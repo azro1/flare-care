@@ -3,9 +3,10 @@
 import { useState, useEffect } from 'react'
 import { useDataSync } from '@/lib/useDataSync'
 import ConfirmationModal from '@/components/ConfirmationModal'
+import SyncSettings from '@/components/SyncSettings'
 
 export default function SymptomsPage() {
-  const { data: symptoms, setData: setSymptoms, deleteData: deleteSymptom } = useDataSync('flarecare-symptoms', [])
+  const { data: symptoms, setData: setSymptoms, deleteData: deleteSymptom, syncEnabled, setSyncEnabled, isOnline, isSyncing, syncToCloud, fetchFromCloud } = useDataSync('flarecare-symptoms', [])
   const [formData, setFormData] = useState({
     symptomStartDate: new Date().toISOString().split('T')[0],
     isOngoing: true,
@@ -84,10 +85,24 @@ export default function SymptomsPage() {
   return (
     <div className="max-w-4xl mx-auto">
       <div className="mb-8">
-        <h1 className="text-3xl font-bold text-gray-900 mb-2">Log Symptoms</h1>
-        <p className="text-gray-600">
-          Track your daily symptoms to identify patterns and triggers. Your data is stored locally on your device.
-        </p>
+        <div className="flex flex-col sm:flex-row sm:justify-between sm:items-start">
+          <div className="mb-4 sm:mb-0">
+            <h1 className="text-3xl font-bold text-gray-900 mb-2">Symptoms</h1>
+            <p className="text-gray-600">
+              Track your daily symptoms to identify patterns and triggers. Your data is stored locally on your device.
+            </p>
+          </div>
+          <div className="sm:ml-4">
+            <SyncSettings 
+              syncEnabled={syncEnabled}
+              setSyncEnabled={setSyncEnabled}
+              isOnline={isOnline}
+              isSyncing={isSyncing}
+              syncToCloud={syncToCloud}
+              fetchFromCloud={fetchFromCloud}
+            />
+          </div>
+        </div>
       </div>
 
       {/* Symptom Logging Form */}

@@ -266,15 +266,15 @@ export default function ReportsPage() {
             />
           </div>
         </div>
-        <div className="flex justify-between items-center">
-          <div className="text-sm text-gray-600">
+        <div className="flex flex-col sm:flex-row sm:justify-between sm:items-center">
+          <div className="text-sm text-gray-600 mb-4 sm:mb-0">
             Showing symptoms from {new Date(dateRange.startDate).toLocaleDateString()} to {new Date(dateRange.endDate).toLocaleDateString()}
           </div>
           <div className="flex space-x-3">
-            <button onClick={exportToPDF} className="btn-primary">
+            <button onClick={exportToPDF} className="btn-primary whitespace-nowrap">
               Export PDF
             </button>
-            <button onClick={exportToCSV} className="btn-secondary">
+            <button onClick={exportToCSV} className="btn-secondary whitespace-nowrap">
               Export CSV
             </button>
           </div>
@@ -391,9 +391,9 @@ export default function ReportsPage() {
           <p className="text-gray-600 mb-4">
             Start logging symptoms and adding medications to generate meaningful reports.
           </p>
-          <div className="flex justify-center space-x-3">
-            <a href="/symptoms" className="btn-primary">Log Symptoms</a>
-            <a href="/medications" className="btn-secondary">Add Medications</a>
+          <div className="flex flex-col sm:flex-row justify-center space-y-3 sm:space-y-0 sm:space-x-3">
+            <a href="/symptoms" className="btn-primary whitespace-nowrap">Log Symptoms</a>
+            <a href="/medications" className="btn-secondary whitespace-nowrap">Add Medications</a>
           </div>
         </div>
       )}

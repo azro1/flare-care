@@ -3,9 +3,10 @@
 import { useState, useEffect } from 'react'
 import { useDataSync } from '@/lib/useDataSync'
 import ConfirmationModal from '@/components/ConfirmationModal'
+import SyncSettings from '@/components/SyncSettings'
 
 export default function MedicationsPage() {
-  const { data: medications, setData: setMedications, deleteData: deleteMedication } = useDataSync('flarecare-medications', [])
+  const { data: medications, setData: setMedications, deleteData: deleteMedication, syncEnabled, setSyncEnabled, isOnline, isSyncing, syncToCloud, fetchFromCloud } = useDataSync('flarecare-medications', [])
   const [isAdding, setIsAdding] = useState(false)
   const [editingId, setEditingId] = useState(null)
   const [deleteModal, setDeleteModal] = useState({ isOpen: false, id: null })
@@ -149,10 +150,24 @@ export default function MedicationsPage() {
   return (
     <div className="max-w-4xl mx-auto">
       <div className="mb-8">
-        <h1 className="text-3xl font-bold text-gray-900 mb-2">Medications</h1>
-        <p className="text-gray-600">
-          Manage your medication schedule and track adherence. Set up reminders to help you stay on track.
-        </p>
+        <div className="flex flex-col sm:flex-row sm:justify-between sm:items-start">
+          <div className="mb-4 sm:mb-0">
+            <h1 className="text-3xl font-bold text-gray-900 mb-2">Medications</h1>
+            <p className="text-gray-600">
+              Manage your medication schedule and track adherence. Set up reminders to help you stay on track.
+            </p>
+          </div>
+          <div className="sm:ml-4">
+            <SyncSettings 
+              syncEnabled={syncEnabled}
+              setSyncEnabled={setSyncEnabled}
+              isOnline={isOnline}
+              isSyncing={isSyncing}
+              syncToCloud={syncToCloud}
+              fetchFromCloud={fetchFromCloud}
+            />
+          </div>
+        </div>
       </div>
 
       {/* Add/Edit Medication Form */}
@@ -243,12 +258,12 @@ export default function MedicationsPage() {
 
       {/* Medications List */}
       <div className="card">
-        <div className="flex justify-between items-center mb-6">
-          <h2 className="text-xl font-semibold text-gray-900">Your Medications</h2>
+        <div className="flex flex-col sm:flex-row sm:justify-between sm:items-center mb-6">
+          <h2 className="text-xl font-semibold text-gray-900 mb-4 sm:mb-0">Your Medications</h2>
           {!isAdding && (
             <button
               onClick={() => setIsAdding(true)}
-              className="btn-primary"
+              className="btn-primary whitespace-nowrap"
             >
               Add Medication
             </button>
