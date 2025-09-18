@@ -58,11 +58,11 @@
   }
   
   .nav-link-active {
-    @apply bg-gradient-to-r from-purple-100 to-violet-100 text-purple-700 shadow-sm;
+    @apply bg-gradient-to-r from-blue-100 to-indigo-100 text-blue-700 shadow-sm;
   }
   
   .nav-link-inactive {
-    @apply text-gray-600 hover:text-gray-900 hover:bg-purple-100;
+    @apply text-gray-600 hover:text-gray-900 hover:bg-blue-100;
   }
   
   .hero-gradient {

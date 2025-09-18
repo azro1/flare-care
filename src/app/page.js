@@ -29,7 +29,7 @@ export default function Home() {
       </div>
 
       {/* Features Grid */}
-      <div className="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 pb-12 sm:pb-16 lg:pb-20">
+      <div className="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 pb-6 sm:pb-16 lg:pb-20">
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6 sm:gap-8 mb-12 sm:mb-16">
           <Link href="/symptoms" className="group">
             <div className="feature-card group h-full min-h-[280px] sm:min-h-[320px]">
