@@ -152,7 +152,7 @@ export default function MedicationsPage() {
       <div className="mb-8">
         <div className="flex flex-col sm:flex-row sm:justify-between sm:items-start">
           <div className="mb-4 sm:mb-0">
-            <h1 className="text-3xl font-bold text-gray-900 mb-2">Medications</h1>
+            <h1 className="text-2xl sm:text-3xl lg:text-4xl font-bold text-gray-900 mb-2">Medications</h1>
             <p className="text-gray-600">
               Manage your medication schedule and track adherence. Set up reminders to help you stay on track.
             </p>

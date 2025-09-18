@@ -8,7 +8,7 @@
   }
   
   body {
-    @apply bg-gradient-to-br from-blue-50 via-indigo-50 to-purple-50 text-gray-900 antialiased;
+    @apply bg-gradient-to-br from-slate-50 via-gray-50 to-zinc-50 text-slate-800 antialiased;
     font-feature-settings: 'rlig' 1, 'calt' 1;
   }
   
@@ -19,7 +19,7 @@
 
 @layer components {
   .btn-primary {
-    @apply bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-700 hover:to-indigo-700 text-white font-semibold py-3 px-6 rounded-xl transition-all duration-300 transform hover:scale-105 hover:shadow-lg active:scale-95;
+    @apply bg-gradient-to-r from-purple-600 to-violet-600 hover:from-purple-700 hover:to-violet-700 text-white font-semibold py-3 px-6 rounded-xl transition-all duration-300 transform hover:scale-105 hover:shadow-lg active:scale-95;
   }
   
   .btn-secondary {
@@ -58,21 +58,56 @@
   }
   
   .nav-link-active {
-    @apply bg-gradient-to-r from-blue-100 to-indigo-100 text-blue-700 shadow-sm;
+    @apply bg-gradient-to-r from-purple-100 to-violet-100 text-purple-700 shadow-sm;
   }
   
   .nav-link-inactive {
-    @apply text-gray-600 hover:text-gray-900 hover:bg-gray-100;
+    @apply text-gray-600 hover:text-gray-900 hover:bg-purple-100;
   }
   
   .hero-gradient {
     @apply bg-gradient-to-br from-blue-600 via-indigo-600 to-purple-600;
   }
   
-  .feature-card {
-    @apply relative overflow-hidden bg-white/80 rounded-2xl shadow-lg border border-white/20 p-6 transition-all duration-500 hover:shadow-2xl hover:scale-105 hover:bg-white/90;
-    backdrop-filter: blur(8px);
-  }
+         .feature-card {
+           @apply relative overflow-hidden bg-white/80 rounded-2xl shadow-lg border border-white/20 p-6 transition-all duration-500 hover:shadow-2xl hover:bg-white/90;
+           backdrop-filter: blur(8px);
+         }
+
+         .feature-card:hover {
+           transform: scale(1.05);
+         }
+
+         /* Disable scale animations on mobile */
+         @media (max-width: 1024px) {
+           .feature-card:hover {
+             transform: none;
+           }
+           
+           .btn-primary:hover {
+             transform: none;
+           }
+           
+           .card:hover {
+             transform: none;
+           }
+           
+           .nav-link:hover {
+             transform: none;
+           }
+           
+           .feature-icon:hover {
+             transform: none;
+           }
+           
+           .slider::-webkit-slider-thumb:hover {
+             transform: none;
+           }
+           
+           .slider::-moz-range-thumb:hover {
+             transform: none;
+           }
+         }
   
   .feature-card::before {
     content: '';

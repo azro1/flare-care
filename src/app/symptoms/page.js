@@ -16,16 +16,25 @@ export default function SymptomsPage() {
     foods: ''
   })
   const [deleteModal, setDeleteModal] = useState({ isOpen: false, id: null })
+  const [alertModal, setAlertModal] = useState({ isOpen: false, title: '', message: '' })
 
   const handleSubmit = (e) => {
     e.preventDefault()
     if (!formData.notes.trim() && !formData.foods.trim()) {
-      alert('Please add some notes or foods to log this entry.')
+      setAlertModal({ 
+        isOpen: true, 
+        title: 'Missing Information', 
+        message: 'Please add some notes or foods to log this entry.' 
+      })
       return
     }
 
     if (!formData.isOngoing && !formData.symptomEndDate) {
-      alert('Please specify when symptoms ended.')
+      setAlertModal({ 
+        isOpen: true, 
+        title: 'Missing End Date', 
+        message: 'Please specify when symptoms ended.' 
+      })
       return
     }
 
@@ -87,7 +96,7 @@ export default function SymptomsPage() {
       <div className="mb-8">
         <div className="flex flex-col sm:flex-row sm:justify-between sm:items-start">
           <div className="mb-4 sm:mb-0">
-            <h1 className="text-3xl font-bold text-gray-900 mb-2">Symptoms</h1>
+            <h1 className="text-2xl sm:text-3xl lg:text-4xl font-bold text-gray-900 mb-2">Symptoms</h1>
             <p className="text-gray-600">
               Track your daily symptoms to identify patterns and triggers. Your data is stored locally on your device.
             </p>
@@ -303,6 +312,17 @@ export default function SymptomsPage() {
         confirmText="Delete"
         cancelText="Cancel"
         isDestructive={true}
+      />
+
+      <ConfirmationModal
+        isOpen={alertModal.isOpen}
+        onClose={() => setAlertModal({ isOpen: false, title: '', message: '' })}
+        onConfirm={() => setAlertModal({ isOpen: false, title: '', message: '' })}
+        title={alertModal.title}
+        message={alertModal.message}
+        confirmText="OK"
+        cancelText=""
+        isDestructive={false}
       />
     </div>
   )

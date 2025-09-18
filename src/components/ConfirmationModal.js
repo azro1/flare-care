@@ -81,12 +81,14 @@ export default function ConfirmationModal({
           </p>
 
           <div className="flex space-x-3 justify-end">
-            <button
-              onClick={onClose}
-              className="px-4 py-2 text-sm font-medium text-gray-700 bg-gray-100 hover:bg-gray-200 rounded-lg transition-colors duration-200"
-            >
-              {cancelText}
-            </button>
+            {cancelText && (
+              <button
+                onClick={onClose}
+                className="px-4 py-2 text-sm font-medium text-gray-700 bg-gray-100 hover:bg-gray-200 rounded-lg transition-colors duration-200"
+              >
+                {cancelText}
+              </button>
+            )}
             <button
               onClick={handleConfirm}
               className={`px-4 py-2 text-sm font-medium text-white rounded-lg transition-colors duration-200 ${

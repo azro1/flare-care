@@ -1,10 +1,14 @@
 'use client'
 
+import { useState } from 'react'
+import ConfirmationModal from '@/components/ConfirmationModal'
+
 export default function About() {
+  const [blogModal, setBlogModal] = useState({ isOpen: false })
   return (
     <div className="max-w-4xl mx-auto">
       <div className="text-center mb-12">
-        <h1 className="text-3xl sm:text-4xl lg:text-5xl font-bold text-gray-900 mb-4 sm:mb-6">
+        <h1 className="text-2xl sm:text-3xl lg:text-4xl font-bold text-gray-900 mb-4 sm:mb-6">
           About FlareCare
         </h1>
         <p className="text-lg sm:text-xl text-gray-700 max-w-3xl mx-auto leading-relaxed">
@@ -107,7 +111,7 @@ export default function About() {
             </p>
             <button 
               className="btn-secondary inline-block"
-              onClick={() => alert('Blog feature coming soon! This will be a place for the community to share stories, tips, and support each other.')}
+              onClick={() => setBlogModal({ isOpen: true })}
             >
               Coming Soon
             </button>
@@ -118,6 +122,17 @@ export default function About() {
           Built with care for Crohn's and Colitis patients.
         </p>
       </div>
+
+      <ConfirmationModal
+        isOpen={blogModal.isOpen}
+        onClose={() => setBlogModal({ isOpen: false })}
+        onConfirm={() => setBlogModal({ isOpen: false })}
+        title="Community Blog Coming Soon"
+        message="This will be a place for the community to share stories, tips, and support each other. Stay tuned for updates!"
+        confirmText="OK"
+        cancelText=""
+        isDestructive={false}
+      />
     </div>
   )
 }
