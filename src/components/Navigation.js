@@ -19,7 +19,7 @@ export default function Navigation() {
   return (
     <nav className="bg-white/90 shadow-lg border-b border-white/20 sticky top-0 z-50" style={{backdropFilter: 'blur(12px)'}}>
       <div className="container mx-auto px-4 sm:px-6 lg:px-8">
-        <div className="flex justify-between items-center h-16 sm:h-18">
+        <div className="flex justify-between items-center h-18">
           {/* Logo */}
           <Link href="/" className="flex items-center space-x-2 group">
             <div className="w-8 h-8 sm:w-10 sm:h-10 bg-gradient-to-br from-blue-600 to-indigo-600 rounded-xl flex items-center justify-center group-hover:scale-110 transition-transform duration-200 shadow-lg lg:group-hover:scale-110">
