@@ -230,15 +230,15 @@ export default function ReportsPage() {
 
   return (
     <div className="max-w-4xl mx-auto">
-      <div className="mb-8">
-        <h1 className="text-2xl sm:text-3xl lg:text-4xl font-bold text-gray-900 mb-2">Health Reports</h1>
+      <div className="mb-8 sm:mb-10">
+        <h1 className="text-2xl sm:text-3xl lg:text-4xl font-bold text-gray-900 mb-4 sm:mb-6">Health Reports</h1>
         <p className="text-gray-600">
           Generate detailed reports of your health data to share with your healthcare team.
         </p>
       </div>
 
       {/* Date Range Selector */}
-      <div className="card mb-8">
+      <div className="card mb-8 sm:mb-12">
         <h2 className="text-xl font-semibold text-gray-900 mb-6">Select Report Period</h2>
         <div className="grid md:grid-cols-2 gap-4 mb-6">
           <div>
@@ -282,7 +282,7 @@ export default function ReportsPage() {
       </div>
 
       {/* Report Results */}
-      <div className="card mb-8">
+      <div className="card mb-8 sm:mb-12">
         <div className="flex justify-between items-center mb-6">
           <h2 className="text-xl font-semibold text-gray-900">Symptom Report</h2>
         </div>
@@ -319,7 +319,7 @@ export default function ReportsPage() {
         {reportData.severityTrend.length > 0 && (
           <div className="mb-8">
             <h3 className="text-lg font-semibold text-gray-900 mb-4">Symptom Episodes</h3>
-            <div className="space-y-2">
+            <div className="space-y-3 sm:space-y-4">
               {reportData.severityTrend.map((entry, index) => (
                 <div key={index} className="flex items-center space-x-4">
                   <div className="w-32 text-sm text-gray-600">
@@ -348,9 +348,9 @@ export default function ReportsPage() {
 
       {/* Medications */}
       {reportData.medications.length > 0 && (
-        <div className="card mb-8">
+        <div className="card mb-8 sm:mb-12">
           <h3 className="text-lg font-semibold text-gray-900 mb-4">Current Medications</h3>
-          <div className="space-y-3">
+          <div className="space-y-4 sm:space-y-6">
             {reportData.medications.map((med, index) => (
               <div key={index} className="flex justify-between items-center py-2 border-b border-gray-100 last:border-b-0">
                 <div>
@@ -370,7 +370,7 @@ export default function ReportsPage() {
       {reportData.topFoods.length > 0 && (
         <div className="card">
           <h3 className="text-lg font-semibold text-gray-900 mb-4">Most Logged Foods</h3>
-          <div className="space-y-2">
+          <div className="space-y-3 sm:space-y-4">
             {reportData.topFoods.map(([food, count], index) => (
               <div key={index} className="flex justify-between items-center">
                 <span className="text-gray-900">{food}</span>

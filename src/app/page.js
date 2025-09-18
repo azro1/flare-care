@@ -6,10 +6,10 @@ export default function Home() {
       {/* Hero Section */}
       <div className="relative overflow-hidden">
         <div className="absolute inset-0 bg-gradient-to-br from-slate-100/40 via-gray-100/30 to-zinc-100/40"></div>
-        <div className="relative max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 py-12 sm:py-16 lg:py-20 pb-12 sm:pb-16 lg:pb-20">
+        <div className="relative max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 py-2 sm:py-12 lg:py-16 pb-8 sm:pb-12 lg:pb-16">
           <div className="text-center fade-in-up">
             <div className="mb-8">
-              <div className="w-20 h-20 sm:w-24 sm:h-24 bg-gradient-to-br from-purple-600 to-violet-600 rounded-3xl flex items-center justify-center mx-auto mb-6 pulse-animation">
+              <div className="w-20 h-20 sm:w-24 sm:h-24 bg-gradient-to-br from-blue-600 to-indigo-600 rounded-3xl flex items-center justify-center mx-auto mb-6 pulse-animation">
                 <svg className="w-10 h-10 sm:w-12 sm:h-12 text-white" fill="currentColor" viewBox="0 0 24 24">
                   <path d="M4.318 6.318a4.5 4.5 0 000 6.364L12 20.364l7.682-7.682a4.5 4.5 0 00-6.364-6.364L12 7.636l-1.318-1.318a4.5 4.5 0 00-6.364 0z" />
                 </svg>

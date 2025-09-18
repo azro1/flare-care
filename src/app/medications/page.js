@@ -149,10 +149,10 @@ export default function MedicationsPage() {
 
   return (
     <div className="max-w-4xl mx-auto">
-      <div className="mb-8">
+      <div className="mb-8 sm:mb-10">
         <div className="flex flex-col sm:flex-row sm:justify-between sm:items-start">
-          <div className="mb-4 sm:mb-0">
-            <h1 className="text-2xl sm:text-3xl lg:text-4xl font-bold text-gray-900 mb-2">Medications</h1>
+          <div className="mb-6 sm:mb-0">
+            <h1 className="text-2xl sm:text-3xl lg:text-4xl font-bold text-gray-900 mb-4 sm:mb-6">Medications</h1>
             <p className="text-gray-600">
               Manage your medication schedule and track adherence. Set up reminders to help you stay on track.
             </p>
@@ -257,7 +257,7 @@ export default function MedicationsPage() {
       )}
 
       {/* Medications List */}
-      <div className="card">
+      <div className="card mt-8 sm:mt-12">
         <div className="flex flex-col sm:flex-row sm:justify-between sm:items-center mb-6">
           <h2 className="text-xl font-semibold text-gray-900 mb-4 sm:mb-0">Your Medications</h2>
           {!isAdding && (
@@ -278,7 +278,7 @@ export default function MedicationsPage() {
             <p>No medications added yet. Add your first medication to get started!</p>
           </div>
         ) : (
-          <div className="space-y-4">
+          <div className="space-y-6 sm:space-y-8">
             {medications.map((medication) => (
               <div key={medication.id} className="border border-gray-200 rounded-lg p-4 hover:shadow-sm transition-shadow">
                 <div className="flex justify-between items-start mb-3">
