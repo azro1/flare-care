@@ -3,6 +3,7 @@
 import { useState, useEffect } from 'react'
 import { useDataSync } from '@/lib/useDataSync'
 import jsPDF from 'jspdf'
+import ConfirmationModal from '@/components/ConfirmationModal'
 
 export default function ReportsPage() {
   const { data: symptoms } = useDataSync('flarecare-symptoms', [])
@@ -12,6 +13,7 @@ export default function ReportsPage() {
     startDate: new Date(Date.now() - 7 * 24 * 60 * 60 * 1000).toISOString().split('T')[0], // 7 days ago
     endDate: new Date().toISOString().split('T')[0] // today
   })
+  const [showNoDataModal, setShowNoDataModal] = useState(false)
 
   useEffect(() => {
     generateReport()
@@ -82,6 +84,19 @@ export default function ReportsPage() {
         timeOfDay: med.timeOfDay
       }))
     })
+  }
+
+  const hasDataToExport = () => {
+    if (!reportData) return false
+    return reportData.totalEntries > 0 || reportData.medications.length > 0
+  }
+
+  const handleExportClick = (exportFunction) => {
+    if (!hasDataToExport()) {
+      setShowNoDataModal(true)
+      return
+    }
+    exportFunction()
   }
 
   const exportToPDF = () => {
@@ -271,10 +286,10 @@ export default function ReportsPage() {
             Showing symptoms from {new Date(dateRange.startDate).toLocaleDateString()} to {new Date(dateRange.endDate).toLocaleDateString()}
           </div>
           <div className="flex space-x-3">
-            <button onClick={exportToPDF} className="btn-primary whitespace-nowrap">
+            <button onClick={() => handleExportClick(exportToPDF)} className="btn-primary whitespace-nowrap">
               Export PDF
             </button>
-            <button onClick={exportToCSV} className="btn-secondary whitespace-nowrap">
+            <button onClick={() => handleExportClick(exportToCSV)} className="btn-secondary whitespace-nowrap">
               Export CSV
             </button>
           </div>
@@ -397,6 +412,18 @@ export default function ReportsPage() {
           </div>
         </div>
       )}
+
+      {/* No Data Modal */}
+      <ConfirmationModal
+        isOpen={showNoDataModal}
+        onClose={() => setShowNoDataModal(false)}
+        onConfirm={() => setShowNoDataModal(false)}
+        title="No Data to Export"
+        message="There's no data available for the selected period. Please log some symptoms or add medications before exporting a report."
+        confirmText="OK"
+        cancelText={null}
+        isDestructive={false}
+      />
     </div>
   )
 }

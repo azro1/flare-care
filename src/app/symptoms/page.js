@@ -267,7 +267,7 @@ export default function SymptomsPage() {
                         day: 'numeric'
                       })}`}
                     </span>
-                    <span className={`px-2 py-1 rounded-full text-xs font-medium ${getSeverityColor(symptom.severity)}`}>
+                    <span className={`text-center px-2 py-1 rounded-full text-xs font-medium ${getSeverityColor(symptom.severity)}`}>
                       {symptom.severity}/10 - {getSeverityLabel(symptom.severity)}
                     </span>
                   </div>
