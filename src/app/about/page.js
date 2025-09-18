@@ -4,10 +4,10 @@ export default function About() {
   return (
     <div className="max-w-4xl mx-auto">
       <div className="text-center mb-12">
-        <h1 className="text-4xl font-bold text-gray-900 mb-4">
+        <h1 className="text-3xl sm:text-4xl lg:text-5xl font-bold text-gray-900 mb-4 sm:mb-6">
           About FlareCare
         </h1>
-        <p className="text-xl text-gray-600">
+        <p className="text-lg sm:text-xl text-gray-700 max-w-3xl mx-auto leading-relaxed">
           A personal journey turned into a tool for the community
         </p>
       </div>
@@ -78,15 +78,44 @@ export default function About() {
         </div>
       </div>
 
-      <div className="bg-primary-50 border border-primary-200 rounded-lg p-6">
-        <h2 className="text-lg font-semibold text-primary-900 mb-2">Get in Touch</h2>
-        <p className="text-primary-700 mb-4">
+      <div className="bg-gradient-to-r from-blue-50 to-indigo-50 border border-blue-200 rounded-2xl p-8">
+        <h2 className="text-2xl font-bold text-gray-900 mb-4">Stay Connected</h2>
+        <p className="text-gray-700 mb-6">
           Have questions, suggestions, or want to share your own story? 
           I'd love to hear from you and learn how FlareCare can better serve 
           the Crohn's and Colitis community.
         </p>
-        <p className="text-sm text-primary-600">
-          Built with care by someone who truly understands the journey.
+        
+        <div className="grid md:grid-cols-2 gap-6">
+          <div className="bg-white/80 backdrop-blur-sm rounded-xl p-6 border border-white/20">
+            <h3 className="text-lg font-semibold text-gray-900 mb-3">📧 Email Support</h3>
+            <p className="text-gray-600 mb-4">
+              For technical support, feature requests, or general questions.
+            </p>
+            <a 
+              href="mailto:support@flarecare.app" 
+              className="btn-primary inline-block"
+            >
+              Contact Support
+            </a>
+          </div>
+          
+          <div className="bg-white/80 backdrop-blur-sm rounded-xl p-6 border border-white/20">
+            <h3 className="text-lg font-semibold text-gray-900 mb-3">💬 Community Blog</h3>
+            <p className="text-gray-600 mb-4">
+              Share experiences, tips, and connect with others on similar journeys.
+            </p>
+            <button 
+              className="btn-secondary inline-block"
+              onClick={() => alert('Blog feature coming soon! This will be a place for the community to share stories, tips, and support each other.')}
+            >
+              Coming Soon
+            </button>
+          </div>
+        </div>
+        
+        <p className="text-sm text-gray-600 mt-6 text-center">
+          Built with care for Crohn's and Colitis patients.
         </p>
       </div>
     </div>
