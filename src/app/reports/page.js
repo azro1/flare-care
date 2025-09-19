@@ -9,9 +9,14 @@ export default function ReportsPage() {
   const { data: symptoms } = useDataSync('flarecare-symptoms', [])
   const { data: medications } = useDataSync('flarecare-medications', [])
   const [reportData, setReportData] = useState(null)
-  const [dateRange, setDateRange] = useState({
-    startDate: new Date(Date.now() - 7 * 24 * 60 * 60 * 1000).toISOString().split('T')[0], // 7 days ago
-    endDate: new Date().toISOString().split('T')[0] // today
+  const [dateRange, setDateRange] = useState(() => {
+    const endDate = new Date()
+    const startDate = new Date()
+    startDate.setDate(endDate.getDate() - 30)
+    return {
+      startDate: startDate.toISOString().split('T')[0],
+      endDate: endDate.toISOString().split('T')[0]
+    }
   })
   const [showNoDataModal, setShowNoDataModal] = useState(false)
 
@@ -116,7 +121,7 @@ export default function ReportsPage() {
     // Period
     doc.setFontSize(12)
     doc.setFont('helvetica', 'normal')
-    doc.text(`Report Period: ${reportData.period.start} to ${reportData.period.end}`, pageWidth / 2, yPosition, { align: 'center' })
+    doc.text(`Report Period: ${formatUKDate(reportData.period.start)} to ${formatUKDate(reportData.period.end)}`, pageWidth / 2, yPosition, { align: 'center' })
     yPosition += 20
 
     // Summary Section
@@ -150,6 +155,65 @@ export default function ReportsPage() {
       yPosition += 10
     }
 
+    // Detailed Symptoms Section
+    if (reportData.severityTrend.length > 0) {
+      doc.setFontSize(16)
+      doc.setFont('helvetica', 'bold')
+      doc.text('Symptom Details', margin, yPosition)
+      yPosition += 10
+
+      doc.setFontSize(12)
+      doc.setFont('helvetica', 'normal')
+      
+      // Get the actual symptom data with notes
+      const startDate = new Date(dateRange.startDate)
+      const endDate = new Date(dateRange.endDate)
+      
+      const detailedSymptoms = symptoms.filter(symptom => {
+        const symptomStartDate = new Date(symptom.symptomStartDate)
+        const symptomEndDate = symptom.symptomEndDate ? new Date(symptom.symptomEndDate) : new Date()
+        return (symptomStartDate <= endDate && symptomEndDate >= startDate)
+      }).sort((a, b) => new Date(a.symptomStartDate) - new Date(b.symptomStartDate))
+
+      detailedSymptoms.forEach((symptom, index) => {
+        // Check if we need a new page
+        if (yPosition > 250) {
+          doc.addPage()
+          yPosition = 20
+        }
+
+        doc.setFont('helvetica', 'bold')
+        doc.text(`${index + 1}. ${formatUKDate(symptom.symptomStartDate)}`, margin, yPosition)
+        yPosition += 6
+        
+        doc.setFont('helvetica', 'normal')
+        doc.text(`   Severity: ${symptom.severity}/10 (${getSeverityLabel(symptom.severity)})`, margin, yPosition)
+        yPosition += 5
+        
+        if (symptom.isOngoing) {
+          doc.text(`   Status: Ongoing`, margin, yPosition)
+          yPosition += 5
+        }
+        
+        if (symptom.notes && symptom.notes.trim()) {
+          const notesText = `   Notes: ${symptom.notes}`
+          const splitNotes = doc.splitTextToSize(notesText, pageWidth - 2 * margin)
+          doc.text(splitNotes, margin, yPosition)
+          yPosition += splitNotes.length * 5
+        }
+        
+        if (symptom.foods && symptom.foods.trim()) {
+          const foodsText = `   Foods: ${symptom.foods}`
+          const splitFoods = doc.splitTextToSize(foodsText, pageWidth - 2 * margin)
+          doc.text(splitFoods, margin, yPosition)
+          yPosition += splitFoods.length * 5
+        }
+        
+        yPosition += 8
+      })
+      yPosition += 10
+    }
+
     // Top Foods Section
     if (reportData.topFoods.length > 0) {
       doc.setFontSize(16)
@@ -166,7 +230,7 @@ export default function ReportsPage() {
     }
 
     // Save the PDF
-    doc.save(`flarecare-report-${dateRange.startDate}-to-${dateRange.endDate}.pdf`)
+    doc.save(`flarecare-report-${reportData.period.start}-to-${reportData.period.end}.pdf`)
   }
 
   const exportToCSV = () => {
@@ -192,8 +256,8 @@ export default function ReportsPage() {
       .sort((a, b) => new Date(a.symptomStartDate) - new Date(b.symptomStartDate))
       .forEach(symptom => {
         csvData.push([
-          symptom.symptomStartDate,
-          symptom.symptomEndDate || '',
+          formatUKDate(symptom.symptomStartDate),
+          symptom.symptomEndDate ? formatUKDate(symptom.symptomEndDate) : '',
           symptom.isOngoing ? 'Yes' : 'No',
           symptom.severity,
           symptom.notes || '',
@@ -211,7 +275,7 @@ export default function ReportsPage() {
     const link = document.createElement('a')
     const url = URL.createObjectURL(blob)
     link.setAttribute('href', url)
-    link.setAttribute('download', `flarecare-data-${dateRange.startDate}-to-${dateRange.endDate}.csv`)
+    link.setAttribute('download', `flarecare-data-${reportData.period.start}-to-${reportData.period.end}.csv`)
     link.style.visibility = 'hidden'
     document.body.appendChild(link)
     link.click()
@@ -230,6 +294,12 @@ export default function ReportsPage() {
     if (severity <= 6) return 'Moderate'
     if (severity <= 8) return 'Severe'
     return 'Very Severe'
+  }
+
+  const formatUKDate = (dateString) => {
+    if (!dateString) return ''
+    const date = new Date(dateString)
+    return date.toLocaleDateString('en-GB')
   }
 
   if (!reportData) {
@@ -255,6 +325,67 @@ export default function ReportsPage() {
       {/* Date Range Selector */}
       <div className="card mb-8 sm:mb-12">
         <h2 className="text-xl font-semibold text-gray-900 mb-6">Select Report Period</h2>
+        
+        {/* Quick Presets */}
+        <div className="flex flex-wrap gap-2 mb-6">
+          <button 
+            onClick={() => {
+              const endDate = new Date()
+              const startDate = new Date()
+              startDate.setDate(endDate.getDate() - 7)
+              setDateRange({
+                startDate: startDate.toISOString().split('T')[0],
+                endDate: endDate.toISOString().split('T')[0]
+              })
+            }}
+            className="px-3 py-1 text-sm bg-gray-100 hover:bg-gray-200 rounded-lg transition-colors"
+          >
+            Last 7 days
+          </button>
+          <button 
+            onClick={() => {
+              const endDate = new Date()
+              const startDate = new Date()
+              startDate.setDate(endDate.getDate() - 30)
+              setDateRange({
+                startDate: startDate.toISOString().split('T')[0],
+                endDate: endDate.toISOString().split('T')[0]
+              })
+            }}
+            className="px-3 py-1 text-sm bg-gray-100 hover:bg-gray-200 rounded-lg transition-colors"
+          >
+            Last 30 days
+          </button>
+          <button 
+            onClick={() => {
+              const endDate = new Date()
+              const startDate = new Date()
+              startDate.setMonth(endDate.getMonth() - 3)
+              setDateRange({
+                startDate: startDate.toISOString().split('T')[0],
+                endDate: endDate.toISOString().split('T')[0]
+              })
+            }}
+            className="px-3 py-1 text-sm bg-gray-100 hover:bg-gray-200 rounded-lg transition-colors"
+          >
+            Last 3 months
+          </button>
+          <button 
+            onClick={() => {
+              const allDates = symptoms.map(s => new Date(s.symptomStartDate)).sort((a, b) => a - b)
+              if (allDates.length > 0) {
+                setDateRange({
+                  startDate: allDates[0].toISOString().split('T')[0],
+                  endDate: allDates[allDates.length - 1].toISOString().split('T')[0]
+                })
+              }
+            }}
+            className="px-3 py-1 text-sm bg-gray-100 hover:bg-gray-200 rounded-lg transition-colors"
+          >
+            All time
+          </button>
+        </div>
+
         <div className="grid md:grid-cols-2 gap-4 mb-6">
           <div>
             <label htmlFor="startDate" className="block text-sm font-medium text-gray-700 mb-2">
