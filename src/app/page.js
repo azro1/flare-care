@@ -10,10 +10,10 @@ export default function Home() {
           <div className="text-center fade-in-up">
             {/* Mobile Hero - Different Layout */}
             <div className="sm:hidden">
-              <h1 className="text-xl font-bold text-blue-600 mb-3">
+              <h1 className="text-lg font-bold text-blue-600 mb-3">
                 FlareCare
               </h1>
-              <p className="text-2xl font-extrabold text-slate-900 mb-4 leading-snug" style={{fontFamily: 'Inter, -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif'}}>
+              <p className="text-2xl font-extrabold text-slate-900 mb-4 leading-normal" style={{fontFamily: 'Inter, -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif'}}>
                 Your personal companion for managing <span className="text-blue-600">Crohn's & Colitis</span> symptoms
               </p>
               <p className="text-base text-slate-600 mb-6 leading-relaxed">
