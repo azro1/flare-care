@@ -6,15 +6,17 @@ A personal companion app for managing Crohn's & Colitis symptoms, built with Nex
 
 ### 🏠 Home Dashboard
 - Clean, intuitive interface with quick access to all features
-- Personal welcome message and feature overview
-- Responsive design that works on all devices
+- Mobile-optimized hero section with responsive design
+- Feature cards with hover animations and visual indicators
+- Modern glass-morphism design with smooth transitions
 
 ### 📊 Symptom Tracking
 - Log daily symptoms with severity levels (1-10)
 - Track symptom start/end dates and ongoing status
-- Add notes and potential food triggers
+- Add detailed notes and potential food triggers
 - Edit and delete previous entries
-- Visual severity indicators
+- Visual severity indicators with color coding
+- Mobile-friendly form design with validation
 
 ### 💊 Medication Management
 - Add medications with dosage and timing
@@ -22,12 +24,17 @@ A personal companion app for managing Crohn's & Colitis symptoms, built with Nex
 - Add notes for each medication
 - Edit and delete medication entries
 - Visual time-of-day indicators
+- Clean, organized medication list
 
 ### 📈 Reports & Analytics
-- Generate 7-day symptom summaries
-- Export data as PDF or CSV
-- Share reports with healthcare providers
-- Visual charts and trend analysis
+- **Flexible date ranges** - Last 7 days, 30 days, 3 months, or custom periods
+- **Quick preset buttons** for common time periods
+- **Comprehensive PDF exports** with detailed symptom information
+- **CSV exports** for data analysis in Excel/Google Sheets
+- **UK date formatting** (dd/mm/yyyy) for better readability
+- **Notes included** in all exports for complete medical context
+- **Auto-pagination** for long reports
+- **Data validation** prevents empty report exports
 
 ### ☁️ Cloud Sync (Optional)
 - Local-first data storage by default
@@ -35,14 +42,25 @@ A personal companion app for managing Crohn's & Colitis symptoms, built with Nex
 - Access your data across multiple devices
 - Secure, encrypted data storage
 - Works offline with automatic sync when online
+- Green gradient sync button for better visibility
+
+### 🎨 Design & UX
+- **Mobile-first responsive design** with optimized layouts
+- **Custom animations** and smooth transitions
+- **Modern typography** with Inter font family
+- **Glass-morphism effects** with backdrop blur
+- **Intuitive navigation** with mobile dropdown menu
+- **Custom modals** replacing browser alerts
+- **Consistent color scheme** with blue gradients
 
 ## Tech Stack
 
 - **Frontend**: Next.js 14 (App Router), React, JavaScript
-- **Styling**: Tailwind CSS
+- **Styling**: Tailwind CSS with custom components
 - **Data Storage**: Local Storage + Supabase (optional)
-- **PDF Export**: jsPDF
+- **PDF Export**: jsPDF with text wrapping and pagination
 - **Icons**: Heroicons (SVG)
+- **Fonts**: Inter, Merriweather, Playfair Display (Google Fonts)
 
 ## Getting Started
 
