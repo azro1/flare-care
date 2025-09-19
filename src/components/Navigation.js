@@ -2,11 +2,28 @@
 
 import Link from 'next/link'
 import { usePathname } from 'next/navigation'
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
 
 export default function Navigation() {
   const pathname = usePathname()
   const [isMenuOpen, setIsMenuOpen] = useState(false)
+
+  // Close menu when clicking outside
+  useEffect(() => {
+    const handleClickOutside = (event) => {
+      if (isMenuOpen && !event.target.closest('nav')) {
+        setIsMenuOpen(false)
+      }
+    }
+
+    if (isMenuOpen) {
+      document.addEventListener('click', handleClickOutside)
+    }
+
+    return () => {
+      document.removeEventListener('click', handleClickOutside)
+    }
+  }, [isMenuOpen])
 
   const navItems = [
     { href: '/', label: 'Home' },
@@ -19,15 +36,15 @@ export default function Navigation() {
   return (
     <nav className="bg-white/90 shadow-lg border-b border-white/20 sticky top-0 z-50" style={{backdropFilter: 'blur(12px)'}}>
       <div className="container mx-auto px-4 sm:px-6 lg:px-8">
-        <div className="flex justify-between items-center h-18">
+        <div className="flex justify-between items-center h-16 sm:h-18">
           {/* Logo */}
           <Link href="/" className="flex items-center space-x-2 group">
-            <div className="w-8 h-8 sm:w-10 sm:h-10 bg-gradient-to-br from-blue-600 to-indigo-600 rounded-xl flex items-center justify-center group-hover:scale-110 transition-transform duration-200 shadow-lg lg:group-hover:scale-110">
+            <div className="w-10 h-10 sm:w-10 sm:h-10 bg-gradient-to-br from-blue-600 to-indigo-600 rounded-xl flex items-center justify-center group-hover:scale-110 transition-transform duration-200 shadow-lg lg:group-hover:scale-110">
               <svg className="w-5 h-5 sm:w-6 sm:h-6 text-white" fill="currentColor" viewBox="0 0 24 24">
                 <path d="M4.318 6.318a4.5 4.5 0 000 6.364L12 20.364l7.682-7.682a4.5 4.5 0 00-6.364-6.364L12 7.636l-1.318-1.318a4.5 4.5 0 00-6.364 0z" />
               </svg>
             </div>
-            <span className="text-base sm:text-lg lg:text-xl font-bold text-slate-900">FlareCare</span>
+            <span className="hidden sm:block text-base sm:text-lg lg:text-xl font-bold text-slate-900">FlareCare</span>
           </Link>
 
           {/* Desktop Navigation */}
@@ -73,11 +90,11 @@ export default function Navigation() {
                 <Link
                   key={item.href}
                   href={item.href}
-                         className={`block px-4 py-3 rounded-xl text-base font-medium transition-all duration-200 transform lg:hover:scale-105 ${
-                           pathname === item.href
-                             ? 'bg-gradient-to-r from-blue-100 to-indigo-100 text-blue-700 shadow-sm'
-                             : 'text-gray-600 hover:text-gray-900 hover:bg-blue-100'
-                         }`}
+                  className={`block px-4 py-3 text-base font-medium transition-all duration-200 transform lg:hover:scale-105 ${
+                    pathname === item.href
+                      ? 'bg-gradient-to-r from-blue-100 to-indigo-100 text-blue-700 shadow-sm'
+                      : 'text-gray-600 hover:text-gray-900 hover:bg-blue-100'
+                  }`}
                   onClick={() => setIsMenuOpen(false)}
                   style={{
                     animationDelay: `${index * 100}ms`,
