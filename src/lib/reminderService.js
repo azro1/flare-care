@@ -92,14 +92,24 @@ class ReminderService {
     
     // Show browser notification if permission granted
     if (Notification.permission === 'granted') {
-      new Notification('Medication Reminder', {
+      new Notification('💊 Medication Reminder', {
         body: `Time to take: ${medication.name}`,
+        icon: 'data:image/svg+xml,<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><rect width="24" height="24" fill="%232563eb" rx="4"/><path d="M4.318 6.318a4.5 4.5 0 000 6.364L12 20.364l7.682-7.682a4.5 4.5 0 00-6.364-6.364L12 7.636l-1.318-1.318a4.5 4.5 0 00-6.364 0z" fill="white" stroke="white" stroke-width="0.5"/></svg>',
+        badge: 'data:image/svg+xml,<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><rect width="24" height="24" fill="%232563eb" rx="4"/><path d="M4.318 6.318a4.5 4.5 0 000 6.364L12 20.364l7.682-7.682a4.5 4.5 0 00-6.364-6.364L12 7.636l-1.318-1.318a4.5 4.5 0 00-6.364 0z" fill="white" stroke="white" stroke-width="0.5"/></svg>',
         tag: 'medication-reminder',
-        requireInteraction: true
+        requireInteraction: true,
+        silent: false,
+        vibrate: [200, 100, 200]
       })
     } else {
       console.log(`Reminder: Time to take ${medication.name}`)
     }
+
+    // Always show in-app banner notification as fallback
+    const event = new CustomEvent('medication-reminder', {
+      detail: { medicationNames: medication.name }
+    })
+    window.dispatchEvent(event)
   }
 
   // Check for due medications

@@ -11,6 +11,7 @@ const NotificationBanner = () => {
       const { medicationNames } = event.detail
       const id = Date.now()
       
+      
       setNotifications(prev => [...prev, { id, medicationNames, timestamp: new Date() }])
       
       // Auto-remove after 10 seconds

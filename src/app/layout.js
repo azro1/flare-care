@@ -1,6 +1,7 @@
 import './globals.css'
 import Navigation from '@/components/Navigation'
 import ReminderProvider from '@/components/ReminderProvider'
+import NotificationBanner from '@/components/NotificationBanner'
 
 export const metadata = {
   title: 'FlareCare - Crohn\'s & Colitis Management',
@@ -20,6 +21,7 @@ export default function RootLayout({ children }) {
       </head>
       <body className="min-h-screen bg-slate-50">
         <ReminderProvider />
+        <NotificationBanner />
         <div className="min-h-screen flex flex-col">
           <Navigation />
           <main className="flex-1 container mx-auto px-4 py-12">
