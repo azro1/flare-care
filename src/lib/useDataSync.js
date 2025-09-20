@@ -93,6 +93,8 @@ export function useDataSync(key, initialValue = []) {
         if (tableName === 'medications') {
           const { 
             timeOfDay, 
+            customTime,
+            remindersEnabled,
             startDate, 
             endDate,
             createdAt,
@@ -104,6 +106,8 @@ export function useDataSync(key, initialValue = []) {
             created_at: createdAt,
             updated_at: updatedAt || createdAt,
             frequency: timeOfDay, // Map timeOfDay to frequency
+            custom_time: customTime, // Map customTime to custom_time
+            reminders_enabled: remindersEnabled, // Map remindersEnabled to reminders_enabled
             start_date: startDate || createdAt?.split('T')[0] || new Date().toISOString().split('T')[0], // Use creation date as start date if not provided
             end_date: endDate || null
           }
@@ -170,12 +174,16 @@ export function useDataSync(key, initialValue = []) {
               if (tableName === 'medications') {
                 const { 
                   frequency, 
+                  custom_time,
+                  reminders_enabled,
                   start_date, 
                   end_date 
                 } = item
                 return {
                   ...baseTransformed,
                   timeOfDay: frequency, // Map frequency back to timeOfDay
+                  customTime: custom_time, // Map custom_time back to customTime
+                  remindersEnabled: reminders_enabled !== false, // Map reminders_enabled back to remindersEnabled (default to true)
                   // Note: startDate and endDate are not used in the current UI
                   // but are available if needed for future features
                   startDate: start_date,

@@ -183,7 +183,11 @@ export default function ReportsPage() {
         }
 
         doc.setFont('helvetica', 'bold')
-        doc.text(`${index + 1}. ${formatUKDate(symptom.symptomStartDate)}`, margin, yPosition)
+        // Show date range for non-ongoing symptoms, or just start date for ongoing
+        const dateText = symptom.isOngoing 
+          ? `${index + 1}. ${formatUKDate(symptom.symptomStartDate)}`
+          : `${index + 1}. ${formatUKDate(symptom.symptomStartDate)} - ${formatUKDate(symptom.symptomEndDate)}`
+        doc.text(dateText, margin, yPosition)
         yPosition += 6
         
         doc.setFont('helvetica', 'normal')
@@ -192,6 +196,9 @@ export default function ReportsPage() {
         
         if (symptom.isOngoing) {
           doc.text(`   Status: Ongoing`, margin, yPosition)
+          yPosition += 5
+        } else {
+          doc.text(`   Status: Resolved`, margin, yPosition)
           yPosition += 5
         }
         

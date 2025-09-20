@@ -4,6 +4,7 @@ import { useState, useEffect } from 'react'
 import { useDataSync } from '@/lib/useDataSync'
 import ConfirmationModal from '@/components/ConfirmationModal'
 import SyncSettings from '@/components/SyncSettings'
+import reminderService from '@/lib/reminderService'
 
 export default function MedicationsPage() {
   const { data: medications, setData: setMedications, deleteData: deleteMedication, syncEnabled, setSyncEnabled, isOnline, isSyncing, syncToCloud, fetchFromCloud } = useDataSync('flarecare-medications', [])
@@ -13,15 +14,30 @@ export default function MedicationsPage() {
   const [formData, setFormData] = useState({
     name: '',
     dosage: '',
-    timeOfDay: 'morning',
+    timeOfDay: '7:00',
+    customTime: '',
+    remindersEnabled: true,
     notes: ''
   })
 
   const timeOptions = [
-    { value: 'morning', label: 'Morning' },
-    { value: 'afternoon', label: 'Afternoon' },
-    { value: 'evening', label: 'Evening' },
-    { value: 'night', label: 'Night' },
+    { value: 'custom', label: 'Custom Time' },
+    { value: '7:00', label: '7:00 AM' },
+    { value: '8:00', label: '8:00 AM' },
+    { value: '9:00', label: '9:00 AM' },
+    { value: '10:00', label: '10:00 AM' },
+    { value: '11:00', label: '11:00 AM' },
+    { value: '12:00', label: '12:00 PM (Noon)' },
+    { value: '13:00', label: '1:00 PM' },
+    { value: '14:00', label: '2:00 PM' },
+    { value: '15:00', label: '3:00 PM' },
+    { value: '16:00', label: '4:00 PM' },
+    { value: '17:00', label: '5:00 PM' },
+    { value: '18:00', label: '6:00 PM' },
+    { value: '19:00', label: '7:00 PM' },
+    { value: '20:00', label: '8:00 PM' },
+    { value: '21:00', label: '9:00 PM' },
+    { value: '22:00', label: '10:00 PM' },
     { value: 'as-needed', label: 'As Needed' }
   ]
 
@@ -53,7 +69,9 @@ export default function MedicationsPage() {
     setFormData({
       name: '',
       dosage: '',
-      timeOfDay: 'morning',
+      timeOfDay: '7:00',
+      customTime: '',
+      remindersEnabled: true,
       notes: ''
     })
     setIsAdding(false)
@@ -71,7 +89,9 @@ export default function MedicationsPage() {
     setFormData({
       name: medication.name,
       dosage: medication.dosage,
-      timeOfDay: medication.timeOfDay,
+      timeOfDay: medication.timeOfDay || '7:00',
+      customTime: medication.customTime || '',
+      remindersEnabled: medication.remindersEnabled !== false,
       notes: medication.notes || ''
     })
     setEditingId(medication.id)
@@ -82,7 +102,9 @@ export default function MedicationsPage() {
     setFormData({
       name: '',
       dosage: '',
-      timeOfDay: 'morning',
+      timeOfDay: '7:00',
+      customTime: '',
+      remindersEnabled: true,
       notes: ''
     })
     setEditingId(null)
@@ -105,46 +127,44 @@ export default function MedicationsPage() {
 
   const getTimeOfDayColor = (timeOfDay) => {
     const colors = {
-      morning: 'bg-yellow-100 text-yellow-800',
-      afternoon: 'bg-orange-100 text-orange-800',
-      evening: 'bg-purple-100 text-purple-800',
-      night: 'bg-blue-100 text-blue-800',
-      'as-needed': 'bg-gray-100 text-gray-800'
+      '7:00': 'bg-yellow-100 text-yellow-800',
+      '8:00': 'bg-yellow-100 text-yellow-800',
+      '9:00': 'bg-yellow-100 text-yellow-800',
+      '10:00': 'bg-yellow-100 text-yellow-800',
+      '11:00': 'bg-yellow-100 text-yellow-800',
+      '12:00': 'bg-orange-100 text-orange-800',
+      '13:00': 'bg-orange-100 text-orange-800',
+      '14:00': 'bg-orange-100 text-orange-800',
+      '15:00': 'bg-orange-100 text-orange-800',
+      '16:00': 'bg-orange-100 text-orange-800',
+      '17:00': 'bg-purple-100 text-purple-800',
+      '18:00': 'bg-purple-100 text-purple-800',
+      '19:00': 'bg-purple-100 text-purple-800',
+      '20:00': 'bg-purple-100 text-purple-800',
+      '21:00': 'bg-blue-100 text-blue-800',
+      '22:00': 'bg-blue-100 text-blue-800',
+      'as-needed': 'bg-gray-100 text-gray-800',
+      'custom': 'bg-indigo-100 text-indigo-800'
     }
     return colors[timeOfDay] || 'bg-gray-100 text-gray-800'
   }
 
-  const getTimeOfDayLabel = (timeOfDay) => {
-    const option = timeOptions.find(opt => opt.value === timeOfDay)
-    return option ? option.label : timeOfDay
+  const getTimeOfDayLabel = (medication) => {
+    if (medication.timeOfDay === 'custom' && medication.customTime) {
+      const time = new Date(`2000-01-01T${medication.customTime}`)
+      return time.toLocaleTimeString('en-US', { 
+        hour: 'numeric', 
+        minute: '2-digit',
+        hour12: true 
+      })
+    }
+    const option = timeOptions.find(opt => opt.value === medication.timeOfDay)
+    return option ? option.label : medication.timeOfDay
   }
 
-  // Check for medication reminders
+  // Update global reminder service when medications change
   useEffect(() => {
-    const checkReminders = () => {
-      const now = new Date()
-      const currentHour = now.getHours()
-      const currentTimeOfDay = 
-        currentHour >= 5 && currentHour < 12 ? 'morning' :
-        currentHour >= 12 && currentHour < 17 ? 'afternoon' :
-        currentHour >= 17 && currentHour < 22 ? 'evening' : 'night'
-
-      const dueMedications = medications.filter(med => 
-        med.timeOfDay === currentTimeOfDay || med.timeOfDay === 'as-needed'
-      )
-
-      if (dueMedications.length > 0) {
-        const medicationNames = dueMedications.map(med => med.name).join(', ')
-        // Simple alert for now - in a real app, you'd want a better notification system
-        console.log(`Reminder: Time to take ${medicationNames}`)
-      }
-    }
-
-    // Check every hour
-    const interval = setInterval(checkReminders, 60 * 60 * 1000)
-    checkReminders() // Check immediately
-
-    return () => clearInterval(interval)
+    reminderService.updateMedications(medications)
   }, [medications])
 
   return (
@@ -210,23 +230,64 @@ export default function MedicationsPage() {
               </div>
             </div>
 
-            <div>
-              <label htmlFor="timeOfDay" className="block text-sm font-medium text-gray-700 mb-2">
-                Time of Day
+            <div className="grid md:grid-cols-2 gap-6">
+              <div>
+                <label htmlFor="timeOfDay" className="block text-sm font-medium text-gray-700 mb-2">
+                  Reminder Time
+                </label>
+                 <select
+                   id="timeOfDay"
+                   name="timeOfDay"
+                   value={formData.timeOfDay}
+                   onChange={handleInputChange}
+                   className="input-field appearance-none bg-no-repeat bg-right pr-10"
+                   style={{
+                     backgroundImage: `url("data:image/svg+xml,%3csvg xmlns='http://www.w3.org/2000/svg' fill='none' viewBox='0 0 20 20'%3e%3cpath stroke='%236b7280' stroke-linecap='round' stroke-linejoin='round' stroke-width='1.5' d='m6 8 4 4 4-4'/%3e%3c/svg%3e")`,
+                     backgroundPosition: 'right 0.75rem center',
+                     backgroundSize: '1.5em 1.5em'
+                   }}
+                 >
+                  {timeOptions.map(option => (
+                    <option key={option.value} value={option.value}>
+                      {option.label}
+                    </option>
+                  ))}
+                </select>
+              </div>
+
+              {formData.timeOfDay === 'custom' && (
+                <div>
+                  <label htmlFor="customTime" className="block text-sm font-medium text-gray-700 mb-2">
+                    Custom Time
+                  </label>
+                  <input
+                    type="time"
+                    id="customTime"
+                    name="customTime"
+                    value={formData.customTime}
+                    onChange={handleInputChange}
+                    className="input-field"
+                    required={formData.timeOfDay === 'custom'}
+                  />
+                </div>
+              )}
+            </div>
+
+            <div className="flex items-start sm:items-center">
+               <input
+                 type="checkbox"
+                 id="remindersEnabled"
+                 name="remindersEnabled"
+                 checked={formData.remindersEnabled}
+                 onChange={(e) => setFormData(prev => ({
+                   ...prev,
+                   remindersEnabled: e.target.checked
+                 }))}
+                 className="h-4 w-4 text-blue-600 focus:ring-blue-500 border-blue-300 rounded accent-blue-600"
+               />
+              <label htmlFor="remindersEnabled" className="ml-2 block text-sm text-gray-700">
+                Enable reminder notifications for this medication
               </label>
-              <select
-                id="timeOfDay"
-                name="timeOfDay"
-                value={formData.timeOfDay}
-                onChange={handleInputChange}
-                className="input-field"
-              >
-                {timeOptions.map(option => (
-                  <option key={option.value} value={option.value}>
-                    {option.label}
-                  </option>
-                ))}
-              </select>
             </div>
 
             <div>
@@ -291,9 +352,19 @@ export default function MedicationsPage() {
                         <span className="font-medium">Dosage:</span> {medication.dosage}
                       </p>
                     )}
-                    <span className={`inline-block px-2 py-1 rounded-full text-xs font-medium ${getTimeOfDayColor(medication.timeOfDay)}`}>
-                      {getTimeOfDayLabel(medication.timeOfDay)}
-                    </span>
+                    <div className="flex items-center gap-2 text-center">
+                      <span className={`inline-block px-2 py-1 rounded-full text-xs font-medium ${getTimeOfDayColor(medication.timeOfDay)}`}>
+                        {getTimeOfDayLabel(medication)}
+                      </span>
+                      {medication.remindersEnabled !== false && (
+                        <span className="inline-flex items-center px-2 py-1 rounded-full text-xs font-medium bg-green-100 text-green-800">
+                          <svg className="w-3 h-3 mr-1" fill="currentColor" viewBox="0 0 20 20">
+                            <path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clipRule="evenodd" />
+                          </svg>
+                          Reminders On
+                        </span>
+                      )}
+                    </div>
                   </div>
                   <div className="flex space-x-2 ml-4">
                     <button
@@ -345,9 +416,12 @@ export default function MedicationsPage() {
           </svg>
           <div>
             <h3 className="text-sm font-medium text-blue-900 mb-1">Medication Reminders</h3>
-            <p className="text-sm text-blue-700">
-              FlareCare will remind you when it's time to take your medications based on the time of day you've set. 
-              Check the browser console for reminder notifications.
+            <p className="text-sm text-blue-700 mb-2">
+              FlareCare will send browser notifications when it's time to take your medications.
+            </p>
+            <p className="text-xs text-blue-600">
+              💡 <strong>Tip:</strong> Make sure to allow notifications in your browser for the best experience. 
+              You can enable/disable reminders for each medication individually.
             </p>
           </div>
         </div>

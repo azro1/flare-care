@@ -1,5 +1,6 @@
 import './globals.css'
 import Navigation from '@/components/Navigation'
+import ReminderProvider from '@/components/ReminderProvider'
 
 export const metadata = {
   title: 'FlareCare - Crohn\'s & Colitis Management',
@@ -18,6 +19,7 @@ export default function RootLayout({ children }) {
         <link href="https://fonts.googleapis.com/css2?family=Merriweather:wght@300;400;700;900&family=Playfair+Display:wght@400;500;600;700;800;900&family=Inter:wght@400;500;600;700;800;900&display=swap" rel="stylesheet" />
       </head>
       <body className="min-h-screen bg-slate-50">
+        <ReminderProvider />
         <div className="min-h-screen flex flex-col">
           <Navigation />
           <main className="flex-1 container mx-auto px-4 py-12">

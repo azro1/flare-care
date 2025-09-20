@@ -20,7 +20,9 @@ A personal companion app for managing Crohn's & Colitis symptoms, built with Nex
 
 ### 💊 Medication Management
 - Add medications with dosage and timing
-- Set frequency (Morning, Afternoon, Evening, Night, As Needed)
+- **Medication reminders** with browser notifications
+- Set specific times or custom times for each medication
+- Enable/disable reminders per medication
 - Add notes for each medication
 - Edit and delete medication entries
 - Visual time-of-day indicators
