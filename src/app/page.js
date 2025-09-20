@@ -6,18 +6,25 @@ export default function Home() {
       {/* Hero Section */}
       <div className="relative overflow-hidden">
         <div className="absolute inset-0 bg-gradient-to-br from-slate-100/40 via-gray-100/30 to-zinc-100/40"></div>
-        <div className="relative max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 py-2 sm:py-12 lg:py-16 pb-8 sm:pb-12 lg:pb-16">
+        <div className="relative max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 py-4 lg:py-16  lg:pb-16">
           <div className="text-center fade-in-up">
             {/* Mobile Hero - Different Layout */}
             <div className="sm:hidden">
-              <h1 className="text-lg font-bold text-blue-600 mb-3">
+              {/* Logo Icon */}
+              <div className="w-16 h-16 bg-gradient-to-br from-blue-600 to-indigo-600 rounded-2xl flex items-center justify-center mx-auto mb-4">
+                <svg className="w-8 h-8 text-white" fill="currentColor" viewBox="0 0 24 24">
+                  <path d="M4.318 6.318a4.5 4.5 0 000 6.364L12 20.364l7.682-7.682a4.5 4.5 0 00-6.364-6.364L12 7.636l-1.318-1.318a4.5 4.5 0 00-6.364 0z" />
+                </svg>
+              </div>
+              
+              <h1 className="text-2xl font-bold text-slate-900 mb-2">
                 FlareCare
               </h1>
-              <p className="text-2xl font-extrabold text-slate-900 mb-4 leading-normal" style={{fontFamily: 'Inter, -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif'}}>
-                Your personal companion for managing <span className="text-blue-600">Crohn's & Colitis</span> symptoms
+              <p className="text-lg font-semibold text-blue-600 mb-4">
+                Crohn's & Colitis Companion
               </p>
               <p className="text-base text-slate-600 mb-6 leading-relaxed">
-                Track your symptoms, manage medications, and generate detailed reports to help you and your healthcare team make informed decisions.
+                Track symptoms, manage medications, and generate reports for better health decisions.
               </p>
             </div>
 
