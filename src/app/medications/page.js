@@ -5,6 +5,7 @@ import { useDataSync } from '@/lib/useDataSync'
 import ConfirmationModal from '@/components/ConfirmationModal'
 import SyncSettings from '@/components/SyncSettings'
 import reminderService from '@/lib/reminderService'
+import TimePicker from '@/components/TimePicker'
 
 export default function MedicationsPage() {
   const { data: medications, setData: setMedications, deleteData: deleteMedication, syncEnabled, setSyncEnabled, isOnline, isSyncing, syncToCloud, fetchFromCloud } = useDataSync('flarecare-medications', [])
@@ -14,30 +15,30 @@ export default function MedicationsPage() {
   const [formData, setFormData] = useState({
     name: '',
     dosage: '',
-    timeOfDay: '7:00',
+    timeOfDay: '07:00',
     customTime: '',
-    remindersEnabled: true,
+    remindersEnabled: false,
     notes: ''
   })
 
   const timeOptions = [
     { value: 'custom', label: 'Custom Time' },
-    { value: '7:00', label: '7:00 AM' },
-    { value: '8:00', label: '8:00 AM' },
-    { value: '9:00', label: '9:00 AM' },
-    { value: '10:00', label: '10:00 AM' },
-    { value: '11:00', label: '11:00 AM' },
-    { value: '12:00', label: '12:00 PM (Noon)' },
-    { value: '13:00', label: '1:00 PM' },
-    { value: '14:00', label: '2:00 PM' },
-    { value: '15:00', label: '3:00 PM' },
-    { value: '16:00', label: '4:00 PM' },
-    { value: '17:00', label: '5:00 PM' },
-    { value: '18:00', label: '6:00 PM' },
-    { value: '19:00', label: '7:00 PM' },
-    { value: '20:00', label: '8:00 PM' },
-    { value: '21:00', label: '9:00 PM' },
-    { value: '22:00', label: '10:00 PM' },
+    { value: '07:00', label: '07:00' },
+    { value: '08:00', label: '08:00' },
+    { value: '09:00', label: '09:00' },
+    { value: '10:00', label: '10:00' },
+    { value: '11:00', label: '11:00' },
+    { value: '12:00', label: '12:00' },
+    { value: '13:00', label: '13:00' },
+    { value: '14:00', label: '14:00' },
+    { value: '15:00', label: '15:00' },
+    { value: '16:00', label: '16:00' },
+    { value: '17:00', label: '17:00' },
+    { value: '18:00', label: '18:00' },
+    { value: '19:00', label: '19:00' },
+    { value: '20:00', label: '20:00' },
+    { value: '21:00', label: '21:00' },
+    { value: '22:00', label: '22:00' },
     { value: 'as-needed', label: 'As Needed' }
   ]
 
@@ -77,11 +78,22 @@ export default function MedicationsPage() {
     setIsAdding(false)
   }
 
-  const handleInputChange = (e) => {
-    const { name, value } = e.target
+  const handleInputChange = async (e) => {
+    const { name, value, type, checked } = e.target
+    
+    console.log('Input change:', { name, value, type, checked })
+    console.log('Notification permission:', Notification.permission)
+    
+    // Request notification permission when reminders checkbox is checked
+    if (name === 'remindersEnabled' && checked && Notification.permission === 'default') {
+      console.log('Requesting notification permission...')
+      await Notification.requestPermission()
+      console.log('Permission result:', Notification.permission)
+    }
+    
     setFormData(prev => ({
       ...prev,
-      [name]: value
+      [name]: type === 'checkbox' ? checked : value
     }))
   }
 
@@ -102,14 +114,43 @@ export default function MedicationsPage() {
     setFormData({
       name: '',
       dosage: '',
-      timeOfDay: '7:00',
+      timeOfDay: '07:00',
       customTime: '',
-      remindersEnabled: true,
+      remindersEnabled: false,
       notes: ''
     })
     setEditingId(null)
     setIsAdding(false)
   }
+
+  // Update global reminder service when medications change
+  useEffect(() => {
+    console.log('=== MEDICATIONS CHANGED ===')
+    console.log('Medications array:', medications)
+    medications.forEach((med, index) => {
+      console.log(`Medication ${index}:`, {
+        name: med.name,
+        timeOfDay: med.timeOfDay,
+        customTime: med.customTime,
+        remindersEnabled: med.remindersEnabled,
+        updatedAt: med.updatedAt
+      })
+    })
+    
+    reminderService.updateMedications(medications)
+    
+    // Start the reminder service if there are medications with reminders enabled
+    const medicationsWithReminders = medications.filter(med => med.remindersEnabled)
+    console.log('Medications with reminders enabled:', medicationsWithReminders)
+    
+    if (medicationsWithReminders.length > 0) {
+      console.log('Starting reminder service...')
+      reminderService.start(medications)
+    } else {
+      console.log('No medications with reminders, stopping service...')
+      reminderService.stop()
+    }
+  }, [medications])
 
   const handleDeleteMedication = (id) => {
     setDeleteModal({ isOpen: true, id })
@@ -232,42 +273,23 @@ export default function MedicationsPage() {
 
             <div className="grid md:grid-cols-2 gap-6">
               <div>
-                <label htmlFor="timeOfDay" className="block text-sm font-medium text-gray-700 mb-2">
+                <label className="block text-sm font-medium text-gray-700 mb-2">
                   Reminder Time
                 </label>
-                 <select
-                   id="timeOfDay"
-                   name="timeOfDay"
-                   value={formData.timeOfDay}
-                   onChange={handleInputChange}
-                   className="input-field appearance-none bg-no-repeat bg-right pr-10"
-                   style={{
-                     backgroundImage: `url("data:image/svg+xml,%3csvg xmlns='http://www.w3.org/2000/svg' fill='none' viewBox='0 0 20 20'%3e%3cpath stroke='%236b7280' stroke-linecap='round' stroke-linejoin='round' stroke-width='1.5' d='m6 8 4 4 4-4'/%3e%3c/svg%3e")`,
-                     backgroundPosition: 'right 0.75rem center',
-                     backgroundSize: '1.5em 1.5em'
-                   }}
-                 >
-                  {timeOptions.map(option => (
-                    <option key={option.value} value={option.value}>
-                      {option.label}
-                    </option>
-                  ))}
-                </select>
+                <TimePicker
+                  value={formData.timeOfDay}
+                  onChange={(value) => setFormData(prev => ({ ...prev, timeOfDay: value }))}
+                />
               </div>
 
               {formData.timeOfDay === 'custom' && (
                 <div>
-                  <label htmlFor="customTime" className="block text-sm font-medium text-gray-700 mb-2">
+                  <label className="block text-sm font-medium text-gray-700 mb-2">
                     Custom Time
                   </label>
-                  <input
-                    type="time"
-                    id="customTime"
-                    name="customTime"
+                  <TimePicker
                     value={formData.customTime}
-                    onChange={handleInputChange}
-                    className="input-field"
-                    required={formData.timeOfDay === 'custom'}
+                    onChange={(value) => setFormData(prev => ({ ...prev, customTime: value }))}
                   />
                 </div>
               )}
@@ -279,10 +301,7 @@ export default function MedicationsPage() {
                  id="remindersEnabled"
                  name="remindersEnabled"
                  checked={formData.remindersEnabled}
-                 onChange={(e) => setFormData(prev => ({
-                   ...prev,
-                   remindersEnabled: e.target.checked
-                 }))}
+                 onChange={handleInputChange}
                  className="h-4 w-4 text-blue-600 focus:ring-blue-500 border-blue-300 rounded accent-blue-600"
                />
               <label htmlFor="remindersEnabled" className="ml-2 block text-sm text-gray-700">

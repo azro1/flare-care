@@ -8,11 +8,13 @@ export default function ReminderProvider() {
   const { data: medications } = useDataSync('flarecare-medications', [])
 
   useEffect(() => {
+    console.log('ReminderProvider: Starting reminder service with medications:', medications)
     // Start the global reminder service
     reminderService.start(medications)
 
     // Cleanup on unmount
     return () => {
+      console.log('ReminderProvider: Stopping reminder service')
       reminderService.stop()
     }
   }, [medications])

@@ -4,6 +4,7 @@ import { useState, useEffect } from 'react'
 import { useDataSync } from '@/lib/useDataSync'
 import ConfirmationModal from '@/components/ConfirmationModal'
 import SyncSettings from '@/components/SyncSettings'
+import DatePicker from '@/components/DatePicker'
 
 export default function SymptomsPage() {
   const { data: symptoms, setData: setSymptoms, deleteData: deleteSymptom, syncEnabled, setSyncEnabled, isOnline, isSyncing, syncToCloud, fetchFromCloud } = useDataSync('flarecare-symptoms', [])
@@ -123,15 +124,14 @@ export default function SymptomsPage() {
               <label htmlFor="symptomStartDate" className="block text-sm font-medium text-gray-700 mb-2">
                 When did symptoms begin?
               </label>
-              <input
-                type="date"
-                id="symptomStartDate"
-                name="symptomStartDate"
-                value={formData.symptomStartDate}
-                onChange={handleInputChange}
-                className="input-field"
-                required
-              />
+                      <DatePicker
+                        id="symptomStartDate"
+                        name="symptomStartDate"
+                        value={formData.symptomStartDate}
+                        onChange={(value) => setFormData(prev => ({ ...prev, symptomStartDate: value }))}
+                        placeholder="Select start date"
+                        className="w-full"
+                      />
             </div>
 
             <div>
@@ -165,22 +165,21 @@ export default function SymptomsPage() {
             </div>
           </div>
 
-          {!formData.isOngoing && (
-            <div>
-              <label htmlFor="symptomEndDate" className="block text-sm font-medium text-gray-700 mb-2">
-                When did symptoms end?
-              </label>
-              <input
-                type="date"
-                id="symptomEndDate"
-                name="symptomEndDate"
-                value={formData.symptomEndDate}
-                onChange={handleInputChange}
-                className="input-field"
-                required={!formData.isOngoing}
-              />
-            </div>
-          )}
+            {!formData.isOngoing && (
+              <div>
+                <label htmlFor="symptomEndDate" className="block text-sm font-medium text-gray-700 mb-2">
+                  When did symptoms end?
+                </label>
+                        <DatePicker
+                          id="symptomEndDate"
+                          name="symptomEndDate"
+                          value={formData.symptomEndDate}
+                          onChange={(value) => setFormData(prev => ({ ...prev, symptomEndDate: value }))}
+                          placeholder="Select end date"
+                          className="w-full"
+                        />
+              </div>
+            )}
 
           <div>
             <label htmlFor="severity" className="block text-sm font-medium text-gray-700 mb-2">
