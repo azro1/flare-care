@@ -177,6 +177,7 @@ export default function SymptomsPage() {
                           onChange={(value) => setFormData(prev => ({ ...prev, symptomEndDate: value }))}
                           placeholder="Select end date"
                           className="w-full"
+                          minDate={formData.symptomStartDate}
                         />
               </div>
             )}
@@ -255,15 +256,15 @@ export default function SymptomsPage() {
                 <div className="flex justify-between items-start mb-3">
                   <div className="flex items-center space-x-3">
                     <span className="text-sm text-gray-500">
-                      {new Date(symptom.symptomStartDate).toLocaleDateString('en-US', {
+                      {new Date(symptom.symptomStartDate).toLocaleDateString('en-GB', {
                         weekday: 'short',
-                        year: 'numeric',
+                        day: 'numeric',
                         month: 'short',
-                        day: 'numeric'
+                        year: 'numeric'
                       })}
-                      {symptom.isOngoing ? ' - Ongoing' : ` to ${new Date(symptom.symptomEndDate).toLocaleDateString('en-US', {
-                        month: 'short',
-                        day: 'numeric'
+                      {symptom.isOngoing ? ' - Ongoing' : ` to ${new Date(symptom.symptomEndDate).toLocaleDateString('en-GB', {
+                        day: 'numeric',
+                        month: 'short'
                       })}`}
                     </span>
                     <span className={`text-center px-2 py-1 rounded-full text-xs font-medium ${getSeverityColor(symptom.severity)}`}>

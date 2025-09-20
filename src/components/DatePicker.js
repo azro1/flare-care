@@ -2,7 +2,7 @@
 
 import { useState, useRef, useEffect } from 'react'
 
-export default function DatePicker({ value, onChange, className = '', placeholder = 'Select date' }) {
+export default function DatePicker({ value, onChange, className = '', placeholder = 'Select date', minDate = null }) {
   const [isOpen, setIsOpen] = useState(false)
   const [selectedDate, setSelectedDate] = useState('')
   const [selectedMonth, setSelectedMonth] = useState('')
@@ -23,6 +23,23 @@ export default function DatePicker({ value, onChange, className = '', placeholde
     }
   }, [value])
 
+  // Auto-set year from minDate when dropdown opens (but let user pick month)
+  useEffect(() => {
+    if (isOpen && minDate && !selectedYear) {
+      const minDateObj = new Date(minDate)
+      setSelectedYear(minDateObj.getFullYear().toString())
+      // Only auto-set month if it's the current year and we're in the start month
+      const currentDate = new Date()
+      const currentYear = currentDate.getFullYear().toString()
+      const currentMonth = (currentDate.getMonth() + 1).toString().padStart(2, '0')
+      const minMonth = (minDateObj.getMonth() + 1).toString().padStart(2, '0')
+      
+      if (selectedYear === currentYear && currentMonth === minMonth) {
+        setSelectedMonth(minMonth)
+      }
+    }
+  }, [isOpen, minDate, selectedYear, selectedMonth])
+
   // Close dropdown when clicking outside
   useEffect(() => {
     function handleClickOutside(event) {
@@ -41,9 +58,18 @@ export default function DatePicker({ value, onChange, className = '', placeholde
     setSelectedYear(year)
     
     if (month && day && year) {
-      const formattedDate = `${year}-${month}-${day}`
-      setSelectedDate(formattedDate)
-      onChange(formattedDate)
+      // Validate the date exists (e.g., Feb 30th should not become Mar 2nd)
+      const testDate = new Date(year, month - 1, day)
+      if (testDate.getFullYear() == year && 
+          testDate.getMonth() == month - 1 && 
+          testDate.getDate() == day) {
+        const formattedDate = `${year}-${month}-${day}`
+        setSelectedDate(formattedDate)
+        onChange(formattedDate)
+      } else {
+        // Invalid date, don't update
+        console.log('Invalid date:', month, day, year)
+      }
     }
   }
 
@@ -85,6 +111,61 @@ export default function DatePicker({ value, onChange, className = '', placeholde
     return year.toString()
   })
 
+  // Filter years, months, and days based on minDate
+  const getAvailableYears = () => {
+    if (!minDate) return years
+    const minYear = new Date(minDate).getFullYear().toString()
+    return years.filter(year => year >= minYear)
+  }
+
+  const getAvailableMonths = () => {
+    if (!minDate) return months
+    const minDateObj = new Date(minDate)
+    const minYear = minDateObj.getFullYear().toString()
+    const minMonth = (minDateObj.getMonth() + 1).toString().padStart(2, '0')
+    const currentDate = new Date()
+    const currentYear = currentDate.getFullYear().toString()
+    const currentMonth = (currentDate.getMonth() + 1).toString().padStart(2, '0')
+    
+    if (selectedYear === minYear) {
+      // Same year as start date - show from start month to current month (if current year) or end of year
+      const maxMonth = (selectedYear === currentYear) ? currentMonth : '12'
+      return months.filter(month => month.value >= minMonth && month.value <= maxMonth)
+    }
+    return []
+  }
+
+  const getAvailableDays = () => {
+    if (!minDate) {
+      // Get valid days for selected month/year
+      if (selectedMonth && selectedYear) {
+        const daysInMonth = new Date(selectedYear, selectedMonth, 0).getDate()
+        return Array.from({ length: daysInMonth }, (_, i) => (i + 1).toString().padStart(2, '0'))
+      }
+      return days
+    }
+    
+    const minDateObj = new Date(minDate)
+    const minYear = minDateObj.getFullYear().toString()
+    const minMonth = (minDateObj.getMonth() + 1).toString().padStart(2, '0')
+    const minDay = minDateObj.getDate().toString().padStart(2, '0')
+    
+    if (selectedYear === minYear && selectedMonth === minMonth) {
+      // Get valid days for the selected month and filter from min day
+      const daysInMonth = new Date(selectedYear, selectedMonth, 0).getDate()
+      const validDays = Array.from({ length: daysInMonth }, (_, i) => (i + 1).toString().padStart(2, '0'))
+      return validDays.filter(day => day >= minDay)
+    }
+    
+    // Get valid days for selected month/year
+    if (selectedMonth && selectedYear) {
+      const daysInMonth = new Date(selectedYear, selectedMonth, 0).getDate()
+      return Array.from({ length: daysInMonth }, (_, i) => (i + 1).toString().padStart(2, '0'))
+    }
+    
+    return days
+  }
+
   return (
     <div className={`relative ${className}`} ref={dropdownRef}>
       <button
@@ -103,35 +184,8 @@ export default function DatePicker({ value, onChange, className = '', placeholde
       </button>
 
       {isOpen && (
-        <div className="absolute z-50 w-full mt-1 bg-white border border-gray-200 rounded-xl shadow-lg">
+        <div className="absolute z-[99999] w-full mt-1 bg-white border border-gray-200 rounded-xl shadow-lg">
           <div className="p-4">
-            {/* Quick Date Buttons */}
-            <div className="mb-4">
-              <div className="grid grid-cols-2 gap-2">
-                {[
-                  { label: 'Today', getDate: () => new Date() },
-                  { label: 'Yesterday', getDate: () => { const d = new Date(); d.setDate(d.getDate() - 1); return d } },
-                  { label: '1 week ago', getDate: () => { const d = new Date(); d.setDate(d.getDate() - 7); return d } },
-                  { label: '1 month ago', getDate: () => { const d = new Date(); d.setMonth(d.getMonth() - 1); return d } }
-                ].map(dateOption => {
-                  const date = dateOption.getDate()
-                  const month = (date.getMonth() + 1).toString().padStart(2, '0')
-                  const day = date.getDate().toString().padStart(2, '0')
-                  const year = date.getFullYear().toString()
-                  
-                  return (
-                    <button
-                      key={dateOption.label}
-                      type="button"
-                      onClick={() => handleDateChange(month, day, year)}
-                      className="px-3 py-2 text-sm text-gray-700 bg-gray-100 hover:bg-gray-200 rounded-lg transition-colors"
-                    >
-                      {dateOption.label}
-                    </button>
-                  )
-                })}
-              </div>
-            </div>
 
             <div className="pt-4 border-t border-gray-200">
               <div className="flex items-center space-x-3">
@@ -149,7 +203,7 @@ export default function DatePicker({ value, onChange, className = '', placeholde
                     }}
                   >
                     <option value="">--</option>
-                    {days.map(day => (
+                    {getAvailableDays().map(day => (
                       <option key={day} value={day}>{day}</option>
                     ))}
                   </select>
@@ -169,7 +223,7 @@ export default function DatePicker({ value, onChange, className = '', placeholde
                     }}
                   >
                     <option value="">--</option>
-                    {months.map(month => (
+                    {getAvailableMonths().map(month => (
                       <option key={month.value} value={month.value}>{month.label}</option>
                     ))}
                   </select>
@@ -189,7 +243,7 @@ export default function DatePicker({ value, onChange, className = '', placeholde
                     }}
                   >
                     <option value="">--</option>
-                    {years.map(year => (
+                    {getAvailableYears().map(year => (
                       <option key={year} value={year}>{year}</option>
                     ))}
                   </select>

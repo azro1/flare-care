@@ -109,10 +109,6 @@
            }
          }
   
-  .feature-card::before {
-    content: '';
-    @apply absolute inset-0 bg-gradient-to-br from-blue-500/10 to-indigo-500/10 opacity-0 transition-opacity duration-500 group-hover:opacity-100;
-  }
   
   .feature-icon {
     @apply w-16 h-16 bg-gradient-to-br from-blue-100 to-indigo-100 rounded-2xl flex items-center justify-center mx-auto mb-4 group-hover:from-blue-200 group-hover:to-indigo-200 transition-all duration-300 group-hover:scale-110;

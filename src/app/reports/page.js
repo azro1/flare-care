@@ -4,6 +4,7 @@ import { useState, useEffect } from 'react'
 import { useDataSync } from '@/lib/useDataSync'
 import jsPDF from 'jspdf'
 import ConfirmationModal from '@/components/ConfirmationModal'
+import DatePicker from '@/components/DatePicker'
 
 export default function ReportsPage() {
   const { data: symptoms } = useDataSync('flarecare-symptoms', [])
@@ -398,24 +399,24 @@ export default function ReportsPage() {
             <label htmlFor="startDate" className="block text-sm font-medium text-gray-700 mb-2">
               Start Date
             </label>
-            <input
-              type="date"
+            <DatePicker
               id="startDate"
               value={dateRange.startDate}
-              onChange={(e) => setDateRange(prev => ({ ...prev, startDate: e.target.value }))}
-              className="input-field"
+              onChange={(value) => setDateRange(prev => ({ ...prev, startDate: value }))}
+              placeholder="Select start date"
+              className="w-full"
             />
           </div>
           <div>
             <label htmlFor="endDate" className="block text-sm font-medium text-gray-700 mb-2">
               End Date
             </label>
-            <input
-              type="date"
+            <DatePicker
               id="endDate"
               value={dateRange.endDate}
-              onChange={(e) => setDateRange(prev => ({ ...prev, endDate: e.target.value }))}
-              className="input-field"
+              onChange={(value) => setDateRange(prev => ({ ...prev, endDate: value }))}
+              placeholder="Select end date"
+              className="w-full"
             />
           </div>
         </div>
