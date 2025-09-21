@@ -51,7 +51,7 @@ export default function Toast({ message, type = 'success', duration = 3000, onCl
   }
 
   return (
-    <div className={`fixed top-4 right-4 z-50 transition-all duration-300 transform ${
+    <div className={`fixed top-20 right-4 z-50 transition-all duration-300 transform ${
       isVisible ? 'translate-x-0 opacity-100' : 'translate-x-full opacity-0'
     }`}>
       <div className={`${getToastStyles()} px-6 py-4 rounded-lg shadow-lg flex items-start space-x-3 max-w-sm`}>

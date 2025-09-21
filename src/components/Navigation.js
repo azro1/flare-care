@@ -4,12 +4,23 @@ import Link from 'next/link'
 import { usePathname } from 'next/navigation'
 import { useState, useEffect } from 'react'
 import { useAuth } from '../lib/AuthContext'
+import { useToast } from '../lib/ToastContext'
 import SyncSettings from './SyncSettings'
 
 export default function Navigation() {
   const pathname = usePathname()
   const [isMenuOpen, setIsMenuOpen] = useState(false)
   const { user, isAuthenticated, signOut } = useAuth()
+  const { addToast } = useToast()
+
+  const handleSignOut = async () => {
+    try {
+      await signOut()
+      addToast('Successfully signed out!', 'success')
+    } catch (error) {
+      addToast('Error signing out', 'error')
+    }
+  }
 
   // Close menu when clicking outside
   useEffect(() => {
@@ -79,7 +90,7 @@ export default function Navigation() {
                     <span className="text-sm text-slate-700 font-medium hidden lg:block">{user?.email}</span>
                   </div>
                   <button
-                    onClick={signOut}
+                    onClick={handleSignOut}
                     className="nav-link nav-link-inactive bg-red-50 hover:bg-red-100 text-red-700 hover:text-red-800"
                   >
                     Sign Out
@@ -144,7 +155,7 @@ export default function Navigation() {
                     </div>
                     <button
                       onClick={() => {
-                        signOut()
+                        handleSignOut()
                         setIsMenuOpen(false)
                       }}
                       className="block w-full px-4 py-3 text-base font-medium transition-all duration-200 transform bg-red-50 hover:bg-red-100 text-red-700 hover:text-red-800"
