@@ -9,7 +9,7 @@ export default function Footer() {
   
   // Pages that should have minimal footer
   const minimalFooterPages = ['/auth', '/auth/callback']
-  const isMinimalFooter = minimalFooterPages.includes(pathname) || (!loading && !isAuthenticated)
+  const isMinimalFooter = minimalFooterPages.includes(pathname) || (loading || !isAuthenticated)
   
   // Minimal footer for auth and landing pages
   if (isMinimalFooter) {
