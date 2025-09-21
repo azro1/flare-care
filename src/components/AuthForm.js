@@ -41,7 +41,7 @@ export default function AuthForm() {
           <h2 className="mt-6 text-center text-3xl font-extrabold text-gray-900">
             Welcome to FlareCare
           </h2>
-          <p className="mt-2 text-center text-sm text-gray-600">
+          <p className="mt-6 text-center text-sm text-gray-600">
             Your personal health companion for tracking Crohn's & Colitis symptoms
           </p>
         </div>
