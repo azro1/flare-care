@@ -118,7 +118,7 @@ export default function Navigation() {
                   className={`block px-4 py-3 text-base font-medium transition-all duration-200 transform lg:hover:scale-105 ${
                     pathname === item.href
                       ? 'bg-gradient-to-r from-blue-100 to-indigo-100 text-blue-700 shadow-sm'
-                      : 'text-gray-600 hover:text-gray-900 hover:bg-blue-100'
+                      : 'text-gray-600 hover:text-gray-900 hover:bg-gray-100'
                   }`}
                   onClick={() => setIsMenuOpen(false)}
                   style={{

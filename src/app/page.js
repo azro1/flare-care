@@ -23,13 +23,14 @@ export default function Home() {
     return (
       <div className="flex items-center justify-center min-h-[500px] sm:h-[calc(100vh-450px)]">
         <div className="text-center max-w-md mx-auto px-4">
-          <div className="w-16 h-16 bg-gradient-to-br from-blue-600 to-indigo-600 rounded-2xl flex items-center justify-center mx-auto mb-6">
-            <svg className="w-8 h-8 text-white" fill="currentColor" viewBox="0 0 24 24">
-              <path d="M4.318 6.318a4.5 4.5 0 000 6.364L12 20.364l7.682-7.682a4.5 4.5 0 00-6.364-6.364L12 7.636l-1.318-1.318a4.5 4.5 0 00-6.364 0z" />
+          <div className="mx-auto h-12 w-12 flex items-center justify-center rounded-full bg-blue-100 mb-6">
+            <svg className="h-6 w-6 text-blue-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4.318 6.318a4.5 4.5 0 000 6.364L12 20.364l7.682-7.682a4.5 4.5 0 00-6.364-6.364L12 7.636l-1.318-1.318a4.5 4.5 0 00-6.364 0z" />
             </svg>
           </div>
-          <h1 className="text-2xl font-bold text-slate-900 mb-4">Welcome to FlareCare</h1>
-          <p className="text-slate-600 mb-6">Sign in to access your health tracking dashboard and sync your data across devices.</p>
+          <h1 className="text-3xl font-bold text-slate-900 mb-4">FlareCare</h1>
+          <p className="text-lg text-slate-600 mb-4">Track your Crohn's & Colitis journey</p>
+          <p className="text-slate-600 mb-8">Log symptoms, manage medications, and generate reports for your healthcare team.</p>
           <Link href="/auth" className="btn-primary inline-flex items-center gap-2">
             <span>Sign In</span>
             <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
