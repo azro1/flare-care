@@ -29,7 +29,7 @@ export default function Home() {
             </svg>
           </div>
           <h1 className="text-3xl font-bold text-slate-900 mb-4">FlareCare</h1>
-          <p className="text-lg text-slate-600 mb-4">Track your Crohn's & Colitis journey</p>
+          <p className="text-lg font-semibold text-blue-600 mb-4">Track your Crohn's & Colitis journey</p>
           <p className="text-slate-600 mb-8 text-sm">Log symptoms, manage medications, and generate reports for your healthcare team.</p>
           <Link href="/auth" className="btn-primary inline-flex items-center gap-2">
             <span>Sign In</span>

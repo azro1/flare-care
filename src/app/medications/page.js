@@ -207,6 +207,15 @@ function MedicationsPageContent() {
     return option ? option.label : medication.timeOfDay
   }
 
+  const formatUKDate = (dateString) => {
+    if (!dateString) return ''
+    const date = new Date(dateString)
+    const day = date.getDate().toString().padStart(2, '0')
+    const month = (date.getMonth() + 1).toString().padStart(2, '0')
+    const year = date.getFullYear()
+    return `${day}/${month}/${year}`
+  }
+
   // Update global reminder service when medications change
   useEffect(() => {
     reminderService.updateMedications(medications)
@@ -420,9 +429,9 @@ function MedicationsPageContent() {
                 )}
 
                 <div className="mt-3 pt-3 border-t border-gray-100 text-xs text-gray-500">
-                  Added {new Date(medication.createdAt).toLocaleDateString()}
+                  Added {formatUKDate(medication.createdAt)}
                   {medication.updatedAt && medication.updatedAt !== medication.createdAt && (
-                    <span> • Updated {new Date(medication.updatedAt).toLocaleDateString()}</span>
+                    <span> • Updated {formatUKDate(medication.updatedAt)}</span>
                   )}
                 </div>
               </div>
@@ -443,8 +452,9 @@ function MedicationsPageContent() {
               FlareCare will send browser notifications when it's time to take your medications.
             </p>
             <p className="text-xs text-blue-600">
-              💡 <strong>Tip:</strong> Make sure to allow notifications in your browser for the best experience. 
-              You can enable/disable reminders for each medication individually.
+              💡 <strong>Tip:</strong> Reminders only work in your web browser. 
+                  They won’t show up as push notifications on your phone. 
+                  You can turn reminders on or off for each medication.
             </p>
           </div>
         </div>
