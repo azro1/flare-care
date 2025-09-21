@@ -35,7 +35,7 @@ export default function AuthForm() {
   }
 
   return (
-    <div className="flex items-center justify-center bg-gray-50 min-h-[350px] px-4 sm:h-[calc(100vh-250px)] sm:px-6 lg:px-8">
+    <div className="flex items-center justify-center bg-gray-50 min-h-[450px] px-4 sm:h-[calc(100vh-250px)] sm:px-6 lg:px-8">
       <div className="max-w-md w-full space-y-8">
         <div>
           <h2 className="mt-6 text-center text-3xl font-extrabold text-gray-900">
