@@ -1,8 +1,47 @@
+'use client'
+
 import Link from 'next/link'
+import { useAuth } from '@/lib/AuthContext'
 
 export default function Home() {
+  const { isAuthenticated, loading } = useAuth()
+
+  // Show loading state while checking authentication
+  if (loading) {
+    return (
+      <div className="flex items-center justify-center min-h-[500px] sm:h-[calc(100vh-450px)]">
+        <div className="text-center">
+          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600 mx-auto"></div>
+          <p className="mt-4 text-gray-600">Loading...</p>
+        </div>
+      </div>
+    )
+  }
+
+  // If not authenticated, show a message about signing in
+  if (!isAuthenticated) {
+    return (
+      <div className="flex items-center justify-center min-h-[500px] sm:h-[calc(100vh-450px)]">
+        <div className="text-center max-w-md mx-auto px-4">
+          <div className="w-16 h-16 bg-gradient-to-br from-blue-600 to-indigo-600 rounded-2xl flex items-center justify-center mx-auto mb-6">
+            <svg className="w-8 h-8 text-white" fill="currentColor" viewBox="0 0 24 24">
+              <path d="M4.318 6.318a4.5 4.5 0 000 6.364L12 20.364l7.682-7.682a4.5 4.5 0 00-6.364-6.364L12 7.636l-1.318-1.318a4.5 4.5 0 00-6.364 0z" />
+            </svg>
+          </div>
+          <h1 className="text-2xl font-bold text-slate-900 mb-4">Welcome to FlareCare</h1>
+          <p className="text-slate-600 mb-6">Sign in to access your health tracking dashboard and sync your data across devices.</p>
+          <Link href="/auth" className="btn-primary inline-flex items-center gap-2">
+            <span>Sign In</span>
+            <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 7l5 5m0 0l-5 5m5-5H6" />
+            </svg>
+          </Link>
+        </div>
+      </div>
+    )
+  }
   return (
-    <div className="min-h-screen">
+    <div>
       {/* Hero Section */}
       <div className="relative overflow-hidden">
         <div className="absolute inset-0 bg-gradient-to-br from-slate-100/40 via-gray-100/30 to-zinc-100/40"></div>

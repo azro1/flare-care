@@ -1,6 +1,7 @@
 import { useState, useEffect, useRef } from 'react'
 import { useLocalStorage } from './useLocalStorage'
 import { supabase, TABLES, syncToSupabase, fetchFromSupabase, deleteFromSupabase } from './supabase'
+import { useAuth } from './AuthContext'
 
 export function useDataSync(key, initialValue = []) {
   const [isClient, setIsClient] = useState(false)
@@ -8,10 +9,11 @@ export function useDataSync(key, initialValue = []) {
   const [isOnline, setIsOnline] = useState(typeof window !== 'undefined' ? navigator.onLine : true)
   const [isSyncing, setIsSyncing] = useState(false)
   const [syncEnabled, setSyncEnabled] = useLocalStorage('flarecare-sync-enabled', false)
-  const [userId, setUserId] = useLocalStorage('flarecare-user-id', null)
+  const { user, isAuthenticated } = useAuth()
   const hasFetchedRef = useRef(false)
 
-  console.log(`useDataSync for ${key}:`, { syncEnabled, isOnline, userId, dataLength: localData.length })
+  const userId = user?.id
+  console.log(`useDataSync for ${key}:`, { syncEnabled, isOnline, userId, isAuthenticated, dataLength: localData.length })
 
   // Ensure we're on the client side
   useEffect(() => {
@@ -32,21 +34,13 @@ export function useDataSync(key, initialValue = []) {
     }
   }, [])
 
-  // Generate user ID if not exists
-  useEffect(() => {
-    if (typeof window === 'undefined') return
-    
-    if (!userId) {
-      const newUserId = `user_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`
-      setUserId(newUserId)
-    }
-  }, [userId, setUserId])
+  // No need to generate user ID - we get it from authentication
 
   // Sync data to Supabase when sync is enabled and online
   const syncToCloud = async () => {
-    console.log('syncToCloud called:', { syncEnabled, isOnline, userId, dataLength: localData.length })
-    if (!syncEnabled || !isOnline || !userId || localData.length === 0) {
-      console.log('Sync skipped:', { syncEnabled, isOnline, userId, dataLength: localData.length })
+    console.log('syncToCloud called:', { syncEnabled, isOnline, userId, isAuthenticated, dataLength: localData.length })
+    if (!syncEnabled || !isOnline || !userId || !isAuthenticated || localData.length === 0) {
+      console.log('Sync skipped:', { syncEnabled, isOnline, userId, isAuthenticated, dataLength: localData.length })
       return
     }
 
@@ -130,7 +124,7 @@ export function useDataSync(key, initialValue = []) {
 
   // Fetch data from Supabase when sync is enabled
   const fetchFromCloud = async () => {
-    if (!syncEnabled || !isOnline || !userId) return
+    if (!syncEnabled || !isOnline || !userId || !isAuthenticated) return
 
     setIsSyncing(true)
     try {
@@ -221,11 +215,11 @@ export function useDataSync(key, initialValue = []) {
 
   // Auto-sync when data changes and sync is enabled
   useEffect(() => {
-    if (syncEnabled && isOnline && userId) {
+    if (syncEnabled && isOnline && userId && isAuthenticated) {
       const timeoutId = setTimeout(syncToCloud, 2000) // Increased debounce to 2 seconds
       return () => clearTimeout(timeoutId)
     }
-  }, [localData, syncEnabled, isOnline, userId])
+  }, [localData, syncEnabled, isOnline, userId, isAuthenticated])
 
   // Sync existing local data when sync is first enabled
   useEffect(() => {
@@ -233,7 +227,7 @@ export function useDataSync(key, initialValue = []) {
     const currentSyncState = JSON.parse(localStorage.getItem('flarecare-sync-enabled') || 'false')
     console.log('Sync state changed - localStorage says:', currentSyncState, 'component state:', syncEnabled)
     
-    if (currentSyncState && isOnline && userId) {
+    if (currentSyncState && isOnline && userId && isAuthenticated) {
       // Force re-read from localStorage when sync is enabled
       const storedData = JSON.parse(localStorage.getItem(key) || '[]')
       console.log('Sync enabled - checking localStorage:', storedData)
@@ -248,15 +242,15 @@ export function useDataSync(key, initialValue = []) {
         console.log('No data in localStorage to sync')
       }
     }
-  }, [syncEnabled]) // Only trigger when syncEnabled changes
+  }, [syncEnabled, isAuthenticated]) // Trigger when syncEnabled or authentication changes
 
   // Fetch data on mount if sync is enabled (only once)
   useEffect(() => {
-    if (syncEnabled && isOnline && userId && !hasFetchedRef.current) {
+    if (syncEnabled && isOnline && userId && isAuthenticated && !hasFetchedRef.current) {
       hasFetchedRef.current = true
       // Don't fetch from cloud - let the sync effect handle pushing local data to cloud
     }
-  }, [syncEnabled, isOnline, userId])
+  }, [syncEnabled, isOnline, userId, isAuthenticated])
 
   // Enhanced setter that handles both local and cloud operations
   const setData = (newData) => {
@@ -265,10 +259,10 @@ export function useDataSync(key, initialValue = []) {
 
   // Enhanced delete function
   const deleteData = async (id) => {
-    console.log('deleteData called:', { id, syncEnabled, isOnline, userId })
+    console.log('deleteData called:', { id, syncEnabled, isOnline, userId, isAuthenticated })
     
     // Always try to delete from cloud if online and have userId
-    if (isOnline && userId) {
+    if (isOnline && userId && isAuthenticated) {
       try {
         const tableName = key.replace('flarecare-', '')
         console.log('Deleting from cloud:', { tableName, id, userId })
@@ -283,7 +277,7 @@ export function useDataSync(key, initialValue = []) {
         console.warn('Delete from cloud failed, but continuing with local delete:', error)
       }
     } else {
-      console.log('Skipping cloud delete - offline or no userId:', { isOnline, userId })
+      console.log('Skipping cloud delete - offline, no userId, or not authenticated:', { isOnline, userId, isAuthenticated })
     }
 
     // Always delete from local data
@@ -318,6 +312,7 @@ export function useDataSync(key, initialValue = []) {
     setSyncEnabled,
     syncToCloud,
     fetchFromCloud,
-    userId
+    userId,
+    isAuthenticated
   }
 }

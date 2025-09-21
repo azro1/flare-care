@@ -2,6 +2,8 @@ import './globals.css'
 import Navigation from '@/components/Navigation'
 import ReminderProvider from '@/components/ReminderProvider'
 import NotificationBanner from '@/components/NotificationBanner'
+import { AuthProvider } from '@/lib/AuthContext'
+import { ToastProvider } from '@/lib/ToastContext'
 
 export const metadata = {
   title: 'FlareCare - Crohn\'s & Colitis Management',
@@ -20,13 +22,15 @@ export default function RootLayout({ children }) {
         <link href="https://fonts.googleapis.com/css2?family=Merriweather:wght@300;400;700;900&family=Playfair+Display:wght@400;500;600;700;800;900&family=Inter:wght@400;500;600;700;800;900&display=swap" rel="stylesheet" />
       </head>
       <body className="min-h-screen bg-slate-50">
-        <ReminderProvider />
-        <NotificationBanner />
-        <div className="min-h-screen flex flex-col">
-          <Navigation />
-          <main className="flex-1 container mx-auto px-4 py-12">
-            {children}
-          </main>
+        <AuthProvider>
+          <ToastProvider>
+            <ReminderProvider />
+            <NotificationBanner />
+          <div className="min-h-screen flex flex-col">
+            <Navigation />
+            <main className="flex-1 container mx-auto px-4 py-12">
+              {children}
+            </main>
           <footer className="bg-white border-t border-gray-200 py-8 mt-auto">
             <div className="container mx-auto px-4 sm:px-6 lg:px-8">
               <div className="flex flex-col items-center text-center md:grid md:grid-cols-2 md:gap-8 md:items-start md:text-left lg:flex lg:flex-row lg:justify-between gap-8 mb-8">
@@ -73,6 +77,8 @@ export default function RootLayout({ children }) {
             </div>
           </footer>
         </div>
+          </ToastProvider>
+        </AuthProvider>
       </body>
     </html>
   )

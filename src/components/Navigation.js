@@ -3,10 +3,13 @@
 import Link from 'next/link'
 import { usePathname } from 'next/navigation'
 import { useState, useEffect } from 'react'
+import { useAuth } from '../lib/AuthContext'
+import SyncSettings from './SyncSettings'
 
 export default function Navigation() {
   const pathname = usePathname()
   const [isMenuOpen, setIsMenuOpen] = useState(false)
+  const { user, isAuthenticated, signOut } = useAuth()
 
   // Close menu when clicking outside
   useEffect(() => {
@@ -62,6 +65,28 @@ export default function Navigation() {
                 {item.label}
               </Link>
             ))}
+            
+            {/* User menu for authenticated users */}
+            {isAuthenticated && (
+              <div className="flex items-center space-x-3 ml-4 pl-4 border-l border-gray-200">
+                <div className="flex items-center space-x-3">
+                  <div className="flex items-center space-x-2">
+                    <div className="w-8 h-8 bg-blue-100 rounded-full flex items-center justify-center">
+                        <span className="text-blue-800 text-sm font-medium">
+                        {user?.email?.charAt(0).toUpperCase()}
+                      </span>
+                    </div>
+                    <span className="text-sm text-slate-700 font-medium hidden lg:block">{user?.email}</span>
+                  </div>
+                  <button
+                    onClick={signOut}
+                    className="nav-link nav-link-inactive bg-red-50 hover:bg-red-100 text-red-700 hover:text-red-800"
+                  >
+                    Sign Out
+                  </button>
+                </div>
+              </div>
+            )}
           </div>
 
           {/* Mobile menu button */}
@@ -97,13 +122,38 @@ export default function Navigation() {
                   }`}
                   onClick={() => setIsMenuOpen(false)}
                   style={{
-                    animationDelay: `${index * 100}ms`,
-                    animation: isMenuOpen ? 'slideInRight 0.3s ease-out forwards' : 'none'
+                    animationDelay: `${index * 50}ms`,
+                    animation: isMenuOpen ? 'fadeInDown 0.4s ease-out forwards' : 'none'
                   }}
                 >
                   {item.label}
                 </Link>
               ))}
+              
+              {/* Mobile user menu for authenticated users */}
+              {isAuthenticated && (
+                <div className="border-t border-gray-200 pt-4 mt-4">
+                  <div className="px-4 py-3">
+                    <div className="flex items-center space-x-3 mb-3">
+                      <div className="w-10 h-10 bg-blue-100 rounded-full flex items-center justify-center">
+                        <span className="text-blue-800 text-lg font-medium">
+                          {user?.email?.charAt(0).toUpperCase()}
+                        </span>
+                      </div>
+                      <div className="text-sm text-slate-700 font-medium">{user?.email}</div>
+                    </div>
+                    <button
+                      onClick={() => {
+                        signOut()
+                        setIsMenuOpen(false)
+                      }}
+                      className="block w-full px-4 py-3 text-base font-medium transition-all duration-200 transform bg-red-50 hover:bg-red-100 text-red-700 hover:text-red-800"
+                    >
+                      Sign Out
+                    </button>
+                  </div>
+                </div>
+              )}
             </div>
           </div>
         </div>

@@ -5,8 +5,9 @@ import { useDataSync } from '@/lib/useDataSync'
 import ConfirmationModal from '@/components/ConfirmationModal'
 import SyncSettings from '@/components/SyncSettings'
 import DatePicker from '@/components/DatePicker'
+import ProtectedRoute from '@/components/ProtectedRoute'
 
-export default function SymptomsPage() {
+function SymptomsPageContent() {
   const { data: symptoms, setData: setSymptoms, deleteData: deleteSymptom, syncEnabled, setSyncEnabled, isOnline, isSyncing, syncToCloud, fetchFromCloud } = useDataSync('flarecare-symptoms', [])
   const [formData, setFormData] = useState({
     symptomStartDate: new Date().toISOString().split('T')[0],
@@ -325,5 +326,13 @@ export default function SymptomsPage() {
         isDestructive={false}
       />
     </div>
+  )
+}
+
+export default function SymptomsPage() {
+  return (
+    <ProtectedRoute>
+      <SymptomsPageContent />
+    </ProtectedRoute>
   )
 }

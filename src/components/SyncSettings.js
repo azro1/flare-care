@@ -1,6 +1,7 @@
 'use client'
 
 import { useState } from 'react'
+import { useAuth } from '../lib/AuthContext'
 
 export default function SyncSettings({ 
   syncEnabled, 
@@ -10,11 +11,16 @@ export default function SyncSettings({
   syncToCloud, 
   fetchFromCloud 
 }) {
+  const { isAuthenticated } = useAuth()
   const [showSettings, setShowSettings] = useState(false)
 
   const handleSyncToggle = (enabled) => {
     if (enabled && !isOnline) {
       alert('You need to be online to enable cloud sync.')
+      return
+    }
+    if (enabled && !isAuthenticated) {
+      alert('You need to be signed in to enable cloud sync.')
       return
     }
     setSyncEnabled(enabled)
@@ -63,7 +69,7 @@ export default function SyncSettings({
                   type="checkbox"
                   checked={syncEnabled}
                   onChange={(e) => handleSyncToggle(e.target.checked)}
-                  disabled={!isOnline}
+                  disabled={!isOnline || !isAuthenticated}
                   className="sr-only peer"
                 />
                 <div className="w-11 h-6 bg-gray-200 peer-focus:outline-none peer-focus:ring-4 peer-focus:ring-blue-300 rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-blue-600"></div>
@@ -85,7 +91,7 @@ export default function SyncSettings({
             </div>
 
             {/* Sync Actions */}
-            {syncEnabled && isOnline && (
+            {syncEnabled && isOnline && isAuthenticated && (
               <div className="space-y-2">
                 <button
                   onClick={syncToCloud}
@@ -109,7 +115,7 @@ export default function SyncSettings({
               <p className="font-medium mb-1">How it works:</p>
               <ul className="space-y-1">
                 <li>• Your data is stored locally by default</li>
-                <li>• Enable sync to backup and access across devices</li>
+                <li>• Sign in to enable sync across devices</li>
                 <li>• Data is encrypted and only you can access it</li>
                 <li>• Works offline - syncs when you're back online</li>
               </ul>

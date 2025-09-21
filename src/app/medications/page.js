@@ -6,8 +6,9 @@ import ConfirmationModal from '@/components/ConfirmationModal'
 import SyncSettings from '@/components/SyncSettings'
 import reminderService from '@/lib/reminderService'
 import TimePicker from '@/components/TimePicker'
+import ProtectedRoute from '@/components/ProtectedRoute'
 
-export default function MedicationsPage() {
+function MedicationsPageContent() {
   const { data: medications, setData: setMedications, deleteData: deleteMedication, syncEnabled, setSyncEnabled, isOnline, isSyncing, syncToCloud, fetchFromCloud } = useDataSync('flarecare-medications', [])
   const [isAdding, setIsAdding] = useState(false)
   const [editingId, setEditingId] = useState(null)
@@ -457,5 +458,13 @@ export default function MedicationsPage() {
         isDestructive={true}
       />
     </div>
+  )
+}
+
+export default function MedicationsPage() {
+  return (
+    <ProtectedRoute>
+      <MedicationsPageContent />
+    </ProtectedRoute>
   )
 }

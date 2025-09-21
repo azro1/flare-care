@@ -197,3 +197,15 @@
     @apply w-14 h-14;
   }
 }
+
+/* Mobile menu animations */
+@keyframes fadeInDown {
+  from {
+    opacity: 0;
+    transform: translateY(-20px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}

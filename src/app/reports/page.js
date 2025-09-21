@@ -5,8 +5,9 @@ import { useDataSync } from '@/lib/useDataSync'
 import jsPDF from 'jspdf'
 import ConfirmationModal from '@/components/ConfirmationModal'
 import DatePicker from '@/components/DatePicker'
+import ProtectedRoute from '@/components/ProtectedRoute'
 
-export default function ReportsPage() {
+function ReportsPageContent() {
   const { data: symptoms } = useDataSync('flarecare-symptoms', [])
   const { data: medications } = useDataSync('flarecare-medications', [])
   const [reportData, setReportData] = useState(null)
@@ -564,5 +565,13 @@ export default function ReportsPage() {
         isDestructive={false}
       />
     </div>
+  )
+}
+
+export default function ReportsPage() {
+  return (
+    <ProtectedRoute>
+      <ReportsPageContent />
+    </ProtectedRoute>
   )
 }
