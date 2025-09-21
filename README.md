@@ -39,7 +39,7 @@ A personal companion app for managing Crohn's & Colitis symptoms, built with Nex
 - **Data validation** prevents empty report exports
 
 ### ☁️ Cloud Sync & Authentication
-- **User Authentication** - Secure email OTP login system
+- **User Authentication** - Secure Google OAuth login system
 - **Cross-device access** - Sign in on any device to access your data
 - **Local-first data storage** by default
 - **Optional Supabase cloud synchronization**
@@ -57,9 +57,9 @@ A personal companion app for managing Crohn's & Colitis symptoms, built with Nex
 - **Consistent color scheme** with blue gradients
 
 ### 🔒 Security & Validation
-- **Input sanitization** to prevent XSS attacks
-- **Form validation** with React Hook Form and Yup
-- **Secure authentication** with email OTP
+- **Input sanitization** to prevent XSS attacks using DOMPurify
+- **Form validation** with built-in HTML5 validation
+- **Secure authentication** with Google OAuth
 - **Data protection** with proper sanitization of user inputs
 - **Secure data operations** via Supabase's built-in client methods
 
@@ -112,7 +112,7 @@ A personal companion app for managing Crohn's & Colitis symptoms, built with Nex
 ## Usage
 
 ### Basic Usage
-1. **Sign in** - Enter your email to receive a secure login code
+1. **Sign in** - Click "Continue with Google" to sign in securely
 2. **Start by logging symptoms** - Click "Symptoms" and add your first entry
 3. **Add medications** - Go to "Medications" to set up your medication schedule
 4. **Generate reports** - Use the "Reports" page to create summaries for your healthcare team
