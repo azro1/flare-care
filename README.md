@@ -38,13 +38,14 @@ A personal companion app for managing Crohn's & Colitis symptoms, built with Nex
 - **Auto-pagination** for long reports
 - **Data validation** prevents empty report exports
 
-### ☁️ Cloud Sync (Optional)
-- Local-first data storage by default
-- Optional Supabase cloud synchronization
-- Access your data across multiple devices
-- Secure, encrypted data storage
-- Works offline with automatic sync when online
-- Green gradient sync button for better visibility
+### ☁️ Cloud Sync & Authentication
+- **User Authentication** - Secure email OTP login system
+- **Cross-device access** - Sign in on any device to access your data
+- **Local-first data storage** by default
+- **Optional Supabase cloud synchronization**
+- **Secure, encrypted data storage**
+- **Works offline** with automatic sync when online
+- **User isolation** - Each user only sees their own data
 
 ### 🎨 Design & UX
 - **Mobile-first responsive design** with optimized layouts
@@ -104,9 +105,10 @@ A personal companion app for managing Crohn's & Colitis symptoms, built with Nex
 ## Usage
 
 ### Basic Usage
-1. **Start by logging symptoms** - Click "Symptoms" and add your first entry
-2. **Add medications** - Go to "Medications" to set up your medication schedule
-3. **Generate reports** - Use the "Reports" page to create summaries for your healthcare team
+1. **Sign in** - Enter your email to receive a secure login code
+2. **Start by logging symptoms** - Click "Symptoms" and add your first entry
+3. **Add medications** - Go to "Medications" to set up your medication schedule
+4. **Generate reports** - Use the "Reports" page to create summaries for your healthcare team
 
 ### Cloud Sync (Optional)
 1. **Enable sync** - Toggle the sync switch on Symptoms or Medications pages
