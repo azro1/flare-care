@@ -308,7 +308,10 @@ function ReportsPageContent() {
   const formatUKDate = (dateString) => {
     if (!dateString) return ''
     const date = new Date(dateString)
-    return date.toLocaleDateString('en-GB')
+    const day = date.getDate().toString().padStart(2, '0')
+    const month = (date.getMonth() + 1).toString().padStart(2, '0')
+    const year = date.getFullYear()
+    return `${day}/${month}/${year}`
   }
 
   if (!reportData) {
@@ -423,7 +426,7 @@ function ReportsPageContent() {
         </div>
         <div className="flex flex-col sm:flex-row sm:justify-between sm:items-center">
           <div className="text-sm text-gray-600 mb-4 sm:mb-0">
-            Showing symptoms from {new Date(dateRange.startDate).toLocaleDateString()} to {new Date(dateRange.endDate).toLocaleDateString()}
+            Showing symptoms from {formatUKDate(dateRange.startDate)} to {formatUKDate(dateRange.endDate)}
           </div>
           <div className="flex space-x-3">
             <button onClick={() => handleExportClick(exportToPDF)} className="btn-primary whitespace-nowrap">
@@ -478,8 +481,8 @@ function ReportsPageContent() {
               {reportData.severityTrend.map((entry, index) => (
                 <div key={index} className="flex items-center space-x-4">
                   <div className="w-32 text-sm text-gray-600">
-                    {new Date(entry.date).toLocaleDateString()}
-                    {entry.isOngoing ? ' (Ongoing)' : ` - ${new Date(entry.endDate).toLocaleDateString()}`}
+                    {formatUKDate(entry.date)}
+                    {entry.isOngoing ? ' (Ongoing)' : ` - ${formatUKDate(entry.endDate)}`}
                   </div>
                   <div className="flex-1">
                     <div className="flex items-center space-x-2">

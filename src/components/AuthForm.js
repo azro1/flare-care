@@ -16,6 +16,14 @@ const emailSchema = yup.object({
     .required('Email is required')
     .email('Please enter a valid email address')
     .max(254, 'Email address is too long')
+    .test('no-disposable', 'Disposable email addresses are not allowed', function(value) {
+      const disposableDomains = [
+        '10minutemail.com', 'tempmail.org', 'guerrillamail.com', 
+        'mailinator.com', 'temp-mail.org', 'throwaway.email'
+      ]
+      const domain = value?.split('@')[1]?.toLowerCase()
+      return !disposableDomains.includes(domain)
+    })
 })
 
 const otpSchema = yup.object({
