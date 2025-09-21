@@ -133,7 +133,7 @@ export default function Navigation() {
               {/* Mobile user menu for authenticated users */}
               {isAuthenticated && (
                 <div className="border-t border-gray-200 pt-4 mt-4">
-                  <div className="px-4 py-3">
+                  <div className="px-4">
                     <div className="flex items-center space-x-3 mb-3">
                       <div className="w-10 h-10 bg-blue-100 rounded-full flex items-center justify-center">
                         <span className="text-blue-800 text-lg font-medium">

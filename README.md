@@ -56,6 +56,13 @@ A personal companion app for managing Crohn's & Colitis symptoms, built with Nex
 - **Custom modals** replacing browser alerts
 - **Consistent color scheme** with blue gradients
 
+### 🔒 Security & Validation
+- **Input sanitization** to prevent XSS attacks
+- **Form validation** with React Hook Form and Yup
+- **Secure authentication** with email OTP
+- **Data protection** with proper sanitization of user inputs
+- **Secure data operations** via Supabase's built-in client methods
+
 ## Tech Stack
 
 - **Frontend**: Next.js 14 (App Router), React, JavaScript

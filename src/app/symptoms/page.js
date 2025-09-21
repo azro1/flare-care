@@ -6,6 +6,7 @@ import ConfirmationModal from '@/components/ConfirmationModal'
 import SyncSettings from '@/components/SyncSettings'
 import DatePicker from '@/components/DatePicker'
 import ProtectedRoute from '@/components/ProtectedRoute'
+import { sanitizeNotes, sanitizeFoodTriggers } from '@/lib/sanitize'
 
 function SymptomsPageContent() {
   const { data: symptoms, setData: setSymptoms, deleteData: deleteSymptom, syncEnabled, setSyncEnabled, isOnline, isSyncing, syncToCloud, fetchFromCloud } = useDataSync('flarecare-symptoms', [])
@@ -43,6 +44,8 @@ function SymptomsPageContent() {
     const newSymptom = {
       id: Date.now().toString(),
       ...formData,
+      notes: sanitizeNotes(formData.notes),
+      foods: sanitizeFoodTriggers(formData.foods),
       createdAt: new Date().toISOString()
     }
 

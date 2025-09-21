@@ -1,16 +1,32 @@
 'use client'
 
 import { useState } from 'react'
+import { useForm } from 'react-hook-form'
+import { yupResolver } from '@hookform/resolvers/yup'
+import * as yup from 'yup'
 import { useAuth } from '../lib/AuthContext'
 import { supabase } from '../lib/supabase'
 import { useRouter } from 'next/navigation'
 import { useToast } from '../lib/ToastContext'
 
+// Validation schemas
+const emailSchema = yup.object({
+  email: yup
+    .string()
+    .required('Email is required')
+    .email('Please enter a valid email address')
+    .max(254, 'Email address is too long')
+})
+
+const otpSchema = yup.object({
+  otp: yup
+    .string()
+    .required('Verification code is required')
+    .matches(/^\d{6}$/, 'Please enter the 6-digit code from your email')
+})
+
 export default function AuthForm() {
-  const [email, setEmail] = useState('')
-  const [otp, setOtp] = useState('')
   const [step, setStep] = useState('email') // 'email' or 'otp'
-  const [loading, setLoading] = useState(false)
   const [message, setMessage] = useState('')
   const [error, setError] = useState('')
   
@@ -18,33 +34,44 @@ export default function AuthForm() {
   const router = useRouter()
   const { addToast } = useToast()
 
-  const handleEmailSubmit = async (e) => {
-    e.preventDefault()
-    setLoading(true)
+  // Email form
+  const emailForm = useForm({
+    resolver: yupResolver(emailSchema),
+    defaultValues: {
+      email: ''
+    }
+  })
+
+  // OTP form
+  const otpForm = useForm({
+    resolver: yupResolver(otpSchema),
+    defaultValues: {
+      otp: ''
+    }
+  })
+
+  const handleEmailSubmit = async (data) => {
     setError('')
     setMessage('')
 
-    const result = await signInWithOtp(email)
+    const result = await signInWithOtp(data.email)
     
     if (result.success) {
-      setMessage('Check your email for the login link!')
+      setMessage('Check your email for the login code!')
       setStep('otp')
     } else {
       setError(result.error)
     }
-    
-    setLoading(false)
   }
 
-  const handleOtpSubmit = async (e) => {
-    e.preventDefault()
-    setLoading(true)
+  const handleOtpSubmit = async (data) => {
     setError('')
 
     try {
-      const { data, error } = await supabase.auth.verifyOtp({
-        email,
-        token: otp,
+      const emailData = emailForm.getValues()
+      const { data: authData, error } = await supabase.auth.verifyOtp({
+        email: emailData.email,
+        token: data.otp,
         type: 'email'
       })
 
@@ -58,15 +85,13 @@ export default function AuthForm() {
     } catch (error) {
       setError(error.message)
     }
-    
-    setLoading(false)
   }
 
   const handleBackToEmail = () => {
     setStep('email')
     setMessage('')
     setError('')
-    setOtp('')
+    otpForm.reset()
   }
 
   return (
@@ -86,40 +111,75 @@ export default function AuthForm() {
           </p>
         </div>
 
-        <form className="mt-8 space-y-6" onSubmit={step === 'email' ? handleEmailSubmit : handleOtpSubmit}>
-          <div className="rounded-md shadow-sm space-y-4">
-            {step === 'email' ? (
+        {step === 'email' ? (
+          <form className="mt-8 space-y-6" onSubmit={emailForm.handleSubmit(handleEmailSubmit)}>
+            <div className="rounded-md shadow-sm space-y-4">
               <div>
                 <label htmlFor="email" className="block text-sm font-medium text-gray-700">
                   Email address
                 </label>
                 <input
                   id="email"
-                  name="email"
                   type="email"
                   autoComplete="email"
-                  required
-                  value={email}
-                  onChange={(e) => setEmail(e.target.value)}
-                  className="mt-1 appearance-none relative block w-full px-3 py-2 border border-gray-300 placeholder-gray-500 text-gray-900 rounded-md focus:outline-none focus:ring-blue-500 focus:border-blue-500 focus:z-10 sm:text-sm"
+                  {...emailForm.register('email')}
+                  className={`mt-1 appearance-none relative block w-full px-3 py-2 border rounded-md focus:outline-none focus:z-10 sm:text-sm ${
+                    emailForm.formState.errors.email
+                      ? 'border-red-300 focus:ring-red-500 focus:border-red-500'
+                      : 'border-gray-300 focus:ring-blue-500 focus:border-blue-500'
+                  } placeholder-gray-500 text-gray-900`}
                   placeholder="Enter your email"
                 />
+                {emailForm.formState.errors.email && (
+                  <p className="mt-1 text-sm text-red-600">{emailForm.formState.errors.email.message}</p>
+                )}
               </div>
-            ) : (
+            </div>
+
+            {error && (
+              <div className="rounded-md bg-red-50 p-4">
+                <div className="text-sm text-red-700">{error}</div>
+              </div>
+            )}
+
+            {message && (
+              <div className="rounded-md bg-green-50 p-4">
+                <div className="text-sm text-green-700">{message}</div>
+              </div>
+            )}
+
+            <div>
+              <button
+                type="submit"
+                disabled={emailForm.formState.isSubmitting}
+                className="group relative w-full flex justify-center py-2 px-4 border border-transparent text-sm font-medium rounded-md text-white bg-blue-600 hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 disabled:opacity-50 disabled:cursor-not-allowed"
+              >
+                {emailForm.formState.isSubmitting ? 'Sending...' : 'Send login code'}
+              </button>
+            </div>
+          </form>
+        ) : (
+          <form className="mt-8 space-y-6" onSubmit={otpForm.handleSubmit(handleOtpSubmit)}>
+            <div className="rounded-md shadow-sm space-y-4">
               <div>
                 <label htmlFor="otp" className="block text-sm font-medium text-gray-700">
                   Verification code
                 </label>
                 <input
                   id="otp"
-                  name="otp"
                   type="text"
-                  required
-                  value={otp}
-                  onChange={(e) => setOtp(e.target.value)}
-                  className="mt-1 appearance-none relative block w-full px-3 py-2 border border-gray-300 placeholder-gray-500 text-gray-900 rounded-md focus:outline-none focus:ring-blue-500 focus:border-blue-500 focus:z-10 sm:text-sm"
-                  placeholder="Enter the code from your email"
+                  {...otpForm.register('otp')}
+                  className={`mt-1 appearance-none relative block w-full px-3 py-2 border rounded-md focus:outline-none focus:z-10 sm:text-sm ${
+                    otpForm.formState.errors.otp
+                      ? 'border-red-300 focus:ring-red-500 focus:border-red-500'
+                      : 'border-gray-300 focus:ring-blue-500 focus:border-blue-500'
+                  } placeholder-gray-500 text-gray-900`}
+                  placeholder="Enter the 6-digit code from your email"
+                  maxLength={6}
                 />
+                {otpForm.formState.errors.otp && (
+                  <p className="mt-1 text-sm text-red-600">{otpForm.formState.errors.otp.message}</p>
+                )}
                 <button
                   type="button"
                   onClick={handleBackToEmail}
@@ -128,31 +188,32 @@ export default function AuthForm() {
                   ← Back to email
                 </button>
               </div>
+            </div>
+
+            {error && (
+              <div className="rounded-md bg-red-50 p-4">
+                <div className="text-sm text-red-700">{error}</div>
+              </div>
             )}
-          </div>
 
-          {error && (
-            <div className="rounded-md bg-red-50 p-4">
-              <div className="text-sm text-red-700">{error}</div>
+            {message && (
+              <div className="rounded-md bg-green-50 p-4">
+                <div className="text-sm text-green-700">{message}</div>
+              </div>
+            )}
+
+            <div>
+              <button
+                type="submit"
+                disabled={otpForm.formState.isSubmitting}
+                className="group relative w-full flex justify-center py-2 px-4 border border-transparent text-sm font-medium rounded-md text-white bg-blue-600 hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 disabled:opacity-50 disabled:cursor-not-allowed"
+              >
+                {otpForm.formState.isSubmitting ? 'Verifying...' : 'Verify code'}
+              </button>
             </div>
-          )}
+          </form>
+        )}
 
-          {message && (
-            <div className="rounded-md bg-green-50 p-4">
-              <div className="text-sm text-green-700">{message}</div>
-            </div>
-          )}
-
-          <div>
-            <button
-              type="submit"
-              disabled={loading}
-              className="group relative w-full flex justify-center py-2 px-4 border border-transparent text-sm font-medium rounded-md text-white bg-blue-600 hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 disabled:opacity-50 disabled:cursor-not-allowed"
-            >
-              {loading ? 'Sending...' : step === 'email' ? 'Send login link' : 'Verify code'}
-            </button>
-          </div>
-        </form>
 
         <div className="text-center">
           <p className="text-xs text-gray-500">

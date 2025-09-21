@@ -7,6 +7,7 @@ import SyncSettings from '@/components/SyncSettings'
 import reminderService from '@/lib/reminderService'
 import TimePicker from '@/components/TimePicker'
 import ProtectedRoute from '@/components/ProtectedRoute'
+import { sanitizeMedicationName, sanitizeNotes } from '@/lib/sanitize'
 
 function MedicationsPageContent() {
   const { data: medications, setData: setMedications, deleteData: deleteMedication, syncEnabled, setSyncEnabled, isOnline, isSyncing, syncToCloud, fetchFromCloud } = useDataSync('flarecare-medications', [])
@@ -54,7 +55,7 @@ function MedicationsPageContent() {
       // Update existing medication
       setMedications(medications.map(med => 
         med.id === editingId 
-          ? { ...med, ...formData, updatedAt: new Date().toISOString() }
+          ? { ...med, ...formData, name: sanitizeMedicationName(formData.name), notes: sanitizeNotes(formData.notes), updatedAt: new Date().toISOString() }
           : med
       ))
       setEditingId(null)
@@ -63,6 +64,8 @@ function MedicationsPageContent() {
       const newMedication = {
         id: Date.now().toString(),
         ...formData,
+        name: sanitizeMedicationName(formData.name),
+        notes: sanitizeNotes(formData.notes),
         createdAt: new Date().toISOString()
       }
       setMedications([...medications, newMedication])
