@@ -2,6 +2,7 @@
 
 import { usePathname } from 'next/navigation'
 import { useAuth } from '../lib/AuthContext'
+import CrohnsColitisLogo from './CrohnsColitisLogo'
 
 export default function Footer() {
   const pathname = usePathname()
@@ -16,18 +17,24 @@ export default function Footer() {
     return (
       <footer className="bg-white border-t border-gray-200 py-6 mt-auto">
         <div className="container mx-auto px-4 sm:px-6 lg:px-8">
-            <div className="flex items-center justify-center lg:justify-normal gap-3">
-
-              <div className="w-8 h-8 bg-gradient-to-br from-blue-600 to-indigo-600 rounded-xl flex items-center justify-center">
-                <svg className="w-5 h-5 text-white" fill="currentColor" viewBox="0 0 24 24">
-                  <path d="M4.318 6.318a4.5 4.5 0 000 6.364L12 20.364l7.682-7.682a4.5 4.5 0 00-6.364-6.364L12 7.636l-1.318-1.318a4.5 4.5 0 00-6.364 0z" />
-                </svg>
+            <div className="flex items-center justify-center lg:justify-between gap-3">
+              <div className="flex items-center justify-center gap-2">
+                <div className="w-8 h-8 bg-gradient-to-br from-teal-400 to-purple-600 rounded-xl flex items-center justify-center">
+                  <svg className="w-5 h-5 text-white" fill="currentColor" viewBox="0 0 24 24">
+                    <path d="M4.318 6.318a4.5 4.5 0 000 6.364L12 20.364l7.682-7.682a4.5 4.5 0 00-6.364-6.364L12 7.636l-1.318-1.318a4.5 4.5 0 00-6.364 0z" />
+                  </svg>
+                </div>
+                <p className="text-sm text-gray-600">
+                  &copy; 2025 FlareCare.
+                </p>
               </div>
-              <p className="text-sm text-gray-600">
-                &copy; 2025 FlareCare. <span className="hidden lg:inline">Built with care for Crohn's & Colitis patients.</span>
-              </p>
+              <div className="hidden lg:flex items-center gap-2">
+                <span className="text-sm text-gray-500">Supporting</span>
+                <CrohnsColitisLogo size="xs" showText={false} />
+                <span className="text-sm text-gray-600">Crohn's & Colitis UK</span>
               </div>
             </div>
+        </div>
       </footer>
     )
   }
@@ -64,16 +71,27 @@ export default function Footer() {
           </div>
         </div>
         
-        <div className="border-t border-gray-200 pt-6 text-center flex items-center justify-center gap-2">
-          <div className="hidden sm:block"> 
-            <div className="w-8 h-8 bg-gradient-to-br from-blue-600 to-indigo-600 rounded-xl flex items-center justify-center">
-              <svg className="w-5 h-5 text-white" fill="currentColor" viewBox="0 0 24 24">
-                <path d="M4.318 6.318a4.5 4.5 0 000 6.364L12 20.364l7.682-7.682a4.5 4.5 0 00-6.364-6.364L12 7.636l-1.318-1.318a4.5 4.5 0 00-6.364 0z" />
-              </svg>
+        <div className="border-t border-gray-200 pt-6">
+          <div className="flex flex-col sm:flex-row items-center justify-center gap-4 mb-4">
+            <div className="flex items-center gap-2">
+              <div className="w-8 h-8 bg-gradient-to-br from-teal-400 to-purple-600 rounded-xl flex items-center justify-center">
+                <svg className="w-5 h-5 text-white" fill="currentColor" viewBox="0 0 24 24">
+                  <path d="M4.318 6.318a4.5 4.5 0 000 6.364L12 20.364l7.682-7.682a4.5 4.5 0 00-6.364-6.364L12 7.636l-1.318-1.318a4.5 4.5 0 00-6.364 0z" />
+                </svg>
+              </div>
+              <p className="text-sm text-gray-600">
+                &copy; 2025 FlareCare
+              </p>
+            </div>
+            
+            <div className="flex items-center gap-2 text-center">
+              <span className="text-sm text-gray-500">Supporting</span>
+              <CrohnsColitisLogo size="sm" showText={true} />
             </div>
           </div>
-          <p className="text-sm text-gray-600">
-            &copy; 2025 FlareCare. <span className="hidden lg:inline">Built with care for Crohn's & Colitis patients.</span>
+          
+          <p className="text-center text-sm text-gray-500">
+            Built with care for Crohn's & Colitis patients
           </p>
         </div>
       </div>

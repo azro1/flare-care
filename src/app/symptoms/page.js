@@ -268,7 +268,8 @@ function SymptomsPageContent() {
                       })}
                       {symptom.isOngoing ? ' - Ongoing' : ` to ${new Date(symptom.symptomEndDate).toLocaleDateString('en-GB', {
                         day: 'numeric',
-                        month: 'short'
+                        month: 'short',
+                        year: 'numeric'
                       })}`}
                     </span>
                     <span className={`text-center px-2 py-1 rounded-full text-xs font-medium ${getSeverityColor(symptom.severity)}`}>

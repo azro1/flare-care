@@ -110,7 +110,7 @@ export default function About() {
               Share experiences, tips, and connect with others on similar journeys.
             </p>
             <button 
-              className="btn-secondary inline-block"
+              className="bg-white hover:bg-gray-50 text-gray-800 font-medium py-3 px-6 rounded-xl border border-gray-200 hover:border-gray-300 transition-all duration-200 shadow-sm hover:shadow-md inline-block"
               onClick={() => setBlogModal({ isOpen: true })}
             >
               Coming Soon
