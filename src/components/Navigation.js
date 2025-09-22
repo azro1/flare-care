@@ -162,7 +162,7 @@ export default function Navigation() {
           <div className="py-4">
             <div className="space-y-2">
               {/* All Navigation Links */}
-              {[...mainNavItems, ...featureNavItems].map((item, index) => (
+              {[...mainNavItems, ...(isAuthenticated ? featureNavItems : [])].map((item, index) => (
                 <Link
                   key={item.href}
                   href={item.href}
