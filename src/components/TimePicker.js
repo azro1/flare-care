@@ -78,7 +78,7 @@ export default function TimePicker({ value, onChange, className = '', placeholde
       </button>
 
       {isOpen && (
-        <div className="absolute z-50 w-full mt-1 bg-white border border-gray-200 rounded-xl shadow-lg">
+        <div className="absolute z-10 w-full mt-1 bg-white border border-gray-200 rounded-xl shadow-lg">
           <div className="p-4">
             {/* Quick Time Buttons */}
             <div className="mb-4">

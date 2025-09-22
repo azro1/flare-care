@@ -168,7 +168,7 @@ export default function DatePicker({ value, onChange, className = '', placeholde
   }
 
   return (
-    <div className={`relative ${className}`} ref={dropdownRef} style={{ zIndex: 100 }}>
+    <div className={`relative ${className}`} ref={dropdownRef}>
       <button
         type="button"
         onClick={() => setIsOpen(!isOpen)}
@@ -193,7 +193,7 @@ export default function DatePicker({ value, onChange, className = '', placeholde
             top: '100%',
             left: 0,
             right: 0,
-            zIndex: 99999
+            zIndex: 10
           }}
         >
           <div className="p-4">
