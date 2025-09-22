@@ -42,6 +42,11 @@ export default function Navigation() {
   const mainNavItems = [
     { href: '/', label: 'Home' },
     { href: '/about', label: 'About' },
+  ]
+
+  const unauthenticatedNavItems = [
+    { href: '/', label: 'Home' },
+    { href: '/about', label: 'About' },
     { href: '/learn', label: 'Learn' },
   ]
 
@@ -69,7 +74,7 @@ export default function Navigation() {
           <div className="hidden lg:flex items-center space-x-8">
             {/* Main Navigation */}
             <div className="flex items-center space-x-6">
-              {mainNavItems.map((item) => (
+              {(isAuthenticated ? mainNavItems : unauthenticatedNavItems).map((item) => (
                 <Link
                   key={item.href}
                   href={item.href}
@@ -162,7 +167,7 @@ export default function Navigation() {
           <div className="py-4">
             <div className="space-y-2">
               {/* All Navigation Links */}
-              {[...mainNavItems, ...(isAuthenticated ? featureNavItems : [])].map((item, index) => (
+              {[...(isAuthenticated ? mainNavItems : unauthenticatedNavItems), ...(isAuthenticated ? featureNavItems : [])].map((item, index) => (
                 <Link
                   key={item.href}
                   href={item.href}
