@@ -335,7 +335,7 @@ function ReportsPageContent() {
       </div>
 
       {/* Date Range Selector */}
-      <div className="bg-white/80 rounded-2xl shadow-lg border border-white/20 p-6 transition-all duration-300 hover:shadow-xl hover:scale-105 mb-8 sm:mb-12 overflow-visible" style={{ isolation: 'isolate' }}>
+      <div className="bg-white/80 rounded-2xl shadow-lg border border-white/20 p-6 transition-all duration-300 hover:shadow-xl mb-8 sm:mb-12 overflow-visible" style={{ isolation: 'isolate' }}>
         <h2 className="text-xl font-semibold text-gray-900 mb-6">Select Report Period</h2>
         
         {/* Quick Presets */}

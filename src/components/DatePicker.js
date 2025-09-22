@@ -1,7 +1,6 @@
 'use client'
 
 import { useState, useRef, useEffect } from 'react'
-import { createPortal } from 'react-dom'
 
 export default function DatePicker({ value, onChange, className = '', placeholder = 'Select date', minDate = null }) {
   const [isOpen, setIsOpen] = useState(false)
@@ -10,8 +9,6 @@ export default function DatePicker({ value, onChange, className = '', placeholde
   const [selectedDay, setSelectedDay] = useState('')
   const [selectedYear, setSelectedYear] = useState('')
   const dropdownRef = useRef(null)
-  const buttonRef = useRef(null)
-  const [dropdownPosition, setDropdownPosition] = useState({ top: 0, left: 0, width: 0 })
 
   // Parse initial value
   useEffect(() => {
@@ -43,36 +40,10 @@ export default function DatePicker({ value, onChange, className = '', placeholde
     }
   }, [isOpen, minDate, selectedYear, selectedMonth])
 
-  // Calculate dropdown position
-  const updateDropdownPosition = () => {
-    if (buttonRef.current) {
-      const rect = buttonRef.current.getBoundingClientRect()
-      setDropdownPosition({
-        top: rect.bottom + window.scrollY + 4,
-        left: rect.left + window.scrollX,
-        width: rect.width
-      })
-    }
-  }
-
-  // Update position when dropdown opens
-  useEffect(() => {
-    if (isOpen) {
-      updateDropdownPosition()
-      window.addEventListener('resize', updateDropdownPosition)
-      window.addEventListener('scroll', updateDropdownPosition)
-      return () => {
-        window.removeEventListener('resize', updateDropdownPosition)
-        window.removeEventListener('scroll', updateDropdownPosition)
-      }
-    }
-  }, [isOpen])
-
   // Close dropdown when clicking outside
   useEffect(() => {
     function handleClickOutside(event) {
-      if (dropdownRef.current && !dropdownRef.current.contains(event.target) && 
-          buttonRef.current && !buttonRef.current.contains(event.target)) {
+      if (dropdownRef.current && !dropdownRef.current.contains(event.target)) {
         setIsOpen(false)
       }
     }
@@ -197,9 +168,8 @@ export default function DatePicker({ value, onChange, className = '', placeholde
   }
 
   return (
-    <div className={`relative ${className}`} ref={dropdownRef} style={{ zIndex: 1000 }}>
+    <div className={`relative ${className}`} ref={dropdownRef} style={{ zIndex: 100 }}>
       <button
-        ref={buttonRef}
         type="button"
         onClick={() => setIsOpen(!isOpen)}
         className="w-full px-4 py-3 text-left bg-white border border-gray-200 rounded-xl shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent appearance-none bg-no-repeat bg-right pr-10 transition-all duration-200 hover:border-gray-300"
@@ -214,14 +184,16 @@ export default function DatePicker({ value, onChange, className = '', placeholde
         </span>
       </button>
 
-      {isOpen && createPortal(
+      {isOpen && (
         <div 
           ref={dropdownRef}
-          className="fixed bg-white border border-gray-200 rounded-xl shadow-lg z-[999999]"
+          className="absolute w-full mt-1 bg-white border border-gray-200 rounded-xl shadow-lg"
           style={{
-            top: dropdownPosition.top,
-            left: dropdownPosition.left,
-            width: dropdownPosition.width
+            position: 'absolute',
+            top: '100%',
+            left: 0,
+            right: 0,
+            zIndex: 99999
           }}
         >
           <div className="p-4">
@@ -314,8 +286,7 @@ export default function DatePicker({ value, onChange, className = '', placeholde
               </button>
             </div>
           </div>
-        </div>,
-        document.body
+        </div>
       )}
     </div>
   )

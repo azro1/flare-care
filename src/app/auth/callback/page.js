@@ -25,10 +25,10 @@ export default function AuthCallback() {
         if (data.session) {
           // User is authenticated, show success toast and redirect to app
           addToast('Successfully signed in!', 'success')
-          // Add a small delay to ensure toast is visible before redirect
+          // Add a delay to ensure toast is visible before redirect (longer for production)
           setTimeout(() => {
             router.push('/')
-          }, 100)
+          }, 500)
         } else {
           // No session, redirect to login
           router.push('/auth')
