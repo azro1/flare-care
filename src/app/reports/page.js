@@ -424,8 +424,8 @@ function ReportsPageContent() {
             />
           </div>
         </div>
-        <div className="flex flex-col sm:flex-row sm:justify-between sm:items-center">
-          <div className="text-sm text-gray-600 mb-4 sm:mb-0">
+        <div className="flex flex-col sm:flex-row sm:justify-between sm:items-center gap-4">
+          <div className="text-sm text-gray-600 sm:max-w-md sm:pr-4">
             Showing symptoms from {formatUKDate(dateRange.startDate)} to {formatUKDate(dateRange.endDate)}
           </div>
           <div className="flex space-x-3">

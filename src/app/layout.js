@@ -29,7 +29,7 @@ export default function RootLayout({ children }) {
             <NotificationBanner />
           <div className="min-h-screen flex flex-col">
             <Navigation />
-            <main className="flex-1 container mx-auto px-4 py-12">
+            <main className="flex-grow flex flex-col container mx-auto px-4 py-12">
               {children}
             </main>
           <Footer />

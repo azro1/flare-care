@@ -9,7 +9,7 @@ export default function Home() {
   // Show loading state while checking authentication
   if (loading) {
     return (
-      <div className="flex items-center justify-center min-h-[400px] sm:h-[calc(100vh-250px)]">
+      <div className="flex-grow flex items-center justify-center">
         <div className="text-center">
           <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600 mx-auto"></div>
           <p className="mt-4 text-gray-600">Loading...</p>
@@ -21,7 +21,7 @@ export default function Home() {
   // If not authenticated, show a message about signing in
   if (!isAuthenticated) {
     return (
-      <div className="flex items-center justify-center min-h-[450px] sm:h-[calc(100vh-250px)]">
+      <div className="flex-grow flex items-center justify-center">
         <div className="text-center max-w-md mx-auto px-4">
           <div className="mx-auto h-12 w-12 flex items-center justify-center rounded-full bg-teal-100 mb-6">
             <svg className="h-6 w-6 text-teal-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -30,7 +30,7 @@ export default function Home() {
           </div>
           <h1 className="text-3xl font-bold text-slate-900 mb-4">FlareCare</h1>
           <p className="text-lg font-semibold text-teal-600 mb-4">Track your Crohn's & Colitis journey</p>
-          <p className="text-slate-600 mb-8 text-sm">Log symptoms, manage medications, and generate reports for your healthcare team.</p>
+          <p className="text-slate-600 mb-6 text-sm">Log symptoms, manage medications, and generate reports for your healthcare team.</p>
           <Link href="/auth" className="inline-flex items-center gap-2 bg-gradient-to-r from-teal-500 to-purple-600 hover:from-teal-600 hover:to-purple-700 text-white font-semibold py-3 px-6 rounded-xl transition-all duration-300 transform hover:scale-105 hover:shadow-lg active:scale-95">
             <span>Sign In</span>
             <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
