@@ -8,18 +8,18 @@ export default function About() {
   return (
     <div className="max-w-4xl mx-auto">
       <div className="text-center mb-12">
-        <h1 className="text-2xl sm:text-3xl lg:text-4xl font-bold text-gray-900 mb-4 sm:mb-6">
+        <h1 className="text-2xl sm:text-3xl lg:text-4xl font-bold font-source text-gray-900 mb-4 sm:mb-6">
           About FlareCare
         </h1>
-        <p className="text-lg sm:text-xl text-gray-700 max-w-3xl mx-auto leading-relaxed">
+        <p className="text-lg sm:text-xl font-source text-gray-700 max-w-3xl mx-auto leading-relaxed">
           A personal journey turned into a tool for the community
         </p>
       </div>
 
       <div className="grid md:grid-cols-2 gap-8 mb-12">
         <div className="card">
-          <h2 className="text-2xl font-semibold text-gray-900 mb-4">My Story</h2>
-          <div className="space-y-4 text-gray-700">
+          <h2 className="text-2xl font-semibold font-source text-gray-900 mb-4">My Story</h2>
+          <div className="space-y-4 text-gray-700 font-source">
             <p>
               Hi, I'm Simon, and I was diagnosed with Crohn's disease in 2005. Like many others, 
               I quickly learned that managing this condition requires constant attention 
@@ -40,8 +40,8 @@ export default function About() {
         </div>
 
         <div className="card">
-          <h2 className="text-2xl font-semibold text-gray-900 mb-4">Why FlareCare?</h2>
-          <div className="space-y-4 text-gray-700">
+          <h2 className="text-2xl font-semibold font-source text-gray-900 mb-4">Why FlareCare?</h2>
+          <div className="space-y-4 text-gray-700 font-source">
             <p>
               FlareCare was born from my personal need for a simple, effective way to 
               track my health journey. I wanted something that would:
@@ -62,8 +62,8 @@ export default function About() {
       </div>
 
       <div className="card mb-12">
-        <h2 className="text-2xl font-semibold text-gray-900 mb-4">The Vision</h2>
-        <div className="space-y-4 text-gray-700">
+        <h2 className="text-2xl font-semibold font-source text-gray-900 mb-4">The Vision</h2>
+        <div className="space-y-4 text-gray-700 font-source">
           <p>
             Living with Crohn's or Colitis can feel isolating, but you're not alone. 
             FlareCare is built by someone who understands the daily challenges of 
@@ -83,8 +83,8 @@ export default function About() {
       </div>
 
       <div className="bg-gradient-to-r from-blue-50 to-indigo-50 border border-blue-200 rounded-2xl p-8">
-        <h2 className="text-2xl font-bold text-gray-900 mb-4">Stay Connected</h2>
-        <p className="text-gray-700 mb-6">
+        <h2 className="text-2xl font-bold font-source text-gray-900 mb-4">Stay Connected</h2>
+        <p className="text-gray-700 mb-6 font-source">
           Have questions, suggestions, or want to share your own story? 
           I'd love to hear from you and learn how FlareCare can better serve 
           the Crohn's and Colitis community.
@@ -92,25 +92,25 @@ export default function About() {
         
         <div className="grid md:grid-cols-2 gap-6">
           <div className="bg-white/80 backdrop-blur-sm rounded-xl p-6 border border-white/20">
-            <h3 className="text-lg font-semibold text-gray-900 mb-3">📧 Email Support</h3>
-            <p className="text-gray-600 mb-4">
+            <h3 className="text-lg font-semibold font-source text-gray-900 mb-3">📧 Email Support</h3>
+            <p className="text-gray-600 mb-4 font-source">
               For technical support, feature requests, or general questions.
             </p>
             <a 
               href="mailto:support@flarecare.app" 
-              className="bg-blue-600 hover:bg-blue-700 text-white font-semibold py-3 px-6 rounded-xl transition-all duration-300 transform hover:scale-105 hover:shadow-lg active:scale-95 inline-block"
+              className="bg-blue-600 hover:bg-blue-700 text-white font-semibold font-source py-3 px-6 rounded-xl transition-all duration-300 transform hover:scale-105 hover:shadow-lg active:scale-95 inline-block"
             >
               Contact Support
             </a>
           </div>
           
           <div className="bg-white/80 backdrop-blur-sm rounded-xl p-6 border border-white/20">
-            <h3 className="text-lg font-semibold text-gray-900 mb-3">💬 Community Blog</h3>
-            <p className="text-gray-600 mb-4">
+            <h3 className="text-lg font-semibold font-source text-gray-900 mb-3">💬 Community Blog</h3>
+            <p className="text-gray-600 mb-4 font-source">
               Share experiences, tips, and connect with others on similar journeys.
             </p>
             <button 
-              className="bg-white hover:bg-gray-50 text-gray-800 font-medium py-3 px-6 rounded-xl border border-gray-200 hover:border-gray-300 transition-all duration-200 shadow-sm hover:shadow-md inline-block"
+              className="bg-white hover:bg-gray-50 text-gray-800 font-medium font-source py-3 px-6 rounded-xl border border-gray-200 hover:border-gray-300 transition-all duration-200 shadow-sm hover:shadow-md inline-block"
               onClick={() => setBlogModal({ isOpen: true })}
             >
               Coming Soon
@@ -118,7 +118,7 @@ export default function About() {
           </div>
         </div>
         
-        <p className="text-sm text-gray-600 mt-6 text-center">
+        <p className="text-sm text-gray-600 mt-6 text-center font-source">
           Built with care for Crohn's and Colitis patients.
         </p>
       </div>

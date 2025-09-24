@@ -67,7 +67,7 @@ export default function Navigation() {
                 <path d="M4.318 6.318a4.5 4.5 0 000 6.364L12 20.364l7.682-7.682a4.5 4.5 0 00-6.364-6.364L12 7.636l-1.318-1.318a4.5 4.5 0 00-6.364 0z" />
               </svg>
             </div>
-            <span className="hidden sm:block text-base sm:text-lg lg:text-xl font-bold text-slate-900">FlareCare</span>
+            <span className="hidden sm:block text-base sm:text-lg lg:text-xl font-bold font-source text-slate-900">FlareCare</span>
           </Link>
 
           {/* Desktop Navigation */}

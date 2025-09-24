@@ -29,9 +29,9 @@ export default function Footer() {
                 </p>
               </div>
               <div className="hidden lg:flex items-center gap-2">
-                <span className="text-sm text-gray-500">Supporting</span>
+                <span className="text-sm text-gray-500 font-source">Supporting</span>
                 <CrohnsColitisLogo size="xs" showText={false} />
-                <span className="text-sm text-gray-600">Crohn's & Colitis UK</span>
+                <span className="text-sm text-gray-600 font-source">Crohn's & Colitis UK</span>
               </div>
             </div>
         </div>
