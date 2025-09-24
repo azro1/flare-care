@@ -21,7 +21,7 @@ export default function Home() {
   // If not authenticated, show a message about signing in
   if (!isAuthenticated) {
     return (
-      <div className="pt-8 sm:pt-0 sm:flex-grow flex items-center justify-center ">
+      <div className="overflow-hidden flex-grow flex items-center justify-center min-h-0">
         <div className="text-center max-w-md mx-auto ">
           <div className="mx-auto h-12 w-12 flex items-center justify-center rounded-full bg-teal-100 mb-6">
             <svg className="h-6 w-6 text-teal-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
