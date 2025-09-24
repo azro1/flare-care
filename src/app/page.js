@@ -10,14 +10,14 @@ export default function Home() {
   // Prevent body scrolling when not authenticated
   useEffect(() => {
     if (!isAuthenticated && !loading) {
-      document.body.style.overflow = 'hidden'
+      document.body.style.overflowY = 'hidden'
     } else {
-      document.body.style.overflow = 'auto'
+      document.body.style.overflowY = 'auto'
     }
     
     // Cleanup on unmount
     return () => {
-      document.body.style.overflow = 'auto'
+      document.body.style.overflowY = 'auto'
     }
   }, [isAuthenticated, loading])
 
