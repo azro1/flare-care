@@ -62,7 +62,7 @@ export default function Navigation() {
         <div className="flex justify-between items-center h-16 sm:h-18">
           {/* Logo */}
           <Link href="/" className="flex items-center space-x-2 group">
-            <div className="w-10 h-10 sm:w-10 sm:h-10 bg-gradient-to-br from-teal-400 to-purple-600 rounded-xl flex items-center justify-center group-hover:scale-110 transition-transform duration-200 shadow-lg lg:group-hover:scale-110">
+            <div className="w-10 h-10 sm:w-10 sm:h-10 bg-blue-600 rounded-xl flex items-center justify-center group-hover:scale-110 transition-transform duration-200 shadow-lg lg:group-hover:scale-110">
               <svg className="w-5 h-5 sm:w-6 sm:h-6 text-white" fill="currentColor" viewBox="0 0 24 24">
                 <path d="M4.318 6.318a4.5 4.5 0 000 6.364L12 20.364l7.682-7.682a4.5 4.5 0 00-6.364-6.364L12 7.636l-1.318-1.318a4.5 4.5 0 00-6.364 0z" />
               </svg>
@@ -173,8 +173,8 @@ export default function Navigation() {
                   href={item.href}
                   className={`block px-4 py-3 text-base font-medium transition-all duration-200 transform ${
                     pathname === item.href
-                      ? 'bg-gradient-to-r from-teal-100 to-purple-100 text-teal-700 shadow-sm'
-                      : 'text-gray-600 hover:text-gray-900 hover:bg-teal-100'
+                      ? 'bg-blue-100 text-blue-700 shadow-sm'
+                      : 'text-gray-600 hover:text-gray-900 hover:bg-blue-100'
                   }`}
                   onClick={() => setIsMenuOpen(false)}
                   style={{

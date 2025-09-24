@@ -19,7 +19,7 @@
 
 @layer components {
   .btn-primary {
-    @apply bg-purple-600 hover:bg-purple-700 text-white font-semibold py-3 px-6 rounded-xl transition-all duration-300 transform hover:scale-105 hover:shadow-lg active:scale-95;
+    @apply bg-blue-600 hover:bg-blue-700 text-white font-semibold py-3 px-6 rounded-xl transition-all duration-300 transform hover:scale-105 hover:shadow-lg active:scale-95;
   }
   
   .btn-secondary {
@@ -57,11 +57,11 @@
   }
   
   .nav-link-active {
-    @apply bg-purple-100 text-purple-700 shadow-sm;
+    @apply bg-blue-100 text-blue-700 shadow-sm;
   }
   
   .nav-link-inactive {
-    @apply text-gray-600 hover:text-green-800 hover:bg-teal-100;
+    @apply text-gray-600 hover:text-gray-800 hover:bg-gray-100;
   }
   
   .hero-gradient {

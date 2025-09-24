@@ -45,15 +45,15 @@ export default function Home() {
     return (
       <div className="pt-6 sm:pt-0 sm:flex-grow flex items-center justify-center">
         <div className="text-center max-w-md mx-auto ">
-          <div className="mx-auto h-12 w-12 flex items-center justify-center rounded-full bg-teal-100 mb-6">
-            <svg className="h-6 w-6 text-teal-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <div className="mx-auto h-12 w-12 flex items-center justify-center rounded-full bg-blue-100 mb-6">
+            <svg className="h-6 w-6 text-blue-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4.318 6.318a4.5 4.5 0 000 6.364L12 20.364l7.682-7.682a4.5 4.5 0 00-6.364-6.364L12 7.636l-1.318-1.318a4.5 4.5 0 00-6.364 0z" />
             </svg>
           </div>
           <h1 className="text-3xl font-bold text-slate-900 mb-4">FlareCare</h1>
-          <p className="text-lg font-semibold text-teal-600 mb-4">Track your Crohn's & Colitis journey</p>
+          <p className="text-lg font-semibold text-blue-600 mb-4">Track your Crohn's & Colitis journey</p>
           <p className="text-slate-600 mb-6 text-sm">Log symptoms, manage medications, and generate reports for your healthcare team.</p>
-          <Link href="/auth" className="inline-flex items-center gap-2 bg-gradient-to-r from-teal-500 to-purple-600 hover:from-teal-600 hover:to-purple-700 text-white font-semibold py-3 px-6 rounded-xl transition-all duration-300 transform hover:scale-105 hover:shadow-lg active:scale-95">
+          <Link href="/auth" className="inline-flex items-center gap-2 bg-blue-600 hover:bg-blue-700 text-white font-semibold py-3 px-6 rounded-xl transition-all duration-300 transform hover:scale-105 hover:shadow-lg active:scale-95">
             <span>Sign In</span>
             <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 7l5 5m0 0l-5 5m5-5H6" />
@@ -73,7 +73,7 @@ export default function Home() {
             {/* Mobile Hero - Different Layout */}
             <div className="sm:hidden">
               {/* Logo Icon */}
-                <div className="w-16 h-16 bg-gradient-to-br from-teal-500 to-purple-600 rounded-2xl flex items-center justify-center mx-auto mb-4">
+                <div className="w-16 h-16 bg-blue-600 rounded-2xl flex items-center justify-center mx-auto mb-4">
                   <svg className="w-8 h-8 text-white" fill="currentColor" viewBox="0 0 24 24">
                     <path d="M4.318 6.318a4.5 4.5 0 000 6.364L12 20.364l7.682-7.682a4.5 4.5 0 00-6.364-6.364L12 7.636l-1.318-1.318a4.5 4.5 0 00-6.364 0z" />
                   </svg>
@@ -82,7 +82,7 @@ export default function Home() {
               <h1 className="text-2xl font-bold text-slate-900 mb-2">
                 FlareCare
               </h1>
-              <p className="text-lg font-semibold text-teal-600 mb-4">
+              <p className="text-lg font-semibold text-blue-600 mb-4">
                 Crohn's & Colitis Companion
               </p>
               <p className="text-base text-slate-600 mb-6 leading-relaxed">
@@ -93,7 +93,7 @@ export default function Home() {
             {/* Desktop Hero - Original Layout */}
             <div className="hidden sm:block">
               <div className="mb-8">
-                <div className="w-20 h-20 sm:w-24 sm:h-24 bg-gradient-to-br from-teal-500 to-purple-600 rounded-3xl flex items-center justify-center mx-auto mb-6 pulse-animation">
+                <div className="w-20 h-20 sm:w-24 sm:h-24 bg-blue-600 rounded-3xl flex items-center justify-center mx-auto mb-6 pulse-animation">
                   <svg className="w-10 h-10 sm:w-12 sm:h-12 text-white" fill="currentColor" viewBox="0 0 24 24">
                     <path d="M4.318 6.318a4.5 4.5 0 000 6.364L12 20.364l7.682-7.682a4.5 4.5 0 00-6.364-6.364L12 7.636l-1.318-1.318a4.5 4.5 0 00-6.364 0z" />
                   </svg>
@@ -175,7 +175,7 @@ export default function Home() {
                 it only takes a minute, but the insights you'll gain are priceless. 
                 Your future self will thank you for the data you collect today.
               </p>
-              <Link href="/symptoms" className="btn-primary inline-flex items-center gap-2 text-base px-6 py-4">
+              <Link href="/symptoms" className="bg-blue-600 hover:bg-blue-700 text-white font-semibold inline-flex items-center gap-2 text-base px-6 py-4 rounded-xl transition-all duration-300 transform hover:scale-105 hover:shadow-lg active:scale-95">
                 <span>Start Your Journey</span>
                 <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 7l5 5m0 0l-5 5m5-5H6" />
