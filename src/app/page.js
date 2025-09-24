@@ -21,8 +21,8 @@ export default function Home() {
   // If not authenticated, show a message about signing in
   if (!isAuthenticated) {
     return (
-      <div className="flex-grow flex items-center justify-center">
-        <div className="text-center max-w-md mx-auto px-4">
+      <div className="pt-8 sm:pt-0 sm:flex-grow flex items-center justify-center ">
+        <div className="text-center max-w-md mx-auto ">
           <div className="mx-auto h-12 w-12 flex items-center justify-center rounded-full bg-teal-100 mb-6">
             <svg className="h-6 w-6 text-teal-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4.318 6.318a4.5 4.5 0 000 6.364L12 20.364l7.682-7.682a4.5 4.5 0 00-6.364-6.364L12 7.636l-1.318-1.318a4.5 4.5 0 00-6.364 0z" />
