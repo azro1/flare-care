@@ -326,7 +326,7 @@ function ReportsPageContent() {
   }
 
   return (
-    <div className="max-w-4xl mx-auto">
+    <div className="w-full max-w-4xl mx-auto">
       <div className="mb-8 sm:mb-10">
         <h1 className="text-2xl sm:text-3xl lg:text-4xl font-bold text-gray-900 mb-4 sm:mb-6">Health Reports</h1>
         <p className="text-gray-600">
