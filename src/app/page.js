@@ -10,14 +10,21 @@ export default function Home() {
   // Prevent body scrolling when not authenticated
   useEffect(() => {
     if (!isAuthenticated && !loading) {
-      document.body.style.overflowY = 'hidden'
+      // Mobile-friendly approach
+      document.body.style.position = 'fixed'
+      document.body.style.width = '100%'
+      document.body.style.height = '100%'
     } else {
-      document.body.style.overflowY = 'auto'
+      document.body.style.position = 'static'
+      document.body.style.width = 'auto'
+      document.body.style.height = 'auto'
     }
     
     // Cleanup on unmount
     return () => {
-      document.body.style.overflowY = 'auto'
+      document.body.style.position = 'static'
+      document.body.style.width = 'auto'
+      document.body.style.height = 'auto'
     }
   }, [isAuthenticated, loading])
 
