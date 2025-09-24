@@ -1,6 +1,6 @@
 'use client'
 
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
 import { supabase } from '../lib/supabase'
 import { useRouter } from 'next/navigation'
 import { useToast } from '../lib/ToastContext'
@@ -10,6 +10,20 @@ export default function AuthForm() {
   const router = useRouter()
   const { addToast } = useToast()
 
+  // Prevent body scrolling on auth page
+  useEffect(() => {
+    // Mobile-friendly approach
+    document.body.style.position = 'fixed'
+    document.body.style.width = '100%'
+    document.body.style.height = '100%'
+    
+    // Cleanup on unmount
+    return () => {
+      document.body.style.position = 'static'
+      document.body.style.width = 'auto'
+      document.body.style.height = 'auto'
+    }
+  }, [])
 
   const handleGoogleSignIn = async () => {
     setError('')
@@ -35,7 +49,7 @@ export default function AuthForm() {
   }
 
   return (
-    <div className="flex-grow flex items-center justify-center bg-gray-50 sm:px-6 lg:px-8">
+    <div className="pt-6 sm:pt-0 sm:flex-grow flex items-center justify-center bg-gray-50 sm:px-6 lg:px-8">
       <div className="max-w-md w-full space-y-8">
         <div>
           <h2 className="mt-6 text-center text-3xl font-extrabold text-gray-900">
