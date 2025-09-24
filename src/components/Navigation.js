@@ -164,13 +164,13 @@ export default function Navigation() {
         <div className={`lg:hidden absolute top-full left-0 right-0 bg-white shadow-lg border-t border-gray-200/50 transition-all duration-300 ease-in-out ${
           isMenuOpen ? 'opacity-100 visible' : 'opacity-0 invisible'
         }`}>
-          <div className="py-2">
+          <div className="py-4">
               {/* All Navigation Links */}
               {[...(isAuthenticated ? mainNavItems : unauthenticatedNavItems), ...(isAuthenticated ? featureNavItems : [])].map((item, index) => (
                 <Link
                   key={item.href}
                   href={item.href}
-                  className={`block px-4 py-2.5 text-base font-medium transition-all duration-200 transform ${
+                  className={`block px-4 py-3 text-base font-medium transition-all duration-200 transform ${
                     pathname === item.href
                       ? 'text-blue-700'
                       : 'text-gray-600 hover:text-gray-900'
