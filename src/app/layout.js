@@ -27,9 +27,9 @@ export default function RootLayout({ children }) {
           <ToastProvider>
             <ReminderProvider />
             <NotificationBanner />
-          <div className="min-h-[100dvh] flex flex-col">
+          <div className="min-h-screen flex flex-col">
             <Navigation />
-            <main className="flex-grow flex flex-col container mx-auto px-4 py-12 pb-24">
+            <main className="flex-grow flex flex-col container mx-auto px-4 py-12">
               {children}
             </main>
           <Footer />
