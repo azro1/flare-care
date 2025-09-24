@@ -50,10 +50,10 @@ export default function Home() {
               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4.318 6.318a4.5 4.5 0 000 6.364L12 20.364l7.682-7.682a4.5 4.5 0 00-6.364-6.364L12 7.636l-1.318-1.318a4.5 4.5 0 00-6.364 0z" />
             </svg>
           </div>
-          <h1 className="text-3xl font-bold font-nunito text-slate-900 mb-4">FlareCare</h1>
-          <p className="text-lg font-semibold font-nunito text-blue-600 mb-4">Track your Crohn's & Colitis journey</p>
-          <p className="text-slate-600 mb-6 text-sm font-nunito">Log symptoms, manage medications, and generate reports for your healthcare team.</p>
-          <Link href="/auth" className="inline-flex items-center gap-2 bg-blue-600 hover:bg-blue-700 text-white font-semibold font-nunito py-3 px-6 rounded-xl transition-all duration-300 transform hover:scale-105 hover:shadow-lg active:scale-95">
+          <h1 className="text-3xl font-bold font-source text-slate-900 mb-4">FlareCare</h1>
+          <p className="text-lg font-semibold font-source text-blue-600 mb-4">Track your Crohn's & Colitis journey</p>
+          <p className="text-slate-600 mb-6 text-sm font-source">Log symptoms, manage medications, and generate reports for your healthcare team.</p>
+          <Link href="/auth" className="inline-flex items-center gap-2 bg-blue-600 hover:bg-blue-700 text-white font-semibold py-3 px-6 rounded-xl transition-all duration-300 transform hover:scale-105 hover:shadow-lg active:scale-95 font-source">
             <span>Sign In</span>
             <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 7l5 5m0 0l-5 5m5-5H6" />

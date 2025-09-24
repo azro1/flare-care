@@ -122,10 +122,17 @@ module.exports = {
       backdropBlur: {
         xs: '2px',
       },
-      fontFamily: {
-        sans: ['Inter', 'system-ui', 'sans-serif'],
-        nunito: ['Nunito', 'system-ui', 'sans-serif'],
-      },
+    fontFamily: {
+      sans: ['Inter', 'system-ui', 'sans-serif'],
+      nunito: ['Nunito', 'system-ui', 'sans-serif'],
+      playfair: ['Playfair Display', 'system-ui', 'serif'],
+      merriweather: ['Merriweather', 'system-ui', 'serif'],
+      lato: ['Lato', 'system-ui', 'sans-serif'],
+      montserrat: ['Montserrat', 'system-ui', 'sans-serif'],
+      raleway: ['Raleway', 'system-ui', 'sans-serif'],
+      source: ['Source Sans Pro', 'system-ui', 'sans-serif'],
+      barlow: ['Barlow', 'system-ui', 'sans-serif'],
+    },
       spacing: {
         '18': '4.5rem',
         '88': '22rem',
