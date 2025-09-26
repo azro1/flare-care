@@ -52,10 +52,10 @@ export default function AuthForm() {
     <div className="pt-6 sm:pt-0 sm:flex-grow flex items-center justify-center bg-gray-50 sm:px-6 lg:px-8">
       <div className="max-w-md w-full space-y-8">
         <div>
-          <h2 className="mt-6 text-center text-3xl font-bold font-source text-gray-900">
+          <h2 className="mt-6 text-center text-3xl font-bold font-source text-gray-900 sm:text-4xl">
             FlareCare
           </h2>
-          <p className="mt-6 text-center text-sm font-roboto text-gray-600">
+          <p className="mt-6 text-center text-sm font-roboto text-gray-600 sm:text-base">
             Your personal health companion for tracking Crohn's & Colitis symptoms
           </p>
         </div>
@@ -70,7 +70,7 @@ export default function AuthForm() {
           <button
             type="button"
             onClick={handleGoogleSignIn}
-            className="w-full flex justify-center items-center py-3 px-4 border border-gray-300 rounded-md shadow-sm bg-white text-sm font-medium font-roboto text-gray-700 hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500"
+            className="w-full flex justify-center items-center py-3 px-4 border border-gray-300 rounded-md shadow-sm bg-white text-sm font-medium font-roboto text-gray-700 hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 sm:text-base"
           >
             <svg className="w-5 h-5 mr-2" viewBox="0 0 24 24">
               <path fill="#4285F4" d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z"/>
@@ -84,7 +84,7 @@ export default function AuthForm() {
 
 
         <div className="text-center">
-          <p className="text-xs font-roboto text-gray-600">
+          <p className="text-xs font-roboto text-gray-600 sm:text-sm">
             Secure sign-in with Google. No password required.
           </p>
         </div>

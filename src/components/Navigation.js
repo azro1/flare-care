@@ -59,7 +59,7 @@ export default function Navigation() {
   return (
     <nav className="bg-white/90 shadow-md border-b border-white/20 sticky top-0 z-50" style={{backdropFilter: 'blur(12px)', boxShadow: '0 4px 6px -1px rgba(0, 0, 0, 0.05), 0 2px 4px -1px rgba(0, 0, 0, 0.03)'}}>
       <div className="container mx-auto px-4 sm:px-6 lg:px-8">
-        <div className="flex justify-between items-center h-16 sm:h-18">
+        <div className="flex justify-between items-center h-16 sm:h-20">
           {/* Logo */}
           <Link href="/" className="flex items-center space-x-2 group">
             <div className="w-10 h-10 sm:w-10 sm:h-10 bg-blue-600 rounded-xl flex items-center justify-center group-hover:scale-110 transition-transform duration-200 shadow-lg lg:group-hover:scale-110">
@@ -106,7 +106,7 @@ export default function Navigation() {
                       <Link
                         key={item.href}
                         href={item.href}
-                        className={`flex items-center gap-3 px-4 py-3 text-sm font-roboto transition-colors ${
+                        className={`flex items-center gap-3 px-4 py-3 text-sm lg:text-base font-roboto transition-colors ${
                           pathname === item.href
                             ? 'bg-blue-50 text-blue-700'
                             : 'text-gray-600 hover:bg-gray-50'
@@ -195,7 +195,7 @@ export default function Navigation() {
                           {user?.email?.charAt(0).toUpperCase()}
                         </span>
                       </div>
-                      <div className="text-sm text-gray-600 font-medium font-roboto">{user?.email}</div>
+                      <div className="text-base lg:text-sm text-gray-600 font-medium font-roboto">{user?.email}</div>
                     </div>
                     <button
                       onClick={() => {

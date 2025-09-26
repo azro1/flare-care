@@ -37,7 +37,7 @@ export default function CrohnsColitisLogo({ className = "", showText = true, siz
       </div>
       
       {showText && (
-        <span className={`${textSizeClasses[size]} text-gray-600 font-medium`}>
+        <span className={`${textSizeClasses[size]} text-gray-600 font-roboto`}>
           Crohn's & Colitis UK
         </span>
       )}
