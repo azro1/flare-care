@@ -71,12 +71,12 @@ export default function ConfirmationModal({
                 />
               </svg>
             </div>
-            <h3 className="text-lg font-semibold text-gray-900">
+            <h3 className="text-lg font-semibold font-roboto text-gray-900">
               {title}
             </h3>
           </div>
           
-          <p className="text-gray-600 mb-6">
+          <p className="text-gray-600 mb-6 font-roboto">
             {message}
           </p>
 
@@ -84,14 +84,14 @@ export default function ConfirmationModal({
             {cancelText && (
               <button
                 onClick={onClose}
-                className="px-4 py-2 text-sm font-medium text-gray-700 bg-gray-100 hover:bg-gray-200 rounded-lg transition-colors duration-200"
+                className="px-4 py-2 text-sm font-medium font-roboto text-gray-700 bg-gray-100 hover:bg-gray-200 rounded-lg transition-colors duration-200"
               >
                 {cancelText}
               </button>
             )}
             <button
               onClick={handleConfirm}
-              className={`px-4 py-2 text-sm font-medium text-white rounded-lg transition-colors duration-200 ${
+              className={`px-4 py-2 text-sm font-medium font-roboto text-white rounded-lg transition-colors duration-200 ${
                 isDestructive 
                   ? 'bg-red-600 hover:bg-red-700' 
                   : 'bg-blue-600 hover:bg-blue-700'

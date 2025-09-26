@@ -106,10 +106,10 @@ export default function Navigation() {
                       <Link
                         key={item.href}
                         href={item.href}
-                        className={`flex items-center gap-3 px-4 py-3 text-sm transition-colors ${
+                        className={`flex items-center gap-3 px-4 py-3 text-sm font-roboto transition-colors ${
                           pathname === item.href
                             ? 'bg-blue-50 text-blue-700'
-                            : 'text-gray-700 hover:bg-gray-50'
+                            : 'text-gray-600 hover:bg-gray-50'
                         }`}
                       >
                         <span className="text-lg">{item.icon}</span>
@@ -131,11 +131,11 @@ export default function Navigation() {
                         {user?.email?.charAt(0).toUpperCase()}
                       </span>
                     </div>
-                    <span className="text-sm text-slate-700 font-medium hidden xl:block">{user?.email}</span>
+                    <span className="text-sm text-gray-600 font-medium font-roboto hidden xl:block">{user?.email}</span>
                   </div>
                   <button
                     onClick={handleSignOut}
-                    className="nav-link nav-link-inactive bg-gray-50 hover:bg-gray-100 text-gray-700 hover:text-gray-800"
+                    className="nav-link nav-link-inactive bg-gray-50 hover:bg-gray-100 text-gray-600 hover:text-gray-800"
                   >
                     Sign Out
                   </button>
@@ -170,7 +170,7 @@ export default function Navigation() {
                 <Link
                   key={item.href}
                   href={item.href}
-                  className={`block px-4 py-3 text-base font-medium transition-all duration-200 transform ${
+                  className={`block px-4 py-3 text-base font-medium font-roboto transition-all duration-200 transform ${
                     pathname === item.href
                       ? 'text-blue-700'
                       : 'text-gray-600 hover:text-gray-900'
@@ -195,14 +195,14 @@ export default function Navigation() {
                           {user?.email?.charAt(0).toUpperCase()}
                         </span>
                       </div>
-                      <div className="text-sm text-slate-700 font-medium">{user?.email}</div>
+                      <div className="text-sm text-gray-600 font-medium font-roboto">{user?.email}</div>
                     </div>
                     <button
                       onClick={() => {
                         handleSignOut()
                         setIsMenuOpen(false)
                       }}
-                      className="block w-full px-4 py-3 text-base font-medium transition-all duration-200 transform bg-gray-50 hover:bg-gray-100 text-gray-700 hover:text-gray-800"
+                      className="block w-full px-4 py-3 text-base font-medium font-roboto transition-all duration-200 transform bg-gray-50 hover:bg-gray-100 text-gray-600 hover:text-gray-800"
                     >
                       Sign Out
                     </button>

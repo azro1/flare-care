@@ -226,8 +226,8 @@ function MedicationsPageContent() {
       <div className="mb-8 sm:mb-10">
         <div className="flex flex-col sm:flex-row sm:justify-between sm:items-start">
           <div className="mb-6 sm:mb-0">
-            <h1 className="text-2xl sm:text-3xl lg:text-4xl font-bold text-gray-900 mb-4 sm:mb-6">Medications</h1>
-            <p className="text-gray-600">
+            <h1 className="text-2xl sm:text-3xl lg:text-4xl font-bold font-source text-gray-900 mb-4 sm:mb-6">Medications</h1>
+            <p className="text-gray-600 font-roboto">
               Manage your medication schedule and track adherence. Set up reminders to help you stay on track.
             </p>
           </div>
@@ -247,13 +247,13 @@ function MedicationsPageContent() {
       {/* Add/Edit Medication Form */}
       {isAdding && (
         <div className="card mb-8">
-          <h2 className="text-xl font-semibold text-gray-900 mb-6">
+          <h2 className="text-xl font-semibold font-source text-gray-900 mb-6">
             {editingId ? 'Edit Medication' : 'Add New Medication'}
           </h2>
           <form onSubmit={handleSubmit} className="space-y-6">
             <div className="grid md:grid-cols-2 gap-6">
               <div>
-                <label htmlFor="name" className="block text-sm font-medium text-gray-700 mb-2">
+                <label htmlFor="name" className="block text-sm font-medium font-roboto text-gray-700 mb-2">
                   Medication Name *
                 </label>
                 <input
@@ -269,7 +269,7 @@ function MedicationsPageContent() {
               </div>
 
               <div>
-                <label htmlFor="dosage" className="block text-sm font-medium text-gray-700 mb-2">
+                <label htmlFor="dosage" className="block text-sm font-medium font-roboto text-gray-700 mb-2">
                   Dosage
                 </label>
                 <input
@@ -286,7 +286,7 @@ function MedicationsPageContent() {
 
             <div className="grid md:grid-cols-2 gap-6">
               <div>
-                <label className="block text-sm font-medium text-gray-700 mb-2">
+                <label className="block text-sm font-medium font-roboto text-gray-700 mb-2">
                   Reminder Time
                 </label>
                 <TimePicker
@@ -297,7 +297,7 @@ function MedicationsPageContent() {
 
               {formData.timeOfDay === 'custom' && (
                 <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-2">
+                  <label className="block text-sm font-medium font-roboto text-gray-700 mb-2">
                     Custom Time
                   </label>
                   <TimePicker
@@ -317,13 +317,13 @@ function MedicationsPageContent() {
                  onChange={handleInputChange}
                  className="h-4 w-4 text-blue-600 focus:ring-blue-500 border-blue-300 rounded accent-blue-600"
                />
-              <label htmlFor="remindersEnabled" className="ml-2 block text-sm text-gray-700">
+              <label htmlFor="remindersEnabled" className="ml-2 block text-sm font-roboto text-gray-700">
                 Enable reminder notifications for this medication
               </label>
             </div>
 
             <div>
-              <label htmlFor="notes" className="block text-sm font-medium text-gray-700 mb-2">
+              <label htmlFor="notes" className="block text-sm font-medium font-roboto text-gray-700 mb-2">
                 Notes
               </label>
               <textarea
@@ -338,10 +338,10 @@ function MedicationsPageContent() {
             </div>
 
             <div className="flex space-x-3">
-              <button type="submit" className="btn-primary">
+              <button type="submit" className="btn-primary font-roboto">
                 {editingId ? 'Update Medication' : 'Add Medication'}
               </button>
-              <button type="button" onClick={cancelEdit} className="btn-secondary">
+              <button type="button" onClick={cancelEdit} className="btn-secondary font-roboto">
                 Cancel
               </button>
             </div>
@@ -352,11 +352,11 @@ function MedicationsPageContent() {
       {/* Medications List */}
       <div className="card mt-8 sm:mt-12">
         <div className="flex flex-col sm:flex-row sm:justify-between sm:items-center mb-6">
-          <h2 className="text-xl font-semibold text-gray-900 mb-4 sm:mb-0">Your Medications</h2>
+          <h2 className="text-xl font-semibold font-source text-gray-900 mb-4 sm:mb-0">Your Medications</h2>
           {!isAdding && (
             <button
               onClick={() => setIsAdding(true)}
-              className="btn-primary whitespace-nowrap"
+              className="btn-primary font-roboto whitespace-nowrap"
             >
               Add Medication
             </button>
@@ -368,7 +368,7 @@ function MedicationsPageContent() {
             <svg className="w-12 h-12 mx-auto mb-4 text-gray-300" fill="none" stroke="currentColor" viewBox="0 0 24 24">
               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19.428 15.428a2 2 0 00-1.022-.547l-2.387-.477a6 6 0 00-3.86.517l-.318.158a6 6 0 01-3.86.517L6.05 15.21a2 2 0 00-1.806.547M8 4h8l-1 1v5.172a2 2 0 00.586 1.414l5 5c1.26 1.26.367 3.414-1.415 3.414H4.828c-1.782 0-2.674-2.154-1.414-3.414l5-5A2 2 0 009 10.172V5L8 4z" />
             </svg>
-            <p>No medications added yet. Add your first medication to get started!</p>
+            <p className="font-roboto">No medications added yet. Add your first medication to get started!</p>
           </div>
         ) : (
           <div className="space-y-6 sm:space-y-8">
@@ -376,20 +376,20 @@ function MedicationsPageContent() {
               <div key={medication.id} className="border border-gray-200 rounded-lg p-4 hover:shadow-sm transition-shadow">
                 <div className="flex justify-between items-start mb-3">
                   <div className="flex-1">
-                    <h3 className="text-lg font-semibold text-gray-900 mb-1">
+                    <h3 className="text-lg font-semibold font-source text-gray-900 mb-1">
                       {medication.name}
                     </h3>
                     {medication.dosage && (
-                      <p className="text-sm text-gray-600 mb-2">
+                      <p className="text-sm text-gray-600 mb-2 font-roboto">
                         <span className="font-medium">Dosage:</span> {medication.dosage}
                       </p>
                     )}
                     <div className="flex items-center gap-2 text-center">
-                      <span className={`inline-block px-2 py-1 rounded-full text-xs font-medium ${getTimeOfDayColor(medication.timeOfDay)}`}>
+                      <span className={`inline-block px-2 py-1 rounded-full text-xs font-medium font-roboto ${getTimeOfDayColor(medication.timeOfDay)}`}>
                         {getTimeOfDayLabel(medication)}
                       </span>
                       {medication.remindersEnabled !== false && (
-                        <span className="inline-flex items-center px-2 py-1 rounded-full text-xs font-medium bg-green-100 text-green-800">
+                        <span className="inline-flex items-center px-2 py-1 rounded-full text-xs font-medium font-roboto bg-green-100 text-green-800">
                           <svg className="w-3 h-3 mr-1" fill="currentColor" viewBox="0 0 20 20">
                             <path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clipRule="evenodd" />
                           </svg>
@@ -422,13 +422,13 @@ function MedicationsPageContent() {
 
                 {medication.notes && (
                   <div className="mt-3 pt-3 border-t border-gray-100">
-                    <p className="text-sm text-gray-700">
+                    <p className="text-sm text-gray-700 font-roboto">
                       <span className="font-medium">Notes:</span> {medication.notes}
                     </p>
                   </div>
                 )}
 
-                <div className="mt-3 pt-3 border-t border-gray-100 text-xs text-gray-500">
+                <div className="mt-3 pt-3 border-t border-gray-100 text-xs text-gray-500 font-roboto">
                   Added {formatUKDate(medication.createdAt)}
                   {medication.updatedAt && medication.updatedAt !== medication.createdAt && (
                     <span> • Updated {formatUKDate(medication.updatedAt)}</span>
@@ -447,13 +447,13 @@ function MedicationsPageContent() {
             <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" />
           </svg>
           <div>
-            <h3 className="text-sm font-medium text-blue-900 mb-1">Medication Reminders</h3>
-            <p className="text-sm text-blue-700 mb-2">
+            <h3 className="text-sm font-medium font-source text-blue-900 mb-1">Medication Reminders</h3>
+            <p className="text-sm text-blue-700 mb-2 font-roboto">
               FlareCare will send browser notifications when it's time to take your medications.
             </p>
-            <p className="text-xs text-blue-600">
+            <p className="text-xs text-blue-600 font-roboto">
               💡 <strong>Tip:</strong> Reminders only work in your web browser. 
-                  They won’t show up as push notifications on your phone. 
+                  They won't show up as push notifications on your phone. 
                   You can turn reminders on or off for each medication.
             </p>
           </div>

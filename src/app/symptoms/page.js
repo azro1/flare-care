@@ -101,8 +101,8 @@ function SymptomsPageContent() {
       <div className="mb-8 sm:mb-10">
         <div className="flex flex-col sm:flex-row sm:justify-between sm:items-start">
           <div className="mb-6 sm:mb-0">
-            <h1 className="text-2xl sm:text-3xl lg:text-4xl font-bold text-gray-900 mb-4 sm:mb-6">Symptoms</h1>
-            <p className="text-gray-600">
+            <h1 className="text-2xl sm:text-3xl lg:text-4xl font-bold font-source text-gray-900 mb-4 sm:mb-6">Symptoms</h1>
+            <p className="text-gray-600 font-roboto">
               Track your daily symptoms to identify patterns and triggers. Your data is stored locally on your device.
             </p>
           </div>
@@ -121,11 +121,11 @@ function SymptomsPageContent() {
 
       {/* Symptom Logging Form */}
       <div className="card mb-8">
-        <h2 className="text-xl font-semibold text-gray-900 mb-6">Add New Entry</h2>
+        <h2 className="text-xl font-semibold font-source text-gray-900 mb-6">Add New Entry</h2>
         <form onSubmit={handleSubmit} className="space-y-6">
           <div className="grid md:grid-cols-2 gap-6">
             <div>
-              <label htmlFor="symptomStartDate" className="block text-sm font-medium text-gray-700 mb-2">
+              <label htmlFor="symptomStartDate" className="block text-sm font-medium font-roboto text-gray-700 mb-2">
                 When did symptoms begin?
               </label>
                       <DatePicker
@@ -139,11 +139,11 @@ function SymptomsPageContent() {
             </div>
 
             <div>
-              <label className="block text-sm font-medium text-gray-700 mb-2">
+              <label className="block text-sm font-medium font-roboto text-gray-700 mb-2">
                 Are symptoms still ongoing?
               </label>
               <div className="flex space-x-4">
-                <label className="flex items-center">
+                <label className="flex items-center font-roboto">
                   <input
                     type="radio"
                     name="isOngoing"
@@ -154,7 +154,7 @@ function SymptomsPageContent() {
                   />
                   Yes
                 </label>
-                <label className="flex items-center">
+                <label className="flex items-center font-roboto">
                   <input
                     type="radio"
                     name="isOngoing"
@@ -171,7 +171,7 @@ function SymptomsPageContent() {
 
             {!formData.isOngoing && (
               <div>
-                <label htmlFor="symptomEndDate" className="block text-sm font-medium text-gray-700 mb-2">
+                <label htmlFor="symptomEndDate" className="block text-sm font-medium font-roboto text-gray-700 mb-2">
                   When did symptoms end?
                 </label>
                         <DatePicker
@@ -187,7 +187,7 @@ function SymptomsPageContent() {
             )}
 
           <div>
-            <label htmlFor="severity" className="block text-sm font-medium text-gray-700 mb-2">
+            <label htmlFor="severity" className="block text-sm font-medium font-roboto text-gray-700 mb-2">
               Current Severity: {formData.severity}/10 ({getSeverityLabel(formData.severity)})
             </label>
             <input
@@ -200,14 +200,14 @@ function SymptomsPageContent() {
               onChange={handleInputChange}
               className="slider"
             />
-            <div className="flex justify-between text-xs text-gray-500 mt-1">
+            <div className="flex justify-between text-xs text-gray-500 mt-1 font-roboto">
               <span>1 (Very Mild)</span>
               <span>10 (Very Severe)</span>
             </div>
           </div>
 
           <div>
-            <label htmlFor="notes" className="block text-sm font-medium text-gray-700 mb-2">
+            <label htmlFor="notes" className="block text-sm font-medium font-roboto text-gray-700 mb-2">
               Notes
             </label>
             <textarea
@@ -222,7 +222,7 @@ function SymptomsPageContent() {
           </div>
 
           <div>
-            <label htmlFor="foods" className="block text-sm font-medium text-gray-700 mb-2">
+            <label htmlFor="foods" className="block text-sm font-medium font-roboto text-gray-700 mb-2">
               Foods Eaten
             </label>
             <input
@@ -236,7 +236,7 @@ function SymptomsPageContent() {
             />
           </div>
 
-          <button type="submit" className="btn-primary w-full md:w-auto">
+          <button type="submit" className="btn-primary font-roboto w-full md:w-auto">
             Log Symptom Entry
           </button>
         </form>
@@ -244,14 +244,14 @@ function SymptomsPageContent() {
 
       {/* Symptoms List */}
       <div className="card mt-8 sm:mt-12">
-        <h2 className="text-xl font-semibold text-gray-900 mb-6">Recent Entries</h2>
+        <h2 className="text-xl font-semibold font-source text-gray-900 mb-6">Recent Entries</h2>
         
         {symptoms.length === 0 ? (
           <div className="text-center py-8 text-gray-500">
             <svg className="w-12 h-12 mx-auto mb-4 text-gray-300" fill="none" stroke="currentColor" viewBox="0 0 24 24">
               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
             </svg>
-            <p>No symptom entries yet. Log your first entry above!</p>
+            <p className="font-roboto">No symptom entries yet. Log your first entry above!</p>
           </div>
         ) : (
           <div className="space-y-6 sm:space-y-8">
@@ -259,7 +259,7 @@ function SymptomsPageContent() {
               <div key={symptom.id} className="border border-gray-200 rounded-lg p-4 hover:shadow-sm transition-shadow">
                 <div className="flex justify-between items-start mb-3">
                   <div className="flex items-center space-x-3">
-                    <span className="text-sm text-gray-500">
+                    <span className="text-sm text-gray-500 font-roboto">
                       {new Date(symptom.symptomStartDate).toLocaleDateString('en-GB', {
                         weekday: 'short',
                         day: 'numeric',
@@ -272,7 +272,7 @@ function SymptomsPageContent() {
                         year: 'numeric'
                       })}`}
                     </span>
-                    <span className={`text-center px-2 py-1 rounded-full text-xs font-medium ${getSeverityColor(symptom.severity)}`}>
+                    <span className={`text-center px-2 py-1 rounded-full text-xs font-medium font-roboto ${getSeverityColor(symptom.severity)}`}>
                       {symptom.severity}/10 - {getSeverityLabel(symptom.severity)}
                     </span>
                   </div>
@@ -289,7 +289,7 @@ function SymptomsPageContent() {
 
                 {symptom.notes && (
                   <div className="mb-3">
-                    <p className="text-sm text-gray-700">
+                    <p className="text-sm text-gray-700 font-roboto">
                       <span className="font-medium">Notes:</span> {symptom.notes}
                     </p>
                   </div>
@@ -297,7 +297,7 @@ function SymptomsPageContent() {
 
                 {symptom.foods && (
                   <div>
-                    <p className="text-sm text-gray-700">
+                    <p className="text-sm text-gray-700 font-roboto">
                       <span className="font-medium">Foods:</span> {symptom.foods}
                     </p>
                   </div>

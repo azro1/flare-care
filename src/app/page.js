@@ -52,8 +52,8 @@ export default function Home() {
           </div>
           <h1 className="text-3xl font-bold font-source text-slate-900 mb-4">FlareCare</h1>
           <p className="text-lg font-semibold font-source text-blue-600 mb-4">Track your Crohn's & Colitis journey</p>
-          <p className="text-slate-600 mb-6 text-sm font-source">Log symptoms, manage medications, and generate reports for your healthcare team.</p>
-          <Link href="/auth" className="inline-flex items-center gap-2 bg-blue-600 hover:bg-blue-700 text-white font-semibold py-3 px-6 rounded-xl transition-all duration-300 transform hover:scale-105 hover:shadow-lg active:scale-95 font-source">
+          <p className="text-gray-600 mb-6 text-sm font-roboto leading-normal">Log symptoms, manage medications, and generate reports for your healthcare team</p>
+          <Link href="/auth" className="inline-flex items-center gap-2 bg-blue-600 hover:bg-blue-700 text-white font-semibold font-roboto py-3 px-6 rounded-xl transition-all duration-300 transform hover:scale-105 hover:shadow-lg active:scale-95">
             <span>Sign In</span>
             <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 7l5 5m0 0l-5 5m5-5H6" />
@@ -79,13 +79,13 @@ export default function Home() {
                   </svg>
                 </div>
               
-              <h1 className="text-2xl font-bold text-slate-900 mb-2">
+              <h1 className="text-2xl font-bold font-source text-slate-900 mb-2">
                 FlareCare
               </h1>
-              <p className="text-lg font-semibold text-blue-600 mb-4">
+              <p className="text-lg font-semibold font-source text-blue-600 mb-4">
                 Crohn's & Colitis Companion
               </p>
-              <p className="text-base text-slate-600 mb-6 leading-relaxed">
+              <p className="text-base font-roboto text-slate-600 mb-6 leading-relaxed">
                 Track symptoms, manage medications, and generate reports for better health decisions.
               </p>
             </div>
@@ -99,13 +99,13 @@ export default function Home() {
                   </svg>
                 </div>
               </div>
-              <h1 className="text-2xl sm:text-3xl lg:text-4xl font-bold text-slate-900 mb-4 sm:mb-6">
+              <h1 className="text-2xl sm:text-3xl lg:text-4xl font-bold font-source text-slate-900 mb-4 sm:mb-6">
                 Welcome to FlareCare
               </h1>
-              <p className="text-lg sm:text-xl text-slate-700 mb-4 sm:mb-6 max-w-3xl mx-auto leading-relaxed">
+              <p className="text-lg sm:text-xl font-source text-slate-700 mb-4 sm:mb-6 max-w-3xl mx-auto leading-relaxed">
                 Your personal companion for managing Crohn's & Colitis symptoms
               </p>
-              <p className="text-base sm:text-lg text-slate-600 max-w-2xl mx-auto mb-8 sm:mb-12 leading-relaxed">
+              <p className="text-base sm:text-lg font-roboto text-slate-600 max-w-2xl mx-auto mb-8 sm:mb-12 leading-relaxed">
                 Track your symptoms, manage medications, and generate detailed reports to help you and your healthcare team make informed decisions.
               </p>
             </div>
@@ -124,8 +124,8 @@ export default function Home() {
                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z" />
                   </svg>
                 </div>
-                <h3 className="text-xl sm:text-2xl font-bold text-slate-900 mb-3 group-hover:text-emerald-700 transition-colors duration-300">Symptoms</h3>
-                <p className="text-slate-600 leading-relaxed">Track your daily symptoms, severity, and triggers to identify patterns and improve your quality of life.</p>
+                <h3 className="text-xl sm:text-2xl font-bold font-source text-slate-900 mb-3 group-hover:text-emerald-700 transition-colors duration-300">Symptoms</h3>
+                <p className="text-slate-600 font-roboto leading-relaxed">Track your daily symptoms, severity, and triggers to identify patterns and improve your quality of life.</p>
               </div>
             </div>
           </Link>
@@ -138,8 +138,8 @@ export default function Home() {
                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19.428 15.428a2 2 0 00-1.022-.547l-2.387-.477a6 6 0 00-3.86.517l-.318.158a6 6 0 01-3.86.517L6.05 15.21a2 2 0 00-1.806.547M8 4h8l-1 1v5.172a2 2 0 00.586 1.414l5 5c1.26 1.26.367 3.414-1.415 3.414H4.828c-1.782 0-2.674-2.154-1.414-3.414l5-5A2 2 0 009 10.172V5L8 4z" />
                   </svg>
                 </div>
-                <h3 className="text-xl sm:text-2xl font-bold text-slate-900 mb-3 group-hover:text-purple-700 transition-colors duration-300">Medications</h3>
-                <p className="text-slate-600 leading-relaxed">Manage your medication schedule, track adherence, and never miss a dose with smart reminders.</p>
+                <h3 className="text-xl sm:text-2xl font-bold font-source text-slate-900 mb-3 group-hover:text-purple-700 transition-colors duration-300">Medications</h3>
+                <p className="text-slate-600 font-roboto leading-relaxed">Manage your medication schedule, track adherence, and never miss a dose with smart reminders.</p>
               </div>
             </div>
           </Link>
@@ -152,8 +152,8 @@ export default function Home() {
                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 17v-2m3 2v-4m3 4v-6m2 10H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
                   </svg>
                 </div>
-                <h3 className="text-xl sm:text-2xl font-bold text-slate-900 mb-3 group-hover:text-orange-700 transition-colors duration-300">Reports</h3>
-                <p className="text-slate-600 leading-relaxed">Generate detailed reports and export data for your healthcare team to make informed decisions.</p>
+                <h3 className="text-xl sm:text-2xl font-bold font-source text-slate-900 mb-3 group-hover:text-orange-700 transition-colors duration-300">Reports</h3>
+                <p className="text-slate-600 font-roboto leading-relaxed">Generate detailed reports and export data for your healthcare team to make informed decisions.</p>
               </div>
             </div>
           </Link>
@@ -167,15 +167,15 @@ export default function Home() {
               <div className="mb-6">
                 <span className="text-4xl sm:text-5xl">🚀</span>
               </div>
-              <h2 className="text-2xl sm:text-3xl font-bold text-slate-900 mb-4 sm:mb-6">
+              <h2 className="text-2xl sm:text-3xl font-bold font-source text-slate-900 mb-4 sm:mb-6">
                 Ready to take control?
               </h2>
-              <p className="text-slate-700 mb-8 sm:mb-10 text-base sm:text-lg leading-relaxed max-w-2xl mx-auto">
+              <p className="text-slate-700 mb-8 sm:mb-10 text-base sm:text-lg font-roboto leading-relaxed max-w-2xl mx-auto">
                 Every journey begins with a single step. Start by logging your first symptom entry - 
                 it only takes a minute, but the insights you'll gain are priceless. 
                 Your future self will thank you for the data you collect today.
               </p>
-              <Link href="/symptoms" className="bg-blue-600 hover:bg-blue-700 text-white font-semibold inline-flex items-center gap-2 text-base px-6 py-4 rounded-xl transition-all duration-300 transform hover:scale-105 hover:shadow-lg active:scale-95">
+              <Link href="/symptoms" className="bg-blue-600 hover:bg-blue-700 text-white font-semibold font-roboto inline-flex items-center gap-2 text-base px-6 py-4 rounded-xl transition-all duration-300 transform hover:scale-105 hover:shadow-lg active:scale-95">
                 <span>Start Your Journey</span>
                 <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 7l5 5m0 0l-5 5m5-5H6" />

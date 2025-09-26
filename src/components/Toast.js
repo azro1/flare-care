@@ -56,7 +56,7 @@ export default function Toast({ message, type = 'success', duration = 3000, onCl
     }`}>
       <div className={`${getToastStyles()} px-6 py-4 rounded-lg shadow-lg flex items-start space-x-3 max-w-sm`}>
         {getIcon()}
-        <span className="font-medium">{message}</span>
+        <span className="font-medium font-roboto">{message}</span>
         <button
           onClick={() => {
             setIsVisible(false)

@@ -54,6 +54,7 @@
   
   .nav-link {
     @apply px-4 py-2 rounded-xl text-sm font-medium transition-all duration-200 transform hover:scale-105;
+    font-family: 'Roboto', system-ui, sans-serif;
   }
   
   .nav-link-active {

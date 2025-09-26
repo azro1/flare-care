@@ -132,6 +132,7 @@ module.exports = {
       raleway: ['Raleway', 'system-ui', 'sans-serif'],
       source: ['Source Sans Pro', 'system-ui', 'sans-serif'],
       barlow: ['Barlow', 'system-ui', 'sans-serif'],
+      opensans: ['Open Sans', 'system-ui', 'sans-serif'],
     },
       spacing: {
         '18': '4.5rem',

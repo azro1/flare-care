@@ -28,8 +28,8 @@ function ReportsPageContent() {
 
   const generateReport = () => {
     // Filter symptoms by selected date range
-    const startDate = new Date(dateRange.startDate)
-    const endDate = new Date(dateRange.endDate)
+    const startDate = dateRange.startDate ? new Date(dateRange.startDate) : new Date(0) // Use epoch if no start date
+    const endDate = dateRange.endDate ? new Date(dateRange.endDate) : new Date() // Use today if no end date
     
     const allSymptoms = symptoms.filter(symptom => {
       const symptomStartDate = new Date(symptom.symptomStartDate)
@@ -73,8 +73,8 @@ function ReportsPageContent() {
       }))
 
     // Use the selected date range for the report period
-    const reportStartDate = new Date(dateRange.startDate)
-    const reportEndDate = new Date(dateRange.endDate)
+    const reportStartDate = dateRange.startDate ? new Date(dateRange.startDate) : new Date()
+    const reportEndDate = dateRange.endDate ? new Date(dateRange.endDate) : new Date()
 
     setReportData({
       period: {
@@ -151,7 +151,7 @@ function ReportsPageContent() {
       doc.setFontSize(12)
       doc.setFont('helvetica', 'normal')
       reportData.medications.forEach(med => {
-        doc.text(`• ${med.name}${med.dosage ? ` (${med.dosage})` : ''} - ${med.timeOfDay}`, margin, yPosition)
+        doc.text(`• ${med.name}${med.dosage ? ` (${med.dosage})` : ''}`, margin, yPosition)
         yPosition += 6
       })
       yPosition += 10
@@ -319,7 +319,7 @@ function ReportsPageContent() {
       <div className="max-w-4xl mx-auto">
         <div className="text-center py-8">
           <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary-600 mx-auto mb-4"></div>
-          <p className="text-gray-600">Generating report...</p>
+          <p className="text-gray-600 font-roboto">Generating report...</p>
         </div>
       </div>
     )
@@ -328,15 +328,15 @@ function ReportsPageContent() {
   return (
     <div className="w-full max-w-4xl mx-auto">
       <div className="mb-8 sm:mb-10">
-        <h1 className="text-2xl sm:text-3xl lg:text-4xl font-bold text-gray-900 mb-4 sm:mb-6">Health Reports</h1>
-        <p className="text-gray-600">
+        <h1 className="text-2xl sm:text-3xl lg:text-4xl font-bold font-source text-gray-900 mb-4 sm:mb-6">Health Reports</h1>
+        <p className="text-gray-600 font-roboto">
           Generate detailed reports of your health data to share with your healthcare team.
         </p>
       </div>
 
       {/* Date Range Selector */}
-      <div className="bg-white/80 rounded-2xl shadow-lg border border-white/20 p-6 transition-all duration-300 hover:shadow-xl mb-8 sm:mb-12 overflow-visible" style={{ isolation: 'isolate' }}>
-        <h2 className="text-xl font-semibold text-gray-900 mb-6">Select Report Period</h2>
+      <div className="bg-white/80 rounded-2xl shadow-lg border border-white/20 p-4 sm:p-6 transition-all duration-300 hover:shadow-xl mb-8 sm:mb-12 overflow-visible" style={{ isolation: 'isolate' }}>
+        <h2 className="text-xl font-semibold font-source text-gray-900 mb-6">Select Report Period</h2>
         
         {/* Quick Presets */}
         <div className="flex flex-wrap gap-2 mb-6">
@@ -350,7 +350,7 @@ function ReportsPageContent() {
                 endDate: endDate.toISOString().split('T')[0]
               })
             }}
-            className="px-3 py-1 text-sm bg-gray-100 hover:bg-gray-200 rounded-lg transition-colors"
+            className="px-3 py-1 text-sm bg-gray-100 hover:bg-gray-200 rounded-lg transition-colors font-roboto"
           >
             Last 7 days
           </button>
@@ -364,7 +364,7 @@ function ReportsPageContent() {
                 endDate: endDate.toISOString().split('T')[0]
               })
             }}
-            className="px-3 py-1 text-sm bg-gray-100 hover:bg-gray-200 rounded-lg transition-colors"
+            className="px-3 py-1 text-sm bg-gray-100 hover:bg-gray-200 rounded-lg transition-colors font-roboto"
           >
             Last 30 days
           </button>
@@ -378,7 +378,7 @@ function ReportsPageContent() {
                 endDate: endDate.toISOString().split('T')[0]
               })
             }}
-            className="px-3 py-1 text-sm bg-gray-100 hover:bg-gray-200 rounded-lg transition-colors"
+            className="px-3 py-1 text-sm bg-gray-100 hover:bg-gray-200 rounded-lg transition-colors font-roboto"
           >
             Last 3 months
           </button>
@@ -392,7 +392,7 @@ function ReportsPageContent() {
                 })
               }
             }}
-            className="px-3 py-1 text-sm bg-gray-100 hover:bg-gray-200 rounded-lg transition-colors"
+            className="px-3 py-1 text-sm bg-gray-100 hover:bg-gray-200 rounded-lg transition-colors font-roboto"
           >
             All time
           </button>
@@ -400,7 +400,7 @@ function ReportsPageContent() {
 
         <div className="grid md:grid-cols-2 gap-4 mb-6">
           <div>
-            <label htmlFor="startDate" className="block text-sm font-medium text-gray-700 mb-2">
+            <label htmlFor="startDate" className="block text-sm font-medium font-roboto text-gray-700 mb-2">
               Start Date
             </label>
             <DatePicker
@@ -412,7 +412,7 @@ function ReportsPageContent() {
             />
           </div>
           <div>
-            <label htmlFor="endDate" className="block text-sm font-medium text-gray-700 mb-2">
+            <label htmlFor="endDate" className="block text-sm font-medium font-roboto text-gray-700 mb-2">
               End Date
             </label>
             <DatePicker
@@ -425,14 +425,14 @@ function ReportsPageContent() {
           </div>
         </div>
         <div className="flex flex-col sm:flex-row sm:justify-between sm:items-center gap-4">
-          <div className="text-sm text-gray-600 sm:max-w-md sm:pr-4">
+          <div className="text-sm text-gray-600 sm:max-w-md sm:pr-4 font-roboto">
             Showing symptoms from {formatUKDate(dateRange.startDate)} to {formatUKDate(dateRange.endDate)}
           </div>
           <div className="flex space-x-3">
-            <button onClick={() => handleExportClick(exportToPDF)} className="btn-primary whitespace-nowrap">
+            <button onClick={() => handleExportClick(exportToPDF)} className="btn-primary whitespace-nowrap font-roboto">
               Export PDF
             </button>
-            <button onClick={() => handleExportClick(exportToCSV)} className="btn-secondary whitespace-nowrap">
+            <button onClick={() => handleExportClick(exportToCSV)} className="btn-secondary whitespace-nowrap font-roboto">
               Export CSV
             </button>
           </div>
@@ -442,11 +442,11 @@ function ReportsPageContent() {
       {/* Report Results */}
       <div className="card mb-8 sm:mb-12">
         <div className="flex justify-between items-center mb-6">
-          <h2 className="text-xl font-semibold text-gray-900">Symptom Report</h2>
+          <h2 className="text-xl font-semibold font-source text-gray-900">Symptom Report</h2>
         </div>
         
         {reportData.totalEntries > 0 && (
-          <div className="text-sm text-gray-600 mb-6">
+          <div className="text-sm text-gray-600 mb-6 font-roboto">
             Found {reportData.totalEntries} symptom {reportData.totalEntries === 1 ? 'episode' : 'episodes'} in the selected period
           </div>
         )}
@@ -457,30 +457,30 @@ function ReportsPageContent() {
             <div className="text-3xl font-bold text-primary-600 mb-2">
               {reportData.totalEntries}
             </div>
-            <div className="text-sm text-gray-600">Symptom Episodes</div>
+            <div className="text-sm text-gray-600 font-roboto">Symptom Episodes</div>
           </div>
           <div className="text-center">
             <div className="text-3xl font-bold text-primary-600 mb-2">
               {reportData.averageSeverity}
             </div>
-            <div className="text-sm text-gray-600">Average Severity</div>
+            <div className="text-sm text-gray-600 font-roboto">Average Severity</div>
           </div>
           <div className="text-center">
             <div className="text-3xl font-bold text-primary-600 mb-2">
               {reportData.medications.length}
             </div>
-            <div className="text-sm text-gray-600">Medications</div>
+            <div className="text-sm text-gray-600 font-roboto">Medications</div>
           </div>
         </div>
 
         {/* Severity Trend */}
         {reportData.severityTrend.length > 0 && (
           <div className="mb-8">
-            <h3 className="text-lg font-semibold text-gray-900 mb-4">Symptom Episodes</h3>
+            <h3 className="text-lg font-semibold font-source text-gray-900 mb-4">Symptom Episodes</h3>
             <div className="space-y-3 sm:space-y-4">
               {reportData.severityTrend.map((entry, index) => (
                 <div key={index} className="flex items-center space-x-4">
-                  <div className="w-32 text-sm text-gray-600">
+                  <div className="w-32 text-sm text-gray-600 font-roboto">
                     {formatUKDate(entry.date)}
                     {entry.isOngoing ? ' (Ongoing)' : ` - ${formatUKDate(entry.endDate)}`}
                   </div>
@@ -492,7 +492,7 @@ function ReportsPageContent() {
                           style={{ width: `${(entry.severity / 10) * 100}%` }}
                         ></div>
                       </div>
-                      <span className={`px-2 py-1 rounded-full text-xs font-medium ${getSeverityColor(entry.severity)}`}>
+                      <span className={`px-2 py-1 rounded-full text-xs font-medium font-roboto ${getSeverityColor(entry.severity)}`}>
                         {entry.severity}/10
                       </span>
                     </div>
@@ -507,17 +507,17 @@ function ReportsPageContent() {
       {/* Medications */}
       {reportData.medications.length > 0 && (
         <div className="card mb-8 sm:mb-12">
-          <h3 className="text-lg font-semibold text-gray-900 mb-4">Current Medications</h3>
+          <h3 className="text-lg font-semibold font-source text-gray-900 mb-4">Current Medications</h3>
           <div className="space-y-4 sm:space-y-6">
             {reportData.medications.map((med, index) => (
               <div key={index} className="flex justify-between items-center py-2 border-b border-gray-100 last:border-b-0">
                 <div>
-                  <span className="font-medium text-gray-900">{med.name}</span>
+                  <span className="font-medium font-roboto text-gray-900">{med.name}</span>
                   {med.dosage && (
-                    <span className="text-gray-600 ml-2">({med.dosage})</span>
+                    <span className="text-gray-600 ml-2 font-roboto">({med.dosage})</span>
                   )}
                 </div>
-                <span className="text-sm text-gray-500 capitalize">{med.timeOfDay}</span>
+                <span className="text-sm text-gray-500 capitalize font-roboto">{med.timeOfDay}</span>
               </div>
             ))}
           </div>
@@ -527,12 +527,12 @@ function ReportsPageContent() {
       {/* Top Foods */}
       {reportData.topFoods.length > 0 && (
         <div className="card">
-          <h3 className="text-lg font-semibold text-gray-900 mb-4">Most Logged Foods</h3>
+          <h3 className="text-lg font-semibold font-source text-gray-900 mb-4">Most Logged Foods</h3>
           <div className="space-y-3 sm:space-y-4">
             {reportData.topFoods.map(([food, count], index) => (
               <div key={index} className="flex justify-between items-center">
-                <span className="text-gray-900">{food}</span>
-                <span className="text-sm text-gray-500">{count} time{count !== 1 ? 's' : ''}</span>
+                <span className="text-gray-900 font-roboto">{food}</span>
+                <span className="text-sm text-gray-500 font-roboto">{count} time{count !== 1 ? 's' : ''}</span>
               </div>
             ))}
           </div>
