@@ -82,7 +82,7 @@ export default function About() {
         </div>
       </div>
 
-      <div className="bg-gradient-to-r from-blue-50 to-indigo-50 border border-blue-200 rounded-2xl p-8">
+      <div className="bg-gradient-to-r from-blue-50 to-indigo-50 border border-blue-200 rounded-2xl p-7">
         <h2 className="text-2xl font-bold font-source text-gray-900 mb-4">Stay Connected</h2>
         <p className="text-gray-600 mb-6 font-roboto">
           Have questions, suggestions, or want to share your own story? 

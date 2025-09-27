@@ -41,9 +41,9 @@ export default function Footer() {
   
   // Full footer for main content pages
   return (
-    <footer className="bg-white border-t border-gray-200 py-10 sm:py-8 mt-auto">
+    <footer className="bg-white border-t border-gray-200 py-8 mt-auto">
       <div className="container mx-auto px-4 sm:px-6 lg:px-8">
-        <div className="flex flex-col items-center text-center md:grid md:grid-cols-2 md:gap-8 md:items-start md:text-left lg:flex lg:flex-row lg:justify-between gap-8 mb-10 sm:mb-8">
+        <div className="flex flex-col items-center text-center md:grid md:grid-cols-2 md:gap-8 md:items-start md:text-left lg:flex lg:flex-row lg:justify-between gap-8 mb-8">
           
           <div className="md:text-left">
             <h3 className="font-semibold font-source text-gray-900 mb-2 text-lg">Track</h3>

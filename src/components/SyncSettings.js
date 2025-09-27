@@ -1,6 +1,6 @@
 'use client'
 
-import { useState } from 'react'
+import { useState, useEffect, useRef } from 'react'
 import { useAuth } from '../lib/AuthContext'
 
 export default function SyncSettings({ 
@@ -13,6 +13,7 @@ export default function SyncSettings({
 }) {
   const { isAuthenticated } = useAuth()
   const [showSettings, setShowSettings] = useState(false)
+  const dropdownRef = useRef(null)
 
   const handleSyncToggle = (enabled) => {
     if (enabled && !isOnline) {
@@ -26,16 +27,33 @@ export default function SyncSettings({
     setSyncEnabled(enabled)
   }
 
+  // Close dropdown when clicking outside
+  useEffect(() => {
+    const handleClickOutside = (event) => {
+      if (dropdownRef.current && !dropdownRef.current.contains(event.target)) {
+        setShowSettings(false)
+      }
+    }
+
+    if (showSettings) {
+      document.addEventListener('mousedown', handleClickOutside)
+    }
+
+    return () => {
+      document.removeEventListener('mousedown', handleClickOutside)
+    }
+  }, [showSettings])
+
   return (
-    <div className="relative">
+    <div className="relative" ref={dropdownRef}>
       <button
         onClick={() => setShowSettings(!showSettings)}
-        className="flex items-center space-x-2 text-sm bg-blue-600 text-white px-3 py-2 rounded-lg shadow-sm transition-all duration-200 whitespace-nowrap"
+        className="flex items-center space-x-1 text-sm bg-blue-600 text-white px-3 pr-4 py-2 rounded-lg shadow-sm transition-all duration-200 whitespace-nowrap"
       >
         <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
           <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15" />
         </svg>
-        <span className="font-roboto">Sync Settings</span>
+        <span className="font-roboto">Sync</span>
         {isSyncing && (
           <div className="w-2 h-2 bg-blue-500 rounded-full animate-pulse"></div>
         )}
