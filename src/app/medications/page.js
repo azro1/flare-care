@@ -27,9 +27,9 @@ function MedicationsPageContent() {
     missedMedications: false,
     missedMedicationsList: [{ medication: '', timeOfDay: '', date: new Date().toISOString().split('T')[0] }],
     nsaidUsage: false,
-    nsaidList: [{ details: '', date: new Date().toISOString().split('T')[0], timeOfDay: '' }],
+    nsaidList: [{ medication: '', date: new Date().toISOString().split('T')[0], timeOfDay: '' }],
     antibioticUsage: false,
-    antibioticList: [{ details: '', date: new Date().toISOString().split('T')[0], timeOfDay: '' }]
+    antibioticList: [{ medication: '', date: new Date().toISOString().split('T')[0], timeOfDay: '' }]
   })
 
 
@@ -253,7 +253,7 @@ function MedicationsPageContent() {
   const addNsaid = () => {
     setMedicationTracking(prev => ({
       ...prev,
-      nsaidList: [...prev.nsaidList, { details: '', date: new Date().toISOString().split('T')[0], timeOfDay: '' }]
+      nsaidList: [...prev.nsaidList, { medication: '', date: new Date().toISOString().split('T')[0], timeOfDay: '' }]
     }))
   }
 
@@ -276,7 +276,7 @@ function MedicationsPageContent() {
   const addAntibiotic = () => {
     setMedicationTracking(prev => ({
       ...prev,
-      antibioticList: [...prev.antibioticList, { details: '', date: new Date().toISOString().split('T')[0], timeOfDay: '' }]
+      antibioticList: [...prev.antibioticList, { medication: '', date: new Date().toISOString().split('T')[0], timeOfDay: '' }]
     }))
   }
 
@@ -321,8 +321,8 @@ function MedicationsPageContent() {
         startDate: new Date().toISOString().split('T')[0],
         endDate: null,
         missed_medications_list: medicationTracking.missedMedications ? medicationTracking.missedMedicationsList.filter(item => item.medication.trim()) : [],
-        nsaid_list: medicationTracking.nsaidUsage ? medicationTracking.nsaidList.filter(item => item.details.trim()) : [],
-        antibiotic_list: medicationTracking.antibioticUsage ? medicationTracking.antibioticList.filter(item => item.details.trim()) : [],
+        nsaid_list: medicationTracking.nsaidUsage ? medicationTracking.nsaidList.filter(item => item.medication.trim()) : [],
+        antibiotic_list: medicationTracking.antibioticUsage ? medicationTracking.antibioticList.filter(item => item.medication.trim()) : [],
         createdAt: existingTracking?.createdAt || new Date().toISOString()
       }
 
@@ -495,7 +495,7 @@ function MedicationsPageContent() {
           </div>
         ) : (
           <div className="space-y-6 sm:space-y-8">
-            {medications.map((medication) => (
+            {medications.filter(med => med.name !== 'Medication Tracking').map((medication) => (
               <div key={medication.id} className="border border-gray-200 rounded-lg p-4 hover:shadow-sm transition-shadow">
                 <div className="flex justify-between items-start mb-3">
                   <div className="flex-1">
@@ -645,6 +645,7 @@ function MedicationsPageContent() {
                         placeholder="Date"
                         className="w-full"
                         maxDate={new Date().toISOString().split('T')[0]}
+                        minDate={new Date(Date.now() - 2 * 365 * 24 * 60 * 60 * 1000).toISOString().split('T')[0]}
                       />
                     </div>
                     <div className="sm:col-span-2">
@@ -739,8 +740,8 @@ function MedicationsPageContent() {
                       <input
                         type="text"
                         placeholder="e.g., Ibuprofen 200mg"
-                        value={item.details}
-                        onChange={(e) => updateNsaid(index, 'details', e.target.value)}
+                        value={item.medication}
+                        onChange={(e) => updateNsaid(index, 'medication', e.target.value)}
                         className="input-field"
                       />
                     </div>
@@ -751,6 +752,7 @@ function MedicationsPageContent() {
                         placeholder="When taken?"
                         className="w-full"
                         maxDate={new Date().toISOString().split('T')[0]}
+                        minDate={new Date(Date.now() - 2 * 365 * 24 * 60 * 60 * 1000).toISOString().split('T')[0]}
                       />
                     </div>
                     <div className="sm:col-span-2">
@@ -845,8 +847,8 @@ function MedicationsPageContent() {
                       <input
                         type="text"
                         placeholder="e.g., Amoxicillin 500mg"
-                        value={item.details}
-                        onChange={(e) => updateAntibiotic(index, 'details', e.target.value)}
+                        value={item.medication}
+                        onChange={(e) => updateAntibiotic(index, 'medication', e.target.value)}
                         className="input-field"
                       />
                     </div>
@@ -857,6 +859,7 @@ function MedicationsPageContent() {
                         placeholder="When taken?"
                         className="w-full"
                         maxDate={new Date().toISOString().split('T')[0]}
+                        minDate={new Date(Date.now() - 2 * 365 * 24 * 60 * 60 * 1000).toISOString().split('T')[0]}
                       />
                     </div>
                     <div className="sm:col-span-2">
@@ -884,6 +887,67 @@ function MedicationsPageContent() {
             </div>
           )}
         </div>
+        
+        {/* Medication Tracking Data Display */}
+        {medications.find(med => med.name === 'Medication Tracking') && (
+          <div className="mt-6 p-4 bg-gray-50 border border-gray-200 rounded-lg">
+            <div className="flex justify-between items-start mb-3">
+              <h4 className="text-sm font-medium font-roboto text-gray-900">Medication Tracking Data</h4>
+              <div className="flex space-x-2">
+                <button
+                  onClick={() => {
+                    const trackingData = medications.find(med => med.name === 'Medication Tracking')
+                    // Populate the form with existing tracking data
+                    setMedicationTracking({
+                      missedMedications: trackingData.missed_medications_list?.length > 0,
+                      missedMedicationsList: trackingData.missed_medications_list?.length > 0 ? trackingData.missed_medications_list : [{ medication: '', timeOfDay: '', date: new Date().toISOString().split('T')[0] }],
+                      nsaidUsage: trackingData.nsaid_list?.length > 0,
+                      nsaidList: trackingData.nsaid_list?.length > 0 ? trackingData.nsaid_list : [{ medication: '', date: new Date().toISOString().split('T')[0], timeOfDay: '' }],
+                      antibioticUsage: trackingData.antibiotic_list?.length > 0,
+                      antibioticList: trackingData.antibiotic_list?.length > 0 ? trackingData.antibiotic_list : [{ medication: '', date: new Date().toISOString().split('T')[0], timeOfDay: '' }]
+                    })
+                  }}
+                  className="text-blue-600 hover:text-blue-800 p-1"
+                  title="Edit tracking data"
+                >
+                  <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z" />
+                  </svg>
+                </button>
+                <button
+                  onClick={() => {
+                    setDeleteModal({ isOpen: true, id: medications.find(med => med.name === 'Medication Tracking')?.id })
+                  }}
+                  className="text-red-600 hover:text-red-800 p-1"
+                  title="Delete tracking data"
+                >
+                  <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
+                  </svg>
+                </button>
+              </div>
+            </div>
+            <div className="text-xs text-gray-600 space-y-1">
+              {(() => {
+                const trackingData = medications.find(med => med.name === 'Medication Tracking')
+                return (
+                  <>
+                    <p><strong>Created:</strong> {formatUKDate(trackingData.createdAt)}</p>
+                    {trackingData.missed_medications_list?.length > 0 && (
+                      <p><strong>Missed Medications:</strong> {trackingData.missed_medications_list.length} entries</p>
+                    )}
+                    {trackingData.nsaid_list?.length > 0 && (
+                      <p><strong>NSAIDs:</strong> {trackingData.nsaid_list.length} entries</p>
+                    )}
+                    {trackingData.antibiotic_list?.length > 0 && (
+                      <p><strong>Antibiotics:</strong> {trackingData.antibiotic_list.length} entries</p>
+                    )}
+                  </>
+                )
+              })()}
+            </div>
+          </div>
+        )}
       </div>
 
       {/* Reminder Info */}
