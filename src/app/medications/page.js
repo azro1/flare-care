@@ -298,10 +298,27 @@ function MedicationsPageContent() {
 
   const handleMedicationTrackingChange = (e) => {
     const { name, value, type, checked } = e.target
-    setMedicationTracking(prev => ({
-      ...prev,
-      [name]: type === 'checkbox' ? checked : value === 'true'
-    }))
+    const isTrue = type === 'checkbox' ? checked : value === 'true'
+    
+    setMedicationTracking(prev => {
+      const newState = {
+        ...prev,
+        [name]: isTrue
+      }
+      
+      // Initialize lists when first set to true - all default to today's date
+      if (name === 'missedMedications' && isTrue && prev.missedMedicationsList.length === 0) {
+        newState.missedMedicationsList = [{ medication: '', timeOfDay: '', date: new Date().toISOString().split('T')[0] }]
+      }
+      if (name === 'nsaidUsage' && isTrue && prev.nsaidList.length === 0) {
+        newState.nsaidList = [{ medication: '', date: new Date().toISOString().split('T')[0], timeOfDay: '' }]
+      }
+      if (name === 'antibioticUsage' && isTrue && prev.antibioticList.length === 0) {
+        newState.antibioticList = [{ medication: '', date: new Date().toISOString().split('T')[0], timeOfDay: '' }]
+      }
+      
+      return newState
+    })
   }
 
   // Auto-save medication tracking to medications list when data changes
@@ -367,206 +384,11 @@ function MedicationsPageContent() {
         </div>
       </div>
 
-      {/* Add/Edit Medication Form */}
-      {isAdding && (
-        <div className="card mb-8">
-          <h2 className="text-xl font-semibold font-source text-gray-900 mb-6">
-            {editingId ? 'Edit Medication' : 'Add New Medication'}
-          </h2>
-          <form onSubmit={handleSubmit} className="space-y-6">
-            <div className="grid md:grid-cols-2 gap-6">
-              <div>
-                <label htmlFor="name" className="block text-sm font-medium font-roboto text-gray-700 mb-2">
-                  Medication Name *
-                </label>
-                <input
-                  type="text"
-                  id="name"
-                  name="name"
-                  value={formData.name}
-                  onChange={handleInputChange}
-                  placeholder="e.g., Mesalamine, Prednisone"
-                  className="input-field"
-                  required
-                />
-              </div>
-
-              <div>
-                <label htmlFor="dosage" className="block text-sm font-medium font-roboto text-gray-700 mb-2">
-                  Dosage
-                </label>
-                <input
-                  type="text"
-                  id="dosage"
-                  name="dosage"
-                  value={formData.dosage}
-                  onChange={handleInputChange}
-                  placeholder="e.g., 500mg, 2 tablets"
-                  className="input-field"
-                />
-              </div>
-            </div>
-
-            <div className="grid md:grid-cols-2 gap-6">
-              <div>
-                <label className="block text-sm font-medium font-roboto text-gray-700 mb-2">
-                  Reminder Time
-                </label>
-                <TimePicker
-                  value={formData.timeOfDay}
-                  onChange={(value) => setFormData(prev => ({ ...prev, timeOfDay: value }))}
-                />
-              </div>
-
-              {formData.timeOfDay === 'custom' && (
-                <div>
-                  <label className="block text-sm font-medium font-roboto text-gray-700 mb-2">
-                    Custom Time
-                  </label>
-                  <TimePicker
-                    value={formData.customTime}
-                    onChange={(value) => setFormData(prev => ({ ...prev, customTime: value }))}
-                  />
-                </div>
-              )}
-            </div>
-
-            <div className="flex items-start sm:items-center">
-               <input
-                 type="checkbox"
-                 id="remindersEnabled"
-                 name="remindersEnabled"
-                 checked={formData.remindersEnabled}
-                 onChange={handleInputChange}
-                 className="h-4 w-4 text-blue-600 focus:ring-blue-500 border-blue-300 rounded accent-blue-600"
-               />
-              <label htmlFor="remindersEnabled" className="ml-2 block text-sm font-roboto text-gray-700">
-                Enable reminder notifications for this medication
-              </label>
-            </div>
-
-            <div>
-              <label htmlFor="notes" className="block text-sm font-medium font-roboto text-gray-700 mb-2">
-                Notes
-              </label>
-              <textarea
-                id="notes"
-                name="notes"
-                rows="3"
-                value={formData.notes}
-                onChange={handleInputChange}
-                placeholder="Any special instructions, side effects to watch for, etc."
-                className="input-field resize-none"
-              />
-            </div>
-
-            <div className="flex space-x-3">
-              <button type="submit" className="btn-primary font-roboto">
-                {editingId ? 'Update Medication' : 'Add Medication'}
-              </button>
-              <button type="button" onClick={cancelEdit} className="btn-secondary font-roboto">
-                Cancel
-              </button>
-            </div>
-          </form>
-        </div>
-      )}
-
-      {/* Medications List */}
-      <div className="card mt-8 sm:mt-12">
-        <div className="flex flex-col sm:flex-row sm:justify-between sm:items-center mb-6">
-          <h2 className="text-xl font-semibold font-source text-gray-900 mb-4 sm:mb-0">Your Medications</h2>
-          {!isAdding && (
-            <button
-              onClick={() => setIsAdding(true)}
-              className="btn-primary font-roboto whitespace-nowrap"
-            >
-              Add Medication
-            </button>
-          )}
-        </div>
-
-        {medications.length === 0 ? (
-          <div className="text-center py-8 text-gray-500">
-            <svg className="w-12 h-12 mx-auto mb-4 text-gray-300" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19.428 15.428a2 2 0 00-1.022-.547l-2.387-.477a6 6 0 00-3.86.517l-.318.158a6 6 0 01-3.86.517L6.05 15.21a2 2 0 00-1.806.547M8 4h8l-1 1v5.172a2 2 0 00.586 1.414l5 5c1.26 1.26.367 3.414-1.415 3.414H4.828c-1.782 0-2.674-2.154-1.414-3.414l5-5A2 2 0 009 10.172V5L8 4z" />
-            </svg>
-            <p className="font-roboto">No medications added yet. Add your first medication to get started!</p>
-          </div>
-        ) : (
-          <div className="space-y-6 sm:space-y-8">
-            {medications.filter(med => med.name !== 'Medication Tracking').map((medication) => (
-              <div key={medication.id} className="border border-gray-200 rounded-lg p-4 hover:shadow-sm transition-shadow">
-                <div className="flex justify-between items-start mb-3">
-                  <div className="flex-1">
-                    <h3 className="text-lg font-semibold font-source text-gray-900 mb-1">
-                      {medication.name}
-                    </h3>
-                    {medication.dosage && (
-                      <p className="text-sm text-gray-600 mb-2 font-roboto">
-                        <span className="font-medium">Dosage:</span> {medication.dosage}
-                      </p>
-                    )}
-                    <div className="flex items-center gap-2 text-center">
-                      <span className={`inline-block px-2 py-1 rounded-full text-xs font-medium font-roboto ${getTimeOfDayColor(medication.timeOfDay)}`}>
-                        {getTimeOfDayLabel(medication)}
-                      </span>
-                      {medication.remindersEnabled !== false && (
-                        <span className="inline-flex items-center px-2 py-1 rounded-full text-xs font-medium font-roboto bg-green-100 text-green-800">
-                          <svg className="w-3 h-3 mr-1" fill="currentColor" viewBox="0 0 20 20">
-                            <path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clipRule="evenodd" />
-                          </svg>
-                          Reminders On
-                        </span>
-                      )}
-                    </div>
-                  </div>
-                  <div className="flex space-x-2 ml-4">
-                    <button
-                      onClick={() => startEdit(medication)}
-                      className="text-blue-500 hover:text-blue-700 p-1"
-                      title="Edit medication"
-                    >
-                      <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z" />
-                      </svg>
-                    </button>
-                    <button
-                      onClick={() => handleDeleteMedication(medication.id)}
-                      className="text-red-500 hover:text-red-700 p-1"
-                      title="Delete medication"
-                    >
-                      <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
-                      </svg>
-                    </button>
-                  </div>
-                </div>
-
-                {medication.notes && (
-                  <div className="mt-3 pt-3 border-t border-gray-100">
-                    <p className="text-sm text-gray-700 font-roboto">
-                      <span className="font-medium">Notes:</span> {medication.notes}
-                    </p>
-                  </div>
-                )}
-
-                <div className="mt-3 pt-3 border-t border-gray-100 text-xs text-gray-500 font-roboto">
-                  Added {formatUKDate(medication.createdAt)}
-                  {medication.updatedAt && medication.updatedAt !== medication.createdAt && (
-                    <span> • Updated {formatUKDate(medication.updatedAt)}</span>
-                  )}
-                </div>
-              </div>
-            ))}
-          </div>
-        )}
-      </div>
 
       {/* Medication Tracking */}
-      <div className="card mt-8">
+      <div className="card mt-8 sm:mt-12">
         <h2 className="text-xl font-semibold font-source text-gray-900 mb-6">Medication Tracking</h2>
-        
+                
         {/* Missed Medications */}
         <div className="space-y-4 mb-8">
           <div>
@@ -574,104 +396,98 @@ function MedicationsPageContent() {
               Did you miss any prescribed medications recently?
             </label>
             <div className="flex space-x-4">
-              <label className="flex items-center font-roboto">
-                <input
-                  type="radio"
-                  name="missedMedications"
-                  value="true"
-                  checked={medicationTracking.missedMedications === true}
-                  onChange={handleMedicationTrackingChange}
-                  className="mr-2"
-                />
-                Yes
-              </label>
-              <label className="flex items-center font-roboto">
+              <label className="flex items-center">
                 <input
                   type="radio"
                   name="missedMedications"
                   value="false"
-                  checked={medicationTracking.missedMedications === false}
+                  checked={!medicationTracking.missedMedications}
                   onChange={handleMedicationTrackingChange}
                   className="mr-2"
                 />
-                No
+                <span className="font-roboto">No</span>
+              </label>
+              <label className="flex items-center">
+                <input
+                  type="radio"
+                  name="missedMedications"
+                  value="true"
+                  checked={medicationTracking.missedMedications}
+                  onChange={handleMedicationTrackingChange}
+                  className="mr-2"
+                />
+                <span className="font-roboto">Yes</span>
               </label>
             </div>
-          </div>
 
-          {medicationTracking.missedMedications && (
-            <div className="ml-0 md:ml-6 space-y-4">
-              <div className="flex items-center justify-between">
-                <h4 className="text-md font-medium font-roboto text-gray-700">
-                  Which medications did you miss?
-                </h4>
-                <button
-                  type="button"
-                  onClick={addMissedMedication}
-                  className="text-blue-600 hover:text-blue-800 text-sm font-roboto"
-                >
-                  + Add Medication
-                </button>
-              </div>
-              
-              {medicationTracking.missedMedicationsList.map((item, index) => (
-                <div key={index} className="border border-gray-200 rounded-lg p-4 relative">
-                  {medicationTracking.missedMedicationsList.length > 1 && (
-                    <button
-                      type="button"
-                      onClick={() => removeMissedMedication(index)}
-                      className="absolute -left-2 -top-2 text-red-500 hover:text-red-700 bg-white border border-gray-200 rounded-full p-1 shadow-sm z-10"
-                      title="Remove medication"
-                    >
-                      <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
-                      </svg>
-                    </button>
-                  )}
-                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
-                    <div>
-                      <input
-                        type="text"
-                        placeholder="e.g., Mesalamine, Prednisone"
-                        value={item.medication}
-                        onChange={(e) => updateMissedMedication(index, 'medication', e.target.value)}
-                        className="input-field"
-                      />
-                    </div>
-                    <div>
-                      <DatePicker
-                        value={item.date || new Date().toISOString().split('T')[0]}
-                        onChange={(value) => updateMissedMedication(index, 'date', value)}
-                        placeholder="Date"
-                        className="w-full"
-                        maxDate={new Date().toISOString().split('T')[0]}
-                        minDate={new Date(Date.now() - 2 * 365 * 24 * 60 * 60 * 1000).toISOString().split('T')[0]}
-                      />
-                    </div>
-                    <div className="sm:col-span-2">
-                      <select
-                        value={item.timeOfDay}
-                        onChange={(e) => updateMissedMedication(index, 'timeOfDay', e.target.value)}
-                        className="w-full px-4 py-3 text-left bg-white border border-gray-200 rounded-xl shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent appearance-none bg-no-repeat bg-right pr-10 transition-all duration-200 hover:border-gray-300"
-                        style={{
-                          backgroundImage: `url("data:image/svg+xml,%3csvg xmlns='http://www.w3.org/2000/svg' fill='none' viewBox='0 0 20 20'%3e%3cpath stroke='%236b7280' stroke-linecap='round' stroke-linejoin='round' stroke-width='1.5' d='m6 8 4 4 4-4'/%3e%3c/svg%3e")`,
-                          backgroundPosition: 'right 0.75rem center',
-                          backgroundSize: '1.5em 1.5em'
-                        }}
-                        required
+            {medicationTracking.missedMedications && (
+              <div className="ml-0 md:ml-6 mt-4">
+                <div className="space-y-4">
+                  {medicationTracking.missedMedicationsList.map((item, index) => (
+                    <div key={index} className="relative border border-gray-200 rounded-lg p-4">
+                      <button
+                        type="button"
+                        onClick={() => removeMissedMedication(index)}
+                        className="absolute -left-2 -top-2 bg-white border border-gray-300 rounded-full p-1 shadow-sm z-10 text-red-500 hover:text-red-700"
+                        title="Remove medication"
                       >
-                        <option value="">Time of day</option>
-                        <option value="morning">Morning</option>
-                        <option value="afternoon">Afternoon</option>
-                        <option value="evening">Evening</option>
-                        <option value="night">Night</option>
-                      </select>
+                        <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M6 18L18 6M6 6l12 12"></path>
+                        </svg>
+                      </button>
+                      <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                        <div>
+                          <input
+                            type="text"
+                            placeholder="Medication name (e.g., Mesalamine, Prednisone)"
+                            value={item.medication}
+                            onChange={(e) => updateMissedMedication(index, 'medication', e.target.value)}
+                            className="input-field"
+                          />
+                        </div>
+                        <div>
+                          <DatePicker
+                            value={item.date || new Date().toISOString().split('T')[0]}
+                            onChange={(value) => updateMissedMedication(index, 'date', value)}
+                            placeholder="Date"
+                            className="w-full"
+                            maxDate={new Date().toISOString().split('T')[0]}
+                            minDate={new Date(Date.now() - 2 * 365 * 24 * 60 * 60 * 1000).toISOString().split('T')[0]}
+                          />
+                        </div>
+                      </div>
+                      <div className="mt-3">
+                        <select
+                          value={item.timeOfDay}
+                          onChange={(e) => updateMissedMedication(index, 'timeOfDay', e.target.value)}
+                          className="w-full px-4 py-3 text-left bg-white border border-gray-200 rounded-xl shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent appearance-none bg-no-repeat bg-right pr-10 transition-all duration-200 hover:border-gray-300"
+                          style={{
+                            backgroundImage: `url("data:image/svg+xml,%3csvg xmlns='http://www.w3.org/2000/svg' fill='none' viewBox='0 0 20 20'%3e%3cpath stroke='%236b7280' stroke-linecap='round' stroke-linejoin='round' stroke-width='1.5' d='m6 8 4 4 4-4'/%3e%3c/svg%3e")`,
+                            backgroundPosition: 'right 0.75rem center',
+                            backgroundSize: '1.5em 1.5em'
+                          }}
+                          required
+                        >
+                          <option value="">Time of day</option>
+                          <option value="morning">Morning</option>
+                          <option value="afternoon">Afternoon</option>
+                          <option value="evening">Evening</option>
+                          <option value="night">Night</option>
+                        </select>
+                      </div>
                     </div>
-                  </div>
+                  ))}
+                  <button
+                    type="button"
+                    onClick={addMissedMedication}
+                    className="text-blue-600 hover:text-blue-800 text-sm font-roboto"
+                  >
+                    + Add Medication
+                  </button>
                 </div>
-              ))}
-            </div>
-          )}
+              </div>
+            )}
+          </div>
         </div>
 
         {/* NSAID Usage */}
@@ -681,211 +497,199 @@ function MedicationsPageContent() {
               Did you take any NSAIDs (ibuprofen, naproxen, aspirin) recently?
             </label>
             <div className="flex space-x-4">
-              <label className="flex items-center font-roboto">
-                <input
-                  type="radio"
-                  name="nsaidUsage"
-                  value="true"
-                  checked={medicationTracking.nsaidUsage === true}
-                  onChange={handleMedicationTrackingChange}
-                  className="mr-2"
-                />
-                Yes
-              </label>
-              <label className="flex items-center font-roboto">
+              <label className="flex items-center">
                 <input
                   type="radio"
                   name="nsaidUsage"
                   value="false"
-                  checked={medicationTracking.nsaidUsage === false}
+                  checked={!medicationTracking.nsaidUsage}
                   onChange={handleMedicationTrackingChange}
                   className="mr-2"
                 />
-                No
+                <span className="font-roboto">No</span>
+              </label>
+              <label className="flex items-center">
+                <input
+                  type="radio"
+                  name="nsaidUsage"
+                  value="true"
+                  checked={medicationTracking.nsaidUsage}
+                  onChange={handleMedicationTrackingChange}
+                  className="mr-2"
+                />
+                <span className="font-roboto">Yes</span>
               </label>
             </div>
-          </div>
-          
-          {medicationTracking.nsaidUsage && (
-            <div className="ml-0 md:ml-6 space-y-4">
-              <div className="flex items-center justify-between">
-                <h4 className="text-md font-medium font-roboto text-gray-700">
-                  Which NSAIDs did you take?
-                </h4>
-                <button
-                  type="button"
-                  onClick={addNsaid}
-                  className="text-blue-600 hover:text-blue-800 text-sm font-roboto"
-                >
-                  + Add NSAID
-                </button>
-              </div>
-              
-              {medicationTracking.nsaidList.map((item, index) => (
-                <div key={index} className="border border-gray-200 rounded-lg p-4 relative">
-                  {medicationTracking.nsaidList.length > 1 && (
-                    <button
-                      type="button"
-                      onClick={() => removeNsaid(index)}
-                      className="absolute -left-2 -top-2 text-red-500 hover:text-red-700 bg-white border border-gray-200 rounded-full p-1 shadow-sm z-10"
-                      title="Remove NSAID"
-                    >
-                      <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
-                      </svg>
-                    </button>
-                  )}
-                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
-                    <div>
-                      <input
-                        type="text"
-                        placeholder="e.g., Ibuprofen 200mg"
-                        value={item.medication}
-                        onChange={(e) => updateNsaid(index, 'medication', e.target.value)}
-                        className="input-field"
-                      />
-                    </div>
-                    <div>
-                      <DatePicker
-                        value={item.date || new Date().toISOString().split('T')[0]}
-                        onChange={(value) => updateNsaid(index, 'date', value)}
-                        placeholder="When taken?"
-                        className="w-full"
-                        maxDate={new Date().toISOString().split('T')[0]}
-                        minDate={new Date(Date.now() - 2 * 365 * 24 * 60 * 60 * 1000).toISOString().split('T')[0]}
-                      />
-                    </div>
-                    <div className="sm:col-span-2">
-                      <select
-                        value={item.timeOfDay}
-                        onChange={(e) => updateNsaid(index, 'timeOfDay', e.target.value)}
-                        className="w-full px-4 py-3 text-left bg-white border border-gray-200 rounded-xl shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent appearance-none bg-no-repeat bg-right pr-10 transition-all duration-200 hover:border-gray-300"
-                        style={{
-                          backgroundImage: `url("data:image/svg+xml,%3csvg xmlns='http://www.w3.org/2000/svg' fill='none' viewBox='0 0 20 20'%3e%3cpath stroke='%236b7280' stroke-linecap='round' stroke-linejoin='round' stroke-width='1.5' d='m6 8 4 4 4-4'/%3e%3c/svg%3e")`,
-                          backgroundPosition: 'right 0.75rem center',
-                          backgroundSize: '1.5em 1.5em'
-                        }}
-                        required
+
+            {medicationTracking.nsaidUsage && (
+              <div className="ml-0 md:ml-6 mt-4">
+                <div className="space-y-4">
+                  {medicationTracking.nsaidList.map((item, index) => (
+                    <div key={index} className="relative border border-gray-200 rounded-lg p-4">
+                      <button
+                        type="button"
+                        onClick={() => removeNsaid(index)}
+                        className="absolute -left-2 -top-2 bg-white border border-gray-300 rounded-full p-1 shadow-sm z-10 text-red-500 hover:text-red-700"
+                        title="Remove NSAID"
                       >
-                        <option value="">Time of day</option>
-                        <option value="morning">Morning</option>
-                        <option value="afternoon">Afternoon</option>
-                        <option value="evening">Evening</option>
-                        <option value="night">Night</option>
-                      </select>
+                        <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M6 18L18 6M6 6l12 12"></path>
+                        </svg>
+                      </button>
+                      <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                        <div>
+                          <input
+                            type="text"
+                            placeholder="e.g., Ibuprofen 200mg"
+                            value={item.medication}
+                            onChange={(e) => updateNsaid(index, 'medication', e.target.value)}
+                            className="input-field"
+                          />
+                        </div>
+                        <div>
+                          <DatePicker
+                            value={item.date || new Date().toISOString().split('T')[0]}
+                            onChange={(value) => updateNsaid(index, 'date', value)}
+                            placeholder="When taken?"
+                            className="w-full"
+                            maxDate={new Date().toISOString().split('T')[0]}
+                            minDate={new Date(Date.now() - 2 * 365 * 24 * 60 * 60 * 1000).toISOString().split('T')[0]}
+                          />
+                        </div>
+                      </div>
+                      <div className="mt-3">
+                        <select
+                          value={item.timeOfDay}
+                          onChange={(e) => updateNsaid(index, 'timeOfDay', e.target.value)}
+                          className="w-full px-4 py-3 text-left bg-white border border-gray-200 rounded-xl shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent appearance-none bg-no-repeat bg-right pr-10 transition-all duration-200 hover:border-gray-300"
+                          style={{
+                            backgroundImage: `url("data:image/svg+xml,%3csvg xmlns='http://www.w3.org/2000/svg' fill='none' viewBox='0 0 20 20'%3e%3cpath stroke='%236b7280' stroke-linecap='round' stroke-linejoin='round' stroke-width='1.5' d='m6 8 4 4 4-4'/%3e%3c/svg%3e")`,
+                            backgroundPosition: 'right 0.75rem center',
+                            backgroundSize: '1.5em 1.5em'
+                          }}
+                          required
+                        >
+                          <option value="">Time of day</option>
+                          <option value="morning">Morning</option>
+                          <option value="afternoon">Afternoon</option>
+                          <option value="evening">Evening</option>
+                          <option value="night">Night</option>
+                        </select>
+                      </div>
                     </div>
-                  </div>
+                  ))}
+                  <button
+                    type="button"
+                    onClick={addNsaid}
+                    className="text-blue-600 hover:text-blue-800 text-sm font-roboto"
+                  >
+                    + Add Medication
+                  </button>
                 </div>
-              ))}
-            </div>
-          )}
+              </div>
+            )}
+          </div>
         </div>
 
         {/* Antibiotic Usage */}
-        <div className="space-y-4">
+        <div className="space-y-4 mb-8">
           <div>
             <label className="block text-sm font-medium font-roboto text-gray-700 mb-2">
               Did you take any antibiotics recently?
             </label>
             <div className="flex space-x-4">
-              <label className="flex items-center font-roboto">
-                <input
-                  type="radio"
-                  name="antibioticUsage"
-                  value="true"
-                  checked={medicationTracking.antibioticUsage === true}
-                  onChange={handleMedicationTrackingChange}
-                  className="mr-2"
-                />
-                Yes
-              </label>
-              <label className="flex items-center font-roboto">
+              <label className="flex items-center">
                 <input
                   type="radio"
                   name="antibioticUsage"
                   value="false"
-                  checked={medicationTracking.antibioticUsage === false}
+                  checked={!medicationTracking.antibioticUsage}
                   onChange={handleMedicationTrackingChange}
                   className="mr-2"
                 />
-                No
+                <span className="font-roboto">No</span>
+              </label>
+              <label className="flex items-center">
+                <input
+                  type="radio"
+                  name="antibioticUsage"
+                  value="true"
+                  checked={medicationTracking.antibioticUsage}
+                  onChange={handleMedicationTrackingChange}
+                  className="mr-2"
+                />
+                <span className="font-roboto">Yes</span>
               </label>
             </div>
-          </div>
-          
-          {medicationTracking.antibioticUsage && (
-            <div className="ml-0 md:ml-6 space-y-4">
-              <div className="flex items-center justify-between">
-                <h4 className="text-md font-medium font-roboto text-gray-700">
-                  Which antibiotics did you take?
-                </h4>
-                <button
-                  type="button"
-                  onClick={addAntibiotic}
-                  className="text-blue-600 hover:text-blue-800 text-sm font-roboto"
-                >
-                  + Add Antibiotic
-                </button>
-              </div>
-              
-              {medicationTracking.antibioticList.map((item, index) => (
-                <div key={index} className="border border-gray-200 rounded-lg p-4 relative">
-                  {medicationTracking.antibioticList.length > 1 && (
-                    <button
-                      type="button"
-                      onClick={() => removeAntibiotic(index)}
-                      className="absolute -left-2 -top-2 text-red-500 hover:text-red-700 bg-white border border-gray-200 rounded-full p-1 shadow-sm z-10"
-                      title="Remove antibiotic"
-                    >
-                      <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
-                      </svg>
-                    </button>
-                  )}
-                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
-                    <div>
-                      <input
-                        type="text"
-                        placeholder="e.g., Amoxicillin 500mg"
-                        value={item.medication}
-                        onChange={(e) => updateAntibiotic(index, 'medication', e.target.value)}
-                        className="input-field"
-                      />
-                    </div>
-                    <div>
-                      <DatePicker
-                        value={item.date || new Date().toISOString().split('T')[0]}
-                        onChange={(value) => updateAntibiotic(index, 'date', value)}
-                        placeholder="When taken?"
-                        className="w-full"
-                        maxDate={new Date().toISOString().split('T')[0]}
-                        minDate={new Date(Date.now() - 2 * 365 * 24 * 60 * 60 * 1000).toISOString().split('T')[0]}
-                      />
-                    </div>
-                    <div className="sm:col-span-2">
-                      <select
-                        value={item.timeOfDay}
-                        onChange={(e) => updateAntibiotic(index, 'timeOfDay', e.target.value)}
-                        className="w-full px-4 py-3 text-left bg-white border border-gray-200 rounded-xl shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent appearance-none bg-no-repeat bg-right pr-10 transition-all duration-200 hover:border-gray-300"
-                        style={{
-                          backgroundImage: `url("data:image/svg+xml,%3csvg xmlns='http://www.w3.org/2000/svg' fill='none' viewBox='0 0 20 20'%3e%3cpath stroke='%236b7280' stroke-linecap='round' stroke-linejoin='round' stroke-width='1.5' d='m6 8 4 4 4-4'/%3e%3c/svg%3e")`,
-                          backgroundPosition: 'right 0.75rem center',
-                          backgroundSize: '1.5em 1.5em'
-                        }}
-                        required
+
+            {medicationTracking.antibioticUsage && (
+              <div className="ml-0 md:ml-6 mt-4">
+                <div className="space-y-4">
+                  {medicationTracking.antibioticList.map((item, index) => (
+                    <div key={index} className="relative border border-gray-200 rounded-lg p-4">
+                      <button
+                        type="button"
+                        onClick={() => removeAntibiotic(index)}
+                        className="absolute -left-2 -top-2 bg-white border border-gray-300 rounded-full p-1 shadow-sm z-10 text-red-500 hover:text-red-700"
+                        title="Remove antibiotic"
                       >
-                        <option value="">Time of day</option>
-                        <option value="morning">Morning</option>
-                        <option value="afternoon">Afternoon</option>
-                        <option value="evening">Evening</option>
-                        <option value="night">Night</option>
-                      </select>
+                        <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M6 18L18 6M6 6l12 12"></path>
+                        </svg>
+                      </button>
+                      <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                        <div>
+                          <input
+                            type="text"
+                            placeholder="e.g., Amoxicillin 500mg"
+                            value={item.medication}
+                            onChange={(e) => updateAntibiotic(index, 'medication', e.target.value)}
+                            className="input-field"
+                          />
+                        </div>
+                        <div>
+                          <DatePicker
+                            value={item.date || new Date().toISOString().split('T')[0]}
+                            onChange={(value) => updateAntibiotic(index, 'date', value)}
+                            placeholder="When taken?"
+                            className="w-full"
+                            maxDate={new Date().toISOString().split('T')[0]}
+                            minDate={new Date(Date.now() - 2 * 365 * 24 * 60 * 60 * 1000).toISOString().split('T')[0]}
+                          />
+                        </div>
+                      </div>
+                      <div className="mt-3">
+                        <select
+                          value={item.timeOfDay}
+                          onChange={(e) => updateAntibiotic(index, 'timeOfDay', e.target.value)}
+                          className="w-full px-4 py-3 text-left bg-white border border-gray-200 rounded-xl shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent appearance-none bg-no-repeat bg-right pr-10 transition-all duration-200 hover:border-gray-300"
+                          style={{
+                            backgroundImage: `url("data:image/svg+xml,%3csvg xmlns='http://www.w3.org/2000/svg' fill='none' viewBox='0 0 20 20'%3e%3cpath stroke='%236b7280' stroke-linecap='round' stroke-linejoin='round' stroke-width='1.5' d='m6 8 4 4 4-4'/%3e%3c/svg%3e")`,
+                            backgroundPosition: 'right 0.75rem center',
+                            backgroundSize: '1.5em 1.5em'
+                          }}
+                          required
+                        >
+                          <option value="">Time of day</option>
+                          <option value="morning">Morning</option>
+                          <option value="afternoon">Afternoon</option>
+                          <option value="evening">Evening</option>
+                          <option value="night">Night</option>
+                        </select>
+                      </div>
                     </div>
-                  </div>
+                  ))}
+                  <button
+                    type="button"
+                    onClick={addAntibiotic}
+                    className="text-blue-600 hover:text-blue-800 text-sm font-roboto"
+                  >
+                    + Add Medication
+                  </button>
                 </div>
-              ))}
-            </div>
-          )}
+              </div>
+            )}
+          </div>
         </div>
         
         {/* Medication Tracking Data Display */}
@@ -949,6 +753,205 @@ function MedicationsPageContent() {
           </div>
         )}
       </div>
+
+      {/* Your Medications Section */}
+      <div className="card mt-8 sm:mt-12">
+        <div className="flex flex-col sm:flex-row sm:justify-between sm:items-center mb-6">
+          <h2 className="text-xl font-semibold font-source text-gray-900 mb-4 sm:mb-0">Your Medications</h2>
+          {!isAdding && (
+            <button
+              onClick={() => setIsAdding(true)}
+              className="btn-primary font-roboto whitespace-nowrap"
+            >
+              Add Medication
+            </button>
+          )}
+        </div>
+
+        {/* Add/Edit Medication Form */}
+        {isAdding && (
+          <div className="mb-8">
+            <h3 className="text-lg font-semibold font-source text-gray-900 mb-4">
+              {editingId ? 'Edit Medication' : 'Add New Medication'}
+            </h3>
+            <form onSubmit={handleSubmit} className="space-y-6">
+              <div className="grid md:grid-cols-2 gap-6">
+                <div>
+                  <label htmlFor="name" className="block text-sm font-medium font-roboto text-gray-700 mb-2">
+                    Medication Name *
+                  </label>
+                  <input
+                    type="text"
+                    id="name"
+                    name="name"
+                    value={formData.name}
+                    onChange={handleInputChange}
+                    placeholder="e.g., Mesalamine, Prednisone"
+                    className="input-field"
+                    required
+                  />
+                </div>
+
+                <div>
+                  <label htmlFor="dosage" className="block text-sm font-medium font-roboto text-gray-700 mb-2">
+                    Dosage
+                  </label>
+                  <input
+                    type="text"
+                    id="dosage"
+                    name="dosage"
+                    value={formData.dosage}
+                    onChange={handleInputChange}
+                    placeholder="e.g., 500mg, 2 tablets"
+                    className="input-field"
+                  />
+                </div>
+              </div>
+
+              <div className="grid md:grid-cols-2 gap-6">
+                <div>
+                  <label className="block text-sm font-medium font-roboto text-gray-700 mb-2">
+                    Reminder Time
+                  </label>
+                  <TimePicker
+                    value={formData.timeOfDay}
+                    onChange={(value) => setFormData(prev => ({ ...prev, timeOfDay: value }))}
+                  />
+                </div>
+
+                {formData.timeOfDay === 'custom' && (
+                  <div>
+                    <label className="block text-sm font-medium font-roboto text-gray-700 mb-2">
+                      Custom Time
+                    </label>
+                    <TimePicker
+                      value={formData.customTime}
+                      onChange={(value) => setFormData(prev => ({ ...prev, customTime: value }))}
+                    />
+                  </div>
+                )}
+              </div>
+
+              <div className="flex items-start sm:items-center">
+                 <input
+                   type="checkbox"
+                   id="remindersEnabled"
+                   name="remindersEnabled"
+                   checked={formData.remindersEnabled}
+                   onChange={handleInputChange}
+                   className="h-4 w-4 text-blue-600 focus:ring-blue-500 border-blue-300 rounded accent-blue-600"
+                 />
+                <label htmlFor="remindersEnabled" className="ml-2 block text-sm font-roboto text-gray-700">
+                  Enable reminder notifications for this medication
+                </label>
+              </div>
+
+              <div>
+                <label htmlFor="notes" className="block text-sm font-medium font-roboto text-gray-700 mb-2">
+                  Notes
+                </label>
+                <textarea
+                  id="notes"
+                  name="notes"
+                  rows="3"
+                  value={formData.notes}
+                  onChange={handleInputChange}
+                  placeholder="Any special instructions, side effects to watch for, etc."
+                  className="input-field resize-none"
+                />
+              </div>
+
+              <div className="flex space-x-3">
+                <button type="submit" className="btn-primary font-roboto">
+                  {editingId ? 'Update Medication' : 'Add Medication'}
+                </button>
+                <button type="button" onClick={cancelEdit} className="btn-secondary font-roboto">
+                  Cancel
+                </button>
+              </div>
+            </form>
+          </div>
+        )}
+
+        {medications.filter(med => med.name !== 'Medication Tracking').length === 0 ? (
+          <div className="text-center py-8 text-gray-500">
+            <svg className="w-12 h-12 mx-auto mb-4 text-gray-300" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19.428 15.428a2 2 0 00-1.022-.547l-2.387-.477a6 6 0 00-3.86.517l-.318.158a6 6 0 01-3.86.517L6.05 15.21a2 2 0 00-1.806.547M8 4h8l-1 1v5.172a2 2 0 00.586 1.414l5 5c1.26 1.26.367 3.414-1.415 3.414H4.828c-1.782 0-2.674-2.154-1.414-3.414l5-5A2 2 0 009 10.172V5L8 4z" />
+            </svg>
+            <p className="font-roboto">Add your medications to keep track of them and set up reminders to help you stay on schedule.</p>
+          </div>
+        ) : (
+          <div className="space-y-6 sm:space-y-8">
+            {medications.filter(med => med.name !== 'Medication Tracking').map((medication) => (
+              <div key={medication.id} className="border border-gray-200 rounded-lg p-4 hover:shadow-sm transition-shadow">
+                <div className="flex justify-between items-start mb-3">
+                  <div className="flex-1">
+                    <h3 className="text-lg font-semibold font-source text-gray-900 mb-1">
+                      {medication.name}
+                    </h3>
+                    {medication.dosage && (
+                      <p className="text-sm text-gray-600 mb-2 font-roboto">
+                        <span className="font-medium">Dosage:</span> {medication.dosage}
+                      </p>
+                    )}
+                    <div className="flex items-center gap-2 text-center">
+                      {medication.timeOfDay && (
+                        <span className={`inline-block px-2 py-1 rounded-full text-xs font-medium font-roboto ${getTimeOfDayColor(medication.timeOfDay)}`}>
+                          {getTimeOfDayLabel(medication)}
+                        </span>
+                      )}
+                      {medication.remindersEnabled !== false && (
+                        <span className="inline-flex items-center px-2 py-1 rounded-full text-xs font-medium font-roboto bg-green-100 text-green-800">
+                          <svg className="w-3 h-3 mr-1" fill="currentColor" viewBox="0 0 20 20">
+                            <path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clipRule="evenodd" />
+                          </svg>
+                          Reminders On
+                        </span>
+                      )}
+                    </div>
+                  </div>
+                  <div className="flex space-x-2 ml-4">
+                    <button
+                      onClick={() => startEdit(medication)}
+                      className="text-blue-500 hover:text-blue-700 p-1"
+                      title="Edit medication"
+                    >
+                      <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z" />
+                      </svg>
+                    </button>
+                    <button
+                      onClick={() => handleDeleteMedication(medication.id)}
+                      className="text-red-500 hover:text-red-700 p-1"
+                      title="Delete medication"
+                    >
+                      <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
+                      </svg>
+                    </button>
+                  </div>
+                </div>
+
+                {medication.notes && (
+                  <div className="mt-3 pt-3 border-t border-gray-100">
+                    <p className="text-sm text-gray-700 font-roboto">
+                      <span className="font-medium">Notes:</span> {medication.notes}
+                    </p>
+                  </div>
+                )}
+
+                <div className="mt-3 pt-3 border-t border-gray-100 text-xs text-gray-500 font-roboto">
+                  Added {formatUKDate(medication.createdAt)}
+                  {medication.updatedAt && medication.updatedAt !== medication.createdAt && (
+                    <span> • Updated {formatUKDate(medication.updatedAt)}</span>
+                  )}
+                </div>
+              </div>
+            ))}
+          </div>
+        )}
+      </div>
+
 
       {/* Reminder Info */}
       <div className="mt-8 bg-blue-50 border border-blue-200 rounded-lg p-4">
