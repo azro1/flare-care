@@ -41,7 +41,7 @@ function ReportsPageContent() {
 
     // Calculate average severity
     const averageSeverity = allSymptoms.length > 0 
-      ? (allSymptoms.reduce((sum, symptom) => sum + symptom.severity, 0) / allSymptoms.length).toFixed(1)
+      ? (allSymptoms.reduce((sum, symptom) => sum + parseFloat(symptom.severity), 0) / allSymptoms.length).toFixed(1)
       : 0
 
     // Get all foods logged (handle both old and new formats)
@@ -92,6 +92,9 @@ function ReportsPageContent() {
     const reportStartDate = dateRange.startDate ? new Date(dateRange.startDate) : new Date()
     const reportEndDate = dateRange.endDate ? new Date(dateRange.endDate) : new Date()
 
+    // Get medication tracking data
+    const medicationTracking = medications.find(med => med.name === 'Medication Tracking')
+    
     setReportData({
       period: {
         start: reportStartDate.toISOString().split('T')[0],
@@ -101,11 +104,16 @@ function ReportsPageContent() {
       totalEntries: allSymptoms.length,
       topFoods,
       severityTrend,
-      medications: medications.map(med => ({
+      medications: medications.filter(med => med.name !== 'Medication Tracking').map(med => ({
         name: med.name,
         dosage: med.dosage,
         timeOfDay: med.timeOfDay
-      }))
+      })),
+      medicationTracking: {
+        missedMedications: medicationTracking?.missed_medications_list || [],
+        nsaids: medicationTracking?.nsaid_list || [],
+        antibiotics: medicationTracking?.antibiotic_list || []
+      }
     })
   }
 
@@ -152,7 +160,7 @@ function ReportsPageContent() {
     doc.setFont('helvetica', 'normal')
     doc.text(`Total Symptom Entries: ${reportData.totalEntries}`, margin, yPosition)
     yPosition += 8
-    doc.text(`Average Severity (1-10): ${reportData.averageSeverity}`, margin, yPosition)
+    doc.text(`Average Severity: ${reportData.averageSeverity.toFixed(1)}/10`, margin, yPosition)
     yPosition += 8
     doc.text(`Medications Tracked: ${reportData.medications.length}`, margin, yPosition)
     yPosition += 15
@@ -170,6 +178,70 @@ function ReportsPageContent() {
         doc.text(`• ${med.name}${med.dosage ? ` (${med.dosage})` : ''}`, margin, yPosition)
         yPosition += 6
       })
+      yPosition += 10
+    }
+
+    // Tracked Medications Section
+    const hasTrackingData = reportData.medicationTracking && (
+      reportData.medicationTracking.missedMedications.length > 0 || 
+      reportData.medicationTracking.nsaids.length > 0 || 
+      reportData.medicationTracking.antibiotics.length > 0
+    )
+    
+    if (hasTrackingData) {
+      doc.setFontSize(16)
+      doc.setFont('helvetica', 'bold')
+      doc.text('Tracked Medications', margin, yPosition)
+      yPosition += 10
+
+      doc.setFontSize(12)
+      doc.setFont('helvetica', 'normal')
+      
+      // Missed Medications
+      if (reportData.medicationTracking.missedMedications.length > 0) {
+        doc.setFont('helvetica', 'bold')
+        doc.text('Missed Medications:', margin, yPosition)
+        yPosition += 6
+        
+        doc.setFont('helvetica', 'normal')
+        reportData.medicationTracking.missedMedications.forEach(item => {
+          const dateText = item.date ? formatUKDate(item.date) : 'Date not specified'
+          doc.text(`• ${item.medication} - ${dateText} (${item.timeOfDay})`, margin + 10, yPosition)
+          yPosition += 5
+        })
+        yPosition += 5
+      }
+      
+      // NSAIDs
+      if (reportData.medicationTracking.nsaids.length > 0) {
+        doc.setFont('helvetica', 'bold')
+        doc.text('NSAIDs Taken:', margin, yPosition)
+        yPosition += 6
+        
+        doc.setFont('helvetica', 'normal')
+        reportData.medicationTracking.nsaids.forEach(item => {
+          const dateText = item.date ? formatUKDate(item.date) : 'Date not specified'
+          doc.text(`• ${item.medication} - ${dateText} (${item.timeOfDay})`, margin + 10, yPosition)
+          yPosition += 5
+        })
+        yPosition += 5
+      }
+      
+      // Antibiotics
+      if (reportData.medicationTracking.antibiotics.length > 0) {
+        doc.setFont('helvetica', 'bold')
+        doc.text('Antibiotics Taken:', margin, yPosition)
+        yPosition += 6
+        
+        doc.setFont('helvetica', 'normal')
+        reportData.medicationTracking.antibiotics.forEach(item => {
+          const dateText = item.date ? formatUKDate(item.date) : 'Date not specified'
+          doc.text(`• ${item.medication} - ${dateText} (${item.timeOfDay})`, margin + 10, yPosition)
+          yPosition += 5
+        })
+        yPosition += 5
+      }
+      
       yPosition += 10
     }
 
@@ -271,6 +343,12 @@ function ReportsPageContent() {
 
     // Top Foods Section
     if (reportData.topFoods.length > 0) {
+      // Check if we have enough space for the title and at least one food item
+      if (yPosition > 260) {
+        doc.addPage()
+        yPosition = 20
+      }
+      
       doc.setFontSize(16)
       doc.setFont('helvetica', 'bold')
       doc.text('Most Logged Foods', margin, yPosition)
@@ -279,6 +357,11 @@ function ReportsPageContent() {
       doc.setFontSize(12)
       doc.setFont('helvetica', 'normal')
       reportData.topFoods.forEach(([food, count]) => {
+        // Only check for new page if we're getting close to the bottom
+        if (yPosition > 270) {
+          doc.addPage()
+          yPosition = 20
+        }
         doc.text(`• ${food} (${count} times)`, margin, yPosition)
         yPosition += 6
       })
@@ -348,6 +431,58 @@ function ReportsPageContent() {
           foodsData
         ])
       })
+
+    // Add medication tracking data if available
+    const medicationTracking = medications.find(med => med.name === 'Medication Tracking')
+    
+    if (medicationTracking) {
+      // Add section separator
+      csvData.push([])
+      csvData.push(['TRACKED MEDICATIONS'])
+      csvData.push([])
+      
+      // Missed Medications
+      if (medicationTracking.missed_medications_list?.length > 0) {
+        csvData.push(['Missed Medications'])
+        csvData.push(['Medication', 'Date', 'Time of Day'])
+        medicationTracking.missed_medications_list.forEach(item => {
+          csvData.push([
+            item.medication || '',
+            item.date ? formatUKDate(item.date) : '',
+            item.timeOfDay || ''
+          ])
+        })
+        csvData.push([])
+      }
+      
+      // NSAIDs
+      if (medicationTracking.nsaid_list?.length > 0) {
+        csvData.push(['NSAIDs Taken'])
+        csvData.push(['Medication', 'Date', 'Time of Day'])
+        medicationTracking.nsaid_list.forEach(item => {
+          csvData.push([
+            item.medication || '',
+            item.date ? formatUKDate(item.date) : '',
+            item.timeOfDay || ''
+          ])
+        })
+        csvData.push([])
+      }
+      
+      // Antibiotics
+      if (medicationTracking.antibiotic_list?.length > 0) {
+        csvData.push(['Antibiotics Taken'])
+        csvData.push(['Medication', 'Date', 'Time of Day'])
+        medicationTracking.antibiotic_list.forEach(item => {
+          csvData.push([
+            item.medication || '',
+            item.date ? formatUKDate(item.date) : '',
+            item.timeOfDay || ''
+          ])
+        })
+        csvData.push([])
+      }
+    }
 
     // Convert to CSV string
     const csvString = csvData.map(row => 
@@ -582,32 +717,157 @@ function ReportsPageContent() {
       {/* Medications */}
       {reportData.medications.length > 0 && (
         <div className="card mb-8 sm:mb-12">
-          <h3 className="text-lg font-semibold font-source text-gray-900 mb-4">Current Medications</h3>
-          <div className="space-y-4 sm:space-y-6">
+          <h3 className="text-lg font-semibold font-source text-gray-900 mb-6 flex items-center">
+            <span className="w-3 h-3 bg-purple-100 rounded-full mr-3 flex items-center justify-center">
+              <span className="w-1.5 h-1.5 bg-purple-500 rounded-full"></span>
+            </span>
+            Current Medications
+          </h3>
+          <div className="space-y-4">
             {reportData.medications.map((med, index) => (
-              <div key={index} className="flex justify-between items-center py-2 border-b border-gray-100 last:border-b-0">
+              <div key={index} className="bg-purple-50 border border-purple-200 rounded-lg p-4">
                 <div>
-                  <span className="font-medium font-roboto text-gray-900">{med.name}</span>
+                  <h5 className="font-medium font-roboto text-gray-900 text-lg">{med.name}</h5>
                   {med.dosage && (
-                    <span className="text-gray-600 ml-2 font-roboto">({med.dosage})</span>
+                    <div className="mt-2">
+                      <span className="text-sm text-gray-600 font-roboto">
+                        <span className="font-medium">Dosage:</span> {med.dosage}
+                      </span>
+                    </div>
                   )}
                 </div>
-                <span className="text-sm text-gray-500 capitalize font-roboto">{med.timeOfDay}</span>
               </div>
             ))}
           </div>
         </div>
       )}
 
+      {/* Tracked Medications */}
+      {reportData.medicationTracking && (
+        reportData.medicationTracking.missedMedications.length > 0 || 
+        reportData.medicationTracking.nsaids.length > 0 || 
+        reportData.medicationTracking.antibiotics.length > 0
+      ) && (
+        <div className="card mb-8 sm:mb-12">
+          <h3 className="text-lg font-semibold font-source text-gray-900 mb-6">Tracked Medications</h3>
+          
+          {/* Missed Medications */}
+          {reportData.medicationTracking.missedMedications.length > 0 && (
+            <div className="mb-8">
+              <h4 className="text-md font-semibold font-source text-gray-800 mb-4 flex items-center">
+                <span className="w-3 h-3 bg-red-100 rounded-full mr-3 flex items-center justify-center">
+                  <span className="w-1.5 h-1.5 bg-red-500 rounded-full"></span>
+                </span>
+                Missed Medications
+              </h4>
+              <div className="space-y-4">
+                {reportData.medicationTracking.missedMedications.map((item, index) => (
+                  <div key={index} className="bg-red-50 border border-red-200 rounded-lg p-4">
+                    <div className="flex flex-col sm:flex-row sm:justify-between sm:items-start gap-2">
+                      <div className="flex-1">
+                        <h5 className="font-medium font-roboto text-gray-900 text-lg">{item.medication}</h5>
+                        <div className="mt-2 flex flex-col sm:flex-row sm:gap-4 gap-1">
+                          <div className="text-sm text-gray-600 font-roboto">
+                            <span className="font-medium">Date:</span> {item.date ? formatUKDate(item.date) : 'Not specified'}
+                          </div>
+                          <div className="text-sm text-gray-600 font-roboto">
+                            <span className="font-medium">Time:</span> {item.timeOfDay || 'Not specified'}
+                          </div>
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+                ))}
+              </div>
+            </div>
+          )}
+          
+          {/* NSAIDs */}
+          {reportData.medicationTracking.nsaids.length > 0 && (
+            <div className="mb-8">
+              <h4 className="text-md font-semibold font-source text-gray-800 mb-4 flex items-center">
+                <span className="w-3 h-3 bg-orange-100 rounded-full mr-3 flex items-center justify-center">
+                  <span className="w-1.5 h-1.5 bg-orange-500 rounded-full"></span>
+                </span>
+                NSAIDs Taken
+              </h4>
+              <div className="space-y-4">
+                {reportData.medicationTracking.nsaids.map((item, index) => (
+                  <div key={index} className="bg-orange-50 border border-orange-200 rounded-lg p-4">
+                    <div className="flex flex-col sm:flex-row sm:justify-between sm:items-start gap-2">
+                      <div className="flex-1">
+                        <h5 className="font-medium font-roboto text-gray-900 text-lg">{item.medication}</h5>
+                        <div className="mt-2 flex flex-col sm:flex-row sm:gap-4 gap-1">
+                          <div className="text-sm text-gray-600 font-roboto">
+                            <span className="font-medium">Date:</span> {item.date ? formatUKDate(item.date) : 'Not specified'}
+                          </div>
+                          <div className="text-sm text-gray-600 font-roboto">
+                            <span className="font-medium">Time:</span> {item.timeOfDay || 'Not specified'}
+                          </div>
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+                ))}
+              </div>
+            </div>
+          )}
+          
+          {/* Antibiotics */}
+          {reportData.medicationTracking.antibiotics.length > 0 && (
+            <div className="mb-8">
+              <h4 className="text-md font-semibold font-source text-gray-800 mb-4 flex items-center">
+                <span className="w-3 h-3 bg-blue-100 rounded-full mr-3 flex items-center justify-center">
+                  <span className="w-1.5 h-1.5 bg-blue-500 rounded-full"></span>
+                </span>
+                Antibiotics Taken
+              </h4>
+              <div className="space-y-4">
+                {reportData.medicationTracking.antibiotics.map((item, index) => (
+                  <div key={index} className="bg-blue-50 border border-blue-200 rounded-lg p-4">
+                    <div className="flex flex-col sm:flex-row sm:justify-between sm:items-start gap-2">
+                      <div className="flex-1">
+                        <h5 className="font-medium font-roboto text-gray-900 text-lg">{item.medication}</h5>
+                        <div className="mt-2 flex flex-col sm:flex-row sm:gap-4 gap-1">
+                          <div className="text-sm text-gray-600 font-roboto">
+                            <span className="font-medium">Date:</span> {item.date ? formatUKDate(item.date) : 'Not specified'}
+                          </div>
+                          <div className="text-sm text-gray-600 font-roboto">
+                            <span className="font-medium">Time:</span> {item.timeOfDay || 'Not specified'}
+                          </div>
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+                ))}
+              </div>
+            </div>
+          )}
+        </div>
+      )}
+
       {/* Top Foods */}
       {reportData.topFoods.length > 0 && (
         <div className="card">
-          <h3 className="text-lg font-semibold font-source text-gray-900 mb-4">Most Logged Foods</h3>
-          <div className="space-y-3 sm:space-y-4">
+          <h3 className="text-lg font-semibold font-source text-gray-900 mb-6 flex items-center">
+            <span className="w-3 h-3 bg-green-100 rounded-full mr-3 flex items-center justify-center">
+              <span className="w-1.5 h-1.5 bg-green-500 rounded-full"></span>
+            </span>
+            Most Logged Foods
+          </h3>
+          <div className="space-y-4">
             {reportData.topFoods.map(([food, count], index) => (
-              <div key={index} className="flex justify-between items-center">
-                <span className="text-gray-900 font-roboto">{food}</span>
-                <span className="text-sm text-gray-500 font-roboto">{count} time{count !== 1 ? 's' : ''}</span>
+              <div key={index} className="bg-green-50 border border-green-200 rounded-lg p-4">
+                <div className="flex flex-col sm:flex-row sm:justify-between sm:items-center gap-2">
+                  <div className="flex-1">
+                    <h5 className="font-medium font-roboto text-gray-900 text-lg">{food}</h5>
+                  </div>
+                  <div className="flex items-center">
+                    <span className="inline-flex items-center px-3 py-1 rounded-full text-sm font-medium font-roboto bg-green-100 text-green-800">
+                      {count} time{count !== 1 ? 's' : ''}
+                    </span>
+                  </div>
+                </div>
               </div>
             ))}
           </div>

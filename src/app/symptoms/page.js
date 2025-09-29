@@ -280,7 +280,7 @@ function SymptomsPageContent() {
 
           <div>
             <label htmlFor="severity" className="block text-sm font-medium font-roboto text-gray-700 mb-2">
-              Current Severity: {formData.severity}/10 ({getSeverityLabel(formData.severity)})
+              Severity (1-10): {formData.severity}/10 ({getSeverityLabel(formData.severity)})
             </label>
             <input
               type="range"
