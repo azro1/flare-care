@@ -44,12 +44,28 @@ function ReportsPageContent() {
       ? (allSymptoms.reduce((sum, symptom) => sum + symptom.severity, 0) / allSymptoms.length).toFixed(1)
       : 0
 
-    // Get all foods logged
+    // Get all foods logged (handle both old and new formats)
     const allFoods = allSymptoms
-      .filter(symptom => symptom.foods && symptom.foods.trim())
-      .map(symptom => symptom.foods.split(',').map(food => food.trim()))
+      .map(symptom => {
+        const foods = []
+        
+        // New format: structured meals
+        if (symptom.breakfast || symptom.lunch || symptom.dinner) {
+          [...(symptom.breakfast || []), ...(symptom.lunch || []), ...(symptom.dinner || [])]
+            .filter(item => item.food && item.food.trim())
+            .forEach(item => {
+              const foodEntry = item.quantity ? `${item.food} (${item.quantity})` : item.food
+              foods.push(foodEntry)
+            })
+        }
+        // Old format: comma-separated foods
+        else if (symptom.foods && symptom.foods.trim()) {
+          foods.push(...symptom.foods.split(',').map(food => food.trim()).filter(food => food.length > 0))
+        }
+        
+        return foods
+      })
       .flat()
-      .filter(food => food.length > 0)
 
     // Count food frequency
     const foodFrequency = allFoods.reduce((acc, food) => {
@@ -211,8 +227,38 @@ function ReportsPageContent() {
           yPosition += splitNotes.length * 5
         }
         
-        if (symptom.foods && symptom.foods.trim()) {
-          const foodsText = `   Foods: ${symptom.foods}`
+        // Display foods (handle both old and new formats)
+        let foodsText = ''
+        if (symptom.breakfast || symptom.lunch || symptom.dinner) {
+          // New format: structured meals
+          const mealSections = []
+          if (symptom.breakfast?.length > 0) {
+            const breakfastItems = symptom.breakfast.map(item => 
+              item.quantity ? `${item.food} (${item.quantity})` : item.food
+            ).join(', ')
+            mealSections.push(`Breakfast: ${breakfastItems}`)
+          }
+          if (symptom.lunch?.length > 0) {
+            const lunchItems = symptom.lunch.map(item => 
+              item.quantity ? `${item.food} (${item.quantity})` : item.food
+            ).join(', ')
+            mealSections.push(`Lunch: ${lunchItems}`)
+          }
+          if (symptom.dinner?.length > 0) {
+            const dinnerItems = symptom.dinner.map(item => 
+              item.quantity ? `${item.food} (${item.quantity})` : item.food
+            ).join(', ')
+            mealSections.push(`Dinner: ${dinnerItems}`)
+          }
+          if (mealSections.length > 0) {
+            foodsText = `   Meals: ${mealSections.join(' | ')}`
+          }
+        } else if (symptom.foods && symptom.foods.trim()) {
+          // Old format: comma-separated foods
+          foodsText = `   Foods: ${symptom.foods}`
+        }
+        
+        if (foodsText) {
           const splitFoods = doc.splitTextToSize(foodsText, pageWidth - 2 * margin)
           doc.text(splitFoods, margin, yPosition)
           yPosition += splitFoods.length * 5
@@ -264,13 +310,42 @@ function ReportsPageContent() {
     filteredSymptoms
       .sort((a, b) => new Date(a.symptomStartDate) - new Date(b.symptomStartDate))
       .forEach(symptom => {
+        // Format foods data (handle both old and new formats)
+        let foodsData = ''
+        if (symptom.breakfast || symptom.lunch || symptom.dinner) {
+          // New format: structured meals
+          const mealSections = []
+          if (symptom.breakfast?.length > 0) {
+            const breakfastItems = symptom.breakfast.map(item => 
+              item.quantity ? `${item.food} (${item.quantity})` : item.food
+            ).join(', ')
+            mealSections.push(`Breakfast: ${breakfastItems}`)
+          }
+          if (symptom.lunch?.length > 0) {
+            const lunchItems = symptom.lunch.map(item => 
+              item.quantity ? `${item.food} (${item.quantity})` : item.food
+            ).join(', ')
+            mealSections.push(`Lunch: ${lunchItems}`)
+          }
+          if (symptom.dinner?.length > 0) {
+            const dinnerItems = symptom.dinner.map(item => 
+              item.quantity ? `${item.food} (${item.quantity})` : item.food
+            ).join(', ')
+            mealSections.push(`Dinner: ${dinnerItems}`)
+          }
+          foodsData = mealSections.join(' | ')
+        } else {
+          // Old format: comma-separated foods
+          foodsData = symptom.foods || ''
+        }
+        
         csvData.push([
           formatUKDate(symptom.symptomStartDate),
           symptom.symptomEndDate ? formatUKDate(symptom.symptomEndDate) : '',
           symptom.isOngoing ? 'Yes' : 'No',
           symptom.severity,
           symptom.notes || '',
-          symptom.foods || ''
+          foodsData
         ])
       })
 

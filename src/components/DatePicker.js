@@ -2,7 +2,7 @@
 
 import { useState, useRef, useEffect } from 'react'
 
-export default function DatePicker({ value, onChange, className = '', placeholder = 'Select date', minDate = null }) {
+export default function DatePicker({ value, onChange, className = '', placeholder = 'Select date', minDate = null, maxDate = null }) {
   const [isOpen, setIsOpen] = useState(false)
   const [selectedDate, setSelectedDate] = useState('')
   const [selectedMonth, setSelectedMonth] = useState('')
@@ -23,22 +23,13 @@ export default function DatePicker({ value, onChange, className = '', placeholde
     }
   }, [value])
 
-  // Auto-set year from minDate when dropdown opens (but let user pick month)
+  // Auto-set year to current year when dropdown opens (but still respect minDate restrictions)
   useEffect(() => {
-    if (isOpen && minDate && !selectedYear) {
-      const minDateObj = new Date(minDate)
-      setSelectedYear(minDateObj.getFullYear().toString())
-      // Only auto-set month if it's the current year and we're in the start month
+    if (isOpen && !selectedYear) {
       const currentDate = new Date()
-      const currentYear = currentDate.getFullYear().toString()
-      const currentMonth = (currentDate.getMonth() + 1).toString().padStart(2, '0')
-      const minMonth = (minDateObj.getMonth() + 1).toString().padStart(2, '0')
-      
-      if (selectedYear === currentYear && currentMonth === minMonth) {
-        setSelectedMonth(minMonth)
-      }
+      setSelectedYear(currentDate.getFullYear().toString())
     }
-  }, [isOpen, minDate, selectedYear, selectedMonth])
+  }, [isOpen, selectedYear])
 
   // Close dropdown when clicking outside
   useEffect(() => {
@@ -111,57 +102,82 @@ export default function DatePicker({ value, onChange, className = '', placeholde
     return year.toString()
   })
 
-  // Filter years, months, and days based on minDate
+  // Filter years, months, and days based on minDate and maxDate
   const getAvailableYears = () => {
-    if (!minDate) return years
-    const minYear = new Date(minDate).getFullYear().toString()
-    return years.filter(year => year >= minYear)
+    let availableYears = years
+    
+    if (minDate) {
+      const minYear = new Date(minDate).getFullYear().toString()
+      availableYears = availableYears.filter(year => year >= minYear)
+    }
+    
+    if (maxDate) {
+      const maxYear = new Date(maxDate).getFullYear().toString()
+      availableYears = availableYears.filter(year => year <= maxYear)
+    }
+    
+    return availableYears
   }
 
   const getAvailableMonths = () => {
-    if (!minDate) return months
-    const minDateObj = new Date(minDate)
-    const minYear = minDateObj.getFullYear().toString()
-    const minMonth = (minDateObj.getMonth() + 1).toString().padStart(2, '0')
-    const currentDate = new Date()
-    const currentYear = currentDate.getFullYear().toString()
-    const currentMonth = (currentDate.getMonth() + 1).toString().padStart(2, '0')
+    let availableMonths = months
     
-    if (selectedYear === minYear) {
-      // Same year as start date - show from start month to current month (if current year) or end of year
-      const maxMonth = (selectedYear === currentYear) ? currentMonth : '12'
-      return months.filter(month => month.value >= minMonth && month.value <= maxMonth)
+    // Apply minDate filter
+    if (minDate) {
+      const minDateObj = new Date(minDate)
+      const minYear = minDateObj.getFullYear().toString()
+      const minMonth = (minDateObj.getMonth() + 1).toString().padStart(2, '0')
+      
+      if (selectedYear === minYear) {
+        availableMonths = availableMonths.filter(month => month.value >= minMonth)
+      }
     }
-    // For years other than the minimum year, return all months
-    return months
+    
+    // Apply maxDate filter
+    if (maxDate) {
+      const maxDateObj = new Date(maxDate)
+      const maxYear = maxDateObj.getFullYear().toString()
+      const maxMonth = (maxDateObj.getMonth() + 1).toString().padStart(2, '0')
+      
+      if (selectedYear === maxYear) {
+        availableMonths = availableMonths.filter(month => month.value <= maxMonth)
+      }
+    }
+    
+    return availableMonths
   }
 
   const getAvailableDays = () => {
-    if (!minDate) {
-      // Get valid days for selected month/year
-      if (selectedMonth && selectedYear) {
-        const daysInMonth = new Date(selectedYear, selectedMonth, 0).getDate()
-        return Array.from({ length: daysInMonth }, (_, i) => (i + 1).toString().padStart(2, '0'))
-      }
-      return days
-    }
-    
-    const minDateObj = new Date(minDate)
-    const minYear = minDateObj.getFullYear().toString()
-    const minMonth = (minDateObj.getMonth() + 1).toString().padStart(2, '0')
-    const minDay = minDateObj.getDate().toString().padStart(2, '0')
-    
-    if (selectedYear === minYear && selectedMonth === minMonth) {
-      // Get valid days for the selected month and filter from min day
-      const daysInMonth = new Date(selectedYear, selectedMonth, 0).getDate()
-      const validDays = Array.from({ length: daysInMonth }, (_, i) => (i + 1).toString().padStart(2, '0'))
-      return validDays.filter(day => day >= minDay)
-    }
-    
     // Get valid days for selected month/year
     if (selectedMonth && selectedYear) {
       const daysInMonth = new Date(selectedYear, selectedMonth, 0).getDate()
-      return Array.from({ length: daysInMonth }, (_, i) => (i + 1).toString().padStart(2, '0'))
+      let validDays = Array.from({ length: daysInMonth }, (_, i) => (i + 1).toString().padStart(2, '0'))
+      
+      // Apply minDate filter
+      if (minDate) {
+        const minDateObj = new Date(minDate)
+        const minYear = minDateObj.getFullYear().toString()
+        const minMonth = (minDateObj.getMonth() + 1).toString().padStart(2, '0')
+        const minDay = minDateObj.getDate().toString().padStart(2, '0')
+        
+        if (selectedYear === minYear && selectedMonth === minMonth) {
+          validDays = validDays.filter(day => day >= minDay)
+        }
+      }
+      
+      // Apply maxDate filter
+      if (maxDate) {
+        const maxDateObj = new Date(maxDate)
+        const maxYear = maxDateObj.getFullYear().toString()
+        const maxMonth = (maxDateObj.getMonth() + 1).toString().padStart(2, '0')
+        const maxDay = maxDateObj.getDate().toString().padStart(2, '0')
+        
+        if (selectedYear === maxYear && selectedMonth === maxMonth) {
+          validDays = validDays.filter(day => day <= maxDay)
+        }
+      }
+      
+      return validDays
     }
     
     return days

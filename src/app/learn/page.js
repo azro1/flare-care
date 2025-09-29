@@ -281,6 +281,60 @@ export default function LearnPage() {
         </div>
       </div>
 
+      {/* Quit Smoking Section */}
+      <div className="bg-gradient-to-r from-red-50 to-orange-50 border border-red-200 rounded-2xl p-7 mb-8 sm:mb-12">
+        <div className="flex items-center mb-4">
+          <svg className="w-8 h-8 text-red-600 mr-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-2.5L13.732 4c-.77-.833-1.732-.833-2.464 0L3.35 16.5c-.77.833.192 2.5 1.732 2.5z" />
+          </svg>
+          <h2 className="text-2xl font-bold font-source text-gray-900">Quit Smoking Support</h2>
+        </div>
+        
+        <div className="space-y-4 text-gray-700 font-roboto mb-6">
+          <p className="text-lg">
+            <strong>Smoking significantly increases the risk of Crohn's disease flares and complications.</strong> 
+            If you smoke, quitting is one of the most important steps you can take to improve your health.
+          </p>
+          <p>
+            Research shows that smoking can reduce blood flow to the gut and weaken your body's natural defenses, 
+            making Crohn's symptoms worse and more frequent.
+          </p>
+        </div>
+
+        <div className="grid md:grid-cols-2 gap-6">
+          <div className="bg-white/80 backdrop-blur-sm rounded-xl p-6 border border-white/20">
+            <h3 className="text-lg font-semibold font-source text-gray-900 mb-3">🚭 NHS Stop Smoking Services</h3>
+            <div className="space-y-2 text-gray-600 font-roboto">
+              <p><strong>Website:</strong> <a href="https://www.nhs.uk/smokefree" className="text-blue-600 hover:underline" target="_blank" rel="noopener noreferrer">nhs.uk/smokefree</a></p>
+              <p><strong>Helpline:</strong> <a href="tel:03001231045" className="text-blue-600 hover:underline">0300 123 1045</a></p>
+              <p><strong>Text Support:</strong> Text QUIT to 66777</p>
+              <p className="text-sm">Free support, advice, and resources</p>
+            </div>
+          </div>
+          
+          <div className="bg-white/80 backdrop-blur-sm rounded-xl p-6 border border-white/20">
+            <h3 className="text-lg font-semibold font-source text-gray-900 mb-3">📱 Additional Resources</h3>
+            <div className="space-y-2 text-gray-600 font-roboto">
+              <p><strong>Crohn's & Colitis UK:</strong></p>
+              <p>Helpline: <a href="tel:03002229099" className="text-blue-600 hover:underline">0300 222 9099</a></p>
+              <p>Email: <a href="mailto:helpline@crohnsandcolitis.org.uk" className="text-blue-600 hover:underline">helpline@crohnsandcolitis.org.uk</a></p>
+              <p className="text-sm">Specialist support for IBD patients</p>
+            </div>
+          </div>
+        </div>
+
+        <div className="mt-6 p-4 bg-white/60 rounded-xl border border-white/30">
+          <h4 className="font-semibold font-source text-gray-900 mb-2">💡 Tips to Get Started:</h4>
+          <ul className="list-disc list-inside space-y-1 text-gray-600 font-roboto text-sm">
+            <li>Set a quit date and stick to it</li>
+            <li>Tell your family and friends about your decision</li>
+            <li>Ask your GP about nicotine replacement therapy</li>
+            <li>Identify your smoking triggers and plan alternatives</li>
+            <li>Consider joining a support group</li>
+          </ul>
+        </div>
+      </div>
+
       {/* Call to Action */}
       <div className="card text-center">
         <h2 className="text-xl font-semibold font-source text-gray-900 mb-4">Ready to Start Tracking?</h2>

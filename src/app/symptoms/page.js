@@ -15,19 +15,30 @@ function SymptomsPageContent() {
     isOngoing: true,
     symptomEndDate: '',
     severity: 5,
+    stress_level: 3,
     notes: '',
-    foods: ''
+    breakfast: [{ food: '', quantity: '' }],
+    lunch: [{ food: '', quantity: '' }],
+    dinner: [{ food: '', quantity: '' }],
+    smoking: false,
+    smoking_details: ''
   })
   const [deleteModal, setDeleteModal] = useState({ isOpen: false, id: null })
   const [alertModal, setAlertModal] = useState({ isOpen: false, title: '', message: '' })
 
   const handleSubmit = (e) => {
     e.preventDefault()
-    if (!formData.notes.trim() && !formData.foods.trim()) {
+    
+    // Check if there's any meal data
+    const hasMealData = formData.breakfast.some(item => item.food.trim()) ||
+                       formData.lunch.some(item => item.food.trim()) ||
+                       formData.dinner.some(item => item.food.trim())
+    
+    if (!formData.notes.trim() && !hasMealData) {
       setAlertModal({ 
         isOpen: true, 
         title: 'Missing Information', 
-        message: 'Please add some notes or foods to log this entry.' 
+        message: 'Please add some notes or meal information to log this entry.' 
       })
       return
     }
@@ -41,11 +52,28 @@ function SymptomsPageContent() {
       return
     }
 
+    // Sanitize meal data
+    const sanitizedMeals = {
+      breakfast: formData.breakfast.map(item => ({
+        food: sanitizeFoodTriggers(item.food),
+        quantity: sanitizeFoodTriggers(item.quantity)
+      })).filter(item => item.food.trim()),
+      lunch: formData.lunch.map(item => ({
+        food: sanitizeFoodTriggers(item.food),
+        quantity: sanitizeFoodTriggers(item.quantity)
+      })).filter(item => item.food.trim()),
+      dinner: formData.dinner.map(item => ({
+        food: sanitizeFoodTriggers(item.food),
+        quantity: sanitizeFoodTriggers(item.quantity)
+      })).filter(item => item.food.trim())
+    }
+
+
     const newSymptom = {
       id: Date.now().toString(),
       ...formData,
       notes: sanitizeNotes(formData.notes),
-      foods: sanitizeFoodTriggers(formData.foods),
+      ...sanitizedMeals,
       createdAt: new Date().toISOString()
     }
 
@@ -55,8 +83,13 @@ function SymptomsPageContent() {
       isOngoing: true,
       symptomEndDate: '',
       severity: 5,
+      stress_level: 3,
       notes: '',
-      foods: ''
+      breakfast: [{ food: '', quantity: '' }],
+      lunch: [{ food: '', quantity: '' }],
+      dinner: [{ food: '', quantity: '' }],
+      smoking: false,
+      smoking_details: ''
     })
   }
 
@@ -95,6 +128,63 @@ function SymptomsPageContent() {
     if (severity <= 8) return 'Severe'
     return 'Very Severe'
   }
+
+  const getStressLabel = (stress) => {
+    if (stress <= 2) return 'Very Low'
+    if (stress <= 4) return 'Low'
+    if (stress <= 6) return 'Moderate'
+    if (stress <= 8) return 'High'
+    return 'Very High'
+  }
+
+  const getStressColor = (stress) => {
+    if (stress <= 2) return 'text-green-600 bg-green-100'
+    if (stress <= 4) return 'text-blue-600 bg-blue-100'
+    if (stress <= 6) return 'text-yellow-600 bg-yellow-100'
+    if (stress <= 8) return 'text-orange-600 bg-orange-100'
+    return 'text-red-600 bg-red-100'
+  }
+
+
+  const getMealLabel = (mealType) => {
+    const symptomDate = new Date(formData.symptomStartDate)
+    const today = new Date()
+    const isToday = symptomDate.toDateString() === today.toDateString()
+    
+    if (isToday) {
+      return `What did you eat for ${mealType}?`
+    } else {
+      const dateStr = symptomDate.toLocaleDateString('en-GB', {
+        day: 'numeric',
+        month: 'short'
+      })
+      return `What did you eat for ${mealType} on ${dateStr}?`
+    }
+  }
+
+  const addMealItem = (mealType) => {
+    setFormData(prev => ({
+      ...prev,
+      [mealType]: [...prev[mealType], { food: '', quantity: '' }]
+    }))
+  }
+
+  const removeMealItem = (mealType, index) => {
+    setFormData(prev => ({
+      ...prev,
+      [mealType]: prev[mealType].filter((_, i) => i !== index)
+    }))
+  }
+
+  const updateMealItem = (mealType, index, field, value) => {
+    setFormData(prev => ({
+      ...prev,
+      [mealType]: prev[mealType].map((item, i) => 
+        i === index ? { ...item, [field]: value } : item
+      )
+    }))
+  }
+
 
   return (
     <div className="max-w-4xl mx-auto">
@@ -135,6 +225,7 @@ function SymptomsPageContent() {
                         onChange={(value) => setFormData(prev => ({ ...prev, symptomStartDate: value }))}
                         placeholder="Select start date"
                         className="w-full"
+                        maxDate={new Date().toISOString().split('T')[0]}
                       />
             </div>
 
@@ -182,6 +273,7 @@ function SymptomsPageContent() {
                           placeholder="Select end date"
                           className="w-full"
                           minDate={formData.symptomStartDate}
+                          maxDate={new Date().toISOString().split('T')[0]}
                         />
               </div>
             )}
@@ -207,6 +299,74 @@ function SymptomsPageContent() {
           </div>
 
           <div>
+            <label htmlFor="stress_level" className="block text-sm font-medium font-roboto text-gray-700 mb-2">
+              Stress Level: {formData.stress_level}/10 ({getStressLabel(formData.stress_level)})
+            </label>
+            <input
+              type="range"
+              id="stress_level"
+              name="stress_level"
+              min="1"
+              max="10"
+              value={formData.stress_level}
+              onChange={handleInputChange}
+              className="slider"
+            />
+            <div className="flex justify-between text-xs text-gray-500 mt-1 font-roboto">
+              <span>1 (Very Low)</span>
+              <span>10 (Very High)</span>
+            </div>
+          </div>
+
+          {/* Smoking Status */}
+          <div>
+            <label className="block text-sm font-medium font-roboto text-gray-700 mb-2">
+              Do you smoke?
+            </label>
+            <div className="flex space-x-4 mb-3">
+              <label className="flex items-center font-roboto">
+                <input
+                  type="radio"
+                  name="smoking"
+                  value="true"
+                  checked={formData.smoking === true}
+                  onChange={handleInputChange}
+                  className="mr-2"
+                />
+                Yes
+              </label>
+              <label className="flex items-center font-roboto">
+                <input
+                  type="radio"
+                  name="smoking"
+                  value="false"
+                  checked={formData.smoking === false}
+                  onChange={handleInputChange}
+                  className="mr-2"
+                />
+                No
+              </label>
+            </div>
+            
+            {formData.smoking && (
+              <div className="ml-0 md:ml-6">
+                <label htmlFor="smoking_details" className="block text-sm font-medium font-roboto text-gray-700 mb-2">
+                  Please describe your smoking habits (e.g., cigarettes, cigars, frequency, amount)
+                </label>
+                <input
+                  type="text"
+                  id="smoking_details"
+                  name="smoking_details"
+                  value={formData.smoking_details}
+                  onChange={handleInputChange}
+                  placeholder="e.g., 1 pack of cigarettes per day, occasional cigars, etc."
+                  className="input-field"
+                />
+              </div>
+            )}
+          </div>
+
+          <div>
             <label htmlFor="notes" className="block text-sm font-medium font-roboto text-gray-700 mb-2">
               Notes
             </label>
@@ -221,19 +381,171 @@ function SymptomsPageContent() {
             />
           </div>
 
-          <div>
-            <label htmlFor="foods" className="block text-sm font-medium font-roboto text-gray-700 mb-2">
-              Foods Eaten
-            </label>
-            <input
-              type="text"
-              id="foods"
-              name="foods"
-              value={formData.foods}
-              onChange={handleInputChange}
-              placeholder="List foods you ate today (comma-separated)"
-              className="input-field"
-            />
+          {/* Meal Tracking */}
+          <div className="space-y-6">
+            <h3 className="text-lg font-semibold font-source text-gray-900">Meal Tracking</h3>
+            
+            {/* Breakfast */}
+            <div className="border border-gray-200 rounded-lg p-4">
+              <div className="flex items-center justify-between mb-4">
+                <h4 className="text-md font-medium font-roboto text-gray-700">
+                  {getMealLabel('breakfast')}
+                </h4>
+                <button
+                  type="button"
+                  onClick={() => addMealItem('breakfast')}
+                  className="text-blue-600 hover:text-blue-800 text-sm font-roboto"
+                >
+                  + Add Item
+                </button>
+              </div>
+              <div className="space-y-3">
+                {formData.breakfast.map((item, index) => (
+                  <div key={index} className="border border-gray-200 rounded-lg p-4 relative">
+                    {formData.breakfast.length > 1 && (
+                      <button
+                        type="button"
+                        onClick={() => removeMealItem('breakfast', index)}
+                        className="absolute -left-2 -top-2 text-red-500 hover:text-red-700 bg-white border border-gray-200 rounded-full p-1 shadow-sm z-10"
+                        title="Remove item"
+                      >
+                        <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+                        </svg>
+                      </button>
+                    )}
+                    <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
+                      <div>
+                        <input
+                          type="text"
+                          placeholder="Food item"
+                          value={item.food}
+                          onChange={(e) => updateMealItem('breakfast', index, 'food', e.target.value)}
+                          className="input-field"
+                        />
+                      </div>
+                      <div>
+                        <input
+                          type="text"
+                          placeholder="Quantity"
+                          value={item.quantity}
+                          onChange={(e) => updateMealItem('breakfast', index, 'quantity', e.target.value)}
+                          className="input-field"
+                        />
+                      </div>
+                    </div>
+                  </div>
+                ))}
+              </div>
+            </div>
+
+            {/* Lunch */}
+            <div className="border border-gray-200 rounded-lg p-4">
+              <div className="flex items-center justify-between mb-4">
+                <h4 className="text-md font-medium font-roboto text-gray-700">
+                  {getMealLabel('lunch')}
+                </h4>
+                <button
+                  type="button"
+                  onClick={() => addMealItem('lunch')}
+                  className="text-blue-600 hover:text-blue-800 text-sm font-roboto"
+                >
+                  + Add Item
+                </button>
+              </div>
+              <div className="space-y-3">
+                {formData.lunch.map((item, index) => (
+                  <div key={index} className="border border-gray-200 rounded-lg p-4 relative">
+                    {formData.lunch.length > 1 && (
+                      <button
+                        type="button"
+                        onClick={() => removeMealItem('lunch', index)}
+                        className="absolute -left-2 -top-2 text-red-500 hover:text-red-700 bg-white border border-gray-200 rounded-full p-1 shadow-sm z-10"
+                        title="Remove item"
+                      >
+                        <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+                        </svg>
+                      </button>
+                    )}
+                    <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
+                      <div>
+                        <input
+                          type="text"
+                          placeholder="Food item"
+                          value={item.food}
+                          onChange={(e) => updateMealItem('lunch', index, 'food', e.target.value)}
+                          className="input-field"
+                        />
+                      </div>
+                      <div>
+                        <input
+                          type="text"
+                          placeholder="Quantity"
+                          value={item.quantity}
+                          onChange={(e) => updateMealItem('lunch', index, 'quantity', e.target.value)}
+                          className="input-field"
+                        />
+                      </div>
+                    </div>
+                  </div>
+                ))}
+              </div>
+            </div>
+
+            {/* Dinner */}
+            <div className="border border-gray-200 rounded-lg p-4">
+              <div className="flex items-center justify-between mb-4">
+                <h4 className="text-md font-medium font-roboto text-gray-700">
+                  {getMealLabel('dinner')}
+                </h4>
+                <button
+                  type="button"
+                  onClick={() => addMealItem('dinner')}
+                  className="text-blue-600 hover:text-blue-800 text-sm font-roboto"
+                >
+                  + Add Item
+                </button>
+              </div>
+              <div className="space-y-3">
+                {formData.dinner.map((item, index) => (
+                  <div key={index} className="border border-gray-200 rounded-lg p-4 relative">
+                    {formData.dinner.length > 1 && (
+                      <button
+                        type="button"
+                        onClick={() => removeMealItem('dinner', index)}
+                        className="absolute -left-2 -top-2 text-red-500 hover:text-red-700 bg-white border border-gray-200 rounded-full p-1 shadow-sm z-10"
+                        title="Remove item"
+                      >
+                        <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+                        </svg>
+                      </button>
+                    )}
+                    <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
+                      <div>
+                        <input
+                          type="text"
+                          placeholder="Food item"
+                          value={item.food}
+                          onChange={(e) => updateMealItem('dinner', index, 'food', e.target.value)}
+                          className="input-field"
+                        />
+                      </div>
+                      <div>
+                        <input
+                          type="text"
+                          placeholder="Quantity"
+                          value={item.quantity}
+                          onChange={(e) => updateMealItem('dinner', index, 'quantity', e.target.value)}
+                          className="input-field"
+                        />
+                      </div>
+                    </div>
+                  </div>
+                ))}
+              </div>
+            </div>
           </div>
 
           <button type="submit" className="btn-primary font-roboto w-full md:w-auto">
@@ -258,7 +570,7 @@ function SymptomsPageContent() {
             {symptoms.map((symptom) => (
               <div key={symptom.id} className="border border-gray-200 rounded-lg p-4 hover:shadow-sm transition-shadow">
                 <div className="flex justify-between items-start mb-3">
-                  <div className="flex items-center space-x-3">
+                  <div className="flex flex-wrap items-center gap-3">
                     <span className="text-sm text-gray-500 font-roboto">
                       {new Date(symptom.symptomStartDate).toLocaleDateString('en-GB', {
                         weekday: 'short',
@@ -273,8 +585,13 @@ function SymptomsPageContent() {
                       })}`}
                     </span>
                     <span className={`text-center px-2 py-1 rounded-full text-xs font-medium font-roboto ${getSeverityColor(symptom.severity)}`}>
-                      {symptom.severity}/10 - {getSeverityLabel(symptom.severity)}
+                      Symptom: {symptom.severity}/10 - {getSeverityLabel(symptom.severity)}
                     </span>
+                    {symptom.stress_level && (
+                      <span className={`text-center px-2 py-1 rounded-full text-xs font-medium font-roboto ${getStressColor(symptom.stress_level)}`}>
+                        Stress: {symptom.stress_level}/10 - {getStressLabel(symptom.stress_level)}
+                      </span>
+                    )}
                   </div>
                   <button
                     onClick={() => handleDeleteSymptom(symptom.id)}
@@ -295,7 +612,65 @@ function SymptomsPageContent() {
                   </div>
                 )}
 
-                {symptom.foods && (
+                {/* Display smoking status */}
+                {symptom.smoking && (
+                  <div className="mt-3">
+                    <span className="inline-flex items-center px-2 py-1 rounded-full text-xs font-medium bg-gray-100 text-gray-800 font-roboto">
+                      <svg className="w-3 h-3 mr-1" fill="currentColor" viewBox="0 0 20 20">
+                        <path fillRule="evenodd" d="M8.257 3.099c.765-1.36 2.722-1.36 3.486 0l5.58 9.92c.75 1.334-.213 2.98-1.742 2.98H4.42c-1.53 0-2.493-1.646-1.743-2.98l5.58-9.92zM11 13a1 1 0 11-2 0 1 1 0 012 0zm-1-8a1 1 0 00-1 1v3a1 1 0 002 0V6a1 1 0 00-1-1z" clipRule="evenodd" />
+                      </svg>
+                      Smoking
+                    </span>
+                    {symptom.smoking_details && (
+                      <div className="text-sm text-gray-600 font-roboto ml-2 mt-1">
+                        {symptom.smoking_details}
+                      </div>
+                    )}
+                  </div>
+                )}
+
+                {/* Display meals if they exist */}
+                {(symptom.breakfast?.length > 0 || symptom.lunch?.length > 0 || symptom.dinner?.length > 0) && (
+                  <div className="mt-3">
+                    <p className="text-sm font-medium text-gray-700 font-roboto mb-2">Meals:</p>
+                    
+                    {symptom.breakfast?.length > 0 && (
+                      <div className="mb-2">
+                        <p className="text-sm font-medium text-gray-600 font-roboto">Breakfast:</p>
+                        <ul className="text-sm text-gray-600 font-roboto ml-2">
+                          {symptom.breakfast.map((item, index) => (
+                            <li key={index}>• {item.food}{item.quantity ? ` (${item.quantity})` : ''}</li>
+                          ))}
+                        </ul>
+                      </div>
+                    )}
+                    
+                    {symptom.lunch?.length > 0 && (
+                      <div className="mb-2">
+                        <p className="text-sm font-medium text-gray-600 font-roboto">Lunch:</p>
+                        <ul className="text-sm text-gray-600 font-roboto ml-2">
+                          {symptom.lunch.map((item, index) => (
+                            <li key={index}>• {item.food}{item.quantity ? ` (${item.quantity})` : ''}</li>
+                          ))}
+                        </ul>
+                      </div>
+                    )}
+                    
+                    {symptom.dinner?.length > 0 && (
+                      <div className="mb-2">
+                        <p className="text-sm font-medium text-gray-600 font-roboto">Dinner:</p>
+                        <ul className="text-sm text-gray-600 font-roboto ml-2">
+                          {symptom.dinner.map((item, index) => (
+                            <li key={index}>• {item.food}{item.quantity ? ` (${item.quantity})` : ''}</li>
+                          ))}
+                        </ul>
+                      </div>
+                    )}
+                  </div>
+                )}
+
+                {/* Fallback for old data format */}
+                {symptom.foods && !symptom.breakfast && !symptom.lunch && !symptom.dinner && (
                   <div>
                     <p className="text-sm text-gray-700 font-roboto">
                       <span className="font-medium">Foods:</span> {symptom.foods}
