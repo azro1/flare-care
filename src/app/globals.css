@@ -51,6 +51,28 @@
   .slider::-moz-range-thumb {
     @apply h-6 w-6 bg-gradient-to-r from-blue-500 to-blue-600 rounded-full cursor-pointer border-0 shadow-lg transition-all duration-200 hover:scale-110;
   }
+
+  .slider-custom {
+    @apply w-full h-3 rounded-full appearance-none cursor-pointer transition-all duration-200;
+  }
+  
+  .slider-custom::-webkit-slider-thumb {
+    @apply appearance-none h-6 w-6 bg-blue-600 rounded-full cursor-pointer shadow-lg border-2 border-blue-800 transition-all duration-200 hover:scale-110 hover:border-blue-900;
+  }
+  
+  .slider-custom::-moz-range-thumb {
+    @apply h-6 w-6 bg-blue-600 rounded-full cursor-pointer border-2 border-blue-800 shadow-lg transition-all duration-200 hover:scale-110 hover:border-blue-900;
+  }
+
+  /* Override Chrome autofill styling */
+  input:-webkit-autofill,
+  input:-webkit-autofill:hover,
+  input:-webkit-autofill:focus,
+  input:-webkit-autofill:active {
+    -webkit-box-shadow: 0 0 0 30px white inset !important;
+    -webkit-text-fill-color: #374151 !important;
+    background-color: white !important;
+  }
   
   .nav-link {
     @apply px-4 py-2 rounded-xl text-sm lg:text-base font-medium transition-all duration-200 transform hover:scale-105;

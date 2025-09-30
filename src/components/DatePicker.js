@@ -2,7 +2,7 @@
 
 import { useState, useRef, useEffect } from 'react'
 
-export default function DatePicker({ value, onChange, className = '', placeholder = 'Select date', minDate = null, maxDate = null }) {
+export default function DatePicker({ value, onChange, className = '', placeholder = 'Select date', minDate = null, maxDate = null, style = {} }) {
   const [isOpen, setIsOpen] = useState(false)
   const [selectedDate, setSelectedDate] = useState('')
   const [selectedMonth, setSelectedMonth] = useState('')
@@ -184,12 +184,17 @@ export default function DatePicker({ value, onChange, className = '', placeholde
   }
 
   return (
-    <div className={`relative ${className}`} ref={dropdownRef}>
+    <div className="relative" ref={dropdownRef}>
       <button
         type="button"
         onClick={() => setIsOpen(!isOpen)}
-        className="w-full px-4 py-3 text-left bg-white border border-gray-200 rounded-xl shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent appearance-none bg-no-repeat bg-right pr-10 transition-all duration-200 hover:border-gray-300"
-        style={{
+        className={className || "w-full px-4 py-3 text-left bg-white border border-gray-200 rounded-xl shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent appearance-none bg-no-repeat bg-right pr-10 transition-all duration-200 hover:border-gray-300"}
+        style={Object.keys(style).length > 0 ? {
+          ...style,
+          backgroundImage: `url("data:image/svg+xml,%3csvg xmlns='http://www.w3.org/2000/svg' fill='none' viewBox='0 0 20 20'%3e%3cpath stroke='%236b7280' stroke-linecap='round' stroke-linejoin='round' stroke-width='1.5' d='m6 8 4 4 4-4'/%3e%3c/svg%3e")`,
+          backgroundPosition: 'right 0.75rem center',
+          backgroundSize: '1.5em 1.5em'
+        } : {
           backgroundImage: `url("data:image/svg+xml,%3csvg xmlns='http://www.w3.org/2000/svg' fill='none' viewBox='0 0 20 20'%3e%3cpath stroke='%236b7280' stroke-linecap='round' stroke-linejoin='round' stroke-width='1.5' d='m6 8 4 4 4-4'/%3e%3c/svg%3e")`,
           backgroundPosition: 'right 0.75rem center',
           backgroundSize: '1.5em 1.5em'
@@ -209,7 +214,7 @@ export default function DatePicker({ value, onChange, className = '', placeholde
             top: '100%',
             left: 0,
             right: 0,
-            zIndex: 10
+            zIndex: 9999
           }}
         >
           <div className="p-4">

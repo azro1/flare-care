@@ -48,25 +48,25 @@ export default function Footer() {
           <div className="md:text-left">
             <h3 className="font-semibold font-source text-gray-900 mb-2 text-lg">Track</h3>
             <ul className="space-y-2">
-              <li><a href="/symptoms" className="text-base text-gray-600 font-roboto hover:text-blue-600 transition-colors">Symptoms</a></li>
-              <li><a href="/medications" className="text-base text-gray-600 font-roboto hover:text-blue-600 transition-colors">Medications</a></li>
-              <li><a href="/reports" className="text-base text-gray-600 font-roboto hover:text-blue-600 transition-colors">Reports</a></li>
+              <li><a href="/symptoms" className="text-sm text-gray-600 font-roboto hover:text-blue-600 transition-colors">Symptoms</a></li>
+              <li><a href="/medications" className="text-sm text-gray-600 font-roboto hover:text-blue-600 transition-colors">Medications</a></li>
+              <li><a href="/reports" className="text-sm text-gray-600 font-roboto hover:text-blue-600 transition-colors">Reports</a></li>
             </ul>
           </div>
           
           <div className="md:text-left">
             <h3 className="font-semibold font-source text-gray-900 mb-2 text-lg">About</h3>
             <ul className="space-y-2">
-              <li><a href="/about" className="text-base text-gray-600 font-roboto hover:text-blue-600 transition-colors">About Us</a></li>
-              <li><a href="/" className="text-base text-gray-600 font-roboto hover:text-blue-600 transition-colors">Home</a></li>
+              <li><a href="/about" className="text-sm text-gray-600 font-roboto hover:text-blue-600 transition-colors">About Us</a></li>
+              <li><a href="/" className="text-sm text-gray-600 font-roboto hover:text-blue-600 transition-colors">Home</a></li>
             </ul>
           </div>
           
           <div className="md:text-left">
             <h3 className="font-semibold font-source text-gray-900 mb-2 text-lg">Support</h3>
             <ul className="space-y-2">
-              <li><a href="mailto:support@flarecare.app" className="text-base text-gray-600 font-roboto hover:text-blue-600 transition-colors">Contact</a></li>
-              <li><span className="text-base text-gray-500 font-roboto">Blog (Coming Soon)</span></li>
+              <li><a href="mailto:support@flarecare.app" className="text-sm text-gray-600 font-roboto hover:text-blue-600 transition-colors">Contact</a></li>
+              <li><span className="text-sm text-gray-500 font-roboto">Blog (Coming Soon)</span></li>
             </ul>
           </div>
         </div>

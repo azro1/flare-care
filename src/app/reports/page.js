@@ -14,7 +14,7 @@ function ReportsPageContent() {
   const [dateRange, setDateRange] = useState(() => {
     const endDate = new Date()
     const startDate = new Date()
-    startDate.setDate(endDate.getDate() - 30)
+    startDate.setDate(endDate.getDate() - 7)
     return {
       startDate: startDate.toISOString().split('T')[0],
       endDate: endDate.toISOString().split('T')[0]
@@ -161,8 +161,6 @@ function ReportsPageContent() {
     doc.text(`Total Symptom Entries: ${reportData.totalEntries}`, margin, yPosition)
     yPosition += 8
     doc.text(`Average Severity: ${reportData.averageSeverity.toFixed(1)}/10`, margin, yPosition)
-    yPosition += 8
-    doc.text(`Medications Tracked: ${reportData.medications.length}`, margin, yPosition)
     yPosition += 15
 
     // Medications Section
@@ -284,6 +282,11 @@ function ReportsPageContent() {
         doc.text(`   Severity: ${symptom.severity}/10 (${getSeverityLabel(symptom.severity)})`, margin, yPosition)
         yPosition += 5
         
+        if (symptom.stress_level) {
+          doc.text(`   Stress Level: ${symptom.stress_level}/10 (${getStressLabel(symptom.stress_level)})`, margin, yPosition)
+          yPosition += 5
+        }
+        
         if (symptom.isOngoing) {
           doc.text(`   Status: Ongoing`, margin, yPosition)
           yPosition += 5
@@ -297,6 +300,24 @@ function ReportsPageContent() {
           const splitNotes = doc.splitTextToSize(notesText, pageWidth - 2 * margin)
           doc.text(splitNotes, margin, yPosition)
           yPosition += splitNotes.length * 5
+        }
+        
+        // Display smoking status
+        if (symptom.smoking) {
+          const smokingText = symptom.smoking_details 
+            ? `   Smoking: ${symptom.smoking_details}`
+            : `   Smoking: Yes`
+          doc.text(smokingText, margin, yPosition)
+          yPosition += 5
+        }
+        
+        // Display alcohol consumption
+        if (symptom.alcohol) {
+          const alcoholText = symptom.alcohol_units 
+            ? `   Alcohol: ${symptom.alcohol_units} per day`
+            : `   Alcohol: Yes`
+          doc.text(alcoholText, margin, yPosition)
+          yPosition += 5
         }
         
         // Display foods (handle both old and new formats)
@@ -377,7 +398,7 @@ function ReportsPageContent() {
     const csvData = []
     
     // Add header
-    csvData.push(['Symptom Start Date', 'Symptom End Date', 'Ongoing', 'Severity', 'Notes', 'Foods'])
+    csvData.push(['Symptom Start Date', 'Symptom End Date', 'Ongoing', 'Severity', 'Stress Level', 'Notes', 'Smoking', 'Alcohol', 'Foods'])
     
     // Filter symptoms by selected date range (same logic as generateReport)
     const startDate = new Date(dateRange.startDate)
@@ -422,12 +443,25 @@ function ReportsPageContent() {
           foodsData = symptom.foods || ''
         }
         
+        // Format smoking data
+        const smokingData = symptom.smoking 
+          ? (symptom.smoking_details || 'Yes')
+          : ''
+        
+        // Format alcohol data
+        const alcoholData = symptom.alcohol 
+          ? (symptom.alcohol_units || 'Yes')
+          : ''
+
         csvData.push([
           formatUKDate(symptom.symptomStartDate),
           symptom.symptomEndDate ? formatUKDate(symptom.symptomEndDate) : '',
           symptom.isOngoing ? 'Yes' : 'No',
           symptom.severity,
+          symptom.stress_level || '',
           symptom.notes || '',
+          smokingData,
+          alcoholData,
           foodsData
         ])
       })
@@ -515,6 +549,14 @@ function ReportsPageContent() {
     return 'Very Severe'
   }
 
+  const getStressLabel = (stress) => {
+    if (stress <= 2) return 'Very Low'
+    if (stress <= 4) return 'Low'
+    if (stress <= 6) return 'Moderate'
+    if (stress <= 8) return 'High'
+    return 'Very High'
+  }
+
   const formatUKDate = (dateString) => {
     if (!dateString) return ''
     const date = new Date(dateString)
@@ -536,8 +578,8 @@ function ReportsPageContent() {
   }
 
   return (
-    <div className="w-full max-w-4xl mx-auto">
-      <div className="mb-8 sm:mb-10">
+    <div className="max-w-4xl w-full mx-auto px-2 sm:px-3 md:px-6 lg:px-8 min-w-0">
+      <div className="mb-6 sm:mb-8 md:mb-10 min-w-0">
         <h1 className="text-2xl sm:text-3xl lg:text-4xl font-bold font-source text-gray-900 mb-4 sm:mb-6">Health Reports</h1>
         <p className="text-gray-600 font-roboto">
           Generate detailed reports of your health data to share with your healthcare team.
@@ -545,11 +587,18 @@ function ReportsPageContent() {
       </div>
 
       {/* Date Range Selector */}
-      <div className="bg-white/80 rounded-2xl shadow-lg border border-white/20 p-4 sm:p-6 transition-all duration-300 hover:shadow-xl mb-8 sm:mb-12 overflow-visible" style={{ isolation: 'isolate' }}>
-        <h2 className="text-xl font-semibold font-source text-gray-900 mb-6">Select Report Period</h2>
+      <div className="bg-white/90 backdrop-blur-sm rounded-3xl shadow-xl border border-white/20 p-3 sm:p-6 md:p-8 mb-8 sm:mb-12 min-w-0">
+        <div className="flex items-center mb-4 sm:mb-6 min-w-0">
+          <div className="bg-blue-600 p-3 rounded-2xl mr-4 flex-shrink-0">
+            <svg className="w-6 h-6 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z" />
+            </svg>
+          </div>
+          <h2 className="text-xl font-semibold font-source text-gray-900 flex-1">Select Report Period</h2>
+        </div>
         
         {/* Quick Presets */}
-        <div className="flex flex-wrap gap-2 mb-6">
+        <div className="flex flex-wrap gap-2 mb-4 sm:mb-6 min-w-0">
           <button 
             onClick={() => {
               const endDate = new Date()
@@ -608,7 +657,7 @@ function ReportsPageContent() {
           </button>
         </div>
 
-        <div className="grid md:grid-cols-2 gap-4 mb-6">
+        <div className="grid grid-cols-1 lg:grid-cols-2 gap-3 sm:gap-4 mb-4 sm:mb-6 min-w-0">
           <div>
             <label htmlFor="startDate" className="block text-sm font-medium font-roboto text-gray-700 mb-2">
               Start Date
@@ -618,7 +667,7 @@ function ReportsPageContent() {
               value={dateRange.startDate}
               onChange={(value) => setDateRange(prev => ({ ...prev, startDate: value }))}
               placeholder="Select start date"
-              className="w-full"
+              className="w-full px-4 py-3 text-left bg-white border-2 border-gray-200 rounded-xl shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-400 transition-all duration-200 hover:border-gray-300 appearance-none bg-no-repeat bg-right pr-10"
             />
           </div>
           <div>
@@ -630,19 +679,25 @@ function ReportsPageContent() {
               value={dateRange.endDate}
               onChange={(value) => setDateRange(prev => ({ ...prev, endDate: value }))}
               placeholder="Select end date"
-              className="w-full"
+              className="w-full px-4 py-3 text-left bg-white border-2 border-gray-200 rounded-xl shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-400 transition-all duration-200 hover:border-gray-300 appearance-none bg-no-repeat bg-right pr-10"
             />
           </div>
         </div>
-        <div className="flex flex-col sm:flex-row sm:justify-between sm:items-center gap-4">
-          <div className="text-sm text-gray-600 sm:max-w-md sm:pr-4 font-roboto">
+        <div className="flex flex-col sm:flex-row sm:justify-between sm:items-center gap-3 sm:gap-4 min-w-0">
+          <div className="text-sm text-gray-600 sm:max-w-md sm:pr-4 font-roboto flex-1">
             Showing symptoms from {formatUKDate(dateRange.startDate)} to {formatUKDate(dateRange.endDate)}
           </div>
-          <div className="flex space-x-3">
-            <button onClick={() => handleExportClick(exportToPDF)} className="btn-primary whitespace-nowrap font-roboto">
+          <div className="flex flex-col sm:flex-row gap-2 sm:gap-3 min-w-0 items-center sm:items-stretch">
+            <button onClick={() => handleExportClick(exportToPDF)} className="inline-flex items-center justify-center px-6 py-3 bg-blue-600 hover:bg-blue-700 text-white font-semibold rounded-xl shadow-lg hover:shadow-xl transition-all duration-300 transform hover:scale-105 active:scale-95 whitespace-nowrap w-full sm:w-auto">
+              <svg className="w-5 h-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 10v6m0 0l-3-3m3 3l3-3m2 8H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
+              </svg>
               Export PDF
             </button>
-            <button onClick={() => handleExportClick(exportToCSV)} className="btn-secondary whitespace-nowrap font-roboto">
+            <button onClick={() => handleExportClick(exportToCSV)} className="inline-flex items-center justify-center px-6 py-3 btn-secondary whitespace-nowrap w-full sm:w-auto">
+              <svg className="w-5 h-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
+              </svg>
               Export CSV
             </button>
           </div>
@@ -650,9 +705,14 @@ function ReportsPageContent() {
       </div>
 
       {/* Report Results */}
-      <div className="card mb-8 sm:mb-12">
-        <div className="flex justify-between items-center mb-6">
-          <h2 className="text-xl font-semibold font-source text-gray-900">Symptom Report</h2>
+      <div className="bg-white rounded-3xl shadow-xl border border-gray-200 p-3 sm:p-6 md:p-8 mb-8 sm:mb-12 min-w-0">
+        <div className="flex items-center mb-4 sm:mb-6 min-w-0">
+          <div className="bg-blue-600 p-3 rounded-2xl mr-4 flex-shrink-0">
+            <svg className="w-6 h-6 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z" />
+            </svg>
+          </div>
+          <h2 className="text-xl font-semibold font-source text-gray-900 flex-1">Symptom Report</h2>
         </div>
         
         {reportData.totalEntries > 0 && (
@@ -662,24 +722,45 @@ function ReportsPageContent() {
         )}
 
         {/* Summary Stats */}
-        <div className="grid md:grid-cols-3 gap-6 mb-8">
-          <div className="text-center">
-            <div className="text-3xl font-bold text-primary-600 mb-2">
+        <div className="grid grid-cols-1 lg:grid-cols-3 gap-6 mb-8 min-w-0">
+          <div className="bg-gradient-to-br from-blue-50 to-indigo-100 rounded-2xl p-6 text-center border border-blue-200">
+            <div className="flex items-center justify-center mb-3">
+              <div className="bg-blue-600 p-2 rounded-xl">
+                <svg className="w-5 h-5 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 10V3L4 14h7v7l9-11h-7z" />
+                </svg>
+              </div>
+            </div>
+            <div className="text-3xl font-bold text-blue-600 mb-2">
               {reportData.totalEntries}
             </div>
-            <div className="text-sm text-gray-600 font-roboto">Symptom Episodes</div>
+            <div className="text-gray-700 font-medium">Symptom Episodes</div>
           </div>
-          <div className="text-center">
-            <div className="text-3xl font-bold text-primary-600 mb-2">
+          <div className="bg-gradient-to-br from-blue-50 to-indigo-100 rounded-2xl p-6 text-center border border-blue-200">
+            <div className="flex items-center justify-center mb-3">
+              <div className="bg-blue-600 p-2 rounded-xl">
+                <svg className="w-5 h-5 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M7 4V2a1 1 0 011-1h8a1 1 0 011 1v2m0 0V1a1 1 0 011 1v16a1 1 0 01-1 1H7a1 1 0 01-1-1V2a1 1 0 011-1h8z" />
+                </svg>
+              </div>
+            </div>
+            <div className={`text-3xl font-bold mb-2 ${getSeverityColor(reportData.averageSeverity).split(' ')[0]}`}>
               {reportData.averageSeverity}
             </div>
-            <div className="text-sm text-gray-600 font-roboto">Average Severity</div>
+            <div className="text-gray-700 font-medium">Average Severity</div>
           </div>
-          <div className="text-center">
-            <div className="text-3xl font-bold text-primary-600 mb-2">
+          <div className="bg-gradient-to-br from-blue-50 to-indigo-100 rounded-2xl p-6 text-center border border-blue-200">
+            <div className="flex items-center justify-center mb-3">
+              <div className="bg-blue-600 p-2 rounded-xl">
+                <svg className="w-5 h-5 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19.428 15.428a2 2 0 00-1.022-.547l-2.387-.477a6 6 0 00-3.86.517l-.318.158a6 6 0 01-3.86.517L6.05 15.21a2 2 0 00-1.806.547M8 4h8l-1 1v5.172a2 2 0 00.586 1.414l5 5c1.26 1.26.367 3.414-1.415 3.414H4.828c-1.782 0-2.674-2.154-1.414-3.414l5-5A2 2 0 009 10.172V5L8 4z" />
+                </svg>
+              </div>
+            </div>
+            <div className="text-3xl font-bold text-blue-600 mb-2">
               {reportData.medications.length}
             </div>
-            <div className="text-sm text-gray-600 font-roboto">Medications</div>
+            <div className="text-gray-700 font-medium">Medications</div>
           </div>
         </div>
 
@@ -850,20 +931,20 @@ function ReportsPageContent() {
       {reportData.topFoods.length > 0 && (
         <div className="card">
           <h3 className="text-lg font-semibold font-source text-gray-900 mb-6 flex items-center">
-            <span className="w-3 h-3 bg-green-100 rounded-full mr-3 flex items-center justify-center">
-              <span className="w-1.5 h-1.5 bg-green-500 rounded-full"></span>
+            <span className="w-3 h-3 bg-blue-100 rounded-full mr-3 flex items-center justify-center">
+              <span className="w-1.5 h-1.5 bg-blue-500 rounded-full"></span>
             </span>
             Most Logged Foods
           </h3>
           <div className="space-y-4">
             {reportData.topFoods.map(([food, count], index) => (
-              <div key={index} className="bg-green-50 border border-green-200 rounded-lg p-4">
+              <div key={index} className="bg-blue-50 border border-blue-200 rounded-lg p-4">
                 <div className="flex flex-col sm:flex-row sm:justify-between sm:items-center gap-2">
                   <div className="flex-1">
                     <h5 className="font-medium font-roboto text-gray-900 text-lg">{food}</h5>
                   </div>
                   <div className="flex items-center">
-                    <span className="inline-flex items-center px-3 py-1 rounded-full text-sm font-medium font-roboto bg-green-100 text-green-800">
+                    <span className="inline-flex items-center px-3 py-1 rounded-full text-sm font-medium font-roboto bg-blue-100 text-blue-800">
                       {count} time{count !== 1 ? 's' : ''}
                     </span>
                   </div>

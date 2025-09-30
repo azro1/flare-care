@@ -13,6 +13,22 @@ export default function Navigation() {
   const { user, isAuthenticated, signOut } = useAuth()
   const { addToast } = useToast()
 
+  // Get user's display name from Google metadata or fallback to email
+  const getUserDisplayName = () => {
+    if (!user) return ''
+    
+    // Try to get name from user metadata (Google OAuth)
+    const fullName = user.user_metadata?.full_name || 
+                     user.user_metadata?.name ||
+                     user.user_metadata?.display_name
+    
+    if (fullName) return fullName
+    
+    // Fallback to email if no name is available
+    return user.email || ''
+  }
+
+
   const handleSignOut = async () => {
     try {
       await signOut()
@@ -125,14 +141,9 @@ export default function Navigation() {
             {isAuthenticated && (
               <div className="flex items-center space-x-3 ml-4 pl-4 border-l border-gray-200">
                 <div className="flex items-center space-x-3">
-                  <div className="flex items-center space-x-2">
-                    <div className="w-8 h-8 bg-blue-100 rounded-full flex items-center justify-center">
-                        <span className="text-blue-800 text-sm font-medium">
-                        {user?.email?.charAt(0).toUpperCase()}
-                      </span>
-                    </div>
-                    <span className="text-sm text-gray-600 font-medium font-roboto hidden xl:block">{user?.email}</span>
-                  </div>
+                  <span className="text-sm lg:text-base text-gray-600 font-medium font-roboto">
+                    Hi, {getUserDisplayName()}
+                  </span>
                   <button
                     onClick={handleSignOut}
                     className="nav-link nav-link-inactive bg-gray-50 hover:bg-gray-100 text-gray-600 hover:text-gray-800"
@@ -164,7 +175,7 @@ export default function Navigation() {
         <div className={`lg:hidden absolute top-full left-0 right-0 bg-white shadow-lg border-t border-gray-200/50 transition-all duration-300 ease-in-out ${
           isMenuOpen ? 'opacity-100 visible' : 'opacity-0 invisible'
         }`}>
-          <div className="py-4">
+          <div className="container mx-auto px-4 sm:px-6 lg:px-8 py-4">
               {/* All Navigation Links */}
               {[...(isAuthenticated ? mainNavItems : unauthenticatedNavItems), ...(isAuthenticated ? featureNavItems : [])].map((item, index) => (
                 <Link
@@ -189,13 +200,10 @@ export default function Navigation() {
               {isAuthenticated && (
                 <div className="border-t border-gray-200 pt-4 mt-4">
                   <div className="px-4">
-                    <div className="flex items-center space-x-3 mb-3">
-                      <div className="w-10 h-10 bg-blue-100 rounded-full flex items-center justify-center">
-                        <span className="text-blue-800 text-lg font-medium">
-                          {user?.email?.charAt(0).toUpperCase()}
-                        </span>
+                    <div className="mb-3">
+                      <div className="text-base text-gray-600 font-medium font-roboto">
+                        Hi, {getUserDisplayName()}
                       </div>
-                      <div className="text-base lg:text-sm text-gray-600 font-medium font-roboto">{user?.email}</div>
                     </div>
                     <button
                       onClick={() => {
