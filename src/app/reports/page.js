@@ -589,7 +589,7 @@ function ReportsPageContent() {
       {/* Date Range Selector */}
       <div className="bg-white/90 backdrop-blur-sm rounded-3xl shadow-xl border border-white/20 p-3 sm:p-6 md:p-8 mb-8 sm:mb-12 min-w-0">
         <div className="flex items-center mb-4 sm:mb-6 min-w-0">
-          <div className="bg-blue-600 p-3 rounded-2xl mr-4 flex-shrink-0">
+          <div className="hidden sm:flex bg-blue-600 p-3 rounded-2xl mr-4 flex-shrink-0">
             <svg className="w-6 h-6 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z" />
             </svg>
@@ -598,7 +598,7 @@ function ReportsPageContent() {
         </div>
         
         {/* Quick Presets */}
-        <div className="flex flex-wrap gap-2 mb-4 sm:mb-6 min-w-0">
+        <div className="flex flex-wrap gap-3 sm:gap-2 mb-4 sm:mb-6 min-w-0">
           <button 
             onClick={() => {
               const endDate = new Date()
@@ -609,7 +609,7 @@ function ReportsPageContent() {
                 endDate: endDate.toISOString().split('T')[0]
               })
             }}
-            className="px-3 py-1 text-sm bg-gray-100 hover:bg-gray-200 rounded-lg transition-colors font-roboto"
+            className="px-4 py-2 sm:px-3 sm:py-1 text-sm bg-gray-100 hover:bg-gray-200 rounded-lg transition-colors font-roboto"
           >
             Last 7 days
           </button>
@@ -623,7 +623,7 @@ function ReportsPageContent() {
                 endDate: endDate.toISOString().split('T')[0]
               })
             }}
-            className="px-3 py-1 text-sm bg-gray-100 hover:bg-gray-200 rounded-lg transition-colors font-roboto"
+            className="px-4 py-2 sm:px-3 sm:py-1 text-sm bg-gray-100 hover:bg-gray-200 rounded-lg transition-colors font-roboto"
           >
             Last 30 days
           </button>
@@ -637,7 +637,7 @@ function ReportsPageContent() {
                 endDate: endDate.toISOString().split('T')[0]
               })
             }}
-            className="px-3 py-1 text-sm bg-gray-100 hover:bg-gray-200 rounded-lg transition-colors font-roboto"
+            className="px-4 py-2 sm:px-3 sm:py-1 text-sm bg-gray-100 hover:bg-gray-200 rounded-lg transition-colors font-roboto"
           >
             Last 3 months
           </button>
@@ -651,7 +651,7 @@ function ReportsPageContent() {
                 })
               }
             }}
-            className="px-3 py-1 text-sm bg-gray-100 hover:bg-gray-200 rounded-lg transition-colors font-roboto"
+            className="px-4 py-2 sm:px-3 sm:py-1 text-sm bg-gray-100 hover:bg-gray-200 rounded-lg transition-colors font-roboto"
           >
             All time
           </button>
@@ -707,7 +707,7 @@ function ReportsPageContent() {
       {/* Report Results */}
       <div className="bg-white rounded-3xl shadow-xl border border-gray-200 p-3 sm:p-6 md:p-8 mb-8 sm:mb-12 min-w-0">
         <div className="flex items-center mb-4 sm:mb-6 min-w-0">
-          <div className="bg-blue-600 p-3 rounded-2xl mr-4 flex-shrink-0">
+          <div className="hidden sm:flex bg-blue-600 p-3 rounded-2xl mr-4 flex-shrink-0">
             <svg className="w-6 h-6 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z" />
             </svg>

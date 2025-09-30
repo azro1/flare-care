@@ -172,6 +172,19 @@ function MedicationsPageContent() {
 
   const confirmDelete = async () => {
     if (deleteModal.id) {
+      // Check if we're deleting the medication tracking data
+      const medicationToDelete = medications.find(med => med.id === deleteModal.id)
+      if (medicationToDelete?.name === 'Medication Tracking') {
+        // Reset tracking state when deleting tracking data
+        setMedicationTracking({
+          missedMedications: false,
+          missedMedicationsList: [{ medication: '', timeOfDay: '', date: new Date().toISOString().split('T')[0] }],
+          nsaidUsage: false,
+          nsaidList: [{ medication: '', date: new Date().toISOString().split('T')[0], timeOfDay: '' }],
+          antibioticUsage: false,
+          antibioticList: [{ medication: '', date: new Date().toISOString().split('T')[0], timeOfDay: '' }]
+        })
+      }
       await deleteMedication(deleteModal.id)
     }
   }
@@ -429,9 +442,9 @@ function MedicationsPageContent() {
 
 
       {/* Medication Tracking Section */}
-      <div data-tracking-section className="bg-white/90 backdrop-blur-sm rounded-3xl shadow-xl border border-white/20 p-3 sm:p-6 md:p-8 mb-8 sm:mb-12 min-w-0">
+      <div data-tracking-section className="bg-white/90 backdrop-blur-sm rounded-3xl shadow-xl border border-white/20 p-4 sm:p-6 md:p-8 mb-8 sm:mb-12 min-w-0">
         <div className="flex items-center mb-6 sm:mb-8">
-          <div className="bg-gradient-to-br from-blue-500 to-indigo-600 p-3 rounded-2xl mr-4">
+          <div className="hidden sm:flex bg-blue-600 p-3 rounded-2xl mr-4">
             <svg className="w-6 h-6 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z" />
             </svg>
@@ -440,10 +453,10 @@ function MedicationsPageContent() {
         </div>
                 
         {/* Missed Medications */}
-        <div className="bg-gradient-to-br from-blue-50 to-indigo-50 border-2 border-blue-200 rounded-2xl p-3 sm:p-6 mb-8">
+        <div className="mb-8">
           <div className="space-y-4">
             <div className="flex items-center justify-between">
-              <label className="block text-lg font-semibold font-source text-gray-900">
+              <label className="block text-sm font-semibold font-roboto text-gray-900">
                 Did you miss any prescribed medications recently?
               </label>
             </div>
@@ -457,7 +470,7 @@ function MedicationsPageContent() {
                   onChange={handleMedicationTrackingChange}
                   className="w-5 h-5 text-red-600 bg-gray-100 border-2 border-gray-300 focus:ring-0 focus:outline-none group-hover:text-gray-900"
                 />
-                <span className="ml-3 text-base font-roboto text-gray-700 group-hover:text-gray-900">No</span>
+                <span className="ml-3 text-sm font-roboto text-gray-700 group-hover:text-gray-900">No</span>
               </label>
               <label className="flex items-center group cursor-pointer">
                 <input
@@ -468,7 +481,7 @@ function MedicationsPageContent() {
                   onChange={handleMedicationTrackingChange}
                   className="w-5 h-5 text-red-600 bg-gray-100 border-2 border-gray-300 focus:ring-0 focus:outline-none group-hover:text-gray-900"
                 />
-                <span className="ml-3 text-base font-roboto text-gray-700 group-hover:text-gray-900">Yes</span>
+                <span className="ml-3 text-sm font-roboto text-gray-700 group-hover:text-gray-900">Yes</span>
               </label>
             </div>
 
@@ -476,14 +489,14 @@ function MedicationsPageContent() {
               <div className="ml-0 md:ml-6 mt-4 min-w-0">
                 <div className="space-y-4 min-w-0">
                   {medicationTracking.missedMedicationsList.map((item, index) => (
-                    <div key={index} className="relative bg-white border-2 border-blue-200 rounded-2xl p-4 min-w-0">
+                    <div key={index} className="relative min-w-0">
                       <button
                         type="button"
                         onClick={() => removeMissedMedication(index)}
-                        className="absolute -left-2 -top-2 bg-white border-2 border-gray-300 rounded-full p-1.5 shadow-lg z-10 text-red-500 hover:text-red-700 hover:shadow-xl transition-all duration-200 flex-shrink-0"
+                        className="absolute -left-1 -top-1 bg-white border border-gray-300 rounded-full p-1 shadow-md z-10 text-red-500 hover:text-red-700 hover:shadow-lg transition-all duration-200 flex-shrink-0"
                         title="Remove medication"
                       >
-                        <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <svg className="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                           <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M6 18L18 6M6 6l12 12"></path>
                         </svg>
                       </button>
@@ -494,7 +507,7 @@ function MedicationsPageContent() {
                             placeholder="Medication name"
                             value={item.medication}
                             onChange={(e) => updateMissedMedication(index, 'medication', e.target.value)}
-                            className="w-full px-4 py-3 bg-white/80 border-2 border-blue-200 rounded-2xl focus:outline-none focus:ring-4 focus:ring-blue-100 focus:border-blue-400 transition-all duration-200 shadow-sm hover:shadow-md"
+                            className="w-full px-4 py-3 bg-white/80 border-2 border-gray-200 rounded-2xl focus:outline-none focus:ring-4 focus:ring-blue-100 focus:border-blue-400 transition-all duration-200 shadow-sm hover:shadow-md"
                           />
                         </div>
                         <div>
@@ -502,7 +515,7 @@ function MedicationsPageContent() {
                             value={item.date || new Date().toISOString().split('T')[0]}
                             onChange={(value) => updateMissedMedication(index, 'date', value)}
                             placeholder="Date"
-                            className="w-full px-4 py-3 text-left bg-white/80 border-2 border-blue-200 rounded-2xl focus:outline-none focus:ring-4 focus:ring-blue-100 focus:border-blue-400 transition-all duration-200 shadow-sm hover:shadow-md appearance-none bg-no-repeat bg-right pr-10"
+                            className="w-full px-4 py-3 text-left bg-white/80 border-2 border-gray-200 rounded-2xl focus:outline-none focus:ring-4 focus:ring-blue-100 focus:border-blue-400 transition-all duration-200 shadow-sm hover:shadow-md appearance-none bg-no-repeat bg-right pr-10"
                             style={{
                               backgroundImage: `url("data:image/svg+xml,%3csvg xmlns='http://www.w3.org/2000/svg' fill='none' viewBox='0 0 20 20'%3e%3cpath stroke='%236b7280' stroke-linecap='round' stroke-linejoin='round' stroke-width='1.5' d='m6 8 4 4 4-4'/%3e%3c/svg%3e")`,
                               backgroundPosition: 'right 0.75rem center',
@@ -517,7 +530,7 @@ function MedicationsPageContent() {
                         <select
                           value={item.timeOfDay}
                           onChange={(e) => updateMissedMedication(index, 'timeOfDay', e.target.value)}
-                          className="w-full px-4 py-3 text-left bg-white/80 border-2 border-blue-200 rounded-2xl shadow-sm focus:outline-none focus:ring-4 focus:ring-blue-100 focus:border-blue-400 appearance-none bg-no-repeat bg-right pr-10 transition-all duration-200 hover:shadow-md"
+                          className="w-full px-4 py-3 text-left bg-white/80 border-2 border-gray-200 rounded-2xl shadow-sm focus:outline-none focus:ring-4 focus:ring-blue-100 focus:border-blue-400 appearance-none bg-no-repeat bg-right pr-10 transition-all duration-200 hover:shadow-md"
                           style={{
                             backgroundImage: `url("data:image/svg+xml,%3csvg xmlns='http://www.w3.org/2000/svg' fill='none' viewBox='0 0 20 20'%3e%3cpath stroke='%236b7280' stroke-linecap='round' stroke-linejoin='round' stroke-width='1.5' d='m6 8 4 4 4-4'/%3e%3c/svg%3e")`,
                             backgroundPosition: 'right 0.75rem center',
@@ -551,10 +564,10 @@ function MedicationsPageContent() {
         </div>
 
         {/* NSAID Usage */}
-        <div className="bg-gradient-to-br from-blue-50 to-indigo-50 border-2 border-blue-200 rounded-2xl p-3 sm:p-6 mb-8">
+        <div className="mb-8">
           <div className="space-y-4">
             <div className="flex items-center justify-between">
-              <label className="block text-lg font-semibold font-source text-gray-900">
+              <label className="block text-sm font-semibold font-roboto text-gray-900">
                 Did you take any NSAIDs (ibuprofen, naproxen, aspirin) recently?
               </label>
             </div>
@@ -568,7 +581,7 @@ function MedicationsPageContent() {
                   onChange={handleMedicationTrackingChange}
                   className="w-5 h-5 text-orange-600 bg-gray-100 border-2 border-gray-300 focus:ring-0 focus:outline-none group-hover:text-gray-900"
                 />
-                <span className="ml-3 text-base font-roboto text-gray-700 group-hover:text-gray-900">No</span>
+                <span className="ml-3 text-sm font-roboto text-gray-700 group-hover:text-gray-900">No</span>
               </label>
               <label className="flex items-center group cursor-pointer">
                 <input
@@ -579,7 +592,7 @@ function MedicationsPageContent() {
                   onChange={handleMedicationTrackingChange}
                   className="w-5 h-5 text-orange-600 bg-gray-100 border-2 border-gray-300 focus:ring-0 focus:outline-none group-hover:text-gray-900"
                 />
-                <span className="ml-3 text-base font-roboto text-gray-700 group-hover:text-gray-900">Yes</span>
+                <span className="ml-3 text-sm font-roboto text-gray-700 group-hover:text-gray-900">Yes</span>
               </label>
             </div>
 
@@ -587,14 +600,14 @@ function MedicationsPageContent() {
               <div className="ml-0 md:ml-6 mt-4 min-w-0">
                 <div className="space-y-4 min-w-0">
                   {medicationTracking.nsaidList.map((item, index) => (
-                    <div key={index} className="relative bg-white border-2 border-blue-200 rounded-2xl p-4 min-w-0">
+                    <div key={index} className="relative min-w-0">
                       <button
                         type="button"
                         onClick={() => removeNsaid(index)}
-                        className="absolute -left-2 -top-2 bg-white border-2 border-gray-300 rounded-full p-1.5 shadow-lg z-10 text-red-500 hover:text-red-700 hover:shadow-xl transition-all duration-200 flex-shrink-0"
+                        className="absolute -left-1 -top-1 bg-white border border-gray-300 rounded-full p-1 shadow-md z-10 text-red-500 hover:text-red-700 hover:shadow-lg transition-all duration-200 flex-shrink-0"
                         title="Remove NSAID"
                       >
-                        <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <svg className="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                           <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M6 18L18 6M6 6l12 12"></path>
                         </svg>
                       </button>
@@ -605,7 +618,7 @@ function MedicationsPageContent() {
                             placeholder="e.g., Ibuprofen"
                             value={item.medication}
                             onChange={(e) => updateNsaid(index, 'medication', e.target.value)}
-                            className="w-full px-4 py-3 bg-white/80 border-2 border-blue-200 rounded-2xl focus:outline-none focus:ring-4 focus:ring-blue-100 focus:border-blue-400 transition-all duration-200 shadow-sm hover:shadow-md"
+                            className="w-full px-4 py-3 bg-white/80 border-2 border-gray-200 rounded-2xl focus:outline-none focus:ring-4 focus:ring-blue-100 focus:border-blue-400 transition-all duration-200 shadow-sm hover:shadow-md"
                           />
                         </div>
                         <div>
@@ -613,7 +626,7 @@ function MedicationsPageContent() {
                             value={item.date || new Date().toISOString().split('T')[0]}
                             onChange={(value) => updateNsaid(index, 'date', value)}
                             placeholder="When taken?"
-                            className="w-full px-4 py-3 text-left bg-white/80 border-2 border-blue-200 rounded-2xl focus:outline-none focus:ring-4 focus:ring-blue-100 focus:border-blue-400 transition-all duration-200 shadow-sm hover:shadow-md appearance-none bg-no-repeat bg-right pr-10"
+                            className="w-full px-4 py-3 text-left bg-white/80 border-2 border-gray-200 rounded-2xl focus:outline-none focus:ring-4 focus:ring-blue-100 focus:border-blue-400 transition-all duration-200 shadow-sm hover:shadow-md appearance-none bg-no-repeat bg-right pr-10"
                             style={{
                               backgroundImage: `url("data:image/svg+xml,%3csvg xmlns='http://www.w3.org/2000/svg' fill='none' viewBox='0 0 20 20'%3e%3cpath stroke='%236b7280' stroke-linecap='round' stroke-linejoin='round' stroke-width='1.5' d='m6 8 4 4 4-4'/%3e%3c/svg%3e")`,
                               backgroundPosition: 'right 0.75rem center',
@@ -628,7 +641,7 @@ function MedicationsPageContent() {
                         <select
                           value={item.timeOfDay}
                           onChange={(e) => updateNsaid(index, 'timeOfDay', e.target.value)}
-                          className="w-full px-4 py-3 text-left bg-white/80 border-2 border-blue-200 rounded-2xl shadow-sm focus:outline-none focus:ring-4 focus:ring-blue-100 focus:border-blue-400 appearance-none bg-no-repeat bg-right pr-10 transition-all duration-200 hover:shadow-md"
+                          className="w-full px-4 py-3 text-left bg-white/80 border-2 border-gray-200 rounded-2xl shadow-sm focus:outline-none focus:ring-4 focus:ring-blue-100 focus:border-blue-400 appearance-none bg-no-repeat bg-right pr-10 transition-all duration-200 hover:shadow-md"
                           style={{
                             backgroundImage: `url("data:image/svg+xml,%3csvg xmlns='http://www.w3.org/2000/svg' fill='none' viewBox='0 0 20 20'%3e%3cpath stroke='%236b7280' stroke-linecap='round' stroke-linejoin='round' stroke-width='1.5' d='m6 8 4 4 4-4'/%3e%3c/svg%3e")`,
                             backgroundPosition: 'right 0.75rem center',
@@ -662,10 +675,10 @@ function MedicationsPageContent() {
         </div>
 
         {/* Antibiotic Usage */}
-        <div className="bg-gradient-to-br from-blue-50 to-indigo-50 border-2 border-blue-200 rounded-2xl p-3 sm:p-6 mb-8">
+        <div className="mb-8">
           <div className="space-y-4">
             <div className="flex items-center justify-between">
-              <label className="block text-lg font-semibold font-source text-gray-900">
+              <label className="block text-sm font-semibold font-roboto text-gray-900">
                 Did you take any antibiotics recently?
               </label>
             </div>
@@ -679,7 +692,7 @@ function MedicationsPageContent() {
                   onChange={handleMedicationTrackingChange}
                   className="w-5 h-5 text-green-600 bg-gray-100 border-2 border-gray-300 focus:ring-0 focus:outline-none group-hover:text-gray-900"
                 />
-                <span className="ml-3 text-base font-roboto text-gray-700 group-hover:text-gray-900">No</span>
+                <span className="ml-3 text-sm font-roboto text-gray-700 group-hover:text-gray-900">No</span>
               </label>
               <label className="flex items-center group cursor-pointer">
                 <input
@@ -690,7 +703,7 @@ function MedicationsPageContent() {
                   onChange={handleMedicationTrackingChange}
                   className="w-5 h-5 text-green-600 bg-gray-100 border-2 border-gray-300 focus:ring-0 focus:outline-none group-hover:text-gray-900"
                 />
-                <span className="ml-3 text-base font-roboto text-gray-700 group-hover:text-gray-900">Yes</span>
+                <span className="ml-3 text-sm font-roboto text-gray-700 group-hover:text-gray-900">Yes</span>
               </label>
             </div>
 
@@ -698,14 +711,14 @@ function MedicationsPageContent() {
               <div className="ml-0 md:ml-6 mt-4 min-w-0">
                 <div className="space-y-4 min-w-0">
                   {medicationTracking.antibioticList.map((item, index) => (
-                    <div key={index} className="relative bg-white border-2 border-blue-200 rounded-2xl p-4 min-w-0">
+                    <div key={index} className="relative min-w-0">
                       <button
                         type="button"
                         onClick={() => removeAntibiotic(index)}
-                        className="absolute -left-2 -top-2 bg-white border-2 border-gray-300 rounded-full p-1.5 shadow-lg z-10 text-red-500 hover:text-red-700 hover:shadow-xl transition-all duration-200 flex-shrink-0"
+                        className="absolute -left-1 -top-1 bg-white border border-gray-300 rounded-full p-1 shadow-md z-10 text-red-500 hover:text-red-700 hover:shadow-lg transition-all duration-200 flex-shrink-0"
                         title="Remove antibiotic"
                       >
-                        <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <svg className="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                           <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M6 18L18 6M6 6l12 12"></path>
                         </svg>
                       </button>
@@ -716,7 +729,7 @@ function MedicationsPageContent() {
                             placeholder="e.g., Amoxicillin"
                             value={item.medication}
                             onChange={(e) => updateAntibiotic(index, 'medication', e.target.value)}
-                            className="w-full px-4 py-3 bg-white/80 border-2 border-blue-200 rounded-2xl focus:outline-none focus:ring-4 focus:ring-blue-100 focus:border-blue-400 transition-all duration-200 shadow-sm hover:shadow-md"
+                            className="w-full px-4 py-3 bg-white/80 border-2 border-gray-200 rounded-2xl focus:outline-none focus:ring-4 focus:ring-blue-100 focus:border-blue-400 transition-all duration-200 shadow-sm hover:shadow-md"
                           />
                         </div>
                         <div>
@@ -724,7 +737,7 @@ function MedicationsPageContent() {
                             value={item.date || new Date().toISOString().split('T')[0]}
                             onChange={(value) => updateAntibiotic(index, 'date', value)}
                             placeholder="When taken?"
-                            className="w-full px-4 py-3 text-left bg-white/80 border-2 border-blue-200 rounded-2xl focus:outline-none focus:ring-4 focus:ring-blue-100 focus:border-blue-400 transition-all duration-200 shadow-sm hover:shadow-md appearance-none bg-no-repeat bg-right pr-10"
+                            className="w-full px-4 py-3 text-left bg-white/80 border-2 border-gray-200 rounded-2xl focus:outline-none focus:ring-4 focus:ring-blue-100 focus:border-blue-400 transition-all duration-200 shadow-sm hover:shadow-md appearance-none bg-no-repeat bg-right pr-10"
                             style={{
                               backgroundImage: `url("data:image/svg+xml,%3csvg xmlns='http://www.w3.org/2000/svg' fill='none' viewBox='0 0 20 20'%3e%3cpath stroke='%236b7280' stroke-linecap='round' stroke-linejoin='round' stroke-width='1.5' d='m6 8 4 4 4-4'/%3e%3c/svg%3e")`,
                               backgroundPosition: 'right 0.75rem center',
@@ -739,7 +752,7 @@ function MedicationsPageContent() {
                         <select
                           value={item.timeOfDay}
                           onChange={(e) => updateAntibiotic(index, 'timeOfDay', e.target.value)}
-                          className="w-full px-4 py-3 text-left bg-white/80 border-2 border-blue-200 rounded-2xl shadow-sm focus:outline-none focus:ring-4 focus:ring-blue-100 focus:border-blue-400 appearance-none bg-no-repeat bg-right pr-10 transition-all duration-200 hover:shadow-md"
+                          className="w-full px-4 py-3 text-left bg-white/80 border-2 border-gray-200 rounded-2xl shadow-sm focus:outline-none focus:ring-4 focus:ring-blue-100 focus:border-blue-400 appearance-none bg-no-repeat bg-right pr-10 transition-all duration-200 hover:shadow-md"
                           style={{
                             backgroundImage: `url("data:image/svg+xml,%3csvg xmlns='http://www.w3.org/2000/svg' fill='none' viewBox='0 0 20 20'%3e%3cpath stroke='%236b7280' stroke-linecap='round' stroke-linejoin='round' stroke-width='1.5' d='m6 8 4 4 4-4'/%3e%3c/svg%3e")`,
                             backgroundPosition: 'right 0.75rem center',
@@ -774,14 +787,9 @@ function MedicationsPageContent() {
         
         {/* Medication Tracking Data Display */}
         {medications.find(med => med.name === 'Medication Tracking') && (
-          <div className="bg-gradient-to-br from-blue-50 to-indigo-50 border-2 border-blue-200 rounded-2xl p-6 mt-8">
+          <div className="mt-8 pt-8 border-t border-gray-200">
             <div className="flex items-center justify-between mb-4">
               <div className="flex items-center">
-                <div className="bg-gradient-to-br from-blue-500 to-indigo-600 p-2 rounded-xl mr-3">
-                  <svg className="w-5 h-5 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z" />
-                  </svg>
-                </div>
                 <h4 className="text-lg font-bold font-source text-gray-900">Tracking Data Summary</h4>
               </div>
               <div className="flex space-x-2">
@@ -821,7 +829,7 @@ function MedicationsPageContent() {
                 </button>
               </div>
             </div>
-            <div className="bg-white/60 rounded-xl p-4">
+            <div>
               {(() => {
                 const trackingData = medications.find(med => med.name === 'Medication Tracking')
                 return (
@@ -867,20 +875,26 @@ function MedicationsPageContent() {
       </div>
 
       {/* Your Medications Section */}
-      <div className="bg-white/90 backdrop-blur-sm rounded-3xl shadow-xl border border-white/20 p-3 sm:p-6 md:p-8 mb-8 sm:mb-12 min-w-0">
+      <div className="bg-white/90 backdrop-blur-sm rounded-3xl shadow-xl border border-white/20 p-4 sm:p-6 md:p-8 mb-8 sm:mb-12 min-w-0">
         <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 mb-6 sm:mb-8">
           <div className="flex items-center">
-            <div className="bg-gradient-to-br from-blue-500 to-indigo-600 p-3 rounded-2xl mr-4">
+            <div className="hidden sm:flex bg-blue-600 p-3 rounded-2xl mr-4">
               <svg className="w-6 h-6 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19.428 15.428a2 2 0 00-1.022-.547l-2.387-.477a6 6 0 00-3.86.517l-.318.158a6 6 0 01-3.86.517L6.05 15.21a2 2 0 00-1.806.547M8 4h8l-1 1v5.172a2 2 0 00.586 1.414l5 5c1.26 1.26.367 3.414-1.415 3.414H4.828c-1.782 0-2.674-2.154-1.414-3.414l5-5A2 2 0 009 10.172V5L8 4z" />
+                {isAdding ? (
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z" />
+                ) : (
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19.428 15.428a2 2 0 00-1.022-.547l-2.387-.477a6 6 0 00-3.86.517l-.318.158a6 6 0 01-3.86.517L6.05 15.21a2 2 0 00-1.806.547M8 4h8l-1 1v5.172a2 2 0 00.586 1.414l5 5c1.26 1.26.367 3.414-1.415 3.414H4.828c-1.782 0-2.674-2.154-1.414-3.414l5-5A2 2 0 009 10.172V5L8 4z" />
+                )}
               </svg>
             </div>
-            <h2 className="text-xl font-semibold font-source text-gray-900">Your Medications</h2>
+            <h2 className="text-xl font-semibold font-source text-gray-900">
+              {isAdding ? (editingId ? 'Edit Medication' : 'Add New Medication') : 'Your Medications'}
+            </h2>
           </div>
           {!isAdding && (
             <button
               onClick={() => setIsAdding(true)}
-              className="bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-700 hover:to-indigo-700 text-white px-4 py-3 rounded-2xl font-medium font-roboto shadow-lg hover:shadow-xl transition-all duration-300 transform hover:scale-105 active:scale-95 self-start sm:self-auto"
+              className="bg-blue-600 hover:bg-blue-700 text-white px-4 py-3 rounded-2xl font-medium font-roboto shadow-lg hover:shadow-xl transition-all duration-300 transform hover:scale-105 active:scale-95 self-start sm:self-auto"
             >
               <svg className="w-5 h-5 mr-2 inline" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 6v6m0 0v6m0-6h6m-6 0H6" />
@@ -892,17 +906,7 @@ function MedicationsPageContent() {
 
         {/* Add/Edit Medication Form */}
         {isAdding && (
-          <div className="bg-gradient-to-br from-blue-50 to-indigo-50 border-2 border-blue-200 rounded-2xl p-4 sm:p-6 mb-8 min-w-0">
-            <div className="flex items-center mb-6">
-              <div className="bg-gradient-to-br from-blue-500 to-indigo-600 p-2 rounded-xl mr-3">
-                <svg className="w-5 h-5 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z" />
-                </svg>
-              </div>
-              <h3 className="text-lg font-semibold font-source text-gray-900">
-                {editingId ? 'Edit Medication' : 'Add New Medication'}
-              </h3>
-            </div>
+          <div className="mb-8 min-w-0">
             <form onSubmit={handleSubmit} className="space-y-6">
               <div className="grid lg:grid-cols-2 gap-6 min-w-0">
                 <div>
@@ -916,7 +920,7 @@ function MedicationsPageContent() {
                     value={formData.name}
                     onChange={handleInputChange}
                     placeholder="Medication name"
-                    className="w-full px-4 py-3 bg-white/80 border-2 border-blue-200 rounded-2xl focus:outline-none focus:ring-4 focus:ring-blue-100 focus:border-blue-400 transition-all duration-200 shadow-sm hover:shadow-md"
+                    className="w-full px-4 py-3 bg-white/80 border-2 border-gray-200 rounded-2xl focus:outline-none focus:ring-4 focus:ring-blue-100 focus:border-blue-400 transition-all duration-200 shadow-sm hover:shadow-md"
                     required
                   />
                 </div>
@@ -932,7 +936,7 @@ function MedicationsPageContent() {
                     value={formData.dosage}
                     onChange={handleInputChange}
                     placeholder="e.g., 500mg"
-                    className="w-full px-4 py-3 bg-white/80 border-2 border-blue-200 rounded-2xl focus:outline-none focus:ring-4 focus:ring-blue-100 focus:border-blue-400 transition-all duration-200 shadow-sm hover:shadow-md"
+                    className="w-full px-4 py-3 bg-white/80 border-2 border-gray-200 rounded-2xl focus:outline-none focus:ring-4 focus:ring-blue-100 focus:border-blue-400 transition-all duration-200 shadow-sm hover:shadow-md"
                   />
                 </div>
               </div>
@@ -986,12 +990,12 @@ function MedicationsPageContent() {
                   value={formData.notes}
                   onChange={handleInputChange}
                   placeholder="Any special instructions, side effects to watch for, etc."
-                  className="w-full px-4 py-3 bg-white/80 border-2 border-blue-200 rounded-2xl focus:outline-none focus:ring-4 focus:ring-blue-100 focus:border-blue-400 transition-all duration-200 shadow-sm hover:shadow-md resize-none"
+                  className="w-full px-4 py-3 bg-white/80 border-2 border-gray-200 rounded-2xl focus:outline-none focus:ring-4 focus:ring-blue-100 focus:border-blue-400 transition-all duration-200 shadow-sm hover:shadow-md resize-none"
                 />
               </div>
 
               <div className="flex flex-col sm:flex-row gap-4 pt-4">
-                <button type="submit" className="bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-700 hover:to-indigo-700 text-white px-8 py-3 rounded-2xl font-medium font-roboto shadow-lg hover:shadow-xl transition-all duration-300 transform hover:scale-105 active:scale-95">
+                <button type="submit" className="bg-blue-600 hover:bg-blue-700 text-white px-8 py-3 rounded-2xl font-medium font-roboto shadow-lg hover:shadow-xl transition-all duration-300 transform hover:scale-105 active:scale-95">
                   <svg className="w-5 h-5 mr-2 inline" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
                   </svg>
@@ -1123,8 +1127,10 @@ function MedicationsPageContent() {
         isOpen={deleteModal.isOpen}
         onClose={closeDeleteModal}
         onConfirm={confirmDelete}
-        title="Delete Medication"
-        message="Are you sure you want to delete this medication? This action cannot be undone."
+        title={medications.find(med => med.id === deleteModal.id)?.name === 'Medication Tracking' ? 'Delete Tracking Data' : 'Delete Medication'}
+        message={medications.find(med => med.id === deleteModal.id)?.name === 'Medication Tracking' 
+          ? 'Are you sure you want to delete all medication tracking data? This action cannot be undone.' 
+          : 'Are you sure you want to delete this medication? This action cannot be undone.'}
         confirmText="Delete"
         cancelText="Cancel"
         isDestructive={true}

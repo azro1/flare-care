@@ -215,12 +215,12 @@ function SymptomsPageContent() {
       {/* Symptom Logging Form */}
       <div className="bg-white/90 backdrop-blur-sm rounded-3xl shadow-xl border border-white/20 p-4 sm:p-6 md:p-8 mb-8 min-w-0">
         <div className="flex items-center mb-6 sm:mb-8">
-          <div className="w-10 h-10 sm:w-12 sm:h-12 bg-blue-600 rounded-xl sm:rounded-2xl flex items-center justify-center mr-3 sm:mr-4 flex-shrink-0">
-            <svg className="w-5 h-5 sm:w-6 sm:h-6 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <div className="hidden sm:flex w-12 h-12 bg-blue-600 rounded-2xl items-center justify-center mr-4 flex-shrink-0">
+            <svg className="w-6 h-6 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 6v6m0 0v6m0-6h6m-6 0H6" />
             </svg>
           </div>
-          <h2 className="text-xl font-semibold font-source text-gray-900 min-w-0">New Symptom Entry</h2>
+          <h2 className="text-xl font-semibold font-source text-gray-900">New Symptom Entry</h2>
         </div>
         
         <form onSubmit={handleSubmit} className="space-y-6 sm:space-y-8">
@@ -228,7 +228,7 @@ function SymptomsPageContent() {
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4 sm:gap-6 md:gap-8">
             <div className="space-y-3">
               <label htmlFor="symptomStartDate" className="block text-sm font-semibold font-roboto text-gray-800 mb-3">
-                📅 When did symptoms begin?
+                When did symptoms begin?
               </label>
               <DatePicker
                 id="symptomStartDate"
@@ -248,7 +248,7 @@ function SymptomsPageContent() {
 
             <div className="space-y-3">
               <label className="block text-sm font-semibold font-roboto text-gray-800 mb-3">
-                ⏰ Are symptoms still ongoing?
+                Are symptoms still ongoing?
               </label>
               <div className="flex space-x-6">
                 <label className="flex items-center cursor-pointer group">
@@ -281,7 +281,7 @@ function SymptomsPageContent() {
           {!formData.isOngoing && (
             <div className="space-y-3">
               <label htmlFor="symptomEndDate" className="block text-sm font-semibold font-roboto text-gray-800 mb-3">
-                🏁 When did symptoms end?
+                When did symptoms end?
               </label>
               <DatePicker
                 id="symptomEndDate"
@@ -307,7 +307,7 @@ function SymptomsPageContent() {
             <div className="space-y-4">
               <div className="flex items-center justify-between">
                 <label htmlFor="severity" className="text-sm font-semibold font-roboto text-gray-800">
-                  🔥 Symptom Severity
+                  Symptom Severity
                 </label>
                 <div className="flex items-center space-x-2">
                   <span className={`text-2xl font-bold ${getSeverityColor(formData.severity).split(' ')[0]}`}>{formData.severity}</span>
@@ -345,7 +345,7 @@ function SymptomsPageContent() {
             <div className="space-y-4">
               <div className="flex items-center justify-between">
                 <label htmlFor="stress_level" className="text-sm font-semibold font-roboto text-gray-800">
-                  😰 Stress Level
+                  Stress Level
                 </label>
                 <div className="flex items-center space-x-2">
                   <span className={`text-2xl font-bold ${getStressColor(formData.stress_level).split(' ')[0]}`}>{formData.stress_level}</span>
@@ -383,7 +383,7 @@ function SymptomsPageContent() {
           {/* Smoking Status */}
           <div className="space-y-4">
             <label className="block text-sm font-semibold font-roboto text-gray-800 mb-3">
-              🚭 Do you smoke?
+              Do you smoke?
             </label>
             <div className="flex space-x-6">
               <label className="flex items-center cursor-pointer group">
@@ -411,7 +411,7 @@ function SymptomsPageContent() {
             </div>
             
             {formData.smoking && (
-              <div className="mt-4 p-4 bg-blue-50 border border-blue-200 rounded-2xl">
+              <div className="mt-4">
                 <label htmlFor="smoking_details" className="block text-sm font-semibold font-roboto text-gray-800 mb-3">
                   Please describe your smoking habits
                 </label>
@@ -422,8 +422,7 @@ function SymptomsPageContent() {
                   value={formData.smoking_details}
                   onChange={handleInputChange}
                   placeholder="e.g., 1 pack of cigarettes per day, occasional cigars, etc."
-                  className="w-full px-4 py-3 bg-white border-2 border-blue-200 rounded-xl focus:outline-none focus:ring-4 focus:ring-blue-100 focus:border-blue-500 focus:bg-white hover:bg-white transition-all duration-200"
-                  style={{ backgroundColor: 'white' }}
+                  className="w-full px-4 py-3 bg-white border-2 border-gray-200 rounded-xl focus:outline-none focus:ring-4 focus:ring-blue-100 focus:border-blue-400 transition-all duration-200"
                   autoComplete="off"
                 />
               </div>
@@ -433,7 +432,7 @@ function SymptomsPageContent() {
           {/* Alcohol Status */}
           <div className="space-y-4">
             <label className="block text-sm font-semibold font-roboto text-gray-800 mb-3">
-              🍷 Do you drink alcohol?
+              Do you drink alcohol?
             </label>
             <div className="flex space-x-6">
               <label className="flex items-center cursor-pointer group">
@@ -461,7 +460,7 @@ function SymptomsPageContent() {
             </div>
             
             {formData.alcohol && (
-              <div className="mt-4 p-4 bg-blue-50 border border-blue-200 rounded-2xl">
+              <div className="mt-4">
                 <label htmlFor="alcohol_units" className="block text-sm font-semibold font-roboto text-gray-800 mb-3">
                   How many units of alcohol do you drink per day?
                 </label>
@@ -472,8 +471,7 @@ function SymptomsPageContent() {
                   value={formData.alcohol_units}
                   onChange={handleInputChange}
                   placeholder="e.g., 2-3 units, occasional glass of wine, etc."
-                  className="w-full px-4 py-3 bg-white border-2 border-blue-200 rounded-xl focus:outline-none focus:ring-4 focus:ring-blue-100 focus:border-blue-500 focus:bg-white hover:bg-white transition-all duration-200"
-                  style={{ backgroundColor: 'white' }}
+                  className="w-full px-4 py-3 bg-white border-2 border-gray-200 rounded-xl focus:outline-none focus:ring-4 focus:ring-blue-100 focus:border-blue-400 transition-all duration-200"
                   autoComplete="off"
                 />
               </div>
@@ -482,8 +480,8 @@ function SymptomsPageContent() {
 
           {/* Notes Section */}
           <div className="space-y-3">
-            <label htmlFor="notes" className="block text-sm font-semibold font-roboto text-gray-800 mb-3">
-              📝 Additional Notes
+            <label htmlFor="notes" className="block text-sm font-semibold font-roboto text-gray-800">
+              Additional Notes
             </label>
             <textarea
               id="notes"
@@ -499,8 +497,8 @@ function SymptomsPageContent() {
           {/* Meal Tracking */}
           <div className="space-y-8">
             <div className="flex items-center">
-              <div className="w-10 h-10 bg-blue-600 rounded-2xl flex items-center justify-center mr-4">
-                <svg className="w-5 h-5 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <div className="hidden sm:flex w-12 h-12 bg-blue-600 rounded-2xl items-center justify-center mr-4 flex-shrink-0">
+                <svg className="w-6 h-6 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 3h2l.4 2M7 13h10l4-8H5.4m0 0L7 13m0 0l-2.5 5M7 13l2.5 5m6-5v6a2 2 0 01-2 2H9a2 2 0 01-2-2v-6m8 0V9a2 2 0 00-2-2H9a2 2 0 00-2 2v4.01" />
                 </svg>
               </div>
@@ -508,48 +506,42 @@ function SymptomsPageContent() {
             </div>
             
             {/* Breakfast */}
-            <div className="bg-gradient-to-br from-blue-50 to-indigo-50 border-2 border-blue-200 rounded-2xl p-4 min-w-0">
-              <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3 sm:gap-4 mb-4">
-                <div className="flex items-center min-w-0">
-                  <span className="text-2xl mr-3 flex-shrink-0">🌅</span>
-                  <h4 className="text-lg font-semibold font-source text-gray-900 min-w-0">
-                    {getMealLabel('breakfast')}
-                  </h4>
-                </div>
+            <div className="mb-6">
+              <div className="flex justify-between items-center mb-3 gap-3 sm:gap-0">
+                <h4 className="text-sm font-semibold font-roboto text-gray-900">
+                  {getMealLabel('breakfast')}
+                </h4>
                 <button
                   type="button"
                   onClick={() => addMealItem('breakfast')}
-                  className="inline-flex items-center px-4 py-2 bg-blue-100 hover:bg-blue-200 text-blue-700 text-sm font-medium rounded-xl transition-all duration-200 hover:shadow-md flex-shrink-0"
+                  className="px-2 py-1 text-sm font-medium bg-blue-100 text-blue-700 rounded-lg hover:bg-blue-200 transition-colors"
                 >
-                  <svg className="w-4 h-4 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 6v6m0 0v6m0-6h6m-6 0H6" />
-                  </svg>
-                  Add Item
+                  Add
                 </button>
               </div>
               <div className="space-y-4">
                 {formData.breakfast.map((item, index) => (
-                  <div key={index} className="bg-white border-2 border-blue-200 rounded-xl p-4 relative shadow-sm hover:shadow-md transition-all duration-200">
+                  <div key={index} className="relative">
                     {formData.breakfast.length > 1 && (
                       <button
                         type="button"
                         onClick={() => removeMealItem('breakfast', index)}
-                        className="absolute -left-2 -top-2 bg-white border-2 border-gray-300 rounded-full p-1.5 shadow-lg z-10 text-red-500 hover:text-red-700 hover:shadow-xl transition-all duration-200 flex-shrink-0"
+                        className="absolute -left-1 -top-1 bg-white border border-gray-300 rounded-full p-1 shadow-md z-10 text-red-500 hover:text-red-700 hover:shadow-lg transition-all duration-200 flex-shrink-0"
                         title="Remove item"
                       >
-                        <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <svg className="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                           <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
                         </svg>
                       </button>
                     )}
-                    <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                    <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
                       <div>
                         <input
                           type="text"
                           placeholder="Food item"
                           value={item.food}
                           onChange={(e) => updateMealItem('breakfast', index, 'food', e.target.value)}
-                          className="w-full px-4 py-3 bg-white border-2 border-blue-200 rounded-xl focus:outline-none focus:ring-4 focus:ring-blue-100 focus:border-blue-400 transition-all duration-200"
+                          className="w-full px-4 py-3 bg-white border-2 border-gray-200 rounded-xl focus:outline-none focus:ring-4 focus:ring-blue-100 focus:border-blue-400 transition-all duration-200"
                         />
                       </div>
                       <div>
@@ -558,7 +550,7 @@ function SymptomsPageContent() {
                           placeholder="Quantity"
                           value={item.quantity}
                           onChange={(e) => updateMealItem('breakfast', index, 'quantity', e.target.value)}
-                          className="w-full px-4 py-3 bg-white border-2 border-blue-200 rounded-xl focus:outline-none focus:ring-4 focus:ring-blue-100 focus:border-blue-400 transition-all duration-200"
+                          className="w-full px-4 py-3 bg-white border-2 border-gray-200 rounded-xl focus:outline-none focus:ring-4 focus:ring-blue-100 focus:border-blue-400 transition-all duration-200"
                         />
                       </div>
                     </div>
@@ -568,48 +560,42 @@ function SymptomsPageContent() {
             </div>
 
             {/* Lunch */}
-            <div className="bg-gradient-to-br from-blue-50 to-indigo-50 border-2 border-blue-200 rounded-2xl p-4 min-w-0">
-              <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3 sm:gap-4 mb-4">
-                <div className="flex items-center min-w-0">
-                  <span className="text-2xl mr-3 flex-shrink-0">☀️</span>
-                  <h4 className="text-lg font-semibold font-source text-gray-900 min-w-0">
-                    {getMealLabel('lunch')}
-                  </h4>
-                </div>
+            <div className="mb-6">
+              <div className="flex justify-between items-center mb-3 gap-3 sm:gap-0">
+                <h4 className="text-sm font-semibold font-roboto text-gray-900">
+                  {getMealLabel('lunch')}
+                </h4>
                 <button
                   type="button"
                   onClick={() => addMealItem('lunch')}
-                  className="inline-flex items-center px-4 py-2 bg-blue-100 hover:bg-blue-200 text-blue-700 text-sm font-medium rounded-xl transition-all duration-200 hover:shadow-md flex-shrink-0"
+                  className="px-2 py-1 text-sm font-medium bg-blue-100 text-blue-700 rounded-lg hover:bg-blue-200 transition-colors"
                 >
-                  <svg className="w-4 h-4 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 6v6m0 0v6m0-6h6m-6 0H6" />
-                  </svg>
-                  Add Item
+                  Add
                 </button>
               </div>
               <div className="space-y-4">
                 {formData.lunch.map((item, index) => (
-                  <div key={index} className="bg-white border-2 border-blue-200 rounded-xl p-4 relative shadow-sm hover:shadow-md transition-all duration-200">
+                  <div key={index} className="relative">
                     {formData.lunch.length > 1 && (
                       <button
                         type="button"
                         onClick={() => removeMealItem('lunch', index)}
-                        className="absolute -left-2 -top-2 bg-white border-2 border-gray-300 rounded-full p-1.5 shadow-lg z-10 text-red-500 hover:text-red-700 hover:shadow-xl transition-all duration-200 flex-shrink-0"
+                        className="absolute -left-1 -top-1 bg-white border border-gray-300 rounded-full p-1 shadow-md z-10 text-red-500 hover:text-red-700 hover:shadow-lg transition-all duration-200 flex-shrink-0"
                         title="Remove item"
                       >
-                        <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <svg className="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                           <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
                         </svg>
                       </button>
                     )}
-                    <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                    <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
                       <div>
                         <input
                           type="text"
                           placeholder="Food item"
                           value={item.food}
                           onChange={(e) => updateMealItem('lunch', index, 'food', e.target.value)}
-                          className="w-full px-4 py-3 bg-white border-2 border-blue-200 rounded-xl focus:outline-none focus:ring-4 focus:ring-blue-100 focus:border-blue-400 transition-all duration-200"
+                          className="w-full px-4 py-3 bg-white border-2 border-gray-200 rounded-xl focus:outline-none focus:ring-4 focus:ring-blue-100 focus:border-blue-400 transition-all duration-200"
                         />
                       </div>
                       <div>
@@ -618,7 +604,7 @@ function SymptomsPageContent() {
                           placeholder="Quantity"
                           value={item.quantity}
                           onChange={(e) => updateMealItem('lunch', index, 'quantity', e.target.value)}
-                          className="w-full px-4 py-3 bg-white border-2 border-blue-200 rounded-xl focus:outline-none focus:ring-4 focus:ring-blue-100 focus:border-blue-400 transition-all duration-200"
+                          className="w-full px-4 py-3 bg-white border-2 border-gray-200 rounded-xl focus:outline-none focus:ring-4 focus:ring-blue-100 focus:border-blue-400 transition-all duration-200"
                         />
                       </div>
                     </div>
@@ -628,48 +614,42 @@ function SymptomsPageContent() {
             </div>
 
             {/* Dinner */}
-            <div className="bg-gradient-to-br from-blue-50 to-indigo-50 border-2 border-blue-200 rounded-2xl p-4 min-w-0">
-              <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3 sm:gap-4 mb-4">
-                <div className="flex items-center min-w-0">
-                  <span className="text-2xl mr-3 flex-shrink-0">🌙</span>
-                  <h4 className="text-lg font-semibold font-source text-gray-900 min-w-0">
-                    {getMealLabel('dinner')}
-                  </h4>
-                </div>
+            <div className="mb-6">
+              <div className="flex justify-between items-center mb-3 gap-3 sm:gap-0">
+                <h4 className="text-sm font-semibold font-roboto text-gray-900">
+                  {getMealLabel('dinner')}
+                </h4>
                 <button
                   type="button"
                   onClick={() => addMealItem('dinner')}
-                  className="inline-flex items-center px-4 py-2 bg-blue-100 hover:bg-blue-200 text-blue-700 text-sm font-medium rounded-xl transition-all duration-200 hover:shadow-md flex-shrink-0"
+                  className="px-2 py-1 text-sm font-medium bg-blue-100 text-blue-700 rounded-lg hover:bg-blue-200 transition-colors"
                 >
-                  <svg className="w-4 h-4 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 6v6m0 0v6m0-6h6m-6 0H6" />
-                  </svg>
-                  Add Item
+                  Add
                 </button>
               </div>
               <div className="space-y-4">
                 {formData.dinner.map((item, index) => (
-                  <div key={index} className="bg-white border-2 border-blue-200 rounded-xl p-4 relative shadow-sm hover:shadow-md transition-all duration-200">
+                  <div key={index} className="relative">
                     {formData.dinner.length > 1 && (
                       <button
                         type="button"
                         onClick={() => removeMealItem('dinner', index)}
-                        className="absolute -left-2 -top-2 bg-white border-2 border-gray-300 rounded-full p-1.5 shadow-lg z-10 text-red-500 hover:text-red-700 hover:shadow-xl transition-all duration-200 flex-shrink-0"
+                        className="absolute -left-1 -top-1 bg-white border border-gray-300 rounded-full p-1 shadow-md z-10 text-red-500 hover:text-red-700 hover:shadow-lg transition-all duration-200 flex-shrink-0"
                         title="Remove item"
                       >
-                        <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <svg className="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                           <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
                         </svg>
                       </button>
                     )}
-                    <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                    <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
                       <div>
                         <input
                           type="text"
                           placeholder="Food item"
                           value={item.food}
                           onChange={(e) => updateMealItem('dinner', index, 'food', e.target.value)}
-                          className="w-full px-4 py-3 bg-white border-2 border-blue-200 rounded-xl focus:outline-none focus:ring-4 focus:ring-blue-100 focus:border-blue-400 transition-all duration-200"
+                          className="w-full px-4 py-3 bg-white border-2 border-gray-200 rounded-xl focus:outline-none focus:ring-4 focus:ring-blue-100 focus:border-blue-400 transition-all duration-200"
                         />
                       </div>
                       <div>
@@ -678,7 +658,7 @@ function SymptomsPageContent() {
                           placeholder="Quantity"
                           value={item.quantity}
                           onChange={(e) => updateMealItem('dinner', index, 'quantity', e.target.value)}
-                          className="w-full px-4 py-3 bg-white border-2 border-blue-200 rounded-xl focus:outline-none focus:ring-4 focus:ring-blue-100 focus:border-blue-400 transition-all duration-200"
+                          className="w-full px-4 py-3 bg-white border-2 border-gray-200 rounded-xl focus:outline-none focus:ring-4 focus:ring-blue-100 focus:border-blue-400 transition-all duration-200"
                         />
                       </div>
                     </div>
@@ -688,10 +668,10 @@ function SymptomsPageContent() {
             </div>
           </div>
 
-          <div className="flex justify-center">
+          <div className="flex justify-center lg:justify-start">
             <button 
               type="submit" 
-              className="inline-flex items-center px-8 py-4 bg-blue-600 hover:bg-blue-700 text-white font-semibold rounded-2xl transition-all duration-300 transform hover:scale-105 hover:shadow-xl active:scale-95 shadow-lg"
+              className="inline-flex items-center justify-center w-full sm:w-auto px-8 py-4 bg-blue-600 hover:bg-blue-700 text-white font-semibold rounded-2xl transition-all duration-300 transform hover:scale-105 hover:shadow-xl active:scale-95 shadow-lg"
             >
               <svg className="w-5 h-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 6v6m0 0v6m0-6h6m-6 0H6" />
@@ -705,12 +685,12 @@ function SymptomsPageContent() {
       {/* Symptoms List */}
       <div className="bg-white/90 backdrop-blur-sm rounded-3xl shadow-xl border border-white/20 p-4 sm:p-6 md:p-8 mt-12 min-w-0">
         <div className="flex items-center mb-6 sm:mb-8">
-          <div className="w-10 h-10 sm:w-12 sm:h-12 bg-blue-600 rounded-xl sm:rounded-2xl flex items-center justify-center mr-3 sm:mr-4 flex-shrink-0">
-            <svg className="w-5 h-5 sm:w-6 sm:h-6 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <div className="hidden sm:flex w-12 h-12 bg-blue-600 rounded-2xl items-center justify-center mr-4 flex-shrink-0">
+            <svg className="w-6 h-6 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
             </svg>
           </div>
-          <h2 className="text-xl font-semibold font-source text-gray-900 min-w-0">Recent Entries</h2>
+          <h2 className="text-xl font-semibold font-source text-gray-900">Recent Entries</h2>
         </div>
         
         {symptoms.length === 0 ? (
@@ -726,9 +706,9 @@ function SymptomsPageContent() {
         ) : (
           <div className="space-y-6">
             {symptoms.map((symptom) => (
-              <div key={symptom.id} className="bg-gradient-to-br from-white to-gray-50 border-2 border-gray-200 rounded-2xl p-4 sm:p-6 hover:shadow-lg transition-all duration-300 hover:border-blue-300 min-w-0">
-                <div className="flex justify-between items-start mb-6">
-                  <div className="flex flex-col space-y-3">
+              <div key={symptom.id} className="bg-gradient-to-br from-white to-gray-50 border-2 border-gray-200 rounded-2xl p-4 sm:p-6 hover:shadow-lg transition-all duration-300 min-w-0">
+                <div className="flex justify-between items-start mb-6 gap-4">
+                  <div className="flex flex-col space-y-3 min-w-0 flex-1">
                     <div className="flex items-center space-x-2">
                       <span className="text-sm font-medium text-gray-600 font-roboto">
                         {new Date(symptom.symptomStartDate).toLocaleDateString('en-GB', {
@@ -745,6 +725,7 @@ function SymptomsPageContent() {
                       ) : (
                         <span className="text-sm text-gray-500">
                           to {new Date(symptom.symptomEndDate).toLocaleDateString('en-GB', {
+                            weekday: 'short',
                             day: 'numeric',
                             month: 'short',
                             year: 'numeric'
@@ -754,18 +735,18 @@ function SymptomsPageContent() {
                     </div>
                     <div className="flex flex-wrap gap-2">
                       <span className={`inline-flex items-center px-3 py-1.5 rounded-full text-sm font-medium ${getSeverityColor(symptom.severity)}`}>
-                        🔥 {symptom.severity}/10 - {getSeverityLabel(symptom.severity)}
+                        {symptom.severity}/10 - {getSeverityLabel(symptom.severity)}
                       </span>
                       {symptom.stress_level && (
                         <span className={`inline-flex items-center px-3 py-1.5 rounded-full text-sm font-medium ${getStressColor(symptom.stress_level)}`}>
-                          😰 {symptom.stress_level}/10 - {getStressLabel(symptom.stress_level)}
+                          {symptom.stress_level}/10 - {getStressLabel(symptom.stress_level)}
                         </span>
                       )}
                     </div>
                   </div>
                   <button
                     onClick={() => handleDeleteSymptom(symptom.id)}
-                    className="bg-blue-100 hover:bg-blue-200 text-blue-600 hover:text-blue-700 p-2 rounded-xl transition-all duration-200 shadow-sm hover:shadow-md"
+                    className="bg-blue-100 hover:bg-blue-200 text-blue-600 hover:text-blue-700 p-2 rounded-xl transition-all duration-200 shadow-sm hover:shadow-md flex-shrink-0"
                     title="Delete entry"
                   >
                     <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -775,12 +756,11 @@ function SymptomsPageContent() {
                 </div>
 
                 {symptom.notes && (
-                  <div className="mb-4 p-4 bg-blue-50 border border-blue-200 rounded-xl">
+                  <div className="mb-6">
                     <div className="flex items-start">
-                      <span className="text-lg mr-2">📝</span>
                       <div>
-                        <p className="text-sm font-medium text-blue-800 mb-1">Notes</p>
-                        <p className="text-sm text-blue-700 font-roboto">{symptom.notes}</p>
+                        <p className="text-sm font-semibold text-gray-800 mb-1">Notes</p>
+                        <p className="text-sm text-gray-700 font-roboto">{symptom.notes}</p>
                       </div>
                     </div>
                   </div>
@@ -788,11 +768,10 @@ function SymptomsPageContent() {
 
                 {/* Display smoking status */}
                 {symptom.smoking && (
-                  <div className="mb-4 p-4 bg-blue-50 border border-blue-200 rounded-xl">
+                  <div className="mb-6">
                     <div className="flex items-start">
-                      <span className="text-lg mr-2">🚭</span>
                       <div>
-                        <p className="text-sm font-medium text-gray-800 mb-1">Smoking Status</p>
+                        <p className="text-sm font-semibold text-gray-800 mb-1">Smoking Status</p>
                         {symptom.smoking_details ? (
                           <p className="text-sm text-gray-700 font-roboto">{symptom.smoking_details}</p>
                         ) : (
@@ -805,11 +784,10 @@ function SymptomsPageContent() {
 
                 {/* Display alcohol status */}
                 {symptom.alcohol && (
-                  <div className="mb-4 p-4 bg-blue-50 border border-blue-200 rounded-xl">
+                  <div className="mb-6">
                     <div className="flex items-start">
-                      <span className="text-lg mr-2">🍷</span>
                       <div>
-                        <p className="text-sm font-medium text-gray-800 mb-1">Alcohol Consumption</p>
+                        <p className="text-sm font-semibold text-gray-800 mb-1">Alcohol Consumption</p>
                         {symptom.alcohol_units ? (
                           <p className="text-sm text-gray-700 font-roboto">{symptom.alcohol_units} per day</p>
                         ) : (
@@ -824,21 +802,19 @@ function SymptomsPageContent() {
                 {(symptom.breakfast?.length > 0 || symptom.lunch?.length > 0 || symptom.dinner?.length > 0) && (
                   <div className="space-y-4">
                     <div className="flex items-center">
-                      <span className="text-lg mr-2">🍽️</span>
                       <p className="text-sm font-semibold text-gray-800">Meals Tracked</p>
                     </div>
                     
-                    <div className="grid gap-3">
+                    <div className="grid gap-1">
                       {symptom.breakfast?.length > 0 && (
-                        <div className="bg-blue-50 border border-blue-200 rounded-xl p-3">
+                        <div className="mb-2">
                           <div className="flex items-center mb-2">
-                            <span className="text-sm mr-2">🌅</span>
                             <p className="text-sm font-medium text-gray-800">Breakfast</p>
                           </div>
                           <ul className="text-sm text-gray-700 font-roboto space-y-1">
                             {symptom.breakfast.map((item, index) => (
                               <li key={index} className="flex items-center">
-                                <span className="w-1.5 h-1.5 bg-blue-400 rounded-full mr-2"></span>
+                                <span className="w-1.5 h-1.5 bg-gray-400 rounded-full mr-2"></span>
                                 {item.food}{item.quantity ? ` (${item.quantity})` : ''}
                               </li>
                             ))}
@@ -847,15 +823,14 @@ function SymptomsPageContent() {
                       )}
                       
                       {symptom.lunch?.length > 0 && (
-                        <div className="bg-blue-50 border border-blue-200 rounded-xl p-3">
+                        <div className="mb-2">
                           <div className="flex items-center mb-2">
-                            <span className="text-sm mr-2">☀️</span>
                             <p className="text-sm font-medium text-gray-800">Lunch</p>
                           </div>
                           <ul className="text-sm text-gray-700 font-roboto space-y-1">
                             {symptom.lunch.map((item, index) => (
                               <li key={index} className="flex items-center">
-                                <span className="w-1.5 h-1.5 bg-blue-400 rounded-full mr-2"></span>
+                                <span className="w-1.5 h-1.5 bg-gray-400 rounded-full mr-2"></span>
                                 {item.food}{item.quantity ? ` (${item.quantity})` : ''}
                               </li>
                             ))}
@@ -864,15 +839,14 @@ function SymptomsPageContent() {
                       )}
                       
                       {symptom.dinner?.length > 0 && (
-                        <div className="bg-blue-50 border border-blue-200 rounded-xl p-3">
+                        <div className="mb-2">
                           <div className="flex items-center mb-2">
-                            <span className="text-sm mr-2">🌙</span>
                             <p className="text-sm font-medium text-gray-800">Dinner</p>
                           </div>
                           <ul className="text-sm text-gray-700 font-roboto space-y-1">
                             {symptom.dinner.map((item, index) => (
                               <li key={index} className="flex items-center">
-                                <span className="w-1.5 h-1.5 bg-blue-400 rounded-full mr-2"></span>
+                                <span className="w-1.5 h-1.5 bg-gray-400 rounded-full mr-2"></span>
                                 {item.food}{item.quantity ? ` (${item.quantity})` : ''}
                               </li>
                             ))}
