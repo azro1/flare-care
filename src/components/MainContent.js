@@ -15,7 +15,7 @@ export default function MainContent({ children }) {
   const bottomPadding = isMinimalFooter ? 'pb-32' : ''
   
   return (
-    <main className={`flex-grow flex flex-col container mx-auto px-4 py-12 ${bottomPadding}`}>
+    <main className={`flex-grow flex flex-col container mx-auto px-4 sm:px-6 lg:px-8 py-12 ${bottomPadding}`}>
       {children}
     </main>
   )

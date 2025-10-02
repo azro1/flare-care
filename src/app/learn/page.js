@@ -7,26 +7,26 @@ export default function LearnPage() {
   const { isAuthenticated } = useAuth()
   
   return (
-    <div className="max-w-4xl mx-auto">
+    <div className="max-w-4xl w-full mx-auto px-3 sm:px-4 md:px-6 lg:px-8 min-w-0">
       <div className="mb-8 sm:mb-10">
         <h1 className="text-2xl sm:text-3xl lg:text-4xl font-bold font-source text-gray-900 mb-4 sm:mb-6">Understanding IBD</h1>
-        <p className="text-gray-600 font-roboto">
+        <p className="text-gray-600 font-roboto break-words">
           Learn about Crohn's disease and Ulcerative Colitis, and how FlareCare can help you manage your condition.
         </p>
       </div>
 
       {/* What is IBD Section */}
-      <div className="card mb-8 sm:mb-12">
-        <h2 className="text-xl font-semibold font-source text-gray-900 mb-6">What is Inflammatory Bowel Disease (IBD)?</h2>
+      <div className="card mb-8 sm:mb-12 p-4 sm:p-6">
+        <h2 className="text-xl font-semibold font-source text-gray-900 mb-6 break-words">What is Inflammatory Bowel Disease (IBD)?</h2>
         <div className="prose prose-gray max-w-none">
-          <p className="text-gray-600 mb-4 font-roboto">
+          <p className="text-gray-600 mb-4 font-roboto break-words">
             Inflammatory Bowel Disease (IBD) is a term used to describe disorders that involve chronic inflammation of your digestive tract. The two main types are:
           </p>
           
           <div className="grid md:grid-cols-2 gap-6 mb-6">
             <div className="bg-red-50 p-6 rounded-xl border border-red-200">
-              <h3 className="text-lg font-semibold font-source text-red-800 mb-3">Crohn's Disease</h3>
-              <ul className="text-red-700 space-y-2 text-sm font-roboto">
+              <h3 className="text-lg font-semibold font-source text-red-800 mb-3 break-words">Crohn's Disease</h3>
+              <ul className="text-red-700 space-y-2 text-sm font-roboto break-words">
                 <li>• Can affect any part of the digestive tract</li>
                 <li>• Inflammation can be patchy with healthy areas in between</li>
                 <li>• Can affect the full thickness of the bowel wall</li>
@@ -35,8 +35,8 @@ export default function LearnPage() {
             </div>
             
             <div className="bg-blue-50 p-6 rounded-xl border border-blue-200">
-              <h3 className="text-lg font-semibold font-source text-blue-800 mb-3">Ulcerative Colitis</h3>
-              <ul className="text-blue-700 space-y-2 text-sm font-roboto">
+              <h3 className="text-lg font-semibold font-source text-blue-800 mb-3 break-words">Ulcerative Colitis</h3>
+              <ul className="text-blue-700 space-y-2 text-sm font-roboto break-words">
                 <li>• Affects only the colon and rectum</li>
                 <li>• Inflammation is continuous, starting from the rectum</li>
                 <li>• Usually affects only the inner lining of the colon</li>
@@ -48,12 +48,12 @@ export default function LearnPage() {
       </div>
 
       {/* Common Symptoms Section */}
-      <div className="card mb-8 sm:mb-12">
-        <h2 className="text-xl font-semibold font-source text-gray-900 mb-6">Common Symptoms</h2>
+      <div className="card mb-8 sm:mb-12 p-4 sm:p-6">
+        <h2 className="text-xl font-semibold font-source text-gray-900 mb-6 break-words">Common Symptoms</h2>
         <div className="grid md:grid-cols-2 gap-6">
           <div>
-            <h3 className="text-lg font-medium font-source text-gray-900 mb-4">Digestive Symptoms</h3>
-            <ul className="space-y-2 text-gray-600 font-roboto">
+            <h3 className="text-lg font-medium font-source text-gray-900 mb-4 break-words">Digestive Symptoms</h3>
+            <ul className="space-y-2 text-gray-600 font-roboto break-words">
               <li className="flex items-start">
                 <span className="text-red-500 mr-2">•</span>
                 <span>Abdominal pain and cramping</span>
@@ -78,8 +78,8 @@ export default function LearnPage() {
           </div>
           
           <div>
-            <h3 className="text-lg font-medium font-source text-gray-900 mb-4">Other Symptoms</h3>
-            <ul className="space-y-2 text-gray-600 font-roboto">
+            <h3 className="text-lg font-medium font-source text-gray-900 mb-4 break-words">Other Symptoms</h3>
+            <ul className="space-y-2 text-gray-600 font-roboto break-words">
               <li className="flex items-start">
                 <span className="text-red-500 mr-2">•</span>
                 <span>Fatigue and low energy</span>
@@ -106,37 +106,37 @@ export default function LearnPage() {
       </div>
 
       {/* Triggers Section */}
-      <div className="card mb-8 sm:mb-12">
-        <h2 className="text-xl font-semibold font-source text-gray-900 mb-6">Common Triggers</h2>
+      <div className="card mb-8 sm:mb-12 p-4 sm:p-6">
+        <h2 className="text-xl font-semibold font-source text-gray-900 mb-6 break-words">Common Triggers</h2>
         <div className="grid md:grid-cols-3 gap-6">
           <div className="text-center">
             <div className="w-16 h-16 bg-orange-100 rounded-full flex items-center justify-center mx-auto mb-4">
               <span className="text-2xl">🍕</span>
             </div>
-            <h3 className="font-medium font-source text-gray-900 mb-2">Food & Diet</h3>
-            <p className="text-sm text-gray-600 font-roboto">Spicy foods, dairy, high-fiber foods, alcohol, and caffeine can trigger symptoms</p>
+            <h3 className="font-medium font-source text-gray-900 mb-2 break-words">Food & Diet</h3>
+            <p className="text-sm text-gray-600 font-roboto break-words">Spicy foods, dairy, high-fiber foods, alcohol, and caffeine can trigger symptoms</p>
           </div>
           
           <div className="text-center">
             <div className="w-16 h-16 bg-yellow-100 rounded-full flex items-center justify-center mx-auto mb-4">
               <span className="text-2xl">😰</span>
             </div>
-            <h3 className="font-medium font-source text-gray-900 mb-2">Stress</h3>
-            <p className="text-sm text-gray-600 font-roboto">Emotional stress and anxiety can worsen symptoms and trigger flare-ups</p>
+            <h3 className="font-medium font-source text-gray-900 mb-2 break-words">Stress</h3>
+            <p className="text-sm text-gray-600 font-roboto break-words">Emotional stress and anxiety can worsen symptoms and trigger flare-ups</p>
           </div>
           
           <div className="text-center">
             <div className="w-16 h-16 bg-green-100 rounded-full flex items-center justify-center mx-auto mb-4">
               <span className="text-2xl">🦠</span>
             </div>
-            <h3 className="font-medium font-source text-gray-900 mb-2">Infections</h3>
-            <p className="text-sm text-gray-600 font-roboto">Viral or bacterial infections can trigger or worsen IBD symptoms</p>
+            <h3 className="font-medium font-source text-gray-900 mb-2 break-words">Infections</h3>
+            <p className="text-sm text-gray-600 font-roboto break-words">Viral or bacterial infections can trigger or worsen IBD symptoms</p>
           </div>
         </div>
       </div>
 
       {/* How FlareCare Helps Section */}
-      <div className="card mb-8 sm:mb-12">
+      <div className="card mb-8 sm:mb-12 p-4 sm:p-6">
         <h2 className="text-xl font-semibold font-source text-gray-900 mb-6">How FlareCare Can Help</h2>
         <div className="grid md:grid-cols-2 gap-8">
           <div>
@@ -190,7 +190,7 @@ export default function LearnPage() {
       </div>
 
       {/* When to Seek Help Section */}
-      <div className="card mb-8 sm:mb-12">
+      <div className="card mb-8 sm:mb-12 p-4 sm:p-6">
         <h2 className="text-xl font-semibold font-source text-gray-900 mb-6">When to Seek Medical Help</h2>
         <div className="bg-red-50 border border-red-200 rounded-xl p-6 font-source">
           <h3 className="text-lg font-semibold font-source text-red-800 mb-4">Seek immediate medical attention if you experience:</h3>
@@ -220,7 +220,7 @@ export default function LearnPage() {
       </div>
 
       {/* Resources Section */}
-      <div className="card mb-8 sm:mb-12">
+      <div className="card mb-8 sm:mb-12 p-4 sm:p-6">
         <h2 className="text-xl font-semibold font-source text-gray-900 mb-6">Helpful Resources</h2>
         <div className="grid md:grid-cols-2 gap-6">
           <div>
@@ -287,56 +287,56 @@ export default function LearnPage() {
           <svg className="w-8 h-8 text-red-600 mr-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
             <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-2.5L13.732 4c-.77-.833-1.732-.833-2.464 0L3.35 16.5c-.77.833.192 2.5 1.732 2.5z" />
           </svg>
-          <h2 className="text-2xl font-bold font-source text-gray-900">Quit Smoking Support</h2>
+          <h2 className="text-2xl font-bold font-source text-gray-900 break-words">Quit Smoking Support</h2>
         </div>
         
-        <div className="space-y-4 text-gray-700 font-roboto mb-6">
-          <p className="text-lg">
+        <div className="space-y-4 text-gray-700 font-roboto mb-6 break-words">
+          <p className="text-lg break-words">
             <strong>Smoking significantly increases the risk of Crohn's disease flares and complications.</strong> 
             If you smoke, quitting is one of the most important steps you can take to improve your health.
           </p>
-          <p>
+          <p className="break-words">
             Research shows that smoking can reduce blood flow to the gut and weaken your body's natural defenses, 
             making Crohn's symptoms worse and more frequent.
           </p>
         </div>
 
-        <div className="grid md:grid-cols-2 gap-6">
-          <div className="bg-white/80 backdrop-blur-sm rounded-xl p-6 border border-white/20">
-            <h3 className="text-lg font-semibold font-source text-gray-900 mb-3">🚭 NHS Stop Smoking Services</h3>
-            <div className="space-y-2 text-gray-600 font-roboto">
-              <p><strong>Website:</strong> <a href="https://www.nhs.uk/smokefree" className="text-blue-600 hover:underline" target="_blank" rel="noopener noreferrer">nhs.uk/smokefree</a></p>
-              <p><strong>Helpline:</strong> <a href="tel:03001231045" className="text-blue-600 hover:underline">0300 123 1045</a></p>
-              <p><strong>Text Support:</strong> Text QUIT to 66777</p>
-              <p className="text-sm">Free support, advice, and resources</p>
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+          <div className="bg-white/80 backdrop-blur-sm rounded-xl p-4 sm:p-6 border border-white/20 min-w-0">
+            <h3 className="text-lg font-semibold font-source text-gray-900 mb-3 break-words">🚭 NHS Stop Smoking Services</h3>
+            <div className="space-y-2 text-gray-600 font-roboto break-words">
+              <p className="break-words"><strong>Website:</strong> <a href="https://www.nhs.uk/smokefree" className="text-blue-600 hover:underline break-words" target="_blank" rel="noopener noreferrer">nhs.uk/smokefree</a></p>
+              <p className="break-words"><strong>Helpline:</strong> <a href="tel:03001231045" className="text-blue-600 hover:underline break-words">0300 123 1045</a></p>
+              <p className="break-words"><strong>Text Support:</strong> Text QUIT to 66777</p>
+              <p className="text-sm break-words">Free support, advice, and resources</p>
             </div>
           </div>
           
-          <div className="bg-white/80 backdrop-blur-sm rounded-xl p-6 border border-white/20">
-            <h3 className="text-lg font-semibold font-source text-gray-900 mb-3">📱 Additional Resources</h3>
-            <div className="space-y-2 text-gray-600 font-roboto">
-              <p><strong>Crohn's & Colitis UK:</strong></p>
-              <p>Helpline: <a href="tel:03002229099" className="text-blue-600 hover:underline">0300 222 9099</a></p>
-              <p>Email: <a href="mailto:helpline@crohnsandcolitis.org.uk" className="text-blue-600 hover:underline">helpline@crohnsandcolitis.org.uk</a></p>
-              <p className="text-sm">Specialist support for IBD patients</p>
+          <div className="bg-white/80 backdrop-blur-sm rounded-xl p-4 sm:p-6 border border-white/20 min-w-0">
+            <h3 className="text-lg font-semibold font-source text-gray-900 mb-3 break-words">📱 Additional Resources</h3>
+            <div className="space-y-2 text-gray-600 font-roboto break-words">
+              <p className="break-words"><strong>Crohn's & Colitis UK:</strong></p>
+              <p className="break-words">Helpline: <a href="tel:03002229099" className="text-blue-600 hover:underline break-words">0300 222 9099</a></p>
+              <p className="break-words">Email: <a href="mailto:helpline@crohnsandcolitis.org.uk" className="text-blue-600 hover:underline break-words">helpline@crohnsandcolitis.org.uk</a></p>
+              <p className="text-sm break-words">Specialist support for IBD patients</p>
             </div>
           </div>
         </div>
 
-        <div className="mt-6 p-4 bg-white/60 rounded-xl border border-white/30">
-          <h4 className="font-semibold font-source text-gray-900 mb-2">💡 Tips to Get Started:</h4>
-          <ul className="list-disc list-inside space-y-1 text-gray-600 font-roboto text-sm">
-            <li>Set a quit date and stick to it</li>
-            <li>Tell your family and friends about your decision</li>
-            <li>Ask your GP about nicotine replacement therapy</li>
-            <li>Identify your smoking triggers and plan alternatives</li>
-            <li>Consider joining a support group</li>
+        <div className="mt-6 p-4 bg-white/60 rounded-xl border border-white/30 break-words">
+          <h4 className="font-semibold font-source text-gray-900 mb-2 break-words">💡 Tips to Get Started:</h4>
+          <ul className="list-disc list-inside space-y-1 text-gray-600 font-roboto text-sm break-words">
+            <li className="break-words">Set a quit date and stick to it</li>
+            <li className="break-words">Tell your family and friends about your decision</li>
+            <li className="break-words">Ask your GP about nicotine replacement therapy</li>
+            <li className="break-words">Identify your smoking triggers and plan alternatives</li>
+            <li className="break-words">Consider joining a support group</li>
           </ul>
         </div>
       </div>
 
       {/* Call to Action */}
-      <div className="card text-center">
+      <div className="card text-center p-4 sm:p-6">
         <h2 className="text-xl font-semibold font-source text-gray-900 mb-4">Ready to Start Tracking?</h2>
         <p className="text-gray-600 mb-6 font-roboto">
           Join thousands of people managing their IBD with FlareCare. Start tracking your symptoms and medications today.
