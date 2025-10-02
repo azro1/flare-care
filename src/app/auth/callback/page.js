@@ -3,13 +3,11 @@
 import { useEffect, useState } from 'react'
 import { useRouter } from 'next/navigation'
 import { supabase } from '../../../lib/supabase'
-import { useToast } from '../../../lib/ToastContext'
 
 export default function AuthCallback() {
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState('')
   const router = useRouter()
-  const { addToast } = useToast()
 
   useEffect(() => {
     const handleAuthCallback = async () => {
@@ -23,9 +21,7 @@ export default function AuthCallback() {
         }
 
         if (data.session) {
-          // User is authenticated, show success toast and redirect to app
-          addToast('Successfully signed in!', 'success')
-          // Add a delay to ensure toast is visible before redirect (longer for production)
+          // User is authenticated, redirect to app
           setTimeout(() => {
             router.push('/')
           }, 500)

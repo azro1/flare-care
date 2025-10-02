@@ -514,7 +514,12 @@ function SymptomsPageContent() {
                 <button
                   type="button"
                   onClick={() => addMealItem('breakfast')}
-                  className="px-2 py-1 text-sm font-medium bg-blue-100 text-blue-700 rounded-lg hover:bg-blue-200 transition-colors"
+                  disabled={formData.breakfast.length > 0 && (formData.breakfast[formData.breakfast.length - 1]?.food === '' || formData.breakfast[formData.breakfast.length - 1]?.quantity === '')}
+                  className={`px-2 py-1 text-sm font-medium rounded-lg transition-colors ${
+                    formData.breakfast.length > 0 && (formData.breakfast[formData.breakfast.length - 1]?.food === '' || formData.breakfast[formData.breakfast.length - 1]?.quantity === '')
+                      ? 'bg-gray-100 text-gray-400 cursor-not-allowed'
+                      : 'bg-blue-100 text-blue-700 hover:bg-blue-200'
+                  }`}
                 >
                   Add
                 </button>
@@ -568,7 +573,12 @@ function SymptomsPageContent() {
                 <button
                   type="button"
                   onClick={() => addMealItem('lunch')}
-                  className="px-2 py-1 text-sm font-medium bg-blue-100 text-blue-700 rounded-lg hover:bg-blue-200 transition-colors"
+                  disabled={formData.lunch.length > 0 && (formData.lunch[formData.lunch.length - 1]?.food === '' || formData.lunch[formData.lunch.length - 1]?.quantity === '')}
+                  className={`px-2 py-1 text-sm font-medium rounded-lg transition-colors ${
+                    formData.lunch.length > 0 && (formData.lunch[formData.lunch.length - 1]?.food === '' || formData.lunch[formData.lunch.length - 1]?.quantity === '')
+                      ? 'bg-gray-100 text-gray-400 cursor-not-allowed'
+                      : 'bg-blue-100 text-blue-700 hover:bg-blue-200'
+                  }`}
                 >
                   Add
                 </button>
@@ -622,7 +632,12 @@ function SymptomsPageContent() {
                 <button
                   type="button"
                   onClick={() => addMealItem('dinner')}
-                  className="px-2 py-1 text-sm font-medium bg-blue-100 text-blue-700 rounded-lg hover:bg-blue-200 transition-colors"
+                  disabled={formData.dinner.length > 0 && (formData.dinner[formData.dinner.length - 1]?.food === '' || formData.dinner[formData.dinner.length - 1]?.quantity === '')}
+                  className={`px-2 py-1 text-sm font-medium rounded-lg transition-colors ${
+                    formData.dinner.length > 0 && (formData.dinner[formData.dinner.length - 1]?.food === '' || formData.dinner[formData.dinner.length - 1]?.quantity === '')
+                      ? 'bg-gray-100 text-gray-400 cursor-not-allowed'
+                      : 'bg-blue-100 text-blue-700 hover:bg-blue-200'
+                  }`}
                 >
                   Add
                 </button>

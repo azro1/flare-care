@@ -3,12 +3,10 @@
 import { useState, useEffect } from 'react'
 import { supabase } from '../lib/supabase'
 import { useRouter } from 'next/navigation'
-import { useToast } from '../lib/ToastContext'
 
 export default function AuthForm() {
   const [error, setError] = useState('')
   const router = useRouter()
-  const { addToast } = useToast()
 
   // Prevent body scrolling on auth page
   useEffect(() => {

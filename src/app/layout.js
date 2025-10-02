@@ -5,7 +5,6 @@ import MainContent from '@/components/MainContent'
 import ReminderProvider from '@/components/ReminderProvider'
 import NotificationBanner from '@/components/NotificationBanner'
 import { AuthProvider } from '@/lib/AuthContext'
-import { ToastProvider } from '@/lib/ToastContext'
 
 export const metadata = {
   title: 'FlareCare - Crohn\'s & Colitis Management',
@@ -25,17 +24,15 @@ export default function RootLayout({ children }) {
       </head>
       <body className="min-h-screen bg-slate-50">
         <AuthProvider>
-          <ToastProvider>
-            <ReminderProvider />
-            <NotificationBanner />
+          <ReminderProvider />
+          <NotificationBanner />
           <div className="min-h-screen flex flex-col">
             <Navigation />
             <MainContent>
               {children}
             </MainContent>
-          <Footer />
-        </div>
-          </ToastProvider>
+            <Footer />
+          </div>
         </AuthProvider>
       </body>
     </html>

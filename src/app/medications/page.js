@@ -550,7 +550,12 @@ function MedicationsPageContent() {
                   <button
                     type="button"
                     onClick={addMissedMedication}
-                    className="inline-flex items-center px-4 py-2 bg-blue-100 hover:bg-blue-200 text-blue-700 text-sm font-medium rounded-xl transition-all duration-200 hover:shadow-md flex-shrink-0"
+                    disabled={medicationTracking.missedMedicationsList.length > 0 && (medicationTracking.missedMedicationsList[medicationTracking.missedMedicationsList.length - 1]?.medication === '' || medicationTracking.missedMedicationsList[medicationTracking.missedMedicationsList.length - 1]?.timeOfDay === '')}
+                    className={`inline-flex items-center px-4 py-2 text-sm font-medium rounded-xl transition-all duration-200 flex-shrink-0 ${
+                      medicationTracking.missedMedicationsList.length > 0 && (medicationTracking.missedMedicationsList[medicationTracking.missedMedicationsList.length - 1]?.medication === '' || medicationTracking.missedMedicationsList[medicationTracking.missedMedicationsList.length - 1]?.timeOfDay === '')
+                        ? 'bg-gray-100 text-gray-400 cursor-not-allowed'
+                        : 'bg-blue-100 hover:bg-blue-200 text-blue-700 hover:shadow-md'
+                    }`}
                   >
                     <svg className="w-4 h-4 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                       <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 6v6m0 0v6m0-6h6m-6 0H6" />
@@ -1104,21 +1109,32 @@ function MedicationsPageContent() {
 
 
       {/* Reminder Info */}
-      <div className="mt-8 bg-blue-50 border border-blue-200 rounded-lg p-4">
-        <div className="flex items-start">
-          <svg className="w-5 h-5 text-blue-600 mt-0.5 mr-3 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" />
-          </svg>
-          <div>
-            <h3 className="text-sm font-medium font-source text-blue-900 mb-1">Medication Reminders</h3>
-            <p className="text-sm text-blue-700 mb-2 font-roboto">
+      <div className="mt-6 sm:mt-8 bg-gradient-to-r from-blue-50 to-indigo-50 border-2 border-blue-200 rounded-xl sm:rounded-2xl p-3 sm:p-4 md:p-6 shadow-sm">
+        <div className="flex items-start space-x-3 sm:space-x-4">
+          <div className="flex-shrink-0">
+            <div className="w-8 h-8 sm:w-10 sm:h-10 bg-blue-100 rounded-full flex items-center justify-center">
+              <svg className="w-4 h-4 sm:w-6 sm:h-6 text-blue-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" />
+              </svg>
+            </div>
+          </div>
+          <div className="flex-1 min-w-0">
+            <h3 className="text-base sm:text-lg font-semibold font-source text-blue-900 mb-1 sm:mb-2">Medication Reminders</h3>
+            <p className="text-sm sm:text-base text-blue-800 mb-2 sm:mb-3 font-roboto leading-relaxed">
               FlareCare will send browser notifications when it's time to take your medications.
             </p>
-            <p className="text-xs text-blue-600 font-roboto">
-              💡 <strong>Tip:</strong> Reminders only work in your web browser. 
-                  They won't show up as push notifications on your phone. 
-                  You can turn reminders on or off for each medication.
-            </p>
+            <div className="bg-blue-100/50 rounded-lg sm:rounded-xl p-3 sm:p-4 border border-blue-200">
+              <div className="flex items-start space-x-2">
+                <span className="text-base sm:text-lg">💡</span>
+                <div>
+                  <p className="text-xs sm:text-sm font-medium text-blue-900 mb-1 font-roboto">Important to know:</p>
+                  <p className="text-xs sm:text-sm text-blue-700 font-roboto leading-relaxed">
+                    Reminders only work in your web browser. They won't show up as push notifications on your phone. 
+                    You can turn reminders on or off for each medication.
+                  </p>
+                </div>
+              </div>
+            </div>
           </div>
         </div>
       </div>

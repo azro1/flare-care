@@ -4,14 +4,12 @@ import Link from 'next/link'
 import { usePathname } from 'next/navigation'
 import { useState, useEffect } from 'react'
 import { useAuth } from '../lib/AuthContext'
-import { useToast } from '../lib/ToastContext'
 import SyncSettings from './SyncSettings'
 
 export default function Navigation() {
   const pathname = usePathname()
   const [isMenuOpen, setIsMenuOpen] = useState(false)
   const { user, isAuthenticated, signOut } = useAuth()
-  const { addToast } = useToast()
 
   // Get user's display name from Google metadata or fallback to email
   const getUserDisplayName = () => {
@@ -32,9 +30,8 @@ export default function Navigation() {
   const handleSignOut = async () => {
     try {
       await signOut()
-      addToast('Successfully signed out!', 'success')
     } catch (error) {
-      addToast('Error signing out', 'error')
+      console.error('Error signing out:', error)
     }
   }
 
@@ -122,7 +119,7 @@ export default function Navigation() {
                       <Link
                         key={item.href}
                         href={item.href}
-                        className={`flex items-center gap-3 px-4 py-3 text-sm lg:text-base font-roboto transition-colors ${
+                        className={`flex items-center gap-3 px-4 py-3 text-base font-roboto transition-colors ${
                           pathname === item.href
                             ? 'bg-blue-50 text-blue-700'
                             : 'text-gray-600 hover:bg-gray-50'
@@ -141,7 +138,7 @@ export default function Navigation() {
             {isAuthenticated && (
               <div className="flex items-center space-x-3 ml-4 pl-4 border-l border-gray-200">
                 <div className="flex items-center space-x-3">
-                  <span className="text-sm lg:text-base text-gray-600 font-medium font-roboto">
+                  <span className="text-base text-gray-600 font-medium font-roboto">
                     Hi, {getUserDisplayName()}
                   </span>
                   <button
