@@ -1109,31 +1109,27 @@ function MedicationsPageContent() {
 
 
       {/* Reminder Info */}
-      <div className="mt-6 sm:mt-8 bg-gradient-to-r from-blue-50 to-indigo-50 border-2 border-blue-200 rounded-xl sm:rounded-2xl p-3 sm:p-4 md:p-6 shadow-sm">
-        <div className="flex items-start space-x-3 sm:space-x-4">
-          <div className="flex-shrink-0">
-            <div className="w-8 h-8 sm:w-10 sm:h-10 bg-blue-100 rounded-full flex items-center justify-center">
-              <svg className="w-4 h-4 sm:w-6 sm:h-6 text-blue-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" />
-              </svg>
-            </div>
-          </div>
-          <div className="flex-1 min-w-0">
-            <h3 className="text-base sm:text-lg font-semibold font-source text-blue-900 mb-1 sm:mb-2">Medication Reminders</h3>
+      <div className="mt-6 sm:mt-8 bg-gradient-to-r from-blue-50 to-indigo-50 border-2 border-blue-200 rounded-xl sm:rounded-2xl p-4 md:p-6 shadow-sm">
+        <div>
+        <div>
+          <h3 className="text-base sm:text-lg font-semibold font-source text-blue-900 mb-1 sm:mb-2 flex items-center space-x-2">
+            <svg className="w-4 h-4 sm:w-5 sm:h-5 text-blue-600 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" />
+            </svg>
+            <span>Medication Reminders</span>
+          </h3>
             <p className="text-sm sm:text-base text-blue-800 mb-2 sm:mb-3 font-roboto leading-relaxed">
               FlareCare will send browser notifications when it's time to take your medications.
             </p>
             <div className="bg-blue-100/50 rounded-lg sm:rounded-xl p-3 sm:p-4 border border-blue-200">
-              <div className="flex items-start space-x-2">
+              <div className="flex items-center space-x-1">
                 <span className="text-base sm:text-lg">💡</span>
-                <div>
-                  <p className="text-xs sm:text-sm font-medium text-blue-900 mb-1 font-roboto">Important to know:</p>
-                  <p className="text-xs sm:text-sm text-blue-700 font-roboto leading-relaxed">
-                    Reminders only work in your web browser. They won't show up as push notifications on your phone. 
-                    You can turn reminders on or off for each medication.
-                  </p>
-                </div>
+                <p className="text-xs sm:text-sm font-medium text-blue-900 mb-1 font-roboto">Important to know:</p>
               </div>
+              <p className="text-xs sm:text-sm text-blue-700 font-roboto leading-relaxed">
+                Reminders only work in your web browser. They won't show up as push notifications on your phone. 
+                You can turn reminders on or off for each medication.
+              </p>
             </div>
           </div>
         </div>
