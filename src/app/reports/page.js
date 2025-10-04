@@ -314,7 +314,7 @@ function ReportsPageContent() {
         // Display alcohol consumption
         if (symptom.alcohol) {
           const alcoholText = symptom.alcohol_units 
-            ? `   Alcohol: ${symptom.alcohol_units} per day`
+            ? `   Alcohol: ${symptom.alcohol_units} ${symptom.alcohol_units === '1' ? 'unit' : 'units'} per day`
             : `   Alcohol: Yes`
           doc.text(alcoholText, margin, yPosition)
           yPosition += 5
@@ -450,7 +450,7 @@ function ReportsPageContent() {
         
         // Format alcohol data
         const alcoholData = symptom.alcohol 
-          ? (symptom.alcohol_units || 'Yes')
+          ? (symptom.alcohol_units ? `${symptom.alcohol_units} ${symptom.alcohol_units === '1' ? 'unit' : 'units'} per day` : 'Yes')
           : ''
 
         csvData.push([
@@ -667,7 +667,7 @@ function ReportsPageContent() {
               value={dateRange.startDate}
               onChange={(value) => setDateRange(prev => ({ ...prev, startDate: value }))}
               placeholder="Select start date"
-              className="w-full px-4 py-3 text-left bg-white border-2 border-gray-200 rounded-xl shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-400 transition-all duration-200 hover:border-gray-300 appearance-none bg-no-repeat bg-right pr-10"
+              className="w-full px-2 py-1.5 text-left bg-white border-2 border-gray-200 rounded-lg shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-400 transition-all duration-200 hover:border-gray-300 appearance-none bg-no-repeat bg-right pr-10"
             />
           </div>
           <div>
@@ -679,7 +679,7 @@ function ReportsPageContent() {
               value={dateRange.endDate}
               onChange={(value) => setDateRange(prev => ({ ...prev, endDate: value }))}
               placeholder="Select end date"
-              className="w-full px-4 py-3 text-left bg-white border-2 border-gray-200 rounded-xl shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-400 transition-all duration-200 hover:border-gray-300 appearance-none bg-no-repeat bg-right pr-10"
+              className="w-full px-2 py-1.5 text-left bg-white border-2 border-gray-200 rounded-lg shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-400 transition-all duration-200 hover:border-gray-300 appearance-none bg-no-repeat bg-right pr-10"
             />
           </div>
         </div>

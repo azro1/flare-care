@@ -11,7 +11,7 @@ import { sanitizeNotes, sanitizeFoodTriggers } from '@/lib/sanitize'
 function SymptomsPageContent() {
   const { data: symptoms, setData: setSymptoms, deleteData: deleteSymptom, syncEnabled, setSyncEnabled, isOnline, isSyncing, syncToCloud, fetchFromCloud } = useDataSync('flarecare-symptoms', [])
   const [formData, setFormData] = useState({
-    symptomStartDate: new Date().toISOString().split('T')[0],
+    symptomStartDate: '',
     isOngoing: true,
     symptomEndDate: '',
     severity: 5,
@@ -81,7 +81,7 @@ function SymptomsPageContent() {
 
     setSymptoms([newSymptom, ...symptoms])
     setFormData({
-      symptomStartDate: new Date().toISOString().split('T')[0],
+      symptomStartDate: '',
       isOngoing: true,
       symptomEndDate: '',
       severity: 5,
@@ -236,7 +236,7 @@ function SymptomsPageContent() {
                 value={formData.symptomStartDate}
                 onChange={(value) => setFormData(prev => ({ ...prev, symptomStartDate: value }))}
                 placeholder="Select start date"
-                className="w-full px-4 py-3 bg-white/80 border-2 border-gray-200 rounded-2xl focus:outline-none focus:ring-4 focus:ring-blue-100 focus:border-blue-400 transition-all duration-200 shadow-sm hover:shadow-md appearance-none bg-no-repeat bg-right pr-10 text-left"
+                className="w-full px-2 py-1.5 bg-white/80 border-2 border-gray-200 rounded-lg focus:outline-none focus:ring-4 focus:ring-blue-100 focus:border-blue-400 transition-all duration-200 shadow-sm hover:shadow-md appearance-none bg-no-repeat bg-right pr-10 text-left"
                 style={{
                   backgroundImage: `url("data:image/svg+xml,%3csvg xmlns='http://www.w3.org/2000/svg' fill='none' viewBox='0 0 20 20'%3e%3cpath stroke='%236b7280' stroke-linecap='round' stroke-linejoin='round' stroke-width='1.5' d='m6 8 4 4 4-4'/%3e%3c/svg%3e")`,
                   backgroundPosition: 'right 0.75rem center',
@@ -279,7 +279,8 @@ function SymptomsPageContent() {
 
           {/* End Date Section */}
           {!formData.isOngoing && (
-            <div className="space-y-3">
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4 sm:gap-6 md:gap-8">
+              <div className="space-y-3">
               <label htmlFor="symptomEndDate" className="block text-sm font-semibold font-roboto text-gray-800 mb-3">
                 When did symptoms end?
               </label>
@@ -289,7 +290,7 @@ function SymptomsPageContent() {
                 value={formData.symptomEndDate}
                 onChange={(value) => setFormData(prev => ({ ...prev, symptomEndDate: value }))}
                 placeholder="Select end date"
-                className="w-full px-4 py-3 bg-white/80 border-2 border-gray-200 rounded-2xl focus:outline-none focus:ring-4 focus:ring-blue-100 focus:border-blue-400 transition-all duration-200 shadow-sm hover:shadow-md appearance-none bg-no-repeat bg-right pr-10 text-left"
+                className="w-full px-2 py-1.5 bg-white/80 border-2 border-gray-200 rounded-lg focus:outline-none focus:ring-4 focus:ring-blue-100 focus:border-blue-400 transition-all duration-200 shadow-sm hover:shadow-md appearance-none bg-no-repeat bg-right pr-10 text-left"
                 style={{
                   backgroundImage: `url("data:image/svg+xml,%3csvg xmlns='http://www.w3.org/2000/svg' fill='none' viewBox='0 0 20 20'%3e%3cpath stroke='%236b7280' stroke-linecap='round' stroke-linejoin='round' stroke-width='1.5' d='m6 8 4 4 4-4'/%3e%3c/svg%3e")`,
                   backgroundPosition: 'right 0.75rem center',
@@ -298,6 +299,8 @@ function SymptomsPageContent() {
                 minDate={formData.symptomStartDate}
                 maxDate={new Date().toISOString().split('T')[0]}
               />
+              </div>
+              <div></div> {/* Empty div to maintain grid alignment */}
             </div>
           )}
 
@@ -422,7 +425,7 @@ function SymptomsPageContent() {
                   value={formData.smoking_details}
                   onChange={handleInputChange}
                   placeholder="e.g., 1 pack of cigarettes per day, occasional cigars, etc."
-                  className="w-full px-4 py-3 bg-white border-2 border-gray-200 rounded-xl focus:outline-none focus:ring-4 focus:ring-blue-100 focus:border-blue-400 transition-all duration-200"
+                  className="w-full px-2 py-1.5 bg-white border-2 border-gray-200 rounded-lg focus:outline-none focus:ring-4 focus:ring-blue-100 focus:border-blue-400 transition-all duration-200"
                   autoComplete="off"
                 />
               </div>
@@ -471,7 +474,7 @@ function SymptomsPageContent() {
                   value={formData.alcohol_units}
                   onChange={handleInputChange}
                   placeholder="e.g., 2-3 units, occasional glass of wine, etc."
-                  className="w-full px-4 py-3 bg-white border-2 border-gray-200 rounded-xl focus:outline-none focus:ring-4 focus:ring-blue-100 focus:border-blue-400 transition-all duration-200"
+                  className="w-full px-2 py-1.5 bg-white border-2 border-gray-200 rounded-lg focus:outline-none focus:ring-4 focus:ring-blue-100 focus:border-blue-400 transition-all duration-200"
                   autoComplete="off"
                 />
               </div>
@@ -490,7 +493,7 @@ function SymptomsPageContent() {
               value={formData.notes}
               onChange={handleInputChange}
               placeholder="Describe your symptoms, how you're feeling, any triggers you noticed..."
-              className="w-full px-4 py-3 bg-white/80 border-2 border-gray-200 rounded-2xl focus:outline-none focus:ring-4 focus:ring-blue-100 focus:border-blue-400 transition-all duration-200 resize-none shadow-sm hover:shadow-md"
+              className="w-full px-2 py-1.5 bg-white/80 border-2 border-gray-200 rounded-lg focus:outline-none focus:ring-4 focus:ring-blue-100 focus:border-blue-400 transition-all duration-200 resize-none shadow-sm hover:shadow-md"
             />
           </div>
 
@@ -531,7 +534,7 @@ function SymptomsPageContent() {
                       <button
                         type="button"
                         onClick={() => removeMealItem('breakfast', index)}
-                        className="absolute -left-1 -top-1 bg-white border border-gray-300 rounded-full p-1 shadow-md z-10 text-red-500 hover:text-red-700 hover:shadow-lg transition-all duration-200 flex-shrink-0"
+                        className="absolute -left-2.5 -top-2.5 bg-white border border-gray-300 rounded-full p-1 shadow-md z-10 text-red-500 hover:text-red-700 hover:shadow-lg transition-all duration-200 flex-shrink-0"
                         title="Remove item"
                       >
                         <svg className="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -546,7 +549,7 @@ function SymptomsPageContent() {
                           placeholder="Food item"
                           value={item.food}
                           onChange={(e) => updateMealItem('breakfast', index, 'food', e.target.value)}
-                          className="w-full px-4 py-3 bg-white border-2 border-gray-200 rounded-xl focus:outline-none focus:ring-4 focus:ring-blue-100 focus:border-blue-400 transition-all duration-200"
+                          className="w-full px-2 py-1.5 bg-white border-2 border-gray-200 rounded-lg focus:outline-none focus:ring-4 focus:ring-blue-100 focus:border-blue-400 transition-all duration-200"
                         />
                       </div>
                       <div>
@@ -555,7 +558,7 @@ function SymptomsPageContent() {
                           placeholder="Quantity"
                           value={item.quantity}
                           onChange={(e) => updateMealItem('breakfast', index, 'quantity', e.target.value)}
-                          className="w-full px-4 py-3 bg-white border-2 border-gray-200 rounded-xl focus:outline-none focus:ring-4 focus:ring-blue-100 focus:border-blue-400 transition-all duration-200"
+                          className="w-full px-2 py-1.5 bg-white border-2 border-gray-200 rounded-lg focus:outline-none focus:ring-4 focus:ring-blue-100 focus:border-blue-400 transition-all duration-200"
                         />
                       </div>
                     </div>
@@ -590,7 +593,7 @@ function SymptomsPageContent() {
                       <button
                         type="button"
                         onClick={() => removeMealItem('lunch', index)}
-                        className="absolute -left-1 -top-1 bg-white border border-gray-300 rounded-full p-1 shadow-md z-10 text-red-500 hover:text-red-700 hover:shadow-lg transition-all duration-200 flex-shrink-0"
+                        className="absolute -left-2.5 -top-2.5 bg-white border border-gray-300 rounded-full p-1 shadow-md z-10 text-red-500 hover:text-red-700 hover:shadow-lg transition-all duration-200 flex-shrink-0"
                         title="Remove item"
                       >
                         <svg className="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -605,7 +608,7 @@ function SymptomsPageContent() {
                           placeholder="Food item"
                           value={item.food}
                           onChange={(e) => updateMealItem('lunch', index, 'food', e.target.value)}
-                          className="w-full px-4 py-3 bg-white border-2 border-gray-200 rounded-xl focus:outline-none focus:ring-4 focus:ring-blue-100 focus:border-blue-400 transition-all duration-200"
+                          className="w-full px-2 py-1.5 bg-white border-2 border-gray-200 rounded-lg focus:outline-none focus:ring-4 focus:ring-blue-100 focus:border-blue-400 transition-all duration-200"
                         />
                       </div>
                       <div>
@@ -614,7 +617,7 @@ function SymptomsPageContent() {
                           placeholder="Quantity"
                           value={item.quantity}
                           onChange={(e) => updateMealItem('lunch', index, 'quantity', e.target.value)}
-                          className="w-full px-4 py-3 bg-white border-2 border-gray-200 rounded-xl focus:outline-none focus:ring-4 focus:ring-blue-100 focus:border-blue-400 transition-all duration-200"
+                          className="w-full px-2 py-1.5 bg-white border-2 border-gray-200 rounded-lg focus:outline-none focus:ring-4 focus:ring-blue-100 focus:border-blue-400 transition-all duration-200"
                         />
                       </div>
                     </div>
@@ -649,7 +652,7 @@ function SymptomsPageContent() {
                       <button
                         type="button"
                         onClick={() => removeMealItem('dinner', index)}
-                        className="absolute -left-1 -top-1 bg-white border border-gray-300 rounded-full p-1 shadow-md z-10 text-red-500 hover:text-red-700 hover:shadow-lg transition-all duration-200 flex-shrink-0"
+                        className="absolute -left-2.5 -top-2.5 bg-white border border-gray-300 rounded-full p-1 shadow-md z-10 text-red-500 hover:text-red-700 hover:shadow-lg transition-all duration-200 flex-shrink-0"
                         title="Remove item"
                       >
                         <svg className="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -664,7 +667,7 @@ function SymptomsPageContent() {
                           placeholder="Food item"
                           value={item.food}
                           onChange={(e) => updateMealItem('dinner', index, 'food', e.target.value)}
-                          className="w-full px-4 py-3 bg-white border-2 border-gray-200 rounded-xl focus:outline-none focus:ring-4 focus:ring-blue-100 focus:border-blue-400 transition-all duration-200"
+                          className="w-full px-2 py-1.5 bg-white border-2 border-gray-200 rounded-lg focus:outline-none focus:ring-4 focus:ring-blue-100 focus:border-blue-400 transition-all duration-200"
                         />
                       </div>
                       <div>
@@ -673,7 +676,7 @@ function SymptomsPageContent() {
                           placeholder="Quantity"
                           value={item.quantity}
                           onChange={(e) => updateMealItem('dinner', index, 'quantity', e.target.value)}
-                          className="w-full px-4 py-3 bg-white border-2 border-gray-200 rounded-xl focus:outline-none focus:ring-4 focus:ring-blue-100 focus:border-blue-400 transition-all duration-200"
+                          className="w-full px-2 py-1.5 bg-white border-2 border-gray-200 rounded-lg focus:outline-none focus:ring-4 focus:ring-blue-100 focus:border-blue-400 transition-all duration-200"
                         />
                       </div>
                     </div>
@@ -686,7 +689,7 @@ function SymptomsPageContent() {
           <div className="flex justify-center lg:justify-start">
             <button 
               type="submit" 
-              className="inline-flex items-center justify-center w-full sm:w-auto px-8 py-4 bg-blue-600 hover:bg-blue-700 text-white font-semibold rounded-2xl transition-all duration-300 transform hover:scale-105 hover:shadow-xl active:scale-95 shadow-lg"
+              className="inline-flex items-center justify-center w-full sm:w-auto px-8 py-3 bg-blue-600 hover:bg-blue-700 text-white font-semibold rounded-2xl transition-all duration-300 transform hover:scale-105 hover:shadow-xl active:scale-95 shadow-lg"
             >
               <svg className="w-5 h-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 6v6m0 0v6m0-6h6m-6 0H6" />
@@ -804,7 +807,7 @@ function SymptomsPageContent() {
                       <div>
                         <p className="text-sm font-semibold text-gray-800 mb-1">Alcohol Consumption</p>
                         {symptom.alcohol_units ? (
-                          <p className="text-sm text-gray-700 font-roboto">{symptom.alcohol_units} per day</p>
+                          <p className="text-sm text-gray-700 font-roboto">{symptom.alcohol_units} {symptom.alcohol_units === '1' ? 'unit' : 'units'} per day</p>
                         ) : (
                           <p className="text-sm text-gray-700 font-roboto">Yes</p>
                         )}

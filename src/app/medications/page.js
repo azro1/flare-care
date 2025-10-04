@@ -18,7 +18,7 @@ function MedicationsPageContent() {
   const [formData, setFormData] = useState({
     name: '',
     dosage: '',
-    timeOfDay: '07:00',
+    timeOfDay: '',
     customTime: '',
     remindersEnabled: false,
     notes: ''
@@ -124,11 +124,24 @@ function MedicationsPageContent() {
     setIsAdding(true)
   }
 
+  const startAdding = () => {
+    setFormData({
+      name: '',
+      dosage: '',
+      timeOfDay: '',
+      customTime: '',
+      remindersEnabled: false,
+      notes: ''
+    })
+    setEditingId(null)
+    setIsAdding(true)
+  }
+
   const cancelEdit = () => {
     setFormData({
       name: '',
       dosage: '',
-      timeOfDay: '07:00',
+      timeOfDay: '',
       customTime: '',
       remindersEnabled: false,
       notes: ''
@@ -493,7 +506,7 @@ function MedicationsPageContent() {
                       <button
                         type="button"
                         onClick={() => removeMissedMedication(index)}
-                        className="absolute -left-1 -top-1 bg-white border border-gray-300 rounded-full p-1 shadow-md z-10 text-red-500 hover:text-red-700 hover:shadow-lg transition-all duration-200 flex-shrink-0"
+                        className="absolute -left-2.5 -top-2.5 bg-white border border-gray-300 rounded-full p-1 shadow-md z-10 text-red-500 hover:text-red-700 hover:shadow-lg transition-all duration-200 flex-shrink-0"
                         title="Remove medication"
                       >
                         <svg className="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -507,7 +520,7 @@ function MedicationsPageContent() {
                             placeholder="Medication name"
                             value={item.medication}
                             onChange={(e) => updateMissedMedication(index, 'medication', e.target.value)}
-                            className="w-full px-4 py-3 bg-white/80 border-2 border-gray-200 rounded-2xl focus:outline-none focus:ring-4 focus:ring-blue-100 focus:border-blue-400 transition-all duration-200 shadow-sm hover:shadow-md"
+                            className="w-full px-2 py-1.5 bg-white/80 border-2 border-gray-200 rounded-lg focus:outline-none focus:ring-4 focus:ring-blue-100 focus:border-blue-400 transition-all duration-200 shadow-sm hover:shadow-md"
                           />
                         </div>
                         <div>
@@ -515,7 +528,7 @@ function MedicationsPageContent() {
                             value={item.date || new Date().toISOString().split('T')[0]}
                             onChange={(value) => updateMissedMedication(index, 'date', value)}
                             placeholder="Date"
-                            className="w-full px-4 py-3 text-left bg-white/80 border-2 border-gray-200 rounded-2xl focus:outline-none focus:ring-4 focus:ring-blue-100 focus:border-blue-400 transition-all duration-200 shadow-sm hover:shadow-md appearance-none bg-no-repeat bg-right pr-10"
+                            className="w-full px-2 py-1.5 text-left bg-white/80 border-2 border-gray-200 rounded-lg focus:outline-none focus:ring-4 focus:ring-blue-100 focus:border-blue-400 transition-all duration-200 shadow-sm hover:shadow-md appearance-none bg-no-repeat bg-right pr-10"
                             style={{
                               backgroundImage: `url("data:image/svg+xml,%3csvg xmlns='http://www.w3.org/2000/svg' fill='none' viewBox='0 0 20 20'%3e%3cpath stroke='%236b7280' stroke-linecap='round' stroke-linejoin='round' stroke-width='1.5' d='m6 8 4 4 4-4'/%3e%3c/svg%3e")`,
                               backgroundPosition: 'right 0.75rem center',
@@ -527,10 +540,12 @@ function MedicationsPageContent() {
                         </div>
                       </div>
                       <div className="mt-4">
-                        <select
-                          value={item.timeOfDay}
-                          onChange={(e) => updateMissedMedication(index, 'timeOfDay', e.target.value)}
-                          className="w-full px-4 py-3 text-left bg-white/80 border-2 border-gray-200 rounded-2xl shadow-sm focus:outline-none focus:ring-4 focus:ring-blue-100 focus:border-blue-400 appearance-none bg-no-repeat bg-right pr-10 transition-all duration-200 hover:shadow-md"
+                        <div className="grid grid-cols-1 lg:grid-cols-2 gap-4 min-w-0">
+                          <div>
+                            <select
+                              value={item.timeOfDay}
+                              onChange={(e) => updateMissedMedication(index, 'timeOfDay', e.target.value)}
+                              className="w-full px-2 py-1.5 text-left bg-white/80 border-2 border-gray-200 rounded-lg shadow-sm focus:outline-none focus:ring-4 focus:ring-blue-100 focus:border-blue-400 appearance-none bg-no-repeat bg-right pr-10 transition-all duration-200 hover:shadow-md"
                           style={{
                             backgroundImage: `url("data:image/svg+xml,%3csvg xmlns='http://www.w3.org/2000/svg' fill='none' viewBox='0 0 20 20'%3e%3cpath stroke='%236b7280' stroke-linecap='round' stroke-linejoin='round' stroke-width='1.5' d='m6 8 4 4 4-4'/%3e%3c/svg%3e")`,
                             backgroundPosition: 'right 0.75rem center',
@@ -543,7 +558,10 @@ function MedicationsPageContent() {
                           <option value="afternoon">Afternoon</option>
                           <option value="evening">Evening</option>
                           <option value="night">Night</option>
-                        </select>
+                            </select>
+                          </div>
+                          <div></div> {/* Empty div to maintain grid alignment */}
+                        </div>
                       </div>
                     </div>
                   ))}
@@ -609,7 +627,7 @@ function MedicationsPageContent() {
                       <button
                         type="button"
                         onClick={() => removeNsaid(index)}
-                        className="absolute -left-1 -top-1 bg-white border border-gray-300 rounded-full p-1 shadow-md z-10 text-red-500 hover:text-red-700 hover:shadow-lg transition-all duration-200 flex-shrink-0"
+                        className="absolute -left-2.5 -top-2.5 bg-white border border-gray-300 rounded-full p-1 shadow-md z-10 text-red-500 hover:text-red-700 hover:shadow-lg transition-all duration-200 flex-shrink-0"
                         title="Remove NSAID"
                       >
                         <svg className="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -623,7 +641,7 @@ function MedicationsPageContent() {
                             placeholder="e.g., Ibuprofen"
                             value={item.medication}
                             onChange={(e) => updateNsaid(index, 'medication', e.target.value)}
-                            className="w-full px-4 py-3 bg-white/80 border-2 border-gray-200 rounded-2xl focus:outline-none focus:ring-4 focus:ring-blue-100 focus:border-blue-400 transition-all duration-200 shadow-sm hover:shadow-md"
+                            className="w-full px-2 py-1.5 bg-white/80 border-2 border-gray-200 rounded-lg focus:outline-none focus:ring-4 focus:ring-blue-100 focus:border-blue-400 transition-all duration-200 shadow-sm hover:shadow-md"
                           />
                         </div>
                         <div>
@@ -631,7 +649,7 @@ function MedicationsPageContent() {
                             value={item.date || new Date().toISOString().split('T')[0]}
                             onChange={(value) => updateNsaid(index, 'date', value)}
                             placeholder="When taken?"
-                            className="w-full px-4 py-3 text-left bg-white/80 border-2 border-gray-200 rounded-2xl focus:outline-none focus:ring-4 focus:ring-blue-100 focus:border-blue-400 transition-all duration-200 shadow-sm hover:shadow-md appearance-none bg-no-repeat bg-right pr-10"
+                            className="w-full px-2 py-1.5 text-left bg-white/80 border-2 border-gray-200 rounded-lg focus:outline-none focus:ring-4 focus:ring-blue-100 focus:border-blue-400 transition-all duration-200 shadow-sm hover:shadow-md appearance-none bg-no-repeat bg-right pr-10"
                             style={{
                               backgroundImage: `url("data:image/svg+xml,%3csvg xmlns='http://www.w3.org/2000/svg' fill='none' viewBox='0 0 20 20'%3e%3cpath stroke='%236b7280' stroke-linecap='round' stroke-linejoin='round' stroke-width='1.5' d='m6 8 4 4 4-4'/%3e%3c/svg%3e")`,
                               backgroundPosition: 'right 0.75rem center',
@@ -643,10 +661,12 @@ function MedicationsPageContent() {
                         </div>
                       </div>
                       <div className="mt-4">
-                        <select
-                          value={item.timeOfDay}
-                          onChange={(e) => updateNsaid(index, 'timeOfDay', e.target.value)}
-                          className="w-full px-4 py-3 text-left bg-white/80 border-2 border-gray-200 rounded-2xl shadow-sm focus:outline-none focus:ring-4 focus:ring-blue-100 focus:border-blue-400 appearance-none bg-no-repeat bg-right pr-10 transition-all duration-200 hover:shadow-md"
+                        <div className="grid grid-cols-1 lg:grid-cols-2 gap-4 min-w-0">
+                          <div>
+                            <select
+                              value={item.timeOfDay}
+                              onChange={(e) => updateNsaid(index, 'timeOfDay', e.target.value)}
+                              className="w-full px-2 py-1.5 text-left bg-white/80 border-2 border-gray-200 rounded-lg shadow-sm focus:outline-none focus:ring-4 focus:ring-blue-100 focus:border-blue-400 appearance-none bg-no-repeat bg-right pr-10 transition-all duration-200 hover:shadow-md"
                           style={{
                             backgroundImage: `url("data:image/svg+xml,%3csvg xmlns='http://www.w3.org/2000/svg' fill='none' viewBox='0 0 20 20'%3e%3cpath stroke='%236b7280' stroke-linecap='round' stroke-linejoin='round' stroke-width='1.5' d='m6 8 4 4 4-4'/%3e%3c/svg%3e")`,
                             backgroundPosition: 'right 0.75rem center',
@@ -659,14 +679,22 @@ function MedicationsPageContent() {
                           <option value="afternoon">Afternoon</option>
                           <option value="evening">Evening</option>
                           <option value="night">Night</option>
-                        </select>
+                            </select>
+                          </div>
+                          <div></div> {/* Empty div to maintain grid alignment */}
+                        </div>
                       </div>
                     </div>
                   ))}
                   <button
                     type="button"
                     onClick={addNsaid}
-                    className="inline-flex items-center px-4 py-2 bg-blue-100 hover:bg-blue-200 text-blue-700 text-sm font-medium rounded-xl transition-all duration-200 hover:shadow-md flex-shrink-0"
+                    disabled={medicationTracking.nsaidList.length > 0 && (medicationTracking.nsaidList[medicationTracking.nsaidList.length - 1]?.medication === '' || medicationTracking.nsaidList[medicationTracking.nsaidList.length - 1]?.timeOfDay === '')}
+                    className={`inline-flex items-center px-4 py-2 text-sm font-medium rounded-xl transition-all duration-200 flex-shrink-0 ${
+                      medicationTracking.nsaidList.length > 0 && (medicationTracking.nsaidList[medicationTracking.nsaidList.length - 1]?.medication === '' || medicationTracking.nsaidList[medicationTracking.nsaidList.length - 1]?.timeOfDay === '')
+                        ? 'bg-gray-100 text-gray-400 cursor-not-allowed'
+                        : 'bg-blue-100 hover:bg-blue-200 text-blue-700 hover:shadow-md'
+                    }`}
                   >
                     <svg className="w-4 h-4 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                       <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 6v6m0 0v6m0-6h6m-6 0H6" />
@@ -720,7 +748,7 @@ function MedicationsPageContent() {
                       <button
                         type="button"
                         onClick={() => removeAntibiotic(index)}
-                        className="absolute -left-1 -top-1 bg-white border border-gray-300 rounded-full p-1 shadow-md z-10 text-red-500 hover:text-red-700 hover:shadow-lg transition-all duration-200 flex-shrink-0"
+                        className="absolute -left-2.5 -top-2.5 bg-white border border-gray-300 rounded-full p-1 shadow-md z-10 text-red-500 hover:text-red-700 hover:shadow-lg transition-all duration-200 flex-shrink-0"
                         title="Remove antibiotic"
                       >
                         <svg className="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -734,7 +762,7 @@ function MedicationsPageContent() {
                             placeholder="e.g., Amoxicillin"
                             value={item.medication}
                             onChange={(e) => updateAntibiotic(index, 'medication', e.target.value)}
-                            className="w-full px-4 py-3 bg-white/80 border-2 border-gray-200 rounded-2xl focus:outline-none focus:ring-4 focus:ring-blue-100 focus:border-blue-400 transition-all duration-200 shadow-sm hover:shadow-md"
+                            className="w-full px-2 py-1.5 bg-white/80 border-2 border-gray-200 rounded-lg focus:outline-none focus:ring-4 focus:ring-blue-100 focus:border-blue-400 transition-all duration-200 shadow-sm hover:shadow-md"
                           />
                         </div>
                         <div>
@@ -742,7 +770,7 @@ function MedicationsPageContent() {
                             value={item.date || new Date().toISOString().split('T')[0]}
                             onChange={(value) => updateAntibiotic(index, 'date', value)}
                             placeholder="When taken?"
-                            className="w-full px-4 py-3 text-left bg-white/80 border-2 border-gray-200 rounded-2xl focus:outline-none focus:ring-4 focus:ring-blue-100 focus:border-blue-400 transition-all duration-200 shadow-sm hover:shadow-md appearance-none bg-no-repeat bg-right pr-10"
+                            className="w-full px-2 py-1.5 text-left bg-white/80 border-2 border-gray-200 rounded-lg focus:outline-none focus:ring-4 focus:ring-blue-100 focus:border-blue-400 transition-all duration-200 shadow-sm hover:shadow-md appearance-none bg-no-repeat bg-right pr-10"
                             style={{
                               backgroundImage: `url("data:image/svg+xml,%3csvg xmlns='http://www.w3.org/2000/svg' fill='none' viewBox='0 0 20 20'%3e%3cpath stroke='%236b7280' stroke-linecap='round' stroke-linejoin='round' stroke-width='1.5' d='m6 8 4 4 4-4'/%3e%3c/svg%3e")`,
                               backgroundPosition: 'right 0.75rem center',
@@ -754,10 +782,12 @@ function MedicationsPageContent() {
                         </div>
                       </div>
                       <div className="mt-4">
-                        <select
-                          value={item.timeOfDay}
-                          onChange={(e) => updateAntibiotic(index, 'timeOfDay', e.target.value)}
-                          className="w-full px-4 py-3 text-left bg-white/80 border-2 border-gray-200 rounded-2xl shadow-sm focus:outline-none focus:ring-4 focus:ring-blue-100 focus:border-blue-400 appearance-none bg-no-repeat bg-right pr-10 transition-all duration-200 hover:shadow-md"
+                        <div className="grid grid-cols-1 lg:grid-cols-2 gap-4 min-w-0">
+                          <div>
+                            <select
+                              value={item.timeOfDay}
+                              onChange={(e) => updateAntibiotic(index, 'timeOfDay', e.target.value)}
+                              className="w-full px-2 py-1.5 text-left bg-white/80 border-2 border-gray-200 rounded-lg shadow-sm focus:outline-none focus:ring-4 focus:ring-blue-100 focus:border-blue-400 appearance-none bg-no-repeat bg-right pr-10 transition-all duration-200 hover:shadow-md"
                           style={{
                             backgroundImage: `url("data:image/svg+xml,%3csvg xmlns='http://www.w3.org/2000/svg' fill='none' viewBox='0 0 20 20'%3e%3cpath stroke='%236b7280' stroke-linecap='round' stroke-linejoin='round' stroke-width='1.5' d='m6 8 4 4 4-4'/%3e%3c/svg%3e")`,
                             backgroundPosition: 'right 0.75rem center',
@@ -770,14 +800,22 @@ function MedicationsPageContent() {
                           <option value="afternoon">Afternoon</option>
                           <option value="evening">Evening</option>
                           <option value="night">Night</option>
-                        </select>
+                            </select>
+                          </div>
+                          <div></div> {/* Empty div to maintain grid alignment */}
+                        </div>
                       </div>
                     </div>
                   ))}
                   <button
                     type="button"
                     onClick={addAntibiotic}
-                    className="inline-flex items-center px-4 py-2 bg-blue-100 hover:bg-blue-200 text-blue-700 text-sm font-medium rounded-xl transition-all duration-200 hover:shadow-md flex-shrink-0"
+                    disabled={medicationTracking.antibioticList.length > 0 && (medicationTracking.antibioticList[medicationTracking.antibioticList.length - 1]?.medication === '' || medicationTracking.antibioticList[medicationTracking.antibioticList.length - 1]?.timeOfDay === '')}
+                    className={`inline-flex items-center px-4 py-2 text-sm font-medium rounded-xl transition-all duration-200 flex-shrink-0 ${
+                      medicationTracking.antibioticList.length > 0 && (medicationTracking.antibioticList[medicationTracking.antibioticList.length - 1]?.medication === '' || medicationTracking.antibioticList[medicationTracking.antibioticList.length - 1]?.timeOfDay === '')
+                        ? 'bg-gray-100 text-gray-400 cursor-not-allowed'
+                        : 'bg-blue-100 hover:bg-blue-200 text-blue-700 hover:shadow-md'
+                    }`}
                   >
                     <svg className="w-4 h-4 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                       <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 6v6m0 0v6m0-6h6m-6 0H6" />
@@ -791,7 +829,22 @@ function MedicationsPageContent() {
         </div>
         
         {/* Medication Tracking Data Display */}
-        {medications.find(med => med.name === 'Medication Tracking') && (
+        {(() => {
+          const trackingData = medications.find(med => med.name === 'Medication Tracking')
+          if (!trackingData) return false
+          
+          // Check if there's actual data in any of the tracking lists
+          const missedMeds = trackingData.missed_medications_list || []
+          const nsaids = trackingData.nsaid_list || []
+          const antibiotics = trackingData.antibiotic_list || []
+          
+          // Only show if there are items with actual medication names
+          const hasData = (missedMeds.length > 0 && missedMeds.some(item => item.medication && item.medication.trim())) ||
+                         (nsaids.length > 0 && nsaids.some(item => item.medication && item.medication.trim())) ||
+                         (antibiotics.length > 0 && antibiotics.some(item => item.medication && item.medication.trim()))
+          
+          return hasData
+        })() && (
           <div className="mt-8 pt-8 border-t border-gray-200">
             <div className="flex items-center justify-between mb-4">
               <div className="flex items-center">
@@ -898,7 +951,7 @@ function MedicationsPageContent() {
           </div>
           {!isAdding && (
             <button
-              onClick={() => setIsAdding(true)}
+              onClick={startAdding}
               className="bg-blue-600 hover:bg-blue-700 text-white px-4 py-3 rounded-2xl font-medium font-roboto shadow-lg hover:shadow-xl transition-all duration-300 transform hover:scale-105 active:scale-95 self-start sm:self-auto"
             >
               <svg className="w-5 h-5 mr-2 inline" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -925,14 +978,14 @@ function MedicationsPageContent() {
                     value={formData.name}
                     onChange={handleInputChange}
                     placeholder="Medication name"
-                    className="w-full px-4 py-3 bg-white/80 border-2 border-gray-200 rounded-2xl focus:outline-none focus:ring-4 focus:ring-blue-100 focus:border-blue-400 transition-all duration-200 shadow-sm hover:shadow-md"
+                    className="w-full px-2 py-1.5 bg-white/80 border-2 border-gray-200 rounded-lg focus:outline-none focus:ring-4 focus:ring-blue-100 focus:border-blue-400 transition-all duration-200 shadow-sm hover:shadow-md"
                     required
                   />
                 </div>
 
                 <div>
                   <label htmlFor="dosage" className="block text-base font-semibold font-roboto text-gray-700 mb-3">
-                    Dosage
+                    Dosage (per day)
                   </label>
                   <input
                     type="text"
@@ -941,7 +994,7 @@ function MedicationsPageContent() {
                     value={formData.dosage}
                     onChange={handleInputChange}
                     placeholder="e.g., 500mg"
-                    className="w-full px-4 py-3 bg-white/80 border-2 border-gray-200 rounded-2xl focus:outline-none focus:ring-4 focus:ring-blue-100 focus:border-blue-400 transition-all duration-200 shadow-sm hover:shadow-md"
+                    className="w-full px-2 py-1.5 bg-white/80 border-2 border-gray-200 rounded-lg focus:outline-none focus:ring-4 focus:ring-blue-100 focus:border-blue-400 transition-all duration-200 shadow-sm hover:shadow-md"
                   />
                 </div>
               </div>
@@ -995,7 +1048,7 @@ function MedicationsPageContent() {
                   value={formData.notes}
                   onChange={handleInputChange}
                   placeholder="Any special instructions, side effects to watch for, etc."
-                  className="w-full px-4 py-3 bg-white/80 border-2 border-gray-200 rounded-2xl focus:outline-none focus:ring-4 focus:ring-blue-100 focus:border-blue-400 transition-all duration-200 shadow-sm hover:shadow-md resize-none"
+                  className="w-full px-2 py-1.5 bg-white/80 border-2 border-gray-200 rounded-lg focus:outline-none focus:ring-4 focus:ring-blue-100 focus:border-blue-400 transition-all duration-200 shadow-sm hover:shadow-md resize-none"
                 />
               </div>
 
