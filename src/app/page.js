@@ -123,16 +123,16 @@ export default function Home() {
             {/* Mobile Hero - Different Layout */}
             <div className="sm:hidden">
               {/* Logo Icon */}
-                <div className="w-16 h-16 bg-blue-600 rounded-2xl flex items-center justify-center mx-auto mb-4">
+                <div className="w-16 h-16 bg-blue-600 rounded-2xl flex items-center justify-center mx-auto mb-6">
                   <svg className="w-8 h-8 text-white" fill="currentColor" viewBox="0 0 24 24">
                     <path d="M4.318 6.318a4.5 4.5 0 000 6.364L12 20.364l7.682-7.682a4.5 4.5 0 00-6.364-6.364L12 7.636l-1.318-1.318a4.5 4.5 0 00-6.364 0z" />
                   </svg>
                 </div>
               
-              <h1 className="text-3xl font-bold font-source text-slate-900 mb-2">
+              <h1 className="text-4xl font-bold font-source text-slate-900 mb-3">
                 FlareCare
               </h1>
-              <p className="text-xl font-semibold font-source text-blue-600 mb-4">
+              <p className="text-xl font-semibold font-source text-blue-600 mb-5">
                 Your Personal Crohn's & Colitis Companion
               </p>
               <p className="text-lg font-roboto text-slate-600 mb-6 leading-relaxed">
