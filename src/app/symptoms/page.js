@@ -163,6 +163,10 @@ function SymptomsPageContent() {
 
 
   const getMealLabel = (mealType) => {
+    if (!formData.symptomStartDate) {
+      return `What did you have for ${mealType}?`
+    }
+    
     const symptomDate = new Date(formData.symptomStartDate)
     const today = new Date()
     const isToday = symptomDate.toDateString() === today.toDateString()

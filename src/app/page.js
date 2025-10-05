@@ -118,7 +118,7 @@ export default function Home() {
     <div>
       {/* Hero Section */}
       <div className="relative overflow-hidden">
-        <div className="relative max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 py-4 lg:py-16  lg:pb-16">
+        <div className="relative max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 pt-4 pb-2 lg:py-16  lg:pb-16">
           <div className="text-center fade-in-up">
             {/* Mobile Hero - Different Layout */}
             <div className="sm:hidden">
@@ -129,11 +129,11 @@ export default function Home() {
                   </svg>
                 </div>
               
-              <h1 className="text-2xl font-bold font-source text-slate-900 mb-2">
+              <h1 className="text-3xl font-bold font-source text-slate-900 mb-2">
                 FlareCare
               </h1>
               <p className="text-xl font-semibold font-source text-blue-600 mb-4">
-                Crohn's & Colitis Companion
+                Your Personal Crohn's & Colitis Companion
               </p>
               <p className="text-lg font-roboto text-slate-600 mb-6 leading-relaxed">
                 Track symptoms, manage medications, and generate reports for better health decisions
@@ -164,7 +164,7 @@ export default function Home() {
       </div>
 
       {/* Features Grid */}
-      <div className="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 pb-6 sm:pb-16 lg:pb-20">
+      <div className="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 pt-4 sm:pb-16 lg:pb-20">
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6 sm:gap-8 mb-12 sm:mb-16">
           <Link href="/symptoms" className="group">
             <div className="feature-card group h-full min-h-[280px] sm:min-h-[320px]">

@@ -48,26 +48,17 @@ export default function AuthForm() {
 
   return (
     <div className="pt-6 sm:pt-0 sm:flex-grow flex items-center justify-center bg-gray-50 sm:px-6 lg:px-8">
-      <div className="max-w-md w-full space-y-8">
+      <div className="max-w-md w-full space-y-6">
         <div className="text-center">
-          {/* FlareCare Logo */}
-          <div className="flex justify-center mb-6">
-            <div className="w-16 h-16 bg-blue-600 rounded-2xl flex items-center justify-center shadow-lg">
-              <svg className="w-8 h-8 text-white" fill="currentColor" viewBox="0 0 24 24">
-                <path d="M4.318 6.318a4.5 4.5 0 000 6.364L12 20.364l7.682-7.682a4.5 4.5 0 00-6.364-6.364L12 7.636l-1.318-1.318a4.5 4.5 0 00-6.364 0z" />
-              </svg>
-            </div>
-          </div>
-          
-          <h2 className="text-3xl font-bold font-source text-gray-900 mb-2">
-            Welcome to FlareCare
+          <h2 className="text-3xl font-bold font-source text-gray-900 mb-6">
+            Sign In
           </h2>
-          <p className="text-sm font-roboto text-gray-600 sm:text-base">
+          <p className="text-sm font-roboto text-gray-600 sm:text-base mb-6">
             Your personal health companion for tracking Crohn's & Colitis symptoms
           </p>
         </div>
 
-        <div className="mt-8 space-y-6">
+        <div className="space-y-6">
           {error && (
             <div className="rounded-xl bg-red-50 border border-red-200 p-4">
               <div className="text-sm font-roboto text-red-700">{error}</div>
