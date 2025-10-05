@@ -129,10 +129,10 @@ export default function Home() {
                   </svg>
                 </div>
               
-              <h1 className="text-4xl font-bold font-source text-slate-900 mb-3">
+              <h1 className="text-3xl font-bold font-source text-slate-900 mb-3">
                 FlareCare
               </h1>
-              <p className="text-xl font-semibold font-source text-blue-600 mb-5">
+              <p className="text-[22px] font-semibold font-source text-blue-600 mb-5">
                 Your Personal Crohn's & Colitis Companion
               </p>
               <p className="text-lg font-roboto text-slate-600 mb-6 leading-relaxed">
