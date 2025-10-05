@@ -43,15 +43,11 @@ export default function Home() {
   // If not authenticated, show a compelling landing page
   if (!isAuthenticated) {
     return (
-      <div className="sm:flex-grow flex flex-col items-center justify-center bg-gradient-to-br from-slate-50 via-blue-50/30 to-indigo-50/20">
+      <div className="sm:flex-grow flex flex-col items-center justify-center" style={{
+        background: 'radial-gradient(ellipse at center, rgba(240, 249, 255, 0.3) 0%, rgba(224, 242, 254, 0.2) 40%, rgba(255, 255, 255, 0.1) 70%, transparent 100%)'
+      }}>
         {/* Hero Section */}
-        <div className="relative overflow-hidden">
-          {/* Background Pattern */}
-          <div className="absolute inset-0 opacity-5">
-            <div className="absolute top-20 left-10 w-72 h-72 bg-blue-400 rounded-full mix-blend-multiply filter blur-xl animate-pulse"></div>
-            <div className="absolute top-40 right-10 w-72 h-72 bg-purple-400 rounded-full mix-blend-multiply filter blur-xl animate-pulse" style={{animationDelay: '2s'}}></div>
-            <div className="absolute -bottom-8 left-20 w-72 h-72 bg-pink-400 rounded-full mix-blend-multiply filter blur-xl animate-pulse" style={{animationDelay: '4s'}}></div>
-          </div>
+        <div className="relative">
           
           <div className="relative max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 ">
             <div className="text-center">
@@ -63,7 +59,7 @@ export default function Home() {
               {/* Main Headline */}
               <h1 className="text-4xl sm:text-5xl lg:text-6xl font-bold font-source text-slate-900">
                 Take Control of Your
-                <span className="block bg-gradient-to-r from-blue-600 to-purple-600 bg-clip-text text-transparent my-2">
+                <span className="block text-blue-600 my-2">
                   IBD Journey
                 </span>
               </h1>
@@ -122,7 +118,6 @@ export default function Home() {
     <div>
       {/* Hero Section */}
       <div className="relative overflow-hidden">
-        <div className="absolute inset-0 bg-gradient-to-br from-slate-100/40 via-gray-100/30 to-zinc-100/40"></div>
         <div className="relative max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 py-4 lg:py-16  lg:pb-16">
           <div className="text-center fade-in-up">
             {/* Mobile Hero - Different Layout */}
@@ -137,11 +132,11 @@ export default function Home() {
               <h1 className="text-2xl font-bold font-source text-slate-900 mb-2">
                 FlareCare
               </h1>
-              <p className="text-lg font-semibold font-source text-blue-600 mb-4">
+              <p className="text-xl font-semibold font-source text-blue-600 mb-4">
                 Crohn's & Colitis Companion
               </p>
-              <p className="text-base font-roboto text-slate-600 mb-6 leading-relaxed">
-                Track symptoms, manage medications, and generate reports for better health decisions.
+              <p className="text-lg font-roboto text-slate-600 mb-6 leading-relaxed">
+                Track symptoms, manage medications, and generate reports for better health decisions
               </p>
             </div>
 
@@ -216,8 +211,7 @@ export default function Home() {
 
         {/* Call to Action */}
         <div className="relative">
-          <div className="absolute inset-0 bg-gradient-to-r from-blue-500/10 to-indigo-500/10 rounded-3xl"></div>
-          <div className="relative bg-white/80 border border-white/20 rounded-3xl p-6 sm:p-8 lg:p-10 shadow-xl" style={{backdropFilter: 'blur(8px)'}}>
+          <div className="bg-white border border-gray-200 rounded-xl p-6 sm:p-8 lg:p-10 shadow-sm">
             <div className="text-center">
               <div className="mb-6">
                 <span className="text-4xl sm:text-5xl">🚀</span>

@@ -229,7 +229,7 @@ function SymptomsPageContent() {
       </div>
 
       {/* Symptom Logging Form */}
-      <div className="bg-white/90 backdrop-blur-sm rounded-3xl shadow-xl border border-white/20 p-4 sm:p-6 md:p-8 mb-8 min-w-0">
+      <div className="bg-white rounded-xl shadow-sm border border-gray-200 p-4 sm:p-6 md:p-8 mb-8 min-w-0 hover:shadow-md transition-shadow duration-200">
         <div className="flex items-center mb-6 sm:mb-8">
           <div className="hidden sm:flex w-12 h-12 bg-blue-600 rounded-2xl items-center justify-center mr-4 flex-shrink-0">
             <svg className="w-6 h-6 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -788,7 +788,7 @@ function SymptomsPageContent() {
       </div>
 
       {/* Symptoms List */}
-      <div className="bg-white/90 backdrop-blur-sm rounded-3xl shadow-xl border border-white/20 p-4 sm:p-6 md:p-8 mt-12 min-w-0">
+      <div className="bg-white rounded-xl shadow-sm border border-gray-200 p-4 sm:p-6 md:p-8 mt-12 min-w-0 hover:shadow-md transition-shadow duration-200">
         <div className="flex items-center mb-6 sm:mb-8">
           <div className="hidden sm:flex w-12 h-12 bg-blue-600 rounded-2xl items-center justify-center mr-4 flex-shrink-0">
             <svg className="w-6 h-6 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -811,7 +811,7 @@ function SymptomsPageContent() {
         ) : (
           <div className="space-y-6">
             {symptoms.map((symptom) => (
-              <div key={symptom.id} className="bg-gradient-to-br from-white to-gray-50 border-2 border-gray-200 rounded-2xl p-4 sm:p-6 hover:shadow-lg transition-all duration-300 min-w-0">
+              <div key={symptom.id} className="bg-white border border-gray-200 rounded-xl p-4 sm:p-6 hover:shadow-md transition-shadow duration-200 min-w-0">
                 <div className="flex justify-between items-start mb-6 gap-4">
                   <div className="flex flex-col space-y-3 min-w-0 flex-1">
                     <div className="flex items-center space-x-2">

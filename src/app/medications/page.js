@@ -455,7 +455,7 @@ function MedicationsPageContent() {
 
 
       {/* Medication Tracking Section */}
-      <div data-tracking-section className="bg-white/90 backdrop-blur-sm rounded-3xl shadow-xl border border-white/20 p-4 sm:p-6 md:p-8 mb-8 sm:mb-12 min-w-0">
+      <div data-tracking-section className="bg-white rounded-xl shadow-sm border border-gray-200 p-4 sm:p-6 md:p-8 mb-8 sm:mb-12 min-w-0 hover:shadow-md transition-shadow duration-200">
         <div className="flex items-center mb-6 sm:mb-8">
           <div className="hidden sm:flex bg-blue-600 p-3 rounded-2xl mr-4">
             <svg className="w-6 h-6 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -933,7 +933,7 @@ function MedicationsPageContent() {
       </div>
 
       {/* Your Medications Section */}
-      <div className="bg-white/90 backdrop-blur-sm rounded-3xl shadow-xl border border-white/20 p-4 sm:p-6 md:p-8 mb-8 sm:mb-12 min-w-0">
+      <div className="bg-white rounded-xl shadow-sm border border-gray-200 p-4 sm:p-6 md:p-8 mb-8 sm:mb-12 min-w-0 hover:shadow-md transition-shadow duration-200">
         <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 mb-6 sm:mb-8">
           <div className="flex items-center">
             <div className="hidden sm:flex bg-blue-600 p-3 rounded-2xl mr-4">
@@ -1083,7 +1083,7 @@ function MedicationsPageContent() {
         ) : (
           <div className="space-y-6 sm:space-y-8 min-w-0">
             {medications.filter(med => med.name !== 'Medication Tracking').map((medication) => (
-              <div key={medication.id} className="bg-gradient-to-br from-white to-gray-50 border-2 border-gray-200 rounded-2xl p-4 sm:p-6 hover:shadow-lg transition-all duration-300 min-w-0">
+              <div key={medication.id} className="bg-white border border-gray-200 rounded-xl p-4 sm:p-6 hover:shadow-md transition-shadow duration-200 min-w-0">
                 <div className="flex justify-between items-start mb-4">
                   <div className="flex-1 min-w-0">
                     <h3 className="text-lg font-semibold font-source text-gray-900 mb-2 break-words">

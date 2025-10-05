@@ -55,12 +55,14 @@ export default function Navigation() {
   const mainNavItems = [
     { href: '/', label: 'Home' },
     { href: '/about', label: 'About' },
+    { href: '/food-guide', label: 'Foods' },
   ]
 
   const unauthenticatedNavItems = [
     { href: '/', label: 'Home' },
     { href: '/about', label: 'About' },
     { href: '/learn', label: 'Learn' },
+    { href: '/food-guide', label: 'Foods' },
   ]
 
   const featureNavItems = [
@@ -185,8 +187,7 @@ export default function Navigation() {
                   }`}
                   onClick={() => setIsMenuOpen(false)}
                   style={{
-                    animationDelay: `${index * 50}ms`,
-                    animation: isMenuOpen ? 'fadeInDown 0.4s ease-out forwards' : 'none'
+                    animation: isMenuOpen ? `fadeInDown 0.4s ease-out forwards ${index * 50}ms` : 'none'
                   }}
                 >
                   {item.label}

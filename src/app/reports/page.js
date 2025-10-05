@@ -613,7 +613,7 @@ function ReportsPageContent() {
       </div>
 
       {/* Date Range Selector */}
-      <div className="bg-white/90 backdrop-blur-sm rounded-3xl shadow-xl border border-white/20 p-3 sm:p-6 md:p-8 mb-8 sm:mb-12 min-w-0">
+      <div className="bg-white rounded-xl shadow-sm border border-gray-200 p-3 sm:p-6 md:p-8 mb-8 sm:mb-12 min-w-0 hover:shadow-md transition-shadow duration-200">
         <div className="flex items-center mb-4 sm:mb-6 min-w-0">
           <div className="hidden sm:flex bg-blue-600 p-3 rounded-2xl mr-4 flex-shrink-0">
             <svg className="w-6 h-6 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -731,7 +731,7 @@ function ReportsPageContent() {
       </div>
 
       {/* Report Results */}
-      <div className="bg-white rounded-3xl shadow-xl border border-gray-200 p-3 sm:p-6 md:p-8 mb-8 sm:mb-12 min-w-0">
+      <div className="bg-white rounded-xl shadow-sm border border-gray-200 p-3 sm:p-6 md:p-8 mb-8 sm:mb-12 min-w-0 hover:shadow-md transition-shadow duration-200">
         <div className="flex items-center mb-4 sm:mb-6 min-w-0">
           <div className="hidden sm:flex bg-blue-600 p-3 rounded-2xl mr-4 flex-shrink-0">
             <svg className="w-6 h-6 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
