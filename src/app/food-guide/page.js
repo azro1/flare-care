@@ -59,7 +59,7 @@ export default function FoodGuide() {
             <h1 className="text-2xl sm:text-3xl lg:text-4xl font-bold font-source text-gray-900 mb-4 sm:mb-6">
               Food Categories
             </h1>
-            <p className="text-lg text-gray-600 font-roboto max-w-2xl mx-auto">
+            <p className="text-lg text-gray-600 font-roboto max-w-3xl mx-auto">
               Understanding different food categories can help you make informed choices about your diet. 
               Remember, everyone's triggers are different - what affects one person may not affect another.
             </p>
