@@ -16,6 +16,9 @@ function SymptomsPageContent() {
     symptomEndDate: '',
     severity: 5,
     stress_level: 5,
+    normal_bathroom_frequency: '',
+    bathroom_frequency_changed: '',
+    bathroom_frequency_change_details: '',
     notes: '',
     breakfast: [{ food: '', quantity: '' }],
     lunch: [{ food: '', quantity: '' }],
@@ -86,6 +89,9 @@ function SymptomsPageContent() {
       symptomEndDate: '',
       severity: 5,
       stress_level: 5,
+      normal_bathroom_frequency: '',
+      bathroom_frequency_changed: '',
+      bathroom_frequency_change_details: '',
       notes: '',
       breakfast: [{ food: '', quantity: '' }],
       lunch: [{ food: '', quantity: '' }],
@@ -99,10 +105,20 @@ function SymptomsPageContent() {
 
   const handleInputChange = (e) => {
     const { name, value, type, checked } = e.target
-    setFormData(prev => ({
-      ...prev,
-      [name]: type === 'checkbox' ? checked : (type === 'radio' ? value === 'true' : value)
-    }))
+    setFormData(prev => {
+      const newData = {
+        ...prev,
+        [name]: type === 'checkbox' ? checked : (type === 'radio' && (value === 'true' || value === 'false') ? value === 'true' : value)
+      }
+      
+      // Clear bathroom frequency change fields if normal frequency is 0 or empty
+      if (name === 'normal_bathroom_frequency' && (!value || parseInt(value) === 0)) {
+        newData.bathroom_frequency_changed = ''
+        newData.bathroom_frequency_change_details = ''
+      }
+      
+      return newData
+    })
   }
 
   const handleDeleteSymptom = (id) => {
@@ -328,6 +344,7 @@ function SymptomsPageContent() {
                   onChange={handleInputChange}
                   className="w-full h-3 bg-gradient-to-r from-blue-100 via-indigo-100 to-blue-200 rounded-full appearance-none cursor-pointer slider-custom"
                   style={{
+                    touchAction: 'none',
                     background: `linear-gradient(to right, #dbeafe 0%, #e0e7ff 50%, #bfdbfe 100%)`
                   }}
                 />
@@ -366,6 +383,7 @@ function SymptomsPageContent() {
                   onChange={handleInputChange}
                   className="w-full h-3 bg-gradient-to-r from-blue-100 via-indigo-100 to-blue-200 rounded-full appearance-none cursor-pointer slider-custom"
                   style={{
+                    touchAction: 'none',
                     background: `linear-gradient(to right, #dbeafe 0%, #e0e7ff 50%, #bfdbfe 100%)`
                   }}
                 />
@@ -382,6 +400,75 @@ function SymptomsPageContent() {
               </div>
             </div>
           </div>
+
+          {/* Normal Bathroom Frequency Section */}
+          <div className="space-y-3">
+            <label htmlFor="normal_bathroom_frequency" className="block text-sm font-semibold font-roboto text-gray-800">
+              How many times a day do you usually empty your bowels?
+            </label>
+            <input
+              type="number"
+              id="normal_bathroom_frequency"
+              name="normal_bathroom_frequency"
+              min="0"
+              max="50"
+              value={formData.normal_bathroom_frequency}
+              onChange={handleInputChange}
+              placeholder="e.g., 1, 2, 3"
+              className="w-full px-2 py-1.5 bg-white/80 border-2 border-gray-200 rounded-lg focus:outline-none focus:ring-4 focus:ring-blue-100 focus:border-blue-400 transition-all duration-200 shadow-sm hover:shadow-md"
+            />
+          </div>
+
+          {/* Bathroom Frequency Change Question - Only show if normal frequency > 0 */}
+          {formData.normal_bathroom_frequency && parseInt(formData.normal_bathroom_frequency) > 0 && (
+            <div className="space-y-3">
+              <label className="block text-sm font-semibold font-roboto text-gray-800">
+                Have you noticed a change in bathroom frequency since symptoms started?
+              </label>
+              <div className="flex space-x-6">
+                <label className="flex items-center cursor-pointer group">
+                  <input
+                    type="radio"
+                    name="bathroom_frequency_changed"
+                    value="yes"
+                    checked={formData.bathroom_frequency_changed === 'yes'}
+                    onChange={handleInputChange}
+                    className="w-5 h-5 text-blue-600 bg-gray-100 border-2 border-gray-300 focus:ring-0 focus:outline-none"
+                  />
+                  <span className="ml-3 text-sm font-medium text-gray-700 group-hover:text-gray-900">Yes</span>
+                </label>
+                <label className="flex items-center cursor-pointer group">
+                  <input
+                    type="radio"
+                    name="bathroom_frequency_changed"
+                    value="no"
+                    checked={formData.bathroom_frequency_changed === 'no'}
+                    onChange={handleInputChange}
+                    className="w-5 h-5 text-blue-600 bg-gray-100 border-2 border-gray-300 focus:ring-0 focus:outline-none"
+                  />
+                  <span className="ml-3 text-sm font-medium text-gray-700 group-hover:text-gray-900">No</span>
+                </label>
+              </div>
+            </div>
+          )}
+
+          {/* Bathroom Frequency Change Details - Only show if they selected "Yes" */}
+          {formData.bathroom_frequency_changed === 'yes' && (
+            <div className="space-y-3">
+              <label htmlFor="bathroom_frequency_change_details" className="block text-sm font-semibold font-roboto text-gray-800">
+                Describe your change
+              </label>
+              <textarea
+                id="bathroom_frequency_change_details"
+                name="bathroom_frequency_change_details"
+                rows="3"
+                value={formData.bathroom_frequency_change_details}
+                onChange={handleInputChange}
+                placeholder="e.g., increased to 8-10 times per day, blood present, mucus, loose stools..."
+                className="w-full px-2 py-1.5 bg-white/80 border-2 border-gray-200 rounded-lg focus:outline-none focus:ring-4 focus:ring-blue-100 focus:border-blue-400 transition-all duration-200 resize-none shadow-sm hover:shadow-md"
+              />
+            </div>
+          )}
 
           {/* Smoking Status */}
           <div className="space-y-4">
@@ -772,6 +859,36 @@ function SymptomsPageContent() {
                     </svg>
                   </button>
                 </div>
+
+                {(symptom.normal_bathroom_frequency || symptom.bathroom_frequency_changed) && (
+                  <div className="mb-6">
+                    <div className="flex items-start">
+                      <div>
+                        <p className="text-sm font-semibold text-gray-800 mb-1">Bathroom Frequency</p>
+                        <ul className="text-sm text-gray-700 font-roboto space-y-1">
+                          {symptom.normal_bathroom_frequency && (
+                            <li className="flex items-center">
+                              <span className="w-1.5 h-1.5 bg-gray-400 rounded-full mr-2 flex-shrink-0"></span>
+                              {symptom.normal_bathroom_frequency} times per day
+                            </li>
+                          )}
+                          {symptom.bathroom_frequency_changed === 'yes' && (
+                            <li className="flex items-center">
+                              <span className="w-1.5 h-1.5 bg-gray-400 rounded-full mr-2 flex-shrink-0"></span>
+                              Changed since symptoms
+                            </li>
+                          )}
+                          {symptom.bathroom_frequency_change_details && (
+                            <li className="flex items-start">
+                              <span className="w-1.5 h-1.5 bg-gray-400 rounded-full mr-2 mt-[7px] flex-shrink-0"></span>
+                              {symptom.bathroom_frequency_change_details}
+                            </li>
+                          )}
+                        </ul>
+                      </div>
+                    </div>
+                  </div>
+                )}
 
                 {symptom.notes && (
                   <div className="mb-6">

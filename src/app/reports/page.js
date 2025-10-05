@@ -76,7 +76,7 @@ function ReportsPageContent() {
     // Sort foods by frequency
     const topFoods = Object.entries(foodFrequency)
       .sort(([,a], [,b]) => b - a)
-      .slice(0, 10)
+      .slice(0, 5)
 
     // Get symptom trends (sorted by start date)
     const severityTrend = allSymptoms
@@ -320,6 +320,24 @@ function ReportsPageContent() {
           yPosition += 5
         }
         
+        // Display bathroom frequency information
+        if (symptom.normal_bathroom_frequency || symptom.bathroom_frequency_changed) {
+          if (symptom.normal_bathroom_frequency) {
+            doc.text(`   Bathroom Frequency: ${symptom.normal_bathroom_frequency} times per day`, margin, yPosition)
+            yPosition += 5
+          }
+          if (symptom.bathroom_frequency_changed) {
+            doc.text(`   Frequency Changed: ${symptom.bathroom_frequency_changed === 'yes' ? 'Yes' : 'No'}`, margin, yPosition)
+            yPosition += 5
+          }
+          if (symptom.bathroom_frequency_change_details) {
+            const changeDetailsText = `   Change Details: ${symptom.bathroom_frequency_change_details}`
+            const splitText = doc.splitTextToSize(changeDetailsText, 180) // 180mm width
+            doc.text(splitText, margin, yPosition)
+            yPosition += splitText.length * 5
+          }
+        }
+        
         // Display foods (handle both old and new formats)
         let foodsText = ''
         if (symptom.breakfast || symptom.lunch || symptom.dinner) {
@@ -372,7 +390,7 @@ function ReportsPageContent() {
       
       doc.setFontSize(16)
       doc.setFont('helvetica', 'bold')
-      doc.text('Most Logged Foods', margin, yPosition)
+      doc.text('Top 5 Most Logged Foods', margin, yPosition)
       yPosition += 10
 
       doc.setFontSize(12)
@@ -398,7 +416,7 @@ function ReportsPageContent() {
     const csvData = []
     
     // Add header
-    csvData.push(['Symptom Start Date', 'Symptom End Date', 'Ongoing', 'Severity', 'Stress Level', 'Notes', 'Smoking', 'Alcohol', 'Foods'])
+    csvData.push(['Symptom Start Date', 'Symptom End Date', 'Ongoing', 'Severity', 'Stress Level', 'Normal Bathroom Frequency', 'Bathroom Frequency Changed', 'Bathroom Change Details', 'Notes', 'Smoking', 'Alcohol', 'Foods'])
     
     // Filter symptoms by selected date range (same logic as generateReport)
     const startDate = new Date(dateRange.startDate)
@@ -452,6 +470,11 @@ function ReportsPageContent() {
         const alcoholData = symptom.alcohol 
           ? (symptom.alcohol_units ? `${symptom.alcohol_units} ${symptom.alcohol_units === '1' ? 'unit' : 'units'} per day` : 'Yes')
           : ''
+        
+        // Format bathroom frequency data
+        const normalBathroomData = symptom.normal_bathroom_frequency || ''
+        const bathroomChangedData = symptom.bathroom_frequency_changed || ''
+        const bathroomChangeDetailsData = symptom.bathroom_frequency_change_details || ''
 
         csvData.push([
           formatUKDate(symptom.symptomStartDate),
@@ -459,6 +482,9 @@ function ReportsPageContent() {
           symptom.isOngoing ? 'Yes' : 'No',
           symptom.severity,
           symptom.stress_level || '',
+          normalBathroomData,
+          bathroomChangedData,
+          bathroomChangeDetailsData,
           symptom.notes || '',
           smokingData,
           alcoholData,
@@ -934,7 +960,7 @@ function ReportsPageContent() {
             <span className="w-3 h-3 bg-blue-100 rounded-full mr-3 flex items-center justify-center">
               <span className="w-1.5 h-1.5 bg-blue-500 rounded-full"></span>
             </span>
-            Most Logged Foods
+            Top 5 Most Logged Foods
           </h3>
           <div className="space-y-4">
             {reportData.topFoods.map(([food, count], index) => (
