@@ -13,6 +13,7 @@ A personal companion app for managing Crohn's & Colitis symptoms, built with Nex
 ### 📊 Symptom Tracking
 - Log daily symptoms with severity levels (1-10)
 - Track symptom start/end dates and ongoing status
+- **Bathroom frequency tracking** with baseline and change detection
 - Add detailed notes and potential food triggers
 - Edit and delete previous entries
 - Visual severity indicators with color coding
@@ -34,6 +35,7 @@ A personal companion app for managing Crohn's & Colitis symptoms, built with Nex
 - **Comprehensive PDF exports** with detailed symptom information
 - **CSV exports** for data analysis in Excel/Google Sheets
 - **UK date formatting** (dd/mm/yyyy) for better readability
+- **Bathroom frequency data** included in all exports
 - **Notes included** in all exports for complete medical context
 - **Auto-pagination** for long reports
 - **Data validation** prevents empty report exports
