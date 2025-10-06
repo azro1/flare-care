@@ -59,8 +59,8 @@ export default function Home() {
               {/* Main Headline */}
               <h1 className="text-4xl sm:text-5xl lg:text-6xl font-bold font-source text-slate-900">
                 Take Control of Your
-                <span className="block text-blue-600 my-2">
-                  IBD Journey
+                <span className="block my-2">
+                   <span className="text-blue-600">IBD</span> Journey
                 </span>
               </h1>
 

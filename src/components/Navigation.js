@@ -1,6 +1,7 @@
 'use client'
 
 import Link from 'next/link'
+import Image from 'next/image'
 import { usePathname } from 'next/navigation'
 import { useState, useEffect } from 'react'
 import { useAuth } from '../lib/AuthContext'
@@ -24,6 +25,22 @@ export default function Navigation() {
     
     // Fallback to email if no name is available
     return user.email || ''
+  }
+
+  // Get user's avatar from Google metadata
+  const getUserAvatar = () => {
+    if (!user) return null
+    
+    // Get avatar from user metadata (Google OAuth)
+    const avatarUrl = user.user_metadata?.avatar_url || null
+    
+    // If it's a Google avatar, try to get a higher resolution version
+    if (avatarUrl && avatarUrl.includes('googleusercontent.com')) {
+      // Replace =s96-c with =s128-c for higher resolution
+      return avatarUrl.replace('=s96-c', '=s128-c')
+    }
+    
+    return avatarUrl
   }
 
 
@@ -139,10 +156,18 @@ export default function Navigation() {
             {/* User menu for authenticated users */}
             {isAuthenticated && (
               <div className="flex items-center space-x-6 ml-4 pl-4 border-l border-gray-200">
-                <div className="flex items-center space-x-6">
-                  <span className="text-base text-gray-600 font-medium font-roboto">
-                    Hi, {getUserDisplayName()}
-                  </span>
+                <div className="flex items-center space-x-4">
+                  {/* User Avatar */}
+                  {getUserAvatar() && (
+                    <div className="w-10 h-10 rounded-full overflow-hidden border-2 border-gray-200">
+                      <img 
+                        src={getUserAvatar()} 
+                        alt="User avatar" 
+                        className="w-full h-full object-cover"
+                        style={{ imageRendering: 'crisp-edges' }}
+                      />
+                    </div>
+                  )}
                   <button
                     onClick={handleSignOut}
                     className="nav-link nav-link-inactive bg-gray-50 hover:bg-gray-100 text-gray-600 hover:text-gray-800"
@@ -191,17 +216,32 @@ export default function Navigation() {
                 </Link>
               ))}
             
-            {/* Mobile sign out button for authenticated users */}
+            {/* Mobile user section for authenticated users */}
             {isAuthenticated && (
-              <button
-                onClick={() => {
-                  handleSignOut()
-                  setIsMenuOpen(false)
-                }}
-                className="block w-full text-left px-4 py-3 text-base font-medium font-roboto transition-colors duration-150 text-gray-600 hover:text-gray-900"
-              >
-                Sign Out
-              </button>
+              <div className="border-t border-gray-200/50 mt-4 pt-4">
+                <div className="flex items-center px-4 py-3">
+                  {/* User Avatar */}
+                  {getUserAvatar() && (
+                    <div className="w-10 h-10 rounded-full overflow-hidden border-2 border-gray-200 mr-3">
+                      <img 
+                        src={getUserAvatar()} 
+                        alt="User avatar" 
+                        className="w-full h-full object-cover"
+                        style={{ imageRendering: 'crisp-edges' }}
+                      />
+                    </div>
+                  )}
+                  <button
+                    onClick={() => {
+                      handleSignOut()
+                      setIsMenuOpen(false)
+                    }}
+                    className="text-base font-medium font-roboto transition-colors duration-150 text-gray-600 hover:text-gray-900"
+                  >
+                    Sign Out
+                  </button>
+                </div>
+              </div>
             )}
           </div>
         </div>
