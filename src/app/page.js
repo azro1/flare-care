@@ -121,7 +121,7 @@ export default function Home() {
         <div className="relative max-w-6xl mx-auto sm:px-6 lg:p-8">
           <div className="text-center fade-in-up">
             {/* Mobile Hero - Different Layout */}
-            <div className="sm:hidden">
+            <div className="max-w-xs mx-auto sm:hidden">
               {/* Logo Icon */}
                 <div className="w-16 h-16 bg-blue-600 rounded-2xl flex items-center justify-center mx-auto mb-6">
                   <svg className="w-8 h-8 text-white" fill="currentColor" viewBox="0 0 24 24">
