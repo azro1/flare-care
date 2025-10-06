@@ -43,6 +43,18 @@ export default function Navigation() {
     return avatarUrl
   }
 
+  // Get user's initials for fallback
+  const getUserInitials = () => {
+    const displayName = getUserDisplayName()
+    if (!displayName) return 'U'
+    
+    const names = displayName.trim().split(' ')
+    if (names.length >= 2) {
+      return (names[0][0] + names[names.length - 1][0]).toUpperCase()
+    }
+    return displayName[0].toUpperCase()
+  }
+
 
   const handleSignOut = async () => {
     try {
@@ -158,16 +170,29 @@ export default function Navigation() {
               <div className="flex items-center space-x-6 ml-4 pl-4 border-l border-gray-200">
                 <div className="flex items-center space-x-4">
                   {/* User Avatar */}
-                  {getUserAvatar() && (
-                    <div className="w-10 h-10 rounded-full overflow-hidden border-2 border-gray-200">
+                  <div className="w-10 h-10 rounded-full overflow-hidden border-2 border-gray-200 bg-gray-200 flex items-center justify-center">
+                    {getUserAvatar() ? (
                       <img 
                         src={getUserAvatar()} 
                         alt="User avatar" 
                         className="w-full h-full object-cover"
                         style={{ imageRendering: 'crisp-edges' }}
+                        onError={(e) => {
+                          // Hide the image and show initials instead
+                          e.target.style.display = 'none'
+                          const container = e.target.parentElement
+                          const initials = document.createElement('div')
+                          initials.className = 'w-full h-full flex items-center justify-center text-gray-600 font-semibold text-sm'
+                          initials.textContent = getUserInitials()
+                          container.appendChild(initials)
+                        }}
                       />
-                    </div>
-                  )}
+                    ) : (
+                      <div className="w-full h-full flex items-center justify-center text-gray-600 font-semibold text-sm">
+                        {getUserInitials()}
+                      </div>
+                    )}
+                  </div>
                   <button
                     onClick={handleSignOut}
                     className="nav-link nav-link-inactive bg-gray-50 hover:bg-gray-100 text-gray-600 hover:text-gray-800"
@@ -221,16 +246,29 @@ export default function Navigation() {
               <div className="border-t border-gray-200/50 mt-4 pt-4">
                 <div className="flex items-center px-4 py-3">
                   {/* User Avatar */}
-                  {getUserAvatar() && (
-                    <div className="w-10 h-10 rounded-full overflow-hidden border-2 border-gray-200 mr-3">
+                  <div className="w-10 h-10 rounded-full overflow-hidden border-2 border-gray-200 mr-3 bg-gray-200 flex items-center justify-center">
+                    {getUserAvatar() ? (
                       <img 
                         src={getUserAvatar()} 
                         alt="User avatar" 
                         className="w-full h-full object-cover"
                         style={{ imageRendering: 'crisp-edges' }}
+                        onError={(e) => {
+                          // Hide the image and show initials instead
+                          e.target.style.display = 'none'
+                          const container = e.target.parentElement
+                          const initials = document.createElement('div')
+                          initials.className = 'w-full h-full flex items-center justify-center text-gray-600 font-semibold text-sm'
+                          initials.textContent = getUserInitials()
+                          container.appendChild(initials)
+                        }}
                       />
-                    </div>
-                  )}
+                    ) : (
+                      <div className="w-full h-full flex items-center justify-center text-gray-600 font-semibold text-sm">
+                        {getUserInitials()}
+                      </div>
+                    )}
+                  </div>
                   <button
                     onClick={() => {
                       handleSignOut()
