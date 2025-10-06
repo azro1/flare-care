@@ -118,7 +118,7 @@ export default function Home() {
     <div>
       {/* Hero Section */}
       <div className="relative overflow-hidden">
-        <div className="relative max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 pt-4 pb-2 lg:py-16  lg:pb-16">
+        <div className="relative max-w-6xl mx-auto sm:px-6 lg:p-8">
           <div className="text-center fade-in-up">
             {/* Mobile Hero - Different Layout */}
             <div className="sm:hidden">
@@ -132,7 +132,7 @@ export default function Home() {
               <h1 className="text-3xl font-bold font-source text-slate-900 mb-3">
                 FlareCare
               </h1>
-              <p className="text-[22px] font-semibold font-source text-blue-600 mb-5">
+              <p className="text-lg font-semibold font-source text-blue-600 mb-5">
                 Your Personal Crohn's & Colitis Companion
               </p>
               <p className="text-lg font-roboto text-slate-600 mb-6 leading-relaxed">
@@ -143,17 +143,17 @@ export default function Home() {
             {/* Desktop Hero - Original Layout */}
             <div className="hidden sm:block">
               <div className="mb-8">
-                <div className="w-20 h-20 sm:w-24 sm:h-24 bg-blue-600 rounded-3xl flex items-center justify-center mx-auto mb-6 pulse-animation">
+                <div className="w-20 h-20 bg-blue-600 rounded-3xl flex items-center justify-center mx-auto mb-6 pulse-animation">
                   <svg className="w-10 h-10 sm:w-12 sm:h-12 text-white" fill="currentColor" viewBox="0 0 24 24">
                     <path d="M4.318 6.318a4.5 4.5 0 000 6.364L12 20.364l7.682-7.682a4.5 4.5 0 00-6.364-6.364L12 7.636l-1.318-1.318a4.5 4.5 0 00-6.364 0z" />
                   </svg>
                 </div>
               </div>
               <h1 className="text-2xl sm:text-3xl lg:text-4xl font-bold font-source text-slate-900 mb-4 sm:mb-6">
-                Welcome to FlareCare
+                FlareCare
               </h1>
-              <p className="text-lg sm:text-xl font-source text-slate-700 mb-4 sm:mb-6 max-w-3xl mx-auto leading-relaxed">
-                Your personal companion for managing Crohn's & Colitis symptoms
+              <p className="text-xl font-semibold font-source text-blue-600 mb-5">
+                Your Personal Crohn's & Colitis Companion
               </p>
               <p className="text-base sm:text-lg font-roboto text-slate-600 max-w-2xl mx-auto mb-8 sm:mb-12 leading-relaxed">
                 Track your symptoms, manage medications, and generate detailed reports to help you and your healthcare team make informed decisions.
@@ -164,7 +164,7 @@ export default function Home() {
       </div>
 
       {/* Features Grid */}
-      <div className="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 pt-4 sm:pb-16 lg:pb-20">
+      <div className="max-w-6xl mx-auto px-4 pt-4 sm:px-6 lg:pt-0 lg:px-8 sm:pb-16 lg:pb-20">
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6 sm:gap-8 mb-12 sm:mb-16">
           <Link href="/symptoms" className="group">
             <div className="feature-card group h-full min-h-[280px] sm:min-h-[320px]">

@@ -86,7 +86,7 @@ export default function Navigation() {
           </Link>
 
           {/* Desktop Navigation */}
-          <div className="hidden lg:flex items-center space-x-8">
+          <div className="hidden lg:flex items-center space-x-6">
             {/* Main Navigation */}
             <div className="flex items-center space-x-6">
               {(isAuthenticated ? mainNavItems : unauthenticatedNavItems).map((item) => (
@@ -138,8 +138,8 @@ export default function Navigation() {
             
             {/* User menu for authenticated users */}
             {isAuthenticated && (
-              <div className="flex items-center space-x-3 ml-4 pl-4 border-l border-gray-200">
-                <div className="flex items-center space-x-3">
+              <div className="flex items-center space-x-6 ml-4 pl-4 border-l border-gray-200">
+                <div className="flex items-center space-x-6">
                   <span className="text-base text-gray-600 font-medium font-roboto">
                     Hi, {getUserDisplayName()}
                   </span>
@@ -171,51 +171,48 @@ export default function Navigation() {
         </div>
 
         {/* Mobile Navigation */}
-        <div className={`lg:hidden absolute top-full left-0 right-0 bg-white shadow-lg border-t border-gray-200/50 transition-all duration-300 ease-in-out ${
-          isMenuOpen ? 'opacity-100 visible' : 'opacity-0 invisible'
+        <div className={`lg:hidden absolute top-full left-0 right-0 bg-white shadow-lg border-t border-gray-200/50 transition-all duration-300 ease-out overflow-hidden ${
+          isMenuOpen ? 'max-h-screen opacity-100' : 'max-h-0 opacity-0'
         }`}>
           <div className="container mx-auto px-4 sm:px-6 lg:px-8 py-4">
               {/* All Navigation Links */}
-              {[...(isAuthenticated ? mainNavItems : unauthenticatedNavItems), ...(isAuthenticated ? featureNavItems : [])].map((item, index) => (
+              {[...(isAuthenticated ? mainNavItems : unauthenticatedNavItems), ...(isAuthenticated ? featureNavItems : [])].map((item) => (
                 <Link
                   key={item.href}
                   href={item.href}
-                  className={`block px-4 py-3 text-base font-medium font-roboto transition-all duration-200 transform ${
+                  className={`block px-4 py-3 text-base font-medium font-roboto transition-colors duration-150 ${
                     pathname === item.href
                       ? 'text-blue-700'
                       : 'text-gray-600 hover:text-gray-900'
                   }`}
                   onClick={() => setIsMenuOpen(false)}
-                  style={{
-                    animation: isMenuOpen ? `fadeInDown 0.4s ease-out forwards ${index * 50}ms` : 'none'
-                  }}
                 >
                   {item.label}
                 </Link>
               ))}
-              
-              {/* Mobile user menu for authenticated users */}
-              {isAuthenticated && (
-                <div className="border-t border-gray-200 pt-4 mt-4">
-                  <div className="px-4">
-                    <div className="mb-3">
-                      <div className="text-base text-gray-600 font-medium font-roboto">
-                        Hi, {getUserDisplayName()}
-                      </div>
+            
+            {/* Mobile user menu for authenticated users */}
+            {isAuthenticated && (
+              <div className="border-t border-gray-200 pt-4 mt-4">
+                <div className="px-4">
+                  <div className="mb-3">
+                    <div className="text-base text-gray-600 font-medium font-roboto">
+                      Hi, {getUserDisplayName()}
                     </div>
-                    <button
-                      onClick={() => {
-                        handleSignOut()
-                        setIsMenuOpen(false)
-                      }}
-                      className="block w-full px-4 py-3 text-base font-medium font-roboto transition-all duration-200 transform bg-gray-50 hover:bg-gray-100 text-gray-600 hover:text-gray-800"
-                    >
-                      Sign Out
-                    </button>
                   </div>
+                  <button
+                    onClick={() => {
+                      handleSignOut()
+                      setIsMenuOpen(false)
+                    }}
+                    className="w-full px-4 py-3 text-base font-medium font-roboto transition-colors duration-150 bg-gray-50 hover:bg-gray-100 text-gray-600 hover:text-gray-800 rounded-lg"
+                  >
+                    Sign Out
+                  </button>
                 </div>
-              )}
-            </div>
+              </div>
+            )}
+          </div>
         </div>
       </div>
     </nav>
