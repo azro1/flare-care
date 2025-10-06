@@ -191,26 +191,17 @@ export default function Navigation() {
                 </Link>
               ))}
             
-            {/* Mobile user menu for authenticated users */}
+            {/* Mobile sign out button for authenticated users */}
             {isAuthenticated && (
-              <div className="border-t border-gray-200 pt-4 mt-4">
-                <div className="px-4">
-                  <div className="mb-3">
-                    <div className="text-base text-gray-600 font-medium font-roboto">
-                      Hi, {getUserDisplayName()}
-                    </div>
-                  </div>
-                  <button
-                    onClick={() => {
-                      handleSignOut()
-                      setIsMenuOpen(false)
-                    }}
-                    className="w-full px-4 py-3 text-base font-medium font-roboto transition-colors duration-150 bg-gray-50 hover:bg-gray-100 text-gray-600 hover:text-gray-800 rounded-lg"
-                  >
-                    Sign Out
-                  </button>
-                </div>
-              </div>
+              <button
+                onClick={() => {
+                  handleSignOut()
+                  setIsMenuOpen(false)
+                }}
+                className="block w-full text-left px-4 py-3 text-base font-medium font-roboto transition-colors duration-150 text-gray-600 hover:text-gray-900"
+              >
+                Sign Out
+              </button>
             )}
           </div>
         </div>

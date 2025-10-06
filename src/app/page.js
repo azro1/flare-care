@@ -132,8 +132,8 @@ export default function Home() {
               <h1 className="text-3xl font-bold font-source text-slate-900 mb-3">
                 FlareCare
               </h1>
-              <p className="text-lg font-semibold font-source text-blue-600 mb-5">
-                Your Personal Crohn's & Colitis Companion
+              <p className="text-xl font-semibold font-source text-blue-600 mb-5">
+                Take Control of Your IBD Journey
               </p>
               <p className="text-lg font-roboto text-slate-600 mb-6 leading-relaxed">
                 Track symptoms, manage medications, and generate reports for better health decisions
@@ -153,7 +153,7 @@ export default function Home() {
                 FlareCare
               </h1>
               <p className="text-xl font-semibold font-source text-blue-600 mb-5">
-                Your Personal Crohn's & Colitis Companion
+                Take Control of Your IBD Journey
               </p>
               <p className="text-base sm:text-lg font-roboto text-slate-600 max-w-2xl mx-auto mb-8 sm:mb-12 leading-relaxed">
                 Track your symptoms, manage medications, and generate detailed reports to help you and your healthcare team make informed decisions.
