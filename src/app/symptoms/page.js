@@ -1,15 +1,17 @@
 'use client'
 
-import { useState, useEffect } from 'react'
+import { useState } from 'react'
 import { useDataSync } from '@/lib/useDataSync'
 import ConfirmationModal from '@/components/ConfirmationModal'
-import SyncSettings from '@/components/SyncSettings'
 import DatePicker from '@/components/DatePicker'
 import ProtectedRoute from '@/components/ProtectedRoute'
 import { sanitizeNotes, sanitizeFoodTriggers } from '@/lib/sanitize'
 
 function SymptomsPageContent() {
-  const { data: symptoms, setData: setSymptoms, deleteData: deleteSymptom, syncEnabled, setSyncEnabled, isOnline, isSyncing, syncToCloud, fetchFromCloud } = useDataSync('flarecare-symptoms', [])
+  const { data: symptoms, setData: setSymptoms, deleteData: deleteSymptom } = useDataSync('flarecare-symptoms', [])
+  
+  // Wizard state
+  const [currentStep, setCurrentStep] = useState(1)
   const [formData, setFormData] = useState({
     symptomStartDate: '',
     isOngoing: true,
@@ -28,12 +30,173 @@ function SymptomsPageContent() {
     alcohol: false,
     alcohol_units: ''
   })
+  const [dateInputs, setDateInputs] = useState({
+    day: '',
+    month: '',
+    year: '',
+    endDay: '',
+    endMonth: '',
+    endYear: ''
+  })
+  const [dateErrors, setDateErrors] = useState({
+    day: '',
+    month: '',
+    year: '',
+    endDay: '',
+    endMonth: '',
+    endYear: ''
+  })
   const [deleteModal, setDeleteModal] = useState({ isOpen: false, id: null })
   const [alertModal, setAlertModal] = useState({ isOpen: false, title: '', message: '' })
 
-  const handleSubmit = (e) => {
-    e.preventDefault()
+  const totalSteps = 14
+
+  const nextStep = () => {
+    // Validate current step before proceeding
+    if (currentStep === 1) {
+      // Check if date inputs are filled
+      if (!dateInputs.day || !dateInputs.month || !dateInputs.year) {
+        setDateErrors({
+          day: 'Please enter the date your symptoms began',
+          month: '',
+          year: ''
+        })
+        return
+      }
+      
+      // Check for validation errors
+      if (dateErrors.day || dateErrors.month || dateErrors.year) {
+        return
+      }
+      
+      // Create the date string and store it
+      const dateString = `${dateInputs.year}-${dateInputs.month.padStart(2, '0')}-${dateInputs.day.padStart(2, '0')}`
+      setFormData(prev => ({ ...prev, symptomStartDate: dateString }))
+    }
     
+    // Validate step 3 (end date) if symptoms are not ongoing
+    if (currentStep === 3) {
+      if (!dateInputs.endDay || !dateInputs.endMonth || !dateInputs.endYear) {
+        setDateErrors(prev => ({
+          ...prev,
+          endDay: 'Please enter the date your symptoms ended',
+          endMonth: '',
+          endYear: ''
+        }))
+        return
+      }
+      
+      // Create the end date string and store it
+      const endDateString = `${dateInputs.endYear}-${dateInputs.endMonth.padStart(2, '0')}-${dateInputs.endDay.padStart(2, '0')}`
+      setFormData(prev => ({ ...prev, symptomEndDate: endDateString }))
+    }
+    
+    // Skip step 3 (end date) if symptoms are ongoing
+    if (currentStep === 2 && formData.isOngoing === true) {
+      setCurrentStep(4) // Skip to step 4 (severity)
+    }
+    // Skip step 7 (bathroom frequency change) if frequency is 0
+    else if (currentStep === 6 && (!formData.normal_bathroom_frequency || parseInt(formData.normal_bathroom_frequency) === 0)) {
+      setCurrentStep(9) // Skip to step 9 (smoking)
+    }
+    // Skip step 8 (bathroom frequency change details) if no change
+    else if (currentStep === 7 && formData.bathroom_frequency_changed === 'no') {
+      setCurrentStep(9) // Skip to step 9 (smoking)
+    }
+    // Skip step 10 (smoking details) if they don't smoke
+    else if (currentStep === 9 && formData.smoking === false) {
+      setCurrentStep(11) // Skip to step 11 (alcohol)
+    }
+    // Skip step 12 (alcohol details) if they don't drink
+    else if (currentStep === 11 && formData.alcohol === false) {
+      setCurrentStep(13) // Skip to step 13 (meal tracking)
+    }
+    else if (currentStep < totalSteps) {
+      setCurrentStep(currentStep + 1)
+    }
+  }
+
+  const handleInputChange = (e) => {
+    const { name, value, type, checked } = e.target
+    
+    // Add validation for number inputs
+    if (type === 'number') {
+      const numValue = parseInt(value)
+      
+      // Severity and stress level: 1-10
+      if ((name === 'severity' || name === 'stress_level') && value && (numValue < 1 || numValue > 10)) {
+        return // Don't update if invalid
+      }
+      
+      // Bathroom frequency: 0-99 (2 digits max)
+      if (name === 'normal_bathroom_frequency') {
+        if (value.length > 2) {
+          return // Don't update if more than 2 digits
+        }
+        if (value && (numValue < 0 || numValue > 99)) {
+          return // Don't update if invalid range
+        }
+      }
+    }
+    
+    setFormData(prev => {
+      const newData = {
+        ...prev,
+        [name]: type === 'checkbox' ? checked : (type === 'radio' && (value === 'true' || value === 'false') ? value === 'true' : value)
+      }
+      
+      // Clear bathroom frequency change fields if normal frequency is 0 or empty
+      if (name === 'normal_bathroom_frequency' && (!value || parseInt(value) === 0)) {
+        newData.bathroom_frequency_changed = ''
+        newData.bathroom_frequency_change_details = ''
+      }
+      
+      return newData
+    })
+  }
+
+  const handleDateInputChange = (field, value) => {
+    // Update the input value
+    setDateInputs(prev => ({ ...prev, [field]: value }))
+    
+    // Clear any existing error for this field
+    setDateErrors(prev => ({ ...prev, [field]: '' }))
+    
+    // Validate the input
+    let error = ''
+    const numValue = parseInt(value)
+    
+    if (value && !isNaN(numValue)) {
+      switch (field) {
+        case 'day':
+        case 'endDay':
+          if (numValue < 1 || numValue > 31) {
+            error = 'Day must be between 1 and 31'
+          }
+          break
+        case 'month':
+        case 'endMonth':
+          if (numValue < 1 || numValue > 12) {
+            error = 'Month must be between 1 and 12'
+          }
+          break
+        case 'year':
+        case 'endYear':
+          if (value.length === 4) {
+            if (numValue < 2020 || numValue > new Date().getFullYear()) {
+              error = `Year must be between 2020 and ${new Date().getFullYear()}`
+            }
+          }
+          break
+      }
+    }
+    
+    if (error) {
+      setDateErrors(prev => ({ ...prev, [field]: error }))
+    }
+  }
+
+  const handleSubmit = () => {
     // Check if there's any meal data
     const hasMealData = formData.breakfast.some(item => item.food.trim()) ||
                        formData.lunch.some(item => item.food.trim()) ||
@@ -73,7 +236,6 @@ function SymptomsPageContent() {
       })).filter(item => item.food.trim())
     }
 
-
     const newSymptom = {
       id: Date.now().toString(),
       ...formData,
@@ -83,6 +245,8 @@ function SymptomsPageContent() {
     }
 
     setSymptoms([newSymptom, ...symptoms])
+    
+    // Reset form and go back to step 1
     setFormData({
       symptomStartDate: '',
       isOngoing: true,
@@ -101,24 +265,7 @@ function SymptomsPageContent() {
       alcohol: false,
       alcohol_units: ''
     })
-  }
-
-  const handleInputChange = (e) => {
-    const { name, value, type, checked } = e.target
-    setFormData(prev => {
-      const newData = {
-        ...prev,
-        [name]: type === 'checkbox' ? checked : (type === 'radio' && (value === 'true' || value === 'false') ? value === 'true' : value)
-      }
-      
-      // Clear bathroom frequency change fields if normal frequency is 0 or empty
-      if (name === 'normal_bathroom_frequency' && (!value || parseInt(value) === 0)) {
-        newData.bathroom_frequency_changed = ''
-        newData.bathroom_frequency_change_details = ''
-      }
-      
-      return newData
-    })
+    setCurrentStep(1)
   }
 
   const handleDeleteSymptom = (id) => {
@@ -160,7 +307,6 @@ function SymptomsPageContent() {
     if (stress <= 6) return 'text-yellow-600 bg-yellow-100'
     return 'text-red-600 bg-red-100'
   }
-
 
   const getMealLabel = (mealType) => {
     if (!formData.symptomStartDate) {
@@ -205,11 +351,10 @@ function SymptomsPageContent() {
     }))
   }
 
-
   return (
-    <div className="max-w-4xl w-full mx-auto px-3 sm:px-4 md:px-6 lg:px-8 min-w-0">
-      {/* Header Section */}
-      <div className="mb-8 sm:mb-12">
+    <div className="max-w-4xl w-full mx-auto px-3 sm:px-4 md:px-6 lg:px-8 min-w-0 flex flex-col flex-grow justify-center">
+      {/* Header Section - Keep Original */}
+      <div className="mb-4 sm:mb-12">
         <div className="flex flex-col sm:flex-row sm:justify-between sm:items-start">
           <div className="mb-6 sm:mb-0 min-w-0 flex-1">
             <h1 className="text-2xl sm:text-3xl lg:text-4xl font-bold font-source text-gray-900 mb-3 sm:mb-4">
@@ -218,797 +363,651 @@ function SymptomsPageContent() {
             <p className="text-gray-600 font-roboto">
               Monitor your health patterns and identify triggers to better manage your condition.
             </p>
-          </div>
-          <div className="sm:ml-6 flex-shrink-0">
-            <SyncSettings 
-              syncEnabled={syncEnabled}
-              setSyncEnabled={setSyncEnabled}
-              isOnline={isOnline}
-              isSyncing={isSyncing}
-              syncToCloud={syncToCloud}
-              fetchFromCloud={fetchFromCloud}
-            />
+            {currentStep > 1 && (
+              <div className="mt-4">
+                <button
+                  onClick={() => setCurrentStep(currentStep - 1)}
+                  className="text-blue-600 hover:text-blue-800 hover:underline text-base font-medium flex items-center"
+                >
+                  <svg className="w-4 h-4 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 19l-7-7 7-7" />
+                  </svg>
+                  Back
+                </button>
+              </div>
+            )}
           </div>
         </div>
       </div>
 
-      {/* Symptom Logging Form */}
-      <div className="bg-white rounded-xl shadow-sm border border-gray-200 p-4 sm:p-6 md:p-8 mb-8 min-w-0 hover:shadow-md transition-shadow duration-200">
-        <div className="flex items-center mb-6 sm:mb-8">
-          <div className="hidden sm:flex w-12 h-12 bg-blue-600 rounded-2xl items-center justify-center mr-4 flex-shrink-0">
-            <svg className="w-6 h-6 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 6v6m0 0v6m0-6h6m-6 0H6" />
-            </svg>
+      {/* Wizard Container */}
+      <div className="mb-4">
+        {/* Step 1: When did symptoms begin? */}
+        {currentStep === 1 && (
+          <div className="mb-4">
+            <h3 className="text-lg font-semibold text-gray-900 mb-2">When did your symptoms begin?</h3>
+            {(dateErrors.day || dateErrors.month || dateErrors.year) && (
+              <p className="text-red-500 text-sm mb-4">
+                {dateErrors.day || dateErrors.month || dateErrors.year}
+              </p>
+            )}
+            <div className="flex space-x-5">
+              <div className="w-14">
+                <label className="block text-sm font-medium text-gray-700 mb-2">Day</label>
+                <input
+                  type="number"
+                  min="1"
+                  max="31"
+                  value={dateInputs.day}
+                  onChange={(e) => {
+                    let value = e.target.value;
+                    if (value.length > 2) {
+                      value = value.slice(0, 2);
+                    }
+                    handleDateInputChange('day', value);
+                  }}
+                  className={`w-full px-3 py-2 bg-white border-2 focus:outline-none focus:ring-4 transition-all duration-200 text-left text-base [appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none ${
+                    dateErrors.day 
+                      ? 'border-red-400 focus:ring-red-100 focus:border-red-500' 
+                      : 'border-gray-200 focus:ring-blue-100 focus:border-blue-400'
+                  }`}
+                />
+              </div>
+              <div className="w-14">
+                <label className="block text-sm font-medium text-gray-700 mb-2">Month</label>
+                <input
+                  type="number"
+                  min="1"
+                  max="12"
+                  value={dateInputs.month}
+                  onChange={(e) => {
+                    let value = e.target.value;
+                    if (value.length > 2) {
+                      value = value.slice(0, 2);
+                    }
+                    handleDateInputChange('month', value);
+                  }}
+                  className={`w-full px-3 py-2 bg-white border-2 focus:outline-none focus:ring-4 transition-all duration-200 text-left text-base [appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none ${
+                    dateErrors.month 
+                      ? 'border-red-400 focus:ring-red-100 focus:border-red-500' 
+                      : 'border-gray-200 focus:ring-blue-100 focus:border-blue-400'
+                  }`}
+                />
+              </div>
+              <div className="w-24">
+                <label className="block text-sm font-medium text-gray-700 mb-2">Year</label>
+                <input
+                  type="number"
+                  min="2020"
+                  max={new Date().getFullYear()}
+                  value={dateInputs.year}
+                  onChange={(e) => {
+                    let value = e.target.value;
+                    if (value.length > 4) {
+                      value = value.slice(0, 4);
+                    }
+                    handleDateInputChange('year', value);
+                  }}
+                  className={`w-full px-3 py-2 bg-white border-2 focus:outline-none focus:ring-4 transition-all duration-200 text-left text-base [appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none ${
+                    dateErrors.year 
+                      ? 'border-red-400 focus:ring-red-100 focus:border-red-500' 
+                      : 'border-gray-200 focus:ring-blue-100 focus:border-blue-400'
+                  }`}
+                />
+              </div>
+            </div>
           </div>
-          <h2 className="text-xl font-semibold font-source text-gray-900">New Symptom Entry</h2>
-        </div>
-        
-        <form onSubmit={handleSubmit} className="space-y-6 sm:space-y-8">
-          {/* Date and Status Section */}
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-4 sm:gap-6 md:gap-8">
-            <div className="space-y-3">
-              <label htmlFor="symptomStartDate" className="block text-sm font-semibold font-roboto text-gray-800 mb-3">
-                When did symptoms begin?
+        )}
+
+        {/* Step 2: Are symptoms still ongoing? */}
+        {currentStep === 2 && (
+          <div className="mb-4">
+            <h3 className="text-lg font-semibold text-gray-900 mb-2">Are symptoms still ongoing?</h3>
+            <div className="flex space-x-8">
+              <label className="flex items-center cursor-pointer">
+                <input
+                  type="radio"
+                  name="isOngoing"
+                  value="true"
+                  checked={formData.isOngoing === true}
+                  onChange={handleInputChange}
+                  className="w-6 h-6 text-blue-600"
+                />
+                <span className="ml-3 text-lg text-gray-700">Yes</span>
               </label>
-              <DatePicker
-                id="symptomStartDate"
-                name="symptomStartDate"
-                value={formData.symptomStartDate}
-                onChange={(value) => setFormData(prev => ({ ...prev, symptomStartDate: value }))}
-                placeholder="Select start date"
-                className="w-full px-2 py-1.5 bg-white/80 border-2 border-gray-200 rounded-lg focus:outline-none focus:ring-4 focus:ring-blue-100 focus:border-blue-400 transition-all duration-200 shadow-sm hover:shadow-md appearance-none bg-no-repeat bg-right pr-10 text-left"
-                style={{
-                  backgroundImage: `url("data:image/svg+xml,%3csvg xmlns='http://www.w3.org/2000/svg' fill='none' viewBox='0 0 20 20'%3e%3cpath stroke='%236b7280' stroke-linecap='round' stroke-linejoin='round' stroke-width='1.5' d='m6 8 4 4 4-4'/%3e%3c/svg%3e")`,
-                  backgroundPosition: 'right 0.75rem center',
-                  backgroundSize: '1.5em 1.5em'
-                }}
-                maxDate={new Date().toISOString().split('T')[0]}
+              <label className="flex items-center cursor-pointer">
+                <input
+                  type="radio"
+                  name="isOngoing"
+                  value="false"
+                  checked={formData.isOngoing === false}
+                  onChange={handleInputChange}
+                  className="w-6 h-6 text-blue-600"
+                />
+                <span className="ml-3 text-lg text-gray-700">No</span>
+              </label>
+            </div>
+          </div>
+        )}
+
+        {/* Step 3: When did symptoms end? (only if not ongoing) */}
+        {currentStep === 3 && (
+          <div className="mb-4">
+            <h3 className="text-lg font-semibold text-gray-900 mb-2">When did symptoms end?</h3>
+            {(dateErrors.endDay || dateErrors.endMonth || dateErrors.endYear) && (
+              <p className="text-red-500 text-sm mb-4">
+                {dateErrors.endDay || dateErrors.endMonth || dateErrors.endYear}
+              </p>
+            )}
+            <div className="flex space-x-5">
+              <div className="w-14">
+                <label className="block text-sm font-medium text-gray-700 mb-2">Day</label>
+                <input
+                  type="number"
+                  min="1"
+                  max="31"
+                  value={dateInputs.endDay || ''}
+                  onChange={(e) => {
+                    let value = e.target.value;
+                    if (value.length > 2) {
+                      value = value.slice(0, 2);
+                    }
+                    handleDateInputChange('endDay', value);
+                  }}
+                  className="w-full px-3 py-2 bg-white border-2 border-gray-200 focus:outline-none focus:ring-4 focus:ring-blue-100 focus:border-blue-400 transition-all duration-200 text-left text-base [appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none"
+                />
+              </div>
+              <div className="w-14">
+                <label className="block text-sm font-medium text-gray-700 mb-2">Month</label>
+                <input
+                  type="number"
+                  min="1"
+                  max="12"
+                  value={dateInputs.endMonth || ''}
+                  onChange={(e) => {
+                    let value = e.target.value;
+                    if (value.length > 2) {
+                      value = value.slice(0, 2);
+                    }
+                    handleDateInputChange('endMonth', value);
+                  }}
+                  className="w-full px-3 py-2 bg-white border-2 border-gray-200 focus:outline-none focus:ring-4 focus:ring-blue-100 focus:border-blue-400 transition-all duration-200 text-left text-base [appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none"
+                />
+              </div>
+              <div className="w-24">
+                <label className="block text-sm font-medium text-gray-700 mb-2">Year</label>
+                <input
+                  type="number"
+                  min="2020"
+                  max={new Date().getFullYear()}
+                  value={dateInputs.endYear || ''}
+                  onChange={(e) => {
+                    let value = e.target.value;
+                    if (value.length > 4) {
+                      value = value.slice(0, 4);
+                    }
+                    handleDateInputChange('endYear', value);
+                  }}
+                  className="w-full px-3 py-2 bg-white border-2 border-gray-200 focus:outline-none focus:ring-4 focus:ring-blue-100 focus:border-blue-400 transition-all duration-200 text-left text-base [appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none"
+                />
+              </div>
+            </div>
+          </div>
+        )}
+
+        {/* Step 4: Symptom Severity */}
+        {currentStep === 4 && (
+          <div className="mb-4">
+            <h3 className="text-lg font-semibold text-gray-900 mb-2">How severe are your symptoms?</h3>
+            <p className="text-sm text-gray-600 mb-4">Rate from 1 (mild) to 10 (severe)</p>
+            <div className="w-14">
+              <input
+                type="number"
+                id="severity"
+                name="severity"
+                min="1"
+                max="10"
+                value={formData.severity}
+                onChange={handleInputChange}
+                className="w-full px-3 py-2 bg-white border-2 border-gray-200 focus:outline-none focus:ring-4 focus:ring-blue-100 focus:border-blue-400 transition-all duration-200 text-left text-base [appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none"
               />
             </div>
-
-            <div className="space-y-3">
-              <label className="block text-sm font-semibold font-roboto text-gray-800 mb-3">
-                Are symptoms still ongoing?
-              </label>
-              <div className="flex space-x-6">
-                <label className="flex items-center cursor-pointer group">
-                  <input
-                    type="radio"
-                    name="isOngoing"
-                    value="true"
-                    checked={formData.isOngoing === true}
-                    onChange={handleInputChange}
-                    className="w-5 h-5 text-blue-600 bg-gray-100 border-2 border-gray-300 focus:ring-0 focus:outline-none"
-                  />
-                  <span className="ml-3 text-sm font-medium text-gray-700 group-hover:text-gray-900">Yes</span>
-                </label>
-                <label className="flex items-center cursor-pointer group">
-                  <input
-                    type="radio"
-                    name="isOngoing"
-                    value="false"
-                    checked={formData.isOngoing === false}
-                    onChange={handleInputChange}
-                    className="w-5 h-5 text-blue-600 bg-gray-100 border-2 border-gray-300 focus:ring-0 focus:outline-none"
-                  />
-                  <span className="ml-3 text-sm font-medium text-gray-700 group-hover:text-gray-900">No</span>
-                </label>
-              </div>
-            </div>
           </div>
+        )}
 
-          {/* End Date Section */}
-          {!formData.isOngoing && (
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-4 sm:gap-6 md:gap-8">
-              <div className="space-y-3">
-              <label htmlFor="symptomEndDate" className="block text-sm font-semibold font-roboto text-gray-800 mb-3">
-                When did symptoms end?
-              </label>
-              <DatePicker
-                id="symptomEndDate"
-                name="symptomEndDate"
-                value={formData.symptomEndDate}
-                onChange={(value) => setFormData(prev => ({ ...prev, symptomEndDate: value }))}
-                placeholder="Select end date"
-                className="w-full px-2 py-1.5 bg-white/80 border-2 border-gray-200 rounded-lg focus:outline-none focus:ring-4 focus:ring-blue-100 focus:border-blue-400 transition-all duration-200 shadow-sm hover:shadow-md appearance-none bg-no-repeat bg-right pr-10 text-left"
-                style={{
-                  backgroundImage: `url("data:image/svg+xml,%3csvg xmlns='http://www.w3.org/2000/svg' fill='none' viewBox='0 0 20 20'%3e%3cpath stroke='%236b7280' stroke-linecap='round' stroke-linejoin='round' stroke-width='1.5' d='m6 8 4 4 4-4'/%3e%3c/svg%3e")`,
-                  backgroundPosition: 'right 0.75rem center',
-                  backgroundSize: '1.5em 1.5em'
-                }}
-                minDate={formData.symptomStartDate}
-                maxDate={new Date().toISOString().split('T')[0]}
+        {/* Step 5: Stress Level */}
+        {currentStep === 5 && (
+          <div className="mb-4">
+            <h3 className="text-lg font-semibold text-gray-900 mb-2">How stressed are you feeling?</h3>
+            <p className="text-sm text-gray-600 mb-4">Rate from 1 (calm) to 10 (very stressed)</p>
+            <div className="w-14">
+              <input
+                type="number"
+                id="stress_level"
+                name="stress_level"
+                min="1"
+                max="10"
+                value={formData.stress_level}
+                onChange={handleInputChange}
+                className="w-full px-3 py-2 bg-white border-2 border-gray-200 focus:outline-none focus:ring-4 focus:ring-blue-100 focus:border-blue-400 transition-all duration-200 text-left text-base [appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none"
               />
-              </div>
-              <div></div> {/* Empty div to maintain grid alignment */}
-            </div>
-          )}
-
-          {/* Severity and Stress Section */}
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-4 sm:gap-6 md:gap-8">
-            {/* Severity Slider */}
-            <div className="space-y-4">
-              <div className="flex items-center justify-between">
-                <label htmlFor="severity" className="text-sm font-semibold font-roboto text-gray-800">
-                  Symptom Severity
-                </label>
-                <div className="flex items-center space-x-2">
-                  <span className={`text-2xl font-bold ${getSeverityColor(formData.severity).split(' ')[0]}`}>{formData.severity}</span>
-                  <span className="text-sm text-gray-500">/10</span>
-                </div>
-              </div>
-              <div className="relative">
-                <input
-                  type="range"
-                  id="severity"
-                  name="severity"
-                  min="1"
-                  max="10"
-                  value={formData.severity}
-                  onChange={handleInputChange}
-                  className="w-full h-3 bg-gradient-to-r from-blue-100 via-indigo-100 to-blue-200 rounded-full appearance-none cursor-pointer slider-custom"
-                  style={{
-                    touchAction: 'none',
-                    background: `linear-gradient(to right, #dbeafe 0%, #e0e7ff 50%, #bfdbfe 100%)`
-                  }}
-                />
-                <div className="flex justify-between text-xs text-gray-500 mt-2 font-roboto">
-                  <span className="text-green-600 font-medium">Mild</span>
-                  <span className="text-yellow-600 font-medium">Moderate</span>
-                  <span className="text-red-600 font-medium">Severe</span>
-                </div>
-              </div>
-              <div className="text-center">
-                <span className={`inline-flex items-center px-3 py-1 rounded-full text-sm font-medium ${getSeverityColor(formData.severity)}`}>
-                  {getSeverityLabel(formData.severity)}
-                </span>
-              </div>
-            </div>
-
-            {/* Stress Level Slider */}
-            <div className="space-y-4">
-              <div className="flex items-center justify-between">
-                <label htmlFor="stress_level" className="text-sm font-semibold font-roboto text-gray-800">
-                  Stress Level
-                </label>
-                <div className="flex items-center space-x-2">
-                  <span className={`text-2xl font-bold ${getStressColor(formData.stress_level).split(' ')[0]}`}>{formData.stress_level}</span>
-                  <span className="text-sm text-gray-500">/10</span>
-                </div>
-              </div>
-              <div className="relative">
-                <input
-                  type="range"
-                  id="stress_level"
-                  name="stress_level"
-                  min="1"
-                  max="10"
-                  value={formData.stress_level}
-                  onChange={handleInputChange}
-                  className="w-full h-3 bg-gradient-to-r from-blue-100 via-indigo-100 to-blue-200 rounded-full appearance-none cursor-pointer slider-custom"
-                  style={{
-                    touchAction: 'none',
-                    background: `linear-gradient(to right, #dbeafe 0%, #e0e7ff 50%, #bfdbfe 100%)`
-                  }}
-                />
-                <div className="flex justify-between text-xs text-gray-500 mt-2 font-roboto">
-                  <span className="text-green-600 font-medium">Calm</span>
-                  <span className="text-yellow-600 font-medium">Moderate</span>
-                  <span className="text-red-600 font-medium">High</span>
-                </div>
-              </div>
-              <div className="text-center">
-                <span className={`inline-flex items-center px-3 py-1 rounded-full text-sm font-medium ${getStressColor(formData.stress_level)}`}>
-                  {getStressLabel(formData.stress_level)}
-                </span>
-              </div>
             </div>
           </div>
+        )}
 
-          {/* Normal Bathroom Frequency Section */}
-          <div className="space-y-3">
-            <label htmlFor="normal_bathroom_frequency" className="block text-sm font-semibold font-roboto text-gray-800">
-              How many times a day do you usually empty your bowels?
-            </label>
-            <input
-              type="number"
-              id="normal_bathroom_frequency"
-              name="normal_bathroom_frequency"
-              min="0"
-              max="50"
-              value={formData.normal_bathroom_frequency}
+        {/* Step 6: Bathroom Frequency */}
+        {currentStep === 6 && (
+          <div className="mb-4">
+            <h3 className="text-lg font-semibold text-gray-900 mb-2">Bathroom frequency</h3>
+            <p className="text-gray-600 mb-4">How many times a day do you usually empty your bowels?</p>
+            <div className="w-14">
+              <input
+                type="number"
+                id="normal_bathroom_frequency"
+                name="normal_bathroom_frequency"
+                min="0"
+                max="50"
+                value={formData.normal_bathroom_frequency}
+                onChange={handleInputChange}
+                className="w-full px-3 py-2 bg-white border-2 border-gray-200 focus:outline-none focus:ring-4 focus:ring-blue-100 focus:border-blue-400 transition-all duration-200 text-left text-base [appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none"
+              />
+            </div>
+          </div>
+        )}
+
+        {/* Step 7: Bathroom Frequency Change Question */}
+        {currentStep === 7 && (
+          <div className="mb-4">
+            <h3 className="text-lg font-semibold text-gray-900 mb-2">Bathroom Frequency</h3>
+            <p className="text-gray-600 mb-4">Have you noticed a change in bathroom frequency since symptoms started?</p>
+            <div className="flex space-x-8">
+              <label className="flex items-center cursor-pointer">
+                <input
+                  type="radio"
+                  name="bathroom_frequency_changed"
+                  value="yes"
+                  checked={formData.bathroom_frequency_changed === 'yes'}
+                  onChange={handleInputChange}
+                  className="w-6 h-6 text-blue-600"
+                />
+                <span className="ml-3 text-lg text-gray-700">Yes</span>
+              </label>
+              <label className="flex items-center cursor-pointer">
+                <input
+                  type="radio"
+                  name="bathroom_frequency_changed"
+                  value="no"
+                  checked={formData.bathroom_frequency_changed === 'no'}
+                  onChange={handleInputChange}
+                  className="w-6 h-6 text-blue-600"
+                />
+                <span className="ml-3 text-lg text-gray-700">No</span>
+              </label>
+            </div>
+          </div>
+        )}
+
+        {/* Step 8: Bathroom Frequency Change Details */}
+        {currentStep === 8 && (
+          <div className="mb-4">
+            <h3 className="text-lg font-semibold text-gray-900 mb-2">Describe your change</h3>
+            <textarea
+              id="bathroom_frequency_change_details"
+              name="bathroom_frequency_change_details"
+              rows="4"
+              value={formData.bathroom_frequency_change_details}
               onChange={handleInputChange}
-              placeholder="e.g., 1, 2, 3"
-              className="w-full px-2 py-1.5 bg-white/80 border-2 border-gray-200 rounded-lg focus:outline-none focus:ring-4 focus:ring-blue-100 focus:border-blue-400 transition-all duration-200 shadow-sm hover:shadow-md"
+              placeholder="e.g., increased to 8-10 times per day, blood present, mucus, loose stools..."
+              className="w-full px-4 py-3 bg-white border-2 border-gray-200 rounded-lg focus:outline-none focus:ring-4 focus:ring-blue-100 focus:border-blue-400 transition-all duration-200 resize-none"
             />
           </div>
+        )}
 
-          {/* Bathroom Frequency Change Question - Only show if normal frequency > 0 */}
-          {formData.normal_bathroom_frequency && parseInt(formData.normal_bathroom_frequency) > 0 && (
-            <div className="space-y-3">
-              <label className="block text-sm font-semibold font-roboto text-gray-800">
-                Have you noticed a change in bathroom frequency since symptoms started?
-              </label>
-              <div className="flex space-x-6">
-                <label className="flex items-center cursor-pointer group">
-                  <input
-                    type="radio"
-                    name="bathroom_frequency_changed"
-                    value="yes"
-                    checked={formData.bathroom_frequency_changed === 'yes'}
-                    onChange={handleInputChange}
-                    className="w-5 h-5 text-blue-600 bg-gray-100 border-2 border-gray-300 focus:ring-0 focus:outline-none"
-                  />
-                  <span className="ml-3 text-sm font-medium text-gray-700 group-hover:text-gray-900">Yes</span>
-                </label>
-                <label className="flex items-center cursor-pointer group">
-                  <input
-                    type="radio"
-                    name="bathroom_frequency_changed"
-                    value="no"
-                    checked={formData.bathroom_frequency_changed === 'no'}
-                    onChange={handleInputChange}
-                    className="w-5 h-5 text-blue-600 bg-gray-100 border-2 border-gray-300 focus:ring-0 focus:outline-none"
-                  />
-                  <span className="ml-3 text-sm font-medium text-gray-700 group-hover:text-gray-900">No</span>
-                </label>
-              </div>
-            </div>
-          )}
-
-          {/* Bathroom Frequency Change Details - Only show if they selected "Yes" */}
-          {formData.bathroom_frequency_changed === 'yes' && (
-            <div className="space-y-3">
-              <label htmlFor="bathroom_frequency_change_details" className="block text-sm font-semibold font-roboto text-gray-800">
-                Describe your change
-              </label>
-              <textarea
-                id="bathroom_frequency_change_details"
-                name="bathroom_frequency_change_details"
-                rows="3"
-                value={formData.bathroom_frequency_change_details}
-                onChange={handleInputChange}
-                placeholder="e.g., increased to 8-10 times per day, blood present, mucus, loose stools..."
-                className="w-full px-2 py-1.5 bg-white/80 border-2 border-gray-200 rounded-lg focus:outline-none focus:ring-4 focus:ring-blue-100 focus:border-blue-400 transition-all duration-200 resize-none shadow-sm hover:shadow-md"
-              />
-            </div>
-          )}
-
-          {/* Smoking Status */}
-          <div className="space-y-4">
-            <label className="block text-sm font-semibold font-roboto text-gray-800 mb-3">
-              Do you smoke?
-            </label>
-            <div className="flex space-x-6">
-              <label className="flex items-center cursor-pointer group">
+        {/* Step 9: Do you smoke? */}
+        {currentStep === 9 && (
+          <div className="mb-4">
+            <h3 className="text-lg font-semibold text-gray-900 mb-2">Do you smoke?</h3>
+            <div className="flex space-x-8">
+              <label className="flex items-center cursor-pointer">
                 <input
                   type="radio"
                   name="smoking"
                   value="true"
                   checked={formData.smoking === true}
                   onChange={handleInputChange}
-                  className="w-5 h-5 text-blue-600 bg-gray-100 border-2 border-gray-300 focus:ring-0 focus:outline-none"
+                  className="w-6 h-6 text-blue-600"
                 />
-                <span className="ml-3 text-sm font-medium text-gray-700 group-hover:text-gray-900">Yes</span>
+                <span className="ml-3 text-lg text-gray-700">Yes</span>
               </label>
-              <label className="flex items-center cursor-pointer group">
+              <label className="flex items-center cursor-pointer">
                 <input
                   type="radio"
                   name="smoking"
                   value="false"
                   checked={formData.smoking === false}
                   onChange={handleInputChange}
-                  className="w-5 h-5 text-blue-600 bg-gray-100 border-2 border-gray-300 focus:ring-0 focus:outline-none"
+                  className="w-6 h-6 text-blue-600"
                 />
-                <span className="ml-3 text-sm font-medium text-gray-700 group-hover:text-gray-900">No</span>
+                <span className="ml-3 text-lg text-gray-700">No</span>
               </label>
             </div>
-            
-            {formData.smoking && (
-              <div className="mt-4">
-                <label htmlFor="smoking_details" className="block text-sm font-semibold font-roboto text-gray-800 mb-3">
-                  Please describe your smoking habits
-                </label>
-                <input
-                  type="text"
-                  id="smoking_details"
-                  name="smoking_details"
-                  value={formData.smoking_details}
-                  onChange={handleInputChange}
-                  placeholder="e.g., 1 pack of cigarettes per day, occasional cigars, etc."
-                  className="w-full px-2 py-1.5 bg-white border-2 border-gray-200 rounded-lg focus:outline-none focus:ring-4 focus:ring-blue-100 focus:border-blue-400 transition-all duration-200"
-                  autoComplete="off"
-                />
-              </div>
-            )}
           </div>
+        )}
 
-          {/* Alcohol Status */}
-          <div className="space-y-4">
-            <label className="block text-sm font-semibold font-roboto text-gray-800 mb-3">
-              Do you drink alcohol?
-            </label>
-            <div className="flex space-x-6">
-              <label className="flex items-center cursor-pointer group">
+        {/* Step 10: Smoking details (only if they smoke) */}
+        {currentStep === 10 && (
+          <div className="mb-4">
+            <h3 className="text-lg font-semibold text-gray-900 mb-2">Please describe your smoking habits</h3>
+            <input
+              type="text"
+              id="smoking_details"
+              name="smoking_details"
+              value={formData.smoking_details}
+              onChange={handleInputChange}
+              placeholder="e.g., 1 pack of cigarettes per day, occasional cigars, etc."
+              className="w-full px-4 py-3 bg-white border-2 border-gray-200 rounded-lg focus:outline-none focus:ring-4 focus:ring-blue-100 focus:border-blue-400 transition-all duration-200"
+              autoComplete="off"
+            />
+          </div>
+        )}
+
+        {/* Step 11: Do you drink alcohol? */}
+        {currentStep === 11 && (
+          <div className="mb-4">
+            <h3 className="text-lg font-semibold text-gray-900 mb-2">Do you drink alcohol?</h3>
+            <div className="flex space-x-8">
+              <label className="flex items-center cursor-pointer">
                 <input
                   type="radio"
                   name="alcohol"
                   value="true"
                   checked={formData.alcohol === true}
                   onChange={handleInputChange}
-                  className="w-5 h-5 text-blue-600 bg-gray-100 border-2 border-gray-300 focus:ring-0 focus:outline-none"
+                  className="w-6 h-6 text-blue-600"
                 />
-                <span className="ml-3 text-sm font-medium text-gray-700 group-hover:text-gray-900">Yes</span>
+                <span className="ml-3 text-lg text-gray-700">Yes</span>
               </label>
-              <label className="flex items-center cursor-pointer group">
+              <label className="flex items-center cursor-pointer">
                 <input
                   type="radio"
                   name="alcohol"
                   value="false"
                   checked={formData.alcohol === false}
                   onChange={handleInputChange}
-                  className="w-5 h-5 text-blue-600 bg-gray-100 border-2 border-gray-300 focus:ring-0 focus:outline-none"
+                  className="w-6 h-6 text-blue-600"
                 />
-                <span className="ml-3 text-sm font-medium text-gray-700 group-hover:text-gray-900">No</span>
+                <span className="ml-3 text-lg text-gray-700">No</span>
               </label>
             </div>
-            
-            {formData.alcohol && (
-              <div className="mt-4">
-                <label htmlFor="alcohol_units" className="block text-sm font-semibold font-roboto text-gray-800 mb-3">
-                  How many units of alcohol do you drink per day?
-                </label>
-                <input
-                  type="text"
-                  id="alcohol_units"
-                  name="alcohol_units"
-                  value={formData.alcohol_units}
-                  onChange={handleInputChange}
-                  placeholder="e.g., 2-3 units, occasional glass of wine, etc."
-                  className="w-full px-2 py-1.5 bg-white border-2 border-gray-200 rounded-lg focus:outline-none focus:ring-4 focus:ring-blue-100 focus:border-blue-400 transition-all duration-200"
-                  autoComplete="off"
-                />
-              </div>
-            )}
-          </div>
-
-          {/* Notes Section */}
-          <div className="space-y-3">
-            <label htmlFor="notes" className="block text-sm font-semibold font-roboto text-gray-800">
-              Additional Notes
-            </label>
-            <textarea
-              id="notes"
-              name="notes"
-              rows="4"
-              value={formData.notes}
-              onChange={handleInputChange}
-              placeholder="Describe your symptoms, how you're feeling, any triggers you noticed..."
-              className="w-full px-2 py-1.5 bg-white/80 border-2 border-gray-200 rounded-lg focus:outline-none focus:ring-4 focus:ring-blue-100 focus:border-blue-400 transition-all duration-200 resize-none shadow-sm hover:shadow-md"
-            />
-          </div>
-
-          {/* Meal Tracking */}
-          <div className="space-y-8">
-            <div className="flex items-center">
-              <div className="hidden sm:flex w-12 h-12 bg-blue-600 rounded-2xl items-center justify-center mr-4 flex-shrink-0">
-                <svg className="w-6 h-6 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 3h2l.4 2M7 13h10l4-8H5.4m0 0L7 13m0 0l-2.5 5M7 13l2.5 5m6-5v6a2 2 0 01-2 2H9a2 2 0 01-2-2v-6m8 0V9a2 2 0 00-2-2H9a2 2 0 00-2 2v4.01" />
-                </svg>
-              </div>
-              <h3 className="text-xl font-semibold font-source text-gray-900">Meal Tracking</h3>
-            </div>
-            
-            {/* Breakfast */}
-            <div className="mb-6">
-              <div className="flex justify-between items-center mb-3 gap-3 sm:gap-0">
-                <h4 className="text-sm font-semibold font-roboto text-gray-900">
-                  {getMealLabel('breakfast')}
-                </h4>
-                <button
-                  type="button"
-                  onClick={() => addMealItem('breakfast')}
-                  disabled={formData.breakfast.length > 0 && (formData.breakfast[formData.breakfast.length - 1]?.food === '' || formData.breakfast[formData.breakfast.length - 1]?.quantity === '')}
-                  className={`px-2 py-1 text-sm font-medium rounded-lg transition-colors ${
-                    formData.breakfast.length > 0 && (formData.breakfast[formData.breakfast.length - 1]?.food === '' || formData.breakfast[formData.breakfast.length - 1]?.quantity === '')
-                      ? 'bg-gray-100 text-gray-400 cursor-not-allowed'
-                      : 'bg-blue-100 text-blue-700 hover:bg-blue-200'
-                  }`}
-                >
-                  Add
-                </button>
-              </div>
-              <div className="space-y-4">
-                {formData.breakfast.map((item, index) => (
-                  <div key={index} className="relative">
-                    {formData.breakfast.length > 1 && (
-                      <button
-                        type="button"
-                        onClick={() => removeMealItem('breakfast', index)}
-                        className="absolute -left-2.5 -top-2.5 bg-white border border-gray-300 rounded-full p-1 shadow-md z-10 text-red-500 hover:text-red-700 hover:shadow-lg transition-all duration-200 flex-shrink-0"
-                        title="Remove item"
-                      >
-                        <svg className="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
-                        </svg>
-                      </button>
-                    )}
-                    <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
-                      <div>
-                        <input
-                          type="text"
-                          placeholder="Food item"
-                          value={item.food}
-                          onChange={(e) => updateMealItem('breakfast', index, 'food', e.target.value)}
-                          className="w-full px-2 py-1.5 bg-white border-2 border-gray-200 rounded-lg focus:outline-none focus:ring-4 focus:ring-blue-100 focus:border-blue-400 transition-all duration-200"
-                        />
-                      </div>
-                      <div>
-                        <input
-                          type="text"
-                          placeholder="Quantity"
-                          value={item.quantity}
-                          onChange={(e) => updateMealItem('breakfast', index, 'quantity', e.target.value)}
-                          className="w-full px-2 py-1.5 bg-white border-2 border-gray-200 rounded-lg focus:outline-none focus:ring-4 focus:ring-blue-100 focus:border-blue-400 transition-all duration-200"
-                        />
-                      </div>
-                    </div>
-                  </div>
-                ))}
-              </div>
-            </div>
-
-            {/* Lunch */}
-            <div className="mb-6">
-              <div className="flex justify-between items-center mb-3 gap-3 sm:gap-0">
-                <h4 className="text-sm font-semibold font-roboto text-gray-900">
-                  {getMealLabel('lunch')}
-                </h4>
-                <button
-                  type="button"
-                  onClick={() => addMealItem('lunch')}
-                  disabled={formData.lunch.length > 0 && (formData.lunch[formData.lunch.length - 1]?.food === '' || formData.lunch[formData.lunch.length - 1]?.quantity === '')}
-                  className={`px-2 py-1 text-sm font-medium rounded-lg transition-colors ${
-                    formData.lunch.length > 0 && (formData.lunch[formData.lunch.length - 1]?.food === '' || formData.lunch[formData.lunch.length - 1]?.quantity === '')
-                      ? 'bg-gray-100 text-gray-400 cursor-not-allowed'
-                      : 'bg-blue-100 text-blue-700 hover:bg-blue-200'
-                  }`}
-                >
-                  Add
-                </button>
-              </div>
-              <div className="space-y-4">
-                {formData.lunch.map((item, index) => (
-                  <div key={index} className="relative">
-                    {formData.lunch.length > 1 && (
-                      <button
-                        type="button"
-                        onClick={() => removeMealItem('lunch', index)}
-                        className="absolute -left-2.5 -top-2.5 bg-white border border-gray-300 rounded-full p-1 shadow-md z-10 text-red-500 hover:text-red-700 hover:shadow-lg transition-all duration-200 flex-shrink-0"
-                        title="Remove item"
-                      >
-                        <svg className="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
-                        </svg>
-                      </button>
-                    )}
-                    <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
-                      <div>
-                        <input
-                          type="text"
-                          placeholder="Food item"
-                          value={item.food}
-                          onChange={(e) => updateMealItem('lunch', index, 'food', e.target.value)}
-                          className="w-full px-2 py-1.5 bg-white border-2 border-gray-200 rounded-lg focus:outline-none focus:ring-4 focus:ring-blue-100 focus:border-blue-400 transition-all duration-200"
-                        />
-                      </div>
-                      <div>
-                        <input
-                          type="text"
-                          placeholder="Quantity"
-                          value={item.quantity}
-                          onChange={(e) => updateMealItem('lunch', index, 'quantity', e.target.value)}
-                          className="w-full px-2 py-1.5 bg-white border-2 border-gray-200 rounded-lg focus:outline-none focus:ring-4 focus:ring-blue-100 focus:border-blue-400 transition-all duration-200"
-                        />
-                      </div>
-                    </div>
-                  </div>
-                ))}
-              </div>
-            </div>
-
-            {/* Dinner */}
-            <div className="mb-6">
-              <div className="flex justify-between items-center mb-3 gap-3 sm:gap-0">
-                <h4 className="text-sm font-semibold font-roboto text-gray-900">
-                  {getMealLabel('dinner')}
-                </h4>
-                <button
-                  type="button"
-                  onClick={() => addMealItem('dinner')}
-                  disabled={formData.dinner.length > 0 && (formData.dinner[formData.dinner.length - 1]?.food === '' || formData.dinner[formData.dinner.length - 1]?.quantity === '')}
-                  className={`px-2 py-1 text-sm font-medium rounded-lg transition-colors ${
-                    formData.dinner.length > 0 && (formData.dinner[formData.dinner.length - 1]?.food === '' || formData.dinner[formData.dinner.length - 1]?.quantity === '')
-                      ? 'bg-gray-100 text-gray-400 cursor-not-allowed'
-                      : 'bg-blue-100 text-blue-700 hover:bg-blue-200'
-                  }`}
-                >
-                  Add
-                </button>
-              </div>
-              <div className="space-y-4">
-                {formData.dinner.map((item, index) => (
-                  <div key={index} className="relative">
-                    {formData.dinner.length > 1 && (
-                      <button
-                        type="button"
-                        onClick={() => removeMealItem('dinner', index)}
-                        className="absolute -left-2.5 -top-2.5 bg-white border border-gray-300 rounded-full p-1 shadow-md z-10 text-red-500 hover:text-red-700 hover:shadow-lg transition-all duration-200 flex-shrink-0"
-                        title="Remove item"
-                      >
-                        <svg className="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
-                        </svg>
-                      </button>
-                    )}
-                    <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
-                      <div>
-                        <input
-                          type="text"
-                          placeholder="Food item"
-                          value={item.food}
-                          onChange={(e) => updateMealItem('dinner', index, 'food', e.target.value)}
-                          className="w-full px-2 py-1.5 bg-white border-2 border-gray-200 rounded-lg focus:outline-none focus:ring-4 focus:ring-blue-100 focus:border-blue-400 transition-all duration-200"
-                        />
-                      </div>
-                      <div>
-                        <input
-                          type="text"
-                          placeholder="Quantity"
-                          value={item.quantity}
-                          onChange={(e) => updateMealItem('dinner', index, 'quantity', e.target.value)}
-                          className="w-full px-2 py-1.5 bg-white border-2 border-gray-200 rounded-lg focus:outline-none focus:ring-4 focus:ring-blue-100 focus:border-blue-400 transition-all duration-200"
-                        />
-                      </div>
-                    </div>
-                  </div>
-                ))}
-              </div>
-            </div>
-          </div>
-
-          <div className="flex justify-center lg:justify-start">
-            <button 
-              type="submit" 
-              className="inline-flex items-center justify-center w-full sm:w-auto px-8 py-3 bg-blue-600 hover:bg-blue-700 text-white font-semibold rounded-2xl transition-all duration-300 transform hover:scale-105 hover:shadow-xl active:scale-95 shadow-lg"
-            >
-              <svg className="w-5 h-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 6v6m0 0v6m0-6h6m-6 0H6" />
-              </svg>
-              Log Symptom Entry
-            </button>
-          </div>
-        </form>
-      </div>
-
-      {/* Symptoms List */}
-      <div className="bg-white rounded-xl shadow-sm border border-gray-200 p-4 sm:p-6 md:p-8 mt-12 min-w-0 hover:shadow-md transition-shadow duration-200">
-        <div className="flex items-center mb-6 sm:mb-8">
-          <div className="hidden sm:flex w-12 h-12 bg-blue-600 rounded-2xl items-center justify-center mr-4 flex-shrink-0">
-            <svg className="w-6 h-6 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
-            </svg>
-          </div>
-          <h2 className="text-xl font-semibold font-source text-gray-900">Recent Entries</h2>
-        </div>
-        
-        {symptoms.length === 0 ? (
-          <div className="text-center py-12">
-            <div className="w-20 h-20 bg-gradient-to-br from-blue-100 to-blue-200 rounded-3xl flex items-center justify-center mx-auto mb-6">
-              <svg className="w-10 h-10 text-blue-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
-              </svg>
-            </div>
-            <h3 className="text-lg font-semibold text-gray-700 mb-2">No entries yet</h3>
-            <p className="text-gray-500 font-roboto">Start tracking your symptoms to identify patterns and triggers.</p>
-          </div>
-        ) : (
-          <div className="space-y-6">
-            {symptoms.map((symptom) => (
-              <div key={symptom.id} className="bg-white border border-gray-200 rounded-xl p-4 sm:p-6 hover:shadow-md transition-shadow duration-200 min-w-0">
-                <div className="flex justify-between items-start mb-6 gap-4">
-                  <div className="flex flex-col space-y-3 min-w-0 flex-1">
-                    <div className="flex items-center space-x-2">
-                      <span className="text-sm font-medium text-gray-600 font-roboto">
-                        {new Date(symptom.symptomStartDate).toLocaleDateString('en-GB', {
-                          weekday: 'short',
-                          day: 'numeric',
-                          month: 'short',
-                          year: 'numeric'
-                        })}
-                      </span>
-                      {symptom.isOngoing ? (
-                        <span className="inline-flex items-center px-2 py-1 rounded-full text-xs font-medium bg-green-100 text-green-800">
-                          Ongoing
-                        </span>
-                      ) : (
-                        <span className="text-sm text-gray-500">
-                          to {new Date(symptom.symptomEndDate).toLocaleDateString('en-GB', {
-                            weekday: 'short',
-                            day: 'numeric',
-                            month: 'short',
-                            year: 'numeric'
-                          })}
-                        </span>
-                      )}
-                    </div>
-                    <div className="flex flex-wrap gap-2">
-                      <span className={`inline-flex items-center px-3 py-1.5 rounded-full text-sm font-medium ${getSeverityColor(symptom.severity)}`}>
-                        {symptom.severity}/10 - {getSeverityLabel(symptom.severity)}
-                      </span>
-                      {symptom.stress_level && (
-                        <span className={`inline-flex items-center px-3 py-1.5 rounded-full text-sm font-medium ${getStressColor(symptom.stress_level)}`}>
-                          {symptom.stress_level}/10 - {getStressLabel(symptom.stress_level)}
-                        </span>
-                      )}
-                    </div>
-                  </div>
-                  <button
-                    onClick={() => handleDeleteSymptom(symptom.id)}
-                    className="bg-blue-100 hover:bg-blue-200 text-blue-600 hover:text-blue-700 p-2 rounded-xl transition-all duration-200 shadow-sm hover:shadow-md flex-shrink-0"
-                    title="Delete entry"
-                  >
-                    <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
-                    </svg>
-                  </button>
-                </div>
-
-                {(symptom.normal_bathroom_frequency || symptom.bathroom_frequency_changed) && (
-                  <div className="mb-6">
-                    <div className="flex items-start">
-                      <div>
-                        <p className="text-sm font-semibold text-gray-800 mb-1">Bathroom Frequency</p>
-                        <ul className="text-sm text-gray-700 font-roboto space-y-1">
-                          {symptom.normal_bathroom_frequency && (
-                            <li className="flex items-center">
-                              <span className="w-1.5 h-1.5 bg-gray-400 rounded-full mr-2 flex-shrink-0"></span>
-                              {symptom.normal_bathroom_frequency} times per day
-                            </li>
-                          )}
-                          {symptom.bathroom_frequency_changed === 'yes' && (
-                            <li className="flex items-center">
-                              <span className="w-1.5 h-1.5 bg-gray-400 rounded-full mr-2 flex-shrink-0"></span>
-                              Changed since symptoms
-                            </li>
-                          )}
-                          {symptom.bathroom_frequency_change_details && (
-                            <li className="flex items-start">
-                              <span className="w-1.5 h-1.5 bg-gray-400 rounded-full mr-2 mt-[7px] flex-shrink-0"></span>
-                              {symptom.bathroom_frequency_change_details}
-                            </li>
-                          )}
-                        </ul>
-                      </div>
-                    </div>
-                  </div>
-                )}
-
-                {symptom.notes && (
-                  <div className="mb-6">
-                    <div className="flex items-start">
-                      <div>
-                        <p className="text-sm font-semibold text-gray-800 mb-1">Notes</p>
-                        <p className="text-sm text-gray-700 font-roboto">{symptom.notes}</p>
-                      </div>
-                    </div>
-                  </div>
-                )}
-
-                {/* Display smoking status */}
-                {symptom.smoking && (
-                  <div className="mb-6">
-                    <div className="flex items-start">
-                      <div>
-                        <p className="text-sm font-semibold text-gray-800 mb-1">Smoking Status</p>
-                        {symptom.smoking_details ? (
-                          <p className="text-sm text-gray-700 font-roboto">{symptom.smoking_details}</p>
-                        ) : (
-                          <p className="text-sm text-gray-700 font-roboto">Yes</p>
-                        )}
-                      </div>
-                    </div>
-                  </div>
-                )}
-
-                {/* Display alcohol status */}
-                {symptom.alcohol && (
-                  <div className="mb-6">
-                    <div className="flex items-start">
-                      <div>
-                        <p className="text-sm font-semibold text-gray-800 mb-1">Alcohol Consumption</p>
-                        {symptom.alcohol_units ? (
-                          <p className="text-sm text-gray-700 font-roboto">{symptom.alcohol_units} {symptom.alcohol_units === '1' ? 'unit' : 'units'} per day</p>
-                        ) : (
-                          <p className="text-sm text-gray-700 font-roboto">Yes</p>
-                        )}
-                      </div>
-                    </div>
-                  </div>
-                )}
-
-                {/* Display meals if they exist */}
-                {(symptom.breakfast?.length > 0 || symptom.lunch?.length > 0 || symptom.dinner?.length > 0) && (
-                  <div className="space-y-4">
-                    <div className="flex items-center">
-                      <p className="text-sm font-semibold text-gray-800">Meals Tracked</p>
-                    </div>
-                    
-                    <div className="grid gap-1">
-                      {symptom.breakfast?.length > 0 && (
-                        <div className="mb-2">
-                          <div className="flex items-center mb-2">
-                            <p className="text-sm font-medium text-gray-800">Breakfast</p>
-                          </div>
-                          <ul className="text-sm text-gray-700 font-roboto space-y-1">
-                            {symptom.breakfast.map((item, index) => (
-                              <li key={index} className="flex items-center">
-                                <span className="w-1.5 h-1.5 bg-gray-400 rounded-full mr-2"></span>
-                                {item.food}{item.quantity ? ` (${item.quantity})` : ''}
-                              </li>
-                            ))}
-                          </ul>
-                        </div>
-                      )}
-                      
-                      {symptom.lunch?.length > 0 && (
-                        <div className="mb-2">
-                          <div className="flex items-center mb-2">
-                            <p className="text-sm font-medium text-gray-800">Lunch</p>
-                          </div>
-                          <ul className="text-sm text-gray-700 font-roboto space-y-1">
-                            {symptom.lunch.map((item, index) => (
-                              <li key={index} className="flex items-center">
-                                <span className="w-1.5 h-1.5 bg-gray-400 rounded-full mr-2"></span>
-                                {item.food}{item.quantity ? ` (${item.quantity})` : ''}
-                              </li>
-                            ))}
-                          </ul>
-                        </div>
-                      )}
-                      
-                      {symptom.dinner?.length > 0 && (
-                        <div className="mb-2">
-                          <div className="flex items-center mb-2">
-                            <p className="text-sm font-medium text-gray-800">Dinner</p>
-                          </div>
-                          <ul className="text-sm text-gray-700 font-roboto space-y-1">
-                            {symptom.dinner.map((item, index) => (
-                              <li key={index} className="flex items-center">
-                                <span className="w-1.5 h-1.5 bg-gray-400 rounded-full mr-2"></span>
-                                {item.food}{item.quantity ? ` (${item.quantity})` : ''}
-                              </li>
-                            ))}
-                          </ul>
-                        </div>
-                      )}
-                    </div>
-                  </div>
-                )}
-
-                {/* Fallback for old data format */}
-                {symptom.foods && !symptom.breakfast && !symptom.lunch && !symptom.dinner && (
-                  <div>
-                    <p className="text-sm text-gray-700 font-roboto">
-                      <span className="font-medium">Foods:</span> {symptom.foods}
-                    </p>
-                  </div>
-                )}
-              </div>
-            ))}
           </div>
         )}
+
+        {/* Step 12: Alcohol details (only if they drink) */}
+        {currentStep === 12 && (
+          <div className="mb-4">
+            <h3 className="text-lg font-semibold text-gray-900 mb-2">How many units of alcohol do you drink per day?</h3>
+            <input
+              type="text"
+              id="alcohol_units"
+              name="alcohol_units"
+              value={formData.alcohol_units}
+              onChange={handleInputChange}
+              placeholder="e.g., 2-3 units, occasional glass of wine, etc."
+              className="w-full px-4 py-3 bg-white border-2 border-gray-200 rounded-lg focus:outline-none focus:ring-4 focus:ring-blue-100 focus:border-blue-400 transition-all duration-200"
+              autoComplete="off"
+            />
+          </div>
+        )}
+
+        {/* Step 13: Meal Tracking */}
+        {currentStep === 13 && (
+          <div className="mb-4">
+            <h3 className="text-lg font-semibold text-gray-900 mb-2">Meal tracking</h3>
+            <p className="text-gray-600 mb-4">What did you eat? (Optional)</p>
+            
+            <div className="space-y-6">
+              {/* Breakfast */}
+              <div>
+                <div className="flex justify-between items-center mb-3">
+                  <h4 className="text-sm font-semibold font-roboto text-gray-900">
+                    {getMealLabel('breakfast')}
+                  </h4>
+                  <button
+                    type="button"
+                    onClick={() => addMealItem('breakfast')}
+                    disabled={formData.breakfast.length > 0 && (formData.breakfast[formData.breakfast.length - 1]?.food === '' || formData.breakfast[formData.breakfast.length - 1]?.quantity === '')}
+                    className={`px-3 py-1 text-sm font-medium rounded-lg transition-colors ${
+                      formData.breakfast.length > 0 && (formData.breakfast[formData.breakfast.length - 1]?.food === '' || formData.breakfast[formData.breakfast.length - 1]?.quantity === '')
+                        ? 'bg-gray-100 text-gray-400 cursor-not-allowed'
+                        : 'bg-blue-100 text-blue-700 hover:bg-blue-200'
+                    }`}
+                  >
+                    Add
+                  </button>
+                </div>
+                <div className="space-y-3">
+                  {formData.breakfast.map((item, index) => (
+                    <div key={index} className="relative">
+                      {formData.breakfast.length > 1 && (
+                        <button
+                          type="button"
+                          onClick={() => removeMealItem('breakfast', index)}
+                          className="absolute -left-2 -top-2 bg-red-500 rounded-full w-[22px] h-[22px] flex items-center justify-center shadow-md z-10 hover:bg-red-600 transition-all duration-200"
+                          title="Remove item"
+                        >
+                          <span className="text-white text-sm font-bold leading-none">×</span>
+                        </button>
+                      )}
+                      <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
+                        <div>
+                          <input
+                            type="text"
+                            placeholder="Food item"
+                            value={item.food}
+                            onChange={(e) => updateMealItem('breakfast', index, 'food', e.target.value)}
+                            className="w-full px-3 py-2 bg-white border-2 border-gray-200 rounded-lg focus:outline-none focus:ring-4 focus:ring-blue-100 focus:border-blue-400 transition-all duration-200"
+                          />
+                        </div>
+                        <div>
+                          <input
+                            type="text"
+                            placeholder="Quantity"
+                            value={item.quantity}
+                            onChange={(e) => updateMealItem('breakfast', index, 'quantity', e.target.value)}
+                            className="w-full px-3 py-2 bg-white border-2 border-gray-200 rounded-lg focus:outline-none focus:ring-4 focus:ring-blue-100 focus:border-blue-400 transition-all duration-200"
+                          />
+                        </div>
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              </div>
+
+              {/* Lunch */}
+              <div>
+                <div className="flex justify-between items-center mb-3">
+                  <h4 className="text-sm font-semibold font-roboto text-gray-900">
+                    {getMealLabel('lunch')}
+                  </h4>
+                  <button
+                    type="button"
+                    onClick={() => addMealItem('lunch')}
+                    disabled={formData.lunch.length > 0 && (formData.lunch[formData.lunch.length - 1]?.food === '' || formData.lunch[formData.lunch.length - 1]?.quantity === '')}
+                    className={`px-3 py-1 text-sm font-medium rounded-lg transition-colors ${
+                      formData.lunch.length > 0 && (formData.lunch[formData.lunch.length - 1]?.food === '' || formData.lunch[formData.lunch.length - 1]?.quantity === '')
+                        ? 'bg-gray-100 text-gray-400 cursor-not-allowed'
+                        : 'bg-blue-100 text-blue-700 hover:bg-blue-200'
+                    }`}
+                  >
+                    Add
+                  </button>
+                </div>
+                <div className="space-y-3">
+                  {formData.lunch.map((item, index) => (
+                    <div key={index} className="relative">
+                      {formData.lunch.length > 1 && (
+                        <button
+                          type="button"
+                          onClick={() => removeMealItem('lunch', index)}
+                          className="absolute -left-2 -top-2 bg-red-500 rounded-full w-[22px] h-[22px] flex items-center justify-center shadow-md z-10 hover:bg-red-600 transition-all duration-200"
+                          title="Remove item"
+                        >
+                          <span className="text-white text-sm font-bold leading-none">×</span>
+                        </button>
+                      )}
+                      <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
+                        <div>
+                          <input
+                            type="text"
+                            placeholder="Food item"
+                            value={item.food}
+                            onChange={(e) => updateMealItem('lunch', index, 'food', e.target.value)}
+                            className="w-full px-3 py-2 bg-white border-2 border-gray-200 rounded-lg focus:outline-none focus:ring-4 focus:ring-blue-100 focus:border-blue-400 transition-all duration-200"
+                          />
+                        </div>
+                        <div>
+                          <input
+                            type="text"
+                            placeholder="Quantity"
+                            value={item.quantity}
+                            onChange={(e) => updateMealItem('lunch', index, 'quantity', e.target.value)}
+                            className="w-full px-3 py-2 bg-white border-2 border-gray-200 rounded-lg focus:outline-none focus:ring-4 focus:ring-blue-100 focus:border-blue-400 transition-all duration-200"
+                          />
+                        </div>
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              </div>
+
+              {/* Dinner */}
+              <div>
+                <div className="flex justify-between items-center mb-3">
+                  <h4 className="text-sm font-semibold font-roboto text-gray-900">
+                    {getMealLabel('dinner')}
+                  </h4>
+                  <button
+                    type="button"
+                    onClick={() => addMealItem('dinner')}
+                    disabled={formData.dinner.length > 0 && (formData.dinner[formData.dinner.length - 1]?.food === '' || formData.dinner[formData.dinner.length - 1]?.quantity === '')}
+                    className={`px-3 py-1 text-sm font-medium rounded-lg transition-colors ${
+                      formData.dinner.length > 0 && (formData.dinner[formData.dinner.length - 1]?.food === '' || formData.dinner[formData.dinner.length - 1]?.quantity === '')
+                        ? 'bg-gray-100 text-gray-400 cursor-not-allowed'
+                        : 'bg-blue-100 text-blue-700 hover:bg-blue-200'
+                    }`}
+                  >
+                    Add
+                  </button>
+                </div>
+                <div className="space-y-3">
+                  {formData.dinner.map((item, index) => (
+                    <div key={index} className="relative">
+                      {formData.dinner.length > 1 && (
+                        <button
+                          type="button"
+                          onClick={() => removeMealItem('dinner', index)}
+                          className="absolute -left-2 -top-2 bg-red-500 rounded-full w-[22px] h-[22px] flex items-center justify-center shadow-md z-10 hover:bg-red-600 transition-all duration-200"
+                          title="Remove item"
+                        >
+                          <span className="text-white text-sm font-bold leading-none">×</span>
+                        </button>
+                      )}
+                      <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
+                        <div>
+                          <input
+                            type="text"
+                            placeholder="Food item"
+                            value={item.food}
+                            onChange={(e) => updateMealItem('dinner', index, 'food', e.target.value)}
+                            className="w-full px-3 py-2 bg-white border-2 border-gray-200 rounded-lg focus:outline-none focus:ring-4 focus:ring-blue-100 focus:border-blue-400 transition-all duration-200"
+                          />
+                        </div>
+                        <div>
+                          <input
+                            type="text"
+                            placeholder="Quantity"
+                            value={item.quantity}
+                            onChange={(e) => updateMealItem('dinner', index, 'quantity', e.target.value)}
+                            className="w-full px-3 py-2 bg-white border-2 border-gray-200 rounded-lg focus:outline-none focus:ring-4 focus:ring-blue-100 focus:border-blue-400 transition-all duration-200"
+                          />
+                        </div>
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              </div>
+            </div>
+          </div>
+        )}
+
+        {/* Step 14: Notes & Review */}
+        {currentStep === 14 && (
+          <div className="mb-4">
+            <h3 className="text-lg font-semibold text-gray-900 mb-6">Additional notes</h3>
+            <p className="text-gray-600 mb-6">Any other details you'd like to add?</p>
+            
+            <div className="space-y-6">
+              <div>
+                <label htmlFor="notes" className="block text-sm font-semibold font-roboto text-gray-800 mb-3">
+                  Additional Notes
+                </label>
+                <textarea
+                  id="notes"
+                  name="notes"
+                  rows="4"
+                  value={formData.notes}
+                  onChange={handleInputChange}
+                  placeholder="Describe your symptoms, how you're feeling, any triggers you noticed..."
+                  className="w-full px-4 py-3 bg-white border-2 border-gray-200 rounded-lg focus:outline-none focus:ring-4 focus:ring-blue-100 focus:border-blue-400 transition-all duration-200 resize-none"
+                />
+              </div>
+
+              {/* Review Summary */}
+              <div className="bg-gray-50 rounded-lg p-6">
+                <h4 className="font-semibold text-gray-800 mb-4">Review your entry</h4>
+                <div className="space-y-2 text-sm">
+                  <div className="flex justify-between">
+                    <span className="text-gray-600">Start Date:</span>
+                    <span className="font-medium">{formData.symptomStartDate ? new Date(formData.symptomStartDate).toLocaleDateString() : 'Not set'}</span>
+                  </div>
+                  <div className="flex justify-between">
+                    <span className="text-gray-600">Status:</span>
+                    <span className="font-medium">{formData.isOngoing ? 'Ongoing' : 'Ended'}</span>
+                  </div>
+                  <div className="flex justify-between">
+                    <span className="text-gray-600">Severity:</span>
+                    <span className="font-medium">{formData.severity}/10</span>
+                  </div>
+                  <div className="flex justify-between">
+                    <span className="text-gray-600">Stress Level:</span>
+                    <span className="font-medium">{formData.stress_level}/10</span>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+        )}
+
+        {/* Navigation Buttons */}
+        <div className="flex justify-start items-center mt-4">
+          {currentStep < totalSteps ? (
+            <button
+              onClick={nextStep}
+              className="px-6 py-3 bg-blue-600 text-white font-semibold rounded-lg hover:bg-blue-700 transition-colors"
+            >
+              Continue
+            </button>
+          ) : (
+            <button
+              onClick={handleSubmit}
+              className="px-6 py-3 bg-green-600 text-white font-semibold rounded-lg hover:bg-green-700 transition-colors"
+            >
+              Submit Entry
+            </button>
+          )}
+        </div>
       </div>
+
 
       <ConfirmationModal
         isOpen={deleteModal.isOpen}
