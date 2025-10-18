@@ -1,23 +1,31 @@
 'use client'
 
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
 import { useDataSync } from '@/lib/useDataSync'
 import ConfirmationModal from '@/components/ConfirmationModal'
 import DatePicker from '@/components/DatePicker'
 import ProtectedRoute from '@/components/ProtectedRoute'
 import { sanitizeNotes, sanitizeFoodTriggers } from '@/lib/sanitize'
+import { supabase, TABLES } from '@/lib/supabase'
+import { useRouter, usePathname } from 'next/navigation'
+import { useAuth } from '@/lib/AuthContext'
 
 function SymptomsPageContent() {
   const { data: symptoms, setData: setSymptoms, deleteData: deleteSymptom } = useDataSync('flarecare-symptoms', [])
+  const router = useRouter()
+  const pathname = usePathname()
+  const { user } = useAuth()
+
   
+
   // Wizard state
-  const [currentStep, setCurrentStep] = useState(1)
+  const [currentStep, setCurrentStep] = useState(0)
   const [formData, setFormData] = useState({
     symptomStartDate: '',
     isOngoing: true,
     symptomEndDate: '',
-    severity: 5,
-    stress_level: 5,
+    severity: '',
+    stress_level: '',
     normal_bathroom_frequency: '',
     bathroom_frequency_changed: '',
     bathroom_frequency_change_details: '',
@@ -46,10 +54,19 @@ function SymptomsPageContent() {
     endMonth: '',
     endYear: ''
   })
+  const [fieldErrors, setFieldErrors] = useState({
+    bathroom_frequency_change_details: '',
+    smoking_details: '',
+    severity: '',
+    stress_level: '',
+    normal_bathroom_frequency: '',
+    alcohol_units: ''
+  })
   const [deleteModal, setDeleteModal] = useState({ isOpen: false, id: null })
   const [alertModal, setAlertModal] = useState({ isOpen: false, title: '', message: '' })
+  const [isSubmitting, setIsSubmitting] = useState(false)
 
-  const totalSteps = 14
+  const totalSteps = 16
 
   const nextStep = () => {
     // Validate current step before proceeding
@@ -64,13 +81,56 @@ function SymptomsPageContent() {
         return
       }
       
-      // Check for validation errors
-      if (dateErrors.day || dateErrors.month || dateErrors.year) {
+      // Validate date values
+      const day = parseInt(dateInputs.day)
+      const month = parseInt(dateInputs.month)
+      const year = parseInt(dateInputs.year)
+      
+      // Check for valid ranges
+      if (day < 1 || day > 31) {
+        setDateErrors({
+          day: 'Day must be between 1 and 31',
+          month: '',
+          year: ''
+        })
         return
       }
       
+      if (month < 1 || month > 12) {
+        setDateErrors({
+          day: '',
+          month: 'Month must be between 1 and 12',
+          year: ''
+        })
+        return
+      }
+      
+      if (year < 2020 || year > new Date().getFullYear()) {
+        setDateErrors({
+          day: '',
+          month: '',
+          year: `Year must be between 2020 and ${new Date().getFullYear()}`
+        })
+        return
+      }
+      
+      // Check if it's a valid date
+      const dateString = `${year}-${month.toString().padStart(2, '0')}-${day.toString().padStart(2, '0')}`
+      const testDate = new Date(dateString)
+      
+      if (isNaN(testDate.getTime()) || testDate.getDate() !== day || testDate.getMonth() !== (month - 1) || testDate.getFullYear() !== year) {
+        setDateErrors({
+          day: 'Please enter a valid date',
+          month: '',
+          year: ''
+        })
+        return
+      }
+      
+      // Clear any existing errors since validation passed
+      setDateErrors({ day: '', month: '', year: '', endDay: '', endMonth: '', endYear: '' })
+      
       // Create the date string and store it
-      const dateString = `${dateInputs.year}-${dateInputs.month.padStart(2, '0')}-${dateInputs.day.padStart(2, '0')}`
       setFormData(prev => ({ ...prev, symptomStartDate: dateString }))
     }
     
@@ -86,32 +146,154 @@ function SymptomsPageContent() {
         return
       }
       
+      // Validate end date values
+      const endDay = parseInt(dateInputs.endDay)
+      const endMonth = parseInt(dateInputs.endMonth)
+      const endYear = parseInt(dateInputs.endYear)
+      
+      // Check for valid ranges
+      if (endDay < 1 || endDay > 31) {
+        setDateErrors(prev => ({
+          ...prev,
+          endDay: 'Day must be between 1 and 31',
+          endMonth: '',
+          endYear: ''
+        }))
+        return
+      }
+      
+      if (endMonth < 1 || endMonth > 12) {
+        setDateErrors(prev => ({
+          ...prev,
+          endDay: '',
+          endMonth: 'Month must be between 1 and 12',
+          endYear: ''
+        }))
+        return
+      }
+      
+      if (endYear < 2020 || endYear > new Date().getFullYear()) {
+        setDateErrors(prev => ({
+          ...prev,
+          endDay: '',
+          endMonth: '',
+          endYear: `Year must be between 2020 and ${new Date().getFullYear()}`
+        }))
+        return
+      }
+      
+      // Check if it's a valid date
+      const endDateString = `${endYear}-${endMonth.toString().padStart(2, '0')}-${endDay.toString().padStart(2, '0')}`
+      const testEndDate = new Date(endDateString)
+      
+      if (isNaN(testEndDate.getTime()) || testEndDate.getDate() !== endDay || testEndDate.getMonth() !== (endMonth - 1) || testEndDate.getFullYear() !== endYear) {
+        setDateErrors(prev => ({
+          ...prev,
+          endDay: 'Please enter a valid date',
+          endMonth: '',
+          endYear: ''
+        }))
+        return
+      }
+      
+      // Clear any existing errors since validation passed
+      setDateErrors({ day: '', month: '', year: '', endDay: '', endMonth: '', endYear: '' })
+      
       // Create the end date string and store it
-      const endDateString = `${dateInputs.endYear}-${dateInputs.endMonth.padStart(2, '0')}-${dateInputs.endDay.padStart(2, '0')}`
       setFormData(prev => ({ ...prev, symptomEndDate: endDateString }))
     }
     
     // Skip step 3 (end date) if symptoms are ongoing
     if (currentStep === 2 && formData.isOngoing === true) {
       setCurrentStep(4) // Skip to step 4 (severity)
+      return
     }
-    // Skip step 7 (bathroom frequency change) if frequency is 0
-    else if (currentStep === 6 && (!formData.normal_bathroom_frequency || parseInt(formData.normal_bathroom_frequency) === 0)) {
-      setCurrentStep(9) // Skip to step 9 (smoking)
+    
+    // Validate step 4 (severity) - must be filled
+    if (currentStep === 4) {
+      if (!formData.severity || formData.severity === '') {
+        setFieldErrors(prev => ({ ...prev, severity: 'Please rate your symptom severity' }))
+        return
+      }
+      // Clear error if validation passes
+      setFieldErrors(prev => ({ ...prev, severity: '' }))
     }
+    
+    // Validate step 5 (stress level) - must be filled
+    if (currentStep === 5) {
+      if (!formData.stress_level || formData.stress_level === '') {
+        setFieldErrors(prev => ({ ...prev, stress_level: 'Please rate your stress level' }))
+        return
+      }
+      // Clear error if validation passes
+      setFieldErrors(prev => ({ ...prev, stress_level: '' }))
+    }
+    // Validate step 6 (bathroom frequency) - must be filled
+    if (currentStep === 6) {
+      if (!formData.normal_bathroom_frequency || formData.normal_bathroom_frequency === '') {
+        setFieldErrors(prev => ({ ...prev, normal_bathroom_frequency: 'Please enter your normal bathroom frequency' }))
+        return
+      }
+      // Clear error if validation passes
+      setFieldErrors(prev => ({ ...prev, normal_bathroom_frequency: '' }))
+      
+      // Skip step 7 if frequency is 0
+      if (parseInt(formData.normal_bathroom_frequency) === 0) {
+        setCurrentStep(9) // Skip to step 9 (smoking)
+        return
+      }
+    }
+    
     // Skip step 8 (bathroom frequency change details) if no change
-    else if (currentStep === 7 && formData.bathroom_frequency_changed === 'no') {
+    if (currentStep === 7 && formData.bathroom_frequency_changed === 'no') {
       setCurrentStep(9) // Skip to step 9 (smoking)
+      return
     }
+    
+    // Validate step 8 (bathroom frequency change details) - must be filled if they said yes
+    if (currentStep === 8) {
+      if (!formData.bathroom_frequency_change_details || formData.bathroom_frequency_change_details.trim() === '') {
+        setFieldErrors(prev => ({ ...prev, bathroom_frequency_change_details: 'Please describe your bathroom frequency change' }))
+        return
+      }
+      // Clear error if validation passes
+      setFieldErrors(prev => ({ ...prev, bathroom_frequency_change_details: '' }))
+    }
+    
     // Skip step 10 (smoking details) if they don't smoke
-    else if (currentStep === 9 && formData.smoking === false) {
+    if (currentStep === 9 && formData.smoking === false) {
       setCurrentStep(11) // Skip to step 11 (alcohol)
+      return
     }
+    
+    // Validate step 10 (smoking details) - must be filled if they smoke
+    if (currentStep === 10) {
+      if (!formData.smoking_details || formData.smoking_details.trim() === '') {
+        setFieldErrors(prev => ({ ...prev, smoking_details: 'Please describe your smoking habits' }))
+        return
+      }
+      // Clear error if validation passes
+      setFieldErrors(prev => ({ ...prev, smoking_details: '' }))
+    }
+    
     // Skip step 12 (alcohol details) if they don't drink
-    else if (currentStep === 11 && formData.alcohol === false) {
+    if (currentStep === 11 && formData.alcohol === false) {
       setCurrentStep(13) // Skip to step 13 (meal tracking)
+      return
     }
-    else if (currentStep < totalSteps) {
+    
+    // Validate step 12 (alcohol units) - must be filled if they drink
+    if (currentStep === 12) {
+      if (!formData.alcohol_units || formData.alcohol_units === '') {
+        setFieldErrors(prev => ({ ...prev, alcohol_units: 'Please enter how many units of alcohol you drink per day' }))
+        return
+      }
+      // Clear error if validation passes
+      setFieldErrors(prev => ({ ...prev, alcohol_units: '' }))
+    }
+    
+    // Move to next step if no validation issues
+    if (currentStep < totalSteps) {
       setCurrentStep(currentStep + 1)
     }
   }
@@ -137,6 +319,16 @@ function SymptomsPageContent() {
           return // Don't update if invalid range
         }
       }
+      
+      // Alcohol units: 0-30 (2 digits max)
+      if (name === 'alcohol_units') {
+        if (value.length > 2) {
+          return // Don't update if more than 2 digits
+        }
+        if (value && (numValue < 0 || numValue > 30)) {
+          return // Don't update if invalid range
+        }
+      }
     }
     
     setFormData(prev => {
@@ -149,6 +341,12 @@ function SymptomsPageContent() {
       if (name === 'normal_bathroom_frequency' && (!value || parseInt(value) === 0)) {
         newData.bathroom_frequency_changed = ''
         newData.bathroom_frequency_change_details = ''
+        setFieldErrors(prev => ({ ...prev, bathroom_frequency_change_details: '' }))
+      }
+      
+      // Clear field errors when user starts typing
+      if (name === 'bathroom_frequency_change_details' || name === 'smoking_details' || name === 'severity' || name === 'stress_level' || name === 'normal_bathroom_frequency' || name === 'alcohol_units') {
+        setFieldErrors(prev => ({ ...prev, [name]: '' }))
       }
       
       return newData
@@ -196,7 +394,12 @@ function SymptomsPageContent() {
     }
   }
 
-  const handleSubmit = () => {
+  const handleSubmit = async () => {
+    // Prevent multiple submissions
+    if (isSubmitting) return
+    
+    setIsSubmitting(true)
+    
     // Check if there's any meal data
     const hasMealData = formData.breakfast.some(item => item.food.trim()) ||
                        formData.lunch.some(item => item.food.trim()) ||
@@ -208,6 +411,7 @@ function SymptomsPageContent() {
         title: 'Missing Information', 
         message: 'Please add some notes or meal information to log this entry.' 
       })
+      setIsSubmitting(false)
       return
     }
 
@@ -217,6 +421,7 @@ function SymptomsPageContent() {
         title: 'Missing End Date', 
         message: 'Please specify when symptoms ended.' 
       })
+      setIsSubmitting(false)
       return
     }
 
@@ -238,24 +443,45 @@ function SymptomsPageContent() {
 
     const newSymptom = {
       id: Date.now().toString(),
-      ...formData,
+      user_id: user?.id || 'anonymous',
+      symptom_start_date: formData.symptomStartDate || null,
+      is_ongoing: formData.isOngoing,
+      symptom_end_date: formData.symptomEndDate || null,
+      severity: formData.severity,
+      stress_level: formData.stress_level,
+      normal_bathroom_frequency: formData.normal_bathroom_frequency,
+      bathroom_frequency_changed: formData.bathroom_frequency_changed,
+      bathroom_frequency_change_details: formData.bathroom_frequency_change_details,
+      smoking: formData.smoking,
+      smoking_details: formData.smoking_details,
+      alcohol: formData.alcohol,
+      alcohol_units: formData.alcohol_units,
       notes: sanitizeNotes(formData.notes),
       ...sanitizedMeals,
-      createdAt: new Date().toISOString()
+      created_at: new Date().toISOString()
     }
 
+    try {
+      // Save to Supabase
+      const { error } = await supabase
+        .from(TABLES.SYMPTOMS)
+        .insert([newSymptom])
+
+      if (error) throw error
+
+      // Update local state
     setSymptoms([newSymptom, ...symptoms])
-    
-    // Reset form and go back to step 1
+      
+      // Reset form immediately
     setFormData({
-      symptomStartDate: '',
+        symptomStartDate: '',
       isOngoing: true,
       symptomEndDate: '',
-      severity: 5,
-      stress_level: 5,
-      normal_bathroom_frequency: '',
-      bathroom_frequency_changed: '',
-      bathroom_frequency_change_details: '',
+        severity: '',
+        stress_level: '',
+        normal_bathroom_frequency: '',
+        bathroom_frequency_changed: '',
+        bathroom_frequency_change_details: '',
       notes: '',
       breakfast: [{ food: '', quantity: '' }],
       lunch: [{ food: '', quantity: '' }],
@@ -265,7 +491,20 @@ function SymptomsPageContent() {
       alcohol: false,
       alcohol_units: ''
     })
-    setCurrentStep(1)
+      setCurrentStep(0)
+      setIsSubmitting(false)
+      
+      // Redirect to homepage immediately
+      router.push('/')
+    } catch (error) {
+      console.error('Error saving symptoms:', error)
+      setIsSubmitting(false)
+      setAlertModal({
+        isOpen: true,
+        title: 'Error',
+        message: 'Failed to save your symptoms. Please try again.'
+      })
+    }
   }
 
   const handleDeleteSymptom = (id) => {
@@ -353,8 +592,9 @@ function SymptomsPageContent() {
 
   return (
     <div className="max-w-4xl w-full mx-auto px-3 sm:px-4 md:px-6 lg:px-8 min-w-0 flex flex-col flex-grow justify-center">
-      {/* Header Section - Keep Original */}
-      <div className="mb-4 sm:mb-12">
+      {/* Header Section - Hide on landing page */}
+      {currentStep > 0 && (
+        <div className="mb-4 sm:mb-12">
         <div className="flex flex-col sm:flex-row sm:justify-between sm:items-start">
           <div className="mb-6 sm:mb-0 min-w-0 flex-1">
             <h1 className="text-2xl sm:text-3xl lg:text-4xl font-bold font-source text-gray-900 mb-3 sm:mb-4">
@@ -363,7 +603,6 @@ function SymptomsPageContent() {
             <p className="text-gray-600 font-roboto">
               Monitor your health patterns and identify triggers to better manage your condition.
             </p>
-            {currentStep > 1 && (
               <div className="mt-4">
                 <button
                   onClick={() => setCurrentStep(currentStep - 1)}
@@ -374,26 +613,48 @@ function SymptomsPageContent() {
                   </svg>
                   Back
                 </button>
-              </div>
-            )}
+                <div className="mt-4 border-b border-gray-200"></div>
+          </div>
           </div>
         </div>
       </div>
+      )}
 
       {/* Wizard Container */}
       <div className="mb-4">
+        {/* Step 0: Landing Page */}
+        {currentStep === 0 && (
+          <div className="flex flex-col items-center justify-center text-center py-12">
+            {/* Icon - same as home page symptoms card */}
+            <div className="w-16 h-16 bg-gradient-to-br from-emerald-100 to-green-100 rounded-2xl flex items-center justify-center mx-auto mb-6">
+              <svg className="w-8 h-8 text-emerald-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z" />
+            </svg>
+          </div>
+            
+            {/* Title */}
+            <h2 className="text-2xl sm:text-3xl lg:text-4xl font-bold font-source text-gray-900 mb-4 sm:mb-6">Log Symptoms</h2>
+            
+            {/* Optional description */}
+            <p className="text-lg sm:text-xl font-roboto text-gray-600 mb-8 max-w-md">Track your daily symptoms to identify patterns and triggers</p>
+            
+            {/* Start button */}
+            <button
+              onClick={nextStep}
+              className="px-4 py-2 bg-blue-600 text-white text-lg font-semibold rounded-lg hover:bg-blue-700 transition-colors"
+            >
+              Start
+            </button>
+        </div>
+        )}
+
         {/* Step 1: When did symptoms begin? */}
         {currentStep === 1 && (
-          <div className="mb-4">
-            <h3 className="text-lg font-semibold text-gray-900 mb-2">When did your symptoms begin?</h3>
-            {(dateErrors.day || dateErrors.month || dateErrors.year) && (
-              <p className="text-red-500 text-sm mb-4">
-                {dateErrors.day || dateErrors.month || dateErrors.year}
-              </p>
-            )}
+          <div className="mb-5">
+            <h3 className="text-lg sm:text-xl font-semibold text-gray-900 mb-4">When did your symptoms begin?</h3>
             <div className="flex space-x-5">
               <div className="w-14">
-                <label className="block text-sm font-medium text-gray-700 mb-2">Day</label>
+                <label className="block text-base font-medium text-gray-700 mb-2">Day</label>
                 <input
                   type="number"
                   min="1"
@@ -406,15 +667,15 @@ function SymptomsPageContent() {
                     }
                     handleDateInputChange('day', value);
                   }}
-                  className={`w-full px-3 py-2 bg-white border-2 focus:outline-none focus:ring-4 transition-all duration-200 text-left text-base [appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none ${
+                  className={`w-full px-3 py-2 bg-white border-2 rounded-lg focus:outline-none focus:ring-4 transition-all duration-200 text-left text-base [appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none ${
                     dateErrors.day 
                       ? 'border-red-400 focus:ring-red-100 focus:border-red-500' 
                       : 'border-gray-200 focus:ring-blue-100 focus:border-blue-400'
                   }`}
-                />
-              </div>
+              />
+            </div>
               <div className="w-14">
-                <label className="block text-sm font-medium text-gray-700 mb-2">Month</label>
+                <label className="block text-base font-medium text-gray-700 mb-2">Month</label>
                 <input
                   type="number"
                   min="1"
@@ -427,7 +688,7 @@ function SymptomsPageContent() {
                     }
                     handleDateInputChange('month', value);
                   }}
-                  className={`w-full px-3 py-2 bg-white border-2 focus:outline-none focus:ring-4 transition-all duration-200 text-left text-base [appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none ${
+                  className={`w-full px-3 py-2 bg-white border-2 rounded-lg focus:outline-none focus:ring-4 transition-all duration-200 text-left text-base [appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none ${
                     dateErrors.month 
                       ? 'border-red-400 focus:ring-red-100 focus:border-red-500' 
                       : 'border-gray-200 focus:ring-blue-100 focus:border-blue-400'
@@ -435,7 +696,7 @@ function SymptomsPageContent() {
                 />
               </div>
               <div className="w-24">
-                <label className="block text-sm font-medium text-gray-700 mb-2">Year</label>
+                <label className="block text-base font-medium text-gray-700 mb-2">Year</label>
                 <input
                   type="number"
                   min="2020"
@@ -448,7 +709,7 @@ function SymptomsPageContent() {
                     }
                     handleDateInputChange('year', value);
                   }}
-                  className={`w-full px-3 py-2 bg-white border-2 focus:outline-none focus:ring-4 transition-all duration-200 text-left text-base [appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none ${
+                  className={`w-full px-3 py-2 bg-white border-2 rounded-lg focus:outline-none focus:ring-4 transition-all duration-200 text-left text-base [appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none ${
                     dateErrors.year 
                       ? 'border-red-400 focus:ring-red-100 focus:border-red-500' 
                       : 'border-gray-200 focus:ring-blue-100 focus:border-blue-400'
@@ -456,52 +717,50 @@ function SymptomsPageContent() {
                 />
               </div>
             </div>
+            {(dateErrors.day || dateErrors.month || dateErrors.year) && (
+              <p className="text-red-600 text-sm mt-2">{dateErrors.day || dateErrors.month || dateErrors.year}</p>
+            )}
           </div>
         )}
 
         {/* Step 2: Are symptoms still ongoing? */}
         {currentStep === 2 && (
-          <div className="mb-4">
-            <h3 className="text-lg font-semibold text-gray-900 mb-2">Are symptoms still ongoing?</h3>
+          <div className="mb-5">
+            <h3 className="text-lg sm:text-xl font-semibold text-gray-900 mb-4">Are symptoms still ongoing?</h3>
             <div className="flex space-x-8">
               <label className="flex items-center cursor-pointer">
-                <input
-                  type="radio"
-                  name="isOngoing"
-                  value="true"
-                  checked={formData.isOngoing === true}
-                  onChange={handleInputChange}
+                  <input
+                    type="radio"
+                    name="isOngoing"
+                    value="true"
+                    checked={formData.isOngoing === true}
+                    onChange={handleInputChange}
                   className="w-6 h-6 text-blue-600"
-                />
+                  />
                 <span className="ml-3 text-lg text-gray-700">Yes</span>
-              </label>
+                </label>
               <label className="flex items-center cursor-pointer">
-                <input
-                  type="radio"
-                  name="isOngoing"
-                  value="false"
-                  checked={formData.isOngoing === false}
-                  onChange={handleInputChange}
+                  <input
+                    type="radio"
+                    name="isOngoing"
+                    value="false"
+                    checked={formData.isOngoing === false}
+                    onChange={handleInputChange}
                   className="w-6 h-6 text-blue-600"
-                />
+                  />
                 <span className="ml-3 text-lg text-gray-700">No</span>
-              </label>
+                </label>
+              </div>
             </div>
-          </div>
         )}
 
         {/* Step 3: When did symptoms end? (only if not ongoing) */}
         {currentStep === 3 && (
-          <div className="mb-4">
-            <h3 className="text-lg font-semibold text-gray-900 mb-2">When did symptoms end?</h3>
-            {(dateErrors.endDay || dateErrors.endMonth || dateErrors.endYear) && (
-              <p className="text-red-500 text-sm mb-4">
-                {dateErrors.endDay || dateErrors.endMonth || dateErrors.endYear}
-              </p>
-            )}
+          <div className="mb-5">
+            <h3 className="text-lg sm:text-xl font-semibold text-gray-900 mb-4">When did symptoms end?</h3>
             <div className="flex space-x-5">
               <div className="w-14">
-                <label className="block text-sm font-medium text-gray-700 mb-2">Day</label>
+                <label className="block text-base font-medium text-gray-700 mb-2">Day</label>
                 <input
                   type="number"
                   min="1"
@@ -514,11 +773,11 @@ function SymptomsPageContent() {
                     }
                     handleDateInputChange('endDay', value);
                   }}
-                  className="w-full px-3 py-2 bg-white border-2 border-gray-200 focus:outline-none focus:ring-4 focus:ring-blue-100 focus:border-blue-400 transition-all duration-200 text-left text-base [appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none"
-                />
-              </div>
+                  className="w-full px-3 py-2 bg-white border-2 border-gray-200 rounded-lg focus:outline-none focus:ring-4 focus:ring-blue-100 focus:border-blue-400 transition-all duration-200 text-left text-base [appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none"
+              />
+            </div>
               <div className="w-14">
-                <label className="block text-sm font-medium text-gray-700 mb-2">Month</label>
+                <label className="block text-base font-medium text-gray-700 mb-2">Month</label>
                 <input
                   type="number"
                   min="1"
@@ -531,11 +790,11 @@ function SymptomsPageContent() {
                     }
                     handleDateInputChange('endMonth', value);
                   }}
-                  className="w-full px-3 py-2 bg-white border-2 border-gray-200 focus:outline-none focus:ring-4 focus:ring-blue-100 focus:border-blue-400 transition-all duration-200 text-left text-base [appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none"
+                  className="w-full px-3 py-2 bg-white border-2 border-gray-200 rounded-lg focus:outline-none focus:ring-4 focus:ring-blue-100 focus:border-blue-400 transition-all duration-200 text-left text-base [appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none"
                 />
-              </div>
+                </div>
               <div className="w-24">
-                <label className="block text-sm font-medium text-gray-700 mb-2">Year</label>
+                <label className="block text-base font-medium text-gray-700 mb-2">Year</label>
                 <input
                   type="number"
                   min="2020"
@@ -548,58 +807,75 @@ function SymptomsPageContent() {
                     }
                     handleDateInputChange('endYear', value);
                   }}
-                  className="w-full px-3 py-2 bg-white border-2 border-gray-200 focus:outline-none focus:ring-4 focus:ring-blue-100 focus:border-blue-400 transition-all duration-200 text-left text-base [appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none"
+                  className="w-full px-3 py-2 bg-white border-2 border-gray-200 rounded-lg focus:outline-none focus:ring-4 focus:ring-blue-100 focus:border-blue-400 transition-all duration-200 text-left text-base [appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none"
                 />
               </div>
             </div>
+            {(dateErrors.endDay || dateErrors.endMonth || dateErrors.endYear) && (
+              <p className="text-red-600 text-sm mt-2">{dateErrors.endDay || dateErrors.endMonth || dateErrors.endYear}</p>
+            )}
           </div>
         )}
 
         {/* Step 4: Symptom Severity */}
         {currentStep === 4 && (
-          <div className="mb-4">
-            <h3 className="text-lg font-semibold text-gray-900 mb-2">How severe are your symptoms?</h3>
+          <div className="mb-5">
+            <h3 className="text-lg sm:text-xl font-semibold text-gray-900 mb-1">
+              {formData.isOngoing ? 'How severe are your symptoms?' : 'How severe were your symptoms?'}
+            </h3>
             <p className="text-sm text-gray-600 mb-4">Rate from 1 (mild) to 10 (severe)</p>
             <div className="w-14">
-              <input
+                <input
                 type="number"
-                id="severity"
-                name="severity"
-                min="1"
-                max="10"
-                value={formData.severity}
-                onChange={handleInputChange}
-                className="w-full px-3 py-2 bg-white border-2 border-gray-200 focus:outline-none focus:ring-4 focus:ring-blue-100 focus:border-blue-400 transition-all duration-200 text-left text-base [appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none"
-              />
-            </div>
-          </div>
+                  id="severity"
+                  name="severity"
+                  min="1"
+                  max="10"
+                  value={formData.severity}
+                  onChange={handleInputChange}
+                  className={`w-full px-3 py-2 bg-white border-2 rounded-lg focus:outline-none focus:ring-4 focus:ring-blue-100 focus:border-blue-400 transition-all duration-200 text-left text-base [appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none ${
+                    fieldErrors.severity ? 'border-red-300' : 'border-gray-200'
+                  }`}
+                />
+                </div>
+                {fieldErrors.severity && (
+                  <p className="text-red-600 text-sm mt-2">{fieldErrors.severity}</p>
+                )}
+              </div>
         )}
 
         {/* Step 5: Stress Level */}
         {currentStep === 5 && (
-          <div className="mb-4">
-            <h3 className="text-lg font-semibold text-gray-900 mb-2">How stressed are you feeling?</h3>
+          <div className="mb-5">
+            <h3 className="text-lg sm:text-xl font-semibold text-gray-900 mb-1">
+              {formData.isOngoing ? 'How stressed are you feeling?' : 'How stressed were you feeling during that time?'}
+            </h3>
             <p className="text-sm text-gray-600 mb-4">Rate from 1 (calm) to 10 (very stressed)</p>
             <div className="w-14">
-              <input
+                <input
                 type="number"
-                id="stress_level"
-                name="stress_level"
-                min="1"
-                max="10"
-                value={formData.stress_level}
-                onChange={handleInputChange}
-                className="w-full px-3 py-2 bg-white border-2 border-gray-200 focus:outline-none focus:ring-4 focus:ring-blue-100 focus:border-blue-400 transition-all duration-200 text-left text-base [appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none"
-              />
-            </div>
-          </div>
+                  id="stress_level"
+                  name="stress_level"
+                  min="1"
+                  max="10"
+                  value={formData.stress_level}
+                  onChange={handleInputChange}
+                  className={`w-full px-3 py-2 bg-white border-2 rounded-lg focus:outline-none focus:ring-4 focus:ring-blue-100 focus:border-blue-400 transition-all duration-200 text-left text-base [appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none ${
+                    fieldErrors.stress_level ? 'border-red-300' : 'border-gray-200'
+                  }`}
+                />
+                </div>
+                {fieldErrors.stress_level && (
+                  <p className="text-red-600 text-sm mt-2">{fieldErrors.stress_level}</p>
+                )}
+              </div>
         )}
 
         {/* Step 6: Bathroom Frequency */}
         {currentStep === 6 && (
-          <div className="mb-4">
-            <h3 className="text-lg font-semibold text-gray-900 mb-2">Bathroom frequency</h3>
-            <p className="text-gray-600 mb-4">How many times a day do you usually empty your bowels?</p>
+          <div className="mb-5">
+            <h3 className="text-lg sm:text-xl font-semibold text-gray-900 mb-4">How many times a day do you usually empty your bowels?</h3>
+            <p className="text-gray-600 mb-4"></p>
             <div className="w-14">
               <input
                 type="number"
@@ -609,17 +885,23 @@ function SymptomsPageContent() {
                 max="50"
                 value={formData.normal_bathroom_frequency}
                 onChange={handleInputChange}
-                className="w-full px-3 py-2 bg-white border-2 border-gray-200 focus:outline-none focus:ring-4 focus:ring-blue-100 focus:border-blue-400 transition-all duration-200 text-left text-base [appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none"
+                className={`w-full px-3 py-2 bg-white border-2 rounded-lg focus:outline-none focus:ring-4 focus:ring-blue-100 focus:border-blue-400 transition-all duration-200 text-left text-base [appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none ${
+                  fieldErrors.normal_bathroom_frequency ? 'border-red-300' : 'border-gray-200'
+                }`}
               />
+              </div>
+              {fieldErrors.normal_bathroom_frequency && (
+                <p className="text-red-600 text-sm mt-2">{fieldErrors.normal_bathroom_frequency}</p>
+              )}
             </div>
-          </div>
         )}
 
         {/* Step 7: Bathroom Frequency Change Question */}
         {currentStep === 7 && (
-          <div className="mb-4">
-            <h3 className="text-lg font-semibold text-gray-900 mb-2">Bathroom Frequency</h3>
-            <p className="text-gray-600 mb-4">Have you noticed a change in bathroom frequency since symptoms started?</p>
+          <div className="mb-5">
+            <h3 className="text-lg sm:text-xl font-semibold text-gray-900 mb-4">
+              {formData.isOngoing ? 'Have you noticed a change in bathroom frequency since symptoms started?' : 'Did you notice a change in bathroom frequency during that time?'}
+            </h3>
             <div className="flex space-x-8">
               <label className="flex items-center cursor-pointer">
                 <input
@@ -631,7 +913,7 @@ function SymptomsPageContent() {
                   className="w-6 h-6 text-blue-600"
                 />
                 <span className="ml-3 text-lg text-gray-700">Yes</span>
-              </label>
+            </label>
               <label className="flex items-center cursor-pointer">
                 <input
                   type="radio"
@@ -649,8 +931,8 @@ function SymptomsPageContent() {
 
         {/* Step 8: Bathroom Frequency Change Details */}
         {currentStep === 8 && (
-          <div className="mb-4">
-            <h3 className="text-lg font-semibold text-gray-900 mb-2">Describe your change</h3>
+          <div className="mb-5">
+            <h3 className="text-lg sm:text-xl font-semibold text-gray-900 mb-4">Describe your change</h3>
             <textarea
               id="bathroom_frequency_change_details"
               name="bathroom_frequency_change_details"
@@ -658,15 +940,20 @@ function SymptomsPageContent() {
               value={formData.bathroom_frequency_change_details}
               onChange={handleInputChange}
               placeholder="e.g., increased to 8-10 times per day, blood present, mucus, loose stools..."
-              className="w-full px-4 py-3 bg-white border-2 border-gray-200 rounded-lg focus:outline-none focus:ring-4 focus:ring-blue-100 focus:border-blue-400 transition-all duration-200 resize-none"
+              className={`w-full px-4 py-3 bg-white border-2 rounded-lg focus:outline-none focus:ring-4 focus:ring-blue-100 focus:border-blue-400 transition-all duration-200 resize-none ${
+                fieldErrors.bathroom_frequency_change_details ? 'border-red-300' : 'border-gray-200'
+              }`}
             />
+            {fieldErrors.bathroom_frequency_change_details && (
+              <p className="text-red-600 text-sm mt-2">{fieldErrors.bathroom_frequency_change_details}</p>
+            )}
           </div>
         )}
 
         {/* Step 9: Do you smoke? */}
         {currentStep === 9 && (
-          <div className="mb-4">
-            <h3 className="text-lg font-semibold text-gray-900 mb-2">Do you smoke?</h3>
+          <div className="mb-5">
+            <h3 className="text-lg sm:text-xl font-semibold text-gray-900 mb-4">Do you smoke?</h3>
             <div className="flex space-x-8">
               <label className="flex items-center cursor-pointer">
                 <input
@@ -696,25 +983,30 @@ function SymptomsPageContent() {
 
         {/* Step 10: Smoking details (only if they smoke) */}
         {currentStep === 10 && (
-          <div className="mb-4">
-            <h3 className="text-lg font-semibold text-gray-900 mb-2">Please describe your smoking habits</h3>
-            <input
-              type="text"
-              id="smoking_details"
-              name="smoking_details"
-              value={formData.smoking_details}
-              onChange={handleInputChange}
-              placeholder="e.g., 1 pack of cigarettes per day, occasional cigars, etc."
-              className="w-full px-4 py-3 bg-white border-2 border-gray-200 rounded-lg focus:outline-none focus:ring-4 focus:ring-blue-100 focus:border-blue-400 transition-all duration-200"
-              autoComplete="off"
-            />
+          <div className="mb-5">
+            <h3 className="text-lg sm:text-xl font-semibold text-gray-900 mb-4">Please describe your smoking habits</h3>
+                <input
+                  type="text"
+                  id="smoking_details"
+                  name="smoking_details"
+                  value={formData.smoking_details}
+                  onChange={handleInputChange}
+                  placeholder="e.g., 1 pack of cigarettes per day, occasional cigars, etc."
+                  className={`w-full px-4 py-3 bg-white border-2 rounded-lg focus:outline-none focus:ring-4 focus:ring-blue-100 focus:border-blue-400 transition-all duration-200 ${
+                    fieldErrors.smoking_details ? 'border-red-300' : 'border-gray-200'
+                  }`}
+                  autoComplete="off"
+                />
+                {fieldErrors.smoking_details && (
+                  <p className="text-red-600 text-sm mt-2">{fieldErrors.smoking_details}</p>
+            )}
           </div>
         )}
 
         {/* Step 11: Do you drink alcohol? */}
         {currentStep === 11 && (
-          <div className="mb-4">
-            <h3 className="text-lg font-semibold text-gray-900 mb-2">Do you drink alcohol?</h3>
+          <div className="mb-5">
+            <h3 className="text-lg sm:text-xl font-semibold text-gray-900 mb-4">Do you drink alcohol?</h3>
             <div className="flex space-x-8">
               <label className="flex items-center cursor-pointer">
                 <input
@@ -744,268 +1036,373 @@ function SymptomsPageContent() {
 
         {/* Step 12: Alcohol details (only if they drink) */}
         {currentStep === 12 && (
-          <div className="mb-4">
-            <h3 className="text-lg font-semibold text-gray-900 mb-2">How many units of alcohol do you drink per day?</h3>
-            <input
-              type="text"
-              id="alcohol_units"
-              name="alcohol_units"
-              value={formData.alcohol_units}
-              onChange={handleInputChange}
-              placeholder="e.g., 2-3 units, occasional glass of wine, etc."
-              className="w-full px-4 py-3 bg-white border-2 border-gray-200 rounded-lg focus:outline-none focus:ring-4 focus:ring-blue-100 focus:border-blue-400 transition-all duration-200"
-              autoComplete="off"
-            />
+          <div className="mb-5">
+            <h3 className="text-lg sm:text-xl font-semibold text-gray-900 mb-4">How many units of alcohol do you drink per day?</h3>
+            <div className="w-14">
+                <input
+                type="number"
+                  id="alcohol_units"
+                  name="alcohol_units"
+                min="0"
+                max="30"
+                  value={formData.alcohol_units}
+                  onChange={handleInputChange}
+                  className={`w-full px-3 py-2 bg-white border-2 rounded-lg focus:outline-none focus:ring-4 focus:ring-blue-100 focus:border-blue-400 transition-all duration-200 text-left text-base [appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none ${
+                    fieldErrors.alcohol_units ? 'border-red-300' : 'border-gray-200'
+                  }`}
+                />
+              </div>
+              {fieldErrors.alcohol_units && (
+                <p className="text-red-600 text-sm mt-2">{fieldErrors.alcohol_units}</p>
+            )}
           </div>
         )}
 
         {/* Step 13: Meal Tracking */}
         {currentStep === 13 && (
-          <div className="mb-4">
-            <h3 className="text-lg font-semibold text-gray-900 mb-2">Meal tracking</h3>
-            <p className="text-gray-600 mb-4">What did you eat? (Optional)</p>
+          <div className="mb-5">
+ 
             
             <div className="space-y-6">
-              {/* Breakfast */}
+            {/* Breakfast */}
               <div>
                 <div className="flex justify-between items-center mb-3">
-                  <h4 className="text-sm font-semibold font-roboto text-gray-900">
-                    {getMealLabel('breakfast')}
-                  </h4>
-                  <button
-                    type="button"
-                    onClick={() => addMealItem('breakfast')}
+                  <h4 className="text-lg sm:text-xl font-semibold text-gray-900 mb-4">
+                  {getMealLabel('breakfast')}
+                </h4>
+                <button
+                  type="button"
+                  onClick={() => addMealItem('breakfast')}
                     disabled={formData.breakfast.length > 0 && (formData.breakfast[formData.breakfast.length - 1]?.food === '' || formData.breakfast[formData.breakfast.length - 1]?.quantity === '')}
                     className={`px-3 py-1 text-sm font-medium rounded-lg transition-colors ${
                       formData.breakfast.length > 0 && (formData.breakfast[formData.breakfast.length - 1]?.food === '' || formData.breakfast[formData.breakfast.length - 1]?.quantity === '')
                         ? 'bg-gray-100 text-gray-400 cursor-not-allowed'
                         : 'bg-blue-100 text-blue-700 hover:bg-blue-200'
                     }`}
-                  >
-                    Add
-                  </button>
-                </div>
+                >
+                  Add
+                </button>
+              </div>
                 <div className="space-y-3">
-                  {formData.breakfast.map((item, index) => (
-                    <div key={index} className="relative">
-                      {formData.breakfast.length > 1 && (
-                        <button
-                          type="button"
-                          onClick={() => removeMealItem('breakfast', index)}
+                {formData.breakfast.map((item, index) => (
+                  <div key={index} className="relative">
+                    {formData.breakfast.length > 1 && (
+                      <button
+                        type="button"
+                        onClick={() => removeMealItem('breakfast', index)}
                           className="absolute -left-2 -top-2 bg-red-500 rounded-full w-[22px] h-[22px] flex items-center justify-center shadow-md z-10 hover:bg-red-600 transition-all duration-200"
-                          title="Remove item"
-                        >
+                        title="Remove item"
+                      >
                           <span className="text-white text-sm font-bold leading-none">×</span>
-                        </button>
-                      )}
-                      <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
-                        <div>
-                          <input
-                            type="text"
-                            placeholder="Food item"
-                            value={item.food}
-                            onChange={(e) => updateMealItem('breakfast', index, 'food', e.target.value)}
+                      </button>
+                    )}
+                    <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
+                      <div>
+                        <input
+                          type="text"
+                          placeholder="Food item"
+                          value={item.food}
+                          onChange={(e) => updateMealItem('breakfast', index, 'food', e.target.value)}
                             className="w-full px-3 py-2 bg-white border-2 border-gray-200 rounded-lg focus:outline-none focus:ring-4 focus:ring-blue-100 focus:border-blue-400 transition-all duration-200"
-                          />
-                        </div>
-                        <div>
-                          <input
-                            type="text"
-                            placeholder="Quantity"
-                            value={item.quantity}
-                            onChange={(e) => updateMealItem('breakfast', index, 'quantity', e.target.value)}
+                        />
+                      </div>
+                      <div>
+                        <input
+                          type="text"
+                          placeholder="Quantity"
+                          value={item.quantity}
+                          onChange={(e) => updateMealItem('breakfast', index, 'quantity', e.target.value)}
                             className="w-full px-3 py-2 bg-white border-2 border-gray-200 rounded-lg focus:outline-none focus:ring-4 focus:ring-blue-100 focus:border-blue-400 transition-all duration-200"
-                          />
-                        </div>
+                        />
                       </div>
                     </div>
-                  ))}
-                </div>
+                  </div>
+                ))}
               </div>
+            </div>
 
-              {/* Lunch */}
+            {/* Lunch */}
               <div>
                 <div className="flex justify-between items-center mb-3">
-                  <h4 className="text-sm font-semibold font-roboto text-gray-900">
-                    {getMealLabel('lunch')}
-                  </h4>
-                  <button
-                    type="button"
-                    onClick={() => addMealItem('lunch')}
+                  <h4 className="text-lg sm:text-xl font-semibold text-gray-900 mb-4">
+                  {getMealLabel('lunch')}
+                </h4>
+                <button
+                  type="button"
+                  onClick={() => addMealItem('lunch')}
                     disabled={formData.lunch.length > 0 && (formData.lunch[formData.lunch.length - 1]?.food === '' || formData.lunch[formData.lunch.length - 1]?.quantity === '')}
                     className={`px-3 py-1 text-sm font-medium rounded-lg transition-colors ${
                       formData.lunch.length > 0 && (formData.lunch[formData.lunch.length - 1]?.food === '' || formData.lunch[formData.lunch.length - 1]?.quantity === '')
                         ? 'bg-gray-100 text-gray-400 cursor-not-allowed'
                         : 'bg-blue-100 text-blue-700 hover:bg-blue-200'
                     }`}
-                  >
-                    Add
-                  </button>
-                </div>
+                >
+                  Add
+                </button>
+              </div>
                 <div className="space-y-3">
-                  {formData.lunch.map((item, index) => (
-                    <div key={index} className="relative">
-                      {formData.lunch.length > 1 && (
-                        <button
-                          type="button"
-                          onClick={() => removeMealItem('lunch', index)}
+                {formData.lunch.map((item, index) => (
+                  <div key={index} className="relative">
+                    {formData.lunch.length > 1 && (
+                      <button
+                        type="button"
+                        onClick={() => removeMealItem('lunch', index)}
                           className="absolute -left-2 -top-2 bg-red-500 rounded-full w-[22px] h-[22px] flex items-center justify-center shadow-md z-10 hover:bg-red-600 transition-all duration-200"
-                          title="Remove item"
-                        >
+                        title="Remove item"
+                      >
                           <span className="text-white text-sm font-bold leading-none">×</span>
-                        </button>
-                      )}
-                      <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
-                        <div>
-                          <input
-                            type="text"
-                            placeholder="Food item"
-                            value={item.food}
-                            onChange={(e) => updateMealItem('lunch', index, 'food', e.target.value)}
+                      </button>
+                    )}
+                    <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
+                      <div>
+                        <input
+                          type="text"
+                          placeholder="Food item"
+                          value={item.food}
+                          onChange={(e) => updateMealItem('lunch', index, 'food', e.target.value)}
                             className="w-full px-3 py-2 bg-white border-2 border-gray-200 rounded-lg focus:outline-none focus:ring-4 focus:ring-blue-100 focus:border-blue-400 transition-all duration-200"
-                          />
-                        </div>
-                        <div>
-                          <input
-                            type="text"
-                            placeholder="Quantity"
-                            value={item.quantity}
-                            onChange={(e) => updateMealItem('lunch', index, 'quantity', e.target.value)}
+                        />
+                      </div>
+                      <div>
+                        <input
+                          type="text"
+                          placeholder="Quantity"
+                          value={item.quantity}
+                          onChange={(e) => updateMealItem('lunch', index, 'quantity', e.target.value)}
                             className="w-full px-3 py-2 bg-white border-2 border-gray-200 rounded-lg focus:outline-none focus:ring-4 focus:ring-blue-100 focus:border-blue-400 transition-all duration-200"
-                          />
-                        </div>
+                        />
                       </div>
                     </div>
-                  ))}
-                </div>
+                  </div>
+                ))}
               </div>
+            </div>
 
-              {/* Dinner */}
+            {/* Dinner */}
               <div>
                 <div className="flex justify-between items-center mb-3">
-                  <h4 className="text-sm font-semibold font-roboto text-gray-900">
-                    {getMealLabel('dinner')}
-                  </h4>
-                  <button
-                    type="button"
-                    onClick={() => addMealItem('dinner')}
+                  <h4 className="text-lg sm:text-xl font-semibold text-gray-900 mb-4">
+                  {getMealLabel('dinner')}
+                </h4>
+                <button
+                  type="button"
+                  onClick={() => addMealItem('dinner')}
                     disabled={formData.dinner.length > 0 && (formData.dinner[formData.dinner.length - 1]?.food === '' || formData.dinner[formData.dinner.length - 1]?.quantity === '')}
                     className={`px-3 py-1 text-sm font-medium rounded-lg transition-colors ${
                       formData.dinner.length > 0 && (formData.dinner[formData.dinner.length - 1]?.food === '' || formData.dinner[formData.dinner.length - 1]?.quantity === '')
                         ? 'bg-gray-100 text-gray-400 cursor-not-allowed'
                         : 'bg-blue-100 text-blue-700 hover:bg-blue-200'
                     }`}
-                  >
-                    Add
-                  </button>
-                </div>
+                >
+                  Add
+                </button>
+              </div>
                 <div className="space-y-3">
-                  {formData.dinner.map((item, index) => (
-                    <div key={index} className="relative">
-                      {formData.dinner.length > 1 && (
-                        <button
-                          type="button"
-                          onClick={() => removeMealItem('dinner', index)}
+                {formData.dinner.map((item, index) => (
+                  <div key={index} className="relative">
+                    {formData.dinner.length > 1 && (
+                      <button
+                        type="button"
+                        onClick={() => removeMealItem('dinner', index)}
                           className="absolute -left-2 -top-2 bg-red-500 rounded-full w-[22px] h-[22px] flex items-center justify-center shadow-md z-10 hover:bg-red-600 transition-all duration-200"
-                          title="Remove item"
-                        >
+                        title="Remove item"
+                      >
                           <span className="text-white text-sm font-bold leading-none">×</span>
-                        </button>
-                      )}
-                      <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
-                        <div>
-                          <input
-                            type="text"
-                            placeholder="Food item"
-                            value={item.food}
-                            onChange={(e) => updateMealItem('dinner', index, 'food', e.target.value)}
+                      </button>
+                    )}
+                    <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
+                      <div>
+                        <input
+                          type="text"
+                          placeholder="Food item"
+                          value={item.food}
+                          onChange={(e) => updateMealItem('dinner', index, 'food', e.target.value)}
                             className="w-full px-3 py-2 bg-white border-2 border-gray-200 rounded-lg focus:outline-none focus:ring-4 focus:ring-blue-100 focus:border-blue-400 transition-all duration-200"
-                          />
-                        </div>
-                        <div>
-                          <input
-                            type="text"
-                            placeholder="Quantity"
-                            value={item.quantity}
-                            onChange={(e) => updateMealItem('dinner', index, 'quantity', e.target.value)}
+                        />
+                      </div>
+                      <div>
+                        <input
+                          type="text"
+                          placeholder="Quantity"
+                          value={item.quantity}
+                          onChange={(e) => updateMealItem('dinner', index, 'quantity', e.target.value)}
                             className="w-full px-3 py-2 bg-white border-2 border-gray-200 rounded-lg focus:outline-none focus:ring-4 focus:ring-blue-100 focus:border-blue-400 transition-all duration-200"
-                          />
-                        </div>
+                        />
                       </div>
                     </div>
-                  ))}
-                </div>
+                  </div>
+                ))}
               </div>
             </div>
           </div>
+          </div>
         )}
 
-        {/* Step 14: Notes & Review */}
+        {/* Step 14: Additional Notes */}
         {currentStep === 14 && (
-          <div className="mb-4">
-            <h3 className="text-lg font-semibold text-gray-900 mb-6">Additional notes</h3>
-            <p className="text-gray-600 mb-6">Any other details you'd like to add?</p>
-            
-            <div className="space-y-6">
-              <div>
-                <label htmlFor="notes" className="block text-sm font-semibold font-roboto text-gray-800 mb-3">
-                  Additional Notes
-                </label>
-                <textarea
-                  id="notes"
-                  name="notes"
-                  rows="4"
-                  value={formData.notes}
-                  onChange={handleInputChange}
-                  placeholder="Describe your symptoms, how you're feeling, any triggers you noticed..."
-                  className="w-full px-4 py-3 bg-white border-2 border-gray-200 rounded-lg focus:outline-none focus:ring-4 focus:ring-blue-100 focus:border-blue-400 transition-all duration-200 resize-none"
-                />
-              </div>
+          <div className="mb-5">
+            <h3 className="text-lg sm:text-xl font-semibold text-gray-900 mb-4">Additional notes</h3>            
+            <div>
+              <textarea
+                id="notes"
+                name="notes"
+                rows="4"
+                value={formData.notes}
+                onChange={handleInputChange}
+                placeholder="Any other details you'd like to add? e.g. describe your symptoms, how you're feeling, any triggers you noticed..."
+                className="w-full px-4 py-3 bg-white border-2 border-gray-200 rounded-lg focus:outline-none focus:ring-4 focus:ring-blue-100 focus:border-blue-400 transition-all duration-200 resize-none"
+              />
+          </div>
+      </div>
+        )}
 
-              {/* Review Summary */}
-              <div className="bg-gray-50 rounded-lg p-6">
-                <h4 className="font-semibold text-gray-800 mb-4">Review your entry</h4>
-                <div className="space-y-2 text-sm">
-                  <div className="flex justify-between">
-                    <span className="text-gray-600">Start Date:</span>
-                    <span className="font-medium">{formData.symptomStartDate ? new Date(formData.symptomStartDate).toLocaleDateString() : 'Not set'}</span>
-                  </div>
-                  <div className="flex justify-between">
-                    <span className="text-gray-600">Status:</span>
-                    <span className="font-medium">{formData.isOngoing ? 'Ongoing' : 'Ended'}</span>
-                  </div>
-                  <div className="flex justify-between">
-                    <span className="text-gray-600">Severity:</span>
-                    <span className="font-medium">{formData.severity}/10</span>
-                  </div>
-                  <div className="flex justify-between">
-                    <span className="text-gray-600">Stress Level:</span>
-                    <span className="font-medium">{formData.stress_level}/10</span>
-                  </div>
-                </div>
-              </div>
+        {/* Step 15: Review */}
+        {currentStep === 15 && (
+          <div className="mb-4">
+            <h3 className="text-lg sm:text-xl font-semibold text-gray-900 mb-6">Review your entry</h3>
+            <div className="space-y-4">
+              
+              <div className="flex justify-between py-2 border-b border-gray-200">
+                <span className="text-gray-600">Start Date:</span>
+                <span className="font-medium">{formData.symptomStartDate ? new Date(formData.symptomStartDate).toLocaleDateString() : 'Not set'}</span>
+          </div>
+
+              <div className="flex justify-between py-2 border-b border-gray-200">
+                <span className="text-gray-600">Status:</span>
+                <span className="font-medium">{formData.isOngoing ? 'Ongoing' : 'Ended'}</span>
+        </div>
+        
+              {!formData.isOngoing && formData.symptomEndDate && (
+                <div className="flex justify-between py-2 border-b border-gray-200">
+                  <span className="text-gray-600">End Date:</span>
+                  <span className="font-medium">{new Date(formData.symptomEndDate).toLocaleDateString()}</span>
             </div>
+              )}
+
+              <div className="flex justify-between py-2 border-b border-gray-200">
+                <span className="text-gray-600">Severity:</span>
+                <span className="font-medium">{formData.severity}/10</span>
+                    </div>
+
+              <div className="flex justify-between py-2 border-b border-gray-200">
+                <span className="text-gray-600">Stress Level:</span>
+                <span className="font-medium">{formData.stress_level}/10</span>
+                    </div>
+
+              <div className="flex justify-between py-2 border-b border-gray-200">
+                <span className="text-gray-600">Bathroom Frequency:</span>
+                <span className="font-medium">{formData.normal_bathroom_frequency || 'Not set'} times/day</span>
+                </div>
+
+              {formData.bathroom_frequency_changed && (
+                <div className="flex justify-between py-2 border-b border-gray-200">
+                  <span className="text-gray-600">Frequency Changed:</span>
+                  <span className="font-medium">{formData.bathroom_frequency_changed === 'yes' ? 'Yes' : 'No'}</span>
+                  </div>
+                )}
+
+              {formData.bathroom_frequency_changed === 'yes' && formData.bathroom_frequency_change_details && (
+                <div className="py-2 border-b border-gray-200">
+                  <span className="text-gray-600 block mb-1">Describe your change:</span>
+                  <span className="font-medium">{formData.bathroom_frequency_change_details}</span>
+                  </div>
+                )}
+
+              <div className="flex justify-between py-2 border-b border-gray-200">
+                <span className="text-gray-600">Smoking:</span>
+                <span className="font-medium">{formData.smoking ? 'Yes' : 'No'}</span>
+                      </div>
+
+              {formData.smoking && formData.smoking_details && (
+                <div className="py-2 border-b border-gray-200">
+                  <span className="text-gray-600 block mb-1">Smoking Habits:</span>
+                  <span className="font-medium">{formData.smoking_details}</span>
+                  </div>
+                )}
+
+              <div className="flex justify-between py-2 border-b border-gray-200">
+                <span className="text-gray-600">Alcohol:</span>
+                <span className="font-medium">{formData.alcohol ? 'Yes' : 'No'}</span>
+                    </div>
+                    
+              {formData.alcohol && formData.alcohol_units && (
+                <div className="flex justify-between py-2 border-b border-gray-200">
+                  <span className="text-gray-600">Alcohol Units:</span>
+                  <span className="font-medium">{formData.alcohol_units} units/day</span>
+                        </div>
+                      )}
+                      
+              {(formData.breakfast.some(item => item.food.trim()) || 
+                formData.lunch.some(item => item.food.trim()) || 
+                formData.dinner.some(item => item.food.trim())) && (
+                <div className="py-2 border-b border-gray-200">
+                  <span className="text-gray-600 block mb-2">Meals:</span>
+                  <div className="space-y-1 text-sm">
+                    {formData.breakfast.some(item => item.food.trim()) && (
+                      <div>
+                        <span className="font-medium">Breakfast:</span>
+                        {formData.breakfast.filter(item => item.food.trim()).map((item, index) => (
+                          <span key={index} className="ml-2 text-gray-600">{item.food} ({item.quantity})</span>
+                        ))}
+                        </div>
+                      )}
+                    {formData.lunch.some(item => item.food.trim()) && (
+                      <div>
+                        <span className="font-medium">Lunch:</span>
+                        {formData.lunch.filter(item => item.food.trim()).map((item, index) => (
+                          <span key={index} className="ml-2 text-gray-600">{item.food} ({item.quantity})</span>
+                        ))}
+                          </div>
+                    )}
+                    {formData.dinner.some(item => item.food.trim()) && (
+                      <div>
+                        <span className="font-medium">Dinner:</span>
+                        {formData.dinner.filter(item => item.food.trim()).map((item, index) => (
+                          <span key={index} className="ml-2 text-gray-600">{item.food} ({item.quantity})</span>
+                        ))}
+                        </div>
+                      )}
+                    </div>
+                  </div>
+                )}
+
+              {formData.notes && (
+                <div className="py-2">
+                  <span className="text-gray-600 block mb-2">Notes:</span>
+                  <p className="font-medium">{formData.notes}</p>
+                  </div>
+                )}
+
+              </div>
           </div>
         )}
 
-        {/* Navigation Buttons */}
-        <div className="flex justify-start items-center mt-4">
-          {currentStep < totalSteps ? (
-            <button
-              onClick={nextStep}
-              className="px-6 py-3 bg-blue-600 text-white font-semibold rounded-lg hover:bg-blue-700 transition-colors"
-            >
-              Continue
-            </button>
-          ) : (
-            <button
-              onClick={handleSubmit}
-              className="px-6 py-3 bg-green-600 text-white font-semibold rounded-lg hover:bg-green-700 transition-colors"
-            >
-              Submit Entry
-            </button>
-          )}
-        </div>
+        {/* Visual Separator for Review Page - only show if there are notes */}
+        {currentStep === 15 && formData.notes && (
+          <div className="my-8 border-t border-gray-200"></div>
+        )}
+
+        {/* Navigation Buttons - Hide on landing page (step 0) */}
+        {currentStep > 0 && (
+          <div className={`flex justify-start items-center ${currentStep === 15 ? 'mt-8' : 'mt-4'}`}>
+            {currentStep < 15 ? (
+              <button
+                onClick={nextStep}
+                className="px-4 py-2 bg-blue-600 text-white text-lg font-semibold rounded-lg hover:bg-blue-700 transition-colors"
+              >
+                Continue
+              </button>
+            ) : (
+              <button
+                onClick={handleSubmit}
+                disabled={isSubmitting}
+                className="px-4 py-2 bg-green-600 text-white text-lg font-semibold rounded-lg hover:bg-green-700 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+              >
+                {isSubmitting ? 'Submitting...' : 'Submit'}
+              </button>
+            )}
+          </div>
+        )}
       </div>
 
 

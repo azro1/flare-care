@@ -82,22 +82,111 @@ export default function Navigation() {
   }, [isMenuOpen])
 
   const mainNavItems = [
-    { href: '/', label: 'Home' },
-    { href: '/about', label: 'About' },
-    { href: '/food-guide', label: 'Foods' },
+    { 
+      href: '/', 
+      label: 'Home', 
+      icon: (
+        <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 12l2-2m0 0l7-7 7 7M5 10v10a1 1 0 001 1h3m10-11l2 2m-2-2v10a1 1 0 01-1 1h-3m-6 0a1 1 0 001-1v-4a1 1 0 011-1h2a1 1 0 011 1v4a1 1 0 001 1m-6 0h6" />
+        </svg>
+      )
+    },
+    { 
+      href: '/about', 
+      label: 'About', 
+      icon: (
+        <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+        </svg>
+      )
+    },
+    { 
+      href: '/ibd', 
+      label: 'IBD', 
+      icon: (
+        <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 6.253v13m0-13C10.832 5.477 9.246 5 7.5 5S4.168 5.477 3 6.253v13C4.168 18.477 5.754 18 7.5 18s3.332.477 4.5 1.253m0-13C13.168 5.477 14.754 5 16.5 5c1.746 0 3.332.477 4.5 1.253v13C19.832 18.477 18.246 18 16.5 18c-1.746 0-3.332.477-4.5 1.253" />
+        </svg>
+      )
+    },
+    { 
+      href: '/food-guide', 
+      label: 'Foods', 
+      icon: (
+        <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 6.253v13m0-13C10.832 5.477 9.246 5 7.5 5S4.168 5.477 3 6.253v13C4.168 18.477 5.754 18 7.5 18s3.332.477 4.5 1.253m0-13C13.168 5.477 14.754 5 16.5 5c1.746 0 3.332.477 4.5 1.253v13C19.832 18.477 18.246 18 16.5 18c-1.746 0-3.332.477-4.5 1.253" />
+        </svg>
+      )
+    },
   ]
 
   const unauthenticatedNavItems = [
-    { href: '/', label: 'Home' },
-    { href: '/about', label: 'About' },
-    { href: '/learn', label: 'Learn' },
-    { href: '/food-guide', label: 'Foods' },
+    { 
+      href: '/', 
+      label: 'Home', 
+      icon: (
+        <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 12l2-2m0 0l7-7 7 7M5 10v10a1 1 0 001 1h3m10-11l2 2m-2-2v10a1 1 0 01-1 1h-3m-6 0a1 1 0 001-1v-4a1 1 0 011-1h2a1 1 0 011 1v4a1 1 0 001 1m-6 0h6" />
+        </svg>
+      )
+    },
+    { 
+      href: '/about', 
+      label: 'About', 
+      icon: (
+        <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+        </svg>
+      )
+    },
+    { 
+      href: '/ibd', 
+      label: 'IBD', 
+      icon: (
+        <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 6.253v13m0-13C10.832 5.477 9.246 5 7.5 5S4.168 5.477 3 6.253v13C4.168 18.477 5.754 18 7.5 18s3.332.477 4.5 1.253m0-13C13.168 5.477 14.754 5 16.5 5c1.746 0 3.332.477 4.5 1.253v13C19.832 18.477 18.246 18 16.5 18c-1.746 0-3.332.477-4.5 1.253" />
+        </svg>
+      )
+    },
+    { 
+      href: '/food-guide', 
+      label: 'Foods', 
+      icon: (
+        <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 6.253v13m0-13C10.832 5.477 9.246 5 7.5 5S4.168 5.477 3 6.253v13C4.168 18.477 5.754 18 7.5 18s3.332.477 4.5 1.253m0-13C13.168 5.477 14.754 5 16.5 5c1.746 0 3.332.477 4.5 1.253v13C19.832 18.477 18.246 18 16.5 18c-1.746 0-3.332.477-4.5 1.253" />
+        </svg>
+      )
+    },
   ]
 
   const featureNavItems = [
-    { href: '/symptoms', label: 'Symptoms', icon: '📊' },
-    { href: '/medications', label: 'Medications', icon: '💊' },
-    { href: '/reports', label: 'Reports', icon: '📋' },
+    { 
+      href: '/symptoms', 
+      label: 'Symptoms', 
+      icon: (
+        <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z" />
+        </svg>
+      )
+    },
+    { 
+      href: '/medications', 
+      label: 'Medications', 
+      icon: (
+        <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19.428 15.428a2 2 0 00-1.022-.547l-2.387-.477a6 6 0 00-3.86.517l-.318.158a6 6 0 01-3.86.517L6.05 15.21a2 2 0 00-1.806.547M8 4h8l-1 1v5.172a2 2 0 00.586 1.414l5 5c1.26 1.26.367 3.414-1.415 3.414H4.828c-1.782 0-2.674-2.154-1.414-3.414l5-5A2 2 0 009 10.172V5L8 4z" />
+        </svg>
+      )
+    },
+    { 
+      href: '/reports', 
+      label: 'Reports', 
+      icon: (
+        <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 17v-2m3 2v-4m3 4v-6m2 10H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
+        </svg>
+      )
+    },
   ]
 
   return (
@@ -106,7 +195,7 @@ export default function Navigation() {
         <div className="flex justify-between items-center h-16 sm:h-20">
           {/* Logo */}
           <Link href="/" className="flex items-center space-x-2 group">
-            <div className="w-10 h-10 sm:w-10 sm:h-10 bg-blue-600 rounded-xl flex items-center justify-center group-hover:scale-110 transition-transform duration-200 shadow-lg lg:group-hover:scale-110">
+            <div className="w-10 h-10 sm:w-10 sm:h-10 bg-blue-600 rounded-xl flex items-center justify-center shadow-lg">
               <svg className="w-5 h-5 sm:w-6 sm:h-6 text-white" fill="currentColor" viewBox="0 0 24 24">
                 <path d="M4.318 6.318a4.5 4.5 0 000 6.364L12 20.364l7.682-7.682a4.5 4.5 0 00-6.364-6.364L12 7.636l-1.318-1.318a4.5 4.5 0 00-6.364 0z" />
               </svg>
@@ -133,44 +222,14 @@ export default function Navigation() {
               ))}
             </div>
 
-            {/* Health Tools Dropdown - Only show when authenticated */}
-            {isAuthenticated && (
-              <div className="relative group">
-                <button className="nav-link nav-link-inactive flex items-center gap-1">
-                  Track
-                  <svg className="w-4 h-4 transition-transform group-hover:rotate-180" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
-                  </svg>
-                </button>
-                
-                {/* Dropdown Menu */}
-                <div className="absolute top-full left-0 mt-2 w-48 bg-white rounded-lg shadow-lg border border-gray-200 opacity-0 invisible group-hover:opacity-100 group-hover:visible transition-all duration-200 z-50">
-                  <div className="py-2">
-                    {featureNavItems.map((item) => (
-                      <Link
-                        key={item.href}
-                        href={item.href}
-                        className={`flex items-center gap-3 px-4 py-3 text-base font-roboto transition-colors ${
-                          pathname === item.href
-                            ? 'bg-blue-50 text-blue-700'
-                            : 'text-gray-600 hover:bg-gray-50'
-                        }`}
-                      >
-                        <span className="text-lg">{item.icon}</span>
-                        <span>{item.label}</span>
-                      </Link>
-                    ))}
-                  </div>
-                </div>
-              </div>
-            )}
             
             {/* User menu for authenticated users */}
             {isAuthenticated && (
               <div className="flex items-center space-x-6 ml-4 pl-4 border-l border-gray-200">
                 <div className="flex items-center space-x-4">
-                  {/* User Avatar */}
-                  <div className="w-10 h-10 rounded-full overflow-hidden border-2 border-gray-200 bg-gray-200 flex items-center justify-center">
+                  {/* User Avatar with Dropdown */}
+                  <div className="relative group">
+                    <div className="w-10 h-10 rounded-full overflow-hidden border-2 border-gray-200 bg-gray-200 flex items-center justify-center hover:border-blue-300 transition-colors">
                     {getUserAvatar() ? (
                       <img 
                         src={getUserAvatar()} 
@@ -192,13 +251,26 @@ export default function Navigation() {
                         {getUserInitials()}
                       </div>
                     )}
+                    </div>
+                    
+                    {/* User Dropdown Menu */}
+                    <div className="absolute top-full right-0 mt-2 w-48 bg-white rounded-lg shadow-lg border border-gray-200 opacity-0 invisible group-hover:opacity-100 group-hover:visible transition-all duration-200 z-50">
+                      <div className="py-2">
+                        <Link
+                          href="/account"
+                          className="block px-4 py-3 text-base font-roboto transition-colors text-gray-600 hover:bg-gray-50 cursor-pointer"
+                        >
+                          Account
+                        </Link>
+                        <Link
+                          href="/profile-settings"
+                          className="block px-4 py-3 text-base font-roboto transition-colors text-gray-600 hover:bg-gray-50 cursor-pointer"
+                        >
+                          Profile Settings
+                        </Link>
+                      </div>
+                    </div>
                   </div>
-                  <button
-                    onClick={handleSignOut}
-                    className="nav-link nav-link-inactive bg-gray-50 hover:bg-gray-100 text-gray-600 hover:text-gray-800"
-                  >
-                    Sign Out
-                  </button>
                 </div>
               </div>
             )}
@@ -226,18 +298,22 @@ export default function Navigation() {
         }`}>
           <div className="container mx-auto px-4 sm:px-6 lg:px-8 py-4">
               {/* All Navigation Links */}
-              {[...(isAuthenticated ? mainNavItems : unauthenticatedNavItems), ...(isAuthenticated ? featureNavItems : [])].map((item) => (
+              {[...(isAuthenticated ? mainNavItems : unauthenticatedNavItems)].map((item) => (
                 <Link
                   key={item.href}
                   href={item.href}
-                  className={`block px-4 py-3 text-base font-medium font-roboto transition-colors duration-150 ${
+                  className={`flex items-center gap-3 px-4 py-3 text-base font-medium font-roboto transition-colors duration-150 ${
                     pathname === item.href
                       ? 'text-blue-700'
                       : 'text-gray-600 hover:text-gray-900'
                   }`}
                   onClick={() => setIsMenuOpen(false)}
                 >
-                  {item.label}
+                  {item.icon && <div className={`${
+                    item.href === '/ibd' ? 'text-blue-600' :
+                    'text-gray-600'
+                  }`}>{item.icon}</div>}
+                  <span>{item.label}</span>
                 </Link>
               ))}
             
@@ -246,7 +322,7 @@ export default function Navigation() {
               <div className="border-t border-gray-200/50 mt-4 pt-4">
                 <div className="flex items-center px-4 py-3">
                   {/* User Avatar */}
-                  <div className="w-10 h-10 rounded-full overflow-hidden border-2 border-gray-200 mr-3 bg-gray-200 flex items-center justify-center">
+                  <Link href="/account" className="w-10 h-10 rounded-full overflow-hidden border-2 border-gray-200 mr-3 bg-gray-200 flex items-center justify-center hover:border-blue-300 transition-colors">
                     {getUserAvatar() ? (
                       <img 
                         src={getUserAvatar()} 
@@ -268,16 +344,7 @@ export default function Navigation() {
                         {getUserInitials()}
                       </div>
                     )}
-                  </div>
-                  <button
-                    onClick={() => {
-                      handleSignOut()
-                      setIsMenuOpen(false)
-                    }}
-                    className="text-base font-medium font-roboto transition-colors duration-150 text-gray-600 hover:text-gray-900"
-                  >
-                    Sign Out
-                  </button>
+                  </Link>
                 </div>
               </div>
             )}

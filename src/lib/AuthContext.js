@@ -22,9 +22,17 @@ export const AuthProvider = ({ children }) => {
     // Get initial session
     const getInitialSession = async () => {
       const { data: { session } } = await supabase.auth.getSession()
-      setUser(session?.user ?? null)
-      setIsAuthenticated(!!session?.user)
+      const userData = session?.user ?? null
+      setUser(userData)
+      setIsAuthenticated(!!userData)
       setLoading(false)
+      
+      // Store/remove user data in localStorage
+      if (userData) {
+        localStorage.setItem('supabase.auth.user', JSON.stringify(userData))
+      } else {
+        localStorage.removeItem('supabase.auth.user')
+      }
     }
 
     getInitialSession()
@@ -32,9 +40,17 @@ export const AuthProvider = ({ children }) => {
     // Listen for auth changes
     const { data: { subscription } } = supabase.auth.onAuthStateChange(
       async (event, session) => {
-        setUser(session?.user ?? null)
-        setIsAuthenticated(!!session?.user)
+        const userData = session?.user ?? null
+        setUser(userData)
+        setIsAuthenticated(!!userData)
         setLoading(false)
+        
+        // Store/remove user data in localStorage
+        if (userData) {
+          localStorage.setItem('supabase.auth.user', JSON.stringify(userData))
+        } else {
+          localStorage.removeItem('supabase.auth.user')
+        }
       }
     )
 

@@ -7,7 +7,86 @@ export default function LearnPage() {
   const { isAuthenticated } = useAuth()
   
   return (
-    <div className="max-w-4xl w-full mx-auto px-3 sm:px-4 md:px-6 lg:px-8 min-w-0">
+    <div className="w-full px-3 sm:px-4 md:px-6 lg:px-8 min-w-0">
+      <div className="flex flex-col lg:flex-row lg:gap-8 lg:justify-center">
+        
+        {/* Left Sidebar */}
+        <div className="lg:w-96 lg:flex-shrink-0 order-2 lg:order-1">
+          <div className="sticky top-8 space-y-6">
+            
+            {/* Quick Facts */}
+            <div className="card p-4 sm:p-6">
+              <h3 className="text-lg font-semibold font-source text-gray-900 mb-4">Quick Facts</h3>
+              <div className="space-y-3">
+                <div className="flex items-start">
+                  <div className="w-2 h-2 bg-blue-500 rounded-full mt-2 mr-3 flex-shrink-0"></div>
+                  <p className="text-sm text-gray-600 font-roboto">IBD affects over 500,000 people in the UK</p>
+                </div>
+                <div className="flex items-start">
+                  <div className="w-2 h-2 bg-green-500 rounded-full mt-2 mr-3 flex-shrink-0"></div>
+                  <p className="text-sm text-gray-600 font-roboto">Most commonly diagnosed between ages 15-35</p>
+                </div>
+                <div className="flex items-start">
+                  <div className="w-2 h-2 bg-purple-500 rounded-full mt-2 mr-3 flex-shrink-0"></div>
+                  <p className="text-sm text-gray-600 font-roboto">Both conditions are chronic but manageable</p>
+                </div>
+                <div className="flex items-start">
+                  <div className="w-2 h-2 bg-orange-500 rounded-full mt-2 mr-3 flex-shrink-0"></div>
+                  <p className="text-sm text-gray-600 font-roboto">Early diagnosis leads to better outcomes</p>
+                </div>
+              </div>
+            </div>
+
+            {/* Daily Tips */}
+            <div className="card p-4 sm:p-6">
+              <h3 className="text-lg font-semibold font-source text-gray-900 mb-4">Daily Tips</h3>
+              <div className="space-y-4">
+                <div className="bg-blue-50 p-3 rounded-lg">
+                  <h4 className="font-medium text-blue-900 mb-1">💧 Stay Hydrated</h4>
+                  <p className="text-sm text-blue-700">Drink plenty of water, especially during flare-ups</p>
+                </div>
+                <div className="bg-green-50 p-3 rounded-lg">
+                  <h4 className="font-medium text-green-900 mb-1">📝 Keep a Diary</h4>
+                  <p className="text-sm text-green-700">Track symptoms, foods, and stress levels</p>
+                </div>
+                <div className="bg-yellow-50 p-3 rounded-lg">
+                  <h4 className="font-medium text-yellow-900 mb-1">😌 Manage Stress</h4>
+                  <p className="text-sm text-yellow-700">Practice relaxation techniques daily</p>
+                </div>
+                <div className="bg-purple-50 p-3 rounded-lg">
+                  <h4 className="font-medium text-purple-900 mb-1">🏥 Regular Check-ups</h4>
+                  <p className="text-sm text-purple-700">Stay in touch with your healthcare team</p>
+                </div>
+              </div>
+            </div>
+
+            {/* Emergency Contacts */}
+            <div className="card p-4 sm:p-6">
+              <h3 className="text-lg font-semibold font-source text-gray-900 mb-4">Emergency Contacts</h3>
+              <div className="space-y-3">
+                <div className="border-l-4 border-red-500 pl-3">
+                  <h4 className="font-medium text-gray-900">NHS 111</h4>
+                  <p className="text-sm text-gray-600">Non-emergency medical advice</p>
+                  <p className="text-sm font-medium text-red-600">Call 111</p>
+                </div>
+                <div className="border-l-4 border-blue-500 pl-3">
+                  <h4 className="font-medium text-gray-900">Crohn's & Colitis UK</h4>
+                  <p className="text-sm text-gray-600">Support helpline</p>
+                  <p className="text-sm font-medium text-blue-600">0300 222 9099</p>
+                </div>
+                <div className="border-l-4 border-green-500 pl-3">
+                  <h4 className="font-medium text-gray-900">Your GP</h4>
+                  <p className="text-sm text-gray-600">For routine appointments</p>
+                  <p className="text-sm font-medium text-green-600">Contact your surgery</p>
+                </div>
+              </div>
+            </div>
+
+          </div>
+        </div>
+
+        {/* Main Content */}
+        <div className="flex-1 lg:max-w-4xl order-1 lg:order-2">
       <div className="mb-12">
         <h1 className="text-2xl sm:text-3xl lg:text-4xl font-bold font-source text-gray-900 mb-4 sm:mb-6">Understanding IBD</h1>
         <p className="text-gray-600 font-roboto break-words">
@@ -287,13 +366,12 @@ export default function LearnPage() {
           <svg className="w-8 h-8 text-red-600 mr-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
             <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-2.5L13.732 4c-.77-.833-1.732-.833-2.464 0L3.35 16.5c-.77.833.192 2.5 1.732 2.5z" />
           </svg>
-          <h2 className="text-2xl font-bold font-source text-gray-900 break-words">Quit Smoking Support</h2>
+          <h2 className="text-xl font-semibold font-source text-gray-900 break-words">Quit Smoking Support</h2>
         </div>
         
         <div className="space-y-4 text-gray-700 font-roboto mb-6 break-words">
-          <p className="text-lg break-words">
-            <strong>Smoking significantly increases the risk of Crohn's disease flares and complications.</strong> 
-            If you smoke, quitting is one of the most important steps you can take to improve your health.
+          <p className="break-words">
+            <strong>Smoking significantly increases the risk of Crohn's disease flares and complications.</strong> If you smoke, quitting is one of the most important steps you can take to improve your health.
           </p>
           <p className="break-words">
             Research shows that smoking can reduce blood flow to the gut and weaken your body's natural defenses, 
@@ -335,25 +413,31 @@ export default function LearnPage() {
         </div>
       </div>
 
+        </div>
+
+      </div>
+
       {/* Call to Action */}
-      <div className="card text-center p-4 sm:p-6">
-        <h2 className="text-xl font-semibold font-source text-gray-900 mb-4">Ready to Start Tracking?</h2>
-        <p className="text-gray-600 mb-6 font-roboto">
-          Join thousands of people managing their IBD with FlareCare. Start tracking your symptoms and medications today.
-        </p>
-        <div className="flex flex-col sm:flex-row justify-center space-y-3 sm:space-y-0 sm:space-x-4">
-          {isAuthenticated ? (
-            <Link href="/" className="btn-primary font-roboto">
-              Go to Dashboard
+      <div className="mt-8">
+        <div className="card text-center p-4 sm:p-6">
+          <h2 className="text-xl font-semibold font-source text-gray-900 mb-4">Ready to Start Tracking?</h2>
+          <p className="text-gray-600 mb-6 font-roboto">
+            Start tracking your symptoms and medications to better manage your IBD condition.
+          </p>
+          <div className="flex flex-col sm:flex-row justify-center space-y-3 sm:space-y-0 sm:space-x-4">
+            {isAuthenticated ? (
+              <Link href="/" className="btn-primary font-roboto">
+                Go to Dashboard
+              </Link>
+            ) : (
+              <Link href="/auth" className="btn-primary font-roboto">
+                Get Started Free
+              </Link>
+            )}
+            <Link href="/about" className="btn-secondary font-roboto">
+              Learn More About FlareCare
             </Link>
-          ) : (
-            <Link href="/auth" className="btn-primary font-roboto">
-              Get Started Free
-            </Link>
-          )}
-          <Link href="/about" className="btn-secondary font-roboto">
-            Learn More About FlareCare
-          </Link>
+          </div>
         </div>
       </div>
     </div>
