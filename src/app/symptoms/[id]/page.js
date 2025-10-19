@@ -60,7 +60,7 @@ function SymptomDetailContent() {
 
   if (!symptom) {
     return (
-      <div className="flex items-center justify-center min-h-screen">
+      <div className="fixed inset-0 bg-slate-50 flex items-center justify-center z-50">
         <div className="text-center">
           <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600 mx-auto"></div>
           <p className="mt-4 text-gray-600">Loading...</p>
@@ -182,7 +182,7 @@ function SymptomDetailContent() {
                   </span>
                 </div>
                 {!symptom.is_ongoing && symptom.symptom_end_date && (
-                  <div className="flex items-center justify-between py-3 border-b border-gray-100">
+                  <div className="flex items-center justify-between pt-3 pb-1">
                     <div className="flex items-center gap-3">
                       <div className="w-2 h-2 bg-red-500 rounded-full"></div>
                       <span className="text-gray-600 font-medium">Ended</span>
@@ -279,7 +279,7 @@ function SymptomDetailContent() {
                       </h4>
                       <div className="space-y-2">
                         {symptom.breakfast.filter(item => item.food?.trim()).map((item, index) => (
-                          <div key={index} className="text-gray-700 bg-gray-50 rounded-lg px-3 py-2">
+                          <div key={index} className="text-gray-700 bg-yellow-50 rounded-lg px-3 py-2">
                             <span className="font-medium">{item.food}</span>
                             <span className="text-gray-500 ml-2">({item.quantity})</span>
                           </div>
@@ -295,7 +295,7 @@ function SymptomDetailContent() {
                       </h4>
                       <div className="space-y-2">
                         {symptom.lunch.filter(item => item.food?.trim()).map((item, index) => (
-                          <div key={index} className="text-gray-700 bg-gray-50 rounded-lg px-3 py-2">
+                          <div key={index} className="text-gray-700 bg-orange-50 rounded-lg px-3 py-2">
                             <span className="font-medium">{item.food}</span>
                             <span className="text-gray-500 ml-2">({item.quantity})</span>
                           </div>
@@ -311,7 +311,7 @@ function SymptomDetailContent() {
                       </h4>
                       <div className="space-y-2">
                         {symptom.dinner.filter(item => item.food?.trim()).map((item, index) => (
-                          <div key={index} className="text-gray-700 bg-gray-50 rounded-lg px-3 py-2">
+                          <div key={index} className="text-gray-700 bg-purple-50 rounded-lg px-3 py-2">
                             <span className="font-medium">{item.food}</span>
                             <span className="text-gray-500 ml-2">({item.quantity})</span>
                           </div>

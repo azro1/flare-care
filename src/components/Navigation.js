@@ -6,10 +6,12 @@ import { usePathname } from 'next/navigation'
 import { useState, useEffect } from 'react'
 import { useAuth } from '../lib/AuthContext'
 import SyncSettings from './SyncSettings'
+import { Sandwich } from "lucide-react"
 
 export default function Navigation() {
   const pathname = usePathname()
   const [isMenuOpen, setIsMenuOpen] = useState(false)
+  const [isUserMenuOpen, setIsUserMenuOpen] = useState(false)
   const { user, isAuthenticated, signOut } = useAuth()
 
   // Get user's display name from Google metadata or fallback to email
@@ -112,11 +114,7 @@ export default function Navigation() {
     { 
       href: '/food-guide', 
       label: 'Foods', 
-      icon: (
-        <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 6.253v13m0-13C10.832 5.477 9.246 5 7.5 5S4.168 5.477 3 6.253v13C4.168 18.477 5.754 18 7.5 18s3.332.477 4.5 1.253m0-13C13.168 5.477 14.754 5 16.5 5c1.746 0 3.332.477 4.5 1.253v13C19.832 18.477 18.246 18 16.5 18c-1.746 0-3.332.477-4.5 1.253" />
-        </svg>
-      )
+      icon: <Sandwich className="w-5 h-5" />
     },
   ]
 
@@ -151,11 +149,7 @@ export default function Navigation() {
     { 
       href: '/food-guide', 
       label: 'Foods', 
-      icon: (
-        <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 6.253v13m0-13C10.832 5.477 9.246 5 7.5 5S4.168 5.477 3 6.253v13C4.168 18.477 5.754 18 7.5 18s3.332.477 4.5 1.253m0-13C13.168 5.477 14.754 5 16.5 5c1.746 0 3.332.477 4.5 1.253v13C19.832 18.477 18.246 18 16.5 18c-1.746 0-3.332.477-4.5 1.253" />
-        </svg>
-      )
+      icon: <Sandwich className="w-5 h-5" />
     },
   ]
 
@@ -309,10 +303,7 @@ export default function Navigation() {
                   }`}
                   onClick={() => setIsMenuOpen(false)}
                 >
-                  {item.icon && <div className={`${
-                    item.href === '/ibd' ? 'text-blue-600' :
-                    'text-gray-600'
-                  }`}>{item.icon}</div>}
+                  {item.icon && <div className="text-gray-600">{item.icon}</div>}
                   <span>{item.label}</span>
                 </Link>
               ))}
@@ -321,8 +312,11 @@ export default function Navigation() {
             {isAuthenticated && (
               <div className="border-t border-gray-200/50 mt-4 pt-4">
                 <div className="flex items-center px-4 py-3">
-                  {/* User Avatar */}
-                  <Link href="/account" className="w-10 h-10 rounded-full overflow-hidden border-2 border-gray-200 mr-3 bg-gray-200 flex items-center justify-center hover:border-blue-300 transition-colors">
+                  {/* User Avatar - Clickable */}
+                  <button 
+                    onClick={() => setIsUserMenuOpen(!isUserMenuOpen)}
+                    className="w-10 h-10 rounded-full overflow-hidden border-2 border-gray-200 mr-3 bg-gray-200 flex items-center justify-center hover:border-blue-300 transition-colors"
+                  >
                     {getUserAvatar() ? (
                       <img 
                         src={getUserAvatar()} 
@@ -344,8 +338,40 @@ export default function Navigation() {
                         {getUserInitials()}
                       </div>
                     )}
-                  </Link>
+                  </button>
+                  {/* User Name */}
+                  <div className="flex-1">
+                    <p className="text-base font-medium text-gray-600 font-roboto">
+                      {getUserDisplayName()}
+                    </p>
+                  </div>
                 </div>
+                
+                {/* Mobile User Menu Options - Conditionally shown */}
+                {isUserMenuOpen && (
+                  <div className="px-4 pb-3">
+                    <Link
+                      href="/account"
+                      className="block px-4 py-3 text-base font-roboto transition-colors text-gray-600 hover:bg-gray-50 rounded-lg"
+                      onClick={() => {
+                        setIsMenuOpen(false)
+                        setIsUserMenuOpen(false)
+                      }}
+                    >
+                      Account
+                    </Link>
+                    <Link
+                      href="/profile-settings"
+                      className="block px-4 py-3 text-base font-roboto transition-colors text-gray-600 hover:bg-gray-50 rounded-lg"
+                      onClick={() => {
+                        setIsMenuOpen(false)
+                        setIsUserMenuOpen(false)
+                      }}
+                    >
+                      Profile Settings
+                    </Link>
+                  </div>
+                )}
               </div>
             )}
           </div>

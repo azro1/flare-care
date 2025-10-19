@@ -27,12 +27,15 @@ function SymptomsPageContent() {
     severity: '',
     stress_level: '',
     normal_bathroom_frequency: '',
-    bathroom_frequency_changed: '',
+    bathroom_frequency_changed: 'no',
     bathroom_frequency_change_details: '',
     notes: '',
     breakfast: [{ food: '', quantity: '' }],
     lunch: [{ food: '', quantity: '' }],
     dinner: [{ food: '', quantity: '' }],
+    breakfast_skipped: false,
+    lunch_skipped: false,
+    dinner_skipped: false,
     smoking: false,
     smoking_details: '',
     alcohol: false,
@@ -292,6 +295,20 @@ function SymptomsPageContent() {
       setFieldErrors(prev => ({ ...prev, alcohol_units: '' }))
     }
     
+    // Validate step 13 (meals) - must have food or mark as skipped for each meal
+    if (currentStep === 13) {
+      const hasBreakfast = formData.breakfast.some(meal => meal.food.trim()) || formData.breakfast_skipped
+      const hasLunch = formData.lunch.some(meal => meal.food.trim()) || formData.lunch_skipped
+      const hasDinner = formData.dinner.some(meal => meal.food.trim()) || formData.dinner_skipped
+      
+      if (!hasBreakfast || !hasLunch || !hasDinner) {
+        setFieldErrors(prev => ({ ...prev, meals: 'Please enter what you ate for each meal or check "I didn\'t eat anything"' }))
+        return
+      }
+      // Clear error if validation passes
+      setFieldErrors(prev => ({ ...prev, meals: '' }))
+    }
+    
     // Move to next step if no validation issues
     if (currentStep < totalSteps) {
       setCurrentStep(currentStep + 1)
@@ -339,7 +356,7 @@ function SymptomsPageContent() {
       
       // Clear bathroom frequency change fields if normal frequency is 0 or empty
       if (name === 'normal_bathroom_frequency' && (!value || parseInt(value) === 0)) {
-        newData.bathroom_frequency_changed = ''
+        newData.bathroom_frequency_changed = 'no'
         newData.bathroom_frequency_change_details = ''
         setFieldErrors(prev => ({ ...prev, bathroom_frequency_change_details: '' }))
       }
@@ -403,7 +420,8 @@ function SymptomsPageContent() {
     // Check if there's any meal data
     const hasMealData = formData.breakfast.some(item => item.food.trim()) ||
                        formData.lunch.some(item => item.food.trim()) ||
-                       formData.dinner.some(item => item.food.trim())
+                       formData.dinner.some(item => item.food.trim()) ||
+                       formData.breakfast_skipped || formData.lunch_skipped || formData.dinner_skipped
     
     if (!formData.notes.trim() && !hasMealData) {
       setAlertModal({ 
@@ -480,12 +498,15 @@ function SymptomsPageContent() {
         severity: '',
         stress_level: '',
         normal_bathroom_frequency: '',
-        bathroom_frequency_changed: '',
+        bathroom_frequency_changed: 'no',
         bathroom_frequency_change_details: '',
       notes: '',
       breakfast: [{ food: '', quantity: '' }],
       lunch: [{ food: '', quantity: '' }],
       dinner: [{ food: '', quantity: '' }],
+      breakfast_skipped: false,
+      lunch_skipped: false,
+      dinner_skipped: false,
       smoking: false,
       smoking_details: '',
       alcohol: false,
@@ -601,7 +622,7 @@ function SymptomsPageContent() {
               Track Your Symptoms
             </h1>
             <p className="text-gray-600 font-roboto">
-              Monitor your health patterns and identify triggers to better manage your condition.
+              Monitor your health patterns and identify triggers to better manage your condition
             </p>
               <div className="mt-4">
                 <button
@@ -667,11 +688,13 @@ function SymptomsPageContent() {
                     }
                     handleDateInputChange('day', value);
                   }}
-                  className={`w-full px-3 py-2 bg-white border-2 rounded-lg focus:outline-none focus:ring-4 transition-all duration-200 text-left text-base [appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none ${
-                    dateErrors.day 
-                      ? 'border-red-400 focus:ring-red-100 focus:border-red-500' 
-                      : 'border-gray-200 focus:ring-blue-100 focus:border-blue-400'
-                  }`}
+                  onKeyDown={(e) => {
+                    // Prevent 'e', 'E', '+', '-', '.' from being entered
+                    if (['e', 'E', '+', '-', '.'].includes(e.key)) {
+                      e.preventDefault();
+                    }
+                  }}
+                  className="w-full px-3 py-2 bg-white border-2 border-gray-200 rounded-lg focus:outline-none focus:ring-4 focus:ring-blue-100 focus:border-blue-400 transition-all duration-200 text-left text-base [appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none"
               />
             </div>
               <div className="w-14">
@@ -688,11 +711,13 @@ function SymptomsPageContent() {
                     }
                     handleDateInputChange('month', value);
                   }}
-                  className={`w-full px-3 py-2 bg-white border-2 rounded-lg focus:outline-none focus:ring-4 transition-all duration-200 text-left text-base [appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none ${
-                    dateErrors.month 
-                      ? 'border-red-400 focus:ring-red-100 focus:border-red-500' 
-                      : 'border-gray-200 focus:ring-blue-100 focus:border-blue-400'
-                  }`}
+                  onKeyDown={(e) => {
+                    // Prevent 'e', 'E', '+', '-', '.' from being entered
+                    if (['e', 'E', '+', '-', '.'].includes(e.key)) {
+                      e.preventDefault();
+                    }
+                  }}
+                  className="w-full px-3 py-2 bg-white border-2 border-gray-200 rounded-lg focus:outline-none focus:ring-4 focus:ring-blue-100 focus:border-blue-400 transition-all duration-200 text-left text-base [appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none"
                 />
               </div>
               <div className="w-24">
@@ -709,16 +734,20 @@ function SymptomsPageContent() {
                     }
                     handleDateInputChange('year', value);
                   }}
-                  className={`w-full px-3 py-2 bg-white border-2 rounded-lg focus:outline-none focus:ring-4 transition-all duration-200 text-left text-base [appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none ${
-                    dateErrors.year 
-                      ? 'border-red-400 focus:ring-red-100 focus:border-red-500' 
-                      : 'border-gray-200 focus:ring-blue-100 focus:border-blue-400'
-                  }`}
+                  onKeyDown={(e) => {
+                    // Prevent 'e', 'E', '+', '-', '.' from being entered
+                    if (['e', 'E', '+', '-', '.'].includes(e.key)) {
+                      e.preventDefault();
+                    }
+                  }}
+                  className="w-full px-3 py-2 bg-white border-2 border-gray-200 rounded-lg focus:outline-none focus:ring-4 focus:ring-blue-100 focus:border-blue-400 transition-all duration-200 text-left text-base [appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none"
                 />
               </div>
             </div>
             {(dateErrors.day || dateErrors.month || dateErrors.year) && (
-              <p className="text-red-600 text-sm mt-2">{dateErrors.day || dateErrors.month || dateErrors.year}</p>
+              <div className="mt-3 p-3 bg-red-50 border border-red-200 rounded-lg">
+                <p className="text-red-600 text-sm">{dateErrors.day || dateErrors.month || dateErrors.year}</p>
+              </div>
             )}
           </div>
         )}
@@ -773,6 +802,12 @@ function SymptomsPageContent() {
                     }
                     handleDateInputChange('endDay', value);
                   }}
+                  onKeyDown={(e) => {
+                    // Prevent 'e', 'E', '+', '-', '.' from being entered
+                    if (['e', 'E', '+', '-', '.'].includes(e.key)) {
+                      e.preventDefault();
+                    }
+                  }}
                   className="w-full px-3 py-2 bg-white border-2 border-gray-200 rounded-lg focus:outline-none focus:ring-4 focus:ring-blue-100 focus:border-blue-400 transition-all duration-200 text-left text-base [appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none"
               />
             </div>
@@ -789,6 +824,12 @@ function SymptomsPageContent() {
                       value = value.slice(0, 2);
                     }
                     handleDateInputChange('endMonth', value);
+                  }}
+                  onKeyDown={(e) => {
+                    // Prevent 'e', 'E', '+', '-', '.' from being entered
+                    if (['e', 'E', '+', '-', '.'].includes(e.key)) {
+                      e.preventDefault();
+                    }
                   }}
                   className="w-full px-3 py-2 bg-white border-2 border-gray-200 rounded-lg focus:outline-none focus:ring-4 focus:ring-blue-100 focus:border-blue-400 transition-all duration-200 text-left text-base [appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none"
                 />
@@ -807,12 +848,20 @@ function SymptomsPageContent() {
                     }
                     handleDateInputChange('endYear', value);
                   }}
+                  onKeyDown={(e) => {
+                    // Prevent 'e', 'E', '+', '-', '.' from being entered
+                    if (['e', 'E', '+', '-', '.'].includes(e.key)) {
+                      e.preventDefault();
+                    }
+                  }}
                   className="w-full px-3 py-2 bg-white border-2 border-gray-200 rounded-lg focus:outline-none focus:ring-4 focus:ring-blue-100 focus:border-blue-400 transition-all duration-200 text-left text-base [appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none"
                 />
               </div>
             </div>
             {(dateErrors.endDay || dateErrors.endMonth || dateErrors.endYear) && (
-              <p className="text-red-600 text-sm mt-2">{dateErrors.endDay || dateErrors.endMonth || dateErrors.endYear}</p>
+              <div className="mt-3 p-3 bg-red-50 border border-red-200 rounded-lg">
+                <p className="text-red-600 text-sm">{dateErrors.endDay || dateErrors.endMonth || dateErrors.endYear}</p>
+              </div>
             )}
           </div>
         )}
@@ -826,20 +875,26 @@ function SymptomsPageContent() {
             <p className="text-sm text-gray-600 mb-4">Rate from 1 (mild) to 10 (severe)</p>
             <div className="w-14">
                 <input
-                type="number"
+                  type="number"
                   id="severity"
                   name="severity"
                   min="1"
                   max="10"
                   value={formData.severity}
                   onChange={handleInputChange}
-                  className={`w-full px-3 py-2 bg-white border-2 rounded-lg focus:outline-none focus:ring-4 focus:ring-blue-100 focus:border-blue-400 transition-all duration-200 text-left text-base [appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none ${
-                    fieldErrors.severity ? 'border-red-300' : 'border-gray-200'
-                  }`}
+                  onKeyDown={(e) => {
+                    // Prevent 'e', 'E', '+', '-', '.' from being entered
+                    if (['e', 'E', '+', '-', '.'].includes(e.key)) {
+                      e.preventDefault();
+                    }
+                  }}
+                  className="w-full px-3 py-2 bg-white border-2 border-gray-200 rounded-lg focus:outline-none focus:ring-4 focus:ring-blue-100 focus:border-blue-400 transition-all duration-200 text-left text-base [appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none"
                 />
                 </div>
                 {fieldErrors.severity && (
-                  <p className="text-red-600 text-sm mt-2">{fieldErrors.severity}</p>
+                  <div className="mt-3 p-3 bg-red-50 border border-red-200 rounded-lg">
+                    <p className="text-red-600 text-sm">{fieldErrors.severity}</p>
+              </div>
                 )}
               </div>
         )}
@@ -853,20 +908,26 @@ function SymptomsPageContent() {
             <p className="text-sm text-gray-600 mb-4">Rate from 1 (calm) to 10 (very stressed)</p>
             <div className="w-14">
                 <input
-                type="number"
+                  type="number"
                   id="stress_level"
                   name="stress_level"
                   min="1"
                   max="10"
                   value={formData.stress_level}
                   onChange={handleInputChange}
-                  className={`w-full px-3 py-2 bg-white border-2 rounded-lg focus:outline-none focus:ring-4 focus:ring-blue-100 focus:border-blue-400 transition-all duration-200 text-left text-base [appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none ${
-                    fieldErrors.stress_level ? 'border-red-300' : 'border-gray-200'
-                  }`}
+                  onKeyDown={(e) => {
+                    // Prevent 'e', 'E', '+', '-', '.' from being entered
+                    if (['e', 'E', '+', '-', '.'].includes(e.key)) {
+                      e.preventDefault();
+                    }
+                  }}
+                  className="w-full px-3 py-2 bg-white border-2 border-gray-200 rounded-lg focus:outline-none focus:ring-4 focus:ring-blue-100 focus:border-blue-400 transition-all duration-200 text-left text-base [appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none"
                 />
                 </div>
                 {fieldErrors.stress_level && (
-                  <p className="text-red-600 text-sm mt-2">{fieldErrors.stress_level}</p>
+                  <div className="mt-3 p-3 bg-red-50 border border-red-200 rounded-lg">
+                    <p className="text-red-600 text-sm">{fieldErrors.stress_level}</p>
+              </div>
                 )}
               </div>
         )}
@@ -885,13 +946,19 @@ function SymptomsPageContent() {
                 max="50"
                 value={formData.normal_bathroom_frequency}
                 onChange={handleInputChange}
-                className={`w-full px-3 py-2 bg-white border-2 rounded-lg focus:outline-none focus:ring-4 focus:ring-blue-100 focus:border-blue-400 transition-all duration-200 text-left text-base [appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none ${
-                  fieldErrors.normal_bathroom_frequency ? 'border-red-300' : 'border-gray-200'
-                }`}
+                onKeyDown={(e) => {
+                  // Prevent 'e', 'E', '+', '-', '.' from being entered
+                  if (['e', 'E', '+', '-', '.'].includes(e.key)) {
+                    e.preventDefault();
+                  }
+                }}
+                className="w-full px-3 py-2 bg-white border-2 border-gray-200 rounded-lg focus:outline-none focus:ring-4 focus:ring-blue-100 focus:border-blue-400 transition-all duration-200 text-left text-base [appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none"
               />
-              </div>
+            </div>
               {fieldErrors.normal_bathroom_frequency && (
-                <p className="text-red-600 text-sm mt-2">{fieldErrors.normal_bathroom_frequency}</p>
+                <div className="mt-3 p-3 bg-red-50 border border-red-200 rounded-lg">
+                  <p className="text-red-600 text-sm">{fieldErrors.normal_bathroom_frequency}</p>
+          </div>
               )}
             </div>
         )}
@@ -940,12 +1007,12 @@ function SymptomsPageContent() {
               value={formData.bathroom_frequency_change_details}
               onChange={handleInputChange}
               placeholder="e.g., increased to 8-10 times per day, blood present, mucus, loose stools..."
-              className={`w-full px-4 py-3 bg-white border-2 rounded-lg focus:outline-none focus:ring-4 focus:ring-blue-100 focus:border-blue-400 transition-all duration-200 resize-none ${
-                fieldErrors.bathroom_frequency_change_details ? 'border-red-300' : 'border-gray-200'
-              }`}
+              className="w-full px-4 py-3 bg-white border-2 border-gray-200 rounded-lg focus:outline-none focus:ring-4 focus:ring-blue-100 focus:border-blue-400 transition-all duration-200 resize-none"
             />
             {fieldErrors.bathroom_frequency_change_details && (
-              <p className="text-red-600 text-sm mt-2">{fieldErrors.bathroom_frequency_change_details}</p>
+              <div className="mt-3 p-3 bg-red-50 border border-red-200 rounded-lg">
+                <p className="text-red-600 text-sm">{fieldErrors.bathroom_frequency_change_details}</p>
+              </div>
             )}
           </div>
         )}
@@ -992,13 +1059,13 @@ function SymptomsPageContent() {
                   value={formData.smoking_details}
                   onChange={handleInputChange}
                   placeholder="e.g., 1 pack of cigarettes per day, occasional cigars, etc."
-                  className={`w-full px-4 py-3 bg-white border-2 rounded-lg focus:outline-none focus:ring-4 focus:ring-blue-100 focus:border-blue-400 transition-all duration-200 ${
-                    fieldErrors.smoking_details ? 'border-red-300' : 'border-gray-200'
-                  }`}
+                  className="w-full px-4 py-3 bg-white border-2 border-gray-200 rounded-lg focus:outline-none focus:ring-4 focus:ring-blue-100 focus:border-blue-400 transition-all duration-200"
                   autoComplete="off"
                 />
                 {fieldErrors.smoking_details && (
-                  <p className="text-red-600 text-sm mt-2">{fieldErrors.smoking_details}</p>
+                  <div className="mt-3 p-3 bg-red-50 border border-red-200 rounded-lg">
+                    <p className="text-red-600 text-sm">{fieldErrors.smoking_details}</p>
+              </div>
             )}
           </div>
         )}
@@ -1047,13 +1114,19 @@ function SymptomsPageContent() {
                 max="30"
                   value={formData.alcohol_units}
                   onChange={handleInputChange}
-                  className={`w-full px-3 py-2 bg-white border-2 rounded-lg focus:outline-none focus:ring-4 focus:ring-blue-100 focus:border-blue-400 transition-all duration-200 text-left text-base [appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none ${
-                    fieldErrors.alcohol_units ? 'border-red-300' : 'border-gray-200'
-                  }`}
+                  onKeyDown={(e) => {
+                    // Prevent 'e', 'E', '+', '-', '.' from being entered
+                    if (['e', 'E', '+', '-', '.'].includes(e.key)) {
+                      e.preventDefault();
+                    }
+                  }}
+                  className="w-full px-3 py-2 bg-white border-2 border-gray-200 rounded-lg focus:outline-none focus:ring-4 focus:ring-blue-100 focus:border-blue-400 transition-all duration-200 text-left text-base [appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none"
                 />
               </div>
               {fieldErrors.alcohol_units && (
-                <p className="text-red-600 text-sm mt-2">{fieldErrors.alcohol_units}</p>
+                <div className="mt-3 p-3 bg-red-50 border border-red-200 rounded-lg">
+                  <p className="text-red-600 text-sm">{fieldErrors.alcohol_units}</p>
+              </div>
             )}
           </div>
         )}
@@ -1119,6 +1192,19 @@ function SymptomsPageContent() {
                   </div>
                 ))}
               </div>
+              
+              {/* Breakfast skipped checkbox */}
+              <div className="mt-3">
+                <label className="flex items-center">
+                  <input
+                    type="checkbox"
+                    checked={formData.breakfast_skipped}
+                    onChange={(e) => setFormData(prev => ({ ...prev, breakfast_skipped: e.target.checked }))}
+                    className="mr-2 w-4 h-4 text-blue-600 bg-gray-100 border-gray-300 rounded focus:ring-blue-500 focus:ring-2"
+                  />
+                  <span className="text-sm text-gray-600">I didn't eat anything for breakfast</span>
+                </label>
+              </div>
             </div>
 
             {/* Lunch */}
@@ -1176,6 +1262,19 @@ function SymptomsPageContent() {
                   </div>
                 ))}
               </div>
+              
+              {/* Lunch skipped checkbox */}
+              <div className="mt-3">
+                <label className="flex items-center">
+                  <input
+                    type="checkbox"
+                    checked={formData.lunch_skipped}
+                    onChange={(e) => setFormData(prev => ({ ...prev, lunch_skipped: e.target.checked }))}
+                    className="mr-2 w-4 h-4 text-blue-600 bg-gray-100 border-gray-300 rounded focus:ring-blue-500 focus:ring-2"
+                  />
+                  <span className="text-sm text-gray-600">I didn't eat anything for lunch</span>
+                </label>
+              </div>
             </div>
 
             {/* Dinner */}
@@ -1232,10 +1331,30 @@ function SymptomsPageContent() {
                     </div>
                   </div>
                 ))}
-              </div>
+          </div>
+
+              {/* Dinner skipped checkbox */}
+              <div className="mt-3">
+                <label className="flex items-center">
+                  <input
+                    type="checkbox"
+                    checked={formData.dinner_skipped}
+                    onChange={(e) => setFormData(prev => ({ ...prev, dinner_skipped: e.target.checked }))}
+                    className="mr-2 w-4 h-4 text-blue-600 bg-gray-100 border-gray-300 rounded focus:ring-blue-500 focus:ring-2"
+                  />
+                  <span className="text-sm text-gray-600">I didn't eat anything for dinner</span>
+                </label>
+          </div>
+      </div>
+        </div>
+        
+          {/* Validation error message */}
+          {fieldErrors.meals && (
+                  <div className="mt-3 p-3 bg-red-50 border border-red-200 rounded-lg">
+              <p className="text-red-600 text-sm">{fieldErrors.meals}</p>
             </div>
-          </div>
-          </div>
+                      )}
+                    </div>
         )}
 
         {/* Step 14: Additional Notes */}
@@ -1252,8 +1371,8 @@ function SymptomsPageContent() {
                 placeholder="Any other details you'd like to add? e.g. describe your symptoms, how you're feeling, any triggers you noticed..."
                 className="w-full px-4 py-3 bg-white border-2 border-gray-200 rounded-lg focus:outline-none focus:ring-4 focus:ring-blue-100 focus:border-blue-400 transition-all duration-200 resize-none"
               />
-          </div>
-      </div>
+                    </div>
+                  </div>
         )}
 
         {/* Step 15: Review */}
@@ -1265,24 +1384,24 @@ function SymptomsPageContent() {
               <div className="flex justify-between py-2 border-b border-gray-200">
                 <span className="text-gray-600">Start Date:</span>
                 <span className="font-medium">{formData.symptomStartDate ? new Date(formData.symptomStartDate).toLocaleDateString() : 'Not set'}</span>
-          </div>
+                </div>
 
               <div className="flex justify-between py-2 border-b border-gray-200">
                 <span className="text-gray-600">Status:</span>
                 <span className="font-medium">{formData.isOngoing ? 'Ongoing' : 'Ended'}</span>
-        </div>
+                      </div>
         
               {!formData.isOngoing && formData.symptomEndDate && (
                 <div className="flex justify-between py-2 border-b border-gray-200">
                   <span className="text-gray-600">End Date:</span>
                   <span className="font-medium">{new Date(formData.symptomEndDate).toLocaleDateString()}</span>
-            </div>
-              )}
+                  </div>
+                )}
 
               <div className="flex justify-between py-2 border-b border-gray-200">
                 <span className="text-gray-600">Severity:</span>
                 <span className="font-medium">{formData.severity}/10</span>
-                    </div>
+                      </div>
 
               <div className="flex justify-between py-2 border-b border-gray-200">
                 <span className="text-gray-600">Stress Level:</span>
@@ -1329,12 +1448,13 @@ function SymptomsPageContent() {
                 <div className="flex justify-between py-2 border-b border-gray-200">
                   <span className="text-gray-600">Alcohol Units:</span>
                   <span className="font-medium">{formData.alcohol_units} units/day</span>
-                        </div>
+                          </div>
                       )}
                       
               {(formData.breakfast.some(item => item.food.trim()) || 
                 formData.lunch.some(item => item.food.trim()) || 
-                formData.dinner.some(item => item.food.trim())) && (
+                formData.dinner.some(item => item.food.trim()) ||
+                formData.breakfast_skipped || formData.lunch_skipped || formData.dinner_skipped) && (
                 <div className="py-2 border-b border-gray-200">
                   <span className="text-gray-600 block mb-2">Meals:</span>
                   <div className="space-y-1 text-sm">
@@ -1346,12 +1466,24 @@ function SymptomsPageContent() {
                         ))}
                         </div>
                       )}
+                    {formData.breakfast_skipped && (
+                      <div>
+                        <span className="font-medium">Breakfast:</span>
+                        <span className="ml-2 text-gray-500 italic">Didn't eat anything</span>
+                          </div>
+                    )}
                     {formData.lunch.some(item => item.food.trim()) && (
                       <div>
                         <span className="font-medium">Lunch:</span>
                         {formData.lunch.filter(item => item.food.trim()).map((item, index) => (
                           <span key={index} className="ml-2 text-gray-600">{item.food} ({item.quantity})</span>
                         ))}
+                        </div>
+                      )}
+                    {formData.lunch_skipped && (
+                      <div>
+                        <span className="font-medium">Lunch:</span>
+                        <span className="ml-2 text-gray-500 italic">Didn't eat anything</span>
                           </div>
                     )}
                     {formData.dinner.some(item => item.food.trim()) && (
@@ -1362,6 +1494,12 @@ function SymptomsPageContent() {
                         ))}
                         </div>
                       )}
+                    {formData.dinner_skipped && (
+                      <div>
+                        <span className="font-medium">Dinner:</span>
+                        <span className="ml-2 text-gray-500 italic">Didn't eat anything</span>
+                      </div>
+                    )}
                     </div>
                   </div>
                 )}

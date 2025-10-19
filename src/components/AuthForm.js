@@ -51,7 +51,7 @@ export default function AuthForm() {
       <div className="max-w-md w-full space-y-6">
         <div className="text-center">
           <h2 className="text-3xl font-bold font-source text-gray-900 mb-6">
-            Sign In
+            FlareCare
           </h2>
           <p className="text-sm font-roboto text-gray-600 sm:text-base mb-6">
             Your personal health companion for tracking Crohn's & Colitis symptoms

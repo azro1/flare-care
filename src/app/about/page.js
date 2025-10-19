@@ -6,7 +6,7 @@ import ConfirmationModal from '@/components/ConfirmationModal'
 export default function About() {
   const [blogModal, setBlogModal] = useState({ isOpen: false })
   return (
-    <div className="max-w-4xl mx-auto">
+    <div className="max-w-5xl mx-auto">
       <div className="text-center mb-12">
         <h1 className="text-2xl sm:text-3xl lg:text-4xl font-bold font-source text-gray-900 mb-4 sm:mb-6">
           About FlareCare
