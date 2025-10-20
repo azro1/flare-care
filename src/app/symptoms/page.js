@@ -16,7 +16,20 @@ function SymptomsPageContent() {
   const pathname = usePathname()
   const { user } = useAuth()
 
-  
+  // ✅ Prevent body scrolling for symptoms pages (mobile-friendly)
+  useEffect(() => {
+    // Disable scroll for symptoms pages
+    document.body.style.position = 'fixed'
+    document.body.style.width = '100%'
+    document.body.style.height = '100%'
+    
+    // 🧹 Cleanup on unmount
+    return () => {
+      document.body.style.position = 'static'
+      document.body.style.width = 'auto'
+      document.body.style.height = 'auto'
+    }
+  }, [])
 
   // Wizard state
   const [currentStep, setCurrentStep] = useState(0)
