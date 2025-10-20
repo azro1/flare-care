@@ -57,7 +57,7 @@ export default function Home() {
               <div className="mb-0">
                 <span className="text-lg sm:text-xl font-semibold text-blue-500">FlareCare</span>
               </div>
-              <h1 className="text-4xl md:text-6xl font-bold text-slate-900 leading-tight font-source">
+              <h1 className="text-4xl md:text-6xl font-bold text-slate-900 leading-tight font-source max-w-xs mx-auto sm:max-w-none">
                 A clearer view of your <span className="text-blue-500">IBD</span>
               </h1>
 
