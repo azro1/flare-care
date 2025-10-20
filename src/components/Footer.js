@@ -11,95 +11,41 @@ export default function Footer() {
   if (loading) {
     return null
   }
-  
-  
-  // Full footer for authenticated users, minimal for unauthenticated
-  if (isAuthenticated) {
-    return (
-      <footer className="bg-white border-t border-gray-200 py-8 mt-auto lg:flex-grow">
-        <div className="container mx-auto px-4 sm:px-6 lg:px-8">
-          <div className="hidden lg:flex lg:flex-row lg:justify-between gap-8 mb-8">
-            
-            <div>
-              <h3 className="font-semibold font-source text-gray-900 mb-2 text-xl">Track</h3>
-              <ul className="space-y-2">
-                <li><a href="/symptoms" className="text-base text-gray-600 font-roboto hover:text-blue-600 transition-colors">Symptoms</a></li>
-                <li><a href="/medications" className="text-base text-gray-600 font-roboto hover:text-blue-600 transition-colors">Medications</a></li>
-                <li><a href="/reports" className="text-base text-gray-600 font-roboto hover:text-blue-600 transition-colors">Reports</a></li>
-              </ul>
-            </div>
-            
-            <div>
-              <h3 className="font-semibold font-source text-gray-900 mb-2 text-xl">About</h3>
-              <ul className="space-y-2">
-                <li><a href="/" className="text-base text-gray-600 font-roboto hover:text-blue-600 transition-colors">Home</a></li>
-                <li><a href="/about" className="text-base text-gray-600 font-roboto hover:text-blue-600 transition-colors">About Us</a></li>
-                <li><a href="/food-guide" className="text-base text-gray-600 font-roboto hover:text-blue-600 transition-colors">Foods</a></li>
-              </ul>
-            </div>
-            
-            <div>
-              <h3 className="font-semibold font-source text-gray-900 mb-2 text-xl">Support</h3>
-              <ul className="space-y-2">
-                <li><a href="mailto:support@flarecare.app" className="text-base text-gray-600 font-roboto hover:text-blue-600 transition-colors">Contact</a></li>
-                <li><span className="text-base text-gray-500 font-roboto">Blog</span></li>
-              </ul>
-            </div>
-          </div>
-          
-          <div className="hidden lg:block border-t border-gray-200 pt-8">
-            <div className="flex items-center justify-center">
-              <div className="w-12 h-12 bg-blue-600 rounded-xl flex items-center justify-center mr-2">
-                <svg className="w-7 h-7 text-white" fill="currentColor" viewBox="0 0 24 24">
-                  <path d="M4.318 6.318a4.5 4.5 0 000 6.364L12 20.364l7.682-7.682a4.5 4.5 0 00-6.364-6.364L12 7.636l-1.318-1.318a4.5 4.5 0 00-6.364 0z" />
-                </svg>
-              </div>
-              <p className="text-lg text-gray-600 font-roboto">
-                &copy; 2025 FlareCare
-              </p>
-            </div> 
-          </div>
-          
-          {/* Minimal footer for mobile authenticated users */}
-          <div className="lg:hidden">
-            <div className="flex items-center justify-center gap-3">
-              <div className="flex items-center justify-center gap-2">
-                <div className="hidden sm:flex items-center justify-center w-9 h-9 bg-blue-700 rounded-xl">
-                  <svg className="w-5 h-5 text-white" fill="currentColor" viewBox="0 0 24 24">
-                    <path d="M4.318 6.318a4.5 4.5 0 000 6.364L12 20.364l7.682-7.682a4.5 4.5 0 00-6.364-6.364L12 7.636l-1.318-1.318a4.5 4.5 0 00-6.364 0z" />
-                  </svg>
-                </div>
-                <p className="text-base text-gray-600 font-roboto">
-                  &copy; 2025 FlareCare
-                </p>
-              </div>
-            </div>
+
+  return (
+    <footer className="py-6 sm:py-8 lg:py-12 px-4 sm:px-6 bg-white border-t border-slate-200 mt-auto">
+      <div className="max-w-6xl mx-auto">
+        {/* Mobile minimal footer */}
+        <div className="lg:hidden">
+          <div className="flex items-center justify-center">
+            <span className="text-sm text-slate-600">© 2025 FlareCare</span>
           </div>
         </div>
-      </footer>
-    )
-  }
-  
-  // Minimal footer for unauthenticated users
-  return (
-    <footer className="bg-white border-t border-gray-200 py-6">
-      <div className="container mx-auto px-4 sm:px-6 lg:px-8">
-          <div className="flex items-center justify-center lg:justify-between gap-3">
-            <div className="flex items-center justify-center gap-2">
-              <div className="hidden sm:flex items-center justify-center w-9 h-9 bg-blue-700 rounded-xl">
-                <svg className="w-5 h-5 text-white" fill="currentColor" viewBox="0 0 24 24">
-                  <path d="M4.318 6.318a4.5 4.5 0 000 6.364L12 20.364l7.682-7.682a4.5 4.5 0 00-6.364-6.364L12 7.636l-1.318-1.318a4.5 4.5 0 00-6.364 0z" />
+
+        {/* Desktop full footer */}
+        <div className="hidden lg:flex lg:flex-col">
+          <div className="flex flex-col md:flex-row justify-between items-center gap-6">
+            <div className="flex items-center gap-2">
+              <div className="w-8 h-8 bg-blue-500 rounded-lg flex items-center justify-center">
+                <svg className="w-4 h-4 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4.318 6.318a4.5 4.5 0 000 6.364L12 20.364l7.682-7.682a4.5 4.5 0 00-6.364-6.364L12 7.636l-1.318-1.318a4.5 4.5 0 00-6.364 0z" />
                 </svg>
               </div>
-              <p className="text-base text-gray-600 font-roboto">
-                &copy; 2025 FlareCare
-              </p>
+              <span className="font-bold font-source text-lg text-slate-900">FlareCare</span>
             </div>
-            <div className="hidden lg:flex flex-col items-start justify-center text-sm text-gray-600 font-roboto">
-              <p>Terms of use</p>
-              <p>Privacy policy</p>
+
+            <div className="flex gap-8 text-sm text-slate-600">
+              <a href="/about" className="hover:text-slate-900 transition-colors">About</a>
+              <a href="#" className="hover:text-slate-900 transition-colors">Privacy</a>
+              <a href="#" className="hover:text-slate-900 transition-colors">Terms</a>
+              <a href="#" className="hover:text-slate-900 transition-colors">Contact</a>
             </div>
           </div>
+
+          <div className="mt-8 pt-8 border-t border-slate-200 text-center text-sm text-slate-500">
+            Made with care for the IBD community
+          </div>
+        </div>
       </div>
     </footer>
   )

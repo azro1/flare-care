@@ -17,19 +17,19 @@ function SymptomsPageContent() {
   const { user } = useAuth()
 
   // ✅ Prevent body scrolling for symptoms pages (mobile-friendly)
-  useEffect(() => {
-    // Disable scroll for symptoms pages
-    document.body.style.position = 'fixed'
-    document.body.style.width = '100%'
-    document.body.style.height = '100%'
+  // useEffect(() => {
+  //   // Disable scroll for symptoms pages
+  //   document.body.style.position = 'fixed'
+  //   document.body.style.width = '100%'
+  //   document.body.style.height = '100%'
     
-    // 🧹 Cleanup on unmount
-    return () => {
-      document.body.style.position = 'static'
-      document.body.style.width = 'auto'
-      document.body.style.height = 'auto'
-    }
-  }, [])
+  //   // 🧹 Cleanup on unmount
+  //   return () => {
+  //     document.body.style.position = 'static'
+  //     document.body.style.width = 'auto'
+  //     document.body.style.height = 'auto'
+  //   }
+  // }, [])
 
   // Wizard state
   const [currentStep, setCurrentStep] = useState(0)
@@ -638,15 +638,17 @@ function SymptomsPageContent() {
               Monitor your health patterns and identify triggers to better manage your condition
             </p>
               <div className="mt-4">
-                <button
-                  onClick={() => setCurrentStep(currentStep - 1)}
-                  className="text-blue-600 hover:text-blue-800 hover:underline text-base font-medium flex items-center"
-                >
-                  <svg className="w-4 h-4 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 19l-7-7 7-7" />
-                  </svg>
-                  Back
-                </button>
+                {currentStep !== 1 && (
+                  <button
+                    onClick={() => setCurrentStep(currentStep - 1)}
+                    className="text-blue-600 hover:text-blue-800 hover:underline text-base font-medium flex items-center"
+                  >
+                    <svg className="w-4 h-4 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 19l-7-7 7-7" />
+                    </svg>
+                    Back
+                  </button>
+                )}
                 <div className="mt-4 border-b border-gray-200"></div>
           </div>
           </div>
@@ -677,7 +679,7 @@ function SymptomsPageContent() {
               onClick={nextStep}
               className="px-4 py-2 bg-blue-600 text-white text-lg font-semibold rounded-lg hover:bg-blue-700 transition-colors"
             >
-              Start
+              Let's go!
             </button>
         </div>
         )}

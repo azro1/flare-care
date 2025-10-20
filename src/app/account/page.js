@@ -21,7 +21,7 @@ function AccountPageContent() {
     
     try {
       await signOut()
-      router.push('/')
+      router.replace('/')
     } catch (error) {
       console.error('Sign out error:', error)
       setIsSigningOut(false)

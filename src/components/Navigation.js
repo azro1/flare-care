@@ -189,27 +189,23 @@ export default function Navigation() {
         <div className="flex justify-between items-center h-16 sm:h-20">
           {/* Logo */}
           <Link href="/" className="flex items-center space-x-2 group">
-            <div className="w-10 h-10 sm:w-10 sm:h-10 bg-blue-600 rounded-xl flex items-center justify-center shadow-lg">
-              <svg className="w-5 h-5 sm:w-6 sm:h-6 text-white" fill="currentColor" viewBox="0 0 24 24">
-                <path d="M4.318 6.318a4.5 4.5 0 000 6.364L12 20.364l7.682-7.682a4.5 4.5 0 00-6.364-6.364L12 7.636l-1.318-1.318a4.5 4.5 0 00-6.364 0z" />
+            <div className="w-10 h-10 sm:w-10 sm:h-10 bg-blue-500 rounded-lg flex items-center justify-center">
+              <svg className="w-5 h-5 sm:w-6 sm:h-6 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4.318 6.318a4.5 4.5 0 000 6.364L12 20.364l7.682-7.682a4.5 4.5 0 00-6.364-6.364L12 7.636l-1.318-1.318a4.5 4.5 0 00-6.364 0z" />
               </svg>
             </div>
-            <span className="hidden sm:block text-base sm:text-lg lg:text-xl font-bold font-source text-slate-900">FlareCare</span>
+            <span className="hidden sm:block text-base sm:text-lg lg:text-xl font-bold text-slate-900 font-source">FlareCare</span>
           </Link>
 
           {/* Desktop Navigation */}
           <div className="hidden lg:flex items-center space-x-6">
             {/* Main Navigation */}
-            <div className="flex items-center space-x-6">
+            <div className="flex items-center space-x-6 lg:space-x-12">
               {(isAuthenticated ? mainNavItems : unauthenticatedNavItems).map((item) => (
                 <Link
                   key={item.href}
                   href={item.href}
-                  className={`nav-link ${
-                    pathname === item.href
-                      ? 'nav-link-active'
-                      : 'nav-link-inactive'
-                  }`}
+                  className="text-base text-gray-600 hover:text-blue-600"
                 >
                   {item.label}
                 </Link>
@@ -296,14 +292,9 @@ export default function Navigation() {
                 <Link
                   key={item.href}
                   href={item.href}
-                  className={`flex items-center gap-3 px-4 py-3 text-base font-medium font-roboto transition-colors duration-150 ${
-                    pathname === item.href
-                      ? 'text-blue-700'
-                      : 'text-gray-600 hover:text-gray-900'
-                  }`}
+                  className="flex items-center gap-3 px-4 py-3 text-base font-roboto text-gray-600 hover:text-blue-600"
                   onClick={() => setIsMenuOpen(false)}
                 >
-                  {item.icon && <div className="text-gray-600">{item.icon}</div>}
                   <span>{item.label}</span>
                 </Link>
               ))}

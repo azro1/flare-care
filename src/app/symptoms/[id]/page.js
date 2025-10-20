@@ -88,7 +88,7 @@ function SymptomDetailContent() {
             <button
               onClick={() => setShowDeleteModal(true)}
               disabled={isDeleting}
-              className="flex items-center gap-2 px-4 py-2 text-red-600 hover:text-red-700 hover:bg-red-50 rounded-lg transition-colors disabled:opacity-50"
+              className="hidden"
             >
               <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
@@ -97,11 +97,11 @@ function SymptomDetailContent() {
             </button>
           </div>
           
-          <div className="text-center">
-            <h1 className="text-2xl sm:text-3xl lg:text-4xl font-bold font-source text-gray-900 mb-4 sm:mb-6">
+          <div>
+            <h1 className="text-2xl sm:text-3xl lg:text-4xl font-bold font-source text-gray-900 mb-2 sm:mb-4">
               Symptom Entry
             </h1>
-            <p className="text-lg sm:text-xl font-roboto text-gray-600">
+            <p className="text-base sm:text-lg font-roboto text-gray-500">
               {new Date(symptom.created_at || symptom.createdAt).toLocaleDateString('en-GB', { 
                 weekday: 'long', 
                 year: 'numeric', 
@@ -341,6 +341,17 @@ function SymptomDetailContent() {
             )}
           </div>
         </div>
+      </div>
+
+      {/* Bottom delete action (all screens) */}
+      <div className="max-w-5xl mx-auto px-3 sm:px-4 md:px-6 lg:px-8 mt-8 pt-6 border-t border-gray-200">
+        <button
+          onClick={() => setShowDeleteModal(true)}
+          disabled={isDeleting}
+          className="w-full px-5 py-3.5 text-red-600 border border-red-200 rounded-lg bg-white hover:bg-red-50 focus:outline-none focus:ring-4 focus:ring-red-100 transition-colors disabled:opacity-50"
+        >
+          {isDeleting ? 'Deleting...' : 'Delete entry'}
+        </button>
       </div>
 
       {/* Delete Confirmation Modal */}

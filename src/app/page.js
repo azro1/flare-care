@@ -48,74 +48,185 @@ export default function Home() {
   // If not authenticated, show a compelling landing page
   if (!isAuthenticated) {
     return (
-      <div className="sm:flex-grow flex flex-col items-center justify-center" style={{
-        background: 'radial-gradient(ellipse at center, rgba(240, 249, 255, 0.3) 0%, rgba(224, 242, 254, 0.2) 40%, rgba(255, 255, 255, 0.1) 70%, transparent 100%)'
-      }}>
-        {/* Hero Section */}
-        <div className="relative">
-          
-          <div className="relative max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 ">
-            <div className="text-center">
-              {/* Brand Name */}
-              <div className="mb-2">
-                <h2 className="text-2xl font-bold font-source text-blue-600 mb-2">FlareCare</h2>
-              </div>
+      <div className="min-h-screen bg-white">
+        {/* Global Navigation component is used via layout; removing inline landing nav to avoid duplicates */}
 
-              {/* Main Headline */}
-              <h1 className="text-4xl sm:text-5xl lg:text-6xl font-bold font-source text-slate-900">
-                Take Control of Your
-                <span className="block my-2">
-                   <span className="text-blue-600">IBD</span> Journey
-                </span>
+        <section className="pt-12 pb-16 sm:pb-20 px-6 sm:pt-32">
+          <div className="max-w-6xl mx-auto">
+            <div className="max-w-3xl mx-auto text-center space-y-3 sm:space-y-5">
+              <div className="mb-0">
+                <span className="text-xl sm:text-2xl font-semibold text-blue-500 font-source">FlareCare</span>
+              </div>
+              <h1 className="text-4xl md:text-6xl font-bold text-slate-900 leading-tight">
+                A clearer view of your <span className="text-blue-500">IBD</span>
               </h1>
 
-              {/* Features */}
-              <div className="mt-12 sm:mt-16 max-w-5xl mx-auto">
-                <div className="grid grid-cols-1 md:grid-cols-3 gap-8 mb-12">
-                  <div className="text-center">
-                    <div className="w-16 h-16 bg-green-100 rounded-2xl flex items-center justify-center mx-auto mb-4">
-                      <svg className="w-8 h-8 text-green-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z" />
-                      </svg>
+              <p className="text-base sm:text-lg text-slate-600 leading-relaxed max-w-2xl mx-auto">
+                A personal health journal designed for people with Crohn's disease and ulcerative colitis.
+                Track your symptoms, understand your patterns, and feel more in control.
+              </p>
+
+              <div className="pt-4">
+                <Link href="/auth" className="px-8 py-3 bg-blue-500 text-white rounded-lg hover:bg-blue-600 transition-all text-lg font-medium">
+                  Sign In
+                </Link>
+              </div>
+            </div>
+
+            <div className="mt-16 max-w-4xl mx-auto">
+              <div className="bg-gradient-to-br from-slate-50 to-blue-50 rounded-2xl p-8 md:p-12 border border-slate-200">
+                <div className="space-y-6">
+                  <div className="flex items-center justify-between pb-4 border-b border-slate-200">
+                    <div>
+                      <h3 className="text-lg font-semibold text-slate-900">Today's Check-in</h3>
+                      <p className="text-sm text-slate-500">{new Date().toLocaleDateString('en-GB', { weekday: 'long', day: 'numeric', month: 'long' })}</p>
                     </div>
-                    <h3 className="text-xl font-bold text-slate-800 mb-2">Track Symptoms</h3>
-                    <p className="text-slate-600">Log daily symptoms and identify patterns over time</p>
-                  </div>
-                  
-                  <div className="text-center">
-                    <div className="w-16 h-16 bg-purple-100 rounded-2xl flex items-center justify-center mx-auto mb-4">
-                      <svg className="w-8 h-8 text-purple-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19.428 15.428a2 2 0 00-1.022-.547l-2.387-.477a6 6 0 00-3.86.517l-.318.158a6 6 0 01-3.86.517L6.05 15.21a2 2 0 00-1.806.547M8 4h8l-1 1v5.172a2 2 0 00.586 1.414l5 5c1.26 1.26.367 3.414-1.415 3.414H4.828c-1.782 0-2.674-2.154-1.414-3.414l5-5A2 2 0 009 10.172V5L8 4z" />
-                      </svg>
-                    </div>
-                    <h3 className="text-xl font-bold text-slate-800 mb-2">Manage Medications</h3>
-                    <p className="text-slate-600">Set reminders and track medication adherence</p>
-                  </div>
-                  
-                  <div className="text-center">
-                    <div className="w-16 h-16 bg-orange-100 rounded-2xl flex items-center justify-center mx-auto mb-4">
-                      <svg className="w-8 h-8 text-orange-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 17v-2m3 2v-4m3 4v-6m2 10H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
+                    <svg className="w-8 h-8 text-blue-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4.318 6.318a4.5 4.5 0 000 6.364L12 20.364l7.682-7.682a4.5 4.5 0 00-6.364-6.364L12 7.636l-1.318-1.318a4.5 4.5 0 00-6.364 0z" />
             </svg>
-          </div>
-                    <h3 className="text-xl font-bold text-slate-800 mb-2">Generate Reports</h3>
-                    <p className="text-slate-600">Create detailed reports for your healthcare team</p>
+                  </div>
+
+                  <div className="grid md:grid-cols-3 gap-4">
+                    <div className="bg-white p-4 rounded-lg">
+                      <div className="text-sm text-slate-500 mb-1">Pain Level</div>
+                      <div className="text-2xl font-semibold text-slate-900">2/10</div>
+                    </div>
+                    <div className="bg-white p-4 rounded-lg">
+                      <div className="text-sm text-slate-500 mb-1">Energy</div>
+                      <div className="text-2xl font-semibold text-slate-900">Good</div>
+                    </div>
+                    <div className="bg-white p-4 rounded-lg">
+                      <div className="text-sm text-slate-500 mb-1">Meds Taken</div>
+                      <div className="text-2xl font-semibold text-slate-900">3/3</div>
+                    </div>
+                  </div>
+
+                  <div className="bg-white p-4 rounded-lg">
+                    <div className="text-sm text-slate-500 mb-2">Notes</div>
+                    <p className="text-slate-700">Feeling better today. Avoided dairy and it seems to help.</p>
                   </div>
                 </div>
-                
-                <div className="text-center">
-                  <Link href="/auth" className="inline-flex items-center gap-3 bg-blue-600 hover:bg-blue-700 text-white font-semibold text-lg px-6 py-3 rounded-xl transition-colors duration-200">
-                    <span>Get Started</span>
-            <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 7l5 5m0 0l-5 5m5-5H6" />
-            </svg>
-          </Link>
-        </div>
-      </div>
+              </div>
             </div>
           </div>
-        </div>
+        </section>
 
+        <section className="py-16  sm:py-20 px-6 bg-slate-50">
+          <div className="max-w-6xl mx-auto">
+            <div className="text-center mb-12">
+              <h2 className="text-3xl md:text-4xl font-bold text-slate-900 mb-4">
+                Tools to help you manage your health
+              </h2>
+              <p className="text-lg text-slate-600 max-w-2xl mx-auto">
+                Simple features that make a real difference in your daily life
+              </p>
+            </div>
+
+            <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-6">
+              <div className="bg-white p-6 rounded-xl border border-slate-200 hover:border-blue-200 hover:shadow-md transition-all">
+                <div className="w-12 h-12 bg-blue-100 rounded-lg flex items-center justify-center text-blue-600 mb-4">
+                  <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z" />
+                  </svg>
+                </div>
+                <h3 className="text-lg font-semibold text-slate-900 mb-2">Track Your Days</h3>
+                <p className="text-slate-600 leading-relaxed">Log symptoms, pain levels, and bowel movements with a simple daily journal</p>
+              </div>
+
+              <div className="bg-white p-6 rounded-xl border border-slate-200 hover:border-blue-200 hover:shadow-md transition-all">
+                <div className="w-12 h-12 bg-blue-100 rounded-lg flex items-center justify-center text-blue-600 mb-4">
+                  <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z" />
+                  </svg>
+                </div>
+                <h3 className="text-lg font-semibold text-slate-900 mb-2">Medication Reminders</h3>
+                <p className="text-slate-600 leading-relaxed">Set up reminders for your medications so you never miss a dose</p>
+              </div>
+
+              <div className="bg-white p-6 rounded-xl border border-slate-200 hover:border-blue-200 hover:shadow-md transition-all">
+                <div className="w-12 h-12 bg-blue-100 rounded-lg flex items-center justify-center text-blue-600 mb-4">
+                  <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 7h8m0 0v8m0-8l-8 8-4-4-6 6" />
+                  </svg>
+                </div>
+                <h3 className="text-lg font-semibold text-slate-900 mb-2">Spot Patterns</h3>
+                <p className="text-slate-600 leading-relaxed">See how your symptoms change over time and identify your triggers</p>
+              </div>
+
+              <div className="bg-white p-6 rounded-xl border border-slate-200 hover:border-blue-200 hover:shadow-md transition-all">
+                <div className="w-12 h-12 bg-blue-100 rounded-lg flex items-center justify-center text-blue-600 mb-4">
+                  <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 6.253v13m0-13C10.832 5.477 9.246 5 7.5 5S4.168 5.477 3 6.253v13C4.168 18.477 5.754 18 7.5 18s3.332.477 4.5 1.253m0-13C13.168 5.477 14.754 5 16.5 5c1.746 0 3.332.477 4.5 1.253v13C19.832 18.477 18.246 18 16.5 18c-1.746 0-3.332.477-4.5 1.253" />
+                  </svg>
+                </div>
+                <h3 className="text-lg font-semibold text-slate-900 mb-2">Food Diary</h3>
+                <p className="text-slate-600 leading-relaxed">Keep track of what you eat and how it affects your symptoms</p>
+              </div>
+
+              <div className="bg-white p-6 rounded-xl border border-slate-200 hover:border-blue-200 hover:shadow-md transition-all">
+                <div className="w-12 h-12 bg-blue-100 rounded-lg flex items-center justify-center text-blue-600 mb-4">
+                  <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12l2 2 4-4m5.618-4.016A11.955 11.955 0 0112 2.944a11.955 11.955 0 01-8.618 3.04A12.02 12.02 0 003 9c0 5.591 3.824 10.29 9 11.622 5.176-1.332 9-6.03 9-11.622 0-1.042-.133-2.052-.382-3.016z" />
+                  </svg>
+                </div>
+                <h3 className="text-lg font-semibold text-slate-900 mb-2">Your Data, Private</h3>
+                <p className="text-slate-600 leading-relaxed">All your health information stays private and secure</p>
+              </div>
+
+              <div className="bg-white p-6 rounded-xl border border-slate-200 hover:border-blue-200 hover:shadow-md transition-all">
+                <div className="w-12 h-12 bg-blue-100 rounded-lg flex items-center justify-center text-blue-600 mb-4">
+                  <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4.318 6.318a4.5 4.5 0 000 6.364L12 20.364l7.682-7.682a4.5 4.5 0 00-6.364-6.364L12 7.636l-1.318-1.318a4.5 4.5 0 00-6.364 0z" />
+            </svg>
+                </div>
+                <h3 className="text-lg font-semibold text-slate-900 mb-2">Share with Your Doctor</h3>
+                <p className="text-slate-600 leading-relaxed">Export reports to share with your healthcare team</p>
+              </div>
+            </div>
+          </div>
+        </section>
+
+        <section className="py-16 sm:py-20 px-6">
+          <div className="max-w-4xl mx-auto">
+            <div className="bg-blue-500 rounded-2xl p-8 md:p-12 text-white">
+              <h2 className="text-3xl md:text-4xl font-bold mb-6">
+                Built by someone who understands
+              </h2>
+              <div className="space-y-4 text-lg text-blue-50">
+                <p>
+                  Living with IBD means tracking a lot of information. What you ate, how you're feeling,
+                  which medications you took, and so much more.
+                </p>
+                <p>
+                  FlareCare was created to make this easier. It's not about fancy features or complicated
+                  analytics. It's about having a simple, reliable place to track your health journey.
+                </p>
+                <p>
+                  Whether you're newly diagnosed or have been managing IBD for years, FlareCare is here
+                  to help you understand your body better and feel more in control.
+                </p>
+              </div>
+            </div>
+          </div>
+        </section>
+
+        <section className="pt-16 pb-8 sm:py-20 px-6 bg-slate-50">
+          <div className="max-w-4xl mx-auto text-center">
+            <h2 className="text-3xl md:text-4xl font-bold text-slate-900">
+              Start tracking today
+            </h2>
+            <p className="text-lg text-slate-600 mt-4">
+              Join others who are taking control of their IBD journey
+            </p>
+            <div className="mt-6 flex justify-center">
+              <Link href="/auth" className="inline-flex items-center justify-center w-full sm:w-auto px-8 py-3 bg-blue-500 text-white rounded-lg hover:bg-blue-600 transition-all text-lg font-medium">
+                Sign In
+          </Link>
+        </div>
+          </div>
+        </section>
+
+        {/* Footer removed here to avoid duplicate; global Footer component handles it */}
       </div>
     )
   }
@@ -159,7 +270,7 @@ export default function Home() {
                     <span className="font-semibold text-gray-900">{todaySymptoms.length}</span>
                   </div>
                 </div>
-              </div>
+            </div>
 
               {/* Today's Goals */}
               <div className="bg-white rounded-xl p-4 sm:p-6 shadow-sm border border-gray-200">
@@ -198,7 +309,7 @@ export default function Home() {
                     <div className="w-6 h-6 bg-blue-100 rounded-lg flex items-center justify-center">
                       <svg className="w-3 h-3 text-blue-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                         <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 6.253v13m0-13C10.832 5.477 9.246 5 7.5 5S4.168 5.477 3 6.253v13C4.168 18.477 5.754 18 7.5 18s3.332.477 4.5 1.253m0-13C13.168 5.477 14.754 5 16.5 5c1.746 0 3.332.477 4.5 1.253v13C19.832 18.477 18.246 18 16.5 18c-1.746 0-3.332.477-4.5 1.253" />
-                      </svg>
+                  </svg>
                     </div>
                     <span className="text-sm text-gray-600">Stay hydrated</span>
                   </div>
@@ -425,7 +536,7 @@ export default function Home() {
             </Link>
 
             <Link href="/ibd" className="bg-white rounded-xl p-6 shadow-sm border border-gray-200 hover:shadow-md transition-shadow">
-              <div className="text-center">
+            <div className="text-center">
                 <div className="w-12 h-12 bg-blue-100 rounded-xl flex items-center justify-center mx-auto mb-3">
                   <svg className="w-6 h-6 text-blue-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 6.253v13m0-13C10.832 5.477 9.246 5 7.5 5S4.168 5.477 3 6.253v13C4.168 18.477 5.754 18 7.5 18s3.332.477 4.5 1.253m0-13C13.168 5.477 14.754 5 16.5 5c1.746 0 3.332.477 4.5 1.253v13C19.832 18.477 18.246 18 16.5 18c-1.746 0-3.332.477-4.5 1.253" />
@@ -440,13 +551,13 @@ export default function Home() {
                 <div className="w-12 h-12 bg-yellow-100 rounded-xl flex items-center justify-center mx-auto mb-3">
                   <svg className="w-6 h-6 text-yellow-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 6.253v13m0-13C10.832 5.477 9.246 5 7.5 5S4.168 5.477 3 6.253v13C4.168 18.477 5.754 18 7.5 18s3.332.477 4.5 1.253m0-13C13.168 5.477 14.754 5 16.5 5c1.746 0 3.332.477 4.5 1.253v13C19.832 18.477 18.246 18 16.5 18c-1.746 0-3.332.477-4.5 1.253" />
-                  </svg>
+                </svg>
                 </div>
                 <h3 className="font-semibold text-gray-900">Foods</h3>
               </div>
-            </Link>
+              </Link>
           </div>
-        </div>
+            </div>
           </div>
         </div>
       </div>
