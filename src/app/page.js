@@ -5,6 +5,7 @@ import { useAuth } from '@/lib/AuthContext'
 import { useEffect, useState } from 'react'
 import { useDataSync } from '@/lib/useDataSync'
 import { useRouter } from 'next/navigation'
+import { CupSoda, Pizza } from 'lucide-react'
 
 export default function Home() {
   const { isAuthenticated, loading, user } = useAuth()
@@ -123,8 +124,8 @@ export default function Home() {
             </div>
 
             <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-6">
-              <div className="bg-white p-6 rounded-xl border border-slate-200 hover:border-blue-200 hover:shadow-md transition-all">
-                <div className="w-12 h-12 bg-blue-100 rounded-lg flex items-center justify-center text-blue-600 mb-4">
+              <div className="bg-white p-6 rounded-xl border border-slate-200 hover:border-blue-200 hover:shadow-md transition-all text-center sm:text-left">
+                <div className="w-12 h-12 bg-blue-100 rounded-lg flex items-center justify-center text-blue-600 mb-4 mx-auto sm:mx-0">
                   <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z" />
                   </svg>
@@ -133,8 +134,8 @@ export default function Home() {
                 <p className="text-slate-600 leading-relaxed">Log symptoms, pain levels, and bowel movements with a simple daily journal</p>
               </div>
 
-              <div className="bg-white p-6 rounded-xl border border-slate-200 hover:border-blue-200 hover:shadow-md transition-all">
-                <div className="w-12 h-12 bg-blue-100 rounded-lg flex items-center justify-center text-blue-600 mb-4">
+              <div className="bg-white p-6 rounded-xl border border-slate-200 hover:border-blue-200 hover:shadow-md transition-all text-center sm:text-left">
+                <div className="w-12 h-12 bg-blue-100 rounded-lg flex items-center justify-center text-blue-600 mb-4 mx-auto sm:mx-0">
                   <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z" />
                   </svg>
@@ -143,8 +144,8 @@ export default function Home() {
                 <p className="text-slate-600 leading-relaxed">Set up reminders for your medications so you never miss a dose</p>
               </div>
 
-              <div className="bg-white p-6 rounded-xl border border-slate-200 hover:border-blue-200 hover:shadow-md transition-all">
-                <div className="w-12 h-12 bg-blue-100 rounded-lg flex items-center justify-center text-blue-600 mb-4">
+              <div className="bg-white p-6 rounded-xl border border-slate-200 hover:border-blue-200 hover:shadow-md transition-all text-center sm:text-left">
+                <div className="w-12 h-12 bg-blue-100 rounded-lg flex items-center justify-center text-blue-600 mb-4 mx-auto sm:mx-0">
                   <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 7h8m0 0v8m0-8l-8 8-4-4-6 6" />
                   </svg>
@@ -153,8 +154,8 @@ export default function Home() {
                 <p className="text-slate-600 leading-relaxed">See how your symptoms change over time and identify your triggers</p>
               </div>
 
-              <div className="bg-white p-6 rounded-xl border border-slate-200 hover:border-blue-200 hover:shadow-md transition-all">
-                <div className="w-12 h-12 bg-blue-100 rounded-lg flex items-center justify-center text-blue-600 mb-4">
+              <div className="bg-white p-6 rounded-xl border border-slate-200 hover:border-blue-200 hover:shadow-md transition-all text-center sm:text-left">
+                <div className="w-12 h-12 bg-blue-100 rounded-lg flex items-center justify-center text-blue-600 mb-4 mx-auto sm:mx-0">
                   <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 6.253v13m0-13C10.832 5.477 9.246 5 7.5 5S4.168 5.477 3 6.253v13C4.168 18.477 5.754 18 7.5 18s3.332.477 4.5 1.253m0-13C13.168 5.477 14.754 5 16.5 5c1.746 0 3.332.477 4.5 1.253v13C19.832 18.477 18.246 18 16.5 18c-1.746 0-3.332.477-4.5 1.253" />
                   </svg>
@@ -163,8 +164,8 @@ export default function Home() {
                 <p className="text-slate-600 leading-relaxed">Keep track of what you eat and how it affects your symptoms</p>
               </div>
 
-              <div className="bg-white p-6 rounded-xl border border-slate-200 hover:border-blue-200 hover:shadow-md transition-all">
-                <div className="w-12 h-12 bg-blue-100 rounded-lg flex items-center justify-center text-blue-600 mb-4">
+              <div className="bg-white p-6 rounded-xl border border-slate-200 hover:border-blue-200 hover:shadow-md transition-all text-center sm:text-left">
+                <div className="w-12 h-12 bg-blue-100 rounded-lg flex items-center justify-center text-blue-600 mb-4 mx-auto sm:mx-0">
                   <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12l2 2 4-4m5.618-4.016A11.955 11.955 0 0112 2.944a11.955 11.955 0 01-8.618 3.04A12.02 12.02 0 003 9c0 5.591 3.824 10.29 9 11.622 5.176-1.332 9-6.03 9-11.622 0-1.042-.133-2.052-.382-3.016z" />
                   </svg>
@@ -173,8 +174,8 @@ export default function Home() {
                 <p className="text-slate-600 leading-relaxed">All your health information stays private and secure</p>
               </div>
 
-              <div className="bg-white p-6 rounded-xl border border-slate-200 hover:border-blue-200 hover:shadow-md transition-all">
-                <div className="w-12 h-12 bg-blue-100 rounded-lg flex items-center justify-center text-blue-600 mb-4">
+              <div className="bg-white p-6 rounded-xl border border-slate-200 hover:border-blue-200 hover:shadow-md transition-all text-center sm:text-left">
+                <div className="w-12 h-12 bg-blue-100 rounded-lg flex items-center justify-center text-blue-600 mb-4 mx-auto sm:mx-0">
                   <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4.318 6.318a4.5 4.5 0 000 6.364L12 20.364l7.682-7.682a4.5 4.5 0 00-6.364-6.364L12 7.636l-1.318-1.318a4.5 4.5 0 00-6.364 0z" />
             </svg>
@@ -282,7 +283,7 @@ export default function Home() {
                         ? 'bg-emerald-100' 
                         : 'bg-emerald-100'
                     }`}>
-                      <svg className={`w-3 h-3 ${todaySymptoms.length > 0 ? 'text-emerald-600' : 'text-emerald-400'}`} fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <svg className="w-3 h-3 text-emerald-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                         <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z" />
                       </svg>
                     </div>
@@ -291,7 +292,7 @@ export default function Home() {
                         Log symptoms
                       </span>
                       {todaySymptoms.length > 0 && (
-                        <svg className="w-4 h-4 text-emerald-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <svg className="w-4 h-4 text-blue-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                           <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={3} d="M5 13l4 4L19 7" />
                         </svg>
                       )}
@@ -307,9 +308,7 @@ export default function Home() {
                   </div>
                   <div className="flex items-center gap-3">
                     <div className="w-6 h-6 bg-blue-100 rounded-lg flex items-center justify-center">
-                      <svg className="w-3 h-3 text-blue-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 6.253v13m0-13C10.832 5.477 9.246 5 7.5 5S4.168 5.477 3 6.253v13C4.168 18.477 5.754 18 7.5 18s3.332.477 4.5 1.253m0-13C13.168 5.477 14.754 5 16.5 5c1.746 0 3.332.477 4.5 1.253v13C19.832 18.477 18.246 18 16.5 18c-1.746 0-3.332.477-4.5 1.253" />
-                  </svg>
+                      <CupSoda className="w-3 h-3 text-blue-600" />
                     </div>
                     <span className="text-sm text-gray-600">Stay hydrated</span>
                   </div>
@@ -336,7 +335,7 @@ export default function Home() {
           <h1 className="text-2xl sm:text-3xl lg:text-4xl font-bold font-source text-gray-900 mb-4 sm:mb-6">
             Hello, {user?.user_metadata?.full_name?.split(' ')[0] || 'User'}
           </h1>
-          <p className="text-lg sm:text-xl font-roboto text-gray-600">
+          <p className="text-base font-roboto text-gray-600">
             {new Date().toLocaleDateString('en-GB', { weekday: 'long', day: 'numeric', month: 'long' })}
           </p>
       </div>
@@ -548,11 +547,9 @@ export default function Home() {
 
             <Link href="/food-guide" className="bg-white rounded-xl p-6 shadow-sm border border-gray-200 hover:shadow-md transition-shadow">
               <div className="text-center">
-                <div className="w-12 h-12 bg-yellow-100 rounded-xl flex items-center justify-center mx-auto mb-3">
-                  <svg className="w-6 h-6 text-yellow-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 6.253v13m0-13C10.832 5.477 9.246 5 7.5 5S4.168 5.477 3 6.253v13C4.168 18.477 5.754 18 7.5 18s3.332.477 4.5 1.253m0-13C13.168 5.477 14.754 5 16.5 5c1.746 0 3.332.477 4.5 1.253v13C19.832 18.477 18.246 18 16.5 18c-1.746 0-3.332.477-4.5 1.253" />
-                </svg>
-                </div>
+              <div className="w-12 h-12 bg-yellow-100 rounded-xl flex items-center justify-center mx-auto mb-3">
+                <Pizza className="w-6 h-6 text-yellow-600" />
+              </div>
                 <h3 className="font-semibold text-gray-900">Foods</h3>
               </div>
               </Link>

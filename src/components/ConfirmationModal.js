@@ -94,7 +94,7 @@ export default function ConfirmationModal({
               className={`px-4 py-2 text-sm font-medium font-roboto text-white rounded-lg transition-colors duration-200 ${
                 isDestructive 
                   ? 'bg-red-600 hover:bg-red-700' 
-                  : 'bg-blue-600 hover:bg-blue-700'
+                  : 'bg-violet-500 hover:bg-violet-600'
               }`}
             >
               {confirmText}

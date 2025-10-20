@@ -98,13 +98,13 @@ function AccountPageContent() {
                         e.target.style.display = 'none'
                         const container = e.target.parentElement
                         const initials = document.createElement('div')
-                        initials.className = 'w-full h-full flex items-center justify-center text-white text-2xl font-bold font-source bg-blue-600'
+                        initials.className = 'w-full h-full flex items-center justify-center text-white text-2xl font-bold font-source bg-blue-500'
                         initials.textContent = getInitials()
                         container.appendChild(initials)
                       }}
                     />
                   ) : (
-                    <div className="w-full h-full flex items-center justify-center text-white text-2xl font-bold font-source bg-blue-600">
+                    <div className="w-full h-full flex items-center justify-center text-white text-2xl font-bold font-source bg-blue-500">
                       {getInitials()}
                     </div>
                   )}
@@ -120,7 +120,7 @@ function AccountPageContent() {
             <button
               onClick={() => setShowSignOutModal(true)}
               disabled={isSigningOut}
-              className="bg-blue-600 text-white font-semibold py-2 px-4 rounded-lg hover:bg-blue-700 transition-colors disabled:opacity-50 self-start sm:self-auto"
+              className="bg-blue-500 text-white font-semibold py-2 px-4 rounded-lg hover:bg-blue-600 transition-colors disabled:opacity-50 self-start sm:self-auto"
             >
               Sign Out
             </button>
@@ -206,7 +206,7 @@ function AccountPageContent() {
               <button
                 onClick={handleSignOut}
                 disabled={isSigningOut}
-                className="flex-1 px-4 py-2 bg-blue-600 text-white hover:bg-blue-700 rounded-lg transition-colors disabled:opacity-50"
+                className="flex-1 px-4 py-2 bg-blue-500 text-white hover:bg-blue-600 rounded-lg transition-colors disabled:opacity-50"
               >
                 {isSigningOut ? 'Signing Out...' : 'Sign Out'}
               </button>

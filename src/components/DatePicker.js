@@ -301,7 +301,7 @@ export default function DatePicker({ value, onChange, className = '', placeholde
               <button
                 type="button"
                 onClick={() => setIsOpen(false)}
-                className="px-4 py-2 text-sm bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors"
+                className="px-4 py-2 text-sm bg-violet-500 text-white rounded-lg hover:bg-violet-600 transition-colors"
               >
                 Done
               </button>

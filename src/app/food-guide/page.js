@@ -1,6 +1,7 @@
 'use client'
 
 import Link from 'next/link'
+import { CupSoda, Pizza } from 'lucide-react'
 
 export default function FoodGuide() {
   const categories = [
@@ -147,32 +148,28 @@ export default function FoodGuide() {
               <div className="bg-white rounded-xl p-6 shadow-sm border border-gray-200">
                 <h3 className="text-lg font-semibold font-source text-gray-900 mb-4">Quick Food Tips</h3>
                 <div className="space-y-3">
-                  <div className="flex items-start gap-3">
-                    <div className="w-6 h-6 bg-green-100 rounded-lg flex items-center justify-center mt-0.5">
+                  <div className="flex items-center gap-3">
+                    <div className="w-6 h-6 bg-green-100 rounded-lg flex items-center justify-center">
                       <svg className="w-3 h-3 text-green-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                         <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
                       </svg>
                     </div>
                     <p className="text-sm text-gray-600">Keep a food diary to track triggers</p>
                   </div>
-                  <div className="flex items-start gap-3">
-                    <div className="w-6 h-6 bg-blue-100 rounded-lg flex items-center justify-center mt-0.5">
-                      <svg className="w-3 h-3 text-blue-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 6.253v13m0-13C10.832 5.477 9.246 5 7.5 5S4.168 5.477 3 6.253v13C4.168 18.477 5.754 18 7.5 18s3.332.477 4.5 1.253m0-13C13.168 5.477 14.754 5 16.5 5c1.746 0 3.332.477 4.5 1.253v13C19.832 18.477 18.246 18 16.5 18c-1.746 0-3.332.477-4.5 1.253" />
-                      </svg>
+                  <div className="flex items-center gap-3">
+                    <div className="w-6 h-6 bg-blue-100 rounded-lg flex items-center justify-center">
+                      <CupSoda className="w-3 h-3 text-blue-600" />
                     </div>
                     <p className="text-sm text-gray-600">Stay hydrated throughout the day</p>
                   </div>
-                  <div className="flex items-start gap-3">
-                    <div className="w-6 h-6 bg-yellow-100 rounded-lg flex items-center justify-center mt-0.5">
-                      <svg className="w-3 h-3 text-yellow-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" />
-                      </svg>
+                  <div className="flex items-center gap-3">
+                    <div className="w-6 h-6 bg-yellow-100 rounded-lg flex items-center justify-center">
+                      <Pizza className="w-3 h-3 text-yellow-600" />
                     </div>
                     <p className="text-sm text-gray-600">Eat smaller, frequent meals</p>
                   </div>
-                  <div className="flex items-start gap-3">
-                    <div className="w-6 h-6 bg-purple-100 rounded-lg flex items-center justify-center mt-0.5">
+                  <div className="flex items-center gap-3">
+                    <div className="w-6 h-6 bg-purple-100 rounded-lg flex items-center justify-center">
                       <svg className="w-3 h-3 text-purple-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                         <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
                       </svg>
@@ -215,7 +212,7 @@ export default function FoodGuide() {
           </p>
           <Link 
             href="/symptoms"
-            className="inline-block bg-blue-600 text-white font-semibold px-8 py-3 rounded-lg hover:bg-blue-700 transition-colors duration-200"
+            className="inline-block bg-blue-500 text-white font-semibold px-8 py-3 rounded-lg hover:bg-blue-600 transition-colors duration-200"
           >
             Start Tracking
           </Link>

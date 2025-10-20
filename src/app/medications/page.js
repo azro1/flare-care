@@ -457,7 +457,7 @@ function MedicationsPageContent() {
       {/* Medication Tracking Section */}
       <div data-tracking-section className="bg-white rounded-xl shadow-sm border border-gray-200 p-4 sm:p-6 md:p-8 mb-8 sm:mb-12 min-w-0 hover:shadow-md transition-shadow duration-200">
         <div className="flex items-center mb-6 sm:mb-8">
-          <div className="hidden sm:flex bg-blue-600 p-3 rounded-2xl mr-4">
+          <div className="hidden sm:flex bg-emerald-500 p-3 rounded-2xl mr-4">
             <svg className="w-6 h-6 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z" />
             </svg>
@@ -867,7 +867,7 @@ function MedicationsPageContent() {
                     
                     setMedicationTracking(newTrackingState)
                   }}
-                  className="bg-blue-100 hover:bg-blue-200 text-blue-600 hover:text-blue-700 p-2 rounded-xl transition-all duration-200 shadow-sm hover:shadow-md"
+                  className="bg-emerald-100 hover:bg-emerald-200 text-emerald-600 hover:text-emerald-700 p-2 rounded-xl transition-all duration-200 shadow-sm hover:shadow-md"
                   title="Edit tracking data"
                 >
                   <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -878,7 +878,7 @@ function MedicationsPageContent() {
                   onClick={() => {
                     setDeleteModal({ isOpen: true, id: medications.find(med => med.name === 'Medication Tracking')?.id })
                   }}
-                  className="bg-blue-100 hover:bg-blue-200 text-blue-600 hover:text-blue-700 p-2 rounded-xl transition-all duration-200 shadow-sm hover:shadow-md"
+                  className="bg-emerald-100 hover:bg-emerald-200 text-emerald-600 hover:text-emerald-700 p-2 rounded-xl transition-all duration-200 shadow-sm hover:shadow-md"
                   title="Delete tracking data"
                 >
                   <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -936,7 +936,7 @@ function MedicationsPageContent() {
       <div className="bg-white rounded-xl shadow-sm border border-gray-200 p-4 sm:p-6 md:p-8 mb-8 sm:mb-12 min-w-0 hover:shadow-md transition-shadow duration-200">
         <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 mb-6 sm:mb-8">
           <div className="flex items-center">
-            <div className="hidden sm:flex bg-blue-600 p-3 rounded-2xl mr-4">
+            <div className="hidden sm:flex bg-emerald-500 p-3 rounded-2xl mr-4">
               <svg className="w-6 h-6 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                 {isAdding ? (
                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z" />
@@ -952,7 +952,7 @@ function MedicationsPageContent() {
           {!isAdding && (
             <button
               onClick={startAdding}
-              className="bg-blue-600 hover:bg-blue-700 text-white px-4 py-3 rounded-2xl font-medium font-roboto shadow-lg hover:shadow-xl transition-all duration-300 transform hover:scale-105 active:scale-95 self-start sm:self-auto"
+              className="bg-emerald-500 hover:bg-emerald-600 text-white px-4 py-3 rounded-2xl font-medium font-roboto shadow-lg hover:shadow-xl transition-all duration-300 transform hover:scale-105 active:scale-95 self-start sm:self-auto"
             >
               <svg className="w-5 h-5 mr-2 inline" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 6v6m0 0v6m0-6h6m-6 0H6" />
@@ -1030,7 +1030,7 @@ function MedicationsPageContent() {
                    name="remindersEnabled"
                    checked={formData.remindersEnabled}
                    onChange={handleInputChange}
-                   className="h-5 w-5 text-blue-600 focus:ring-0 focus:outline-none border-2 border-gray-300 rounded accent-blue-600"
+                   className="h-5 w-5 text-emerald-600 focus:ring-0 focus:outline-none border-2 border-gray-300 rounded accent-emerald-600"
                  />
                 <label htmlFor="remindersEnabled" className="ml-3 block text-base font-roboto text-gray-700">
                   Enable reminder notifications for this medication
@@ -1053,7 +1053,7 @@ function MedicationsPageContent() {
               </div>
 
               <div className="flex flex-col sm:flex-row gap-4 pt-4">
-                <button type="submit" className="bg-blue-600 hover:bg-blue-700 text-white px-8 py-3 rounded-2xl font-medium font-roboto shadow-lg hover:shadow-xl transition-all duration-300 transform hover:scale-105 active:scale-95">
+                <button type="submit" className="bg-emerald-500 hover:bg-emerald-600 text-white px-8 py-3 rounded-2xl font-medium font-roboto shadow-lg hover:shadow-xl transition-all duration-300 transform hover:scale-105 active:scale-95">
                   <svg className="w-5 h-5 mr-2 inline" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
                   </svg>
@@ -1116,7 +1116,7 @@ function MedicationsPageContent() {
                   <div className="flex space-x-2 ml-4 flex-shrink-0">
                     <button
                       onClick={() => startEdit(medication)}
-                      className="bg-blue-100 hover:bg-blue-200 text-blue-600 hover:text-blue-700 p-2 rounded-xl transition-all duration-200 shadow-sm hover:shadow-md"
+                      className="bg-emerald-100 hover:bg-emerald-200 text-emerald-600 hover:text-emerald-700 p-2 rounded-xl transition-all duration-200 shadow-sm hover:shadow-md"
                       title="Edit medication"
                     >
                       <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -1125,7 +1125,7 @@ function MedicationsPageContent() {
                     </button>
                     <button
                       onClick={() => handleDeleteMedication(medication.id)}
-                      className="bg-blue-100 hover:bg-blue-200 text-blue-600 hover:text-blue-700 p-2 rounded-xl transition-all duration-200 shadow-sm hover:shadow-md"
+                      className="bg-emerald-100 hover:bg-emerald-200 text-emerald-600 hover:text-emerald-700 p-2 rounded-xl transition-all duration-200 shadow-sm hover:shadow-md"
                       title="Delete medication"
                     >
                       <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">

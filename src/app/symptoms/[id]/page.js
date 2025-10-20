@@ -6,6 +6,7 @@ import { useDataSync } from '@/lib/useDataSync'
 import { useAuth } from '@/lib/AuthContext'
 import { deleteFromSupabase, TABLES } from '@/lib/supabase'
 import ProtectedRoute from '@/components/ProtectedRoute'
+import { Pizza } from 'lucide-react'
 
 function SymptomDetailContent() {
   const params = useParams()
@@ -263,10 +264,8 @@ function SymptomDetailContent() {
               symptom.dinner?.some(item => item.food?.trim())) && (
               <div className="bg-white rounded-xl p-6 shadow-sm border border-gray-200">
                 <div className="flex items-center gap-3 mb-6">
-                  <div className="w-10 h-10 bg-green-100 rounded-lg flex items-center justify-center">
-                    <svg className="w-5 h-5 text-green-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 3h2l.4 2M7 13h10l4-8H5.4m0 0L7 13m0 0l-2.5 5M7 13l2.5 5m6-5v6a2 2 0 01-2 2H9a2 2 0 01-2-2v-6m8 0V9a2 2 0 00-2-2H9a2 2 0 00-2 2v4.01" />
-                    </svg>
+                  <div className="w-10 h-10 bg-yellow-100 rounded-lg flex items-center justify-center">
+                    <Pizza className="w-5 h-5 text-yellow-600" />
                   </div>
                   <h3 className="text-xl font-semibold font-source text-gray-900">Meals</h3>
                 </div>
@@ -290,12 +289,12 @@ function SymptomDetailContent() {
                   {symptom.lunch?.some(item => item.food?.trim()) && (
                     <div>
                       <h4 className="font-semibold text-gray-900 mb-3 flex items-center gap-2">
-                        <div className="w-2 h-2 bg-orange-500 rounded-full"></div>
+                        <div className="w-2 h-2 bg-yellow-500 rounded-full"></div>
                         Lunch
                       </h4>
                       <div className="space-y-2">
                         {symptom.lunch.filter(item => item.food?.trim()).map((item, index) => (
-                          <div key={index} className="text-gray-700 bg-orange-50 rounded-lg px-3 py-2">
+                          <div key={index} className="text-gray-700 bg-yellow-50 rounded-lg px-3 py-2">
                             <span className="font-medium">{item.food}</span>
                             <span className="text-gray-500 ml-2">({item.quantity})</span>
                           </div>
@@ -306,12 +305,12 @@ function SymptomDetailContent() {
                   {symptom.dinner?.some(item => item.food?.trim()) && (
                     <div>
                       <h4 className="font-semibold text-gray-900 mb-3 flex items-center gap-2">
-                        <div className="w-2 h-2 bg-purple-500 rounded-full"></div>
+                        <div className="w-2 h-2 bg-yellow-500 rounded-full"></div>
                         Dinner
                       </h4>
                       <div className="space-y-2">
                         {symptom.dinner.filter(item => item.food?.trim()).map((item, index) => (
-                          <div key={index} className="text-gray-700 bg-purple-50 rounded-lg px-3 py-2">
+                          <div key={index} className="text-gray-700 bg-yellow-50 rounded-lg px-3 py-2">
                             <span className="font-medium">{item.food}</span>
                             <span className="text-gray-500 ml-2">({item.quantity})</span>
                           </div>

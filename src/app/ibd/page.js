@@ -49,9 +49,9 @@ export default function LearnPage() {
                   <h4 className="font-medium text-green-900 mb-1">📝 Keep a Diary</h4>
                   <p className="text-sm text-green-700">Track symptoms, foods, and stress levels</p>
                 </div>
-                <div className="bg-yellow-50 p-3 rounded-lg">
-                  <h4 className="font-medium text-yellow-900 mb-1">😌 Manage Stress</h4>
-                  <p className="text-sm text-yellow-700">Practice relaxation techniques daily</p>
+                <div className="bg-red-50 p-3 rounded-lg">
+                  <h4 className="font-medium text-red-900 mb-1">😌 Manage Stress</h4>
+                  <p className="text-sm text-red-700">Practice relaxation techniques daily</p>
                 </div>
                 <div className="bg-purple-50 p-3 rounded-lg">
                   <h4 className="font-medium text-purple-900 mb-1">🏥 Regular Check-ups</h4>
@@ -189,7 +189,7 @@ export default function LearnPage() {
         <h2 className="text-xl font-semibold font-source text-gray-900 mb-6 break-words">Common Triggers</h2>
         <div className="grid md:grid-cols-3 gap-6">
           <div className="text-center">
-            <div className="w-16 h-16 bg-orange-100 rounded-full flex items-center justify-center mx-auto mb-4">
+            <div className="w-16 h-16 bg-yellow-100 rounded-full flex items-center justify-center mx-auto mb-4">
               <span className="text-2xl">🍕</span>
             </div>
             <h3 className="font-medium font-source text-gray-900 mb-2 break-words">Food & Diet</h3>
@@ -197,7 +197,7 @@ export default function LearnPage() {
           </div>
           
           <div className="text-center">
-            <div className="w-16 h-16 bg-yellow-100 rounded-full flex items-center justify-center mx-auto mb-4">
+            <div className="w-16 h-16 bg-red-100 rounded-full flex items-center justify-center mx-auto mb-4">
               <span className="text-2xl">😰</span>
             </div>
             <h3 className="font-medium font-source text-gray-900 mb-2 break-words">Stress</h3>
@@ -228,8 +228,8 @@ export default function LearnPage() {
                 <span>Log daily symptoms with severity ratings</span>
               </li>
               <li className="flex items-start">
-                <div className="w-6 h-6 bg-teal-100 rounded-full flex items-center justify-center mr-3 mt-0.5">
-                  <span className="text-teal-600 text-sm">✓</span>
+                <div className="w-6 h-6 bg-yellow-100 rounded-full flex items-center justify-center mr-3 mt-0.5">
+                  <span className="text-yellow-600 text-sm">✓</span>
                 </div>
                 <span>Record foods that may trigger symptoms</span>
               </li>
@@ -383,20 +383,20 @@ export default function LearnPage() {
           <div className="bg-white/80 backdrop-blur-sm rounded-xl p-4 sm:p-6 border border-white/20 min-w-0">
             <h3 className="text-lg font-semibold font-source text-gray-900 mb-3 break-words">🚭 NHS Stop Smoking Services</h3>
             <div className="space-y-2 text-gray-600 font-roboto break-words">
-              <p className="break-words"><strong>Website:</strong> <a href="https://www.nhs.uk/smokefree" className="text-blue-600 hover:underline break-words" target="_blank" rel="noopener noreferrer">nhs.uk/smokefree</a></p>
-              <p className="break-words"><strong>Helpline:</strong> <a href="tel:03001231045" className="text-blue-600 hover:underline break-words">0300 123 1045</a></p>
-              <p className="break-words"><strong>Text Support:</strong> Text QUIT to 66777</p>
-              <p className="text-sm break-words">Free support, advice, and resources</p>
+              <p className="text-sm sm:text-base break-words"><strong>Website:</strong> <a href="https://www.nhs.uk/smokefree" className="text-blue-600 hover:underline break-words" target="_blank" rel="noopener noreferrer">nhs.uk/smokefree</a></p>
+              <p className="text-sm sm:text-base break-words"><strong>Helpline:</strong> <a href="tel:03001231045" className="text-blue-600 hover:underline break-words">0300 123 1045</a></p>
+              <p className="text-sm sm:text-base break-words"><strong>Text Support:</strong> Text QUIT to 66777</p>
+              <p className="text-xs sm:text-sm break-words">Free support, advice, and resources</p>
             </div>
           </div>
           
           <div className="bg-white/80 backdrop-blur-sm rounded-xl p-4 sm:p-6 border border-white/20 min-w-0">
             <h3 className="text-lg font-semibold font-source text-gray-900 mb-3 break-words">📱 Additional Resources</h3>
             <div className="space-y-2 text-gray-600 font-roboto break-words">
-              <p className="break-words"><strong>Crohn's & Colitis UK:</strong></p>
-              <p className="break-words">Helpline: <a href="tel:03002229099" className="text-blue-600 hover:underline break-words">0300 222 9099</a></p>
-              <p className="break-words">Email: <a href="mailto:helpline@crohnsandcolitis.org.uk" className="text-blue-600 hover:underline break-words">helpline@crohnsandcolitis.org.uk</a></p>
-              <p className="text-sm break-words">Specialist support for IBD patients</p>
+              <p className="text-sm sm:text-base break-words"><strong>Crohn's & Colitis UK:</strong></p>
+              <p className="text-sm sm:text-base break-words">Helpline: <a href="tel:03002229099" className="text-blue-600 hover:underline break-words">0300 222 9099</a></p>
+              <p className="text-sm sm:text-base break-words">Email: <a href="mailto:helpline@crohnsandcolitis.org.uk" className="text-blue-600 hover:underline break-words">helpline@crohnsandcolitis.org.uk</a></p>
+              <p className="text-xs sm:text-sm break-words">Specialist support for IBD patients</p>
             </div>
           </div>
         </div>

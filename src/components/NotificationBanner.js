@@ -34,7 +34,7 @@ const NotificationBanner = () => {
       {notifications.map(notification => (
         <div
           key={notification.id}
-          className="bg-blue-600 text-white px-6 py-4 rounded-lg shadow-lg border-l-4 border-blue-400 max-w-sm animate-in slide-in-from-right duration-300"
+          className="bg-violet-500 text-white px-6 py-4 rounded-lg shadow-lg border-l-4 border-violet-400 max-w-sm animate-in slide-in-from-right duration-300"
         >
           <div className="flex items-start">
             <div className="flex-shrink-0">

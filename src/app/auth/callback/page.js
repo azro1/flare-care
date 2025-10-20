@@ -56,7 +56,7 @@ export default function AuthCallback() {
           <div className="text-red-600 mb-4">{error}</div>
           <button
             onClick={() => router.push('/auth')}
-            className="bg-blue-600 text-white px-4 py-2 rounded hover:bg-blue-700"
+            className="bg-emerald-500 text-white px-4 py-2 rounded hover:bg-emerald-600"
           >
             Try Again
           </button>
