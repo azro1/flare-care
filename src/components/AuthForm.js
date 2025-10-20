@@ -9,19 +9,19 @@ export default function AuthForm() {
   const router = useRouter()
 
   // Prevent body scrolling on auth page
-  useEffect(() => {
-    // Mobile-friendly approach
-    document.body.style.position = 'fixed'
-    document.body.style.width = '100%'
-    document.body.style.height = '100%'
+  // useEffect(() => {
+  //   // Mobile-friendly approach
+  //   document.body.style.position = 'fixed'
+  //   document.body.style.width = '100%'
+  //   document.body.style.height = '100%'
     
-    // Cleanup on unmount
-    return () => {
-      document.body.style.position = 'static'
-      document.body.style.width = 'auto'
-      document.body.style.height = 'auto'
-    }
-  }, [])
+  //   // Cleanup on unmount
+  //   return () => {
+  //     document.body.style.position = 'static'
+  //     document.body.style.width = 'auto'
+  //     document.body.style.height = 'auto'
+  //   }
+  // }, [])
 
   const handleGoogleSignIn = async () => {
     setError('')
@@ -51,7 +51,7 @@ export default function AuthForm() {
       <div className="max-w-md w-full space-y-6">
         <div className="text-center">
           <h2 className="text-3xl font-bold font-source text-gray-900 mb-6">
-            FlareCare
+            Sign In
           </h2>
           <p className="text-sm font-roboto text-gray-600 sm:text-base mb-6">
             Your personal health companion for tracking Crohn's & Colitis symptoms
