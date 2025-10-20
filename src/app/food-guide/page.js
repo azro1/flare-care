@@ -144,7 +144,7 @@ export default function FoodGuide() {
             <div className="sticky top-8 space-y-6">
               
               {/* Quick Food Tips */}
-              <div className="bg-white rounded-xl p-4 sm:p-6 shadow-sm border border-gray-200">
+              <div className="bg-white rounded-xl p-6 shadow-sm border border-gray-200">
                 <h3 className="text-lg font-semibold font-source text-gray-900 mb-4">Quick Food Tips</h3>
                 <div className="space-y-3">
                   <div className="flex items-start gap-3">
@@ -183,7 +183,7 @@ export default function FoodGuide() {
               </div>
 
               {/* IBD-Friendly Foods */}
-              <div className="bg-white rounded-xl p-4 sm:p-6 shadow-sm border border-gray-200">
+              <div className="bg-white rounded-xl p-6 shadow-sm border border-gray-200">
                 <h3 className="text-lg font-semibold font-source text-gray-900 mb-4">IBD-Friendly Foods</h3>
                 <div className="space-y-3">
                   <div className="bg-green-50 p-3 rounded-lg">

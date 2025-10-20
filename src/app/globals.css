@@ -204,7 +204,7 @@
 /* Mobile-first responsive utilities */
 @media (max-width: 640px) {
   .card {
-    @apply p-4;
+    @apply p-6;
   }
   
   .btn-primary {

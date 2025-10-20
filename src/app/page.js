@@ -51,8 +51,8 @@ export default function Home() {
       <div className="min-h-screen bg-white">
         {/* Global Navigation component is used via layout; removing inline landing nav to avoid duplicates */}
 
-        <section className="pt-12 pb-16 sm:pb-20 px-6 sm:pt-32">
-          <div className="max-w-6xl mx-auto">
+        <section className="pt-12 pb-16 sm:pb-20 px-2 sm:px-3 md:px-6 lg:px-8 sm:pt-32">
+          <div className="max-w-5xl mx-auto">
             <div className="max-w-3xl mx-auto text-center space-y-3 sm:space-y-5">
               <div className="mb-0">
                 <span className="text-lg sm:text-xl font-semibold text-blue-500">FlareCare</span>
@@ -111,8 +111,8 @@ export default function Home() {
           </div>
         </section>
 
-        <section className="py-16  sm:py-20 px-6 bg-slate-50">
-          <div className="max-w-6xl mx-auto">
+        <section className="py-16  sm:py-20 px-2 sm:px-3 md:px-6 lg:px-8 bg-slate-50">
+          <div className="max-w-5xl mx-auto">
             <div className="text-center mb-12">
               <h2 className="text-3xl md:text-4xl font-bold font-source text-slate-900 mb-4">
                 Tools to help you manage your health
@@ -186,8 +186,8 @@ export default function Home() {
           </div>
         </section>
 
-        <section className="py-16 sm:py-20 px-6">
-          <div className="max-w-4xl mx-auto">
+        <section className="py-16 sm:py-20 px-2 sm:px-3 md:px-6 lg:px-8">
+          <div className="max-w-5xl mx-auto">
             <div className="bg-blue-500 rounded-2xl p-8 md:p-12 text-white">
               <h2 className="text-3xl md:text-4xl font-bold font-source mb-6">
                 Built by someone who understands
@@ -210,8 +210,8 @@ export default function Home() {
           </div>
         </section>
 
-        <section className="pt-16 pb-8 sm:py-20 px-6 bg-slate-50">
-          <div className="max-w-4xl mx-auto text-center">
+        <section className="pt-16 pb-8 sm:py-20 px-2 sm:px-3 md:px-6 lg:px-8 bg-slate-50">
+          <div className="max-w-5xl mx-auto text-center">
             <h2 className="text-3xl md:text-4xl font-bold font-source text-slate-900">
               Start tracking today
             </h2>
@@ -219,7 +219,7 @@ export default function Home() {
               Join others who are taking control of their IBD journey
             </p>
             <div className="mt-6 flex justify-center">
-              <Link href="/auth" className="inline-flex items-center justify-center w-full sm:w-auto px-8 py-3 bg-blue-500 text-white rounded-lg hover:bg-blue-600 transition-all text-lg font-medium">
+              <Link href="/auth" className="inline-flex items-center justify-center w-max sm:w-auto px-8 py-3 bg-blue-500 text-white rounded-lg hover:bg-blue-600 transition-all text-lg font-medium">
                 Sign In
           </Link>
         </div>
