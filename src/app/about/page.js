@@ -6,20 +6,21 @@ import ConfirmationModal from '@/components/ConfirmationModal'
 export default function About() {
   const [blogModal, setBlogModal] = useState({ isOpen: false })
   return (
-    <div className="max-w-5xl mx-auto">
+    <div className="w-full px-3 sm:px-4 md:px-6 lg:px-8 min-w-0">
+      <div className="max-w-5xl mx-auto">
       <div className="text-center mb-12">
-        <h1 className="text-2xl sm:text-3xl lg:text-4xl font-bold font-source text-gray-900 mb-4 sm:mb-6">
+        <h1 className="text-2xl sm:text-3xl lg:text-4xl font-bold font-source text-white mb-4 sm:mb-6">
           About FlareCare
         </h1>
-        <p className="text-lg sm:text-xl font-roboto text-gray-600 max-w-3xl mx-auto leading-relaxed">
+        <p className="text-lg sm:text-xl font-roboto text-slate-300 max-w-3xl mx-auto leading-relaxed">
           A personal journey turned into a tool for the community
         </p>
       </div>
 
       <div className="grid md:grid-cols-2 gap-8 mb-12">
-        <div className="card">
-          <h2 className="text-2xl font-semibold font-source text-gray-900 mb-4">My Story</h2>
-          <div className="space-y-4 text-gray-600 font-roboto">
+        <div className="bg-slate-800/60 backdrop-blur-sm rounded-2xl p-8 md:p-10 border border-slate-700/50">
+          <h2 className="text-2xl font-semibold font-source text-white mb-4">My Story</h2>
+          <div className="space-y-4 text-slate-300 font-roboto">
             <p>
               Hi, I'm Simon, and I was diagnosed with Crohn's disease in 2005. Like many others, 
               I quickly learned that managing this condition requires constant attention 
@@ -39,9 +40,9 @@ export default function About() {
           </div>
         </div>
 
-        <div className="card">
-          <h2 className="text-2xl font-semibold font-source text-gray-900 mb-4">Why FlareCare?</h2>
-          <div className="space-y-4 text-gray-600 font-roboto">
+        <div className="bg-slate-800/60 backdrop-blur-sm rounded-2xl p-8 md:p-10 border border-slate-700/50">
+          <h2 className="text-2xl font-semibold font-source text-white mb-4">Why FlareCare?</h2>
+          <div className="space-y-4 text-slate-300 font-roboto">
             <p>
               FlareCare was born from my personal need for a simple, effective way to 
               track my health journey. I wanted something that would:
@@ -61,9 +62,9 @@ export default function About() {
         </div>
       </div>
 
-      <div className="card mb-12">
-        <h2 className="text-2xl font-semibold font-source text-gray-900 mb-4">The Vision</h2>
-        <div className="space-y-4 text-gray-600 font-roboto">
+      <div className="bg-slate-800/60 backdrop-blur-sm rounded-2xl p-8 md:p-10 border border-slate-700/50 mb-12">
+        <h2 className="text-2xl font-semibold font-source text-white mb-4">The Vision</h2>
+        <div className="space-y-4 text-slate-300 font-roboto">
           <p>
             Living with Crohn's or Colitis can feel isolating, but you're not alone. 
             FlareCare is built by someone who understands the daily challenges of 
@@ -82,31 +83,31 @@ export default function About() {
         </div>
       </div>
 
-      <div className="bg-gradient-to-r from-blue-50 to-indigo-50 border border-blue-200 rounded-2xl p-7">
-        <h2 className="text-2xl font-bold font-source text-gray-900 mb-4">Stay Connected</h2>
-        <p className="text-gray-600 mb-6 font-roboto">
+      <div className="bg-slate-800/60 backdrop-blur-sm border border-slate-700/50 rounded-2xl p-7">
+        <h2 className="text-2xl font-bold font-source text-white mb-4">Stay Connected</h2>
+        <p className="text-slate-300 mb-6 font-roboto">
           Have questions, suggestions, or want to share your own story? 
           I'd love to hear from you and learn how FlareCare can better serve 
           the Crohn's and Colitis community.
         </p>
         
         <div className="grid md:grid-cols-2 gap-6">
-          <div className="bg-white/80 backdrop-blur-sm rounded-xl p-6 border border-white/20">
-            <h3 className="text-lg font-semibold font-source text-gray-900 mb-3">📧 Email Support</h3>
-            <p className="text-gray-600 mb-4 font-roboto">
+          <div className="bg-slate-700/40 backdrop-blur-sm rounded-xl p-6 border border-slate-600/30">
+            <h3 className="text-lg font-semibold font-source text-white mb-3">📧 Email Support</h3>
+            <p className="text-slate-300 mb-4 font-roboto">
               For technical support, feature requests, or general questions.
             </p>
             <a 
               href="mailto:support@flarecare.app" 
-              className="bg-blue-500 hover:bg-blue-600 text-white font-semibold font-roboto py-3 px-6 rounded-xl transition-all duration-300 transform hover:scale-105 hover:shadow-lg active:scale-95 inline-block"
+              className="bg-[#008B8B] hover:bg-[#008B8B]/80 text-white font-semibold font-roboto py-3 px-6 rounded-xl transition-all duration-300 hover:shadow-lg inline-block"
             >
               Contact Support
             </a>
           </div>
           
-          <div className="bg-white/80 backdrop-blur-sm rounded-xl p-6 border border-white/20">
-            <h3 className="text-lg font-semibold font-source text-gray-900 mb-3">💬 Community Blog</h3>
-            <p className="text-gray-600 mb-4 font-roboto">
+          <div className="bg-slate-700/40 backdrop-blur-sm rounded-xl p-6 border border-slate-600/30">
+            <h3 className="text-lg font-semibold font-source text-white mb-3">💬 Community Blog</h3>
+            <p className="text-slate-300 mb-4 font-roboto">
               Share experiences, tips, and connect with others on similar journeys.
             </p>
             <button 
@@ -118,7 +119,7 @@ export default function About() {
           </div>
         </div>
         
-        <p className="text-sm text-gray-600 mt-6 text-center font-roboto">
+        <p className="text-sm text-slate-400 mt-6 text-center font-roboto">
           Built with care for Crohn's and Colitis patients.
         </p>
       </div>
@@ -133,6 +134,7 @@ export default function About() {
         cancelText=""
         isDestructive={false}
       />
+      </div>
     </div>
   )
 }

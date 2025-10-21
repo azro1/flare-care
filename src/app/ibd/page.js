@@ -15,68 +15,68 @@ export default function LearnPage() {
           <div className="sticky top-8 space-y-6">
             
             {/* Quick Facts */}
-            <div className="card p-4 sm:p-6">
-              <h3 className="text-lg font-semibold font-source text-gray-900 mb-4">Quick Facts</h3>
+            <div className="bg-slate-800/60 backdrop-blur-sm rounded-2xl p-8 md:p-10 border border-slate-700/50">
+              <h3 className="text-lg font-semibold font-source text-white mb-4">Quick Facts</h3>
               <div className="space-y-3">
                 <div className="flex items-start">
                   <div className="w-2 h-2 bg-blue-500 rounded-full mt-2 mr-3 flex-shrink-0"></div>
-                  <p className="text-sm text-gray-600 font-roboto">IBD affects over 500,000 people in the UK</p>
+                  <p className="text-sm text-slate-300 font-roboto">IBD affects over 500,000 people in the UK</p>
                 </div>
                 <div className="flex items-start">
                   <div className="w-2 h-2 bg-green-500 rounded-full mt-2 mr-3 flex-shrink-0"></div>
-                  <p className="text-sm text-gray-600 font-roboto">Most commonly diagnosed between ages 15-35</p>
+                  <p className="text-sm text-slate-300 font-roboto">Most commonly diagnosed between ages 15-35</p>
                 </div>
                 <div className="flex items-start">
                   <div className="w-2 h-2 bg-purple-500 rounded-full mt-2 mr-3 flex-shrink-0"></div>
-                  <p className="text-sm text-gray-600 font-roboto">Both conditions are chronic but manageable</p>
+                  <p className="text-sm text-slate-300 font-roboto">Both conditions are chronic but manageable</p>
                 </div>
                 <div className="flex items-start">
                   <div className="w-2 h-2 bg-orange-500 rounded-full mt-2 mr-3 flex-shrink-0"></div>
-                  <p className="text-sm text-gray-600 font-roboto">Early diagnosis leads to better outcomes</p>
+                  <p className="text-sm text-slate-300 font-roboto">Early diagnosis leads to better outcomes</p>
                 </div>
               </div>
             </div>
 
             {/* Daily Tips */}
-            <div className="card p-4 sm:p-6">
-              <h3 className="text-lg font-semibold font-source text-gray-900 mb-4">Daily Tips</h3>
+            <div className="bg-slate-800/60 backdrop-blur-sm rounded-2xl p-8 md:p-10 border border-slate-700/50">
+              <h3 className="text-lg font-semibold font-source text-white mb-4">Daily Tips</h3>
               <div className="space-y-4">
-                <div className="bg-blue-50 p-3 rounded-lg">
-                  <h4 className="font-medium text-blue-900 mb-1">💧 Stay Hydrated</h4>
-                  <p className="text-sm text-blue-700">Drink plenty of water, especially during flare-ups</p>
+                <div className="bg-slate-700/40 backdrop-blur-sm p-3 rounded-lg border border-slate-600/30">
+                  <h4 className="font-medium text-white mb-1">💧 Stay Hydrated</h4>
+                  <p className="text-sm text-slate-300">Drink plenty of water, especially during flare-ups</p>
                 </div>
-                <div className="bg-green-50 p-3 rounded-lg">
-                  <h4 className="font-medium text-green-900 mb-1">📝 Keep a Diary</h4>
-                  <p className="text-sm text-green-700">Track symptoms, foods, and stress levels</p>
+                <div className="bg-slate-700/40 backdrop-blur-sm p-3 rounded-lg border border-slate-600/30">
+                  <h4 className="font-medium text-white mb-1">📝 Keep a Diary</h4>
+                  <p className="text-sm text-slate-300">Track symptoms, foods, and stress levels</p>
                 </div>
-                <div className="bg-red-50 p-3 rounded-lg">
-                  <h4 className="font-medium text-red-900 mb-1">😌 Manage Stress</h4>
-                  <p className="text-sm text-red-700">Practice relaxation techniques daily</p>
+                <div className="bg-slate-700/40 backdrop-blur-sm p-3 rounded-lg border border-slate-600/30">
+                  <h4 className="font-medium text-white mb-1">😌 Manage Stress</h4>
+                  <p className="text-sm text-slate-300">Practice relaxation techniques daily</p>
                 </div>
-                <div className="bg-purple-50 p-3 rounded-lg">
-                  <h4 className="font-medium text-purple-900 mb-1">🏥 Regular Check-ups</h4>
-                  <p className="text-sm text-purple-700">Stay in touch with your healthcare team</p>
+                <div className="bg-slate-700/40 backdrop-blur-sm p-3 rounded-lg border border-slate-600/30">
+                  <h4 className="font-medium text-white mb-1">🏥 Regular Check-ups</h4>
+                  <p className="text-sm text-slate-300">Stay in touch with your healthcare team</p>
                 </div>
               </div>
             </div>
 
             {/* Emergency Contacts */}
-            <div className="card p-4 sm:p-6">
-              <h3 className="text-lg font-semibold font-source text-gray-900 mb-4">Emergency Contacts</h3>
+            <div className="bg-slate-800/60 backdrop-blur-sm rounded-2xl p-8 md:p-10 border border-slate-700/50">
+              <h3 className="text-lg font-semibold font-source text-white mb-4">Emergency Contacts</h3>
               <div className="space-y-3">
                 <div className="border-l-4 border-red-500 pl-3">
-                  <h4 className="font-medium text-gray-900">NHS 111</h4>
-                  <p className="text-sm text-gray-600">Non-emergency medical advice</p>
+                  <h4 className="font-medium text-white">NHS 111</h4>
+                  <p className="text-sm text-slate-300">Non-emergency medical advice</p>
                   <p className="text-sm font-medium text-red-600">Call 111</p>
                 </div>
                 <div className="border-l-4 border-blue-500 pl-3">
-                  <h4 className="font-medium text-gray-900">Crohn's & Colitis UK</h4>
-                  <p className="text-sm text-gray-600">Support helpline</p>
+                  <h4 className="font-medium text-white">Crohn's & Colitis UK</h4>
+                  <p className="text-sm text-slate-300">Support helpline</p>
                   <p className="text-sm font-medium text-blue-600">0300 222 9099</p>
                 </div>
                 <div className="border-l-4 border-green-500 pl-3">
-                  <h4 className="font-medium text-gray-900">Your GP</h4>
-                  <p className="text-sm text-gray-600">For routine appointments</p>
+                  <h4 className="font-medium text-white">Your GP</h4>
+                  <p className="text-sm text-slate-300">For routine appointments</p>
                   <p className="text-sm font-medium text-green-600">Contact your surgery</p>
                 </div>
               </div>
@@ -88,24 +88,24 @@ export default function LearnPage() {
         {/* Main Content */}
         <div className="flex-1 lg:max-w-4xl order-1 lg:order-2">
       <div className="mb-12">
-        <h1 className="text-2xl sm:text-3xl lg:text-4xl font-bold font-source text-gray-900 mb-4 sm:mb-6">Understanding IBD</h1>
-        <p className="text-gray-600 font-roboto break-words">
+        <h1 className="text-2xl sm:text-3xl lg:text-4xl font-bold font-source text-white mb-4 sm:mb-6">Understanding IBD</h1>
+        <p className="text-slate-300 font-roboto break-words">
           Learn about Crohn's disease and Ulcerative Colitis, and how FlareCare can help you manage your condition.
         </p>
       </div>
 
       {/* What is IBD Section */}
-      <div className="card mb-8 sm:mb-12 p-4 sm:p-6">
-        <h2 className="text-xl font-semibold font-source text-gray-900 mb-6 break-words">What is Inflammatory Bowel Disease (IBD)?</h2>
+      <div className="bg-slate-800/60 backdrop-blur-sm rounded-2xl p-8 md:p-10 border border-slate-700/50 mb-8 sm:mb-12">
+        <h2 className="text-xl font-semibold font-source text-white mb-6 break-words">What is Inflammatory Bowel Disease (IBD)?</h2>
         <div className="prose prose-gray max-w-none">
-          <p className="text-gray-600 mb-4 font-roboto break-words">
+          <p className="text-slate-300 mb-4 font-roboto break-words">
             Inflammatory Bowel Disease (IBD) is a term used to describe disorders that involve chronic inflammation of your digestive tract. The two main types are:
           </p>
           
           <div className="grid md:grid-cols-2 gap-6 mb-6">
-            <div className="bg-red-50 p-6 rounded-xl border border-red-200">
-              <h3 className="text-lg font-semibold font-source text-red-800 mb-3 break-words">Crohn's Disease</h3>
-              <ul className="text-red-700 space-y-2 text-sm font-roboto break-words">
+            <div className="bg-slate-700/40 backdrop-blur-sm p-6 rounded-xl border border-slate-600/30">
+              <h3 className="text-lg font-semibold font-source text-white mb-3 break-words">Crohn's Disease</h3>
+              <ul className="text-slate-300 space-y-2 text-sm font-roboto break-words">
                 <li>• Can affect any part of the digestive tract</li>
                 <li>• Inflammation can be patchy with healthy areas in between</li>
                 <li>• Can affect the full thickness of the bowel wall</li>
@@ -113,9 +113,9 @@ export default function LearnPage() {
               </ul>
             </div>
             
-            <div className="bg-blue-50 p-6 rounded-xl border border-blue-200">
-              <h3 className="text-lg font-semibold font-source text-blue-800 mb-3 break-words">Ulcerative Colitis</h3>
-              <ul className="text-blue-700 space-y-2 text-sm font-roboto break-words">
+            <div className="bg-slate-700/40 backdrop-blur-sm p-6 rounded-xl border border-slate-600/30">
+              <h3 className="text-lg font-semibold font-source text-white mb-3 break-words">Ulcerative Colitis</h3>
+              <ul className="text-slate-300 space-y-2 text-sm font-roboto break-words">
                 <li>• Affects only the colon and rectum</li>
                 <li>• Inflammation is continuous, starting from the rectum</li>
                 <li>• Usually affects only the inner lining of the colon</li>
@@ -127,12 +127,12 @@ export default function LearnPage() {
       </div>
 
       {/* Common Symptoms Section */}
-      <div className="card mb-8 sm:mb-12 p-4 sm:p-6">
-        <h2 className="text-xl font-semibold font-source text-gray-900 mb-6 break-words">Common Symptoms</h2>
+      <div className="bg-slate-800/60 backdrop-blur-sm rounded-2xl p-8 md:p-10 border border-slate-700/50 mb-8 sm:mb-12">
+        <h2 className="text-xl font-semibold font-source text-white mb-6 break-words">Common Symptoms</h2>
         <div className="grid md:grid-cols-2 gap-6">
           <div>
-            <h3 className="text-lg font-medium font-source text-gray-900 mb-4 break-words">Digestive Symptoms</h3>
-            <ul className="space-y-2 text-gray-600 font-roboto break-words">
+            <h3 className="text-lg font-medium font-source text-white mb-4 break-words">Digestive Symptoms</h3>
+            <ul className="space-y-2 text-slate-300 font-roboto break-words">
               <li className="flex items-start">
                 <span className="text-red-500 mr-2">•</span>
                 <span>Abdominal pain and cramping</span>
@@ -157,8 +157,8 @@ export default function LearnPage() {
           </div>
           
           <div>
-            <h3 className="text-lg font-medium font-source text-gray-900 mb-4 break-words">Other Symptoms</h3>
-            <ul className="space-y-2 text-gray-600 font-roboto break-words">
+            <h3 className="text-lg font-medium font-source text-white mb-4 break-words">Other Symptoms</h3>
+            <ul className="space-y-2 text-slate-300 font-roboto break-words">
               <li className="flex items-start">
                 <span className="text-red-500 mr-2">•</span>
                 <span>Fatigue and low energy</span>
@@ -185,42 +185,42 @@ export default function LearnPage() {
       </div>
 
       {/* Triggers Section */}
-      <div className="card mb-8 sm:mb-12 p-4 sm:p-6">
-        <h2 className="text-xl font-semibold font-source text-gray-900 mb-6 break-words">Common Triggers</h2>
+      <div className="bg-slate-800/60 backdrop-blur-sm rounded-2xl p-8 md:p-10 border border-slate-700/50 mb-8 sm:mb-12">
+        <h2 className="text-xl font-semibold font-source text-white mb-6 break-words">Common Triggers</h2>
         <div className="grid md:grid-cols-3 gap-6">
           <div className="text-center">
             <div className="w-16 h-16 bg-yellow-100 rounded-full flex items-center justify-center mx-auto mb-4">
               <span className="text-2xl">🍕</span>
             </div>
-            <h3 className="font-medium font-source text-gray-900 mb-2 break-words">Food & Diet</h3>
-            <p className="text-sm text-gray-600 font-roboto break-words">Spicy foods, dairy, high-fiber foods, alcohol, and caffeine can trigger symptoms</p>
+            <h3 className="font-medium font-source text-white mb-2 break-words">Food & Diet</h3>
+            <p className="text-sm text-slate-300 font-roboto break-words">Spicy foods, dairy, high-fiber foods, alcohol, and caffeine can trigger symptoms</p>
           </div>
           
           <div className="text-center">
             <div className="w-16 h-16 bg-red-100 rounded-full flex items-center justify-center mx-auto mb-4">
               <span className="text-2xl">😰</span>
             </div>
-            <h3 className="font-medium font-source text-gray-900 mb-2 break-words">Stress</h3>
-            <p className="text-sm text-gray-600 font-roboto break-words">Emotional stress and anxiety can worsen symptoms and trigger flare-ups</p>
+            <h3 className="font-medium font-source text-white mb-2 break-words">Stress</h3>
+            <p className="text-sm text-slate-300 font-roboto break-words">Emotional stress and anxiety can worsen symptoms and trigger flare-ups</p>
           </div>
           
           <div className="text-center">
             <div className="w-16 h-16 bg-green-100 rounded-full flex items-center justify-center mx-auto mb-4">
               <span className="text-2xl">🦠</span>
             </div>
-            <h3 className="font-medium font-source text-gray-900 mb-2 break-words">Infections</h3>
-            <p className="text-sm text-gray-600 font-roboto break-words">Viral or bacterial infections can trigger or worsen IBD symptoms</p>
+            <h3 className="font-medium font-source text-white mb-2 break-words">Infections</h3>
+            <p className="text-sm text-slate-300 font-roboto break-words">Viral or bacterial infections can trigger or worsen IBD symptoms</p>
           </div>
         </div>
       </div>
 
       {/* How FlareCare Helps Section */}
-      <div className="card mb-8 sm:mb-12 p-4 sm:p-6">
-        <h2 className="text-xl font-semibold font-source text-gray-900 mb-6">How FlareCare Can Help</h2>
+      <div className="bg-slate-800/60 backdrop-blur-sm rounded-2xl p-8 md:p-10 border border-slate-700/50 mb-8 sm:mb-12">
+        <h2 className="text-xl font-semibold font-source text-white mb-6">How FlareCare Can Help</h2>
         <div className="grid md:grid-cols-2 gap-8">
           <div>
-            <h3 className="text-lg font-medium font-source text-gray-900 mb-4">Track Your Symptoms</h3>
-            <ul className="space-y-3 text-gray-600 font-roboto">
+            <h3 className="text-lg font-medium font-source text-white mb-4">Track Your Symptoms</h3>
+            <ul className="space-y-3 text-slate-300 font-roboto">
               <li className="flex items-start">
                 <div className="w-6 h-6 bg-teal-100 rounded-full flex items-center justify-center mr-3 mt-0.5">
                   <span className="text-teal-600 text-sm">✓</span>
@@ -243,8 +243,8 @@ export default function LearnPage() {
           </div>
           
           <div>
-            <h3 className="text-lg font-medium font-source text-gray-900 mb-4">Manage Medications</h3>
-            <ul className="space-y-3 text-gray-600 font-roboto">
+            <h3 className="text-lg font-medium font-source text-white mb-4">Manage Medications</h3>
+            <ul className="space-y-3 text-slate-300 font-roboto">
               <li className="flex items-start">
                 <div className="w-6 h-6 bg-purple-100 rounded-full flex items-center justify-center mr-3 mt-0.5">
                   <span className="text-purple-600 text-sm">✓</span>
@@ -269,11 +269,11 @@ export default function LearnPage() {
       </div>
 
       {/* When to Seek Help Section */}
-      <div className="card mb-8 sm:mb-12 p-4 sm:p-6">
-        <h2 className="text-xl font-semibold font-source text-gray-900 mb-6">When to Seek Medical Help</h2>
-        <div className="bg-red-50 border border-red-200 rounded-xl p-6 font-source">
-          <h3 className="text-lg font-semibold font-source text-red-800 mb-4">Seek immediate medical attention if you experience:</h3>
-          <ul className="space-y-2 text-red-700 font-source">
+      <div className="bg-slate-800/60 backdrop-blur-sm rounded-2xl p-8 md:p-10 border border-slate-700/50 mb-8 sm:mb-12">
+        <h2 className="text-xl font-semibold font-source text-white mb-6">When to Seek Medical Help</h2>
+        <div className="bg-slate-700/40 backdrop-blur-sm border border-slate-600/30 rounded-xl p-6 font-source">
+          <h3 className="text-lg font-semibold font-source text-white mb-4">Seek immediate medical attention if you experience:</h3>
+          <ul className="space-y-2 text-slate-300 font-source">
             <li className="flex items-start">
               <span className="text-red-500 mr-2 font-bold">•</span>
               <span>Severe abdominal pain</span>
@@ -299,61 +299,61 @@ export default function LearnPage() {
       </div>
 
       {/* Resources Section */}
-      <div className="card mb-8 sm:mb-12 p-4 sm:p-6">
-        <h2 className="text-xl font-semibold font-source text-gray-900 mb-6">Helpful Resources</h2>
+      <div className="bg-slate-800/60 backdrop-blur-sm rounded-2xl p-8 md:p-10 border border-slate-700/50 mb-8 sm:mb-12">
+        <h2 className="text-xl font-semibold font-source text-white mb-6">Helpful Resources</h2>
         <div className="grid md:grid-cols-2 gap-6">
           <div>
-            <h3 className="text-lg font-medium font-source text-gray-900 mb-4">Support Organizations</h3>
+            <h3 className="text-lg font-medium font-source text-white mb-4">Support Organizations</h3>
             <ul className="space-y-3 font-roboto">
               <li>
                 <a 
                   href="https://www.crohnsandcolitis.org.uk/" 
                   target="_blank" 
                   rel="noopener noreferrer"
-                  className="text-blue-600 hover:text-blue-800 underline"
+                  className="text-[#008B8B] hover:text-[#008B8B]/80 underline"
                 >
                   Crohn's & Colitis UK
                 </a>
-                <p className="text-sm text-gray-600 font-roboto">Leading UK charity providing support and information</p>
+                <p className="text-sm text-slate-300 font-roboto">Leading UK charity providing support and information</p>
               </li>
               <li>
                 <a 
                   href="https://www.crohnscolitisfoundation.org/" 
                   target="_blank" 
                   rel="noopener noreferrer"
-                  className="text-blue-600 hover:text-blue-800 underline"
+                  className="text-[#008B8B] hover:text-[#008B8B]/80 underline"
                 >
                   Crohn's & Colitis Foundation
                 </a>
-                <p className="text-sm text-gray-600 font-roboto">US-based organization with comprehensive resources</p>
+                <p className="text-sm text-slate-300 font-roboto">US-based organization with comprehensive resources</p>
               </li>
             </ul>
           </div>
           
           <div>
-            <h3 className="text-lg font-medium font-source text-gray-900 mb-4">Medical Information</h3>
+            <h3 className="text-lg font-medium font-source text-white mb-4">Medical Information</h3>
             <ul className="space-y-3 font-roboto">
               <li>
                 <a 
                   href="https://www.nhs.uk/conditions/inflammatory-bowel-disease/" 
                   target="_blank" 
                   rel="noopener noreferrer"
-                  className="text-blue-600 hover:text-blue-800 underline"
+                  className="text-[#008B8B] hover:text-[#008B8B]/80 underline"
                 >
                   NHS Information
                 </a>
-                <p className="text-sm text-gray-600 font-roboto">Official NHS guidance on IBD</p>
+                <p className="text-sm text-slate-300 font-roboto">Official NHS guidance on IBD</p>
               </li>
               <li>
                 <a 
                   href="https://www.mayoclinic.org/diseases-conditions/inflammatory-bowel-disease/symptoms-causes/syc-20353315" 
                   target="_blank" 
                   rel="noopener noreferrer"
-                  className="text-blue-600 hover:text-blue-800 underline"
+                  className="text-[#008B8B] hover:text-[#008B8B]/80 underline"
                 >
                   Mayo Clinic Guide
                 </a>
-                <p className="text-sm text-gray-600 font-roboto">Comprehensive medical information</p>
+                <p className="text-sm text-slate-300 font-roboto">Comprehensive medical information</p>
               </li>
             </ul>
           </div>
@@ -361,15 +361,15 @@ export default function LearnPage() {
       </div>
 
       {/* Quit Smoking Section */}
-      <div className="bg-gradient-to-r from-red-50 to-orange-50 border border-red-200 rounded-2xl p-7 mb-8 sm:mb-12">
+      <div className="bg-slate-800/60 backdrop-blur-sm border border-slate-700/50 rounded-2xl p-7 mb-8 sm:mb-12">
         <div className="flex items-center mb-4">
           <svg className="w-8 h-8 text-red-600 mr-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
             <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-2.5L13.732 4c-.77-.833-1.732-.833-2.464 0L3.35 16.5c-.77.833.192 2.5 1.732 2.5z" />
           </svg>
-          <h2 className="text-xl font-semibold font-source text-gray-900 break-words">Quit Smoking Support</h2>
+          <h2 className="text-xl font-semibold font-source text-white break-words">Quit Smoking Support</h2>
         </div>
         
-        <div className="space-y-4 text-gray-700 font-roboto mb-6 break-words">
+        <div className="space-y-4 text-slate-300 font-roboto mb-6 break-words">
           <p className="break-words">
             <strong>Smoking significantly increases the risk of Crohn's disease flares and complications.</strong> If you smoke, quitting is one of the most important steps you can take to improve your health.
           </p>
@@ -380,9 +380,9 @@ export default function LearnPage() {
         </div>
 
         <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-          <div className="bg-white/80 backdrop-blur-sm rounded-xl p-4 sm:p-6 border border-white/20 min-w-0">
-            <h3 className="text-lg font-semibold font-source text-gray-900 mb-3 break-words">🚭 NHS Stop Smoking Services</h3>
-            <div className="space-y-2 text-gray-600 font-roboto break-words">
+          <div className="bg-slate-700/40 backdrop-blur-sm rounded-xl p-4 sm:p-6 border border-slate-600/30 min-w-0">
+            <h3 className="text-lg font-semibold font-source text-white mb-3 break-words">🚭 NHS Stop Smoking Services</h3>
+            <div className="space-y-2 text-slate-300 font-roboto break-words">
               <p className="text-sm sm:text-base break-words"><strong>Website:</strong> <a href="https://www.nhs.uk/smokefree" className="text-blue-600 hover:underline break-words" target="_blank" rel="noopener noreferrer">nhs.uk/smokefree</a></p>
               <p className="text-sm sm:text-base break-words"><strong>Helpline:</strong> <a href="tel:03001231045" className="text-blue-600 hover:underline break-words">0300 123 1045</a></p>
               <p className="text-sm sm:text-base break-words"><strong>Text Support:</strong> Text QUIT to 66777</p>
@@ -390,9 +390,9 @@ export default function LearnPage() {
             </div>
           </div>
           
-          <div className="bg-white/80 backdrop-blur-sm rounded-xl p-4 sm:p-6 border border-white/20 min-w-0">
-            <h3 className="text-lg font-semibold font-source text-gray-900 mb-3 break-words">📱 Additional Resources</h3>
-            <div className="space-y-2 text-gray-600 font-roboto break-words">
+          <div className="bg-slate-700/40 backdrop-blur-sm rounded-xl p-4 sm:p-6 border border-slate-600/30 min-w-0">
+            <h3 className="text-lg font-semibold font-source text-white mb-3 break-words">📱 Additional Resources</h3>
+            <div className="space-y-2 text-slate-300 font-roboto break-words">
               <p className="text-sm sm:text-base break-words"><strong>Crohn's & Colitis UK:</strong></p>
               <p className="text-sm sm:text-base break-words">Helpline: <a href="tel:03002229099" className="text-blue-600 hover:underline break-words">0300 222 9099</a></p>
               <p className="text-sm sm:text-base break-words">Email: <a href="mailto:helpline@crohnsandcolitis.org.uk" className="text-blue-600 hover:underline break-words">helpline@crohnsandcolitis.org.uk</a></p>
@@ -401,9 +401,9 @@ export default function LearnPage() {
           </div>
         </div>
 
-        <div className="mt-6 p-4 bg-white/60 rounded-xl border border-white/30 break-words">
-          <h4 className="font-semibold font-source text-gray-900 mb-2 break-words">💡 Tips to Get Started:</h4>
-          <ul className="list-disc list-inside space-y-1 text-gray-600 font-roboto text-sm break-words">
+        <div className="mt-6 p-4 bg-slate-700/40 rounded-xl border border-slate-600/30 break-words">
+          <h4 className="font-semibold font-source text-white mb-2 break-words">💡 Tips to Get Started:</h4>
+          <ul className="list-disc list-inside space-y-1 text-slate-300 font-roboto text-sm break-words">
             <li className="break-words">Set a quit date and stick to it</li>
             <li className="break-words">Tell your family and friends about your decision</li>
             <li className="break-words">Ask your GP about nicotine replacement therapy</li>
@@ -419,22 +419,22 @@ export default function LearnPage() {
 
       {/* Call to Action */}
       <div className="mt-8">
-        <div className="card text-center p-4 sm:p-6">
-          <h2 className="text-xl font-semibold font-source text-gray-900 mb-4">Ready to Start Tracking?</h2>
-          <p className="text-gray-600 mb-6 font-roboto">
+        <div className="bg-slate-800/60 backdrop-blur-sm rounded-2xl p-8 md:p-10 border border-slate-700/50 text-center">
+          <h2 className="text-xl font-semibold font-source text-white mb-4">Ready to Start Tracking?</h2>
+          <p className="text-slate-300 mb-6 font-roboto">
             Start tracking your symptoms and medications to better manage your IBD condition.
           </p>
           <div className="flex flex-col sm:flex-row justify-center space-y-3 sm:space-y-0 sm:space-x-4">
             {isAuthenticated ? (
-              <Link href="/" className="btn-primary font-roboto">
+              <Link href="/" className="bg-[#008B8B] hover:bg-[#008B8B]/80 text-white font-semibold py-3 px-6 rounded-xl transition-all duration-300 transform hover:scale-105 hover:shadow-lg active:scale-95 font-roboto">
                 Go to Dashboard
               </Link>
             ) : (
-              <Link href="/auth" className="btn-primary font-roboto">
+              <Link href="/auth" className="bg-[#008B8B] hover:bg-[#008B8B]/80 text-white font-semibold py-3 px-6 rounded-xl transition-all duration-300 hover:shadow-lg font-roboto">
                 Get Started Free
               </Link>
             )}
-            <Link href="/about" className="btn-secondary font-roboto">
+            <Link href="/about" className="bg-white/10 hover:bg-white/20 text-white font-medium py-3 px-6 rounded-xl border border-white/20 hover:border-white/30 transition-all duration-200 shadow-sm hover:shadow-md font-roboto">
               Learn More About FlareCare
             </Link>
           </div>

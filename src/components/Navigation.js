@@ -12,6 +12,7 @@ export default function Navigation() {
   const pathname = usePathname()
   const [isMenuOpen, setIsMenuOpen] = useState(false)
   const [isUserMenuOpen, setIsUserMenuOpen] = useState(false)
+  const [scrollY, setScrollY] = useState(0)
   const { user, isAuthenticated, signOut } = useAuth()
 
   // Get user's display name from Google metadata or fallback to email
@@ -82,6 +83,13 @@ export default function Navigation() {
       document.removeEventListener('click', handleClickOutside)
     }
   }, [isMenuOpen])
+
+  // Handle scroll for landing page nav effect
+  useEffect(() => {
+    const handleScroll = () => setScrollY(window.scrollY)
+    window.addEventListener('scroll', handleScroll)
+    return () => window.removeEventListener('scroll', handleScroll)
+  }, [])
 
   const mainNavItems = [
     { 
@@ -184,17 +192,21 @@ export default function Navigation() {
   ]
 
   return (
-    <nav className="bg-white/90 shadow-md border-b border-white/20 sticky top-0 z-50" style={{backdropFilter: 'blur(12px)', boxShadow: '0 4px 6px -1px rgba(0, 0, 0, 0.05), 0 2px 4px -1px rgba(0, 0, 0, 0.03)'}}>
-      <div className="container mx-auto px-4 sm:px-6 lg:px-8">
-        <div className="flex justify-between items-center h-16 sm:h-20">
+        <nav className={`${pathname === '/' && !isAuthenticated ? 'fixed' : 'sticky'} top-0 w-full z-50 ${
+          scrollY > 20 ? 'bg-slate-900' : 'bg-slate-900/20 backdrop-blur-sm'
+        }`} style={{
+          boxShadow: 'none'
+        }}>
+      <div className="max-w-7xl mx-auto px-6 py-5">
+        <div className="flex justify-between items-center">
           {/* Logo */}
-          <Link href="/" className="flex items-center space-x-2 group">
-            <div className="w-10 h-10 sm:w-10 sm:h-10 bg-blue-500 rounded-lg flex items-center justify-center">
+          <Link href="/" className="flex items-center gap-3 group">
+            <div className="w-10 h-10 sm:w-10 sm:h-10 rounded-lg flex items-center justify-center bg-[#008B8B]">
               <svg className="w-5 h-5 sm:w-6 sm:h-6 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4.318 6.318a4.5 4.5 0 000 6.364L12 20.364l7.682-7.682a4.5 4.5 0 00-6.364-6.364L12 7.636l-1.318-1.318a4.5 4.5 0 00-6.364 0z" />
               </svg>
             </div>
-            <span className="hidden sm:block text-base sm:text-lg lg:text-xl font-bold text-slate-900 font-source">FlareCare</span>
+            <span className="hidden sm:block text-xl font-bold text-white font-source">FlareCare</span>
           </Link>
 
           {/* Desktop Navigation */}
@@ -205,7 +217,7 @@ export default function Navigation() {
                 <Link
                   key={item.href}
                   href={item.href}
-                  className="text-base text-gray-600 hover:text-blue-600"
+                  className="text-base transition-colors text-slate-300 hover:text-[#008B8B]"
                 >
                   {item.label}
                 </Link>
@@ -244,17 +256,17 @@ export default function Navigation() {
                     </div>
                     
                     {/* User Dropdown Menu */}
-                    <div className="absolute top-full right-0 mt-2 w-48 bg-white rounded-lg shadow-lg border border-gray-200 opacity-0 invisible group-hover:opacity-100 group-hover:visible transition-all duration-200 z-50">
+                    <div className="absolute top-full right-0 mt-2 w-48 bg-slate-800 rounded-lg shadow-lg border border-slate-700/50 opacity-0 invisible group-hover:opacity-100 group-hover:visible transition-all duration-200 z-50">
                       <div className="py-2">
                         <Link
                           href="/account"
-                          className="block px-4 py-3 text-base font-roboto transition-colors text-gray-600 hover:bg-gray-50 cursor-pointer"
+                          className="block px-4 py-3 text-base font-roboto transition-colors text-slate-300 hover:bg-slate-700/50 hover:text-[#008B8B] cursor-pointer"
                         >
                           Account
                         </Link>
                         <Link
                           href="/profile-settings"
-                          className="block px-4 py-3 text-base font-roboto transition-colors text-gray-600 hover:bg-gray-50 cursor-pointer"
+                          className="block px-4 py-3 text-base font-roboto transition-colors text-slate-300 hover:bg-slate-700/50 hover:text-[#008B8B] cursor-pointer"
                         >
                           Profile Settings
                         </Link>
@@ -269,7 +281,7 @@ export default function Navigation() {
           {/* Mobile menu button */}
           <button
             onClick={() => setIsMenuOpen(!isMenuOpen)}
-            className="lg:hidden p-2 sm:p-3 rounded-xl text-gray-600 hover:text-gray-900 hover:bg-gray-100 transition-all duration-200 active:scale-95"
+            className="lg:hidden p-2 sm:p-3 rounded-xl text-slate-300 hover:text-white hover:bg-slate-700/50 transition-all duration-200 active:scale-95"
             aria-label="Toggle mobile menu"
           >
             <svg className="w-6 h-6 sm:w-7 sm:h-7" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -283,7 +295,7 @@ export default function Navigation() {
         </div>
 
         {/* Mobile Navigation */}
-        <div className={`lg:hidden absolute top-full left-0 right-0 bg-white shadow-lg border-t border-gray-200/50 transition-all duration-300 ease-out overflow-hidden ${
+        <div className={`lg:hidden absolute top-full left-0 right-0 bg-slate-800 shadow-lg border-t border-slate-700/50 transition-all duration-300 ease-out overflow-hidden ${
           isMenuOpen ? 'max-h-screen opacity-100' : 'max-h-0 opacity-0'
         }`}>
           <div className="container mx-auto px-4 sm:px-6 lg:px-8 py-4">
@@ -292,21 +304,21 @@ export default function Navigation() {
                 <Link
                   key={item.href}
                   href={item.href}
-                  className="flex items-center gap-3 px-4 py-3 text-base font-roboto text-gray-600 hover:text-blue-600"
+                  className="flex items-center gap-3 px-4 py-3 text-base font-roboto text-slate-300 hover:text-[#008B8B]"
                   onClick={() => setIsMenuOpen(false)}
                 >
                   <span>{item.label}</span>
                 </Link>
               ))}
-            
+              
             {/* Mobile user section for authenticated users */}
-            {isAuthenticated && (
-              <div className="border-t border-gray-200/50 mt-4 pt-4">
+              {isAuthenticated && (
+              <div className="border-t border-slate-700/50 mt-4 pt-4">
                 <div className="flex items-center px-4 py-3">
                   {/* User Avatar - Clickable */}
                   <button 
                     onClick={() => setIsUserMenuOpen(!isUserMenuOpen)}
-                    className="w-10 h-10 rounded-full overflow-hidden border-2 border-gray-200 mr-3 bg-gray-200 flex items-center justify-center hover:border-blue-300 transition-colors"
+                    className="w-10 h-10 rounded-full overflow-hidden border-2 border-slate-600 mr-3 bg-slate-700 flex items-center justify-center hover:border-[#FF1493] focus:outline-none focus:ring-0 focus:ring-offset-0 focus:border-slate-600 transition-colors"
                   >
                     {getUserAvatar() ? (
                       <img 
@@ -332,18 +344,18 @@ export default function Navigation() {
                   </button>
                   {/* User Name */}
                   <div className="flex-1">
-                    <p className="text-base font-medium text-gray-600 font-roboto">
+                    <p className="text-base font-medium text-slate-300 font-roboto">
                       {getUserDisplayName()}
                     </p>
                   </div>
-                </div>
+                    </div>
                 
                 {/* Mobile User Menu Options - Conditionally shown */}
                 {isUserMenuOpen && (
                   <div className="px-4 pb-3">
                     <Link
                       href="/account"
-                      className="block px-4 py-3 text-base font-roboto transition-colors text-gray-600 hover:bg-gray-50 rounded-lg"
+                      className="block px-4 py-3 text-base font-roboto transition-colors text-slate-300 hover:bg-slate-700/50 hover:text-[#008B8B] rounded-lg"
                       onClick={() => {
                         setIsMenuOpen(false)
                         setIsUserMenuOpen(false)
@@ -353,7 +365,7 @@ export default function Navigation() {
                     </Link>
                     <Link
                       href="/profile-settings"
-                      className="block px-4 py-3 text-base font-roboto transition-colors text-gray-600 hover:bg-gray-50 rounded-lg"
+                      className="block px-4 py-3 text-base font-roboto transition-colors text-slate-300 hover:bg-slate-700/50 hover:text-[#008B8B] rounded-lg"
                       onClick={() => {
                         setIsMenuOpen(false)
                         setIsUserMenuOpen(false)
@@ -363,9 +375,9 @@ export default function Navigation() {
                     </Link>
                   </div>
                 )}
-              </div>
-            )}
-          </div>
+                </div>
+              )}
+            </div>
         </div>
       </div>
     </nav>

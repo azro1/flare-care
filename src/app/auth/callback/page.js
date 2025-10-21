@@ -40,10 +40,10 @@ export default function AuthCallback() {
 
   if (loading) {
     return (
-      <div className="fixed inset-0 bg-slate-50 flex items-center justify-center z-50">
+      <div className="fixed inset-0 bg-slate-900 flex items-center justify-center z-50">
         <div className="text-center">
-          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600 mx-auto"></div>
-          <p className="mt-4 text-gray-600">Completing sign in...</p>
+          <div className="w-8 h-8 border-4 border-[#008B8B] border-t-transparent rounded-full animate-spin mx-auto"></div>
+          <p className="mt-4 text-slate-300">Completing sign in...</p>
         </div>
       </div>
     )
@@ -51,12 +51,12 @@ export default function AuthCallback() {
 
   if (error) {
     return (
-      <div className="fixed inset-0 flex items-center justify-center">
+      <div className="fixed inset-0 bg-slate-900 flex items-center justify-center">
         <div className="text-center">
-          <div className="text-red-600 mb-4">{error}</div>
+          <div className="text-red-400 mb-4">{error}</div>
           <button
             onClick={() => router.push('/auth')}
-            className="bg-emerald-500 text-white px-4 py-2 rounded hover:bg-emerald-600"
+            className="bg-[#008B8B] text-white px-4 py-2 rounded hover:bg-[#008B8B]/80"
           >
             Try Again
           </button>
