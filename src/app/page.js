@@ -55,9 +55,9 @@ export default function Home() {
             <div className="text-center space-y-6 mb-20">
               <div className="text-[#008B8B] text-xl font-medium font-source">FlareCare</div>
               <h1 className="text-4xl md:text-5xl lg:text-6xl font-bold text-white leading-tight">
-              Taking control of
+              Take control of
                 <br />
-                my
+                your
                 <span className="text-[#008B8B]"> IBD</span>
               </h1>
 
