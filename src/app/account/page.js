@@ -63,7 +63,7 @@ function AccountPageContent() {
     return (
       <div className="fixed inset-0 flex items-center justify-center z-50">
         <div className="text-center">
-          <div className="w-8 h-8 border-4 border-[#008B8B] border-t-transparent rounded-full animate-spin mx-auto mb-4"></div>
+          <div className="w-8 h-8 border-4 border-[#5F9EA0] border-t-transparent rounded-full animate-spin mx-auto mb-4"></div>
           <p className="text-slate-300 font-roboto">Signing out...</p>
         </div>
       </div>
@@ -98,13 +98,13 @@ function AccountPageContent() {
                         e.target.style.display = 'none'
                         const container = e.target.parentElement
                         const initials = document.createElement('div')
-                        initials.className = 'w-full h-full flex items-center justify-center text-white text-2xl font-bold font-source bg-[#008B8B]'
+                        initials.className = 'w-full h-full flex items-center justify-center text-white text-2xl font-bold font-source bg-[#5F9EA0]'
                         initials.textContent = getInitials()
                         container.appendChild(initials)
                       }}
                     />
                   ) : (
-                    <div className="w-full h-full flex items-center justify-center text-white text-2xl font-bold font-source bg-[#008B8B]">
+                    <div className="w-full h-full flex items-center justify-center text-white text-2xl font-bold font-source bg-[#5F9EA0]">
                       {getInitials()}
                     </div>
                   )}
@@ -120,7 +120,7 @@ function AccountPageContent() {
             <button
               onClick={() => setShowSignOutModal(true)}
               disabled={isSigningOut}
-              className="bg-[#008B8B] text-white font-semibold py-2 px-4 rounded-lg hover:bg-[#008B8B]/80 transition-colors disabled:opacity-50 self-start sm:self-auto"
+              className="bg-[#5F9EA0] text-white font-semibold py-2 px-4 rounded-lg hover:bg-[#5F9EA0]/80 transition-colors disabled:opacity-50 self-start sm:self-auto"
             >
               Sign Out
             </button>
@@ -183,8 +183,8 @@ function AccountPageContent() {
         <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
           <div className="bg-slate-800 rounded-xl p-6 max-w-md mx-4 border border-slate-700/50">
             <div className="flex items-center gap-3 mb-4">
-              <div className="w-10 h-10 bg-[#008B8B]/20 rounded-full flex items-center justify-center">
-                <svg className="w-6 h-6 text-[#008B8B]" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <div className="w-10 h-10 bg-[#5F9EA0]/20 rounded-full flex items-center justify-center">
+                <svg className="w-6 h-6 text-[#5F9EA0]" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17 16l4-4m0 0l-4-4m4 4H7m6 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h4a3 3 0 013 3v1" />
                 </svg>
               </div>
@@ -206,7 +206,7 @@ function AccountPageContent() {
               <button
                 onClick={handleSignOut}
                 disabled={isSigningOut}
-                className="flex-1 px-4 py-2 bg-[#008B8B] text-white hover:bg-[#008B8B]/80 rounded-lg transition-colors disabled:opacity-50"
+                className="flex-1 px-4 py-2 bg-[#5F9EA0] text-white hover:bg-[#5F9EA0]/80 rounded-lg transition-colors disabled:opacity-50"
               >
                 {isSigningOut ? 'Signing Out...' : 'Sign Out'}
               </button>

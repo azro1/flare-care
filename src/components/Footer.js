@@ -26,7 +26,7 @@ export default function Footer() {
         <div className="hidden lg:flex lg:flex-col">
           <div className="flex flex-col md:flex-row justify-between items-center gap-6">
             <div className="flex items-center gap-3">
-              <div className="w-8 h-8 rounded-lg flex items-center justify-center bg-[#008B8B]">
+              <div className="w-8 h-8 rounded-lg flex items-center justify-center bg-[#5F9EA0]">
                 <svg className="w-4 h-4 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4.318 6.318a4.5 4.5 0 000 6.364L12 20.364l7.682-7.682a4.5 4.5 0 00-6.364-6.364L12 7.636l-1.318-1.318a4.5 4.5 0 00-6.364 0z" />
                 </svg>
@@ -35,10 +35,10 @@ export default function Footer() {
             </div>
 
             <div className="flex gap-8 text-sm text-slate-400">
-              <a href="/about" className="transition-colors hover:text-[#008B8B]">About</a>
-              <a href="#" className="transition-colors hover:text-[#008B8B]">Privacy</a>
-              <a href="#" className="transition-colors hover:text-[#008B8B]">Terms</a>
-              <a href="#" className="transition-colors hover:text-[#008B8B]">Contact</a>
+              <a href="/about" className="transition-colors hover:text-[#5F9EA0]">About</a>
+              <a href="#" className="transition-colors hover:text-[#5F9EA0]">Privacy</a>
+              <a href="#" className="transition-colors hover:text-[#5F9EA0]">Terms</a>
+              <a href="#" className="transition-colors hover:text-[#5F9EA0]">Contact</a>
             </div>
           </div>
 

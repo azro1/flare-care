@@ -201,7 +201,7 @@ export default function Navigation() {
         <div className="flex justify-between items-center">
           {/* Logo */}
           <Link href="/" className="flex items-center gap-3 group">
-            <div className="w-10 h-10 sm:w-10 sm:h-10 rounded-lg flex items-center justify-center bg-[#008B8B]">
+            <div className="w-10 h-10 sm:w-10 sm:h-10 rounded-lg flex items-center justify-center bg-[#5F9EA0]">
               <svg className="w-5 h-5 sm:w-6 sm:h-6 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4.318 6.318a4.5 4.5 0 000 6.364L12 20.364l7.682-7.682a4.5 4.5 0 00-6.364-6.364L12 7.636l-1.318-1.318a4.5 4.5 0 00-6.364 0z" />
               </svg>
@@ -217,7 +217,7 @@ export default function Navigation() {
                 <Link
                   key={item.href}
                   href={item.href}
-                  className="text-base transition-colors text-slate-300 hover:text-[#008B8B]"
+                  className="text-base transition-colors text-slate-300 hover:text-[#5F9EA0]"
                 >
                   {item.label}
                 </Link>
@@ -260,13 +260,13 @@ export default function Navigation() {
                       <div className="py-2">
                         <Link
                           href="/account"
-                          className="block px-4 py-3 text-base font-roboto transition-colors text-slate-300 hover:bg-slate-700/50 hover:text-[#008B8B] cursor-pointer"
+                          className="block px-4 py-3 text-base font-roboto transition-colors text-slate-300 hover:bg-slate-700/50 hover:text-[#5F9EA0] cursor-pointer"
                         >
                           Account
                         </Link>
                         <Link
                           href="/profile-settings"
-                          className="block px-4 py-3 text-base font-roboto transition-colors text-slate-300 hover:bg-slate-700/50 hover:text-[#008B8B] cursor-pointer"
+                          className="block px-4 py-3 text-base font-roboto transition-colors text-slate-300 hover:bg-slate-700/50 hover:text-[#5F9EA0] cursor-pointer"
                         >
                           Profile Settings
                         </Link>
@@ -304,7 +304,7 @@ export default function Navigation() {
                 <Link
                   key={item.href}
                   href={item.href}
-                  className="flex items-center gap-3 px-4 py-3 text-base font-roboto text-slate-300 hover:text-[#008B8B]"
+                  className="flex items-center gap-3 px-4 py-3 text-base font-roboto text-slate-300 hover:text-[#5F9EA0]"
                   onClick={() => setIsMenuOpen(false)}
                 >
                   <span>{item.label}</span>
@@ -355,7 +355,7 @@ export default function Navigation() {
                   <div className="px-4 pb-3">
                     <Link
                       href="/account"
-                      className="block px-4 py-3 text-base font-roboto transition-colors text-slate-300 hover:bg-slate-700/50 hover:text-[#008B8B] rounded-lg"
+                      className="block px-4 py-3 text-base font-roboto transition-colors text-slate-300 hover:bg-slate-700/50 hover:text-[#5F9EA0] rounded-lg"
                       onClick={() => {
                         setIsMenuOpen(false)
                         setIsUserMenuOpen(false)
@@ -365,7 +365,7 @@ export default function Navigation() {
                     </Link>
                     <Link
                       href="/profile-settings"
-                      className="block px-4 py-3 text-base font-roboto transition-colors text-slate-300 hover:bg-slate-700/50 hover:text-[#008B8B] rounded-lg"
+                      className="block px-4 py-3 text-base font-roboto transition-colors text-slate-300 hover:bg-slate-700/50 hover:text-[#5F9EA0] rounded-lg"
                       onClick={() => {
                         setIsMenuOpen(false)
                         setIsUserMenuOpen(false)

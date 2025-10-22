@@ -310,7 +310,7 @@ export default function LearnPage() {
                   href="https://www.crohnsandcolitis.org.uk/" 
                   target="_blank" 
                   rel="noopener noreferrer"
-                  className="text-[#008B8B] hover:text-[#008B8B]/80 underline"
+                  className="text-[#5F9EA0] hover:text-[#5F9EA0]/80 underline"
                 >
                   Crohn's & Colitis UK
                 </a>
@@ -321,7 +321,7 @@ export default function LearnPage() {
                   href="https://www.crohnscolitisfoundation.org/" 
                   target="_blank" 
                   rel="noopener noreferrer"
-                  className="text-[#008B8B] hover:text-[#008B8B]/80 underline"
+                  className="text-[#5F9EA0] hover:text-[#5F9EA0]/80 underline"
                 >
                   Crohn's & Colitis Foundation
                 </a>
@@ -338,7 +338,7 @@ export default function LearnPage() {
                   href="https://www.nhs.uk/conditions/inflammatory-bowel-disease/" 
                   target="_blank" 
                   rel="noopener noreferrer"
-                  className="text-[#008B8B] hover:text-[#008B8B]/80 underline"
+                  className="text-[#5F9EA0] hover:text-[#5F9EA0]/80 underline"
                 >
                   NHS Information
                 </a>
@@ -349,7 +349,7 @@ export default function LearnPage() {
                   href="https://www.mayoclinic.org/diseases-conditions/inflammatory-bowel-disease/symptoms-causes/syc-20353315" 
                   target="_blank" 
                   rel="noopener noreferrer"
-                  className="text-[#008B8B] hover:text-[#008B8B]/80 underline"
+                  className="text-[#5F9EA0] hover:text-[#5F9EA0]/80 underline"
                 >
                   Mayo Clinic Guide
                 </a>
@@ -426,11 +426,11 @@ export default function LearnPage() {
           </p>
           <div className="flex flex-col sm:flex-row justify-center space-y-3 sm:space-y-0 sm:space-x-4">
             {isAuthenticated ? (
-              <Link href="/" className="bg-[#008B8B] hover:bg-[#008B8B]/80 text-white font-semibold py-3 px-6 rounded-xl transition-all duration-300 transform hover:scale-105 hover:shadow-lg active:scale-95 font-roboto">
+              <Link href="/" className="bg-[#5F9EA0] hover:bg-[#5F9EA0]/80 text-white font-semibold py-3 px-6 rounded-xl transition-all duration-300 transform hover:scale-105 hover:shadow-lg active:scale-95 font-roboto">
                 Go to Dashboard
               </Link>
             ) : (
-              <Link href="/auth" className="bg-[#008B8B] hover:bg-[#008B8B]/80 text-white font-semibold py-3 px-6 rounded-xl transition-all duration-300 hover:shadow-lg font-roboto">
+              <Link href="/auth" className="bg-[#5F9EA0] hover:bg-[#5F9EA0]/80 text-white font-semibold py-3 px-6 rounded-xl transition-all duration-300 hover:shadow-lg font-roboto">
                 Get Started Free
               </Link>
             )}

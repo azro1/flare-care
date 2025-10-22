@@ -99,7 +99,7 @@ export default function About() {
             </p>
             <a 
               href="mailto:support@flarecare.app" 
-              className="bg-[#008B8B] hover:bg-[#008B8B]/80 text-white font-semibold font-roboto py-3 px-6 rounded-xl transition-all duration-300 hover:shadow-lg inline-block"
+              className="bg-[#5F9EA0] hover:bg-[#5F9EA0]/80 text-white font-semibold font-roboto py-3 px-6 rounded-xl transition-all duration-300 hover:shadow-lg inline-block"
             >
               Contact Support
             </a>

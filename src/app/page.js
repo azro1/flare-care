@@ -53,27 +53,26 @@ export default function Home() {
         <section className="pt-28 pb-16 sm:pt-40 sm:pb-32 px-6">
           <div className="max-w-4xl mx-auto">
             <div className="text-center space-y-6 mb-20">
-              <div className="text-[#008B8B] text-xl font-medium font-source">FlareCare</div>
+              <div className="text-[#5F9EA0] text-xl font-medium font-source">FlareCare</div>
               <h1 className="text-4xl md:text-5xl lg:text-6xl font-bold text-white leading-tight">
               Take control of
                 <br />
                 your
-                <span className="text-[#008B8B]"> IBD</span>
+                <span className="text-[#5F9EA0]"> IBD</span>
               </h1>
 
               <p className="text-lg sm:text-xl text-slate-300 leading-relaxed max-w-2xl mx-auto">
-                I made this because I needed it. A calm place to track my Crohn's symptoms,
-                see what helps, and feel less alone in this journey.
+              Because living with Crohn’s is more than managing symptoms — it’s understanding your story
               </p>
 
-              <Link href="/auth" className="inline-block mt-6 px-8 py-2.5 bg-[#008B8B] text-white rounded-lg hover:bg-[#008B8B]/80 transition-colors text-lg font-bold">
+              <Link href="/auth" className="inline-block mt-6 px-8 py-2.5 bg-[#5F9EA0] text-white rounded-lg hover:bg-[#5F9EA0]/80 transition-colors text-lg font-bold">
                 Sign In
               </Link>
             </div>
 
             <div className="bg-slate-800/60 backdrop-blur-sm rounded-2xl p-8 md:p-10 border border-slate-700/50">
               <div className="flex items-center gap-3 mb-6">
-                <div className="w-10 h-10 rounded-full bg-[#008B8B] flex items-center justify-center">
+                <div className="w-10 h-10 rounded-full bg-[#5F9EA0] flex items-center justify-center">
                   <span className="text-white text-sm font-medium">JD</span>
                 </div>
                 <div>
@@ -178,7 +177,7 @@ export default function Home() {
                   So I made Flarecare for myself. And if it helps you too, that makes me really happy.
                 </p>
                 <div className="pt-4 flex items-center gap-3">
-                  <div className="w-12 h-12 rounded-full bg-[#008B8B] flex items-center justify-center flex-shrink-0">
+                  <div className="w-12 h-12 rounded-full bg-[#5F9EA0] flex items-center justify-center flex-shrink-0">
                     <span className="text-white font-semibold text-lg">S</span>
                   </div>
                   <div className="min-w-0">
@@ -199,7 +198,7 @@ export default function Home() {
             <p className="text-lg text-slate-300">
               Its free and easy to sign up. No forms. No hassle.
             </p>
-            <Link href="/auth" className="inline-block px-8 py-2.5 bg-[#008B8B] text-white rounded-lg hover:bg-[#008B8B]/80 transition-colors text-lg font-bold">
+              <Link href="/auth" className="inline-block px-8 py-2.5 bg-[#5F9EA0] text-white rounded-lg hover:bg-[#5F9EA0]/80 transition-colors text-lg font-bold">
               Sign In
           </Link>
             <p className="text-sm text-slate-400">Your data stays private, always</p>
@@ -328,7 +327,7 @@ export default function Home() {
                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z" />
                   </svg>
                 </div>
-                <h3 className="font-semibold text-white">Log Symptoms</h3>
+                <h3 className="font-semibold text-white">Track Symptoms</h3>
             </div>
           </Link>
 
@@ -380,7 +379,7 @@ export default function Home() {
               {symptoms.length > 1 && (
                 <button 
                   onClick={() => setShowAllSymptoms(!showAllSymptoms)}
-                  className="text-[#008B8B] hover:text-[#008B8B]/80 text-sm font-medium"
+                  className="text-[#5F9EA0] hover:text-[#5F9EA0]/80 text-sm font-medium"
                 >
                   {showAllSymptoms ? 'Show Less' : 'View All'}
                 </button>

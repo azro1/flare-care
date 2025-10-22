@@ -42,7 +42,7 @@ export default function AuthCallback() {
     return (
       <div className="fixed inset-0 bg-slate-900 flex items-center justify-center z-50">
         <div className="text-center">
-          <div className="w-8 h-8 border-4 border-[#008B8B] border-t-transparent rounded-full animate-spin mx-auto"></div>
+          <div className="w-8 h-8 border-4 border-[#5F9EA0] border-t-transparent rounded-full animate-spin mx-auto"></div>
           <p className="mt-4 text-slate-300">Completing sign in...</p>
         </div>
       </div>
@@ -56,7 +56,7 @@ export default function AuthCallback() {
           <div className="text-red-400 mb-4">{error}</div>
           <button
             onClick={() => router.push('/auth')}
-            className="bg-[#008B8B] text-white px-4 py-2 rounded hover:bg-[#008B8B]/80"
+            className="bg-[#5F9EA0] text-white px-4 py-2 rounded hover:bg-[#5F9EA0]/80"
           >
             Try Again
           </button>

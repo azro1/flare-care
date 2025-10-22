@@ -8,7 +8,7 @@ export default function LoadingScreen({ children }) {
   if (loading) {
     return (
       <div className="min-h-screen bg-slate-900 flex items-center justify-center">
-        <div className="w-8 h-8 border-4 border-[#008B8B] border-t-transparent rounded-full animate-spin"></div>
+        <div className="w-8 h-8 border-4 border-[#5F9EA0] border-t-transparent rounded-full animate-spin"></div>
       </div>
     )
   }

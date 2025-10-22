@@ -131,7 +131,7 @@ export default function FoodGuide() {
           <ul className="space-y-3">
             {tips.map((tip, index) => (
               <li key={index} className="text-slate-300 font-roboto leading-relaxed flex items-start">
-                <span className="w-2 h-2 bg-[#008B8B] rounded-full mr-3 mt-2 flex-shrink-0"></span>
+                <span className="w-2 h-2 bg-[#5F9EA0] rounded-full mr-3 mt-2 flex-shrink-0"></span>
                 {tip}
               </li>
             ))}
@@ -212,7 +212,7 @@ export default function FoodGuide() {
           </p>
           <Link 
             href="/symptoms"
-            className="inline-block bg-[#008B8B] text-white font-semibold px-8 py-3 rounded-lg hover:bg-[#008B8B]/80 transition-colors duration-200"
+            className="inline-block bg-[#5F9EA0] text-white font-semibold px-8 py-3 rounded-lg hover:bg-[#5F9EA0]/80 transition-colors duration-200"
           >
             Start Tracking
           </Link>

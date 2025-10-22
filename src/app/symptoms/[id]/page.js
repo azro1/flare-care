@@ -24,7 +24,7 @@ function SymptomDetailContent() {
       setSymptom(foundSymptom)
     } else if (symptoms.length > 0 && !isRedirecting) {
       // Only redirect if we have symptoms but didn't find this one and we're not already redirecting
-      router.push('/symptoms')
+      router.push('/')
     }
     // If symptoms array is empty, wait for it to load
   }, [symptoms, params.id, router, isRedirecting])
@@ -117,6 +117,27 @@ function SymptomDetailContent() {
         <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
           {/* Left Column - Key Metrics */}
           <div className="lg:col-span-1 space-y-6">
+            {/* Status Card */}
+            <div className="bg-slate-800/60 backdrop-blur-sm rounded-xl p-6 border border-slate-700/50">
+              <div className="text-center">
+                <div className={`w-16 h-16 rounded-full flex items-center justify-center mx-auto mb-4 ${
+                  (symptom.isOngoing || !symptom.symptomEndDate) ? 'bg-yellow-100' : 'bg-green-100'
+                }`}>
+                  <svg className={`w-8 h-8 ${(symptom.isOngoing || !symptom.symptomEndDate) ? 'text-yellow-600' : 'text-green-600'}`} fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    {(symptom.isOngoing || !symptom.symptomEndDate) ? (
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" />
+                    ) : (
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
+                    )}
+                  </svg>
+                </div>
+                <h3 className="text-sm font-medium text-slate-400 mb-1">Status</h3>
+                <p className="text-lg font-semibold text-white">
+                  {symptom.isOngoing || !symptom.symptomEndDate ? 'Ongoing' : 'Resolved'}
+                </p>
+              </div>
+            </div>
+
             {/* Severity Card */}
             <div className="bg-slate-800/60 backdrop-blur-sm rounded-xl p-6 border border-slate-700/50">
               <div className="text-center">
@@ -139,24 +160,6 @@ function SymptomDetailContent() {
               </div>
             </div>
 
-            {/* Status Card */}
-            <div className="bg-slate-800/60 backdrop-blur-sm rounded-xl p-6 border border-slate-700/50">
-              <div className="text-center">
-                <div className={`w-16 h-16 rounded-full flex items-center justify-center mx-auto mb-4 ${
-                  symptom.isOngoing ? 'bg-yellow-100' : 'bg-green-100'
-                }`}>
-                  <svg className={`w-8 h-8 ${symptom.isOngoing ? 'text-yellow-600' : 'text-green-600'}`} fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    {symptom.isOngoing ? (
-                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" />
-                    ) : (
-                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
-                    )}
-                  </svg>
-                </div>
-                <h3 className="text-sm font-medium text-slate-400 mb-1">Status</h3>
-                <p className="text-lg font-semibold text-white">{symptom.isOngoing ? 'Ongoing' : 'Resolved'}</p>
-              </div>
-            </div>
           </div>
 
           {/* Right Column - Detailed Information */}
@@ -173,7 +176,7 @@ function SymptomDetailContent() {
                 <h3 className="text-xl font-semibold font-source text-white">Timeline</h3>
               </div>
               <div className="space-y-4">
-                <div className="flex items-center justify-between py-3 border-b border-gray-100">
+                <div className="flex items-center justify-between py-3 border-b border-slate-700/30">
                   <div className="flex items-center gap-3">
                     <div className="w-2 h-2 bg-green-500 rounded-full"></div>
                     <span className="text-slate-300 font-medium">Started</span>
@@ -205,12 +208,12 @@ function SymptomDetailContent() {
                 <h3 className="text-xl font-semibold font-source text-white">Bathroom Frequency</h3>
               </div>
               <div className="space-y-4">
-                <div className="flex items-center justify-between py-3 border-b border-gray-100">
+                <div className="flex items-center justify-between py-3 border-b border-slate-700/30">
                   <span className="text-slate-300 font-medium">Normal frequency</span>
                   <span className="font-semibold text-white">{symptom.normal_bathroom_frequency || 'Not set'} times/day</span>
                 </div>
                 {symptom.bathroom_frequency_changed && (
-                  <div className="flex items-center justify-between py-3 border-b border-gray-100">
+                  <div className="flex items-center justify-between py-3 border-b border-slate-700/30">
                     <span className="text-slate-300 font-medium">Frequency changed</span>
                     <span className="font-semibold text-white">{symptom.bathroom_frequency_changed === 'yes' ? 'Yes' : 'No'}</span>
                   </div>
@@ -235,17 +238,17 @@ function SymptomDetailContent() {
                 <h3 className="text-xl font-semibold font-source text-white">Lifestyle</h3>
               </div>
               <div className="space-y-4">
-                <div className="flex items-center justify-between py-3 border-b border-gray-100">
+                <div className="flex items-center justify-between py-3 border-b border-slate-700/30">
                   <span className="text-slate-300 font-medium">Smoking</span>
                   <span className="font-semibold text-white">{symptom.smoking ? 'Yes' : 'No'}</span>
                 </div>
                 {symptom.smoking && symptom.smoking_details && (
-                  <div className="py-3 border-b border-gray-100">
+                  <div className="py-3 border-b border-slate-700/30">
                     <span className="text-slate-300 font-medium block mb-2">Smoking details</span>
                     <p className="text-white leading-relaxed">{symptom.smoking_details}</p>
                   </div>
                 )}
-                <div className="flex items-center justify-between py-3 border-b border-gray-100">
+                <div className="flex items-center justify-between py-3 border-b border-slate-700/30">
                   <span className="text-slate-300 font-medium">Alcohol</span>
                   <span className="font-semibold text-white">{symptom.alcohol ? 'Yes' : 'No'}</span>
                 </div>
