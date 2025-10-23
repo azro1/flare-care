@@ -36,7 +36,7 @@ export default function Footer() {
   }, [])
   
   return (
-    <footer className={`py-8 sm:py-8 lg:py-12 px-4 sm:px-6 mt-auto border-t border-slate-800/50 ${needsFixedFooter ? 'bg-slate-900 fixed bottom-0 left-0 right-0 lg:static lg:bg-transparent' : 'bg-transparent'}`}>
+    <footer className={`py-8 sm:py-8 lg:py-12 px-4 sm:px-6 mt-auto ${needsFixedFooter ? 'bg-slate-800 fixed bottom-0 left-0 right-0 lg:static' : 'bg-slate-800'}`}>
       <div className="max-w-7xl mx-auto">
         {/* Mobile minimal footer */}
         <div className="lg:hidden">
@@ -65,7 +65,7 @@ export default function Footer() {
             </div>
           </div>
 
-          <div className="mt-8 pt-8 text-center text-sm border-t border-slate-800/50 text-slate-500">
+          <div className="mt-8 pt-8 text-center text-sm border-t border-slate-700/50 text-slate-500">
             Made with care for the IBD community
           </div>
         </div>

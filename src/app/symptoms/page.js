@@ -50,8 +50,8 @@ function SymptomsPageContent() {
 
   // ✅ Prevent body scrolling for symptoms pages (except meals and review)
   useEffect(() => {
-    // Only apply fixed positioning on landing page (step 0)
-    if (currentStep === 0) {
+    // Apply fixed positioning on landing page and all questions except meals (step 13) and review (step 15)
+    if (currentStep !== 13 && currentStep !== 15) {
       // Freeze scroll
       document.body.style.position = 'fixed'
       document.body.style.width = '100%'
@@ -631,7 +631,7 @@ function SymptomsPageContent() {
   }
 
   return (
-    <div className={`max-w-4xl w-full mx-auto px-3 sm:px-4 md:px-6 lg:px-8 min-w-0 flex flex-col justify-center sm:flex-grow ${currentStep === 0 ? '' : 'pb-20 lg:pb-0'}`}>
+    <div className={`max-w-4xl w-full mx-auto px-3 sm:px-4 md:px-6 lg:px-8 min-w-0 flex flex-col justify-center sm:flex-grow ${(currentStep === 13 || currentStep === 15) ? 'pb-20 lg:pb-0' : ''}`}>
       {/* Back Button - Hide on landing page and first question */}
       {currentStep > 1 && (
         <div className="mb-4 sm:mb-8">

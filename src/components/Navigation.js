@@ -192,9 +192,7 @@ export default function Navigation() {
   ]
 
   return (
-        <nav className={`${pathname === '/' && !isAuthenticated ? 'fixed' : 'sticky'} top-0 w-full z-50 ${
-          scrollY > 20 ? 'bg-slate-900' : 'bg-slate-900/20 backdrop-blur-sm'
-        }`} style={{
+        <nav className={`${pathname === '/' && !isAuthenticated ? 'fixed' : 'sticky'} top-0 w-full z-50 bg-slate-800`} style={{
           boxShadow: 'none'
         }}>
       <div className="max-w-7xl mx-auto px-6 py-5">
