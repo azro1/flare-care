@@ -121,10 +121,10 @@ function SymptomDetailContent() {
             <div className="bg-slate-800/60 backdrop-blur-sm rounded-xl p-6 border border-slate-700/50">
               <div className="text-center">
                 <div className={`w-16 h-16 rounded-full flex items-center justify-center mx-auto mb-4 ${
-                  (symptom.isOngoing || !symptom.symptomEndDate) ? 'bg-yellow-100' : 'bg-green-100'
+                  (symptom.is_ongoing || !symptom.symptom_end_date) ? 'bg-yellow-100' : 'bg-green-100'
                 }`}>
-                  <svg className={`w-8 h-8 ${(symptom.isOngoing || !symptom.symptomEndDate) ? 'text-yellow-600' : 'text-green-600'}`} fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    {(symptom.isOngoing || !symptom.symptomEndDate) ? (
+                  <svg className={`w-8 h-8 ${(symptom.is_ongoing || !symptom.symptom_end_date) ? 'text-yellow-600' : 'text-green-600'}`} fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    {(symptom.is_ongoing || !symptom.symptom_end_date) ? (
                       <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" />
                     ) : (
                       <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
@@ -133,7 +133,7 @@ function SymptomDetailContent() {
                 </div>
                 <h3 className="text-sm font-medium text-slate-400 mb-1">Status</h3>
                 <p className="text-lg font-semibold text-white">
-                  {symptom.isOngoing || !symptom.symptomEndDate ? 'Ongoing' : 'Resolved'}
+                  {symptom.is_ongoing || !symptom.symptom_end_date ? 'Ongoing' : 'Resolved'}
                 </p>
               </div>
             </div>

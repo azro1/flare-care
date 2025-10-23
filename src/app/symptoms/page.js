@@ -50,8 +50,8 @@ function SymptomsPageContent() {
 
   // ✅ Prevent body scrolling for symptoms pages (except meals and review)
   useEffect(() => {
-    // Apply fixed positioning on landing page and all questions except meals (step 13) and review (step 15)
-    if (currentStep !== 13 && currentStep !== 15) {
+    // Apply fixed positioning on landing page and all questions except meals (steps 13-15) and review (step 17)
+    if (currentStep !== 13 && currentStep !== 14 && currentStep !== 15 && currentStep !== 17) {
       // Freeze scroll
       document.body.style.position = 'fixed'
       document.body.style.width = '100%'
@@ -102,7 +102,7 @@ function SymptomsPageContent() {
   const [alertModal, setAlertModal] = useState({ isOpen: false, title: '', message: '' })
   const [isSubmitting, setIsSubmitting] = useState(false)
 
-  const totalSteps = 16
+  const totalSteps = 18
 
   const nextStep = () => {
     // Validate current step before proceeding
@@ -314,7 +314,7 @@ function SymptomsPageContent() {
     
     // Skip step 12 (alcohol details) if they don't drink
     if (currentStep === 11 && formData.alcohol === false) {
-      setCurrentStep(13) // Skip to step 13 (meal tracking)
+      setCurrentStep(13) // Skip to step 13 (breakfast)
       return
     }
     
@@ -328,18 +328,40 @@ function SymptomsPageContent() {
       setFieldErrors(prev => ({ ...prev, alcohol_units: '' }))
     }
     
-    // Validate step 13 (meals) - must have food or mark as skipped for each meal
+    // Validate step 13 (breakfast) - must have food or mark as skipped
     if (currentStep === 13) {
       const hasBreakfast = formData.breakfast.some(meal => meal.food.trim()) || formData.breakfast_skipped
-      const hasLunch = formData.lunch.some(meal => meal.food.trim()) || formData.lunch_skipped
-      const hasDinner = formData.dinner.some(meal => meal.food.trim()) || formData.dinner_skipped
       
-      if (!hasBreakfast || !hasLunch || !hasDinner) {
-        setFieldErrors(prev => ({ ...prev, meals: 'Please enter what you ate for each meal or check "I didn\'t eat anything"' }))
+      if (!hasBreakfast) {
+        setFieldErrors(prev => ({ ...prev, breakfast: 'Please enter what you ate for breakfast or check "I didn\'t eat anything"' }))
         return
       }
       // Clear error if validation passes
-      setFieldErrors(prev => ({ ...prev, meals: '' }))
+      setFieldErrors(prev => ({ ...prev, breakfast: '' }))
+    }
+    
+    // Validate step 14 (lunch) - must have food or mark as skipped
+    if (currentStep === 14) {
+      const hasLunch = formData.lunch.some(meal => meal.food.trim()) || formData.lunch_skipped
+      
+      if (!hasLunch) {
+        setFieldErrors(prev => ({ ...prev, lunch: 'Please enter what you ate for lunch or check "I didn\'t eat anything"' }))
+        return
+      }
+      // Clear error if validation passes
+      setFieldErrors(prev => ({ ...prev, lunch: '' }))
+    }
+    
+    // Validate step 15 (dinner) - must have food or mark as skipped
+    if (currentStep === 15) {
+      const hasDinner = formData.dinner.some(meal => meal.food.trim()) || formData.dinner_skipped
+      
+      if (!hasDinner) {
+        setFieldErrors(prev => ({ ...prev, dinner: 'Please enter what you ate for dinner or check "I didn\'t eat anything"' }))
+        return
+      }
+      // Clear error if validation passes
+      setFieldErrors(prev => ({ ...prev, dinner: '' }))
     }
     
     // Move to next step if no validation issues
@@ -631,7 +653,7 @@ function SymptomsPageContent() {
   }
 
   return (
-    <div className={`max-w-4xl w-full mx-auto px-3 sm:px-4 md:px-6 lg:px-8 min-w-0 flex flex-col justify-center sm:flex-grow ${(currentStep === 13 || currentStep === 15) ? 'pb-20 lg:pb-0' : ''}`}>
+    <div className={`max-w-4xl w-full mx-auto px-3 sm:px-4 md:px-6 lg:px-8 min-w-0 flex flex-col justify-center sm:flex-grow ${(currentStep === 13 || currentStep === 14 || currentStep === 15 || currentStep === 17) ? 'pb-20 lg:pb-0' : ''}`}>
       {/* Back Button - Hide on landing page and first question */}
       {currentStep > 1 && (
         <div className="mb-4 sm:mb-8">
@@ -1149,18 +1171,19 @@ function SymptomsPageContent() {
           </div>
         )}
 
-        {/* Step 13: Meal Tracking */}
+        {/* Step 13: Breakfast */}
         {currentStep === 13 && (
           <div className="mb-5">
- 
-            
             <div className="space-y-6">
             {/* Breakfast */}
               <div>
                 <div className="flex justify-between items-center mb-3">
-                  <h4 className="text-2xl sm:text-xl font-semibold text-white mb-4">
-                  {getMealLabel('breakfast')}
-                </h4>
+                  <div>
+                    <h3 className="text-2xl sm:text-2xl md:text-3xl font-semibold text-white mb-2">
+                    {getMealLabel('breakfast')}
+                  </h3>
+                  <p className="text-sm text-slate-400 mb-6">Add all the food items you had for breakfast</p>
+                  </div>
                 <button
                   type="button"
                   onClick={() => addMealItem('breakfast')}
@@ -1232,13 +1255,30 @@ function SymptomsPageContent() {
                 </label>
               </div>
             </div>
+            </div>
+            
+            {/* Validation error message */}
+            {fieldErrors.breakfast && (
+              <div className="mt-6 p-3 bg-slate-700/40 border border-slate-600/30 rounded-lg">
+                <p className="text-slate-300 text-sm">{fieldErrors.breakfast}</p>
+              </div>
+            )}
+          </div>
+        )}
 
+        {/* Step 14: Lunch */}
+        {currentStep === 14 && (
+          <div className="mb-5">
+            <div className="space-y-6">
             {/* Lunch */}
               <div>
                 <div className="flex justify-between items-center mb-3">
-                  <h4 className="text-2xl sm:text-xl font-semibold text-white mb-4">
-                  {getMealLabel('lunch')}
-                </h4>
+                  <div>
+                    <h3 className="text-2xl sm:text-2xl md:text-3xl font-semibold text-white mb-2">
+                    {getMealLabel('lunch')}
+                  </h3>
+                  <p className="text-sm text-slate-400 mb-6">Add all the food items you had for lunch</p>
+                  </div>
                 <button
                   type="button"
                   onClick={() => addMealItem('lunch')}
@@ -1310,13 +1350,30 @@ function SymptomsPageContent() {
                 </label>
               </div>
             </div>
+            </div>
+            
+            {/* Validation error message */}
+            {fieldErrors.lunch && (
+              <div className="mt-6 p-3 bg-slate-700/40 border border-slate-600/30 rounded-lg">
+                <p className="text-slate-300 text-sm">{fieldErrors.lunch}</p>
+              </div>
+            )}
+          </div>
+        )}
 
+        {/* Step 15: Dinner */}
+        {currentStep === 15 && (
+          <div className="mb-5">
+            <div className="space-y-6">
             {/* Dinner */}
               <div>
                 <div className="flex justify-between items-center mb-3">
-                  <h4 className="text-2xl sm:text-xl font-semibold text-white mb-4">
-                  {getMealLabel('dinner')}
-                </h4>
+                  <div>
+                    <h3 className="text-2xl sm:text-2xl md:text-3xl font-semibold text-white mb-2">
+                    {getMealLabel('dinner')}
+                  </h3>
+                  <p className="text-sm text-slate-400 mb-6">Add all the food items you had for dinner</p>
+                  </div>
                 <button
                   type="button"
                   onClick={() => addMealItem('dinner')}
@@ -1365,7 +1422,7 @@ function SymptomsPageContent() {
                     </div>
                   </div>
                 ))}
-          </div>
+              </div>
 
               {/* Dinner skipped checkbox */}
               <div className="mt-3">
@@ -1386,21 +1443,21 @@ function SymptomsPageContent() {
                   />
                   <span className="text-sm text-slate-300">I didn't eat anything for dinner</span>
                 </label>
-          </div>
-      </div>
-        </div>
-        
-          {/* Validation error message */}
-          {fieldErrors.meals && (
-                  <div className="mt-6 p-3 bg-slate-700/40 border border-slate-600/30 rounded-lg">
-              <p className="text-slate-300 text-sm">{fieldErrors.meals}</p>
+              </div>
             </div>
-                      )}
-                    </div>
+            </div>
+            
+            {/* Validation error message */}
+            {fieldErrors.dinner && (
+              <div className="mt-6 p-3 bg-slate-700/40 border border-slate-600/30 rounded-lg">
+                <p className="text-slate-300 text-sm">{fieldErrors.dinner}</p>
+              </div>
+            )}
+          </div>
         )}
 
-        {/* Step 14: Additional Notes */}
-        {currentStep === 14 && (
+        {/* Step 16: Additional Notes */}
+        {currentStep === 16 && (
           <div className="mb-5">
             <h3 className="text-2xl sm:text-2xl md:text-3xl font-semibold text-white mb-6">Additional notes</h3>
             <p className="text-sm text-slate-400 mb-4">Share any other details about your symptoms, how you're feeling, or triggers you noticed</p>            
@@ -1417,8 +1474,8 @@ function SymptomsPageContent() {
                   </div>
         )}
 
-        {/* Step 15: Review */}
-        {currentStep === 15 && (
+        {/* Step 17: Review */}
+        {currentStep === 17 && (
           <div className="mb-4">
             <h3 className="text-2xl sm:text-2xl md:text-3xl font-semibold text-white mb-8">Review your entry</h3>
             <div className="space-y-4">
@@ -1558,14 +1615,14 @@ function SymptomsPageContent() {
         )}
 
         {/* Visual Separator for Review Page - only show if there are notes */}
-        {currentStep === 15 && formData.notes && (
+        {currentStep === 17 && formData.notes && (
           <div className="my-8 border-t border-slate-700/50"></div>
         )}
 
         {/* Navigation Buttons - Hide on landing page (step 0) */}
         {currentStep > 0 && (
-          <div className={`flex justify-start items-center ${currentStep === 15 ? 'mt-8' : 'mt-6'}`}>
-            {currentStep < 15 ? (
+          <div className={`flex justify-start items-center ${currentStep === 17 ? 'mt-8' : 'mt-6'}`}>
+            {currentStep < 17 ? (
               <button
                 onClick={nextStep}
                 className="px-4 py-2 bg-[#5F9EA0] text-white text-lg font-semibold rounded-lg hover:bg-[#5F9EA0]/80 transition-colors"
