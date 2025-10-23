@@ -43,7 +43,7 @@ export default function AuthForm() {
   }
 
   return (
-    <div className="w-screen h-screen overflow-hidden sm:flex-grow flex items-center justify-center sm:px-6 lg:px-8 pb-20 lg:pb-0 fixed top-0 left-0 lg:h-auto lg:w-auto lg:static">
+    <div className="w-screen h-screen overflow-hidden sm:flex-grow flex items-center justify-center sm:px-6 lg:px-8 pb-20 lg:pb-0 fixed top-[-40px] left-0 lg:h-auto lg:w-auto lg:static">
     
       <div className="max-w-md w-full space-y-4">
         <div className="text-center">
