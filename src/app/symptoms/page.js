@@ -659,7 +659,7 @@ function SymptomsPageContent() {
       <div className="mb-4">
         {/* Step 0: Landing Page */}
         {currentStep === 0 && (
-          <div className="flex flex-col items-center justify-center text-center pt-12">
+          <div className="flex flex-col items-center justify-center text-center pt-16 sm:pt-0">
             {/* Icon - same as home page symptoms card */}
             <div className="w-16 h-16 bg-emerald-100 rounded-2xl flex items-center justify-center mx-auto mb-6">
               <svg className="w-8 h-8 text-emerald-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
