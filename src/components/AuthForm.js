@@ -10,13 +10,12 @@ export default function AuthForm() {
 
   // Prevent body scrolling on auth page
   useEffect(() => {
-    // Disable only body scroll, but allow refresh gestures
-    const originalStyle = window.getComputedStyle(document.body).overflow;
-    document.body.style.overflowY = "clip"; // newer spec, better mobile handling
-  
+    document.body.style.overflow = 'hidden'
+    document.body.style.touchAction = 'pan-down';
+
     return () => {
-      document.body.style.overflowY = originalStyle;
-    };
+      document.body.style.overflow = 'auto'
+    }
   }, []);
   
 
