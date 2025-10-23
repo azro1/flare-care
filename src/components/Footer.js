@@ -2,10 +2,12 @@
 
 import { usePathname } from 'next/navigation'
 import { useAuth } from '../lib/AuthContext'
+import { useState, useEffect } from 'react'
 
 export default function Footer() {
   const pathname = usePathname()
   const { isAuthenticated, loading } = useAuth()
+  const [scrollY, setScrollY] = useState(0)
   
   // Don't render footer during loading
   if (loading) {
@@ -13,10 +15,28 @@ export default function Footer() {
   }
 
   // Check if we're on a page that needs fixed footer on mobile
-  const needsFixedFooter = pathname === '/auth'
+  const needsFixedFooter = pathname === '/auth' || pathname === '/symptoms'
+
+  // Track scroll position
+  useEffect(() => {
+    const handleScroll = () => {
+      const scrollY = window.scrollY
+      const maxScroll = document.documentElement.scrollHeight - window.innerHeight
+      
+      // If we're near the bottom (within 50px), keep it dark
+      if (scrollY >= maxScroll - 50) {
+        setScrollY(999) // Force dark background
+      } else {
+        setScrollY(scrollY)
+      }
+    }
+    
+    window.addEventListener('scroll', handleScroll)
+    return () => window.removeEventListener('scroll', handleScroll)
+  }, [])
   
   return (
-    <footer className={`py-8 sm:py-8 lg:py-12 px-4 sm:px-6 mt-auto bg-transparent border-t border-slate-800/50 ${needsFixedFooter ? 'bg-slate-900/50 backdrop-blur-sm fixed bottom-0 left-0 right-0 lg:static lg:bg-transparent' : ''}`}>
+    <footer className={`py-8 sm:py-8 lg:py-12 px-4 sm:px-6 mt-auto border-t border-slate-800/50 ${needsFixedFooter ? 'bg-slate-900 fixed bottom-0 left-0 right-0 lg:static lg:bg-transparent' : 'bg-transparent'}`}>
       <div className="max-w-7xl mx-auto">
         {/* Mobile minimal footer */}
         <div className="lg:hidden">

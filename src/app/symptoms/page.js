@@ -16,21 +16,6 @@ function SymptomsPageContent() {
   const pathname = usePathname()
   const { user } = useAuth()
 
-  // ✅ Prevent body scrolling for symptoms pages (mobile-friendly)
-  // useEffect(() => {
-  //   // Disable scroll for symptoms pages
-  //   document.body.style.position = 'fixed'
-  //   document.body.style.width = '100%'
-  //   document.body.style.height = '100%'
-    
-  //   // 🧹 Cleanup on unmount
-  //   return () => {
-  //     document.body.style.position = 'static'
-  //     document.body.style.width = 'auto'
-  //     document.body.style.height = 'auto'
-  //   }
-  // }, [])
-
   // Wizard state
   const [currentStep, setCurrentStep] = useState(0)
   const [formData, setFormData] = useState({
@@ -62,6 +47,41 @@ function SymptomsPageContent() {
     endMonth: '',
     endYear: ''
   })
+
+  // ✅ Prevent body scrolling for symptoms pages (except meals and review)
+  useEffect(() => {
+    // Only apply fixed positioning on landing page (step 0)
+    if (currentStep === 0) {
+      // Freeze scroll
+      document.body.style.position = 'fixed'
+      document.body.style.width = '100%'
+      document.body.style.height = '100%'
+    
+      // Apply gradient to html element since body is fixed
+      document.body.style.backgroundColor = 'transparent'
+      document.documentElement.style.background = 'linear-gradient(to bottom right, #0f172a, #1e293b, #0f172a)'
+      document.documentElement.style.height = '100%'
+    } else {
+      // Reset styles when on meals/review pages
+      document.body.style.position = 'static'
+      document.body.style.width = 'auto'
+      document.body.style.height = 'auto'
+      document.body.style.backgroundColor = ''
+      document.documentElement.style.background = ''
+      document.documentElement.style.height = ''
+    }
+  
+    // 🧹 Cleanup on unmount
+    return () => {
+      document.body.style.position = 'static'
+      document.body.style.width = 'auto'
+      document.body.style.height = 'auto'
+      document.body.style.backgroundColor = ''
+      document.documentElement.style.background = ''
+      document.documentElement.style.height = ''
+    }
+  }, [currentStep])
+  
   const [dateErrors, setDateErrors] = useState({
     day: '',
     month: '',
@@ -611,7 +631,7 @@ function SymptomsPageContent() {
   }
 
   return (
-    <div className="max-w-4xl w-full mx-auto px-3 sm:px-4 md:px-6 lg:px-8 min-w-0 flex flex-col flex-grow justify-center">
+    <div className={`max-w-4xl w-full mx-auto px-3 sm:px-4 md:px-6 lg:px-8 min-w-0 flex flex-col justify-center sm:flex-grow ${currentStep === 0 ? '' : 'pb-20 lg:pb-0'}`}>
       {/* Back Button - Hide on landing page and first question */}
       {currentStep > 1 && (
         <div className="mb-4 sm:mb-8">
@@ -624,7 +644,7 @@ function SymptomsPageContent() {
             </svg>
             Back
           </button>
-        </div>
+          </div>
       )}
 
       {/* Section Header - Hide on landing page */}
@@ -632,14 +652,14 @@ function SymptomsPageContent() {
         <div className="mb-8">
           <h1 className="text-base sm:text-lg font-regular text-white mb-3">Track Symptoms</h1>
           <div className="border-b border-slate-700/50"></div>
-        </div>
+          </div>
       )}
 
       {/* Wizard Container */}
       <div className="mb-4">
         {/* Step 0: Landing Page */}
         {currentStep === 0 && (
-          <div className="flex flex-col items-center justify-center text-center py-12">
+          <div className="flex flex-col items-center justify-center text-center pt-12">
             {/* Icon - same as home page symptoms card */}
             <div className="w-16 h-16 bg-emerald-100 rounded-2xl flex items-center justify-center mx-auto mb-6">
               <svg className="w-8 h-8 text-emerald-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -666,7 +686,8 @@ function SymptomsPageContent() {
         {/* Step 1: When did symptoms begin? */}
         {currentStep === 1 && (
           <div className="mb-5">
-            <h3 className="text-xl sm:text-2xl md:text-3xl font-semibold text-white mb-6">When did your symptoms begin?</h3>
+            <h3 className="text-2xl sm:text-2xl md:text-3xl font-semibold text-white mb-2">When did your symptoms begin?</h3>
+            <p className="text-sm text-slate-400 mb-6">For example, '24 06 1970'</p>
             <div className="flex space-x-5">
               <div className="w-14">
                 <label className="block text-base font-medium text-slate-300 mb-2">Day</label>
@@ -740,7 +761,7 @@ function SymptomsPageContent() {
             </div>
             {(dateErrors.day || dateErrors.month || dateErrors.year) && (
               <div className="mt-6 p-3 bg-slate-700/40 border border-slate-600/30 rounded-lg">
-                <p className="text-red-300 text-sm">{dateErrors.day || dateErrors.month || dateErrors.year}</p>
+                <p className="text-slate-300 text-sm">{dateErrors.day || dateErrors.month || dateErrors.year}</p>
               </div>
             )}
           </div>
@@ -749,7 +770,7 @@ function SymptomsPageContent() {
         {/* Step 2: Are symptoms still ongoing? */}
         {currentStep === 2 && (
           <div className="mb-5">
-            <h3 className="text-xl sm:text-2xl md:text-3xl font-semibold text-white mb-6">Are symptoms still ongoing?</h3>
+            <h3 className="text-2xl sm:text-2xl md:text-3xl font-semibold text-white mb-6">Are symptoms still ongoing?</h3>
             <div className="flex space-x-8">
               <label className="flex items-center cursor-pointer">
                   <input
@@ -780,7 +801,8 @@ function SymptomsPageContent() {
         {/* Step 3: When did symptoms end? (only if not ongoing) */}
         {currentStep === 3 && (
           <div className="mb-5">
-            <h3 className="text-xl sm:text-2xl md:text-3xl font-semibold text-white mb-6">When did symptoms end?</h3>
+            <h3 className="text-2xl sm:text-2xl md:text-3xl font-semibold text-white mb-2">When did symptoms end?</h3>
+            <p className="text-sm text-slate-400 mb-6">For example, '24 06 1970'</p>
             <div className="flex space-x-5">
               <div className="w-14">
                 <label className="block text-base font-medium text-slate-300 mb-2">Day</label>
@@ -854,7 +876,7 @@ function SymptomsPageContent() {
             </div>
             {(dateErrors.endDay || dateErrors.endMonth || dateErrors.endYear) && (
               <div className="mt-6 p-3 bg-slate-700/40 border border-slate-600/30 rounded-lg">
-                <p className="text-red-300 text-sm">{dateErrors.endDay || dateErrors.endMonth || dateErrors.endYear}</p>
+                <p className="text-slate-300 text-sm">{dateErrors.endDay || dateErrors.endMonth || dateErrors.endYear}</p>
               </div>
             )}
           </div>
@@ -863,7 +885,7 @@ function SymptomsPageContent() {
         {/* Step 4: Symptom Severity */}
         {currentStep === 4 && (
           <div className="mb-5">
-            <h3 className="text-xl sm:text-2xl md:text-3xl font-semibold text-white">
+            <h3 className="text-2xl sm:text-2xl md:text-3xl font-semibold text-white mb-2">
               {formData.isOngoing ? 'How severe are your symptoms?' : 'How severe were your symptoms?'}
             </h3>
             <p className="text-sm text-slate-400 mb-6">Rate from 1 (mild) to 10 (severe)</p>
@@ -887,7 +909,7 @@ function SymptomsPageContent() {
                 </div>
                 {fieldErrors.severity && (
                   <div className="mt-6 p-3 bg-slate-700/40 border border-slate-600/30 rounded-lg">
-                    <p className="text-red-300 text-sm">{fieldErrors.severity}</p>
+                    <p className="text-slate-300 text-sm">{fieldErrors.severity}</p>
               </div>
                 )}
               </div>
@@ -896,7 +918,7 @@ function SymptomsPageContent() {
         {/* Step 5: Stress Level */}
         {currentStep === 5 && (
           <div className="mb-5">
-            <h3 className="text-xl sm:text-2xl md:text-3xl font-semibold text-white mb-1">
+            <h3 className="text-2xl sm:text-2xl md:text-3xl font-semibold text-white mb-2">
               {formData.isOngoing ? 'How stressed are you feeling?' : 'How stressed were you feeling during that time?'}
             </h3>
             <p className="text-sm text-slate-400 mb-6">Rate from 1 (calm) to 10 (very stressed)</p>
@@ -920,7 +942,7 @@ function SymptomsPageContent() {
                 </div>
                 {fieldErrors.stress_level && (
                   <div className="mt-6 p-3 bg-slate-700/40 border border-slate-600/30 rounded-lg">
-                    <p className="text-red-300 text-sm">{fieldErrors.stress_level}</p>
+                    <p className="text-slate-300 text-sm">{fieldErrors.stress_level}</p>
               </div>
                 )}
               </div>
@@ -929,8 +951,9 @@ function SymptomsPageContent() {
         {/* Step 6: Bathroom Frequency */}
         {currentStep === 6 && (
           <div className="mb-5">
-            <h3 className="text-xl sm:text-2xl md:text-3xl font-semibold text-white mb-6">How many times a day do you usually empty your bowels?</h3>
-            <p className="text-slate-400 mb-4"></p>
+            <h3 className="text-2xl sm:text-2xl md:text-3xl font-semibold text-white mb-2">How many times a day do you usually empty your bowels?</h3>
+            <p className="text-sm text-slate-400 mb-6">For example, '3' or '5'</p>
+
             <div className="w-14">
               <input
                 type="number"
@@ -951,7 +974,7 @@ function SymptomsPageContent() {
             </div>
               {fieldErrors.normal_bathroom_frequency && (
                 <div className="mt-6 p-3 bg-slate-700/40 border border-slate-600/30 rounded-lg">
-                  <p className="text-red-300 text-sm">{fieldErrors.normal_bathroom_frequency}</p>
+                  <p className="text-slate-300 text-sm">{fieldErrors.normal_bathroom_frequency}</p>
           </div>
               )}
             </div>
@@ -960,7 +983,7 @@ function SymptomsPageContent() {
         {/* Step 7: Bathroom Frequency Change Question */}
         {currentStep === 7 && (
           <div className="mb-5">
-            <h3 className="text-xl sm:text-2xl md:text-3xl font-semibold text-white mb-6">
+            <h3 className="text-2xl sm:text-2xl md:text-3xl font-semibold text-white mb-6">
               {formData.isOngoing ? 'Have you noticed a change in bathroom frequency since symptoms started?' : 'Did you notice a change in bathroom frequency during that time?'}
             </h3>
             <div className="flex space-x-8">
@@ -993,19 +1016,19 @@ function SymptomsPageContent() {
         {/* Step 8: Bathroom Frequency Change Details */}
         {currentStep === 8 && (
           <div className="mb-5">
-            <h3 className="text-xl sm:text-2xl md:text-3xl font-semibold text-white mb-6">Describe your change</h3>
+            <h3 className="text-2xl sm:text-2xl md:text-3xl font-semibold text-white mb-2">Describe your change</h3>
+            <p className="text-sm text-slate-400 mb-6">For example, 'increased to 8-10 times per day, blood present, mucus, loose stools'</p>
             <textarea
               id="bathroom_frequency_change_details"
               name="bathroom_frequency_change_details"
               rows="4"
               value={formData.bathroom_frequency_change_details}
               onChange={handleInputChange}
-              placeholder="e.g., increased to 8-10 times per day, blood present, mucus, loose stools..."
               className="w-full px-4 py-3 bg-white border-2 border-gray-200 rounded-lg focus:outline-none transition-all duration-200 resize-none text-gray-900"
             />
             {fieldErrors.bathroom_frequency_change_details && (
               <div className="mt-6 p-3 bg-slate-700/40 border border-slate-600/30 rounded-lg">
-                <p className="text-red-300 text-sm">{fieldErrors.bathroom_frequency_change_details}</p>
+                <p className="text-slate-300 text-sm">{fieldErrors.bathroom_frequency_change_details}</p>
               </div>
             )}
           </div>
@@ -1014,7 +1037,7 @@ function SymptomsPageContent() {
         {/* Step 9: Do you smoke? */}
         {currentStep === 9 && (
           <div className="mb-5">
-            <h3 className="text-xl sm:text-2xl md:text-3xl font-semibold text-white mb-6">Do you smoke?</h3>
+            <h3 className="text-2xl sm:text-2xl md:text-3xl font-semibold text-white mb-6">Do you smoke?</h3>
             <div className="flex space-x-8">
               <label className="flex items-center cursor-pointer">
                 <input
@@ -1045,20 +1068,20 @@ function SymptomsPageContent() {
         {/* Step 10: Smoking details (only if they smoke) */}
         {currentStep === 10 && (
           <div className="mb-5">
-            <h3 className="text-xl sm:text-2xl md:text-3xl font-semibold text-white mb-6">Please describe your smoking habits</h3>
+            <h3 className="text-2xl sm:text-2xl md:text-3xl font-semibold text-white mb-2">Please describe your smoking habits</h3>
+            <p className="text-sm text-slate-400 mb-6">For example, '1 pack of cigarettes per day, occasional cigars'</p>
                 <input
                   type="text"
                   id="smoking_details"
                   name="smoking_details"
                   value={formData.smoking_details}
                   onChange={handleInputChange}
-                  placeholder="e.g., 1 pack of cigarettes per day, occasional cigars, etc."
                   className="w-full px-4 py-3 bg-white border-2 border-gray-200 rounded-lg focus:outline-none transition-all duration-200 text-gray-900"
                   autoComplete="off"
                 />
                 {fieldErrors.smoking_details && (
                   <div className="mt-6 p-3 bg-slate-700/40 border border-slate-600/30 rounded-lg">
-                    <p className="text-red-300 text-sm">{fieldErrors.smoking_details}</p>
+                    <p className="text-slate-300 text-sm">{fieldErrors.smoking_details}</p>
               </div>
             )}
           </div>
@@ -1067,7 +1090,7 @@ function SymptomsPageContent() {
         {/* Step 11: Do you drink alcohol? */}
         {currentStep === 11 && (
           <div className="mb-5">
-            <h3 className="text-xl sm:text-2xl md:text-3xl font-semibold text-white mb-6">Do you drink alcohol?</h3>
+            <h3 className="text-2xl sm:text-2xl md:text-3xl font-semibold text-white mb-6">Do you drink alcohol?</h3>
             <div className="flex space-x-8">
               <label className="flex items-center cursor-pointer">
                 <input
@@ -1098,7 +1121,8 @@ function SymptomsPageContent() {
         {/* Step 12: Alcohol details (only if they drink) */}
         {currentStep === 12 && (
           <div className="mb-5">
-            <h3 className="text-xl sm:text-2xl md:text-3xl font-semibold text-white mb-6">How many units of alcohol do you drink per day?</h3>
+            <h3 className="text-2xl sm:text-2xl md:text-3xl font-semibold text-white mb-2">How many units of alcohol do you drink per day?</h3>
+            <p className="text-sm text-slate-400 mb-6">For example, '2' or '5'</p>
             <div className="w-14">
                 <input
                 type="number"
@@ -1119,7 +1143,7 @@ function SymptomsPageContent() {
               </div>
               {fieldErrors.alcohol_units && (
                 <div className="mt-6 p-3 bg-slate-700/40 border border-slate-600/30 rounded-lg">
-                  <p className="text-red-300 text-sm">{fieldErrors.alcohol_units}</p>
+                  <p className="text-slate-300 text-sm">{fieldErrors.alcohol_units}</p>
               </div>
             )}
           </div>
@@ -1134,7 +1158,7 @@ function SymptomsPageContent() {
             {/* Breakfast */}
               <div>
                 <div className="flex justify-between items-center mb-3">
-                  <h4 className="text-lg sm:text-xl font-semibold text-white mb-4">
+                  <h4 className="text-2xl sm:text-xl font-semibold text-white mb-4">
                   {getMealLabel('breakfast')}
                 </h4>
                 <button
@@ -1212,7 +1236,7 @@ function SymptomsPageContent() {
             {/* Lunch */}
               <div>
                 <div className="flex justify-between items-center mb-3">
-                  <h4 className="text-lg sm:text-xl font-semibold text-white mb-4">
+                  <h4 className="text-2xl sm:text-xl font-semibold text-white mb-4">
                   {getMealLabel('lunch')}
                 </h4>
                 <button
@@ -1290,7 +1314,7 @@ function SymptomsPageContent() {
             {/* Dinner */}
               <div>
                 <div className="flex justify-between items-center mb-3">
-                  <h4 className="text-lg sm:text-xl font-semibold text-white mb-4">
+                  <h4 className="text-2xl sm:text-xl font-semibold text-white mb-4">
                   {getMealLabel('dinner')}
                 </h4>
                 <button
@@ -1369,7 +1393,7 @@ function SymptomsPageContent() {
           {/* Validation error message */}
           {fieldErrors.meals && (
                   <div className="mt-6 p-3 bg-slate-700/40 border border-slate-600/30 rounded-lg">
-              <p className="text-red-300 text-sm">{fieldErrors.meals}</p>
+              <p className="text-slate-300 text-sm">{fieldErrors.meals}</p>
             </div>
                       )}
                     </div>
@@ -1378,7 +1402,8 @@ function SymptomsPageContent() {
         {/* Step 14: Additional Notes */}
         {currentStep === 14 && (
           <div className="mb-5">
-            <h3 className="text-xl sm:text-2xl md:text-3xl font-semibold text-white mb-6">Additional notes</h3>            
+            <h3 className="text-2xl sm:text-2xl md:text-3xl font-semibold text-white mb-6">Additional notes</h3>
+            <p className="text-sm text-slate-400 mb-4">Share any other details about your symptoms, how you're feeling, or triggers you noticed</p>            
             <div>
               <textarea
                 id="notes"
@@ -1386,7 +1411,6 @@ function SymptomsPageContent() {
                 rows="4"
                 value={formData.notes}
                 onChange={handleInputChange}
-                placeholder="Any other details you'd like to add? e.g. describe your symptoms, how you're feeling, any triggers you noticed..."
                 className="w-full px-4 py-3 bg-white border-2 border-gray-200 rounded-lg focus:outline-none transition-all duration-200 resize-none text-gray-900"
               />
                     </div>
@@ -1396,7 +1420,7 @@ function SymptomsPageContent() {
         {/* Step 15: Review */}
         {currentStep === 15 && (
           <div className="mb-4">
-            <h3 className="text-xl sm:text-2xl md:text-3xl font-semibold text-white mb-6">Review your entry</h3>
+            <h3 className="text-2xl sm:text-2xl md:text-3xl font-semibold text-white mb-8">Review your entry</h3>
             <div className="space-y-4">
               
               <div className="flex justify-between py-2 border-b border-slate-700/50">
