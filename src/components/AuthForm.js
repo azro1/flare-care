@@ -9,14 +9,14 @@ export default function AuthForm() {
   const router = useRouter()
 
   // Prevent body scrolling on auth page
-  useEffect(() => {
-    document.body.style.overflow = 'hidden'
-    document.body.style.touchAction = 'pan-down';
+  // useEffect(() => {
+  //   document.body.style.overflow = 'hidden'
+  //   document.body.style.touchAction = 'pan-down';
 
-    return () => {
-      document.body.style.overflow = 'auto'
-    }
-  }, []);
+  //   return () => {
+  //     document.body.style.overflow = 'auto'
+  //   }
+  // }, []);
   
 
   const handleGoogleSignIn = async () => {
@@ -43,7 +43,8 @@ export default function AuthForm() {
   }
 
   return (
-    <div className="pt-20 sm:pt-0 sm:flex-grow flex items-center justify-center sm:px-6 lg:px-8 pb-20 lg:pb-0">
+    <div className="w-screen h-screen overflow-hidden sm:flex-grow flex items-center justify-center sm:px-6 lg:px-8 pb-20 lg:pb-0 fixed top-0 left-0 lg:h-auto lg:w-auto lg:static">
+    
       <div className="max-w-md w-full space-y-4">
         <div className="text-center">
             <h2 className="text-3xl font-bold font-source text-white mb-6">
@@ -64,7 +65,7 @@ export default function AuthForm() {
            <button
              type="button"
              onClick={handleGoogleSignIn}
-             className="max-w-sm mx-auto w-full flex justify-center items-center py-3 px-6 bg-white border border-gray-200 rounded-xl shadow-sm hover:shadow-md text-base font-semibold font-roboto text-gray-700 hover:bg-gray-50 focus:outline-none focus:ring-0 focus:ring-offset-0 transition-all duration-200"
+             className="max-w-xs mx-auto w-full flex justify-center items-center py-3 px-6 bg-white border border-gray-200 rounded-xl shadow-sm hover:shadow-md text-base font-semibold font-roboto text-gray-700 hover:bg-gray-50 focus:outline-none focus:ring-0 focus:ring-offset-0 transition-all duration-200"
            >
             <svg className="w-5 h-5 mr-2" viewBox="0 0 24 24">
               <path fill="#4285F4" d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z"/>
