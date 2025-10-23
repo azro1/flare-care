@@ -16,7 +16,7 @@ export default function Footer() {
   const needsFixedFooter = pathname === '/auth'
   
   return (
-    <footer className={`py-8 sm:py-8 lg:py-12 px-4 sm:px-6 mt-auto bg-transparent border-t border-slate-800/50 ${needsFixedFooter ? 'bg-slate-900/30 backdrop-blur-sm fixed bottom-0 left-0 right-0 lg:static lg:bg-transparent' : ''}`}>
+    <footer className={`py-8 sm:py-8 lg:py-12 px-4 sm:px-6 mt-auto bg-transparent border-t border-slate-800/50 ${needsFixedFooter ? 'bg-slate-900/50 backdrop-blur-sm fixed bottom-0 left-0 right-0 lg:static lg:bg-transparent' : ''}`}>
       <div className="max-w-7xl mx-auto">
         {/* Mobile minimal footer */}
         <div className="lg:hidden">

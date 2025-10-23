@@ -56,7 +56,7 @@ export default function AuthForm() {
   }
 
   return (
-    <div className="pt-20 sm:pt-0 sm:flex-grow flex items-center justify-center sm:px-6 lg:px-8 pb-20 lg:pb-0">
+    <div className="flex-grow flex items-center justify-center sm:px-6 lg:px-8 pb-20 lg:pb-0">
       <div className="max-w-md w-full space-y-4">
         <div className="text-center">
             <h2 className="text-3xl font-bold font-source text-white mb-6">
