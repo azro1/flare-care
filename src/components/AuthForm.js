@@ -10,13 +10,14 @@ export default function AuthForm() {
 
   // Prevent body scrolling on auth page
   useEffect(() => {
-    // Prevent background scroll safely
-    document.body.style.overflow = 'hidden'
+    // Disable only body scroll, but allow refresh gestures
+    const originalStyle = window.getComputedStyle(document.body).overflow;
+    document.body.style.overflowY = "clip"; // newer spec, better mobile handling
   
     return () => {
-      document.body.style.overflow = 'auto'
-    }
-  }, [])
+      document.body.style.overflowY = originalStyle;
+    };
+  }, []);
   
 
   const handleGoogleSignIn = async () => {
