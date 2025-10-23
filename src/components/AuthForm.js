@@ -9,19 +9,15 @@ export default function AuthForm() {
   const router = useRouter()
 
   // Prevent body scrolling on auth page
-  // useEffect(() => {
-  //   // Mobile-friendly approach
-  //   document.body.style.position = 'fixed'
-  //   document.body.style.width = '100%'
-  //   document.body.style.height = '100%'
-    
-  //   // Cleanup on unmount
-  //   return () => {
-  //     document.body.style.position = 'static'
-  //     document.body.style.width = 'auto'
-  //     document.body.style.height = 'auto'
-  //   }
-  // }, [])
+  useEffect(() => {
+    // Prevent background scroll safely
+    document.body.style.overflow = 'hidden'
+  
+    return () => {
+      document.body.style.overflow = 'auto'
+    }
+  }, [])
+  
 
   const handleGoogleSignIn = async () => {
     setError('')
@@ -47,7 +43,7 @@ export default function AuthForm() {
   }
 
   return (
-    <div className="pt-6 sm:pt-0 sm:flex-grow flex items-center justify-center sm:px-6 lg:px-8">
+    <div className="pt-20 sm:pt-0 sm:flex-grow flex items-center justify-center sm:px-6 lg:px-8 pb-20 lg:pb-0">
       <div className="max-w-md w-full space-y-4">
         <div className="text-center">
             <h2 className="text-3xl font-bold font-source text-white mb-6">
