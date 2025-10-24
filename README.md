@@ -11,13 +11,19 @@ A personal companion app for managing Crohn's & Colitis symptoms, built with Nex
 - Modern glass-morphism design with smooth transitions
 
 ### 📊 Symptom Tracking
+- **Multi-step wizard** with intuitive question flow
 - Log daily symptoms with severity levels (1-10)
 - Track symptom start/end dates and ongoing status
+- **Smart user preferences** - learns from your habits to streamline future entries
 - **Bathroom frequency tracking** with baseline and change detection
+- **Lifestyle tracking** - smoking and alcohol consumption patterns
+- **Meal tracking** - separate breakfast, lunch, and dinner entry screens
 - Add detailed notes and potential food triggers
 - Edit and delete previous entries
 - Visual severity indicators with color coding
+- **Toast notifications** for successful actions
 - Mobile-friendly form design with validation
+- **Pattern detection** - intelligently detects habit changes over time
 
 ### 💊 Medication Management
 - Add medications with dosage and timing
@@ -56,7 +62,20 @@ A personal companion app for managing Crohn's & Colitis symptoms, built with Nex
 - **Glass-morphism effects** with backdrop blur
 - **Intuitive navigation** with mobile dropdown menu
 - **Custom modals** replacing browser alerts
-- **Consistent color scheme** with blue gradients
+- **Consistent color scheme** with cadet blue accents
+- **Dark theme** with slate backgrounds and white text
+- **Custom form elements** - styled radio buttons and checkboxes
+- **Responsive toast notifications** with proper mobile positioning
+
+### 🧠 Smart User Preferences
+- **First-time user setup** - captures baseline habits (smoking, drinking, bathroom frequency)
+- **Returning user optimization** - asks contextual questions instead of repetitive ones
+- **Pattern detection** - intelligently detects when habits change over time
+- **Respectful prompts** - only asks about habit changes after 5+ consecutive "No" answers
+- **30-day cooldown** - prevents repeated prompts for the same habit
+- **Automatic profile updates** - updates preferences when users confirm habit changes
+- **Local + cloud storage** - preferences synced across devices
+- **Smart navigation** - skips irrelevant questions based on stored preferences
 
 ### 🔒 Security & Validation
 - **Input sanitization** to prevent XSS attacks using DOMPurify
@@ -130,20 +149,31 @@ A personal companion app for managing Crohn's & Colitis symptoms, built with Nex
 src/
 ├── app/                    # Next.js App Router pages
 │   ├── about/             # About page
+│   ├── auth/              # Authentication pages
 │   ├── medications/       # Medications management
 │   ├── reports/           # Reports and analytics
 │   ├── symptoms/          # Symptom tracking
+│   │   └── [id]/         # Individual symptom details
 │   ├── globals.css        # Global styles
 │   ├── layout.js          # Root layout
 │   └── page.js            # Home page
 ├── components/            # Reusable components
-│   ├── ConfirmationModal.js
-│   ├── Navigation.js
-│   └── SyncSettings.js
+│   ├── AuthForm.js        # Authentication form
+│   ├── ConfirmationModal.js # Modal dialogs
+│   ├── DatePicker.js      # Date selection component
+│   ├── LoadingScreen.js   # Loading states
+│   ├── Navigation.js      # Main navigation
+│   ├── ProtectedRoute.js  # Route protection
+│   ├── ReminderProvider.js # Medication reminders
+│   ├── SyncSettings.js    # Cloud sync controls
+│   └── TimePicker.js      # Time selection component
 └── lib/                   # Utilities and hooks
+    ├── AuthContext.js     # Authentication context
+    ├── sanitize.js        # Input sanitization
     ├── supabase.js        # Supabase client and helpers
     ├── useDataSync.js     # Data sync hook
-    └── useLocalStorage.js # Local storage hook
+    ├── useLocalStorage.js # Local storage hook
+    └── userPreferences.js # Smart preferences system
 ```
 
 ## Data Privacy
@@ -153,13 +183,34 @@ src/
 - **Encrypted**: Data is encrypted in transit and at rest
 - **Private**: Only you can access your data - no sharing with third parties
 
+## Recent Updates
+
+### 🚀 Smart User Preferences System
+- **Intelligent symptom logging** - learns from your habits to streamline future entries
+- **Pattern detection** - detects when you've quit smoking/drinking based on usage patterns
+- **Respectful prompts** - only asks about habit changes after detecting clear patterns
+- **Contextual questions** - asks "Did you smoke today?" instead of "Do you smoke?"
+
+### 🎨 UI/UX Improvements
+- **Split meal entry** - separate screens for breakfast, lunch, and dinner
+- **Dark theme** - consistent slate backgrounds with white text
+- **Custom form elements** - styled radio buttons and checkboxes in cadet blue
+- **Toast notifications** - success and delete confirmations
+- **Mobile optimization** - improved scrolling and button visibility
+
+### 🔧 Technical Enhancements
+- **Multi-step wizard** - intuitive question flow for symptom logging
+- **Smart navigation** - skips irrelevant questions based on user preferences
+- **Pattern tracking** - stores consecutive "No" answers to detect habit changes
+- **Preference persistence** - local storage + cloud sync for user preferences
+
 ## Contributing
 
 This is a personal project, but suggestions and feedback are welcome! The app is designed to be easily extensible for future features like:
-- Medication reminders and notifications
 - Advanced analytics and insights
 - Healthcare provider integration
 - Mobile app development
+- AI-powered symptom pattern recognition
 
 ## License
 
