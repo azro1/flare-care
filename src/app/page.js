@@ -14,6 +14,31 @@ export default function Home() {
   const [showAllSymptoms, setShowAllSymptoms] = useState(false)
   const [showToast, setShowToast] = useState(false)
   const [showDeleteToast, setShowDeleteToast] = useState(false)
+  const [currentTipIndex, setCurrentTipIndex] = useState(0)
+  const [isFading, setIsFading] = useState(false)
+
+  // Daily tips array
+  const dailyTips = [
+    "Log symptoms within 1-2 days for better accuracy - you'll remember more details about what triggered them",
+    "Be honest with yourself - truthful answers help the app learn your patterns and provide better insights",
+    "Start your week with a symptom check-in to track any weekend changes",
+    "Weekend approaching! Log any stress or dietary changes that might affect your symptoms",
+    "Keep a consistent sleep schedule - it can help reduce IBD flare-ups",
+    "Track your stress levels - high stress can trigger symptoms in many people"
+  ]
+
+  // Rotate tips every minute with fade effect
+  useEffect(() => {
+    const interval = setInterval(() => {
+      setIsFading(true)
+      setTimeout(() => {
+        setCurrentTipIndex((prevIndex) => (prevIndex + 1) % dailyTips.length)
+        setIsFading(false)
+      }, 500) // Fade out duration
+    }, 60000) // 60 seconds (1 minute) between changes
+
+    return () => clearInterval(interval)
+  }, [])
 
   // Check for toast notifications
   useEffect(() => {
@@ -359,13 +384,15 @@ export default function Home() {
               </div>
 
               {/* Daily Tip */}
-              <div className="bg-slate-700/40 rounded-xl p-4 sm:p-6 border border-slate-600/30">
-                <h3 className="text-lg font-semibold font-source text-white mb-2">💡 Daily Tip</h3>
-                <p className="text-sm text-slate-300">
-                  {new Date().getDay() === 1 ? "Start your week with a symptom check-in to track any weekend changes." :
-                   new Date().getDay() === 5 ? "Weekend approaching! Log any stress or dietary changes that might affect your symptoms." :
-                   "Keep a consistent sleep schedule - it can help reduce IBD flare-ups."}
-                </p>
+              <div className="relative rounded-xl p-4 sm:p-6 border border-slate-600/30 overflow-hidden">
+                {/* Moving gradient background */}
+                <div className="absolute inset-0 bg-gradient-to-br from-yellow-500/20 via-cyan-500/30 to-violet-500/20 animate-gradient-x"></div>
+                <div className="relative z-10">
+                  <h3 className="text-lg font-semibold font-source text-white mb-2">💡 Daily Tip</h3>
+                  <p className={`text-sm text-slate-300 transition-opacity duration-500 ${isFading ? 'opacity-0' : 'opacity-100'}`}>
+                    {dailyTips[currentTipIndex]}
+                  </p>
+                </div>
               </div>
 
             </div>

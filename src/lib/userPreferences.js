@@ -84,6 +84,8 @@ export async function saveUserPreferences(userId, preferences) {
           user_id: userId,
           preferences: preferencesData,
           updated_at: preferencesData.lastUpdated
+        }, {
+          onConflict: 'user_id'
         })
 
       if (error) {

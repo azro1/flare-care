@@ -91,7 +91,7 @@ function SymptomsPageContent() {
   useEffect(() => {
     const loadUserPreferences = async () => {
       try {
-        const userId = user?.id || 'anonymous'
+        const userId = user?.id
         const preferences = await getUserPreferences(userId)
         
         if (preferences) {
@@ -132,6 +132,114 @@ function SymptomsPageContent() {
   const [isSubmitting, setIsSubmitting] = useState(false)
 
   const totalSteps = 18
+
+  const prevStep = () => {
+    
+    // Smart back navigation for ALL skip scenarios
+    
+    // 1. If on severity (step 4) and symptoms are ongoing, go back to ongoing question (step 2)
+    if (currentStep === 4 && formData.isOngoing === true) {
+      setCurrentStep(2) // Go back to ongoing question
+      return
+    }
+    
+    // 2. If on smoking (step 9) and bathroom frequency is 0, go back to bathroom frequency (step 6)
+    if (currentStep === 9 && parseInt(formData.normal_bathroom_frequency) === 0) {
+      setCurrentStep(6) // Go back to bathroom frequency
+      return
+    }
+    
+    // 3. Smart navigation based on user preferences
+    if (!isFirstTimeUser && userPreferences) {
+      // If on meals (step 13) and user is non-smoker/non-drinker, go back to bathroom details (step 8) or bathroom change (step 7)
+      if (currentStep === 13 && !userPreferences.isSmoker && !userPreferences.isDrinker) {
+        // Go back to bathroom details if they filled it out, otherwise bathroom change question
+        if (formData.bathroom_frequency_changed === 'yes' && formData.bathroom_frequency_change_details) {
+          setCurrentStep(8) // Go back to bathroom details
+        } else {
+          setCurrentStep(7) // Go back to bathroom change question
+        }
+        return
+      }
+      // If on alcohol questions (step 11) and user is non-smoker, go back to bathroom details/change
+      else if (currentStep === 11 && !userPreferences.isSmoker) {
+        if (formData.bathroom_frequency_changed === 'yes' && formData.bathroom_frequency_change_details) {
+          setCurrentStep(8) // Go back to bathroom details
+        } else {
+          setCurrentStep(7) // Go back to bathroom change question
+        }
+        return
+      }
+      // If on smoking details (step 10) and user is non-drinker, go back to smoking question (step 9)
+      else if (currentStep === 10 && !userPreferences.isDrinker) {
+        setCurrentStep(9) // Go back to smoking question
+        return
+      }
+    }
+    
+    // 4. If on bathroom change question (step 7) and bathroom frequency is 0, go back to bathroom frequency (step 6)
+    if (currentStep === 7 && parseInt(formData.normal_bathroom_frequency) === 0) {
+      setCurrentStep(6) // Go back to bathroom frequency
+      return
+    }
+    
+    // 5. If on meals (step 13) and user answered "Yes" to alcohol, go back to alcohol details (step 12)
+    if (currentStep === 13 && formData.alcohol === true && formData.alcohol_units) {
+      setCurrentStep(12) // Go back to alcohol details
+      return
+    }
+    
+    // 6. If on meals (step 13) and user answered "No" to alcohol, go back to alcohol question (step 11)
+    if (currentStep === 13 && formData.alcohol === false) {
+      setCurrentStep(11) // Go back to alcohol question, skip alcohol details
+      return
+    }
+    
+    // 6. If on meals (step 13) and user answered "No" to smoking, go back to smoking question (step 9)
+    if (currentStep === 13 && formData.smoking === false) {
+      setCurrentStep(9) // Go back to smoking question, skip smoking details
+      return
+    }
+    
+    // 6. If on meals (step 13) and user is a smoker but not a drinker, go back to smoking details (step 10)
+    if (currentStep === 13 && !isFirstTimeUser && userPreferences && userPreferences.isSmoker && !userPreferences.isDrinker) {
+      setCurrentStep(10) // Go back to smoking details, skip alcohol question
+      return
+    }
+    
+    // 6. If on meals (step 13) and user answered "No" to alcohol, go back to alcohol question (step 11)
+    if (currentStep === 13 && formData.alcohol === false) {
+      setCurrentStep(11) // Go back to alcohol question
+      return
+    }
+    
+    // 7. If on bathroom change question (step 7) and user has baseline frequency, go back to stress level (step 5)
+    if (currentStep === 7 && !isFirstTimeUser && userPreferences && userPreferences.normalBathroomFrequency) {
+      setCurrentStep(5) // Go back to stress level, skip baseline question
+      return
+    }
+    
+    // 8. If on smoking (step 9) and user answered "No" to bathroom frequency change, go back to bathroom change question (step 7)
+    if (currentStep === 9 && formData.bathroom_frequency_changed === 'no') {
+      setCurrentStep(7) // Go back to bathroom change question
+      return
+    }
+    
+    // 7. If on alcohol (step 11) and user answered "No" to smoking, go back to smoking question (step 9)
+    if (currentStep === 11 && formData.smoking === false) {
+      setCurrentStep(9) // Go back to smoking question
+      return
+    }
+    
+    // 8. If on smoking (step 9) and bathroom frequency is 0, go back to bathroom frequency (step 6)
+    if (currentStep === 9 && parseInt(formData.normal_bathroom_frequency) === 0) {
+      setCurrentStep(6) // Go back to bathroom frequency
+      return
+    }
+    
+    // Default back navigation
+    setCurrentStep(currentStep - 1)
+  }
 
   const nextStep = () => {
     // Validate current step before proceeding
@@ -311,7 +419,16 @@ function SymptomsPageContent() {
     
     // Skip step 8 (bathroom frequency change details) if no change
     if (currentStep === 7 && formData.bathroom_frequency_changed === 'no') {
-      setCurrentStep(9) // Skip to step 9 (smoking)
+      // Use smart navigation to determine next step
+      if (!isFirstTimeUser && userPreferences && !userPreferences.isSmoker && !userPreferences.isDrinker) {
+        setCurrentStep(13) // Skip both smoking and alcohol questions if neither
+        setFormData(prev => ({ ...prev, smoking: false, smoking_details: '', alcohol: false, alcohol_units: '' }))
+      } else if (!isFirstTimeUser && userPreferences && !userPreferences.isSmoker) {
+        setCurrentStep(11) // Skip to alcohol questions if not a smoker
+        setFormData(prev => ({ ...prev, smoking: false, smoking_details: '' }))
+      } else {
+        setCurrentStep(9) // Go to smoking questions
+      }
       return
     }
     
@@ -323,11 +440,31 @@ function SymptomsPageContent() {
       }
       // Clear error if validation passes
       setFieldErrors(prev => ({ ...prev, bathroom_frequency_change_details: '' }))
+      
+      // Use smart navigation to determine next step after bathroom details
+      if (!isFirstTimeUser && userPreferences && !userPreferences.isSmoker && !userPreferences.isDrinker) {
+        setCurrentStep(13) // Skip both smoking and alcohol questions if neither
+        setFormData(prev => ({ ...prev, smoking: false, smoking_details: '', alcohol: false, alcohol_units: '' }))
+        return
+      } else if (!isFirstTimeUser && userPreferences && !userPreferences.isSmoker) {
+        setCurrentStep(11) // Skip to alcohol questions if not a smoker
+        setFormData(prev => ({ ...prev, smoking: false, smoking_details: '' }))
+        return
+      } else if (!isFirstTimeUser && userPreferences && userPreferences.isSmoker && !userPreferences.isDrinker) {
+        setCurrentStep(9) // Go to smoking questions if smoker but not drinker
+        return
+      }
     }
     
     // Skip step 10 (smoking details) if they don't smoke
     if (currentStep === 9 && formData.smoking === false) {
-      setCurrentStep(11) // Skip to step 11 (alcohol)
+      // Use smart navigation to determine next step
+      if (!isFirstTimeUser && userPreferences && !userPreferences.isDrinker) {
+        setCurrentStep(13) // Skip to meals if not a drinker
+        setFormData(prev => ({ ...prev, alcohol: false, alcohol_units: '' }))
+      } else {
+        setCurrentStep(11) // Go to alcohol question
+      }
       return
     }
     
@@ -406,19 +543,19 @@ function SymptomsPageContent() {
           setFormData(prev => ({ ...prev, normal_bathroom_frequency: userPreferences.normalBathroomFrequency }))
         }
         // Skip smoking questions if user is not a smoker
-        else if (currentStep === 8 && !userPreferences.isSmoker) {
+        else if (currentStep === 9 && !userPreferences.isSmoker) {
           nextStepNumber = 11 // Skip to alcohol questions
           // Set smoking data to false
           setFormData(prev => ({ ...prev, smoking: false, smoking_details: '' }))
         }
         // Skip alcohol questions if user is not a drinker
-        else if (currentStep === 10 && !userPreferences.isDrinker) {
+        else if (currentStep === 11 && !userPreferences.isDrinker) {
           nextStepNumber = 13 // Skip to meal questions
           // Set alcohol data to false
           setFormData(prev => ({ ...prev, alcohol: false, alcohol_units: '' }))
         }
         // Skip alcohol questions if user is not a drinker (from smoking details)
-        else if (currentStep === 9 && !userPreferences.isDrinker) {
+        else if (currentStep === 10 && !userPreferences.isDrinker) {
           nextStepNumber = 13 // Skip to meal questions
           // Set alcohol data to false
           setFormData(prev => ({ ...prev, alcohol: false, alcohol_units: '' }))
@@ -835,7 +972,7 @@ function SymptomsPageContent() {
       {currentStep > 1 && (
         <div className="mb-4 sm:mb-8">
           <button
-            onClick={() => setCurrentStep(currentStep - 1)}
+            onClick={prevStep}
             className="text-[#5F9EA0] hover:text-[#5F9EA0]/80 hover:underline text-base font-medium flex items-center"
           >
             <svg className="w-4 h-4 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -1299,7 +1436,7 @@ function SymptomsPageContent() {
             {isFirstTimeUser ? (
               <h3 className="text-2xl sm:text-2xl md:text-3xl font-semibold text-white mb-6">Do you smoke?</h3>
             ) : userPreferences?.isSmoker ? (
-              <h3 className="text-2xl sm:text-2xl md:text-3xl font-semibold text-white mb-6">Did you smoke today?</h3>
+              <h3 className="text-2xl sm:text-2xl md:text-3xl font-semibold text-white mb-6">Did you smoke on {new Date(formData.symptomStartDate).toLocaleDateString('en-GB', { day: 'numeric', month: 'short' })}?</h3>
             ) : (
               <h3 className="text-2xl sm:text-2xl md:text-3xl font-semibold text-white mb-6">Do you smoke?</h3>
             )}
@@ -1364,7 +1501,7 @@ function SymptomsPageContent() {
         {currentStep === 10 && (
           <div className="mb-5">
             <h3 className="text-2xl sm:text-2xl md:text-3xl font-semibold text-white mb-2">
-              {isFirstTimeUser ? 'Please describe your smoking habits' : 'How much did you smoke today?'}
+              {isFirstTimeUser ? 'Please describe your smoking habits' : `How much did you smoke on ${new Date(formData.symptomStartDate).toLocaleDateString('en-GB', { day: 'numeric', month: 'short' })}?`}
             </h3>
             <p className="text-sm text-slate-400 mb-6">
               {isFirstTimeUser 
@@ -1395,7 +1532,7 @@ function SymptomsPageContent() {
             {isFirstTimeUser ? (
               <h3 className="text-2xl sm:text-2xl md:text-3xl font-semibold text-white mb-6">Do you drink alcohol?</h3>
             ) : userPreferences?.isDrinker ? (
-              <h3 className="text-2xl sm:text-2xl md:text-3xl font-semibold text-white mb-6">Did you drink alcohol today?</h3>
+              <h3 className="text-2xl sm:text-2xl md:text-3xl font-semibold text-white mb-6">Did you drink alcohol on {new Date(formData.symptomStartDate).toLocaleDateString('en-GB', { day: 'numeric', month: 'short' })}?</h3>
             ) : (
               <h3 className="text-2xl sm:text-2xl md:text-3xl font-semibold text-white mb-6">Do you drink alcohol?</h3>
             )}
@@ -1459,7 +1596,11 @@ function SymptomsPageContent() {
         {/* Step 12: Alcohol details (only if they drink) */}
         {currentStep === 12 && (
           <div className="mb-5">
-            <h3 className="text-2xl sm:text-2xl md:text-3xl font-semibold text-white mb-2">How many units of alcohol do you drink per day?</h3>
+            <h3 className="text-2xl sm:text-2xl md:text-3xl font-semibold text-white mb-2">
+              {!isFirstTimeUser && userPreferences?.isDrinker 
+                ? `How many units of alcohol did you drink on ${new Date(formData.symptomStartDate).toLocaleDateString('en-GB', { day: 'numeric', month: 'short' })}?` 
+                : 'How many units of alcohol do you drink per day?'}
+            </h3>
             <p className="text-sm text-slate-400 mb-6">For example, '2' or '5'</p>
             <div className="w-14">
                 <input
