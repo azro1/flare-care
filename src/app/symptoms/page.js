@@ -9,6 +9,7 @@ import { sanitizeNotes, sanitizeFoodTriggers } from '@/lib/sanitize'
 import { supabase, TABLES } from '@/lib/supabase'
 import { useRouter, usePathname } from 'next/navigation'
 import { useAuth } from '@/lib/AuthContext'
+import { getUserPreferences, saveUserPreferences, updatePreference, checkHabitPattern } from '@/lib/userPreferences'
 
 function SymptomsPageContent() {
   const { data: symptoms, setData: setSymptoms, deleteData: deleteSymptom } = useDataSync('flarecare-symptoms', [])
@@ -18,6 +19,10 @@ function SymptomsPageContent() {
 
   // Wizard state
   const [currentStep, setCurrentStep] = useState(0)
+  const [userPreferences, setUserPreferences] = useState(null)
+  const [isFirstTimeUser, setIsFirstTimeUser] = useState(false)
+  const [preferenceChangeModal, setPreferenceChangeModal] = useState({ isOpen: false, habit: '', oldValue: null, newValue: null })
+  const [patternModal, setPatternModal] = useState({ isOpen: false, habit: '', consecutiveNo: 0 })
   const [formData, setFormData] = useState({
     symptomStartDate: '',
     isOngoing: true,
@@ -48,10 +53,10 @@ function SymptomsPageContent() {
     endYear: ''
   })
 
-  // ✅ Prevent body scrolling for symptoms pages (except meals and review)
+  // ✅ Prevent body scrolling only on landing page
   useEffect(() => {
-    // Apply fixed positioning on landing page and all questions except meals (steps 13-15) and review (step 17)
-    if (currentStep !== 13 && currentStep !== 14 && currentStep !== 15 && currentStep !== 17) {
+    // Apply fixed positioning only on landing page (step 0)
+    if (currentStep === 0) {
       // Freeze scroll
       document.body.style.position = 'fixed'
       document.body.style.width = '100%'
@@ -62,7 +67,7 @@ function SymptomsPageContent() {
       document.documentElement.style.background = 'linear-gradient(to bottom right, #0f172a, #1e293b, #0f172a)'
       document.documentElement.style.height = '100%'
     } else {
-      // Reset styles when on meals/review pages
+      // Reset styles when on question pages
       document.body.style.position = 'static'
       document.body.style.width = 'auto'
       document.body.style.height = 'auto'
@@ -81,6 +86,30 @@ function SymptomsPageContent() {
       document.documentElement.style.height = ''
     }
   }, [currentStep])
+
+  // Load user preferences on component mount
+  useEffect(() => {
+    const loadUserPreferences = async () => {
+      try {
+        const userId = user?.id || 'anonymous'
+        const preferences = await getUserPreferences(userId)
+        
+        if (preferences) {
+          setUserPreferences(preferences)
+          setIsFirstTimeUser(false)
+        } else {
+          setUserPreferences(null)
+          setIsFirstTimeUser(true)
+        }
+      } catch (error) {
+        console.error('Error loading user preferences:', error)
+        setUserPreferences(null)
+        setIsFirstTimeUser(true)
+      }
+    }
+
+    loadUserPreferences()
+  }, [user?.id])
   
   const [dateErrors, setDateErrors] = useState({
     day: '',
@@ -366,7 +395,37 @@ function SymptomsPageContent() {
     
     // Move to next step if no validation issues
     if (currentStep < totalSteps) {
-      setCurrentStep(currentStep + 1)
+      let nextStepNumber = currentStep + 1
+      
+      // Smart navigation based on user preferences
+      if (!isFirstTimeUser && userPreferences) {
+        // Skip baseline bathroom frequency question if we already have it
+        if (currentStep === 5 && userPreferences.normalBathroomFrequency) {
+          nextStepNumber = 7 // Skip to change detection question
+          // Set baseline data from preferences
+          setFormData(prev => ({ ...prev, normal_bathroom_frequency: userPreferences.normalBathroomFrequency }))
+        }
+        // Skip smoking questions if user is not a smoker
+        else if (currentStep === 8 && !userPreferences.isSmoker) {
+          nextStepNumber = 11 // Skip to alcohol questions
+          // Set smoking data to false
+          setFormData(prev => ({ ...prev, smoking: false, smoking_details: '' }))
+        }
+        // Skip alcohol questions if user is not a drinker
+        else if (currentStep === 10 && !userPreferences.isDrinker) {
+          nextStepNumber = 13 // Skip to meal questions
+          // Set alcohol data to false
+          setFormData(prev => ({ ...prev, alcohol: false, alcohol_units: '' }))
+        }
+        // Skip alcohol questions if user is not a drinker (from smoking details)
+        else if (currentStep === 9 && !userPreferences.isDrinker) {
+          nextStepNumber = 13 // Skip to meal questions
+          // Set alcohol data to false
+          setFormData(prev => ({ ...prev, alcohol: false, alcohol_units: '' }))
+        }
+      }
+      
+      setCurrentStep(nextStepNumber)
     }
   }
 
@@ -423,6 +482,21 @@ function SymptomsPageContent() {
       
       return newData
     })
+
+    // Check for preference changes for returning users
+    if (!isFirstTimeUser && userPreferences && (name === 'normal_bathroom_frequency')) {
+      const currentPreference = userPreferences.normalBathroomFrequency
+      const newValue = parseInt(value) || 0
+      
+      if (currentPreference !== newValue && value !== '') {
+        setPreferenceChangeModal({
+          isOpen: true,
+          habit: name,
+          oldValue: currentPreference,
+          newValue: newValue
+        })
+      }
+    }
   }
 
   const handleDateInputChange = (field, value) => {
@@ -545,7 +619,44 @@ function SymptomsPageContent() {
       // Update local state
     setSymptoms([newSymptom, ...symptoms])
       
-      // Redirect to homepage immediately
+      // Save user preferences if this is a first-time user
+      if (isFirstTimeUser) {
+        const userId = user?.id
+        await saveUserPreferences(userId, {
+          isSmoker: formData.smoking,
+          isDrinker: formData.alcohol,
+          normalBathroomFrequency: formData.normal_bathroom_frequency
+        })
+      } else {
+        // Check for habit patterns for returning users
+        const userId = user?.id
+        const smokingPattern = await checkHabitPattern(userId, 'smoking', formData.smoking)
+        const alcoholPattern = await checkHabitPattern(userId, 'alcohol', formData.alcohol)
+        
+        // Show pattern modal if detected
+        if (smokingPattern.showModal) {
+          setPatternModal({
+            isOpen: true,
+            habit: 'smoking',
+            consecutiveNo: smokingPattern.consecutiveNo
+          })
+          setIsSubmitting(false)
+          return // Don't redirect yet, wait for user response
+        }
+        
+        if (alcoholPattern.showModal) {
+          setPatternModal({
+            isOpen: true,
+            habit: 'alcohol',
+            consecutiveNo: alcoholPattern.consecutiveNo
+          })
+          setIsSubmitting(false)
+          return // Don't redirect yet, wait for user response
+        }
+      }
+      
+      // Set toast flag and redirect to homepage
+      localStorage.setItem('showSymptomToast', 'true')
       router.push('/')
       
       setIsSubmitting(false)
@@ -572,6 +683,72 @@ function SymptomsPageContent() {
 
   const closeDeleteModal = () => {
     setDeleteModal({ isOpen: false, id: null })
+  }
+
+  const handlePreferenceChangeConfirm = async () => {
+    const { habit, newValue } = preferenceChangeModal
+    const userId = user?.id
+    
+    let preferenceKey
+    if (habit === 'smoking') {
+      preferenceKey = 'isSmoker'
+    } else if (habit === 'alcohol') {
+      preferenceKey = 'isDrinker'
+    } else if (habit === 'normal_bathroom_frequency') {
+      preferenceKey = 'normalBathroomFrequency'
+    }
+    
+    // Update the preference
+    const updatedPrefs = {
+      ...userPreferences,
+      [preferenceKey]: newValue,
+      lastUpdated: new Date().toISOString()
+    }
+    
+    await saveUserPreferences(userId, updatedPrefs)
+    setUserPreferences(updatedPrefs)
+    setPreferenceChangeModal({ isOpen: false, habit: '', oldValue: null, newValue: null })
+  }
+
+  const handlePreferenceChangeCancel = () => {
+    // Revert the form data to the original preference
+    const { habit, oldValue } = preferenceChangeModal
+    setFormData(prev => ({
+      ...prev,
+      [habit]: oldValue
+    }))
+    setPreferenceChangeModal({ isOpen: false, habit: '', oldValue: null, newValue: null })
+  }
+
+  const handlePatternModalConfirm = async () => {
+    // User confirmed they've quit the habit
+    const { habit } = patternModal
+    const userId = user?.id
+    const preferenceKey = habit === 'smoking' ? 'isSmoker' : 'isDrinker'
+    
+    // Update the preference to false (quit)
+    const updatedPrefs = {
+      ...userPreferences,
+      [preferenceKey]: false,
+      lastUpdated: new Date().toISOString()
+    }
+    
+    await saveUserPreferences(userId, updatedPrefs)
+    setUserPreferences(updatedPrefs)
+    setPatternModal({ isOpen: false, habit: '', consecutiveNo: 0 })
+    
+    // Now redirect to homepage
+    localStorage.setItem('showSymptomToast', 'true')
+    router.push('/')
+  }
+
+  const handlePatternModalCancel = () => {
+    // User said they haven't quit, just continue
+    setPatternModal({ isOpen: false, habit: '', consecutiveNo: 0 })
+    
+    // Now redirect to homepage
+    localStorage.setItem('showSymptomToast', 'true')
+    router.push('/')
   }
 
   const getSeverityColor = (severity) => {
@@ -653,7 +830,7 @@ function SymptomsPageContent() {
   }
 
   return (
-    <div className={`max-w-4xl w-full mx-auto px-3 sm:px-4 md:px-6 lg:px-8 min-w-0 flex flex-col justify-center sm:flex-grow ${(currentStep === 13 || currentStep === 14 || currentStep === 15 || currentStep === 17) ? 'pb-20 lg:pb-0' : ''}`}>
+    <div className={`max-w-4xl w-full mx-auto px-3 sm:px-4 md:px-6 lg:px-8 min-w-0 flex flex-col justify-center sm:flex-grow ${currentStep > 0 ? 'pb-20 lg:pb-0' : ''}`}>
       {/* Back Button - Hide on landing page and first question */}
       {currentStep > 1 && (
         <div className="mb-4 sm:mb-8">
@@ -672,7 +849,7 @@ function SymptomsPageContent() {
       {/* Section Header - Hide on landing page */}
       {currentStep > 0 && (
         <div className="mb-8">
-          <h1 className="text-base sm:text-lg font-regular text-white mb-3">Track Symptoms</h1>
+          <h1 className="text-base sm:text-lg font-regular text-slate-400 mb-3">Track Symptoms</h1>
           <div className="border-b border-slate-700/50"></div>
           </div>
       )}
@@ -693,7 +870,7 @@ function SymptomsPageContent() {
             <h2 className="text-2xl sm:text-3xl lg:text-4xl font-bold font-source text-white mb-4 sm:mb-6">Track Symptoms</h2>
             
             {/* Optional description */}
-            <p className="text-lg sm:text-xl font-roboto text-slate-300 mb-8 max-w-md">Track your daily symptoms to identify patterns and triggers</p>
+            <p className="text-lg sm:text-xl font-roboto text-slate-400 mb-8 max-w-md">Track your daily symptoms to identify patterns and triggers</p>
             
             {/* Start button */}
             <button
@@ -709,7 +886,7 @@ function SymptomsPageContent() {
         {currentStep === 1 && (
           <div className="mb-5">
             <h3 className="text-2xl sm:text-2xl md:text-3xl font-semibold text-white mb-2">When did your symptoms begin?</h3>
-            <p className="text-sm text-slate-400 mb-6">For example, '24 06 1970'</p>
+            <p className="text-sm text-slate-400 mb-6">For example, '14 09 2014'</p>
             <div className="flex space-x-5">
               <div className="w-14">
                 <label className="block text-base font-medium text-slate-300 mb-2">Day</label>
@@ -731,7 +908,7 @@ function SymptomsPageContent() {
                       e.preventDefault();
                     }
                   }}
-                  className="w-full px-3 py-2 bg-white border-2 border-gray-200 rounded-lg focus:outline-none transition-all duration-200 text-left text-base text-gray-900 [appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none"
+                  className="w-full px-3 py-2 bg-slate-700 border-2 border-slate-500 rounded-lg focus:outline-none transition-all duration-200 text-left text-base text-white placeholder-slate-400 [appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none"
               />
             </div>
               <div className="w-14">
@@ -754,7 +931,7 @@ function SymptomsPageContent() {
                       e.preventDefault();
                     }
                   }}
-                  className="w-full px-3 py-2 bg-white border-2 border-gray-200 rounded-lg focus:outline-none transition-all duration-200 text-left text-base text-gray-900 [appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none"
+                  className="w-full px-3 py-2 bg-slate-700 border-2 border-slate-500 rounded-lg focus:outline-none transition-all duration-200 text-left text-base text-white placeholder-slate-400 [appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none"
                 />
               </div>
               <div className="w-24">
@@ -777,12 +954,12 @@ function SymptomsPageContent() {
                       e.preventDefault();
                     }
                   }}
-                  className="w-full px-3 py-2 bg-white border-2 border-gray-200 rounded-lg focus:outline-none transition-all duration-200 text-left text-base text-gray-900 [appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none"
+                  className="w-full px-3 py-2 bg-slate-700 border-2 border-slate-500 rounded-lg focus:outline-none transition-all duration-200 text-left text-base text-white placeholder-slate-400 [appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none"
                 />
               </div>
             </div>
             {(dateErrors.day || dateErrors.month || dateErrors.year) && (
-              <div className="mt-6 p-3 bg-slate-700/40 border border-slate-600/30 rounded-lg">
+              <div className="mt-6 p-3 bg-slate-700/40 border border-slate-500/30 rounded-lg">
                 <p className="text-slate-300 text-sm">{dateErrors.day || dateErrors.month || dateErrors.year}</p>
               </div>
             )}
@@ -795,25 +972,55 @@ function SymptomsPageContent() {
             <h3 className="text-2xl sm:text-2xl md:text-3xl font-semibold text-white mb-6">Are symptoms still ongoing?</h3>
             <div className="flex space-x-8">
               <label className="flex items-center cursor-pointer">
-                  <input
-                    type="radio"
-                    name="isOngoing"
-                    value="true"
-                    checked={formData.isOngoing === true}
-                    onChange={handleInputChange}
-                  className="w-6 h-6 text-[#008B8B]"
-                  />
+                  <div className="relative">
+                    <input
+                      type="radio"
+                      name="isOngoing"
+                      value="true"
+                      checked={formData.isOngoing === true}
+                      onChange={handleInputChange}
+                      className="w-6 h-6 text-[#5F9EA0] opacity-0 absolute"
+                      style={{
+                        accentColor: '#5F9EA0',
+                        '--tw-accent-color': '#5F9EA0'
+                      }}
+                    />
+                    <span className={`w-6 h-6 rounded-full border-2 flex items-center justify-center ${
+                      formData.isOngoing === true 
+                        ? 'border-white bg-white' 
+                        : 'border-slate-400 bg-white'
+                    }`}>
+                      {formData.isOngoing === true && (
+                        <div className="w-3.5 h-3.5 rounded-full bg-[#5F9EA0]"></div>
+                      )}
+                    </span>
+                  </div>
                 <span className="ml-3 text-lg text-slate-300">Yes</span>
                 </label>
               <label className="flex items-center cursor-pointer">
-                  <input
-                    type="radio"
-                    name="isOngoing"
-                    value="false"
-                    checked={formData.isOngoing === false}
-                    onChange={handleInputChange}
-                  className="w-6 h-6 text-[#008B8B]"
-                  />
+                  <div className="relative">
+                    <input
+                      type="radio"
+                      name="isOngoing"
+                      value="false"
+                      checked={formData.isOngoing === false}
+                      onChange={handleInputChange}
+                      className="w-6 h-6 text-[#5F9EA0] opacity-0 absolute"
+                      style={{
+                        accentColor: '#5F9EA0',
+                        '--tw-accent-color': '#5F9EA0'
+                      }}
+                    />
+                    <span className={`w-6 h-6 rounded-full border-2 flex items-center justify-center ${
+                      formData.isOngoing === false 
+                        ? 'border-white bg-white' 
+                        : 'border-slate-400 bg-white'
+                    }`}>
+                      {formData.isOngoing === false && (
+                        <div className="w-3.5 h-3.5 rounded-full bg-[#5F9EA0]"></div>
+                      )}
+                    </span>
+                  </div>
                 <span className="ml-3 text-lg text-slate-300">No</span>
                 </label>
               </div>
@@ -824,7 +1031,7 @@ function SymptomsPageContent() {
         {currentStep === 3 && (
           <div className="mb-5">
             <h3 className="text-2xl sm:text-2xl md:text-3xl font-semibold text-white mb-2">When did symptoms end?</h3>
-            <p className="text-sm text-slate-400 mb-6">For example, '24 06 1970'</p>
+            <p className="text-sm text-slate-400 mb-6">For example, '14 09 2014'</p>
             <div className="flex space-x-5">
               <div className="w-14">
                 <label className="block text-base font-medium text-slate-300 mb-2">Day</label>
@@ -846,7 +1053,7 @@ function SymptomsPageContent() {
                       e.preventDefault();
                     }
                   }}
-                  className="w-full px-3 py-2 bg-white border-2 border-gray-200 rounded-lg focus:outline-none transition-all duration-200 text-left text-base text-gray-900 [appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none"
+                  className="w-full px-3 py-2 bg-slate-700 border-2 border-slate-500 rounded-lg focus:outline-none transition-all duration-200 text-left text-base text-white placeholder-slate-400 [appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none"
               />
             </div>
               <div className="w-14">
@@ -869,7 +1076,7 @@ function SymptomsPageContent() {
                       e.preventDefault();
                     }
                   }}
-                  className="w-full px-3 py-2 bg-white border-2 border-gray-200 rounded-lg focus:outline-none transition-all duration-200 text-left text-base text-gray-900 [appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none"
+                  className="w-full px-3 py-2 bg-slate-700 border-2 border-slate-500 rounded-lg focus:outline-none transition-all duration-200 text-left text-base text-white placeholder-slate-400 [appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none"
                 />
                 </div>
               <div className="w-24">
@@ -892,12 +1099,12 @@ function SymptomsPageContent() {
                       e.preventDefault();
                     }
                   }}
-                  className="w-full px-3 py-2 bg-white border-2 border-gray-200 rounded-lg focus:outline-none transition-all duration-200 text-left text-base text-gray-900 [appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none"
+                  className="w-full px-3 py-2 bg-slate-700 border-2 border-slate-500 rounded-lg focus:outline-none transition-all duration-200 text-left text-base text-white placeholder-slate-400 [appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none"
                 />
               </div>
             </div>
             {(dateErrors.endDay || dateErrors.endMonth || dateErrors.endYear) && (
-              <div className="mt-6 p-3 bg-slate-700/40 border border-slate-600/30 rounded-lg">
+              <div className="mt-6 p-3 bg-slate-700/40 border border-slate-500/30 rounded-lg">
                 <p className="text-slate-300 text-sm">{dateErrors.endDay || dateErrors.endMonth || dateErrors.endYear}</p>
               </div>
             )}
@@ -926,11 +1133,11 @@ function SymptomsPageContent() {
                       e.preventDefault();
                     }
                   }}
-                  className="w-full px-3 py-2 bg-white border-2 border-gray-200 rounded-lg focus:outline-none transition-all duration-200 text-left text-base text-gray-900 [appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none"
+                  className="w-full px-3 py-2 bg-slate-700 border-2 border-slate-500 rounded-lg focus:outline-none transition-all duration-200 text-left text-base text-white placeholder-slate-400 [appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none"
                 />
                 </div>
                 {fieldErrors.severity && (
-                  <div className="mt-6 p-3 bg-slate-700/40 border border-slate-600/30 rounded-lg">
+                  <div className="mt-6 p-3 bg-slate-700/40 border border-slate-500/30 rounded-lg">
                     <p className="text-slate-300 text-sm">{fieldErrors.severity}</p>
               </div>
                 )}
@@ -959,11 +1166,11 @@ function SymptomsPageContent() {
                       e.preventDefault();
                     }
                   }}
-                  className="w-full px-3 py-2 bg-white border-2 border-gray-200 rounded-lg focus:outline-none transition-all duration-200 text-left text-base text-gray-900 [appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none"
+                  className="w-full px-3 py-2 bg-slate-700 border-2 border-slate-500 rounded-lg focus:outline-none transition-all duration-200 text-left text-base text-white placeholder-slate-400 [appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none"
                 />
                 </div>
                 {fieldErrors.stress_level && (
-                  <div className="mt-6 p-3 bg-slate-700/40 border border-slate-600/30 rounded-lg">
+                  <div className="mt-6 p-3 bg-slate-700/40 border border-slate-500/30 rounded-lg">
                     <p className="text-slate-300 text-sm">{fieldErrors.stress_level}</p>
               </div>
                 )}
@@ -991,11 +1198,11 @@ function SymptomsPageContent() {
                     e.preventDefault();
                   }
                 }}
-                className="w-full px-3 py-2 bg-white border-2 border-gray-200 rounded-lg focus:outline-none transition-all duration-200 text-left text-base text-gray-900 [appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none"
+                className="w-full px-3 py-2 bg-slate-700 border-2 border-slate-500 rounded-lg focus:outline-none transition-all duration-200 text-left text-base text-white placeholder-slate-400 [appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none"
               />
             </div>
               {fieldErrors.normal_bathroom_frequency && (
-                <div className="mt-6 p-3 bg-slate-700/40 border border-slate-600/30 rounded-lg">
+                <div className="mt-6 p-3 bg-slate-700/40 border border-slate-500/30 rounded-lg">
                   <p className="text-slate-300 text-sm">{fieldErrors.normal_bathroom_frequency}</p>
           </div>
               )}
@@ -1010,25 +1217,55 @@ function SymptomsPageContent() {
             </h3>
             <div className="flex space-x-8">
               <label className="flex items-center cursor-pointer">
-                <input
-                  type="radio"
-                  name="bathroom_frequency_changed"
-                  value="yes"
-                  checked={formData.bathroom_frequency_changed === 'yes'}
-                  onChange={handleInputChange}
-                  className="w-6 h-6 text-[#008B8B]"
-                />
+                <div className="relative">
+                  <input
+                    type="radio"
+                    name="bathroom_frequency_changed"
+                    value="yes"
+                    checked={formData.bathroom_frequency_changed === 'yes'}
+                    onChange={handleInputChange}
+                    className="w-6 h-6 text-[#5F9EA0] opacity-0 absolute"
+                    style={{
+                      accentColor: '#5F9EA0',
+                      '--tw-accent-color': '#5F9EA0'
+                    }}
+                  />
+                  <span className={`w-6 h-6 rounded-full border-2 flex items-center justify-center ${
+                    formData.bathroom_frequency_changed === 'yes' 
+                      ? 'border-white bg-white' 
+                      : 'border-slate-400 bg-white'
+                  }`}>
+                    {formData.bathroom_frequency_changed === 'yes' && (
+                      <div className="w-3.5 h-3.5 rounded-full bg-[#5F9EA0]"></div>
+                    )}
+                  </span>
+                </div>
                 <span className="ml-3 text-lg text-slate-300">Yes</span>
-            </label>
+              </label>
               <label className="flex items-center cursor-pointer">
-                <input
-                  type="radio"
-                  name="bathroom_frequency_changed"
-                  value="no"
-                  checked={formData.bathroom_frequency_changed === 'no'}
-                  onChange={handleInputChange}
-                  className="w-6 h-6 text-[#008B8B]"
-                />
+                <div className="relative">
+                  <input
+                    type="radio"
+                    name="bathroom_frequency_changed"
+                    value="no"
+                    checked={formData.bathroom_frequency_changed === 'no'}
+                    onChange={handleInputChange}
+                    className="w-6 h-6 text-[#5F9EA0] opacity-0 absolute"
+                    style={{
+                      accentColor: '#5F9EA0',
+                      '--tw-accent-color': '#5F9EA0'
+                    }}
+                  />
+                  <span className={`w-6 h-6 rounded-full border-2 flex items-center justify-center ${
+                    formData.bathroom_frequency_changed === 'no' 
+                      ? 'border-white bg-white' 
+                      : 'border-slate-400 bg-white'
+                  }`}>
+                    {formData.bathroom_frequency_changed === 'no' && (
+                      <div className="w-3.5 h-3.5 rounded-full bg-[#5F9EA0]"></div>
+                    )}
+                  </span>
+                </div>
                 <span className="ml-3 text-lg text-slate-300">No</span>
               </label>
             </div>
@@ -1046,41 +1283,77 @@ function SymptomsPageContent() {
               rows="4"
               value={formData.bathroom_frequency_change_details}
               onChange={handleInputChange}
-              className="w-full px-4 py-3 bg-white border-2 border-gray-200 rounded-lg focus:outline-none transition-all duration-200 resize-none text-gray-900"
+              className="w-full px-4 py-3 bg-slate-700 border-2 border-slate-500 rounded-lg focus:outline-none transition-all duration-200 resize-none text-white placeholder-slate-400"
             />
             {fieldErrors.bathroom_frequency_change_details && (
-              <div className="mt-6 p-3 bg-slate-700/40 border border-slate-600/30 rounded-lg">
+              <div className="mt-6 p-3 bg-slate-700/40 border border-slate-500/30 rounded-lg">
                 <p className="text-slate-300 text-sm">{fieldErrors.bathroom_frequency_change_details}</p>
               </div>
             )}
           </div>
         )}
 
-        {/* Step 9: Do you smoke? */}
+        {/* Step 9: Smoking questions */}
         {currentStep === 9 && (
           <div className="mb-5">
-            <h3 className="text-2xl sm:text-2xl md:text-3xl font-semibold text-white mb-6">Do you smoke?</h3>
+            {isFirstTimeUser ? (
+              <h3 className="text-2xl sm:text-2xl md:text-3xl font-semibold text-white mb-6">Do you smoke?</h3>
+            ) : userPreferences?.isSmoker ? (
+              <h3 className="text-2xl sm:text-2xl md:text-3xl font-semibold text-white mb-6">Did you smoke today?</h3>
+            ) : (
+              <h3 className="text-2xl sm:text-2xl md:text-3xl font-semibold text-white mb-6">Do you smoke?</h3>
+            )}
             <div className="flex space-x-8">
               <label className="flex items-center cursor-pointer">
-                <input
-                  type="radio"
-                  name="smoking"
-                  value="true"
-                  checked={formData.smoking === true}
-                  onChange={handleInputChange}
-                  className="w-6 h-6 text-[#008B8B]"
-                />
+                <div className="relative">
+                  <input
+                    type="radio"
+                    name="smoking"
+                    value="true"
+                    checked={formData.smoking === true}
+                    onChange={handleInputChange}
+                    className="w-6 h-6 text-[#5F9EA0] opacity-0 absolute"
+                    style={{
+                      accentColor: '#5F9EA0',
+                      '--tw-accent-color': '#5F9EA0'
+                    }}
+                  />
+                  <span className={`w-6 h-6 rounded-full border-2 flex items-center justify-center ${
+                    formData.smoking === true 
+                      ? 'border-white bg-white' 
+                      : 'border-slate-400 bg-white'
+                  }`}>
+                    {formData.smoking === true && (
+                      <div className="w-3.5 h-3.5 rounded-full bg-[#5F9EA0]"></div>
+                    )}
+                  </span>
+                </div>
                 <span className="ml-3 text-lg text-slate-300">Yes</span>
               </label>
               <label className="flex items-center cursor-pointer">
-                <input
-                  type="radio"
-                  name="smoking"
-                  value="false"
-                  checked={formData.smoking === false}
-                  onChange={handleInputChange}
-                  className="w-6 h-6 text-[#008B8B]"
-                />
+                <div className="relative">
+                  <input
+                    type="radio"
+                    name="smoking"
+                    value="false"
+                    checked={formData.smoking === false}
+                    onChange={handleInputChange}
+                    className="w-6 h-6 text-[#5F9EA0] opacity-0 absolute"
+                    style={{
+                      accentColor: '#5F9EA0',
+                      '--tw-accent-color': '#5F9EA0'
+                    }}
+                  />
+                  <span className={`w-6 h-6 rounded-full border-2 flex items-center justify-center ${
+                    formData.smoking === false 
+                      ? 'border-white bg-white' 
+                      : 'border-slate-400 bg-white'
+                  }`}>
+                    {formData.smoking === false && (
+                      <div className="w-3.5 h-3.5 rounded-full bg-[#5F9EA0]"></div>
+                    )}
+                  </span>
+                </div>
                 <span className="ml-3 text-lg text-slate-300">No</span>
               </label>
             </div>
@@ -1090,50 +1363,93 @@ function SymptomsPageContent() {
         {/* Step 10: Smoking details (only if they smoke) */}
         {currentStep === 10 && (
           <div className="mb-5">
-            <h3 className="text-2xl sm:text-2xl md:text-3xl font-semibold text-white mb-2">Please describe your smoking habits</h3>
-            <p className="text-sm text-slate-400 mb-6">For example, '1 pack of cigarettes per day, occasional cigars'</p>
+            <h3 className="text-2xl sm:text-2xl md:text-3xl font-semibold text-white mb-2">
+              {isFirstTimeUser ? 'Please describe your smoking habits' : 'How much did you smoke today?'}
+            </h3>
+            <p className="text-sm text-slate-400 mb-6">
+              {isFirstTimeUser 
+                ? "For example, '1 pack of cigarettes per day, occasional cigars'" 
+                : "For example, '5 cigarettes' or '1 cigar'"
+              }
+            </p>
                 <input
                   type="text"
                   id="smoking_details"
                   name="smoking_details"
                   value={formData.smoking_details}
                   onChange={handleInputChange}
-                  className="w-full px-4 py-3 bg-white border-2 border-gray-200 rounded-lg focus:outline-none transition-all duration-200 text-gray-900"
+                  className="w-full px-4 py-3 bg-slate-700 border-2 border-slate-500 rounded-lg focus:outline-none transition-all duration-200 text-white placeholder-slate-400"
                   autoComplete="off"
                 />
                 {fieldErrors.smoking_details && (
-                  <div className="mt-6 p-3 bg-slate-700/40 border border-slate-600/30 rounded-lg">
+                  <div className="mt-6 p-3 bg-slate-700/40 border border-slate-500/30 rounded-lg">
                     <p className="text-slate-300 text-sm">{fieldErrors.smoking_details}</p>
               </div>
             )}
           </div>
         )}
 
-        {/* Step 11: Do you drink alcohol? */}
+        {/* Step 11: Alcohol questions */}
         {currentStep === 11 && (
           <div className="mb-5">
-            <h3 className="text-2xl sm:text-2xl md:text-3xl font-semibold text-white mb-6">Do you drink alcohol?</h3>
+            {isFirstTimeUser ? (
+              <h3 className="text-2xl sm:text-2xl md:text-3xl font-semibold text-white mb-6">Do you drink alcohol?</h3>
+            ) : userPreferences?.isDrinker ? (
+              <h3 className="text-2xl sm:text-2xl md:text-3xl font-semibold text-white mb-6">Did you drink alcohol today?</h3>
+            ) : (
+              <h3 className="text-2xl sm:text-2xl md:text-3xl font-semibold text-white mb-6">Do you drink alcohol?</h3>
+            )}
             <div className="flex space-x-8">
               <label className="flex items-center cursor-pointer">
-                <input
-                  type="radio"
-                  name="alcohol"
-                  value="true"
-                  checked={formData.alcohol === true}
-                  onChange={handleInputChange}
-                  className="w-6 h-6 text-[#008B8B]"
-                />
+                <div className="relative">
+                  <input
+                    type="radio"
+                    name="alcohol"
+                    value="true"
+                    checked={formData.alcohol === true}
+                    onChange={handleInputChange}
+                    className="w-6 h-6 text-[#5F9EA0] opacity-0 absolute"
+                    style={{
+                      accentColor: '#5F9EA0',
+                      '--tw-accent-color': '#5F9EA0'
+                    }}
+                  />
+                  <span className={`w-6 h-6 rounded-full border-2 flex items-center justify-center ${
+                    formData.alcohol === true 
+                      ? 'border-white bg-white' 
+                      : 'border-slate-400 bg-white'
+                  }`}>
+                    {formData.alcohol === true && (
+                      <div className="w-3.5 h-3.5 rounded-full bg-[#5F9EA0]"></div>
+                    )}
+                  </span>
+                </div>
                 <span className="ml-3 text-lg text-slate-300">Yes</span>
               </label>
               <label className="flex items-center cursor-pointer">
-                <input
-                  type="radio"
-                  name="alcohol"
-                  value="false"
-                  checked={formData.alcohol === false}
-                  onChange={handleInputChange}
-                  className="w-6 h-6 text-[#008B8B]"
-                />
+                <div className="relative">
+                  <input
+                    type="radio"
+                    name="alcohol"
+                    value="false"
+                    checked={formData.alcohol === false}
+                    onChange={handleInputChange}
+                    className="w-6 h-6 text-[#5F9EA0] opacity-0 absolute"
+                    style={{
+                      accentColor: '#5F9EA0',
+                      '--tw-accent-color': '#5F9EA0'
+                    }}
+                  />
+                  <span className={`w-6 h-6 rounded-full border-2 flex items-center justify-center ${
+                    formData.alcohol === false 
+                      ? 'border-white bg-white' 
+                      : 'border-slate-400 bg-white'
+                  }`}>
+                    {formData.alcohol === false && (
+                      <div className="w-3.5 h-3.5 rounded-full bg-[#5F9EA0]"></div>
+                    )}
+                  </span>
+                </div>
                 <span className="ml-3 text-lg text-slate-300">No</span>
               </label>
             </div>
@@ -1160,11 +1476,11 @@ function SymptomsPageContent() {
                       e.preventDefault();
                     }
                   }}
-                  className="w-full px-3 py-2 bg-white border-2 border-gray-200 rounded-lg focus:outline-none transition-all duration-200 text-left text-base text-gray-900 [appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none"
+                  className="w-full px-3 py-2 bg-slate-700 border-2 border-slate-500 rounded-lg focus:outline-none transition-all duration-200 text-left text-base text-white placeholder-slate-400 [appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none"
                 />
               </div>
               {fieldErrors.alcohol_units && (
-                <div className="mt-6 p-3 bg-slate-700/40 border border-slate-600/30 rounded-lg">
+                <div className="mt-6 p-3 bg-slate-700/40 border border-slate-500/30 rounded-lg">
                   <p className="text-slate-300 text-sm">{fieldErrors.alcohol_units}</p>
               </div>
             )}
@@ -1191,7 +1507,7 @@ function SymptomsPageContent() {
                     className={`px-3 py-1 text-sm font-medium rounded-lg transition-colors ${
                       formData.breakfast.length > 0 && (formData.breakfast[formData.breakfast.length - 1]?.food === '' || formData.breakfast[formData.breakfast.length - 1]?.quantity === '')
                         ? 'bg-slate-700 text-slate-500 cursor-not-allowed'
-                        : 'bg-[#5F9EA0]/20 text-[#5F9EA0] hover:bg-[#5F9EA0]/30'
+                        : 'bg-[#5F9EA0] text-white hover:bg-[#5F9EA0]/80'
                     }`}
                 >
                   Add
@@ -1204,7 +1520,7 @@ function SymptomsPageContent() {
                       <button
                         type="button"
                         onClick={() => removeMealItem('breakfast', index)}
-                          className="absolute -left-2 -top-2 bg-red-500 rounded-full w-[22px] h-[22px] flex items-center justify-center shadow-md z-10 hover:bg-red-600 transition-all duration-200"
+                          className="absolute -left-2 -top-2 bg-red-500 rounded-full w-[22px] h-[22px] flex items-center justify-center shadow-md hover:bg-red-600 transition-all duration-200"
                         title="Remove item"
                       >
                           <span className="text-white text-sm font-bold leading-none">×</span>
@@ -1217,7 +1533,7 @@ function SymptomsPageContent() {
                           placeholder="Food item"
                           value={item.food}
                           onChange={(e) => updateMealItem('breakfast', index, 'food', e.target.value)}
-                            className="w-full px-3 py-2 bg-white border-2 border-gray-200 rounded-lg focus:outline-none transition-all duration-200 text-gray-900"
+                            className="w-full px-3 py-2 bg-slate-700 border-2 border-slate-500 rounded-lg focus:outline-none transition-all duration-200 text-white placeholder-slate-400"
                         />
                       </div>
                       <div>
@@ -1226,7 +1542,7 @@ function SymptomsPageContent() {
                           placeholder="Quantity"
                           value={item.quantity}
                           onChange={(e) => updateMealItem('breakfast', index, 'quantity', e.target.value)}
-                            className="w-full px-3 py-2 bg-white border-2 border-gray-200 rounded-lg focus:outline-none transition-all duration-200 text-gray-900"
+                            className="w-full px-3 py-2 bg-slate-700 border-2 border-slate-500 rounded-lg focus:outline-none transition-all duration-200 text-white placeholder-slate-400"
                         />
                       </div>
                     </div>
@@ -1235,31 +1551,30 @@ function SymptomsPageContent() {
               </div>
               
               {/* Breakfast skipped checkbox */}
-              <div className="mt-3">
-                <label className="flex items-center">
-                  <input
-                    type="checkbox"
-                    checked={formData.breakfast_skipped}
-                    onChange={(e) => {
-                      const isChecked = e.target.checked
-                      setFormData(prev => ({ 
-                        ...prev, 
-                        breakfast_skipped: isChecked,
-                        // Clear breakfast items if "didn't eat anything" is checked
-                        breakfast: isChecked ? [{ food: '', quantity: '' }] : prev.breakfast
-                      }))
-                    }}
-                    className="mr-2 w-4 h-4 text-[#008B8B] bg-slate-700 border-slate-600 rounded focus:ring-[#008B8B] focus:ring-2"
-                  />
-                  <span className="text-sm text-slate-300">I didn't eat anything for breakfast</span>
-                </label>
+              <div className="mt-3 flex items-center">
+                <input
+                  type="checkbox"
+                  checked={formData.breakfast_skipped}
+                  onChange={(e) => {
+                    const isChecked = e.target.checked
+                    setFormData(prev => ({ 
+                      ...prev, 
+                      breakfast_skipped: isChecked,
+                      // Clear breakfast items if "didn't eat anything" is checked
+                      breakfast: isChecked ? [{ food: '', quantity: '' }] : prev.breakfast
+                    }))
+                  }}
+                  className="mr-2 w-4 h-4 text-[#5F9EA0] bg-slate-700 border-slate-500 rounded focus:ring-[#5F9EA0] focus:ring-2"
+                  style={{accentColor: '#5F9EA0'}}
+                />
+                <span className="text-sm text-slate-300">I didn't eat anything for breakfast</span>
               </div>
             </div>
             </div>
             
             {/* Validation error message */}
             {fieldErrors.breakfast && (
-              <div className="mt-6 p-3 bg-slate-700/40 border border-slate-600/30 rounded-lg">
+              <div className="mt-6 p-3 bg-slate-700/40 border border-slate-500/30 rounded-lg">
                 <p className="text-slate-300 text-sm">{fieldErrors.breakfast}</p>
               </div>
             )}
@@ -1286,7 +1601,7 @@ function SymptomsPageContent() {
                     className={`px-3 py-1 text-sm font-medium rounded-lg transition-colors ${
                       formData.lunch.length > 0 && (formData.lunch[formData.lunch.length - 1]?.food === '' || formData.lunch[formData.lunch.length - 1]?.quantity === '')
                         ? 'bg-slate-700 text-slate-500 cursor-not-allowed'
-                        : 'bg-[#5F9EA0]/20 text-[#5F9EA0] hover:bg-[#5F9EA0]/30'
+                        : 'bg-[#5F9EA0] text-white hover:bg-[#5F9EA0]/80'
                     }`}
                 >
                   Add
@@ -1299,7 +1614,7 @@ function SymptomsPageContent() {
                       <button
                         type="button"
                         onClick={() => removeMealItem('lunch', index)}
-                          className="absolute -left-2 -top-2 bg-red-500 rounded-full w-[22px] h-[22px] flex items-center justify-center shadow-md z-10 hover:bg-red-600 transition-all duration-200"
+                          className="absolute -left-2 -top-2 bg-red-500 rounded-full w-[22px] h-[22px] flex items-center justify-center shadow-md hover:bg-red-600 transition-all duration-200"
                         title="Remove item"
                       >
                           <span className="text-white text-sm font-bold leading-none">×</span>
@@ -1312,7 +1627,7 @@ function SymptomsPageContent() {
                           placeholder="Food item"
                           value={item.food}
                           onChange={(e) => updateMealItem('lunch', index, 'food', e.target.value)}
-                            className="w-full px-3 py-2 bg-white border-2 border-gray-200 rounded-lg focus:outline-none transition-all duration-200 text-gray-900"
+                            className="w-full px-3 py-2 bg-slate-700 border-2 border-slate-500 rounded-lg focus:outline-none transition-all duration-200 text-white placeholder-slate-400"
                         />
                       </div>
                       <div>
@@ -1321,7 +1636,7 @@ function SymptomsPageContent() {
                           placeholder="Quantity"
                           value={item.quantity}
                           onChange={(e) => updateMealItem('lunch', index, 'quantity', e.target.value)}
-                            className="w-full px-3 py-2 bg-white border-2 border-gray-200 rounded-lg focus:outline-none transition-all duration-200 text-gray-900"
+                            className="w-full px-3 py-2 bg-slate-700 border-2 border-slate-500 rounded-lg focus:outline-none transition-all duration-200 text-white placeholder-slate-400"
                         />
                       </div>
                     </div>
@@ -1330,31 +1645,30 @@ function SymptomsPageContent() {
               </div>
               
               {/* Lunch skipped checkbox */}
-              <div className="mt-3">
-                <label className="flex items-center">
-                  <input
-                    type="checkbox"
-                    checked={formData.lunch_skipped}
-                    onChange={(e) => {
-                      const isChecked = e.target.checked
-                      setFormData(prev => ({ 
-                        ...prev, 
-                        lunch_skipped: isChecked,
-                        // Clear lunch items if "didn't eat anything" is checked
-                        lunch: isChecked ? [{ food: '', quantity: '' }] : prev.lunch
-                      }))
-                    }}
-                    className="mr-2 w-4 h-4 text-[#008B8B] bg-slate-700 border-slate-600 rounded focus:ring-[#008B8B] focus:ring-2"
-                  />
-                  <span className="text-sm text-slate-300">I didn't eat anything for lunch</span>
-                </label>
+              <div className="mt-3 flex items-center">
+                <input
+                  type="checkbox"
+                  checked={formData.lunch_skipped}
+                  onChange={(e) => {
+                    const isChecked = e.target.checked
+                    setFormData(prev => ({ 
+                      ...prev, 
+                      lunch_skipped: isChecked,
+                      // Clear lunch items if "didn't eat anything" is checked
+                      lunch: isChecked ? [{ food: '', quantity: '' }] : prev.lunch
+                    }))
+                  }}
+                  className="mr-2 w-4 h-4 text-[#5F9EA0] bg-slate-700 border-slate-500 rounded focus:ring-[#5F9EA0] focus:ring-2"
+                  style={{accentColor: '#5F9EA0'}}
+                />
+                <span className="text-sm text-slate-300">I didn't eat anything for lunch</span>
               </div>
             </div>
             </div>
             
             {/* Validation error message */}
             {fieldErrors.lunch && (
-              <div className="mt-6 p-3 bg-slate-700/40 border border-slate-600/30 rounded-lg">
+              <div className="mt-6 p-3 bg-slate-700/40 border border-slate-500/30 rounded-lg">
                 <p className="text-slate-300 text-sm">{fieldErrors.lunch}</p>
               </div>
             )}
@@ -1381,7 +1695,7 @@ function SymptomsPageContent() {
                     className={`px-3 py-1 text-sm font-medium rounded-lg transition-colors ${
                       formData.dinner.length > 0 && (formData.dinner[formData.dinner.length - 1]?.food === '' || formData.dinner[formData.dinner.length - 1]?.quantity === '')
                         ? 'bg-slate-700 text-slate-500 cursor-not-allowed'
-                        : 'bg-[#5F9EA0]/20 text-[#5F9EA0] hover:bg-[#5F9EA0]/30'
+                        : 'bg-[#5F9EA0] text-white hover:bg-[#5F9EA0]/80'
                     }`}
                 >
                   Add
@@ -1394,7 +1708,7 @@ function SymptomsPageContent() {
                       <button
                         type="button"
                         onClick={() => removeMealItem('dinner', index)}
-                          className="absolute -left-2 -top-2 bg-red-500 rounded-full w-[22px] h-[22px] flex items-center justify-center shadow-md z-10 hover:bg-red-600 transition-all duration-200"
+                          className="absolute -left-2 -top-2 bg-red-500 rounded-full w-[22px] h-[22px] flex items-center justify-center shadow-md hover:bg-red-600 transition-all duration-200"
                         title="Remove item"
                       >
                           <span className="text-white text-sm font-bold leading-none">×</span>
@@ -1407,7 +1721,7 @@ function SymptomsPageContent() {
                           placeholder="Food item"
                           value={item.food}
                           onChange={(e) => updateMealItem('dinner', index, 'food', e.target.value)}
-                            className="w-full px-3 py-2 bg-white border-2 border-gray-200 rounded-lg focus:outline-none transition-all duration-200 text-gray-900"
+                            className="w-full px-3 py-2 bg-slate-700 border-2 border-slate-500 rounded-lg focus:outline-none transition-all duration-200 text-white placeholder-slate-400"
                         />
                       </div>
                       <div>
@@ -1416,7 +1730,7 @@ function SymptomsPageContent() {
                           placeholder="Quantity"
                           value={item.quantity}
                           onChange={(e) => updateMealItem('dinner', index, 'quantity', e.target.value)}
-                            className="w-full px-3 py-2 bg-white border-2 border-gray-200 rounded-lg focus:outline-none transition-all duration-200 text-gray-900"
+                            className="w-full px-3 py-2 bg-slate-700 border-2 border-slate-500 rounded-lg focus:outline-none transition-all duration-200 text-white placeholder-slate-400"
                         />
                       </div>
                     </div>
@@ -1425,31 +1739,30 @@ function SymptomsPageContent() {
               </div>
 
               {/* Dinner skipped checkbox */}
-              <div className="mt-3">
-                <label className="flex items-center">
-                  <input
-                    type="checkbox"
-                    checked={formData.dinner_skipped}
-                    onChange={(e) => {
-                      const isChecked = e.target.checked
-                      setFormData(prev => ({ 
-                        ...prev, 
-                        dinner_skipped: isChecked,
-                        // Clear dinner items if "didn't eat anything" is checked
-                        dinner: isChecked ? [{ food: '', quantity: '' }] : prev.dinner
-                      }))
-                    }}
-                    className="mr-2 w-4 h-4 text-[#008B8B] bg-slate-700 border-slate-600 rounded focus:ring-[#008B8B] focus:ring-2"
-                  />
-                  <span className="text-sm text-slate-300">I didn't eat anything for dinner</span>
-                </label>
+              <div className="mt-3 flex items-center">
+                <input
+                  type="checkbox"
+                  checked={formData.dinner_skipped}
+                  onChange={(e) => {
+                    const isChecked = e.target.checked
+                    setFormData(prev => ({ 
+                      ...prev, 
+                      dinner_skipped: isChecked,
+                      // Clear dinner items if "didn't eat anything" is checked
+                      dinner: isChecked ? [{ food: '', quantity: '' }] : prev.dinner
+                    }))
+                  }}
+                  className="mr-2 w-4 h-4 text-[#5F9EA0] bg-slate-700 border-slate-500 rounded focus:ring-[#5F9EA0] focus:ring-2"
+                  style={{accentColor: '#5F9EA0'}}
+                />
+                <span className="text-sm text-slate-300">I didn't eat anything for dinner</span>
               </div>
             </div>
             </div>
             
             {/* Validation error message */}
             {fieldErrors.dinner && (
-              <div className="mt-6 p-3 bg-slate-700/40 border border-slate-600/30 rounded-lg">
+              <div className="mt-6 p-3 bg-slate-700/40 border border-slate-500/30 rounded-lg">
                 <p className="text-slate-300 text-sm">{fieldErrors.dinner}</p>
               </div>
             )}
@@ -1468,7 +1781,7 @@ function SymptomsPageContent() {
                 rows="4"
                 value={formData.notes}
                 onChange={handleInputChange}
-                className="w-full px-4 py-3 bg-white border-2 border-gray-200 rounded-lg focus:outline-none transition-all duration-200 resize-none text-gray-900"
+                className="w-full px-4 py-3 bg-slate-700 border-2 border-slate-500 rounded-lg focus:outline-none transition-all duration-200 resize-none text-white placeholder-slate-400"
               />
                     </div>
                   </div>
@@ -1633,7 +1946,7 @@ function SymptomsPageContent() {
               <button
                 onClick={handleSubmit}
                 disabled={isSubmitting}
-                className="px-4 py-2 bg-emerald-600 text-white text-lg font-semibold rounded-lg hover:bg-emerald-700 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+                className="px-4 py-2 bg-[#5F9EA0] text-white text-lg font-semibold rounded-lg hover:bg-[#5F9EA0]/80 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
               >
                 {isSubmitting ? 'Submitting...' : 'Submit'}
               </button>
@@ -1662,6 +1975,29 @@ function SymptomsPageContent() {
         message={alertModal.message}
         confirmText="OK"
         cancelText=""
+        isDestructive={false}
+      />
+
+      <ConfirmationModal
+        isOpen={preferenceChangeModal.isOpen}
+        onClose={handlePreferenceChangeCancel}
+        onConfirm={handlePreferenceChangeConfirm}
+        title={`${preferenceChangeModal.habit === 'smoking' ? 'Smoking' : preferenceChangeModal.habit === 'alcohol' ? 'Alcohol' : 'Bathroom Frequency'} Habit Change`}
+        message={`We noticed you ${preferenceChangeModal.habit === 'smoking' ? 'smoked' : preferenceChangeModal.habit === 'alcohol' ? 'drank alcohol' : `went to the bathroom ${preferenceChangeModal.newValue} times`} today. Have your ${preferenceChangeModal.habit === 'smoking' ? 'smoking' : preferenceChangeModal.habit === 'alcohol' ? 'drinking' : 'bathroom frequency'} habits changed?`}
+        confirmText="Yes, update my profile"
+        cancelText="No, just this once"
+        isDestructive={false}
+      />
+
+      {/* Pattern Detection Modal */}
+      <ConfirmationModal
+        isOpen={patternModal.isOpen}
+        onClose={handlePatternModalCancel}
+        onConfirm={handlePatternModalConfirm}
+        title={`${patternModal.habit === 'smoking' ? 'Smoking' : 'Drinking'} Pattern Detected`}
+        message={`We've noticed you haven't ${patternModal.habit === 'smoking' ? 'smoked' : 'had a drink'} in your last ${patternModal.consecutiveNo} symptom entries. Have you stopped ${patternModal.habit === 'smoking' ? 'smoking' : 'drinking'}?`}
+        confirmText="Yes, I've quit"
+        cancelText="No, just tracking symptoms"
         isDestructive={false}
       />
     </div>

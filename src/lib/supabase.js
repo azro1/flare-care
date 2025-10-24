@@ -9,7 +9,8 @@ export const supabase = createClient(supabaseUrl, supabaseAnonKey)
 export const TABLES = {
   SYMPTOMS: 'symptoms',
   MEDICATIONS: 'medications',
-  USER_SETTINGS: 'user_settings'
+  USER_SETTINGS: 'user_settings',
+  USER_PREFERENCES: 'user_preferences'
 }
 
 // Helper functions for data operations

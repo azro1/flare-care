@@ -44,7 +44,8 @@ function SymptomDetailContent() {
         const updatedSymptoms = symptoms.filter(s => s.id !== symptom.id)
         setSymptoms(updatedSymptoms)
         
-        // Redirect to dashboard
+        // Set delete toast flag and redirect to dashboard
+        localStorage.setItem('showDeleteToast', 'true')
         router.push('/')
       } else {
         console.error('Failed to delete symptom:', result.error)

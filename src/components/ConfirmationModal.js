@@ -48,14 +48,14 @@ export default function ConfirmationModal({
       className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4"
       onClick={handleBackdropClick}
     >
-      <div className="bg-white rounded-lg shadow-xl max-w-md w-full transform transition-all">
+      <div className="bg-slate-800 rounded-lg shadow-xl max-w-md w-full transform transition-all border border-slate-700">
         <div className="p-6">
           <div className="flex items-center mb-4">
             <div className={`w-10 h-10 rounded-full flex items-center justify-center mr-3 ${
-              isDestructive ? 'bg-red-100' : 'bg-blue-100'
+              isDestructive ? 'bg-red-100' : 'bg-[#5F9EA0]/20'
             }`}>
               <svg 
-                className={`w-6 h-6 ${isDestructive ? 'text-red-600' : 'text-blue-600'}`} 
+                className={`w-6 h-6 ${isDestructive ? 'text-red-600' : 'text-[#5F9EA0]'}`} 
                 fill="none" 
                 stroke="currentColor" 
                 viewBox="0 0 24 24"
@@ -71,12 +71,12 @@ export default function ConfirmationModal({
                 />
               </svg>
             </div>
-            <h3 className="text-lg font-semibold font-roboto text-gray-900">
+            <h3 className="text-lg font-semibold font-roboto text-white">
               {title}
             </h3>
           </div>
           
-          <p className="text-gray-600 mb-6 font-roboto">
+          <p className="text-slate-300 mb-6 font-roboto">
             {message}
           </p>
 
@@ -84,7 +84,7 @@ export default function ConfirmationModal({
             {cancelText && (
               <button
                 onClick={onClose}
-                className="px-4 py-2 text-sm font-medium font-roboto text-gray-700 bg-gray-100 hover:bg-gray-200 rounded-lg transition-colors duration-200"
+                className="px-4 py-2 text-sm font-medium font-roboto text-slate-300 bg-slate-700 hover:bg-slate-600 rounded-lg transition-colors duration-200"
               >
                 {cancelText}
               </button>
@@ -93,8 +93,8 @@ export default function ConfirmationModal({
               onClick={handleConfirm}
               className={`px-4 py-2 text-sm font-medium font-roboto text-white rounded-lg transition-colors duration-200 ${
                 isDestructive 
-                  ? 'bg-red-600 hover:bg-red-700' 
-                  : 'bg-violet-500 hover:bg-violet-600'
+                  ? 'bg-red-500 hover:bg-red-400' 
+                  : 'bg-[#5F9EA0] hover:bg-[#5F9EA0]/80'
               }`}
             >
               {confirmText}
