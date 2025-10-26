@@ -317,7 +317,7 @@ export default function Home() {
             <div className="sticky top-8 space-y-6">
               
               {/* Quick Stats */}
-              <div className="bg-card rounded-xl p-4 sm:p-6">
+              <div className="card p-4 sm:p-6">
                 <h3 className="text-lg font-semibold font-source text-primary mb-4">Your Progress</h3>
                 <div className="space-y-3">
                   <div className="flex justify-between items-center">
@@ -342,7 +342,7 @@ export default function Home() {
             </div>
 
               {/* Today's Goals */}
-              <div className="bg-card rounded-xl p-4 sm:p-6">
+              <div className="card p-4 sm:p-6">
                 <h3 className="text-lg font-semibold font-source text-primary mb-4">Today's Goals</h3>
                 <div className="space-y-3">
                   <div className="flex items-center gap-3">
@@ -448,7 +448,7 @@ export default function Home() {
         {/* Today's Summary */}
         <div className="mb-8">
           <h2 className="text-xl font-semibold font-source text-primary mb-4">Today's Summary</h2>
-          <div className="bg-card rounded-xl p-6">
+          <div className="card p-6">
             <div className="flex justify-between items-center py-2">
               <span className="text-secondary">Symptoms Logged</span>
               <span className="font-semibold text-primary">{todaySymptoms.length}</span>
@@ -510,7 +510,7 @@ export default function Home() {
         {/* Recent Activity */}
         <div className="mb-8">
           <h2 className="text-xl font-semibold font-source text-primary mb-4">Recent Activity</h2>
-          <div className="bg-card rounded-xl p-6">
+          <div className="card p-6">
             {symptoms.length === 0 ? (
               <div className="text-center py-4">
                 <div className="w-12 h-12 icon-container mx-auto mb-3">

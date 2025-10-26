@@ -31,7 +31,7 @@ export default function RootLayout({ children }) {
             <ReminderProvider />
             <NotificationBanner />
             <LoadingScreen>
-              <div className="min-h-screen flex flex-col">
+              <div className="min-h-screen flex flex-col relative">
                 <Navigation />
                 <MainContent>
                   {children}

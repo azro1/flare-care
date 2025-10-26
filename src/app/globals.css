@@ -7,6 +7,9 @@
     /* Light theme colors */
     --bg-main: #f8fafc; /* Light main page background */
     --bg-main-gradient: linear-gradient(135deg, #f8fafc 0%, #e2e8f0 50%, #f8fafc 100%); /* Light gradient background */
+    --bg-primary: #f8fafc; /* Light primary background */
+    --bg-secondary: #e2e8f0; /* Light secondary background */
+    --bg-tertiary: #f8fafc; /* Light tertiary background */
     --bg-section: #f1f5f9; /* Light section background */
     --bg-card: #ffffff;
     --bg-card-hover: #f1f5f9;
@@ -28,6 +31,8 @@
     --bg-button-hover: #e2e8f0; /* Light button hover */
     --bg-button-disabled: #cbd5e1; /* Light disabled button background */
     --text-button-disabled: #475569; /* Light disabled button text */
+    --bg-button-cancel: #e2e8f0; /* Light cancel button background */
+    --bg-button-cancel-hover: #cbd5e1; /* Light cancel button hover */
     
     /* Goal colors */
     --bg-goal-success: #dcfce7; /* Light green background for completed goals */
@@ -45,6 +50,8 @@
     --text-muted: #64748b; /* Muted gray text - darker for light mode readability */
     --text-white: #ffffff;
     
+    --border-primary: #cbd5e1; /* Light primary border */
+    --border-secondary: #94a3b8; /* Light secondary border */
     --border-card: #cbd5e1; /* Light card border */
     --border-card-inner: #cbd5e1; /* Light inner card border */
     
@@ -57,6 +64,9 @@
     /* Dark theme colors */
         --bg-main: #0f172a; /* Main page background */
         --bg-main-gradient: linear-gradient(135deg, #0f172a 0%, #1e293b 50%, #0f172a 100%); /* Main gradient background */
+        --bg-primary: #0f172a; /* Dark primary background */
+        --bg-secondary: #1e293b; /* Dark secondary background */
+        --bg-tertiary: #0f172a; /* Dark tertiary background */
         --bg-section: rgba(15, 23, 42, 0.4); /* Dark section background */
     --bg-card: rgba(51, 65, 85, 0.4);
     --bg-card-hover: #334155;
@@ -78,6 +88,8 @@
     --bg-button-hover: #475569; /* Dark button hover */
     --bg-button-disabled: #334155; /* Dark disabled button background */
     --text-button-disabled: #64748b; /* Dark disabled button text */
+    --bg-button-cancel: rgba(51, 65, 85, 0.5); /* Dark cancel button background */
+    --bg-button-cancel-hover: rgba(51, 65, 85, 0.6); /* Dark cancel button hover */
     
     /* Goal colors */
     --bg-goal-success: #064e3b; /* Dark green background for completed goals */
@@ -95,6 +107,8 @@
     --text-muted: #94a3b8; /* Muted gray text - same as light mode */
     --text-white: #ffffff;
     
+    --border-primary: #475569; /* Dark primary border */
+    --border-secondary: #64748b; /* Dark secondary border */
     --border-card: #475569; /* Dark card border */
     --border-card-inner: #475569; /* Dark inner card border */
     
