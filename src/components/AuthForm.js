@@ -17,7 +17,7 @@ export default function AuthForm() {
   
     // Apply gradient to html element since body is fixed
     document.body.style.backgroundColor = 'transparent'
-    document.documentElement.style.background = 'linear-gradient(to bottom right, #0f172a, #1e293b, #0f172a)'
+    document.documentElement.style.background = 'var(--bg-main-gradient)'
     document.documentElement.style.height = '100%'
   
     // Cleanup on unmount
@@ -48,29 +48,23 @@ export default function AuthForm() {
     }
   }
 
-  const handleBackToEmail = () => {
-    setStep('email')
-    setMessage('')
-    setError('')
-    otpForm.reset()
-  }
 
   return (
     <div className="pt-24 sm:pt-0 sm:flex-grow flex items-center justify-center sm:px-6 lg:px-8 pb-20 lg:pb-0">
       <div className="max-w-md w-full space-y-4">
         <div className="text-center">
-            <h2 className="text-3xl font-bold font-source text-white mb-6">
+            <h2 className="text-3xl font-bold font-source text-primary mb-6">
               FlareCare
             </h2>
-          <p className="text-sm font-roboto text-slate-300 sm:text-base mb-6">
+          <p className="text-sm font-roboto text-secondary sm:text-base mb-6">
             Sign in to start tracking your symptoms
           </p>
         </div>
 
         <div className="space-y-6">
           {error && (
-            <div className="rounded-xl bg-red-900/50 border border-red-700/50 p-4">
-              <div className="text-sm font-roboto text-red-300">{error}</div>
+            <div className="rounded-xl bg-red-100 dark:bg-red-900/50 border border-red-200 dark:border-red-700/50 p-4">
+              <div className="text-sm font-roboto text-red-600 dark:text-red-300">{error}</div>
             </div>
           )}
 
@@ -90,7 +84,7 @@ export default function AuthForm() {
         </div>
 
         <div className="text-center">
-          <p className="text-xs font-roboto text-slate-400 sm:text-sm">
+          <p className="text-xs font-roboto text-tertiary sm:text-sm">
             Secure sign-in with Google
           </p>
         </div>

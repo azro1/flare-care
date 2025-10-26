@@ -64,7 +64,7 @@ function AccountPageContent() {
       <div className="fixed inset-0 flex items-center justify-center z-50">
         <div className="text-center">
           <div className="w-8 h-8 border-4 border-[#5F9EA0] border-t-transparent rounded-full animate-spin mx-auto mb-4"></div>
-          <p className="text-slate-300 font-roboto">Signing out...</p>
+          <p className="text-secondary font-roboto">Signing out...</p>
         </div>
       </div>
     )
@@ -76,17 +76,17 @@ function AccountPageContent() {
         {/* Header */}
         <div className="mb-12">
           <div className="text-center">
-            <h1 className="text-2xl sm:text-3xl lg:text-4xl font-bold font-source text-white mb-4 sm:mb-6">Account</h1>
-            <p className="text-slate-300 font-roboto break-words">Manage your account settings and information</p>
+            <h1 className="text-2xl sm:text-3xl lg:text-4xl font-bold font-source text-primary mb-4 sm:mb-6">Account</h1>
+            <p className="text-secondary font-roboto break-words">Manage your account settings and information</p>
           </div>
         </div>
 
         {/* Profile Section */}
-        <div className="bg-slate-800/60 backdrop-blur-sm rounded-xl p-6 border border-slate-700/50 mb-6">
+        <div className="card p-6 mb-6">
           <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
             <div className="flex items-center min-w-0">
               <div className="mr-4 sm:mr-6 flex-shrink-0">
-                <div className="w-20 h-20 rounded-full overflow-hidden border-2 border-slate-600/50 bg-slate-700/50 flex items-center justify-center">
+                <div className="w-20 h-20 rounded-full overflow-hidden bg-slate-700/50 flex items-center justify-center">
                   {getUserAvatar() ? (
                     <img 
                       src={getUserAvatar()} 
@@ -111,16 +111,16 @@ function AccountPageContent() {
                 </div>
               </div>
               <div className="min-w-0 flex-1">
-                <h2 className="text-xl font-semibold font-source text-white mb-1 truncate">
+                <h2 className="text-xl font-semibold font-source text-primary mb-1 truncate">
                   {user?.user_metadata?.full_name || 'User'}
                 </h2>
-                <p className="text-slate-300 font-roboto truncate">{user?.email}</p>
+                <p className="text-secondary font-roboto truncate">{user?.email}</p>
               </div>
             </div>
             <button
               onClick={() => setShowSignOutModal(true)}
               disabled={isSigningOut}
-              className="bg-[#5F9EA0] text-white font-semibold py-2 px-4 rounded-lg hover:bg-[#5F9EA0]/80 transition-colors disabled:opacity-50 self-start sm:self-auto"
+              className="bg-[#5F9EA0] text-white font-semibold py-2 px-4 rounded-lg hover:bg-button-cadet-hover transition-colors disabled:opacity-50 self-start sm:self-auto"
             >
               Sign Out
             </button>
@@ -128,39 +128,39 @@ function AccountPageContent() {
         </div>
 
         {/* Account Information */}
-        <div className="bg-slate-800/60 backdrop-blur-sm rounded-xl p-6 border border-slate-700/50 mb-6">
-          <h3 className="text-lg font-semibold font-source text-white mb-4">Account Information</h3>
+        <div className="card p-6 mb-6">
+          <h3 className="text-lg font-semibold font-source text-primary mb-4">Account Information</h3>
           
           <div className="space-y-4">
-            <div className="py-3 border-b border-slate-700/50">
-              <p className="text-sm font-medium text-slate-300 mb-1">Email</p>
-              <p className="text-white font-roboto">{user?.email || 'Not available'}</p>
+            <div className="py-3 border-b border-slate-300/50 dark:border-slate-700/50">
+              <p className="text-sm font-medium text-secondary mb-1">Email</p>
+              <p className="text-primary font-roboto">{user?.email || 'Not available'}</p>
             </div>
 
-            <div className="py-3 border-b border-slate-700/50">
-              <p className="text-sm font-medium text-slate-300 mb-1">Full Name</p>
-              <p className="text-white font-roboto">{user?.user_metadata?.full_name || 'Not set'}</p>
+            <div className="py-3 border-b border-slate-300/50 dark:border-slate-700/50">
+              <p className="text-sm font-medium text-secondary mb-1">Full Name</p>
+              <p className="text-primary font-roboto">{user?.user_metadata?.full_name || 'Not set'}</p>
             </div>
 
-            <div className="py-3 border-b border-slate-700/50">
-              <p className="text-sm font-medium text-slate-300 mb-1">Account Created</p>
-              <p className="text-white font-roboto">
+            <div className="py-3 border-b border-slate-300/50 dark:border-slate-700/50">
+              <p className="text-sm font-medium text-secondary mb-1">Account Created</p>
+              <p className="text-primary font-roboto">
                 {user?.created_at ? new Date(user.created_at).toLocaleDateString('en-GB') : 'Not available'}
               </p>
             </div>
 
             <div className="py-3">
-              <p className="text-sm font-medium text-slate-300 mb-1">User ID</p>
-              <p className="text-white font-roboto text-sm font-mono">{user?.id || 'Not available'}</p>
+              <p className="text-sm font-medium text-secondary mb-1">User ID</p>
+              <p className="text-primary font-roboto text-sm font-mono">{user?.id || 'Not available'}</p>
             </div>
           </div>
         </div>
 
         {/* Delete Account Section */}
-        <div className="bg-slate-800/60 backdrop-blur-sm rounded-xl p-6 border border-slate-700/50 mb-8">
+        <div className="card p-6 mb-8">
           <div className="border-l-4 border-red-500 pl-4 mb-6">
-            <h3 className="text-lg font-semibold font-source text-white mb-2">Delete Account</h3>
-            <p className="text-slate-300 font-roboto mb-4">
+            <h3 className="text-lg font-semibold font-source text-primary mb-2">Delete Account</h3>
+            <p className="text-secondary font-roboto mb-4">
               Permanently delete your account and all associated data
             </p>
           </div>
@@ -181,17 +181,17 @@ function AccountPageContent() {
       {/* Sign Out Confirmation Modal */}
       {showSignOutModal && (
         <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
-          <div className="bg-slate-800 rounded-xl p-6 max-w-md mx-4 border border-slate-700/50">
+          <div className="card rounded-xl p-6 max-w-md mx-4">
             <div className="flex items-center gap-3 mb-4">
               <div className="w-10 h-10 bg-[#5F9EA0]/20 rounded-full flex items-center justify-center">
                 <svg className="w-6 h-6 text-[#5F9EA0]" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17 16l4-4m0 0l-4-4m4 4H7m6 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h4a3 3 0 013 3v1" />
                 </svg>
               </div>
-              <h3 className="text-lg font-semibold text-white">Sign Out</h3>
+              <h3 className="text-lg font-semibold text-primary">Sign Out</h3>
             </div>
             
-            <p className="text-slate-300 mb-6">
+            <p className="text-secondary mb-6">
               Are you sure you want to sign out of your account?
             </p>
             
@@ -199,14 +199,14 @@ function AccountPageContent() {
               <button
                 onClick={() => setShowSignOutModal(false)}
                 disabled={isSigningOut}
-                className="flex-1 px-4 py-2 text-slate-300 bg-slate-700/50 hover:bg-slate-600/50 rounded-lg transition-colors disabled:opacity-50"
+                className="flex-1 button-cancel disabled:opacity-50"
               >
                 Cancel
               </button>
               <button
                 onClick={handleSignOut}
                 disabled={isSigningOut}
-                className="flex-1 px-4 py-2 bg-[#5F9EA0] text-white hover:bg-[#5F9EA0]/80 rounded-lg transition-colors disabled:opacity-50"
+                className="flex-1 px-4 py-2 bg-[#5F9EA0] text-white hover:bg-button-cadet-hover rounded-lg transition-colors disabled:opacity-50"
               >
                 {isSigningOut ? 'Signing Out...' : 'Sign Out'}
               </button>
@@ -218,24 +218,24 @@ function AccountPageContent() {
       {/* Delete Account Confirmation Modal */}
       {showDeleteModal && (
         <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
-          <div className="bg-slate-800 rounded-xl p-6 max-w-md mx-4 border border-slate-700/50">
+          <div className="card rounded-xl p-6 max-w-md mx-4">
             <div className="flex items-center gap-3 mb-4">
               <div className="w-10 h-10 bg-red-500/20 rounded-full flex items-center justify-center">
                 <svg className="w-6 h-6 text-red-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-2.5L13.732 4c-.77-.833-1.964-.833-2.732 0L3.732 16.5c-.77.833.192 2.5 1.732 2.5z" />
                 </svg>
               </div>
-              <h3 className="text-lg font-semibold text-white">Delete Account</h3>
+              <h3 className="text-lg font-semibold text-primary">Delete Account</h3>
             </div>
             
-            <p className="text-slate-300 mb-6">
+            <p className="text-secondary mb-6">
               Are you sure you want to permanently delete your account? This action cannot be undone and all your data will be lost.
             </p>
             
             <div className="flex gap-3">
               <button
                 onClick={() => setShowDeleteModal(false)}
-                className="flex-1 px-4 py-2 text-slate-300 bg-slate-700/50 hover:bg-slate-600/50 rounded-lg transition-colors"
+                className="flex-1 px-4 py-2 text-secondary bg-slate-200/50 dark:bg-slate-700/50 hover:bg-slate-300/50 dark:hover:bg-slate-600/50 rounded-lg transition-colors"
               >
                 Cancel
               </button>

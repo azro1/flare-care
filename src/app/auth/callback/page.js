@@ -40,10 +40,10 @@ export default function AuthCallback() {
 
   if (loading) {
     return (
-      <div className="fixed inset-0 bg-slate-900 flex items-center justify-center z-50">
+      <div className="fixed inset-0 flex items-center justify-center z-50" style={{backgroundColor: 'var(--bg-main)'}}>
         <div className="text-center">
           <div className="w-8 h-8 border-4 border-[#5F9EA0] border-t-transparent rounded-full animate-spin mx-auto"></div>
-          <p className="mt-4 text-slate-300">Completing sign in...</p>
+          <p className="mt-4 text-primary">Completing sign in...</p>
         </div>
       </div>
     )

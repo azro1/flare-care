@@ -11,7 +11,7 @@ export default function MainContent({ children }) {
   // Apply dark background to body for all pages
   useEffect(() => {
     const body = document.getElementById('body')
-    body.className = 'min-h-screen bg-gradient-to-br from-slate-900 via-slate-800 to-slate-900'
+    body.style.background = 'var(--bg-main-gradient)'
   }, [pathname, isAuthenticated, loading])
 
   // For landing page, don't constrain width

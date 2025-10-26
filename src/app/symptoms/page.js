@@ -986,8 +986,8 @@ function SymptomsPageContent() {
       {/* Section Header - Hide on landing page */}
       {currentStep > 0 && (
         <div className="mb-8">
-          <h1 className="text-base sm:text-lg font-regular text-slate-400 mb-3">Track Symptoms</h1>
-          <div className="border-b border-slate-700/50"></div>
+          <h1 className="text-base sm:text-lg font-regular text-secondary mb-3">Track Symptoms</h1>
+          <div className="border-b border-slate-300 dark:border-slate-700/50"></div>
           </div>
       )}
 
@@ -1004,15 +1004,15 @@ function SymptomsPageContent() {
           </div>
             
             {/* Title */}
-            <h2 className="text-2xl sm:text-3xl lg:text-4xl font-bold font-source text-white mb-4 sm:mb-6">Track Symptoms</h2>
+            <h2 className="text-2xl sm:text-3xl lg:text-4xl font-bold font-source text-primary mb-4 sm:mb-6">Track Symptoms</h2>
             
             {/* Optional description */}
-            <p className="text-lg sm:text-xl font-roboto text-slate-400 mb-8 max-w-md">Track your daily symptoms to identify patterns and triggers</p>
+            <p className="text-lg sm:text-xl font-roboto text-secondary mb-8 max-w-md">Track your daily symptoms to identify patterns and triggers</p>
             
             {/* Start button */}
             <button
               onClick={nextStep}
-              className="px-4 py-2 bg-[#5F9EA0] text-white text-lg font-semibold rounded-lg hover:bg-[#5F9EA0]/80 transition-colors"
+              className="px-4 py-2 bg-[#5F9EA0] text-white text-lg font-semibold rounded-lg hover:bg-button-cadet-hover transition-colors"
             >
               Start now
             </button>
@@ -1022,11 +1022,11 @@ function SymptomsPageContent() {
         {/* Step 1: When did symptoms begin? */}
         {currentStep === 1 && (
           <div className="mb-5">
-            <h3 className="text-2xl sm:text-2xl md:text-3xl font-semibold text-white mb-2">When did your symptoms begin?</h3>
-            <p className="text-sm text-slate-400 mb-6">For example, '14 09 2014'</p>
+            <h3 className="text-2xl sm:text-2xl md:text-3xl font-semibold text-primary mb-2">When did your symptoms begin?</h3>
+            <p className="text-sm text-secondary mb-6">For example, '14 09 2014'</p>
             <div className="flex space-x-5">
               <div className="w-14">
-                <label className="block text-base font-medium text-slate-300 mb-2">Day</label>
+                <label className="block text-base font-medium text-secondary mb-2">Day</label>
                 <input
                   type="number"
                   min="1"
@@ -1045,11 +1045,11 @@ function SymptomsPageContent() {
                       e.preventDefault();
                     }
                   }}
-                  className="w-full px-3 py-2 bg-slate-700 border-2 border-slate-500 rounded-lg focus:outline-none transition-all duration-200 text-left text-base text-white placeholder-slate-400 [appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none"
+                  className="input-field-wizard [appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none"
               />
             </div>
               <div className="w-14">
-                <label className="block text-base font-medium text-slate-300 mb-2">Month</label>
+                <label className="block text-base font-medium text-secondary mb-2">Month</label>
                 <input
                   type="number"
                   min="1"
@@ -1068,11 +1068,11 @@ function SymptomsPageContent() {
                       e.preventDefault();
                     }
                   }}
-                  className="w-full px-3 py-2 bg-slate-700 border-2 border-slate-500 rounded-lg focus:outline-none transition-all duration-200 text-left text-base text-white placeholder-slate-400 [appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none"
+                  className="input-field-wizard [appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none"
                 />
               </div>
               <div className="w-24">
-                <label className="block text-base font-medium text-slate-300 mb-2">Year</label>
+                <label className="block text-base font-medium text-secondary mb-2">Year</label>
                 <input
                   type="number"
                   min="2020"
@@ -1091,13 +1091,13 @@ function SymptomsPageContent() {
                       e.preventDefault();
                     }
                   }}
-                  className="w-full px-3 py-2 bg-slate-700 border-2 border-slate-500 rounded-lg focus:outline-none transition-all duration-200 text-left text-base text-white placeholder-slate-400 [appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none"
+                  className="input-field-wizard [appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none"
                 />
               </div>
             </div>
             {(dateErrors.day || dateErrors.month || dateErrors.year) && (
-              <div className="mt-6 p-3 bg-slate-700/40 border border-slate-500/30 rounded-lg">
-                <p className="text-slate-300 text-sm">{dateErrors.day || dateErrors.month || dateErrors.year}</p>
+              <div className="mt-6 p-3 bg-red-50 dark:card-inner border border-red-300 dark:border-slate-600/50 rounded-lg">
+                <p className="text-red-600 dark:text-secondary text-sm">{dateErrors.day || dateErrors.month || dateErrors.year}</p>
               </div>
             )}
           </div>
@@ -1106,7 +1106,7 @@ function SymptomsPageContent() {
         {/* Step 2: Are symptoms still ongoing? */}
         {currentStep === 2 && (
           <div className="mb-5">
-            <h3 className="text-2xl sm:text-2xl md:text-3xl font-semibold text-white mb-6">Are symptoms still ongoing?</h3>
+            <h3 className="text-2xl sm:text-2xl md:text-3xl font-semibold text-primary mb-6">Are symptoms still ongoing?</h3>
             <div className="flex space-x-8">
               <label className="flex items-center cursor-pointer">
                   <div className="relative">
@@ -1132,7 +1132,7 @@ function SymptomsPageContent() {
                       )}
                     </span>
                   </div>
-                <span className="ml-3 text-lg text-slate-300">Yes</span>
+                <span className="ml-3 text-lg text-secondary">Yes</span>
                 </label>
               <label className="flex items-center cursor-pointer">
                   <div className="relative">
@@ -1158,7 +1158,7 @@ function SymptomsPageContent() {
                       )}
                     </span>
                   </div>
-                <span className="ml-3 text-lg text-slate-300">No</span>
+                <span className="ml-3 text-lg text-secondary">No</span>
                 </label>
               </div>
             </div>
@@ -1167,11 +1167,11 @@ function SymptomsPageContent() {
         {/* Step 3: When did symptoms end? (only if not ongoing) */}
         {currentStep === 3 && (
           <div className="mb-5">
-            <h3 className="text-2xl sm:text-2xl md:text-3xl font-semibold text-white mb-2">When did symptoms end?</h3>
-            <p className="text-sm text-slate-400 mb-6">For example, '14 09 2014'</p>
+            <h3 className="text-2xl sm:text-2xl md:text-3xl font-semibold text-primary mb-2">When did symptoms end?</h3>
+            <p className="text-sm text-secondary mb-6">For example, '14 09 2014'</p>
             <div className="flex space-x-5">
               <div className="w-14">
-                <label className="block text-base font-medium text-slate-300 mb-2">Day</label>
+                <label className="block text-base font-medium text-secondary mb-2">Day</label>
                 <input
                   type="number"
                   min="1"
@@ -1190,11 +1190,11 @@ function SymptomsPageContent() {
                       e.preventDefault();
                     }
                   }}
-                  className="w-full px-3 py-2 bg-slate-700 border-2 border-slate-500 rounded-lg focus:outline-none transition-all duration-200 text-left text-base text-white placeholder-slate-400 [appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none"
+                  className="input-field-wizard [appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none"
               />
             </div>
               <div className="w-14">
-                <label className="block text-base font-medium text-slate-300 mb-2">Month</label>
+                <label className="block text-base font-medium text-secondary mb-2">Month</label>
                 <input
                   type="number"
                   min="1"
@@ -1213,11 +1213,11 @@ function SymptomsPageContent() {
                       e.preventDefault();
                     }
                   }}
-                  className="w-full px-3 py-2 bg-slate-700 border-2 border-slate-500 rounded-lg focus:outline-none transition-all duration-200 text-left text-base text-white placeholder-slate-400 [appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none"
+                  className="input-field-wizard [appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none"
                 />
                 </div>
               <div className="w-24">
-                <label className="block text-base font-medium text-slate-300 mb-2">Year</label>
+                <label className="block text-base font-medium text-secondary mb-2">Year</label>
                 <input
                   type="number"
                   min="2020"
@@ -1236,13 +1236,13 @@ function SymptomsPageContent() {
                       e.preventDefault();
                     }
                   }}
-                  className="w-full px-3 py-2 bg-slate-700 border-2 border-slate-500 rounded-lg focus:outline-none transition-all duration-200 text-left text-base text-white placeholder-slate-400 [appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none"
+                  className="input-field-wizard [appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none"
                 />
               </div>
             </div>
             {(dateErrors.endDay || dateErrors.endMonth || dateErrors.endYear) && (
-              <div className="mt-6 p-3 bg-slate-700/40 border border-slate-500/30 rounded-lg">
-                <p className="text-slate-300 text-sm">{dateErrors.endDay || dateErrors.endMonth || dateErrors.endYear}</p>
+              <div className="mt-6 p-3 bg-red-50 dark:card-inner border border-red-300 dark:border-slate-600/50 rounded-lg">
+                <p className="text-red-600 dark:text-secondary text-sm">{dateErrors.endDay || dateErrors.endMonth || dateErrors.endYear}</p>
               </div>
             )}
           </div>
@@ -1251,10 +1251,10 @@ function SymptomsPageContent() {
         {/* Step 4: Symptom Severity */}
         {currentStep === 4 && (
           <div className="mb-5">
-            <h3 className="text-2xl sm:text-2xl md:text-3xl font-semibold text-white mb-2">
+            <h3 className="text-2xl sm:text-2xl md:text-3xl font-semibold text-primary mb-2">
               {formData.isOngoing ? 'How severe are your symptoms?' : 'How severe were your symptoms?'}
             </h3>
-            <p className="text-sm text-slate-400 mb-6">Rate from 1 (mild) to 10 (severe)</p>
+            <p className="text-sm text-secondary mb-6">Rate from 1 (mild) to 10 (severe)</p>
             <div className="w-14">
                 <input
                   type="number"
@@ -1270,12 +1270,12 @@ function SymptomsPageContent() {
                       e.preventDefault();
                     }
                   }}
-                  className="w-full px-3 py-2 bg-slate-700 border-2 border-slate-500 rounded-lg focus:outline-none transition-all duration-200 text-left text-base text-white placeholder-slate-400 [appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none"
+                  className="input-field-wizard [appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none"
                 />
                 </div>
                 {fieldErrors.severity && (
-                  <div className="mt-6 p-3 bg-slate-700/40 border border-slate-500/30 rounded-lg">
-                    <p className="text-slate-300 text-sm">{fieldErrors.severity}</p>
+                  <div className="mt-6 p-3 bg-red-50 dark:card-inner border border-red-300 dark:border-slate-600/50 rounded-lg">
+                    <p className="text-red-600 dark:text-secondary text-sm">{fieldErrors.severity}</p>
               </div>
                 )}
               </div>
@@ -1284,10 +1284,10 @@ function SymptomsPageContent() {
         {/* Step 5: Stress Level */}
         {currentStep === 5 && (
           <div className="mb-5">
-            <h3 className="text-2xl sm:text-2xl md:text-3xl font-semibold text-white mb-2">
+            <h3 className="text-2xl sm:text-2xl md:text-3xl font-semibold text-primary mb-2">
               {formData.isOngoing ? 'How stressed are you feeling?' : 'How stressed were you feeling during that time?'}
             </h3>
-            <p className="text-sm text-slate-400 mb-6">Rate from 1 (calm) to 10 (very stressed)</p>
+            <p className="text-sm text-secondary mb-6">Rate from 1 (calm) to 10 (very stressed)</p>
             <div className="w-14">
                 <input
                   type="number"
@@ -1303,12 +1303,12 @@ function SymptomsPageContent() {
                       e.preventDefault();
                     }
                   }}
-                  className="w-full px-3 py-2 bg-slate-700 border-2 border-slate-500 rounded-lg focus:outline-none transition-all duration-200 text-left text-base text-white placeholder-slate-400 [appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none"
+                  className="input-field-wizard [appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none"
                 />
                 </div>
                 {fieldErrors.stress_level && (
-                  <div className="mt-6 p-3 bg-slate-700/40 border border-slate-500/30 rounded-lg">
-                    <p className="text-slate-300 text-sm">{fieldErrors.stress_level}</p>
+                  <div className="mt-6 p-3 bg-red-50 dark:card-inner border border-red-300 dark:border-slate-600/50 rounded-lg">
+                    <p className="text-red-600 dark:text-secondary text-sm">{fieldErrors.stress_level}</p>
               </div>
                 )}
               </div>
@@ -1317,8 +1317,8 @@ function SymptomsPageContent() {
         {/* Step 6: Bathroom Frequency */}
         {currentStep === 6 && (
           <div className="mb-5">
-            <h3 className="text-2xl sm:text-2xl md:text-3xl font-semibold text-white mb-2">How many times a day do you usually empty your bowels?</h3>
-            <p className="text-sm text-slate-400 mb-6">For example, '3' or '5'</p>
+            <h3 className="text-2xl sm:text-2xl md:text-3xl font-semibold text-primary mb-2">How many times a day do you usually empty your bowels?</h3>
+            <p className="text-sm text-secondary mb-6">For example, '3' or '5'</p>
 
             <div className="w-14">
               <input
@@ -1335,12 +1335,12 @@ function SymptomsPageContent() {
                     e.preventDefault();
                   }
                 }}
-                className="w-full px-3 py-2 bg-slate-700 border-2 border-slate-500 rounded-lg focus:outline-none transition-all duration-200 text-left text-base text-white placeholder-slate-400 [appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none"
+                className="input-field-wizard [appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none"
               />
             </div>
               {fieldErrors.normal_bathroom_frequency && (
-                <div className="mt-6 p-3 bg-slate-700/40 border border-slate-500/30 rounded-lg">
-                  <p className="text-slate-300 text-sm">{fieldErrors.normal_bathroom_frequency}</p>
+                <div className="mt-6 p-3 bg-red-50 dark:card-inner border border-red-300 dark:border-slate-600/50 rounded-lg">
+                  <p className="text-red-600 dark:text-secondary text-sm">{fieldErrors.normal_bathroom_frequency}</p>
           </div>
               )}
             </div>
@@ -1349,7 +1349,7 @@ function SymptomsPageContent() {
         {/* Step 7: Bathroom Frequency Change Question */}
         {currentStep === 7 && (
           <div className="mb-5">
-            <h3 className="text-2xl sm:text-2xl md:text-3xl font-semibold text-white mb-6">
+            <h3 className="text-2xl sm:text-2xl md:text-3xl font-semibold text-primary mb-6">
               {formData.isOngoing ? 'Have you noticed a change in bathroom frequency since symptoms started?' : 'Did you notice a change in bathroom frequency during that time?'}
             </h3>
             <div className="flex space-x-8">
@@ -1377,7 +1377,7 @@ function SymptomsPageContent() {
                     )}
                   </span>
                 </div>
-                <span className="ml-3 text-lg text-slate-300">Yes</span>
+                <span className="ml-3 text-lg text-secondary">Yes</span>
               </label>
               <label className="flex items-center cursor-pointer">
                 <div className="relative">
@@ -1403,7 +1403,7 @@ function SymptomsPageContent() {
                     )}
                   </span>
                 </div>
-                <span className="ml-3 text-lg text-slate-300">No</span>
+                <span className="ml-3 text-lg text-secondary">No</span>
               </label>
             </div>
           </div>
@@ -1412,19 +1412,19 @@ function SymptomsPageContent() {
         {/* Step 8: Bathroom Frequency Change Details */}
         {currentStep === 8 && (
           <div className="mb-5">
-            <h3 className="text-2xl sm:text-2xl md:text-3xl font-semibold text-white mb-2">Describe your change</h3>
-            <p className="text-sm text-slate-400 mb-6">For example, 'increased to 8-10 times per day, blood present, mucus, loose stools'</p>
+            <h3 className="text-2xl sm:text-2xl md:text-3xl font-semibold text-primary mb-2">Describe your change</h3>
+            <p className="text-sm text-secondary mb-6">For example, 'increased to 8-10 times per day, blood present, mucus, loose stools'</p>
             <textarea
               id="bathroom_frequency_change_details"
               name="bathroom_frequency_change_details"
               rows="4"
               value={formData.bathroom_frequency_change_details}
               onChange={handleInputChange}
-              className="w-full px-4 py-3 bg-slate-700 border-2 border-slate-500 rounded-lg focus:outline-none transition-all duration-200 resize-none text-white placeholder-slate-400"
+              className="w-full px-4 py-3 input-field-wizard resize-none"
             />
             {fieldErrors.bathroom_frequency_change_details && (
-              <div className="mt-6 p-3 bg-slate-700/40 border border-slate-500/30 rounded-lg">
-                <p className="text-slate-300 text-sm">{fieldErrors.bathroom_frequency_change_details}</p>
+              <div className="mt-6 p-3 bg-red-50 dark:card-inner border border-red-300 dark:border-slate-600/50 rounded-lg">
+                <p className="text-red-600 dark:text-secondary text-sm">{fieldErrors.bathroom_frequency_change_details}</p>
               </div>
             )}
           </div>
@@ -1434,11 +1434,11 @@ function SymptomsPageContent() {
         {currentStep === 9 && (
           <div className="mb-5">
             {isFirstTimeUser ? (
-              <h3 className="text-2xl sm:text-2xl md:text-3xl font-semibold text-white mb-6">Do you smoke?</h3>
+              <h3 className="text-2xl sm:text-2xl md:text-3xl font-semibold text-primary mb-6">Do you smoke?</h3>
             ) : userPreferences?.isSmoker ? (
-              <h3 className="text-2xl sm:text-2xl md:text-3xl font-semibold text-white mb-6">Did you smoke on {new Date(formData.symptomStartDate).toLocaleDateString('en-GB', { day: 'numeric', month: 'short' })}?</h3>
+              <h3 className="text-2xl sm:text-2xl md:text-3xl font-semibold text-primary mb-6">Did you smoke on {new Date(formData.symptomStartDate).toLocaleDateString('en-GB', { day: 'numeric', month: 'short' })}?</h3>
             ) : (
-              <h3 className="text-2xl sm:text-2xl md:text-3xl font-semibold text-white mb-6">Do you smoke?</h3>
+              <h3 className="text-2xl sm:text-2xl md:text-3xl font-semibold text-primary mb-6">Do you smoke?</h3>
             )}
             <div className="flex space-x-8">
               <label className="flex items-center cursor-pointer">
@@ -1465,7 +1465,7 @@ function SymptomsPageContent() {
                     )}
                   </span>
                 </div>
-                <span className="ml-3 text-lg text-slate-300">Yes</span>
+                <span className="ml-3 text-lg text-secondary">Yes</span>
               </label>
               <label className="flex items-center cursor-pointer">
                 <div className="relative">
@@ -1491,7 +1491,7 @@ function SymptomsPageContent() {
                     )}
                   </span>
                 </div>
-                <span className="ml-3 text-lg text-slate-300">No</span>
+                <span className="ml-3 text-lg text-secondary">No</span>
               </label>
             </div>
           </div>
@@ -1500,10 +1500,10 @@ function SymptomsPageContent() {
         {/* Step 10: Smoking details (only if they smoke) */}
         {currentStep === 10 && (
           <div className="mb-5">
-            <h3 className="text-2xl sm:text-2xl md:text-3xl font-semibold text-white mb-2">
+            <h3 className="text-2xl sm:text-2xl md:text-3xl font-semibold text-primary mb-2">
               {isFirstTimeUser ? 'Please describe your smoking habits' : `How much did you smoke on ${new Date(formData.symptomStartDate).toLocaleDateString('en-GB', { day: 'numeric', month: 'short' })}?`}
             </h3>
-            <p className="text-sm text-slate-400 mb-6">
+            <p className="text-sm text-secondary mb-6">
               {isFirstTimeUser 
                 ? "For example, '1 pack of cigarettes per day, occasional cigars'" 
                 : "For example, '5 cigarettes' or '1 cigar'"
@@ -1515,12 +1515,12 @@ function SymptomsPageContent() {
                   name="smoking_details"
                   value={formData.smoking_details}
                   onChange={handleInputChange}
-                  className="w-full px-4 py-3 bg-slate-700 border-2 border-slate-500 rounded-lg focus:outline-none transition-all duration-200 text-white placeholder-slate-400"
+                  className="w-full px-4 py-3 input-field-wizard"
                   autoComplete="off"
                 />
                 {fieldErrors.smoking_details && (
-                  <div className="mt-6 p-3 bg-slate-700/40 border border-slate-500/30 rounded-lg">
-                    <p className="text-slate-300 text-sm">{fieldErrors.smoking_details}</p>
+                  <div className="mt-6 p-3 bg-red-50 dark:card-inner border border-red-300 dark:border-slate-600/50 rounded-lg">
+                    <p className="text-red-600 dark:text-secondary text-sm">{fieldErrors.smoking_details}</p>
               </div>
             )}
           </div>
@@ -1530,11 +1530,11 @@ function SymptomsPageContent() {
         {currentStep === 11 && (
           <div className="mb-5">
             {isFirstTimeUser ? (
-              <h3 className="text-2xl sm:text-2xl md:text-3xl font-semibold text-white mb-6">Do you drink alcohol?</h3>
+              <h3 className="text-2xl sm:text-2xl md:text-3xl font-semibold text-primary mb-6">Do you drink alcohol?</h3>
             ) : userPreferences?.isDrinker ? (
-              <h3 className="text-2xl sm:text-2xl md:text-3xl font-semibold text-white mb-6">Did you drink alcohol on {new Date(formData.symptomStartDate).toLocaleDateString('en-GB', { day: 'numeric', month: 'short' })}?</h3>
+              <h3 className="text-2xl sm:text-2xl md:text-3xl font-semibold text-primary mb-6">Did you drink alcohol on {new Date(formData.symptomStartDate).toLocaleDateString('en-GB', { day: 'numeric', month: 'short' })}?</h3>
             ) : (
-              <h3 className="text-2xl sm:text-2xl md:text-3xl font-semibold text-white mb-6">Do you drink alcohol?</h3>
+              <h3 className="text-2xl sm:text-2xl md:text-3xl font-semibold text-primary mb-6">Do you drink alcohol?</h3>
             )}
             <div className="flex space-x-8">
               <label className="flex items-center cursor-pointer">
@@ -1561,7 +1561,7 @@ function SymptomsPageContent() {
                     )}
                   </span>
                 </div>
-                <span className="ml-3 text-lg text-slate-300">Yes</span>
+                <span className="ml-3 text-lg text-secondary">Yes</span>
               </label>
               <label className="flex items-center cursor-pointer">
                 <div className="relative">
@@ -1587,7 +1587,7 @@ function SymptomsPageContent() {
                     )}
                   </span>
                 </div>
-                <span className="ml-3 text-lg text-slate-300">No</span>
+                <span className="ml-3 text-lg text-secondary">No</span>
               </label>
             </div>
           </div>
@@ -1596,12 +1596,12 @@ function SymptomsPageContent() {
         {/* Step 12: Alcohol details (only if they drink) */}
         {currentStep === 12 && (
           <div className="mb-5">
-            <h3 className="text-2xl sm:text-2xl md:text-3xl font-semibold text-white mb-2">
+            <h3 className="text-2xl sm:text-2xl md:text-3xl font-semibold text-primary mb-2">
               {!isFirstTimeUser && userPreferences?.isDrinker 
                 ? `How many units of alcohol did you drink on ${new Date(formData.symptomStartDate).toLocaleDateString('en-GB', { day: 'numeric', month: 'short' })}?` 
                 : 'How many units of alcohol do you drink per day?'}
             </h3>
-            <p className="text-sm text-slate-400 mb-6">For example, '2' or '5'</p>
+            <p className="text-sm text-secondary mb-6">For example, '2' or '5'</p>
             <div className="w-14">
                 <input
                 type="number"
@@ -1617,12 +1617,12 @@ function SymptomsPageContent() {
                       e.preventDefault();
                     }
                   }}
-                  className="w-full px-3 py-2 bg-slate-700 border-2 border-slate-500 rounded-lg focus:outline-none transition-all duration-200 text-left text-base text-white placeholder-slate-400 [appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none"
+                  className="input-field-wizard [appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none"
                 />
               </div>
               {fieldErrors.alcohol_units && (
-                <div className="mt-6 p-3 bg-slate-700/40 border border-slate-500/30 rounded-lg">
-                  <p className="text-slate-300 text-sm">{fieldErrors.alcohol_units}</p>
+                <div className="mt-6 p-3 bg-red-50 dark:card-inner border border-red-300 dark:border-slate-600/50 rounded-lg">
+                  <p className="text-red-600 dark:text-secondary text-sm">{fieldErrors.alcohol_units}</p>
               </div>
             )}
           </div>
@@ -1636,10 +1636,9 @@ function SymptomsPageContent() {
               <div>
                 <div className="flex justify-between items-center mb-3">
                   <div>
-                    <h3 className="text-2xl sm:text-2xl md:text-3xl font-semibold text-white mb-2">
+                    <h3 className="text-2xl sm:text-2xl md:text-3xl font-semibold text-primary mb-2">
                     {getMealLabel('breakfast')}
                   </h3>
-                  <p className="text-sm text-slate-400 mb-6">Add all the food items you had for breakfast</p>
                   </div>
                 <button
                   type="button"
@@ -1647,8 +1646,8 @@ function SymptomsPageContent() {
                     disabled={formData.breakfast.length > 0 && (formData.breakfast[formData.breakfast.length - 1]?.food === '' || formData.breakfast[formData.breakfast.length - 1]?.quantity === '')}
                     className={`px-3 py-1 text-sm font-medium rounded-lg transition-colors ${
                       formData.breakfast.length > 0 && (formData.breakfast[formData.breakfast.length - 1]?.food === '' || formData.breakfast[formData.breakfast.length - 1]?.quantity === '')
-                        ? 'bg-slate-700 text-slate-500 cursor-not-allowed'
-                        : 'bg-[#5F9EA0] text-white hover:bg-[#5F9EA0]/80'
+                        ? 'button-disabled'
+                        : 'bg-[#5F9EA0] text-white hover:bg-button-cadet-hover'
                     }`}
                 >
                   Add
@@ -1674,7 +1673,7 @@ function SymptomsPageContent() {
                           placeholder="Food item"
                           value={item.food}
                           onChange={(e) => updateMealItem('breakfast', index, 'food', e.target.value)}
-                            className="w-full px-3 py-2 bg-slate-700 border-2 border-slate-500 rounded-lg focus:outline-none transition-all duration-200 text-white placeholder-slate-400"
+                            className="w-full px-3 py-2 input-field-wizard"
                         />
                       </div>
                       <div>
@@ -1683,7 +1682,7 @@ function SymptomsPageContent() {
                           placeholder="Quantity"
                           value={item.quantity}
                           onChange={(e) => updateMealItem('breakfast', index, 'quantity', e.target.value)}
-                            className="w-full px-3 py-2 bg-slate-700 border-2 border-slate-500 rounded-lg focus:outline-none transition-all duration-200 text-white placeholder-slate-400"
+                            className="w-full px-3 py-2 input-field-wizard"
                         />
                       </div>
                     </div>
@@ -1708,15 +1707,15 @@ function SymptomsPageContent() {
                   className="mr-2 w-4 h-4 text-[#5F9EA0] bg-slate-700 border-slate-500 rounded focus:ring-[#5F9EA0] focus:ring-2"
                   style={{accentColor: '#5F9EA0'}}
                 />
-                <span className="text-sm text-slate-300">I didn't eat anything for breakfast</span>
+                <span className="text-sm text-secondary">I didn't eat anything for breakfast</span>
               </div>
             </div>
             </div>
             
             {/* Validation error message */}
             {fieldErrors.breakfast && (
-              <div className="mt-6 p-3 bg-slate-700/40 border border-slate-500/30 rounded-lg">
-                <p className="text-slate-300 text-sm">{fieldErrors.breakfast}</p>
+              <div className="mt-6 p-3 bg-red-50 dark:card-inner border border-red-300 dark:border-slate-600/50 rounded-lg">
+                <p className="text-red-600 dark:text-secondary text-sm">{fieldErrors.breakfast}</p>
               </div>
             )}
           </div>
@@ -1730,10 +1729,9 @@ function SymptomsPageContent() {
               <div>
                 <div className="flex justify-between items-center mb-3">
                   <div>
-                    <h3 className="text-2xl sm:text-2xl md:text-3xl font-semibold text-white mb-2">
+                    <h3 className="text-2xl sm:text-2xl md:text-3xl font-semibold text-primary mb-2">
                     {getMealLabel('lunch')}
                   </h3>
-                  <p className="text-sm text-slate-400 mb-6">Add all the food items you had for lunch</p>
                   </div>
                 <button
                   type="button"
@@ -1741,8 +1739,8 @@ function SymptomsPageContent() {
                     disabled={formData.lunch.length > 0 && (formData.lunch[formData.lunch.length - 1]?.food === '' || formData.lunch[formData.lunch.length - 1]?.quantity === '')}
                     className={`px-3 py-1 text-sm font-medium rounded-lg transition-colors ${
                       formData.lunch.length > 0 && (formData.lunch[formData.lunch.length - 1]?.food === '' || formData.lunch[formData.lunch.length - 1]?.quantity === '')
-                        ? 'bg-slate-700 text-slate-500 cursor-not-allowed'
-                        : 'bg-[#5F9EA0] text-white hover:bg-[#5F9EA0]/80'
+                        ? 'button-disabled'
+                        : 'bg-[#5F9EA0] text-white hover:bg-button-cadet-hover'
                     }`}
                 >
                   Add
@@ -1768,7 +1766,7 @@ function SymptomsPageContent() {
                           placeholder="Food item"
                           value={item.food}
                           onChange={(e) => updateMealItem('lunch', index, 'food', e.target.value)}
-                            className="w-full px-3 py-2 bg-slate-700 border-2 border-slate-500 rounded-lg focus:outline-none transition-all duration-200 text-white placeholder-slate-400"
+                            className="w-full px-3 py-2 input-field-wizard"
                         />
                       </div>
                       <div>
@@ -1777,7 +1775,7 @@ function SymptomsPageContent() {
                           placeholder="Quantity"
                           value={item.quantity}
                           onChange={(e) => updateMealItem('lunch', index, 'quantity', e.target.value)}
-                            className="w-full px-3 py-2 bg-slate-700 border-2 border-slate-500 rounded-lg focus:outline-none transition-all duration-200 text-white placeholder-slate-400"
+                            className="w-full px-3 py-2 input-field-wizard"
                         />
                       </div>
                     </div>
@@ -1802,15 +1800,15 @@ function SymptomsPageContent() {
                   className="mr-2 w-4 h-4 text-[#5F9EA0] bg-slate-700 border-slate-500 rounded focus:ring-[#5F9EA0] focus:ring-2"
                   style={{accentColor: '#5F9EA0'}}
                 />
-                <span className="text-sm text-slate-300">I didn't eat anything for lunch</span>
+                <span className="text-sm text-secondary">I didn't eat anything for lunch</span>
               </div>
             </div>
             </div>
             
             {/* Validation error message */}
             {fieldErrors.lunch && (
-              <div className="mt-6 p-3 bg-slate-700/40 border border-slate-500/30 rounded-lg">
-                <p className="text-slate-300 text-sm">{fieldErrors.lunch}</p>
+              <div className="mt-6 p-3 bg-red-50 dark:card-inner border border-red-300 dark:border-slate-600/50 rounded-lg">
+                <p className="text-red-600 dark:text-secondary text-sm">{fieldErrors.lunch}</p>
               </div>
             )}
           </div>
@@ -1824,10 +1822,9 @@ function SymptomsPageContent() {
               <div>
                 <div className="flex justify-between items-center mb-3">
                   <div>
-                    <h3 className="text-2xl sm:text-2xl md:text-3xl font-semibold text-white mb-2">
+                    <h3 className="text-2xl sm:text-2xl md:text-3xl font-semibold text-primary mb-2">
                     {getMealLabel('dinner')}
                   </h3>
-                  <p className="text-sm text-slate-400 mb-6">Add all the food items you had for dinner</p>
                   </div>
                 <button
                   type="button"
@@ -1835,8 +1832,8 @@ function SymptomsPageContent() {
                     disabled={formData.dinner.length > 0 && (formData.dinner[formData.dinner.length - 1]?.food === '' || formData.dinner[formData.dinner.length - 1]?.quantity === '')}
                     className={`px-3 py-1 text-sm font-medium rounded-lg transition-colors ${
                       formData.dinner.length > 0 && (formData.dinner[formData.dinner.length - 1]?.food === '' || formData.dinner[formData.dinner.length - 1]?.quantity === '')
-                        ? 'bg-slate-700 text-slate-500 cursor-not-allowed'
-                        : 'bg-[#5F9EA0] text-white hover:bg-[#5F9EA0]/80'
+                        ? 'button-disabled'
+                        : 'bg-[#5F9EA0] text-white hover:bg-button-cadet-hover'
                     }`}
                 >
                   Add
@@ -1862,7 +1859,7 @@ function SymptomsPageContent() {
                           placeholder="Food item"
                           value={item.food}
                           onChange={(e) => updateMealItem('dinner', index, 'food', e.target.value)}
-                            className="w-full px-3 py-2 bg-slate-700 border-2 border-slate-500 rounded-lg focus:outline-none transition-all duration-200 text-white placeholder-slate-400"
+                            className="w-full px-3 py-2 input-field-wizard"
                         />
                       </div>
                       <div>
@@ -1871,7 +1868,7 @@ function SymptomsPageContent() {
                           placeholder="Quantity"
                           value={item.quantity}
                           onChange={(e) => updateMealItem('dinner', index, 'quantity', e.target.value)}
-                            className="w-full px-3 py-2 bg-slate-700 border-2 border-slate-500 rounded-lg focus:outline-none transition-all duration-200 text-white placeholder-slate-400"
+                            className="w-full px-3 py-2 input-field-wizard"
                         />
                       </div>
                     </div>
@@ -1896,15 +1893,15 @@ function SymptomsPageContent() {
                   className="mr-2 w-4 h-4 text-[#5F9EA0] bg-slate-700 border-slate-500 rounded focus:ring-[#5F9EA0] focus:ring-2"
                   style={{accentColor: '#5F9EA0'}}
                 />
-                <span className="text-sm text-slate-300">I didn't eat anything for dinner</span>
+                <span className="text-sm text-secondary">I didn't eat anything for dinner</span>
               </div>
             </div>
             </div>
             
             {/* Validation error message */}
             {fieldErrors.dinner && (
-              <div className="mt-6 p-3 bg-slate-700/40 border border-slate-500/30 rounded-lg">
-                <p className="text-slate-300 text-sm">{fieldErrors.dinner}</p>
+              <div className="mt-6 p-3 bg-red-50 dark:card-inner border border-red-300 dark:border-slate-600/50 rounded-lg">
+                <p className="text-red-600 dark:text-secondary text-sm">{fieldErrors.dinner}</p>
               </div>
             )}
           </div>
@@ -1913,8 +1910,8 @@ function SymptomsPageContent() {
         {/* Step 16: Additional Notes */}
         {currentStep === 16 && (
           <div className="mb-5">
-            <h3 className="text-2xl sm:text-2xl md:text-3xl font-semibold text-white mb-6">Additional notes</h3>
-            <p className="text-sm text-slate-400 mb-4">Share any other details about your symptoms, how you're feeling, or triggers you noticed</p>            
+            <h3 className="text-2xl sm:text-2xl md:text-3xl font-semibold text-primary mb-6">Additional notes</h3>
+            <p className="text-sm text-secondary mb-4">Share any other details about your symptoms, how you're feeling, or triggers you noticed</p>            
             <div>
               <textarea
                 id="notes"
@@ -1922,7 +1919,7 @@ function SymptomsPageContent() {
                 rows="4"
                 value={formData.notes}
                 onChange={handleInputChange}
-                className="w-full px-4 py-3 bg-slate-700 border-2 border-slate-500 rounded-lg focus:outline-none transition-all duration-200 resize-none text-white placeholder-slate-400"
+                className="w-full px-4 py-3 input-field-wizard resize-none"
               />
                     </div>
                   </div>
@@ -1931,76 +1928,76 @@ function SymptomsPageContent() {
         {/* Step 17: Review */}
         {currentStep === 17 && (
           <div className="mb-4">
-            <h3 className="text-2xl sm:text-2xl md:text-3xl font-semibold text-white mb-8">Review your entry</h3>
+            <h3 className="text-2xl sm:text-2xl md:text-3xl font-semibold text-primary mb-8">Review your entry</h3>
             <div className="space-y-4">
               
               <div className="flex justify-between py-2 border-b border-slate-700/50">
-                <span className="text-slate-300">Start Date:</span>
-                <span className="font-medium text-white">{formData.symptomStartDate ? new Date(formData.symptomStartDate).toLocaleDateString() : 'Not set'}</span>
+                <span className="text-secondary">Start Date:</span>
+                <span className="font-medium text-primary">{formData.symptomStartDate ? new Date(formData.symptomStartDate).toLocaleDateString() : 'Not set'}</span>
                 </div>
 
               <div className="flex justify-between py-2 border-b border-slate-700/50">
-                <span className="text-slate-300">Status:</span>
-                <span className="font-medium text-white">{formData.isOngoing ? 'Ongoing' : 'Ended'}</span>
+                <span className="text-secondary">Status:</span>
+                <span className="font-medium text-primary">{formData.isOngoing ? 'Ongoing' : 'Ended'}</span>
                       </div>
         
               {!formData.isOngoing && formData.symptomEndDate && (
                 <div className="flex justify-between py-2 border-b border-slate-700/50">
-                  <span className="text-slate-300">End Date:</span>
-                  <span className="font-medium text-white">{new Date(formData.symptomEndDate).toLocaleDateString()}</span>
+                  <span className="text-secondary">End Date:</span>
+                  <span className="font-medium text-primary">{new Date(formData.symptomEndDate).toLocaleDateString()}</span>
                   </div>
                 )}
 
               <div className="flex justify-between py-2 border-b border-slate-700/50">
-                <span className="text-slate-300">Severity:</span>
-                <span className="font-medium text-white">{formData.severity}/10</span>
+                <span className="text-secondary">Severity:</span>
+                <span className="font-medium text-primary">{formData.severity}/10</span>
                       </div>
 
               <div className="flex justify-between py-2 border-b border-slate-700/50">
-                <span className="text-slate-300">Stress Level:</span>
-                <span className="font-medium text-white">{formData.stress_level}/10</span>
+                <span className="text-secondary">Stress Level:</span>
+                <span className="font-medium text-primary">{formData.stress_level}/10</span>
                     </div>
 
               <div className="flex justify-between py-2 border-b border-slate-700/50">
-                <span className="text-slate-300">Bathroom Frequency:</span>
-                <span className="font-medium text-white">{formData.normal_bathroom_frequency || 'Not set'} times/day</span>
+                <span className="text-secondary">Bathroom Frequency:</span>
+                <span className="font-medium text-primary">{formData.normal_bathroom_frequency || 'Not set'} times/day</span>
                 </div>
 
               {formData.bathroom_frequency_changed && (
                 <div className="flex justify-between py-2 border-b border-slate-700/50">
-                  <span className="text-slate-300">Frequency Changed:</span>
-                  <span className="font-medium text-white">{formData.bathroom_frequency_changed === 'yes' ? 'Yes' : 'No'}</span>
+                  <span className="text-secondary">Frequency Changed:</span>
+                  <span className="font-medium text-primary">{formData.bathroom_frequency_changed === 'yes' ? 'Yes' : 'No'}</span>
                   </div>
                 )}
 
               {formData.bathroom_frequency_changed === 'yes' && formData.bathroom_frequency_change_details && (
                 <div className="py-2 border-b border-slate-700/50">
-                  <span className="text-slate-300 block mb-1">Describe your change:</span>
-                  <span className="font-medium text-white">{formData.bathroom_frequency_change_details}</span>
+                  <span className="text-secondary block mb-1">Describe your change:</span>
+                  <span className="font-medium text-primary">{formData.bathroom_frequency_change_details}</span>
                   </div>
                 )}
 
               <div className="flex justify-between py-2 border-b border-slate-700/50">
-                <span className="text-slate-300">Smoking:</span>
-                <span className="font-medium text-white">{formData.smoking ? 'Yes' : 'No'}</span>
+                <span className="text-secondary">Smoking:</span>
+                <span className="font-medium text-primary">{formData.smoking ? 'Yes' : 'No'}</span>
                       </div>
 
               {formData.smoking && formData.smoking_details && (
                 <div className="py-2 border-b border-slate-700/50">
-                  <span className="text-slate-300 block mb-1">Smoking Habits:</span>
-                  <span className="font-medium text-white">{formData.smoking_details}</span>
+                  <span className="text-secondary block mb-1">Smoking Habits:</span>
+                  <span className="font-medium text-primary">{formData.smoking_details}</span>
                   </div>
                 )}
 
               <div className="flex justify-between py-2 border-b border-slate-700/50">
-                <span className="text-slate-300">Alcohol:</span>
-                <span className="font-medium text-white">{formData.alcohol ? 'Yes' : 'No'}</span>
+                <span className="text-secondary">Alcohol:</span>
+                <span className="font-medium text-primary">{formData.alcohol ? 'Yes' : 'No'}</span>
                     </div>
                     
               {formData.alcohol && formData.alcohol_units && (
                 <div className="flex justify-between py-2 border-b border-slate-700/50">
-                  <span className="text-slate-300">Alcohol Units:</span>
-                  <span className="font-medium text-white">{formData.alcohol_units} units/day</span>
+                  <span className="text-secondary">Alcohol Units:</span>
+                  <span className="font-medium text-primary">{formData.alcohol_units} units/day</span>
                           </div>
                       )}
                       
@@ -2009,48 +2006,48 @@ function SymptomsPageContent() {
                 formData.dinner.some(item => item.food.trim()) ||
                 formData.breakfast_skipped || formData.lunch_skipped || formData.dinner_skipped) && (
                 <div className="py-2 border-b border-slate-700/50">
-                  <span className="text-slate-300 block mb-2">Meals:</span>
+                  <span className="text-secondary block mb-2">Meals:</span>
                   <div className="space-y-1 text-sm">
                     {formData.breakfast.some(item => item.food.trim()) && (
                       <div>
-                        <span className="font-medium text-white">Breakfast:</span>
+                        <span className="font-medium text-primary">Breakfast:</span>
                         {formData.breakfast.filter(item => item.food.trim()).map((item, index) => (
-                          <span key={index} className="ml-2 text-slate-300">{item.food} ({item.quantity})</span>
+                          <span key={index} className="ml-2 text-secondary">{item.food} ({item.quantity})</span>
                         ))}
                         </div>
                       )}
                     {formData.breakfast_skipped && (
                       <div>
-                        <span className="font-medium text-white">Breakfast:</span>
-                        <span className="ml-2 text-slate-400 italic">Didn't eat anything</span>
+                        <span className="font-medium text-primary">Breakfast:</span>
+                        <span className="ml-2 text-secondary italic">Didn't eat anything</span>
                           </div>
                     )}
                     {formData.lunch.some(item => item.food.trim()) && (
                       <div>
-                        <span className="font-medium text-white">Lunch:</span>
+                        <span className="font-medium text-primary">Lunch:</span>
                         {formData.lunch.filter(item => item.food.trim()).map((item, index) => (
-                          <span key={index} className="ml-2 text-slate-300">{item.food} ({item.quantity})</span>
+                          <span key={index} className="ml-2 text-secondary">{item.food} ({item.quantity})</span>
                         ))}
                         </div>
                       )}
                     {formData.lunch_skipped && (
                       <div>
-                        <span className="font-medium text-white">Lunch:</span>
-                        <span className="ml-2 text-slate-400 italic">Didn't eat anything</span>
+                        <span className="font-medium text-primary">Lunch:</span>
+                        <span className="ml-2 text-secondary italic">Didn't eat anything</span>
                           </div>
                     )}
                     {formData.dinner.some(item => item.food.trim()) && (
                       <div>
-                        <span className="font-medium text-white">Dinner:</span>
+                        <span className="font-medium text-primary">Dinner:</span>
                         {formData.dinner.filter(item => item.food.trim()).map((item, index) => (
-                          <span key={index} className="ml-2 text-slate-300">{item.food} ({item.quantity})</span>
+                          <span key={index} className="ml-2 text-secondary">{item.food} ({item.quantity})</span>
                         ))}
                         </div>
                       )}
                     {formData.dinner_skipped && (
                       <div>
-                        <span className="font-medium text-white">Dinner:</span>
-                        <span className="ml-2 text-slate-400 italic">Didn't eat anything</span>
+                        <span className="font-medium text-primary">Dinner:</span>
+                        <span className="ml-2 text-secondary italic">Didn't eat anything</span>
                       </div>
                     )}
                     </div>
@@ -2059,8 +2056,8 @@ function SymptomsPageContent() {
 
               {formData.notes && (
                 <div className="py-2">
-                  <span className="text-slate-300 block mb-2">Notes:</span>
-                  <p className="font-medium text-white">{formData.notes}</p>
+                  <span className="text-secondary block mb-2">Notes:</span>
+                  <p className="font-medium text-primary">{formData.notes}</p>
                   </div>
                 )}
 
@@ -2079,7 +2076,7 @@ function SymptomsPageContent() {
             {currentStep < 17 ? (
               <button
                 onClick={nextStep}
-                className="px-4 py-2 bg-[#5F9EA0] text-white text-lg font-semibold rounded-lg hover:bg-[#5F9EA0]/80 transition-colors"
+                className="px-4 py-2 bg-[#5F9EA0] text-white text-lg font-semibold rounded-lg hover:bg-button-cadet-hover transition-colors"
               >
                 Continue
               </button>
@@ -2087,7 +2084,7 @@ function SymptomsPageContent() {
               <button
                 onClick={handleSubmit}
                 disabled={isSubmitting}
-                className="px-4 py-2 bg-[#5F9EA0] text-white text-lg font-semibold rounded-lg hover:bg-[#5F9EA0]/80 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+                className="px-4 py-2 bg-[#5F9EA0] text-white text-lg font-semibold rounded-lg hover:bg-button-cadet-hover transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
               >
                 {isSubmitting ? 'Submitting...' : 'Submit'}
               </button>

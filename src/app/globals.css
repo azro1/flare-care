@@ -3,13 +3,113 @@
 @tailwind utilities;
 
 @layer base {
+  :root {
+    /* Light theme colors */
+    --bg-main: #f8fafc; /* Light main page background */
+    --bg-main-gradient: linear-gradient(135deg, #f8fafc 0%, #e2e8f0 50%, #f8fafc 100%); /* Light gradient background */
+    --bg-section: #f1f5f9; /* Light section background */
+    --bg-card: #ffffff;
+    --bg-card-hover: #f1f5f9;
+    --bg-card-inner: #ffffff; /* White inner card background */
+    --bg-icon: #e2e8f0; /* Light icon background */
+    --text-icon: #475569; /* Light icon text */
+    --bg-input: #ffffff;
+    --bg-input-dark: #f1f5f9; /* Light input background */
+    --border-input: #cbd5e1; /* Light input border */
+    --border-input-dark: #cbd5e1; /* Light input border */
+    --bg-button-primary: #3b82f6;
+    --bg-button-primary-hover: #2563eb; /* Primary button hover */
+    --bg-button-cadet: #5F9EA0; /* Cadet blue button */
+    --bg-button-cadet-hover: #4a8a8a; /* Cadet blue button hover - subtle darker for light mode */
+    --bg-button-delete: #fef2f2; /* Light delete button background - same as toast */
+    --bg-button-delete-hover: #fee2e2; /* Light delete button hover */
+    --bg-button-secondary: #ffffff;
+    --bg-button-secondary-hover: #f1f5f9;
+    --bg-button-hover: #e2e8f0; /* Light button hover */
+    --bg-button-disabled: #cbd5e1; /* Light disabled button background */
+    --text-button-disabled: #475569; /* Light disabled button text */
+    
+    /* Goal colors */
+    --bg-goal-success: #dcfce7; /* Light green background for completed goals */
+    --text-goal-success: #16a34a; /* Dark green text for completed goals */
+    --bg-goal-icon-success: #dcfce7; /* Light green background for success icons */
+    --text-goal-icon-success: #16a34a; /* Dark green for success icons */
+    --bg-goal-icon-medication: #f3e8ff; /* Light purple background for medication icons */
+    --text-goal-icon-medication: #9333ea; /* Dark purple for medication icons */
+    --bg-goal-icon-hydration: #dbeafe; /* Light blue background for hydration icons */
+    --text-goal-icon-hydration: #2563eb; /* Dark blue for hydration icons */
+    
+    --text-primary: #1e293b; /* Dark text for light background */
+    --text-secondary: #475569; /* Medium dark text */
+    --text-tertiary: #64748b; /* Lighter dark text */
+    --text-white: #ffffff;
+    
+    --border-card: #cbd5e1; /* Light card border */
+    --border-card-inner: #cbd5e1; /* Light inner card border */
+    
+    --shadow-sm: 0 1px 2px 0 rgb(0 0 0 / 0.05);
+    --shadow-md: 0 4px 6px -1px rgb(0 0 0 / 0.1), 0 2px 4px -2px rgb(0 0 0 / 0.1);
+    --shadow-lg: 0 10px 15px -3px rgb(0 0 0 / 0.1), 0 4px 6px -4px rgb(0 0 0 / 0.1);
+  }
+
+  .dark {
+    /* Dark theme colors */
+        --bg-main: #0f172a; /* Main page background */
+        --bg-main-gradient: linear-gradient(135deg, #0f172a 0%, #1e293b 50%, #0f172a 100%); /* Main gradient background */
+        --bg-section: rgba(15, 23, 42, 0.4); /* Dark section background */
+    --bg-card: rgba(51, 65, 85, 0.4);
+    --bg-card-hover: #334155;
+    --bg-card-inner: rgba(51, 65, 85, 0.4);
+    --bg-icon: #334155; /* Dark icon background */
+    --text-icon: #cbd5e1; /* Dark icon text */
+    --bg-input: #1e293b;
+    --bg-input-dark: #334155; /* Dark input background */
+    --border-input: #64748b; /* Dark input border */
+    --border-input-dark: #64748b; /* Dark input border */
+    --bg-button-primary: #3b82f6;
+    --bg-button-primary-hover: #2563eb; /* Primary button hover */
+    --bg-button-cadet: #5F9EA0; /* Cadet blue button */
+    --bg-button-cadet-hover: rgba(95, 158, 160, 0.8); /* Cadet blue button hover - washed out for dark mode */
+    --bg-button-delete: rgba(51, 65, 85, 0.4); /* Dark delete button background */
+    --bg-button-delete-hover: rgba(51, 65, 85, 0.6); /* Dark delete button hover */
+    --bg-button-secondary: #1e293b;
+    --bg-button-secondary-hover: #334155;
+    --bg-button-hover: #475569; /* Dark button hover */
+    --bg-button-disabled: #334155; /* Dark disabled button background */
+    --text-button-disabled: #64748b; /* Dark disabled button text */
+    
+    /* Goal colors */
+    --bg-goal-success: #064e3b; /* Dark green background for completed goals */
+    --text-goal-success: #10b981; /* Light green text for completed goals */
+    --bg-goal-icon-success: #064e3b; /* Dark green background for success icons */
+    --text-goal-icon-success: #10b981; /* Light green for success icons */
+    --bg-goal-icon-medication: #7c3aed; /* Brighter purple background for medication icons */
+    --text-goal-icon-medication: #c4b5fd; /* Brighter purple for medication icons */
+    --bg-goal-icon-hydration: #2563eb; /* Brighter blue background for hydration icons */
+    --text-goal-icon-hydration: #93c5fd; /* Brighter blue for hydration icons */
+    
+    --text-primary: #f8fafc;
+    --text-secondary: #cbd5e1;
+    --text-tertiary: #94a3b8;
+    --text-white: #ffffff;
+    
+    --border-card: #475569; /* Dark card border */
+    --border-card-inner: #475569; /* Dark inner card border */
+    
+    --shadow-sm: 0 1px 2px 0 rgb(0 0 0 / 0.3);
+    --shadow-md: 0 4px 6px -1px rgb(0 0 0 / 0.4), 0 2px 4px -2px rgb(0 0 0 / 0.4);
+    --shadow-lg: 0 10px 15px -3px rgb(0 0 0 / 0.4), 0 4px 6px -4px rgb(0 0 0 / 0.4);
+  }
+
   * {
     @apply scroll-smooth;
   }
   
   body {
-    @apply bg-gradient-to-br from-slate-50 via-gray-50 to-zinc-50 text-slate-800 antialiased;
+    background: linear-gradient(135deg, var(--bg-primary) 0%, var(--bg-secondary) 50%, var(--bg-tertiary) 100%);
+    color: var(--text-primary);
     font-feature-settings: 'rlig' 1, 'calt' 1;
+    transition: background-color 0.3s ease, color 0.3s ease;
   }
   
   html {
@@ -19,26 +119,144 @@
 
 @layer components {
   .btn-primary {
-    @apply bg-blue-500 hover:bg-blue-600 text-white font-semibold py-3 px-6 rounded-xl transition-all duration-300 transform hover:scale-105 hover:shadow-lg active:scale-95;
+    background-color: var(--bg-button-primary);
+    color: var(--text-white);
+    @apply font-semibold py-3 px-6 rounded-xl transition-all duration-300 transform hover:scale-105 hover:shadow-lg active:scale-95;
   }
-  
+
+  .btn-primary:hover {
+    background-color: #2563eb;
+  }
+
   .btn-secondary {
-    @apply bg-white hover:bg-gray-50 text-gray-800 font-medium py-3 px-6 rounded-xl border border-gray-200 hover:border-gray-300 transition-all duration-200 shadow-sm hover:shadow-md;
+    background-color: var(--bg-button-secondary);
+    color: var(--text-primary);
+    @apply font-medium py-3 px-6 rounded-xl border transition-all duration-200 shadow-sm hover:shadow-md;
+    border-color: var(--border-primary);
   }
-  
+
+  .btn-secondary:hover {
+    background-color: var(--bg-button-secondary-hover);
+    border-color: var(--border-secondary);
+  }
+
   .card {
-    @apply bg-white rounded-xl shadow-sm border border-gray-200 p-6 transition-shadow duration-200 hover:shadow-md;
+    background-color: var(--bg-card);
+    color: var(--text-primary);
+    border: 1px solid;
+    border-color: var(--border-card);
+    @apply rounded-xl shadow-sm p-6 transition-shadow duration-200 hover:shadow-md;
   }
-  
+
+  .card-inner {
+    background-color: var(--bg-card-inner);
+    color: var(--text-primary);
+    border: 1px solid;
+    border-color: var(--border-card-inner);
+    @apply backdrop-blur-sm rounded-lg;
+  }
+
+  .section-bg {
+    background-color: var(--bg-section);
+  }
+
+  .button-delete {
+    background-color: var(--bg-button-delete);
+    color: #dc2626; /* Red text for light mode */
+    border-color: #dc2626; /* Red border for light mode */
+    @apply px-5 py-3.5 rounded-lg transition-colors border hover:border-red-700;
+  }
+  .dark .button-delete {
+    color: var(--text-secondary); /* Normal text for dark mode */
+    border-color: var(--border-card); /* Normal border for dark mode */
+  }
+  .button-delete:hover {
+    background-color: var(--bg-button-delete-hover);
+  }
+
+  .button-cancel {
+    background-color: var(--bg-button-cancel);
+    color: var(--text-secondary);
+    @apply px-4 py-2 rounded-lg transition-colors;
+  }
+  .button-cancel:hover {
+    background-color: var(--bg-button-cancel-hover);
+  }
+
   .card-mobile {
-    @apply bg-white/90 rounded-2xl shadow-lg border border-white/20 p-4 sm:p-6 transition-all duration-300 hover:shadow-xl;
+    background-color: var(--bg-card);
+    border-color: var(--border-primary);
+    @apply rounded-2xl shadow-lg p-4 sm:p-6 transition-all duration-300 hover:shadow-xl;
+    border: 1px solid;
     backdrop-filter: blur(8px);
+  }
+
+  .input-field {
+    background-color: var(--bg-input);
+    color: var(--text-primary);
+    border-color: var(--border-primary);
+    @apply w-full px-4 py-3 rounded-xl focus:outline-none focus:ring-2 focus:border-transparent transition-all duration-200;
+    border: 1px solid;
+    backdrop-filter: blur(8px);
+  }
+
+  .input-field-wizard {
+    background-color: var(--bg-input-dark);
+    color: var(--text-primary);
+    border-color: var(--border-input-dark);
+    @apply w-full px-3 py-2 border-2 rounded-lg focus:outline-none transition-all duration-200 text-left text-base placeholder-slate-400;
+  }
+
+  .icon-container {
+    background-color: var(--bg-icon);
+    color: var(--text-icon);
+    @apply rounded-xl flex items-center justify-center;
+  }
+
+  .button-cadet {
+    background-color: var(--bg-button-cadet);
+    @apply text-white font-semibold transition-all duration-300;
   }
   
-  .input-field {
-    @apply w-full px-4 py-3 border border-gray-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all duration-200 bg-white/80;
-    backdrop-filter: blur(8px);
+  .button-cadet:hover {
+    background-color: var(--bg-button-cadet-hover);
   }
+
+  .button-disabled {
+    background-color: var(--bg-button-disabled);
+    color: var(--text-button-disabled);
+    @apply cursor-not-allowed;
+  }
+
+  /* Utility classes for easy theme usage */
+  .text-primary {
+    color: var(--text-primary);
+  }
+
+  .text-secondary {
+    color: var(--text-secondary);
+  }
+
+  .text-tertiary {
+    color: var(--text-tertiary);
+  }
+
+  .text-white {
+    color: var(--text-white);
+  }
+
+  .bg-card {
+    background-color: var(--bg-card);
+  }
+
+  .bg-card-hover {
+    background-color: var(--bg-card-hover);
+  }
+
+  .border-theme {
+    border-color: var(--border-primary);
+  }
+}
   
   .slider {
     @apply w-full h-3 bg-gradient-to-r from-gray-200 to-gray-300 rounded-full appearance-none cursor-pointer transition-all duration-200;
@@ -151,7 +369,6 @@
   .slide-in-right {
     animation: slideInRight 0.5s ease-out;
   }
-}
 
 @keyframes pulse {
   0%, 100% {
