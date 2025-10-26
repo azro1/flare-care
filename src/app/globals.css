@@ -42,6 +42,7 @@
     --text-primary: #1e293b; /* Dark text for light background */
     --text-secondary: #475569; /* Medium dark text */
     --text-tertiary: #64748b; /* Lighter dark text */
+    --text-muted: #64748b; /* Muted gray text - darker for light mode readability */
     --text-white: #ffffff;
     
     --border-card: #cbd5e1; /* Light card border */
@@ -91,6 +92,7 @@
     --text-primary: #f8fafc;
     --text-secondary: #cbd5e1;
     --text-tertiary: #94a3b8;
+    --text-muted: #94a3b8; /* Muted gray text - same as light mode */
     --text-white: #ffffff;
     
     --border-card: #475569; /* Dark card border */
@@ -239,6 +241,10 @@
 
   .text-tertiary {
     color: var(--text-tertiary);
+  }
+
+  .text-muted {
+    color: var(--text-muted);
   }
 
   .text-white {

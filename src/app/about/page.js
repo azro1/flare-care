@@ -119,7 +119,7 @@ export default function About() {
           </div>
         </div>
         
-        <p className="text-sm text-slate-400 mt-6 text-center font-roboto">
+        <p className="text-sm text-secondary mt-6 text-center font-roboto">
           Built with care for Crohn's and Colitis patients.
         </p>
       </div>

@@ -986,7 +986,7 @@ function SymptomsPageContent() {
       {/* Section Header - Hide on landing page */}
       {currentStep > 0 && (
         <div className="mb-8">
-          <h1 className="text-base sm:text-lg font-regular text-secondary mb-3">Track Symptoms</h1>
+          <h1 className="text-base sm:text-lg font-regular text-muted mb-3">Track Symptoms</h1>
           <div className="border-b border-slate-300 dark:border-slate-700/50"></div>
           </div>
       )}
@@ -1023,7 +1023,7 @@ function SymptomsPageContent() {
         {currentStep === 1 && (
           <div className="mb-5">
             <h3 className="text-2xl sm:text-2xl md:text-3xl font-semibold text-primary mb-2">When did your symptoms begin?</h3>
-            <p className="text-sm text-secondary mb-6">For example, '14 09 2014'</p>
+            <p className="text-sm text-muted mb-6">For example, '14 09 2014'</p>
             <div className="flex space-x-5">
               <div className="w-14">
                 <label className="block text-base font-medium text-secondary mb-2">Day</label>
@@ -1168,7 +1168,7 @@ function SymptomsPageContent() {
         {currentStep === 3 && (
           <div className="mb-5">
             <h3 className="text-2xl sm:text-2xl md:text-3xl font-semibold text-primary mb-2">When did symptoms end?</h3>
-            <p className="text-sm text-secondary mb-6">For example, '14 09 2014'</p>
+            <p className="text-sm text-muted mb-6">For example, '14 09 2014'</p>
             <div className="flex space-x-5">
               <div className="w-14">
                 <label className="block text-base font-medium text-secondary mb-2">Day</label>
