@@ -12,8 +12,11 @@ export default function Home() {
   const { data: symptoms } = useDataSync('flarecare-symptoms', [])
   const router = useRouter()
   const [showAllSymptoms, setShowAllSymptoms] = useState(false)
+  const [showAllMedications, setShowAllMedications] = useState(false)
+  const [trackedMedications, setTrackedMedications] = useState([])
   const [showToast, setShowToast] = useState(false)
   const [showDeleteToast, setShowDeleteToast] = useState(false)
+  const [showMedicationToast, setShowMedicationToast] = useState(false)
   const [currentTipIndex, setCurrentTipIndex] = useState(0)
   const [isFading, setIsFading] = useState(false)
 
@@ -63,7 +66,29 @@ export default function Home() {
         setShowDeleteToast(false)
       }, 4000)
     }
+
+    const showMedicationToast = localStorage.getItem('showMedicationToast')
+    if (showMedicationToast === 'true') {
+      setShowMedicationToast(true)
+      localStorage.removeItem('showMedicationToast')
+      
+      // Auto-hide toast after 4 seconds
+      setTimeout(() => {
+        setShowMedicationToast(false)
+      }, 4000)
+    }
   }, [])
+
+  // Load tracked medications from localStorage
+  useEffect(() => {
+    if (typeof window !== 'undefined') {
+      const data = localStorage.getItem('flarecare-medication-tracking')
+      if (data) {
+        const parsed = JSON.parse(data)
+        setTrackedMedications(parsed.sort((a, b) => new Date(b.createdAt) - new Date(a.createdAt)))
+      }
+    }
+  }, [showMedicationToast]) // Reload when medication is added
 
   // Prevent body scrolling when not authenticated
   // useEffect(() => {
@@ -298,6 +323,20 @@ export default function Home() {
           </button>
         </div>
       )}
+
+      {showMedicationToast && (
+        <div className="fixed top-24 right-4 z-50 bg-purple-100 text-purple-600 px-6 py-3 rounded-lg shadow-lg flex items-center max-w-xs border border-purple-600">
+          <span className="font-medium">Medications tracked successfully!</span>
+          <button
+            onClick={() => setShowMedicationToast(false)}
+            className="ml-3 text-purple-600/80 hover:text-purple-600"
+          >
+            <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+            </svg>
+          </button>
+        </div>
+      )}
       
       <div className="w-full px-3 sm:px-4 md:px-6 lg:px-8">
         <div className="flex flex-col lg:flex-row lg:gap-8 lg:justify-center">
@@ -405,7 +444,7 @@ export default function Home() {
             </div>
           </Link>
 
-            <Link href="/medications" className="card p-6 hover:border-slate-500/50 transition-all">
+            <Link href="/medications/track" className="card p-6 hover:border-slate-500/50 transition-all">
               <div className="text-center">
                 <div className="w-12 h-12 bg-purple-100 rounded-xl flex items-center justify-center mx-auto mb-3">
                   <Pill className="w-5 h-5 text-purple-600" />
@@ -445,7 +484,7 @@ export default function Home() {
         {displayedSymptoms.length > 0 && (
           <div className="mb-8">
             <div className="flex justify-between items-center mb-4">
-              <h2 className="text-xl font-semibold font-source text-primary">Recent Symptoms</h2>
+              <h2 className="text-xl font-semibold font-source text-primary">Recent Tracked Symptoms</h2>
               {symptoms.length > 1 && (
                 <button 
                   onClick={() => setShowAllSymptoms(!showAllSymptoms)}
@@ -480,6 +519,56 @@ export default function Home() {
                     {symptom.notes && (
                       <p className="text-sm text-secondary line-clamp-2 leading-relaxed">{symptom.notes}</p>
                     )}
+                  </div>
+                </div>
+              ))}
+            </div>
+          </div>
+        )}
+
+        {/* Recent Medications */}
+        {trackedMedications.length > 0 && (
+          <div className="mb-8">
+            <div className="flex justify-between items-center mb-4">
+              <h2 className="text-xl font-semibold font-source text-primary">Recent Tracked Medications</h2>
+              {trackedMedications.length > 1 && (
+                <button 
+                  onClick={() => setShowAllMedications(!showAllMedications)}
+                  className="text-[#5F9EA0] hover:text-[#5F9EA0]/80 text-sm font-medium"
+                >
+                  {showAllMedications ? 'Show Less' : 'View All'}
+                </button>
+              )}
+            </div>
+            <div className="space-y-3 max-w-xs">
+              {(showAllMedications ? trackedMedications : trackedMedications.slice(0, 1)).map((tracked, index) => (
+                <div 
+                  key={tracked.id}
+                  className="card p-6 hover:border-slate-500/50 cursor-pointer transition-all duration-200"
+                  onClick={() => {
+                    router.push(`/medications/track/${tracked.id}`)
+                  }}
+                >
+                  <div className="space-y-4">
+                    <div className="flex items-center justify-between">
+                      <span className="text-sm font-medium text-primary">
+                        {new Date(tracked.createdAt).toLocaleDateString()}
+                      </span>
+                      <span className="text-xs text-slate-400">
+                        {new Date(tracked.createdAt).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
+                      </span>
+                    </div>
+                    <div className="flex gap-6 text-sm text-secondary">
+                      {tracked.missedMedicationsList.length > 0 && (
+                        <span>Missed: {tracked.missedMedicationsList.length}</span>
+                      )}
+                      {tracked.nsaidList.length > 0 && (
+                        <span>NSAIDs: {tracked.nsaidList.length}</span>
+                      )}
+                      {tracked.antibioticList.length > 0 && (
+                        <span>Antibiotics: {tracked.antibioticList.length}</span>
+                      )}
+                    </div>
                   </div>
                 </div>
               ))}

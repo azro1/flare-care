@@ -1077,7 +1077,7 @@ function SymptomsPageContent() {
             {/* Start button */}
             <button
               onClick={nextStep}
-              className="px-4 py-2 bg-[#5F9EA0] text-white text-lg font-semibold rounded-lg hover:bg-button-cadet-hover transition-colors"
+              className="button-cadet px-4 py-2 text-lg font-semibold rounded-lg transition-colors"
             >
               Start now
             </button>
