@@ -236,7 +236,7 @@ function AccountPageContent() {
             <div className="flex gap-3">
               <button
                 onClick={() => setShowDeleteModal(false)}
-                className="flex-1 px-4 py-2 text-secondary bg-slate-200/50 dark:bg-slate-700/50 hover:bg-slate-300/50 dark:hover:bg-slate-600/50 rounded-lg transition-colors"
+                className="flex-1 button-cancel"
               >
                 Cancel
               </button>

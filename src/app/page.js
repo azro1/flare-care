@@ -5,7 +5,7 @@ import { useAuth } from '@/lib/AuthContext'
 import { useEffect, useState } from 'react'
 import { useDataSync } from '@/lib/useDataSync'
 import { useRouter } from 'next/navigation'
-import { CupSoda, Pizza, Coffee, BookOpen, Smile, Thermometer, Pill, FileText, Activity, TrendingUp, PartyPopper } from 'lucide-react'
+import { CupSoda, Pizza, Coffee, BookOpen, Smile, Thermometer, Pill, FileText, Activity, TrendingUp, PartyPopper, Clipboard, Cookie } from 'lucide-react'
 
 export default function Home() {
   const { isAuthenticated, loading, user } = useAuth()
@@ -105,7 +105,7 @@ export default function Home() {
         <section className="pt-28 pb-16 sm:pt-40 sm:pb-32 px-6">
           <div className="max-w-4xl mx-auto">
             <div className="text-center space-y-6 mb-20">
-              <div className="text-[#5F9EA0] text-xl font-medium font-source">FlareCare</div>
+              <div className="text-cadet-blue text-xl font-medium font-source">FlareCare</div>
               <h1 className="text-4xl md:text-5xl lg:text-6xl font-bold text-primary leading-tight">
               Take control of
                 <br />
@@ -174,32 +174,32 @@ export default function Home() {
             </div>
 
             <div className="grid md:grid-cols-2 gap-8">
-              <div className="space-y-3">
-                <div className="text-[#FF1493] text-2xl">📝</div>
+              <div className="space-y-3 flex flex-col">
+                <Clipboard className="w-6 h-6 text-pink-600" />
                 <h3 className="text-xl font-semibold text-primary">Daily check-ins</h3>
                 <p className="text-secondary leading-relaxed">
                   Quick notes about how you're feeling. Track pain, energy, bathroom trips, whatever matters to you.
                 </p>
               </div>
 
-              <div className="space-y-3">
-                <div className="text-[#FF1493] text-2xl">🍽️</div>
+              <div className="space-y-3 flex flex-col">
+                <Cookie className="w-6 h-6 text-yellow-600" />
                 <h3 className="text-xl font-semibold text-primary">Food diary</h3>
                 <p className="text-secondary leading-relaxed">
                   See what works for your body. Log meals and notice patterns over time.
                 </p>
               </div>
 
-              <div className="space-y-3">
-                <div className="text-[#FF1493] text-2xl">💊</div>
+              <div className="space-y-3 flex flex-col">
+                <Pill className="w-6 h-6 text-purple-600" />
                 <h3 className="text-xl font-semibold text-primary">Medication tracking</h3>
                 <p className="text-secondary leading-relaxed">
                   Never forget a dose. Simple reminders that actually work.
                 </p>
               </div>
 
-              <div className="space-y-3">
-                <div className="text-[#FF1493] text-2xl">📊</div>
+              <div className="space-y-3 flex flex-col">
+                <TrendingUp className="w-6 h-6 text-blue-600" />
                 <h3 className="text-xl font-semibold text-primary">Spot your triggers</h3>
                 <p className="text-secondary leading-relaxed">
                   See patterns in your symptoms. Share reports with your doctor.
@@ -271,16 +271,11 @@ export default function Home() {
     <div>
       {/* Toast Notification */}
       {showToast && (
-        <div className="fixed top-4 left-4 right-4 z-50 bg-green-100 text-green-600 px-6 py-3 rounded-lg shadow-lg flex items-center">
-          <div className="flex-1 flex items-center justify-center gap-3">
-            <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
-            </svg>
-            <span className="font-medium">Symptom entry added successfully!</span>
-          </div>
+        <div className="fixed top-24 right-4 z-50 bg-green-100 text-green-600 px-6 py-3 rounded-lg shadow-lg flex items-center max-w-xs border border-green-600">
+          <span className="font-medium">Symptom entry added successfully!</span>
           <button
             onClick={() => setShowToast(false)}
-            className="text-green-600/80 hover:text-green-600"
+            className="ml-3 text-green-600/80 hover:text-green-600"
           >
             <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
@@ -291,16 +286,11 @@ export default function Home() {
 
       {/* Delete Toast Notification */}
       {showDeleteToast && (
-        <div className="fixed top-4 left-4 right-4 z-50 bg-red-100 text-red-600 px-6 py-3 rounded-lg shadow-lg flex items-center">
-          <div className="flex-1 flex items-center justify-center gap-3">
-            <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
-            </svg>
-            <span className="font-medium">Symptom entry deleted successfully!</span>
-          </div>
+        <div className="fixed top-24 right-4 z-50 bg-red-100 text-red-600 px-6 py-3 rounded-lg shadow-lg flex items-center max-w-xs border border-red-600">
+          <span className="font-medium">Symptom entry deleted successfully!</span>
           <button
             onClick={() => setShowDeleteToast(false)}
-            className="text-red-600/80 hover:text-red-600"
+            className="ml-3 text-red-600/80 hover:text-red-600"
           >
             <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />

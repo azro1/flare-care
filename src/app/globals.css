@@ -24,8 +24,8 @@
     --bg-button-primary-hover: #2563eb; /* Primary button hover */
     --bg-button-cadet: #5F9EA0; /* Cadet blue button */
     --bg-button-cadet-hover: #4a8a8a; /* Cadet blue button hover - subtle darker for light mode */
-    --bg-button-delete: #fef2f2; /* Light delete button background - same as toast */
-    --bg-button-delete-hover: #fee2e2; /* Light delete button hover */
+    --bg-button-delete: #ef4444; /* Light delete button background - solid red */
+    --bg-button-delete-hover: #dc2626; /* Light delete button hover - darker red */
     --bg-button-secondary: #ffffff;
     --bg-button-secondary-hover: #f1f5f9;
     --bg-button-hover: #e2e8f0; /* Light button hover */
@@ -33,6 +33,14 @@
     --text-button-disabled: #475569; /* Light disabled button text */
     --bg-button-cancel: #e2e8f0; /* Light cancel button background */
     --bg-button-cancel-hover: #cbd5e1; /* Light cancel button hover */
+    
+    /* Cadet blue for UI elements (stronger for light mode visibility) */
+    --text-cadet-blue: #2d7d87; /* Stronger cadet blue for light mode */
+    
+    /* Radio button styling */
+    --radio-bg: #ffffff; /* Light radio button background */
+    --radio-border: #cbd5e1; /* Light radio button border - matches input border */
+    --radio-checked-border: #cbd5e1; /* Light checked radio border - same as input */
     
     /* Goal colors */
     --bg-goal-success: #dcfce7; /* Light green background for completed goals */
@@ -91,14 +99,22 @@
     --bg-button-cancel: rgba(51, 65, 85, 0.5); /* Dark cancel button background */
     --bg-button-cancel-hover: rgba(51, 65, 85, 0.6); /* Dark cancel button hover */
     
+    /* Cadet blue for UI elements (original for dark mode) */
+    --text-cadet-blue: #5F9EA0; /* Original cadet blue for dark mode */
+    
+    /* Radio button styling */
+    --radio-bg: #334155; /* Dark radio button background */
+    --radio-border: #64748b; /* Dark radio button border - matches input border */
+    --radio-checked-border: #64748b; /* Dark checked radio border - same as input */
+    
     /* Goal colors */
     --bg-goal-success: #064e3b; /* Dark green background for completed goals */
     --text-goal-success: #10b981; /* Light green text for completed goals */
-    --bg-goal-icon-success: #064e3b; /* Dark green background for success icons */
+    --bg-goal-icon-success: rgba(16, 185, 129, 0.1); /* Subtle green background for success icons */
     --text-goal-icon-success: #10b981; /* Light green for success icons */
-    --bg-goal-icon-medication: #7c3aed; /* Brighter purple background for medication icons */
+    --bg-goal-icon-medication: rgba(196, 181, 253, 0.1); /* Subtle purple background for medication icons */
     --text-goal-icon-medication: #c4b5fd; /* Brighter purple for medication icons */
-    --bg-goal-icon-hydration: #2563eb; /* Brighter blue background for hydration icons */
+    --bg-goal-icon-hydration: rgba(147, 197, 253, 0.1); /* Subtle blue background for hydration icons */
     --text-goal-icon-hydration: #93c5fd; /* Brighter blue for hydration icons */
     
     --text-primary: #f8fafc;
@@ -178,7 +194,7 @@
 
   .button-delete {
     background-color: var(--bg-button-delete);
-    color: #dc2626; /* Red text for light mode */
+    color: white; /* White text for light mode solid red background */
     border-color: #dc2626; /* Red border for light mode */
     @apply px-4 py-2 rounded-lg transition-colors border hover:border-red-700;
   }
@@ -237,6 +253,22 @@
   .button-cadet:hover {
     background-color: var(--bg-button-cadet-hover);
   }
+
+  .text-cadet-blue {
+    color: var(--text-cadet-blue);
+  }
+
+  .radio-button {
+    background-color: var(--radio-bg);
+    border-color: var(--radio-border);
+    @apply border-2 rounded;
+  }
+
+  .radio-button:checked {
+    border-color: var(--radio-checked-border) !important;
+    border-width: 2px !important;
+  }
+
 
   .button-disabled {
     background-color: var(--bg-button-disabled);

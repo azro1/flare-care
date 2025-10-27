@@ -18,32 +18,64 @@ function SymptomsPageContent() {
   const pathname = usePathname()
   const { user } = useAuth()
 
-  // Wizard state
-  const [currentStep, setCurrentStep] = useState(0)
+  // Wizard state - initialize from localStorage if available
+  const [currentStep, setCurrentStep] = useState(() => {
+    if (typeof window !== 'undefined') {
+      const savedStep = localStorage.getItem('symptoms-wizard-step')
+      return savedStep ? parseInt(savedStep) : 0
+    }
+    return 0
+  })
   const [userPreferences, setUserPreferences] = useState(null)
   const [isFirstTimeUser, setIsFirstTimeUser] = useState(false)
   const [preferenceChangeModal, setPreferenceChangeModal] = useState({ isOpen: false, habit: '', oldValue: null, newValue: null })
   const [patternModal, setPatternModal] = useState({ isOpen: false, habit: '', consecutiveNo: 0 })
-  const [formData, setFormData] = useState({
-    symptomStartDate: '',
-    isOngoing: true,
-    symptomEndDate: '',
-    severity: '',
-    stress_level: '',
-    normal_bathroom_frequency: '',
-    bathroom_frequency_changed: 'no',
-    bathroom_frequency_change_details: '',
-    notes: '',
-    breakfast: [{ food: '', quantity: '' }],
-    lunch: [{ food: '', quantity: '' }],
-    dinner: [{ food: '', quantity: '' }],
-    breakfast_skipped: false,
-    lunch_skipped: false,
-    dinner_skipped: false,
-    smoking: false,
-    smoking_details: '',
-    alcohol: false,
-    alcohol_units: ''
+  const [formData, setFormData] = useState(() => {
+    if (typeof window !== 'undefined') {
+      const savedFormData = localStorage.getItem('symptoms-wizard-form')
+      return savedFormData ? JSON.parse(savedFormData) : {
+        symptomStartDate: '',
+        isOngoing: true,
+        symptomEndDate: '',
+        severity: '',
+        stress_level: '',
+        normal_bathroom_frequency: '',
+        bathroom_frequency_changed: 'no',
+        bathroom_frequency_change_details: '',
+        notes: '',
+        breakfast: [{ food: '', quantity: '' }],
+        lunch: [{ food: '', quantity: '' }],
+        dinner: [{ food: '', quantity: '' }],
+        breakfast_skipped: false,
+        lunch_skipped: false,
+        dinner_skipped: false,
+        smoking: false,
+        smoking_details: '',
+        alcohol: false,
+        alcohol_units: ''
+      }
+    }
+    return {
+      symptomStartDate: '',
+      isOngoing: true,
+      symptomEndDate: '',
+      severity: '',
+      stress_level: '',
+      normal_bathroom_frequency: '',
+      bathroom_frequency_changed: 'no',
+      bathroom_frequency_change_details: '',
+      notes: '',
+      breakfast: [{ food: '', quantity: '' }],
+      lunch: [{ food: '', quantity: '' }],
+      dinner: [{ food: '', quantity: '' }],
+      breakfast_skipped: false,
+      lunch_skipped: false,
+      dinner_skipped: false,
+      smoking: false,
+      smoking_details: '',
+      alcohol: false,
+      alcohol_units: ''
+    }
   })
   const [dateInputs, setDateInputs] = useState({
     day: '',
@@ -111,6 +143,31 @@ function SymptomsPageContent() {
 
     loadUserPreferences()
   }, [user?.id])
+
+  // Persist current step to localStorage
+  useEffect(() => {
+    if (typeof window !== 'undefined') {
+      localStorage.setItem('symptoms-wizard-step', currentStep.toString())
+    }
+  }, [currentStep])
+
+  // Persist form data to localStorage
+  useEffect(() => {
+    if (typeof window !== 'undefined') {
+      localStorage.setItem('symptoms-wizard-form', JSON.stringify(formData))
+    }
+  }, [formData])
+
+  // Cleanup wizard state when component unmounts (user navigates away)
+  useEffect(() => {
+    return () => {
+      // Clear wizard state when user navigates away from the page
+      if (typeof window !== 'undefined') {
+        localStorage.removeItem('symptoms-wizard-step')
+        localStorage.removeItem('symptoms-wizard-form')
+      }
+    }
+  }, [])
   
   const [dateErrors, setDateErrors] = useState({
     day: '',
@@ -795,6 +852,9 @@ function SymptomsPageContent() {
       
       // Set toast flag and redirect to homepage
       localStorage.setItem('showSymptomToast', 'true')
+      // Clear wizard state
+      localStorage.removeItem('symptoms-wizard-step')
+      localStorage.removeItem('symptoms-wizard-form')
       router.push('/')
       
       setIsSubmitting(false)
@@ -877,6 +937,9 @@ function SymptomsPageContent() {
     
     // Now redirect to homepage
     localStorage.setItem('showSymptomToast', 'true')
+    // Clear wizard state
+    localStorage.removeItem('symptoms-wizard-step')
+    localStorage.removeItem('symptoms-wizard-form')
     router.push('/')
   }
 
@@ -886,6 +949,9 @@ function SymptomsPageContent() {
     
     // Now redirect to homepage
     localStorage.setItem('showSymptomToast', 'true')
+    // Clear wizard state
+    localStorage.removeItem('symptoms-wizard-step')
+    localStorage.removeItem('symptoms-wizard-form')
     router.push('/')
   }
 
@@ -974,7 +1040,7 @@ function SymptomsPageContent() {
         <div className="mb-4 sm:mb-8">
           <button
             onClick={prevStep}
-            className="text-[#5F9EA0] hover:text-[#5F9EA0]/80 hover:underline text-base font-medium flex items-center"
+            className="text-cadet-blue hover:text-cadet-blue/80 hover:underline text-base font-medium flex items-center"
           >
             <svg className="w-4 h-4 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 19l-7-7 7-7" />
@@ -1115,16 +1181,16 @@ function SymptomsPageContent() {
                       value="true"
                       checked={formData.isOngoing === true}
                       onChange={handleInputChange}
-                      className="w-6 h-6 text-[#5F9EA0] opacity-0 absolute"
+                      className="w-6 h-6 text-cadet-blue opacity-0 absolute radio-button"
                       style={{
-                        accentColor: '#5F9EA0',
+                        accentColor: 'var(--text-cadet-blue)',
                         '--tw-accent-color': '#5F9EA0'
                       }}
                     />
                     <span className={`w-6 h-6 rounded-full border-2 flex items-center justify-center ${
                       formData.isOngoing === true 
-                        ? 'border-white bg-white' 
-                        : 'border-slate-400 bg-white'
+                        ? 'border-[var(--radio-border)] bg-white' 
+                        : 'border-[var(--radio-border)] bg-white'
                     }`}>
                       {formData.isOngoing === true && (
                         <div className="w-3.5 h-3.5 rounded-full bg-[#5F9EA0]"></div>
@@ -1141,16 +1207,16 @@ function SymptomsPageContent() {
                       value="false"
                       checked={formData.isOngoing === false}
                       onChange={handleInputChange}
-                      className="w-6 h-6 text-[#5F9EA0] opacity-0 absolute"
+                      className="w-6 h-6 text-cadet-blue opacity-0 absolute radio-button"
                       style={{
-                        accentColor: '#5F9EA0',
+                        accentColor: 'var(--text-cadet-blue)',
                         '--tw-accent-color': '#5F9EA0'
                       }}
                     />
                     <span className={`w-6 h-6 rounded-full border-2 flex items-center justify-center ${
                       formData.isOngoing === false 
-                        ? 'border-white bg-white' 
-                        : 'border-slate-400 bg-white'
+                        ? 'border-[var(--radio-border)] bg-white' 
+                        : 'border-[var(--radio-border)] bg-white'
                     }`}>
                       {formData.isOngoing === false && (
                         <div className="w-3.5 h-3.5 rounded-full bg-[#5F9EA0]"></div>
@@ -1360,16 +1426,16 @@ function SymptomsPageContent() {
                     value="yes"
                     checked={formData.bathroom_frequency_changed === 'yes'}
                     onChange={handleInputChange}
-                    className="w-6 h-6 text-[#5F9EA0] opacity-0 absolute"
+                    className="w-6 h-6 text-cadet-blue opacity-0 absolute radio-button"
                     style={{
-                      accentColor: '#5F9EA0',
+                      accentColor: 'var(--text-cadet-blue)',
                       '--tw-accent-color': '#5F9EA0'
                     }}
                   />
                   <span className={`w-6 h-6 rounded-full border-2 flex items-center justify-center ${
                     formData.bathroom_frequency_changed === 'yes' 
-                      ? 'border-white bg-white' 
-                      : 'border-slate-400 bg-white'
+                      ? 'border-[var(--radio-border)] bg-white' 
+                      : 'border-[var(--radio-border)] bg-white'
                   }`}>
                     {formData.bathroom_frequency_changed === 'yes' && (
                       <div className="w-3.5 h-3.5 rounded-full bg-[#5F9EA0]"></div>
@@ -1386,16 +1452,16 @@ function SymptomsPageContent() {
                     value="no"
                     checked={formData.bathroom_frequency_changed === 'no'}
                     onChange={handleInputChange}
-                    className="w-6 h-6 text-[#5F9EA0] opacity-0 absolute"
+                    className="w-6 h-6 text-cadet-blue opacity-0 absolute radio-button"
                     style={{
-                      accentColor: '#5F9EA0',
+                      accentColor: 'var(--text-cadet-blue)',
                       '--tw-accent-color': '#5F9EA0'
                     }}
                   />
                   <span className={`w-6 h-6 rounded-full border-2 flex items-center justify-center ${
                     formData.bathroom_frequency_changed === 'no' 
-                      ? 'border-white bg-white' 
-                      : 'border-slate-400 bg-white'
+                      ? 'border-[var(--radio-border)] bg-white' 
+                      : 'border-[var(--radio-border)] bg-white'
                   }`}>
                     {formData.bathroom_frequency_changed === 'no' && (
                       <div className="w-3.5 h-3.5 rounded-full bg-[#5F9EA0]"></div>
@@ -1448,16 +1514,16 @@ function SymptomsPageContent() {
                     value="true"
                     checked={formData.smoking === true}
                     onChange={handleInputChange}
-                    className="w-6 h-6 text-[#5F9EA0] opacity-0 absolute"
+                    className="w-6 h-6 text-cadet-blue opacity-0 absolute radio-button"
                     style={{
-                      accentColor: '#5F9EA0',
+                      accentColor: 'var(--text-cadet-blue)',
                       '--tw-accent-color': '#5F9EA0'
                     }}
                   />
                   <span className={`w-6 h-6 rounded-full border-2 flex items-center justify-center ${
                     formData.smoking === true 
-                      ? 'border-white bg-white' 
-                      : 'border-slate-400 bg-white'
+                      ? 'border-[var(--radio-border)] bg-white' 
+                      : 'border-[var(--radio-border)] bg-white'
                   }`}>
                     {formData.smoking === true && (
                       <div className="w-3.5 h-3.5 rounded-full bg-[#5F9EA0]"></div>
@@ -1474,16 +1540,16 @@ function SymptomsPageContent() {
                     value="false"
                     checked={formData.smoking === false}
                     onChange={handleInputChange}
-                    className="w-6 h-6 text-[#5F9EA0] opacity-0 absolute"
+                    className="w-6 h-6 text-cadet-blue opacity-0 absolute radio-button"
                     style={{
-                      accentColor: '#5F9EA0',
+                      accentColor: 'var(--text-cadet-blue)',
                       '--tw-accent-color': '#5F9EA0'
                     }}
                   />
                   <span className={`w-6 h-6 rounded-full border-2 flex items-center justify-center ${
                     formData.smoking === false 
-                      ? 'border-white bg-white' 
-                      : 'border-slate-400 bg-white'
+                      ? 'border-[var(--radio-border)] bg-white' 
+                      : 'border-[var(--radio-border)] bg-white'
                   }`}>
                     {formData.smoking === false && (
                       <div className="w-3.5 h-3.5 rounded-full bg-[#5F9EA0]"></div>
@@ -1544,16 +1610,16 @@ function SymptomsPageContent() {
                     value="true"
                     checked={formData.alcohol === true}
                     onChange={handleInputChange}
-                    className="w-6 h-6 text-[#5F9EA0] opacity-0 absolute"
+                    className="w-6 h-6 text-cadet-blue opacity-0 absolute radio-button"
                     style={{
-                      accentColor: '#5F9EA0',
+                      accentColor: 'var(--text-cadet-blue)',
                       '--tw-accent-color': '#5F9EA0'
                     }}
                   />
                   <span className={`w-6 h-6 rounded-full border-2 flex items-center justify-center ${
                     formData.alcohol === true 
-                      ? 'border-white bg-white' 
-                      : 'border-slate-400 bg-white'
+                      ? 'border-[var(--radio-border)] bg-white' 
+                      : 'border-[var(--radio-border)] bg-white'
                   }`}>
                     {formData.alcohol === true && (
                       <div className="w-3.5 h-3.5 rounded-full bg-[#5F9EA0]"></div>
@@ -1570,16 +1636,16 @@ function SymptomsPageContent() {
                     value="false"
                     checked={formData.alcohol === false}
                     onChange={handleInputChange}
-                    className="w-6 h-6 text-[#5F9EA0] opacity-0 absolute"
+                    className="w-6 h-6 text-cadet-blue opacity-0 absolute radio-button"
                     style={{
-                      accentColor: '#5F9EA0',
+                      accentColor: 'var(--text-cadet-blue)',
                       '--tw-accent-color': '#5F9EA0'
                     }}
                   />
                   <span className={`w-6 h-6 rounded-full border-2 flex items-center justify-center ${
                     formData.alcohol === false 
-                      ? 'border-white bg-white' 
-                      : 'border-slate-400 bg-white'
+                      ? 'border-[var(--radio-border)] bg-white' 
+                      : 'border-[var(--radio-border)] bg-white'
                   }`}>
                     {formData.alcohol === false && (
                       <div className="w-3.5 h-3.5 rounded-full bg-[#5F9EA0]"></div>
@@ -1703,8 +1769,8 @@ function SymptomsPageContent() {
                       breakfast: isChecked ? [{ food: '', quantity: '' }] : prev.breakfast
                     }))
                   }}
-                  className="mr-2 w-4 h-4 text-[#5F9EA0] bg-slate-700 border-slate-500 rounded focus:ring-[#5F9EA0] focus:ring-2"
-                  style={{accentColor: '#5F9EA0'}}
+                  className="mr-2 w-4 h-4 text-cadet-blue focus:ring-cadet-blue focus:ring-2"
+                  style={{accentColor: 'var(--text-cadet-blue)'}}
                 />
                 <span className="text-sm text-secondary">I didn't eat anything for breakfast</span>
               </div>
@@ -1796,8 +1862,8 @@ function SymptomsPageContent() {
                       lunch: isChecked ? [{ food: '', quantity: '' }] : prev.lunch
                     }))
                   }}
-                  className="mr-2 w-4 h-4 text-[#5F9EA0] bg-slate-700 border-slate-500 rounded focus:ring-[#5F9EA0] focus:ring-2"
-                  style={{accentColor: '#5F9EA0'}}
+                  className="mr-2 w-4 h-4 text-cadet-blue focus:ring-cadet-blue focus:ring-2"
+                  style={{accentColor: 'var(--text-cadet-blue)'}}
                 />
                 <span className="text-sm text-secondary">I didn't eat anything for lunch</span>
               </div>
@@ -1889,8 +1955,8 @@ function SymptomsPageContent() {
                       dinner: isChecked ? [{ food: '', quantity: '' }] : prev.dinner
                     }))
                   }}
-                  className="mr-2 w-4 h-4 text-[#5F9EA0] bg-slate-700 border-slate-500 rounded focus:ring-[#5F9EA0] focus:ring-2"
-                  style={{accentColor: '#5F9EA0'}}
+                  className="mr-2 w-4 h-4 text-cadet-blue focus:ring-cadet-blue focus:ring-2"
+                  style={{accentColor: 'var(--text-cadet-blue)'}}
                 />
                 <span className="text-sm text-secondary">I didn't eat anything for dinner</span>
               </div>
@@ -2066,7 +2132,7 @@ function SymptomsPageContent() {
 
         {/* Visual Separator for Review Page - only show if there are notes */}
         {currentStep === 17 && formData.notes && (
-          <div className="my-8 border-t border-slate-700/50"></div>
+          <div className="my-8 border-t border-slate-300 dark:border-slate-700/50"></div>
         )}
 
         {/* Navigation Buttons - Hide on landing page (step 0) */}

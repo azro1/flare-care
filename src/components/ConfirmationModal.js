@@ -91,9 +91,9 @@ export default function ConfirmationModal({
             )}
             <button
               onClick={handleConfirm}
-              className={`px-4 py-2 text-sm font-medium font-roboto text-white rounded-lg transition-colors duration-200 ${
+              className={`px-4 py-2 text-sm font-medium font-roboto rounded-lg transition-colors duration-200 ${
                 isDestructive 
-                  ? 'bg-red-500 hover:bg-red-400' 
+                  ? 'button-delete' 
                   : 'button-cadet'
               }`}
             >

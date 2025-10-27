@@ -351,7 +351,7 @@ function SymptomDetailContent() {
         <button
           onClick={() => setShowDeleteModal(true)}
           disabled={isDeleting}
-          className="w-full button-delete border border-red-600 focus:outline-none disabled:opacity-50"
+          className="w-full button-delete border border-red-600 focus:outline-none disabled:opacity-50 font-semibold"
         >
           {isDeleting ? 'Deleting...' : 'Delete entry'}
         </button>
