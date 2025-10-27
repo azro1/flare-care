@@ -21,6 +21,7 @@ function AccountPageContent() {
     
     try {
       await signOut()
+      setIsSigningOut(false)
       router.replace('/')
     } catch (error) {
       console.error('Sign out error:', error)
@@ -61,7 +62,7 @@ function AccountPageContent() {
 
   if (isSigningOut) {
     return (
-      <div className="fixed inset-0 flex items-center justify-center z-50">
+      <div className="flex-grow flex items-center justify-center">
         <div className="text-center">
           <div className="w-8 h-8 border-4 border-[#5F9EA0] border-t-transparent rounded-full animate-spin mx-auto mb-4"></div>
           <p className="text-secondary font-roboto">Signing out...</p>
@@ -241,7 +242,7 @@ function AccountPageContent() {
               </button>
               <button
                 onClick={handleDeleteAccount}
-                className="flex-1 px-4 py-2 bg-red-500 text-white hover:bg-red-400 rounded-lg transition-colors"
+                className="button-delete flex-1"
               >
                 Delete Account
               </button>

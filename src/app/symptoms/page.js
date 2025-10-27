@@ -10,6 +10,7 @@ import { supabase, TABLES } from '@/lib/supabase'
 import { useRouter, usePathname } from 'next/navigation'
 import { useAuth } from '@/lib/AuthContext'
 import { getUserPreferences, saveUserPreferences, updatePreference, checkHabitPattern } from '@/lib/userPreferences'
+import { Thermometer } from 'lucide-react'
 
 function SymptomsPageContent() {
   const { data: symptoms, setData: setSymptoms, deleteData: deleteSymptom } = useDataSync('flarecare-symptoms', [])
@@ -998,16 +999,14 @@ function SymptomsPageContent() {
           <div className="flex flex-col items-center justify-center text-center pt-16 sm:pt-0">
             {/* Icon - same as home page symptoms card */}
             <div className="w-16 h-16 bg-emerald-100 rounded-2xl flex items-center justify-center mx-auto mb-6">
-              <svg className="w-8 h-8 text-emerald-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z" />
-            </svg>
+              <Thermometer className="w-8 h-8 text-emerald-600" />
           </div>
             
             {/* Title */}
             <h2 className="text-2xl sm:text-3xl lg:text-4xl font-bold font-source text-primary mb-4 sm:mb-6">Track Symptoms</h2>
             
             {/* Optional description */}
-            <p className="text-lg sm:text-xl font-roboto text-secondary mb-8 max-w-md">Track your daily symptoms to identify patterns and triggers</p>
+            <p className="text-lg sm:text-xl font-roboto text-muted mb-8 max-w-md">Track your daily symptoms to identify patterns and triggers</p>
             
             {/* Start button */}
             <button
@@ -1254,7 +1253,7 @@ function SymptomsPageContent() {
             <h3 className="text-2xl sm:text-2xl md:text-3xl font-semibold text-primary mb-2">
               {formData.isOngoing ? 'How severe are your symptoms?' : 'How severe were your symptoms?'}
             </h3>
-            <p className="text-sm text-secondary mb-6">Rate from 1 (mild) to 10 (severe)</p>
+            <p className="text-sm text-muted mb-6">Rate from 1 (mild) to 10 (severe)</p>
             <div className="w-14">
                 <input
                   type="number"
@@ -1287,7 +1286,7 @@ function SymptomsPageContent() {
             <h3 className="text-2xl sm:text-2xl md:text-3xl font-semibold text-primary mb-2">
               {formData.isOngoing ? 'How stressed are you feeling?' : 'How stressed were you feeling during that time?'}
             </h3>
-            <p className="text-sm text-secondary mb-6">Rate from 1 (calm) to 10 (very stressed)</p>
+            <p className="text-sm text-muted mb-6">Rate from 1 (calm) to 10 (very stressed)</p>
             <div className="w-14">
                 <input
                   type="number"
@@ -1318,7 +1317,7 @@ function SymptomsPageContent() {
         {currentStep === 6 && (
           <div className="mb-5">
             <h3 className="text-2xl sm:text-2xl md:text-3xl font-semibold text-primary mb-2">How many times a day do you usually empty your bowels?</h3>
-            <p className="text-sm text-secondary mb-6">For example, '3' or '5'</p>
+            <p className="text-sm text-muted mb-6">For example, '3' or '5'</p>
 
             <div className="w-14">
               <input
@@ -1413,7 +1412,7 @@ function SymptomsPageContent() {
         {currentStep === 8 && (
           <div className="mb-5">
             <h3 className="text-2xl sm:text-2xl md:text-3xl font-semibold text-primary mb-2">Describe your change</h3>
-            <p className="text-sm text-secondary mb-6">For example, 'increased to 8-10 times per day, blood present, mucus, loose stools'</p>
+            <p className="text-sm text-muted mb-6">For example, 'increased to 8-10 times per day, blood present, mucus, loose stools'</p>
             <textarea
               id="bathroom_frequency_change_details"
               name="bathroom_frequency_change_details"
@@ -1503,7 +1502,7 @@ function SymptomsPageContent() {
             <h3 className="text-2xl sm:text-2xl md:text-3xl font-semibold text-primary mb-2">
               {isFirstTimeUser ? 'Please describe your smoking habits' : `How much did you smoke on ${new Date(formData.symptomStartDate).toLocaleDateString('en-GB', { day: 'numeric', month: 'short' })}?`}
             </h3>
-            <p className="text-sm text-secondary mb-6">
+            <p className="text-sm text-muted mb-6">
               {isFirstTimeUser 
                 ? "For example, '1 pack of cigarettes per day, occasional cigars'" 
                 : "For example, '5 cigarettes' or '1 cigar'"
@@ -1601,7 +1600,7 @@ function SymptomsPageContent() {
                 ? `How many units of alcohol did you drink on ${new Date(formData.symptomStartDate).toLocaleDateString('en-GB', { day: 'numeric', month: 'short' })}?` 
                 : 'How many units of alcohol do you drink per day?'}
             </h3>
-            <p className="text-sm text-secondary mb-6">For example, '2' or '5'</p>
+            <p className="text-sm text-muted mb-6">For example, '2' or '5'</p>
             <div className="w-14">
                 <input
                 type="number"
@@ -1911,7 +1910,7 @@ function SymptomsPageContent() {
         {currentStep === 16 && (
           <div className="mb-5">
             <h3 className="text-2xl sm:text-2xl md:text-3xl font-semibold text-primary mb-6">Additional notes</h3>
-            <p className="text-sm text-secondary mb-4">Share any other details about your symptoms, how you're feeling, or triggers you noticed</p>            
+            <p className="text-sm text-muted mb-4">Share any other details about your symptoms, how you're feeling, or triggers you noticed</p>            
             <div>
               <textarea
                 id="notes"
@@ -1931,71 +1930,71 @@ function SymptomsPageContent() {
             <h3 className="text-2xl sm:text-2xl md:text-3xl font-semibold text-primary mb-8">Review your entry</h3>
             <div className="space-y-4">
               
-              <div className="flex justify-between py-2 border-b border-slate-700/50">
+              <div className="flex justify-between py-2 border-b border-slate-300 dark:border-slate-700/50">
                 <span className="text-secondary">Start Date:</span>
                 <span className="font-medium text-primary">{formData.symptomStartDate ? new Date(formData.symptomStartDate).toLocaleDateString() : 'Not set'}</span>
                 </div>
 
-              <div className="flex justify-between py-2 border-b border-slate-700/50">
+              <div className="flex justify-between py-2 border-b border-slate-300 dark:border-slate-700/50">
                 <span className="text-secondary">Status:</span>
                 <span className="font-medium text-primary">{formData.isOngoing ? 'Ongoing' : 'Ended'}</span>
                       </div>
         
               {!formData.isOngoing && formData.symptomEndDate && (
-                <div className="flex justify-between py-2 border-b border-slate-700/50">
+                <div className="flex justify-between py-2 border-b border-slate-300 dark:border-slate-700/50">
                   <span className="text-secondary">End Date:</span>
                   <span className="font-medium text-primary">{new Date(formData.symptomEndDate).toLocaleDateString()}</span>
                   </div>
                 )}
 
-              <div className="flex justify-between py-2 border-b border-slate-700/50">
+              <div className="flex justify-between py-2 border-b border-slate-300 dark:border-slate-700/50">
                 <span className="text-secondary">Severity:</span>
                 <span className="font-medium text-primary">{formData.severity}/10</span>
                       </div>
 
-              <div className="flex justify-between py-2 border-b border-slate-700/50">
+              <div className="flex justify-between py-2 border-b border-slate-300 dark:border-slate-700/50">
                 <span className="text-secondary">Stress Level:</span>
                 <span className="font-medium text-primary">{formData.stress_level}/10</span>
                     </div>
 
-              <div className="flex justify-between py-2 border-b border-slate-700/50">
+              <div className="flex justify-between py-2 border-b border-slate-300 dark:border-slate-700/50">
                 <span className="text-secondary">Bathroom Frequency:</span>
                 <span className="font-medium text-primary">{formData.normal_bathroom_frequency || 'Not set'} times/day</span>
                 </div>
 
               {formData.bathroom_frequency_changed && (
-                <div className="flex justify-between py-2 border-b border-slate-700/50">
+                <div className="flex justify-between py-2 border-b border-slate-300 dark:border-slate-700/50">
                   <span className="text-secondary">Frequency Changed:</span>
                   <span className="font-medium text-primary">{formData.bathroom_frequency_changed === 'yes' ? 'Yes' : 'No'}</span>
                   </div>
                 )}
 
               {formData.bathroom_frequency_changed === 'yes' && formData.bathroom_frequency_change_details && (
-                <div className="py-2 border-b border-slate-700/50">
+                <div className="py-2 border-b border-slate-300 dark:border-slate-700/50">
                   <span className="text-secondary block mb-1">Describe your change:</span>
                   <span className="font-medium text-primary">{formData.bathroom_frequency_change_details}</span>
                   </div>
                 )}
 
-              <div className="flex justify-between py-2 border-b border-slate-700/50">
+              <div className="flex justify-between py-2 border-b border-slate-300 dark:border-slate-700/50">
                 <span className="text-secondary">Smoking:</span>
                 <span className="font-medium text-primary">{formData.smoking ? 'Yes' : 'No'}</span>
                       </div>
 
               {formData.smoking && formData.smoking_details && (
-                <div className="py-2 border-b border-slate-700/50">
+                <div className="py-2 border-b border-slate-300 dark:border-slate-700/50">
                   <span className="text-secondary block mb-1">Smoking Habits:</span>
                   <span className="font-medium text-primary">{formData.smoking_details}</span>
                   </div>
                 )}
 
-              <div className="flex justify-between py-2 border-b border-slate-700/50">
+              <div className="flex justify-between py-2 border-b border-slate-300 dark:border-slate-700/50">
                 <span className="text-secondary">Alcohol:</span>
                 <span className="font-medium text-primary">{formData.alcohol ? 'Yes' : 'No'}</span>
                     </div>
                     
               {formData.alcohol && formData.alcohol_units && (
-                <div className="flex justify-between py-2 border-b border-slate-700/50">
+                <div className="flex justify-between py-2 border-b border-slate-300 dark:border-slate-700/50">
                   <span className="text-secondary">Alcohol Units:</span>
                   <span className="font-medium text-primary">{formData.alcohol_units} units/day</span>
                           </div>
@@ -2005,7 +2004,7 @@ function SymptomsPageContent() {
                 formData.lunch.some(item => item.food.trim()) || 
                 formData.dinner.some(item => item.food.trim()) ||
                 formData.breakfast_skipped || formData.lunch_skipped || formData.dinner_skipped) && (
-                <div className="py-2 border-b border-slate-700/50">
+                <div className="py-2 border-b border-slate-300 dark:border-slate-700/50">
                   <span className="text-secondary block mb-2">Meals:</span>
                   <div className="space-y-1 text-sm">
                     {formData.breakfast.some(item => item.food.trim()) && (

@@ -360,7 +360,7 @@ function SymptomDetailContent() {
       {/* Delete Confirmation Modal */}
       {showDeleteModal && (
         <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
-          <div className="bg-slate-800 rounded-xl p-6 max-w-md mx-4 border border-slate-300/50 dark:border-slate-700/50">
+          <div className="bg-white dark:bg-slate-800 rounded-xl p-6 max-w-md mx-4 border border-slate-300/50 dark:border-slate-700/50">
             <div className="flex items-center gap-3 mb-4">
               <div className="w-10 h-10 bg-red-100 rounded-full flex items-center justify-center">
                 <svg className="w-6 h-6 text-red-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -378,14 +378,14 @@ function SymptomDetailContent() {
               <button
                 onClick={() => setShowDeleteModal(false)}
                 disabled={isDeleting}
-                className="flex-1 px-4 py-2 text-secondary bg-slate-700/50 hover:bg-slate-600/50 rounded-lg transition-colors disabled:opacity-50"
+                className="flex-1 px-4 py-2 button-cancel disabled:opacity-50"
               >
                 Cancel
               </button>
               <button
                 onClick={handleDelete}
                 disabled={isDeleting}
-                className="flex-1 px-4 py-2 bg-red-500 text-primary hover:bg-red-400 rounded-lg transition-colors disabled:opacity-50"
+                className="flex-1 px-4 py-2 button-delete disabled:opacity-50"
               >
                 {isDeleting ? 'Deleting...' : 'Delete'}
               </button>

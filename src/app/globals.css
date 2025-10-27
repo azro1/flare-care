@@ -13,7 +13,7 @@
     --bg-section: #f1f5f9; /* Light section background */
     --bg-card: #ffffff;
     --bg-card-hover: #f1f5f9;
-    --bg-card-inner: #ffffff; /* White inner card background */
+    --bg-card-inner: #f8fafc; /* Light gray inner card background - different from white */
     --bg-icon: #e2e8f0; /* Light icon background */
     --text-icon: #475569; /* Light icon text */
     --bg-input: #ffffff;
@@ -36,7 +36,7 @@
     
     /* Goal colors */
     --bg-goal-success: #dcfce7; /* Light green background for completed goals */
-    --text-goal-success: #16a34a; /* Dark green text for completed goals */
+    --text-goal-success: #059669; /* Medium green text for completed goals */
     --bg-goal-icon-success: #dcfce7; /* Light green background for success icons */
     --text-goal-icon-success: #16a34a; /* Dark green for success icons */
     --bg-goal-icon-medication: #f3e8ff; /* Light purple background for medication icons */
@@ -47,7 +47,7 @@
     --text-primary: #1e293b; /* Dark text for light background */
     --text-secondary: #475569; /* Medium dark text */
     --text-tertiary: #64748b; /* Lighter dark text */
-    --text-muted: #64748b; /* Muted gray text - darker for light mode readability */
+    --text-muted: #475569; /* Muted gray text - darker for light mode readability */
     --text-white: #ffffff;
     
     --border-primary: #cbd5e1; /* Light primary border */
@@ -180,7 +180,7 @@
     background-color: var(--bg-button-delete);
     color: #dc2626; /* Red text for light mode */
     border-color: #dc2626; /* Red border for light mode */
-    @apply px-5 py-3.5 rounded-lg transition-colors border hover:border-red-700;
+    @apply px-4 py-2 rounded-lg transition-colors border hover:border-red-700;
   }
   .dark .button-delete {
     color: var(--text-secondary); /* Normal text for dark mode */
