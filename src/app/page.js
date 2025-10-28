@@ -5,11 +5,12 @@ import { useAuth } from '@/lib/AuthContext'
 import { useEffect, useState } from 'react'
 import { useDataSync } from '@/lib/useDataSync'
 import { useRouter } from 'next/navigation'
-import { CupSoda, Pizza, Coffee, BookOpen, Smile, Thermometer, Pill, FileText, Activity, TrendingUp, PartyPopper, Clipboard, Cookie } from 'lucide-react'
+import { CupSoda, Pizza, Coffee, BookOpen, Smile, Thermometer, Pill, FileText, Activity, TrendingUp, PartyPopper, Clipboard, Cookie, ChartLine } from 'lucide-react'
 
 export default function Home() {
   const { isAuthenticated, loading, user } = useAuth()
   const { data: symptoms } = useDataSync('flarecare-symptoms', [])
+  const { data: medications } = useDataSync('flarecare-medications', [])
   const router = useRouter()
   const [showAllSymptoms, setShowAllSymptoms] = useState(false)
   const [showAllMedications, setShowAllMedications] = useState(false)
@@ -17,6 +18,7 @@ export default function Home() {
   const [showToast, setShowToast] = useState(false)
   const [showDeleteToast, setShowDeleteToast] = useState(false)
   const [showMedicationToast, setShowMedicationToast] = useState(false)
+  const [showMedicationDeleteToast, setShowMedicationDeleteToast] = useState(false)
   const [currentTipIndex, setCurrentTipIndex] = useState(0)
   const [isFading, setIsFading] = useState(false)
 
@@ -77,18 +79,25 @@ export default function Home() {
         setShowMedicationToast(false)
       }, 4000)
     }
+
+    const showMedicationDeleteToast = localStorage.getItem('showMedicationDeleteToast')
+    if (showMedicationDeleteToast === 'true') {
+      setShowMedicationDeleteToast(true)
+      localStorage.removeItem('showMedicationDeleteToast')
+      
+      // Auto-hide toast after 4 seconds
+      setTimeout(() => {
+        setShowMedicationDeleteToast(false)
+      }, 4000)
+    }
   }, [])
 
-  // Load tracked medications from localStorage
+  // Load tracked medications from Supabase medications data
   useEffect(() => {
-    if (typeof window !== 'undefined') {
-      const data = localStorage.getItem('flarecare-medication-tracking')
-      if (data) {
-        const parsed = JSON.parse(data)
-        setTrackedMedications(parsed.sort((a, b) => new Date(b.createdAt) - new Date(a.createdAt)))
-      }
-    }
-  }, [showMedicationToast]) // Reload when medication is added
+    // Filter medication tracking entries from medications data
+    const medicationTrackingEntries = medications.filter(med => med.name === 'Medication Tracking')
+    setTrackedMedications(medicationTrackingEntries.sort((a, b) => new Date(b.created_at) - new Date(a.created_at)))
+  }, [medications, showMedicationToast]) // Reload when medications change or medication is added
 
   // Prevent body scrolling when not authenticated
   // useEffect(() => {
@@ -337,6 +346,20 @@ export default function Home() {
           </button>
         </div>
       )}
+
+      {showMedicationDeleteToast && (
+        <div className="fixed top-24 right-4 z-50 bg-red-100 text-red-600 px-6 py-3 rounded-lg shadow-lg flex items-center max-w-xs border border-red-600">
+          <span className="font-medium">Medication entry deleted successfully!</span>
+          <button
+            onClick={() => setShowMedicationDeleteToast(false)}
+            className="ml-3 text-red-600/80 hover:text-red-600"
+          >
+            <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+            </svg>
+          </button>
+        </div>
+      )}
       
       <div className="w-full px-3 sm:px-4 md:px-6 lg:px-8">
         <div className="flex flex-col lg:flex-row lg:gap-8 lg:justify-center">
@@ -422,32 +445,37 @@ export default function Home() {
           {/* Main Content */}
           <div className="flex-1 lg:max-w-4xl order-1 lg:order-2">
         {/* Greeting */}
-        <div className="mb-12">
+        <div className="mb-8">
           <h1 className="text-2xl sm:text-3xl lg:text-4xl font-bold font-source text-primary mb-4 sm:mb-6">
-            Hello, {user?.user_metadata?.full_name?.split(' ')[0] || 'User'}
+            {(() => {
+              const hour = new Date().getHours()
+              if (hour < 12) return 'Good morning'
+              if (hour < 17) return 'Good afternoon'
+              return 'Good evening'
+            })()}, {user?.user_metadata?.full_name?.split(' ')[0] || 'User'}
           </h1>
           <p className="text-base font-roboto text-secondary">
             {new Date().toLocaleDateString('en-GB', { weekday: 'long', day: 'numeric', month: 'long' })}
           </p>
-      </div>
+        </div>
 
         {/* Quick Actions */}
-        <div className="mb-8">
+        <div className="mb-8 p-6 rounded-xl w-full" style={{background: 'var(--bg-quick-actions-gradient)'}}>
           <h2 className="text-xl font-semibold font-source text-primary mb-4">Quick Actions</h2>
-          <div className="grid grid-cols-2 gap-4">
+          <div className="grid grid-cols-2 gap-4 max-w-sm">
             <Link href="/symptoms" className="card p-6 hover:border-slate-500/50 transition-all">
               <div className="text-center">
                 <div className="w-12 h-12 bg-emerald-100 rounded-xl flex items-center justify-center mx-auto mb-3">
                   <Thermometer className="w-6 h-6 text-emerald-600" />
                 </div>
-                <h3 className="font-semibold text-primary">Track Symptoms</h3>
+                <h3 className="font-semibold text-primary">Log Symptoms</h3>
             </div>
           </Link>
 
             <Link href="/medications/track" className="card p-6 hover:border-slate-500/50 transition-all">
               <div className="text-center">
-                <div className="w-12 h-12 bg-purple-100 rounded-xl flex items-center justify-center mx-auto mb-3">
-                  <Pill className="w-5 h-5 text-purple-600" />
+                <div className="w-12 h-12 bg-pink-100 rounded-xl flex items-center justify-center mx-auto mb-3">
+                  <ChartLine className="w-5 h-5 text-pink-600" />
                 </div>
                 <h3 className="font-semibold text-primary">Track Meds</h3>
             </div>
@@ -483,12 +511,12 @@ export default function Home() {
         {/* Recent Symptoms */}
         {displayedSymptoms.length > 0 && (
           <div className="mb-8">
-            <div className="flex justify-between items-center mb-4">
-              <h2 className="text-xl font-semibold font-source text-primary">Recent Tracked Symptoms</h2>
+            <div className="flex flex-col sm:flex-row sm:justify-between sm:items-center mb-4 gap-2">
+              <h2 className="text-xl font-semibold font-source text-primary">Recent Logged Symptoms</h2>
               {symptoms.length > 1 && (
                 <button 
                   onClick={() => setShowAllSymptoms(!showAllSymptoms)}
-                  className="text-[#5F9EA0] hover:text-[#5F9EA0]/80 text-sm font-medium"
+                  className="text-[#5F9EA0] hover:text-[#5F9EA0]/80 text-sm font-medium self-start sm:self-auto"
                 >
                   {showAllSymptoms ? 'Show Less' : 'View All'}
                 </button>
@@ -496,13 +524,14 @@ export default function Home() {
             </div>
             <div className="space-y-3 max-w-xs">
               {displayedSymptoms.map((symptom) => (
-                <div 
-                  key={symptom.id} 
-                  className="card p-6 hover:border-slate-500/50 cursor-pointer transition-all duration-200"
-                  onClick={() => {
-                    router.push(`/symptoms/${symptom.id}`)
-                  }}
-                >
+                <div key={symptom.id} className="flex items-center">
+                  <div className="w-1 h-20 bg-emerald-600 mx-3"></div>
+                  <div 
+                    className="card p-6 hover:border-slate-500/50 cursor-pointer transition-all duration-200 flex-1"
+                    onClick={() => {
+                      router.push(`/symptoms/${symptom.id}`)
+                    }}
+                  >
                   <div className="space-y-4">
                     <div className="flex items-center justify-between">
                       <span className="text-sm font-medium text-primary">
@@ -513,12 +542,12 @@ export default function Home() {
                       </span>
                     </div>
                     <div className="flex gap-6 text-sm text-secondary">
-                      <span>Severity: {symptom.severity}/10</span>
-                      <span>Stress: {symptom.stress_level}/10</span>
+                      <span>View details</span>
                     </div>
                     {symptom.notes && (
                       <p className="text-sm text-secondary line-clamp-2 leading-relaxed">{symptom.notes}</p>
                     )}
+                  </div>
                   </div>
                 </div>
               ))}
@@ -529,12 +558,12 @@ export default function Home() {
         {/* Recent Medications */}
         {trackedMedications.length > 0 && (
           <div className="mb-8">
-            <div className="flex justify-between items-center mb-4">
+            <div className="flex flex-col sm:flex-row sm:justify-between sm:items-center mb-4 gap-2">
               <h2 className="text-xl font-semibold font-source text-primary">Recent Tracked Medications</h2>
               {trackedMedications.length > 1 && (
                 <button 
                   onClick={() => setShowAllMedications(!showAllMedications)}
-                  className="text-[#5F9EA0] hover:text-[#5F9EA0]/80 text-sm font-medium"
+                  className="text-[#5F9EA0] hover:text-[#5F9EA0]/80 text-sm font-medium self-start sm:self-auto"
                 >
                   {showAllMedications ? 'Show Less' : 'View All'}
                 </button>
@@ -542,33 +571,27 @@ export default function Home() {
             </div>
             <div className="space-y-3 max-w-xs">
               {(showAllMedications ? trackedMedications : trackedMedications.slice(0, 1)).map((tracked, index) => (
-                <div 
-                  key={tracked.id}
-                  className="card p-6 hover:border-slate-500/50 cursor-pointer transition-all duration-200"
-                  onClick={() => {
-                    router.push(`/medications/track/${tracked.id}`)
-                  }}
-                >
+                <div key={tracked.id} className="flex items-center">
+                  <div className="w-1 h-20 bg-pink-600 mx-3"></div>
+                  <div 
+                    className="card p-6 hover:border-slate-500/50 cursor-pointer transition-all duration-200 flex-1"
+                    onClick={() => {
+                      router.push(`/medications/track/${tracked.id}`)
+                    }}
+                  >
                   <div className="space-y-4">
                     <div className="flex items-center justify-between">
                       <span className="text-sm font-medium text-primary">
-                        {new Date(tracked.createdAt).toLocaleDateString()}
+                        {new Date(tracked.created_at || tracked.createdAt).toLocaleDateString()}
                       </span>
                       <span className="text-xs text-slate-400">
-                        {new Date(tracked.createdAt).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
+                        {new Date(tracked.created_at || tracked.createdAt).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
                       </span>
                     </div>
                     <div className="flex gap-6 text-sm text-secondary">
-                      {tracked.missedMedicationsList.length > 0 && (
-                        <span>Missed: {tracked.missedMedicationsList.length}</span>
-                      )}
-                      {tracked.nsaidList.length > 0 && (
-                        <span>NSAIDs: {tracked.nsaidList.length}</span>
-                      )}
-                      {tracked.antibioticList.length > 0 && (
-                        <span>Antibiotics: {tracked.antibioticList.length}</span>
-                      )}
+                      <span>View details</span>
                     </div>
+                  </div>
                   </div>
                 </div>
               ))}
@@ -579,8 +602,8 @@ export default function Home() {
         {/* Recent Activity */}
         <div className="mb-8">
           <h2 className="text-xl font-semibold font-source text-primary mb-4">Recent Activity</h2>
-          <div className="card p-6">
-            {symptoms.length === 0 ? (
+          <div className="card p-6 transition-all duration-300 ease-in-out">
+            {symptoms.length === 0 && trackedMedications.length === 0 ? (
               <div className="text-center py-4">
                 <div className="w-12 h-12 icon-container mx-auto mb-3">
                   <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -588,35 +611,65 @@ export default function Home() {
                   </svg>
                 </div>
                 <p className="text-secondary text-sm">No recent activity</p>
-                <p className="text-xs text-secondary mt-1">Start tracking your symptoms to see activity here</p>
+                <p className="text-xs text-secondary mt-1">Start tracking your symptoms and medications to see activity here</p>
               </div>
             ) : (
               <div className="space-y-3">
                 {/* Most recent symptom entry */}
-                <div className="flex items-center gap-3 py-2">
-                  <div className="w-8 h-8 bg-emerald-100 rounded-lg flex items-center justify-center">
-                    <Thermometer className="w-4 h-4 text-emerald-600" />
+                {symptoms.length > 0 && (
+                  <div className="flex items-center gap-3 py-2">
+                    <div className="w-8 h-8 bg-emerald-100 rounded-lg flex items-center justify-center">
+                      <Thermometer className="w-4 h-4 text-emerald-600" />
+                    </div>
+                    <div className="flex-1">
+                      <p className="text-sm font-medium text-primary">Logged symptoms</p>
+                      <p className="text-xs text-slate-400 mt-1">
+                        {(() => {
+                          const lastSymptom = symptoms[0]
+                          const lastDate = new Date(lastSymptom.created_at || lastSymptom.createdAt)
+                          const now = new Date()
+                          const diffMinutes = Math.floor((now - lastDate) / (1000 * 60))
+                          const diffHours = Math.floor(diffMinutes / 60)
+                          
+                          if (diffMinutes < 1) return 'Just now'
+                          if (diffMinutes < 60) return `${diffMinutes} minute${diffMinutes > 1 ? 's' : ''} ago`
+                          if (diffHours < 24) return `${diffHours} hour${diffHours > 1 ? 's' : ''} ago`
+                          const diffDays = Math.floor(diffHours / 24)
+                          if (diffDays < 7) return `${diffDays} day${diffDays > 1 ? 's' : ''} ago`
+                          return lastDate.toLocaleDateString()
+                        })()}
+                      </p>
+                    </div>
                   </div>
-                  <div className="flex-1">
-                    <p className="text-sm font-medium text-primary">Logged symptoms</p>
-                    <p className="text-xs text-slate-400 mt-1">
-                      {(() => {
-                        const lastSymptom = symptoms[0]
-                        const lastDate = new Date(lastSymptom.created_at || lastSymptom.createdAt)
-                        const now = new Date()
-                        const diffMinutes = Math.floor((now - lastDate) / (1000 * 60))
-                        const diffHours = Math.floor(diffMinutes / 60)
-                        
-                        if (diffMinutes < 1) return 'Just now'
-                        if (diffMinutes < 60) return `${diffMinutes} minute${diffMinutes > 1 ? 's' : ''} ago`
-                        if (diffHours < 24) return `${diffHours} hour${diffHours > 1 ? 's' : ''} ago`
-                        const diffDays = Math.floor(diffHours / 24)
-                        if (diffDays < 7) return `${diffDays} day${diffDays > 1 ? 's' : ''} ago`
-                        return lastDate.toLocaleDateString()
-                      })()}
-                    </p>
+                )}
+
+                {/* Most recent medication entry */}
+                {trackedMedications.length > 0 && (
+                  <div className="flex items-center gap-3 py-2">
+                    <div className="w-8 h-8 bg-pink-100 rounded-lg flex items-center justify-center">
+                      <ChartLine className="w-3.5 h-3.5 text-pink-600" />
+                    </div>
+                    <div className="flex-1">
+                      <p className="text-sm font-medium text-primary">Tracked medications</p>
+                      <p className="text-xs text-slate-400 mt-1">
+                        {(() => {
+                          const lastMedication = trackedMedications[0]
+                          const lastDate = new Date(lastMedication.created_at || lastMedication.createdAt)
+                          const now = new Date()
+                          const diffMinutes = Math.floor((now - lastDate) / (1000 * 60))
+                          const diffHours = Math.floor(diffMinutes / 60)
+                          
+                          if (diffMinutes < 1) return 'Just now'
+                          if (diffMinutes < 60) return `${diffMinutes} minute${diffMinutes > 1 ? 's' : ''} ago`
+                          if (diffHours < 24) return `${diffHours} hour${diffHours > 1 ? 's' : ''} ago`
+                          const diffDays = Math.floor(diffHours / 24)
+                          if (diffDays < 7) return `${diffDays} day${diffDays > 1 ? 's' : ''} ago`
+                          return lastDate.toLocaleDateString()
+                        })()}
+                      </p>
+                    </div>
                   </div>
-                </div>
+                )}
 
                 {/* Tracking streak */}
                 {symptoms.length >= 3 && (
@@ -636,8 +689,8 @@ export default function Home() {
                 {/* Welcome message for new users */}
                 {symptoms.length === 1 && (
                   <div className="flex items-center gap-3 py-2">
-                    <div className="w-8 h-8 bg-pink-100 rounded-lg flex items-center justify-center">
-                      <PartyPopper className="w-4 h-4 text-pink-600" />
+                    <div className="w-8 h-8 bg-gradient-to-br from-orange-400 to-red-500 rounded-lg flex items-center justify-center">
+                      <PartyPopper className="w-4 h-4 text-white" />
                     </div>
                     <div className="flex-1">
                       <p className="text-sm font-medium text-primary">Welcome to FlareCare!</p>

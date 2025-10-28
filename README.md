@@ -24,6 +24,8 @@ A personal companion app for managing Crohn's & Colitis symptoms, built with Nex
 - **Toast notifications** for successful actions
 - Mobile-friendly form design with validation
 - **Pattern detection** - intelligently detects habit changes over time
+- **Enhanced detail pages** - Clean, organized view of individual symptom entries
+- **Improved visual hierarchy** - Better spacing and typography for readability
 
 ### 💊 Medication Management
 - Add medications with dosage and timing
@@ -34,6 +36,11 @@ A personal companion app for managing Crohn's & Colitis symptoms, built with Nex
 - Edit and delete medication entries
 - Visual time-of-day indicators
 - Clean, organized medication list
+- **NEW: Medication Tracking Wizard** - Track missed medications, NSAIDs, and antibiotics
+- **Multi-step tracking flow** - Simple wizard interface for medication adherence logging
+- **Detailed tracking** - Log specific medications with dates, times, and dosages
+- **Dashboard integration** - View recent medication tracking activity
+- **Supabase integration** - Cloud storage for medication tracking data
 
 ### 📈 Reports & Analytics
 - **Flexible date ranges** - Last 7 days, 30 days, 3 months, or custom periods
@@ -184,6 +191,22 @@ src/
 - **Private**: Only you can access your data - no sharing with third parties
 
 ## Recent Updates
+
+### 🆕 Medication Tracking Wizard (Latest)
+- **Complete medication adherence tracking** - Track missed medications, NSAIDs, and antibiotics
+- **Multi-step wizard interface** - Intuitive flow matching the symptoms wizard design
+- **Detailed medication logging** - Specific medications with dates, times, and dosages
+- **Dashboard integration** - Recent medication tracking activity displayed on home page
+- **Supabase cloud storage** - Medication tracking data synced across devices
+- **Delete functionality** - Remove medication tracking entries with confirmation modals
+- **Consistent UI/UX** - Matches the existing app design language and patterns
+
+### 🎨 Enhanced Symptom Details Pages
+- **Redesigned detail view** - Clean, organized layout for individual symptom entries
+- **Improved visual hierarchy** - Better spacing, typography, and information organization
+- **Status-first overview** - Key metrics displayed with clear priority (Status, Severity, Stress)
+- **Consistent styling** - Proper CSS variable usage and dark mode support
+- **Mobile optimization** - Responsive design that works perfectly on all devices
 
 ### 🚀 Smart User Preferences System
 - **Intelligent symptom logging** - learns from your habits to streamline future entries

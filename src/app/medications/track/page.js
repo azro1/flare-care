@@ -7,11 +7,14 @@ import ConfirmationModal from '@/components/ConfirmationModal'
 import ProtectedRoute from '@/components/ProtectedRoute'
 import DatePicker from 'react-datepicker'
 import 'react-datepicker/dist/react-datepicker.css'
-import { Pill } from 'lucide-react'
+import { ChartLine } from 'lucide-react'
+import { useDataSync } from '@/lib/useDataSync'
+import { supabase, TABLES } from '@/lib/supabase'
 
 function MedicationTrackingWizard() {
   const router = useRouter()
   const { user } = useAuth()
+  const { data: medications, setData: setMedications } = useDataSync('flarecare-medications', [])
 
   // Wizard state - initialize from localStorage if available
   const [currentStep, setCurrentStep] = useState(() => {
@@ -47,6 +50,7 @@ function MedicationTrackingWizard() {
   const [showCancelModal, setShowCancelModal] = useState(false)
   const [dateErrors, setDateErrors] = useState({})
   const [fieldErrors, setFieldErrors] = useState({})
+  const [isSubmitting, setIsSubmitting] = useState(false)
 
   // Save state to localStorage whenever it changes
   useEffect(() => {
@@ -312,6 +316,11 @@ function MedicationTrackingWizard() {
 
   // Handle submit
   const handleSubmit = async () => {
+    // Prevent multiple submissions
+    if (isSubmitting) return
+    
+    setIsSubmitting(true)
+    
     // Filter out empty entries
     const cleanedData = {
       missedMedicationsList: formData.missedMedications ? formData.missedMedicationsList.filter(item => item.medication.trim()) : [],
@@ -319,29 +328,48 @@ function MedicationTrackingWizard() {
       antibioticList: formData.antibioticUsage ? formData.antibioticList.filter(item => item.medication.trim()) : []
     }
 
-    // Save to localStorage (or Supabase if implemented)
-    const medicationData = {
+    // Create medication tracking entry following the same pattern as symptoms
+    const newMedicationTracking = {
       id: `medication-tracking-${Date.now()}`,
-      ...cleanedData,
-      createdAt: new Date().toISOString()
+      user_id: user?.id, // Add user_id like symptoms does
+      name: 'Medication Tracking',
+      dosage: '',
+      frequency: 'custom',
+      custom_time: '',
+      reminders_enabled: false,
+      notes: 'Medication adherence tracking data',
+      start_date: new Date().toISOString().split('T')[0],
+      end_date: null,
+      missed_medications_list: cleanedData.missedMedicationsList,
+      nsaid_list: cleanedData.nsaidList,
+      antibiotic_list: cleanedData.antibioticList,
+      created_at: new Date().toISOString()
     }
 
-    // Store in localStorage for now
-    if (typeof window !== 'undefined') {
-      const existingData = JSON.parse(localStorage.getItem('flarecare-medication-tracking') || '[]')
-      existingData.push(medicationData)
-      localStorage.setItem('flarecare-medication-tracking', JSON.stringify(existingData))
+    try {
+      // Save to Supabase - following the exact same pattern as symptoms
+      const { error } = await supabase
+        .from(TABLES.MEDICATIONS)
+        .insert([newMedicationTracking])
+
+      if (error) throw error
+
+      // Update local state - following the exact same pattern as symptoms
+      setMedications([newMedicationTracking, ...medications])
+
+      // Clear wizard state
+      localStorage.removeItem('medication-wizard-step')
+      localStorage.removeItem('medication-wizard-form')
+
+      // Set toast flag
+      localStorage.setItem('showMedicationToast', 'true')
+
+      // Redirect to dashboard
+      router.push('/')
+    } catch (error) {
+      console.error('Error saving medication tracking:', error)
+      setIsSubmitting(false)
     }
-
-    // Clear wizard state
-    localStorage.removeItem('medication-wizard-step')
-    localStorage.removeItem('medication-wizard-form')
-
-    // Set toast flag
-    localStorage.setItem('showMedicationToast', 'true')
-
-    // Redirect to dashboard
-    router.push('/')
   }
 
   // Render based on current step
@@ -925,8 +953,8 @@ function MedicationTrackingWizard() {
         {currentStep === 0 && (
           <div className="flex flex-col items-center justify-center text-center pt-16 sm:pt-0">
             {/* Icon - same as home page medications card */}
-            <div className="w-16 h-16 rounded-2xl flex items-center justify-center mx-auto mb-6" style={{backgroundColor: 'var(--bg-goal-icon-medication)'}}>
-              <Pill className="w-8 h-8" style={{color: 'var(--text-goal-icon-medication)'}} />
+            <div className="w-16 h-16 bg-pink-100 rounded-2xl flex items-center justify-center mx-auto mb-6">
+              <ChartLine className="w-8 h-8 text-pink-600" />
             </div>
             
             {/* Title */}
@@ -965,9 +993,10 @@ function MedicationTrackingWizard() {
             ) : (
               <button
                 onClick={handleSubmit}
-                className="button-cadet px-4 py-2 text-lg font-semibold rounded-lg transition-colors"
+                disabled={isSubmitting}
+                className="button-cadet px-4 py-2 text-lg font-semibold rounded-lg transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
               >
-                Submit
+                {isSubmitting ? 'Submitting...' : 'Submit'}
               </button>
             )}
           </div>

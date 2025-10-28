@@ -7,6 +7,7 @@
     /* Light theme colors */
     --bg-main: #f8fafc; /* Light main page background */
     --bg-main-gradient: linear-gradient(135deg, #f8fafc 0%, #e2e8f0 50%, #f8fafc 100%); /* Light gradient background */
+    --bg-quick-actions-gradient: linear-gradient(135deg, rgba(95, 158, 160, 0.1) 0%, rgba(95, 158, 160, 0.05) 50%, rgba(95, 158, 160, 0.1) 100%);
     --bg-primary: #f8fafc; /* Light primary background */
     --bg-secondary: #e2e8f0; /* Light secondary background */
     --bg-tertiary: #f8fafc; /* Light tertiary background */
@@ -72,6 +73,7 @@
     /* Dark theme colors */
         --bg-main: #0f172a; /* Main page background */
         --bg-main-gradient: linear-gradient(135deg, #0f172a 0%, #1e293b 50%, #0f172a 100%); /* Main gradient background */
+        --bg-quick-actions-gradient: linear-gradient(135deg, rgba(51, 65, 85, 0.3) 0%, rgba(51, 65, 85, 0.15) 50%, rgba(51, 65, 85, 0.3) 100%);
         --bg-primary: #0f172a; /* Dark primary background */
         --bg-secondary: #1e293b; /* Dark secondary background */
         --bg-tertiary: #0f172a; /* Dark tertiary background */

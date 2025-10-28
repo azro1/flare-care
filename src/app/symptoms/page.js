@@ -1053,7 +1053,7 @@ function SymptomsPageContent() {
       {/* Section Header - Hide on landing page */}
       {currentStep > 0 && (
         <div className="mb-8">
-          <h1 className="text-base sm:text-lg font-regular text-muted mb-3">Track Symptoms</h1>
+          <h1 className="text-base sm:text-lg font-regular text-muted mb-3">Log Symptoms</h1>
           <div className="border-b border-slate-300 dark:border-slate-700/50"></div>
           </div>
       )}
@@ -1069,7 +1069,7 @@ function SymptomsPageContent() {
           </div>
             
             {/* Title */}
-            <h2 className="text-2xl sm:text-3xl lg:text-4xl font-bold font-source text-primary mb-4 sm:mb-6">Track Symptoms</h2>
+            <h2 className="text-2xl sm:text-3xl lg:text-4xl font-bold font-source text-primary mb-4 sm:mb-6">Log Symptoms</h2>
             
             {/* Optional description */}
             <p className="text-lg sm:text-xl font-roboto text-muted mb-8 max-w-md">Track your daily symptoms to identify patterns and triggers</p>
