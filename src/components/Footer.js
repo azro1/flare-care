@@ -37,12 +37,12 @@ export default function Footer() {
   }, [])
   
   return (
-    <footer className={`py-8 sm:py-8 lg:py-12 px-4 sm:px-6 mt-auto ${needsFixedFooter ? 'bg-slate-800 fixed bottom-0 left-0 right-0 lg:static' : 'bg-slate-800'}`}>
+    <footer className={`py-8 sm:py-8 lg:py-12 px-4 sm:px-6 mt-auto ${needsFixedFooter ? 'fixed bottom-0 left-0 right-0 lg:static' : ''}`} style={{backgroundColor: 'var(--bg-nav-footer)'}}>
       <div className="max-w-7xl mx-auto">
         {/* Mobile minimal footer */}
         <div className="lg:hidden">
           <div className="flex items-center justify-center">
-            <span className="text-sm text-slate-300">© 2025 FlareCare</span>
+            <span className="text-sm" style={{color: 'var(--text-footer)'}}>© 2025 FlareCare</span>
           </div>
         </div>
 
@@ -53,10 +53,10 @@ export default function Footer() {
               <div className="w-8 h-8 rounded-lg flex items-center justify-center bg-[#5F9EA0]">
                 <Activity className="w-4 h-4 text-white" />
               </div>
-              <span className="font-bold font-source text-lg text-slate-300">FlareCare</span>
+              <span className="font-bold font-source text-lg" style={{color: 'var(--text-footer)'}}>FlareCare</span>
             </div>
 
-            <div className="flex gap-8 text-sm text-slate-400">
+            <div className="flex gap-8 text-sm text-slate-300">
               <a href="/about" className="transition-colors hover:text-[#5F9EA0]">About</a>
               <a href="#" className="transition-colors hover:text-[#5F9EA0]">Privacy</a>
               <a href="#" className="transition-colors hover:text-[#5F9EA0]">Terms</a>
@@ -64,7 +64,7 @@ export default function Footer() {
             </div>
           </div>
 
-          <div className="mt-8 pt-8 text-center text-sm border-t border-slate-700/50 text-slate-500">
+          <div className="mt-8 pt-8 text-center text-sm text-slate-300" style={{borderTop: '1px solid var(--border-footer)'}}>
             Made with care for the IBD community
           </div>
         </div>

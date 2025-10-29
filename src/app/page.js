@@ -90,6 +90,7 @@ export default function Home() {
         setShowMedicationDeleteToast(false)
       }, 4000)
     }
+
   }, [])
 
   // Load tracked medications from Supabase medications data
@@ -163,7 +164,7 @@ export default function Home() {
                 </div>
                 <div>
                   <div className="text-primary font-medium">Today's entry</div>
-                  <div className="text-sm text-slate-400">Oct 21, 2025</div>
+                  <div className="text-sm text-slate-400 dark:[color:var(--text-tertiary)]">Oct 21, 2025</div>
                 </div>
               </div>
 
@@ -172,7 +173,7 @@ export default function Home() {
                   <Smile className="w-5 h-5 text-green-400 mt-1 flex-shrink-0" />
                   <div>
                     <div className="text-primary mb-1">Feeling pretty good today</div>
-                    <div className="text-slate-400 text-sm">Pain around 2/10, energy is decent</div>
+                    <div className="text-slate-400 dark:[color:var(--text-tertiary)] text-sm">Pain around 2/10, energy is decent</div>
                   </div>
                 </div>
 
@@ -180,7 +181,7 @@ export default function Home() {
                   <Coffee className="w-5 h-5 text-amber-400 mt-1 flex-shrink-0" />
                   <div>
                     <div className="text-primary mb-1">Had oatmeal for breakfast</div>
-                    <div className="text-slate-400 text-sm">Skipping coffee today to be safe</div>
+                    <div className="text-slate-400 dark:[color:var(--text-tertiary)] text-sm">Skipping coffee today to be safe</div>
                   </div>
                 </div>
 
@@ -188,7 +189,7 @@ export default function Home() {
                   <BookOpen className="w-5 h-5 text-blue-400 mt-1 flex-shrink-0" />
                   <div>
                     <div className="text-primary mb-1">All meds taken</div>
-                    <div className="text-slate-400 text-sm">Set up reminders for tomorrow</div>
+                    <div className="text-slate-400 dark:[color:var(--text-tertiary)] text-sm">Set up reminders for tomorrow</div>
                   </div>
                 </div>
               </div>
@@ -334,11 +335,11 @@ export default function Home() {
       )}
 
       {showMedicationToast && (
-        <div className="fixed top-24 right-4 z-50 bg-purple-100 text-purple-600 px-6 py-3 rounded-lg shadow-lg flex items-center max-w-xs border border-purple-600">
+        <div className="fixed top-24 right-4 z-50 bg-pink-100 text-pink-600 px-6 py-3 rounded-lg shadow-lg flex items-center max-w-xs border border-pink-600">
           <span className="font-medium">Medications tracked successfully!</span>
           <button
             onClick={() => setShowMedicationToast(false)}
-            className="ml-3 text-purple-600/80 hover:text-purple-600"
+            className="ml-3 text-pink-600/80 hover:text-pink-600"
           >
             <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
@@ -360,7 +361,7 @@ export default function Home() {
           </button>
         </div>
       )}
-      
+
       <div className="w-full px-3 sm:px-4 md:px-6 lg:px-8">
         <div className="flex flex-col lg:flex-row lg:gap-8 lg:justify-center">
           
@@ -369,7 +370,7 @@ export default function Home() {
             <div className="sticky top-8 space-y-6">
               
               {/* Quick Stats */}
-              <div className="card p-4 sm:p-6">
+              <div className="card no-hover-border p-4 sm:p-6">
                 <h3 className="text-lg font-semibold font-source text-primary mb-4">Your Progress</h3>
                 <div className="space-y-3">
                   <div className="flex justify-between items-center">
@@ -394,7 +395,7 @@ export default function Home() {
             </div>
 
               {/* Today's Goals */}
-              <div className="card p-4 sm:p-6">
+              <div className="card no-hover-border p-4 sm:p-6">
                 <h3 className="text-lg font-semibold font-source text-primary mb-4">Today's Goals</h3>
                 <div className="space-y-3">
                   <div className="flex items-center gap-3">
@@ -463,7 +464,7 @@ export default function Home() {
         <div className="mb-8 p-6 rounded-xl w-full" style={{background: 'var(--bg-quick-actions-gradient)'}}>
           <h2 className="text-xl font-semibold font-source text-primary mb-4">Quick Actions</h2>
           <div className="grid grid-cols-2 gap-4 max-w-sm">
-            <Link href="/symptoms" className="card p-6 hover:border-slate-500/50 transition-all">
+            <Link href="/symptoms" className="card p-6  transition-all">
               <div className="text-center">
                 <div className="w-12 h-12 bg-emerald-100 rounded-xl flex items-center justify-center mx-auto mb-3">
                   <Thermometer className="w-6 h-6 text-emerald-600" />
@@ -472,7 +473,7 @@ export default function Home() {
             </div>
           </Link>
 
-            <Link href="/medications/track" className="card p-6 hover:border-slate-500/50 transition-all">
+            <Link href="/medications/track" className="card p-6  transition-all">
               <div className="text-center">
                 <div className="w-12 h-12 bg-pink-100 rounded-xl flex items-center justify-center mx-auto mb-3">
                   <ChartLine className="w-5 h-5 text-pink-600" />
@@ -481,7 +482,7 @@ export default function Home() {
             </div>
           </Link>
 
-            <Link href="/reports" className="card p-6 hover:border-slate-500/50 transition-all">
+            <Link href="/reports" className="card p-6  transition-all">
               <div className="text-center">
                 <div className="w-12 h-12 bg-orange-100 rounded-xl flex items-center justify-center mx-auto mb-3">
                   <FileText className="w-5 h-5 text-orange-600" />
@@ -495,12 +496,12 @@ export default function Home() {
         {/* Today's Summary */}
         <div className="mb-8">
           <h2 className="text-xl font-semibold font-source text-primary mb-4">Today's Summary</h2>
-          <div className="card p-6">
+          <div className="card no-hover-border p-6">
             <div className="flex justify-between items-center py-2">
               <span className="text-secondary">Symptoms Logged</span>
               <span className="font-semibold text-primary">{todaySymptoms.length}</span>
             </div>
-            <div className="border-t border-slate-300/50 dark:border-slate-700/50 my-2"></div>
+            <div className="border-t my-2" style={{borderColor: 'var(--border-primary)'}}></div>
             <div className="flex justify-between items-center py-2">
               <span className="text-secondary">Medications Taken</span>
               <span className="font-semibold text-primary">0/0</span>
@@ -527,7 +528,7 @@ export default function Home() {
                 <div key={symptom.id} className="flex items-center">
                   <div className="w-1 h-20 bg-emerald-600 mx-3"></div>
                   <div 
-                    className="card p-6 hover:border-slate-500/50 cursor-pointer transition-all duration-200 flex-1"
+                    className="card p-6  cursor-pointer transition-all duration-200 flex-1"
                     onClick={() => {
                       router.push(`/symptoms/${symptom.id}`)
                     }}
@@ -537,7 +538,7 @@ export default function Home() {
                       <span className="text-sm font-medium text-primary">
                         {new Date(symptom.created_at || symptom.createdAt).toLocaleDateString()}
                       </span>
-                      <span className="text-xs text-slate-400">
+                      <span className="text-xs text-slate-400 dark:[color:var(--text-tertiary)]">
                         {new Date(symptom.created_at || symptom.createdAt).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
                       </span>
                     </div>
@@ -574,7 +575,7 @@ export default function Home() {
                 <div key={tracked.id} className="flex items-center">
                   <div className="w-1 h-20 bg-pink-600 mx-3"></div>
                   <div 
-                    className="card p-6 hover:border-slate-500/50 cursor-pointer transition-all duration-200 flex-1"
+                    className="card p-6  cursor-pointer transition-all duration-200 flex-1"
                     onClick={() => {
                       router.push(`/medications/track/${tracked.id}`)
                     }}
@@ -584,7 +585,7 @@ export default function Home() {
                       <span className="text-sm font-medium text-primary">
                         {new Date(tracked.created_at || tracked.createdAt).toLocaleDateString()}
                       </span>
-                      <span className="text-xs text-slate-400">
+                      <span className="text-xs text-slate-400 dark:[color:var(--text-tertiary)]">
                         {new Date(tracked.created_at || tracked.createdAt).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
                       </span>
                     </div>
@@ -602,7 +603,7 @@ export default function Home() {
         {/* Recent Activity */}
         <div className="mb-8">
           <h2 className="text-xl font-semibold font-source text-primary mb-4">Recent Activity</h2>
-          <div className="card p-6 transition-all duration-300 ease-in-out">
+          <div className="card no-hover-border p-6 transition-all duration-300 ease-in-out">
             {symptoms.length === 0 && trackedMedications.length === 0 ? (
               <div className="text-center py-4">
                 <div className="w-12 h-12 icon-container mx-auto mb-3">
@@ -623,7 +624,7 @@ export default function Home() {
                     </div>
                     <div className="flex-1">
                       <p className="text-sm font-medium text-primary">Logged symptoms</p>
-                      <p className="text-xs text-slate-400 mt-1">
+                      <p className="text-xs text-slate-400 dark:[color:var(--text-tertiary)] mt-1">
                         {(() => {
                           const lastSymptom = symptoms[0]
                           const lastDate = new Date(lastSymptom.created_at || lastSymptom.createdAt)
@@ -651,7 +652,7 @@ export default function Home() {
                     </div>
                     <div className="flex-1">
                       <p className="text-sm font-medium text-primary">Tracked medications</p>
-                      <p className="text-xs text-slate-400 mt-1">
+                      <p className="text-xs text-slate-400 dark:[color:var(--text-tertiary)] mt-1">
                         {(() => {
                           const lastMedication = trackedMedications[0]
                           const lastDate = new Date(lastMedication.created_at || lastMedication.createdAt)
@@ -674,14 +675,14 @@ export default function Home() {
                 {/* Tracking streak */}
                 {symptoms.length >= 3 && (
                   <div className="flex items-center gap-3 py-2">
-                    <div className="w-8 h-8 bg-blue-100 rounded-lg flex items-center justify-center">
-                      <svg className="w-4 h-4 text-blue-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <div className="w-8 h-8 bg-gradient-to-br from-slate-400 to-gray-500 rounded-lg flex items-center justify-center">
+                      <svg className="w-4 h-4 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                         <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12l2 2 4-4M7.835 4.697a3.42 3.42 0 001.946-.806 3.42 3.42 0 014.438 0 3.42 3.42 0 001.946.806 3.42 3.42 0 013.138 3.138 3.42 3.42 0 00.806 1.946 3.42 3.42 0 010 4.438 3.42 3.42 0 00-.806 1.946 3.42 3.42 0 01-3.138 3.138 3.42 3.42 0 00-1.946.806 3.42 3.42 0 01-4.438 0 3.42 3.42 0 00-1.946-.806 3.42 3.42 0 01-3.138-3.138 3.42 3.42 0 00-.806-1.946 3.42 3.42 0 010-4.438 3.42 3.42 0 00.806-1.946 3.42 3.42 0 013.138-3.138z" />
                       </svg>
                     </div>
                     <div className="flex-1">
                       <p className="text-sm font-medium text-primary">Completed {symptoms.length}-day tracking streak</p>
-                      <p className="text-xs text-slate-400">Great consistency!</p>
+                      <p className="text-xs text-slate-400 dark:[color:var(--text-tertiary)]">Great consistency!</p>
                     </div>
                   </div>
                 )}
@@ -694,7 +695,7 @@ export default function Home() {
                     </div>
                     <div className="flex-1">
                       <p className="text-sm font-medium text-primary">Welcome to FlareCare!</p>
-                      <p className="text-xs text-slate-400">You've logged your first symptom entry</p>
+                      <p className="text-xs text-slate-400 dark:[color:var(--text-tertiary)]">You've logged your first symptom entry</p>
                     </div>
                   </div>
                 )}
@@ -707,7 +708,7 @@ export default function Home() {
         <div className="mb-8">
           <h2 className="text-xl font-semibold font-source text-primary mb-4">More</h2>
           <div className="grid grid-cols-2 sm:grid-cols-3 gap-4">
-            <Link href="/about" className="card p-6 hover:border-slate-500/50 transition-all">
+            <Link href="/about" className="card p-6  transition-all">
               <div className="text-center">
                 <div className="w-12 h-12 icon-container mx-auto mb-3">
                   <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -718,7 +719,7 @@ export default function Home() {
               </div>
             </Link>
 
-            <Link href="/ibd" className="card p-6 hover:border-slate-500/50 transition-all">
+            <Link href="/ibd" className="card p-6  transition-all">
             <div className="text-center">
                 <div className="w-12 h-12 bg-blue-100 rounded-xl flex items-center justify-center mx-auto mb-3">
                   <svg className="w-6 h-6 text-blue-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -729,7 +730,7 @@ export default function Home() {
               </div>
             </Link>
 
-            <Link href="/food-guide" className="card p-6 hover:border-slate-500/50 transition-all">
+            <Link href="/food-guide" className="card p-6  transition-all">
               <div className="text-center">
               <div className="w-12 h-12 bg-yellow-100 rounded-xl flex items-center justify-center mx-auto mb-3">
                 <Pizza className="w-6 h-6 text-yellow-600" />

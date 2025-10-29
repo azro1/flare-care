@@ -48,6 +48,7 @@ function MedicationTrackingWizard() {
   })
 
   const [showCancelModal, setShowCancelModal] = useState(false)
+  const [showNoDataModal, setShowNoDataModal] = useState(false)
   const [dateErrors, setDateErrors] = useState({})
   const [fieldErrors, setFieldErrors] = useState({})
   const [isSubmitting, setIsSubmitting] = useState(false)
@@ -328,6 +329,21 @@ function MedicationTrackingWizard() {
       antibioticList: formData.antibioticUsage ? formData.antibioticList.filter(item => item.medication.trim()) : []
     }
 
+    // Check if all questions are "No" and all lists are empty
+    const hasNoData = 
+      !formData.missedMedications && 
+      !formData.nsaidUsage && 
+      !formData.antibioticUsage &&
+      cleanedData.missedMedicationsList.length === 0 &&
+      cleanedData.nsaidList.length === 0 &&
+      cleanedData.antibioticList.length === 0
+
+    if (hasNoData) {
+      setIsSubmitting(false)
+      setShowNoDataModal(true)
+      return
+    }
+
     // Create medication tracking entry following the same pattern as symptoms
     const newMedicationTracking = {
       id: `medication-tracking-${Date.now()}`,
@@ -507,8 +523,8 @@ function MedicationTrackingWizard() {
             </div>
             {/* Validation error message */}
             {fieldErrors.missedMedicationsList && (
-              <div className="mt-6 p-3 bg-red-50 dark:card-inner border border-red-300 dark:border-slate-600/50 rounded-lg">
-                <p className="text-red-600 dark:text-secondary text-sm">{fieldErrors.missedMedicationsList}</p>
+              <div className="mt-6 p-3 bg-red-50 border border-red-300 rounded-lg">
+                <p className="text-red-600 text-sm">{fieldErrors.missedMedicationsList}</p>
               </div>
             )}
           </div>
@@ -656,8 +672,8 @@ function MedicationTrackingWizard() {
             </div>
             {/* Validation error message */}
             {fieldErrors.nsaidList && (
-              <div className="mt-6 p-3 bg-red-50 dark:card-inner border border-red-300 dark:border-slate-600/50 rounded-lg">
-                <p className="text-red-600 dark:text-secondary text-sm">{fieldErrors.nsaidList}</p>
+              <div className="mt-6 p-3 bg-red-50 border border-red-300 rounded-lg">
+                <p className="text-red-600 text-sm">{fieldErrors.nsaidList}</p>
               </div>
             )}
           </div>
@@ -805,8 +821,8 @@ function MedicationTrackingWizard() {
             </div>
             {/* Validation error message */}
             {fieldErrors.antibioticList && (
-              <div className="mt-6 p-3 bg-red-50 dark:card-inner border border-red-300 dark:border-slate-600/50 rounded-lg">
-                <p className="text-red-600 dark:text-secondary text-sm">{fieldErrors.antibioticList}</p>
+              <div className="mt-6 p-3 bg-red-50 border border-red-300 rounded-lg">
+                <p className="text-red-600 text-sm">{fieldErrors.antibioticList}</p>
               </div>
             )}
           </div>
@@ -834,15 +850,15 @@ function MedicationTrackingWizard() {
               <div className="space-y-6">
                 {formData.missedMedicationsList.filter(item => item.medication.trim()).map((item, index) => (
                   <div key={index} className="space-y-3">
-                    <div className="flex justify-between py-2 border-b border-slate-300 dark:border-slate-700/50">
+                    <div className="flex justify-between py-2 border-b" style={{borderColor: 'var(--border-primary)'}}>
                       <span className="text-secondary">Medication:</span>
                       <span className="font-medium text-primary">{item.medication}</span>
                     </div>
-                    <div className="flex justify-between py-2 border-b border-slate-300 dark:border-slate-700/50">
+                    <div className="flex justify-between py-2 border-b" style={{borderColor: 'var(--border-primary)'}}>
                       <span className="text-secondary">Date:</span>
                       <span className="font-medium text-primary">{item.date ? new Date(item.date).toLocaleDateString('en-GB', { day: '2-digit', month: '2-digit', year: 'numeric' }) : 'N/A'}</span>
                     </div>
-                    <div className="flex justify-between py-2 border-b border-slate-300 dark:border-slate-700/50">
+                    <div className="flex justify-between py-2 border-b" style={{borderColor: 'var(--border-primary)'}}>
                       <span className="text-secondary">Time of Day:</span>
                       <span className="font-medium text-primary">{item.timeOfDay || 'N/A'}</span>
                     </div>
@@ -861,19 +877,19 @@ function MedicationTrackingWizard() {
               <div className="space-y-6">
                 {formData.nsaidList.filter(item => item.medication.trim()).map((item, index) => (
                   <div key={index} className="space-y-3">
-                    <div className="flex justify-between py-2 border-b border-slate-300 dark:border-slate-700/50">
+                    <div className="flex justify-between py-2 border-b" style={{borderColor: 'var(--border-primary)'}}>
                       <span className="text-secondary">Medication:</span>
                       <span className="font-medium text-primary">{item.medication}</span>
                     </div>
-                    <div className="flex justify-between py-2 border-b border-slate-300 dark:border-slate-700/50">
+                    <div className="flex justify-between py-2 border-b" style={{borderColor: 'var(--border-primary)'}}>
                       <span className="text-secondary">Dosage:</span>
                       <span className="font-medium text-primary">{item.dosage || 'N/A'}</span>
                     </div>
-                    <div className="flex justify-between py-2 border-b border-slate-300 dark:border-slate-700/50">
+                    <div className="flex justify-between py-2 border-b" style={{borderColor: 'var(--border-primary)'}}>
                       <span className="text-secondary">Date:</span>
                       <span className="font-medium text-primary">{item.date ? new Date(item.date).toLocaleDateString('en-GB', { day: '2-digit', month: '2-digit', year: 'numeric' }) : 'N/A'}</span>
                     </div>
-                    <div className="flex justify-between py-2 border-b border-slate-300 dark:border-slate-700/50">
+                    <div className="flex justify-between py-2 border-b" style={{borderColor: 'var(--border-primary)'}}>
                       <span className="text-secondary">Time of Day:</span>
                       <span className="font-medium text-primary">{item.timeOfDay || 'N/A'}</span>
                     </div>
@@ -892,19 +908,19 @@ function MedicationTrackingWizard() {
               <div className="space-y-6">
                 {formData.antibioticList.filter(item => item.medication.trim()).map((item, index) => (
                   <div key={index} className="space-y-3">
-                    <div className="flex justify-between py-2 border-b border-slate-300 dark:border-slate-700/50">
+                    <div className="flex justify-between py-2 border-b" style={{borderColor: 'var(--border-primary)'}}>
                       <span className="text-secondary">Medication:</span>
                       <span className="font-medium text-primary">{item.medication}</span>
                     </div>
-                    <div className="flex justify-between py-2 border-b border-slate-300 dark:border-slate-700/50">
+                    <div className="flex justify-between py-2 border-b" style={{borderColor: 'var(--border-primary)'}}>
                       <span className="text-secondary">Dosage:</span>
                       <span className="font-medium text-primary">{item.dosage || 'N/A'}</span>
                     </div>
-                    <div className="flex justify-between py-2 border-b border-slate-300 dark:border-slate-700/50">
+                    <div className="flex justify-between py-2 border-b" style={{borderColor: 'var(--border-primary)'}}>
                       <span className="text-secondary">Date:</span>
                       <span className="font-medium text-primary">{item.date ? new Date(item.date).toLocaleDateString('en-GB', { day: '2-digit', month: '2-digit', year: 'numeric' }) : 'N/A'}</span>
                     </div>
-                    <div className="flex justify-between py-2 border-b border-slate-300 dark:border-slate-700/50">
+                    <div className="flex justify-between py-2 border-b" style={{borderColor: 'var(--border-primary)'}}>
                       <span className="text-secondary">Time of Day:</span>
                       <span className="font-medium text-primary">{item.timeOfDay || 'N/A'}</span>
                     </div>
@@ -943,7 +959,7 @@ function MedicationTrackingWizard() {
       {currentStep > 0 && (
         <div className="mb-8">
           <h1 className="text-base sm:text-lg font-regular text-muted mb-3">Track Medications</h1>
-          <div className="border-b border-slate-300 dark:border-slate-700/50"></div>
+          <div className="border-b" style={{borderColor: 'var(--border-primary)'}}></div>
         </div>
       )}
 
@@ -1004,6 +1020,25 @@ function MedicationTrackingWizard() {
       </div>
 
       {/* Cancel modal */}
+      <ConfirmationModal
+        isOpen={showNoDataModal}
+        onClose={() => {
+          // Go back to step 0 (start)
+          setCurrentStep(0)
+          setShowNoDataModal(false)
+        }}
+        onConfirm={() => {
+          // Go back to step 0 (start) - same as cancel
+          setCurrentStep(0)
+          setShowNoDataModal(false)
+        }}
+        title="No Tracking Data Entered"
+        message="You must add at least one medication in order to continue."
+        confirmText="Back to Start"
+        cancelText=""
+        isDestructive={false}
+      />
+
       <ConfirmationModal
         isOpen={showCancelModal}
         onClose={() => setShowCancelModal(false)}

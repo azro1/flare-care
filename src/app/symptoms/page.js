@@ -97,7 +97,7 @@ function SymptomsPageContent() {
     
       // Apply gradient to html element since body is fixed
       document.body.style.backgroundColor = 'transparent'
-      document.documentElement.style.background = 'linear-gradient(to bottom right, #0f172a, #1e293b, #0f172a)'
+      document.documentElement.style.background = '#1a1d24'
       document.documentElement.style.height = '100%'
     } else {
       // Reset styles when on question pages
@@ -1054,7 +1054,7 @@ function SymptomsPageContent() {
       {currentStep > 0 && (
         <div className="mb-8">
           <h1 className="text-base sm:text-lg font-regular text-muted mb-3">Log Symptoms</h1>
-          <div className="border-b border-slate-300 dark:border-slate-700/50"></div>
+          <div className="border-b" style={{borderColor: 'var(--border-primary)'}}></div>
           </div>
       )}
 
@@ -1161,8 +1161,8 @@ function SymptomsPageContent() {
               </div>
             </div>
             {(dateErrors.day || dateErrors.month || dateErrors.year) && (
-              <div className="mt-6 p-3 bg-red-50 dark:card-inner border border-red-300 dark:border-slate-600/50 rounded-lg">
-                <p className="text-red-600 dark:text-secondary text-sm">{dateErrors.day || dateErrors.month || dateErrors.year}</p>
+              <div className="mt-6 p-3 bg-red-50 border border-red-300 rounded-lg">
+                <p className="text-red-600 text-sm">{dateErrors.day || dateErrors.month || dateErrors.year}</p>
               </div>
             )}
           </div>
@@ -1306,8 +1306,8 @@ function SymptomsPageContent() {
               </div>
             </div>
             {(dateErrors.endDay || dateErrors.endMonth || dateErrors.endYear) && (
-              <div className="mt-6 p-3 bg-red-50 dark:card-inner border border-red-300 dark:border-slate-600/50 rounded-lg">
-                <p className="text-red-600 dark:text-secondary text-sm">{dateErrors.endDay || dateErrors.endMonth || dateErrors.endYear}</p>
+              <div className="mt-6 p-3 bg-red-50 border border-red-300 rounded-lg">
+                <p className="text-red-600 text-sm">{dateErrors.endDay || dateErrors.endMonth || dateErrors.endYear}</p>
               </div>
             )}
           </div>
@@ -1339,8 +1339,8 @@ function SymptomsPageContent() {
                 />
                 </div>
                 {fieldErrors.severity && (
-                  <div className="mt-6 p-3 bg-red-50 dark:card-inner border border-red-300 dark:border-slate-600/50 rounded-lg">
-                    <p className="text-red-600 dark:text-secondary text-sm">{fieldErrors.severity}</p>
+                  <div className="mt-6 p-3 bg-red-50 border border-red-300 rounded-lg">
+                    <p className="text-red-600 text-sm">{fieldErrors.severity}</p>
               </div>
                 )}
               </div>
@@ -1372,8 +1372,8 @@ function SymptomsPageContent() {
                 />
                 </div>
                 {fieldErrors.stress_level && (
-                  <div className="mt-6 p-3 bg-red-50 dark:card-inner border border-red-300 dark:border-slate-600/50 rounded-lg">
-                    <p className="text-red-600 dark:text-secondary text-sm">{fieldErrors.stress_level}</p>
+                  <div className="mt-6 p-3 bg-red-50 border border-red-300 rounded-lg">
+                    <p className="text-red-600 text-sm">{fieldErrors.stress_level}</p>
               </div>
                 )}
               </div>
@@ -1404,8 +1404,8 @@ function SymptomsPageContent() {
               />
             </div>
               {fieldErrors.normal_bathroom_frequency && (
-                <div className="mt-6 p-3 bg-red-50 dark:card-inner border border-red-300 dark:border-slate-600/50 rounded-lg">
-                  <p className="text-red-600 dark:text-secondary text-sm">{fieldErrors.normal_bathroom_frequency}</p>
+                <div className="mt-6 p-3 bg-red-50 border border-red-300 rounded-lg">
+                  <p className="text-red-600 text-sm">{fieldErrors.normal_bathroom_frequency}</p>
           </div>
               )}
             </div>
@@ -1488,8 +1488,8 @@ function SymptomsPageContent() {
               className="w-full px-4 py-3 input-field-wizard resize-none"
             />
             {fieldErrors.bathroom_frequency_change_details && (
-              <div className="mt-6 p-3 bg-red-50 dark:card-inner border border-red-300 dark:border-slate-600/50 rounded-lg">
-                <p className="text-red-600 dark:text-secondary text-sm">{fieldErrors.bathroom_frequency_change_details}</p>
+              <div className="mt-6 p-3 bg-red-50 border border-red-300 rounded-lg">
+                <p className="text-red-600 text-sm">{fieldErrors.bathroom_frequency_change_details}</p>
               </div>
             )}
           </div>
@@ -1584,8 +1584,8 @@ function SymptomsPageContent() {
                   autoComplete="off"
                 />
                 {fieldErrors.smoking_details && (
-                  <div className="mt-6 p-3 bg-red-50 dark:card-inner border border-red-300 dark:border-slate-600/50 rounded-lg">
-                    <p className="text-red-600 dark:text-secondary text-sm">{fieldErrors.smoking_details}</p>
+                  <div className="mt-6 p-3 bg-red-50 border border-red-300 rounded-lg">
+                    <p className="text-red-600 text-sm">{fieldErrors.smoking_details}</p>
               </div>
             )}
           </div>
@@ -1686,8 +1686,8 @@ function SymptomsPageContent() {
                 />
               </div>
               {fieldErrors.alcohol_units && (
-                <div className="mt-6 p-3 bg-red-50 dark:card-inner border border-red-300 dark:border-slate-600/50 rounded-lg">
-                  <p className="text-red-600 dark:text-secondary text-sm">{fieldErrors.alcohol_units}</p>
+                <div className="mt-6 p-3 bg-red-50 border border-red-300 rounded-lg">
+                  <p className="text-red-600 text-sm">{fieldErrors.alcohol_units}</p>
               </div>
             )}
           </div>
@@ -1779,8 +1779,8 @@ function SymptomsPageContent() {
             
             {/* Validation error message */}
             {fieldErrors.breakfast && (
-              <div className="mt-6 p-3 bg-red-50 dark:card-inner border border-red-300 dark:border-slate-600/50 rounded-lg">
-                <p className="text-red-600 dark:text-secondary text-sm">{fieldErrors.breakfast}</p>
+              <div className="mt-6 p-3 bg-red-50 border border-red-300 rounded-lg">
+                <p className="text-red-600 text-sm">{fieldErrors.breakfast}</p>
               </div>
             )}
           </div>
@@ -1872,8 +1872,8 @@ function SymptomsPageContent() {
             
             {/* Validation error message */}
             {fieldErrors.lunch && (
-              <div className="mt-6 p-3 bg-red-50 dark:card-inner border border-red-300 dark:border-slate-600/50 rounded-lg">
-                <p className="text-red-600 dark:text-secondary text-sm">{fieldErrors.lunch}</p>
+              <div className="mt-6 p-3 bg-red-50 border border-red-300 rounded-lg">
+                <p className="text-red-600 text-sm">{fieldErrors.lunch}</p>
               </div>
             )}
           </div>
@@ -1965,8 +1965,8 @@ function SymptomsPageContent() {
             
             {/* Validation error message */}
             {fieldErrors.dinner && (
-              <div className="mt-6 p-3 bg-red-50 dark:card-inner border border-red-300 dark:border-slate-600/50 rounded-lg">
-                <p className="text-red-600 dark:text-secondary text-sm">{fieldErrors.dinner}</p>
+              <div className="mt-6 p-3 bg-red-50 border border-red-300 rounded-lg">
+                <p className="text-red-600 text-sm">{fieldErrors.dinner}</p>
               </div>
             )}
           </div>
@@ -1996,71 +1996,71 @@ function SymptomsPageContent() {
             <h3 className="text-2xl sm:text-2xl md:text-3xl font-semibold text-primary mb-8">Review your entry</h3>
             <div className="space-y-4">
               
-              <div className="flex justify-between py-2 border-b border-slate-300 dark:border-slate-700/50">
+              <div className="flex justify-between py-2 border-b" style={{borderColor: 'var(--border-primary)'}}>
                 <span className="text-secondary">Start Date:</span>
                 <span className="font-medium text-primary">{formData.symptomStartDate ? new Date(formData.symptomStartDate).toLocaleDateString() : 'Not set'}</span>
                 </div>
 
-              <div className="flex justify-between py-2 border-b border-slate-300 dark:border-slate-700/50">
+              <div className="flex justify-between py-2 border-b" style={{borderColor: 'var(--border-primary)'}}>
                 <span className="text-secondary">Status:</span>
                 <span className="font-medium text-primary">{formData.isOngoing ? 'Ongoing' : 'Ended'}</span>
                       </div>
         
               {!formData.isOngoing && formData.symptomEndDate && (
-                <div className="flex justify-between py-2 border-b border-slate-300 dark:border-slate-700/50">
+                <div className="flex justify-between py-2 border-b" style={{borderColor: 'var(--border-primary)'}}>
                   <span className="text-secondary">End Date:</span>
                   <span className="font-medium text-primary">{new Date(formData.symptomEndDate).toLocaleDateString()}</span>
                   </div>
                 )}
 
-              <div className="flex justify-between py-2 border-b border-slate-300 dark:border-slate-700/50">
+              <div className="flex justify-between py-2 border-b" style={{borderColor: 'var(--border-primary)'}}>
                 <span className="text-secondary">Severity:</span>
                 <span className="font-medium text-primary">{formData.severity}/10</span>
                       </div>
 
-              <div className="flex justify-between py-2 border-b border-slate-300 dark:border-slate-700/50">
+              <div className="flex justify-between py-2 border-b" style={{borderColor: 'var(--border-primary)'}}>
                 <span className="text-secondary">Stress Level:</span>
                 <span className="font-medium text-primary">{formData.stress_level}/10</span>
                     </div>
 
-              <div className="flex justify-between py-2 border-b border-slate-300 dark:border-slate-700/50">
+              <div className="flex justify-between py-2 border-b" style={{borderColor: 'var(--border-primary)'}}>
                 <span className="text-secondary">Bathroom Frequency:</span>
                 <span className="font-medium text-primary">{formData.normal_bathroom_frequency || 'Not set'} times/day</span>
                 </div>
 
               {formData.bathroom_frequency_changed && (
-                <div className="flex justify-between py-2 border-b border-slate-300 dark:border-slate-700/50">
+                <div className="flex justify-between py-2 border-b" style={{borderColor: 'var(--border-primary)'}}>
                   <span className="text-secondary">Frequency Changed:</span>
                   <span className="font-medium text-primary">{formData.bathroom_frequency_changed === 'yes' ? 'Yes' : 'No'}</span>
                   </div>
                 )}
 
               {formData.bathroom_frequency_changed === 'yes' && formData.bathroom_frequency_change_details && (
-                <div className="py-2 border-b border-slate-300 dark:border-slate-700/50">
+                <div className="py-2 border-b" style={{borderColor: 'var(--border-primary)'}}>
                   <span className="text-secondary block mb-1">Describe your change:</span>
                   <span className="font-medium text-primary">{formData.bathroom_frequency_change_details}</span>
                   </div>
                 )}
 
-              <div className="flex justify-between py-2 border-b border-slate-300 dark:border-slate-700/50">
+              <div className="flex justify-between py-2 border-b" style={{borderColor: 'var(--border-primary)'}}>
                 <span className="text-secondary">Smoking:</span>
                 <span className="font-medium text-primary">{formData.smoking ? 'Yes' : 'No'}</span>
                       </div>
 
               {formData.smoking && formData.smoking_details && (
-                <div className="py-2 border-b border-slate-300 dark:border-slate-700/50">
+                <div className="py-2 border-b" style={{borderColor: 'var(--border-primary)'}}>
                   <span className="text-secondary block mb-1">Smoking Habits:</span>
                   <span className="font-medium text-primary">{formData.smoking_details}</span>
                   </div>
                 )}
 
-              <div className="flex justify-between py-2 border-b border-slate-300 dark:border-slate-700/50">
+              <div className="flex justify-between py-2 border-b" style={{borderColor: 'var(--border-primary)'}}>
                 <span className="text-secondary">Alcohol:</span>
                 <span className="font-medium text-primary">{formData.alcohol ? 'Yes' : 'No'}</span>
                     </div>
                     
               {formData.alcohol && formData.alcohol_units && (
-                <div className="flex justify-between py-2 border-b border-slate-300 dark:border-slate-700/50">
+                <div className="flex justify-between py-2 border-b" style={{borderColor: 'var(--border-primary)'}}>
                   <span className="text-secondary">Alcohol Units:</span>
                   <span className="font-medium text-primary">{formData.alcohol_units} units/day</span>
                           </div>
@@ -2070,7 +2070,7 @@ function SymptomsPageContent() {
                 formData.lunch.some(item => item.food.trim()) || 
                 formData.dinner.some(item => item.food.trim()) ||
                 formData.breakfast_skipped || formData.lunch_skipped || formData.dinner_skipped) && (
-                <div className="py-2 border-b border-slate-300 dark:border-slate-700/50">
+                <div className="py-2 border-b" style={{borderColor: 'var(--border-primary)'}}>
                   <span className="text-secondary block mb-2">Meals:</span>
                   <div className="space-y-1 text-sm">
                     {formData.breakfast.some(item => item.food.trim()) && (
@@ -2132,7 +2132,7 @@ function SymptomsPageContent() {
 
         {/* Visual Separator for Review Page - only show if there are notes */}
         {currentStep === 17 && formData.notes && (
-          <div className="my-8 border-t border-slate-300 dark:border-slate-700/50"></div>
+          <div className="my-8 border-t" style={{borderColor: 'var(--border-primary)'}}></div>
         )}
 
         {/* Navigation Buttons - Hide on landing page (step 0) */}

@@ -96,13 +96,7 @@ function TrackedMedicationDetails() {
             day: 'numeric', 
             month: 'long', 
             year: 'numeric' 
-          })}
-        </p>
-        <p className="text-sm text-slate-400">
-          {new Date(trackedData.created_at || trackedData.createdAt).toLocaleTimeString('en-GB', { 
-            hour: '2-digit', 
-            minute: '2-digit' 
-          })}
+          })} at {new Date(trackedData.created_at || trackedData.createdAt).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
         </p>
       </div>
 
@@ -110,16 +104,16 @@ function TrackedMedicationDetails() {
         {/* Missed Medications */}
         {trackedData.missed_medications_list && trackedData.missed_medications_list.length > 0 && (
           <div>
-            <h2 className="text-lg font-semibold text-primary mb-4">Missed Medications</h2>
+            <h2 className="text-lg font-semibold text-primary dark:text-cadet-blue mb-4">Missed Medications</h2>
             <div className="space-y-6">
               {trackedData.missed_medications_list.map((item, index) => (
                 <div key={index} className="card p-6">
                   <div className="space-y-3">
-                    <div className="flex justify-between py-2 border-b border-slate-300 dark:border-slate-700/50">
+                    <div className="flex justify-between py-2 border-b border-slate-300 dark:border-b" style={{borderColor: 'var(--border-primary)'}}>
                       <span className="text-secondary">Medication:</span>
                       <span className="font-medium text-primary">{item.medication}</span>
                     </div>
-                    <div className="flex justify-between py-2 border-b border-slate-300 dark:border-slate-700/50">
+                    <div className="flex justify-between py-2 border-b border-slate-300 dark:border-b" style={{borderColor: 'var(--border-primary)'}}>
                       <span className="text-secondary">Date:</span>
                       <span className="font-medium text-primary">{item.date ? new Date(item.date).toLocaleDateString('en-GB', { day: '2-digit', month: '2-digit', year: 'numeric' }) : 'N/A'}</span>
                     </div>
@@ -137,20 +131,20 @@ function TrackedMedicationDetails() {
         {/* NSAIDs */}
         {trackedData.nsaid_list && trackedData.nsaid_list.length > 0 && (
           <div>
-            <h2 className="text-lg font-semibold text-primary mb-4">NSAIDs</h2>
+            <h2 className="text-lg font-semibold text-primary dark:text-cadet-blue mb-4">NSAIDs</h2>
             <div className="space-y-6">
               {trackedData.nsaid_list.map((item, index) => (
                 <div key={index} className="card p-6">
                   <div className="space-y-3">
-                    <div className="flex justify-between py-2 border-b border-slate-300 dark:border-slate-700/50">
+                    <div className="flex justify-between py-2 border-b border-slate-300 dark:border-b" style={{borderColor: 'var(--border-primary)'}}>
                       <span className="text-secondary">Medication:</span>
                       <span className="font-medium text-primary">{item.medication}</span>
                     </div>
-                    <div className="flex justify-between py-2 border-b border-slate-300 dark:border-slate-700/50">
+                    <div className="flex justify-between py-2 border-b border-slate-300 dark:border-b" style={{borderColor: 'var(--border-primary)'}}>
                       <span className="text-secondary">Dosage:</span>
                       <span className="font-medium text-primary">{item.dosage || 'N/A'}</span>
                     </div>
-                    <div className="flex justify-between py-2 border-b border-slate-300 dark:border-slate-700/50">
+                    <div className="flex justify-between py-2 border-b border-slate-300 dark:border-b" style={{borderColor: 'var(--border-primary)'}}>
                       <span className="text-secondary">Date:</span>
                       <span className="font-medium text-primary">{item.date ? new Date(item.date).toLocaleDateString('en-GB', { day: '2-digit', month: '2-digit', year: 'numeric' }) : 'N/A'}</span>
                     </div>
@@ -168,20 +162,20 @@ function TrackedMedicationDetails() {
         {/* Antibiotics */}
         {trackedData.antibiotic_list && trackedData.antibiotic_list.length > 0 && (
           <div>
-            <h2 className="text-lg font-semibold text-primary mb-4">Antibiotics</h2>
+            <h2 className="text-lg font-semibold text-primary dark:text-cadet-blue mb-4">Antibiotics</h2>
             <div className="space-y-6">
               {trackedData.antibiotic_list.map((item, index) => (
                 <div key={index} className="card p-6">
                   <div className="space-y-3">
-                    <div className="flex justify-between py-2 border-b border-slate-300 dark:border-slate-700/50">
+                    <div className="flex justify-between py-2 border-b border-slate-300 dark:border-b" style={{borderColor: 'var(--border-primary)'}}>
                       <span className="text-secondary">Medication:</span>
                       <span className="font-medium text-primary">{item.medication}</span>
                     </div>
-                    <div className="flex justify-between py-2 border-b border-slate-300 dark:border-slate-700/50">
+                    <div className="flex justify-between py-2 border-b border-slate-300 dark:border-b" style={{borderColor: 'var(--border-primary)'}}>
                       <span className="text-secondary">Dosage:</span>
                       <span className="font-medium text-primary">{item.dosage || 'N/A'}</span>
                     </div>
-                    <div className="flex justify-between py-2 border-b border-slate-300 dark:border-slate-700/50">
+                    <div className="flex justify-between py-2 border-b border-slate-300 dark:border-b" style={{borderColor: 'var(--border-primary)'}}>
                       <span className="text-secondary">Date:</span>
                       <span className="font-medium text-primary">{item.date ? new Date(item.date).toLocaleDateString('en-GB', { day: '2-digit', month: '2-digit', year: 'numeric' }) : 'N/A'}</span>
                     </div>
@@ -198,7 +192,7 @@ function TrackedMedicationDetails() {
       </div>
 
       {/* Bottom delete action (all screens) */}
-      <div className="mt-8 pt-6 border-t border-slate-300/50 dark:border-slate-700/50">
+      <div className="mt-8 pt-6 border-t border-slate-300/50 dark:border-t" style={{borderColor: 'var(--border-primary)'}}>
         <button
           onClick={() => setShowDeleteModal(true)}
           disabled={isDeleting}
@@ -212,7 +206,7 @@ function TrackedMedicationDetails() {
       {/* Delete Confirmation Modal */}
       {showDeleteModal && (
         <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
-          <div className="bg-white dark:bg-slate-800 rounded-xl p-6 max-w-md mx-4 border border-slate-300/50 dark:border-slate-700/50">
+          <div className="bg-white rounded-xl p-6 max-w-md mx-4 border border-slate-300/50 dark:border dark:bg-[var(--bg-secondary)]" style={{borderColor: 'var(--border-primary)'}}>
             <div className="flex items-center gap-3 mb-4">
               <div className="w-10 h-10 bg-red-100 rounded-full flex items-center justify-center">
                 <svg className="w-6 h-6 text-red-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">

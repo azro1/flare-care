@@ -48,7 +48,7 @@ export default function ConfirmationModal({
       className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4"
       onClick={handleBackdropClick}
     >
-      <div className="bg-card rounded-lg shadow-xl max-w-md w-full transform transition-all border border-slate-700">
+      <div className="bg-card rounded-lg shadow-xl max-w-md w-full transform transition-all border border-slate-700" style={{backgroundColor: 'var(--bg-secondary)', opacity: 1}}>
         <div className="p-6">
           <div className="flex items-center mb-4">
             <div className={`w-10 h-10 rounded-full flex items-center justify-center mr-3 ${
@@ -84,14 +84,14 @@ export default function ConfirmationModal({
             {cancelText && (
               <button
                 onClick={onClose}
-                className="px-4 py-2 text-sm font-medium font-roboto button-cancel"
+                className="px-4 py-2 text-base font-medium font-roboto button-cancel"
               >
                 {cancelText}
               </button>
             )}
             <button
               onClick={handleConfirm}
-              className={`px-4 py-2 text-sm font-medium font-roboto rounded-lg transition-colors duration-200 ${
+              className={`px-4 py-2 text-base font-medium font-roboto rounded-lg transition-colors duration-200 ${
                 isDestructive 
                   ? 'button-delete' 
                   : 'button-cadet'

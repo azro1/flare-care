@@ -3,7 +3,7 @@
 import Link from 'next/link'
 import Image from 'next/image'
 import { usePathname } from 'next/navigation'
-import { useState, useEffect } from 'react'
+import { useState, useEffect, useRef } from 'react'
 import { useAuth } from '../lib/AuthContext'
 import SyncSettings from './SyncSettings'
 import { Sandwich, Activity } from "lucide-react"
@@ -13,6 +13,7 @@ export default function Navigation() {
   const [isMenuOpen, setIsMenuOpen] = useState(false)
   const [isUserMenuOpen, setIsUserMenuOpen] = useState(false)
   const [scrollY, setScrollY] = useState(0)
+  const hamburgerButtonRef = useRef(null)
   const { user, isAuthenticated, signOut } = useAuth()
 
   // Get user's display name from Google metadata or fallback to email
@@ -90,6 +91,17 @@ export default function Navigation() {
     window.addEventListener('scroll', handleScroll)
     return () => window.removeEventListener('scroll', handleScroll)
   }, [])
+
+  // Keep hamburger button background in sync with menu and dropdown interactions
+  useEffect(() => {
+    if (!hamburgerButtonRef.current) return
+
+    const bg = isMenuOpen
+      ? 'rgba(156, 163, 175, 0.8)'
+      : 'transparent'
+
+    hamburgerButtonRef.current.style.setProperty('background-color', bg, 'important')
+  }, [isMenuOpen, isUserMenuOpen])
 
   const mainNavItems = [
     { 
@@ -192,7 +204,8 @@ export default function Navigation() {
   ]
 
   return (
-        <nav className={`${pathname === '/' && !isAuthenticated ? 'fixed' : 'sticky'} top-0 w-full z-50 bg-slate-800`} style={{
+        <nav className={`${pathname === '/' && !isAuthenticated ? 'fixed' : 'sticky'} top-0 w-full z-50`} style={{
+          backgroundColor: 'var(--bg-nav-footer)',
           boxShadow: 'none'
         }}>
       <div className="max-w-7xl mx-auto px-6 py-5">
@@ -227,7 +240,7 @@ export default function Navigation() {
                 <div className="flex items-center space-x-4">
                   {/* User Avatar with Dropdown */}
                   <div className="relative group">
-                    <div className="w-10 h-10 rounded-full overflow-hidden border-2 border-gray-200 bg-gray-200 flex items-center justify-center hover:border-blue-300 transition-colors">
+                    <div className="w-10 h-10 rounded-full overflow-hidden border-2 flex items-center justify-center transition-colors" style={{borderColor: 'var(--border-dropdown)', backgroundColor: 'var(--bg-dropdown-hover)'}} onMouseEnter={(e) => e.target.style.borderColor = '#3b82f6'} onMouseLeave={(e) => e.target.style.borderColor = 'var(--border-dropdown)'}>
                     {getUserAvatar() ? (
                       <img 
                         src={getUserAvatar()} 
@@ -239,30 +252,37 @@ export default function Navigation() {
                           e.target.style.display = 'none'
                           const container = e.target.parentElement
                           const initials = document.createElement('div')
-                          initials.className = 'w-full h-full flex items-center justify-center text-gray-600 font-semibold text-sm'
+                          initials.className = 'w-full h-full flex items-center justify-center font-semibold text-sm'
+                          initials.style.color = 'var(--text-dropdown)'
                           initials.textContent = getUserInitials()
                           container.appendChild(initials)
                         }}
                       />
                     ) : (
-                      <div className="w-full h-full flex items-center justify-center text-gray-600 font-semibold text-sm">
+                      <div className="w-full h-full flex items-center justify-center font-semibold text-sm" style={{color: 'var(--text-dropdown)'}}>
                         {getUserInitials()}
                       </div>
                     )}
                     </div>
                     
                     {/* User Dropdown Menu */}
-                    <div className="absolute top-full right-0 mt-2 w-48 bg-slate-800 rounded-lg shadow-lg border border-slate-700/50 opacity-0 invisible group-hover:opacity-100 group-hover:visible transition-all duration-200 z-50">
+                    <div className="absolute top-full right-0 mt-2 w-48 rounded-lg shadow-lg border opacity-0 invisible group-hover:opacity-100 group-hover:visible transition-all duration-200 z-50" style={{backgroundColor: 'var(--bg-dropdown)', borderColor: 'var(--border-dropdown)'}}>
                       <div className="py-2">
                         <Link
                           href="/account"
-                          className="block px-4 py-3 text-base font-roboto transition-colors text-slate-300 hover:bg-slate-700/50 hover:text-[#5F9EA0] cursor-pointer"
+                          className="block px-4 py-3 text-base font-roboto transition-colors cursor-pointer"
+                          style={{color: 'var(--text-dropdown)'}}
+                          onMouseEnter={(e) => e.target.style.backgroundColor = 'var(--bg-dropdown-hover)'}
+                          onMouseLeave={(e) => e.target.style.backgroundColor = 'transparent'}
                         >
                           Account
                         </Link>
                         <Link
                           href="/profile-settings"
-                          className="block px-4 py-3 text-base font-roboto transition-colors text-slate-300 hover:bg-slate-700/50 hover:text-[#5F9EA0] cursor-pointer"
+                          className="block px-4 py-3 text-base font-roboto transition-colors cursor-pointer"
+                          style={{color: 'var(--text-dropdown)'}}
+                          onMouseEnter={(e) => e.target.style.backgroundColor = 'var(--bg-dropdown-hover)'}
+                          onMouseLeave={(e) => e.target.style.backgroundColor = 'transparent'}
                         >
                           Profile Settings
                         </Link>
@@ -276,8 +296,18 @@ export default function Navigation() {
 
           {/* Mobile menu button */}
           <button
+            ref={hamburgerButtonRef}
             onClick={() => setIsMenuOpen(!isMenuOpen)}
-            className="lg:hidden p-2 sm:p-3 rounded-xl text-slate-300 hover:text-white hover:bg-slate-700/50 transition-all duration-200 active:scale-95"
+            type="button"
+            className={`lg:hidden p-2 sm:p-3 rounded-xl transition-all duration-200 active:scale-95 focus:outline-none text-white`}
+            onFocus={(e) => {
+              const bg = isMenuOpen ? 'rgba(156, 163, 175, 0.8)' : 'transparent'
+              e.currentTarget.style.setProperty('background-color', bg, 'important')
+            }}
+            onBlur={(e) => {
+              const bg = isMenuOpen ? 'rgba(156, 163, 175, 0.8)' : 'transparent'
+              e.currentTarget.style.setProperty('background-color', bg, 'important')
+            }}
             aria-label="Toggle mobile menu"
           >
             <svg className="w-6 h-6 sm:w-7 sm:h-7" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -291,16 +321,19 @@ export default function Navigation() {
         </div>
 
         {/* Mobile Navigation */}
-        <div className={`lg:hidden absolute top-full left-0 right-0 bg-slate-800 shadow-lg border-t border-slate-700/50 transition-all duration-300 ease-out overflow-hidden ${
+        <div className={`lg:hidden absolute top-full left-0 right-0 shadow-lg border-t transition-all duration-300 ease-out overflow-hidden ${
           isMenuOpen ? 'max-h-screen opacity-100' : 'max-h-0 opacity-0'
-        }`}>
+        }`} style={{backgroundColor: 'var(--bg-dropdown)', borderColor: 'var(--border-dropdown)'}}>
           <div className="container mx-auto px-4 sm:px-6 lg:px-8 py-4">
               {/* All Navigation Links */}
               {[...(isAuthenticated ? mainNavItems : unauthenticatedNavItems)].map((item) => (
                 <Link
                   key={item.href}
                   href={item.href}
-                  className="flex items-center gap-3 px-4 py-3 text-base font-roboto text-slate-300 hover:text-[#5F9EA0]"
+                  className="flex items-center gap-3 px-4 py-3 text-base font-roboto transition-colors"
+                  style={{color: 'var(--text-dropdown)'}}
+                  onMouseEnter={(e) => e.target.style.color = 'var(--text-cadet-blue)'}
+                  onMouseLeave={(e) => e.target.style.color = 'var(--text-dropdown)'}
                   onClick={() => setIsMenuOpen(false)}
                 >
                   <span>{item.label}</span>
@@ -309,12 +342,16 @@ export default function Navigation() {
               
             {/* Mobile user section for authenticated users */}
               {isAuthenticated && (
-              <div className="border-t border-slate-700/50 mt-4 pt-4">
+              <div className="border-t mt-4 pt-4" style={{borderColor: 'var(--border-dropdown)'}}>
                 <div className="flex items-center px-4 py-3">
                   {/* User Avatar - Clickable */}
                   <button 
                     onClick={() => setIsUserMenuOpen(!isUserMenuOpen)}
-                    className="w-10 h-10 rounded-full overflow-hidden border-2 border-slate-600 mr-3 bg-slate-700 flex items-center justify-center hover:border-[#FF1493] focus:outline-none focus:ring-0 focus:ring-offset-0 focus:border-slate-600 transition-colors"
+                    className="w-10 h-10 rounded-full overflow-hidden border-2 mr-3 flex items-center justify-center focus:outline-none focus:ring-0 focus:ring-offset-0 transition-colors"
+                    style={{borderColor: 'var(--border-dropdown)', backgroundColor: 'var(--bg-dropdown-hover)'}}
+                    onMouseEnter={(e) => e.target.style.borderColor = '#FF1493'}
+                    onMouseLeave={(e) => e.target.style.borderColor = 'var(--border-dropdown)'}
+                    onFocus={(e) => e.target.style.borderColor = 'var(--border-dropdown)'}
                   >
                     {getUserAvatar() ? (
                       <img 
@@ -327,20 +364,21 @@ export default function Navigation() {
                           e.target.style.display = 'none'
                           const container = e.target.parentElement
                           const initials = document.createElement('div')
-                          initials.className = 'w-full h-full flex items-center justify-center text-gray-600 font-semibold text-sm'
+                          initials.className = 'w-full h-full flex items-center justify-center font-semibold text-sm'
+                          initials.style.color = 'var(--text-dropdown)'
                           initials.textContent = getUserInitials()
                           container.appendChild(initials)
                         }}
                       />
                     ) : (
-                      <div className="w-full h-full flex items-center justify-center text-gray-600 font-semibold text-sm">
+                      <div className="w-full h-full flex items-center justify-center font-semibold text-sm" style={{color: 'var(--text-dropdown)'}}>
                         {getUserInitials()}
                       </div>
                     )}
                   </button>
                   {/* User Name */}
                   <div className="flex-1">
-                    <p className="text-base font-medium text-slate-300 font-roboto">
+                    <p className="text-base font-medium font-roboto" style={{color: 'var(--text-dropdown)'}}>
                       {getUserDisplayName()}
                     </p>
                   </div>
@@ -351,7 +389,10 @@ export default function Navigation() {
                   <div className="px-4 pb-3">
                     <Link
                       href="/account"
-                      className="block px-4 py-3 text-base font-roboto transition-colors text-slate-300 hover:bg-slate-700/50 hover:text-[#5F9EA0] rounded-lg"
+                      className="block px-4 py-3 text-base font-roboto transition-colors rounded-lg"
+                      style={{color: 'var(--text-dropdown)'}}
+                      onMouseEnter={(e) => {e.target.style.backgroundColor = 'var(--bg-dropdown-hover)'; e.target.style.color = 'var(--text-cadet-blue)'}}
+                      onMouseLeave={(e) => {e.target.style.backgroundColor = 'transparent'; e.target.style.color = 'var(--text-dropdown)'}}
                       onClick={() => {
                         setIsMenuOpen(false)
                         setIsUserMenuOpen(false)
@@ -361,7 +402,10 @@ export default function Navigation() {
                     </Link>
                     <Link
                       href="/profile-settings"
-                      className="block px-4 py-3 text-base font-roboto transition-colors text-slate-300 hover:bg-slate-700/50 hover:text-[#5F9EA0] rounded-lg"
+                      className="block px-4 py-3 text-base font-roboto transition-colors rounded-lg"
+                      style={{color: 'var(--text-dropdown)'}}
+                      onMouseEnter={(e) => {e.target.style.backgroundColor = 'var(--bg-dropdown-hover)'; e.target.style.color = 'var(--text-cadet-blue)'}}
+                      onMouseLeave={(e) => {e.target.style.backgroundColor = 'transparent'; e.target.style.color = 'var(--text-dropdown)'}}
                       onClick={() => {
                         setIsMenuOpen(false)
                         setIsUserMenuOpen(false)
