@@ -100,26 +100,7 @@ export default function Home() {
     setTrackedMedications(medicationTrackingEntries.sort((a, b) => new Date(b.created_at) - new Date(a.created_at)))
   }, [medications, showMedicationToast]) // Reload when medications change or medication is added
 
-  // Prevent body scrolling when not authenticated
-  // useEffect(() => {
-  //   if (!isAuthenticated && !loading) {
-  //     // Mobile-friendly approach
-  //     document.body.style.position = 'fixed'
-  //     document.body.style.width = '100%'
-  //     document.body.style.height = '100%'
-  //   } else {
-  //     document.body.style.position = 'static'
-  //     document.body.style.width = 'auto'
-  //     document.body.style.height = 'auto'
-  //   }
-    
-  //   // Cleanup on unmount
-  //   return () => {
-  //     document.body.style.position = 'static'
-  //     document.body.style.width = 'auto'
-  //     document.body.style.height = 'auto'
-  //   }
-  // }, [isAuthenticated, loading])
+
 
   // Show loading state while checking authentication
   if (loading) {
@@ -370,27 +351,27 @@ export default function Home() {
             <div className="sticky top-8 space-y-6">
               
               {/* Quick Stats */}
-              <div className="card no-hover-border p-4 sm:p-6">
+              <div className="p-4 sm:p-6">
                 <h3 className="text-lg font-semibold font-source text-primary mb-4">Your Progress</h3>
-                <div className="space-y-3">
-                  <div className="flex justify-between items-center">
-                    <span className="text-sm text-secondary">Total Symptoms</span>
-                    <span className="font-semibold text-primary">{symptoms.length}</span>
-                  </div>
-                  <div className="flex justify-between items-center">
-                    <span className="text-sm text-secondary">This Week</span>
-                    <span className="font-semibold text-primary">
-                      {symptoms.filter(s => {
-                        const weekAgo = new Date()
-                        weekAgo.setDate(weekAgo.getDate() - 7)
-                        return new Date(s.created_at || s.createdAt) > weekAgo
-                      }).length}
-                    </span>
-                  </div>
-                  <div className="flex justify-between items-center">
-                    <span className="text-sm text-secondary">Today</span>
-                    <span className="font-semibold text-primary">{todaySymptoms.length}</span>
-                  </div>
+                <div className="space-y-2 border-l-4 pl-4 sm:pl-5" style={{borderColor: 'var(--text-cadet-blue)'}}>
+                    <div className="flex justify-between items-center">
+                      <span className="text-sm text-secondary">Total Symptoms</span>
+                    <span className="font-semibold" style={{color: 'var(--text-cadet-blue)'}}>{symptoms.length}</span>
+                    </div>
+                    <div className="flex justify-between items-center">
+                      <span className="text-sm text-secondary">This Week</span>
+                    <span className="font-semibold" style={{color: 'var(--text-cadet-blue)'}}>
+                        {symptoms.filter(s => {
+                          const weekAgo = new Date()
+                          weekAgo.setDate(weekAgo.getDate() - 7)
+                          return new Date(s.created_at || s.createdAt) > weekAgo
+                        }).length}
+                      </span>
+                    </div>
+                    <div className="flex justify-between items-center">
+                      <span className="text-sm text-secondary">Today</span>
+                    <span className="font-semibold" style={{color: 'var(--text-cadet-blue)'}}>{todaySymptoms.length}</span>
+                    </div>
                 </div>
             </div>
 
@@ -429,10 +410,8 @@ export default function Home() {
               </div>
 
               {/* Daily Tip */}
-              <div className="relative rounded-xl p-4 sm:p-6 overflow-hidden">
-                {/* Moving gradient background */}
-                <div className="absolute inset-0 bg-gradient-to-br from-yellow-500/20 via-cyan-500/30 to-violet-500/20 animate-gradient-x"></div>
-                <div className="relative z-10">
+              <div className="p-4 sm:p-6">
+                <div>
                   <h3 className="text-lg font-semibold font-source text-primary mb-2">💡 Daily Tip</h3>
                   <p className={`text-sm text-secondary transition-opacity duration-500 ${isFading ? 'opacity-0' : 'opacity-100'}`}>
                     {dailyTips[currentTipIndex]}
@@ -446,8 +425,8 @@ export default function Home() {
           {/* Main Content */}
           <div className="flex-1 lg:max-w-4xl order-1 lg:order-2">
         {/* Greeting */}
-        <div className="mb-8">
-          <h1 className="text-2xl sm:text-3xl lg:text-4xl font-bold font-source text-primary mb-4 sm:mb-6">
+        <div>
+          <h1 className="text-2xl sm:text-3xl lg:text-4xl font-bold font-source text-primary mb-2 sm:mb-3">
             {(() => {
               const hour = new Date().getHours()
               if (hour < 12) return 'Good morning'
@@ -461,8 +440,7 @@ export default function Home() {
         </div>
 
         {/* Quick Actions */}
-        <h2 className="text-xl font-semibold font-source text-primary mb-4">Quick Actions</h2>
-        <div className="grid grid-cols-2 gap-4 max-w-sm mb-8">
+        <div className="grid grid-cols-2 gap-4 max-w-sm mt-8 md:mt-10 mb-8">
             <Link href="/symptoms" className="card p-6  transition-all">
               <div className="text-center">
                 <div className="w-12 h-12 bg-emerald-100 rounded-xl flex items-center justify-center mx-auto mb-3">
@@ -491,21 +469,26 @@ export default function Home() {
             </Link>
         </div>
 
+        {/* Section Divider */}
+        <div className="border-t mb-8" style={{borderColor: 'var(--border-primary)'}}></div>
+
         {/* Today's Summary */}
-        <div className="mb-8">
-          <h2 className="text-xl font-semibold font-source text-primary mb-4">Today's Summary</h2>
-          <div className="card no-hover-border p-6">
+        <div>
+          <h2 className="text-xl font-semibold font-source" style={{color: 'var(--text-cadet-blue)'}}>Today's Summary</h2>
+          <div className="p-6">
             <div className="flex justify-between items-center py-2">
               <span className="text-secondary">Symptoms Logged</span>
               <span className="font-semibold text-primary">{todaySymptoms.length}</span>
             </div>
-            <div className="border-t my-2" style={{borderColor: 'var(--border-primary)'}}></div>
             <div className="flex justify-between items-center py-2">
               <span className="text-secondary">Medications Taken</span>
               <span className="font-semibold text-primary">0/0</span>
             </div>
           </div>
         </div>
+
+        {/* Section Divider */}
+        <div className="border-t mb-8" style={{borderColor: 'var(--border-primary)'}}></div>
 
         {/* Recent Symptoms */}
         {displayedSymptoms.length > 0 && (
@@ -554,6 +537,8 @@ export default function Home() {
           </div>
         )}
 
+      
+
         {/* Recent Medications */}
         {trackedMedications.length > 0 && (
           <div className="mb-8">
@@ -598,10 +583,13 @@ export default function Home() {
           </div>
         )}
 
+        {/* Section Divider */}
+        <div className="border-t my-8" style={{borderColor: 'var(--border-primary)'}}></div>
+
         {/* Recent Activity */}
-        <div className="mb-8">
-          <h2 className="text-xl font-semibold font-source text-primary mb-4">Recent Activity</h2>
-          <div className="card no-hover-border p-6 transition-all duration-300 ease-in-out">
+        <div>
+          <h2 className="text-xl font-semibold font-source" style={{color: 'var(--text-cadet-blue)'}}>Recent Activity</h2>
+          <div className="p-6 transition-all duration-300 ease-in-out">
             {symptoms.length === 0 && trackedMedications.length === 0 ? (
               <div className="text-center py-4">
                 <div className="w-12 h-12 icon-container mx-auto mb-3">
@@ -701,6 +689,9 @@ export default function Home() {
             )}
           </div>
         </div>
+
+        {/* Section Divider */}
+        <div className="border-t mb-8" style={{borderColor: 'var(--border-primary)'}}></div>
 
         {/* More Options */}
         <div className="mb-8">
