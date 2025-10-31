@@ -1033,7 +1033,7 @@ function MedicationTrackingWizard() {
           setShowNoDataModal(false)
         }}
         title="No Tracking Data Entered"
-        message="You must add at least one medication in order to continue."
+        message="You must add at least one medication in order to log this entry."
         confirmText="Back to Start"
         cancelText=""
         isDestructive={false}

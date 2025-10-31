@@ -13,13 +13,13 @@ export default function ThemeToggle() {
       className="fixed bottom-6 right-6 z-50 p-3 rounded-full shadow-lg border transition-all duration-200"
       style={{
         borderColor: 'var(--border-card)',
-        backgroundColor: theme === 'dark' ? '#ffffff' : 'var(--bg-nav-footer)'
+        backgroundColor: theme === 'dark' ? '#ffffff' : '#111419'
       }}
       onMouseEnter={(e) => {
-        e.currentTarget.style.backgroundColor = theme === 'dark' ? '#f1f5f9' : 'var(--bg-nav-footer)'
+        e.currentTarget.style.backgroundColor = theme === 'dark' ? '#f1f5f9' : '#111419'
       }}
       onMouseLeave={(e) => {
-        e.currentTarget.style.backgroundColor = theme === 'dark' ? '#ffffff' : 'var(--bg-nav-footer)'
+        e.currentTarget.style.backgroundColor = theme === 'dark' ? '#ffffff' : '#111419'
       }}
       aria-label={`Switch to ${theme === 'dark' ? 'light' : 'dark'} mode`}
     >

@@ -461,9 +461,8 @@ export default function Home() {
         </div>
 
         {/* Quick Actions */}
-        <div className="mb-8 p-6 rounded-xl w-full" style={{background: 'var(--bg-quick-actions-gradient)'}}>
-          <h2 className="text-xl font-semibold font-source text-primary mb-4">Quick Actions</h2>
-          <div className="grid grid-cols-2 gap-4 max-w-sm">
+        <h2 className="text-xl font-semibold font-source text-primary mb-4">Quick Actions</h2>
+        <div className="grid grid-cols-2 gap-4 max-w-sm mb-8">
             <Link href="/symptoms" className="card p-6  transition-all">
               <div className="text-center">
                 <div className="w-12 h-12 bg-emerald-100 rounded-xl flex items-center justify-center mx-auto mb-3">
@@ -490,7 +489,6 @@ export default function Home() {
                 <h3 className="font-semibold text-primary">Reports</h3>
               </div>
             </Link>
-          </div>
         </div>
 
         {/* Today's Summary */}

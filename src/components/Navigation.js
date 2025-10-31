@@ -266,8 +266,8 @@ export default function Navigation() {
                     </div>
                     
                     {/* User Dropdown Menu */}
-                    <div className="absolute top-full right-0 mt-2 w-48 rounded-lg shadow-lg border opacity-0 invisible group-hover:opacity-100 group-hover:visible transition-all duration-200 z-50" style={{backgroundColor: 'var(--bg-dropdown)', borderColor: 'var(--border-dropdown)'}}>
-                      <div className="py-2">
+                    <div className="absolute top-full right-0 mt-2 w-48 rounded-sm shadow-lg border opacity-0 invisible group-hover:opacity-100 group-hover:visible transition-all duration-200 z-50" style={{backgroundColor: 'var(--bg-dropdown)', borderColor: 'var(--border-dropdown)'}}>
+                      <div className="">
                         <Link
                           href="/account"
                           className="block px-4 py-3 text-base font-roboto transition-colors cursor-pointer"
@@ -299,7 +299,7 @@ export default function Navigation() {
             ref={hamburgerButtonRef}
             onClick={() => setIsMenuOpen(!isMenuOpen)}
             type="button"
-            className={`lg:hidden p-2 sm:p-3 rounded-xl transition-all duration-200 active:scale-95 focus:outline-none text-white`}
+            className={`lg:hidden p-2 rounded-lg transition-all duration-200 active:scale-95 focus:outline-none text-white`}
             onFocus={(e) => {
               const bg = isMenuOpen ? 'rgba(156, 163, 175, 0.8)' : 'transparent'
               e.currentTarget.style.setProperty('background-color', bg, 'important')
@@ -310,7 +310,7 @@ export default function Navigation() {
             }}
             aria-label="Toggle mobile menu"
           >
-            <svg className="w-6 h-6 sm:w-7 sm:h-7" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <svg className="w-6 h-6 " fill="none" stroke="currentColor" viewBox="0 0 24 24">
               {isMenuOpen ? (
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
               ) : (
@@ -324,14 +324,14 @@ export default function Navigation() {
         <div className={`lg:hidden absolute top-full left-0 right-0 shadow-lg border-t transition-all duration-300 ease-out overflow-hidden ${
           isMenuOpen ? 'max-h-screen opacity-100' : 'max-h-0 opacity-0'
         }`} style={{backgroundColor: 'var(--bg-dropdown)', borderColor: 'var(--border-dropdown)'}}>
-          <div className="container mx-auto px-4 sm:px-6 lg:px-8 py-4">
+          <div className="container mx-auto px-3 sm:px-6 lg:px-8">
               {/* All Navigation Links */}
-              {[...(isAuthenticated ? mainNavItems : unauthenticatedNavItems)].map((item) => (
+              {[...(isAuthenticated ? mainNavItems : unauthenticatedNavItems)].map((item, idx, arr) => (
                 <Link
                   key={item.href}
                   href={item.href}
-                  className="flex items-center gap-3 px-4 py-3 text-base font-roboto transition-colors"
-                  style={{color: 'var(--text-dropdown)'}}
+                  className="flex items-center gap-3 px-4 py-3 text-base font-roboto transition-colors border-b border-dashed last:border-b-0"
+                  style={{color: 'var(--text-dropdown)', borderColor: 'var(--border-dropdown)'}}
                   onMouseEnter={(e) => e.target.style.color = 'var(--text-cadet-blue)'}
                   onMouseLeave={(e) => e.target.style.color = 'var(--text-dropdown)'}
                   onClick={() => setIsMenuOpen(false)}
@@ -342,12 +342,12 @@ export default function Navigation() {
               
             {/* Mobile user section for authenticated users */}
               {isAuthenticated && (
-              <div className="border-t mt-4 pt-4" style={{borderColor: 'var(--border-dropdown)'}}>
-                <div className="flex items-center px-4 py-3">
+              <div style={{borderColor: 'var(--border-dropdown)'}}>
+                <div className="flex items-center px-4 py-3 border-b border-dashed" style={{borderColor: 'var(--border-dropdown)'}}>
                   {/* User Avatar - Clickable */}
                   <button 
                     onClick={() => setIsUserMenuOpen(!isUserMenuOpen)}
-                    className="w-10 h-10 rounded-full overflow-hidden border-2 mr-3 flex items-center justify-center focus:outline-none focus:ring-0 focus:ring-offset-0 transition-colors"
+                    className="w-10 h-10 rounded-full overflow-hidden border-2 mr-3 flex items-center justify-center focus:outline-none focus:ring-0 focus:ring-offset-0 transition-colors "
                     style={{borderColor: 'var(--border-dropdown)', backgroundColor: 'var(--bg-dropdown-hover)'}}
                     onMouseEnter={(e) => e.target.style.borderColor = '#FF1493'}
                     onMouseLeave={(e) => e.target.style.borderColor = 'var(--border-dropdown)'}
@@ -386,11 +386,11 @@ export default function Navigation() {
                 
                 {/* Mobile User Menu Options - Conditionally shown */}
                 {isUserMenuOpen && (
-                  <div className="px-4 pb-3">
+                  <div className="">
                     <Link
                       href="/account"
-                      className="block px-4 py-3 text-base font-roboto transition-colors rounded-lg"
-                      style={{color: 'var(--text-dropdown)'}}
+                      className="block px-4 pt-2 pb-3 text-base font-roboto transition-colors rounded-lg border-b border-dashed"
+                      style={{color: 'var(--text-dropdown)', borderColor: 'var(--border-dropdown)'}}
                       onMouseEnter={(e) => {e.target.style.backgroundColor = 'var(--bg-dropdown-hover)'; e.target.style.color = 'var(--text-cadet-blue)'}}
                       onMouseLeave={(e) => {e.target.style.backgroundColor = 'transparent'; e.target.style.color = 'var(--text-dropdown)'}}
                       onClick={() => {
@@ -402,8 +402,8 @@ export default function Navigation() {
                     </Link>
                     <Link
                       href="/profile-settings"
-                      className="block px-4 py-3 text-base font-roboto transition-colors rounded-lg"
-                      style={{color: 'var(--text-dropdown)'}}
+                      className="block px-4 py-3 text-base font-roboto transition-colors border-b"
+                      style={{color: 'var(--text-dropdown)', borderColor: 'var(--border-dropdown)'}}
                       onMouseEnter={(e) => {e.target.style.backgroundColor = 'var(--bg-dropdown-hover)'; e.target.style.color = 'var(--text-cadet-blue)'}}
                       onMouseLeave={(e) => {e.target.style.backgroundColor = 'transparent'; e.target.style.color = 'var(--text-dropdown)'}}
                       onClick={() => {

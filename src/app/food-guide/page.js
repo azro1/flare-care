@@ -138,14 +138,18 @@ export default function FoodGuide() {
           </ul>
         </div>
 
+        
+
+        
+
           </div>
 
           {/* Left Sidebar */}
-          <div className="lg:w-96 lg:flex-shrink-0 order-2 lg:order-1">
+          <div className="lg:w-72 lg:flex-shrink-0 order-2 lg:order-1">
             <div className="sticky top-8 space-y-6">
               
               {/* Quick Food Tips */}
-              <div className="card p-8 md:p-10 rounded-2xl backdrop-blur-sm">
+              <div className="card p-4 sm:p-6 rounded-2xl backdrop-blur-sm">
                 <h3 className="text-lg font-semibold font-source text-primary mb-4">Quick Food Tips</h3>
                 <div className="space-y-3">
                   <div className="flex items-center gap-3">
@@ -180,7 +184,7 @@ export default function FoodGuide() {
               </div>
 
               {/* IBD-Friendly Foods */}
-              <div className="card p-8 md:p-10 rounded-2xl backdrop-blur-sm">
+              <div className="card p-4 sm:p-6 rounded-2xl backdrop-blur-sm">
                 <h3 className="text-lg font-semibold font-source text-primary mb-4">IBD-Friendly Foods</h3>
                 <div className="space-y-3">
                   <div className="card-inner p-3">
@@ -203,9 +207,10 @@ export default function FoodGuide() {
         </div>
       </div>
 
-      {/* Call to Action - Full Width */}
-      <div className="mt-8">
-        <div className="card p-8 md:p-10 rounded-2xl backdrop-blur-sm text-center">
+      {/* Call to Action - Combined width (sidebar + content) */}
+      <div className="mt-8 lg:mt-0">
+        <div className="max-w-[76rem] mx-auto px-3 sm:px-4 md:px-6 lg:px-0">
+          <div className="card p-8 md:p-10 rounded-2xl backdrop-blur-sm text-center">
           <h2 className="text-xl font-semibold font-source text-primary mb-4">Track Your Meals</h2>
           <p className="text-secondary font-roboto mb-6 leading-relaxed">
             Use the symptom tracker to log what you eat each day and monitor how different foods affect you.
@@ -216,6 +221,7 @@ export default function FoodGuide() {
           >
             Start Tracking
           </Link>
+          </div>
         </div>
       </div>
     </div>
