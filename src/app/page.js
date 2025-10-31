@@ -1,6 +1,7 @@
 'use client'
 
 import Link from 'next/link'
+import WeatherHero from '@/components/WeatherHero'
 import { useAuth } from '@/lib/AuthContext'
 import { useEffect, useState } from 'react'
 import { useDataSync } from '@/lib/useDataSync'
@@ -424,8 +425,8 @@ export default function Home() {
 
           {/* Main Content */}
           <div className="flex-1 lg:max-w-4xl order-1 lg:order-2">
-        {/* Greeting */}
-        <div>
+        {/* Weather Hero with Greeting & Date inside */}
+        <WeatherHero>
           <h1 className="text-2xl sm:text-3xl lg:text-4xl font-bold font-source text-primary mb-2 sm:mb-3">
             {(() => {
               const hour = new Date().getHours()
@@ -437,7 +438,9 @@ export default function Home() {
           <p className="text-base font-roboto text-secondary">
             {new Date().toLocaleDateString('en-GB', { weekday: 'long', day: 'numeric', month: 'long' })}
           </p>
-        </div>
+        </WeatherHero>
+
+        
 
         {/* Quick Actions */}
         <div className="grid grid-cols-2 gap-4 max-w-sm mt-8 md:mt-10 mb-8">

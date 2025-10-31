@@ -236,7 +236,7 @@ export default function Navigation() {
             
             {/* User menu for authenticated users */}
             {isAuthenticated && (
-              <div className="flex items-center space-x-6 ml-4 pl-4 border-l border-gray-200">
+              <div className="flex items-center space-x-6 ml-4 pl-4 border-l" style={{borderColor: 'var(--border-primary)'}}>
                 <div className="flex items-center space-x-4">
                   {/* User Avatar with Dropdown */}
                   <div className="relative group">
