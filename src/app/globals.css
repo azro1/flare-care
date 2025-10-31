@@ -12,6 +12,14 @@
     --bg-secondary: #e2e8f0; /* Light secondary background */
     --bg-tertiary: #f8fafc; /* Light tertiary background */
     --bg-section: #f1f5f9; /* Light section background */
+    --bg-nav-footer: #1e293b; /* Dark nav/footer for light mode */
+    --text-footer: #d1d5db; /* Footer text - warm gray, no blue (dark bg) */
+    --text-footer-muted: #9ca3af; /* Footer muted text - warm gray, no blue */
+    --border-footer: rgba(209, 213, 219, 0.15); /* Footer separator - warm gray, lighter */
+    --bg-dropdown: #ffffff; /* Dropdown background */
+    --bg-dropdown-hover: #f1f5f9; /* Dropdown item hover */
+    --border-dropdown: #cbd5e1; /* Dropdown border */
+    --text-dropdown: #1e293b; /* Dropdown text */
     --bg-card: #ffffff;
     --bg-card-hover: #f1f5f9;
     --bg-card-inner: #f8fafc; /* Light gray inner card background - different from white */
@@ -70,44 +78,49 @@
   }
 
   .dark {
-    /* Dark theme colors */
-        --bg-main: #0f172a; /* Main page background */
-        --bg-main-gradient: linear-gradient(135deg, #0f172a 0%, #1e293b 50%, #0f172a 100%); /* Main gradient background */
-        --bg-quick-actions-gradient: linear-gradient(135deg, rgba(51, 65, 85, 0.3) 0%, rgba(51, 65, 85, 0.15) 50%, rgba(51, 65, 85, 0.3) 100%);
-        --bg-primary: #0f172a; /* Dark primary background */
-        --bg-secondary: #1e293b; /* Dark secondary background */
-        --bg-tertiary: #0f172a; /* Dark tertiary background */
-        --bg-section: rgba(15, 23, 42, 0.4); /* Dark section background */
-    --bg-card: rgba(51, 65, 85, 0.4);
-    --bg-card-hover: #334155;
-    --bg-card-inner: rgba(51, 65, 85, 0.4);
-    --bg-icon: #334155; /* Dark icon background */
-    --text-icon: #cbd5e1; /* Dark icon text */
-    --bg-input: #1e293b;
-    --bg-input-dark: #334155; /* Dark input background */
-    --border-input: #64748b; /* Dark input border */
-    --border-input-dark: #64748b; /* Dark input border */
-    --bg-button-primary: #3b82f6;
-    --bg-button-primary-hover: #2563eb; /* Primary button hover */
-    --bg-button-cadet: #5F9EA0; /* Cadet blue button */
-    --bg-button-cadet-hover: rgba(95, 158, 160, 0.8); /* Cadet blue button hover - washed out for dark mode */
-    --bg-button-delete: rgba(51, 65, 85, 0.4); /* Dark delete button background */
-    --bg-button-delete-hover: rgba(51, 65, 85, 0.6); /* Dark delete button hover */
-    --bg-button-secondary: #1e293b;
-    --bg-button-secondary-hover: #334155;
-    --bg-button-hover: #475569; /* Dark button hover */
-    --bg-button-disabled: #334155; /* Dark disabled button background */
-    --text-button-disabled: #64748b; /* Dark disabled button text */
-    --bg-button-cancel: rgba(51, 65, 85, 0.5); /* Dark cancel button background */
-    --bg-button-cancel-hover: rgba(51, 65, 85, 0.6); /* Dark cancel button hover */
+    /* Warm charcoal/slate dark theme - moving away from blue */
+        --bg-main: #1a1d24; /* Warm charcoal main background */
+        --bg-main-gradient: linear-gradient(135deg, #1a1d24 0%, #1a1d24 100%); /* Solid warm charcoal */
+        --bg-quick-actions-gradient: rgba(42, 45, 52, 0.6);
+        --bg-primary: #1a1d24; /* Warm charcoal primary */
+        --bg-secondary: #2a2d34; /* Warm neutral charcoal secondary */
+        --bg-tertiary: #1a1d24; /* Warm charcoal tertiary */
+        --bg-section: rgba(42, 45, 52, 0.5); /* Warm neutral charcoal section */
+        --bg-nav-footer: #111419; /* Darker warm charcoal for nav/footer contrast */
+        --bg-dropdown: #1e2128; /* Dropdown background - fully opaque */
+        --bg-dropdown-hover: rgba(42, 45, 52, 0.7); /* Dropdown item hover */
+        --border-dropdown: rgba(63, 68, 73, 0.5); /* Dropdown border */
+        --text-dropdown: #d1d5db; /* Dropdown text */
+    --bg-card: rgba(42, 45, 52, 0.6); /* Warm neutral charcoal card */
+    --bg-card-hover: rgba(55, 58, 65, 0.7); /* Lighter warm charcoal hover */
+    --bg-card-inner: rgba(30, 33, 40, 0.7); /* Darker inner card for better contrast */
+    --bg-icon: rgba(42, 45, 52, 0.8); /* Warm neutral charcoal icon background */
+    --text-icon: #d1d5db; /* Soft gray icon text */
+    --bg-input: #2a2d34; /* Warm neutral charcoal input */
+    --bg-input-dark: rgba(42, 45, 52, 0.7); /* Warm neutral charcoal input dark */
+    --border-input: #3f4449; /* Warm neutral border */
+    --border-input-dark: #555961; /* Lighter warm neutral border for better visibility */
+    --bg-button-primary: #6366f1; /* Warm indigo (less blue than before) */
+    --bg-button-primary-hover: #4f46e5; /* Deeper warm indigo */
+    --bg-button-cadet: #5F9EA0; /* Cadet blue button - keep original */
+    --bg-button-cadet-hover: rgba(95, 158, 160, 0.8); /* Cadet blue button hover */
+    --bg-button-delete: #ef4444; /* Red delete button background for dark mode */
+    --bg-button-delete-hover: #dc2626; /* Darker red delete button hover */
+    --bg-button-secondary: #2a2d34; /* Warm neutral charcoal secondary */
+    --bg-button-secondary-hover: rgba(55, 58, 65, 0.9); /* Warmer charcoal hover */
+    --bg-button-hover: rgba(55, 58, 65, 0.7); /* Warm neutral hover */
+    --bg-button-disabled: rgba(42, 45, 52, 0.5); /* Warm neutral charcoal disabled */
+    --text-button-disabled: #6b7280; /* Warm gray disabled text */
+    --bg-button-cancel: #3a3d44; /* Warm neutral charcoal cancel - solid for visibility */
+    --bg-button-cancel-hover: #4a4d54; /* Warmer charcoal cancel hover */
     
-    /* Cadet blue for UI elements (original for dark mode) */
-    --text-cadet-blue: #5F9EA0; /* Original cadet blue for dark mode */
+    /* Cadet blue - keep original brand color */
+    --text-cadet-blue: #5F9EA0; /* Cadet blue - same as light mode */
     
     /* Radio button styling */
-    --radio-bg: #334155; /* Dark radio button background */
-    --radio-border: #64748b; /* Dark radio button border - matches input border */
-    --radio-checked-border: #64748b; /* Dark checked radio border - same as input */
+    --radio-bg: rgba(42, 45, 52, 0.8); /* Warm neutral charcoal radio */
+    --radio-border: #3f4449; /* Warm neutral border */
+    --radio-checked-border: #059669; /* Warm emerald when checked */
     
     /* Goal colors */
     --bg-goal-success: #064e3b; /* Dark green background for completed goals */
@@ -116,19 +129,20 @@
     --text-goal-icon-success: #10b981; /* Light green for success icons */
     --bg-goal-icon-medication: rgba(196, 181, 253, 0.1); /* Subtle purple background for medication icons */
     --text-goal-icon-medication: #c4b5fd; /* Brighter purple for medication icons */
-    --bg-goal-icon-hydration: rgba(147, 197, 253, 0.1); /* Subtle blue background for hydration icons */
-    --text-goal-icon-hydration: #93c5fd; /* Brighter blue for hydration icons */
+    --bg-goal-icon-hydration: rgba(59, 130, 246, 0.15); /* Subtle blue kept for hydration (water theme) */
+    --text-goal-icon-hydration: #60a5fa; /* Softer blue for hydration */
     
-    --text-primary: #f8fafc;
-    --text-secondary: #cbd5e1;
-    --text-tertiary: #94a3b8;
-    --text-muted: #94a3b8; /* Muted gray text - same as light mode */
+    --text-primary: #f3f4f6; /* Softer white for better contrast */
+    --text-secondary: #d1d5db; /* Warm light gray */
+    --text-tertiary: #9ca3af; /* Warm medium gray */
+    --text-muted: #9ca3af; /* Warm muted gray */
     --text-white: #ffffff;
     
-    --border-primary: #475569; /* Dark primary border */
-    --border-secondary: #64748b; /* Dark secondary border */
-    --border-card: #475569; /* Dark card border */
-    --border-card-inner: #475569; /* Dark inner card border */
+    --border-primary: #353940; /* More subtle warm neutral primary border */
+    --border-secondary: #4f5459; /* Warm neutral secondary border */
+    --border-card: #3f4449; /* Warm neutral card border */
+    --border-card-hover: #52525b; /* Warmer card border on hover */
+    --border-card-inner: #4f5459; /* Warmer inner card border */
     
     --shadow-sm: 0 1px 2px 0 rgb(0 0 0 / 0.3);
     --shadow-md: 0 4px 6px -1px rgb(0 0 0 / 0.4), 0 2px 4px -2px rgb(0 0 0 / 0.4);
@@ -181,6 +195,15 @@
     border-color: var(--border-card);
     @apply rounded-xl shadow-sm p-6 transition-shadow duration-200 hover:shadow-md;
   }
+  
+  .dark .card:hover {
+    border-color: var(--border-card-hover);
+  }
+  
+  .dark .card.no-hover-border:hover {
+    border-color: var(--border-card); /* Keep original border on hover */
+  }
+  
 
   .card-inner {
     background-color: var(--bg-card-inner);
@@ -201,8 +224,8 @@
     @apply px-4 py-2 rounded-lg transition-colors border hover:border-red-700;
   }
   .dark .button-delete {
-    color: var(--text-secondary); /* Normal text for dark mode */
-    border-color: var(--border-card); /* Normal border for dark mode */
+    color: white; /* White text for dark mode red background */
+    border-color: #dc2626; /* Red border for dark mode */
   }
   .button-delete:hover {
     background-color: var(--bg-button-delete-hover);
@@ -238,14 +261,14 @@
     background-color: var(--bg-input-dark);
     color: var(--text-primary);
     border-color: var(--border-input-dark);
-    @apply w-full px-3 py-2 border-2 rounded-lg focus:outline-none transition-all duration-200 text-left text-base placeholder-slate-400;
+    @apply w-full px-3 py-2 border rounded-lg focus:outline-none transition-all duration-200 text-left text-base placeholder-slate-400;
   }
 
 select.input-field-wizard {
     background-color: var(--bg-input-dark) !important;
     color: var(--text-primary) !important;
     border-color: var(--border-input-dark) !important;
-    @apply px-3 py-2 border-2 rounded-lg focus:outline-none transition-all duration-200 text-left text-base placeholder-slate-400;
+    @apply px-3 py-2 border rounded-lg focus:outline-none transition-all duration-200 text-left text-base placeholder-slate-400;
     appearance: none !important;
     background-image: url("data:image/svg+xml,%3csvg xmlns='http://www.w3.org/2000/svg' fill='none' viewBox='0 0 20 20'%3e%3cpath stroke='%23475569' stroke-linecap='round' stroke-linejoin='round' stroke-width='1.5' d='m6 8 4 4 4-4'/%3e%3c/svg%3e") !important;
     background-position: right 0.75rem center !important;
@@ -265,6 +288,15 @@ select.input-field-wizard.has-value {
 select.input-field-wizard:focus {
     border-color: var(--text-cadet-blue) !important;
     box-shadow: 0 0 0 3px rgba(95, 158, 160, 0.1) !important;
+}
+
+/* Dark mode placeholder color for wizard inputs - warm gray instead of blue slate */
+.dark .input-field-wizard::placeholder {
+    color: #6b7280 !important; /* Dimmer warm gray for less prominent placeholders */
+}
+
+.dark select.input-field-wizard.placeholder {
+    color: #6b7280 !important; /* Dimmer warm gray for less prominent placeholders */
 }
 
 select.input-field-wizard option {
@@ -557,7 +589,7 @@ select.input-field-wizard option[value=""] {
   background-color: var(--bg-input-dark) !important;
   color: var(--text-primary) !important;
   border-color: var(--border-input-dark) !important;
-  @apply px-3 py-2 border-2 rounded-lg focus:outline-none transition-all duration-200 text-left text-base placeholder-slate-400;
+  @apply px-3 py-2 border rounded-lg focus:outline-none transition-all duration-200 text-left text-base placeholder-slate-400;
 }
 
 .react-datepicker {

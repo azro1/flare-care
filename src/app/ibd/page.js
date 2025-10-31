@@ -11,11 +11,11 @@ export default function LearnPage() {
       <div className="flex flex-col lg:flex-row lg:gap-8 lg:justify-center">
         
         {/* Left Sidebar */}
-        <div className="lg:w-96 lg:flex-shrink-0 order-2 lg:order-1">
+        <div className="lg:w-72 lg:flex-shrink-0 order-2 lg:order-1">
           <div className="sticky top-8 space-y-6">
             
             {/* Quick Facts */}
-            <div className="card p-8 md:p-10 rounded-2xl backdrop-blur-sm">
+            <div className="card p-4 sm:p-6 rounded-2xl backdrop-blur-sm">
               <h3 className="text-lg font-semibold font-source text-primary mb-4">Quick Facts</h3>
               <div className="space-y-3">
                 <div className="flex items-start">
@@ -38,7 +38,7 @@ export default function LearnPage() {
             </div>
 
             {/* Daily Tips */}
-            <div className="card p-8 md:p-10 rounded-2xl backdrop-blur-sm">
+            <div className="card p-4 sm:p-6 rounded-2xl backdrop-blur-sm">
               <h3 className="text-lg font-semibold font-source text-primary mb-4">Daily Tips</h3>
               <div className="space-y-4">
                 <div className="card-inner p-3">
@@ -61,7 +61,7 @@ export default function LearnPage() {
             </div>
 
             {/* Emergency Contacts */}
-            <div className="card p-8 md:p-10 rounded-2xl backdrop-blur-sm">
+            <div className="card p-4 sm:p-6 rounded-2xl backdrop-blur-sm">
               <h3 className="text-lg font-semibold font-source text-primary mb-4">Emergency Contacts</h3>
               <div className="space-y-3">
                 <div className="border-l-4 border-red-500 pl-3">
@@ -418,8 +418,9 @@ export default function LearnPage() {
       </div>
 
       {/* Call to Action */}
-      <div className="mt-8">
-        <div className="card p-8 md:p-10 rounded-2xl backdrop-blur-sm text-center">
+        <div className="mt-8">
+          <div className="max-w-[76rem] mx-auto px-0 sm:px-4 md:px-6 lg:px-0">
+            <div className="card p-8 md:p-10 rounded-2xl backdrop-blur-sm text-center">
           <h2 className="text-xl font-semibold font-source text-primary mb-4">Ready to Start Tracking?</h2>
           <p className="text-secondary mb-6 font-roboto">
             Start tracking your symptoms and medications to better manage your IBD condition.
@@ -438,7 +439,8 @@ export default function LearnPage() {
               Learn More About FlareCare
             </Link>
           </div>
-        </div>
+            </div>
+          </div>
       </div>
     </div>
   )

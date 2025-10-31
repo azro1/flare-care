@@ -115,7 +115,7 @@ function SymptomDetailContent() {
             <div className="grid grid-cols-1 sm:grid-cols-3 gap-8">
               <div className="text-center">
                 <div className={`w-20 h-20 rounded-2xl flex items-center justify-center mx-auto mb-4 ${
-                  (symptom.is_ongoing || !symptom.symptom_end_date) ? 'bg-yellow-100 dark:bg-slate-700' : 'bg-green-100 dark:bg-slate-700'
+                  (symptom.is_ongoing || !symptom.symptom_end_date) ? 'bg-yellow-100 dark:bg-yellow-500/20' : 'bg-green-100 dark:bg-green-500/20'
                 }`}>
                   <svg className={`w-10 h-10 ${
                     (symptom.is_ongoing || !symptom.symptom_end_date) ? 'text-yellow-600 dark:text-yellow-400' : 'text-green-600 dark:text-green-400'
@@ -134,7 +134,7 @@ function SymptomDetailContent() {
               </div>
               
               <div className="text-center">
-                <div className="w-20 h-20 bg-red-100 dark:bg-slate-700 rounded-2xl flex items-center justify-center mx-auto mb-4">
+                <div className="w-20 h-20 bg-red-100 dark:bg-red-500/20 rounded-2xl flex items-center justify-center mx-auto mb-4">
                   <span className="text-3xl font-bold text-red-600 dark:text-red-400">{symptom.severity}</span>
                 </div>
                 <h3 className="text-base font-semibold text-primary mb-1">Severity</h3>
@@ -142,7 +142,7 @@ function SymptomDetailContent() {
               </div>
               
               <div className="text-center">
-                <div className="w-20 h-20 bg-orange-100 dark:bg-slate-700 rounded-2xl flex items-center justify-center mx-auto mb-4">
+                <div className="w-20 h-20 bg-orange-100 dark:bg-orange-500/20 rounded-2xl flex items-center justify-center mx-auto mb-4">
                   <span className="text-3xl font-bold text-orange-600 dark:text-orange-400">{symptom.stress_level}</span>
                 </div>
                 <h3 className="text-base font-semibold text-primary mb-1">Stress Level</h3>
@@ -155,7 +155,7 @@ function SymptomDetailContent() {
           <div className="card p-6">
             <h2 className="text-xl font-semibold font-source text-primary mb-6">Timeline</h2>
             <div className="space-y-4">
-              <div className="flex items-center justify-between py-3 border-b border-slate-300/30 dark:border-slate-700/30">
+              <div className="flex items-center justify-between py-3 border-b border-slate-300/30 dark:border-b" style={{borderColor: 'var(--border-primary)'}}>
                 <div className="flex items-center gap-3">
                   <div className="w-3 h-3 bg-green-500 rounded-full"></div>
                   <span className="font-medium text-primary">Started</span>
@@ -180,12 +180,12 @@ function SymptomDetailContent() {
           <div className="card p-6">
             <h2 className="text-xl font-semibold font-source text-primary mb-6">Bathroom Frequency</h2>
             <div className="space-y-4">
-              <div className="flex items-center justify-between py-3 border-b border-slate-300/30 dark:border-slate-700/30">
+              <div className="flex items-center justify-between py-3 border-b border-slate-300/30 dark:border-b" style={{borderColor: 'var(--border-primary)'}}>
                 <span className="font-medium text-primary">Normal frequency</span>
                 <span className="text-secondary">{symptom.normal_bathroom_frequency || 'Not set'} times/day</span>
               </div>
               {symptom.bathroom_frequency_changed && (
-                <div className="flex items-center justify-between py-3 border-b border-slate-300/30 dark:border-slate-700/30">
+                <div className="flex items-center justify-between py-3 border-b border-slate-300/30 dark:border-b" style={{borderColor: 'var(--border-primary)'}}>
                   <span className="font-medium text-primary">Frequency changed</span>
                   <span className="text-secondary">{symptom.bathroom_frequency_changed === 'yes' ? 'Yes' : 'No'}</span>
                 </div>
@@ -203,17 +203,17 @@ function SymptomDetailContent() {
           <div className="card p-6">
             <h2 className="text-xl font-semibold font-source text-primary mb-6">Lifestyle</h2>
             <div className="space-y-4">
-              <div className="flex items-center justify-between py-3 border-b border-slate-300/30 dark:border-slate-700/30">
+              <div className="flex items-center justify-between py-3 border-b border-slate-300/30 dark:border-b" style={{borderColor: 'var(--border-primary)'}}>
                 <span className="font-medium text-primary">Smoking</span>
                 <span className="text-secondary">{symptom.smoking ? 'Yes' : 'No'}</span>
               </div>
               {symptom.smoking && symptom.smoking_details && (
-                <div className="py-3 border-b border-slate-300/30 dark:border-slate-700/30">
+                <div className="py-3 border-b border-slate-300/30 dark:border-b" style={{borderColor: 'var(--border-primary)'}}>
                   <span className="font-medium text-primary block mb-2">Smoking details</span>
                   <p className="text-secondary leading-relaxed">{symptom.smoking_details}</p>
                 </div>
               )}
-              <div className="flex items-center justify-between py-3 border-b border-slate-300/30 dark:border-slate-700/30">
+              <div className="flex items-center justify-between py-3 border-b border-slate-300/30 dark:border-b" style={{borderColor: 'var(--border-primary)'}}>
                 <span className="font-medium text-primary">Alcohol</span>
                 <span className="text-secondary">{symptom.alcohol ? 'Yes' : 'No'}</span>
               </div>
@@ -236,7 +236,7 @@ function SymptomDetailContent() {
                     <h3 className="font-medium text-primary mb-3">Breakfast</h3>
                     <div className="space-y-2">
                       {symptom.breakfast.map((meal, index) => (
-                        <div key={index} className="flex items-center justify-between py-2 border-b border-slate-300/30 dark:border-slate-700/30">
+                        <div key={index} className="flex items-center justify-between py-2 border-b border-slate-300/30 dark:border-b" style={{borderColor: 'var(--border-primary)'}}>
                           <span className="text-secondary">{meal.food}</span>
                           <span className="text-secondary">{meal.quantity}</span>
                         </div>
@@ -250,7 +250,7 @@ function SymptomDetailContent() {
                     <h3 className="font-medium text-primary mb-3">Lunch</h3>
                     <div className="space-y-2">
                       {symptom.lunch.map((meal, index) => (
-                        <div key={index} className="flex items-center justify-between py-2 border-b border-slate-300/30 dark:border-slate-700/30">
+                        <div key={index} className="flex items-center justify-between py-2 border-b border-slate-300/30 dark:border-b" style={{borderColor: 'var(--border-primary)'}}>
                           <span className="text-secondary">{meal.food}</span>
                           <span className="text-secondary">{meal.quantity}</span>
                         </div>
@@ -264,7 +264,7 @@ function SymptomDetailContent() {
                     <h3 className="font-medium text-primary mb-3">Dinner</h3>
                     <div className="space-y-2">
                       {symptom.dinner.map((meal, index) => (
-                        <div key={index} className="flex items-center justify-between py-2 border-b border-slate-300/30 dark:border-slate-700/30">
+                        <div key={index} className="flex items-center justify-between py-2 border-b border-slate-300/30 dark:border-b" style={{borderColor: 'var(--border-primary)'}}>
                           <span className="text-secondary">{meal.food}</span>
                           <span className="text-secondary">{meal.quantity}</span>
                         </div>
@@ -287,7 +287,7 @@ function SymptomDetailContent() {
         </div>
 
         {/* Delete Button */}
-        <div className="mt-8 pt-6 border-t border-slate-300/50 dark:border-slate-700/50">
+        <div className="mt-8 pt-6 border-t border-slate-300/50 dark:border-t" style={{borderColor: 'var(--border-primary)'}}>
           <button
             onClick={() => setShowDeleteModal(true)}
             disabled={isDeleting}
@@ -301,7 +301,7 @@ function SymptomDetailContent() {
       {/* Delete Confirmation Modal */}
       {showDeleteModal && (
         <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
-          <div className="bg-white dark:bg-slate-800 rounded-xl p-6 max-w-md mx-4 border border-slate-300/50 dark:border-slate-700/50">
+          <div className="bg-white rounded-xl p-6 max-w-md mx-4 border border-slate-300/50 dark:border dark:bg-[var(--bg-secondary)]" style={{borderColor: 'var(--border-primary)'}}>
             <div className="flex items-center gap-3 mb-4">
               <div className="w-10 h-10 bg-red-100 rounded-full flex items-center justify-center">
                 <svg className="w-6 h-6 text-red-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
