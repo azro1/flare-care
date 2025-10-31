@@ -76,31 +76,37 @@ function MedicationTrackingWizard() {
     }
   }, [])
 
-  // Prevent body scrolling only on landing page
+  // ✅ Prevent body scrolling only on landing page
   useEffect(() => {
+    // Apply fixed positioning only on landing page (step 0)
     if (currentStep === 0) {
+      // Freeze scroll
       document.body.style.position = 'fixed'
       document.body.style.width = '100%'
       document.body.style.height = '100%'
+    
+      // Apply gradient to html element since body is fixed
       document.body.style.backgroundColor = 'transparent'
-      document.documentElement.style.background = 'var(--bg-main-gradient)'
-      document.documentElement.style.minHeight = '100vh'
+      document.documentElement.style.background = '#1a1d24'
+      document.documentElement.style.height = '100%'
     } else {
-      document.body.style.position = ''
-      document.body.style.width = ''
-      document.body.style.height = ''
+      // Reset styles when on question pages
+      document.body.style.position = 'static'
+      document.body.style.width = 'auto'
+      document.body.style.height = 'auto'
       document.body.style.backgroundColor = ''
       document.documentElement.style.background = ''
-      document.documentElement.style.minHeight = ''
+      document.documentElement.style.height = ''
     }
-
+  
+    // 🧹 Cleanup on unmount
     return () => {
-      document.body.style.position = ''
-      document.body.style.width = ''
-      document.body.style.height = ''
+      document.body.style.position = 'static'
+      document.body.style.width = 'auto'
+      document.body.style.height = 'auto'
       document.body.style.backgroundColor = ''
       document.documentElement.style.background = ''
-      document.documentElement.style.minHeight = ''
+      document.documentElement.style.height = ''
     }
   }, [currentStep])
 
