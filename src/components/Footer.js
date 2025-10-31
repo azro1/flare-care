@@ -16,7 +16,8 @@ export default function Footer() {
   }
 
   // Check if we're on a page that needs fixed footer on mobile
-  const needsFixedFooter = pathname === '/auth' || pathname === '/symptoms' || pathname === '/medications/track'
+  const is404 = typeof window !== 'undefined' && document.documentElement.classList.contains('is-404')
+  const needsFixedFooter = pathname === '/auth' || pathname === '/symptoms' || pathname === '/medications/track' || is404
 
   // Track scroll position
   useEffect(() => {

@@ -1,8 +1,14 @@
 'use client'
 
 import Link from 'next/link'
+import { useEffect } from 'react'
 
 export default function NotFound() {
+  useEffect(() => {
+    document.documentElement.classList.add('is-404')
+    return () => document.documentElement.classList.remove('is-404')
+  }, [])
+
   return (
     <div className="flex-grow flex flex-col items-center justify-center px-6">
       <div className="text-center max-w-md mx-auto">
