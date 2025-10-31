@@ -587,8 +587,10 @@ export default function Home() {
         )}
 
         {/* Section Divider */}
-        <div className="border-t my-8" style={{borderColor: 'var(--border-primary)'}}></div>
-
+        {(symptoms.length > 0 || trackedMedications.length > 0) && (
+           <div className="border-t my-8" style={{borderColor: 'var(--border-primary)'}}></div>
+        )}
+        
         {/* Recent Activity */}
         <div>
           <h2 className="text-xl font-semibold font-source" style={{color: 'var(--text-cadet-blue)'}}>Recent Activity</h2>
