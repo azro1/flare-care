@@ -389,7 +389,7 @@ export default function Navigation() {
                   <div className="">
                     <Link
                       href="/account"
-                      className="block px-4 pt-2 pb-3 text-base font-roboto transition-colors rounded-lg border-b border-dashed"
+                      className="block px-4 py-3 text-base font-roboto transition-colors rounded-lg border-b border-dashed"
                       style={{color: 'var(--text-dropdown)', borderColor: 'var(--border-dropdown)'}}
                       onMouseEnter={(e) => {e.target.style.backgroundColor = 'var(--bg-dropdown-hover)'; e.target.style.color = 'var(--text-cadet-blue)'}}
                       onMouseLeave={(e) => {e.target.style.backgroundColor = 'transparent'; e.target.style.color = 'var(--text-dropdown)'}}
