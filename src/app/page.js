@@ -190,8 +190,8 @@ export default function Home() {
               </p>
             </div>
 
-            <div className="grid md:grid-cols-2 gap-8">
-              <div className="space-y-3 flex flex-col">
+            <div className="grid md:grid-cols-2 gap-8 text-center md:text-left">
+              <div className="space-y-3 flex flex-col items-center md:items-start">
                 <Clipboard className="w-6 h-6 text-pink-600" />
                 <h3 className="text-xl font-semibold text-primary">Daily check-ins</h3>
                 <p className="text-secondary leading-relaxed">
@@ -199,7 +199,7 @@ export default function Home() {
                 </p>
               </div>
 
-              <div className="space-y-3 flex flex-col">
+              <div className="space-y-3 flex flex-col items-center md:items-start">
                 <Cookie className="w-6 h-6 text-yellow-600" />
                 <h3 className="text-xl font-semibold text-primary">Food diary</h3>
                 <p className="text-secondary leading-relaxed">
@@ -207,7 +207,7 @@ export default function Home() {
                 </p>
               </div>
 
-              <div className="space-y-3 flex flex-col">
+              <div className="space-y-3 flex flex-col items-center md:items-start">
                 <Pill className="w-6 h-6 text-purple-600" />
                 <h3 className="text-xl font-semibold text-primary">Medication tracking</h3>
                 <p className="text-secondary leading-relaxed">
@@ -215,7 +215,7 @@ export default function Home() {
                 </p>
               </div>
 
-              <div className="space-y-3 flex flex-col">
+              <div className="space-y-3 flex flex-col items-center md:items-start">
                 <TrendingUp className="w-6 h-6 text-blue-600" />
                 <h3 className="text-xl font-semibold text-primary">Spot your triggers</h3>
                 <p className="text-secondary leading-relaxed">
@@ -352,7 +352,7 @@ export default function Home() {
             <div className="sticky top-8 space-y-6">
               
               {/* Quick Stats */}
-              <div className="p-4 sm:p-6">
+              <div className="p-4 py-0 sm:p-6 sm:py-0">
                 <h3 className="text-lg font-semibold font-source text-primary mb-4">Your Progress</h3>
                 <div className="space-y-2 border-l-4 pl-4 sm:pl-5" style={{borderColor: 'var(--text-cadet-blue)'}}>
                     <div className="flex justify-between items-center">
@@ -411,7 +411,7 @@ export default function Home() {
               </div>
 
               {/* Daily Tip */}
-              <div className="p-4 sm:p-6">
+              <div className="p-4 pt-0 sm:p-6 sm:pt-0">
                 <div>
                   <h3 className="text-lg font-semibold font-source text-primary mb-2">💡 Daily Tip</h3>
                   <p className={`text-sm text-secondary transition-opacity duration-500 ${isFading ? 'opacity-0' : 'opacity-100'}`}>
@@ -529,9 +529,6 @@ export default function Home() {
                     <div className="flex gap-6 text-sm text-secondary">
                       <span>View details</span>
                     </div>
-                    {symptom.notes && (
-                      <p className="text-sm text-secondary line-clamp-2 leading-relaxed">{symptom.notes}</p>
-                    )}
                   </div>
                   </div>
                 </div>
@@ -724,7 +721,7 @@ export default function Home() {
               </div>
             </Link>
 
-            <Link href="/food-guide" className="card p-6  transition-all">
+            <Link href="/foods" className="card p-6  transition-all">
               <div className="text-center">
               <div className="w-12 h-12 bg-yellow-100 rounded-xl flex items-center justify-center mx-auto mb-3">
                 <Pizza className="w-6 h-6 text-yellow-600" />

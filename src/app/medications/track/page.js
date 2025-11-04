@@ -52,6 +52,17 @@ function MedicationTrackingWizard() {
   const [dateErrors, setDateErrors] = useState({})
   const [fieldErrors, setFieldErrors] = useState({})
   const [isSubmitting, setIsSubmitting] = useState(false)
+  const [isMobile, setIsMobile] = useState(false)
+
+  // Detect mobile for DatePicker
+  useEffect(() => {
+    const checkMobile = () => {
+      setIsMobile(window.innerWidth <= 640)
+    }
+    checkMobile()
+    window.addEventListener('resize', checkMobile)
+    return () => window.removeEventListener('resize', checkMobile)
+  }, [])
 
   // Save state to localStorage whenever it changes
   useEffect(() => {
@@ -844,99 +855,93 @@ function MedicationTrackingWizard() {
       }
 
       return (
-        <div className="space-y-6">
-          <h2 className="text-2xl font-semibold font-source text-primary mb-6">
+        <div className="space-y-8">
+          <h2 className="text-2xl font-semibold font-source text-primary mb-8">
             Review your entry
           </h2>
 
           {/* Missed Medications */}
-          <div>
-            <h3 className="text-lg font-semibold text-primary mb-4">Missed Medications:</h3>
-            {formData.missedMedications && formData.missedMedicationsList.filter(item => item.medication.trim()).length > 0 ? (
-              <div className="space-y-6">
-                {formData.missedMedicationsList.filter(item => item.medication.trim()).map((item, index) => (
-                  <div key={index} className="space-y-3">
-                    <div className="flex justify-between py-2 border-b" style={{borderColor: 'var(--border-primary)'}}>
-                      <span className="text-secondary">Medication:</span>
+          {(formData.missedMedications && formData.missedMedicationsList.filter(item => item.medication.trim()).length > 0) && (
+            <div className="card p-6 rounded-xl border" style={{borderColor: 'var(--border-card)'}}>
+              <h3 className="text-xl font-semibold text-cadet-blue mb-6 pb-4 border-b" style={{borderColor: 'var(--border-primary)'}}>Missed Medications</h3>
+              <div className="space-y-4">
+                {formData.missedMedicationsList.filter(item => item.medication.trim()).map((item, index, array) => (
+                  <div key={index} className={`grid grid-cols-1 sm:grid-cols-2 gap-3 py-3 ${index < array.length - 1 ? 'border-b' : ''}`} style={index < array.length - 1 ? {borderColor: 'var(--border-primary)'} : {}}>
+                    <div>
+                      <span className="text-sm text-cadet-blue block mb-1">Medication</span>
                       <span className="font-medium text-primary">{item.medication}</span>
                     </div>
-                    <div className="flex justify-between py-2 border-b" style={{borderColor: 'var(--border-primary)'}}>
-                      <span className="text-secondary">Date:</span>
+                    <div>
+                      <span className="text-sm text-cadet-blue block mb-1">Date</span>
                       <span className="font-medium text-primary">{item.date ? new Date(item.date).toLocaleDateString('en-GB', { day: '2-digit', month: '2-digit', year: 'numeric' }) : 'N/A'}</span>
                     </div>
-                    <div className="flex justify-between py-2 border-b" style={{borderColor: 'var(--border-primary)'}}>
-                      <span className="text-secondary">Time of Day:</span>
+                    <div>
+                      <span className="text-sm text-cadet-blue block mb-1">Time of Day</span>
                       <span className="font-medium text-primary">{item.timeOfDay || 'N/A'}</span>
                     </div>
                   </div>
                 ))}
               </div>
-            ) : (
-              <p className="text-secondary">None</p>
-            )}
-          </div>
+            </div>
+          )}
 
           {/* NSAIDs */}
-          <div>
-            <h3 className="text-lg font-semibold text-primary mb-4">NSAIDs:</h3>
-            {formData.nsaidUsage && formData.nsaidList.filter(item => item.medication.trim()).length > 0 ? (
-              <div className="space-y-6">
-                {formData.nsaidList.filter(item => item.medication.trim()).map((item, index) => (
-                  <div key={index} className="space-y-3">
-                    <div className="flex justify-between py-2 border-b" style={{borderColor: 'var(--border-primary)'}}>
-                      <span className="text-secondary">Medication:</span>
+          {(formData.nsaidUsage && formData.nsaidList.filter(item => item.medication.trim()).length > 0) && (
+            <div className="card p-6 rounded-xl border" style={{borderColor: 'var(--border-card)'}}>
+              <h3 className="text-xl font-semibold text-cadet-blue mb-6 pb-4 border-b" style={{borderColor: 'var(--border-primary)'}}>NSAIDs</h3>
+              <div className="space-y-4">
+                {formData.nsaidList.filter(item => item.medication.trim()).map((item, index, array) => (
+                  <div key={index} className={`grid grid-cols-1 sm:grid-cols-2 gap-3 py-3 ${index < array.length - 1 ? 'border-b' : ''}`} style={index < array.length - 1 ? {borderColor: 'var(--border-primary)'} : {}}>
+                    <div>
+                      <span className="text-sm text-cadet-blue block mb-1">Medication</span>
                       <span className="font-medium text-primary">{item.medication}</span>
                     </div>
-                    <div className="flex justify-between py-2 border-b" style={{borderColor: 'var(--border-primary)'}}>
-                      <span className="text-secondary">Dosage:</span>
+                    <div>
+                      <span className="text-sm text-cadet-blue block mb-1">Dosage</span>
                       <span className="font-medium text-primary">{item.dosage || 'N/A'}</span>
                     </div>
-                    <div className="flex justify-between py-2 border-b" style={{borderColor: 'var(--border-primary)'}}>
-                      <span className="text-secondary">Date:</span>
+                    <div>
+                      <span className="text-sm text-cadet-blue block mb-1">Date</span>
                       <span className="font-medium text-primary">{item.date ? new Date(item.date).toLocaleDateString('en-GB', { day: '2-digit', month: '2-digit', year: 'numeric' }) : 'N/A'}</span>
                     </div>
-                    <div className="flex justify-between py-2 border-b" style={{borderColor: 'var(--border-primary)'}}>
-                      <span className="text-secondary">Time of Day:</span>
+                    <div>
+                      <span className="text-sm text-cadet-blue block mb-1">Time of Day</span>
                       <span className="font-medium text-primary">{item.timeOfDay || 'N/A'}</span>
                     </div>
                   </div>
                 ))}
               </div>
-            ) : (
-              <p className="text-secondary">None</p>
-            )}
-          </div>
+            </div>
+          )}
 
           {/* Antibiotics */}
-          <div>
-            <h3 className="text-lg font-semibold text-primary mb-4">Antibiotics:</h3>
-            {formData.antibioticUsage && formData.antibioticList.filter(item => item.medication.trim()).length > 0 ? (
-              <div className="space-y-6">
-                {formData.antibioticList.filter(item => item.medication.trim()).map((item, index) => (
-                  <div key={index} className="space-y-3">
-                    <div className="flex justify-between py-2 border-b" style={{borderColor: 'var(--border-primary)'}}>
-                      <span className="text-secondary">Medication:</span>
+          {(formData.antibioticUsage && formData.antibioticList.filter(item => item.medication.trim()).length > 0) && (
+            <div className="card p-6 rounded-xl border" style={{borderColor: 'var(--border-card)'}}>
+              <h3 className="text-xl font-semibold text-cadet-blue mb-6 pb-4 border-b" style={{borderColor: 'var(--border-primary)'}}>Antibiotics</h3>
+              <div className="space-y-4">
+                {formData.antibioticList.filter(item => item.medication.trim()).map((item, index, array) => (
+                  <div key={index} className={`grid grid-cols-1 sm:grid-cols-2 gap-3 py-3 ${index < array.length - 1 ? 'border-b' : ''}`} style={index < array.length - 1 ? {borderColor: 'var(--border-primary)'} : {}}>
+                    <div>
+                      <span className="text-sm text-cadet-blue block mb-1">Medication</span>
                       <span className="font-medium text-primary">{item.medication}</span>
                     </div>
-                    <div className="flex justify-between py-2 border-b" style={{borderColor: 'var(--border-primary)'}}>
-                      <span className="text-secondary">Dosage:</span>
+                    <div>
+                      <span className="text-sm text-cadet-blue block mb-1">Dosage</span>
                       <span className="font-medium text-primary">{item.dosage || 'N/A'}</span>
                     </div>
-                    <div className="flex justify-between py-2 border-b" style={{borderColor: 'var(--border-primary)'}}>
-                      <span className="text-secondary">Date:</span>
+                    <div>
+                      <span className="text-sm text-cadet-blue block mb-1">Date</span>
                       <span className="font-medium text-primary">{item.date ? new Date(item.date).toLocaleDateString('en-GB', { day: '2-digit', month: '2-digit', year: 'numeric' }) : 'N/A'}</span>
                     </div>
-                    <div className="flex justify-between py-2 border-b" style={{borderColor: 'var(--border-primary)'}}>
-                      <span className="text-secondary">Time of Day:</span>
+                    <div>
+                      <span className="text-sm text-cadet-blue block mb-1">Time of Day</span>
                       <span className="font-medium text-primary">{item.timeOfDay || 'N/A'}</span>
                     </div>
                   </div>
                 ))}
               </div>
-            ) : (
-              <p className="text-secondary">None</p>
-            )}
-          </div>
+            </div>
+          )}
         </div>
       )
     }

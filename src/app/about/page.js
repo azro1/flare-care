@@ -2,6 +2,7 @@
 
 import { useState } from 'react'
 import ConfirmationModal from '@/components/ConfirmationModal'
+import { Heart, Target, Lightbulb, Mail } from 'lucide-react'
 
 export default function About() {
   const [blogModal, setBlogModal] = useState({ isOpen: false })
@@ -18,9 +19,14 @@ export default function About() {
       </div>
 
       <div className="grid md:grid-cols-2 gap-8 mb-12">
-        <div className="card p-8 md:p-10 rounded-2xl backdrop-blur-sm">
-          <h2 className="text-2xl font-semibold font-source text-primary mb-4">My Story</h2>
-          <div className="space-y-4 text-secondary font-roboto">
+        <div className="card p-8 md:p-10 rounded-2xl backdrop-blur-sm border" style={{borderColor: 'var(--border-card)'}}>
+          <div className="flex items-center gap-4 mb-4">
+            <div className="w-14 h-14 rounded-2xl bg-[#5F9EA0]/10 flex items-center justify-center">
+              <Heart className="w-7 h-7 text-[#5F9EA0]" />
+            </div>
+            <h2 className="text-xl sm:text-2xl font-semibold font-source text-primary">My Story</h2>
+          </div>
+          <div className="space-y-4 text-secondary font-roboto leading-relaxed">
             <p>
               Hi, I'm Simon, and I was diagnosed with Crohn's disease in 2005. Like many others, 
               I quickly learned that managing this condition requires constant attention 
@@ -40,19 +46,39 @@ export default function About() {
           </div>
         </div>
 
-        <div className="card p-8 md:p-10 rounded-2xl backdrop-blur-sm">
-          <h2 className="text-2xl font-semibold font-source text-primary mb-4">Why FlareCare?</h2>
-          <div className="space-y-4 text-secondary font-roboto">
+        <div className="card p-8 md:p-10 rounded-2xl backdrop-blur-sm border" style={{borderColor: 'var(--border-card)'}}>
+          <div className="flex items-center gap-4 mb-4">
+            <div className="w-14 h-14 rounded-2xl bg-[#5F9EA0]/10 flex items-center justify-center">
+              <Target className="w-7 h-7 text-[#5F9EA0]" />
+            </div>
+            <h2 className="text-xl sm:text-2xl font-semibold font-source text-primary">Why FlareCare?</h2>
+          </div>
+          <div className="space-y-4 text-secondary font-roboto leading-relaxed">
             <p>
               FlareCare was born from my personal need for a simple, effective way to 
               track my health journey. I wanted something that would:
             </p>
-            <ul className="list-disc list-inside space-y-2 ml-4 font-roboto">
-              <li>Make symptom logging quick and intuitive</li>
-              <li>Help identify patterns and triggers</li>
-              <li>Generate clear reports for medical appointments</li>
-              <li>Work seamlessly across devices</li>
-              <li>Respect privacy with local-first data storage</li>
+            <ul className="space-y-2 ml-4 font-roboto">
+              <li className="flex items-start">
+                <span className="w-1.5 h-1.5 bg-[#5F9EA0] rounded-full mt-2 mr-3 flex-shrink-0"></span>
+                <span>Make symptom logging quick and intuitive</span>
+              </li>
+              <li className="flex items-start">
+                <span className="w-1.5 h-1.5 bg-[#5F9EA0] rounded-full mt-2 mr-3 flex-shrink-0"></span>
+                <span>Help identify patterns and triggers</span>
+              </li>
+              <li className="flex items-start">
+                <span className="w-1.5 h-1.5 bg-[#5F9EA0] rounded-full mt-2 mr-3 flex-shrink-0"></span>
+                <span>Generate clear reports for medical appointments</span>
+              </li>
+              <li className="flex items-start">
+                <span className="w-1.5 h-1.5 bg-[#5F9EA0] rounded-full mt-2 mr-3 flex-shrink-0"></span>
+                <span>Work seamlessly across devices</span>
+              </li>
+              <li className="flex items-start">
+                <span className="w-1.5 h-1.5 bg-[#5F9EA0] rounded-full mt-2 mr-3 flex-shrink-0"></span>
+                <span>Respect privacy with local-first data storage</span>
+              </li>
             </ul>
             <p>
               The app is designed to grow with you - whether you're newly diagnosed 
@@ -62,9 +88,14 @@ export default function About() {
         </div>
       </div>
 
-      <div className="card p-8 md:p-10 rounded-2xl backdrop-blur-sm mb-12">
-        <h2 className="text-2xl font-semibold font-source text-primary mb-4">The Vision</h2>
-        <div className="space-y-4 text-secondary font-roboto">
+      <div className="card p-8 md:p-10 rounded-2xl backdrop-blur-sm mb-12 border" style={{borderColor: 'var(--border-card)'}}>
+        <div className="flex items-center gap-4 mb-4">
+          <div className="w-14 h-14 rounded-2xl bg-[#5F9EA0]/10 flex items-center justify-center">
+            <Lightbulb className="w-7 h-7 text-[#5F9EA0]" />
+          </div>
+          <h2 className="text-xl sm:text-2xl font-semibold font-source text-primary">The Vision</h2>
+        </div>
+        <div className="space-y-4 text-secondary font-roboto leading-relaxed">
           <p>
             Living with Crohn's or Colitis can feel isolating, but you're not alone. 
             FlareCare is built by someone who understands the daily challenges of 
@@ -83,18 +114,23 @@ export default function About() {
         </div>
       </div>
 
-      <div className="card p-8 md:p-10 rounded-2xl backdrop-blur-sm">
-        <h2 className="text-2xl font-bold font-source text-primary mb-4">Stay Connected</h2>
-        <p className="text-secondary mb-6 font-roboto">
+      <div className="card p-8 md:p-10 rounded-2xl backdrop-blur-sm border" style={{borderColor: 'var(--border-card)'}}>
+        <div className="flex items-center gap-4 mb-4">
+          <div className="w-14 h-14 rounded-2xl bg-[#5F9EA0]/10 flex items-center justify-center">
+            <Mail className="w-7 h-7 text-[#5F9EA0]" />
+          </div>
+          <h2 className="text-xl sm:text-2xl font-bold font-source text-primary">Stay Connected</h2>
+        </div>
+        <p className="text-secondary mb-8 font-roboto leading-relaxed">
           Have questions, suggestions, or want to share your own story? 
           I'd love to hear from you and learn how FlareCare can better serve 
           the Crohn's and Colitis community.
         </p>
         
         <div className="grid md:grid-cols-2 gap-6">
-          <div className="card-inner p-6">
-            <h3 className="text-lg font-semibold font-source text-primary mb-3">📧 Email Support</h3>
-            <p className="text-secondary mb-4 font-roboto">
+          <div className="card-inner p-6 rounded-xl">
+            <h3 className="text-lg font-semibold font-source text-primary mb-3">Email Support</h3>
+            <p className="text-secondary mb-4 font-roboto text-sm leading-relaxed">
               For technical support, feature requests, or general questions.
             </p>
             <a 
@@ -105,9 +141,9 @@ export default function About() {
             </a>
           </div>
           
-          <div className="card-inner p-6">
-            <h3 className="text-lg font-semibold font-source text-primary mb-3">💬 Community Blog</h3>
-            <p className="text-secondary mb-4 font-roboto">
+          <div className="card-inner p-6 rounded-xl">
+            <h3 className="text-lg font-semibold font-source text-primary mb-3">Community Blog</h3>
+            <p className="text-secondary mb-4 font-roboto text-sm leading-relaxed">
               Share experiences, tips, and connect with others on similar journeys.
             </p>
             <button 
@@ -119,7 +155,7 @@ export default function About() {
           </div>
         </div>
         
-        <p className="text-sm text-secondary mt-6 text-center font-roboto">
+        <p className="text-sm text-secondary mt-8 text-center font-roboto">
           Built with care for Crohn's and Colitis patients.
         </p>
       </div>

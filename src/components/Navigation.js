@@ -132,7 +132,7 @@ export default function Navigation() {
       )
     },
     { 
-      href: '/food-guide', 
+      href: '/foods', 
       label: 'Foods', 
       icon: <Sandwich className="w-5 h-5" />
     },
@@ -167,7 +167,7 @@ export default function Navigation() {
       )
     },
     { 
-      href: '/food-guide', 
+      href: '/foods', 
       label: 'Foods', 
       icon: <Sandwich className="w-5 h-5" />
     },
@@ -226,7 +226,8 @@ export default function Navigation() {
                 <Link
                   key={item.href}
                   href={item.href}
-                  className="text-base transition-colors text-slate-300 hover:text-[#5F9EA0]"
+                  className="text-base transition-colors hover:text-[#5F9EA0]"
+                  style={{color: 'var(--text-footer)'}}
                 >
                   {item.label}
                 </Link>

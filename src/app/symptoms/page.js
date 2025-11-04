@@ -158,6 +158,35 @@ function SymptomsPageContent() {
     }
   }, [formData])
 
+  // Populate dateInputs from formData when navigating back to date steps
+  useEffect(() => {
+    // When on step 1 (start date), populate from formData.symptomStartDate
+    if (currentStep === 1 && formData.symptomStartDate) {
+      const date = new Date(formData.symptomStartDate)
+      if (!isNaN(date.getTime())) {
+        setDateInputs(prev => ({
+          ...prev,
+          day: date.getDate().toString(),
+          month: (date.getMonth() + 1).toString(),
+          year: date.getFullYear().toString()
+        }))
+      }
+    }
+    
+    // When on step 3 (end date), populate from formData.symptomEndDate
+    if (currentStep === 3 && formData.symptomEndDate) {
+      const date = new Date(formData.symptomEndDate)
+      if (!isNaN(date.getTime())) {
+        setDateInputs(prev => ({
+          ...prev,
+          endDay: date.getDate().toString(),
+          endMonth: (date.getMonth() + 1).toString(),
+          endYear: date.getFullYear().toString()
+        }))
+      }
+    }
+  }, [currentStep, formData.symptomStartDate, formData.symptomEndDate])
+
   // Cleanup wizard state when component unmounts (user navigates away)
   useEffect(() => {
     return () => {
@@ -1992,141 +2021,165 @@ function SymptomsPageContent() {
 
         {/* Step 17: Review */}
         {currentStep === 17 && (
-          <div className="mb-4">
-            <h3 className="text-2xl sm:text-2xl md:text-3xl font-semibold text-primary mb-8">Review your entry</h3>
-            <div className="space-y-4">
-              
-              <div className="flex justify-between py-2 border-b" style={{borderColor: 'var(--border-primary)'}}>
-                <span className="text-secondary">Start Date:</span>
-                <span className="font-medium text-primary">{formData.symptomStartDate ? new Date(formData.symptomStartDate).toLocaleDateString() : 'Not set'}</span>
+          <div className="space-y-8">
+            <h2 className="text-2xl font-semibold font-source text-primary mb-8">
+              Review your entry
+            </h2>
+
+            {/* Basic Information */}
+            <div className="card p-6 rounded-xl border" style={{borderColor: 'var(--border-card)'}}>
+              <h3 className="text-xl font-semibold text-cadet-blue mb-6 pb-4 border-b" style={{borderColor: 'var(--border-primary)'}}>Basic Information</h3>
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 py-3">
+                <div>
+                  <span className="text-sm text-cadet-blue block mb-1">Start Date</span>
+                  <span className="font-medium text-primary">{formData.symptomStartDate ? new Date(formData.symptomStartDate).toLocaleDateString() : 'Not set'}</span>
                 </div>
-
-              <div className="flex justify-between py-2 border-b" style={{borderColor: 'var(--border-primary)'}}>
-                <span className="text-secondary">Status:</span>
-                <span className="font-medium text-primary">{formData.isOngoing ? 'Ongoing' : 'Ended'}</span>
-                      </div>
-        
-              {!formData.isOngoing && formData.symptomEndDate && (
-                <div className="flex justify-between py-2 border-b" style={{borderColor: 'var(--border-primary)'}}>
-                  <span className="text-secondary">End Date:</span>
-                  <span className="font-medium text-primary">{new Date(formData.symptomEndDate).toLocaleDateString()}</span>
-                  </div>
-                )}
-
-              <div className="flex justify-between py-2 border-b" style={{borderColor: 'var(--border-primary)'}}>
-                <span className="text-secondary">Severity:</span>
-                <span className="font-medium text-primary">{formData.severity}/10</span>
-                      </div>
-
-              <div className="flex justify-between py-2 border-b" style={{borderColor: 'var(--border-primary)'}}>
-                <span className="text-secondary">Stress Level:</span>
-                <span className="font-medium text-primary">{formData.stress_level}/10</span>
-                    </div>
-
-              <div className="flex justify-between py-2 border-b" style={{borderColor: 'var(--border-primary)'}}>
-                <span className="text-secondary">Bathroom Frequency:</span>
-                <span className="font-medium text-primary">{formData.normal_bathroom_frequency || 'Not set'} times/day</span>
+                <div>
+                  <span className="text-sm text-cadet-blue block mb-1">Status</span>
+                  <span className="font-medium text-primary">{formData.isOngoing ? 'Ongoing' : 'Ended'}</span>
                 </div>
-
-              {formData.bathroom_frequency_changed && (
-                <div className="flex justify-between py-2 border-b" style={{borderColor: 'var(--border-primary)'}}>
-                  <span className="text-secondary">Frequency Changed:</span>
-                  <span className="font-medium text-primary">{formData.bathroom_frequency_changed === 'yes' ? 'Yes' : 'No'}</span>
+                {!formData.isOngoing && formData.symptomEndDate && (
+                  <div>
+                    <span className="text-sm text-cadet-blue block mb-1">End Date</span>
+                    <span className="font-medium text-primary">{new Date(formData.symptomEndDate).toLocaleDateString()}</span>
                   </div>
                 )}
-
-              {formData.bathroom_frequency_changed === 'yes' && formData.bathroom_frequency_change_details && (
-                <div className="py-2 border-b" style={{borderColor: 'var(--border-primary)'}}>
-                  <span className="text-secondary block mb-1">Describe your change:</span>
-                  <span className="font-medium text-primary">{formData.bathroom_frequency_change_details}</span>
-                  </div>
-                )}
-
-              <div className="flex justify-between py-2 border-b" style={{borderColor: 'var(--border-primary)'}}>
-                <span className="text-secondary">Smoking:</span>
-                <span className="font-medium text-primary">{formData.smoking ? 'Yes' : 'No'}</span>
-                      </div>
-
-              {formData.smoking && formData.smoking_details && (
-                <div className="py-2 border-b" style={{borderColor: 'var(--border-primary)'}}>
-                  <span className="text-secondary block mb-1">Smoking Habits:</span>
-                  <span className="font-medium text-primary">{formData.smoking_details}</span>
-                  </div>
-                )}
-
-              <div className="flex justify-between py-2 border-b" style={{borderColor: 'var(--border-primary)'}}>
-                <span className="text-secondary">Alcohol:</span>
-                <span className="font-medium text-primary">{formData.alcohol ? 'Yes' : 'No'}</span>
-                    </div>
-                    
-              {formData.alcohol && formData.alcohol_units && (
-                <div className="flex justify-between py-2 border-b" style={{borderColor: 'var(--border-primary)'}}>
-                  <span className="text-secondary">Alcohol Units:</span>
-                  <span className="font-medium text-primary">{formData.alcohol_units} units/day</span>
-                          </div>
-                      )}
-                      
-              {(formData.breakfast.some(item => item.food.trim()) || 
-                formData.lunch.some(item => item.food.trim()) || 
-                formData.dinner.some(item => item.food.trim()) ||
-                formData.breakfast_skipped || formData.lunch_skipped || formData.dinner_skipped) && (
-                <div className="py-2 border-b" style={{borderColor: 'var(--border-primary)'}}>
-                  <span className="text-secondary block mb-2">Meals:</span>
-                  <div className="space-y-1 text-sm">
-                    {formData.breakfast.some(item => item.food.trim()) && (
-                      <div>
-                        <span className="font-medium text-primary">Breakfast:</span>
-                        {formData.breakfast.filter(item => item.food.trim()).map((item, index) => (
-                          <span key={index} className="ml-2 text-secondary">{item.food} ({item.quantity})</span>
-                        ))}
-                        </div>
-                      )}
-                    {formData.breakfast_skipped && (
-                      <div>
-                        <span className="font-medium text-primary">Breakfast:</span>
-                        <span className="ml-2 text-secondary italic">Didn't eat anything</span>
-                          </div>
-                    )}
-                    {formData.lunch.some(item => item.food.trim()) && (
-                      <div>
-                        <span className="font-medium text-primary">Lunch:</span>
-                        {formData.lunch.filter(item => item.food.trim()).map((item, index) => (
-                          <span key={index} className="ml-2 text-secondary">{item.food} ({item.quantity})</span>
-                        ))}
-                        </div>
-                      )}
-                    {formData.lunch_skipped && (
-                      <div>
-                        <span className="font-medium text-primary">Lunch:</span>
-                        <span className="ml-2 text-secondary italic">Didn't eat anything</span>
-                          </div>
-                    )}
-                    {formData.dinner.some(item => item.food.trim()) && (
-                      <div>
-                        <span className="font-medium text-primary">Dinner:</span>
-                        {formData.dinner.filter(item => item.food.trim()).map((item, index) => (
-                          <span key={index} className="ml-2 text-secondary">{item.food} ({item.quantity})</span>
-                        ))}
-                        </div>
-                      )}
-                    {formData.dinner_skipped && (
-                      <div>
-                        <span className="font-medium text-primary">Dinner:</span>
-                        <span className="ml-2 text-secondary italic">Didn't eat anything</span>
-                      </div>
-                    )}
-                    </div>
-                  </div>
-                )}
-
-              {formData.notes && (
-                <div className="py-2">
-                  <span className="text-secondary block mb-2">Notes:</span>
-                  <p className="font-medium text-primary">{formData.notes}</p>
-                  </div>
-                )}
-
+                <div>
+                  <span className="text-sm text-cadet-blue block mb-1">Severity</span>
+                  <span className="font-medium text-primary">{formData.severity}/10</span>
+                </div>
+                <div>
+                  <span className="text-sm text-cadet-blue block mb-1">Stress Level</span>
+                  <span className="font-medium text-primary">{formData.stress_level}/10</span>
+                </div>
               </div>
+            </div>
+
+            {/* Bathroom Frequency */}
+            <div className="card p-6 rounded-xl border" style={{borderColor: 'var(--border-card)'}}>
+              <h3 className="text-xl font-semibold text-cadet-blue mb-6 pb-4 border-b" style={{borderColor: 'var(--border-primary)'}}>Bathroom Frequency</h3>
+              <div className="space-y-4">
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 py-3">
+                  <div>
+                    <span className="text-sm text-cadet-blue block mb-1">Frequency</span>
+                    <span className="font-medium text-primary">{formData.normal_bathroom_frequency || 'Not set'} times/day</span>
+                  </div>
+                  {formData.bathroom_frequency_changed && (
+                    <div>
+                      <span className="text-sm text-cadet-blue block mb-1">Frequency Changed</span>
+                      <span className="font-medium text-primary">{formData.bathroom_frequency_changed === 'yes' ? 'Yes' : 'No'}</span>
+                    </div>
+                  )}
+                </div>
+                {formData.bathroom_frequency_changed === 'yes' && formData.bathroom_frequency_change_details && (
+                  <div className="py-3 border-t" style={{borderColor: 'var(--border-primary)'}}>
+                    <span className="text-sm text-cadet-blue block mb-1">Change Description</span>
+                    <span className="font-medium text-primary">{formData.bathroom_frequency_change_details}</span>
+                  </div>
+                )}
+              </div>
+            </div>
+
+            {/* Lifestyle - Only show if first-time user (they actually answered these questions) */}
+            {isFirstTimeUser && (formData.smoking !== undefined || formData.alcohol !== undefined) && (
+              <div className="card p-6 rounded-xl border" style={{borderColor: 'var(--border-card)'}}>
+                <h3 className="text-xl font-semibold text-cadet-blue mb-6 pb-4 border-b" style={{borderColor: 'var(--border-primary)'}}>Lifestyle</h3>
+                <div className="space-y-4">
+                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 py-3">
+                    <div>
+                      <span className="text-sm text-cadet-blue block mb-1">Smoking</span>
+                      <span className="font-medium text-primary">{formData.smoking ? 'Yes' : 'No'}</span>
+                    </div>
+                    {formData.smoking && formData.smoking_details && (
+                      <div>
+                        <span className="text-sm text-cadet-blue block mb-1">Smoking Habits</span>
+                        <span className="font-medium text-primary">{formData.smoking_details}</span>
+                      </div>
+                    )}
+                    <div>
+                      <span className="text-sm text-cadet-blue block mb-1">Alcohol</span>
+                      <span className="font-medium text-primary">{formData.alcohol ? 'Yes' : 'No'}</span>
+                    </div>
+                    {formData.alcohol && formData.alcohol_units && (
+                      <div>
+                        <span className="text-sm text-cadet-blue block mb-1">Alcohol Units</span>
+                        <span className="font-medium text-primary">{formData.alcohol_units} units/day</span>
+                      </div>
+                    )}
+                  </div>
+                </div>
+              </div>
+            )}
+
+            {/* Meals */}
+            {(formData.breakfast.some(item => item.food.trim()) || 
+              formData.lunch.some(item => item.food.trim()) || 
+              formData.dinner.some(item => item.food.trim()) ||
+              formData.breakfast_skipped || formData.lunch_skipped || formData.dinner_skipped) && (
+              <div className="card p-6 rounded-xl border" style={{borderColor: 'var(--border-card)'}}>
+                <h3 className="text-xl font-semibold text-cadet-blue mb-6 pb-4 border-b" style={{borderColor: 'var(--border-primary)'}}>Meals</h3>
+                <div className="space-y-3">
+                  {formData.breakfast.some(item => item.food.trim()) && (
+                    <div className="py-3 border-b" style={{borderColor: 'var(--border-primary)'}}>
+                      <span className="text-sm text-cadet-blue block mb-2">Breakfast</span>
+                      <div className="space-y-1">
+                        {formData.breakfast.filter(item => item.food.trim()).map((item, index) => (
+                          <div key={index} className="font-medium text-primary">{item.food} ({item.quantity})</div>
+                        ))}
+                      </div>
+                    </div>
+                  )}
+                  {formData.breakfast_skipped && (
+                    <div className="py-3 border-b" style={{borderColor: 'var(--border-primary)'}}>
+                      <span className="text-sm text-cadet-blue block mb-2">Breakfast</span>
+                      <span className="font-medium text-primary italic">Didn't eat anything</span>
+                    </div>
+                  )}
+                  {formData.lunch.some(item => item.food.trim()) && (
+                    <div className="py-3 border-b" style={{borderColor: 'var(--border-primary)'}}>
+                      <span className="text-sm text-cadet-blue block mb-2">Lunch</span>
+                      <div className="space-y-1">
+                        {formData.lunch.filter(item => item.food.trim()).map((item, index) => (
+                          <div key={index} className="font-medium text-primary">{item.food} ({item.quantity})</div>
+                        ))}
+                      </div>
+                    </div>
+                  )}
+                  {formData.lunch_skipped && (
+                    <div className="py-3 border-b" style={{borderColor: 'var(--border-primary)'}}>
+                      <span className="text-sm text-cadet-blue block mb-2">Lunch</span>
+                      <span className="font-medium text-primary italic">Didn't eat anything</span>
+                    </div>
+                  )}
+                  {formData.dinner.some(item => item.food.trim()) && (
+                    <div className="py-3 border-b" style={{borderColor: 'var(--border-primary)'}}>
+                      <span className="text-sm text-cadet-blue block mb-2">Dinner</span>
+                      <div className="space-y-1">
+                        {formData.dinner.filter(item => item.food.trim()).map((item, index) => (
+                          <div key={index} className="font-medium text-primary">{item.food} ({item.quantity})</div>
+                        ))}
+                      </div>
+                    </div>
+                  )}
+                  {formData.dinner_skipped && (
+                    <div className="py-3">
+                      <span className="text-sm text-cadet-blue block mb-2">Dinner</span>
+                      <span className="font-medium text-primary italic">Didn't eat anything</span>
+                    </div>
+                  )}
+                </div>
+              </div>
+            )}
+
+            {/* Notes */}
+            {formData.notes && (
+              <div className="card p-6 rounded-xl border" style={{borderColor: 'var(--border-card)'}}>
+                <h3 className="text-xl font-semibold text-cadet-blue mb-6 pb-4 border-b" style={{borderColor: 'var(--border-primary)'}}>Notes</h3>
+                <div className="py-3">
+                  <p className="font-medium text-primary">{formData.notes}</p>
+                </div>
+              </div>
+            )}
           </div>
         )}
 

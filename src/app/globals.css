@@ -191,8 +191,8 @@
   .card {
     background-color: var(--bg-card);
     color: var(--text-primary);
-    border: 1px solid;
-    border-color: var(--border-card);
+    /* border: 1px solid; */
+    /* border-color: var(--border-card); */
     @apply rounded-xl shadow-sm p-6 transition-shadow duration-200 hover:shadow-md;
   }
   
@@ -286,8 +286,9 @@ select.input-field-wizard.has-value {
 }
 
 select.input-field-wizard:focus {
-    border-color: var(--text-cadet-blue) !important;
-    box-shadow: 0 0 0 3px rgba(95, 158, 160, 0.1) !important;
+    border-color: var(--border-input-dark) !important;
+    box-shadow: none !important;
+    outline: none !important;
 }
 
 /* Dark mode placeholder color for wizard inputs - warm gray instead of blue slate */
@@ -301,6 +302,12 @@ select.input-field-wizard:focus {
 
 select.input-field-wizard option {
     background-color: var(--bg-input-dark) !important;
+    color: var(--text-primary) !important;
+}
+
+/* Dark mode: Make select dropdown options match datepicker color */
+.dark select.input-field-wizard option {
+    background-color: #1e2128 !important;
     color: var(--text-primary) !important;
 }
 
@@ -621,7 +628,45 @@ select.input-field-wizard option[value=""] {
 }
 
 @media (max-width: 640px) {
-  .react-datepicker {
+  /* Nuclear option: Use hardcoded opaque color to rule out CSS variable issues */
+  .dark .react-datepicker,
+  .dark .react-datepicker__wrapper,
+  .dark .react-datepicker__triangle,
+  .dark .react-datepicker-popper,
+  .dark .react-datepicker-popper > div,
+  .dark .react-datepicker-popper > div > div,
+  .dark body > .react-datepicker__portal,
+  .dark body > .react-datepicker__portal > div,
+  .dark body > div[class*="react-datepicker"],
+  .dark .react-datepicker__portal,
+  .dark .react-datepicker__portal > div,
+  .dark .react-datepicker__portal .react-datepicker,
+  .dark .react-datepicker-popper-opaque,
+  .dark .react-datepicker-popper-opaque > div,
+  .dark .react-datepicker-popper-opaque .react-datepicker,
+  .dark .react-datepicker-responsive,
+  .dark .react-datepicker-responsive * {
+    background-color: #1e2128 !important;
+    background: #1e2128 !important;
+    opacity: 1 !important;
+  }
+  
+  /* Force ALL datepicker elements to be opaque on mobile in dark mode */
+  .dark .react-datepicker *:not(.react-datepicker__day):not(.react-datepicker__day--selected):not(.react-datepicker__day--today):not(.react-datepicker__day:hover) {
+    background-color: #1e2128 !important;
+    background: #1e2128 !important;
+    opacity: 1 !important;
+  }
+  
+  /* Exception: day cells should be transparent (unless hovered/selected) */
+  .dark .react-datepicker__day:not(:hover):not(.react-datepicker__day--selected):not(.react-datepicker__day--today) {
+    background-color: transparent !important;
+    background: transparent !important;
+  }
+  
+  .dark .react-datepicker {
+    background-color: #1e2128 !important;
+    background: #1e2128 !important;
     font-size: 12px !important;
     padding: 8px !important;
     border-radius: 12px !important;
@@ -630,7 +675,6 @@ select.input-field-wizard option[value=""] {
     left: 50% !important;
     transform: translate(-50%, -50%) !important;
     width: 280px !important;
-    background-color: var(--bg-card) !important;
     border: 1px solid var(--border-card) !important;
     box-shadow: var(--shadow-lg) !important;
     z-index: 9999 !important;
@@ -641,18 +685,30 @@ select.input-field-wizard option[value=""] {
     float: left !important;
   }
   
+  .dark .react-datepicker__month-container {
+    background-color: #1e2128 !important;
+  }
+  
   .react-datepicker__time-container {
     border-left: 1px solid var(--border-card-inner) !important;
     width: 70px !important;
     float: right !important;
   }
   
-  .react-datepicker__time {
-    background-color: var(--bg-card) !important;
+  .dark .react-datepicker__time-container {
+    background-color: #1e2128 !important;
+  }
+  
+  .dark .react-datepicker__time {
+    background-color: #1e2128 !important;
   }
   
   .react-datepicker__time-box {
     width: 70px !important;
+  }
+  
+  .dark .react-datepicker__time-box {
+    background-color: #1e2128 !important;
   }
   
   .react-datepicker::after {
@@ -690,6 +746,10 @@ select.input-field-wizard option[value=""] {
     margin: 0 1px !important;
   }
   
+  .dark .react-datepicker__day-name {
+    background-color: #1e2128 !important;
+  }
+  
   .react-datepicker__current-month {
     font-size: 13px !important;
   }
@@ -699,9 +759,67 @@ select.input-field-wizard option[value=""] {
     height: 26px !important;
   }
   
+  .dark .react-datepicker__navigation {
+    background-color: #1e2128 !important;
+  }
+  
   .react-datepicker__navigation-icon::before {
     width: 5px !important;
     height: 5px !important;
+  }
+  
+  .dark .react-datepicker__header {
+    background-color: #1e2128 !important;
+  }
+  
+  .dark .react-datepicker__month {
+    background-color: #1e2128 !important;
+  }
+  
+  .dark .react-datepicker__day-names {
+    background: #1e2128 !important;
+    background-color: #1e2128 !important;
+  }
+  
+  .dark .react-datepicker__day-names > div {
+    background: #1e2128 !important;
+    background-color: #1e2128 !important;
+  }
+  
+  .dark .react-datepicker__week {
+    background-color: #1e2128 !important;
+  }
+  
+  .dark .react-datepicker__current-month {
+    background-color: #1e2128 !important;
+  }
+  
+  /* Force all container elements to be opaque */
+  .dark .react-datepicker > div,
+  .dark .react-datepicker__month-container > div,
+  .dark .react-datepicker__time-container > div,
+  .dark .react-datepicker__month-container *:not(.react-datepicker__day):not(.react-datepicker__day--selected):not(.react-datepicker__day--today):not(.react-datepicker__day:hover) {
+    background-color: #1e2128 !important;
+    background: #1e2128 !important;
+  }
+  
+  /* Make the entire datepicker and all its children opaque, except day cells */
+  .dark .react-datepicker *:not(.react-datepicker__day):not(.react-datepicker__day--selected):not(.react-datepicker__day--today):not(.react-datepicker__day:hover):not(.react-datepicker__day--in-range) {
+    background-color: #1e2128 !important;
+    background: #1e2128 !important;
+  }
+  
+  /* Force absolutely everything to be opaque - most aggressive */
+  .dark .react-datepicker,
+  .dark .react-datepicker * {
+    background-color: #1e2128 !important;
+    background: #1e2128 !important;
+  }
+  
+  /* Exception: day cells should be transparent (unless hovered/selected) */
+  .dark .react-datepicker__day:not(:hover):not(.react-datepicker__day--selected):not(.react-datepicker__day--today):not(.react-datepicker__day--in-range) {
+    background-color: transparent !important;
+    background: transparent !important;
   }
 }
 
@@ -911,9 +1029,12 @@ select.input-field-wizard option[value=""] {
   border-color: var(--border-input-dark) !important;
 }
 
-.dark .react-datepicker {
-  background-color: var(--bg-card) !important;
-  border-color: var(--border-card) !important;
+/* Desktop only - mobile has its own rules in media query */
+@media (min-width: 641px) {
+  .dark .react-datepicker {
+    background-color: var(--bg-card) !important;
+    border-color: var(--border-card) !important;
+  }
 }
 
 .dark .react-datepicker__header {

@@ -130,7 +130,7 @@ function AccountPageContent() {
 
         {/* Account Information */}
         <div className="card p-6 mb-6">
-          <h3 className="text-lg font-semibold font-source text-primary mb-4">Account Information</h3>
+          <h3 className="text-lg sm:text-xl font-semibold font-source text-primary mb-4">Account Information</h3>
           
           <div className="space-y-4">
             <div className="py-3 border-b border-slate-300/50 dark:border-slate-700/50">
@@ -152,7 +152,7 @@ function AccountPageContent() {
 
             <div className="py-3">
               <p className="text-sm font-medium text-secondary mb-1">User ID</p>
-              <p className="text-primary font-roboto text-sm font-mono">{user?.id || 'Not available'}</p>
+              <p className="text-primary font-roboto font-mono">{user?.id || 'Not available'}</p>
             </div>
           </div>
         </div>
@@ -160,7 +160,7 @@ function AccountPageContent() {
         {/* Delete Account Section */}
         <div className="card p-6 mb-8">
           <div className="border-l-4 border-red-500 pl-4 mb-6">
-            <h3 className="text-lg font-semibold font-source text-primary mb-2">Delete Account</h3>
+            <h3 className="text-lg sm:text-xl font-semibold font-source text-primary mb-2">Delete Account</h3>
             <p className="text-secondary font-roboto mb-4">
               Permanently delete your account and all associated data
             </p>
@@ -170,7 +170,7 @@ function AccountPageContent() {
           <div>
             <button
               onClick={() => setShowDeleteModal(true)}
-              className="bg-red-500 text-white font-semibold py-3 px-8 rounded-xl hover:bg-red-400 transition-colors"
+              className="button-delete py-3 px-8 rounded-xl"
             >
               Delete Account
             </button>

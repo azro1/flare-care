@@ -3,7 +3,7 @@
 import Link from 'next/link'
 import { CupSoda, Pizza } from 'lucide-react'
 
-export default function FoodGuide() {
+export default function Foods() {
   const categories = [
     {
       emoji: '🥩',
@@ -85,17 +85,10 @@ export default function FoodGuide() {
         {/* Header */}
         <div className="mb-12">
           <h1 className="text-2xl sm:text-3xl lg:text-4xl font-bold font-source text-primary mb-4 sm:mb-6">
-            Food Guide
+            Foods
           </h1>
           <p className="text-secondary font-roboto break-words">
             Understanding different food categories can help you make informed choices about your diet. This reference guide provides an overview of common food groups and their nutritional properties.
-          </p>
-        </div>
-
-        {/* Warning Box */}
-        <div className="card-inner rounded-xl p-6 mb-8">
-          <p className="text-secondary font-roboto leading-relaxed">
-            <span className="font-semibold">Note:</span> This is a general food reference guide. Always follow the specific dietary advice provided by your doctor or registered dietitian.
           </p>
         </div>
 
@@ -202,6 +195,13 @@ export default function FoodGuide() {
                 </div>
               </div>
 
+              {/* Note */}
+              <div className="p-4 pt-0 sm:p-6 sm:pt-0">
+                <p className="text-secondary font-roboto leading-relaxed text-sm">
+                  <span className="font-semibold">Note:</span> This is a general food reference guide. Always follow the specific dietary advice provided by your doctor or registered dietitian.
+                </p>
+              </div>
+
             </div>
           </div>
         </div>
@@ -227,3 +227,4 @@ export default function FoodGuide() {
     </div>
   )
 }
+
