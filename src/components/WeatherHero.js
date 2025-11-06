@@ -141,10 +141,6 @@ export default function WeatherHero({
     <div className="rounded-2xl overflow-hidden mb-6" style={{ position: 'relative' }}>
       <div
         className="p-6 sm:p-8"
-        style={{
-          background: getBackground(theme),
-          backdropFilter: 'blur(2px)',
-        }}
       >
         {children && (
           <div className="mb-6">

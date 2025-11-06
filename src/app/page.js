@@ -6,7 +6,7 @@ import { useAuth } from '@/lib/AuthContext'
 import { useEffect, useState } from 'react'
 import { useDataSync } from '@/lib/useDataSync'
 import { useRouter } from 'next/navigation'
-import { CupSoda, Pizza, Coffee, BookOpen, Smile, Thermometer, Pill, FileText, Activity, TrendingUp, PartyPopper, Clipboard, Cookie, ChartLine } from 'lucide-react'
+import { CupSoda, Pizza, Coffee, BookOpen, Smile, Thermometer, Pill, FileText, Activity, TrendingUp, PartyPopper, Clipboard, Cookie, ChartLine, ChevronRight } from 'lucide-react'
 
 export default function Home() {
   const { isAuthenticated, loading, user } = useAuth()
@@ -352,7 +352,7 @@ export default function Home() {
             <div className="sticky top-8 space-y-6">
               
               {/* Quick Stats */}
-              <div className="p-4 py-0 sm:p-6 sm:py-0">
+              <div className="p-4 sm:p-6 lg:py-0 lg:pb-2">
                 <h3 className="text-lg font-semibold font-source text-primary mb-4">Your Progress</h3>
                 <div className="space-y-2 border-l-4 pl-4 sm:pl-5" style={{borderColor: 'var(--text-cadet-blue)'}}>
                     <div className="flex justify-between items-center">
@@ -411,7 +411,7 @@ export default function Home() {
               </div>
 
               {/* Daily Tip */}
-              <div className="p-4 pt-0 sm:p-6 sm:pt-0">
+              <div className="p-4 sm:p-6 sm:pt-0 lg:pt-2">
                 <div>
                   <h3 className="text-lg font-semibold font-source text-primary mb-2">💡 Daily Tip</h3>
                   <p className={`text-sm text-secondary transition-opacity duration-500 ${isFading ? 'opacity-0' : 'opacity-100'}`}>
@@ -443,13 +443,16 @@ export default function Home() {
         
 
         {/* Quick Actions */}
-        <div className="grid grid-cols-2 gap-4 max-w-sm mt-8 md:mt-10 mb-8">
+        <div className="mt-8 md:mt-10 mb-8">
+          <h2 className="text-xl font-semibold font-source text-primary mb-4">Get Started</h2>
+          <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
             <Link href="/symptoms" className="card p-6  transition-all">
               <div className="text-center">
                 <div className="w-12 h-12 bg-emerald-100 rounded-xl flex items-center justify-center mx-auto mb-3">
                   <Thermometer className="w-6 h-6 text-emerald-600" />
                 </div>
-                <h3 className="font-semibold text-primary">Log Symptoms</h3>
+                <h3 className="font-semibold text-primary mb-2 leading-relaxed">Log Symptoms</h3>
+                <p className="text-xs text-secondary leading-relaxed">Record how you're feeling and track your symptoms</p>
             </div>
           </Link>
 
@@ -458,7 +461,8 @@ export default function Home() {
                 <div className="w-12 h-12 bg-pink-100 rounded-xl flex items-center justify-center mx-auto mb-3">
                   <ChartLine className="w-5 h-5 text-pink-600" />
                 </div>
-                <h3 className="font-semibold text-primary">Track Meds</h3>
+                <h3 className="font-semibold text-primary mb-2 leading-relaxed">Track Meds</h3>
+                <p className="text-xs text-secondary leading-relaxed">Log missed medications and track your adherence</p>
             </div>
           </Link>
 
@@ -467,9 +471,11 @@ export default function Home() {
                 <div className="w-12 h-12 bg-orange-100 rounded-xl flex items-center justify-center mx-auto mb-3">
                   <FileText className="w-5 h-5 text-orange-600" />
                 </div>
-                <h3 className="font-semibold text-primary">Reports</h3>
+                <h3 className="font-semibold text-primary mb-2 leading-relaxed">Reports</h3>
+                <p className="text-xs text-secondary leading-relaxed">View insights and share data with your doctor</p>
               </div>
             </Link>
+        </div>
         </div>
 
         {/* Section Divider */}
@@ -477,7 +483,7 @@ export default function Home() {
 
         {/* Today's Summary */}
         <div>
-          <h2 className="text-xl font-semibold font-source" style={{color: 'var(--text-cadet-blue)'}}>Today's Summary</h2>
+          <h2 className="text-xl font-semibold font-source text-primary">Today's Summary</h2>
           <div className="p-6">
             <div className="flex justify-between items-center py-2">
               <span className="text-secondary">Symptoms Logged</span>
@@ -590,7 +596,7 @@ export default function Home() {
         
         {/* Recent Activity */}
         <div>
-          <h2 className="text-xl font-semibold font-source" style={{color: 'var(--text-cadet-blue)'}}>Recent Activity</h2>
+          <h2 className="text-xl font-semibold font-source text-primary">Recent Activity</h2>
           <div className="p-6 transition-all duration-300 ease-in-out">
             {symptoms.length === 0 && trackedMedications.length === 0 ? (
               <div className="text-center py-4">
@@ -696,12 +702,12 @@ export default function Home() {
         <div className="border-t mb-8" style={{borderColor: 'var(--border-primary)'}}></div>
 
         {/* More Options */}
-        <div className="mb-8">
+        <div className="mb-4 lg:mb-8">
           <h2 className="text-xl font-semibold font-source text-primary mb-4">More</h2>
           <div className="grid grid-cols-2 sm:grid-cols-3 gap-4">
             <Link href="/about" className="card p-6  transition-all">
               <div className="text-center">
-                <div className="w-12 h-12 icon-container mx-auto mb-3">
+                <div className="w-12 h-12 icon-container dark:bg-gray-700 mx-auto mb-3">
                   <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
                   </svg>
