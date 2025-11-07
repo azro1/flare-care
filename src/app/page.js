@@ -6,7 +6,7 @@ import { useAuth } from '@/lib/AuthContext'
 import { useEffect, useState } from 'react'
 import { useDataSync } from '@/lib/useDataSync'
 import { useRouter } from 'next/navigation'
-import { CupSoda, Pizza, Coffee, BookOpen, Smile, Thermometer, Pill, FileText, Activity, TrendingUp, PartyPopper, Clipboard, Cookie, ChartLine, ChevronRight } from 'lucide-react'
+import { CupSoda, Pizza, Coffee, BookOpen, Smile, Thermometer, Pill, FileText, Activity, TrendingUp, PartyPopper, Clipboard, Cookie, ChartLine, Sparkles, ChevronRight } from 'lucide-react'
 
 export default function Home() {
   const { isAuthenticated, loading, user } = useAuth()
@@ -146,7 +146,7 @@ export default function Home() {
                 </div>
                 <div>
                   <div className="text-primary font-medium">Today's entry</div>
-                  <div className="text-sm text-slate-400 dark:[color:var(--text-tertiary)]">Oct 21, 2025</div>
+                  <div className="text-sm text-slate-400 dark:[color:var(--text-tertiary)]">Oct 21, 2025 · 8:30 AM</div>
                 </div>
               </div>
 
@@ -185,7 +185,7 @@ export default function Home() {
               <h2 className="text-2xl sm:text-3xl font-bold text-primary mb-4">
                 Just what you need, nothing more
               </h2>
-              <p className="text-lg text-secondary">
+              <p className="sm:text-lg text-secondary">
                 Simple tools that actually help
               </p>
             </div>
@@ -193,15 +193,15 @@ export default function Home() {
             <div className="grid md:grid-cols-2 gap-8 text-center md:text-left">
               <div className="space-y-3 flex flex-col items-center md:items-start">
                 <Clipboard className="w-6 h-6 text-pink-600" />
-                <h3 className="text-xl font-semibold text-primary">Daily check-ins</h3>
+                <h3 className="text-xl sm:text-2xl font-semibold text-primary">Daily check-ins</h3>
                 <p className="text-secondary leading-relaxed">
                   Quick notes about how you're feeling. Track pain, energy, bathroom trips, whatever matters to you.
                 </p>
               </div>
 
               <div className="space-y-3 flex flex-col items-center md:items-start">
-                <Cookie className="w-6 h-6 text-yellow-600" />
-                <h3 className="text-xl font-semibold text-primary">Food diary</h3>
+                <Cookie className="w-6 h-6 text-amber-500" />
+                <h3 className="text-xl sm:text-2xl font-semibold text-primary">Food diary</h3>
                 <p className="text-secondary leading-relaxed">
                   See what works for your body. Log meals and notice patterns over time.
                 </p>
@@ -209,7 +209,7 @@ export default function Home() {
 
               <div className="space-y-3 flex flex-col items-center md:items-start">
                 <Pill className="w-6 h-6 text-purple-600" />
-                <h3 className="text-xl font-semibold text-primary">Medication tracking</h3>
+                <h3 className="text-xl sm:text-2xl font-semibold text-primary">Medication tracking</h3>
                 <p className="text-secondary leading-relaxed">
                   Never forget a dose. Simple reminders that actually work.
                 </p>
@@ -217,7 +217,7 @@ export default function Home() {
 
               <div className="space-y-3 flex flex-col items-center md:items-start">
                 <TrendingUp className="w-6 h-6 text-blue-600" />
-                <h3 className="text-xl font-semibold text-primary">Spot your triggers</h3>
+                <h3 className="text-xl sm:text-2xl font-semibold text-primary">Spot your triggers</h3>
                 <p className="text-secondary leading-relaxed">
                   See patterns in your symptoms. Share reports with your doctor.
                 </p>
@@ -232,17 +232,17 @@ export default function Home() {
               <h2 className="text-2xl sm:text-3xl font-bold text-primary mb-6">
                 Why I built this
               </h2>
-              <div className="space-y-4 text-lg text-secondary leading-relaxed">
-                <p>
+              <div className="space-y-4 text-secondary leading-relaxed">
+                <p className="sm:text-lg">
                   After my diagnosis, I tried a bunch of health tracking apps. They were either too
                   complicated, too medical, or just felt like homework.
                 </p>
-                <p>
+                <p className="sm:text-lg">
                   I wanted something simple. Something that felt like writing in a journal, not
                   filling out a form. A place where I could be honest about my bad days without
                   judgment.
                 </p>
-                <p>
+                <p className="sm:text-lg">
                   So I made Flarecare for myself. And if it helps you too, that makes me really happy.
                 </p>
                 <div className="pt-4 flex items-center gap-3">
@@ -264,10 +264,10 @@ export default function Home() {
             <h2 className="text-2xl sm:text-3xl font-bold text-primary">
               Ready to start?
             </h2>
-            <p className="text-lg text-secondary">
-              Its free and easy to sign up. No forms. No hassle.
+            <p className="text-lg sm:text-xl text-secondary">
+              Open your journal, jot how you feel, and build your own story.
             </p>
-              <Link href="/auth" className="inline-block px-8 py-2.5 bg-[#5F9EA0] text-white rounded-lg hover:bg-button-cadet-hover transition-colors text-lg font-bold">
+              <Link href="/auth" className="inline-block px-8 py-2.5 bg-[#5F9EA0] text-white rounded-lg hover:bg-button-cadet-hover transition-colors text-lg sm:text-xl font-bold">
               Sign In
           </Link>
             <p className="text-sm text-tertiary">Your data stays private, always</p>
@@ -446,33 +446,66 @@ export default function Home() {
         <div className="mt-8 md:mt-10 mb-8">
           <h2 className="text-xl font-semibold font-source text-primary mb-4">Get Started</h2>
           <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
-            <Link href="/symptoms" className="card p-6  transition-all">
-              <div className="text-center">
-                <div className="w-12 h-12 bg-emerald-100 rounded-xl flex items-center justify-center mx-auto mb-3">
+            <Link
+              href="/symptoms"
+              className="card p-6 transition-all group relative focus:outline-none focus:ring-2 focus:ring-[#5F9EA0]"
+            >
+              <div className="flex items-center sm:flex-col sm:items-center gap-4 sm:gap-3">
+                <div className="w-12 h-12 bg-emerald-100 rounded-xl flex items-center justify-center">
                   <Thermometer className="w-6 h-6 text-emerald-600" />
                 </div>
-                <h3 className="font-semibold text-primary mb-2 leading-relaxed">Log Symptoms</h3>
-                <p className="text-xs text-secondary leading-relaxed">Record how you're feeling and track your symptoms</p>
-            </div>
-          </Link>
+                <div className="flex-1 sm:w-full sm:text-center">
+                  <h3 className="font-semibold text-primary leading-relaxed sm:justify-center">
+                    Log Symptoms
+                  </h3>
+                </div>
+              </div>
+              <div className="pointer-events-none absolute right-3 -top-8 hidden w-52 sm:group-hover:flex sm:group-focus-visible:flex">
+                <div className="rounded-lg bg-[var(--bg-card)] px-4 py-3 text-left text-sm text-secondary leading-snug shadow-lg ring-1 ring-[var(--border-primary)] dark:bg-[#1a1d24]" style={{ fontFamily: 'Trebuchet MS, Lucida Grande, sans-serif' }}>
+                  Record how you're feeling and track your symptoms
+                </div>
+              </div>
+            </Link>
 
-            <Link href="/medications/track" className="card p-6  transition-all">
-              <div className="text-center">
-                <div className="w-12 h-12 bg-pink-100 rounded-xl flex items-center justify-center mx-auto mb-3">
+            <Link
+              href="/medications/track"
+              className="card p-6 transition-all group relative focus:outline-none focus:ring-2 focus:ring-[#5F9EA0]"
+            >
+              <div className="flex items-center sm:flex-col sm:items-center gap-4 sm:gap-3">
+                <div className="w-12 h-12 bg-pink-100 rounded-xl flex items-center justify-center">
                   <ChartLine className="w-5 h-5 text-pink-600" />
                 </div>
-                <h3 className="font-semibold text-primary mb-2 leading-relaxed">Track Meds</h3>
-                <p className="text-xs text-secondary leading-relaxed">Log missed medications and track your adherence</p>
-            </div>
-          </Link>
+                <div className="flex-1 sm:w-full sm:text-center">
+                  <h3 className="font-semibold text-primary leading-relaxed sm:justify-center">
+                    Track Meds
+                  </h3>
+                </div>
+              </div>
+              <div className="pointer-events-none absolute right-3 -top-8 hidden w-52 sm:group-hover:flex sm:group-focus-visible:flex">
+                <div className="rounded-lg bg-[var(--bg-card)] px-4 py-3 text-left text-sm text-secondary leading-snug shadow-lg ring-1 ring-[var(--border-primary)] dark:bg-[#1a1d24]" style={{ fontFamily: 'Trebuchet MS, Lucida Grande, sans-serif' }}>
+                  Log missed medications and track your adherence
+                </div>
+              </div>
+            </Link>
 
-            <Link href="/reports" className="card p-6  transition-all">
-              <div className="text-center">
-                <div className="w-12 h-12 bg-orange-100 rounded-xl flex items-center justify-center mx-auto mb-3">
+            <Link
+              href="/reports"
+              className="card p-6 transition-all group relative focus:outline-none focus:ring-2 focus:ring-[#5F9EA0]"
+            >
+              <div className="flex items-center sm:flex-col sm:items-center gap-4 sm:gap-3">
+                <div className="w-12 h-12 bg-orange-100 rounded-xl flex items-center justify-center">
                   <FileText className="w-5 h-5 text-orange-600" />
                 </div>
-                <h3 className="font-semibold text-primary mb-2 leading-relaxed">Reports</h3>
-                <p className="text-xs text-secondary leading-relaxed">View insights and share data with your doctor</p>
+                <div className="flex-1 sm:w-full sm:text-center">
+                  <h3 className="font-semibold text-primary leading-relaxed sm:justify-center">
+                    Reports
+                  </h3>
+                </div>
+              </div>
+              <div className="pointer-events-none absolute right-3 -top-8 hidden w-52 sm:group-hover:flex sm:group-focus-visible:flex">
+                <div className="rounded-lg bg-[var(--bg-card)] px-4 py-3 text-left text-sm text-secondary leading-snug shadow-lg ring-1 ring-[var(--border-primary)] dark:bg-[#1a1d24]" style={{ fontFamily: 'Trebuchet MS, Lucida Grande, sans-serif' }}>
+                  View insights and share data with your doctor
+                </div>
               </div>
             </Link>
         </div>

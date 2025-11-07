@@ -74,10 +74,10 @@ export default function LearnPage() {
                   <p className="text-sm text-secondary">Support helpline</p>
                   <p className="text-sm font-medium text-blue-600">0300 222 9099</p>
                 </div>
-                <div className="border-l-4 border-green-500 pl-3">
-                  <h4 className="font-medium text-primary">Your GP</h4>
-                  <p className="text-sm text-secondary">For routine appointments</p>
-                  <p className="text-sm font-medium text-green-600">Contact your surgery</p>
+              <div className="border-l-4 border-emerald-500 pl-3">
+                <h4 className="font-medium text-primary">Emergency Services</h4>
+                <p className="text-sm text-secondary">For life-threatening situations</p>
+                <p className="text-sm font-medium text-emerald-600">Call 999</p>
                 </div>
               </div>
             </div>
@@ -98,11 +98,11 @@ export default function LearnPage() {
       <div className="card p-8 md:p-10 rounded-2xl backdrop-blur-sm mb-8 sm:mb-12">
         <h2 className="text-xl font-semibold font-source text-primary mb-6 break-words">What is Inflammatory Bowel Disease (IBD)?</h2>
         <div className="prose prose-gray max-w-none">
-          <p className="text-secondary mb-4 font-roboto break-words">
+          <p className="text-secondary mb-6 font-roboto break-words">
             Inflammatory Bowel Disease (IBD) is a term used to describe disorders that involve chronic inflammation of your digestive tract. The two main types are:
           </p>
           
-          <div className="grid md:grid-cols-2 gap-6 mb-6">
+          <div className="grid md:grid-cols-2 gap-6">
             <div className="card-inner p-6">
               <h3 className="text-lg font-semibold font-source text-primary mb-3 break-words">Crohn's Disease</h3>
               <ul className="text-secondary space-y-2 text-sm font-roboto break-words">
@@ -130,57 +130,51 @@ export default function LearnPage() {
       <div className="card p-8 md:p-10 rounded-2xl backdrop-blur-sm mb-8 sm:mb-12">
         <h2 className="text-xl font-semibold font-source text-primary mb-6 break-words">Common Symptoms</h2>
         <div className="grid md:grid-cols-2 gap-6">
-          <div>
-            <h3 className="text-lg font-medium font-source text-primary mb-4 break-words">Digestive Symptoms</h3>
-            <ul className="space-y-2 text-secondary font-roboto break-words">
-              <li className="flex items-start">
-                <span className="text-red-500 mr-2">•</span>
-                <span>Abdominal pain and cramping</span>
-              </li>
-              <li className="flex items-start">
-                <span className="text-red-500 mr-2">•</span>
-                <span>Diarrhea (sometimes bloody)</span>
-              </li>
-              <li className="flex items-start">
-                <span className="text-red-500 mr-2">•</span>
-                <span>Urgent need to have a bowel movement</span>
-              </li>
-              <li className="flex items-start">
-                <span className="text-red-500 mr-2">•</span>
-                <span>Feeling of incomplete bowel movement</span>
-              </li>
-              <li className="flex items-start">
-                <span className="text-red-500 mr-2">•</span>
-                <span>Nausea and vomiting</span>
-              </li>
-            </ul>
-          </div>
+          <ul className="space-y-2 text-secondary font-roboto break-words">
+            <li className="flex items-start">
+              <span className="text-red-500 mr-2">•</span>
+              <span>Abdominal pain and cramping</span>
+            </li>
+            <li className="flex items-start">
+              <span className="text-red-500 mr-2">•</span>
+              <span>Diarrhea (sometimes bloody)</span>
+            </li>
+            <li className="flex items-start">
+              <span className="text-red-500 mr-2">•</span>
+              <span>Urgent need to have a bowel movement</span>
+            </li>
+            <li className="flex items-start">
+              <span className="text-red-500 mr-2">•</span>
+              <span>Feeling of incomplete bowel movement</span>
+            </li>
+            <li className="flex items-start">
+              <span className="text-red-500 mr-2">•</span>
+              <span>Nausea and vomiting</span>
+            </li>
+          </ul>
           
-          <div>
-            <h3 className="text-lg font-medium font-source text-primary mb-4 break-words">Other Symptoms</h3>
-            <ul className="space-y-2 text-secondary font-roboto break-words">
-              <li className="flex items-start">
-                <span className="text-red-500 mr-2">•</span>
-                <span>Fatigue and low energy</span>
-              </li>
-              <li className="flex items-start">
-                <span className="text-red-500 mr-2">•</span>
-                <span>Unintended weight loss</span>
-              </li>
-              <li className="flex items-start">
-                <span className="text-red-500 mr-2">•</span>
-                <span>Loss of appetite</span>
-              </li>
-              <li className="flex items-start">
-                <span className="text-red-500 mr-2">•</span>
-                <span>Fever during flare-ups</span>
-              </li>
-              <li className="flex items-start">
-                <span className="text-red-500 mr-2">•</span>
-                <span>Joint pain and swelling</span>
-              </li>
-            </ul>
-          </div>
+          <ul className="space-y-2 text-secondary font-roboto break-words">
+            <li className="flex items-start">
+              <span className="text-red-500 mr-2">•</span>
+              <span>Fatigue and low energy</span>
+            </li>
+            <li className="flex items-start">
+              <span className="text-red-500 mr-2">•</span>
+              <span>Unintended weight loss</span>
+            </li>
+            <li className="flex items-start">
+              <span className="text-red-500 mr-2">•</span>
+              <span>Loss of appetite</span>
+            </li>
+            <li className="flex items-start">
+              <span className="text-red-500 mr-2">•</span>
+              <span>Fever during flare-ups</span>
+            </li>
+            <li className="flex items-start">
+              <span className="text-red-500 mr-2">•</span>
+              <span>Joint pain and swelling</span>
+            </li>
+          </ul>
         </div>
       </div>
 
@@ -219,23 +213,22 @@ export default function LearnPage() {
         <h2 className="text-xl font-semibold font-source text-primary mb-6">How FlareCare Can Help</h2>
         <div className="grid md:grid-cols-2 gap-8">
           <div>
-            <h3 className="text-lg font-medium font-source text-primary mb-4">Track Your Symptoms</h3>
             <ul className="space-y-3 text-secondary font-roboto">
               <li className="flex items-start">
-                <div className="w-6 h-6 bg-teal-100 rounded-full flex items-center justify-center mr-3 mt-0.5">
-                  <span className="text-teal-600 text-sm">✓</span>
+                <div className="w-6 h-6 flex items-center justify-center mr-3 mt-0.5">
+                  <span className="text-[#5F9EA0] text-sm">✓</span>
                 </div>
                 <span>Log daily symptoms with severity ratings</span>
               </li>
               <li className="flex items-start">
-                <div className="w-6 h-6 bg-yellow-100 rounded-full flex items-center justify-center mr-3 mt-0.5">
-                  <span className="text-yellow-600 text-sm">✓</span>
+                <div className="w-6 h-6 flex items-center justify-center mr-3 mt-0.5">
+                  <span className="text-[#5F9EA0] text-sm">✓</span>
                 </div>
                 <span>Record foods that may trigger symptoms</span>
               </li>
               <li className="flex items-start">
-                <div className="w-6 h-6 bg-teal-100 rounded-full flex items-center justify-center mr-3 mt-0.5">
-                  <span className="text-teal-600 text-sm">✓</span>
+                <div className="w-6 h-6 flex items-center justify-center mr-3 mt-0.5">
+                  <span className="text-[#5F9EA0] text-sm">✓</span>
                 </div>
                 <span>Track patterns and trends over time</span>
               </li>
@@ -243,23 +236,22 @@ export default function LearnPage() {
           </div>
           
           <div>
-            <h3 className="text-lg font-medium font-source text-primary mb-4">Manage Medications</h3>
             <ul className="space-y-3 text-secondary font-roboto">
               <li className="flex items-start">
-                <div className="w-6 h-6 bg-purple-100 rounded-full flex items-center justify-center mr-3 mt-0.5">
-                  <span className="text-purple-600 text-sm">✓</span>
+                <div className="w-6 h-6 flex items-center justify-center mr-3 mt-0.5">
+                  <span className="text-[#5F9EA0] text-sm">✓</span>
                 </div>
                 <span>Set medication reminders</span>
               </li>
               <li className="flex items-start">
-                <div className="w-6 h-6 bg-purple-100 rounded-full flex items-center justify-center mr-3 mt-0.5">
-                  <span className="text-purple-600 text-sm">✓</span>
+                <div className="w-6 h-6 flex items-center justify-center mr-3 mt-0.5">
+                  <span className="text-[#5F9EA0] text-sm">✓</span>
                 </div>
                 <span>Track dosage and timing</span>
               </li>
               <li className="flex items-start">
-                <div className="w-6 h-6 bg-purple-100 rounded-full flex items-center justify-center mr-3 mt-0.5">
-                  <span className="text-purple-600 text-sm">✓</span>
+                <div className="w-6 h-6 flex items-center justify-center mr-3 mt-0.5">
+                  <span className="text-[#5F9EA0] text-sm">✓</span>
                 </div>
                 <span>Generate reports for your doctor</span>
               </li>
@@ -302,61 +294,55 @@ export default function LearnPage() {
       <div className="card p-8 md:p-10 rounded-2xl backdrop-blur-sm mb-8 sm:mb-12">
         <h2 className="text-xl font-semibold font-source text-primary mb-6">Helpful Resources</h2>
         <div className="grid md:grid-cols-2 gap-6">
-          <div>
-            <h3 className="text-lg font-medium font-source text-primary mb-4">Support Organizations</h3>
-            <ul className="space-y-3 font-roboto">
-              <li>
-                <a 
-                  href="https://www.crohnsandcolitis.org.uk/" 
-                  target="_blank" 
-                  rel="noopener noreferrer"
-                  className="text-[#5F9EA0] hover:text-[#5F9EA0]/80 underline"
-                >
-                  Crohn's & Colitis UK
-                </a>
-                <p className="text-sm text-secondary font-roboto">Leading UK charity providing support and information</p>
-              </li>
-              <li>
-                <a 
-                  href="https://www.crohnscolitisfoundation.org/" 
-                  target="_blank" 
-                  rel="noopener noreferrer"
-                  className="text-[#5F9EA0] hover:text-[#5F9EA0]/80 underline"
-                >
-                  Crohn's & Colitis Foundation
-                </a>
-                <p className="text-sm text-secondary font-roboto">US-based organization with comprehensive resources</p>
-              </li>
-            </ul>
-          </div>
+          <ul className="space-y-3 font-roboto">
+            <li>
+              <a 
+                href="https://www.crohnsandcolitis.org.uk/" 
+                target="_blank" 
+                rel="noopener noreferrer"
+                className="text-[#5F9EA0] hover:text-[#5F9EA0]/80 underline"
+              >
+                Crohn's & Colitis UK
+              </a>
+              <p className="text-sm text-secondary font-roboto">Leading UK charity providing support and information</p>
+            </li>
+            <li>
+              <a 
+                href="https://www.crohnscolitisfoundation.org/" 
+                target="_blank" 
+                rel="noopener noreferrer"
+                className="text-[#5F9EA0] hover:text-[#5F9EA0]/80 underline"
+              >
+                Crohn's & Colitis Foundation
+              </a>
+              <p className="text-sm text-secondary font-roboto">US-based organization with comprehensive resources</p>
+            </li>
+          </ul>
           
-          <div>
-            <h3 className="text-lg font-medium font-source text-primary mb-4">Medical Information</h3>
-            <ul className="space-y-3 font-roboto">
-              <li>
-                <a 
-                  href="https://www.nhs.uk/conditions/inflammatory-bowel-disease/" 
-                  target="_blank" 
-                  rel="noopener noreferrer"
-                  className="text-[#5F9EA0] hover:text-[#5F9EA0]/80 underline"
-                >
-                  NHS Information
-                </a>
-                <p className="text-sm text-secondary font-roboto">Official NHS guidance on IBD</p>
-              </li>
-              <li>
-                <a 
-                  href="https://www.mayoclinic.org/diseases-conditions/inflammatory-bowel-disease/symptoms-causes/syc-20353315" 
-                  target="_blank" 
-                  rel="noopener noreferrer"
-                  className="text-[#5F9EA0] hover:text-[#5F9EA0]/80 underline"
-                >
-                  Mayo Clinic Guide
-                </a>
-                <p className="text-sm text-secondary font-roboto">Comprehensive medical information</p>
-              </li>
-            </ul>
-          </div>
+          <ul className="space-y-3 font-roboto">
+            <li>
+              <a 
+                href="https://www.nhs.uk/conditions/inflammatory-bowel-disease/" 
+                target="_blank" 
+                rel="noopener noreferrer"
+                className="text-[#5F9EA0] hover:text-[#5F9EA0]/80 underline"
+              >
+                NHS Information
+              </a>
+              <p className="text-sm text-secondary font-roboto">Official NHS guidance on IBD</p>
+            </li>
+            <li>
+              <a 
+                href="https://www.mayoclinic.org/diseases-conditions/inflammatory-bowel-disease/symptoms-causes/syc-20353315" 
+                target="_blank" 
+                rel="noopener noreferrer"
+                className="text-[#5F9EA0] hover:text-[#5F9EA0]/80 underline"
+              >
+                Mayo Clinic Guide
+              </a>
+              <p className="text-sm text-secondary font-roboto">Comprehensive medical information</p>
+            </li>
+          </ul>
         </div>
       </div>
 

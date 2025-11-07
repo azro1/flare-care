@@ -178,7 +178,7 @@ export default function Foods() {
 
               {/* IBD-Friendly Foods */}
               <div className="card p-4 sm:p-6 rounded-2xl backdrop-blur-sm">
-                <h3 className="text-lg font-semibold font-source text-primary mb-4">IBD-Friendly Foods</h3>
+                <h3 className="text-lg font-semibold font-source text-primary mb-4">IBD Foods</h3>
                 <div className="space-y-3">
                   <div className="card-inner p-3">
                     <h4 className="font-medium text-primary mb-1">✅ Generally Safe</h4>

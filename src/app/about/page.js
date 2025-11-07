@@ -19,13 +19,8 @@ export default function About() {
       </div>
 
       <div className="grid md:grid-cols-2 gap-8 mb-12">
-        <div className="card p-8 md:p-10 rounded-2xl backdrop-blur-sm border" style={{borderColor: 'var(--border-card)'}}>
-          <div className="flex items-center gap-4 mb-4">
-            <div className="w-14 h-14 rounded-2xl bg-[#5F9EA0]/10 flex items-center justify-center">
-              <Heart className="w-7 h-7 text-[#5F9EA0]" />
-            </div>
-            <h2 className="text-xl sm:text-2xl font-semibold font-source text-primary">My Story</h2>
-          </div>
+        <div className="card p-8 md:p-10 rounded-2xl backdrop-blur-sm">
+          <h2 className="text-xl sm:text-2xl font-semibold font-source text-primary mb-4">My Story</h2>
           <div className="space-y-4 text-secondary font-roboto leading-relaxed">
             <p>
               Hi, I'm Simon, and I was diagnosed with Crohn's disease in 2005. Like many others, 
@@ -46,13 +41,8 @@ export default function About() {
           </div>
         </div>
 
-        <div className="card p-8 md:p-10 rounded-2xl backdrop-blur-sm border" style={{borderColor: 'var(--border-card)'}}>
-          <div className="flex items-center gap-4 mb-4">
-            <div className="w-14 h-14 rounded-2xl bg-[#5F9EA0]/10 flex items-center justify-center">
-              <Target className="w-7 h-7 text-[#5F9EA0]" />
-            </div>
-            <h2 className="text-xl sm:text-2xl font-semibold font-source text-primary">Why FlareCare?</h2>
-          </div>
+        <div className="card p-8 md:p-10 rounded-2xl backdrop-blur-sm">
+          <h2 className="text-xl sm:text-2xl font-semibold font-source text-primary mb-4">Why FlareCare?</h2>
           <div className="space-y-4 text-secondary font-roboto leading-relaxed">
             <p>
               FlareCare was born from my personal need for a simple, effective way to 
@@ -88,13 +78,8 @@ export default function About() {
         </div>
       </div>
 
-      <div className="card p-8 md:p-10 rounded-2xl backdrop-blur-sm mb-12 border" style={{borderColor: 'var(--border-card)'}}>
-        <div className="flex items-center gap-4 mb-4">
-          <div className="w-14 h-14 rounded-2xl bg-[#5F9EA0]/10 flex items-center justify-center">
-            <Lightbulb className="w-7 h-7 text-[#5F9EA0]" />
-          </div>
-          <h2 className="text-xl sm:text-2xl font-semibold font-source text-primary">The Vision</h2>
-        </div>
+      <div className="card p-8 md:p-10 rounded-2xl backdrop-blur-sm mb-12">
+        <h2 className="text-xl sm:text-2xl font-semibold font-source text-primary mb-4">The Vision</h2>
         <div className="space-y-4 text-secondary font-roboto leading-relaxed">
           <p>
             Living with Crohn's or Colitis can feel isolating, but you're not alone. 
@@ -114,13 +99,8 @@ export default function About() {
         </div>
       </div>
 
-      <div className="card p-8 md:p-10 rounded-2xl backdrop-blur-sm border" style={{borderColor: 'var(--border-card)'}}>
-        <div className="flex items-center gap-4 mb-4">
-          <div className="w-14 h-14 rounded-2xl bg-[#5F9EA0]/10 flex items-center justify-center">
-            <Mail className="w-7 h-7 text-[#5F9EA0]" />
-          </div>
-          <h2 className="text-xl sm:text-2xl font-bold font-source text-primary">Stay Connected</h2>
-        </div>
+      <div className="card p-8 md:p-10 rounded-2xl backdrop-blur-sm">
+        <h2 className="text-xl sm:text-2xl font-bold font-source text-primary mb-4">Stay Connected</h2>
         <p className="text-secondary mb-8 font-roboto leading-relaxed">
           Have questions, suggestions, or want to share your own story? 
           I'd love to hear from you and learn how FlareCare can better serve 
