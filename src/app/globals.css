@@ -221,7 +221,7 @@
     background-color: var(--bg-button-delete);
     color: white; /* White text for light mode solid red background */
     border-color: #dc2626; /* Red border for light mode */
-    @apply px-4 py-2 rounded-lg transition-colors border hover:border-red-700;
+    @apply px-4 py-2 rounded-lg transition-colors border hover:border-red-700 font-semibold;
   }
   .dark .button-delete {
     color: white; /* White text for dark mode red background */

@@ -133,17 +133,17 @@ function AccountPageContent() {
           <h3 className="text-lg sm:text-xl font-semibold font-source text-primary mb-4">Account Information</h3>
           
           <div className="space-y-4">
-            <div className="py-3 border-b border-slate-300/50 dark:border-slate-700/50">
+            <div className="py-3 border-b" style={{borderColor: 'var(--border-primary)'}}>
               <p className="text-sm font-medium text-secondary mb-1">Email</p>
               <p className="text-primary font-roboto">{user?.email || 'Not available'}</p>
             </div>
 
-            <div className="py-3 border-b border-slate-300/50 dark:border-slate-700/50">
+            <div className="py-3 border-b" style={{borderColor: 'var(--border-primary)'}}>
               <p className="text-sm font-medium text-secondary mb-1">Full Name</p>
               <p className="text-primary font-roboto">{user?.user_metadata?.full_name || 'Not set'}</p>
             </div>
 
-            <div className="py-3 border-b border-slate-300/50 dark:border-slate-700/50">
+            <div className="py-3 border-b" style={{borderColor: 'var(--border-primary)'}}>
               <p className="text-sm font-medium text-secondary mb-1">Account Created</p>
               <p className="text-primary font-roboto">
                 {user?.created_at ? new Date(user.created_at).toLocaleDateString('en-GB') : 'Not available'}
@@ -170,7 +170,7 @@ function AccountPageContent() {
           <div>
             <button
               onClick={() => setShowDeleteModal(true)}
-              className="button-delete py-3 px-8 rounded-xl"
+              className="button-delete"
             >
               Delete Account
             </button>
