@@ -2,6 +2,7 @@
 
 import Link from 'next/link'
 import { useAuth } from '@/lib/AuthContext'
+import { CigaretteOff, Smartphone } from 'lucide-react'
 
 export default function LearnPage() {
   const { isAuthenticated } = useAuth()
@@ -106,20 +107,20 @@ export default function LearnPage() {
             <div className="card-inner p-6">
               <h3 className="text-lg font-semibold font-source text-primary mb-3 break-words">Crohn's Disease</h3>
               <ul className="text-secondary space-y-2 text-sm font-roboto break-words">
-                <li>• Can affect any part of the digestive tract</li>
-                <li>• Inflammation can be patchy with healthy areas in between</li>
-                <li>• Can affect the full thickness of the bowel wall</li>
-                <li>• May cause complications like fistulas and strictures</li>
+                <li><span className="text-[#5F9EA0] mr-2">•</span>Can affect any part of the digestive tract</li>
+                <li><span className="text-[#5F9EA0] mr-2">•</span>Inflammation can be patchy with healthy areas in between</li>
+                <li><span className="text-[#5F9EA0] mr-2">•</span>Can affect the full thickness of the bowel wall</li>
+                <li><span className="text-[#5F9EA0] mr-2">•</span>May cause complications like fistulas and strictures</li>
               </ul>
             </div>
             
             <div className="card-inner p-6">
               <h3 className="text-lg font-semibold font-source text-primary mb-3 break-words">Ulcerative Colitis</h3>
               <ul className="text-secondary space-y-2 text-sm font-roboto break-words">
-                <li>• Affects only the colon and rectum</li>
-                <li>• Inflammation is continuous, starting from the rectum</li>
-                <li>• Usually affects only the inner lining of the colon</li>
-                <li>• May increase risk of colon cancer over time</li>
+                <li><span className="text-[#5F9EA0] mr-2">•</span>Affects only the colon and rectum</li>
+                <li><span className="text-[#5F9EA0] mr-2">•</span>Inflammation is continuous, starting from the rectum</li>
+                <li><span className="text-[#5F9EA0] mr-2">•</span>Usually affects only the inner lining of the colon</li>
+                <li><span className="text-[#5F9EA0] mr-2">•</span>May increase risk of colon cancer over time</li>
               </ul>
             </div>
           </div>
@@ -132,46 +133,46 @@ export default function LearnPage() {
         <div className="grid md:grid-cols-2 gap-6">
           <ul className="space-y-2 text-secondary font-roboto break-words">
             <li className="flex items-start">
-              <span className="text-red-500 mr-2">•</span>
+              <span className="text-[#5F9EA0] mr-2">•</span>
               <span>Abdominal pain and cramping</span>
             </li>
             <li className="flex items-start">
-              <span className="text-red-500 mr-2">•</span>
+              <span className="text-[#5F9EA0] mr-2">•</span>
               <span>Diarrhea (sometimes bloody)</span>
             </li>
             <li className="flex items-start">
-              <span className="text-red-500 mr-2">•</span>
+              <span className="text-[#5F9EA0] mr-2">•</span>
               <span>Urgent need to have a bowel movement</span>
             </li>
             <li className="flex items-start">
-              <span className="text-red-500 mr-2">•</span>
+              <span className="text-[#5F9EA0] mr-2">•</span>
               <span>Feeling of incomplete bowel movement</span>
             </li>
             <li className="flex items-start">
-              <span className="text-red-500 mr-2">•</span>
+              <span className="text-[#5F9EA0] mr-2">•</span>
               <span>Nausea and vomiting</span>
             </li>
           </ul>
           
           <ul className="space-y-2 text-secondary font-roboto break-words">
             <li className="flex items-start">
-              <span className="text-red-500 mr-2">•</span>
+              <span className="text-[#5F9EA0] mr-2">•</span>
               <span>Fatigue and low energy</span>
             </li>
             <li className="flex items-start">
-              <span className="text-red-500 mr-2">•</span>
+              <span className="text-[#5F9EA0] mr-2">•</span>
               <span>Unintended weight loss</span>
             </li>
             <li className="flex items-start">
-              <span className="text-red-500 mr-2">•</span>
+              <span className="text-[#5F9EA0] mr-2">•</span>
               <span>Loss of appetite</span>
             </li>
             <li className="flex items-start">
-              <span className="text-red-500 mr-2">•</span>
+              <span className="text-[#5F9EA0] mr-2">•</span>
               <span>Fever during flare-ups</span>
             </li>
             <li className="flex items-start">
-              <span className="text-red-500 mr-2">•</span>
+              <span className="text-[#5F9EA0] mr-2">•</span>
               <span>Joint pain and swelling</span>
             </li>
           </ul>
@@ -267,23 +268,23 @@ export default function LearnPage() {
           <h3 className="text-lg font-semibold font-source text-primary mb-4">Seek immediate medical attention if you experience:</h3>
           <ul className="space-y-2 text-secondary font-source">
             <li className="flex items-start">
-              <span className="text-red-500 mr-2 font-bold">•</span>
+              <span className="text-[#5F9EA0] mr-2 font-bold">•</span>
               <span>Severe abdominal pain</span>
             </li>
             <li className="flex items-start">
-              <span className="text-red-500 mr-2 font-bold">•</span>
+              <span className="text-[#5F9EA0] mr-2 font-bold">•</span>
               <span>High fever (over 101°F/38°C)</span>
             </li>
             <li className="flex items-start">
-              <span className="text-red-500 mr-2 font-bold">•</span>
+              <span className="text-[#5F9EA0] mr-2 font-bold">•</span>
               <span>Significant blood in stool</span>
             </li>
             <li className="flex items-start">
-              <span className="text-red-500 mr-2 font-bold">•</span>
+              <span className="text-[#5F9EA0] mr-2 font-bold">•</span>
               <span>Signs of dehydration (dizziness, dry mouth, no urination)</span>
             </li>
             <li className="flex items-start">
-              <span className="text-red-500 mr-2 font-bold">•</span>
+              <span className="text-[#5F9EA0] mr-2 font-bold">•</span>
               <span>Rapid weight loss</span>
             </li>
           </ul>
@@ -348,16 +349,16 @@ export default function LearnPage() {
 
       {/* Quit Smoking Section */}
       <div className="card p-8 md:p-10 rounded-2xl backdrop-blur-sm mb-8 sm:mb-12">
-        <div className="flex items-center mb-4">
-          <svg className="w-8 h-8 text-red-600 mr-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-2.5L13.732 4c-.77-.833-1.732-.833-2.464 0L3.35 16.5c-.77.833.192 2.5 1.732 2.5z" />
-          </svg>
+        <div className="flex items-center gap-3 mb-4">
+          <div className="w-10 h-10 rounded-full bg-[#5F9EA0]/15 flex items-center justify-center">
+            <CigaretteOff className="w-5 h-5 text-[#5F9EA0]" />
+          </div>
           <h2 className="text-xl font-semibold font-source text-primary break-words">Quit Smoking Support</h2>
         </div>
         
         <div className="space-y-4 text-secondary font-roboto mb-6 break-words">
           <p className="break-words">
-            <strong>Smoking significantly increases the risk of Crohn's disease flares and complications.</strong> If you smoke, quitting is one of the most important steps you can take to improve your health.
+            Smoking significantly increases the risk of Crohn's disease flares and complications. If you smoke, quitting is one of the most important steps you can take to improve your health.
           </p>
           <p className="break-words">
             Research shows that smoking can reduce blood flow to the gut and weaken your body's natural defenses, 
@@ -367,7 +368,12 @@ export default function LearnPage() {
 
         <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
           <div className="card-inner p-4 sm:p-6">
-            <h3 className="text-lg font-semibold font-source text-primary mb-3 break-words">🚭 NHS Stop Smoking Services</h3>
+            <div className="flex items-center gap-2 mb-3">
+              <div className="w-8 h-8 rounded-full bg-[#5F9EA0]/15 flex items-center justify-center">
+                <CigaretteOff className="w-4 h-4 text-[#5F9EA0]" />
+              </div>
+              <h3 className="text-lg font-semibold font-source text-primary break-words">NHS Stop Smoking Services</h3>
+            </div>
             <div className="space-y-2 text-secondary font-roboto break-words">
               <p className="text-sm sm:text-base break-words"><strong>Website:</strong> <a href="https://www.nhs.uk/smokefree" className="text-blue-600 hover:underline break-words" target="_blank" rel="noopener noreferrer">nhs.uk/smokefree</a></p>
               <p className="text-sm sm:text-base break-words"><strong>Helpline:</strong> <a href="tel:03001231045" className="text-blue-600 hover:underline break-words">0300 123 1045</a></p>
@@ -377,7 +383,12 @@ export default function LearnPage() {
           </div>
           
           <div className="card-inner p-4 sm:p-6">
-            <h3 className="text-lg font-semibold font-source text-primary mb-3 break-words">📱 Additional Resources</h3>
+            <div className="flex items-center gap-2 mb-3">
+              <div className="w-8 h-8 rounded-full bg-[#5F9EA0]/15 flex items-center justify-center">
+                <Smartphone className="w-4 h-4 text-[#5F9EA0]" />
+              </div>
+              <h3 className="text-lg font-semibold font-source text-primary break-words">Additional Resources</h3>
+            </div>
             <div className="space-y-2 text-secondary font-roboto break-words">
               <p className="text-sm sm:text-base break-words"><strong>Crohn's & Colitis UK:</strong></p>
               <p className="text-sm sm:text-base break-words">Helpline: <a href="tel:03002229099" className="text-blue-600 hover:underline break-words">0300 222 9099</a></p>
@@ -389,7 +400,7 @@ export default function LearnPage() {
 
         <div className="mt-6 p-4 card-inner break-words">
           <h4 className="font-semibold font-source text-primary mb-2 break-words">💡 Tips to Get Started:</h4>
-          <ul className="list-disc list-inside space-y-1 text-secondary font-roboto text-sm break-words">
+          <ul className="list-disc list-inside space-y-1 text-secondary font-roboto text-sm break-words marker:text-[#5F9EA0]">
             <li className="break-words">Set a quit date and stick to it</li>
             <li className="break-words">Tell your family and friends about your decision</li>
             <li className="break-words">Ask your GP about nicotine replacement therapy</li>

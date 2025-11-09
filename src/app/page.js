@@ -119,16 +119,19 @@ export default function Home() {
   if (!isAuthenticated) {
     return (
       <div className="min-h-screen">
-        <section className="pt-28 pb-16 sm:pt-40 sm:pb-32 px-6">
+        <section className="pt-32 pb-16 sm:pt-40 sm:pb-32 px-6">
           <div className="max-w-4xl mx-auto">
             <div className="text-center space-y-6 mb-20">
-              <div className="text-cadet-blue text-xl font-medium font-source">FlareCare</div>
-              <h1 className="text-4xl md:text-5xl lg:text-6xl font-bold text-primary leading-tight">
-              Take control of
-                <br />
-                your
-                <span className="text-[#5F9EA0]"> IBD</span>
-              </h1>
+              <div>
+                <div className="text-cadet-blue text-xl font-medium font-source mb-1.5">FlareCare</div>
+                <h1 className="text-4xl md:text-5xl lg:text-6xl font-bold text-primary leading-tight">
+                Take control of
+                  <br />
+                  your
+                  <span className="text-[#5F9EA0]"> IBD</span>
+                </h1>
+              </div>
+
 
               <p className="text-lg sm:text-xl text-secondary leading-relaxed max-w-2xl mx-auto">
               Because living with Crohn’s is more than managing symptoms — it’s understanding your story
@@ -181,7 +184,7 @@ export default function Home() {
 
         <section className="py-12 sm:py-20 px-6 section-bg">
           <div className="max-w-4xl mx-auto">
-            <div className="text-center mb-16">
+            <div className="text-center mb-8 sm:mb-16">
               <h2 className="text-2xl sm:text-3xl font-bold text-primary mb-4">
                 Just what you need, nothing more
               </h2>
@@ -192,7 +195,9 @@ export default function Home() {
 
             <div className="grid md:grid-cols-2 gap-8 text-center md:text-left">
               <div className="space-y-3 flex flex-col items-center md:items-start">
-                <Clipboard className="w-6 h-6 text-pink-600" />
+                <div className="w-12 h-12 icon-container landing-icon">
+                  <Clipboard className="w-6 h-6 text-pink-500" />
+                </div>
                 <h3 className="text-xl sm:text-2xl font-semibold text-primary">Daily check-ins</h3>
                 <p className="text-secondary leading-relaxed">
                   Quick notes about how you're feeling. Track pain, energy, bathroom trips, whatever matters to you.
@@ -200,7 +205,9 @@ export default function Home() {
               </div>
 
               <div className="space-y-3 flex flex-col items-center md:items-start">
-                <Cookie className="w-6 h-6 text-amber-500" />
+                <div className="w-12 h-12 icon-container landing-icon">
+                  <Cookie className="w-6 h-6 text-amber-500" />
+                </div>
                 <h3 className="text-xl sm:text-2xl font-semibold text-primary">Food diary</h3>
                 <p className="text-secondary leading-relaxed">
                   See what works for your body. Log meals and notice patterns over time.
@@ -208,7 +215,9 @@ export default function Home() {
               </div>
 
               <div className="space-y-3 flex flex-col items-center md:items-start">
-                <Pill className="w-6 h-6 text-purple-600" />
+                <div className="w-12 h-12 icon-container landing-icon">
+                  <Pill className="w-6 h-6 text-purple-500" />
+                </div>
                 <h3 className="text-xl sm:text-2xl font-semibold text-primary">Medication tracking</h3>
                 <p className="text-secondary leading-relaxed">
                   Never forget a dose. Simple reminders that actually work.
@@ -216,7 +225,9 @@ export default function Home() {
               </div>
 
               <div className="space-y-3 flex flex-col items-center md:items-start">
-                <TrendingUp className="w-6 h-6 text-blue-600" />
+                <div className="w-12 h-12 icon-container landing-icon">
+                  <TrendingUp className="w-6 h-6 text-blue-500" />
+                </div>
                 <h3 className="text-xl sm:text-2xl font-semibold text-primary">Spot your triggers</h3>
                 <p className="text-secondary leading-relaxed">
                   See patterns in your symptoms. Share reports with your doctor.
@@ -435,7 +446,7 @@ export default function Home() {
               return 'Good evening'
             })()}, {user?.user_metadata?.full_name?.split(' ')[0] || 'User'}
           </h1>
-          <p className="text-base font-roboto text-secondary">
+          <p className="text-sm font-roboto text-secondary">
             {new Date().toLocaleDateString('en-GB', { weekday: 'long', day: 'numeric', month: 'long' })}
           </p>
         </WeatherHero>
@@ -448,7 +459,7 @@ export default function Home() {
           <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
             <Link
               href="/symptoms"
-              className="card p-6 transition-all group relative focus:outline-none focus:ring-2 focus:ring-[#5F9EA0]"
+              className="card card-link p-6 transition-all group relative focus:outline-none focus-visible:outline-none focus-visible:ring-0 focus-visible:ring-offset-0 focus:ring-0"
             >
               <div className="flex items-center sm:flex-col sm:items-center gap-4 sm:gap-3">
                 <div className="w-12 h-12 bg-emerald-100 rounded-xl flex items-center justify-center">
@@ -459,6 +470,7 @@ export default function Home() {
                     Log Symptoms
                   </h3>
                 </div>
+                <ChevronRight className="w-5 h-5 text-secondary sm:hidden" />
               </div>
               <div className="pointer-events-none absolute right-3 -top-8 hidden w-52 sm:group-hover:flex sm:group-focus-visible:flex">
                 <div className="rounded-lg bg-[var(--bg-card)] px-4 py-3 text-left text-sm text-secondary leading-snug shadow-lg ring-1 ring-[var(--border-primary)] dark:bg-[#1a1d24]" style={{ fontFamily: 'Trebuchet MS, Lucida Grande, sans-serif' }}>
@@ -469,7 +481,7 @@ export default function Home() {
 
             <Link
               href="/medications/track"
-              className="card p-6 transition-all group relative focus:outline-none focus:ring-2 focus:ring-[#5F9EA0]"
+              className="card card-link p-6 transition-all group relative focus:outline-none focus-visible:outline-none focus-visible:ring-0 focus-visible:ring-offset-0 focus:ring-0"
             >
               <div className="flex items-center sm:flex-col sm:items-center gap-4 sm:gap-3">
                 <div className="w-12 h-12 bg-pink-100 rounded-xl flex items-center justify-center">
@@ -480,6 +492,7 @@ export default function Home() {
                     Track Meds
                   </h3>
                 </div>
+                <ChevronRight className="w-5 h-5 text-secondary sm:hidden" />
               </div>
               <div className="pointer-events-none absolute right-3 -top-8 hidden w-52 sm:group-hover:flex sm:group-focus-visible:flex">
                 <div className="rounded-lg bg-[var(--bg-card)] px-4 py-3 text-left text-sm text-secondary leading-snug shadow-lg ring-1 ring-[var(--border-primary)] dark:bg-[#1a1d24]" style={{ fontFamily: 'Trebuchet MS, Lucida Grande, sans-serif' }}>
@@ -490,7 +503,7 @@ export default function Home() {
 
             <Link
               href="/reports"
-              className="card p-6 transition-all group relative focus:outline-none focus:ring-2 focus:ring-[#5F9EA0]"
+              className="card card-link p-6 transition-all group relative focus:outline-none focus-visible:outline-none focus-visible:ring-0 focus-visible:ring-offset-0 focus:ring-0"
             >
               <div className="flex items-center sm:flex-col sm:items-center gap-4 sm:gap-3">
                 <div className="w-12 h-12 bg-orange-100 rounded-xl flex items-center justify-center">
@@ -501,6 +514,7 @@ export default function Home() {
                     Reports
                   </h3>
                 </div>
+                <ChevronRight className="w-5 h-5 text-secondary sm:hidden" />
               </div>
               <div className="pointer-events-none absolute right-3 -top-8 hidden w-52 sm:group-hover:flex sm:group-focus-visible:flex">
                 <div className="rounded-lg bg-[var(--bg-card)] px-4 py-3 text-left text-sm text-secondary leading-snug shadow-lg ring-1 ring-[var(--border-primary)] dark:bg-[#1a1d24]" style={{ fontFamily: 'Trebuchet MS, Lucida Grande, sans-serif' }}>
@@ -633,7 +647,7 @@ export default function Home() {
           <div className="p-6 transition-all duration-300 ease-in-out">
             {symptoms.length === 0 && trackedMedications.length === 0 ? (
               <div className="text-center py-4">
-                <div className="w-12 h-12 icon-container mx-auto mb-3">
+                <div className="w-12 h-12 icon-container icon-container--muted mx-auto mb-3">
                   <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5H7a2 2 0 00-2 2v10a2 2 0 002 2h8a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2" />
                   </svg>

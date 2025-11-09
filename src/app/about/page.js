@@ -2,7 +2,6 @@
 
 import { useState } from 'react'
 import ConfirmationModal from '@/components/ConfirmationModal'
-import { Heart, Target, Lightbulb, Mail } from 'lucide-react'
 
 export default function About() {
   const [blogModal, setBlogModal] = useState({ isOpen: false })
@@ -111,7 +110,7 @@ export default function About() {
           <div className="card-inner p-6 rounded-xl">
             <h3 className="text-lg font-semibold font-source text-primary mb-3">Email Support</h3>
             <p className="text-secondary mb-4 font-roboto text-sm leading-relaxed">
-              For technical support, feature requests, or general questions.
+              For technical support, feature requests, or general questions by email.
             </p>
             <a 
               href="mailto:support@flarecare.app" 

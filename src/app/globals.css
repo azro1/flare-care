@@ -23,7 +23,9 @@
     --bg-card: #ffffff;
     --bg-card-hover: #f1f5f9;
     --bg-card-inner: #f8fafc; /* Light gray inner card background - different from white */
+    --text-card-inner: #1f2937; /* Darker text for inner cards in light mode */
     --bg-icon: #e2e8f0; /* Light icon background */
+    --bg-icon-charcoal: #2f333a; /* Darker charcoal option for icon backgrounds */
     --text-icon: #475569; /* Light icon text */
     --bg-input: #ffffff;
     --bg-input-dark: #f1f5f9; /* Light input background */
@@ -93,8 +95,10 @@
         --text-dropdown: #d1d5db; /* Dropdown text */
     --bg-card: rgba(42, 45, 52, 0.6); /* Warm neutral charcoal card */
     --bg-card-hover: rgba(55, 58, 65, 0.7); /* Lighter warm charcoal hover */
-    --bg-card-inner: rgba(30, 33, 40, 0.7); /* Darker inner card for better contrast */
+    --bg-card-inner: rgba(50, 53, 60, 0.56); /* Balanced charcoal inner card */
+    --text-card-inner: #e5e7eb; /* Lighter text for inner cards in dark mode */
     --bg-icon: rgba(42, 45, 52, 0.8); /* Warm neutral charcoal icon background */
+    --bg-icon-charcoal: rgba(28, 30, 36, 0.95); /* Deeper charcoal option for icon backgrounds */
     --text-icon: #d1d5db; /* Soft gray icon text */
     --bg-input: #2a2d34; /* Warm neutral charcoal input */
     --bg-input-dark: rgba(42, 45, 52, 0.7); /* Warm neutral charcoal input dark */
@@ -196,6 +200,18 @@
     @apply rounded-xl shadow-sm p-6 transition-shadow duration-200 hover:shadow-md;
   }
   
+  .card-link {
+    -webkit-tap-highlight-color: transparent;
+    outline: none;
+  }
+
+  .card-link:focus,
+  .card-link:active,
+  .card-link:focus-visible {
+    outline: none !important;
+    box-shadow: none;
+  }
+  
   .dark .card:hover {
     border-color: var(--border-card-hover);
   }
@@ -207,9 +223,8 @@
 
   .card-inner {
     background-color: var(--bg-card-inner);
-    color: var(--text-primary);
-    border: 1px solid;
-    border-color: var(--border-card-inner);
+    color: var(--text-card-inner);
+    border: none;
     @apply backdrop-blur-sm rounded-lg;
   }
 
@@ -320,6 +335,27 @@ select.input-field-wizard option[value=""] {
     color: var(--text-icon);
     @apply rounded-xl flex items-center justify-center;
   }
+
+  .icon-container--charcoal {
+    background-color: var(--bg-icon-charcoal);
+  }
+
+  .icon-container--muted {
+    background-color: rgba(148, 163, 184, 0.35);
+  }
+
+  .dark .icon-container--muted {
+    background-color: rgba(42, 45, 52, 0.8);
+  }
+
+  .landing-icon {
+    background-color: #e2e8f0;
+  }
+
+  .dark .landing-icon {
+    background-color: rgba(60, 63, 70, 0.72);
+  }
+
 
   .button-cadet {
     background-color: var(--bg-button-cadet);

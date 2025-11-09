@@ -1,5 +1,6 @@
 'use client'
 
+import Image from 'next/image'
 import { useEffect, useRef, useState } from 'react'
 
 const conditionToTheme = (main) => {
@@ -10,6 +11,45 @@ const conditionToTheme = (main) => {
   if (m.includes('cloud')) return 'clouds'
   if (m.includes('clear')) return 'clear'
   return 'clouds'
+}
+
+const getIconDisplay = (theme, isNight) => {
+  switch (theme) {
+    case 'clear':
+      return {
+        src: isNight
+          ? 'https://cdnjs.cloudflare.com/ajax/libs/twemoji/15.0.3/svg/1f319.svg'
+          : 'https://cdnjs.cloudflare.com/ajax/libs/twemoji/15.0.3/svg/2600.svg',
+        alt: isNight ? 'Clear night sky' : 'Sunny skies',
+      }
+    case 'clouds':
+      return {
+        src: isNight
+          ? 'https://cdnjs.cloudflare.com/ajax/libs/twemoji/15.0.3/svg/2601.svg'
+          : 'https://cdnjs.cloudflare.com/ajax/libs/twemoji/15.0.3/svg/26c5.svg',
+        alt: isNight ? 'Cloudy night' : 'Partly cloudy',
+      }
+    case 'rain':
+      return {
+        src: 'https://cdnjs.cloudflare.com/ajax/libs/twemoji/15.0.3/svg/1f327.svg',
+        alt: 'Rain showers',
+      }
+    case 'snow':
+      return {
+        src: 'https://cdnjs.cloudflare.com/ajax/libs/twemoji/15.0.3/svg/1f328.svg',
+        alt: 'Snowfall',
+      }
+    case 'storm':
+      return {
+        src: 'https://cdnjs.cloudflare.com/ajax/libs/twemoji/15.0.3/svg/26c8.svg',
+        alt: 'Thunderstorm',
+      }
+    default:
+      return {
+        src: 'https://cdnjs.cloudflare.com/ajax/libs/twemoji/15.0.3/svg/1f324.svg',
+        alt: 'Mostly cloudy',
+      }
+  }
 }
 
 export default function WeatherHero({
@@ -120,27 +160,15 @@ export default function WeatherHero({
 
   const theme = conditionToTheme(previewCondition || weather?.main)
   const isNight = previewCondition ? !!previewIsNight : !!weather?.isNight
-
-  const getBackground = (theme) => {
-    if (theme === 'rain') {
-      return 'linear-gradient(135deg, rgba(100,116,139,0.26), rgba(17,20,25,0.30))'
-    }
-    if (theme === 'storm') {
-      return 'linear-gradient(135deg, rgba(30,41,59,0.45), rgba(148,163,184,0.25))'
-    }
-    if (theme === 'clouds') {
-      return 'linear-gradient(135deg, rgba(148,163,184,0.25), rgba(95,158,160,0.2))'
-    }
-    if (theme === 'snow') {
-      return 'linear-gradient(135deg, rgba(203,213,225,0.35), rgba(148,163,184,0.25))'
-    }
-    return 'linear-gradient(135deg, rgba(59,130,246,0.25), rgba(95,158,160,0.25))'
-  }
+  const { src: iconSrc, alt: iconAlt } = getIconDisplay(theme, isNight)
 
   return (
-    <div className="rounded-2xl overflow-hidden mb-6" style={{ position: 'relative' }}>
+    <div
+      className="rounded-2xl overflow-hidden mb-6"
+      style={{ position: 'relative' }}
+    >
       <div
-        className="p-6 sm:p-8"
+        className="p-6 pt-0 sm:p-8 sm:pt-0"
       >
         {children && (
           <div className="mb-6">
@@ -148,22 +176,20 @@ export default function WeatherHero({
           </div>
         )}
         <div className="flex items-center gap-4">
-          <div className="relative w-12 h-12 sm:w-14 sm:h-14">
-            {/* Simple animated motif */}
-            {theme === 'rain' && (
-              <div className="w-full h-full rounded-full" style={{ background: 'radial-gradient(circle at 30% 30%, rgba(2,132,199,0.6), transparent 60%)' }}></div>
-            )}
-            {theme === 'clear' && (
-              <div className="w-full h-full rounded-full" style={{ background: 'radial-gradient(circle at 50% 50%, rgba(253,224,71,0.6), transparent 60%)' }}></div>
-            )}
-            {theme === 'clouds' && (
-              <div className="w-full h-full rounded-full" style={{ background: 'radial-gradient(circle at 50% 60%, rgba(148,163,184,0.6), transparent 60%)' }}></div>
-            )}
-            {theme === 'snow' && (
-              <div className="w-full h-full rounded-full" style={{ background: 'radial-gradient(circle at 50% 50%, rgba(203,213,225,0.7), transparent 60%)' }}></div>
-            )}
-            {theme === 'storm' && (
-              <div className="w-full h-full rounded-full" style={{ background: 'radial-gradient(circle at 50% 50%, rgba(30,41,59,0.7), transparent 60%)' }}></div>
+          <div className="w-20 h-20 sm:w-22 sm:h-22 flex items-center justify-center">
+            {iconSrc ? (
+              <Image
+                src={iconSrc}
+                alt={iconAlt}
+                width={112}
+                height={112}
+                className="w-18 h-18 sm:w-20 sm:h-20 object-contain drop-shadow-[0_2px_6px_rgba(0,0,0,0.2)]"
+                priority
+              />
+            ) : (
+              <span className="text-3xl sm:text-4xl select-none" role="img" aria-hidden>
+                ☁️
+              </span>
             )}
           </div>
           <div className="flex-1 min-w-0">

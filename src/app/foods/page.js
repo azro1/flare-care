@@ -77,7 +77,7 @@ export default function Foods() {
 
   return (
     <div>
-      <div className="w-full px-3 sm:px-4 md:px-6 lg:px-8">
+      <div className="w-full px-3 sm:px-4 md:px-6">
         <div className="flex flex-col lg:flex-row lg:gap-8 lg:justify-center">
           
           {/* Main Content */}
@@ -180,23 +180,23 @@ export default function Foods() {
               <div className="card p-4 sm:p-6 rounded-2xl backdrop-blur-sm">
                 <h3 className="text-lg font-semibold font-source text-primary mb-4">IBD Foods</h3>
                 <div className="space-y-3">
-                  <div className="card-inner p-3">
-                    <h4 className="font-medium text-primary mb-1">✅ Generally Safe</h4>
+                  <div className="card-inner p-4">
+                    <h4 className="font-medium text-primary mb-2">✅ Generally Safe</h4>
                     <p className="text-sm text-secondary">Bananas, rice, applesauce, toast, oatmeal, lean proteins</p>
                   </div>
-                  <div className="card-inner p-3">
-                    <h4 className="font-medium text-primary mb-1">⚠️ Try Carefully</h4>
+                  <div className="card-inner p-4">
+                    <h4 className="font-medium text-primary mb-2">⚠️ Try Carefully</h4>
                     <p className="text-sm text-secondary">Dairy, high-fiber foods, spicy foods, raw vegetables</p>
                   </div>
-                  <div className="card-inner p-3">
-                    <h4 className="font-medium text-primary mb-1">❌ Avoid During Flares</h4>
+                  <div className="card-inner p-4">
+                    <h4 className="font-medium text-primary mb-2">❌ Avoid During Flares</h4>
                     <p className="text-sm text-secondary">Nuts, seeds, popcorn, alcohol, caffeine, fried foods</p>
                   </div>
                 </div>
               </div>
 
               {/* Note */}
-              <div className="p-4 pt-0 sm:p-6 sm:pt-0">
+              <div className="pb-6">
                 <p className="text-secondary font-roboto leading-relaxed text-sm">
                   <span className="font-semibold">Note:</span> This is a general food reference guide. Always follow the specific dietary advice provided by your doctor or registered dietitian.
                 </p>
@@ -208,7 +208,7 @@ export default function Foods() {
       </div>
 
       {/* Call to Action - Combined width (sidebar + content) */}
-      <div className="mt-8 lg:mt-0">
+      <div>
         <div className="max-w-[76rem] mx-auto px-3 sm:px-4 md:px-6 lg:px-0">
           <div className="card p-8 md:p-10 rounded-2xl backdrop-blur-sm text-center">
           <h2 className="text-xl font-semibold font-source text-primary mb-4">Track Your Meals</h2>

@@ -241,7 +241,10 @@ export default function Navigation() {
                 <div className="flex items-center space-x-4">
                   {/* User Avatar with Dropdown */}
                   <div className="relative group">
-                    <div className="w-10 h-10 rounded-full overflow-hidden border-2 flex items-center justify-center transition-colors" style={{borderColor: 'var(--border-dropdown)', backgroundColor: 'var(--bg-dropdown-hover)'}} onMouseEnter={(e) => e.target.style.borderColor = '#3b82f6'} onMouseLeave={(e) => e.target.style.borderColor = 'var(--border-dropdown)'}>
+                    <div
+                      className="w-10 h-10 rounded-full overflow-hidden flex items-center justify-center"
+                      style={{ backgroundColor: 'var(--bg-dropdown-hover)' }}
+                    >
                     {getUserAvatar() ? (
                       <img 
                         src={getUserAvatar()} 
