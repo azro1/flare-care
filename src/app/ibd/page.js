@@ -2,7 +2,7 @@
 
 import Link from 'next/link'
 import { useAuth } from '@/lib/AuthContext'
-import { CigaretteOff, Smartphone } from 'lucide-react'
+import { CigaretteOff, Smartphone, Hamburger, Brain, Bug, Droplet, NotebookPen, Smile, Stethoscope, BookOpen } from 'lucide-react'
 
 export default function LearnPage() {
   const { isAuthenticated } = useAuth()
@@ -20,19 +20,19 @@ export default function LearnPage() {
               <h3 className="text-lg font-semibold font-source text-primary mb-4">Quick Facts</h3>
               <div className="space-y-3">
                 <div className="flex items-start">
-                  <div className="w-2 h-2 bg-blue-500 rounded-full mt-2 mr-3 flex-shrink-0"></div>
+                  <div className="w-2 h-2 rounded-full mt-2 mr-3 flex-shrink-0" style={{ backgroundColor: '#5F9EA0' }}></div>
                   <p className="text-sm text-secondary font-roboto">IBD affects over 500,000 people in the UK</p>
                 </div>
                 <div className="flex items-start">
-                  <div className="w-2 h-2 bg-green-500 rounded-full mt-2 mr-3 flex-shrink-0"></div>
+                  <div className="w-2 h-2 rounded-full mt-2 mr-3 flex-shrink-0" style={{ backgroundColor: '#5F9EA0' }}></div>
                   <p className="text-sm text-secondary font-roboto">Most commonly diagnosed between ages 15-35</p>
                 </div>
                 <div className="flex items-start">
-                  <div className="w-2 h-2 bg-purple-500 rounded-full mt-2 mr-3 flex-shrink-0"></div>
+                  <div className="w-2 h-2 rounded-full mt-2 mr-3 flex-shrink-0" style={{ backgroundColor: '#5F9EA0' }}></div>
                   <p className="text-sm text-secondary font-roboto">Both conditions are chronic but manageable</p>
                 </div>
                 <div className="flex items-start">
-                  <div className="w-2 h-2 bg-orange-500 rounded-full mt-2 mr-3 flex-shrink-0"></div>
+                  <div className="w-2 h-2 rounded-full mt-2 mr-3 flex-shrink-0" style={{ backgroundColor: '#5F9EA0' }}></div>
                   <p className="text-sm text-secondary font-roboto">Early diagnosis leads to better outcomes</p>
                 </div>
               </div>
@@ -64,21 +64,27 @@ export default function LearnPage() {
             {/* Emergency Contacts */}
             <div className="card p-4 sm:p-6 rounded-2xl backdrop-blur-sm">
               <h3 className="text-lg font-semibold font-source text-primary mb-4">Emergency Contacts</h3>
-              <div className="space-y-3">
-                <div className="border-l-4 border-red-500 pl-3">
-                  <h4 className="font-medium text-primary">NHS 111</h4>
-                  <p className="text-sm text-secondary">Non-emergency medical advice</p>
-                  <p className="text-sm font-medium text-red-600">Call 111</p>
+            <div className="space-y-3">
+              <div className="border-l-4" style={{ borderColor: '#5F9EA0', opacity: 0.85 }}>
+                  <div className="pl-3">
+                    <h4 className="font-medium text-primary">NHS 111</h4>
+                    <p className="text-sm text-secondary">Non-emergency medical advice</p>
+                  <p className="text-sm font-medium" style={{ color: '#5F9EA0' }}>Call 111</p>
+                  </div>
                 </div>
-                <div className="border-l-4 border-blue-500 pl-3">
-                  <h4 className="font-medium text-primary">Crohn's & Colitis UK</h4>
-                  <p className="text-sm text-secondary">Support helpline</p>
-                  <p className="text-sm font-medium text-blue-600">0300 222 9099</p>
+              <div className="border-l-4" style={{ borderColor: '#5F9EA0', opacity: 0.85 }}>
+                  <div className="pl-3">
+                    <h4 className="font-medium text-primary">Crohn's & Colitis UK</h4>
+                    <p className="text-sm text-secondary">Support helpline</p>
+                  <p className="text-sm font-medium" style={{ color: '#5F9EA0' }}>0300 222 9099</p>
+                  </div>
                 </div>
-              <div className="border-l-4 border-emerald-500 pl-3">
-                <h4 className="font-medium text-primary">Emergency Services</h4>
-                <p className="text-sm text-secondary">For life-threatening situations</p>
-                <p className="text-sm font-medium text-emerald-600">Call 999</p>
+              <div className="border-l-4" style={{ borderColor: '#5F9EA0', opacity: 0.85 }}>
+                  <div className="pl-3">
+                    <h4 className="font-medium text-primary">Emergency Services</h4>
+                    <p className="text-sm text-secondary">For life-threatening situations</p>
+                  <p className="text-sm font-medium" style={{ color: '#5F9EA0' }}>Call 999</p>
+                  </div>
                 </div>
               </div>
             </div>
@@ -183,28 +189,31 @@ export default function LearnPage() {
       <div className="card p-8 md:p-10 rounded-2xl backdrop-blur-sm mb-8 sm:mb-12">
         <h2 className="text-xl font-semibold font-source text-primary mb-6 break-words">Common Triggers</h2>
         <div className="grid md:grid-cols-3 gap-6">
-          <div className="text-center">
-            <div className="w-16 h-16 bg-yellow-100 rounded-full flex items-center justify-center mx-auto mb-4">
-              <span className="text-2xl">🍕</span>
+          <div className="card-inner p-6 text-center rounded-2xl">
+            <div className="w-16 h-16 rounded-full flex items-center justify-center mx-auto mb-4 bg-yellow-100">
+              <Hamburger className="w-8 h-8 text-amber-500" />
             </div>
-            <h3 className="font-medium font-source text-primary mb-2 break-words">Food & Diet</h3>
-            <p className="text-sm text-secondary font-roboto break-words">Spicy foods, dairy, high-fiber foods, alcohol, and caffeine can trigger symptoms</p>
+            <p className="text-sm text-secondary font-roboto break-words">
+              Spicy foods, dairy, high-fiber foods, alcohol, and caffeine can trigger symptoms
+            </p>
           </div>
-          
-          <div className="text-center">
-            <div className="w-16 h-16 bg-red-100 rounded-full flex items-center justify-center mx-auto mb-4">
-              <span className="text-2xl">😰</span>
+
+          <div className="card-inner p-6 text-center rounded-2xl">
+            <div className="w-16 h-16 rounded-full flex items-center justify-center mx-auto mb-4 bg-pink-100">
+              <Brain className="w-8 h-8 text-pink-500" />
             </div>
-            <h3 className="font-medium font-source text-primary mb-2 break-words">Stress</h3>
-            <p className="text-sm text-secondary font-roboto break-words">Emotional stress and anxiety can worsen symptoms and trigger flare-ups</p>
+            <p className="text-sm text-secondary font-roboto break-words">
+              Emotional stress and anxiety can worsen symptoms and trigger flare-ups
+            </p>
           </div>
-          
-          <div className="text-center">
-            <div className="w-16 h-16 bg-green-100 rounded-full flex items-center justify-center mx-auto mb-4">
-              <span className="text-2xl">🦠</span>
+
+          <div className="card-inner p-6 text-center rounded-2xl">
+            <div className="w-16 h-16 rounded-full flex items-center justify-center mx-auto mb-4 bg-green-100">
+              <Bug className="w-8 h-8 text-emerald-600" />
             </div>
-            <h3 className="font-medium font-source text-primary mb-2 break-words">Infections</h3>
-            <p className="text-sm text-secondary font-roboto break-words">Viral or bacterial infections can trigger or worsen IBD symptoms</p>
+            <p className="text-sm text-secondary font-roboto break-words">
+              Viral or bacterial infections can trigger or worsen IBD symptoms
+            </p>
           </div>
         </div>
       </div>
@@ -216,20 +225,20 @@ export default function LearnPage() {
           <div>
             <ul className="space-y-3 text-secondary font-roboto">
               <li className="flex items-start">
-                <div className="w-6 h-6 flex items-center justify-center mr-3 mt-0.5">
-                  <span className="text-[#5F9EA0] text-sm">✓</span>
+                <div className="w-6 h-6 flex items-center justify-center mr-3 mt-0.5" style={{ color: 'var(--text-cadet-blue)' }}>
+                  <span className="text-sm">✓</span>
                 </div>
                 <span>Log daily symptoms with severity ratings</span>
               </li>
               <li className="flex items-start">
-                <div className="w-6 h-6 flex items-center justify-center mr-3 mt-0.5">
-                  <span className="text-[#5F9EA0] text-sm">✓</span>
+                <div className="w-6 h-6 flex items-center justify-center mr-3 mt-0.5" style={{ color: 'var(--text-cadet-blue)' }}>
+                  <span className="text-sm">✓</span>
                 </div>
                 <span>Record foods that may trigger symptoms</span>
               </li>
               <li className="flex items-start">
-                <div className="w-6 h-6 flex items-center justify-center mr-3 mt-0.5">
-                  <span className="text-[#5F9EA0] text-sm">✓</span>
+                <div className="w-6 h-6 flex items-center justify-center mr-3 mt-0.5" style={{ color: 'var(--text-cadet-blue)' }}>
+                  <span className="text-sm">✓</span>
                 </div>
                 <span>Track patterns and trends over time</span>
               </li>
@@ -239,20 +248,20 @@ export default function LearnPage() {
           <div>
             <ul className="space-y-3 text-secondary font-roboto">
               <li className="flex items-start">
-                <div className="w-6 h-6 flex items-center justify-center mr-3 mt-0.5">
-                  <span className="text-[#5F9EA0] text-sm">✓</span>
+                <div className="w-6 h-6 flex items-center justify-center mr-3 mt-0.5" style={{ color: 'var(--text-cadet-blue)' }}>
+                  <span className="text-sm">✓</span>
                 </div>
                 <span>Set medication reminders</span>
               </li>
               <li className="flex items-start">
-                <div className="w-6 h-6 flex items-center justify-center mr-3 mt-0.5">
-                  <span className="text-[#5F9EA0] text-sm">✓</span>
+                <div className="w-6 h-6 flex items-center justify-center mr-3 mt-0.5" style={{ color: 'var(--text-cadet-blue)' }}>
+                  <span className="text-sm">✓</span>
                 </div>
                 <span>Track dosage and timing</span>
               </li>
               <li className="flex items-start">
-                <div className="w-6 h-6 flex items-center justify-center mr-3 mt-0.5">
-                  <span className="text-[#5F9EA0] text-sm">✓</span>
+                <div className="w-6 h-6 flex items-center justify-center mr-3 mt-0.5" style={{ color: 'var(--text-cadet-blue)' }}>
+                  <span className="text-sm">✓</span>
                 </div>
                 <span>Generate reports for your doctor</span>
               </li>
@@ -350,10 +359,8 @@ export default function LearnPage() {
       {/* Quit Smoking Section */}
       <div className="card p-8 md:p-10 rounded-2xl backdrop-blur-sm mb-8 sm:mb-12">
         <div className="flex items-center gap-3 mb-4">
-          <div className="w-10 h-10 rounded-full bg-[#5F9EA0]/15 flex items-center justify-center">
-            <CigaretteOff className="w-5 h-5 text-[#5F9EA0]" />
-          </div>
-          <h2 className="text-xl font-semibold font-source text-primary break-words">Quit Smoking Support</h2>
+          <span className="relative -top-1.5 text-2xl" role="img" aria-label="Cigarette">🚬</span>
+          <h2 className="text-xl font-semibold font-source text-primary break-words">Smoking Support</h2>
         </div>
         
         <div className="space-y-4 text-secondary font-roboto mb-6 break-words">
@@ -369,14 +376,32 @@ export default function LearnPage() {
         <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
           <div className="card-inner p-4 sm:p-6">
             <div className="flex items-center gap-2 mb-3">
-              <div className="w-8 h-8 rounded-full bg-[#5F9EA0]/15 flex items-center justify-center">
-                <CigaretteOff className="w-4 h-4 text-[#5F9EA0]" />
-              </div>
+              <span className="text-xl relative -top-0.5" role="img" aria-label="No smoking">🚭</span>
               <h3 className="text-lg font-semibold font-source text-primary break-words">NHS Stop Smoking Services</h3>
             </div>
             <div className="space-y-2 text-secondary font-roboto break-words">
-              <p className="text-sm sm:text-base break-words"><strong>Website:</strong> <a href="https://www.nhs.uk/smokefree" className="text-blue-600 hover:underline break-words" target="_blank" rel="noopener noreferrer">nhs.uk/smokefree</a></p>
-              <p className="text-sm sm:text-base break-words"><strong>Helpline:</strong> <a href="tel:03001231045" className="text-blue-600 hover:underline break-words">0300 123 1045</a></p>
+              <p className="text-sm sm:text-base break-words">
+                <strong>Website:</strong>{' '}
+                <a
+                  href="https://www.nhs.uk/smokefree"
+                  className="font-medium hover:underline break-words"
+                  style={{ color: 'var(--text-cadet-blue)' }}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                >
+                  nhs.uk/smokefree
+                </a>
+              </p>
+              <p className="text-sm sm:text-base break-words">
+                <strong>Helpline:</strong>{' '}
+                <a
+                  href="tel:03001231045"
+                  className="font-medium hover:underline break-words"
+                  style={{ color: 'var(--text-cadet-blue)' }}
+                >
+                  0300 123 1045
+                </a>
+              </p>
               <p className="text-sm sm:text-base break-words"><strong>Text Support:</strong> Text QUIT to 66777</p>
               <p className="text-xs sm:text-sm break-words">Free support, advice, and resources</p>
             </div>
@@ -384,15 +409,31 @@ export default function LearnPage() {
           
           <div className="card-inner p-4 sm:p-6">
             <div className="flex items-center gap-2 mb-3">
-              <div className="w-8 h-8 rounded-full bg-[#5F9EA0]/15 flex items-center justify-center">
-                <Smartphone className="w-4 h-4 text-[#5F9EA0]" />
-              </div>
+              <span className="text-xl" role="img" aria-label="Link">🔗</span>
               <h3 className="text-lg font-semibold font-source text-primary break-words">Additional Resources</h3>
             </div>
             <div className="space-y-2 text-secondary font-roboto break-words">
               <p className="text-sm sm:text-base break-words"><strong>Crohn's & Colitis UK:</strong></p>
-              <p className="text-sm sm:text-base break-words">Helpline: <a href="tel:03002229099" className="text-blue-600 hover:underline break-words">0300 222 9099</a></p>
-              <p className="text-sm sm:text-base break-words">Email: <a href="mailto:helpline@crohnsandcolitis.org.uk" className="text-blue-600 hover:underline break-words">helpline@crohnsandcolitis.org.uk</a></p>
+              <p className="text-sm sm:text-base break-words">
+                Helpline:{' '}
+                <a
+                  href="tel:03002229099"
+                  className="font-medium hover:underline break-words"
+                  style={{ color: 'var(--text-cadet-blue)' }}
+                >
+                  0300 222 9099
+                </a>
+              </p>
+              <p className="text-sm sm:text-base break-words">
+                Email:{' '}
+                <a
+                  href="mailto:helpline@crohnsandcolitis.org.uk"
+                  className="font-medium hover:underline break-words"
+                  style={{ color: 'var(--text-cadet-blue)' }}
+                >
+                  helpline@crohnsandcolitis.org.uk
+                </a>
+              </p>
               <p className="text-xs sm:text-sm break-words">Specialist support for IBD patients</p>
             </div>
           </div>

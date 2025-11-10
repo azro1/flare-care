@@ -15,6 +15,7 @@ export default function Navigation() {
   const [scrollY, setScrollY] = useState(0)
   const hamburgerButtonRef = useRef(null)
   const { user, isAuthenticated, signOut } = useAuth()
+  const [showAvatarFallback, setShowAvatarFallback] = useState(false)
 
   // Get user's display name from Google metadata or fallback to email
   const getUserDisplayName = () => {
@@ -35,30 +36,25 @@ export default function Navigation() {
   const getUserAvatar = () => {
     if (!user) return null
     
-    // Get avatar from user metadata (Google OAuth)
     const avatarUrl = user.user_metadata?.avatar_url || null
-    
-    // If it's a Google avatar, try to get a higher resolution version
     if (avatarUrl && avatarUrl.includes('googleusercontent.com')) {
-      // Replace =s96-c with =s128-c for higher resolution
       return avatarUrl.replace('=s96-c', '=s128-c')
     }
-    
     return avatarUrl
   }
 
-  // Get user's initials for fallback
-  const getUserInitials = () => {
-    const displayName = getUserDisplayName()
-    if (!displayName) return 'U'
-    
-    const names = displayName.trim().split(' ')
-    if (names.length >= 2) {
-      return (names[0][0] + names[names.length - 1][0]).toUpperCase()
-    }
-    return displayName[0].toUpperCase()
-  }
+  const avatarUrl = getUserAvatar()
 
+  useEffect(() => {
+    setShowAvatarFallback(false)
+  }, [avatarUrl])
+
+  useEffect(() => {
+    if (hamburgerButtonRef.current) {
+      const color = isMenuOpen ? '#5F9EA0' : 'transparent'
+      hamburgerButtonRef.current.style.backgroundColor = color
+    }
+  }, [isMenuOpen])
 
   const handleSignOut = async () => {
     try {
@@ -96,12 +92,9 @@ export default function Navigation() {
   useEffect(() => {
     if (!hamburgerButtonRef.current) return
 
-    const bg = isMenuOpen
-      ? 'rgba(156, 163, 175, 0.8)'
-      : 'transparent'
-
+    const bg = isMenuOpen ? '#5F9EA0' : 'transparent'
     hamburgerButtonRef.current.style.setProperty('background-color', bg, 'important')
-  }, [isMenuOpen, isUserMenuOpen])
+  }, [isMenuOpen])
 
   const mainNavItems = [
     { 
@@ -245,48 +238,63 @@ export default function Navigation() {
                       className="w-10 h-10 rounded-full overflow-hidden flex items-center justify-center"
                       style={{ backgroundColor: 'var(--bg-dropdown-hover)' }}
                     >
-                    {getUserAvatar() ? (
+                    {avatarUrl && !showAvatarFallback ? (
                       <img 
-                        src={getUserAvatar()} 
+                        src={avatarUrl} 
                         alt="User avatar" 
                         className="w-full h-full object-cover"
                         style={{ imageRendering: 'crisp-edges' }}
-                        onError={(e) => {
-                          // Hide the image and show initials instead
-                          e.target.style.display = 'none'
-                          const container = e.target.parentElement
-                          const initials = document.createElement('div')
-                          initials.className = 'w-full h-full flex items-center justify-center font-semibold text-sm'
-                          initials.style.color = 'var(--text-dropdown)'
-                          initials.textContent = getUserInitials()
-                          container.appendChild(initials)
-                        }}
+                        onError={() => setShowAvatarFallback(true)}
                       />
-                    ) : (
-                      <div className="w-full h-full flex items-center justify-center font-semibold text-sm" style={{color: 'var(--text-dropdown)'}}>
-                        {getUserInitials()}
+                    ) : null}
+                    {(!avatarUrl || showAvatarFallback) && (
+                      <div className="flex items-center justify-center w-full h-full rounded-full bg-[var(--bg-icon)] dark:bg-[var(--bg-avatar-fallback-dark)]">
+                        <Image
+                          src="/icons/person.svg"
+                          alt="User avatar placeholder"
+                          width={14}
+                          height={14}
+                          className="opacity-90 dark:opacity-90"
+                          priority
+                        />
                       </div>
                     )}
                     </div>
                     
                     {/* User Dropdown Menu */}
-                    <div className="absolute top-full right-0 mt-2 w-48 rounded-sm shadow-lg border opacity-0 invisible group-hover:opacity-100 group-hover:visible transition-all duration-200 z-50" style={{backgroundColor: 'var(--bg-dropdown)', borderColor: 'var(--border-dropdown)'}}>
+                    <div className="absolute top-full right-0 mt-2 w-48 rounded-md shadow-lg opacity-0 invisible group-hover:opacity-100 group-hover:visible transition-all duration-200 z-50 " style={{backgroundColor: 'var(--bg-dropdown)'}}>
                       <div className="">
                         <Link
                           href="/account"
-                          className="block px-4 py-3 text-base font-roboto transition-colors cursor-pointer"
-                          style={{color: 'var(--text-dropdown)'}}
-                          onMouseEnter={(e) => e.target.style.backgroundColor = 'var(--bg-dropdown-hover)'}
-                          onMouseLeave={(e) => e.target.style.backgroundColor = 'transparent'}
+                          className="block px-4 py-3 text-base font-roboto transition-colors cursor-pointer rounded-t-md"
+                          style={{color: 'var(--text-dropdown)', borderTopLeftRadius: '0.375rem', borderTopRightRadius: '0.375rem'}}
+                          onMouseEnter={(e) => {
+                            e.target.style.backgroundColor = 'var(--bg-icon)'
+                            e.target.style.borderTopLeftRadius = '0.375rem'
+                            e.target.style.borderTopRightRadius = '0.375rem'
+                          }}
+                          onMouseLeave={(e) => {
+                            e.target.style.backgroundColor = 'transparent'
+                            e.target.style.borderTopLeftRadius = '0.375rem'
+                            e.target.style.borderTopRightRadius = '0.375rem'
+                          }}
                         >
                           Account
                         </Link>
                         <Link
                           href="/profile-settings"
-                          className="block px-4 py-3 text-base font-roboto transition-colors cursor-pointer"
-                          style={{color: 'var(--text-dropdown)'}}
-                          onMouseEnter={(e) => e.target.style.backgroundColor = 'var(--bg-dropdown-hover)'}
-                          onMouseLeave={(e) => e.target.style.backgroundColor = 'transparent'}
+                          className="block px-4 py-3 text-base font-roboto transition-colors cursor-pointer rounded-b-md"
+                          style={{color: 'var(--text-dropdown)', borderBottomLeftRadius: '0.375rem', borderBottomRightRadius: '0.375rem'}}
+                          onMouseEnter={(e) => {
+                            e.target.style.backgroundColor = 'var(--bg-icon)'
+                            e.target.style.borderBottomLeftRadius = '0.375rem'
+                            e.target.style.borderBottomRightRadius = '0.375rem'
+                          }}
+                          onMouseLeave={(e) => {
+                            e.target.style.backgroundColor = 'transparent'
+                            e.target.style.borderBottomLeftRadius = '0.375rem'
+                            e.target.style.borderBottomRightRadius = '0.375rem'
+                          }}
                         >
                           Profile Settings
                         </Link>
@@ -300,19 +308,13 @@ export default function Navigation() {
 
           {/* Mobile menu button */}
           <button
+            id="mobile-hamburger"
             ref={hamburgerButtonRef}
             onClick={() => setIsMenuOpen(!isMenuOpen)}
             type="button"
-            className={`lg:hidden p-2 rounded-lg transition-all duration-200 active:scale-95 focus:outline-none text-white`}
-            onFocus={(e) => {
-              const bg = isMenuOpen ? 'rgba(156, 163, 175, 0.8)' : 'transparent'
-              e.currentTarget.style.setProperty('background-color', bg, 'important')
-            }}
-            onBlur={(e) => {
-              const bg = isMenuOpen ? 'rgba(156, 163, 175, 0.8)' : 'transparent'
-              e.currentTarget.style.setProperty('background-color', bg, 'important')
-            }}
+            className="lg:hidden p-2 rounded-lg transition-all duration-200 active:scale-95 focus:outline-none text-white bg-transparent"
             aria-label="Toggle mobile menu"
+            aria-pressed={isMenuOpen}
           >
             <svg className="w-6 h-6 " fill="none" stroke="currentColor" viewBox="0 0 24 24">
               {isMenuOpen ? (
@@ -357,26 +359,24 @@ export default function Navigation() {
                     onMouseLeave={(e) => e.target.style.borderColor = 'var(--border-dropdown)'}
                     onFocus={(e) => e.target.style.borderColor = 'var(--border-dropdown)'}
                   >
-                    {getUserAvatar() ? (
+                    {avatarUrl && !showAvatarFallback ? (
                       <img 
-                        src={getUserAvatar()} 
+                        src={avatarUrl} 
                         alt="User avatar" 
                         className="w-full h-full object-cover"
                         style={{ imageRendering: 'crisp-edges' }}
-                        onError={(e) => {
-                          // Hide the image and show initials instead
-                          e.target.style.display = 'none'
-                          const container = e.target.parentElement
-                          const initials = document.createElement('div')
-                          initials.className = 'w-full h-full flex items-center justify-center font-semibold text-sm'
-                          initials.style.color = 'var(--text-dropdown)'
-                          initials.textContent = getUserInitials()
-                          container.appendChild(initials)
-                        }}
+                        onError={() => setShowAvatarFallback(true)}
                       />
                     ) : (
-                      <div className="w-full h-full flex items-center justify-center font-semibold text-sm" style={{color: 'var(--text-dropdown)'}}>
-                        {getUserInitials()}
+                      <div className="flex items-center justify-center w-full h-full rounded-full bg-[var(--bg-icon)] dark:bg-[var(--bg-avatar-fallback-dark)]">
+                        <Image
+                          src="/icons/person.svg"
+                          alt="User avatar placeholder"
+                          width={14}
+                          height={14}
+                          className="opacity-90 dark:opacity-90"
+                          priority
+                        />
                       </div>
                     )}
                   </button>

@@ -26,6 +26,7 @@
     --text-card-inner: #1f2937; /* Darker text for inner cards in light mode */
     --bg-icon: #e2e8f0; /* Light icon background */
     --bg-icon-charcoal: #2f333a; /* Darker charcoal option for icon backgrounds */
+    --bg-avatar-fallback-dark: #3a3e46; /* Charcoal avatar fallback background */
     --text-icon: #475569; /* Light icon text */
     --bg-input: #ffffff;
     --bg-input-dark: #f1f5f9; /* Light input background */
@@ -99,6 +100,7 @@
     --text-card-inner: #e5e7eb; /* Lighter text for inner cards in dark mode */
     --bg-icon: rgba(42, 45, 52, 0.8); /* Warm neutral charcoal icon background */
     --bg-icon-charcoal: rgba(28, 30, 36, 0.95); /* Deeper charcoal option for icon backgrounds */
+    --bg-avatar-fallback-dark: #3a3e46; /* Charcoal avatar fallback background */
     --text-icon: #d1d5db; /* Soft gray icon text */
     --bg-input: #2a2d34; /* Warm neutral charcoal input */
     --bg-input-dark: rgba(42, 45, 52, 0.7); /* Warm neutral charcoal input dark */
@@ -212,6 +214,18 @@
     box-shadow: none;
   }
   
+.tooltip-card {
+  background-color: rgba(248, 250, 252, 0.96);
+  color: var(--text-card-inner);
+  @apply shadow-md;
+}
+
+.dark .tooltip-card {
+  background-color: rgba(50, 53, 60, 0.96);
+  color: var(--text-card-inner);
+  box-shadow: 0 15px 35px rgba(0, 0, 0, 0.45);
+}
+
   .dark .card:hover {
     border-color: var(--border-card-hover);
   }
@@ -226,6 +240,10 @@
     color: var(--text-card-inner);
     border: none;
     @apply backdrop-blur-sm rounded-lg;
+  }
+
+  .dark .card-inner {
+    background-color: var(--bg-avatar-fallback-dark);
   }
 
   .section-bg {

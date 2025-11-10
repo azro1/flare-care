@@ -1,7 +1,8 @@
 'use client'
 
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
 import { useRouter } from 'next/navigation'
+import Image from 'next/image'
 import { useAuth } from '@/lib/AuthContext'
 import ProtectedRoute from '@/components/ProtectedRoute'
 
@@ -11,6 +12,7 @@ function AccountPageContent() {
   const [isSigningOut, setIsSigningOut] = useState(false)
   const [showSignOutModal, setShowSignOutModal] = useState(false)
   const [showDeleteModal, setShowDeleteModal] = useState(false)
+  const [showFallbackAvatar, setShowFallbackAvatar] = useState(false)
 
   const handleSignOut = async () => {
     setIsSigningOut(true)
@@ -38,27 +40,20 @@ function AccountPageContent() {
   const getUserAvatar = () => {
     if (!user) return null
     
-    // Get avatar from user metadata (Google OAuth)
     const avatarUrl = user.user_metadata?.avatar_url || null
     
-    // If it's a Google avatar, try to get a higher resolution version
     if (avatarUrl && avatarUrl.includes('googleusercontent.com')) {
-      // Replace =s96-c with =s128-c for higher resolution
       return avatarUrl.replace('=s96-c', '=s128-c')
     }
     
     return avatarUrl
   }
 
-  // Get user initials for avatar fallback
-  const getInitials = () => {
-    const name = user?.user_metadata?.full_name || user?.email || 'U'
-    if (name.includes(' ')) {
-      const parts = name.split(' ')
-      return `${parts[0][0]}${parts[1][0]}`.toUpperCase()
-    }
-    return name.substring(0, 2).toUpperCase()
-  }
+  const avatarUrl = getUserAvatar()
+
+  useEffect(() => {
+    setShowFallbackAvatar(false)
+  }, [avatarUrl])
 
   if (isSigningOut) {
     return (
@@ -87,26 +82,25 @@ function AccountPageContent() {
           <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
             <div className="flex items-center min-w-0">
               <div className="mr-4 sm:mr-6 flex-shrink-0">
-                <div className="w-20 h-20 rounded-full overflow-hidden bg-slate-700/50 flex items-center justify-center">
-                  {getUserAvatar() ? (
-                    <img 
-                      src={getUserAvatar()} 
-                      alt="User avatar" 
+                <div className="w-20 h-20 rounded-full overflow-hidden flex items-center justify-center bg-[var(--bg-icon)] dark:bg-[var(--bg-icon-charcoal)]">
+                  {avatarUrl && !showFallbackAvatar ? (
+                    <img
+                      src={avatarUrl}
+                      alt="User avatar"
                       className="w-full h-full object-cover"
                       style={{ imageRendering: 'crisp-edges' }}
-                      onError={(e) => {
-                        // Hide the image and show initials instead
-                        e.target.style.display = 'none'
-                        const container = e.target.parentElement
-                        const initials = document.createElement('div')
-                        initials.className = 'w-full h-full flex items-center justify-center text-white text-2xl font-bold font-source bg-[#5F9EA0]'
-                        initials.textContent = getInitials()
-                        container.appendChild(initials)
-                      }}
+                      onError={() => setShowFallbackAvatar(true)}
                     />
                   ) : (
-                    <div className="w-full h-full flex items-center justify-center text-white text-2xl font-bold font-source bg-[#5F9EA0]">
-                      {getInitials()}
+                    <div className="flex items-center justify-center w-full h-full rounded-full bg-[var(--bg-icon)] dark:bg-[var(--bg-avatar-fallback-dark)]">
+                      <Image
+                        src="/icons/person.svg"
+                        alt="User avatar placeholder"
+                        width={28}
+                        height={28}
+                        className="opacity-95 dark:opacity-90"
+                        priority
+                      />
                     </div>
                   )}
                 </div>

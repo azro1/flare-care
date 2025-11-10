@@ -472,8 +472,8 @@ export default function Home() {
                 </div>
                 <ChevronRight className="w-5 h-5 text-secondary sm:hidden" />
               </div>
-              <div className="pointer-events-none absolute right-3 -top-8 hidden w-52 sm:group-hover:flex sm:group-focus-visible:flex">
-                <div className="rounded-lg bg-[var(--bg-card)] px-4 py-3 text-left text-sm text-secondary leading-snug shadow-lg ring-1 ring-[var(--border-primary)] dark:bg-[#1a1d24]" style={{ fontFamily: 'Trebuchet MS, Lucida Grande, sans-serif' }}>
+              <div className="pointer-events-none absolute right-3 -top-14 hidden w-52 sm:group-hover:flex sm:group-focus-visible:flex">
+                <div className="tooltip-card rounded-lg px-4 py-3 text-left text-sm text-secondary leading-snug shadow-lg font-roboto">
                   Record how you're feeling and track your symptoms
                 </div>
               </div>
@@ -494,8 +494,8 @@ export default function Home() {
                 </div>
                 <ChevronRight className="w-5 h-5 text-secondary sm:hidden" />
               </div>
-              <div className="pointer-events-none absolute right-3 -top-8 hidden w-52 sm:group-hover:flex sm:group-focus-visible:flex">
-                <div className="rounded-lg bg-[var(--bg-card)] px-4 py-3 text-left text-sm text-secondary leading-snug shadow-lg ring-1 ring-[var(--border-primary)] dark:bg-[#1a1d24]" style={{ fontFamily: 'Trebuchet MS, Lucida Grande, sans-serif' }}>
+              <div className="pointer-events-none absolute right-3 -top-14 hidden w-52 sm:group-hover:flex sm:group-focus-visible:flex">
+                <div className="tooltip-card rounded-lg px-4 py-3 text-left text-sm text-secondary leading-snug shadow-lg font-roboto">
                   Log missed medications and track your adherence
                 </div>
               </div>
@@ -516,8 +516,8 @@ export default function Home() {
                 </div>
                 <ChevronRight className="w-5 h-5 text-secondary sm:hidden" />
               </div>
-              <div className="pointer-events-none absolute right-3 -top-8 hidden w-52 sm:group-hover:flex sm:group-focus-visible:flex">
-                <div className="rounded-lg bg-[var(--bg-card)] px-4 py-3 text-left text-sm text-secondary leading-snug shadow-lg ring-1 ring-[var(--border-primary)] dark:bg-[#1a1d24]" style={{ fontFamily: 'Trebuchet MS, Lucida Grande, sans-serif' }}>
+              <div className="pointer-events-none absolute right-3 -top-14 hidden w-52 sm:group-hover:flex sm:group-focus-visible:flex">
+                <div className="tooltip-card rounded-lg px-4 py-3 text-left text-sm text-secondary leading-snug shadow-lg font-roboto">
                   View insights and share data with your doctor
                 </div>
               </div>
