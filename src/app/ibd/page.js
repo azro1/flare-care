@@ -103,7 +103,7 @@ export default function LearnPage() {
             </div>
 
             {/* Quick Facts */}
-            <div className="p-4 sm:p-6 lg:py-0 rounded-2xl backdrop-blur-sm">
+            <div className="p-4 sm:p-6 lg:py-4 rounded-2xl backdrop-blur-sm">
               <h3 className="text-lg font-semibold font-source text-primary mb-4">Quick Facts</h3>
               <div className="space-y-3">
                 <p
@@ -479,7 +479,7 @@ export default function LearnPage() {
 
       {/* Call to Action */}
         <div className="mt-8">
-          <div className="max-w-[76rem] mx-auto px-0 sm:px-4 md:px-6 lg:px-0">
+          <div className="max-w-[76rem] mx-auto">
             <div className="card p-8 md:p-10 rounded-2xl backdrop-blur-sm text-center">
           <h2 className="text-xl font-semibold font-source text-primary mb-4">Ready to Start Tracking?</h2>
           <p className="text-secondary mb-6 font-roboto">
