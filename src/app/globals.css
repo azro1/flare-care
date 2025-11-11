@@ -15,7 +15,7 @@
     --bg-nav-footer: #1e293b; /* Dark nav/footer for light mode */
     --text-footer: #d1d5db; /* Footer text - warm gray, no blue (dark bg) */
     --text-footer-muted: #9ca3af; /* Footer muted text - warm gray, no blue */
-    --border-footer: rgba(209, 213, 219, 0.15); /* Footer separator - warm gray, lighter */
+    --border-footer: rgba(209, 213, 219, 0.08); /* Footer separator - lighter */
     --bg-dropdown: #ffffff; /* Dropdown background */
     --bg-dropdown-hover: #f1f5f9; /* Dropdown item hover */
     --border-dropdown: #cbd5e1; /* Dropdown border */

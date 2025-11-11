@@ -50,14 +50,8 @@ export default function Footer() {
         {/* Desktop full footer */}
         <div className="hidden lg:flex lg:flex-col">
           <div className="flex flex-col md:flex-row justify-between items-center gap-6">
-            <div className="flex items-center gap-3">
-              <div className="w-8 h-8 rounded-lg flex items-center justify-center bg-[#5F9EA0]">
-                <Activity className="w-4 h-4 text-white" />
-              </div>
-              <span className="font-bold font-source text-lg" style={{color: 'var(--text-footer)'}}>FlareCare</span>
-            </div>
-
-            <div className="flex gap-8 text-sm text-slate-300">
+            <p style={{color: 'var(--text-footer)'}}>© FlareCare 2025. All rights reserved</p>
+            <div className="flex gap-8 text-base" style={{color: 'var(--text-footer)'}}>
               <a href="/about" className="transition-colors hover:text-[#5F9EA0]">About</a>
               <a href="#" className="transition-colors hover:text-[#5F9EA0]">Privacy</a>
               <a href="#" className="transition-colors hover:text-[#5F9EA0]">Terms</a>
@@ -65,8 +59,8 @@ export default function Footer() {
             </div>
           </div>
 
-          <div className="mt-8 pt-8 text-center text-sm text-slate-300" style={{borderTop: '1px solid var(--border-footer)'}}>
-            Made with care for the IBD community
+          <div className="mt-8 pt-8 text-center text-sm" style={{borderTop: '1px solid var(--border-footer)', color: 'var(--text-footer)'}}>
+            Made with ❤️ for the IBD community 
           </div>
         </div>
       </div>

@@ -44,7 +44,7 @@ export default function LearnPage() {
           <div className="sticky top-8 space-y-6">
             
             {/* Daily Tips */}
-            <div className="p-4 pt-0 sm:p-6 sm:pt-0 lg:p-6 rounded-2xl backdrop-blur-sm">
+            <div className="p-4 pt-0 sm:p-6 sm:pt-0 lg:p-6 lg:pb-4 rounded-2xl backdrop-blur-sm">
               <h3 className="text-lg font-semibold font-source text-primary mb-4">Daily Tips</h3>
               <div className="space-y-3">
                 <div className="flex items-center gap-3">
@@ -75,7 +75,7 @@ export default function LearnPage() {
             </div>
 
             {/* Emergency Contacts */}
-            <div className="card p-4 sm:p-6 rounded-2xl backdrop-blur-sm">
+            <div className="card p-6 rounded-2xl backdrop-blur-sm">
               <h3 className="text-lg font-semibold font-source text-primary mb-4">Emergency Contacts</h3>
             <div className="space-y-3">
               <div className="border-l-4" style={{ borderColor: '#5F9EA0', opacity: 0.85 }}>
@@ -103,7 +103,7 @@ export default function LearnPage() {
             </div>
 
             {/* Quick Facts */}
-            <div className="p-4 sm:p-6 lg:py-4 rounded-2xl backdrop-blur-sm">
+            <div className="p-4 sm:p-6 lg:pt-2.5 lg:pb-10 rounded-2xl backdrop-blur-sm">
               <h3 className="text-lg font-semibold font-source text-primary mb-4">Quick Facts</h3>
               <div className="space-y-3">
                 <p
@@ -402,7 +402,7 @@ export default function LearnPage() {
         </div>
 
         <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-          <div className="card-inner p-4 sm:p-6 rounded-xl">
+          <div className="card-inner p-6 rounded-xl">
             <div className="flex items-center gap-2 mb-3">
               <h3 className="text-lg font-semibold font-source text-primary break-words underline">NHS Stop Smoking Services</h3>
             </div>
@@ -432,7 +432,7 @@ export default function LearnPage() {
             </div>
           </div>
           
-          <div className="card-inner p-4 sm:p-6 rounded-xl">
+          <div className="card-inner p-6 rounded-xl">
             <div className="flex items-center gap-2 mb-3">
               <h3 className="text-lg font-semibold font-source text-primary break-words underline">Additional Resources</h3>
             </div>
@@ -461,7 +461,7 @@ export default function LearnPage() {
           </div>
         </div>
 
-        <div className="mt-6 p-4 card-inner break-words rounded-xl">
+        <div className="mt-6 p-6 card-inner break-words rounded-xl">
           <h4 className="text-lg font-semibold font-source text-primary mb-2 break-words">💡 Tips to Get Started:</h4>
           <ul className="list-disc list-inside space-y-1 text-secondary font-roboto text-sm break-words marker:text-gray-300">
             <li className="break-words">Set a quit date and stick to it</li>
@@ -478,7 +478,7 @@ export default function LearnPage() {
       </div>
 
       {/* Call to Action */}
-        <div className="mt-8">
+        <div className="mt-8 lg:mt-0">
           <div className="max-w-[76rem] mx-auto">
             <div className="card p-8 md:p-10 rounded-2xl backdrop-blur-sm text-center">
           <h2 className="text-xl font-semibold font-source text-primary mb-4">Ready to Start Tracking?</h2>
@@ -496,7 +496,7 @@ export default function LearnPage() {
               </Link>
             )}
             <Link href="/about" className="bg-white hover:bg-gray-50 text-gray-800 font-medium py-3 px-6 rounded-xl border border-gray-200 hover:border-gray-300 transition-all duration-200 shadow-sm hover:shadow-md font-roboto">
-              Learn More About FlareCare
+              About FlareCare
             </Link>
           </div>
             </div>
