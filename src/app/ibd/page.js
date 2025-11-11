@@ -462,7 +462,7 @@ export default function LearnPage() {
         </div>
 
         <div className="mt-6 p-4 card-inner break-words rounded-xl">
-          <h4 className="font-semibold font-source text-primary mb-2 break-words">💡 Tips to Get Started:</h4>
+          <h4 className="text-lg font-semibold font-source text-primary mb-2 break-words">💡 Tips to Get Started:</h4>
           <ul className="list-disc list-inside space-y-1 text-secondary font-roboto text-sm break-words marker:text-gray-300">
             <li className="break-words">Set a quit date and stick to it</li>
             <li className="break-words">Tell your family and friends about your decision</li>
