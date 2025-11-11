@@ -1,7 +1,7 @@
 'use client'
 
 import Link from 'next/link'
-import { CupSoda, Pizza } from 'lucide-react'
+import { UtensilsCrossed, Soup, Snowflake, NotebookPen } from 'lucide-react'
 
 export default function Foods() {
   const categories = [
@@ -146,32 +146,28 @@ export default function Foods() {
                 <h3 className="text-lg font-semibold font-source text-primary mb-4">Quick Food Tips</h3>
                 <div className="space-y-3">
                   <div className="flex items-center gap-3">
-                    <div className="w-6 h-6 bg-green-100 rounded-lg flex items-center justify-center">
-                      <svg className="w-3 h-3 text-green-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
-                      </svg>
+                    <div className="w-8 h-8 min-w-[2rem] rounded-lg flex items-center justify-center card-inner">
+                      <UtensilsCrossed className="w-4 h-4 text-emerald-600" />
                     </div>
-                    <p className="text-sm text-secondary">Keep a food diary to track triggers</p>
+                    <p className="text-sm text-secondary">Pair carbs with protein to steady energy</p>
                   </div>
                   <div className="flex items-center gap-3">
-                    <div className="w-6 h-6 bg-blue-100 rounded-lg flex items-center justify-center">
-                      <CupSoda className="w-3 h-3 text-blue-600" />
+                    <div className="w-8 h-8 min-w-[2rem] rounded-lg flex items-center justify-center card-inner">
+                      <Soup className="w-4 h-4 text-amber-600" />
                     </div>
-                    <p className="text-sm text-secondary">Stay hydrated throughout the day</p>
+                    <p className="text-sm text-secondary">Keep simple foods ready for flare days</p>
                   </div>
                   <div className="flex items-center gap-3">
-                    <div className="w-6 h-6 bg-yellow-100 rounded-lg flex items-center justify-center">
-                      <Pizza className="w-3 h-3 text-yellow-600" />
+                    <div className="w-8 h-8 min-w-[2rem] rounded-lg flex items-center justify-center card-inner">
+                      <Snowflake className="w-4 h-4 text-blue-500" />
                     </div>
-                    <p className="text-sm text-secondary">Eat smaller, frequent meals</p>
+                    <p className="text-sm text-secondary">Freeze single portions for low-energy days</p>
                   </div>
                   <div className="flex items-center gap-3">
-                    <div className="w-6 h-6 bg-purple-100 rounded-lg flex items-center justify-center">
-                      <svg className="w-3 h-3 text-purple-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
-                      </svg>
+                    <div className="w-8 h-8 min-w-[2rem] rounded-lg flex items-center justify-center card-inner">
+                      <NotebookPen className="w-4 h-4 text-indigo-400" />
                     </div>
-                    <p className="text-sm text-secondary">Follow your healthcare team's advice</p>
+                    <p className="text-sm text-secondary">Note any new foods and how your gut reacts</p>
                   </div>
                 </div>
               </div>
@@ -180,15 +176,15 @@ export default function Foods() {
               <div className="card p-4 sm:p-6 rounded-2xl backdrop-blur-sm">
                 <h3 className="text-lg font-semibold font-source text-primary mb-4">IBD Foods</h3>
                 <div className="space-y-3">
-                  <div className="card-inner p-4">
+                  <div className="card-inner p-4 rounded-xl">
                     <h4 className="font-medium text-primary mb-2">✅ Generally Safe</h4>
                     <p className="text-sm text-secondary">Bananas, rice, applesauce, toast, oatmeal, lean proteins</p>
                   </div>
-                  <div className="card-inner p-4">
+                  <div className="card-inner p-4 rounded-xl">
                     <h4 className="font-medium text-primary mb-2">⚠️ Try Carefully</h4>
                     <p className="text-sm text-secondary">Dairy, high-fiber foods, spicy foods, raw vegetables</p>
                   </div>
-                  <div className="card-inner p-4">
+                  <div className="card-inner p-4 rounded-xl">
                     <h4 className="font-medium text-primary mb-2">❌ Avoid During Flares</h4>
                     <p className="text-sm text-secondary">Nuts, seeds, popcorn, alcohol, caffeine, fried foods</p>
                   </div>
