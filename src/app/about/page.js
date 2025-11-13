@@ -17,7 +17,7 @@ export default function About() {
         </p>
       </div>
 
-      <div className="grid md:grid-cols-2 gap-8 mb-12">
+      <div className="grid md:grid-cols-2 gap-8 mb-8">
         <div className="card p-8 md:p-10 rounded-2xl backdrop-blur-sm">
           <h2 className="text-xl sm:text-2xl font-semibold font-source text-primary mb-4">My Story</h2>
           <div className="space-y-4 text-secondary font-roboto leading-relaxed">
@@ -77,7 +77,7 @@ export default function About() {
         </div>
       </div>
 
-      <div className="card p-8 md:p-10 rounded-2xl backdrop-blur-sm mb-12">
+      <div className="card p-8 md:p-10 rounded-2xl backdrop-blur-sm mb-8">
         <h2 className="text-xl sm:text-2xl font-semibold font-source text-primary mb-4">The Vision</h2>
         <div className="space-y-4 text-secondary font-roboto leading-relaxed">
           <p>

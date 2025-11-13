@@ -93,7 +93,7 @@ export default function Foods() {
         </div>
 
         {/* Food Categories */}
-        <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 mb-8">
+        <div className="grid grid-cols-1 lg:grid-cols-2 gap-8 mb-8">
           {categories.map((category, index) => (
             <div key={index} className="card p-8 md:p-10 rounded-2xl backdrop-blur-sm">
               <div className="flex items-center gap-4 mb-4">
@@ -139,10 +139,30 @@ export default function Foods() {
 
           {/* Left Sidebar */}
           <div className="lg:w-72 lg:flex-shrink-0 order-2 lg:order-1">
-            <div className="sticky top-8 space-y-6">
+            <div className="sticky top-8 space-y-8">
               
+
+              {/* IBD-Friendly Foods */}
+              <div className="card p-4 sm:p-6 rounded-2xl backdrop-blur-sm ">
+                <h3 className="text-lg font-semibold font-source text-primary mb-4">IBD Foods</h3>
+                <div className="space-y-4">
+                  <div className="card-inner p-4 rounded-xl">
+                    <h4 className="font-medium text-primary mb-2">✅ Generally Safe</h4>
+                    <p className="text-sm text-secondary">Bananas, rice, applesauce, toast, oatmeal, lean proteins</p>
+                  </div>
+                  <div className="card-inner p-4 rounded-xl">
+                    <h4 className="font-medium text-primary mb-2">⚠️ Try Carefully</h4>
+                    <p className="text-sm text-secondary">Dairy, high-fiber foods, spicy foods, raw vegetables</p>
+                  </div>
+                  <div className="card-inner p-4 rounded-xl">
+                    <h4 className="font-medium text-primary mb-2">❌ Avoid During Flares</h4>
+                    <p className="text-sm text-secondary">Nuts, seeds, popcorn, alcohol, caffeine, fried foods</p>
+                  </div>
+                </div>
+              </div>
+
               {/* Quick Food Tips */}
-              <div className="card p-4 sm:p-6 rounded-2xl backdrop-blur-sm">
+              <div className="card backdrop-blur-sm p-4 sm:p-6 rounded-2xl">
                 <h3 className="text-lg font-semibold font-source text-primary mb-4">Quick Food Tips</h3>
                 <div className="space-y-3">
                   <div className="flex items-center gap-3">
@@ -171,28 +191,9 @@ export default function Foods() {
                   </div>
                 </div>
               </div>
-
-              {/* IBD-Friendly Foods */}
-              <div className="card p-4 sm:p-6 rounded-2xl backdrop-blur-sm">
-                <h3 className="text-lg font-semibold font-source text-primary mb-4">IBD Foods</h3>
-                <div className="space-y-3">
-                  <div className="card-inner p-4 rounded-xl">
-                    <h4 className="font-medium text-primary mb-2">✅ Generally Safe</h4>
-                    <p className="text-sm text-secondary">Bananas, rice, applesauce, toast, oatmeal, lean proteins</p>
-                  </div>
-                  <div className="card-inner p-4 rounded-xl">
-                    <h4 className="font-medium text-primary mb-2">⚠️ Try Carefully</h4>
-                    <p className="text-sm text-secondary">Dairy, high-fiber foods, spicy foods, raw vegetables</p>
-                  </div>
-                  <div className="card-inner p-4 rounded-xl">
-                    <h4 className="font-medium text-primary mb-2">❌ Avoid During Flares</h4>
-                    <p className="text-sm text-secondary">Nuts, seeds, popcorn, alcohol, caffeine, fried foods</p>
-                  </div>
-                </div>
-              </div>
-
+              
               {/* Note */}
-              <div className="pb-6">
+              <div className="card backdrop-blur-sm p-6 lg:pt-0 lg:px-0 lg:pb-8 lg:bg-transparent lg:shadow-none lg:hover:shadow-none">
                 <p className="text-secondary font-roboto leading-relaxed text-sm">
                   <span className="font-semibold">Note:</span> This is a general food reference guide. Always follow the specific dietary advice provided by your doctor or registered dietitian.
                 </p>
@@ -205,7 +206,7 @@ export default function Foods() {
 
       {/* Call to Action - Combined width (sidebar + content) */}
       <div>
-        <div className="max-w-[76rem] mx-auto px-3 sm:px-4 md:px-6 lg:px-0">
+        <div className="mt-8 max-w-[76rem] mx-auto px-3 sm:px-4 md:px-6 lg:px-0 lg:mt-0">
           <div className="card p-8 md:p-10 rounded-2xl backdrop-blur-sm text-center">
           <h2 className="text-xl font-semibold font-source text-primary mb-4">Track Your Meals</h2>
           <p className="text-secondary font-roboto mb-6 leading-relaxed">
