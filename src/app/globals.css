@@ -171,11 +171,17 @@
     scroll-behavior: smooth;
   }
 
-  @media (max-width: 640px) {
-    .backdrop-blur-sm {
-      backdrop-filter: none;
-      background-color: var(--bg-card);
-    }
+}
+
+@media (max-width: 820px) {
+  .card.backdrop-blur-sm {
+    backdrop-filter: none;
+    background-color: var(--bg-card);
+  }
+
+  .card.backdrop-blur-sm .card-inner {
+    backdrop-filter: none;
+    background-color: var(--bg-card-inner);
   }
 }
 
@@ -243,11 +249,11 @@
   }
   
 
-  .card-inner {
+.card-inner {
     background-color: var(--bg-card-inner);
     color: var(--text-card-inner);
     border: none;
-    @apply backdrop-blur-sm rounded-lg;
+    @apply rounded-lg;
   }
 
   .dark .card-inner {

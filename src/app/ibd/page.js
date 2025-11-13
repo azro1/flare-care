@@ -41,10 +41,10 @@ export default function LearnPage() {
         
         {/* Left Sidebar */}
         <div className="lg:w-72 lg:flex-shrink-0 order-2 lg:order-1">
-          <div className="sticky top-8 space-y-6">
+          <div className="sticky top-8 space-y-8 sm:space-y-12 lg:space-y-8">
             
             {/* Daily Tips */}
-            <div className="card rounded-2xl !p-4 !pt-0 sm:!p-6 sm:!pt-0 lg:!p-6 lg:!pb-4">
+            <div className="card backdrop-blur-sm p-4 rounded-2xl sm:p-6 lg:pb-0 lg:bg-transparent lg:shadow-none lg:hover:shadow-none">
               <h3 className="text-lg font-semibold font-source text-primary mb-4">Daily Tips</h3>
               <div className="space-y-3">
                 <div className="flex items-center gap-3">
@@ -103,7 +103,7 @@ export default function LearnPage() {
             </div>
 
             {/* Quick Facts */}
-            <div className="card rounded-2xl !p-4 sm:!p-6 lg:!pt-2.5 lg:!pb-10">
+            <div className="card backdrop-blur-sm p-4 rounded-2xl sm:p-6 lg:pt-0 lg:pb-10 lg:bg-transparent lg:shadow-none lg:hover:shadow-none">
               <h3 className="text-lg font-semibold font-source text-primary mb-4">Quick Facts</h3>
               <div className="space-y-3">
                 <p
@@ -478,7 +478,7 @@ export default function LearnPage() {
       </div>
 
       {/* Call to Action */}
-        <div className="mt-8 lg:mt-0">
+        <div className="mt-8 sm:mt-12 lg:mt-0">
           <div className="max-w-[76rem] mx-auto">
             <div className="card p-8 md:p-10 rounded-2xl backdrop-blur-sm text-center">
           <h2 className="text-xl font-semibold font-source text-primary mb-4">Ready to Start Tracking?</h2>
