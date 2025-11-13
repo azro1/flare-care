@@ -94,11 +94,11 @@
         --bg-dropdown-hover: rgba(42, 45, 52, 0.7); /* Dropdown item hover */
         --border-dropdown: rgba(63, 68, 73, 0.5); /* Dropdown border */
         --text-dropdown: #d1d5db; /* Dropdown text */
-    --bg-card: rgba(42, 45, 52, 0.6); /* Warm neutral charcoal card */
-    --bg-card-hover: rgba(55, 58, 65, 0.7); /* Lighter warm charcoal hover */
-    --bg-card-inner: rgba(50, 53, 60, 0.56); /* Balanced charcoal inner card */
+    --bg-card: #2a2d34; /* Warm neutral charcoal card */
+    --bg-card-hover: #373a41; /* Lighter warm charcoal hover */
+    --bg-card-inner: #343740; /* Balanced charcoal inner card */
     --text-card-inner: #e5e7eb; /* Lighter text for inner cards in dark mode */
-    --bg-icon: rgba(42, 45, 52, 0.8); /* Warm neutral charcoal icon background */
+    --bg-icon: #2a2d34; /* Warm neutral charcoal icon background */
     --bg-icon-charcoal: rgba(28, 30, 36, 0.95); /* Deeper charcoal option for icon backgrounds */
     --bg-avatar-fallback-dark: #3a3e46; /* Charcoal avatar fallback background */
     --text-icon: #d1d5db; /* Soft gray icon text */
@@ -160,7 +160,8 @@
   }
   
   body {
-    background: linear-gradient(135deg, var(--bg-primary) 0%, var(--bg-secondary) 50%, var(--bg-tertiary) 100%);
+    background-color: var(--bg-primary);
+    background-image: linear-gradient(135deg, var(--bg-primary) 0%, var(--bg-secondary) 50%, var(--bg-tertiary) 100%);
     color: var(--text-primary);
     font-feature-settings: 'rlig' 1, 'calt' 1;
     transition: background-color 0.3s ease, color 0.3s ease;
@@ -168,6 +169,13 @@
   
   html {
     scroll-behavior: smooth;
+  }
+
+  @media (max-width: 640px) {
+    .backdrop-blur-sm {
+      backdrop-filter: none;
+      background-color: var(--bg-card);
+    }
   }
 }
 
