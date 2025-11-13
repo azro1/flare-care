@@ -44,7 +44,7 @@ export default function LearnPage() {
           <div className="sticky top-8 space-y-6">
             
             {/* Daily Tips */}
-            <div className="p-4 pt-0 sm:p-6 sm:pt-0 lg:p-6 lg:pb-4 rounded-2xl backdrop-blur-sm">
+            <div className="card rounded-2xl !p-4 !pt-0 sm:!p-6 sm:!pt-0 lg:!p-6 lg:!pb-4">
               <h3 className="text-lg font-semibold font-source text-primary mb-4">Daily Tips</h3>
               <div className="space-y-3">
                 <div className="flex items-center gap-3">
@@ -103,7 +103,7 @@ export default function LearnPage() {
             </div>
 
             {/* Quick Facts */}
-            <div className="p-4 sm:p-6 lg:pt-2.5 lg:pb-10 rounded-2xl backdrop-blur-sm">
+            <div className="card rounded-2xl !p-4 sm:!p-6 lg:!pt-2.5 lg:!pb-10">
               <h3 className="text-lg font-semibold font-source text-primary mb-4">Quick Facts</h3>
               <div className="space-y-3">
                 <p
