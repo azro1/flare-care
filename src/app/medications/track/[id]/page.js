@@ -69,6 +69,10 @@ function TrackedMedicationDetails() {
     )
   }
 
+  const missedCount = trackedData.missed_medications_list?.length ?? 0
+  const nsaidCount = trackedData.nsaid_list?.length ?? 0
+  const antibioticCount = trackedData.antibiotic_list?.length ?? 0
+
   return (
     <div>
       <div className="max-w-4xl w-full mx-auto px-3 sm:px-4 md:px-6 lg:px-8 min-w-0">
@@ -101,23 +105,52 @@ function TrackedMedicationDetails() {
       </div>
 
       <div className="space-y-6">
+        {/* Overview */}
+        <div className="card p-6">
+          <h2 className="text-xl font-semibold font-source text-primary mb-6">Overview</h2>
+          <div className="space-y-4 sm:space-y-0 sm:grid sm:grid-cols-3 sm:gap-6">
+            <div className="card-inner rounded-xl p-4">
+              <span className="text-xs font-semibold text-secondary uppercase tracking-wide block">Missed doses</span>
+              <p className={`mt-2 text-base font-semibold ${missedCount > 0 ? 'text-amber-600 dark:text-amber-300' : 'text-secondary'}`}>
+                {missedCount > 0 ? missedCount : 'None logged'}
+              </p>
+            </div>
+
+            <div className="card-inner rounded-xl p-4">
+              <span className="text-xs font-semibold text-secondary uppercase tracking-wide block">NSAIDs</span>
+              <p className={`mt-2 text-base font-semibold ${nsaidCount > 0 ? 'text-emerald-600 dark:text-emerald-300' : 'text-secondary'}`}>
+                {nsaidCount > 0 ? nsaidCount : 'None logged'}
+              </p>
+            </div>
+
+            <div className="card-inner rounded-xl p-4">
+              <span className="text-xs font-semibold text-secondary uppercase tracking-wide block">Antibiotics</span>
+              <p className={`mt-2 text-base font-semibold ${antibioticCount > 0 ? 'text-blue-600 dark:text-blue-300' : 'text-secondary'}`}>
+                {antibioticCount > 0 ? antibioticCount : 'None logged'}
+              </p>
+            </div>
+          </div>
+        </div>
+
         {/* Missed Medications */}
         {trackedData.missed_medications_list && trackedData.missed_medications_list.length > 0 && (
           <div>
-            <h2 className="text-lg font-semibold text-primary dark:text-cadet-blue mb-4">Missed Medications</h2>
+            <h2 className="text-lg font-semibold text-primary dark:text-primary mb-4">Missed Medications</h2>
             <div className="space-y-6">
               {trackedData.missed_medications_list.map((item, index) => (
                 <div key={index} className="card p-6">
-                  <div className="space-y-3">
-                    <div className="flex justify-between py-2 border-b border-slate-300 dark:border-b" style={{borderColor: 'var(--border-primary)'}}>
+                  <div className="card-inner rounded-xl p-4">
+                    <div className="flex justify-between pb-4 border-b border-slate-300/30 dark:border-b" style={{borderColor: 'var(--border-card-inner)'}}>
                       <span className="text-secondary">Medication:</span>
                       <span className="font-medium text-primary">{item.medication}</span>
                     </div>
-                    <div className="flex justify-between py-2 border-b border-slate-300 dark:border-b" style={{borderColor: 'var(--border-primary)'}}>
+                    <div className="flex justify-between py-4 border-b border-slate-300/30 dark:border-b" style={{borderColor: 'var(--border-card-inner)'}}>
                       <span className="text-secondary">Date:</span>
-                      <span className="font-medium text-primary">{item.date ? new Date(item.date).toLocaleDateString('en-GB', { day: '2-digit', month: '2-digit', year: 'numeric' }) : 'N/A'}</span>
+                      <span className="font-medium text-primary">
+                        {item.date ? new Date(item.date).toLocaleDateString('en-GB', { day: '2-digit', month: '2-digit', year: 'numeric' }) : 'N/A'}
+                      </span>
                     </div>
-                    <div className="flex justify-between py-2">
+                    <div className="flex justify-between pt-4">
                       <span className="text-secondary">Time of Day:</span>
                       <span className="font-medium text-primary">{item.timeOfDay || 'N/A'}</span>
                     </div>
@@ -131,24 +164,24 @@ function TrackedMedicationDetails() {
         {/* NSAIDs */}
         {trackedData.nsaid_list && trackedData.nsaid_list.length > 0 && (
           <div>
-            <h2 className="text-lg font-semibold text-primary dark:text-cadet-blue mb-4">NSAIDs</h2>
+            <h2 className="text-lg font-semibold text-primary dark:text-primary mb-4">NSAIDs</h2>
             <div className="space-y-6">
               {trackedData.nsaid_list.map((item, index) => (
                 <div key={index} className="card p-6">
-                  <div className="space-y-3">
-                    <div className="flex justify-between py-2 border-b border-slate-300 dark:border-b" style={{borderColor: 'var(--border-primary)'}}>
+                  <div className="card-inner rounded-xl p-4">
+                    <div className="flex justify-between pb-4 border-b border-slate-300/30 dark-border-b" style={{borderColor: 'var(--border-card-inner)'}}>
                       <span className="text-secondary">Medication:</span>
                       <span className="font-medium text-primary">{item.medication}</span>
                     </div>
-                    <div className="flex justify-between py-2 border-b border-slate-300 dark:border-b" style={{borderColor: 'var(--border-primary)'}}>
+                    <div className="flex justify-between py-4 border-b border-slate-300/30 dark:border-b" style={{borderColor: 'var(--border-card-inner)'}}>
                       <span className="text-secondary">Dosage:</span>
                       <span className="font-medium text-primary">{item.dosage || 'N/A'}</span>
                     </div>
-                    <div className="flex justify-between py-2 border-b border-slate-300 dark:border-b" style={{borderColor: 'var(--border-primary)'}}>
+                    <div className="flex justify-between py-4 border-b border-slate-300/30 dark:border-b" style={{borderColor: 'var(--border-card-inner)'}}>
                       <span className="text-secondary">Date:</span>
                       <span className="font-medium text-primary">{item.date ? new Date(item.date).toLocaleDateString('en-GB', { day: '2-digit', month: '2-digit', year: 'numeric' }) : 'N/A'}</span>
                     </div>
-                    <div className="flex justify-between py-2">
+                    <div className="flex justify-between pt-4">
                       <span className="text-secondary">Time of Day:</span>
                       <span className="font-medium text-primary">{item.timeOfDay || 'N/A'}</span>
                     </div>
@@ -162,24 +195,24 @@ function TrackedMedicationDetails() {
         {/* Antibiotics */}
         {trackedData.antibiotic_list && trackedData.antibiotic_list.length > 0 && (
           <div>
-            <h2 className="text-lg font-semibold text-primary dark:text-cadet-blue mb-4">Antibiotics</h2>
+            <h2 className="text-lg font-semibold text-primary dark:text-primary mb-4">Antibiotics</h2>
             <div className="space-y-6">
               {trackedData.antibiotic_list.map((item, index) => (
                 <div key={index} className="card p-6">
-                  <div className="space-y-3">
-                    <div className="flex justify-between py-2 border-b border-slate-300 dark:border-b" style={{borderColor: 'var(--border-primary)'}}>
+                  <div className="card-inner rounded-xl p-4">
+                    <div className="flex justify-between pb-4 border-b border-slate-300/30 dark:border-b" style={{borderColor: 'var(--border-card-inner)'}}>
                       <span className="text-secondary">Medication:</span>
                       <span className="font-medium text-primary">{item.medication}</span>
                     </div>
-                    <div className="flex justify-between py-2 border-b border-slate-300 dark:border-b" style={{borderColor: 'var(--border-primary)'}}>
+                    <div className="flex justify-between py-4 border-b border-slate-300/30 dark-border-b" style={{borderColor: 'var(--border-card-inner)'}}>
                       <span className="text-secondary">Dosage:</span>
                       <span className="font-medium text-primary">{item.dosage || 'N/A'}</span>
                     </div>
-                    <div className="flex justify-between py-2 border-b border-slate-300 dark:border-b" style={{borderColor: 'var(--border-primary)'}}>
+                    <div className="flex justify-between py-4 border-b border-slate-300/30 dark-border-b" style={{borderColor: 'var(--border-card-inner)'}}>
                       <span className="text-secondary">Date:</span>
                       <span className="font-medium text-primary">{item.date ? new Date(item.date).toLocaleDateString('en-GB', { day: '2-digit', month: '2-digit', year: 'numeric' }) : 'N/A'}</span>
                     </div>
-                    <div className="flex justify-between py-2">
+                    <div className="flex justify-between pt-4">
                       <span className="text-secondary">Time of Day:</span>
                       <span className="font-medium text-primary">{item.timeOfDay || 'N/A'}</span>
                     </div>
@@ -192,7 +225,7 @@ function TrackedMedicationDetails() {
       </div>
 
       {/* Bottom delete action (all screens) */}
-      <div className="mt-8 pt-6 border-t border-slate-300/50 dark:border-t" style={{borderColor: 'var(--border-primary)'}}>
+      <div className="mt-8">
         <button
           onClick={() => setShowDeleteModal(true)}
           disabled={isDeleting}

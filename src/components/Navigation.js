@@ -1,12 +1,12 @@
 'use client'
 
 import Link from 'next/link'
-import Image from 'next/image'
 import { usePathname } from 'next/navigation'
 import { useState, useEffect, useRef } from 'react'
 import { useAuth } from '../lib/AuthContext'
 import SyncSettings from './SyncSettings'
 import { Sandwich, Activity } from "lucide-react"
+import Image from 'next/image'
 
 export default function Navigation() {
   const pathname = usePathname()
@@ -205,8 +205,15 @@ export default function Navigation() {
         <div className="flex justify-between items-center">
           {/* Logo */}
           <Link href="/" className="flex items-center gap-3 group">
-            <div className="w-10 h-10 sm:w-10 sm:h-10 rounded-lg flex items-center justify-center bg-[#5F9EA0]">
-              <Activity className="w-5 h-5 sm:w-6 sm:h-6 text-white" />
+            <div className="w-12 h-12 sm:w-12 sm:h-12 rounded-full flex items-center justify-center overflow-visible">
+              <Image
+                src="/icons/logo.svg"
+                alt="FlareCare logo"
+                width={48}
+                height={48}
+                className="w-12 h-12 transform scale-125"
+                priority={true}
+              />
             </div>
             <span className="hidden sm:block text-xl font-bold text-white font-source">FlareCare</span>
           </Link>

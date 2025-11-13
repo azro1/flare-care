@@ -73,7 +73,7 @@
     --border-primary: #cbd5e1; /* Light primary border */
     --border-secondary: #94a3b8; /* Light secondary border */
     --border-card: #cbd5e1; /* Light card border */
-    --border-card-inner: #cbd5e1; /* Light inner card border */
+    --border-card-inner: rgba(148, 163, 184, 0.25); /* Light inner card border */
     
     --shadow-sm: 0 1px 2px 0 rgb(0 0 0 / 0.05);
     --shadow-md: 0 4px 6px -1px rgb(0 0 0 / 0.1), 0 2px 4px -2px rgb(0 0 0 / 0.1);
@@ -148,7 +148,7 @@
     --border-secondary: #4f5459; /* Warm neutral secondary border */
     --border-card: #3f4449; /* Warm neutral card border */
     --border-card-hover: #52525b; /* Warmer card border on hover */
-    --border-card-inner: #4f5459; /* Warmer inner card border */
+    --border-card-inner: rgba(79, 84, 89, 0.6); /* Warmer inner card border */
     
     --shadow-sm: 0 1px 2px 0 rgb(0 0 0 / 0.3);
     --shadow-md: 0 4px 6px -1px rgb(0 0 0 / 0.4), 0 2px 4px -2px rgb(0 0 0 / 0.4);
