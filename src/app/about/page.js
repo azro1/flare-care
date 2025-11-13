@@ -8,7 +8,7 @@ export default function About() {
   return (
     <div className="w-full px-3 sm:px-4 md:px-6 lg:px-8 min-w-0">
       <div className="max-w-5xl mx-auto">
-      <div className="text-center mb-12">
+      <div className="text-center mb-8 lg:mb-12">
         <h1 className="text-2xl sm:text-3xl lg:text-4xl font-bold font-source text-primary mb-4 sm:mb-6">
           About FlareCare
         </h1>

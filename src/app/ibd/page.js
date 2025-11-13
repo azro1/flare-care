@@ -122,7 +122,7 @@ export default function LearnPage() {
 
         {/* Main Content */}
         <div className="flex-1 lg:max-w-4xl order-1 lg:order-2">
-      <div className="mb-12">
+      <div className="mb-8 lg:mb-12">
         <h1 className="text-2xl sm:text-3xl lg:text-4xl font-bold font-source text-primary mb-4 sm:mb-6">Understanding IBD</h1>
         <p className="text-secondary font-roboto break-words">
           Learn about Crohn's disease and Ulcerative Colitis, and how FlareCare can help you manage your condition.
