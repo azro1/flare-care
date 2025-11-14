@@ -287,6 +287,16 @@ export default function Home() {
       </div>
     )
   }
+  // Format date in UK format (dd/mm/yyyy) - forces UK format on mobile
+  const formatUKDate = (dateString) => {
+    if (!dateString) return ''
+    const date = new Date(dateString)
+    const day = date.getDate().toString().padStart(2, '0')
+    const month = (date.getMonth() + 1).toString().padStart(2, '0')
+    const year = date.getFullYear()
+    return `${day}/${month}/${year}`
+  }
+
   // Get symptoms to display (1 by default, all if expanded)
   const displayedSymptoms = showAllSymptoms ? symptoms : symptoms.slice(0, 1)
   const todaySymptoms = symptoms.filter(symptom => {
@@ -573,7 +583,7 @@ export default function Home() {
                   <div className="space-y-4">
                     <div className="flex items-center justify-between">
                       <span className="text-sm font-medium text-primary">
-                        {new Date(symptom.created_at || symptom.createdAt).toLocaleDateString()}
+                        {formatUKDate(symptom.created_at || symptom.createdAt)}
                       </span>
                       <span className="text-xs text-slate-400 dark:[color:var(--text-tertiary)]">
                         {new Date(symptom.created_at || symptom.createdAt).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
@@ -619,7 +629,7 @@ export default function Home() {
                   <div className="space-y-4">
                     <div className="flex items-center justify-between">
                       <span className="text-sm font-medium text-primary">
-                        {new Date(tracked.created_at || tracked.createdAt).toLocaleDateString()}
+                        {formatUKDate(tracked.created_at || tracked.createdAt)}
                       </span>
                       <span className="text-xs text-slate-400 dark:[color:var(--text-tertiary)]">
                         {new Date(tracked.created_at || tracked.createdAt).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
