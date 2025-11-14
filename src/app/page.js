@@ -6,7 +6,7 @@ import { useAuth } from '@/lib/AuthContext'
 import { useEffect, useState } from 'react'
 import { useDataSync } from '@/lib/useDataSync'
 import { useRouter } from 'next/navigation'
-import { CupSoda, Pizza, Coffee, BookOpen, Smile, Thermometer, Pill, FileText, Activity, TrendingUp, PartyPopper, Clipboard, Cookie, ChartLine, Sparkles, ChevronRight } from 'lucide-react'
+import { CupSoda, Pizza, Coffee, BookOpen, Smile, Thermometer, Pill, FileText, Activity, TrendingUp, PartyPopper, Clipboard, Cookie, ChartLine, Sparkles, ChevronRight, ChevronDown } from 'lucide-react'
 
 export default function Home() {
   const { isAuthenticated, loading, user } = useAuth()
@@ -22,6 +22,7 @@ export default function Home() {
   const [showMedicationDeleteToast, setShowMedicationDeleteToast] = useState(false)
   const [currentTipIndex, setCurrentTipIndex] = useState(0)
   const [isFading, setIsFading] = useState(false)
+  const [showMore, setShowMore] = useState(false)
 
   // Daily tips array
   const dailyTips = [
@@ -760,8 +761,19 @@ export default function Home() {
 
         {/* More Options */}
         <div className="mb-4 lg:mb-8">
-          <h2 className="text-xl font-semibold font-source text-primary mb-4">More</h2>
-          <div className="grid grid-cols-2 sm:grid-cols-3 gap-4">
+          <button
+            onClick={() => setShowMore(!showMore)}
+            className="flex items-center justify-between w-full text-xl font-semibold font-source text-primary mb-4 hover:opacity-80 transition-opacity"
+          >
+            <span>More</span>
+            {showMore ? (
+              <ChevronDown className="w-5 h-5 transform rotate-180 transition-transform" />
+            ) : (
+              <ChevronDown className="w-5 h-5 transition-transform" />
+            )}
+          </button>
+          {showMore && (
+            <div className="grid grid-cols-2 sm:grid-cols-3 gap-4">
             <Link href="/about" className="card p-6  transition-all">
               <div className="text-center">
                 <div className="w-12 h-12 icon-container dark:bg-gray-700 mx-auto mb-3">
@@ -792,9 +804,17 @@ export default function Home() {
                 <h3 className="font-semibold text-primary">Foods</h3>
               </div>
               </Link>
+
+            <Link href="/medications" className="card p-6  transition-all">
+              <div className="text-center">
+                <div className="w-12 h-12 bg-purple-100 rounded-xl flex items-center justify-center mx-auto mb-3">
+                  <Pill className="w-6 h-6 text-purple-600" />
+                </div>
+                <h3 className="font-semibold text-primary">Your Medications</h3>
+              </div>
+            </Link>
           </div>
-            </div>
-          </div>
+          )}
         </div>
       </div>
     </div>
