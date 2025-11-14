@@ -318,6 +318,18 @@
     @apply w-full px-3 py-2 border rounded-lg focus:outline-none transition-all duration-200 text-left text-base placeholder-slate-400;
   }
 
+  /* Hide browser validation icons */
+  .input-field-wizard::-webkit-validation-bubble-message,
+  .input-field-wizard::-webkit-validation-bubble-icon,
+  .input-field-wizard::-webkit-validation-bubble-arrow {
+    display: none !important;
+  }
+
+  .input-field-wizard:valid,
+  .input-field-wizard:invalid {
+    box-shadow: none !important;
+  }
+
 select.input-field-wizard {
     background-color: var(--bg-input-dark) !important;
     color: var(--text-primary) !important;
@@ -493,6 +505,27 @@ select.input-field-wizard option[value=""] {
     -webkit-box-shadow: 0 0 0 30px white inset !important;
     -webkit-text-fill-color: #374151 !important;
     background-color: white !important;
+  }
+
+  /* Dark mode autofill styling */
+  .dark input:-webkit-autofill,
+  .dark input:-webkit-autofill:hover,
+  .dark input:-webkit-autofill:focus,
+  .dark input:-webkit-autofill:active {
+    -webkit-box-shadow: 0 0 0 1000px #2a2d34 inset !important;
+    -webkit-text-fill-color: var(--text-primary) !important;
+    background-color: #2a2d34 !important;
+    border-radius: 0.5rem !important;
+  }
+
+  .dark input.input-field-wizard:-webkit-autofill,
+  .dark input.input-field-wizard:-webkit-autofill:hover,
+  .dark input.input-field-wizard:-webkit-autofill:focus,
+  .dark input.input-field-wizard:-webkit-autofill:active {
+    -webkit-box-shadow: 0 0 0 1000px #2a2d34 inset !important;
+    -webkit-text-fill-color: var(--text-primary) !important;
+    background-color: #2a2d34 !important;
+    border-radius: 0.5rem !important;
   }
   
   .nav-link {
@@ -1099,9 +1132,63 @@ select.input-field-wizard option[value=""] {
 
 /* Dark mode specific adjustments */
 .dark .react-datepicker__input-container input {
-  background-color: var(--bg-input-dark) !important;
+  background-color: #2a2d34 !important;
   color: var(--text-primary) !important;
   border-color: var(--border-input-dark) !important;
+  box-shadow: none !important;
+  outline: none !important;
+}
+
+.dark .react-datepicker__input-container input:focus {
+  background-color: #2a2d34 !important;
+  color: var(--text-primary) !important;
+  border-color: var(--border-input-dark) !important;
+  box-shadow: none !important;
+  outline: none !important;
+}
+
+.dark .react-datepicker__input-container input.input-field-wizard {
+  background-color: #2a2d34 !important;
+  color: var(--text-primary) !important;
+  border-color: var(--border-input-dark) !important;
+  box-shadow: none !important;
+  outline: none !important;
+}
+
+.dark .react-datepicker__input-container input.input-field-wizard:focus {
+  background-color: #2a2d34 !important;
+  color: var(--text-primary) !important;
+  border-color: var(--border-input-dark) !important;
+  box-shadow: none !important;
+  outline: none !important;
+}
+
+.dark .react-datepicker__input-container input.input-field-wizard:-webkit-autofill,
+.dark .react-datepicker__input-container input.input-field-wizard:-webkit-autofill:hover,
+.dark .react-datepicker__input-container input.input-field-wizard:-webkit-autofill:focus,
+.dark .react-datepicker__input-container input.input-field-wizard:-webkit-autofill:active {
+  -webkit-box-shadow: 0 0 0 1000px #2a2d34 inset !important;
+  -webkit-text-fill-color: var(--text-primary) !important;
+  background-color: #2a2d34 !important;
+  border-radius: 0.5rem !important;
+}
+
+.dark input.input-field-wizard,
+.dark textarea.input-field-wizard {
+  background-color: #2a2d34 !important;
+  color: var(--text-primary) !important;
+  border-color: var(--border-input-dark) !important;
+  box-shadow: none !important;
+  outline: none !important;
+}
+
+.dark input.input-field-wizard:focus,
+.dark textarea.input-field-wizard:focus {
+  background-color: #2a2d34 !important;
+  color: var(--text-primary) !important;
+  border-color: var(--border-input-dark) !important;
+  box-shadow: none !important;
+  outline: none !important;
 }
 
 /* Desktop only - mobile has its own rules in media query */
@@ -1110,6 +1197,57 @@ select.input-field-wizard option[value=""] {
     background-color: var(--bg-card) !important;
     border-color: var(--border-card) !important;
   }
+
+  .dark .react-datepicker__time-container {
+    background-color: var(--bg-card) !important;
+    border-left-color: var(--border-card-inner) !important;
+  }
+
+  .dark .react-datepicker__time {
+    background-color: var(--bg-card) !important;
+  }
+
+  .dark .react-datepicker__time-box {
+    background-color: var(--bg-card) !important;
+  }
+
+  .dark .react-datepicker__time-list {
+    background-color: var(--bg-card) !important;
+  }
+
+  .dark .react-datepicker__time-list-item {
+    background-color: transparent !important;
+    color: var(--text-primary) !important;
+  }
+
+  .dark .react-datepicker__time-list-item:hover {
+    background-color: var(--bg-button-hover) !important;
+    color: var(--text-primary) !important;
+  }
+
+  .dark .react-datepicker__time-list-item--selected {
+    background-color: var(--bg-button-cadet) !important;
+    color: white !important;
+  }
+
+  .dark .react-datepicker__time-caption {
+    color: var(--text-primary) !important;
+  }
+
+  .dark .react-datepicker__time-header {
+    color: var(--text-primary) !important;
+  }
+
+  .dark .react-datepicker__time-container .react-datepicker__time-caption,
+  .dark .react-datepicker__time-container > div:first-child,
+  .dark .react-datepicker__time-container label,
+  .dark .react-datepicker__time-container > div:first-child > div {
+    color: var(--text-primary) !important;
+  }
+
+  .dark .react-datepicker__time-container > *:not(.react-datepicker__time-list) {
+    color: var(--text-primary) !important;
+  }
 }
 
 .dark .react-datepicker__header {
@@ -1117,7 +1255,95 @@ select.input-field-wizard option[value=""] {
   border-bottom-color: var(--border-card-inner) !important;
 }
 
+/* General dark mode time picker styling (applies to all screen sizes) */
+.dark .react-datepicker__time-container {
+  background-color: var(--bg-card) !important;
+  border-left-color: var(--border-card-inner) !important;
+}
+
+.dark .react-datepicker__time {
+  background-color: var(--bg-card) !important;
+}
+
+.dark .react-datepicker__time-box {
+  background-color: var(--bg-card) !important;
+}
+
+.dark .react-datepicker__time-list {
+  background-color: var(--bg-card) !important;
+}
+
+.dark .react-datepicker__time-list-item {
+  background-color: transparent !important;
+  color: var(--text-primary) !important;
+}
+
+.dark .react-datepicker__time-list-item:hover {
+  background-color: var(--bg-button-hover) !important;
+  color: var(--text-primary) !important;
+}
+
+.dark .react-datepicker__time-list-item--selected {
+  background-color: var(--bg-button-cadet) !important;
+  color: white !important;
+}
+
+.dark .react-datepicker__time-caption {
+  color: var(--text-primary) !important;
+}
+
+.dark .react-datepicker__time-header {
+  color: var(--text-primary) !important;
+}
+
+.dark .react-datepicker__time-container .react-datepicker__time-caption,
+.dark .react-datepicker__time-container > div:first-child,
+.dark .react-datepicker__time-container label,
+.dark .react-datepicker__time-container > div:first-child > div {
+  color: var(--text-primary) !important;
+}
+
+/* Target all text in time container except list items (they have their own rules) */
+.dark .react-datepicker__time-container > *:not(.react-datepicker__time-list) {
+  color: var(--text-primary) !important;
+}
+
+/* More aggressive: target all direct children and nested elements in time container header */
+.dark .react-datepicker__time-container > div:first-child,
+.dark .react-datepicker__time-container > div:first-child *,
+.dark .react-datepicker__time-container label,
+.dark .react-datepicker__time-container label * {
+  color: var(--text-primary) !important;
+}
+
 .dark .react-datepicker__day--today {
   background-color: var(--bg-card-inner) !important;
   color: var(--text-cadet-blue) !important;
+}
+
+/* Dark mode scrollbar styling */
+.dark ::-webkit-scrollbar {
+  width: 12px;
+  height: 12px;
+}
+
+.dark ::-webkit-scrollbar-track {
+  background: var(--bg-card);
+  border-radius: 6px;
+}
+
+.dark ::-webkit-scrollbar-thumb {
+  background: var(--border-card-inner);
+  border-radius: 6px;
+  border: 2px solid var(--bg-card);
+}
+
+.dark ::-webkit-scrollbar-thumb:hover {
+  background: var(--border-input-dark);
+}
+
+/* Firefox scrollbar */
+.dark {
+  scrollbar-width: thin;
+  scrollbar-color: var(--border-card-inner) var(--bg-card);
 }

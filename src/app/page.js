@@ -756,14 +756,11 @@ export default function Home() {
           </div>
         </div>
 
-        {/* Section Divider */}
-        <div className="border-t mb-8" style={{borderColor: 'var(--border-primary)'}}></div>
-
         {/* More Options */}
-        <div className="mb-4 lg:mb-8">
+        <div className="mb-8">
           <button
             onClick={() => setShowMore(!showMore)}
-            className="flex items-center justify-between w-full text-xl font-semibold font-source text-primary mb-4 hover:opacity-80 transition-opacity"
+            className="flex items-center justify-between w-full text-xl font-semibold font-source text-primary mb-4 hover:opacity-80 transition-opacity lg:hidden"
           >
             <span>More</span>
             {showMore ? (
@@ -772,8 +769,8 @@ export default function Home() {
               <ChevronDown className="w-5 h-5 transition-transform" />
             )}
           </button>
-          {showMore && (
-            <div className="grid grid-cols-2 sm:grid-cols-3 gap-4">
+          <h2 className="hidden lg:block text-xl font-semibold font-source text-primary mb-4">More</h2>
+          <div className={`grid grid-cols-2 sm:grid-cols-3 gap-4 ${showMore ? '' : 'hidden'} lg:grid`}>
             <Link href="/about" className="card p-6  transition-all">
               <div className="text-center">
                 <div className="w-12 h-12 icon-container dark:bg-gray-700 mx-auto mb-3">
@@ -810,11 +807,15 @@ export default function Home() {
                 <div className="w-12 h-12 bg-purple-100 rounded-xl flex items-center justify-center mx-auto mb-3">
                   <Pill className="w-6 h-6 text-purple-600" />
                 </div>
-                <h3 className="font-semibold text-primary">Your Medications</h3>
+                <h3 className="font-semibold text-primary">Meds</h3>
               </div>
             </Link>
           </div>
-          )}
+        </div>
+
+        {/* Section Divider */}
+        <div className="border-t lg:hidden" style={{borderColor: 'var(--border-primary)'}}></div>
+          </div>
         </div>
       </div>
     </div>

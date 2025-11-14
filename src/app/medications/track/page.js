@@ -364,15 +364,8 @@ function MedicationTrackingWizard() {
     // Create medication tracking entry following the same pattern as symptoms
     const newMedicationTracking = {
       id: `medication-tracking-${Date.now()}`,
-      user_id: user?.id, // Add user_id like symptoms does
+      user_id: user?.id,
       name: 'Medication Tracking',
-      dosage: '',
-      frequency: 'custom',
-      custom_time: '',
-      reminders_enabled: false,
-      notes: 'Medication adherence tracking data',
-      start_date: new Date().toISOString().split('T')[0],
-      end_date: null,
       missed_medications_list: cleanedData.missedMedicationsList,
       nsaid_list: cleanedData.nsaidList,
       antibiotic_list: cleanedData.antibioticList,
@@ -382,7 +375,7 @@ function MedicationTrackingWizard() {
     try {
       // Save to Supabase - following the exact same pattern as symptoms
       const { error } = await supabase
-        .from(TABLES.MEDICATIONS)
+        .from(TABLES.TRACK_MEDICATIONS)
         .insert([newMedicationTracking])
 
       if (error) throw error

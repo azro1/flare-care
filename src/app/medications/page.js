@@ -1,33 +1,34 @@
 'use client'
 
 import { useState, useEffect } from 'react'
-import { useDataSync } from '@/lib/useDataSync'
 import ConfirmationModal from '@/components/ConfirmationModal'
-import SyncSettings from '@/components/SyncSettings'
 import reminderService from '@/lib/reminderService'
 import DatePicker from 'react-datepicker'
 import 'react-datepicker/dist/react-datepicker.css'
 import ProtectedRoute from '@/components/ProtectedRoute'
 import { sanitizeMedicationName, sanitizeNotes } from '@/lib/sanitize'
-import { Pill } from 'lucide-react'
+import { Pill, ChevronDown } from 'lucide-react'
+import { supabase, TABLES } from '@/lib/supabase'
+import { useAuth } from '@/lib/AuthContext'
 
 function MedicationsPageContent() {
-  const { data: medications, setData: setMedications, deleteData: deleteMedication, syncEnabled, setSyncEnabled, isOnline, isSyncing, syncToCloud, fetchFromCloud } = useDataSync('flarecare-medications', [])
+  const { user } = useAuth()
+  const [medications, setMedications] = useState([])
+  const [isLoading, setIsLoading] = useState(true)
   const [isAdding, setIsAdding] = useState(false)
   const [editingId, setEditingId] = useState(null)
   const [deleteModal, setDeleteModal] = useState({ isOpen: false, id: null })
+  const [expandedMedications, setExpandedMedications] = useState(new Set())
   const [formData, setFormData] = useState({
     name: '',
     dosage: '',
     timeOfDay: '',
-    customTime: '',
     remindersEnabled: false,
     notes: ''
   })
 
 
   const timeOptions = [
-    { value: 'custom', label: 'Custom Time' },
     { value: '07:00', label: '07:00' },
     { value: '08:00', label: '08:00' },
     { value: '09:00', label: '09:00' },
@@ -47,42 +48,93 @@ function MedicationsPageContent() {
     { value: 'as-needed', label: 'As Needed' }
   ]
 
-  const handleSubmit = (e) => {
+  const handleSubmit = async (e) => {
     e.preventDefault()
     if (!formData.name.trim()) {
       alert('Please enter a medication name.')
       return
     }
 
-    if (editingId) {
-      // Update existing medication
-      setMedications(medications.map(med => 
-        med.id === editingId 
-          ? { ...med, ...formData, name: sanitizeMedicationName(formData.name), notes: sanitizeNotes(formData.notes), updatedAt: new Date().toISOString() }
-          : med
-      ))
-      setEditingId(null)
-    } else {
-      // Add new medication
-      const newMedication = {
-        id: Date.now().toString(),
-        ...formData,
-        name: sanitizeMedicationName(formData.name),
-        notes: sanitizeNotes(formData.notes),
-        createdAt: new Date().toISOString()
-      }
-      setMedications([...medications, newMedication])
-    }
+    try {
+      if (editingId) {
+        // Update existing medication
+        const updatedMedication = {
+          name: sanitizeMedicationName(formData.name),
+          dosage: formData.dosage,
+          time_of_day: formData.timeOfDay,
+          reminders_enabled: formData.remindersEnabled,
+          notes: sanitizeNotes(formData.notes)
+        }
 
-    setFormData({
-      name: '',
-      dosage: '',
-      timeOfDay: '7:00',
-      customTime: '',
-      remindersEnabled: true,
-      notes: ''
-    })
-    setIsAdding(false)
+        const { error } = await supabase
+          .from(TABLES.MEDICATIONS)
+          .update(updatedMedication)
+          .eq('id', parseInt(editingId))
+          .eq('user_id', user?.id)
+
+        if (error) throw error
+
+        // Update local state
+        const updatedMedications = medications.map(med => 
+          med.id === editingId 
+            ? { ...med, ...formData, name: sanitizeMedicationName(formData.name), notes: sanitizeNotes(formData.notes), updatedAt: new Date().toISOString() }
+            : med
+        )
+        setMedications(updatedMedications)
+        
+        // Also save to localStorage for reports
+        localStorage.setItem('flarecare-medications', JSON.stringify(updatedMedications))
+        setEditingId(null)
+      } else {
+        // Add new medication
+        const newMedication = {
+          user_id: user?.id,
+          name: sanitizeMedicationName(formData.name),
+          dosage: formData.dosage,
+          time_of_day: formData.timeOfDay,
+          reminders_enabled: formData.remindersEnabled,
+          notes: sanitizeNotes(formData.notes)
+        }
+
+        // Save to Supabase
+        const { data, error } = await supabase
+          .from(TABLES.MEDICATIONS)
+          .insert([newMedication])
+          .select()
+
+        if (error) throw error
+
+        // Update local state (map back to camelCase for local use)
+        const insertedMed = data[0]
+        const localMedication = {
+          id: insertedMed.id.toString(),
+          name: insertedMed.name,
+          dosage: insertedMed.dosage || '',
+          timeOfDay: insertedMed.time_of_day || '',
+          remindersEnabled: insertedMed.reminders_enabled !== false,
+          notes: insertedMed.notes || '',
+          createdAt: insertedMed.created_at,
+          updatedAt: insertedMed.updated_at
+        }
+        const updatedMedications = [localMedication, ...medications]
+        setMedications(updatedMedications)
+        
+        // Also save to localStorage for reports
+        localStorage.setItem('flarecare-medications', JSON.stringify(updatedMedications))
+      }
+
+      setFormData({
+        name: '',
+        dosage: '',
+        timeOfDay: '7:00',
+        remindersEnabled: true,
+        notes: ''
+      })
+      setIsAdding(false)
+    } catch (error) {
+      console.error('Error saving medication:', error)
+      alert('Failed to save medication. Please try again.')
+    }
   }
 
   const handleInputChange = async (e) => {
@@ -109,7 +161,6 @@ function MedicationsPageContent() {
       name: medication.name,
       dosage: medication.dosage,
       timeOfDay: medication.timeOfDay || '7:00',
-      customTime: medication.customTime || '',
       remindersEnabled: medication.remindersEnabled !== false,
       notes: medication.notes || ''
     })
@@ -122,7 +173,6 @@ function MedicationsPageContent() {
       name: '',
       dosage: '',
       timeOfDay: '',
-      customTime: '',
       remindersEnabled: false,
       notes: ''
     })
@@ -135,13 +185,56 @@ function MedicationsPageContent() {
       name: '',
       dosage: '',
       timeOfDay: '',
-      customTime: '',
       remindersEnabled: false,
       notes: ''
     })
     setEditingId(null)
     setIsAdding(false)
   }
+
+  // Fetch medications from Supabase on load
+  useEffect(() => {
+    const fetchMedications = async () => {
+      if (!user?.id) {
+        setIsLoading(false)
+        return
+      }
+
+      setIsLoading(true)
+      try {
+        const { data, error } = await supabase
+          .from(TABLES.MEDICATIONS)
+          .select('*')
+          .eq('user_id', user.id)
+          .order('created_at', { ascending: false })
+
+        if (error) throw error
+
+        // Transform to camelCase for local use
+        const transformedMedications = data.map(med => ({
+          id: med.id.toString(),
+          name: med.name,
+          dosage: med.dosage || '',
+          timeOfDay: med.time_of_day || '',
+          remindersEnabled: med.reminders_enabled !== false,
+          notes: med.notes || '',
+          createdAt: med.created_at,
+          updatedAt: med.updated_at
+        }))
+
+        setMedications(transformedMedications)
+        
+        // Also save to localStorage for reports
+        localStorage.setItem('flarecare-medications', JSON.stringify(transformedMedications))
+      } catch (error) {
+        console.error('Error fetching medications:', error)
+      } finally {
+        setIsLoading(false)
+      }
+    }
+
+    fetchMedications()
+  }, [user?.id])
 
   // Update global reminder service when medications change
   useEffect(() => {
@@ -151,7 +244,6 @@ function MedicationsPageContent() {
       console.log(`Medication ${index}:`, {
         name: med.name,
         timeOfDay: med.timeOfDay,
-        customTime: med.customTime,
         remindersEnabled: med.remindersEnabled,
         updatedAt: med.updatedAt
       })
@@ -176,9 +268,40 @@ function MedicationsPageContent() {
     setDeleteModal({ isOpen: true, id })
   }
 
+  const toggleMedicationExpand = (id) => {
+    setExpandedMedications(prev => {
+      const newSet = new Set(prev)
+      if (newSet.has(id)) {
+        newSet.delete(id)
+      } else {
+        newSet.add(id)
+      }
+      return newSet
+    })
+  }
+
   const confirmDelete = async () => {
-    if (deleteModal.id) {
-      await deleteMedication(deleteModal.id)
+    if (!deleteModal.id || !user?.id) return
+
+    try {
+      const { error } = await supabase
+        .from(TABLES.MEDICATIONS)
+        .delete()
+        .eq('id', parseInt(deleteModal.id))
+        .eq('user_id', user.id)
+
+      if (error) throw error
+
+      // Update local state
+      const updatedMedications = medications.filter(med => med.id !== deleteModal.id)
+      setMedications(updatedMedications)
+      
+      // Also update localStorage for reports
+      localStorage.setItem('flarecare-medications', JSON.stringify(updatedMedications))
+      setDeleteModal({ isOpen: false, id: null })
+    } catch (error) {
+      console.error('Error deleting medication:', error)
+      alert('Failed to delete medication. Please try again.')
     }
   }
 
@@ -204,23 +327,25 @@ function MedicationsPageContent() {
       '20:00': 'bg-purple-100 text-purple-800',
       '21:00': 'bg-blue-100 text-blue-800',
       '22:00': 'bg-blue-100 text-blue-800',
-      'as-needed': 'bg-gray-100 text-gray-800',
-      'custom': 'bg-indigo-100 text-indigo-800'
+      'as-needed': 'bg-gray-100 text-gray-800'
     }
     return colors[timeOfDay] || 'bg-gray-100 text-gray-800'
   }
 
   const getTimeOfDayLabel = (medication) => {
-    if (medication.timeOfDay === 'custom' && medication.customTime) {
-      const time = new Date(`2000-01-01T${medication.customTime}`)
+    const option = timeOptions.find(opt => opt.value === medication.timeOfDay)
+    if (option) return option.label
+    // If it's a time string (HH:mm format), format it nicely
+    if (medication.timeOfDay && medication.timeOfDay.match(/^\d{2}:\d{2}$/)) {
+      const [hours, minutes] = medication.timeOfDay.split(':')
+      const time = new Date(`2000-01-01T${hours}:${minutes}`)
       return time.toLocaleTimeString('en-US', { 
         hour: 'numeric', 
         minute: '2-digit',
         hour12: true 
       })
     }
-    const option = timeOptions.find(opt => opt.value === medication.timeOfDay)
-    return option ? option.label : medication.timeOfDay
+    return medication.timeOfDay || 'Not set'
   }
 
   const formatUKDate = (dateString) => {
@@ -245,16 +370,6 @@ function MedicationsPageContent() {
               Add your prescribed medications, set up reminders, and keep track of your medication schedule.
             </p>
           </div>
-          <div className="sm:ml-6 flex-shrink-0">
-            <SyncSettings 
-              syncEnabled={syncEnabled}
-              setSyncEnabled={setSyncEnabled}
-              isOnline={isOnline}
-              isSyncing={isSyncing}
-              syncToCloud={syncToCloud}
-              fetchFromCloud={fetchFromCloud}
-            />
-          </div>
         </div>
       </div>
 
@@ -262,13 +377,13 @@ function MedicationsPageContent() {
       <div className="card p-4 sm:p-6 md:p-8 mb-8 sm:mb-12 min-w-0">
         <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 mb-6 sm:mb-8">
           <div className="flex items-center">
-            <div className="hidden sm:flex w-12 h-12 icon-container dark:bg-gray-700 rounded-xl items-center justify-center mr-4">
+            <div className="hidden sm:flex w-12 h-12 bg-purple-100 rounded-xl items-center justify-center mr-4">
               {isAdding ? (
-                <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <svg className="w-6 h-6 text-purple-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z" />
                 </svg>
               ) : (
-                <Pill className="w-6 h-6" />
+                <Pill className="w-6 h-6 text-purple-600" />
               )}
             </div>
             <h2 className="text-xl font-semibold font-source text-primary">
@@ -278,10 +393,7 @@ function MedicationsPageContent() {
           {!isAdding && (
             <button
               onClick={startAdding}
-              className="px-4 py-3 rounded-2xl font-medium font-roboto shadow-lg hover:shadow-xl transition-all duration-300 transform hover:scale-105 active:scale-95 self-start sm:self-auto"
-              style={{ backgroundColor: 'var(--bg-button-cadet)', color: 'var(--text-white)' }}
-              onMouseEnter={(e) => e.target.style.backgroundColor = 'var(--bg-button-cadet-hover)'}
-              onMouseLeave={(e) => e.target.style.backgroundColor = 'var(--bg-button-cadet)'}
+              className="button-cadet px-4 py-2 text-lg font-semibold rounded-lg transition-colors self-start sm:self-auto"
             >
               <svg className="w-5 h-5 mr-2 inline" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 6v6m0 0v6m0-6h6m-6 0H6" />
@@ -294,7 +406,7 @@ function MedicationsPageContent() {
         {/* Add/Edit Medication Form */}
         {isAdding && (
           <div className="mb-8 min-w-0">
-            <form onSubmit={handleSubmit} className="space-y-6">
+            <form onSubmit={handleSubmit} className="space-y-6" autoComplete="off">
               <div className="grid lg:grid-cols-2 gap-6 min-w-0">
                 <div>
                   <label htmlFor="name" className="block text-base font-semibold font-roboto text-primary mb-3">
@@ -308,6 +420,7 @@ function MedicationsPageContent() {
                     onChange={handleInputChange}
                     placeholder="Medication name"
                     className="input-field-wizard"
+                    autoComplete="off"
                     required
                   />
                 </div>
@@ -324,6 +437,7 @@ function MedicationsPageContent() {
                     onChange={handleInputChange}
                     placeholder="e.g., 500mg"
                     className="input-field-wizard"
+                    autoComplete="off"
                   />
                 </div>
               </div>
@@ -334,7 +448,7 @@ function MedicationsPageContent() {
                     Reminder Time
                   </label>
                   <DatePicker
-                    selected={formData.timeOfDay && formData.timeOfDay !== 'custom' && formData.timeOfDay !== 'as-needed' 
+                    selected={formData.timeOfDay && formData.timeOfDay !== 'as-needed' && formData.timeOfDay.match(/^\d{2}:\d{2}$/)
                       ? new Date(`2000-01-01T${formData.timeOfDay}`) 
                       : null}
                     onChange={(time) => {
@@ -356,46 +470,11 @@ function MedicationsPageContent() {
                     minTime={new Date(2000, 0, 1, 0, 0)}
                     maxTime={new Date(2000, 0, 1, 23, 59)}
                     className="input-field-wizard"
+                    calendarClassName="react-datepicker-responsive"
+                    enableTabLoop={false}
+                    autoComplete="off"
                   />
                 </div>
-
-                {formData.timeOfDay === 'custom' && (
-                  <div>
-                    <label className="block text-base font-semibold font-roboto text-primary mb-3">
-                      Custom Time
-                    </label>
-                    <DatePicker
-                      selected={formData.customTime 
-                        ? new Date(`2000-01-01T${formData.customTime}`) 
-                        : null}
-                      onChange={(time) => {
-                        if (time) {
-                          const hours = time.getHours().toString().padStart(2, '0')
-                          const minutes = time.getMinutes().toString().padStart(2, '0')
-                          setFormData(prev => ({ ...prev, customTime: `${hours}:${minutes}` }))
-                        } else {
-                          setFormData(prev => ({ ...prev, customTime: '' }))
-                        }
-                      }}
-                      showTimeSelect
-                      showTimeSelectOnly
-                      timeIntervals={1}
-                      timeCaption="Time"
-                      dateFormat="HH:mm"
-                      timeFormat="HH:mm"
-                      placeholderText="Select time"
-                      minTime={new Date(2000, 0, 1, 0, 0)}
-                      maxTime={new Date(2000, 0, 1, 23, 59)}
-                      className="w-full px-2 py-1.5 rounded-lg focus:outline-none focus:ring-4 transition-all duration-200 shadow-sm hover:shadow-md"
-                      style={{ 
-                        backgroundColor: 'var(--bg-input)', 
-                        border: '2px solid',
-                        borderColor: 'var(--border-input)',
-                        color: 'var(--text-primary)'
-                      }}
-                    />
-                  </div>
-                )}
               </div>
 
               <div className="flex items-start sm:items-center card-inner rounded-2xl p-4">
@@ -428,16 +507,14 @@ function MedicationsPageContent() {
                   onChange={handleInputChange}
                   placeholder="Any special instructions, side effects to watch for, etc."
                   className="w-full px-4 py-3 input-field-wizard resize-none"
+                  autoComplete="off"
                 />
               </div>
 
               <div className="flex flex-col sm:flex-row gap-4 pt-4">
                 <button 
                   type="submit" 
-                  className="px-8 py-3 rounded-2xl font-medium font-roboto shadow-lg hover:shadow-xl transition-all duration-300 transform hover:scale-105 active:scale-95"
-                  style={{ backgroundColor: 'var(--bg-button-cadet)', color: 'var(--text-white)' }}
-                  onMouseEnter={(e) => e.target.style.backgroundColor = 'var(--bg-button-cadet-hover)'}
-                  onMouseLeave={(e) => e.target.style.backgroundColor = 'var(--bg-button-cadet)'}
+                  className="button-cadet px-4 py-2 text-lg font-semibold rounded-lg transition-colors"
                 >
                   <svg className="w-5 h-5 mr-2 inline" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
@@ -447,13 +524,11 @@ function MedicationsPageContent() {
                 <button 
                   type="button" 
                   onClick={cancelEdit} 
-                  className="px-8 py-3 rounded-2xl font-medium font-roboto shadow-lg hover:shadow-xl transition-all duration-300 transform hover:scale-105 active:scale-95"
+                  className="px-4 py-2 text-lg font-semibold rounded-lg transition-colors hover:opacity-80"
                   style={{ 
                     backgroundColor: 'var(--bg-button-cancel)', 
                     color: 'var(--text-primary)'
                   }}
-                  onMouseEnter={(e) => e.target.style.backgroundColor = 'var(--bg-button-cancel-hover)'}
-                  onMouseLeave={(e) => e.target.style.backgroundColor = 'var(--bg-button-cancel)'}
                 >
                   <svg className="w-5 h-5 mr-2 inline" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
@@ -465,7 +540,11 @@ function MedicationsPageContent() {
           </div>
         )}
 
-        {medications.filter(med => med.name !== 'Medication Tracking').length === 0 ? (
+        {isLoading ? (
+          <div className="text-center py-12 text-secondary">
+            <p className="font-roboto">Loading medications...</p>
+          </div>
+        ) : medications.length === 0 ? (
           <div className="text-center py-12 text-secondary">
             <div className="card-inner rounded-full w-20 h-20 mx-auto mb-6 flex items-center justify-center">
               <Pill className="w-10 h-10 text-secondary" />
@@ -475,82 +554,116 @@ function MedicationsPageContent() {
           </div>
         ) : (
           <div className="space-y-6 sm:space-y-8 min-w-0">
-            {medications.filter(med => med.name !== 'Medication Tracking').map((medication) => (
-              <div key={medication.id} className="card p-4 sm:p-6 min-w-0">
-                <div className="flex justify-between items-start mb-4">
-                  <div className="flex-1 min-w-0">
-                    <h3 className="text-lg font-semibold font-source text-primary mb-2 break-words">
-                      {medication.name}
-                    </h3>
-                    {medication.dosage && (
-                      <p className="text-base text-secondary mb-3 font-roboto break-words">
-                        <span className="font-semibold">Dosage:</span> {medication.dosage}
-                      </p>
-                    )}
-                    <div className="flex flex-wrap items-center gap-3">
-                      {medication.timeOfDay && (
-                        <span className={`inline-flex items-center px-3 py-1.5 rounded-full text-sm font-medium font-roboto ${getTimeOfDayColor(medication.timeOfDay)}`}>
-                          <svg className="w-4 h-4 mr-1.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" />
-                          </svg>
-                          {getTimeOfDayLabel(medication)}
-                        </span>
-                      )}
-                      {medication.remindersEnabled !== false && (
-                        <span className="inline-flex items-center px-3 py-1.5 rounded-full text-sm font-medium font-roboto card-inner">
-                          <svg className="w-4 h-4 mr-1.5" fill="currentColor" viewBox="0 0 20 20">
-                            <path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clipRule="evenodd" />
-                          </svg>
-                          <span style={{ color: 'var(--text-cadet-blue)' }}>Reminders On</span>
-                        </span>
+            {medications.map((medication) => {
+              const isExpanded = expandedMedications.has(medication.id)
+              return (
+                <div key={medication.id} className="card-inner p-4 sm:p-6 min-w-0 rounded-xl">
+                  <div className="flex justify-between items-start mb-4">
+                    <div className="flex-1 min-w-0">
+                      <div className="flex items-center gap-2 mb-2">
+                        <h3 className="text-lg font-semibold font-source text-primary break-words">
+                          {medication.name}
+                        </h3>
+                        <button
+                          onClick={() => toggleMedicationExpand(medication.id)}
+                          className="flex-shrink-0 p-1 rounded transition-colors hover:bg-opacity-20"
+                          style={{ color: 'var(--text-icon)' }}
+                          title={isExpanded ? "Collapse details" : "Expand details"}
+                        >
+                          <ChevronDown 
+                            className={`w-5 h-5 transition-transform duration-200 ${isExpanded ? 'rotate-180' : ''}`}
+                          />
+                        </button>
+                      </div>
+                      {isExpanded && (
+                        <>
+                          {medication.dosage && (
+                            <p className="text-base text-secondary mb-3 font-roboto break-words">
+                              <span className="font-semibold">Dosage:</span> {medication.dosage}
+                            </p>
+                          )}
+                          <div className="flex flex-wrap items-center gap-3">
+                            {medication.timeOfDay && (
+                              <span className={`inline-flex items-center px-3 py-1.5 rounded-full text-sm font-medium font-roboto ${getTimeOfDayColor(medication.timeOfDay)}`}>
+                                <svg className="w-4 h-4 mr-1.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" />
+                                </svg>
+                                {getTimeOfDayLabel(medication)}
+                              </span>
+                            )}
+                            {medication.remindersEnabled !== false && (
+                              <span 
+                                className="inline-flex items-center px-3 py-1.5 rounded-full text-sm font-medium font-roboto"
+                                style={{ 
+                                  backgroundColor: 'var(--bg-card)',
+                                  color: 'var(--text-cadet-blue)'
+                                }}
+                              >
+                                <svg className="w-4 h-4 mr-1.5" fill="currentColor" viewBox="0 0 20 20">
+                                  <path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clipRule="evenodd" />
+                                </svg>
+                                <span>Reminders On</span>
+                              </span>
+                            )}
+                          </div>
+                        </>
                       )}
                     </div>
-                  </div>
-                  <div className="flex space-x-2 ml-4 flex-shrink-0">
-                    <button
-                      onClick={() => startEdit(medication)}
-                      className="w-10 h-10 icon-container dark:bg-gray-700 rounded-xl flex items-center justify-center transition-all duration-200 shadow-sm hover:shadow-md"
-                      title="Edit medication"
-                    >
-                      <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z" />
-                      </svg>
-                    </button>
-                    <button
-                      onClick={() => handleDeleteMedication(medication.id)}
-                      className="w-10 h-10 icon-container dark:bg-gray-700 rounded-xl flex items-center justify-center transition-all duration-200 shadow-sm hover:shadow-md"
-                      title="Delete medication"
-                    >
-                      <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
-                      </svg>
-                    </button>
-                  </div>
-                </div>
-
-                {medication.notes && (
-                  <div className="mt-4 pt-4" style={{ borderTop: '1px solid', borderColor: 'var(--border-card-inner)' }}>
-                    <div className="card-inner rounded-xl p-3">
-                      <p className="text-sm text-secondary font-roboto">
-                        <span className="font-semibold text-primary">Notes:</span> {medication.notes}
-                      </p>
+                    <div className="flex space-x-2 ml-4 flex-shrink-0">
+                      <button
+                        onClick={() => startEdit(medication)}
+                        className="w-10 h-10 rounded-xl flex items-center justify-center transition-all duration-200 shadow-sm hover:shadow-md"
+                        style={{ 
+                          backgroundColor: 'var(--bg-card)',
+                          color: 'var(--text-icon)'
+                        }}
+                        title="Edit medication"
+                      >
+                        <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z" />
+                        </svg>
+                      </button>
+                      <button
+                        onClick={() => handleDeleteMedication(medication.id)}
+                        className="w-10 h-10 rounded-xl flex items-center justify-center transition-all duration-200 shadow-sm hover:shadow-md"
+                        style={{ 
+                          backgroundColor: 'var(--bg-card)',
+                          color: 'var(--text-icon)'
+                        }}
+                        title="Delete medication"
+                      >
+                        <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
+                        </svg>
+                      </button>
                     </div>
                   </div>
-                )}
 
-                <div className="mt-4 pt-4 text-xs text-tertiary font-roboto" style={{ borderTop: '1px solid', borderColor: 'var(--border-card-inner)' }}>
-                  <div className="flex items-center">
-                    <svg className="w-3 h-3 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" />
-                    </svg>
-                    Added {formatUKDate(medication.createdAt)}
-                    {medication.updatedAt && medication.updatedAt !== medication.createdAt && (
-                      <span> • Updated {formatUKDate(medication.updatedAt)}</span>
-                    )}
-                  </div>
+                  {isExpanded && medication.notes && (
+                    <div className="mt-4 pt-4" style={{ borderTop: '1px solid', borderColor: 'var(--border-card-inner)' }}>
+                      <div className="card-inner rounded-xl p-3">
+                        <p className="text-sm text-secondary font-roboto">
+                          <span className="font-semibold text-primary">Notes:</span> {medication.notes}
+                        </p>
+                      </div>
+                    </div>
+                  )}
+                  {isExpanded && (
+                    <div className="mt-4 pt-4 text-xs text-tertiary font-roboto" style={{ borderTop: '1px solid', borderColor: 'var(--border-card-inner)' }}>
+                      <div className="flex items-center">
+                        <svg className="w-3 h-3 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" />
+                        </svg>
+                        Added {formatUKDate(medication.createdAt)}
+                        {medication.updatedAt && medication.updatedAt !== medication.createdAt && (
+                          <span> • Updated {formatUKDate(medication.updatedAt)}</span>
+                        )}
+                      </div>
+                    </div>
+                  )}
                 </div>
-              </div>
-            ))}
+              )
+            })}
           </div>
         )}
       </div>

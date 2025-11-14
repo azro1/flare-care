@@ -35,7 +35,7 @@ function TrackedMedicationDetails() {
     
     setIsDeleting(true)
     try {
-      const result = await deleteFromSupabase(TABLES.MEDICATIONS, trackedData.id, user.id)
+      const result = await deleteFromSupabase(TABLES.TRACK_MEDICATIONS, trackedData.id, user.id)
       
       if (result.success) {
         // Set redirecting flag to prevent useEffect redirect

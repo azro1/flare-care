@@ -8,7 +8,8 @@ export const supabase = createClient(supabaseUrl, supabaseAnonKey)
 // Database schema for Supabase
 export const TABLES = {
   SYMPTOMS: 'symptoms',
-  MEDICATIONS: 'medications',
+  MEDICATIONS: 'medications',  // This now points to the new table
+  TRACK_MEDICATIONS: 'track_medications',  // Add this for the renamed table
   USER_SETTINGS: 'user_settings',
   USER_PREFERENCES: 'user_preferences'
 }

@@ -49,10 +49,7 @@ class ReminderService {
     this.medications.forEach(med => {
       if (!med.remindersEnabled || med.timeOfDay === 'as-needed') return
 
-      let targetTime = med.timeOfDay
-      if (med.timeOfDay === 'custom' && med.customTime) {
-        targetTime = med.customTime
-      }
+      const targetTime = med.timeOfDay
 
       // Calculate exact time until reminder
       const now = new Date()
@@ -122,10 +119,7 @@ class ReminderService {
       if (!med.remindersEnabled) return false
       if (med.timeOfDay === 'as-needed') return false
       
-      let targetTime = med.timeOfDay
-      if (med.timeOfDay === 'custom' && med.customTime) {
-        targetTime = med.customTime
-      }
+      const targetTime = med.timeOfDay
       
       // Check if current time exactly matches target time
       const isTimeMatch = currentTime === targetTime
@@ -164,10 +158,7 @@ class ReminderService {
       
       // Mark these medications as notified today
       dueMedications.forEach(med => {
-        let targetTime = med.timeOfDay
-        if (med.timeOfDay === 'custom' && med.customTime) {
-          targetTime = med.customTime
-        }
+        const targetTime = med.timeOfDay
         const notificationKey = `${med.id}-${targetTime}-${currentDate}`
         this.lastNotificationTime[notificationKey] = currentDate
       })
