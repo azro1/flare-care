@@ -184,15 +184,6 @@
     background-color: var(--bg-card-inner);
   }
 
-  /* Ensure all cards have solid backgrounds on mobile to prevent scroll flash */
-  .card {
-    background-color: var(--bg-card) !important;
-  }
-
-  .card .card-inner {
-    background-color: var(--bg-card-inner) !important;
-  }
-
   /* Force body/html to have dark background in dark mode on mobile to prevent white flash */
   .dark body,
   .dark html {
