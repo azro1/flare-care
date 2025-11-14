@@ -192,6 +192,13 @@
   .card .card-inner {
     background-color: var(--bg-card-inner) !important;
   }
+
+  /* Force body/html to have dark background in dark mode on mobile to prevent white flash */
+  .dark body,
+  .dark html {
+    background-color: var(--bg-primary) !important;
+    background-image: none !important;
+  }
 }
 
 @layer components {
