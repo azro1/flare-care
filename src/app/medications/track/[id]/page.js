@@ -3,32 +3,64 @@
 import { useState, useEffect } from 'react'
 import { useRouter } from 'next/navigation'
 import ProtectedRoute from '@/components/ProtectedRoute'
-import { useDataSync } from '@/lib/useDataSync'
 import { useAuth } from '@/lib/AuthContext'
-import { deleteFromSupabase, TABLES } from '@/lib/supabase'
+import { supabase, deleteFromSupabase, TABLES } from '@/lib/supabase'
 
 function TrackedMedicationDetails() {
   const router = useRouter()
   const { user } = useAuth()
-  const { data: medications, setData: setMedications } = useDataSync('flarecare-medications', [])
   const [trackedData, setTrackedData] = useState(null)
   const [isDeleting, setIsDeleting] = useState(false)
   const [showDeleteModal, setShowDeleteModal] = useState(false)
   const [isRedirecting, setIsRedirecting] = useState(false)
 
   useEffect(() => {
-    if (typeof window !== 'undefined' && medications.length > 0) {
+    const fetchTrackedMedication = async () => {
+      if (!user?.id || isRedirecting) return
+      
       const medicationId = window.location.pathname.split('/').pop()
-      // Find medication tracking entry from Supabase data
-      const found = medications.find(med => med.id === medicationId && med.name === 'Medication Tracking')
-      if (found) {
-        setTrackedData(found)
-      } else if (!isRedirecting) {
-        // If not found, redirect to dashboard
-        router.push('/')
+      
+      try {
+        const { data, error } = await supabase
+          .from(TABLES.TRACK_MEDICATIONS)
+          .select('*')
+          .eq('id', medicationId)
+          .eq('user_id', user.id)
+          .single()
+
+        if (error) {
+          // If record not found (PGRST116) or any other error, redirect
+          if (error.code === 'PGRST116' || error.message?.includes('No rows')) {
+            // Record doesn't exist, redirect to dashboard
+            if (!isRedirecting) {
+              router.push('/')
+            }
+            return
+          }
+          throw error
+        }
+
+        if (data) {
+          setTrackedData(data)
+        } else if (!isRedirecting) {
+          // If not found, redirect to dashboard
+          router.push('/')
+        }
+      } catch (error) {
+        // Only log if it's not a "not found" error
+        if (error.code !== 'PGRST116' && !error.message?.includes('No rows')) {
+          console.error('Error fetching tracked medication:', error)
+        }
+        if (!isRedirecting) {
+          router.push('/')
+        }
       }
     }
-  }, [medications, router, isRedirecting])
+
+    if (typeof window !== 'undefined') {
+      fetchTrackedMedication()
+    }
+  }, [user?.id, router, isRedirecting])
 
   const handleDelete = async () => {
     if (!trackedData || !user) return
@@ -41,9 +73,15 @@ function TrackedMedicationDetails() {
         // Set redirecting flag to prevent useEffect redirect
         setIsRedirecting(true)
         
-        // Remove from local state
-        const updatedMedications = medications.filter(m => m.id !== trackedData.id)
-        setMedications(updatedMedications)
+        // Store deletion activity for Recent Activity
+        const today = new Date().toISOString().split('T')[0]
+        const deletedKey = `flarecare-tracked-medication-deleted-${today}`
+        localStorage.setItem(deletedKey, JSON.stringify({
+          timestamp: new Date().toISOString()
+        }))
+        
+        // Dispatch custom event to notify dashboard
+        window.dispatchEvent(new Event('tracked-medication-deleted'))
         
         // Set delete toast flag and redirect to dashboard
         localStorage.setItem('showMedicationDeleteToast', 'true')

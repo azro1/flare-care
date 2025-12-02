@@ -43,6 +43,16 @@ function SymptomDetailContent() {
         const updatedSymptoms = symptoms.filter(s => s.id !== symptom.id)
         setSymptoms(updatedSymptoms)
         
+        // Store deletion activity for Recent Activity
+        const today = new Date().toISOString().split('T')[0]
+        const deletedKey = `flarecare-symptom-deleted-${today}`
+        localStorage.setItem(deletedKey, JSON.stringify({
+          timestamp: new Date().toISOString()
+        }))
+        
+        // Dispatch custom event to notify dashboard
+        window.dispatchEvent(new Event('symptom-deleted'))
+        
         // Set delete toast flag and redirect to dashboard
         localStorage.setItem('showDeleteToast', 'true')
         router.push('/')

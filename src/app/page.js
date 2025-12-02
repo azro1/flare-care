@@ -30,6 +30,8 @@ export default function Home() {
   const [medicationAdded, setMedicationAdded] = useState(null)
   const [medicationUpdated, setMedicationUpdated] = useState(null)
   const [medicationDeleted, setMedicationDeleted] = useState(null)
+  const [symptomDeleted, setSymptomDeleted] = useState(null)
+  const [trackedMedicationDeleted, setTrackedMedicationDeleted] = useState(null)
   const [individualMedicationTakings, setIndividualMedicationTakings] = useState([])
 
   // Daily tips array
@@ -103,12 +105,38 @@ export default function Home() {
 
   }, [])
 
-  // Load tracked medications from Supabase medications data
+  // Fetch tracked medications directly from Supabase (same as symptoms)
   useEffect(() => {
-    // Filter medication tracking entries from medications data
-    const medicationTrackingEntries = medications.filter(med => med.name === 'Medication Tracking')
-    setTrackedMedications(medicationTrackingEntries.sort((a, b) => new Date(b.created_at) - new Date(a.created_at)))
-  }, [medications, showMedicationToast]) // Reload when medications change or medication is added
+    const fetchTrackedMedications = async () => {
+      if (!user?.id) return
+
+      try {
+        const { data, error } = await supabase
+          .from(TABLES.TRACK_MEDICATIONS)
+          .select('*')
+          .eq('user_id', user.id)
+          .order('created_at', { ascending: false })
+
+        if (error) throw error
+
+        if (data) {
+          setTrackedMedications(data)
+        }
+      } catch (error) {
+        console.error('Error fetching tracked medications:', error)
+      }
+    }
+
+    fetchTrackedMedications()
+
+    // Refresh when window gains focus (user navigates back to dashboard)
+    const handleFocus = () => {
+      fetchTrackedMedications()
+    }
+    
+    window.addEventListener('focus', handleFocus)
+    return () => window.removeEventListener('focus', handleFocus)
+  }, [user?.id, showMedicationToast])
 
   // Fetch medications from Supabase (excluding "Medication Tracking" entries)
   useEffect(() => {
@@ -152,6 +180,8 @@ export default function Home() {
         const activityKey = `flarecare-medication-added-${today}`
         const updatedKey = `flarecare-medication-updated-${today}`
         const deletedKey = `flarecare-medication-deleted-${today}`
+        const symptomDeletedKey = `flarecare-symptom-deleted-${today}`
+        const trackedMedDeletedKey = `flarecare-tracked-medication-deleted-${today}`
         const individualTakingsKey = `flarecare-medication-individual-takings-${today}`
         for (let i = 0; i < localStorage.length; i++) {
           const key = localStorage.key(i)
@@ -161,6 +191,8 @@ export default function Home() {
             (key.startsWith('flarecare-medication-added-') && key !== activityKey) ||
             (key.startsWith('flarecare-medication-updated-') && key !== updatedKey) ||
             (key.startsWith('flarecare-medication-deleted-') && key !== deletedKey) ||
+            (key.startsWith('flarecare-symptom-deleted-') && key !== symptomDeletedKey) ||
+            (key.startsWith('flarecare-tracked-medication-deleted-') && key !== trackedMedDeletedKey) ||
             (key.startsWith('flarecare-medication-individual-takings-') && key !== individualTakingsKey)
           )) {
             keysToRemove.push(key)
@@ -232,6 +264,34 @@ export default function Home() {
         setMedicationDeleted(null)
       }
       
+      // Load symptom deleted activity
+      const symptomDeletedKey = `flarecare-symptom-deleted-${today}`
+      const symptomDeletedData = localStorage.getItem(symptomDeletedKey)
+      if (symptomDeletedData) {
+        try {
+          setSymptomDeleted(JSON.parse(symptomDeletedData))
+        } catch (error) {
+          console.error('Error parsing symptom deleted data:', error)
+          setSymptomDeleted(null)
+        }
+      } else {
+        setSymptomDeleted(null)
+      }
+      
+      // Load tracked medication deleted activity
+      const trackedMedDeletedKey = `flarecare-tracked-medication-deleted-${today}`
+      const trackedMedDeletedData = localStorage.getItem(trackedMedDeletedKey)
+      if (trackedMedDeletedData) {
+        try {
+          setTrackedMedicationDeleted(JSON.parse(trackedMedDeletedData))
+        } catch (error) {
+          console.error('Error parsing tracked medication deleted data:', error)
+          setTrackedMedicationDeleted(null)
+        }
+      } else {
+        setTrackedMedicationDeleted(null)
+      }
+      
       // Load individual medication takings
       const individualTakingsKey = `flarecare-medication-individual-takings-${today}`
       const individualTakingsData = localStorage.getItem(individualTakingsKey)
@@ -261,6 +321,8 @@ export default function Home() {
         e.key.startsWith('flarecare-medication-added-') ||
         e.key.startsWith('flarecare-medication-updated-') ||
         e.key.startsWith('flarecare-medication-deleted-') ||
+        e.key.startsWith('flarecare-symptom-deleted-') ||
+        e.key.startsWith('flarecare-tracked-medication-deleted-') ||
         e.key.startsWith('flarecare-medication-individual-takings-')
       )) {
         loadTakenMedications()
@@ -283,12 +345,22 @@ export default function Home() {
     const handleMedicationDeleted = () => {
       loadTakenMedications()
     }
+    
+    const handleSymptomDeleted = () => {
+      loadTakenMedications()
+    }
+    
+    const handleTrackedMedicationDeleted = () => {
+      loadTakenMedications()
+    }
 
     window.addEventListener('storage', handleStorageChange)
     window.addEventListener('medication-taken', handleMedicationTaken)
     window.addEventListener('medication-added', handleMedicationAdded)
     window.addEventListener('medication-updated', handleMedicationUpdated)
     window.addEventListener('medication-deleted', handleMedicationDeleted)
+    window.addEventListener('symptom-deleted', handleSymptomDeleted)
+    window.addEventListener('tracked-medication-deleted', handleTrackedMedicationDeleted)
     
     // Check when window gains focus (user navigates back to dashboard)
     const handleFocus = () => {
@@ -302,6 +374,8 @@ export default function Home() {
       window.removeEventListener('medication-added', handleMedicationAdded)
       window.removeEventListener('medication-updated', handleMedicationUpdated)
       window.removeEventListener('medication-deleted', handleMedicationDeleted)
+      window.removeEventListener('symptom-deleted', handleSymptomDeleted)
+      window.removeEventListener('tracked-medication-deleted', handleTrackedMedicationDeleted)
       window.removeEventListener('focus', handleFocus)
     }
   }, [])
@@ -872,11 +946,146 @@ export default function Home() {
           <h2 className="text-xl font-semibold font-source text-primary">Recent Activity</h2>
           <div className="p-6 transition-all duration-300 ease-in-out">
             {(() => {
-              const shouldShowTookMeds = medicationsCompletedAt && takenMedications.length === prescribedMedications.length && prescribedMedications.length > 0
-              const hasOtherActivity = symptoms.length > 0 || trackedMedications.length > 0
-              const hasMedicationActivity = shouldShowTookMeds || medicationAdded || medicationUpdated || medicationDeleted || individualMedicationTakings.length > 0
+              // Helper function to format relative time
+              const formatRelativeTime = (date) => {
+                const now = new Date()
+                const diffMinutes = Math.floor((now - date) / (1000 * 60))
+                const diffHours = Math.floor(diffMinutes / 60)
+                
+                if (diffMinutes < 1) return 'Just now'
+                if (diffMinutes < 60) return `${diffMinutes} minute${diffMinutes > 1 ? 's' : ''} ago`
+                if (diffHours < 24) return `${diffHours} hour${diffHours > 1 ? 's' : ''} ago`
+                const diffDays = Math.floor(diffHours / 24)
+                if (diffDays < 7) return `${diffDays} day${diffDays > 1 ? 's' : ''} ago`
+                return date.toLocaleDateString()
+              }
+
+              // Collect all activities with timestamps
+              const activities = []
               
-              if (!hasOtherActivity && !hasMedicationActivity) {
+              // Most recent symptom entry
+              if (symptoms.length > 0) {
+                const lastSymptom = symptoms[0]
+                activities.push({
+                  type: 'symptom',
+                  timestamp: new Date(lastSymptom.created_at || lastSymptom.createdAt),
+                  title: "Completed Today's goal \"Log Symptoms\"",
+                  icon: Thermometer,
+                  iconBg: 'bg-emerald-100',
+                  iconColor: 'text-emerald-600'
+                })
+              }
+
+              // Symptom deleted
+              if (symptomDeleted) {
+                activities.push({
+                  type: 'deleted-symptom',
+                  timestamp: new Date(symptomDeleted.timestamp),
+                  title: 'Deleted symptom entry',
+                  icon: Thermometer,
+                  iconBg: 'bg-emerald-100',
+                  iconColor: 'text-emerald-600'
+                })
+              }
+
+              // Most recent tracked medication entry
+              if (trackedMedications.length > 0) {
+                const lastMedication = trackedMedications[0]
+                activities.push({
+                  type: 'tracked-medication',
+                  timestamp: new Date(lastMedication.created_at || lastMedication.createdAt),
+                  title: "Completed Today's goal \"Track Medications\"",
+                  icon: ChartLine,
+                  iconBg: 'bg-pink-100',
+                  iconColor: 'text-pink-600'
+                })
+              }
+
+              // Tracked medication deleted
+              if (trackedMedicationDeleted) {
+                activities.push({
+                  type: 'deleted-tracked-medication',
+                  timestamp: new Date(trackedMedicationDeleted.timestamp),
+                  title: 'Deleted tracked medication',
+                  icon: ChartLine,
+                  iconBg: 'bg-pink-100',
+                  iconColor: 'text-pink-600'
+                })
+              }
+
+              // Individual medication takings (only if not all medications are taken)
+              const allMedsTaken = medicationsCompletedAt && takenMedications.length === prescribedMedications.length && prescribedMedications.length > 0
+              if (!allMedsTaken && individualMedicationTakings.length > 0) {
+                individualMedicationTakings.forEach((taking) => {
+                  activities.push({
+                    type: 'taken-medication',
+                    timestamp: new Date(taking.timestamp),
+                    title: `Taken ${taking.medicationName}`,
+                    icon: Pill,
+                    iconBg: 'bg-purple-100',
+                    iconColor: 'text-purple-600'
+                  })
+                })
+              }
+
+              // Medication updated
+              if (medicationUpdated) {
+                activities.push({
+                  type: 'updated-medication',
+                  timestamp: new Date(medicationUpdated.timestamp),
+                  title: `Updated ${medicationUpdated.oldMedicationName} to ${medicationUpdated.newMedicationName}`,
+                  icon: Pill,
+                  iconBg: 'bg-purple-100',
+                  iconColor: 'text-purple-600'
+                })
+              }
+
+              // Medication deleted
+              if (medicationDeleted) {
+                activities.push({
+                  type: 'deleted-medication',
+                  timestamp: new Date(medicationDeleted.timestamp),
+                  title: `Deleted ${medicationDeleted.medicationName}`,
+                  icon: Pill,
+                  iconBg: 'bg-purple-100',
+                  iconColor: 'text-purple-600'
+                })
+              }
+
+              // Medication added
+              if (medicationAdded) {
+                activities.push({
+                  type: 'added-medication',
+                  timestamp: new Date(medicationAdded.timestamp),
+                  title: `Added ${medicationAdded.medicationName}`,
+                  icon: Pill,
+                  iconBg: 'bg-purple-100',
+                  iconColor: 'text-purple-600'
+                })
+              }
+
+              // All medications taken
+              if (allMedsTaken) {
+                activities.push({
+                  type: 'all-medications-taken',
+                  timestamp: new Date(medicationsCompletedAt),
+                  title: "Completed Today's goal \"Take Medications\"",
+                  icon: Pill,
+                  iconBg: 'bg-purple-100',
+                  iconColor: 'text-purple-600'
+                })
+              }
+
+              // Filter to today only and sort by timestamp (most recent first)
+              const today = new Date()
+              today.setHours(0, 0, 0, 0)
+              
+              const todayActivities = activities
+                .filter(activity => activity.timestamp >= today)
+                .sort((a, b) => b.timestamp - a.timestamp)
+                .slice(0, 3) // Limit to 3 most recent
+
+              if (todayActivities.length === 0) {
                 return (
                   <div className="text-center py-4">
                     <div className="w-12 h-12 icon-container icon-container--muted mx-auto mb-3">
@@ -889,231 +1098,25 @@ export default function Home() {
                   </div>
                 )
               }
-              
+
               return (
                 <div className="space-y-3">
-                {/* Most recent symptom entry */}
-                {symptoms.length > 0 && (
-                  <div className="flex items-center gap-3 py-2">
-                    <div className="w-8 h-8 bg-emerald-100 rounded-lg flex items-center justify-center">
-                      <Thermometer className="w-4 h-4 text-emerald-600" />
-                    </div>
-                    <div className="flex-1">
-                      <p className="text-sm font-medium text-primary">Logged symptoms</p>
-                      <p className="text-xs text-slate-400 dark:[color:var(--text-tertiary)] mt-1">
-                        {(() => {
-                          const lastSymptom = symptoms[0]
-                          const lastDate = new Date(lastSymptom.created_at || lastSymptom.createdAt)
-                          const now = new Date()
-                          const diffMinutes = Math.floor((now - lastDate) / (1000 * 60))
-                          const diffHours = Math.floor(diffMinutes / 60)
-                          
-                          if (diffMinutes < 1) return 'Just now'
-                          if (diffMinutes < 60) return `${diffMinutes} minute${diffMinutes > 1 ? 's' : ''} ago`
-                          if (diffHours < 24) return `${diffHours} hour${diffHours > 1 ? 's' : ''} ago`
-                          const diffDays = Math.floor(diffHours / 24)
-                          if (diffDays < 7) return `${diffDays} day${diffDays > 1 ? 's' : ''} ago`
-                          return lastDate.toLocaleDateString()
-                        })()}
-                      </p>
-                    </div>
-                  </div>
-                )}
-
-                {/* Most recent medication entry */}
-                {trackedMedications.length > 0 && (
-                  <div className="flex items-center gap-3 py-2">
-                    <div className="w-8 h-8 bg-pink-100 rounded-lg flex items-center justify-center">
-                      <ChartLine className="w-3.5 h-3.5 text-pink-600" />
-                    </div>
-                    <div className="flex-1">
-                      <p className="text-sm font-medium text-primary">Tracked medications</p>
-                      <p className="text-xs text-slate-400 dark:[color:var(--text-tertiary)] mt-1">
-                        {(() => {
-                          const lastMedication = trackedMedications[0]
-                          const lastDate = new Date(lastMedication.created_at || lastMedication.createdAt)
-                          const now = new Date()
-                          const diffMinutes = Math.floor((now - lastDate) / (1000 * 60))
-                          const diffHours = Math.floor(diffMinutes / 60)
-                          
-                          if (diffMinutes < 1) return 'Just now'
-                          if (diffMinutes < 60) return `${diffMinutes} minute${diffMinutes > 1 ? 's' : ''} ago`
-                          if (diffHours < 24) return `${diffHours} hour${diffHours > 1 ? 's' : ''} ago`
-                          const diffDays = Math.floor(diffHours / 24)
-                          if (diffDays < 7) return `${diffDays} day${diffDays > 1 ? 's' : ''} ago`
-                          return lastDate.toLocaleDateString()
-                        })()}
-                      </p>
-                    </div>
-                  </div>
-                )}
-
-                {/* Individual medication takings (only show if not all medications are taken) */}
-                {(() => {
-                  const allMedsTaken = medicationsCompletedAt && takenMedications.length === prescribedMedications.length && prescribedMedications.length > 0
-                  if (allMedsTaken) return null
-                  return individualMedicationTakings.map((taking) => (
-                    <div key={`${taking.medicationId}-${taking.timestamp}`} className="flex items-center gap-3 py-2">
-                      <div className="w-8 h-8 bg-purple-100 rounded-lg flex items-center justify-center">
-                        <Pill className="w-4 h-4 text-purple-600" />
+                  {todayActivities.map((activity, index) => {
+                    const IconComponent = activity.icon
+                    return (
+                      <div key={`${activity.type}-${activity.timestamp.getTime()}-${index}`} className="flex items-center gap-3 py-2">
+                        <div className={`w-8 h-8 ${activity.iconBg} rounded-lg flex items-center justify-center`}>
+                          <IconComponent className={`w-4 h-4 ${activity.iconColor}`} />
+                        </div>
+                        <div className="flex-1">
+                          <p className="text-sm font-medium text-primary">{activity.title}</p>
+                          <p className="text-xs text-slate-400 dark:[color:var(--text-tertiary)] mt-1">
+                            {formatRelativeTime(activity.timestamp)}
+                          </p>
+                        </div>
                       </div>
-                      <div className="flex-1">
-                        <p className="text-sm font-medium text-primary">Taken {taking.medicationName}</p>
-                        <p className="text-xs text-slate-400 dark:[color:var(--text-tertiary)] mt-1">
-                          {(() => {
-                            const takenDate = new Date(taking.timestamp)
-                            const now = new Date()
-                            const diffMinutes = Math.floor((now - takenDate) / (1000 * 60))
-                            const diffHours = Math.floor(diffMinutes / 60)
-                            
-                            if (diffMinutes < 1) return 'Just now'
-                            if (diffMinutes < 60) return `${diffMinutes} minute${diffMinutes > 1 ? 's' : ''} ago`
-                            if (diffHours < 24) return `${diffHours} hour${diffHours > 1 ? 's' : ''} ago`
-                            const diffDays = Math.floor(diffHours / 24)
-                            if (diffDays < 7) return `${diffDays} day${diffDays > 1 ? 's' : ''} ago`
-                            return takenDate.toLocaleDateString()
-                          })()}
-                        </p>
-                      </div>
-                    </div>
-                  ))
-                })()}
-
-                {/* Medication updated today */}
-                {medicationUpdated && (
-                  <div className="flex items-center gap-3 py-2">
-                    <div className="w-8 h-8 bg-purple-100 rounded-lg flex items-center justify-center">
-                      <Pill className="w-4 h-4 text-purple-600" />
-                    </div>
-                    <div className="flex-1">
-                      <p className="text-sm font-medium text-primary">Updated {medicationUpdated.oldMedicationName} to {medicationUpdated.newMedicationName}</p>
-                      <p className="text-xs text-slate-400 dark:[color:var(--text-tertiary)] mt-1">
-                        {(() => {
-                          const updatedDate = new Date(medicationUpdated.timestamp)
-                          const now = new Date()
-                          const diffMinutes = Math.floor((now - updatedDate) / (1000 * 60))
-                          const diffHours = Math.floor(diffMinutes / 60)
-                          
-                          if (diffMinutes < 1) return 'Just now'
-                          if (diffMinutes < 60) return `${diffMinutes} minute${diffMinutes > 1 ? 's' : ''} ago`
-                          if (diffHours < 24) return `${diffHours} hour${diffHours > 1 ? 's' : ''} ago`
-                          const diffDays = Math.floor(diffHours / 24)
-                          if (diffDays < 7) return `${diffDays} day${diffDays > 1 ? 's' : ''} ago`
-                          return updatedDate.toLocaleDateString()
-                        })()}
-                      </p>
-                    </div>
-                  </div>
-                )}
-
-                {/* Medication deleted today */}
-                {medicationDeleted && (
-                  <div className="flex items-center gap-3 py-2">
-                    <div className="w-8 h-8 bg-purple-100 rounded-lg flex items-center justify-center">
-                      <Pill className="w-4 h-4 text-purple-600" />
-                    </div>
-                    <div className="flex-1">
-                      <p className="text-sm font-medium text-primary">Deleted {medicationDeleted.medicationName}</p>
-                      <p className="text-xs text-slate-400 dark:[color:var(--text-tertiary)] mt-1">
-                        {(() => {
-                          const deletedDate = new Date(medicationDeleted.timestamp)
-                          const now = new Date()
-                          const diffMinutes = Math.floor((now - deletedDate) / (1000 * 60))
-                          const diffHours = Math.floor(diffMinutes / 60)
-                          
-                          if (diffMinutes < 1) return 'Just now'
-                          if (diffMinutes < 60) return `${diffMinutes} minute${diffMinutes > 1 ? 's' : ''} ago`
-                          if (diffHours < 24) return `${diffHours} hour${diffHours > 1 ? 's' : ''} ago`
-                          const diffDays = Math.floor(diffHours / 24)
-                          if (diffDays < 7) return `${diffDays} day${diffDays > 1 ? 's' : ''} ago`
-                          return deletedDate.toLocaleDateString()
-                        })()}
-                      </p>
-                    </div>
-                  </div>
-                )}
-
-                {/* Medication added today */}
-                {medicationAdded && (
-                  <div className="flex items-center gap-3 py-2">
-                    <div className="w-8 h-8 bg-purple-100 rounded-lg flex items-center justify-center">
-                      <Pill className="w-4 h-4 text-purple-600" />
-                    </div>
-                    <div className="flex-1">
-                      <p className="text-sm font-medium text-primary">Added {medicationAdded.medicationName}</p>
-                      <p className="text-xs text-slate-400 dark:[color:var(--text-tertiary)] mt-1">
-                        {(() => {
-                          const addedDate = new Date(medicationAdded.timestamp)
-                          const now = new Date()
-                          const diffMinutes = Math.floor((now - addedDate) / (1000 * 60))
-                          const diffHours = Math.floor(diffMinutes / 60)
-                          
-                          if (diffMinutes < 1) return 'Just now'
-                          if (diffMinutes < 60) return `${diffMinutes} minute${diffMinutes > 1 ? 's' : ''} ago`
-                          if (diffHours < 24) return `${diffHours} hour${diffHours > 1 ? 's' : ''} ago`
-                          const diffDays = Math.floor(diffHours / 24)
-                          if (diffDays < 7) return `${diffDays} day${diffDays > 1 ? 's' : ''} ago`
-                          return addedDate.toLocaleDateString()
-                        })()}
-                      </p>
-                    </div>
-                  </div>
-                )}
-
-                {/* All medications taken today */}
-                {medicationsCompletedAt && takenMedications.length === prescribedMedications.length && prescribedMedications.length > 0 && (
-                  <div className="flex items-center gap-3 py-2">
-                    <div className="w-8 h-8 bg-purple-100 rounded-lg flex items-center justify-center">
-                      <Pill className="w-4 h-4 text-purple-600" />
-                    </div>
-                    <div className="flex-1">
-                      <p className="text-sm font-medium text-primary">Took all medications</p>
-                      <p className="text-xs text-slate-400 dark:[color:var(--text-tertiary)] mt-1">
-                        {(() => {
-                          const completedDate = new Date(medicationsCompletedAt)
-                          const now = new Date()
-                          const diffMinutes = Math.floor((now - completedDate) / (1000 * 60))
-                          const diffHours = Math.floor(diffMinutes / 60)
-                          
-                          if (diffMinutes < 1) return 'Just now'
-                          if (diffMinutes < 60) return `${diffMinutes} minute${diffMinutes > 1 ? 's' : ''} ago`
-                          if (diffHours < 24) return `${diffHours} hour${diffHours > 1 ? 's' : ''} ago`
-                          const diffDays = Math.floor(diffHours / 24)
-                          if (diffDays < 7) return `${diffDays} day${diffDays > 1 ? 's' : ''} ago`
-                          return completedDate.toLocaleDateString()
-                        })()}
-                      </p>
-                    </div>
-                  </div>
-                )}
-
-                {/* Tracking streak */}
-                {symptoms.length >= 3 && (
-                  <div className="flex items-center gap-3 py-2">
-                    <div className="w-8 h-8 bg-gradient-to-br from-slate-400 to-gray-500 rounded-lg flex items-center justify-center">
-                      <svg className="w-4 h-4 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12l2 2 4-4M7.835 4.697a3.42 3.42 0 001.946-.806 3.42 3.42 0 014.438 0 3.42 3.42 0 001.946.806 3.42 3.42 0 013.138 3.138 3.42 3.42 0 00.806 1.946 3.42 3.42 0 010 4.438 3.42 3.42 0 00-.806 1.946 3.42 3.42 0 01-3.138 3.138 3.42 3.42 0 00-1.946.806 3.42 3.42 0 01-4.438 0 3.42 3.42 0 00-1.946-.806 3.42 3.42 0 01-3.138-3.138 3.42 3.42 0 00-.806-1.946 3.42 3.42 0 010-4.438 3.42 3.42 0 00.806-1.946 3.42 3.42 0 013.138-3.138z" />
-                      </svg>
-                    </div>
-                    <div className="flex-1">
-                      <p className="text-sm font-medium text-primary">Completed {symptoms.length}-day tracking streak</p>
-                      <p className="text-xs text-slate-400 dark:[color:var(--text-tertiary)]">Great consistency!</p>
-                    </div>
-                  </div>
-                )}
-
-                {/* Welcome message for new users */}
-                {symptoms.length === 1 && (
-                  <div className="flex items-center gap-3 py-2">
-                    <div className="w-8 h-8 bg-gradient-to-br from-orange-400 to-red-500 rounded-lg flex items-center justify-center">
-                      <PartyPopper className="w-4 h-4 text-white" />
-                    </div>
-                    <div className="flex-1">
-                      <p className="text-sm font-medium text-primary">Welcome to FlareCare!</p>
-                      <p className="text-xs text-slate-400 dark:[color:var(--text-tertiary)]">You've logged your first symptom entry</p>
-                    </div>
-                  </div>
-                )}
+                    )
+                  })}
                 </div>
               )
             })()}
