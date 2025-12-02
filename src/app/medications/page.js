@@ -76,16 +76,54 @@ function MedicationsPageContent() {
 
         if (error) throw error
 
+        // Get the old medication name before updating
+        const oldMedication = medications.find(med => med.id === editingId)
+        const newMedicationName = sanitizeMedicationName(formData.name)
+        
         // Update local state
         const updatedMedications = medications.map(med => 
           med.id === editingId 
-            ? { ...med, ...formData, name: sanitizeMedicationName(formData.name), notes: sanitizeNotes(formData.notes), updatedAt: new Date().toISOString() }
+            ? { ...med, ...formData, name: newMedicationName, notes: sanitizeNotes(formData.notes), updatedAt: new Date().toISOString() }
             : med
         )
         setMedications(updatedMedications)
         
         // Also save to localStorage for reports
         localStorage.setItem('flarecare-medications', JSON.stringify(updatedMedications))
+        
+        // Update Recent Activity if medication name changed
+        if (oldMedication && oldMedication.name !== newMedicationName) {
+          const today = new Date().toISOString().split('T')[0]
+          
+          // Store medication updated activity
+          const updatedKey = `flarecare-medication-updated-${today}`
+          localStorage.setItem(updatedKey, JSON.stringify({
+            timestamp: new Date().toISOString(),
+            oldMedicationName: oldMedication.name,
+            newMedicationName: newMedicationName
+          }))
+          
+          // Update individual medication takings if name changed
+          const individualTakingsKey = `flarecare-medication-individual-takings-${today}`
+          const individualTakingsData = localStorage.getItem(individualTakingsKey)
+          if (individualTakingsData) {
+            try {
+              const takings = JSON.parse(individualTakingsData)
+              const updatedTakings = takings.map(taking => 
+                taking.medicationId === editingId 
+                  ? { ...taking, medicationName: newMedicationName }
+                  : taking
+              )
+              localStorage.setItem(individualTakingsKey, JSON.stringify(updatedTakings))
+            } catch (error) {
+              console.error('Error updating individual medication takings:', error)
+            }
+          }
+          
+          // Dispatch custom event to notify dashboard
+          window.dispatchEvent(new Event('medication-updated'))
+        }
+        
         setEditingId(null)
       } else {
         // Add new medication

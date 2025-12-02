@@ -28,6 +28,7 @@ export default function Home() {
   const [takenMedications, setTakenMedications] = useState([])
   const [medicationsCompletedAt, setMedicationsCompletedAt] = useState(null)
   const [medicationAdded, setMedicationAdded] = useState(null)
+  const [medicationUpdated, setMedicationUpdated] = useState(null)
   const [individualMedicationTakings, setIndividualMedicationTakings] = useState([])
 
   // Daily tips array
@@ -148,6 +149,7 @@ export default function Home() {
         const keysToRemove = []
         const timestampKey = `flarecare-medications-completed-${today}`
         const activityKey = `flarecare-medication-added-${today}`
+        const updatedKey = `flarecare-medication-updated-${today}`
         const individualTakingsKey = `flarecare-medication-individual-takings-${today}`
         for (let i = 0; i < localStorage.length; i++) {
           const key = localStorage.key(i)
@@ -155,6 +157,7 @@ export default function Home() {
             (key.startsWith('flarecare-medications-taken-') && key !== storageKey) ||
             (key.startsWith('flarecare-medications-completed-') && key !== timestampKey) ||
             (key.startsWith('flarecare-medication-added-') && key !== activityKey) ||
+            (key.startsWith('flarecare-medication-updated-') && key !== updatedKey) ||
             (key.startsWith('flarecare-medication-individual-takings-') && key !== individualTakingsKey)
           )) {
             keysToRemove.push(key)
@@ -198,6 +201,20 @@ export default function Home() {
         setMedicationAdded(null)
       }
       
+      // Load medication updated activity
+      const updatedKey = `flarecare-medication-updated-${today}`
+      const medicationUpdatedData = localStorage.getItem(updatedKey)
+      if (medicationUpdatedData) {
+        try {
+          setMedicationUpdated(JSON.parse(medicationUpdatedData))
+        } catch (error) {
+          console.error('Error parsing medication updated data:', error)
+          setMedicationUpdated(null)
+        }
+      } else {
+        setMedicationUpdated(null)
+      }
+      
       // Load individual medication takings
       const individualTakingsKey = `flarecare-medication-individual-takings-${today}`
       const individualTakingsData = localStorage.getItem(individualTakingsKey)
@@ -225,6 +242,7 @@ export default function Home() {
         e.key.startsWith('flarecare-medications-taken-') ||
         e.key.startsWith('flarecare-medications-completed-') ||
         e.key.startsWith('flarecare-medication-added-') ||
+        e.key.startsWith('flarecare-medication-updated-') ||
         e.key.startsWith('flarecare-medication-individual-takings-')
       )) {
         loadTakenMedications()
@@ -239,10 +257,15 @@ export default function Home() {
     const handleMedicationAdded = () => {
       loadTakenMedications()
     }
+    
+    const handleMedicationUpdated = () => {
+      loadTakenMedications()
+    }
 
     window.addEventListener('storage', handleStorageChange)
     window.addEventListener('medication-taken', handleMedicationTaken)
     window.addEventListener('medication-added', handleMedicationAdded)
+    window.addEventListener('medication-updated', handleMedicationUpdated)
     
     // Check when window gains focus (user navigates back to dashboard)
     const handleFocus = () => {
@@ -254,6 +277,7 @@ export default function Home() {
       window.removeEventListener('storage', handleStorageChange)
       window.removeEventListener('medication-taken', handleMedicationTaken)
       window.removeEventListener('medication-added', handleMedicationAdded)
+      window.removeEventListener('medication-updated', handleMedicationUpdated)
       window.removeEventListener('focus', handleFocus)
     }
   }, [])
@@ -826,7 +850,7 @@ export default function Home() {
             {(() => {
               const shouldShowTookMeds = medicationsCompletedAt && takenMedications.length === prescribedMedications.length && prescribedMedications.length > 0
               const hasOtherActivity = symptoms.length > 0 || trackedMedications.length > 0
-              const hasMedicationActivity = shouldShowTookMeds || medicationAdded || individualMedicationTakings.length > 0
+              const hasMedicationActivity = shouldShowTookMeds || medicationAdded || medicationUpdated || individualMedicationTakings.length > 0
               
               if (!hasOtherActivity && !hasMedicationActivity) {
                 return (
