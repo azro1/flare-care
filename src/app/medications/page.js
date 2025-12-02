@@ -10,6 +10,7 @@ import { sanitizeMedicationName, sanitizeNotes } from '@/lib/sanitize'
 import { Pill, ChevronDown } from 'lucide-react'
 import { supabase, TABLES } from '@/lib/supabase'
 import { useAuth } from '@/lib/AuthContext'
+import Masonry from 'react-masonry-css'
 
 function MedicationsPageContent() {
   const { user } = useAuth()
@@ -358,7 +359,7 @@ function MedicationsPageContent() {
   }
 
   return (
-    <div className="max-w-4xl mx-auto px-2 sm:px-3 md:px-6 lg:px-8 min-w-0">
+    <div className="max-w-4xl w-full mx-auto px-3 sm:px-4 md:px-6 lg:px-8 min-w-0">
       {/* Header Section */}
       <div className="mb-8 sm:mb-12">
         <div className="flex flex-col sm:flex-row sm:justify-between sm:items-start">
@@ -553,15 +554,24 @@ function MedicationsPageContent() {
             <p className="font-roboto text-secondary max-w-md mx-auto">Add your medications to keep track of them and set up reminders to help you stay on schedule.</p>
           </div>
         ) : (
-          <div className="space-y-6 sm:space-y-8 min-w-0">
+          <Masonry
+            breakpointCols={{
+              default: 2,
+              1024: 2,
+              640: 1
+            }}
+            className="flex -ml-6 w-auto min-w-0"
+            columnClassName="pl-6 bg-clip-padding"
+          >
             {medications.map((medication) => {
               const isExpanded = expandedMedications.has(medication.id)
               return (
-                <div key={medication.id} className="card-inner p-4 sm:p-6 min-w-0 rounded-xl">
-                  <div className="flex justify-between items-start mb-4">
-                    <div className="flex-1 min-w-0">
-                      <div className="flex items-center gap-2 mb-2">
-                        <h3 className="text-lg font-semibold font-source text-primary break-words">
+                <div key={medication.id} className="mb-6 sm:mb-8 lg:mb-6">
+                  <div className="card-inner p-4 sm:p-6 min-w-0 rounded-xl">
+                  <div className="flex flex-col sm:flex-row sm:justify-between sm:items-start mb-4">
+                    <div className="flex-1 min-w-0 w-full sm:w-auto">
+                      <div className="flex items-center gap-2 mb-2 min-w-0">
+                        <h3 className="text-lg font-semibold font-source text-primary break-words sm:truncate min-w-0 flex-1">
                           {medication.name}
                         </h3>
                         <button
@@ -609,7 +619,7 @@ function MedicationsPageContent() {
                         </>
                       )}
                     </div>
-                    <div className="flex space-x-2 ml-4 flex-shrink-0">
+                    <div className="flex space-x-2 mt-2 sm:mt-0 sm:ml-4 flex-shrink-0">
                       <button
                         onClick={() => startEdit(medication)}
                         className="w-10 h-10 rounded-xl flex items-center justify-center transition-all duration-200 shadow-sm hover:shadow-md"
@@ -640,9 +650,9 @@ function MedicationsPageContent() {
                   </div>
 
                   {isExpanded && medication.notes && (
-                    <div className="mt-4 pt-4" style={{ borderTop: '1px solid', borderColor: 'var(--border-card-inner)' }}>
-                      <div className="card-inner rounded-xl p-3">
-                        <p className="text-sm text-secondary font-roboto">
+                    <div className="mt-4 pt-4 min-w-0" style={{ borderTop: '1px solid', borderColor: 'var(--border-card-inner)' }}>
+                      <div className="card-inner rounded-xl p-3 min-w-0">
+                        <p className="text-sm text-secondary font-roboto break-words">
                           <span className="font-semibold text-primary">Notes:</span> {medication.notes}
                         </p>
                       </div>
@@ -661,10 +671,11 @@ function MedicationsPageContent() {
                       </div>
                     </div>
                   )}
+                  </div>
                 </div>
               )
             })}
-          </div>
+          </Masonry>
         )}
       </div>
 
