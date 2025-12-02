@@ -95,7 +95,7 @@ export default function Foods() {
         {/* Food Categories */}
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-8 mb-8">
           {categories.map((category, index) => (
-            <div key={index} className="card p-8 md:p-10 rounded-2xl backdrop-blur-sm">
+            <div key={index} className="card p-8 md:p-10 rounded-2xl">
               <div className="flex items-center gap-4 mb-4">
                 <span className="text-4xl">{category.emoji}</span>
                 <h2 className="text-xl font-semibold font-source text-primary">{category.title}</h2>
@@ -143,7 +143,7 @@ export default function Foods() {
               
 
               {/* IBD-Friendly Foods */}
-              <div className="card p-4 sm:p-6 rounded-2xl backdrop-blur-sm ">
+              <div className="card p-4 sm:p-6 rounded-2xl ">
                 <h3 className="text-lg font-semibold font-source text-primary mb-4">IBD Foods</h3>
                 <div className="space-y-4">
                   <div className="card-inner p-4 rounded-xl">
@@ -162,7 +162,7 @@ export default function Foods() {
               </div>
 
               {/* Quick Food Tips */}
-              <div className="card backdrop-blur-sm p-4 sm:p-6 rounded-2xl">
+              <div className="card p-4 sm:p-6 rounded-2xl">
                 <h3 className="text-lg font-semibold font-source text-primary mb-4">Quick Food Tips</h3>
                 <div className="space-y-3">
                   <div className="flex items-center gap-3">

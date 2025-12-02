@@ -98,7 +98,7 @@ export default function About() {
         </div>
       </div>
 
-      <div className="card p-8 md:p-10 rounded-2xl backdrop-blur-sm">
+      <div className="card p-8 md:p-10 rounded-2xl">
         <h2 className="text-xl sm:text-2xl font-bold font-source text-primary mb-4">Stay Connected</h2>
         <p className="text-secondary mb-8 font-roboto leading-relaxed">
           Have questions, suggestions, or want to share your own story? 
