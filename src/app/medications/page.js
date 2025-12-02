@@ -20,6 +20,7 @@ function MedicationsPageContent() {
   const [editingId, setEditingId] = useState(null)
   const [deleteModal, setDeleteModal] = useState({ isOpen: false, id: null })
   const [expandedMedications, setExpandedMedications] = useState(new Set())
+  const [takenMedications, setTakenMedications] = useState([])
   const [formData, setFormData] = useState({
     name: '',
     dosage: '',
@@ -237,6 +238,44 @@ function MedicationsPageContent() {
     fetchMedications()
   }, [user?.id])
 
+  // Load today's taken medications from localStorage
+  useEffect(() => {
+    const today = new Date().toISOString().split('T')[0] // YYYY-MM-DD format
+    const storageKey = `flarecare-medications-taken-${today}`
+    
+    // Clean up old entries (keep only today's)
+    const cleanupOldEntries = () => {
+      const keysToRemove = []
+      const timestampKey = `flarecare-medications-completed-${today}`
+      for (let i = 0; i < localStorage.length; i++) {
+        const key = localStorage.key(i)
+        if (key && (
+          (key.startsWith('flarecare-medications-taken-') && key !== storageKey) ||
+          (key.startsWith('flarecare-medications-completed-') && key !== timestampKey)
+        )) {
+          keysToRemove.push(key)
+        }
+      }
+      keysToRemove.forEach(key => localStorage.removeItem(key))
+    }
+    
+    // Clean up on mount
+    cleanupOldEntries()
+    
+    // Load today's data
+    const stored = localStorage.getItem(storageKey)
+    if (stored) {
+      try {
+        setTakenMedications(JSON.parse(stored))
+      } catch (error) {
+        console.error('Error parsing taken medications:', error)
+        setTakenMedications([])
+      }
+    } else {
+      setTakenMedications([])
+    }
+  }, [])
+
   // Update global reminder service when medications change
   useEffect(() => {
     console.log('=== MEDICATIONS CHANGED ===')
@@ -356,6 +395,37 @@ function MedicationsPageContent() {
     const month = (date.getMonth() + 1).toString().padStart(2, '0')
     const year = date.getFullYear()
     return `${day}/${month}/${year}`
+  }
+
+  const handleMarkAsTaken = (medicationId) => {
+    const today = new Date().toISOString().split('T')[0] // YYYY-MM-DD format
+    const storageKey = `flarecare-medications-taken-${today}`
+    const timestampKey = `flarecare-medications-completed-${today}`
+    
+    // Check if already taken today
+    if (takenMedications.includes(medicationId)) {
+      // Remove from taken list
+      const updated = takenMedications.filter(id => id !== medicationId)
+      setTakenMedications(updated)
+      localStorage.setItem(storageKey, JSON.stringify(updated))
+      // Remove timestamp if not all medications are taken
+      if (updated.length !== medications.length) {
+        localStorage.removeItem(timestampKey)
+      }
+    } else {
+      // Add to taken list
+      const updated = [...takenMedications, medicationId]
+      setTakenMedications(updated)
+      localStorage.setItem(storageKey, JSON.stringify(updated))
+      
+      // If all medications are now taken, store timestamp
+      if (updated.length === medications.length && medications.length > 0) {
+        localStorage.setItem(timestampKey, new Date().toISOString())
+      }
+    }
+    
+    // Dispatch custom event to notify other components (like dashboard)
+    window.dispatchEvent(new Event('medication-taken'))
   }
 
   return (
@@ -592,7 +662,7 @@ function MedicationsPageContent() {
                               <span className="font-semibold">Dosage:</span> {medication.dosage}
                             </p>
                           )}
-                          <div className="flex flex-wrap items-center gap-3">
+                          <div className="flex flex-wrap items-center gap-3 mb-3">
                             {medication.timeOfDay && (
                               <span className={`inline-flex items-center px-3 py-1.5 rounded-full text-sm font-medium font-roboto ${getTimeOfDayColor(medication.timeOfDay)}`}>
                                 <svg className="w-4 h-4 mr-1.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -615,6 +685,39 @@ function MedicationsPageContent() {
                                 <span>Reminders On</span>
                               </span>
                             )}
+                          </div>
+                          <div className="mt-2">
+                            <button
+                              onClick={() => handleMarkAsTaken(medication.id)}
+                              className="px-3 py-1.5 rounded-lg text-sm font-medium transition-all duration-200 inline-flex items-center justify-center border-2"
+                              style={{
+                                ...(takenMedications.includes(medication.id) 
+                                  ? {
+                                      backgroundColor: 'var(--bg-button-cadet)',
+                                      color: 'white',
+                                      borderColor: 'var(--bg-button-cadet)'
+                                    }
+                                  : {
+                                      borderColor: 'var(--border-input)',
+                                      color: 'var(--text-primary)',
+                                      backgroundColor: 'transparent'
+                                    }
+                                ),
+                                minWidth: '140px'
+                              }}
+                              title={takenMedications.includes(medication.id) ? "Mark as not taken" : "Mark as taken"}
+                            >
+                              {takenMedications.includes(medication.id) ? (
+                                <>
+                                  <svg className="w-4 h-4 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
+                                  </svg>
+                                  <span>Taken</span>
+                                </>
+                              ) : (
+                                <span>Mark as Taken</span>
+                              )}
+                            </button>
                           </div>
                         </>
                       )}

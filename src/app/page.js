@@ -6,6 +6,7 @@ import { useAuth } from '@/lib/AuthContext'
 import { useEffect, useState } from 'react'
 import { useDataSync } from '@/lib/useDataSync'
 import { useRouter } from 'next/navigation'
+import { supabase, TABLES } from '@/lib/supabase'
 import { CupSoda, Pizza, Coffee, BookOpen, Smile, Thermometer, Pill, FileText, Activity, TrendingUp, PartyPopper, Clipboard, Cookie, ChartLine, Sparkles, ChevronRight, ChevronDown } from 'lucide-react'
 
 export default function Home() {
@@ -23,6 +24,9 @@ export default function Home() {
   const [currentTipIndex, setCurrentTipIndex] = useState(0)
   const [isFading, setIsFading] = useState(false)
   const [showMore, setShowMore] = useState(false)
+  const [prescribedMedications, setPrescribedMedications] = useState([])
+  const [takenMedications, setTakenMedications] = useState([])
+  const [medicationsCompletedAt, setMedicationsCompletedAt] = useState(null)
 
   // Daily tips array
   const dailyTips = [
@@ -101,6 +105,105 @@ export default function Home() {
     const medicationTrackingEntries = medications.filter(med => med.name === 'Medication Tracking')
     setTrackedMedications(medicationTrackingEntries.sort((a, b) => new Date(b.created_at) - new Date(a.created_at)))
   }, [medications, showMedicationToast]) // Reload when medications change or medication is added
+
+  // Fetch medications from Supabase (excluding "Medication Tracking" entries)
+  useEffect(() => {
+    const fetchMedications = async () => {
+      if (!user?.id) return
+
+      try {
+        const { data, error } = await supabase
+          .from(TABLES.MEDICATIONS)
+          .select('*')
+          .eq('user_id', user.id)
+          .neq('name', 'Medication Tracking')
+          .order('created_at', { ascending: false })
+
+        if (error) throw error
+
+        setPrescribedMedications(data || [])
+      } catch (error) {
+        console.error('Error fetching medications:', error)
+      }
+    }
+
+    fetchMedications()
+  }, [user?.id])
+
+  // Track daily medication intake with localStorage
+  useEffect(() => {
+    const loadTakenMedications = () => {
+      const today = new Date().toISOString().split('T')[0] // YYYY-MM-DD format
+      const storageKey = `flarecare-medications-taken-${today}`
+      
+      // Clean up old entries (keep only today's)
+      const cleanupOldEntries = () => {
+        const keysToRemove = []
+        const timestampKey = `flarecare-medications-completed-${today}`
+        for (let i = 0; i < localStorage.length; i++) {
+          const key = localStorage.key(i)
+          if (key && (
+            (key.startsWith('flarecare-medications-taken-') && key !== storageKey) ||
+            (key.startsWith('flarecare-medications-completed-') && key !== timestampKey)
+          )) {
+            keysToRemove.push(key)
+          }
+        }
+        keysToRemove.forEach(key => localStorage.removeItem(key))
+      }
+      
+      // Clean up old entries
+      cleanupOldEntries()
+      
+      // Load today's taken medications
+      const stored = localStorage.getItem(storageKey)
+      if (stored) {
+        try {
+          setTakenMedications(JSON.parse(stored))
+        } catch (error) {
+          console.error('Error parsing taken medications:', error)
+          setTakenMedications([])
+        }
+      } else {
+        setTakenMedications([])
+      }
+      
+      // Load completion timestamp
+      const timestampKey = `flarecare-medications-completed-${today}`
+      const completedTimestamp = localStorage.getItem(timestampKey)
+      setMedicationsCompletedAt(completedTimestamp || null)
+    }
+
+    // Load on mount
+    loadTakenMedications()
+
+    // Listen for storage changes (when medications are marked as taken in other tabs/windows)
+    const handleStorageChange = (e) => {
+      if (e.key && e.key.startsWith('flarecare-medications-taken-')) {
+        loadTakenMedications()
+      }
+    }
+
+    // Listen for custom event (when medications are marked as taken in same tab)
+    const handleMedicationTaken = () => {
+      loadTakenMedications()
+    }
+
+    window.addEventListener('storage', handleStorageChange)
+    window.addEventListener('medication-taken', handleMedicationTaken)
+    
+    // Check when window gains focus (user navigates back to dashboard)
+    const handleFocus = () => {
+      loadTakenMedications()
+    }
+    window.addEventListener('focus', handleFocus)
+
+    return () => {
+      window.removeEventListener('storage', handleStorageChange)
+      window.removeEventListener('medication-taken', handleMedicationTaken)
+      window.removeEventListener('focus', handleFocus)
+    }
+  }, [])
 
 
 
@@ -407,11 +510,11 @@ export default function Home() {
                       <Thermometer className="w-3 h-3" style={{color: 'var(--text-goal-icon-success)'}} />
                     </div>
                     <div className="flex-1 flex items-center justify-between">
-                      <span className={`text-sm ${todaySymptoms.length > 0 ? '' : 'text-secondary'}`} style={{color: todaySymptoms.length > 0 ? 'var(--text-goal-success)' : undefined}}>
+                      <span className={`text-sm ${todaySymptoms.length > 0 ? '' : 'text-secondary'}`} style={{color: todaySymptoms.length > 0 ? 'var(--text-cadet-blue)' : undefined}}>
                         Log symptoms
                       </span>
                       {todaySymptoms.length > 0 && (
-                        <svg className="w-5 h-5" style={{color: 'var(--text-goal-success)'}} fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <svg className="w-5 h-5" style={{color: 'var(--text-cadet-blue)'}} fill="none" stroke="currentColor" viewBox="0 0 24 24">
                           <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
                         </svg>
                       )}
@@ -421,7 +524,16 @@ export default function Home() {
                     <div className="w-6 h-6 rounded-lg flex items-center justify-center" style={{backgroundColor: 'var(--bg-goal-icon-medication)'}}>
                       <Pill className="w-2.5 h-2.5" style={{color: 'var(--text-goal-icon-medication)'}} />
                     </div>
-                    <span className="text-sm text-secondary">Take medications</span>
+                    <div className="flex-1 flex items-center justify-between">
+                      <span className={`text-sm ${takenMedications.length === prescribedMedications.length && prescribedMedications.length > 0 ? '' : 'text-secondary'}`} style={{color: takenMedications.length === prescribedMedications.length && prescribedMedications.length > 0 ? 'var(--text-cadet-blue)' : undefined}}>
+                        Take medications
+                      </span>
+                      {takenMedications.length === prescribedMedications.length && prescribedMedications.length > 0 && (
+                        <svg className="w-5 h-5" style={{color: 'var(--text-cadet-blue)'}} fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
+                        </svg>
+                      )}
+                    </div>
                   </div>
                   <div className="flex items-center gap-3">
                     <div className="w-6 h-6 rounded-lg flex items-center justify-center" style={{backgroundColor: 'var(--bg-goal-icon-hydration)'}}>
@@ -549,7 +661,7 @@ export default function Home() {
             </div>
             <div className="flex justify-between items-center py-2">
               <span className="text-secondary">Medications Taken</span>
-              <span className="font-semibold text-primary">0/0</span>
+              <span className="font-semibold text-primary">{takenMedications.length}/{prescribedMedications.length}</span>
             </div>
           </div>
         </div>
@@ -560,14 +672,15 @@ export default function Home() {
         {/* Recent Symptoms */}
         {displayedSymptoms.length > 0 && (
           <div className="mb-8">
-            <div className="flex flex-col sm:flex-row sm:justify-between sm:items-center mb-4 gap-2">
+            <div className="flex items-center justify-between mb-4">
               <h2 className="text-xl font-semibold font-source text-primary">Recent Logged Symptoms</h2>
               {symptoms.length > 1 && (
                 <button 
                   onClick={() => setShowAllSymptoms(!showAllSymptoms)}
-                  className="text-[#5F9EA0] hover:text-[#5F9EA0]/80 text-sm font-medium self-start sm:self-auto"
+                  className="text-[#5F9EA0] hover:text-[#5F9EA0]/80 flex items-center gap-1"
                 >
-                  {showAllSymptoms ? 'Show Less' : 'View All'}
+                  <span className="hidden sm:inline text-sm font-medium">{showAllSymptoms ? 'Show Less' : 'View All'}</span>
+                  <ChevronDown className={`w-5 h-5 sm:hidden transition-transform duration-200 text-primary ${showAllSymptoms ? 'rotate-180' : ''}`} />
                 </button>
               )}
             </div>
@@ -606,14 +719,15 @@ export default function Home() {
         {/* Recent Medications */}
         {trackedMedications.length > 0 && (
           <div className="mb-8">
-            <div className="flex flex-col sm:flex-row sm:justify-between sm:items-center mb-4 gap-2">
+            <div className="flex items-center justify-between mb-4">
               <h2 className="text-xl font-semibold font-source text-primary">Recent Tracked Medications</h2>
               {trackedMedications.length > 1 && (
                 <button 
                   onClick={() => setShowAllMedications(!showAllMedications)}
-                  className="text-[#5F9EA0] hover:text-[#5F9EA0]/80 text-sm font-medium self-start sm:self-auto"
+                  className="text-[#5F9EA0] hover:text-[#5F9EA0]/80 flex items-center gap-1"
                 >
-                  {showAllMedications ? 'Show Less' : 'View All'}
+                  <span className="hidden sm:inline text-sm font-medium">{showAllMedications ? 'Show Less' : 'View All'}</span>
+                  <ChevronDown className={`w-5 h-5 sm:hidden transition-transform duration-200 text-primary ${showAllMedications ? 'rotate-180' : ''}`} />
                 </button>
               )}
             </div>
@@ -724,6 +838,33 @@ export default function Home() {
                   </div>
                 )}
 
+                {/* All medications taken today */}
+                {medicationsCompletedAt && takenMedications.length === prescribedMedications.length && prescribedMedications.length > 0 && (
+                  <div className="flex items-center gap-3 py-2">
+                    <div className="w-8 h-8 bg-purple-100 rounded-lg flex items-center justify-center">
+                      <Pill className="w-4 h-4 text-purple-600" />
+                    </div>
+                    <div className="flex-1">
+                      <p className="text-sm font-medium text-primary">Took medications</p>
+                      <p className="text-xs text-slate-400 dark:[color:var(--text-tertiary)] mt-1">
+                        {(() => {
+                          const completedDate = new Date(medicationsCompletedAt)
+                          const now = new Date()
+                          const diffMinutes = Math.floor((now - completedDate) / (1000 * 60))
+                          const diffHours = Math.floor(diffMinutes / 60)
+                          
+                          if (diffMinutes < 1) return 'Just now'
+                          if (diffMinutes < 60) return `${diffMinutes} minute${diffMinutes > 1 ? 's' : ''} ago`
+                          if (diffHours < 24) return `${diffHours} hour${diffHours > 1 ? 's' : ''} ago`
+                          const diffDays = Math.floor(diffHours / 24)
+                          if (diffDays < 7) return `${diffDays} day${diffDays > 1 ? 's' : ''} ago`
+                          return completedDate.toLocaleDateString()
+                        })()}
+                      </p>
+                    </div>
+                  </div>
+                )}
+
                 {/* Tracking streak */}
                 {symptoms.length >= 3 && (
                   <div className="flex items-center gap-3 py-2">
@@ -770,46 +911,17 @@ export default function Home() {
             )}
           </button>
           <h2 className="hidden lg:block text-xl font-semibold font-source text-primary mb-4">More</h2>
-          <div className={`grid grid-cols-2 sm:grid-cols-3 gap-4 ${showMore ? '' : 'hidden'} lg:grid`}>
-            <Link href="/about" className="card p-6  transition-all">
-              <div className="text-center">
-                <div className="w-12 h-12 icon-container dark:bg-gray-700 mx-auto mb-3">
-                  <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
-                  </svg>
+          <div className={`${showMore ? '' : 'hidden'} lg:block`}>
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 max-w-xl">
+              <Link href="/medications" className="card p-6 transition-all">
+                <div className="text-center">
+                  <div className="w-12 h-12 bg-purple-100 rounded-xl flex items-center justify-center mx-auto mb-3">
+                    <Pill className="w-6 h-6 text-purple-600" />
+                  </div>
+                  <h3 className="font-semibold text-primary">My Medications</h3>
                 </div>
-                <h3 className="font-semibold text-primary">About</h3>
-              </div>
-            </Link>
-
-            <Link href="/ibd" className="card p-6  transition-all">
-            <div className="text-center">
-                <div className="w-12 h-12 bg-blue-100 rounded-xl flex items-center justify-center mx-auto mb-3">
-                  <svg className="w-6 h-6 text-blue-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 6.253v13m0-13C10.832 5.477 9.246 5 7.5 5S4.168 5.477 3 6.253v13C4.168 18.477 5.754 18 7.5 18s3.332.477 4.5 1.253m0-13C13.168 5.477 14.754 5 16.5 5c1.746 0 3.332.477 4.5 1.253v13C19.832 18.477 18.246 18 16.5 18c-1.746 0-3.332.477-4.5 1.253" />
-                  </svg>
-                </div>
-                <h3 className="font-semibold text-primary">IBD</h3>
-              </div>
-            </Link>
-
-            <Link href="/foods" className="card p-6  transition-all">
-              <div className="text-center">
-              <div className="w-12 h-12 bg-yellow-100 rounded-xl flex items-center justify-center mx-auto mb-3">
-                <Pizza className="w-6 h-6 text-yellow-600" />
-              </div>
-                <h3 className="font-semibold text-primary">Foods</h3>
-              </div>
               </Link>
-
-            <Link href="/medications" className="card p-6  transition-all">
-              <div className="text-center">
-                <div className="w-12 h-12 bg-purple-100 rounded-xl flex items-center justify-center mx-auto mb-3">
-                  <Pill className="w-6 h-6 text-purple-600" />
-                </div>
-                <h3 className="font-semibold text-primary">Meds</h3>
-              </div>
-            </Link>
+            </div>
           </div>
         </div>
 

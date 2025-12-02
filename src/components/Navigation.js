@@ -204,14 +204,14 @@ export default function Navigation() {
       <div className="max-w-7xl mx-auto px-6 py-5">
         <div className="flex justify-between items-center">
           {/* Logo */}
-          <Link href="/" className="flex items-center gap-2 group">
-            <div className="w-12 h-12 sm:w-12 sm:h-12 rounded-full flex items-center justify-center overflow-visible">
+          <Link href="/" className="flex items-center group">
+            <div className=" rounded-full flex items-center justify-center overflow-visible">
               <Image
-                src="/icons/flame.svg"
+                src="/icons/flame1.svg"
                 alt="FlareCare logo"
                 width={48}
                 height={48}
-                className="w-11 h-11"
+                className="w-10 h-10"
                 priority={true}
               />
             </div>
