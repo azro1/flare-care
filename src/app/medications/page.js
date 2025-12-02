@@ -392,54 +392,14 @@ function MedicationsPageContent() {
       // Also update localStorage for reports
       localStorage.setItem('flarecare-medications', JSON.stringify(updatedMedications))
       
-      // Clean up Recent Activity entries for this medication
+      // Store deletion activity for Recent Activity
       if (medicationName) {
         const today = new Date().toISOString().split('T')[0]
-        
-        // Remove "Added [medication name]" entry if it exists
-        const activityKey = `flarecare-medication-added-${today}`
-        const medicationAddedData = localStorage.getItem(activityKey)
-        if (medicationAddedData) {
-          try {
-            const activity = JSON.parse(medicationAddedData)
-            if (activity.medicationName === medicationName) {
-              localStorage.removeItem(activityKey)
-            }
-          } catch (error) {
-            console.error('Error removing medication added activity:', error)
-          }
-        }
-        
-        // Remove "Updated [old name] to [new name]" entry if it exists (check both old and new names)
-        const updatedKey = `flarecare-medication-updated-${today}`
-        const medicationUpdatedData = localStorage.getItem(updatedKey)
-        if (medicationUpdatedData) {
-          try {
-            const activity = JSON.parse(medicationUpdatedData)
-            if (activity.oldMedicationName === medicationName || activity.newMedicationName === medicationName) {
-              localStorage.removeItem(updatedKey)
-            }
-          } catch (error) {
-            console.error('Error removing medication updated activity:', error)
-          }
-        }
-        
-        // Remove "Taken [medication name]" entries
-        const individualTakingsKey = `flarecare-medication-individual-takings-${today}`
-        const individualTakingsData = localStorage.getItem(individualTakingsKey)
-        if (individualTakingsData) {
-          try {
-            const takings = JSON.parse(individualTakingsData)
-            const filteredTakings = takings.filter(taking => taking.medicationId !== deleteModal.id)
-            if (filteredTakings.length === 0) {
-              localStorage.removeItem(individualTakingsKey)
-            } else {
-              localStorage.setItem(individualTakingsKey, JSON.stringify(filteredTakings))
-            }
-          } catch (error) {
-            console.error('Error removing individual medication takings:', error)
-          }
-        }
+        const deletedKey = `flarecare-medication-deleted-${today}`
+        localStorage.setItem(deletedKey, JSON.stringify({
+          timestamp: new Date().toISOString(),
+          medicationName: medicationName
+        }))
         
         // Remove from taken medications list
         const storageKey = `flarecare-medications-taken-${today}`
