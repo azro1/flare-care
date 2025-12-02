@@ -1104,7 +1104,7 @@ export default function Home() {
                   {todayActivities.map((activity, index) => {
                     const IconComponent = activity.icon
                     return (
-                      <div key={`${activity.type}-${activity.timestamp.getTime()}-${index}`} className="flex items-center gap-3 py-2">
+                      <div key={`${activity.type}-${activity.timestamp.getTime()}-${index}`} className="flex items-start gap-3 py-2">
                         <div className={`w-8 h-8 ${activity.iconBg} rounded-lg flex items-center justify-center`}>
                           <IconComponent className={`w-4 h-4 ${activity.iconColor}`} />
                         </div>
