@@ -261,11 +261,16 @@ export default function Home() {
     const handleMedicationUpdated = () => {
       loadTakenMedications()
     }
+    
+    const handleMedicationDeleted = () => {
+      loadTakenMedications()
+    }
 
     window.addEventListener('storage', handleStorageChange)
     window.addEventListener('medication-taken', handleMedicationTaken)
     window.addEventListener('medication-added', handleMedicationAdded)
     window.addEventListener('medication-updated', handleMedicationUpdated)
+    window.addEventListener('medication-deleted', handleMedicationDeleted)
     
     // Check when window gains focus (user navigates back to dashboard)
     const handleFocus = () => {
@@ -278,6 +283,7 @@ export default function Home() {
       window.removeEventListener('medication-taken', handleMedicationTaken)
       window.removeEventListener('medication-added', handleMedicationAdded)
       window.removeEventListener('medication-updated', handleMedicationUpdated)
+      window.removeEventListener('medication-deleted', handleMedicationDeleted)
       window.removeEventListener('focus', handleFocus)
     }
   }, [])

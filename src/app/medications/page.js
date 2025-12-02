@@ -373,6 +373,10 @@ function MedicationsPageContent() {
     if (!deleteModal.id || !user?.id) return
 
     try {
+      // Get medication info before deleting
+      const medicationToDelete = medications.find(med => med.id === deleteModal.id)
+      const medicationName = medicationToDelete?.name
+
       const { error } = await supabase
         .from(TABLES.MEDICATIONS)
         .delete()
@@ -387,6 +391,80 @@ function MedicationsPageContent() {
       
       // Also update localStorage for reports
       localStorage.setItem('flarecare-medications', JSON.stringify(updatedMedications))
+      
+      // Clean up Recent Activity entries for this medication
+      if (medicationName) {
+        const today = new Date().toISOString().split('T')[0]
+        
+        // Remove "Added [medication name]" entry if it exists
+        const activityKey = `flarecare-medication-added-${today}`
+        const medicationAddedData = localStorage.getItem(activityKey)
+        if (medicationAddedData) {
+          try {
+            const activity = JSON.parse(medicationAddedData)
+            if (activity.medicationName === medicationName) {
+              localStorage.removeItem(activityKey)
+            }
+          } catch (error) {
+            console.error('Error removing medication added activity:', error)
+          }
+        }
+        
+        // Remove "Updated [old name] to [new name]" entry if it exists (check both old and new names)
+        const updatedKey = `flarecare-medication-updated-${today}`
+        const medicationUpdatedData = localStorage.getItem(updatedKey)
+        if (medicationUpdatedData) {
+          try {
+            const activity = JSON.parse(medicationUpdatedData)
+            if (activity.oldMedicationName === medicationName || activity.newMedicationName === medicationName) {
+              localStorage.removeItem(updatedKey)
+            }
+          } catch (error) {
+            console.error('Error removing medication updated activity:', error)
+          }
+        }
+        
+        // Remove "Taken [medication name]" entries
+        const individualTakingsKey = `flarecare-medication-individual-takings-${today}`
+        const individualTakingsData = localStorage.getItem(individualTakingsKey)
+        if (individualTakingsData) {
+          try {
+            const takings = JSON.parse(individualTakingsData)
+            const filteredTakings = takings.filter(taking => taking.medicationId !== deleteModal.id)
+            if (filteredTakings.length === 0) {
+              localStorage.removeItem(individualTakingsKey)
+            } else {
+              localStorage.setItem(individualTakingsKey, JSON.stringify(filteredTakings))
+            }
+          } catch (error) {
+            console.error('Error removing individual medication takings:', error)
+          }
+        }
+        
+        // Remove from taken medications list
+        const storageKey = `flarecare-medications-taken-${today}`
+        const takenData = localStorage.getItem(storageKey)
+        if (takenData) {
+          try {
+            const taken = JSON.parse(takenData)
+            const filteredTaken = taken.filter(id => id !== deleteModal.id)
+            localStorage.setItem(storageKey, JSON.stringify(filteredTaken))
+            
+            // Check if we need to remove the completion timestamp
+            const timestampKey = `flarecare-medications-completed-${today}`
+            const prescribedMedications = updatedMedications.filter(med => med.name !== 'Medication Tracking')
+            if (filteredTaken.length !== prescribedMedications.length) {
+              localStorage.removeItem(timestampKey)
+            }
+          } catch (error) {
+            console.error('Error removing from taken medications:', error)
+          }
+        }
+        
+        // Dispatch custom event to notify dashboard
+        window.dispatchEvent(new Event('medication-deleted'))
+      }
+      
       setDeleteModal({ isOpen: false, id: null })
     } catch (error) {
       console.error('Error deleting medication:', error)
