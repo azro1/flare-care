@@ -204,7 +204,7 @@ export default function Navigation() {
       <div className="max-w-7xl mx-auto px-6 py-5">
         <div className="flex justify-between items-center">
           {/* Logo */}
-          <Link href="/" className="flex items-center group">
+          <Link href="/" className="flex items-center gap-1 group">
             <div className=" rounded-full flex items-center justify-center overflow-visible">
               <Image
                 src="/icons/flame1.svg"

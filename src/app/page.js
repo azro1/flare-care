@@ -348,16 +348,16 @@ export default function Home() {
                 Why I built this
               </h2>
               <div className="space-y-4 text-secondary leading-relaxed">
-                <p className="sm:text-lg">
+                <p>
                   After my diagnosis, I tried a bunch of health tracking apps. They were either too
                   complicated, too medical, or just felt like homework.
                 </p>
-                <p className="sm:text-lg">
+                <p>
                   I wanted something simple. Something that felt like writing in a journal, not
                   filling out a form. A place where I could be honest about my bad days without
                   judgment.
                 </p>
-                <p className="sm:text-lg">
+                <p>
                   So I made Flarecare for myself. And if it helps you too, that makes me really happy.
                 </p>
                 <div className="pt-4 flex items-center gap-3">
@@ -912,13 +912,21 @@ export default function Home() {
           </button>
           <h2 className="hidden lg:block text-xl font-semibold font-source text-primary mb-4">More</h2>
           <div className={`${showMore ? '' : 'hidden'} lg:block`}>
-            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 max-w-xl">
-              <Link href="/medications" className="card p-6 transition-all">
-                <div className="text-center">
-                  <div className="w-12 h-12 bg-purple-100 rounded-xl flex items-center justify-center mx-auto mb-3">
+            <div className="grid grid-cols-1 sm:grid-cols-3 gap-4 w-full">
+              <Link
+                href="/medications"
+                className="card card-link p-6 transition-all group relative focus:outline-none focus-visible:outline-none focus-visible:ring-0 focus-visible:ring-offset-0 focus:ring-0"
+              >
+                <div className="flex items-center sm:flex-col sm:items-center gap-4 sm:gap-3">
+                  <div className="w-12 h-12 bg-purple-100 rounded-xl flex items-center justify-center">
                     <Pill className="w-6 h-6 text-purple-600" />
                   </div>
-                  <h3 className="font-semibold text-primary">My Medications</h3>
+                  <div className="flex-1 sm:w-full sm:text-center">
+                    <h3 className="font-semibold text-primary leading-relaxed sm:justify-center">
+                      My Medications
+                    </h3>
+                  </div>
+                  <ChevronRight className="w-5 h-5 text-secondary sm:hidden" />
                 </div>
               </Link>
             </div>
