@@ -1006,6 +1006,33 @@ export default function Home() {
                   </div>
                 )}
 
+                {/* Medication deleted today */}
+                {medicationDeleted && (
+                  <div className="flex items-center gap-3 py-2">
+                    <div className="w-8 h-8 bg-purple-100 rounded-lg flex items-center justify-center">
+                      <Pill className="w-4 h-4 text-purple-600" />
+                    </div>
+                    <div className="flex-1">
+                      <p className="text-sm font-medium text-primary">Deleted {medicationDeleted.medicationName}</p>
+                      <p className="text-xs text-slate-400 dark:[color:var(--text-tertiary)] mt-1">
+                        {(() => {
+                          const deletedDate = new Date(medicationDeleted.timestamp)
+                          const now = new Date()
+                          const diffMinutes = Math.floor((now - deletedDate) / (1000 * 60))
+                          const diffHours = Math.floor(diffMinutes / 60)
+                          
+                          if (diffMinutes < 1) return 'Just now'
+                          if (diffMinutes < 60) return `${diffMinutes} minute${diffMinutes > 1 ? 's' : ''} ago`
+                          if (diffHours < 24) return `${diffHours} hour${diffHours > 1 ? 's' : ''} ago`
+                          const diffDays = Math.floor(diffHours / 24)
+                          if (diffDays < 7) return `${diffDays} day${diffDays > 1 ? 's' : ''} ago`
+                          return deletedDate.toLocaleDateString()
+                        })()}
+                      </p>
+                    </div>
+                  </div>
+                )}
+
                 {/* Medication added today */}
                 {medicationAdded && (
                   <div className="flex items-center gap-3 py-2">
