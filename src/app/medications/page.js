@@ -123,6 +123,17 @@ function MedicationsPageContent() {
         
         // Also save to localStorage for reports
         localStorage.setItem('flarecare-medications', JSON.stringify(updatedMedications))
+        
+        // Store timestamp for Recent Activity on dashboard
+        const today = new Date().toISOString().split('T')[0]
+        const activityKey = `flarecare-medication-added-${today}`
+        localStorage.setItem(activityKey, JSON.stringify({
+          timestamp: new Date().toISOString(),
+          medicationName: insertedMed.name
+        }))
+        
+        // Dispatch custom event to notify dashboard
+        window.dispatchEvent(new Event('medication-added'))
       }
 
       setFormData({
@@ -401,6 +412,11 @@ function MedicationsPageContent() {
     const today = new Date().toISOString().split('T')[0] // YYYY-MM-DD format
     const storageKey = `flarecare-medications-taken-${today}`
     const timestampKey = `flarecare-medications-completed-${today}`
+    const individualTakingsKey = `flarecare-medication-individual-takings-${today}`
+    
+    // Filter out "Medication Tracking" entries (same as dashboard does)
+    const prescribedMedications = medications.filter(med => med.name !== 'Medication Tracking')
+    const medication = medications.find(med => med.id === medicationId)
     
     // Check if already taken today
     if (takenMedications.includes(medicationId)) {
@@ -409,17 +425,36 @@ function MedicationsPageContent() {
       setTakenMedications(updated)
       localStorage.setItem(storageKey, JSON.stringify(updated))
       // Remove timestamp if not all medications are taken
-      if (updated.length !== medications.length) {
+      if (updated.length !== prescribedMedications.length) {
         localStorage.removeItem(timestampKey)
       }
+      
+      // Remove from individual takings
+      const individualTakings = JSON.parse(localStorage.getItem(individualTakingsKey) || '[]')
+      const updatedTakings = individualTakings.filter(taking => taking.medicationId !== medicationId)
+      localStorage.setItem(individualTakingsKey, JSON.stringify(updatedTakings))
     } else {
       // Add to taken list
       const updated = [...takenMedications, medicationId]
       setTakenMedications(updated)
       localStorage.setItem(storageKey, JSON.stringify(updated))
       
+      // Store individual medication taking
+      if (medication) {
+        const individualTakings = JSON.parse(localStorage.getItem(individualTakingsKey) || '[]')
+        // Remove any existing entry for this medication (in case they're re-marking it)
+        const filteredTakings = individualTakings.filter(taking => taking.medicationId !== medicationId)
+        // Add new entry
+        filteredTakings.push({
+          medicationId: medicationId,
+          medicationName: medication.name,
+          timestamp: new Date().toISOString()
+        })
+        localStorage.setItem(individualTakingsKey, JSON.stringify(filteredTakings))
+      }
+      
       // If all medications are now taken, store timestamp
-      if (updated.length === medications.length && medications.length > 0) {
+      if (updated.length === prescribedMedications.length && prescribedMedications.length > 0) {
         localStorage.setItem(timestampKey, new Date().toISOString())
       }
     }

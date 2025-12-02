@@ -27,6 +27,8 @@ export default function Home() {
   const [prescribedMedications, setPrescribedMedications] = useState([])
   const [takenMedications, setTakenMedications] = useState([])
   const [medicationsCompletedAt, setMedicationsCompletedAt] = useState(null)
+  const [medicationAdded, setMedicationAdded] = useState(null)
+  const [individualMedicationTakings, setIndividualMedicationTakings] = useState([])
 
   // Daily tips array
   const dailyTips = [
@@ -121,7 +123,12 @@ export default function Home() {
 
         if (error) throw error
 
-        setPrescribedMedications(data || [])
+        // Convert IDs to strings to match medications page format
+        const medicationsWithStringIds = (data || []).map(med => ({
+          ...med,
+          id: med.id.toString()
+        }))
+        setPrescribedMedications(medicationsWithStringIds)
       } catch (error) {
         console.error('Error fetching medications:', error)
       }
@@ -140,11 +147,15 @@ export default function Home() {
       const cleanupOldEntries = () => {
         const keysToRemove = []
         const timestampKey = `flarecare-medications-completed-${today}`
+        const activityKey = `flarecare-medication-added-${today}`
+        const individualTakingsKey = `flarecare-medication-individual-takings-${today}`
         for (let i = 0; i < localStorage.length; i++) {
           const key = localStorage.key(i)
           if (key && (
             (key.startsWith('flarecare-medications-taken-') && key !== storageKey) ||
-            (key.startsWith('flarecare-medications-completed-') && key !== timestampKey)
+            (key.startsWith('flarecare-medications-completed-') && key !== timestampKey) ||
+            (key.startsWith('flarecare-medication-added-') && key !== activityKey) ||
+            (key.startsWith('flarecare-medication-individual-takings-') && key !== individualTakingsKey)
           )) {
             keysToRemove.push(key)
           }
@@ -172,6 +183,37 @@ export default function Home() {
       const timestampKey = `flarecare-medications-completed-${today}`
       const completedTimestamp = localStorage.getItem(timestampKey)
       setMedicationsCompletedAt(completedTimestamp || null)
+      
+      // Load medication added activity
+      const activityKey = `flarecare-medication-added-${today}`
+      const medicationAddedData = localStorage.getItem(activityKey)
+      if (medicationAddedData) {
+        try {
+          setMedicationAdded(JSON.parse(medicationAddedData))
+        } catch (error) {
+          console.error('Error parsing medication added data:', error)
+          setMedicationAdded(null)
+        }
+      } else {
+        setMedicationAdded(null)
+      }
+      
+      // Load individual medication takings
+      const individualTakingsKey = `flarecare-medication-individual-takings-${today}`
+      const individualTakingsData = localStorage.getItem(individualTakingsKey)
+      if (individualTakingsData) {
+        try {
+          const takings = JSON.parse(individualTakingsData)
+          // Sort by timestamp, most recent first
+          takings.sort((a, b) => new Date(b.timestamp) - new Date(a.timestamp))
+          setIndividualMedicationTakings(takings)
+        } catch (error) {
+          console.error('Error parsing individual medication takings:', error)
+          setIndividualMedicationTakings([])
+        }
+      } else {
+        setIndividualMedicationTakings([])
+      }
     }
 
     // Load on mount
@@ -179,18 +221,28 @@ export default function Home() {
 
     // Listen for storage changes (when medications are marked as taken in other tabs/windows)
     const handleStorageChange = (e) => {
-      if (e.key && e.key.startsWith('flarecare-medications-taken-')) {
+      if (e.key && (
+        e.key.startsWith('flarecare-medications-taken-') ||
+        e.key.startsWith('flarecare-medications-completed-') ||
+        e.key.startsWith('flarecare-medication-added-') ||
+        e.key.startsWith('flarecare-medication-individual-takings-')
+      )) {
         loadTakenMedications()
       }
     }
 
-    // Listen for custom event (when medications are marked as taken in same tab)
+    // Listen for custom events
     const handleMedicationTaken = () => {
+      loadTakenMedications()
+    }
+    
+    const handleMedicationAdded = () => {
       loadTakenMedications()
     }
 
     window.addEventListener('storage', handleStorageChange)
     window.addEventListener('medication-taken', handleMedicationTaken)
+    window.addEventListener('medication-added', handleMedicationAdded)
     
     // Check when window gains focus (user navigates back to dashboard)
     const handleFocus = () => {
@@ -201,6 +253,7 @@ export default function Home() {
     return () => {
       window.removeEventListener('storage', handleStorageChange)
       window.removeEventListener('medication-taken', handleMedicationTaken)
+      window.removeEventListener('medication-added', handleMedicationAdded)
       window.removeEventListener('focus', handleFocus)
     }
   }, [])
@@ -770,18 +823,27 @@ export default function Home() {
         <div>
           <h2 className="text-xl font-semibold font-source text-primary">Recent Activity</h2>
           <div className="p-6 transition-all duration-300 ease-in-out">
-            {symptoms.length === 0 && trackedMedications.length === 0 ? (
-              <div className="text-center py-4">
-                <div className="w-12 h-12 icon-container icon-container--muted mx-auto mb-3">
-                  <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5H7a2 2 0 00-2 2v10a2 2 0 002 2h8a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2" />
-                  </svg>
-                </div>
-                <p className="text-secondary text-sm">No recent activity</p>
-                <p className="text-xs text-secondary mt-1">Start tracking your symptoms and medications to see activity here</p>
-              </div>
-            ) : (
-              <div className="space-y-3">
+            {(() => {
+              const shouldShowTookMeds = medicationsCompletedAt && takenMedications.length === prescribedMedications.length && prescribedMedications.length > 0
+              const hasOtherActivity = symptoms.length > 0 || trackedMedications.length > 0
+              const hasMedicationActivity = shouldShowTookMeds || medicationAdded || individualMedicationTakings.length > 0
+              
+              if (!hasOtherActivity && !hasMedicationActivity) {
+                return (
+                  <div className="text-center py-4">
+                    <div className="w-12 h-12 icon-container icon-container--muted mx-auto mb-3">
+                      <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5H7a2 2 0 00-2 2v10a2 2 0 002 2h8a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2" />
+                      </svg>
+                    </div>
+                    <p className="text-secondary text-sm">No recent activity</p>
+                    <p className="text-xs text-secondary mt-1">Start tracking your symptoms and medications to see activity here</p>
+                  </div>
+                )
+              }
+              
+              return (
+                <div className="space-y-3">
                 {/* Most recent symptom entry */}
                 {symptoms.length > 0 && (
                   <div className="flex items-center gap-3 py-2">
@@ -838,6 +900,64 @@ export default function Home() {
                   </div>
                 )}
 
+                {/* Individual medication takings (only show if not all medications are taken) */}
+                {(() => {
+                  const allMedsTaken = medicationsCompletedAt && takenMedications.length === prescribedMedications.length && prescribedMedications.length > 0
+                  if (allMedsTaken) return null
+                  return individualMedicationTakings.map((taking) => (
+                    <div key={`${taking.medicationId}-${taking.timestamp}`} className="flex items-center gap-3 py-2">
+                      <div className="w-8 h-8 bg-purple-100 rounded-lg flex items-center justify-center">
+                        <Pill className="w-4 h-4 text-purple-600" />
+                      </div>
+                      <div className="flex-1">
+                        <p className="text-sm font-medium text-primary">Taken {taking.medicationName}</p>
+                        <p className="text-xs text-slate-400 dark:[color:var(--text-tertiary)] mt-1">
+                          {(() => {
+                            const takenDate = new Date(taking.timestamp)
+                            const now = new Date()
+                            const diffMinutes = Math.floor((now - takenDate) / (1000 * 60))
+                            const diffHours = Math.floor(diffMinutes / 60)
+                            
+                            if (diffMinutes < 1) return 'Just now'
+                            if (diffMinutes < 60) return `${diffMinutes} minute${diffMinutes > 1 ? 's' : ''} ago`
+                            if (diffHours < 24) return `${diffHours} hour${diffHours > 1 ? 's' : ''} ago`
+                            const diffDays = Math.floor(diffHours / 24)
+                            if (diffDays < 7) return `${diffDays} day${diffDays > 1 ? 's' : ''} ago`
+                            return takenDate.toLocaleDateString()
+                          })()}
+                        </p>
+                      </div>
+                    </div>
+                  ))
+                })()}
+
+                {/* Medication added today */}
+                {medicationAdded && (
+                  <div className="flex items-center gap-3 py-2">
+                    <div className="w-8 h-8 bg-purple-100 rounded-lg flex items-center justify-center">
+                      <Pill className="w-4 h-4 text-purple-600" />
+                    </div>
+                    <div className="flex-1">
+                      <p className="text-sm font-medium text-primary">Added {medicationAdded.medicationName}</p>
+                      <p className="text-xs text-slate-400 dark:[color:var(--text-tertiary)] mt-1">
+                        {(() => {
+                          const addedDate = new Date(medicationAdded.timestamp)
+                          const now = new Date()
+                          const diffMinutes = Math.floor((now - addedDate) / (1000 * 60))
+                          const diffHours = Math.floor(diffMinutes / 60)
+                          
+                          if (diffMinutes < 1) return 'Just now'
+                          if (diffMinutes < 60) return `${diffMinutes} minute${diffMinutes > 1 ? 's' : ''} ago`
+                          if (diffHours < 24) return `${diffHours} hour${diffHours > 1 ? 's' : ''} ago`
+                          const diffDays = Math.floor(diffHours / 24)
+                          if (diffDays < 7) return `${diffDays} day${diffDays > 1 ? 's' : ''} ago`
+                          return addedDate.toLocaleDateString()
+                        })()}
+                      </p>
+                    </div>
+                  </div>
+                )}
+
                 {/* All medications taken today */}
                 {medicationsCompletedAt && takenMedications.length === prescribedMedications.length && prescribedMedications.length > 0 && (
                   <div className="flex items-center gap-3 py-2">
@@ -845,7 +965,7 @@ export default function Home() {
                       <Pill className="w-4 h-4 text-purple-600" />
                     </div>
                     <div className="flex-1">
-                      <p className="text-sm font-medium text-primary">Took medications</p>
+                      <p className="text-sm font-medium text-primary">Took all medications</p>
                       <p className="text-xs text-slate-400 dark:[color:var(--text-tertiary)] mt-1">
                         {(() => {
                           const completedDate = new Date(medicationsCompletedAt)
@@ -892,8 +1012,9 @@ export default function Home() {
                     </div>
                   </div>
                 )}
-              </div>
-            )}
+                </div>
+              )
+            })()}
           </div>
         </div>
 
