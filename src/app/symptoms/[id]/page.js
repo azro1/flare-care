@@ -2,20 +2,68 @@
 
 import { useState, useEffect } from 'react'
 import { useParams, useRouter } from 'next/navigation'
-import { useDataSync } from '@/lib/useDataSync'
 import { useAuth } from '@/lib/AuthContext'
-import { deleteFromSupabase, TABLES } from '@/lib/supabase'
+import { supabase, deleteFromSupabase, TABLES } from '@/lib/supabase'
 import ProtectedRoute from '@/components/ProtectedRoute'
 
 function SymptomDetailContent() {
   const params = useParams()
   const router = useRouter()
   const { user } = useAuth()
-  const { data: symptoms, setData: setSymptoms } = useDataSync('flarecare-symptoms', [])
+  const [symptoms, setSymptoms] = useState([])
   const [symptom, setSymptom] = useState(null)
   const [isDeleting, setIsDeleting] = useState(false)
   const [showDeleteModal, setShowDeleteModal] = useState(false)
   const [isRedirecting, setIsRedirecting] = useState(false)
+
+  // Fetch symptoms directly from Supabase
+  useEffect(() => {
+    const fetchSymptoms = async () => {
+      if (!user?.id) {
+        setSymptoms([])
+        return
+      }
+
+      try {
+        const { data, error } = await supabase
+          .from(TABLES.SYMPTOMS)
+          .select('*')
+          .eq('user_id', user.id)
+          .order('created_at', { ascending: false })
+
+        if (error) throw error
+
+        if (data) {
+          // Transform snake_case to camelCase
+          const transformedSymptoms = data.map(item => {
+            const {
+              symptom_start_date,
+              is_ongoing,
+              symptom_end_date,
+              created_at,
+              updated_at,
+              ...rest
+            } = item
+            return {
+              ...rest,
+              symptomStartDate: symptom_start_date,
+              isOngoing: is_ongoing,
+              symptomEndDate: symptom_end_date,
+              createdAt: created_at,
+              created_at: created_at, // Keep both for compatibility
+              updatedAt: updated_at
+            }
+          })
+          setSymptoms(transformedSymptoms)
+        }
+      } catch (error) {
+        console.error('Error fetching symptoms:', error)
+        setSymptoms([])
+      }
+    }
+
+    fetchSymptoms()
+  }, [user?.id])
 
   useEffect(() => {
     const foundSymptom = symptoms.find(s => s.id === params.id)

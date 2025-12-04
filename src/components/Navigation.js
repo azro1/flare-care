@@ -4,7 +4,6 @@ import Link from 'next/link'
 import { usePathname } from 'next/navigation'
 import { useState, useEffect, useRef } from 'react'
 import { useAuth } from '../lib/AuthContext'
-import SyncSettings from './SyncSettings'
 import { Sandwich, Activity } from "lucide-react"
 import Image from 'next/image'
 
@@ -204,18 +203,17 @@ export default function Navigation() {
       <div className="max-w-7xl mx-auto px-6 py-5">
         <div className="flex justify-between items-center">
           {/* Logo */}
-          <Link href="/" className="flex items-center gap-1 group">
+          <Link href="/">
             <div className=" rounded-full flex items-center justify-center overflow-visible">
               <Image
-                src="/icons/flame1.svg"
+                src="/icons/logo.svg"
                 alt="FlareCare logo"
                 width={48}
                 height={48}
-                className="w-10 h-10"
+                className="w-11 h-10"
                 priority={true}
               />
             </div>
-            <span className="hidden sm:block text-xl font-bold text-white font-source">FlareCare</span>
           </Link>
 
           {/* Desktop Navigation */}

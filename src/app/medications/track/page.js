@@ -8,13 +8,11 @@ import ProtectedRoute from '@/components/ProtectedRoute'
 import DatePicker from 'react-datepicker'
 import 'react-datepicker/dist/react-datepicker.css'
 import { ChartLine } from 'lucide-react'
-import { useDataSync } from '@/lib/useDataSync'
 import { supabase, TABLES } from '@/lib/supabase'
 
 function MedicationTrackingWizard() {
   const router = useRouter()
   const { user } = useAuth()
-  const { data: medications, setData: setMedications } = useDataSync('flarecare-medications', [])
 
   // Wizard state - initialize from localStorage if available
   const [currentStep, setCurrentStep] = useState(() => {
@@ -379,9 +377,6 @@ function MedicationTrackingWizard() {
         .insert([newMedicationTracking])
 
       if (error) throw error
-
-      // Update local state - following the exact same pattern as symptoms
-      setMedications([newMedicationTracking, ...medications])
 
       // Clear wizard state
       localStorage.removeItem('medication-wizard-step')

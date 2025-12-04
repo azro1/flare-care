@@ -4,15 +4,14 @@ import Link from 'next/link'
 import WeatherHero from '@/components/WeatherHero'
 import { useAuth } from '@/lib/AuthContext'
 import { useEffect, useState } from 'react'
-import { useDataSync } from '@/lib/useDataSync'
 import { useRouter } from 'next/navigation'
 import { supabase, TABLES } from '@/lib/supabase'
 import { CupSoda, Pizza, Coffee, BookOpen, Smile, Thermometer, Pill, FileText, Activity, TrendingUp, PartyPopper, Clipboard, Cookie, ChartLine, Sparkles, ChevronRight, ChevronDown } from 'lucide-react'
 
 export default function Home() {
   const { isAuthenticated, loading, user } = useAuth()
-  const { data: symptoms } = useDataSync('flarecare-symptoms', [])
-  const { data: medications } = useDataSync('flarecare-medications', [])
+  const [symptoms, setSymptoms] = useState([])
+  const [medications, setMedications] = useState([])
   const router = useRouter()
   const [showAllSymptoms, setShowAllSymptoms] = useState(false)
   const [showAllMedications, setShowAllMedications] = useState(false)
@@ -24,7 +23,6 @@ export default function Home() {
   const [currentTipIndex, setCurrentTipIndex] = useState(0)
   const [isFading, setIsFading] = useState(false)
   const [showMore, setShowMore] = useState(false)
-  const [prescribedMedications, setPrescribedMedications] = useState([])
   const [takenMedications, setTakenMedications] = useState([])
   const [medicationsCompletedAt, setMedicationsCompletedAt] = useState(null)
   const [medicationAdded, setMedicationAdded] = useState(null)
@@ -105,7 +103,111 @@ export default function Home() {
 
   }, [])
 
-  // Fetch tracked medications directly from Supabase (same as symptoms)
+  // Fetch symptoms directly from Supabase
+  useEffect(() => {
+    const fetchSymptoms = async () => {
+      if (!user?.id) {
+        setSymptoms([])
+        return
+      }
+
+      try {
+        const { data, error } = await supabase
+          .from(TABLES.SYMPTOMS)
+          .select('*')
+          .eq('user_id', user.id)
+          .order('created_at', { ascending: false })
+
+        if (error) throw error
+
+        if (data) {
+          // Transform snake_case to camelCase
+          const transformedSymptoms = data.map(item => {
+            const {
+              symptom_start_date,
+              is_ongoing,
+              symptom_end_date,
+              created_at,
+              updated_at,
+              ...rest
+            } = item
+            return {
+              ...rest,
+              symptomStartDate: symptom_start_date,
+              isOngoing: is_ongoing,
+              symptomEndDate: symptom_end_date,
+              createdAt: created_at,
+              created_at: created_at, // Keep both for compatibility
+              updatedAt: updated_at
+            }
+          })
+          setSymptoms(transformedSymptoms)
+        }
+      } catch (error) {
+        console.error('Error fetching symptoms:', error)
+        setSymptoms([])
+      }
+    }
+
+    fetchSymptoms()
+
+    // Refresh when window gains focus (user navigates back to dashboard)
+    const handleFocus = () => {
+      fetchSymptoms()
+    }
+    
+    window.addEventListener('focus', handleFocus)
+    return () => window.removeEventListener('focus', handleFocus)
+  }, [user?.id])
+
+  // Fetch medications directly from Supabase
+  useEffect(() => {
+    const fetchMedications = async () => {
+      if (!user?.id) {
+        setMedications([])
+        return
+      }
+
+      try {
+        const { data, error } = await supabase
+          .from(TABLES.MEDICATIONS)
+          .select('*')
+          .eq('user_id', user.id)
+          .neq('name', 'Medication Tracking')
+          .order('created_at', { ascending: false })
+
+        if (error) throw error
+
+        if (data) {
+          // Transform snake_case to camelCase
+          const transformedMedications = data.map(item => {
+            const {
+              time_of_day,
+              reminders_enabled,
+              created_at,
+              updated_at,
+              ...rest
+            } = item
+            return {
+              ...rest,
+              timeOfDay: time_of_day || '',
+              remindersEnabled: reminders_enabled !== false,
+              createdAt: created_at,
+              updatedAt: updated_at
+            }
+          })
+          setMedications(transformedMedications)
+        }
+      } catch (error) {
+        console.error('Error fetching medications:', error)
+        setMedications([])
+      }
+    }
+
+    fetchMedications()
+  }, [user?.id])
+
+  // Fetch tracked medications directly from Supabase
   useEffect(() => {
     const fetchTrackedMedications = async () => {
       if (!user?.id) return
@@ -138,34 +240,6 @@ export default function Home() {
     return () => window.removeEventListener('focus', handleFocus)
   }, [user?.id, showMedicationToast])
 
-  // Fetch medications from Supabase (excluding "Medication Tracking" entries)
-  useEffect(() => {
-    const fetchMedications = async () => {
-      if (!user?.id) return
-
-      try {
-        const { data, error } = await supabase
-          .from(TABLES.MEDICATIONS)
-          .select('*')
-          .eq('user_id', user.id)
-          .neq('name', 'Medication Tracking')
-          .order('created_at', { ascending: false })
-
-        if (error) throw error
-
-        // Convert IDs to strings to match medications page format
-        const medicationsWithStringIds = (data || []).map(med => ({
-          ...med,
-          id: med.id.toString()
-        }))
-        setPrescribedMedications(medicationsWithStringIds)
-      } catch (error) {
-        console.error('Error fetching medications:', error)
-      }
-    }
-
-    fetchMedications()
-  }, [user?.id])
 
   // Track daily medication intake with localStorage
   useEffect(() => {
@@ -700,10 +774,10 @@ export default function Home() {
                       <Pill className="w-2.5 h-2.5" style={{color: 'var(--text-goal-icon-medication)'}} />
                     </div>
                     <div className="flex-1 flex items-center justify-between">
-                      <span className={`text-sm ${takenMedications.length === prescribedMedications.length && prescribedMedications.length > 0 ? '' : 'text-secondary'}`} style={{color: takenMedications.length === prescribedMedications.length && prescribedMedications.length > 0 ? 'var(--text-cadet-blue)' : undefined}}>
+                      <span className={`text-sm ${takenMedications.length === medications.length && medications.length > 0 ? '' : 'text-secondary'}`} style={{color: takenMedications.length === medications.length && medications.length > 0 ? 'var(--text-cadet-blue)' : undefined}}>
                         Take medications
                       </span>
-                      {takenMedications.length === prescribedMedications.length && prescribedMedications.length > 0 && (
+                      {takenMedications.length === medications.length && medications.length > 0 && (
                         <svg className="w-5 h-5" style={{color: 'var(--text-cadet-blue)'}} fill="none" stroke="currentColor" viewBox="0 0 24 24">
                           <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
                         </svg>
@@ -836,7 +910,7 @@ export default function Home() {
             </div>
             <div className="flex justify-between items-center py-2">
               <span className="text-secondary">Medications Taken</span>
-              <span className="font-semibold text-primary">{takenMedications.length}/{prescribedMedications.length}</span>
+              <span className="font-semibold text-primary">{takenMedications.length}/{medications.length}</span>
             </div>
           </div>
         </div>
@@ -1014,7 +1088,11 @@ export default function Home() {
               }
 
               // Individual medication takings (only if not all medications are taken)
-              const allMedsTaken = medicationsCompletedAt && takenMedications.length === prescribedMedications.length && prescribedMedications.length > 0
+              // Check if all medication IDs are in takenMedications
+              const medicationIds = medications.map(m => m.id.toString())
+              const allMedsTaken = medicationsCompletedAt && 
+                medications.length > 0 && 
+                medicationIds.every(id => takenMedications.includes(id))
               if (!allMedsTaken && individualMedicationTakings.length > 0) {
                 individualMedicationTakings.forEach((taking) => {
                   activities.push({

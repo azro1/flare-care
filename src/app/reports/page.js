@@ -1,15 +1,17 @@
 'use client'
 
 import { useState, useEffect } from 'react'
-import { useDataSync } from '@/lib/useDataSync'
 import jsPDF from 'jspdf'
 import ConfirmationModal from '@/components/ConfirmationModal'
 import DatePicker from '@/components/DatePicker'
 import ProtectedRoute from '@/components/ProtectedRoute'
+import { supabase, TABLES } from '@/lib/supabase'
+import { useAuth } from '@/lib/AuthContext'
 
 function ReportsPageContent() {
-  const { data: symptoms } = useDataSync('flarecare-symptoms', [])
-  const { data: medications } = useDataSync('flarecare-medications', [])
+  const { user } = useAuth()
+  const [symptoms, setSymptoms] = useState([])
+  const [medications, setMedications] = useState([])
   const [reportData, setReportData] = useState(null)
   const [dateRange, setDateRange] = useState(() => {
     const endDate = new Date()
@@ -21,6 +23,100 @@ function ReportsPageContent() {
     }
   })
   const [showNoDataModal, setShowNoDataModal] = useState(false)
+
+  // Fetch symptoms directly from Supabase
+  useEffect(() => {
+    const fetchSymptoms = async () => {
+      if (!user?.id) {
+        setSymptoms([])
+        return
+      }
+
+      try {
+        const { data, error } = await supabase
+          .from(TABLES.SYMPTOMS)
+          .select('*')
+          .eq('user_id', user.id)
+          .order('created_at', { ascending: false })
+
+        if (error) throw error
+
+        if (data) {
+          // Transform snake_case to camelCase
+          const transformedSymptoms = data.map(item => {
+            const {
+              symptom_start_date,
+              is_ongoing,
+              symptom_end_date,
+              created_at,
+              updated_at,
+              ...rest
+            } = item
+            return {
+              ...rest,
+              symptomStartDate: symptom_start_date,
+              isOngoing: is_ongoing,
+              symptomEndDate: symptom_end_date,
+              createdAt: created_at,
+              updatedAt: updated_at
+            }
+          })
+          setSymptoms(transformedSymptoms)
+        }
+      } catch (error) {
+        console.error('Error fetching symptoms:', error)
+        setSymptoms([])
+      }
+    }
+
+    fetchSymptoms()
+  }, [user?.id])
+
+  // Fetch medications directly from Supabase
+  useEffect(() => {
+    const fetchMedications = async () => {
+      if (!user?.id) {
+        setMedications([])
+        return
+      }
+
+      try {
+        const { data, error } = await supabase
+          .from(TABLES.MEDICATIONS)
+          .select('*')
+          .eq('user_id', user.id)
+          .order('created_at', { ascending: false })
+
+        if (error) throw error
+
+        if (data) {
+          // Transform snake_case to camelCase
+          const transformedMedications = data.map(item => {
+            const {
+              time_of_day,
+              reminders_enabled,
+              created_at,
+              updated_at,
+              ...rest
+            } = item
+            return {
+              ...rest,
+              timeOfDay: time_of_day || '',
+              remindersEnabled: reminders_enabled !== false,
+              createdAt: created_at,
+              updatedAt: updated_at
+            }
+          })
+          setMedications(transformedMedications)
+        }
+      } catch (error) {
+        console.error('Error fetching medications:', error)
+        setMedications([])
+      }
+    }
+
+    fetchMedications()
+  }, [user?.id])
 
   useEffect(() => {
     generateReport()

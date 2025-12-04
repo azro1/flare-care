@@ -18,11 +18,52 @@ export const AuthProvider = ({ children }) => {
   const [loading, setLoading] = useState(true)
   const [isAuthenticated, setIsAuthenticated] = useState(false)
 
+  // Helper function to clear user-specific localStorage data
+  const clearUserData = () => {
+    if (typeof window === 'undefined') return
+    
+    // List of all user-specific localStorage keys to clear
+    const keysToRemove = []
+    
+    for (let i = 0; i < localStorage.length; i++) {
+      const key = localStorage.key(i)
+      if (key && (
+        key.startsWith('flarecare-symptoms') ||
+        key.startsWith('flarecare-medications') ||
+        key.startsWith('flarecare-medication-') ||
+        key.startsWith('flarecare-symptom-') ||
+        key.startsWith('flarecare-tracked-medication-') ||
+        key.startsWith('symptoms-wizard-') ||
+        key.startsWith('medication-wizard-') ||
+        key === 'flarecare-user-preferences' ||
+        key === 'flarecare-sync-enabled'
+      )) {
+        keysToRemove.push(key)
+      }
+    }
+    
+    keysToRemove.forEach(key => localStorage.removeItem(key))
+  }
+
   useEffect(() => {
+    let previousUserId = null
+
     // Get initial session
     const getInitialSession = async () => {
       const { data: { session } } = await supabase.auth.getSession()
       const userData = session?.user ?? null
+      
+      // If user changed, clear previous user's data
+      if (previousUserId && userData && previousUserId !== userData.id) {
+        clearUserData()
+      }
+      
+      // If logging out, clear all user data
+      if (!userData && previousUserId) {
+        clearUserData()
+      }
+      
+      previousUserId = userData?.id || null
       setUser(userData)
       setIsAuthenticated(!!userData)
       setLoading(false)
@@ -41,6 +82,21 @@ export const AuthProvider = ({ children }) => {
     const { data: { subscription } } = supabase.auth.onAuthStateChange(
       async (event, session) => {
         const userData = session?.user ?? null
+        
+        // Get current user ID before updating
+        const currentUserId = user?.id || null
+        const newUserId = userData?.id || null
+        
+        // If user changed (login or switch), clear previous user's data
+        if (currentUserId && newUserId && currentUserId !== newUserId) {
+          clearUserData()
+        }
+        
+        // If logging out, clear all user data
+        if (!userData && currentUserId) {
+          clearUserData()
+        }
+        
         setUser(userData)
         setIsAuthenticated(!!userData)
         setLoading(false)
@@ -55,7 +111,7 @@ export const AuthProvider = ({ children }) => {
     )
 
     return () => subscription.unsubscribe()
-  }, [])
+  }, [user?.id])
 
   // Sign in with email OTP
   const signInWithOtp = async (email) => {

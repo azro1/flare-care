@@ -1,22 +1,21 @@
 'use client'
 
 import { useState, useEffect } from 'react'
-import { useDataSync } from '@/lib/useDataSync'
 import ConfirmationModal from '@/components/ConfirmationModal'
 import DatePicker from '@/components/DatePicker'
 import ProtectedRoute from '@/components/ProtectedRoute'
 import { sanitizeNotes, sanitizeFoodTriggers } from '@/lib/sanitize'
-import { supabase, TABLES } from '@/lib/supabase'
+import { supabase, TABLES, deleteFromSupabase } from '@/lib/supabase'
 import { useRouter, usePathname } from 'next/navigation'
 import { useAuth } from '@/lib/AuthContext'
 import { getUserPreferences, saveUserPreferences, updatePreference, checkHabitPattern } from '@/lib/userPreferences'
 import { Thermometer } from 'lucide-react'
 
 function SymptomsPageContent() {
-  const { data: symptoms, setData: setSymptoms, deleteData: deleteSymptom } = useDataSync('flarecare-symptoms', [])
   const router = useRouter()
   const pathname = usePathname()
   const { user } = useAuth()
+  const [symptoms, setSymptoms] = useState([])
 
   // Wizard state - initialize from localStorage if available
   const [currentStep, setCurrentStep] = useState(() => {
@@ -119,6 +118,55 @@ function SymptomsPageContent() {
       document.documentElement.style.height = ''
     }
   }, [currentStep])
+
+  // Fetch symptoms directly from Supabase
+  useEffect(() => {
+    const fetchSymptoms = async () => {
+      if (!user?.id) {
+        setSymptoms([])
+        return
+      }
+
+      try {
+        const { data, error } = await supabase
+          .from(TABLES.SYMPTOMS)
+          .select('*')
+          .eq('user_id', user.id)
+          .order('created_at', { ascending: false })
+
+        if (error) throw error
+
+        if (data) {
+          // Transform snake_case to camelCase
+          const transformedSymptoms = data.map(item => {
+            const {
+              symptom_start_date,
+              is_ongoing,
+              symptom_end_date,
+              created_at,
+              updated_at,
+              ...rest
+            } = item
+            return {
+              ...rest,
+              symptomStartDate: symptom_start_date,
+              isOngoing: is_ongoing,
+              symptomEndDate: symptom_end_date,
+              createdAt: created_at,
+              created_at: created_at, // Keep both for compatibility
+              updatedAt: updated_at
+            }
+          })
+          setSymptoms(transformedSymptoms)
+        }
+      } catch (error) {
+        console.error('Error fetching symptoms:', error)
+        setSymptoms([])
+      }
+    }
+
+    fetchSymptoms()
+  }, [user?.id])
 
   // Load user preferences on component mount
   useEffect(() => {
@@ -840,8 +888,17 @@ function SymptomsPageContent() {
 
       if (error) throw error
 
-      // Update local state
-    setSymptoms([newSymptom, ...symptoms])
+      // Transform and update local state
+      const transformedSymptom = {
+        ...newSymptom,
+        symptomStartDate: newSymptom.symptom_start_date,
+        isOngoing: newSymptom.is_ongoing,
+        symptomEndDate: newSymptom.symptom_end_date,
+        createdAt: newSymptom.created_at,
+        created_at: newSymptom.created_at, // Keep both for compatibility
+        updatedAt: newSymptom.updated_at || newSymptom.created_at
+      }
+      setSymptoms([transformedSymptom, ...symptoms])
       
       // Save user preferences if this is a first-time user
       if (isFirstTimeUser) {
@@ -903,8 +960,30 @@ function SymptomsPageContent() {
   }
 
   const confirmDelete = async () => {
-    if (deleteModal.id) {
-      await deleteSymptom(deleteModal.id)
+    if (deleteModal.id && user?.id) {
+      try {
+        const result = await deleteFromSupabase(TABLES.SYMPTOMS, deleteModal.id, user.id)
+        
+        if (result.success) {
+          // Remove from local state
+          setSymptoms(symptoms.filter(s => s.id !== deleteModal.id))
+          setDeleteModal({ isOpen: false, id: null })
+        } else {
+          console.error('Error deleting symptom:', result.error)
+          setAlertModal({
+            isOpen: true,
+            title: 'Error',
+            message: 'Failed to delete symptom. Please try again.'
+          })
+        }
+      } catch (error) {
+        console.error('Error deleting symptom:', error)
+        setAlertModal({
+          isOpen: true,
+          title: 'Error',
+          message: 'Failed to delete symptom. Please try again.'
+        })
+      }
     }
   }
 

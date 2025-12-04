@@ -17,6 +17,24 @@ export const metadata = {
     shortcut: '/icons/logo.svg',
     apple: '/icons/logo.svg',
   },
+  openGraph: {
+    title: 'FlareCare - Crohn\'s & Colitis Management',
+    description: 'Track symptoms, medications, and generate reports for Crohn\'s & Colitis patients',
+    images: [
+      {
+        url: '/icons/logo.svg',
+        width: 48,
+        height: 48,
+        alt: 'FlareCare logo',
+      },
+    ],
+  },
+  twitter: {
+    card: 'summary',
+    title: 'FlareCare - Crohn\'s & Colitis Management',
+    description: 'Track symptoms, medications, and generate reports for Crohn\'s & Colitis patients',
+    images: ['/icons/logo.svg'],
+  },
 }
 
 export default function RootLayout({ children }) {
