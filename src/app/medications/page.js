@@ -211,7 +211,7 @@ function MedicationsPageContent() {
     setFormData({
       name: medication.name,
       dosage: medication.dosage,
-      timeOfDay: medication.timeOfDay || '7:00',
+      timeOfDay: medication.timeOfDay ?? '',
       remindersEnabled: medication.remindersEnabled !== false,
       notes: medication.notes || ''
     })

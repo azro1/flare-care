@@ -828,7 +828,7 @@ export default function Home() {
         {/* Quick Actions */}
         <div className="mt-8 md:mt-10 mb-8">
           <h2 className="text-xl font-semibold font-source text-primary mb-4">Get Started</h2>
-          <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
+          <div className="grid grid-cols-1 sm:grid-cols-3 gap-4 md:gap-6 ">
             <Link
               href="/symptoms"
               className="card card-link p-6 transition-all group relative focus:outline-none focus-visible:outline-none focus-visible:ring-0 focus-visible:ring-offset-0 focus:ring-0"
@@ -901,14 +901,14 @@ export default function Home() {
         <div className="border-t mb-8" style={{borderColor: 'var(--border-primary)'}}></div>
 
         {/* Today's Summary */}
-        <div>
+        <div className="mb-8">
           <h2 className="text-xl font-semibold font-source text-primary">Today's Summary</h2>
-          <div className="p-6">
+          <div className="p-4 pb-0">
             <div className="flex justify-between items-center py-2">
               <span className="text-secondary">Symptoms Logged</span>
               <span className="font-semibold text-primary">{todaySymptoms.length}</span>
             </div>
-            <div className="flex justify-between items-center py-2">
+            <div className="flex justify-between items-center pt-2">
               <span className="text-secondary">Medications Taken</span>
               <span className="font-semibold text-primary">{takenMedications.length}/{medications.length}</span>
             </div>
@@ -938,7 +938,7 @@ export default function Home() {
                 <div key={symptom.id} className="flex items-center">
                   <div className="w-1 h-20 bg-emerald-600 mx-3"></div>
                   <div 
-                    className="card p-6  cursor-pointer transition-all duration-200 flex-1"
+                    className="card p-6 cursor-pointer transition-all duration-200 flex-1"
                     onClick={() => {
                       router.push(`/symptoms/${symptom.id}`)
                     }}
@@ -1016,9 +1016,9 @@ export default function Home() {
         )}
         
         {/* Recent Activity */}
-        <div>
+        <div className="card mb-8">
           <h2 className="text-xl font-semibold font-source text-primary">Recent Activity</h2>
-          <div className="p-6 transition-all duration-300 ease-in-out">
+          <div className="p-4 pb-0 transition-all duration-300 ease-in-out">
             {(() => {
               // Helper function to format relative time
               const formatRelativeTime = (date) => {
@@ -1182,7 +1182,7 @@ export default function Home() {
                   {todayActivities.map((activity, index) => {
                     const IconComponent = activity.icon
                     return (
-                      <div key={`${activity.type}-${activity.timestamp.getTime()}-${index}`} className="flex items-start gap-3 py-2">
+                      <div key={`${activity.type}-${activity.timestamp.getTime()}-${index}`} className="flex items-start gap-3 pt-2">
                         <div className={`w-8 h-8 ${activity.iconBg} rounded-lg flex items-center justify-center`}>
                           <IconComponent className={`w-4 h-4 ${activity.iconColor}`} />
                         </div>

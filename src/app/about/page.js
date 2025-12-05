@@ -106,7 +106,7 @@ export default function About() {
           the Crohn's and Colitis community.
         </p>
         
-        <div className="grid md:grid-cols-2 gap-6">
+        <div className="grid md:grid-cols-2 gap-8">
           <div className="card-inner p-6 rounded-xl">
             <h3 className="text-lg font-semibold font-source text-primary mb-3">Email Support</h3>
             <p className="text-secondary mb-4 font-roboto text-sm leading-relaxed">

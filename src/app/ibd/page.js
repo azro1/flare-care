@@ -44,7 +44,7 @@ export default function LearnPage() {
           <div className="sticky top-8 space-y-8">
             
             {/* Daily Tips */}
-            <div className="card backdrop-blur-sm p-4 rounded-2xl sm:p-6 lg:pb-0 lg:bg-transparent lg:shadow-none lg:hover:shadow-none">
+            <div className="card p-4 rounded-2xl sm:p-6 lg:pb-0 lg:bg-transparent lg:shadow-none lg:hover:shadow-none">
               <h3 className="text-lg font-semibold font-source text-primary mb-4">Daily Tips</h3>
               <div className="space-y-3">
                 <div className="flex items-center gap-3">
@@ -75,7 +75,7 @@ export default function LearnPage() {
             </div>
 
             {/* Emergency Contacts */}
-            <div className="card p-6 rounded-2xl backdrop-blur-sm">
+            <div className="card rounded-2xl backdrop-blur-sm">
               <h3 className="text-lg font-semibold font-source text-primary mb-4">Emergency Contacts</h3>
             <div className="space-y-3">
               <div className="border-l-4" style={{ borderColor: '#5F9EA0', opacity: 0.85 }}>
@@ -137,7 +137,7 @@ export default function LearnPage() {
             Inflammatory Bowel Disease (IBD) is a term used to describe disorders that involve chronic inflammation of your digestive tract. The two main types are:
           </p>
           
-          <div className="grid md:grid-cols-2 gap-6">
+          <div className="grid md:grid-cols-2 gap-8">
             <div className="card-inner p-6 rounded-xl">
               <h3 className="text-lg font-semibold font-source text-primary mb-3 break-words">Crohn's Disease</h3>
               <ul className="text-secondary space-y-2 text-sm font-roboto break-words">
@@ -214,7 +214,7 @@ export default function LearnPage() {
       </div>
 
       {/* Triggers Section */}
-      <div className="card p-8 rounded-2xl mb-8">
+      <div className="card rounded-2xl mb-8">
         <h2 className="text-xl font-semibold font-source text-primary mb-6 break-words">Common Triggers</h2>
         <div className="grid md:grid-cols-3 gap-6">
           <div className="card-inner p-6 text-center rounded-xl">
@@ -401,7 +401,7 @@ export default function LearnPage() {
           </p>
         </div>
 
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
           <div className="card-inner p-6 rounded-xl">
             <div className="flex items-center gap-2 mb-3">
               <h3 className="text-lg font-semibold font-source text-primary break-words underline">NHS Stop Smoking Services</h3>
@@ -461,7 +461,7 @@ export default function LearnPage() {
           </div>
         </div>
 
-        <div className="mt-6 p-6 card-inner break-words rounded-xl">
+        <div className="mt-8 p-6 card-inner break-words rounded-xl">
           <h4 className="text-lg font-semibold font-source text-primary mb-2 break-words">💡 Tips to Get Started:</h4>
           <ul className="list-disc list-inside space-y-1 text-secondary font-roboto text-sm break-words marker:text-[#5F9EA0]">
             <li className="break-words">Set a quit date and stick to it</li>

@@ -78,7 +78,7 @@ function AccountPageContent() {
         </div>
 
         {/* Profile Section */}
-        <div className="card p-6 mb-6">
+        <div className="card p-6 mb-8">
           <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
             <div className="flex items-center min-w-0">
               <div className="mr-4 sm:mr-6 flex-shrink-0">
@@ -123,7 +123,7 @@ function AccountPageContent() {
         </div>
 
         {/* Account Information */}
-        <div className="card p-6 mb-6">
+        <div className="card p-6 mb-8">
           <h3 className="text-lg sm:text-xl font-semibold font-source text-primary mb-4">Account Information</h3>
           
           <div className="space-y-4">
