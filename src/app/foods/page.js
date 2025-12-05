@@ -95,7 +95,7 @@ export default function Foods() {
         {/* Food Categories */}
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-8 mb-8">
           {categories.map((category, index) => (
-            <div key={index} className="card p-8 md:p-10 rounded-2xl">
+            <div key={index} className="card p-8 rounded-2xl">
               <div className="flex items-center gap-4 mb-4">
                 <span className="text-4xl">{category.emoji}</span>
                 <h2 className="text-xl font-semibold font-source text-primary">{category.title}</h2>
@@ -119,7 +119,7 @@ export default function Foods() {
         </div>
 
         {/* Tips Card */}
-        <div className="card p-8 md:p-10 rounded-2xl backdrop-blur-sm mb-8">
+        <div className="card p-8 rounded-2xl backdrop-blur-sm mb-8">
           <h2 className="text-xl font-semibold font-source text-primary mb-4">💡 Helpful Tips</h2>
           <ul className="space-y-3">
             {tips.map((tip, index) => (
@@ -207,7 +207,7 @@ export default function Foods() {
       {/* Call to Action - Combined width (sidebar + content) */}
       <div>
         <div className="mt-8 max-w-[76rem] mx-auto px-3 sm:px-4 md:px-6 lg:px-0 lg:mt-0">
-          <div className="card p-8 md:p-10 rounded-2xl backdrop-blur-sm text-center">
+          <div className="card p-8 rounded-2xl backdrop-blur-sm text-center">
           <h2 className="text-xl font-semibold font-source text-primary mb-4">Track Your Meals</h2>
           <p className="text-secondary font-roboto mb-6 leading-relaxed">
             Use the symptom tracker to log what you eat each day and monitor how different foods affect you.

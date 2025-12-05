@@ -130,7 +130,7 @@ export default function LearnPage() {
       </div>
 
       {/* What is IBD Section */}
-      <div className="card p-8 md:p-10 rounded-2xl mb-8">
+      <div className="card p-8 rounded-2xl mb-8">
         <h2 className="text-xl font-semibold font-source text-primary mb-6 break-words">What is Inflammatory Bowel Disease (IBD)?</h2>
         <div className="prose prose-gray max-w-none">
           <p className="text-secondary mb-6 font-roboto break-words">
@@ -162,7 +162,7 @@ export default function LearnPage() {
       </div>
 
       {/* Common Symptoms Section */}
-      <div className="card p-8 md:p-10 rounded-2xl backdrop-blur-sm mb-8">
+      <div className="card p-8 rounded-2xl backdrop-blur-sm mb-8">
         <h2 className="text-xl font-semibold font-source text-primary mb-6 break-words">Common Symptoms</h2>
         <div className="grid gap-2 md:gap-6 md:grid-cols-2">
           <ul className="space-y-2 text-secondary font-roboto break-words">
@@ -214,7 +214,7 @@ export default function LearnPage() {
       </div>
 
       {/* Triggers Section */}
-      <div className="card p-8 md:p-10 rounded-2xl mb-8">
+      <div className="card p-8 rounded-2xl mb-8">
         <h2 className="text-xl font-semibold font-source text-primary mb-6 break-words">Common Triggers</h2>
         <div className="grid md:grid-cols-3 gap-6">
           <div className="card-inner p-6 text-center rounded-xl">
@@ -247,7 +247,7 @@ export default function LearnPage() {
       </div>
 
       {/* How FlareCare Helps Section */}
-      <div className="card p-8 md:p-10 rounded-2xl backdrop-blur-sm mb-8">
+      <div className="card p-8 rounded-2xl backdrop-blur-sm mb-8">
         <h2 className="text-xl font-semibold font-source text-primary mb-6">How FlareCare Can Help</h2>
         <div className="grid gap-3 md:gap-6 md:grid-cols-2">
           <div>
@@ -299,7 +299,7 @@ export default function LearnPage() {
       </div>
 
       {/* When to Seek Help Section */}
-      <div className="card p-8 md:p-10 rounded-2xl mb-8">
+      <div className="card p-8 rounded-2xl mb-8">
         <h2 className="text-xl font-semibold font-source text-primary mb-6">When to Seek Medical Help</h2>
         <div className="card-inner p-6 rounded-xl">
           <h3 className="text-lg font-semibold font-source text-primary mb-4">Seek immediate medical attention if you experience:</h3>
@@ -329,7 +329,7 @@ export default function LearnPage() {
       </div>
 
       {/* Resources Section */}
-      <div className="card p-8 md:p-10 rounded-2xl backdrop-blur-sm mb-8">
+      <div className="card p-8 rounded-2xl backdrop-blur-sm mb-8">
         <h2 className="text-xl font-semibold font-source text-primary mb-6">Helpful Resources</h2>
         <div className="grid gap-3 md:gap-6 md:grid-cols-2">
           <ul className="space-y-3 font-roboto">
@@ -385,7 +385,7 @@ export default function LearnPage() {
       </div>
 
       {/* Quit Smoking Section */}
-      <div className="card p-8 md:p-10 rounded-2xl mb-8">
+      <div className="card p-8 rounded-2xl mb-8">
         <div className="flex items-center gap-2 mb-4">
           <span className="text-2xl" role="img" aria-label="No smoking">🚭</span>
           <h2 className="text-xl font-semibold font-source text-primary break-words">Quit Smoking Support</h2>
@@ -463,7 +463,7 @@ export default function LearnPage() {
 
         <div className="mt-6 p-6 card-inner break-words rounded-xl">
           <h4 className="text-lg font-semibold font-source text-primary mb-2 break-words">💡 Tips to Get Started:</h4>
-          <ul className="list-disc list-inside space-y-1 text-secondary font-roboto text-sm break-words marker:text-gray-300">
+          <ul className="list-disc list-inside space-y-1 text-secondary font-roboto text-sm break-words marker:text-[#5F9EA0]">
             <li className="break-words">Set a quit date and stick to it</li>
             <li className="break-words">Tell your family and friends about your decision</li>
             <li className="break-words">Ask your GP about nicotine replacement therapy</li>
@@ -480,7 +480,7 @@ export default function LearnPage() {
       {/* Call to Action */}
         <div className="mt-8 lg:mt-0">
           <div className="max-w-[76rem] mx-auto">
-            <div className="card p-8 md:p-10 rounded-2xl backdrop-blur-sm text-center">
+            <div className="card p-8 rounded-2xl backdrop-blur-sm text-center">
           <h2 className="text-xl font-semibold font-source text-primary mb-4">Ready to Start Tracking?</h2>
           <p className="text-secondary mb-6 font-roboto">
             Start tracking your symptoms and medications to better manage your IBD condition.

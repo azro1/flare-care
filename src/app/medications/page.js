@@ -556,7 +556,7 @@ function MedicationsPageContent() {
       </div>
 
       {/* Your Medications Section */}
-      <div className="card p-4 sm:p-6 md:p-8 mb-8 sm:mb-12 min-w-0">
+      <div className="card mb-8 sm:mb-12 min-w-0">
         <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 mb-6 sm:mb-8">
           <div className="flex items-center">
             <div className="hidden sm:flex w-12 h-12 bg-purple-100 rounded-xl items-center justify-center mr-4">
@@ -749,9 +749,9 @@ function MedicationsPageContent() {
               return (
                 <div key={medication.id} className="mb-6 sm:mb-8 lg:mb-6">
                   <div className="card-inner p-4 sm:p-6 min-w-0 rounded-xl">
-                  <div className="flex flex-col sm:flex-row sm:justify-between sm:items-start mb-4">
+                  <div className="flex flex-col sm:flex-row sm:justify-between sm:items-start mb-1">
                     <div className="flex-1 min-w-0 w-full sm:w-auto">
-                      <div className="flex items-center gap-2 mb-2 min-w-0">
+                      <div className={`flex items-center gap-2 ${isExpanded ? 'mb-1' : ''} min-w-0`}>
                         <h3 className="text-lg font-semibold font-source text-primary break-words sm:truncate min-w-0 flex-1">
                           {medication.name}
                         </h3>
@@ -800,16 +800,16 @@ function MedicationsPageContent() {
                           <div className="mt-2">
                             <button
                               onClick={() => handleMarkAsTaken(medication.id)}
-                              className="px-3 py-1.5 rounded-lg text-sm font-medium transition-all duration-200 inline-flex items-center justify-center border-2"
+                              className="px-3 py-1.5 rounded-lg text-sm font-medium transition-all duration-200 inline-flex items-center justify-center"
                               style={{
+                                border: '1px solid',
+                                borderColor: 'var(--border-card-inner)',
                                 ...(takenMedications.includes(medication.id) 
                                   ? {
                                       backgroundColor: 'var(--bg-button-cadet)',
-                                      color: 'white',
-                                      borderColor: 'var(--bg-button-cadet)'
+                                      color: 'white'
                                     }
                                   : {
-                                      borderColor: 'var(--border-input)',
                                       color: 'var(--text-primary)',
                                       backgroundColor: 'transparent'
                                     }
@@ -895,23 +895,23 @@ function MedicationsPageContent() {
 
 
       {/* Reminder Info */}
-      <div className="mt-6 sm:mt-8 card p-4 md:p-6">
+      <div className="mt-6 sm:mt-8 card">
         <div>
-          <h3 className="text-base sm:text-lg font-semibold font-source text-primary mb-1 sm:mb-2 flex items-center space-x-2">
-            <svg className="w-4 h-4 sm:w-5 sm:h-5 flex-shrink-0" style={{ color: 'var(--text-cadet-blue)' }} fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <h3 className="text-lg font-semibold font-source text-primary mb-1 sm:mb-2 flex items-center space-x-2">
+            <svg className="w-5 h-5 sm:w-6 sm:h-6 flex-shrink-0" style={{ color: 'var(--text-cadet-blue)' }} fill="none" stroke="currentColor" viewBox="0 0 24 24">
               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" />
             </svg>
             <span>Medication Reminders</span>
           </h3>
-          <p className="text-sm sm:text-base text-secondary mb-2 sm:mb-3 font-roboto leading-relaxed">
+          <p className="text-sm sm:text-base text-secondary mb-4 font-roboto leading-relaxed">
             FlareCare will send browser notifications when it's time to take your medications.
           </p>
-          <div className="card-inner rounded-lg sm:rounded-xl p-3 sm:p-4">
+          <div className="card-inner rounded-lg sm:rounded-xl p-5">
             <div className="flex items-center space-x-1">
-              <span className="text-base sm:text-lg">💡</span>
-              <p className="text-xs sm:text-sm font-medium text-primary mb-1 font-roboto">Important to know:</p>
+              <span className="text-lg">💡</span>
+              <p className="text-sm font-medium text-primary mb-1 font-roboto">Important to know:</p>
             </div>
-            <p className="text-xs sm:text-sm text-secondary font-roboto leading-relaxed">
+            <p className="text-xs  text-secondary font-roboto leading-relaxed">
               Reminders only work in your web browser. They won't show up as push notifications on your phone. 
               You can turn reminders on or off for each medication.
             </p>

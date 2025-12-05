@@ -18,7 +18,7 @@ export default function About() {
       </div>
 
       <div className="grid md:grid-cols-2 gap-8 mb-8">
-        <div className="card p-8 md:p-10 rounded-2xl backdrop-blur-sm">
+        <div className="card p-8 rounded-2xl backdrop-blur-sm">
           <h2 className="text-xl sm:text-2xl font-semibold font-source text-primary mb-4">My Story</h2>
           <div className="space-y-4 text-secondary font-roboto leading-relaxed">
             <p>
@@ -40,7 +40,7 @@ export default function About() {
           </div>
         </div>
 
-        <div className="card p-8 md:p-10 rounded-2xl backdrop-blur-sm">
+        <div className="card p-8 rounded-2xl backdrop-blur-sm">
           <h2 className="text-xl sm:text-2xl font-semibold font-source text-primary mb-4">Why FlareCare?</h2>
           <div className="space-y-4 text-secondary font-roboto leading-relaxed">
             <p>
@@ -77,7 +77,7 @@ export default function About() {
         </div>
       </div>
 
-      <div className="card p-8 md:p-10 rounded-2xl backdrop-blur-sm mb-8">
+      <div className="card p-8 rounded-2xl backdrop-blur-sm mb-8">
         <h2 className="text-xl sm:text-2xl font-semibold font-source text-primary mb-4">The Vision</h2>
         <div className="space-y-4 text-secondary font-roboto leading-relaxed">
           <p>
@@ -98,7 +98,7 @@ export default function About() {
         </div>
       </div>
 
-      <div className="card p-8 md:p-10 rounded-2xl">
+      <div className="card p-8 rounded-2xl">
         <h2 className="text-xl sm:text-2xl font-bold font-source text-primary mb-4">Stay Connected</h2>
         <p className="text-secondary mb-8 font-roboto leading-relaxed">
           Have questions, suggestions, or want to share your own story? 
