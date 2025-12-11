@@ -10,6 +10,7 @@ import { ThemeProvider } from '@/lib/ThemeContext'
 import LoadingScreen from '@/components/LoadingScreen'
 
 export const metadata = {
+  metadataBase: new URL(process.env.NEXT_PUBLIC_SITE_URL || 'http://localhost:3000'),
   title: 'FlareCare - Crohn\'s & Colitis Management',
   description: 'Track symptoms, medications, and generate reports for Crohn\'s & Colitis patients',
   icons: {

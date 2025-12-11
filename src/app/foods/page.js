@@ -83,12 +83,12 @@ export default function Foods() {
           {/* Main Content */}
           <div className="flex-1 lg:max-w-4xl order-1 lg:order-2">
         {/* Header */}
-        <div className="mb-8 lg:mb-12">
-          <h1 className="text-2xl sm:text-3xl lg:text-4xl font-bold font-source text-primary mb-4 sm:mb-6">
+        <div className="mb-8 card p-8">
+          <h1 className="text-2xl sm:text-3xl lg:text-4xl font-bold font-source text-primary mb-4">
             Foods
           </h1>
-          <p className="text-secondary font-roboto break-words">
-            Understanding different food categories can help you make informed choices about your diet. This reference guide provides an overview of common food groups and their nutritional properties.
+          <p className="lg:text-lg text-secondary font-roboto break-words">
+            Learn about different food categories and their nutritional properties to help you make informed choices about your diet.
           </p>
         </div>
 
@@ -138,23 +138,23 @@ export default function Foods() {
           </div>
 
           {/* Left Sidebar */}
-          <div className="lg:w-72 lg:flex-shrink-0 order-2 lg:order-1">
+          <div className="lg:w-72 lg:flex-shrink-0 order-2 lg:order-1 lg:mb-8">
             <div className="sticky top-8 space-y-8">
               
 
               {/* IBD-Friendly Foods */}
-              <div className="card rounded-2xl ">
+              <div className="card rounded-2xl">
                 <h3 className="text-lg font-semibold font-source text-primary mb-4">IBD Foods</h3>
                 <div className="space-y-4">
-                  <div className="card-inner p-4 rounded-xl">
+                  <div className="card-inner p-5 rounded-xl">
                     <h4 className="font-medium text-primary mb-2">✅ Generally Safe</h4>
                     <p className="text-sm text-secondary">Bananas, rice, applesauce, toast, oatmeal, lean proteins</p>
                   </div>
-                  <div className="card-inner p-4 rounded-xl">
+                  <div className="card-inner p-5 rounded-xl">
                     <h4 className="font-medium text-primary mb-2">⚠️ Try Carefully</h4>
                     <p className="text-sm text-secondary">Dairy, high-fiber foods, spicy foods, raw vegetables</p>
                   </div>
-                  <div className="card-inner p-4 rounded-xl">
+                  <div className="card-inner p-5 rounded-xl">
                     <h4 className="font-medium text-primary mb-2">❌ Avoid During Flares</h4>
                     <p className="text-sm text-secondary">Nuts, seeds, popcorn, alcohol, caffeine, fried foods</p>
                   </div>
@@ -193,7 +193,7 @@ export default function Foods() {
               </div>
               
               {/* Note */}
-              <div className="card backdrop-blur-sm p-6 lg:pt-0 lg:px-0 lg:pb-8 lg:bg-transparent lg:shadow-none lg:hover:shadow-none">
+              <div className="card">
                 <p className="text-secondary font-roboto leading-relaxed text-sm">
                   <span className="font-semibold">Note:</span> This is a general food reference guide. Always follow the specific dietary advice provided by your doctor or registered dietitian.
                 </p>

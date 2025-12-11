@@ -8,11 +8,11 @@ export default function About() {
   return (
     <div className="w-full px-3 sm:px-4 md:px-6 lg:px-8 min-w-0">
       <div className="max-w-5xl mx-auto">
-      <div className="text-center mb-8 lg:mb-12">
-        <h1 className="text-2xl sm:text-3xl lg:text-4xl font-bold font-source text-primary mb-4 sm:mb-6">
-          About FlareCare
+      <div className="text-center mb-8 card">
+        <h1 className="text-2xl sm:text-3xl lg:text-4xl font-bold font-source text-primary mb-4">
+          FlareCare
         </h1>
-        <p className="text-lg sm:text-xl font-roboto text-secondary max-w-3xl mx-auto leading-relaxed">
+        <p className="text-lg font-roboto text-secondary">
           A personal journey turned into a tool for the community
         </p>
       </div>
@@ -106,7 +106,7 @@ export default function About() {
           the Crohn's and Colitis community.
         </p>
         
-        <div className="grid md:grid-cols-2 gap-8">
+        <div className="grid md:grid-cols-2 gap-6">
           <div className="card-inner p-6 rounded-xl">
             <h3 className="text-lg font-semibold font-source text-primary mb-3">Email Support</h3>
             <p className="text-secondary mb-4 font-roboto text-sm leading-relaxed">

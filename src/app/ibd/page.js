@@ -40,11 +40,11 @@ export default function LearnPage() {
       <div className="flex flex-col lg:flex-row lg:gap-8 lg:justify-center">
         
         {/* Left Sidebar */}
-        <div className="lg:w-72 lg:flex-shrink-0 order-2 lg:order-1">
+        <div className="lg:w-72 lg:flex-shrink-0 order-2 lg:order-1 lg:mb-8">
           <div className="sticky top-8 space-y-8">
             
             {/* Daily Tips */}
-            <div className="card p-4 rounded-2xl sm:p-6 lg:pb-0 lg:bg-transparent lg:shadow-none lg:hover:shadow-none">
+            <div className="card">
               <h3 className="text-lg font-semibold font-source text-primary mb-4">Daily Tips</h3>
               <div className="space-y-3">
                 <div className="flex items-center gap-3">
@@ -103,7 +103,7 @@ export default function LearnPage() {
             </div>
 
             {/* Quick Facts */}
-            <div className="card backdrop-blur-sm p-4 rounded-2xl sm:p-6 lg:pt-0 lg:pb-10 lg:bg-transparent lg:shadow-none lg:hover:shadow-none">
+            <div className="card">
               <h3 className="text-lg font-semibold font-source text-primary mb-4">Quick Facts</h3>
               <div className="space-y-3">
                 <p
@@ -122,9 +122,9 @@ export default function LearnPage() {
 
         {/* Main Content */}
         <div className="flex-1 lg:max-w-4xl order-1 lg:order-2">
-      <div className="mb-8 lg:mb-12">
-        <h1 className="text-2xl sm:text-3xl lg:text-4xl font-bold font-source text-primary mb-4 sm:mb-6">Understanding IBD</h1>
-        <p className="text-secondary font-roboto break-words">
+      <div className="mb-8 card p-8">
+        <h1 className="text-2xl sm:text-3xl lg:text-4xl font-bold font-source text-primary mb-4">Understanding IBD</h1>
+        <p className="lg:text-lg text-secondary font-roboto break-words">
           Learn about Crohn's disease and Ulcerative Colitis, and how FlareCare can help you manage your condition.
         </p>
       </div>
@@ -137,7 +137,7 @@ export default function LearnPage() {
             Inflammatory Bowel Disease (IBD) is a term used to describe disorders that involve chronic inflammation of your digestive tract. The two main types are:
           </p>
           
-          <div className="grid md:grid-cols-2 gap-8">
+          <div className="grid md:grid-cols-2 gap-6">
             <div className="card-inner p-6 rounded-xl">
               <h3 className="text-lg font-semibold font-source text-primary mb-3 break-words">Crohn's Disease</h3>
               <ul className="text-secondary space-y-2 text-sm font-roboto break-words">
@@ -401,7 +401,7 @@ export default function LearnPage() {
           </p>
         </div>
 
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
           <div className="card-inner p-6 rounded-xl">
             <div className="flex items-center gap-2 mb-3">
               <h3 className="text-lg font-semibold font-source text-primary break-words underline">NHS Stop Smoking Services</h3>
@@ -461,7 +461,7 @@ export default function LearnPage() {
           </div>
         </div>
 
-        <div className="mt-8 p-6 card-inner break-words rounded-xl">
+        <div className="mt-6 p-6 card-inner break-words rounded-xl">
           <h4 className="text-lg font-semibold font-source text-primary mb-2 break-words">💡 Tips to Get Started:</h4>
           <ul className="list-disc list-inside space-y-1 text-secondary font-roboto text-sm break-words marker:text-[#5F9EA0]">
             <li className="break-words">Set a quit date and stick to it</li>
@@ -481,23 +481,25 @@ export default function LearnPage() {
         <div className="mt-8 lg:mt-0">
           <div className="max-w-[76rem] mx-auto">
             <div className="card p-8 rounded-2xl backdrop-blur-sm text-center">
-          <h2 className="text-xl font-semibold font-source text-primary mb-4">Ready to Start Tracking?</h2>
-          <p className="text-secondary mb-6 font-roboto">
-            Start tracking your symptoms and medications to better manage your IBD condition.
+          <h2 className="text-xl font-semibold font-source text-primary mb-4">Track Your Medications</h2>
+          <p className="text-secondary font-roboto mb-6 leading-relaxed">
+            Use the medications tracker to log missed medications to keep your healthcare team informed
           </p>
-          <div className="flex flex-col sm:flex-row justify-center space-y-3 sm:space-y-0 sm:space-x-4">
+          <div className="flex flex-col sm:flex-row justify-center items-center sm:items-stretch space-y-3 sm:space-y-0 sm:space-x-4">
             {isAuthenticated ? (
-              <Link href="/" className="bg-[#5F9EA0] hover:bg-button-cadet-hover text-white font-semibold py-3 px-6 rounded-xl transition-all duration-300 transform hover:scale-105 hover:shadow-lg active:scale-95 font-roboto">
-                Go to Dashboard
+              <Link href="/" className="bg-[#5F9EA0] hover:bg-button-cadet-hover text-white font-semibold py-3 px-6 rounded-xl transition-all duration-300 transform hover:scale-105 hover:shadow-lg active:scale-95 font-roboto w-auto">
+                Track Meds
               </Link>
             ) : (
-              <Link href="/auth" className="bg-[#5F9EA0] hover:bg-button-cadet-hover text-white font-semibold py-3 px-6 rounded-xl transition-all duration-300 hover:shadow-lg font-roboto">
-                Get Started Free
-              </Link>
+              <>
+                <Link href="/auth" className="bg-[#5F9EA0] hover:bg-button-cadet-hover text-white font-semibold py-3 px-6 rounded-xl transition-all duration-300 hover:shadow-lg font-roboto">
+                  Sign In
+                </Link>
+                <Link href="/about" className="bg-white hover:bg-gray-50 text-gray-800 font-medium py-3 px-6 rounded-xl border border-gray-200 hover:border-gray-300 transition-all duration-200 shadow-sm hover:shadow-md font-roboto">
+                  About FlareCare
+                </Link>
+              </>
             )}
-            <Link href="/about" className="bg-white hover:bg-gray-50 text-gray-800 font-medium py-3 px-6 rounded-xl border border-gray-200 hover:border-gray-300 transition-all duration-200 shadow-sm hover:shadow-md font-roboto">
-              About FlareCare
-            </Link>
           </div>
             </div>
           </div>

@@ -726,16 +726,16 @@ export default function Home() {
             <div className="sticky top-8 space-y-6">
               
               {/* Quick Stats */}
-              <div className="p-4 sm:p-6 lg:py-0 lg:pb-2">
+              <div className=" card">
                 <h3 className="text-lg font-semibold font-source text-primary mb-4">Your Progress</h3>
-                <div className="space-y-2 border-l-4 pl-4 sm:pl-5" style={{borderColor: 'var(--text-cadet-blue)'}}>
+                <div className="card-inner p-5 space-y-2">
                     <div className="flex justify-between items-center">
                       <span className="text-sm text-secondary">Total Symptoms</span>
-                    <span className="font-semibold" style={{color: 'var(--text-cadet-blue)'}}>{symptoms.length}</span>
+                    <span className="font-semibold text-white">{symptoms.length}</span>
                     </div>
                     <div className="flex justify-between items-center">
                       <span className="text-sm text-secondary">This Week</span>
-                    <span className="font-semibold" style={{color: 'var(--text-cadet-blue)'}}>
+                    <span className="font-semibold text-white">
                         {symptoms.filter(s => {
                           const weekAgo = new Date()
                           weekAgo.setDate(weekAgo.getDate() - 7)
@@ -745,7 +745,7 @@ export default function Home() {
                     </div>
                     <div className="flex justify-between items-center">
                       <span className="text-sm text-secondary">Today</span>
-                    <span className="font-semibold" style={{color: 'var(--text-cadet-blue)'}}>{todaySymptoms.length}</span>
+                    <span className="font-semibold text-white">{todaySymptoms.length}</span>
                     </div>
                 </div>
             </div>
@@ -755,7 +755,7 @@ export default function Home() {
                 <h3 className="text-lg font-semibold font-source text-primary mb-4">Today's Goals</h3>
                 <div className="space-y-3">
                   <div className="flex items-center gap-3">
-                    <div className={`w-6 h-6 rounded-lg flex items-center justify-center`} style={{backgroundColor: 'var(--bg-goal-icon-success)'}}>
+                    <div className="w-6 h-6 card-inner rounded-lg flex items-center justify-center">
                       <Thermometer className="w-3 h-3" style={{color: 'var(--text-goal-icon-success)'}} />
                     </div>
                     <div className="flex-1 flex items-center justify-between">
@@ -770,7 +770,7 @@ export default function Home() {
                     </div>
                   </div>
                   <div className="flex items-center gap-3">
-                    <div className="w-6 h-6 rounded-lg flex items-center justify-center" style={{backgroundColor: 'var(--bg-goal-icon-medication)'}}>
+                    <div className="w-6 h-6 card-inner rounded-lg flex items-center justify-center">
                       <Pill className="w-2.5 h-2.5" style={{color: 'var(--text-goal-icon-medication)'}} />
                     </div>
                     <div className="flex-1 flex items-center justify-between">
@@ -785,7 +785,7 @@ export default function Home() {
                     </div>
                   </div>
                   <div className="flex items-center gap-3">
-                    <div className="w-6 h-6 rounded-lg flex items-center justify-center" style={{backgroundColor: 'var(--bg-goal-icon-hydration)'}}>
+                    <div className="w-6 h-6 card-inner rounded-lg flex items-center justify-center">
                       <CupSoda className="w-3 h-3" style={{color: 'var(--text-goal-icon-hydration)'}} />
                     </div>
                     <span className="text-sm text-secondary">Stay hydrated</span>
@@ -794,7 +794,7 @@ export default function Home() {
               </div>
 
               {/* Daily Tip */}
-              <div className="p-4 sm:p-6 sm:pt-0 lg:pt-2">
+              <div className="card">
                 <div>
                   <h3 className="text-lg font-semibold font-source text-primary mb-2">💡 Daily Tip</h3>
                   <p className={`text-sm text-secondary transition-opacity duration-500 ${isFading ? 'opacity-0' : 'opacity-100'}`}>
@@ -828,7 +828,7 @@ export default function Home() {
         {/* Quick Actions */}
         <div className="mt-8 md:mt-10 mb-8">
           <h2 className="text-xl font-semibold font-source text-primary mb-4">Get Started</h2>
-          <div className="grid grid-cols-1 sm:grid-cols-3 gap-4 md:gap-6 ">
+          <div className="grid grid-cols-1 sm:grid-cols-3 gap-4 md:gap-6">
             <Link
               href="/symptoms"
               className="card card-link p-6 transition-all group relative focus:outline-none focus-visible:outline-none focus-visible:ring-0 focus-visible:ring-offset-0 focus:ring-0"
@@ -897,32 +897,35 @@ export default function Home() {
         </div>
         </div>
 
-        {/* Section Divider */}
-        <div className="border-t mb-8" style={{borderColor: 'var(--border-primary)'}}></div>
 
         {/* Today's Summary */}
-        <div className="mb-8">
+        <div className="mb-8 card">
           <h2 className="text-xl font-semibold font-source text-primary">Today's Summary</h2>
           <div className="p-4 pb-0">
-            <div className="flex justify-between items-center py-2">
-              <span className="text-secondary">Symptoms Logged</span>
-              <span className="font-semibold text-primary">{todaySymptoms.length}</span>
-            </div>
-            <div className="flex justify-between items-center pt-2">
-              <span className="text-secondary">Medications Taken</span>
-              <span className="font-semibold text-primary">{takenMedications.length}/{medications.length}</span>
+            <div className="card-inner p-4">
+              <div className="flex justify-between items-center p-2">
+                <span className="text-secondary">Symptoms Logged</span>
+                <span className="font-semibold text-primary">{todaySymptoms.length}</span>
+              </div>
+              <div className="flex justify-between items-center p-2">
+                <span className="text-secondary">Medications Taken</span>
+                <span className="font-semibold text-primary">{takenMedications.length}/{medications.length}</span>
+              </div>
             </div>
           </div>
         </div>
 
-        {/* Section Divider */}
-        <div className="border-t mb-8" style={{borderColor: 'var(--border-primary)'}}></div>
 
         {/* Recent Symptoms */}
         {displayedSymptoms.length > 0 && (
-          <div className="mb-8">
+          <div className="mb-8 card">
             <div className="flex items-center justify-between mb-4">
-              <h2 className="text-xl font-semibold font-source text-primary">Recent Logged Symptoms</h2>
+              <div className="flex items-start gap-3">
+                <div className="w-8 h-8 bg-emerald-100 rounded-lg flex items-center justify-center">
+                  <Thermometer className="w-4 h-4 text-emerald-600" />
+                </div>
+                <h2 className="text-xl font-semibold font-source text-primary">Recent Logged Symptoms</h2>
+              </div>
               {symptoms.length > 1 && (
                 <button 
                   onClick={() => setShowAllSymptoms(!showAllSymptoms)}
@@ -935,10 +938,9 @@ export default function Home() {
             </div>
             <div className="space-y-3 max-w-xs">
               {displayedSymptoms.map((symptom) => (
-                <div key={symptom.id} className="flex items-center">
-                  <div className="w-1 h-20 bg-emerald-600 mx-3"></div>
+                <div key={symptom.id}>
                   <div 
-                    className="card p-6 cursor-pointer transition-all duration-200 flex-1"
+                    className="card-inner p-6 cursor-pointer transition-all duration-200"
                     onClick={() => {
                       router.push(`/symptoms/${symptom.id}`)
                     }}
@@ -967,9 +969,14 @@ export default function Home() {
 
         {/* Recent Medications */}
         {trackedMedications.length > 0 && (
-          <div className="mb-8">
+          <div className="mb-8 card">
             <div className="flex items-center justify-between mb-4">
-              <h2 className="text-xl font-semibold font-source text-primary">Recent Tracked Medications</h2>
+              <div className="flex items-start gap-3">
+                <div className="w-8 h-8 bg-pink-100 rounded-lg flex items-center justify-center">
+                  <ChartLine className="w-4 h-4 text-pink-600" />
+                </div>
+                <h2 className="text-xl font-semibold font-source text-primary">Recent Tracked Medications</h2>
+              </div>
               {trackedMedications.length > 1 && (
                 <button 
                   onClick={() => setShowAllMedications(!showAllMedications)}
@@ -982,10 +989,9 @@ export default function Home() {
             </div>
             <div className="space-y-3 max-w-xs">
               {(showAllMedications ? trackedMedications : trackedMedications.slice(0, 1)).map((tracked, index) => (
-                <div key={tracked.id} className="flex items-center">
-                  <div className="w-1 h-20 bg-pink-600 mx-3"></div>
+                <div key={tracked.id}>
                   <div 
-                    className="card p-6  cursor-pointer transition-all duration-200 flex-1"
+                    className="card-inner p-6  cursor-pointer transition-all duration-200"
                     onClick={() => {
                       router.push(`/medications/track/${tracked.id}`)
                     }}
@@ -1010,11 +1016,7 @@ export default function Home() {
           </div>
         )}
 
-        {/* Section Divider */}
-        {(symptoms.length > 0 || trackedMedications.length > 0) && (
-           <div className="border-t my-8" style={{borderColor: 'var(--border-primary)'}}></div>
-        )}
-        
+
         {/* Recent Activity */}
         <div className="card mb-8">
           <h2 className="text-xl font-semibold font-source text-primary">Recent Activity</h2>
@@ -1240,8 +1242,6 @@ export default function Home() {
           </div>
         </div>
 
-        {/* Section Divider */}
-        <div className="border-t lg:hidden" style={{borderColor: 'var(--border-primary)'}}></div>
           </div>
         </div>
       </div>

@@ -164,11 +164,11 @@ export default function WeatherHero({
 
   return (
     <div
-      className="rounded-2xl overflow-hidden mb-6"
+      className="rounded-2xl overflow-hidden card"
       style={{ position: 'relative' }}
     >
       <div
-        className="p-6 pt-0 sm:p-8 sm:pt-0"
+        className="sm:p-4"
       >
         {children && (
           <div className="mb-6">

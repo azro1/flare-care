@@ -27,6 +27,7 @@
     --bg-icon: #e2e8f0; /* Light icon background */
     --bg-icon-charcoal: #2f333a; /* Darker charcoal option for icon backgrounds */
     --bg-avatar-fallback-dark: #3a3e46; /* Charcoal avatar fallback background */
+    --bg-avatar: #ffffff; /* White avatar background for contrast in light mode */
     --text-icon: #475569; /* Light icon text */
     --bg-input: #ffffff;
     --bg-input-dark: #f1f5f9; /* Light input background */
@@ -101,6 +102,7 @@
     --bg-icon: #2a2d34; /* Warm neutral charcoal icon background */
     --bg-icon-charcoal: rgba(28, 30, 36, 0.95); /* Deeper charcoal option for icon backgrounds */
     --bg-avatar-fallback-dark: #3a3e46; /* Charcoal avatar fallback background */
+    --bg-avatar: #2f333a; /* Charcoal avatar background for contrast in dark mode */
     --text-icon: #d1d5db; /* Soft gray icon text */
     --bg-input: #2a2d34; /* Warm neutral charcoal input */
     --bg-input-dark: rgba(42, 45, 52, 0.7); /* Warm neutral charcoal input dark */
@@ -265,6 +267,10 @@
 
   .dark .card-inner {
     background-color: var(--bg-avatar-fallback-dark);
+  }
+
+  .avatar-bg {
+    background-color: var(--bg-avatar) !important;
   }
 
   .section-bg {

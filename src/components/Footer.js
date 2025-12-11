@@ -43,7 +43,7 @@ export default function Footer() {
         {/* Mobile minimal footer */}
         <div className="lg:hidden">
           <div className="flex items-center justify-center">
-            <span className="text-sm" style={{color: 'var(--text-footer)'}}>© 2025 FlareCare</span>
+            <span style={{color: 'var(--text-footer)'}}>© 2025 FlareCare</span>
           </div>
         </div>
 

@@ -976,7 +976,7 @@ function MedicationTrackingWizard() {
             <h2 className="text-2xl sm:text-3xl lg:text-4xl font-bold font-source text-primary mb-4 sm:mb-6">Track Medications</h2>
             
             {/* Optional description */}
-            <p className="text-lg sm:text-xl font-roboto text-muted mb-8 max-w-md">Track your medication adherence to identify patterns and triggers</p>
+            <p className="text-lg font-roboto text-muted mb-8 max-w-md">Track your medication adherence to identify patterns and triggers</p>
             
             {/* Start button */}
             <button
