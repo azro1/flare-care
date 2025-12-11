@@ -3,7 +3,7 @@
 import Link from 'next/link'
 import { useEffect, useState } from 'react'
 import { useAuth } from '@/lib/AuthContext'
-import { CigaretteOff, Smartphone, Pizza, Brain, Bug, CupSoda, NotebookPen, Cookie, Stethoscope, BookOpen } from 'lucide-react'
+import { Smartphone, Pizza, Brain, Bug, CupSoda, NotebookPen, Cookie, Stethoscope, BookOpen } from 'lucide-react'
 
 const QUICK_FACTS = [
   'IBD affects over 500,000 people in the UK',
@@ -380,95 +380,6 @@ export default function LearnPage() {
               </a>
               <p className="text-sm text-secondary font-roboto">Comprehensive medical information</p>
             </li>
-          </ul>
-        </div>
-      </div>
-
-      {/* Quit Smoking Section */}
-      <div className="card p-8 rounded-2xl mb-8">
-        <div className="flex items-center gap-2 mb-4">
-          <span className="text-2xl" role="img" aria-label="No smoking">🚭</span>
-          <h2 className="text-xl font-semibold font-source text-primary break-words">Quit Smoking Support</h2>
-        </div>
-        
-        <div className="space-y-4 text-secondary font-roboto mb-6 break-words">
-          <p className="break-words">
-            Smoking significantly increases the risk of Crohn's disease flares and complications. If you smoke, quitting is one of the most important steps you can take to improve your health.
-          </p>
-          <p className="break-words">
-            Research shows that smoking can reduce blood flow to the gut and weaken your body's natural defenses, 
-            making Crohn's symptoms worse and more frequent.
-          </p>
-        </div>
-
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-          <div className="card-inner p-6 rounded-xl">
-            <div className="flex items-center gap-2 mb-3">
-              <h3 className="text-lg font-semibold font-source text-primary break-words underline">NHS Stop Smoking Services</h3>
-            </div>
-            <div className="space-y-2 text-secondary font-roboto break-words">
-              <p className="text-sm sm:text-base break-words">
-                Website:{' '}
-                <a
-                  href="https://www.nhs.uk/smokefree"
-                  className="font-medium break-words text-blue-500 hover:text-blue-600 hover:underline"
-                  target="_blank"
-                  rel="noopener noreferrer"
-                >
-                  nhs.uk/smokefree
-                </a>
-              </p>
-              <p className="text-sm sm:text-base break-words">
-                Helpline:{' '}
-                <a
-                  href="tel:03001231045"
-                  className="font-medium break-words text-blue-500 hover:text-blue-600 hover:underline"
-                >
-                  0300 123 1045
-                </a>
-              </p>
-              <p className="text-sm sm:text-base break-words">Text Support: Text QUIT to 66777</p>
-              <p className="text-xs sm:text-sm break-words">Free support, advice, and resources</p>
-            </div>
-          </div>
-          
-          <div className="card-inner p-6 rounded-xl">
-            <div className="flex items-center gap-2 mb-3">
-              <h3 className="text-lg font-semibold font-source text-primary break-words underline">Additional Resources</h3>
-            </div>
-            <div className="space-y-2 text-secondary font-roboto break-words">
-              <p className="text-sm sm:text-base break-words"><strong>Crohn's & Colitis UK:</strong></p>
-              <p className="text-sm sm:text-base break-words">
-                Helpline:{' '}
-                <a
-                  href="tel:03002229099"
-                  className="font-medium break-words text-blue-500 hover:text-blue-600 hover:underline"
-                >
-                  0300 222 9099
-                </a>
-              </p>
-              <p className="text-sm sm:text-base break-words">
-                Email:{' '}
-                <a
-                  href="mailto:helpline@crohnsandcolitis.org.uk"
-                  className="font-medium break-words text-blue-500 hover:text-blue-600 hover:underline"
-                >
-                  helpline@crohnsandcolitis.org.uk
-                </a>
-              </p>
-              <p className="text-xs sm:text-sm break-words">Specialist support for IBD patients</p>
-            </div>
-          </div>
-        </div>
-
-        <div className="mt-6 p-6 card-inner break-words rounded-xl">
-          <h4 className="text-lg font-semibold font-source text-primary mb-2 break-words">💡 Tips to Get Started:</h4>
-          <ul className="list-disc list-inside space-y-1 text-secondary font-roboto text-sm break-words marker:text-[#5F9EA0]">
-            <li className="break-words">Set a quit date and stick to it</li>
-            <li className="break-words">Tell your family and friends about your decision</li>
-            <li className="break-words">Ask your GP about nicotine replacement therapy</li>
-            <li className="break-words">Identify your smoking triggers and plan alternatives</li>
-            <li className="break-words">Consider joining a support group</li>
           </ul>
         </div>
       </div>
