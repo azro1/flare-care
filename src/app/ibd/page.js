@@ -493,10 +493,7 @@ export default function LearnPage() {
             ) : (
               <>
                 <Link href="/auth" className="bg-[#5F9EA0] hover:bg-button-cadet-hover text-white font-semibold py-3 px-6 rounded-xl transition-all duration-300 hover:shadow-lg font-roboto">
-                  Sign In
-                </Link>
-                <Link href="/about" className="bg-white hover:bg-gray-50 text-gray-800 font-medium py-3 px-6 rounded-xl border border-gray-200 hover:border-gray-300 transition-all duration-200 shadow-sm hover:shadow-md font-roboto">
-                  About FlareCare
+                  Start Tracking
                 </Link>
               </>
             )}
