@@ -900,8 +900,7 @@ export default function Home() {
 
         {/* Today's Summary */}
         <div className="mb-8 card">
-          <h2 className="text-xl font-semibold font-source text-primary">Today's Summary</h2>
-          <div className="p-4 pb-0">
+          <h2 className="text-xl font-semibold font-source text-primary mb-4">Today's Summary</h2>
             <div className="card-inner p-4">
               <div className="flex justify-between items-center p-2">
                 <span className="text-secondary">Symptoms Logged</span>
@@ -911,7 +910,6 @@ export default function Home() {
                 <span className="text-secondary">Medications Taken</span>
                 <span className="font-semibold text-primary">{takenMedications.length}/{medications.length}</span>
               </div>
-            </div>
           </div>
         </div>
 
