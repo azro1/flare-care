@@ -135,8 +135,7 @@ export default function About() {
         </div>
         
         <p className="text-sm text-secondary mt-8 text-center font-roboto">
-          Built with care for Crohn's and Colitis patients.
-        </p>
+          Together, we're building a better way to manage IBD        </p>
       </div>
 
       <ConfirmationModal
