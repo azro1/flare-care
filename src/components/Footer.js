@@ -60,7 +60,7 @@ export default function Footer() {
           </div>
 
           <div className="mt-8 pt-8 text-center text-sm" style={{borderTop: '1px solid var(--border-footer)', color: 'var(--text-footer)'}}>
-            Made with ❤️ for the IBD community 
+            Made with <span className="text-lg">💜</span> for the IBD community 
           </div>
         </div>
       </div>

@@ -7,12 +7,14 @@ import { useAuth } from '@/lib/AuthContext'
 import ProtectedRoute from '@/components/ProtectedRoute'
 
 function AccountPageContent() {
-  const { user, signOut } = useAuth()
+  const { user, signOut, deleteUser } = useAuth()
   const router = useRouter()
   const [isSigningOut, setIsSigningOut] = useState(false)
   const [showSignOutModal, setShowSignOutModal] = useState(false)
   const [showDeleteModal, setShowDeleteModal] = useState(false)
   const [showFallbackAvatar, setShowFallbackAvatar] = useState(false)
+  const [isDeleting, setIsDeleting] = useState(false)
+  const [deleteError, setDeleteError] = useState(null)
 
   const handleSignOut = async () => {
     setIsSigningOut(true)
@@ -31,9 +33,29 @@ function AccountPageContent() {
     }
   }
 
-  const handleDeleteAccount = () => {
+  const handleDeleteAccount = async () => {
+    setIsDeleting(true)
+    setDeleteError(null)
     setShowDeleteModal(false)
-    alert('Coming Soon: Account deletion will be available after we set up the Supabase integration.')
+    
+    try {
+      const result = await deleteUser()
+      
+      if (result.success) {
+        // Account deleted successfully, redirect to landing page
+        router.replace('/')
+      } else {
+        // Show error and reopen modal
+        setDeleteError(result.error || 'Failed to delete account')
+        setShowDeleteModal(true)
+        setIsDeleting(false)
+      }
+    } catch (error) {
+      console.error('Error deleting account:', error)
+      setDeleteError(error.message || 'An unexpected error occurred')
+      setShowDeleteModal(true)
+      setIsDeleting(false)
+    }
   }
 
   // Get user's avatar from Google metadata (same as navigation)
@@ -78,8 +100,8 @@ function AccountPageContent() {
         </div>
 
         {/* Profile Section */}
-        <div className="card p-6 mb-8">
-          <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 mb-8 card-inner p-6">
+        <div className="card mb-8">
+          <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 mb-8 card-inner p-5 sm:p-6">
             <div className="flex items-center min-w-0">
               <div className="mr-4 sm:mr-6 flex-shrink-0">
                 <div className="w-20 h-20 rounded-full overflow-hidden flex items-center justify-center bg-[var(--bg-icon)] dark:bg-[var(--bg-icon-charcoal)]">
@@ -127,24 +149,24 @@ function AccountPageContent() {
           <h3 className="text-lg sm:text-xl font-semibold font-source text-primary mb-4">Account Information</h3>
           
           <div className="space-y-4">
-            <div className="card-inner p-6">
+            <div className="card-inner p-5 sm:p-6">
               <p className="text-sm font-medium text-secondary mb-1">Email</p>
               <p className="text-primary font-roboto">{user?.email || 'Not available'}</p>
             </div>
 
-            <div className="card-inner p-6">
+            <div className="card-inner p-5 sm:p-6">
               <p className="text-sm font-medium text-secondary mb-1">Full Name</p>
               <p className="text-primary font-roboto">{user?.user_metadata?.full_name || 'Not set'}</p>
             </div>
 
-            <div className="card-inner p-6">
+            <div className="card-inner p-5 sm:p-6">
               <p className="text-sm font-medium text-secondary mb-1">Account Created</p>
               <p className="text-primary font-roboto">
                 {user?.created_at ? new Date(user.created_at).toLocaleDateString('en-GB') : 'Not available'}
               </p>
             </div>
 
-            <div className="card-inner p-6">
+            <div className="card-inner p-5 sm:p-6">
               <p className="text-sm font-medium text-secondary mb-1">User ID</p>
               <p className="text-primary font-roboto font-mono">{user?.id || 'Not available'}</p>
             </div>
@@ -166,7 +188,7 @@ function AccountPageContent() {
               onClick={() => setShowDeleteModal(true)}
               className="button-delete"
             >
-              Delete Account
+              Delete
             </button>
           </div>
         </div>
@@ -227,18 +249,29 @@ function AccountPageContent() {
               Are you sure you want to permanently delete your account? This action cannot be undone and all your data will be lost.
             </p>
             
+            {deleteError && (
+              <div className="mb-4 p-3 bg-red-500/10 border border-red-500/20 rounded-lg">
+                <p className="text-sm text-red-400">{deleteError}</p>
+              </div>
+            )}
+            
             <div className="flex gap-3">
               <button
-                onClick={() => setShowDeleteModal(false)}
-                className="flex-1 button-cancel"
+                onClick={() => {
+                  setShowDeleteModal(false)
+                  setDeleteError(null)
+                }}
+                disabled={isDeleting}
+                className="flex-1 button-cancel disabled:opacity-50"
               >
                 Cancel
               </button>
               <button
                 onClick={handleDeleteAccount}
-                className="button-delete flex-1"
+                disabled={isDeleting}
+                className="button-delete flex-1 disabled:opacity-50"
               >
-                Delete Account
+                {isDeleting ? 'Deleting...' : 'Delete'}
               </button>
             </div>
           </div>

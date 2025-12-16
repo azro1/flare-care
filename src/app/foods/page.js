@@ -144,7 +144,7 @@ export default function Foods() {
 
               {/* IBD-Friendly Foods */}
               <div className="card rounded-2xl">
-                <h3 className="text-lg font-semibold font-source text-primary mb-4">IBD Foods</h3>
+                <h3 className="text-xl font-semibold font-source text-primary mb-4">IBD Foods</h3>
                 <div className="space-y-4">
                   <div className="card-inner p-5 rounded-xl">
                     <h4 className="font-medium text-primary mb-2">✅ Generally Safe</h4>
@@ -163,7 +163,7 @@ export default function Foods() {
 
               {/* Quick Food Tips */}
               <div className="card p-4 sm:p-6 rounded-2xl">
-                <h3 className="text-lg font-semibold font-source text-primary mb-4">Quick Food Tips</h3>
+                <h3 className="text-xl font-semibold font-source text-primary mb-4">Quick Food Tips</h3>
                 <div className="space-y-3">
                   <div className="flex items-center gap-3">
                     <div className="w-8 h-8 min-w-[2rem] rounded-lg flex items-center justify-center card-inner">

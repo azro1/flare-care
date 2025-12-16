@@ -12,7 +12,7 @@ export default function About() {
         <h1 className="text-2xl sm:text-3xl lg:text-4xl font-bold font-source text-primary mb-4">
           FlareCare
         </h1>
-        <p className="font-roboto text-secondary">
+        <p className="lg:text-lg font-roboto text-secondary">
           A personal journey turned into a tool for the community
         </p>
       </div>
@@ -134,7 +134,7 @@ export default function About() {
           </div>
         </div>
         
-        <p className="text-sm text-secondary mt-8 text-center font-roboto">
+        <p className="text-secondary mt-8 text-center font-roboto">
           Together, we're building a better way to manage IBD        </p>
       </div>
 

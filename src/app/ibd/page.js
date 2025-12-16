@@ -45,7 +45,7 @@ export default function LearnPage() {
             
             {/* Daily Tips */}
             <div className="card">
-              <h3 className="text-lg font-semibold font-source text-primary mb-4">Daily Tips</h3>
+              <h3 className="text-xl font-semibold font-source text-primary mb-4">Daily Tips</h3>
               <div className="space-y-3">
                 <div className="flex items-center gap-3">
                   <div className="w-8 h-8 min-w-[2rem] rounded-lg flex items-center justify-center card-inner">
@@ -76,7 +76,7 @@ export default function LearnPage() {
 
             {/* Emergency Contacts */}
             <div className="card rounded-2xl backdrop-blur-sm">
-              <h3 className="text-lg font-semibold font-source text-primary mb-4">Emergency Contacts</h3>
+              <h3 className="text-xl font-semibold font-source text-primary mb-4">Emergency Contacts</h3>
             <div className="space-y-3">
               <div className="border-l-4" style={{ borderColor: '#5F9EA0', opacity: 0.85 }}>
                   <div className="pl-3">
@@ -104,7 +104,7 @@ export default function LearnPage() {
 
             {/* Quick Facts */}
             <div className="card">
-              <h3 className="text-lg font-semibold font-source text-primary mb-4">Quick Facts</h3>
+              <h3 className="text-xl font-semibold font-source text-primary mb-4">Quick Facts</h3>
               <div className="space-y-3">
                 <p
                   key={QUICK_FACTS[currentFactIndex]}
@@ -302,7 +302,7 @@ export default function LearnPage() {
       <div className="card p-8 rounded-2xl mb-8">
         <h2 className="text-xl font-semibold font-source text-primary mb-6">When to Seek Medical Help</h2>
         <div className="card-inner p-6 rounded-xl">
-          <h3 className="text-lg font-semibold font-source text-primary mb-4">Seek immediate medical attention if you experience:</h3>
+          <h3 className="text-lg font-semibold font-source text-primary mb-4 leading-normal">Seek immediate medical attention if you experience:</h3>
           <ul className="space-y-2 text-secondary font-source">
             <li className="flex items-start">
               <span className="text-red-500 mr-2 font-bold">•</span>

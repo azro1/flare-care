@@ -143,12 +143,47 @@ export const AuthProvider = ({ children }) => {
     }
   }
 
+  // Delete user account and all associated data
+  const deleteUser = async () => {
+    if (!user) {
+      return { success: false, error: 'No user logged in' }
+    }
+
+    try {
+      // Call RPC function to delete all user data and auth account
+      const { error } = await supabase.rpc('delete_user_account')
+      
+      if (error) {
+        console.error('Error deleting user account:', error)
+        return { success: false, error: error.message }
+      }
+
+      // Set toast flag before clearing data
+      localStorage.setItem('showAccountDeletedToast', 'true')
+      
+      // Clear localStorage
+      clearUserData()
+      localStorage.removeItem('supabase.auth.user')
+      // Re-set toast flag after clearUserData (in case it was cleared)
+      localStorage.setItem('showAccountDeletedToast', 'true')
+
+      // Sign out (this will also clear the session)
+      await signOut()
+
+      return { success: true }
+    } catch (error) {
+      console.error('Error deleting user account:', error)
+      return { success: false, error: error.message }
+    }
+  }
+
   const value = {
     user,
     isAuthenticated,
     loading,
     signInWithOtp,
-    signOut
+    signOut,
+    deleteUser
   }
 
   return (

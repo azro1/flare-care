@@ -20,6 +20,7 @@ export default function Home() {
   const [showDeleteToast, setShowDeleteToast] = useState(false)
   const [showMedicationToast, setShowMedicationToast] = useState(false)
   const [showMedicationDeleteToast, setShowMedicationDeleteToast] = useState(false)
+  const [showAccountDeletedToast, setShowAccountDeletedToast] = useState(false)
   const [currentTipIndex, setCurrentTipIndex] = useState(0)
   const [isFading, setIsFading] = useState(false)
   const [showMore, setShowMore] = useState(false)
@@ -101,6 +102,25 @@ export default function Home() {
       }, 4000)
     }
 
+    // Check for account deleted toast with a small delay to ensure it's set
+    const checkAccountDeletedToast = () => {
+      const showAccountDeletedToast = localStorage.getItem('showAccountDeletedToast')
+      if (showAccountDeletedToast === 'true') {
+        setShowAccountDeletedToast(true)
+        localStorage.removeItem('showAccountDeletedToast')
+        
+        // Auto-hide toast after 4 seconds
+        setTimeout(() => {
+          setShowAccountDeletedToast(false)
+        }, 4000)
+      }
+    }
+
+    // Run immediately and also after a small delay
+    checkAccountDeletedToast()
+    const timeoutId = setTimeout(checkAccountDeletedToast, 200)
+
+    return () => clearTimeout(timeoutId)
   }, [])
 
   // Fetch symptoms directly from Supabase
@@ -472,17 +492,31 @@ export default function Home() {
   if (!isAuthenticated) {
     return (
       <div className="min-h-screen">
-        <section className="pt-32 pb-16 sm:pt-40 sm:pb-32 px-6">
+        {/* Account Deleted Toast */}
+        {showAccountDeletedToast && (
+          <div className="fixed top-24 right-4 z-50 bg-red-100 text-red-600 px-6 py-3 rounded-lg shadow-lg flex items-center max-w-xs border border-red-600">
+            <span className="font-medium">Account deleted successfully!</span>
+            <button
+              onClick={() => setShowAccountDeletedToast(false)}
+              className="ml-3 text-red-600/80 hover:text-red-600"
+            >
+              <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+              </svg>
+            </button>
+          </div>
+        )}
+        <section className="pt-32 pb-12 sm:pt-40 md:pb-24 px-6">
           <div className="max-w-4xl mx-auto">
-            <div className="text-center space-y-6 mb-20">
+            <div className="text-center space-y-6 mb-12 md:mb-20">
               <div>
                 <div className="text-cadet-blue text-xl font-medium font-source mb-1.5">FlareCare</div>
                 <h1 className="text-4xl md:text-5xl lg:text-6xl font-bold text-primary leading-tight">
-                Take control of
-                  <br />
-                  your
-                  <span className="text-[#5F9EA0]"> IBD</span>
-                </h1>
+              Take control of
+                <br />
+                your
+                <span className="text-[#5F9EA0]"> IBD</span>
+              </h1>
               </div>
 
 
@@ -590,7 +624,7 @@ export default function Home() {
           </div>
         </section>
 
-        <section className="py-12 sm:py-20 px-6">
+        <section className="py-12 md:py-24 px-6">
           <div className="max-w-3xl mx-auto">
             <div className="card p-10 md:p-14 rounded-2xl backdrop-blur-sm">
               <h2 className="text-2xl sm:text-3xl font-bold text-primary mb-6">
@@ -626,10 +660,10 @@ export default function Home() {
         <section className="py-12 sm:py-20 px-6 section-bg">
           <div className="max-w-2xl mx-auto text-center space-y-6">
             <h2 className="text-2xl sm:text-3xl font-bold text-primary">
-              Ready to start?
+              Your story starts here
             </h2>
             <p className="text-lg sm:text-xl text-secondary">
-              Open your journal, jot how you feel, and build your own story.
+              Sign in to start tracking your symptoms and medications
             </p>
               <Link href="/auth" className="inline-block px-8 py-2.5 bg-[#5F9EA0] text-white rounded-lg hover:bg-button-cadet-hover transition-colors text-lg sm:text-xl font-bold">
               Sign In
@@ -718,6 +752,20 @@ export default function Home() {
         </div>
       )}
 
+      {showAccountDeletedToast && (
+        <div className="fixed top-24 right-4 z-50 bg-red-100 text-red-600 px-6 py-3 rounded-lg shadow-lg flex items-center max-w-xs border border-red-600">
+          <span className="font-medium">Account deleted successfully!</span>
+          <button
+            onClick={() => setShowAccountDeletedToast(false)}
+            className="ml-3 text-red-600/80 hover:text-red-600"
+          >
+            <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+            </svg>
+          </button>
+        </div>
+      )}
+
       <div className="w-full px-3 sm:px-4 md:px-6 lg:px-8">
         <div className="flex flex-col lg:flex-row lg:gap-8 lg:justify-center">
           
@@ -727,32 +775,32 @@ export default function Home() {
               
               {/* Quick Stats */}
               <div className=" card">
-                <h3 className="text-lg font-semibold font-source text-primary mb-4">Your Progress</h3>
+                <h3 className="text-xl font-semibold font-source text-primary mb-4">Your Progress</h3>
                 <div className="card-inner p-5 space-y-2">
-                    <div className="flex justify-between items-center">
+                  <div className="flex justify-between items-center">
                       <span className="text-sm text-secondary">Total Symptoms</span>
-                    <span className="font-semibold text-white">{symptoms.length}</span>
-                    </div>
-                    <div className="flex justify-between items-center">
+                    <span className="font-semibold text-primary">{symptoms.length}</span>
+                  </div>
+                  <div className="flex justify-between items-center">
                       <span className="text-sm text-secondary">This Week</span>
-                    <span className="font-semibold text-white">
-                        {symptoms.filter(s => {
-                          const weekAgo = new Date()
-                          weekAgo.setDate(weekAgo.getDate() - 7)
-                          return new Date(s.created_at || s.createdAt) > weekAgo
-                        }).length}
-                      </span>
-                    </div>
-                    <div className="flex justify-between items-center">
+                    <span className="font-semibold text-primary">
+                      {symptoms.filter(s => {
+                        const weekAgo = new Date()
+                        weekAgo.setDate(weekAgo.getDate() - 7)
+                        return new Date(s.created_at || s.createdAt) > weekAgo
+                      }).length}
+                    </span>
+                  </div>
+                  <div className="flex justify-between items-center">
                       <span className="text-sm text-secondary">Today</span>
-                    <span className="font-semibold text-white">{todaySymptoms.length}</span>
-                    </div>
+                    <span className="font-semibold text-primary">{todaySymptoms.length}</span>
+                  </div>
                 </div>
             </div>
 
               {/* Today's Goals */}
               <div className="card no-hover-border p-4 sm:p-6">
-                <h3 className="text-lg font-semibold font-source text-primary mb-4">Today's Goals</h3>
+                <h3 className="text-xl font-semibold font-source text-primary mb-4">Today's Goals</h3>
                 <div className="space-y-3">
                   <div className="flex items-center gap-3">
                     <div className="w-6 h-6 card-inner rounded-lg flex items-center justify-center">
@@ -780,7 +828,7 @@ export default function Home() {
                       {takenMedications.length === medications.length && medications.length > 0 && (
                         <svg className="w-5 h-5" style={{color: 'var(--text-cadet-blue)'}} fill="none" stroke="currentColor" viewBox="0 0 24 24">
                           <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
-                        </svg>
+                  </svg>
                       )}
                     </div>
                   </div>
@@ -796,10 +844,10 @@ export default function Home() {
               {/* Daily Tip */}
               <div className="card">
                 <div>
-                  <h3 className="text-lg font-semibold font-source text-primary mb-2">💡 Daily Tip</h3>
+                  <h3 className="text-xl font-semibold font-source text-primary mb-2">💡 Daily Tip</h3>
                   <p className={`text-sm text-secondary transition-opacity duration-500 ${isFading ? 'opacity-0' : 'opacity-100'}`}>
                     {dailyTips[currentTipIndex]}
-                  </p>
+                </p>
                 </div>
               </div>
 
@@ -834,7 +882,7 @@ export default function Home() {
               className="card card-link p-6 transition-all group relative focus:outline-none focus-visible:outline-none focus-visible:ring-0 focus-visible:ring-offset-0 focus:ring-0"
             >
               <div className="flex items-center sm:flex-col sm:items-center gap-4 sm:gap-3">
-                <div className="w-12 h-12 bg-emerald-100 rounded-xl flex items-center justify-center">
+                <div className="w-8 h-8 lg:w-10 lg:h-10 bg-emerald-100 rounded-lg flex items-center justify-center">
                   <Thermometer className="w-6 h-6 text-emerald-600" />
                 </div>
                 <div className="flex-1 sm:w-full sm:text-center">
@@ -848,15 +896,15 @@ export default function Home() {
                 <div className="tooltip-card rounded-lg px-4 py-3 text-left text-sm text-secondary leading-snug shadow-lg font-roboto">
                   Record how you're feeling and track your symptoms
                 </div>
-              </div>
-            </Link>
+            </div>
+          </Link>
 
             <Link
               href="/medications/track"
               className="card card-link p-6 transition-all group relative focus:outline-none focus-visible:outline-none focus-visible:ring-0 focus-visible:ring-offset-0 focus:ring-0"
             >
               <div className="flex items-center sm:flex-col sm:items-center gap-4 sm:gap-3">
-                <div className="w-12 h-12 bg-pink-100 rounded-xl flex items-center justify-center">
+                <div className="w-8 h-8 lg:w-10 lg:h-10 bg-pink-100 rounded-lg flex items-center justify-center">
                   <ChartLine className="w-5 h-5 text-pink-600" />
                 </div>
                 <div className="flex-1 sm:w-full sm:text-center">
@@ -870,15 +918,15 @@ export default function Home() {
                 <div className="tooltip-card rounded-lg px-4 py-3 text-left text-sm text-secondary leading-snug shadow-lg font-roboto">
                   Log missed medications and track your adherence
                 </div>
-              </div>
-            </Link>
+            </div>
+          </Link>
 
             <Link
               href="/reports"
               className="card card-link p-6 transition-all group relative focus:outline-none focus-visible:outline-none focus-visible:ring-0 focus-visible:ring-offset-0 focus:ring-0"
             >
               <div className="flex items-center sm:flex-col sm:items-center gap-4 sm:gap-3">
-                <div className="w-12 h-12 bg-orange-100 rounded-xl flex items-center justify-center">
+                <div className="w-8 h-8 lg:w-10 lg:h-10 bg-orange-100 rounded-lg flex items-center justify-center">
                   <FileText className="w-5 h-5 text-orange-600" />
                 </div>
                 <div className="flex-1 sm:w-full sm:text-center">
@@ -894,7 +942,7 @@ export default function Home() {
                 </div>
               </div>
             </Link>
-        </div>
+          </div>
         </div>
 
 
@@ -903,13 +951,13 @@ export default function Home() {
           <h2 className="text-xl font-semibold font-source text-primary mb-4">Today's Summary</h2>
             <div className="card-inner p-4">
               <div className="flex justify-between items-center p-2">
-                <span className="text-secondary">Symptoms Logged</span>
-                <span className="font-semibold text-primary">{todaySymptoms.length}</span>
-              </div>
+                <span className="text-sm text-secondary">Symptoms Logged</span>
+                <span className="text-sm font-semibold text-primary">{todaySymptoms.length}</span>
+            </div>
               <div className="flex justify-between items-center p-2">
-                <span className="text-secondary">Medications Taken</span>
-                <span className="font-semibold text-primary">{takenMedications.length}/{medications.length}</span>
-              </div>
+                <span className="text-sm text-secondary">Medications Taken</span>
+                <span className="text-sm font-semibold text-primary">{takenMedications.length}/{medications.length}</span>
+            </div>
           </div>
         </div>
 
@@ -937,12 +985,12 @@ export default function Home() {
             <div className="space-y-3 max-w-xs">
               {displayedSymptoms.map((symptom) => (
                 <div key={symptom.id}>
-                  <div 
+                <div 
                     className="card-inner p-6 cursor-pointer transition-all duration-200"
-                    onClick={() => {
-                      router.push(`/symptoms/${symptom.id}`)
-                    }}
-                  >
+                  onClick={() => {
+                    router.push(`/symptoms/${symptom.id}`)
+                  }}
+                >
                   <div className="space-y-4">
                     <div className="flex items-center justify-between">
                       <span className="text-sm font-medium text-primary">
@@ -984,7 +1032,7 @@ export default function Home() {
                   <ChevronDown className={`w-5 h-5 sm:hidden transition-transform duration-200 text-primary ${showAllMedications ? 'rotate-180' : ''}`} />
                 </button>
               )}
-            </div>
+                  </div>
             <div className="space-y-3 max-w-xs">
               {(showAllMedications ? trackedMedications : trackedMedications.slice(0, 1)).map((tracked, index) => (
                 <div key={tracked.id}>
@@ -1019,18 +1067,18 @@ export default function Home() {
         <div className="card mb-8">
           <h2 className="text-xl font-semibold font-source text-primary">Recent Activity</h2>
           <div className="p-4 pb-0 transition-all duration-300 ease-in-out">
-            {(() => {
+                      {(() => {
               // Helper function to format relative time
               const formatRelativeTime = (date) => {
-                const now = new Date()
+                        const now = new Date()
                 const diffMinutes = Math.floor((now - date) / (1000 * 60))
-                const diffHours = Math.floor(diffMinutes / 60)
-                
-                if (diffMinutes < 1) return 'Just now'
-                if (diffMinutes < 60) return `${diffMinutes} minute${diffMinutes > 1 ? 's' : ''} ago`
-                if (diffHours < 24) return `${diffHours} hour${diffHours > 1 ? 's' : ''} ago`
-                const diffDays = Math.floor(diffHours / 24)
-                if (diffDays < 7) return `${diffDays} day${diffDays > 1 ? 's' : ''} ago`
+                        const diffHours = Math.floor(diffMinutes / 60)
+                        
+                        if (diffMinutes < 1) return 'Just now'
+                        if (diffMinutes < 60) return `${diffMinutes} minute${diffMinutes > 1 ? 's' : ''} ago`
+                        if (diffHours < 24) return `${diffHours} hour${diffHours > 1 ? 's' : ''} ago`
+                        const diffDays = Math.floor(diffHours / 24)
+                        if (diffDays < 7) return `${diffDays} day${diffDays > 1 ? 's' : ''} ago`
                 return date.toLocaleDateString()
               }
 
@@ -1176,7 +1224,7 @@ export default function Home() {
                     </div>
                     <p className="text-secondary text-sm">No recent activity</p>
                     <p className="text-xs text-secondary mt-1">Start tracking your symptoms and medications to see activity here</p>
-                  </div>
+                    </div>
                 )
               }
 
@@ -1188,17 +1236,17 @@ export default function Home() {
                       <div key={`${activity.type}-${activity.timestamp.getTime()}-${index}`} className="flex items-start gap-3 pt-2">
                         <div className={`w-8 h-8 ${activity.iconBg} rounded-lg flex items-center justify-center`}>
                           <IconComponent className={`w-4 h-4 ${activity.iconColor}`} />
-                        </div>
-                        <div className="flex-1">
+                    </div>
+                    <div className="flex-1">
                           <p className="text-sm font-medium text-primary">{activity.title}</p>
                           <p className="text-xs text-slate-400 dark:[color:var(--text-tertiary)] mt-1">
                             {formatRelativeTime(activity.timestamp)}
                           </p>
-                        </div>
-                      </div>
+                    </div>
+                  </div>
                     )
                   })}
-                </div>
+              </div>
               )
             })()}
           </div>
@@ -1225,20 +1273,20 @@ export default function Home() {
                 className="card card-link p-6 transition-all group relative focus:outline-none focus-visible:outline-none focus-visible:ring-0 focus-visible:ring-offset-0 focus:ring-0"
               >
                 <div className="flex items-center sm:flex-col sm:items-center gap-4 sm:gap-3">
-                  <div className="w-12 h-12 bg-purple-100 rounded-xl flex items-center justify-center">
-                    <Pill className="w-6 h-6 text-purple-600" />
-                  </div>
+                  <div className="w-8 h-8 lg:w-10 lg:h-10 bg-purple-100 rounded-xl flex items-center justify-center">
+                    <Pill className="w-5 h-5 text-purple-600" />
+                </div>
                   <div className="flex-1 sm:w-full sm:text-center">
                     <h3 className="font-semibold text-primary leading-relaxed sm:justify-center">
                       My Medications
                     </h3>
-                  </div>
+              </div>
                   <ChevronRight className="w-5 h-5 text-secondary sm:hidden" />
-                </div>
-              </Link>
-            </div>
+              </div>
+            </Link>
+              </div>
+              </div>
           </div>
-        </div>
 
           </div>
         </div>
