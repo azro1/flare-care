@@ -557,7 +557,7 @@ function MedicationsPageContent() {
 
       {/* Your Medications Section */}
       <div className="card mb-8 sm:mb-12 min-w-0">
-        <div className={`flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 ${isAdding ? 'mb-6 sm:mb-8' : 'mb-0'} `}>
+        <div className={`flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 ${isAdding || medications.length > 0 ? 'mb-6 sm:mb-8' : 'mb-0'} `}>
           <div className="flex items-center">
             <div className="hidden sm:flex w-12 h-12 bg-purple-100 rounded-xl items-center justify-center mr-4">
               {isAdding ? (
