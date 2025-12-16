@@ -557,7 +557,7 @@ function MedicationsPageContent() {
 
       {/* Your Medications Section */}
       <div className="card mb-8 sm:mb-12 min-w-0">
-        <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 mb-6 sm:mb-8">
+        <div className={`flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 ${isAdding ? 'mb-6 sm:mb-8' : 'mb-0'} `}>
           <div className="flex items-center">
             <div className="hidden sm:flex w-12 h-12 bg-purple-100 rounded-xl items-center justify-center mr-4">
               {isAdding ? (
@@ -728,8 +728,8 @@ function MedicationsPageContent() {
           </div>
         ) : medications.length === 0 ? (
           <div className="text-center py-12 text-secondary">
-            <div className="card-inner rounded-full w-20 h-20 mx-auto mb-6 flex items-center justify-center">
-              <Pill className="w-10 h-10 text-secondary" />
+            <div className="card-inner rounded-full w-14 h-14 sm:w-20 sm:h-20 mx-auto mb-6 flex items-center justify-center">
+              <Pill className="w-6 h-6 sm:w-10 sm:h-10 text-secondary" />
             </div>
             <h3 className="text-lg font-semibold font-source text-primary mb-2">No medications added yet</h3>
             <p className="font-roboto text-secondary max-w-md mx-auto">Add your medications to keep track of them and set up reminders to help you stay on schedule.</p>
@@ -897,21 +897,21 @@ function MedicationsPageContent() {
       {/* Reminder Info */}
       <div className="mt-6 sm:mt-8 card">
         <div>
-          <h3 className="text-lg font-semibold font-source text-primary mb-1 sm:mb-2 flex items-center space-x-2">
+          <h3 className="text-xl sm:text-lg font-semibold font-source text-primary mb-2 flex items-center space-x-2">
             <svg className="w-5 h-5 sm:w-6 sm:h-6 flex-shrink-0" style={{ color: 'var(--text-cadet-blue)' }} fill="none" stroke="currentColor" viewBox="0 0 24 24">
               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" />
             </svg>
             <span>Medication Reminders</span>
           </h3>
-          <p className="text-sm sm:text-base text-secondary mb-4 font-roboto leading-relaxed">
+          <p className="text-sm sm:text-base text-secondary font-roboto leading-relaxed">
             FlareCare will send browser notifications when it's time to take your medications.
           </p>
-          <div className="card-inner rounded-lg sm:rounded-xl p-5">
+          <div className="card-inner rounded-lg sm:rounded-xl p-6 mt-4">
             <div className="flex items-center space-x-1">
               <span className="text-lg">💡</span>
-              <p className="text-sm font-medium text-primary mb-1 font-roboto">Important to know:</p>
+              <p className="text-base sm:text-sm font-medium text-primary mb-2 font-roboto">Important to know:</p>
             </div>
-            <p className="text-xs  text-secondary font-roboto leading-relaxed">
+            <p className="text-sm  text-secondary font-roboto leading-relaxed">
               Reminders only work in your web browser. They won't show up as push notifications on your phone. 
               You can turn reminders on or off for each medication.
             </p>
