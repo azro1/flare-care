@@ -210,7 +210,7 @@ export default function Navigation() {
                 alt="FlareCare logo"
                 width={48}
                 height={48}
-                className="w-12 h-12"
+                className="w-10 h-10"
                 priority={true}
               />
             </div>

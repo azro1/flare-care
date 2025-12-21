@@ -875,22 +875,21 @@ export default function Home() {
 
         {/* Quick Actions */}
         <div className="mt-8 md:mt-10 mb-8">
-          <h2 className="text-xl font-semibold font-source text-primary mb-4">Get Started</h2>
-          <div className="grid grid-cols-1 sm:grid-cols-3 gap-4 md:gap-6">
+          <h2 className="text-xl font-semibold font-source text-primary mb-4">Daily Tasks</h2>
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 md:gap-6">
             <Link
               href="/symptoms"
-              className="card card-link p-6 transition-all group relative focus:outline-none focus-visible:outline-none focus-visible:ring-0 focus-visible:ring-offset-0 focus:ring-0"
+              className="card card-link !py-4 !px-4 sm:!p-6 transition-all group relative focus:outline-none focus-visible:outline-none focus-visible:ring-0 focus-visible:ring-offset-0 focus:ring-0"
             >
               <div className="flex items-center sm:flex-col sm:items-center gap-4 sm:gap-3">
-                <div className="w-8 h-8 lg:w-10 lg:h-10 bg-emerald-100 rounded-lg flex items-center justify-center">
+                <div className="w-8 h-8 lg:w-10 lg:h-10 bg-emerald-100 rounded-lg flex items-center justify-center flex-shrink-0">
                   <Thermometer className="w-6 h-6 text-emerald-600" />
                 </div>
                 <div className="flex-1 sm:w-full sm:text-center">
-                  <h3 className="font-semibold text-primary leading-relaxed sm:justify-center">
+                  <h3 className="font-semibold text-primary leading-tight sm:leading-relaxed sm:justify-center">
                     Log Symptoms
                   </h3>
                 </div>
-                <ChevronRight className="w-5 h-5 text-secondary sm:hidden" />
               </div>
               <div className="pointer-events-none absolute right-3 -top-14 hidden w-52 sm:group-hover:flex sm:group-focus-visible:flex">
                 <div className="tooltip-card rounded-lg px-4 py-3 text-left text-sm text-secondary leading-snug shadow-lg font-roboto">
@@ -901,18 +900,17 @@ export default function Home() {
 
             <Link
               href="/medications/track"
-              className="card card-link p-6 transition-all group relative focus:outline-none focus-visible:outline-none focus-visible:ring-0 focus-visible:ring-offset-0 focus:ring-0"
+              className="card card-link !py-4 !px-4 sm:!p-6 transition-all group relative focus:outline-none focus-visible:outline-none focus-visible:ring-0 focus-visible:ring-offset-0 focus:ring-0"
             >
               <div className="flex items-center sm:flex-col sm:items-center gap-4 sm:gap-3">
-                <div className="w-8 h-8 lg:w-10 lg:h-10 bg-pink-100 rounded-lg flex items-center justify-center">
+                <div className="w-8 h-8 lg:w-10 lg:h-10 bg-pink-100 rounded-lg flex items-center justify-center flex-shrink-0">
                   <ChartLine className="w-5 h-5 text-pink-600" />
                 </div>
                 <div className="flex-1 sm:w-full sm:text-center">
-                  <h3 className="font-semibold text-primary leading-relaxed sm:justify-center">
+                  <h3 className="font-semibold text-primary leading-tight sm:leading-relaxed sm:justify-center">
                     Track Meds
                   </h3>
                 </div>
-                <ChevronRight className="w-5 h-5 text-secondary sm:hidden" />
               </div>
               <div className="pointer-events-none absolute right-3 -top-14 hidden w-52 sm:group-hover:flex sm:group-focus-visible:flex">
                 <div className="tooltip-card rounded-lg px-4 py-3 text-left text-sm text-secondary leading-snug shadow-lg font-roboto">
@@ -920,28 +918,6 @@ export default function Home() {
                 </div>
             </div>
           </Link>
-
-            <Link
-              href="/reports"
-              className="card card-link p-6 transition-all group relative focus:outline-none focus-visible:outline-none focus-visible:ring-0 focus-visible:ring-offset-0 focus:ring-0"
-            >
-              <div className="flex items-center sm:flex-col sm:items-center gap-4 sm:gap-3">
-                <div className="w-8 h-8 lg:w-10 lg:h-10 bg-orange-100 rounded-lg flex items-center justify-center">
-                  <FileText className="w-5 h-5 text-orange-600" />
-                </div>
-                <div className="flex-1 sm:w-full sm:text-center">
-                  <h3 className="font-semibold text-primary leading-relaxed sm:justify-center">
-                    Reports
-                  </h3>
-                </div>
-                <ChevronRight className="w-5 h-5 text-secondary sm:hidden" />
-              </div>
-              <div className="pointer-events-none absolute right-3 -top-14 hidden w-52 sm:group-hover:flex sm:group-focus-visible:flex">
-                <div className="tooltip-card rounded-lg px-4 py-3 text-left text-sm text-secondary leading-snug shadow-lg font-roboto">
-                  View insights and share data with your doctor
-                </div>
-              </div>
-            </Link>
           </div>
         </div>
 
@@ -1254,39 +1230,46 @@ export default function Home() {
 
         {/* More Options */}
         <div className="mb-8">
-          <button
-            onClick={() => setShowMore(!showMore)}
-            className="flex items-center justify-between w-full text-xl font-semibold font-source text-primary mb-4 hover:opacity-80 transition-opacity lg:hidden"
-          >
-            <span>More</span>
-            {showMore ? (
-              <ChevronDown className="w-5 h-5 transform rotate-180 transition-transform" />
-            ) : (
-              <ChevronDown className="w-5 h-5 transition-transform" />
-            )}
-          </button>
-          <h2 className="hidden lg:block text-xl font-semibold font-source text-primary mb-4">More</h2>
-          <div className={`${showMore ? '' : 'hidden'} lg:block`}>
-            <div className="grid grid-cols-1 sm:grid-cols-3 gap-4 w-full">
+          <h2 className="text-xl font-semibold font-source text-primary mb-4">More</h2>
+          <div className="grid grid-cols-2 gap-4 md:gap-6">
               <Link
                 href="/medications"
                 className="card card-link p-6 transition-all group relative focus:outline-none focus-visible:outline-none focus-visible:ring-0 focus-visible:ring-offset-0 focus:ring-0"
               >
-                <div className="flex items-center sm:flex-col sm:items-center gap-4 sm:gap-3">
-                  <div className="w-8 h-8 lg:w-10 lg:h-10 bg-purple-100 rounded-xl flex items-center justify-center">
+                <div className="flex flex-col items-center gap-3">
+                  <div className="w-8 h-8 lg:w-10 lg:h-10 bg-purple-100 rounded-xl flex items-center justify-center flex-shrink-0">
                     <Pill className="w-5 h-5 text-purple-600" />
                 </div>
-                  <div className="flex-1 sm:w-full sm:text-center">
-                    <h3 className="font-semibold text-primary leading-relaxed sm:justify-center">
-                      My Medications
+                  <div className="w-full text-center">
+                    <h3 className="font-semibold text-primary leading-tight sm:leading-relaxed">
+                      My Meds
                     </h3>
               </div>
-                  <ChevronRight className="w-5 h-5 text-secondary sm:hidden" />
               </div>
             </Link>
-              </div>
-              </div>
+
+              <Link
+                href="/reports"
+                className="card card-link p-6 transition-all group relative focus:outline-none focus-visible:outline-none focus-visible:ring-0 focus-visible:ring-offset-0 focus:ring-0"
+              >
+                <div className="flex flex-col items-center gap-3">
+                  <div className="w-8 h-8 lg:w-10 lg:h-10 bg-orange-100 rounded-lg flex items-center justify-center flex-shrink-0">
+                    <FileText className="w-5 h-5 text-orange-600" />
+                  </div>
+                  <div className="w-full text-center">
+                    <h3 className="font-semibold text-primary leading-tight sm:leading-relaxed">
+                      Reports
+                    </h3>
+                  </div>
+                </div>
+                <div className="pointer-events-none absolute right-3 -top-14 hidden w-52 sm:group-hover:flex sm:group-focus-visible:flex">
+                  <div className="tooltip-card rounded-lg px-4 py-3 text-left text-sm text-secondary leading-snug shadow-lg font-roboto">
+                    View insights and share data with your doctor
+                  </div>
+                </div>
+              </Link>
           </div>
+        </div>
 
           </div>
         </div>
