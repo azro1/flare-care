@@ -4,7 +4,6 @@ import Footer from '@/components/Footer'
 import MainContent from '@/components/MainContent'
 import ReminderProvider from '@/components/ReminderProvider'
 import NotificationBanner from '@/components/NotificationBanner'
-import ThemeToggle from '@/components/ThemeToggle'
 import { AuthProvider } from '@/lib/AuthContext'
 import { ThemeProvider } from '@/lib/ThemeContext'
 import LoadingScreen from '@/components/LoadingScreen'
@@ -61,7 +60,6 @@ export default function RootLayout({ children }) {
                   {children}
                 </MainContent>
                 <Footer />
-                <ThemeToggle />
               </div>
             </LoadingScreen>
           </AuthProvider>

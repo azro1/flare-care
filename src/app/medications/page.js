@@ -904,7 +904,7 @@ function MedicationsPageContent() {
             <span>Medication Reminders</span>
           </h3>
           <p className="text-sm sm:text-base text-secondary font-roboto leading-relaxed">
-            FlareCare will send browser notifications when it's time to take your medications.
+            FlareCare will send browser notifications when it's time to take your medications
           </p>
           <div className="card-inner rounded-lg sm:rounded-xl p-6 mt-4">
             <div className="flex items-center space-x-1">

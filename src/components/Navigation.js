@@ -287,7 +287,7 @@ export default function Navigation() {
                           Account
                         </Link>
                         <Link
-                          href="/profile-settings"
+                          href="/settings"
                           className="block px-4 py-3 text-base font-roboto transition-colors cursor-pointer rounded-b-md"
                           style={{color: 'var(--text-dropdown)', borderBottomLeftRadius: '0.375rem', borderBottomRightRadius: '0.375rem'}}
                           onMouseEnter={(e) => {
@@ -301,7 +301,7 @@ export default function Navigation() {
                             e.target.style.borderBottomRightRadius = '0.375rem'
                           }}
                         >
-                          Profile Settings
+                          Settings
                         </Link>
                       </div>
                     </div>
@@ -410,7 +410,7 @@ export default function Navigation() {
                       Account
                     </Link>
                     <Link
-                      href="/profile-settings"
+                      href="/settings"
                       className="block px-4 py-3 text-base font-roboto transition-colors border-b"
                       style={{color: 'var(--text-dropdown)', borderColor: 'var(--border-dropdown)'}}
                       onMouseEnter={(e) => {e.target.style.backgroundColor = 'var(--bg-dropdown-hover)'; e.target.style.color = 'var(--text-cadet-blue)'}}
@@ -420,7 +420,7 @@ export default function Navigation() {
                         setIsUserMenuOpen(false)
                       }}
                     >
-                      Profile Settings
+                      Settings
                     </Link>
                   </div>
                 )}
