@@ -15,6 +15,12 @@ const nextConfig = {
         port: '',
         pathname: '/ajax/libs/twemoji/**',
       },
+      {
+        protocol: 'https',
+        hostname: 'openweathermap.org',
+        port: '',
+        pathname: '/img/wn/**',
+      },
     ],
   },
 }

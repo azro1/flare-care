@@ -95,8 +95,10 @@ function SymptomsPageContent() {
       document.body.style.height = '100%'
     
       // Apply gradient to html element since body is fixed
+      // Use CSS variable to respect light/dark mode
+      const bgMain = getComputedStyle(document.documentElement).getPropertyValue('--bg-main').trim()
       document.body.style.backgroundColor = 'transparent'
-      document.documentElement.style.background = '#1a1d24'
+      document.documentElement.style.background = bgMain || '#f8fafc' // Fallback to light mode default
       document.documentElement.style.height = '100%'
     } else {
       // Reset styles when on question pages

@@ -13,42 +13,19 @@ const conditionToTheme = (main) => {
   return 'clouds'
 }
 
-const getIconDisplay = (theme, isNight) => {
-  switch (theme) {
-    case 'clear':
-      return {
-        src: isNight
-          ? 'https://cdnjs.cloudflare.com/ajax/libs/twemoji/15.0.3/svg/1f319.svg'
-          : 'https://cdnjs.cloudflare.com/ajax/libs/twemoji/15.0.3/svg/2600.svg',
-        alt: isNight ? 'Clear night sky' : 'Sunny skies',
-      }
-    case 'clouds':
-      return {
-        src: isNight
-          ? 'https://cdnjs.cloudflare.com/ajax/libs/twemoji/15.0.3/svg/2601.svg'
-          : 'https://cdnjs.cloudflare.com/ajax/libs/twemoji/15.0.3/svg/26c5.svg',
-        alt: isNight ? 'Cloudy night' : 'Partly cloudy',
-      }
-    case 'rain':
-      return {
-        src: 'https://cdnjs.cloudflare.com/ajax/libs/twemoji/15.0.3/svg/1f327.svg',
-        alt: 'Rain showers',
-      }
-    case 'snow':
-      return {
-        src: 'https://cdnjs.cloudflare.com/ajax/libs/twemoji/15.0.3/svg/1f328.svg',
-        alt: 'Snowfall',
-      }
-    case 'storm':
-      return {
-        src: 'https://cdnjs.cloudflare.com/ajax/libs/twemoji/15.0.3/svg/26c8.svg',
-        alt: 'Thunderstorm',
-      }
-    default:
-      return {
-        src: 'https://cdnjs.cloudflare.com/ajax/libs/twemoji/15.0.3/svg/1f324.svg',
-        alt: 'Mostly cloudy',
-      }
+const getIconDisplay = (iconCode, desc) => {
+  // OpenWeatherMap icon codes (e.g., "01d", "01n", "02d", etc.)
+  // Format: https://openweathermap.org/img/wn/{icon}@2x.png
+  if (iconCode) {
+    return {
+      src: `https://openweathermap.org/img/wn/${iconCode}@2x.png`,
+      alt: desc || 'Weather icon',
+    }
+  }
+  // Fallback if no icon code
+  return {
+    src: 'https://openweathermap.org/img/wn/02d@2x.png',
+    alt: 'Weather icon',
   }
 }
 
@@ -101,10 +78,11 @@ export default function WeatherHero({
           temp: Math.round(data.main?.temp ?? 0),
           main: data.weather[0].main,
           desc: data.weather[0].description,
+          icon: data.weather[0].icon, // OpenWeatherMap icon code (e.g., "01d", "01n")
           city: data.name,
           isNight,
         }
-        const sig = `${next.temp}|${next.main}|${next.desc}|${next.city}|${next.isNight}`
+        const sig = `${next.temp}|${next.main}|${next.desc}|${next.icon}|${next.city}|${next.isNight}`
         if (lastSigRef.current !== sig) {
           lastSigRef.current = sig
           setWeather(next)
@@ -151,7 +129,7 @@ export default function WeatherHero({
       const raw = localStorage.getItem(cacheKey)
       if (raw) {
         const cached = JSON.parse(raw)
-        const sig = `${cached.temp}|${cached.main}|${cached.desc}|${cached.city}|${cached.isNight}`
+        const sig = `${cached.temp}|${cached.main}|${cached.desc}|${cached.icon || ''}|${cached.city}|${cached.isNight}`
         lastSigRef.current = sig
         setWeather(cached)
       }
@@ -160,7 +138,8 @@ export default function WeatherHero({
 
   const theme = conditionToTheme(previewCondition || weather?.main)
   const isNight = previewCondition ? !!previewIsNight : !!weather?.isNight
-  const { src: iconSrc, alt: iconAlt } = getIconDisplay(theme, isNight)
+  const iconCode = weather?.icon || null
+  const { src: iconSrc, alt: iconAlt } = getIconDisplay(iconCode, weather?.desc || previewCondition)
 
   return (
     <div
@@ -206,132 +185,6 @@ export default function WeatherHero({
         </div>
         
       </div>
-      {/* Animated overlays */}
-      {theme === 'rain' && (
-        <div aria-hidden className="pointer-events-none absolute inset-0 overflow-hidden">
-          {Array.from({ length: 40 }).map((_, i) => (
-            <div
-              key={i}
-              className="rain-drop"
-              style={{
-                left: `${(i * 73) % 100}%`,
-                // start animation mid-stream using negative delays
-                animationDelay: `-${(i % 16) * 0.12 + Math.random() * 0.6}s`,
-                animationDuration: `${1.6 + (i % 8) * 0.18}s`,
-                opacity: 0.5,
-                // randomize initial vertical position so not all start at same top
-                top: `${-10 + Math.random() * 120}%`,
-                // shorter drops (12–20px)
-                height: `${12 + (i % 5) * 2}px`,
-              }}
-            />
-          ))}
-        </div>
-      )}
-      {theme === 'snow' && (
-        <div aria-hidden className="pointer-events-none absolute inset-0 overflow-hidden">
-          {Array.from({ length: 28 }).map((_, i) => (
-            <div
-              key={i}
-              className="snow-flake"
-              style={{
-                left: `${(i * 61) % 100}%`,
-                animationDelay: `-${(i % 12) * 0.2 + Math.random() * 0.8}s`,
-                animationDuration: `${3 + (i % 8) * 0.4}s`,
-                opacity: 0.8,
-                top: `${-10 + Math.random() * 120}%`,
-              }}
-            />
-          ))}
-        </div>
-      )}
-      {theme === 'storm' && (
-        <div aria-hidden className="pointer-events-none absolute inset-0 overflow-hidden">
-          {/* occasional sky flash */}
-          <div className="storm-flash" />
-          {/* a few lightning streaks */}
-          {Array.from({ length: 4 }).map((_, i) => (
-            <div
-              key={i}
-              className="lightning-bolt"
-              style={{
-                left: `${10 + i * 20 + (i % 2 === 0 ? 5 : -3)}%`,
-                top: `${-5 + (i % 3) * 10}%`,
-                transform: `rotate(${-(18 + i * 4)}deg)`,
-                animationDelay: `${0.8 * i + (i % 2) * 0.35}s`,
-              }}
-            />
-          ))}
-        </div>
-      )}
-      <style jsx>{`
-        .rain-drop {
-          position: absolute;
-          top: -10%;
-          width: 2px;
-          height: 28px;
-          background: rgba(2,132,199,0.7);
-          border-radius: 1px;
-          filter: drop-shadow(0 0 2px rgba(2,132,199,0.5));
-          transform: rotate(12deg);
-          animation-name: rainFall;
-          animation-timing-function: linear;
-          animation-iteration-count: infinite;
-        }
-        @keyframes rainFall {
-          0% { top: -10%; }
-          100% { top: 110%; }
-        }
-        .snow-flake {
-          position: absolute;
-          top: -10%;
-          width: 6px;
-          height: 6px;
-          background: rgba(255,255,255,0.95);
-          border-radius: 9999px;
-          box-shadow: 0 0 6px rgba(255,255,255,0.6);
-          animation-name: snowDrift;
-          animation-timing-function: ease-in-out;
-          animation-iteration-count: infinite;
-        }
-        @keyframes snowDrift {
-          0% { top: -10%; transform: translateX(-8px); }
-          50% { top: 45%; transform: translateX(8px); }
-          100% { top: 110%; transform: translateX(-6px); }
-        }
-        .storm-flash {
-          position: absolute;
-          inset: 0;
-          background: radial-gradient(circle at 60% 20%, rgba(255,255,255,0.35), rgba(255,255,255,0) 60%);
-          opacity: 0;
-          animation: flash 6s linear infinite;
-          animation-delay: 0.6s;
-        }
-        @keyframes flash {
-          0%, 86%, 100% { opacity: 0; }
-          88% { opacity: 0.8; }
-          89% { opacity: 0.15; }
-          90% { opacity: 0.6; }
-          92% { opacity: 0; }
-        }
-        .lightning-bolt {
-          position: absolute;
-          width: 2px;
-          height: 45%;
-          background: linear-gradient(to bottom, rgba(255,255,255,0.95), rgba(255,255,255,0.2));
-          box-shadow: 0 0 10px rgba(255,255,255,0.6);
-          opacity: 0;
-          animation: bolt 6.2s linear infinite;
-        }
-        @keyframes bolt {
-          0%, 80% { opacity: 0; }
-          82% { opacity: 1; }
-          83% { opacity: 0.2; }
-          84% { opacity: 0.9; }
-          86% { opacity: 0; }
-          100% { opacity: 0; }
-        }
-      `}</style>
       {!apiKey && (
         <div className="px-4 py-2 text-xs text-secondary">Set NEXT_PUBLIC_OPENWEATHER_API_KEY to enable weather.</div>
       )}

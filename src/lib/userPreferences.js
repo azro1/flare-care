@@ -25,9 +25,9 @@ export async function getUserPreferences(userId) {
         .from(TABLES.USER_PREFERENCES)
         .select('*')
         .eq('user_id', userId)
-        .single()
+        .maybeSingle()
 
-      if (error && error.code !== 'PGRST116') { // PGRST116 = no rows found
+      if (error) {
         console.error('Error fetching user preferences:', error)
         return null
       }
