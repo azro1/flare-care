@@ -1,6 +1,7 @@
 'use client'
 
 import { useState, useEffect } from 'react'
+import { usePathname } from 'next/navigation'
 import jsPDF from 'jspdf'
 import ConfirmationModal from '@/components/ConfirmationModal'
 import DatePicker from 'react-datepicker'
@@ -15,11 +16,13 @@ export const dynamic = 'force-dynamic'
 
 function ReportsPageContent() {
   const { user } = useAuth()
+  const pathname = usePathname()
   const [symptoms, setSymptoms] = useState([])
   const [medications, setMedications] = useState([])
   const [medicationTracking, setMedicationTracking] = useState([])
   const [reportData, setReportData] = useState(null)
   const [isMounted, setIsMounted] = useState(false)
+  const [isReady, setIsReady] = useState(false)
   const [dateRange, setDateRange] = useState(() => {
     const endDate = new Date()
     const startDate = new Date()
@@ -155,16 +158,85 @@ function ReportsPageContent() {
   }, [user?.id])
 
   useEffect(() => {
+    // Set mounted immediately
     setIsMounted(true)
     // Clear reportData on mount to prevent stale data flash
     setReportData(null)
+    // Ensure isReady starts as false
+    setIsReady(false)
+    
+    // Add style tag to hide all main content to prevent any flash
+    const styleId = 'reports-page-hide-content'
+    let styleElement = document.getElementById(styleId)
+    if (!styleElement) {
+      styleElement = document.createElement('style')
+      styleElement.id = styleId
+      styleElement.textContent = `
+        main {
+          visibility: hidden !important;
+          opacity: 0 !important;
+        }
+      `
+      document.head.appendChild(styleElement)
+    }
+    
+    return () => {
+      // Remove style tag on unmount
+      const styleElement = document.getElementById(styleId)
+      if (styleElement) {
+        styleElement.remove()
+      }
+      // Restore visibility
+      const mainContent = document.querySelector('main')
+      if (mainContent) {
+        mainContent.style.visibility = ''
+        mainContent.style.opacity = ''
+      }
+    }
   }, [])
 
   useEffect(() => {
-    if (isMounted) {
+    if (isMounted && user) {
       generateReport()
     }
-  }, [symptoms, medications, medicationTracking, dateRange, isMounted])
+  }, [symptoms, medications, medicationTracking, dateRange, isMounted, user])
+
+  // Only set ready when we have reportData and component is mounted
+  useEffect(() => {
+    const styleId = 'reports-page-hide-content'
+    const styleElement = document.getElementById(styleId)
+    
+    if (isMounted && reportData !== null) {
+      // Small delay to ensure DOM is ready and prevent any flash
+      const timer = setTimeout(() => {
+        setIsReady(true)
+        // Remove the hide style and restore main content visibility
+        if (styleElement) {
+          styleElement.remove()
+        }
+        const mainContent = document.querySelector('main')
+        if (mainContent) {
+          mainContent.style.visibility = 'visible'
+          mainContent.style.opacity = '1'
+        }
+      }, 200)
+      return () => clearTimeout(timer)
+    } else {
+      setIsReady(false)
+      // Ensure style is applied if not ready
+      if (!styleElement) {
+        const newStyleElement = document.createElement('style')
+        newStyleElement.id = styleId
+        newStyleElement.textContent = `
+          main {
+            visibility: hidden !important;
+            opacity: 0 !important;
+          }
+        `
+        document.head.appendChild(newStyleElement)
+      }
+    }
+  }, [isMounted, reportData])
 
   const generateReport = () => {
     // Filter symptoms by selected date range
@@ -772,22 +844,14 @@ function ReportsPageContent() {
     return `${day}/${month}/${year}`
   }
 
-  // Prevent hydration mismatch by not rendering until mounted
-  // Show loading screen instead of null to prevent flash of other content
-  if (!isMounted) {
+  // Ensure we're on the correct route
+  const isCorrectRoute = pathname === '/reports'
+  
+  // Prevent hydration mismatch by not rendering until mounted and ready
+  // Show loading screen with maximum z-index to prevent flash of other content
+  if (!isMounted || !reportData || !isReady || !isCorrectRoute) {
     return (
-      <div className="fixed inset-0 flex items-center justify-center z-50" style={{backgroundColor: 'var(--bg-main)'}}>
-        <div className="text-center">
-          <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-[#5F9EA0] mx-auto mb-4"></div>
-          <p className="text-primary font-roboto">Loading...</p>
-        </div>
-      </div>
-    )
-  }
-
-  if (!reportData) {
-    return (
-      <div className="fixed inset-0 flex items-center justify-center z-50" style={{backgroundColor: 'var(--bg-main)'}}>
+      <div className="fixed inset-0 flex items-center justify-center" style={{backgroundColor: 'var(--bg-main)', zIndex: 99999}}>
         <div className="text-center">
           <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-[#5F9EA0] mx-auto mb-4"></div>
           <p className="text-primary font-roboto">Generating report...</p>
@@ -797,7 +861,7 @@ function ReportsPageContent() {
   }
 
   return (
-    <div className="w-full px-3 sm:px-4 md:px-6 lg:px-8 min-w-0">
+    <div className="w-full px-3 sm:px-4 md:px-6 lg:px-8 min-w-0" style={{opacity: isReady ? 1 : 0}}>
       <div className="max-w-4xl mx-auto">
       <div className="mb-8 card">
         <h1 className="text-2xl sm:text-3xl lg:text-4xl font-bold font-source text-primary mb-4">Health Reports</h1>
