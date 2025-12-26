@@ -896,15 +896,10 @@ function ReportsPageContent() {
     
     return (
       <div 
-        className="fixed inset-0 flex items-center justify-center" 
+        className="fixed inset-0" 
         style={{backgroundColor: 'var(--bg-main)', zIndex: 99999}}
         data-reports-loading
-      >
-        <div className="text-center">
-          <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-[#5F9EA0] mx-auto mb-4"></div>
-          <p className="text-primary font-roboto">Generating report...</p>
-        </div>
-      </div>
+      />
     )
   }
 
