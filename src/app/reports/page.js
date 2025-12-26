@@ -21,7 +21,7 @@ function ReportsPageContent() {
   const [medications, setMedications] = useState([])
   const [medicationTracking, setMedicationTracking] = useState([])
   const [reportData, setReportData] = useState(null)
-  const [isMounted, setIsMounted] = useState(false)
+  const [isMounted, setIsMounted] = useState(true) // Start as true to show loading screen immediately
   const [isReady, setIsReady] = useState(false)
   const [dateRange, setDateRange] = useState(() => {
     const endDate = new Date()
@@ -158,8 +158,6 @@ function ReportsPageContent() {
   }, [user?.id])
 
   useEffect(() => {
-    // Set mounted immediately
-    setIsMounted(true)
     // Clear reportData on mount to prevent stale data flash
     setReportData(null)
     // Ensure isReady starts as false
@@ -207,8 +205,8 @@ function ReportsPageContent() {
     const styleElement = document.getElementById(styleId)
     
     if (isMounted && reportData !== null) {
-      // Small delay to ensure DOM is ready and prevent any flash
-      const timer = setTimeout(() => {
+      // Use single requestAnimationFrame for faster render
+      requestAnimationFrame(() => {
         setIsReady(true)
         // Remove the hide style and restore main content visibility
         if (styleElement) {
@@ -219,8 +217,7 @@ function ReportsPageContent() {
           mainContent.style.visibility = 'visible'
           mainContent.style.opacity = '1'
         }
-      }, 200)
-      return () => clearTimeout(timer)
+      })
     } else {
       setIsReady(false)
       // Ensure style is applied if not ready
