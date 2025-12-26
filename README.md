@@ -43,15 +43,20 @@ A personal companion app for managing Crohn's & Colitis symptoms, built with Nex
 - **Supabase integration** - Cloud storage for medication tracking data
 
 ### 📈 Reports & Analytics
-- **Flexible date ranges** - Last 7 days, 30 days, 3 months, or custom periods
+- **Comprehensive health reports** - Combines symptoms, medications, and medication tracking data
+- **Flexible date ranges** - Last 7 days, 30 days, 3 months, or custom periods with react-datepicker
 - **Quick preset buttons** for common time periods
-- **Comprehensive PDF exports** with detailed symptom information
-- **CSV exports** for data analysis in Excel/Google Sheets
+- **Symptom report section** - Average severity, average stress levels, and detailed symptom episodes
+- **Medication tracking integration** - Includes missed medications, NSAIDs, and antibiotics with dosages
+- **Current medications display** - Shows all prescribed medications for the report period
+- **Top foods analysis** - Displays most frequently logged foods during the period
+- **Comprehensive PDF exports** with detailed symptom information, medication tracking, and food data
+- **CSV exports** for data analysis in Excel/Google Sheets with complete medication tracking details
 - **UK date formatting** (dd/mm/yyyy) for better readability
-- **Bathroom frequency data** included in all exports
-- **Notes included** in all exports for complete medical context
+- **Visual indicators** - Color-coded severity and stress levels with progress bars
 - **Auto-pagination** for long reports
 - **Data validation** prevents empty report exports
+- **Mobile-optimized** - Responsive design with proper spacing and sizing for all devices
 
 ### ☁️ Cloud Sync & Authentication
 - **User Authentication** - Secure Google OAuth login system
@@ -192,7 +197,16 @@ src/
 
 ## Recent Updates
 
-### 🆕 Medication Tracking Wizard (Latest)
+### 🆕 Enhanced Health Reports (Latest)
+- **Comprehensive data integration** - Reports now include symptoms, medications, and medication tracking data
+- **Medication tracking in reports** - Missed medications, NSAIDs, and antibiotics with dosages included
+- **Stress level tracking** - Average stress levels displayed alongside severity in symptom reports
+- **Visual improvements** - Updated icons, color-coded metrics, and improved spacing
+- **react-datepicker integration** - Consistent date selection experience across the app
+- **Mobile optimization** - Responsive design with proper text and icon sizing
+- **Performance improvements** - Fixed flash issues and optimized loading states
+
+### 🆕 Medication Tracking Wizard
 - **Complete medication adherence tracking** - Track missed medications, NSAIDs, and antibiotics
 - **Multi-step wizard interface** - Intuitive flow matching the symptoms wizard design
 - **Detailed medication logging** - Specific medications with dates, times, and dosages
