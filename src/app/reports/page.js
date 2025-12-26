@@ -158,7 +158,12 @@ function ReportsPageContent() {
   }, [user?.id])
 
   useEffect(() => {
-    // Clear reportData on mount to prevent stale data flash
+    // Only run this when we're on the reports page
+    if (pathname !== '/reports') {
+      return
+    }
+    
+    // Clear reportData on mount/navigation to prevent stale data flash
     setReportData(null)
     // Ensure isReady starts as false
     setIsReady(false)
@@ -191,13 +196,20 @@ function ReportsPageContent() {
         mainContent.style.opacity = ''
       }
     }
-  }, [])
+  }, [pathname]) // Re-run when pathname changes to ensure reset on navigation
 
   useEffect(() => {
-    if (isMounted && user) {
+    // Reset ready state when pathname changes to ensure loading screen shows
+    if (pathname === '/reports') {
+      setIsReady(false)
+    }
+  }, [pathname])
+
+  useEffect(() => {
+    if (isMounted && user && pathname === '/reports') {
       generateReport()
     }
-  }, [symptoms, medications, medicationTracking, dateRange, isMounted, user])
+  }, [symptoms, medications, medicationTracking, dateRange, isMounted, user, pathname])
 
   // Only set ready when we have reportData and component is mounted
   useEffect(() => {
