@@ -104,7 +104,7 @@ function AccountPageContent() {
           <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 mb-8 card-inner p-5 sm:p-6">
             <div className="flex items-center min-w-0">
               <div className="mr-4 sm:mr-6 flex-shrink-0">
-                <div className="w-20 h-20 rounded-full overflow-hidden flex items-center justify-center bg-[var(--bg-icon)] dark:bg-[var(--bg-icon-charcoal)]">
+                <div className="w-16 h-16 sm:w-20 sm:h-20 rounded-full overflow-hidden flex items-center justify-center bg-[var(--bg-icon)] dark:bg-[var(--bg-icon-charcoal)]">
                   {avatarUrl && !showFallbackAvatar ? (
                     <img
                       src={avatarUrl}
@@ -120,7 +120,7 @@ function AccountPageContent() {
                         alt="User avatar placeholder"
                         width={28}
                         height={28}
-                        className="opacity-95 dark:opacity-90"
+                        className="w-6 h-6 sm:w-7 sm:h-7 opacity-95 dark:opacity-90"
                         priority
                       />
                     </div>
