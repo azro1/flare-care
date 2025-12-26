@@ -125,7 +125,7 @@ export default function LearnPage() {
       <div className="mb-8 card p-8">
         <h1 className="text-2xl sm:text-3xl lg:text-4xl font-bold font-source text-primary mb-4">Understanding IBD</h1>
         <p className="lg:text-lg text-secondary font-roboto break-words">
-          Learn about Crohn's disease and Ulcerative Colitis, and how FlareCare can help you manage your condition.
+          Learn about Crohn's disease and Ulcerative Colitis, and how FlareCare can help you manage your condition
         </p>
       </div>
 
@@ -227,8 +227,8 @@ export default function LearnPage() {
           </div>
 
           <div className="card-inner p-6 text-center rounded-xl">
-            <div className="w-16 h-16 rounded-full flex items-center justify-center mx-auto mb-4 bg-pink-100">
-              <Brain className="w-8 h-8 text-pink-500" />
+            <div className="w-16 h-16 rounded-full flex items-center justify-center mx-auto mb-4 bg-cyan-100">
+              <Brain className="w-8 h-8 text-cyan-600" />
             </div>
             <p className="text-sm text-secondary font-roboto break-words">
               Emotional stress and anxiety can worsen symptoms and trigger flare-ups

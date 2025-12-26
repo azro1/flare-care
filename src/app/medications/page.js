@@ -542,21 +542,23 @@ function MedicationsPageContent() {
   return (
     <div className="max-w-4xl w-full mx-auto px-3 sm:px-4 md:px-6 lg:px-8 min-w-0">
       {/* Header Section */}
-      <div className="mb-8 sm:mb-12">
-        <div className="flex flex-col sm:flex-row sm:justify-between sm:items-start">
-          <div className="min-w-0 flex-1">
-            <h1 className="text-2xl sm:text-3xl lg:text-4xl font-bold font-source text-primary mb-4 sm:mb-6">
-              Manage Your Medications
-            </h1>
-            <p className="text-secondary font-roboto">
-              Add your prescribed medications, set up reminders, and keep track of your medication schedule.
-            </p>
+      <div className="mb-8">
+        <div className="card p-6 sm:p-8">
+          <div className="flex flex-col sm:flex-row sm:justify-between sm:items-start">
+            <div className="min-w-0 flex-1">
+              <h1 className="text-2xl sm:text-3xl lg:text-4xl font-bold font-source text-primary mb-4 sm:mb-6">
+                Manage Your Medications
+              </h1>
+              <p className="text-secondary font-roboto">
+                Add your prescribed medications, set up reminders, and keep track of your medication schedule.
+              </p>
+            </div>
           </div>
         </div>
       </div>
 
       {/* Your Medications Section */}
-      <div className="card mb-8 sm:mb-12 min-w-0">
+      <div className="card mb-8 min-w-0">
         <div className={`flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 ${isAdding || medications.length > 0 ? 'mb-6 sm:mb-8' : 'mb-0'} `}>
           <div className="flex items-center">
             <div className="hidden sm:flex w-12 h-12 bg-purple-100 rounded-xl items-center justify-center mr-4">

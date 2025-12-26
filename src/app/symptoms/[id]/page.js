@@ -191,7 +191,7 @@ function SymptomDetailContent() {
 
               <div className="card-inner rounded-xl p-4">
                 <span className="text-xs font-semibold text-secondary uppercase tracking-wide block">Stress level</span>
-                <p className="mt-2 text-base font-semibold text-orange-600 dark:text-orange-300">
+                <p className="mt-2 text-base font-semibold text-cyan-600 dark:text-cyan-300">
                   {symptom.stress_level ?? 'Not logged'}
                 </p>
               </div>
@@ -213,7 +213,11 @@ function SymptomDetailContent() {
                   <span className="font-medium text-primary">Started</span>
                 </div>
                 <span className="text-secondary">
-                  {symptom.symptom_start_date ? new Date(symptom.symptom_start_date).toLocaleDateString() : 'Not set'}
+                  {symptom.symptom_start_date 
+                    ? new Date(symptom.symptom_start_date).toLocaleDateString() 
+                    : (symptom.created_at || symptom.createdAt 
+                      ? new Date(symptom.created_at || symptom.createdAt).toLocaleDateString() 
+                      : 'Not set')}
                 </span>
               </div>
               {!symptom.is_ongoing && symptom.symptom_end_date && (

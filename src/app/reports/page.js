@@ -3,15 +3,18 @@
 import { useState, useEffect } from 'react'
 import jsPDF from 'jspdf'
 import ConfirmationModal from '@/components/ConfirmationModal'
-import DatePicker from '@/components/DatePicker'
+import DatePicker from 'react-datepicker'
+import 'react-datepicker/dist/react-datepicker.css'
 import ProtectedRoute from '@/components/ProtectedRoute'
 import { supabase, TABLES } from '@/lib/supabase'
 import { useAuth } from '@/lib/AuthContext'
+import { Calendar, FileText, Download, FileDown, BarChart3, Pill, Activity, TrendingUp, AlertCircle, Thermometer, Brain, Pizza } from 'lucide-react'
 
 function ReportsPageContent() {
   const { user } = useAuth()
   const [symptoms, setSymptoms] = useState([])
   const [medications, setMedications] = useState([])
+  const [medicationTracking, setMedicationTracking] = useState([])
   const [reportData, setReportData] = useState(null)
   const [dateRange, setDateRange] = useState(() => {
     const endDate = new Date()
@@ -118,9 +121,38 @@ function ReportsPageContent() {
     fetchMedications()
   }, [user?.id])
 
+  // Fetch medication tracking directly from Supabase
+  useEffect(() => {
+    const fetchMedicationTracking = async () => {
+      if (!user?.id) {
+        setMedicationTracking([])
+        return
+      }
+
+      try {
+        const { data, error } = await supabase
+          .from(TABLES.TRACK_MEDICATIONS)
+          .select('*')
+          .eq('user_id', user.id)
+          .order('created_at', { ascending: false })
+
+        if (error) throw error
+
+        if (data) {
+          setMedicationTracking(data || [])
+        }
+      } catch (error) {
+        console.error('Error fetching medication tracking:', error)
+        setMedicationTracking([])
+      }
+    }
+
+    fetchMedicationTracking()
+  }, [user?.id])
+
   useEffect(() => {
     generateReport()
-  }, [symptoms, medications, dateRange])
+  }, [symptoms, medications, medicationTracking, dateRange])
 
   const generateReport = () => {
     // Filter symptoms by selected date range
@@ -138,6 +170,11 @@ function ReportsPageContent() {
     // Calculate average severity
     const averageSeverity = allSymptoms.length > 0 
       ? (allSymptoms.reduce((sum, symptom) => sum + parseFloat(symptom.severity), 0) / allSymptoms.length).toFixed(1)
+      : 0
+
+    // Calculate average stress level
+    const averageStress = allSymptoms.length > 0 
+      ? (allSymptoms.reduce((sum, symptom) => sum + parseFloat(symptom.stress_level || 0), 0) / allSymptoms.length).toFixed(1)
       : 0
 
     // Get all foods logged (handle both old and new formats)
@@ -180,6 +217,7 @@ function ReportsPageContent() {
       .map(symptom => ({
         date: symptom.symptomStartDate,
         severity: symptom.severity,
+        stressLevel: symptom.stress_level,
         isOngoing: symptom.isOngoing,
         endDate: symptom.symptomEndDate
       }))
@@ -188,8 +226,28 @@ function ReportsPageContent() {
     const reportStartDate = dateRange.startDate ? new Date(dateRange.startDate) : new Date()
     const reportEndDate = dateRange.endDate ? new Date(dateRange.endDate) : new Date()
 
-    // Get medication tracking data
-    const medicationTracking = medications.find(med => med.name === 'Medication Tracking')
+    // Get medication tracking data - filter by date range and combine all entries
+    const filteredTrackingEntries = medicationTracking.filter(entry => {
+      const entryDate = new Date(entry.created_at)
+      return entryDate >= startDate && entryDate <= endDate
+    })
+
+    // Combine all medication tracking data from filtered entries
+    const combinedMissedMedications = []
+    const combinedNsaids = []
+    const combinedAntibiotics = []
+
+    filteredTrackingEntries.forEach(entry => {
+      if (entry.missed_medications_list && Array.isArray(entry.missed_medications_list)) {
+        combinedMissedMedications.push(...entry.missed_medications_list.filter(item => item.medication && item.medication.trim()))
+      }
+      if (entry.nsaid_list && Array.isArray(entry.nsaid_list)) {
+        combinedNsaids.push(...entry.nsaid_list.filter(item => item.medication && item.medication.trim()))
+      }
+      if (entry.antibiotic_list && Array.isArray(entry.antibiotic_list)) {
+        combinedAntibiotics.push(...entry.antibiotic_list.filter(item => item.medication && item.medication.trim()))
+      }
+    })
     
     setReportData({
       period: {
@@ -197,6 +255,7 @@ function ReportsPageContent() {
         end: reportEndDate.toISOString().split('T')[0]
       },
       averageSeverity: parseFloat(averageSeverity),
+      averageStress: parseFloat(averageStress),
       totalEntries: allSymptoms.length,
       topFoods,
       severityTrend,
@@ -206,16 +265,21 @@ function ReportsPageContent() {
         timeOfDay: med.timeOfDay
       })),
       medicationTracking: {
-        missedMedications: medicationTracking?.missed_medications_list || [],
-        nsaids: medicationTracking?.nsaid_list || [],
-        antibiotics: medicationTracking?.antibiotic_list || []
+        missedMedications: combinedMissedMedications,
+        nsaids: combinedNsaids,
+        antibiotics: combinedAntibiotics
       }
     })
   }
 
   const hasDataToExport = () => {
     if (!reportData) return false
-    return reportData.totalEntries > 0 || reportData.medications.length > 0
+    const hasTrackingData = reportData.medicationTracking && (
+      reportData.medicationTracking.missedMedications.length > 0 || 
+      reportData.medicationTracking.nsaids.length > 0 || 
+      reportData.medicationTracking.antibiotics.length > 0
+    )
+    return reportData.totalEntries > 0 || reportData.medications.length > 0 || hasTrackingData
   }
 
   const handleExportClick = (exportFunction) => {
@@ -315,7 +379,8 @@ function ReportsPageContent() {
         doc.setFont('helvetica', 'normal')
         reportData.medicationTracking.nsaids.forEach(item => {
           const dateText = item.date ? formatUKDate(item.date) : 'Date not specified'
-          doc.text(`• ${item.medication} - ${dateText} (${item.timeOfDay})`, margin + 10, yPosition)
+          const dosageText = item.dosage ? ` - Dosage: ${item.dosage}` : ''
+          doc.text(`• ${item.medication} - ${dateText} (${item.timeOfDay})${dosageText}`, margin + 10, yPosition)
           yPosition += 5
         })
         yPosition += 5
@@ -330,7 +395,8 @@ function ReportsPageContent() {
         doc.setFont('helvetica', 'normal')
         reportData.medicationTracking.antibiotics.forEach(item => {
           const dateText = item.date ? formatUKDate(item.date) : 'Date not specified'
-          doc.text(`• ${item.medication} - ${dateText} (${item.timeOfDay})`, margin + 10, yPosition)
+          const dosageText = item.dosage ? ` - Dosage: ${item.dosage}` : ''
+          doc.text(`• ${item.medication} - ${dateText} (${item.timeOfDay})${dosageText}`, margin + 10, yPosition)
           yPosition += 5
         })
         yPosition += 5
@@ -589,19 +655,23 @@ function ReportsPageContent() {
       })
 
     // Add medication tracking data if available
-    const medicationTracking = medications.find(med => med.name === 'Medication Tracking')
-    
-    if (medicationTracking) {
+    const hasTrackingData = reportData.medicationTracking && (
+      reportData.medicationTracking.missedMedications.length > 0 || 
+      reportData.medicationTracking.nsaids.length > 0 || 
+      reportData.medicationTracking.antibiotics.length > 0
+    )
+
+    if (hasTrackingData) {
       // Add section separator
       csvData.push([])
       csvData.push(['TRACKED MEDICATIONS'])
       csvData.push([])
       
       // Missed Medications
-      if (medicationTracking.missed_medications_list?.length > 0) {
+      if (reportData.medicationTracking.missedMedications.length > 0) {
         csvData.push(['Missed Medications'])
         csvData.push(['Medication', 'Date', 'Time of Day'])
-        medicationTracking.missed_medications_list.forEach(item => {
+        reportData.medicationTracking.missedMedications.forEach(item => {
           csvData.push([
             item.medication || '',
             item.date ? formatUKDate(item.date) : '',
@@ -612,28 +682,30 @@ function ReportsPageContent() {
       }
       
       // NSAIDs
-      if (medicationTracking.nsaid_list?.length > 0) {
+      if (reportData.medicationTracking.nsaids.length > 0) {
         csvData.push(['NSAIDs Taken'])
-        csvData.push(['Medication', 'Date', 'Time of Day'])
-        medicationTracking.nsaid_list.forEach(item => {
+        csvData.push(['Medication', 'Date', 'Time of Day', 'Dosage'])
+        reportData.medicationTracking.nsaids.forEach(item => {
           csvData.push([
             item.medication || '',
             item.date ? formatUKDate(item.date) : '',
-            item.timeOfDay || ''
+            item.timeOfDay || '',
+            item.dosage || ''
           ])
         })
         csvData.push([])
       }
       
       // Antibiotics
-      if (medicationTracking.antibiotic_list?.length > 0) {
+      if (reportData.medicationTracking.antibiotics.length > 0) {
         csvData.push(['Antibiotics Taken'])
-        csvData.push(['Medication', 'Date', 'Time of Day'])
-        medicationTracking.antibiotic_list.forEach(item => {
+        csvData.push(['Medication', 'Date', 'Time of Day', 'Dosage'])
+        reportData.medicationTracking.antibiotics.forEach(item => {
           csvData.push([
             item.medication || '',
             item.date ? formatUKDate(item.date) : '',
-            item.timeOfDay || ''
+            item.timeOfDay || '',
+            item.dosage || ''
           ])
         })
         csvData.push([])
@@ -692,7 +764,7 @@ function ReportsPageContent() {
     return (
       <div className="fixed inset-0 flex items-center justify-center z-50" style={{backgroundColor: 'var(--bg-main)'}}>
         <div className="text-center">
-          <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-600 mx-auto mb-4"></div>
+          <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-[#5F9EA0] mx-auto mb-4"></div>
           <p className="text-primary font-roboto">Generating report...</p>
         </div>
       </div>
@@ -700,27 +772,26 @@ function ReportsPageContent() {
   }
 
   return (
-    <div className="max-w-4xl w-full mx-auto px-2 sm:px-3 md:px-6 lg:px-8 min-w-0">
-      <div className="mb-6 sm:mb-8 md:mb-10 min-w-0">
-        <h1 className="text-2xl sm:text-3xl lg:text-4xl font-bold font-source text-gray-900 mb-4 sm:mb-6">Health Reports</h1>
-        <p className="text-gray-600 font-roboto">
-          Generate detailed reports of your health data to share with your healthcare team.
+    <div className="w-full px-3 sm:px-4 md:px-6 lg:px-8 min-w-0">
+      <div className="max-w-4xl mx-auto">
+      <div className="mb-8 card">
+        <h1 className="text-2xl sm:text-3xl lg:text-4xl font-bold font-source text-primary mb-4">Health Reports</h1>
+        <p className="lg:text-lg text-secondary font-roboto">
+          Generate detailed reports to share with your healthcare team
         </p>
       </div>
 
       {/* Date Range Selector */}
-      <div className="bg-white rounded-xl shadow-sm border border-gray-200 p-3 sm:p-6 md:p-8 mb-8 sm:mb-12 min-w-0 hover:shadow-md transition-shadow duration-200">
-        <div className="flex items-center mb-4 sm:mb-6 min-w-0">
-          <div className="hidden sm:flex bg-violet-500 p-3 rounded-2xl mr-4 flex-shrink-0">
-            <svg className="w-6 h-6 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z" />
-            </svg>
+      <div className="card p-8 rounded-2xl mb-8">
+        <div className="flex items-center mb-6">
+          <div className="hidden sm:flex bg-orange-100 w-8 h-8 lg:w-10 lg:h-10 rounded-lg mr-4 flex-shrink-0 items-center justify-center">
+            <Calendar className="w-5 h-5 text-orange-600" />
           </div>
-          <h2 className="text-xl font-semibold font-source text-gray-900 flex-1">Select Report Period</h2>
+          <h2 className="text-xl font-semibold font-source text-primary flex-1">Select Report Period</h2>
         </div>
         
         {/* Quick Presets */}
-        <div className="flex flex-wrap gap-3 sm:gap-2 mb-4 sm:mb-6 min-w-0">
+        <div className="flex flex-wrap gap-3 sm:gap-2 mb-6">
           <button 
             onClick={() => {
               const endDate = new Date()
@@ -731,7 +802,7 @@ function ReportsPageContent() {
                 endDate: endDate.toISOString().split('T')[0]
               })
             }}
-            className="px-4 py-2 sm:px-3 sm:py-1 text-sm bg-gray-100 hover:bg-gray-200 rounded-lg transition-colors font-roboto"
+            className="px-4 py-2 sm:px-3 sm:py-1 text-sm card-inner hover:bg-card-hover rounded-lg transition-colors font-roboto"
           >
             Last 7 days
           </button>
@@ -745,7 +816,7 @@ function ReportsPageContent() {
                 endDate: endDate.toISOString().split('T')[0]
               })
             }}
-            className="px-4 py-2 sm:px-3 sm:py-1 text-sm bg-gray-100 hover:bg-gray-200 rounded-lg transition-colors font-roboto"
+            className="px-4 py-2 sm:px-3 sm:py-1 text-sm card-inner hover:bg-card-hover rounded-lg transition-colors font-roboto"
           >
             Last 30 days
           </button>
@@ -759,7 +830,7 @@ function ReportsPageContent() {
                 endDate: endDate.toISOString().split('T')[0]
               })
             }}
-            className="px-4 py-2 sm:px-3 sm:py-1 text-sm bg-gray-100 hover:bg-gray-200 rounded-lg transition-colors font-roboto"
+            className="px-4 py-2 sm:px-3 sm:py-1 text-sm card-inner hover:bg-card-hover rounded-lg transition-colors font-roboto"
           >
             Last 3 months
           </button>
@@ -773,53 +844,64 @@ function ReportsPageContent() {
                 })
               }
             }}
-            className="px-4 py-2 sm:px-3 sm:py-1 text-sm bg-gray-100 hover:bg-gray-200 rounded-lg transition-colors font-roboto"
+            className="px-4 py-2 sm:px-3 sm:py-1 text-sm card-inner hover:bg-card-hover rounded-lg transition-colors font-roboto"
           >
             All time
           </button>
         </div>
 
-        <div className="grid grid-cols-1 lg:grid-cols-2 gap-3 sm:gap-4 mb-4 sm:mb-6 min-w-0">
+        <div className="flex flex-col lg:flex-row gap-4 mb-6">
           <div>
-            <label htmlFor="startDate" className="block text-sm font-medium font-roboto text-gray-700 mb-2">
+            <label htmlFor="startDate" className="block text-sm font-medium font-roboto text-primary mb-2">
               Start Date
             </label>
             <DatePicker
               id="startDate"
-              value={dateRange.startDate}
-              onChange={(value) => setDateRange(prev => ({ ...prev, startDate: value }))}
-              placeholder="Select start date"
-              className="w-full px-2 py-1.5 text-left bg-white border-2 border-gray-200 rounded-lg shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-400 transition-all duration-200 hover:border-gray-300 appearance-none bg-no-repeat bg-right pr-10"
+              selected={dateRange.startDate ? new Date(dateRange.startDate) : null}
+              onChange={(date) => setDateRange(prev => ({ 
+                ...prev, 
+                startDate: date ? date.toISOString().split('T')[0] : '' 
+              }))}
+              placeholderText="Select start date"
+              dateFormat="dd/MM/yyyy"
+              maxDate={dateRange.endDate ? new Date(dateRange.endDate) : new Date()}
+              className="input-field-wizard w-full"
+              calendarClassName="react-datepicker-responsive"
+              enableTabLoop={false}
             />
           </div>
           <div>
-            <label htmlFor="endDate" className="block text-sm font-medium font-roboto text-gray-700 mb-2">
+            <label htmlFor="endDate" className="block text-sm font-medium font-roboto text-primary mb-2">
               End Date
             </label>
             <DatePicker
               id="endDate"
-              value={dateRange.endDate}
-              onChange={(value) => setDateRange(prev => ({ ...prev, endDate: value }))}
-              placeholder="Select end date"
-              className="w-full px-2 py-1.5 text-left bg-white border-2 border-gray-200 rounded-lg shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-400 transition-all duration-200 hover:border-gray-300 appearance-none bg-no-repeat bg-right pr-10"
+              selected={dateRange.endDate ? new Date(dateRange.endDate) : null}
+              onChange={(date) => setDateRange(prev => ({ 
+                ...prev, 
+                endDate: date ? date.toISOString().split('T')[0] : '' 
+              }))}
+              placeholderText="Select end date"
+              dateFormat="dd/MM/yyyy"
+              minDate={dateRange.startDate ? new Date(dateRange.startDate) : undefined}
+              maxDate={new Date()}
+              className="input-field-wizard w-full"
+              calendarClassName="react-datepicker-responsive"
+              enableTabLoop={false}
             />
           </div>
         </div>
-        <div className="flex flex-col sm:flex-row sm:justify-between sm:items-center gap-3 sm:gap-4 min-w-0">
-          <div className="text-sm text-gray-600 sm:max-w-md sm:pr-4 font-roboto flex-1">
+        <div className="flex flex-col sm:flex-row sm:justify-between sm:items-center gap-4">
+          <div className="text-sm text-secondary sm:max-w-md sm:pr-4 font-roboto flex-1">
             Showing symptoms from {formatUKDate(dateRange.startDate)} to {formatUKDate(dateRange.endDate)}
           </div>
-          <div className="flex flex-col sm:flex-row gap-2 sm:gap-3 min-w-0 items-center sm:items-stretch">
-            <button onClick={() => handleExportClick(exportToPDF)} className="inline-flex items-center justify-center px-6 py-3 bg-violet-500 hover:bg-violet-600 text-white font-semibold rounded-xl shadow-lg hover:shadow-xl transition-all duration-300 transform hover:scale-105 active:scale-95 whitespace-nowrap w-full sm:w-auto">
-              <svg className="w-5 h-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 10v6m0 0l-3-3m3 3l3-3m2 8H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
-              </svg>
+          <div className="flex flex-col sm:flex-row gap-3 items-center sm:items-stretch">
+            <button onClick={() => handleExportClick(exportToPDF)} className="inline-flex items-center justify-center px-6 py-3 button-cadet rounded-xl shadow-lg hover:shadow-xl transition-all duration-300 whitespace-nowrap w-full sm:w-auto font-roboto">
+              <FileText className="w-5 h-5 mr-2" />
               Export PDF
             </button>
-            <button onClick={() => handleExportClick(exportToCSV)} className="inline-flex items-center justify-center px-6 py-3 btn-secondary whitespace-nowrap w-full sm:w-auto">
-              <svg className="w-5 h-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
-              </svg>
+            <button onClick={() => handleExportClick(exportToCSV)} className="inline-flex items-center justify-center px-6 py-3 btn-secondary whitespace-nowrap w-full sm:w-auto font-roboto">
+              <FileDown className="w-5 h-5 mr-2" />
               Export CSV
             </button>
           </div>
@@ -827,87 +909,85 @@ function ReportsPageContent() {
       </div>
 
       {/* Report Results */}
-      <div className="bg-white rounded-xl shadow-sm border border-gray-200 p-3 sm:p-6 md:p-8 mb-8 sm:mb-12 min-w-0 hover:shadow-md transition-shadow duration-200">
-        <div className="flex items-center mb-4 sm:mb-6 min-w-0">
-          <div className="hidden sm:flex bg-violet-500 p-3 rounded-2xl mr-4 flex-shrink-0">
-            <svg className="w-6 h-6 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z" />
-            </svg>
+      <div className="card p-8 rounded-2xl mb-8">
+        <div className="flex items-center mb-6">
+          <div className="hidden sm:flex bg-emerald-100 w-8 h-8 lg:w-10 lg:h-10 rounded-lg mr-4 flex-shrink-0 items-center justify-center">
+            <Thermometer className="w-5 h-5 text-emerald-600" />
           </div>
-          <h2 className="text-xl font-semibold font-source text-gray-900 flex-1">Symptom Report</h2>
+          <h2 className="text-xl font-semibold font-source text-primary flex-1">Symptom Report</h2>
         </div>
         
         {reportData.totalEntries > 0 && (
-          <div className="text-sm text-gray-600 mb-6 font-roboto">
+          <div className="text-sm text-secondary mb-6 font-roboto">
             Found {reportData.totalEntries} symptom {reportData.totalEntries === 1 ? 'episode' : 'episodes'} in the selected period
           </div>
         )}
 
         {/* Summary Stats */}
-        <div className="grid grid-cols-1 lg:grid-cols-3 gap-6 mb-8 min-w-0">
-          <div className="bg-gradient-to-br from-blue-50 to-indigo-100 rounded-2xl p-6 text-center border border-blue-200">
-            <div className="flex items-center justify-center mb-3">
-              <div className="bg-violet-500 p-2 rounded-xl">
-                <svg className="w-5 h-5 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z" />
-                </svg>
-              </div>
-            </div>
-            <div className="text-3xl font-bold text-violet-600 mb-2">
+        <div className="grid grid-cols-1 lg:grid-cols-3 gap-6 mb-8">
+          <div className="card-inner rounded-2xl p-6 text-center">
+            <div className="text-3xl font-bold text-emerald-600 mb-2">
               {reportData.totalEntries}
             </div>
-            <div className="text-gray-700 font-medium">Symptom Episodes</div>
+            <div className="text-secondary font-medium font-roboto">Symptom Episodes</div>
           </div>
-          <div className="bg-gradient-to-br from-blue-50 to-indigo-100 rounded-2xl p-6 text-center border border-blue-200">
-            <div className="flex items-center justify-center mb-3">
-              <div className="bg-violet-500 p-2 rounded-xl">
-                <svg className="w-5 h-5 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 10V3L4 14h7v7l9-11h-7z" />
-                </svg>
-              </div>
-            </div>
-            <div className={`text-3xl font-bold mb-2 ${getSeverityColor(reportData.averageSeverity).split(' ')[0]}`}>
+          <div className="card-inner rounded-2xl p-6 text-center">
+            <div className="text-3xl font-bold mb-2 text-rose-500">
               {reportData.averageSeverity}
             </div>
-            <div className="text-gray-700 font-medium">Average Severity</div>
+            <div className="text-secondary font-medium font-roboto">Average Severity</div>
           </div>
-          <div className="bg-gradient-to-br from-blue-50 to-indigo-100 rounded-2xl p-6 text-center border border-blue-200">
-            <div className="flex items-center justify-center mb-3">
-              <div className="bg-violet-500 p-2 rounded-xl">
-                <svg className="w-5 h-5 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19.428 15.428a2 2 0 00-1.022-.547l-2.387-.477a6 6 0 00-3.86.517l-.318.158a6 6 0 01-3.86.517L6.05 15.21a2 2 0 00-1.806.547M8 4h8l-1 1v5.172a2 2 0 00.586 1.414l5 5c1.26 1.26.367 3.414-1.415 3.414H4.828c-1.782 0-2.674-2.154-1.414-3.414l5-5A2 2 0 009 10.172V5L8 4z" />
-                </svg>
-              </div>
+          <div className="card-inner rounded-2xl p-6 text-center">
+            <div className="text-3xl font-bold mb-2 text-cyan-600">
+              {reportData.averageStress != null && !isNaN(reportData.averageStress) ? reportData.averageStress : 0}
             </div>
-            <div className="text-3xl font-bold text-violet-600 mb-2">
-              {reportData.medications.length}
-            </div>
-            <div className="text-gray-700 font-medium">Medications</div>
+            <div className="text-secondary font-medium font-roboto">Average Stress</div>
           </div>
         </div>
 
         {/* Severity Trend */}
         {reportData.severityTrend.length > 0 && (
           <div className="mb-8">
-            <h3 className="text-lg font-semibold font-source text-gray-900 mb-4">Symptom Episodes</h3>
-            <div className="space-y-3 sm:space-y-4">
+            <h3 className="text-lg font-semibold font-source text-primary mb-4">Symptom Episodes</h3>
+            <div className="space-y-4">
               {reportData.severityTrend.map((entry, index) => (
-                <div key={index} className="flex items-center space-x-4">
-                  <div className="w-32 text-sm text-gray-600 font-roboto">
-                    {formatUKDate(entry.date)}
-                    {entry.isOngoing ? ' (Ongoing)' : ` - ${formatUKDate(entry.endDate)}`}
-                  </div>
-                  <div className="flex-1">
-                    <div className="flex items-center space-x-2">
-                      <div className="flex-1 bg-gray-200 rounded-full h-2">
-                        <div 
-                          className="bg-primary-600 h-2 rounded-full" 
-                          style={{ width: `${(entry.severity / 10) * 100}%` }}
-                        ></div>
+                <div key={index} className="card-inner p-4 rounded-xl">
+                  <div className="flex flex-col sm:flex-row sm:items-start gap-4">
+                    <div className="w-full sm:w-40 text-sm text-secondary font-roboto">
+                      {formatUKDate(entry.date)}
+                      {entry.isOngoing ? ' (Ongoing)' : ` - ${formatUKDate(entry.endDate)}`}
+                    </div>
+                    <div className="flex-1 space-y-2">
+                      <div className="flex items-center space-x-2">
+                        <span className="text-xs font-medium text-secondary font-roboto w-16">Severity:</span>
+                        <div className="flex-1 bg-card rounded-full h-2">
+                          <div 
+                            className="h-2 rounded-full bg-rose-500" 
+                            style={{ 
+                              width: `${(entry.severity / 10) * 100}%`
+                            }}
+                          ></div>
+                        </div>
+                        <span className="px-2 py-1 rounded-full text-xs font-medium font-roboto text-rose-500 bg-rose-100">
+                          {entry.severity}/10
+                        </span>
                       </div>
-                      <span className={`px-2 py-1 rounded-full text-xs font-medium font-roboto ${getSeverityColor(entry.severity)}`}>
-                        {entry.severity}/10
-                      </span>
+                      {entry.stressLevel && (
+                        <div className="flex items-center space-x-2">
+                          <span className="text-xs font-medium text-secondary font-roboto w-16">Stress:</span>
+                          <div className="flex-1 bg-card rounded-full h-2">
+                            <div 
+                              className="h-2 rounded-full bg-cyan-600" 
+                              style={{ 
+                                width: `${(entry.stressLevel / 10) * 100}%`
+                              }}
+                            ></div>
+                          </div>
+                          <span className="px-2 py-1 rounded-full text-xs font-medium font-roboto text-cyan-600 bg-cyan-100">
+                            {entry.stressLevel}/10
+                          </span>
+                        </div>
+                      )}
                     </div>
                   </div>
                 </div>
@@ -919,21 +999,21 @@ function ReportsPageContent() {
 
       {/* Medications */}
       {reportData.medications.length > 0 && (
-        <div className="card mb-8 sm:mb-12">
-          <h3 className="text-lg font-semibold font-source text-gray-900 mb-6 flex items-center">
-            <span className="w-3 h-3 bg-purple-100 rounded-full mr-3 flex items-center justify-center">
-              <span className="w-1.5 h-1.5 bg-purple-500 rounded-full"></span>
-            </span>
+        <div className="card p-8 rounded-2xl mb-8">
+          <h2 className="text-xl font-semibold font-source text-primary mb-6 flex items-center">
+            <div className="bg-purple-100 w-8 h-8 lg:w-10 lg:h-10 rounded-lg mr-3 sm:mr-4 flex-shrink-0 flex items-center justify-center">
+              <Pill className="w-5 h-5 text-purple-600" />
+            </div>
             Current Medications
-          </h3>
+          </h2>
           <div className="space-y-4">
             {reportData.medications.map((med, index) => (
-              <div key={index} className="bg-purple-50 border border-purple-200 rounded-lg p-4">
+              <div key={index} className="card-inner rounded-lg p-4">
                 <div>
-                  <h5 className="font-medium font-roboto text-gray-900 text-lg">{med.name}</h5>
+                  <h5 className="font-medium font-roboto text-primary text-base">{med.name}</h5>
                   {med.dosage && (
                     <div className="mt-2">
-                      <span className="text-sm text-gray-600 font-roboto">
+                      <span className="text-xs text-secondary font-roboto">
                         <span className="font-medium">Dosage:</span> {med.dosage}
                       </span>
                     </div>
@@ -951,29 +1031,30 @@ function ReportsPageContent() {
         reportData.medicationTracking.nsaids.length > 0 || 
         reportData.medicationTracking.antibiotics.length > 0
       ) && (
-        <div className="card mb-8 sm:mb-12">
-          <h3 className="text-lg font-semibold font-source text-gray-900 mb-6">Tracked Medications</h3>
+        <div className="card p-8 rounded-2xl mb-8">
+          <h3 className="text-lg font-semibold font-source text-primary mb-6 flex items-center">
+            <Activity className="w-5 h-5 mr-3 text-[#5F9EA0]" />
+            Tracked Medications
+          </h3>
           
           {/* Missed Medications */}
           {reportData.medicationTracking.missedMedications.length > 0 && (
             <div className="mb-8">
-              <h4 className="text-md font-semibold font-source text-gray-800 mb-4 flex items-center">
-                <span className="w-3 h-3 bg-red-100 rounded-full mr-3 flex items-center justify-center">
-                  <span className="w-1.5 h-1.5 bg-red-500 rounded-full"></span>
-                </span>
+              <h4 className="text-md font-semibold font-source text-primary mb-4 flex items-center">
+                <AlertCircle className="w-4 h-4 mr-3 text-red-500" />
                 Missed Medications
               </h4>
               <div className="space-y-4">
                 {reportData.medicationTracking.missedMedications.map((item, index) => (
-                  <div key={index} className="bg-red-50 border border-red-200 rounded-lg p-4">
+                  <div key={index} className="card-inner rounded-lg p-4">
                     <div className="flex flex-col sm:flex-row sm:justify-between sm:items-start gap-2">
                       <div className="flex-1">
-                        <h5 className="font-medium font-roboto text-gray-900 text-lg">{item.medication}</h5>
+                        <h5 className="font-medium font-roboto text-primary text-lg">{item.medication}</h5>
                         <div className="mt-2 flex flex-col sm:flex-row sm:gap-4 gap-1">
-                          <div className="text-sm text-gray-600 font-roboto">
+                          <div className="text-sm text-secondary font-roboto">
                             <span className="font-medium">Date:</span> {item.date ? formatUKDate(item.date) : 'Not specified'}
                           </div>
-                          <div className="text-sm text-gray-600 font-roboto">
+                          <div className="text-sm text-secondary font-roboto">
                             <span className="font-medium">Time:</span> {item.timeOfDay || 'Not specified'}
                           </div>
                         </div>
@@ -988,25 +1069,28 @@ function ReportsPageContent() {
           {/* NSAIDs */}
           {reportData.medicationTracking.nsaids.length > 0 && (
             <div className="mb-8">
-              <h4 className="text-md font-semibold font-source text-gray-800 mb-4 flex items-center">
-                <span className="w-3 h-3 bg-orange-100 rounded-full mr-3 flex items-center justify-center">
-                  <span className="w-1.5 h-1.5 bg-orange-500 rounded-full"></span>
-                </span>
+              <h4 className="text-md font-semibold font-source text-primary mb-4 flex items-center">
+                <Pill className="w-4 h-4 mr-3 text-orange-500" />
                 NSAIDs Taken
               </h4>
               <div className="space-y-4">
                 {reportData.medicationTracking.nsaids.map((item, index) => (
-                  <div key={index} className="bg-orange-50 border border-orange-200 rounded-lg p-4">
+                  <div key={index} className="card-inner rounded-lg p-4">
                     <div className="flex flex-col sm:flex-row sm:justify-between sm:items-start gap-2">
                       <div className="flex-1">
-                        <h5 className="font-medium font-roboto text-gray-900 text-lg">{item.medication}</h5>
+                        <h5 className="font-medium font-roboto text-primary text-lg">{item.medication}</h5>
                         <div className="mt-2 flex flex-col sm:flex-row sm:gap-4 gap-1">
-                          <div className="text-sm text-gray-600 font-roboto">
+                          <div className="text-sm text-secondary font-roboto">
                             <span className="font-medium">Date:</span> {item.date ? formatUKDate(item.date) : 'Not specified'}
                           </div>
-                          <div className="text-sm text-gray-600 font-roboto">
+                          <div className="text-sm text-secondary font-roboto">
                             <span className="font-medium">Time:</span> {item.timeOfDay || 'Not specified'}
                           </div>
+                          {item.dosage && (
+                            <div className="text-sm text-secondary font-roboto">
+                              <span className="font-medium">Dosage:</span> {item.dosage}
+                            </div>
+                          )}
                         </div>
                       </div>
                     </div>
@@ -1019,25 +1103,28 @@ function ReportsPageContent() {
           {/* Antibiotics */}
           {reportData.medicationTracking.antibiotics.length > 0 && (
             <div className="mb-8">
-              <h4 className="text-md font-semibold font-source text-gray-800 mb-4 flex items-center">
-                <span className="w-3 h-3 bg-blue-100 rounded-full mr-3 flex items-center justify-center">
-                  <span className="w-1.5 h-1.5 bg-violet-500 rounded-full"></span>
-                </span>
+              <h4 className="text-md font-semibold font-source text-primary mb-4 flex items-center">
+                <Pill className="w-4 h-4 mr-3 text-blue-500" />
                 Antibiotics Taken
               </h4>
               <div className="space-y-4">
                 {reportData.medicationTracking.antibiotics.map((item, index) => (
-                  <div key={index} className="bg-blue-50 border border-blue-200 rounded-lg p-4">
+                  <div key={index} className="card-inner rounded-lg p-4">
                     <div className="flex flex-col sm:flex-row sm:justify-between sm:items-start gap-2">
                       <div className="flex-1">
-                        <h5 className="font-medium font-roboto text-gray-900 text-lg">{item.medication}</h5>
+                        <h5 className="font-medium font-roboto text-primary text-lg">{item.medication}</h5>
                         <div className="mt-2 flex flex-col sm:flex-row sm:gap-4 gap-1">
-                          <div className="text-sm text-gray-600 font-roboto">
+                          <div className="text-sm text-secondary font-roboto">
                             <span className="font-medium">Date:</span> {item.date ? formatUKDate(item.date) : 'Not specified'}
                           </div>
-                          <div className="text-sm text-gray-600 font-roboto">
+                          <div className="text-sm text-secondary font-roboto">
                             <span className="font-medium">Time:</span> {item.timeOfDay || 'Not specified'}
                           </div>
+                          {item.dosage && (
+                            <div className="text-sm text-secondary font-roboto">
+                              <span className="font-medium">Dosage:</span> {item.dosage}
+                            </div>
+                          )}
                         </div>
                       </div>
                     </div>
@@ -1051,22 +1138,22 @@ function ReportsPageContent() {
 
       {/* Top Foods */}
       {reportData.topFoods.length > 0 && (
-        <div className="card">
-          <h3 className="text-lg font-semibold font-source text-gray-900 mb-6 flex items-center">
-            <span className="w-3 h-3 bg-blue-100 rounded-full mr-3 flex items-center justify-center">
-              <span className="w-1.5 h-1.5 bg-blue-500 rounded-full"></span>
-            </span>
+        <div className="card p-8 rounded-2xl mb-8">
+          <h2 className="text-xl font-semibold font-source text-primary mb-6 flex items-center">
+            <div className="bg-yellow-100 w-8 h-8 lg:w-10 lg:h-10 rounded-lg mr-3 sm:mr-4 flex-shrink-0 flex items-center justify-center">
+              <Pizza className="w-5 h-5 text-amber-500" />
+            </div>
             Top 5 Most Logged Foods
-          </h3>
+          </h2>
           <div className="space-y-4">
             {reportData.topFoods.map(([food, count], index) => (
-              <div key={index} className="bg-blue-50 border border-blue-200 rounded-lg p-4">
+              <div key={index} className="card-inner rounded-lg p-4">
                 <div className="flex flex-col sm:flex-row sm:justify-between sm:items-center gap-2">
                   <div className="flex-1">
-                    <h5 className="font-medium font-roboto text-gray-900 text-lg">{food}</h5>
+                    <h5 className="font-medium font-roboto text-primary text-base">{food}</h5>
                   </div>
                   <div className="flex items-center">
-                    <span className="inline-flex items-center px-3 py-1 rounded-full text-sm font-medium font-roboto bg-blue-100 text-blue-800">
+                    <span className="inline-flex items-center px-3 py-1 rounded-full text-xs font-medium font-roboto card-inner text-secondary">
                       {count} time{count !== 1 ? 's' : ''}
                     </span>
                   </div>
@@ -1079,20 +1166,19 @@ function ReportsPageContent() {
 
       {/* No Data Message */}
       {reportData.totalEntries === 0 && reportData.medications.length === 0 && (
-        <div className="card text-center py-8">
-          <svg className="w-12 h-12 mx-auto mb-4 text-gray-300" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 17v-2m3 2v-4m3 4v-6m2 10H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
-          </svg>
-          <h3 className="text-lg font-semibold text-gray-900 mb-2">No Data Available</h3>
-          <p className="text-gray-600 mb-4">
+        <div className="card p-8 rounded-2xl text-center">
+          <FileText className="w-12 h-12 mx-auto mb-4 text-secondary" />
+          <h3 className="text-lg font-semibold text-primary mb-2 font-source">No Data Available</h3>
+          <p className="text-secondary mb-4 font-roboto">
             Start logging symptoms and adding medications to generate meaningful reports.
           </p>
           <div className="flex flex-col sm:flex-row justify-center space-y-3 sm:space-y-0 sm:space-x-3">
-            <a href="/symptoms" className="btn-primary whitespace-nowrap">Log Symptoms</a>
-            <a href="/medications" className="btn-secondary whitespace-nowrap">Add Medications</a>
+            <a href="/symptoms" className="btn-primary whitespace-nowrap font-roboto">Log Symptoms</a>
+            <a href="/medications" className="btn-secondary whitespace-nowrap font-roboto">Add Medications</a>
           </div>
         </div>
       )}
+      </div>
 
       {/* No Data Modal */}
       <ConfirmationModal

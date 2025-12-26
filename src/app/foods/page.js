@@ -88,7 +88,7 @@ export default function Foods() {
             Foods
           </h1>
           <p className="lg:text-lg text-secondary font-roboto break-words">
-            Learn about different food categories and their nutritional properties to help you make informed choices about your diet.
+            Learn about different food categories and their nutritional properties to help you make informed choices about your diet
           </p>
         </div>
 

@@ -52,10 +52,8 @@ export default function Footer() {
           <div className="flex flex-col md:flex-row justify-between items-center gap-6">
             <p style={{color: 'var(--text-footer)'}}>© FlareCare 2025. All rights reserved</p>
             <div className="flex gap-8 text-base" style={{color: 'var(--text-footer)'}}>
-              <a href="/about" className="transition-colors hover:text-[#5F9EA0]">About</a>
-              <a href="#" className="transition-colors hover:text-[#5F9EA0]">Privacy</a>
-              <a href="#" className="transition-colors hover:text-[#5F9EA0]">Terms</a>
-              <a href="#" className="transition-colors hover:text-[#5F9EA0]">Contact</a>
+              <a href="#" className="transition-colors hover:text-[#5F9EA0]">Privacy Policy</a>
+              <a href="#" className="transition-colors hover:text-[#5F9EA0]">Terms of Service</a>
             </div>
           </div>
 

@@ -1042,7 +1042,7 @@ export default function Home() {
         {/* Recent Activity */}
         <div className="card mb-8">
           <h2 className="text-xl font-semibold font-source text-primary">Recent Activity</h2>
-          <div className="p-4 pb-0 transition-all duration-300 ease-in-out">
+          <div className="p-4 pb-0 pl-0 transition-all duration-300 ease-in-out">
                       {(() => {
               // Helper function to format relative time
               const formatRelativeTime = (date) => {
@@ -1190,14 +1190,6 @@ export default function Home() {
               if (todayActivities.length === 0) {
                 return (
                   <div className="text-center py-4">
-                    <div 
-                      className="w-12 h-12 rounded-xl flex items-center justify-center mx-auto mb-3"
-                      style={{ backgroundColor: 'var(--bg-card-inner)', color: 'var(--text-icon)' }}
-                    >
-                      <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5H7a2 2 0 00-2 2v10a2 2 0 002 2h8a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2" />
-                      </svg>
-                    </div>
                     <p className="text-secondary text-sm">No recent activity</p>
                     <p className="text-xs text-secondary mt-1">Start tracking your symptoms and medications to see activity here</p>
                     </div>
@@ -1207,19 +1199,16 @@ export default function Home() {
               return (
                 <div className="space-y-3">
                   {todayActivities.map((activity, index) => {
-                    const IconComponent = activity.icon
                     return (
                       <div key={`${activity.type}-${activity.timestamp.getTime()}-${index}`} className="flex items-start gap-3 pt-2">
-                        <div className={`w-8 h-8 ${activity.iconBg} rounded-lg flex items-center justify-center`}>
-                          <IconComponent className={`w-4 h-4 ${activity.iconColor}`} />
-                    </div>
-                    <div className="flex-1">
+                        <span className="text-xl">🎉</span>
+                        <div className="flex-1">
                           <p className="text-sm font-medium text-primary">{activity.title}</p>
                           <p className="text-xs text-slate-400 dark:[color:var(--text-tertiary)] mt-1">
                             {formatRelativeTime(activity.timestamp)}
                           </p>
-                    </div>
-                  </div>
+                        </div>
+                      </div>
                     )
                   })}
               </div>
