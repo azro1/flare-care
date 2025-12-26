@@ -12,6 +12,7 @@ import { Calendar, FileText, Download, FileDown, BarChart3, Pill, Activity, Tren
 
 // Force dynamic rendering to prevent Vercel static generation issues
 export const dynamic = 'force-dynamic'
+export const revalidate = 0
 
 function ReportsPageContent() {
   const { user } = useAuth()
@@ -156,11 +157,15 @@ function ReportsPageContent() {
 
   useEffect(() => {
     setIsMounted(true)
+    // Clear reportData on mount to prevent stale data flash
+    setReportData(null)
   }, [])
 
   useEffect(() => {
-    generateReport()
-  }, [symptoms, medications, medicationTracking, dateRange])
+    if (isMounted) {
+      generateReport()
+    }
+  }, [symptoms, medications, medicationTracking, dateRange, isMounted])
 
   const generateReport = () => {
     // Filter symptoms by selected date range
@@ -769,13 +774,16 @@ function ReportsPageContent() {
   }
 
   // Prevent hydration mismatch by not rendering until mounted
+  // Show loading screen instead of null to prevent flash of other content
   if (!isMounted) {
-    return null
-  }
-
-  // Prevent hydration mismatch by not rendering until mounted
-  if (!isMounted) {
-    return null
+    return (
+      <div className="fixed inset-0 flex items-center justify-center z-50" style={{backgroundColor: 'var(--bg-main)'}}>
+        <div className="text-center">
+          <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-[#5F9EA0] mx-auto mb-4"></div>
+          <p className="text-primary font-roboto">Loading...</p>
+        </div>
+      </div>
+    )
   }
 
   if (!reportData) {
