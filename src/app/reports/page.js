@@ -167,42 +167,6 @@ function ReportsPageContent() {
     setReportData(null)
     // Ensure isReady starts as false
     setIsReady(false)
-    
-    // Aggressively hide ALL content to prevent Next.js prefetched content from showing
-    // This includes main, body children, and any other potential content
-    const styleId = 'reports-page-hide-content'
-    let styleElement = document.getElementById(styleId)
-    if (!styleElement && typeof document !== 'undefined') {
-      styleElement = document.createElement('style')
-      styleElement.id = styleId
-      styleElement.textContent = `
-        main > *:not([data-reports-page]) {
-          visibility: hidden !important;
-          opacity: 0 !important;
-          display: none !important;
-        }
-        body > *:not(script):not(style):not([data-reports-page]) {
-          visibility: hidden !important;
-          opacity: 0 !important;
-        }
-      `
-      document.head.appendChild(styleElement)
-    }
-    
-    return () => {
-      // Remove style tag on unmount
-      const styleElement = document.getElementById(styleId)
-      if (styleElement) {
-        styleElement.remove()
-      }
-      // Restore visibility
-      const mainContent = document.querySelector('main')
-      if (mainContent) {
-        mainContent.style.visibility = ''
-        mainContent.style.opacity = ''
-        mainContent.style.display = ''
-      }
-    }
   }, [pathname]) // Re-run when pathname changes to ensure reset on navigation
 
   useEffect(() => {
@@ -220,17 +184,10 @@ function ReportsPageContent() {
 
   // Only set ready when we have reportData and component is mounted
   useEffect(() => {
-    const styleId = 'reports-page-hide-content'
-    const styleElement = document.getElementById(styleId)
-    
     if (isMounted && reportData !== null && pathname === '/reports') {
       // Use single requestAnimationFrame for faster render
       requestAnimationFrame(() => {
         setIsReady(true)
-        // Remove the hide style and restore main content visibility
-        if (styleElement) {
-          styleElement.remove()
-        }
         // Restore main visibility (set by MainContent.js)
         const main = document.querySelector('main')
         if (main) {
@@ -238,30 +195,11 @@ function ReportsPageContent() {
           main.style.opacity = '1'
           main.style.pointerEvents = ''
         }
-        // Show only our reports page content
-        const reportsContent = document.querySelector('[data-reports-page]')
-        if (reportsContent) {
-          reportsContent.style.visibility = 'visible'
-          reportsContent.style.opacity = '1'
-          reportsContent.style.display = ''
-        }
       })
     } else {
       setIsReady(false)
-      // Ensure style is applied if not ready
-      if (!styleElement) {
-        const newStyleElement = document.createElement('style')
-        newStyleElement.id = styleId
-        newStyleElement.textContent = `
-          main {
-            visibility: hidden !important;
-            opacity: 0 !important;
-          }
-        `
-        document.head.appendChild(newStyleElement)
-      }
     }
-  }, [isMounted, reportData])
+  }, [isMounted, reportData, pathname])
 
   const generateReport = () => {
     // Filter symptoms by selected date range
@@ -873,46 +811,14 @@ function ReportsPageContent() {
   const isCorrectRoute = pathname === '/reports'
   
   // Prevent hydration mismatch by not rendering until mounted and ready
-  // Show loading screen with maximum z-index to prevent flash of other content
-  // Also hide all other content to prevent Next.js prefetched content from showing
+  // MainContent.js handles hiding content, so we just return null here
   if (!isMounted || !reportData || !isReady || !isCorrectRoute) {
-    // Hide all content except our loading screen
-    if (typeof document !== 'undefined') {
-      const styleId = 'reports-page-hide-content'
-      let styleElement = document.getElementById(styleId)
-      if (!styleElement) {
-        styleElement = document.createElement('style')
-        styleElement.id = styleId
-        styleElement.textContent = `
-          main > *:not([data-reports-loading]) {
-            visibility: hidden !important;
-            opacity: 0 !important;
-            display: none !important;
-          }
-        `
-        document.head.appendChild(styleElement)
-      }
-    }
-    
-    return (
-      <div 
-        className="fixed inset-0 flex items-center justify-center" 
-        style={{backgroundColor: 'var(--bg-main)', zIndex: 99999}}
-        data-reports-loading
-      >
-        <div className="text-center">
-          <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-[#5F9EA0] mx-auto mb-4"></div>
-          <p className="text-primary font-roboto">Generating report...</p>
-        </div>
-      </div>
-    )
+    return null
   }
 
   return (
     <div 
-      className="w-full px-3 sm:px-4 md:px-6 lg:px-8 min-w-0" 
-      style={{opacity: isReady ? 1 : 0}}
-      data-reports-page
+      className="w-full px-3 sm:px-4 md:px-6 lg:px-8 min-w-0"
     >
       <div className="max-w-4xl mx-auto">
       <div className="mb-8 card">
