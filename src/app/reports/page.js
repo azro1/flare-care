@@ -12,7 +12,6 @@ import { Calendar, FileText, Download, FileDown, BarChart3, Pill, Activity, Tren
 
 // Force dynamic rendering to prevent Vercel static generation issues
 export const dynamic = 'force-dynamic'
-export const revalidate = 0
 
 function ReportsPageContent() {
   const { user } = useAuth()
