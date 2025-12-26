@@ -231,6 +231,13 @@ function ReportsPageContent() {
         if (styleElement) {
           styleElement.remove()
         }
+        // Restore main visibility (set by MainContent.js)
+        const main = document.querySelector('main')
+        if (main) {
+          main.style.visibility = 'visible'
+          main.style.opacity = '1'
+          main.style.pointerEvents = ''
+        }
         // Show only our reports page content
         const reportsContent = document.querySelector('[data-reports-page]')
         if (reportsContent) {

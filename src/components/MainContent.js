@@ -14,6 +14,28 @@ export default function MainContent({ children }) {
     body.style.background = 'var(--bg-main-gradient)'
   }, [pathname, isAuthenticated, loading])
 
+  // Immediately hide all content when navigating to reports to prevent flash
+  // This runs BEFORE any page component mounts, preventing any cached content from showing
+  useEffect(() => {
+    if (pathname === '/reports') {
+      // Hide main content immediately when route changes to reports
+      const main = document.querySelector('main')
+      if (main) {
+        main.style.visibility = 'hidden'
+        main.style.opacity = '0'
+        main.style.pointerEvents = 'none'
+      }
+    } else {
+      // Restore visibility for other pages
+      const main = document.querySelector('main')
+      if (main) {
+        main.style.visibility = ''
+        main.style.opacity = ''
+        main.style.pointerEvents = ''
+      }
+    }
+  }, [pathname])
+
   // For landing page, don't constrain width
   if (pathname === '/' && !isAuthenticated && !loading) {
     return (
