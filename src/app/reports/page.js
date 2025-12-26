@@ -10,12 +10,16 @@ import { supabase, TABLES } from '@/lib/supabase'
 import { useAuth } from '@/lib/AuthContext'
 import { Calendar, FileText, Download, FileDown, BarChart3, Pill, Activity, TrendingUp, AlertCircle, Thermometer, Brain, Pizza } from 'lucide-react'
 
+// Force dynamic rendering to prevent Vercel static generation issues
+export const dynamic = 'force-dynamic'
+
 function ReportsPageContent() {
   const { user } = useAuth()
   const [symptoms, setSymptoms] = useState([])
   const [medications, setMedications] = useState([])
   const [medicationTracking, setMedicationTracking] = useState([])
   const [reportData, setReportData] = useState(null)
+  const [isMounted, setIsMounted] = useState(false)
   const [dateRange, setDateRange] = useState(() => {
     const endDate = new Date()
     const startDate = new Date()
@@ -149,6 +153,10 @@ function ReportsPageContent() {
 
     fetchMedicationTracking()
   }, [user?.id])
+
+  useEffect(() => {
+    setIsMounted(true)
+  }, [])
 
   useEffect(() => {
     generateReport()
@@ -760,6 +768,16 @@ function ReportsPageContent() {
     return `${day}/${month}/${year}`
   }
 
+  // Prevent hydration mismatch by not rendering until mounted
+  if (!isMounted) {
+    return null
+  }
+
+  // Prevent hydration mismatch by not rendering until mounted
+  if (!isMounted) {
+    return null
+  }
+
   if (!reportData) {
     return (
       <div className="fixed inset-0 flex items-center justify-center z-50" style={{backgroundColor: 'var(--bg-main)'}}>
@@ -959,7 +977,7 @@ function ReportsPageContent() {
                     </div>
                     <div className="flex-1 space-y-2">
                       <div className="flex items-center space-x-2">
-                        <span className="text-xs font-medium text-secondary font-roboto w-16">Severity:</span>
+                        <span className="text-sm sm:text-xs font-medium text-secondary font-roboto w-16">Severity:</span>
                         <div className="flex-1 bg-card rounded-full h-2">
                           <div 
                             className="h-2 rounded-full bg-rose-500" 
@@ -968,13 +986,13 @@ function ReportsPageContent() {
                             }}
                           ></div>
                         </div>
-                        <span className="px-2 py-1 rounded-full text-xs font-medium font-roboto text-rose-500 bg-rose-100">
+                        <span className="px-2 py-1 rounded-full text-sm sm:text-xs font-medium font-roboto text-rose-500 bg-rose-100">
                           {entry.severity}/10
                         </span>
                       </div>
                       {entry.stressLevel && (
                         <div className="flex items-center space-x-2">
-                          <span className="text-xs font-medium text-secondary font-roboto w-16">Stress:</span>
+                          <span className="text-sm sm:text-xs font-medium text-secondary font-roboto w-16">Stress:</span>
                           <div className="flex-1 bg-card rounded-full h-2">
                             <div 
                               className="h-2 rounded-full bg-cyan-600" 
@@ -983,7 +1001,7 @@ function ReportsPageContent() {
                               }}
                             ></div>
                           </div>
-                          <span className="px-2 py-1 rounded-full text-xs font-medium font-roboto text-cyan-600 bg-cyan-100">
+                          <span className="px-2 py-1 rounded-full text-sm sm:text-xs font-medium font-roboto text-cyan-600 bg-cyan-100">
                             {entry.stressLevel}/10
                           </span>
                         </div>
