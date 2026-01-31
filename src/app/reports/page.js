@@ -912,7 +912,7 @@ function ReportsPageContent() {
       <div className="max-w-4xl mx-auto">
       <div className="mb-8 card">
         <h1 className="text-2xl sm:text-3xl lg:text-4xl font-bold font-source text-primary mb-4">Health Reports</h1>
-        <p className="lg:text-lg text-secondary font-roboto">
+        <p className="text-secondary font-roboto">
           Generate detailed reports to share with your healthcare team
         </p>
       </div>
@@ -920,8 +920,8 @@ function ReportsPageContent() {
       {/* Date Range Selector */}
       <div className="card p-8 rounded-2xl mb-8">
         <div className="flex items-center mb-6">
-          <div className="hidden sm:flex bg-orange-100 w-8 h-8 lg:w-10 lg:h-10 rounded-lg mr-4 flex-shrink-0 items-center justify-center">
-            <Calendar className="w-5 h-5 text-orange-600" />
+          <div className="hidden sm:flex bg-orange-100 w-12 h-12 rounded-xl mr-4 flex-shrink-0 items-center justify-center">
+            <Calendar className="w-6 h-6 text-orange-600" />
           </div>
           <h2 className="text-xl font-semibold font-source text-primary flex-1">Select Report Period</h2>
         </div>
@@ -1047,8 +1047,8 @@ function ReportsPageContent() {
       {/* Report Results */}
       <div className="card p-8 rounded-2xl mb-8">
         <div className="flex items-center mb-6">
-          <div className="hidden sm:flex bg-emerald-100 w-8 h-8 lg:w-10 lg:h-10 rounded-lg mr-4 flex-shrink-0 items-center justify-center">
-            <Thermometer className="w-5 h-5 text-emerald-600" />
+          <div className="hidden sm:flex bg-emerald-100 w-12 h-12 rounded-xl mr-4 flex-shrink-0 items-center justify-center">
+            <Thermometer className="w-6 h-6 text-emerald-600" />
           </div>
           <h2 className="text-xl font-semibold font-source text-primary flex-1">Symptom Report</h2>
         </div>
@@ -1137,8 +1137,8 @@ function ReportsPageContent() {
       {reportData.medications.length > 0 && (
         <div className="card p-8 rounded-2xl mb-8">
           <h2 className="text-xl font-semibold font-source text-primary mb-6 flex items-center">
-            <div className="bg-purple-100 w-8 h-8 lg:w-10 lg:h-10 rounded-lg mr-3 sm:mr-4 flex-shrink-0 flex items-center justify-center">
-              <Pill className="w-5 h-5 text-purple-600" />
+            <div className="bg-purple-100 w-12 h-12 rounded-xl mr-3 sm:mr-4 flex-shrink-0 flex items-center justify-center">
+              <Pill className="w-6 h-6 text-purple-600" />
             </div>
             Current Medications
           </h2>
@@ -1276,8 +1276,8 @@ function ReportsPageContent() {
       {reportData.topFoods.length > 0 && (
         <div className="card p-8 rounded-2xl mb-8">
           <h2 className="text-xl font-semibold font-source text-primary mb-6 flex items-center">
-            <div className="bg-yellow-100 w-8 h-8 lg:w-10 lg:h-10 rounded-lg mr-3 sm:mr-4 flex-shrink-0 flex items-center justify-center">
-              <Pizza className="w-5 h-5 text-amber-500" />
+            <div className="bg-yellow-100 w-12 h-12 rounded-xl mr-3 sm:mr-4 flex-shrink-0 flex items-center justify-center">
+              <Pizza className="w-6 h-6 text-amber-500" />
             </div>
             Top 5 Most Logged Foods
           </h2>
@@ -1303,14 +1303,16 @@ function ReportsPageContent() {
       {/* No Data Message */}
       {reportData.totalEntries === 0 && reportData.medications.length === 0 && (
         <div className="card p-8 rounded-2xl text-center">
-          <FileText className="w-12 h-12 mx-auto mb-4 text-secondary" />
-          <h3 className="text-lg font-semibold text-primary mb-2 font-source">No Data Available</h3>
-          <p className="text-secondary mb-4 font-roboto">
-            Start logging symptoms and adding medications to generate meaningful reports.
+          <div className="flex justify-center mb-3">
+            <FileText className="w-10 h-10 text-secondary opacity-40" />
+          </div>
+          <p className="text-secondary text-sm">No Data Available</p>
+          <p className="text-xs text-secondary mt-1 mb-4">
+            Start logging symptoms and adding medications to generate meaningful reports
           </p>
-          <div className="flex flex-col sm:flex-row justify-center space-y-3 sm:space-y-0 sm:space-x-3">
-            <a href="/symptoms" className="btn-primary whitespace-nowrap font-roboto">Log Symptoms</a>
-            <a href="/medications" className="btn-secondary whitespace-nowrap font-roboto">Add Medications</a>
+          <div className="flex flex-col sm:flex-row justify-center space-y-3 sm:space-y-0 sm:space-x-3 mt-6">
+            <a href="/symptoms" className="inline-flex items-center justify-center px-6 py-3 button-cadet rounded-xl shadow-lg hover:shadow-xl transition-all duration-300 whitespace-nowrap font-roboto">Log Symptoms</a>
+            <a href="/medications" className="btn-secondary whitespace-nowrap font-roboto hover:shadow-none">Add Medications</a>
           </div>
         </div>
       )}

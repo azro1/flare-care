@@ -6,7 +6,7 @@ import { useAuth } from '@/lib/AuthContext'
 import { useEffect, useState } from 'react'
 import { useRouter } from 'next/navigation'
 import { supabase, TABLES } from '@/lib/supabase'
-import { CupSoda, Pizza, Coffee, BookOpen, Smile, Thermometer, Pill, FileText, Activity, TrendingUp, PartyPopper, Clipboard, Cookie, ChartLine, Sparkles, ChevronRight, ChevronDown } from 'lucide-react'
+import { CupSoda, Pizza, Coffee, BookOpen, Smile, Thermometer, Pill, FileText, Activity, TrendingUp, PartyPopper, Clipboard, Cookie, ChartLine, Sparkles, ChevronRight, ChevronDown, Clock } from 'lucide-react'
 
 export default function Home() {
   const { isAuthenticated, loading, user } = useAuth()
@@ -1042,7 +1042,7 @@ export default function Home() {
         {/* Recent Activity */}
         <div className="card mb-8">
           <h2 className="text-xl font-semibold font-source text-primary">Recent Activity</h2>
-          <div className="p-4 pb-0 pl-0 transition-all duration-300 ease-in-out">
+          <div className="p-4 transition-all duration-300 ease-in-out">
                       {(() => {
               // Helper function to format relative time
               const formatRelativeTime = (date) => {
@@ -1189,7 +1189,10 @@ export default function Home() {
 
               if (todayActivities.length === 0) {
                 return (
-                  <div className="text-center py-4">
+                  <div className="text-center">
+                    <div className="flex justify-center mb-3">
+                      <Clock className="w-10 h-10 text-secondary opacity-40" />
+                    </div>
                     <p className="text-secondary text-sm">No recent activity</p>
                     <p className="text-xs text-secondary mt-1">Start tracking your symptoms and medications to see activity here</p>
                     </div>
@@ -1226,7 +1229,7 @@ export default function Home() {
                 className="card card-link p-6 transition-all group relative focus:outline-none focus-visible:outline-none focus-visible:ring-0 focus-visible:ring-offset-0 focus:ring-0"
               >
                 <div className="flex flex-col items-center gap-3">
-                  <div className="w-8 h-8 lg:w-10 lg:h-10 bg-purple-100 rounded-xl flex items-center justify-center flex-shrink-0">
+                  <div className="w-8 h-8 lg:w-10 lg:h-10 bg-purple-100 rounded-lg flex items-center justify-center flex-shrink-0">
                     <Pill className="w-5 h-5 text-purple-600" />
                 </div>
                   <div className="w-full text-center">

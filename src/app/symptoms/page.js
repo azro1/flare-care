@@ -1164,7 +1164,7 @@ function SymptomsPageContent() {
       {currentStep > 0 && (
         <div className="mb-8">
           <h1 className="text-base sm:text-lg font-regular text-muted mb-3">Log Symptoms</h1>
-          <div className="border-b" style={{borderColor: 'var(--border-primary)'}}></div>
+          <div className="border-b" style={{borderColor: '#5F9EA0'}}></div>
           </div>
       )}
 
@@ -1174,8 +1174,8 @@ function SymptomsPageContent() {
         {currentStep === 0 && (
           <div className="flex flex-col items-center justify-center text-center pt-16 sm:pt-0">
             {/* Icon - same as home page symptoms card */}
-            <div className="w-16 h-16 bg-emerald-100 rounded-2xl flex items-center justify-center mx-auto mb-6">
-              <Thermometer className="w-8 h-8 text-emerald-600" />
+            <div className="w-14 h-14 bg-white dark:bg-emerald-100 rounded-2xl flex items-center justify-center mx-auto mb-6 shadow-sm">
+              <Thermometer className="w-7 h-7 text-emerald-600" />
           </div>
             
             {/* Title */}
@@ -1191,7 +1191,7 @@ function SymptomsPageContent() {
             >
               Start now
             </button>
-        </div>
+          </div>
         )}
 
         {/* Step 1: When did symptoms begin? */}
@@ -1271,8 +1271,8 @@ function SymptomsPageContent() {
               </div>
             </div>
             {(dateErrors.day || dateErrors.month || dateErrors.year) && (
-              <div className="mt-6 p-3 bg-red-50 border border-red-300 rounded-lg">
-                <p className="text-red-600 text-sm">{dateErrors.day || dateErrors.month || dateErrors.year}</p>
+              <div className="mt-6 p-3 rounded-lg border" style={{backgroundColor: 'var(--bg-error)', borderColor: 'var(--border-error)'}}>
+                <p className="text-sm" style={{color: 'var(--text-error)'}}>{dateErrors.day || dateErrors.month || dateErrors.year}</p>
               </div>
             )}
           </div>
@@ -1416,8 +1416,8 @@ function SymptomsPageContent() {
               </div>
             </div>
             {(dateErrors.endDay || dateErrors.endMonth || dateErrors.endYear) && (
-              <div className="mt-6 p-3 bg-red-50 border border-red-300 rounded-lg">
-                <p className="text-red-600 text-sm">{dateErrors.endDay || dateErrors.endMonth || dateErrors.endYear}</p>
+              <div className="mt-6 p-3 rounded-lg border" style={{backgroundColor: 'var(--bg-error)', borderColor: 'var(--border-error)'}}>
+                <p className="text-sm" style={{color: 'var(--text-error)'}}>{dateErrors.endDay || dateErrors.endMonth || dateErrors.endYear}</p>
               </div>
             )}
           </div>
@@ -1449,8 +1449,8 @@ function SymptomsPageContent() {
                 />
                 </div>
                 {fieldErrors.severity && (
-                  <div className="mt-6 p-3 bg-red-50 border border-red-300 rounded-lg">
-                    <p className="text-red-600 text-sm">{fieldErrors.severity}</p>
+                  <div className="mt-6 p-3 rounded-lg border" style={{backgroundColor: 'var(--bg-error)', borderColor: 'var(--border-error)'}}>
+                    <p className="text-sm" style={{color: 'var(--text-error)'}}>{fieldErrors.severity}</p>
               </div>
                 )}
               </div>
@@ -1482,8 +1482,8 @@ function SymptomsPageContent() {
                 />
                 </div>
                 {fieldErrors.stress_level && (
-                  <div className="mt-6 p-3 bg-red-50 border border-red-300 rounded-lg">
-                    <p className="text-red-600 text-sm">{fieldErrors.stress_level}</p>
+                  <div className="mt-6 p-3 rounded-lg border" style={{backgroundColor: 'var(--bg-error)', borderColor: 'var(--border-error)'}}>
+                    <p className="text-sm" style={{color: 'var(--text-error)'}}>{fieldErrors.stress_level}</p>
               </div>
                 )}
               </div>
@@ -1514,8 +1514,8 @@ function SymptomsPageContent() {
               />
             </div>
               {fieldErrors.normal_bathroom_frequency && (
-                <div className="mt-6 p-3 bg-red-50 border border-red-300 rounded-lg">
-                  <p className="text-red-600 text-sm">{fieldErrors.normal_bathroom_frequency}</p>
+                <div className="mt-6 p-3 rounded-lg border" style={{backgroundColor: 'var(--bg-error)', borderColor: 'var(--border-error)'}}>
+                  <p className="text-sm" style={{color: 'var(--text-error)'}}>{fieldErrors.normal_bathroom_frequency}</p>
           </div>
               )}
             </div>
@@ -1598,8 +1598,8 @@ function SymptomsPageContent() {
               className="w-full px-4 py-3 input-field-wizard resize-none"
             />
             {fieldErrors.bathroom_frequency_change_details && (
-              <div className="mt-6 p-3 bg-red-50 border border-red-300 rounded-lg">
-                <p className="text-red-600 text-sm">{fieldErrors.bathroom_frequency_change_details}</p>
+              <div className="mt-5 p-3 rounded-lg border" style={{backgroundColor: 'var(--bg-error)', borderColor: 'var(--border-error)'}}>
+                <p className="text-sm" style={{color: 'var(--text-error)'}}>{fieldErrors.bathroom_frequency_change_details}</p>
               </div>
             )}
           </div>
@@ -1694,8 +1694,8 @@ function SymptomsPageContent() {
                   autoComplete="off"
                 />
                 {fieldErrors.smoking_details && (
-                  <div className="mt-6 p-3 bg-red-50 border border-red-300 rounded-lg">
-                    <p className="text-red-600 text-sm">{fieldErrors.smoking_details}</p>
+                  <div className="mt-6 p-3 rounded-lg border" style={{backgroundColor: 'var(--bg-error)', borderColor: 'var(--border-error)'}}>
+                    <p className="text-sm" style={{color: 'var(--text-error)'}}>{fieldErrors.smoking_details}</p>
               </div>
             )}
           </div>
@@ -1796,8 +1796,8 @@ function SymptomsPageContent() {
                 />
               </div>
               {fieldErrors.alcohol_units && (
-                <div className="mt-6 p-3 bg-red-50 border border-red-300 rounded-lg">
-                  <p className="text-red-600 text-sm">{fieldErrors.alcohol_units}</p>
+                <div className="mt-6 p-3 rounded-lg border" style={{backgroundColor: 'var(--bg-error)', borderColor: 'var(--border-error)'}}>
+                  <p className="text-sm" style={{color: 'var(--text-error)'}}>{fieldErrors.alcohol_units}</p>
               </div>
             )}
           </div>
@@ -1889,8 +1889,8 @@ function SymptomsPageContent() {
             
             {/* Validation error message */}
             {fieldErrors.breakfast && (
-              <div className="mt-6 p-3 bg-red-50 border border-red-300 rounded-lg">
-                <p className="text-red-600 text-sm">{fieldErrors.breakfast}</p>
+              <div className="mt-6 p-3 rounded-lg border" style={{backgroundColor: 'var(--bg-error)', borderColor: 'var(--border-error)'}}>
+                <p className="text-sm" style={{color: 'var(--text-error)'}}>{fieldErrors.breakfast}</p>
               </div>
             )}
           </div>
@@ -1982,8 +1982,8 @@ function SymptomsPageContent() {
             
             {/* Validation error message */}
             {fieldErrors.lunch && (
-              <div className="mt-6 p-3 bg-red-50 border border-red-300 rounded-lg">
-                <p className="text-red-600 text-sm">{fieldErrors.lunch}</p>
+              <div className="mt-6 p-3 rounded-lg border" style={{backgroundColor: 'var(--bg-error)', borderColor: 'var(--border-error)'}}>
+                <p className="text-sm" style={{color: 'var(--text-error)'}}>{fieldErrors.lunch}</p>
               </div>
             )}
           </div>
@@ -2075,8 +2075,8 @@ function SymptomsPageContent() {
             
             {/* Validation error message */}
             {fieldErrors.dinner && (
-              <div className="mt-6 p-3 bg-red-50 border border-red-300 rounded-lg">
-                <p className="text-red-600 text-sm">{fieldErrors.dinner}</p>
+              <div className="mt-6 p-3 rounded-lg border" style={{backgroundColor: 'var(--bg-error)', borderColor: 'var(--border-error)'}}>
+                <p className="text-sm" style={{color: 'var(--text-error)'}}>{fieldErrors.dinner}</p>
               </div>
             )}
           </div>

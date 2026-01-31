@@ -46,6 +46,9 @@
     --text-button-disabled: #475569; /* Light disabled button text */
     --bg-button-cancel: #e2e8f0; /* Light cancel button background */
     --bg-button-cancel-hover: #cbd5e1; /* Light cancel button hover */
+    --bg-error: #E0F2F3; /* Light cadet blue error background */
+    --border-error: #5F9EA0; /* Cadet blue error border */
+    --text-error: #5F9EA0; /* Cadet blue error text */
     
     /* Cadet blue for UI elements (stronger for light mode visibility) */
     --text-cadet-blue: #2d7d87; /* Stronger cadet blue for light mode */
@@ -121,6 +124,9 @@
     --text-button-disabled: #6b7280; /* Warm gray disabled text */
     --bg-button-cancel: #3a3d44; /* Warm neutral charcoal cancel - solid for visibility */
     --bg-button-cancel-hover: #4a4d54; /* Warmer charcoal cancel hover */
+    --bg-error: rgba(95, 158, 160, 0.15); /* Dark cadet blue error background */
+    --border-error: #7FB3B3; /* Lighter cadet blue error border for dark mode */
+    --text-error: #7FB3B3; /* Lighter cadet blue error text for dark mode */
     
     /* Cadet blue - keep original brand color */
     --text-cadet-blue: #5F9EA0; /* Cadet blue - same as light mode */

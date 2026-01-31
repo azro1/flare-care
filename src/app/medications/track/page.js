@@ -530,8 +530,8 @@ function MedicationTrackingWizard() {
             </div>
             {/* Validation error message */}
             {fieldErrors.missedMedicationsList && (
-              <div className="mt-6 p-3 bg-red-50 border border-red-300 rounded-lg">
-                <p className="text-red-600 text-sm">{fieldErrors.missedMedicationsList}</p>
+              <div className="mt-6 p-3 rounded-lg border" style={{backgroundColor: 'var(--bg-error)', borderColor: 'var(--border-error)'}}>
+                <p className="text-sm" style={{color: 'var(--text-error)'}}>{fieldErrors.missedMedicationsList}</p>
               </div>
             )}
           </div>
@@ -679,8 +679,8 @@ function MedicationTrackingWizard() {
             </div>
             {/* Validation error message */}
             {fieldErrors.nsaidList && (
-              <div className="mt-6 p-3 bg-red-50 border border-red-300 rounded-lg">
-                <p className="text-red-600 text-sm">{fieldErrors.nsaidList}</p>
+              <div className="mt-6 p-3 rounded-lg border" style={{backgroundColor: 'var(--bg-error)', borderColor: 'var(--border-error)'}}>
+                <p className="text-sm" style={{color: 'var(--text-error)'}}>{fieldErrors.nsaidList}</p>
               </div>
             )}
           </div>
@@ -828,8 +828,8 @@ function MedicationTrackingWizard() {
             </div>
             {/* Validation error message */}
             {fieldErrors.antibioticList && (
-              <div className="mt-6 p-3 bg-red-50 border border-red-300 rounded-lg">
-                <p className="text-red-600 text-sm">{fieldErrors.antibioticList}</p>
+              <div className="mt-6 p-3 rounded-lg border" style={{backgroundColor: 'var(--bg-error)', borderColor: 'var(--border-error)'}}>
+                <p className="text-sm" style={{color: 'var(--text-error)'}}>{fieldErrors.antibioticList}</p>
               </div>
             )}
           </div>
@@ -960,7 +960,7 @@ function MedicationTrackingWizard() {
       {currentStep > 0 && (
         <div className="mb-8">
           <h1 className="text-base sm:text-lg font-regular text-muted mb-3">Track Medications</h1>
-          <div className="border-b" style={{borderColor: 'var(--border-primary)'}}></div>
+          <div className="border-b" style={{borderColor: '#5F9EA0'}}></div>
         </div>
       )}
 
@@ -970,8 +970,8 @@ function MedicationTrackingWizard() {
         {currentStep === 0 && (
           <div className="flex flex-col items-center justify-center text-center pt-16 sm:pt-0">
             {/* Icon - same as home page medications card */}
-            <div className="w-16 h-16 bg-pink-100 rounded-2xl flex items-center justify-center mx-auto mb-6">
-              <ChartLine className="w-8 h-8 text-pink-600" />
+            <div className="w-14 h-14 bg-white dark:bg-pink-100 rounded-2xl flex items-center justify-center mx-auto mb-6 shadow-sm">
+              <ChartLine className="w-7 h-7 text-pink-600" />
             </div>
             
             {/* Title */}
