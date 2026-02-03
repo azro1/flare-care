@@ -93,7 +93,7 @@ function SymptomDetailContent() {
         
         // Store deletion activity for Recent Activity
         const today = new Date().toISOString().split('T')[0]
-        const deletedKey = `flarecare-symptom-deleted-${today}`
+        const deletedKey = `flarecare-symptom-deleted-${user.id}-${today}`
         localStorage.setItem(deletedKey, JSON.stringify({
           timestamp: new Date().toISOString()
         }))

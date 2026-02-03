@@ -19,7 +19,7 @@ export const AuthProvider = ({ children }) => {
   const [isAuthenticated, setIsAuthenticated] = useState(false)
 
   // Helper function to clear user-specific localStorage data
-  const clearUserData = () => {
+  const clearUserData = (userId = null) => {
     if (typeof window === 'undefined') return
     
     // List of all user-specific localStorage keys to clear
@@ -30,9 +30,6 @@ export const AuthProvider = ({ children }) => {
       if (key && (
         key.startsWith('flarecare-symptoms') ||
         key.startsWith('flarecare-medications') ||
-        key.startsWith('flarecare-medication-') ||
-        key.startsWith('flarecare-symptom-') ||
-        key.startsWith('flarecare-tracked-medication-') ||
         key.startsWith('symptoms-wizard-') ||
         key.startsWith('medication-wizard-') ||
         key === 'flarecare-user-preferences' ||
@@ -40,6 +37,8 @@ export const AuthProvider = ({ children }) => {
       )) {
         keysToRemove.push(key)
       }
+      // NOTE: Activity keys are NOT cleared here - they persist across logout/login
+      // and only expire naturally at midnight via the cleanup in page.js
     }
     
     keysToRemove.forEach(key => localStorage.removeItem(key))
@@ -53,15 +52,15 @@ export const AuthProvider = ({ children }) => {
       const { data: { session } } = await supabase.auth.getSession()
       const userData = session?.user ?? null
       
-      // If user changed, clear previous user's data
-      if (previousUserId && userData && previousUserId !== userData.id) {
-        clearUserData()
-      }
-      
-      // If logging out, clear all user data
-      if (!userData && previousUserId) {
-        clearUserData()
-      }
+        // If user changed, clear previous user's data
+        if (previousUserId && userData && previousUserId !== userData.id) {
+          clearUserData(previousUserId)
+        }
+        
+        // If logging out, clear all user data
+        if (!userData && previousUserId) {
+          clearUserData(previousUserId)
+        }
       
       previousUserId = userData?.id || null
       setUser(userData)
@@ -89,12 +88,12 @@ export const AuthProvider = ({ children }) => {
         
         // If user changed (login or switch), clear previous user's data
         if (currentUserId && newUserId && currentUserId !== newUserId) {
-          clearUserData()
+          clearUserData(currentUserId)
         }
         
         // If logging out, clear all user data
         if (!userData && currentUserId) {
-          clearUserData()
+          clearUserData(currentUserId)
         }
         
         setUser(userData)
@@ -161,8 +160,8 @@ export const AuthProvider = ({ children }) => {
       // Set toast flag before clearing data
       localStorage.setItem('showAccountDeletedToast', 'true')
       
-      // Clear localStorage
-      clearUserData()
+      // Clear localStorage for this user
+      clearUserData(user.id)
       localStorage.removeItem('supabase.auth.user')
       // Re-set toast flag after clearUserData (in case it was cleared)
       localStorage.setItem('showAccountDeletedToast', 'true')

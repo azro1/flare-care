@@ -729,6 +729,17 @@ select.input-field-wizard option[value=""] {
   font-size: 14px !important;
 }
 
+/* Hide month container for time-only pickers */
+.react-datepicker-responsive .react-datepicker__month-container {
+  display: none !important;
+}
+
+.react-datepicker-responsive .react-datepicker__time-container {
+  border-left: none !important;
+  float: none !important;
+  width: 100% !important;
+}
+
 /* Mobile responsiveness */
 @media (max-width: 640px) {
   .react-datepicker-responsive {
@@ -736,14 +747,13 @@ select.input-field-wizard option[value=""] {
   }
   
   .react-datepicker-responsive .react-datepicker__month-container {
-    width: 210px !important;
-    float: left !important;
+    display: none !important;
   }
   
   .react-datepicker-responsive .react-datepicker__time-container {
-    border-left: 1px solid var(--border-card-inner) !important;
-    width: 70px !important;
-    float: right !important;
+    border-left: none !important;
+    width: 100% !important;
+    float: none !important;
   }
 }
 
@@ -798,6 +808,16 @@ select.input-field-wizard option[value=""] {
     border: 1px solid var(--border-card) !important;
     box-shadow: var(--shadow-lg) !important;
     z-index: 9999 !important;
+  }
+  
+  .react-datepicker-responsive .react-datepicker__month-container {
+    display: none !important;
+  }
+  
+  .react-datepicker-responsive .react-datepicker__time-container {
+    border-left: none !important;
+    width: 100% !important;
+    float: none !important;
   }
   
   .react-datepicker__month-container {

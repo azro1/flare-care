@@ -54,7 +54,7 @@ export default function AuthForm() {
 
   return (
     <div className="pt-24 sm:pt-0 sm:flex-grow flex items-center justify-center sm:px-6 lg:px-8 pb-20 lg:pb-0">
-      <div className="max-w-md w-full space-y-4">
+      <div className="max-w-sm w-full space-y-4">
         <div className="text-center">
             <h2 className="text-3xl font-bold font-source text-primary mb-6">
               FlareCare
@@ -74,7 +74,7 @@ export default function AuthForm() {
            <button
              type="button"
              onClick={handleGoogleSignIn}
-             className="max-w-xs mx-auto w-full flex justify-center items-center py-2.5 px-10 bg-white border border-gray-200 rounded-full shadow-sm hover:shadow-md text-base font-semibold font-roboto text-gray-700 hover:bg-gray-50 focus:outline-none focus:ring-0 focus:ring-offset-0 transition-all duration-200"
+             className="w-full flex justify-center items-center py-3.5 rounded-lg bg-white border border-gray-200 shadow-sm hover:shadow-md text-base font-semibold font-roboto text-gray-700 hover:bg-gray-50 focus:outline-none focus:ring-0 focus:ring-offset-0 transition-all duration-200"
            >
             <svg className="w-5 h-5 mr-2" viewBox="0 0 24 24">
               <path fill="#4285F4" d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z"/>

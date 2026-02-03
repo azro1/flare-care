@@ -75,7 +75,7 @@ function TrackedMedicationDetails() {
         
         // Store deletion activity for Recent Activity
         const today = new Date().toISOString().split('T')[0]
-        const deletedKey = `flarecare-tracked-medication-deleted-${today}`
+        const deletedKey = `flarecare-tracked-medication-deleted-${user.id}-${today}`
         localStorage.setItem(deletedKey, JSON.stringify({
           timestamp: new Date().toISOString()
         }))

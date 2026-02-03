@@ -264,30 +264,32 @@ export default function Home() {
   // Track daily medication intake with localStorage
   useEffect(() => {
     const loadTakenMedications = () => {
+      if (!user?.id) return
+      
       const today = new Date().toISOString().split('T')[0] // YYYY-MM-DD format
       const storageKey = `flarecare-medications-taken-${today}`
       
-      // Clean up old entries (keep only today's)
+      // Clean up old entries (keep only today's for current user)
       const cleanupOldEntries = () => {
         const keysToRemove = []
         const timestampKey = `flarecare-medications-completed-${today}`
-        const activityKey = `flarecare-medication-added-${today}`
-        const updatedKey = `flarecare-medication-updated-${today}`
-        const deletedKey = `flarecare-medication-deleted-${today}`
-        const symptomDeletedKey = `flarecare-symptom-deleted-${today}`
-        const trackedMedDeletedKey = `flarecare-tracked-medication-deleted-${today}`
-        const individualTakingsKey = `flarecare-medication-individual-takings-${today}`
+        const activityKey = `flarecare-medication-added-${user.id}-${today}`
+        const updatedKey = `flarecare-medication-updated-${user.id}-${today}`
+        const deletedKey = `flarecare-medication-deleted-${user.id}-${today}`
+        const symptomDeletedKey = `flarecare-symptom-deleted-${user.id}-${today}`
+        const trackedMedDeletedKey = `flarecare-tracked-medication-deleted-${user.id}-${today}`
+        const individualTakingsKey = `flarecare-medication-individual-takings-${user.id}-${today}`
         for (let i = 0; i < localStorage.length; i++) {
           const key = localStorage.key(i)
           if (key && (
             (key.startsWith('flarecare-medications-taken-') && key !== storageKey) ||
             (key.startsWith('flarecare-medications-completed-') && key !== timestampKey) ||
-            (key.startsWith('flarecare-medication-added-') && key !== activityKey) ||
-            (key.startsWith('flarecare-medication-updated-') && key !== updatedKey) ||
-            (key.startsWith('flarecare-medication-deleted-') && key !== deletedKey) ||
-            (key.startsWith('flarecare-symptom-deleted-') && key !== symptomDeletedKey) ||
-            (key.startsWith('flarecare-tracked-medication-deleted-') && key !== trackedMedDeletedKey) ||
-            (key.startsWith('flarecare-medication-individual-takings-') && key !== individualTakingsKey)
+            (key.startsWith(`flarecare-medication-added-${user.id}-`) && key !== activityKey) ||
+            (key.startsWith(`flarecare-medication-updated-${user.id}-`) && key !== updatedKey) ||
+            (key.startsWith(`flarecare-medication-deleted-${user.id}-`) && key !== deletedKey) ||
+            (key.startsWith(`flarecare-symptom-deleted-${user.id}-`) && key !== symptomDeletedKey) ||
+            (key.startsWith(`flarecare-tracked-medication-deleted-${user.id}-`) && key !== trackedMedDeletedKey) ||
+            (key.startsWith(`flarecare-medication-individual-takings-${user.id}-`) && key !== individualTakingsKey)
           )) {
             keysToRemove.push(key)
           }
@@ -317,7 +319,7 @@ export default function Home() {
       setMedicationsCompletedAt(completedTimestamp || null)
       
       // Load medication added activity
-      const activityKey = `flarecare-medication-added-${today}`
+      const activityKey = `flarecare-medication-added-${user.id}-${today}`
       const medicationAddedData = localStorage.getItem(activityKey)
       if (medicationAddedData) {
         try {
@@ -331,7 +333,7 @@ export default function Home() {
       }
       
       // Load medication updated activity
-      const updatedKey = `flarecare-medication-updated-${today}`
+      const updatedKey = `flarecare-medication-updated-${user.id}-${today}`
       const medicationUpdatedData = localStorage.getItem(updatedKey)
       if (medicationUpdatedData) {
         try {
@@ -345,7 +347,7 @@ export default function Home() {
       }
       
       // Load medication deleted activity
-      const deletedKey = `flarecare-medication-deleted-${today}`
+      const deletedKey = `flarecare-medication-deleted-${user.id}-${today}`
       const medicationDeletedData = localStorage.getItem(deletedKey)
       if (medicationDeletedData) {
         try {
@@ -359,7 +361,7 @@ export default function Home() {
       }
       
       // Load symptom deleted activity
-      const symptomDeletedKey = `flarecare-symptom-deleted-${today}`
+      const symptomDeletedKey = `flarecare-symptom-deleted-${user.id}-${today}`
       const symptomDeletedData = localStorage.getItem(symptomDeletedKey)
       if (symptomDeletedData) {
         try {
@@ -373,7 +375,7 @@ export default function Home() {
       }
       
       // Load tracked medication deleted activity
-      const trackedMedDeletedKey = `flarecare-tracked-medication-deleted-${today}`
+      const trackedMedDeletedKey = `flarecare-tracked-medication-deleted-${user.id}-${today}`
       const trackedMedDeletedData = localStorage.getItem(trackedMedDeletedKey)
       if (trackedMedDeletedData) {
         try {
@@ -387,7 +389,7 @@ export default function Home() {
       }
       
       // Load individual medication takings
-      const individualTakingsKey = `flarecare-medication-individual-takings-${today}`
+      const individualTakingsKey = `flarecare-medication-individual-takings-${user.id}-${today}`
       const individualTakingsData = localStorage.getItem(individualTakingsKey)
       if (individualTakingsData) {
         try {
@@ -404,20 +406,22 @@ export default function Home() {
       }
     }
 
-    // Load on mount
+    // Load on mount and when user changes
     loadTakenMedications()
 
     // Listen for storage changes (when medications are marked as taken in other tabs/windows)
     const handleStorageChange = (e) => {
+      if (!user?.id) return
+      
       if (e.key && (
         e.key.startsWith('flarecare-medications-taken-') ||
         e.key.startsWith('flarecare-medications-completed-') ||
-        e.key.startsWith('flarecare-medication-added-') ||
-        e.key.startsWith('flarecare-medication-updated-') ||
-        e.key.startsWith('flarecare-medication-deleted-') ||
-        e.key.startsWith('flarecare-symptom-deleted-') ||
-        e.key.startsWith('flarecare-tracked-medication-deleted-') ||
-        e.key.startsWith('flarecare-medication-individual-takings-')
+        (e.key.startsWith('flarecare-medication-added-') && e.key.includes(`-${user.id}-`)) ||
+        (e.key.startsWith('flarecare-medication-updated-') && e.key.includes(`-${user.id}-`)) ||
+        (e.key.startsWith('flarecare-medication-deleted-') && e.key.includes(`-${user.id}-`)) ||
+        (e.key.startsWith('flarecare-symptom-deleted-') && e.key.includes(`-${user.id}-`)) ||
+        (e.key.startsWith('flarecare-tracked-medication-deleted-') && e.key.includes(`-${user.id}-`)) ||
+        (e.key.startsWith('flarecare-medication-individual-takings-') && e.key.includes(`-${user.id}-`))
       )) {
         loadTakenMedications()
       }
@@ -472,7 +476,7 @@ export default function Home() {
       window.removeEventListener('tracked-medication-deleted', handleTrackedMedicationDeleted)
       window.removeEventListener('focus', handleFocus)
     }
-  }, [])
+  }, [user?.id])
 
 
 
@@ -766,12 +770,12 @@ export default function Home() {
         </div>
       )}
 
-      <div className="w-full px-3 sm:px-4 md:px-6 lg:px-8">
+      <div className="w-full px-3 sm:px-4 md:px-6 lg:px-8 min-h-screen">
         <div className="flex flex-col lg:flex-row lg:gap-8 lg:justify-center">
           
           {/* Left Sidebar */}
           <div className="lg:w-72 lg:flex-shrink-0 order-2 lg:order-1">
-            <div className="sticky top-8 space-y-6">
+            <div className="sticky top-8 space-y-8">
               
               {/* Quick Stats */}
               <div className=" card">
@@ -883,7 +887,7 @@ export default function Home() {
             >
               <div className="flex items-center sm:flex-col sm:items-center gap-4 sm:gap-3">
                 <div className="w-8 h-8 lg:w-10 lg:h-10 bg-emerald-100 rounded-lg flex items-center justify-center flex-shrink-0">
-                  <Thermometer className="w-6 h-6 text-emerald-600" />
+                  <Thermometer className="w-5 h-5 sm:w-6 sm:h-6 text-emerald-600" />
                 </div>
                 <div className="flex-1 sm:w-full sm:text-center">
                   <h3 className="font-semibold text-primary leading-tight sm:leading-relaxed sm:justify-center">
@@ -943,9 +947,6 @@ export default function Home() {
           <div className="mb-8 card">
             <div className="flex items-center justify-between mb-4">
               <div className="flex items-start gap-3">
-                <div className="w-8 h-8 bg-emerald-100 rounded-lg flex items-center justify-center">
-                  <Thermometer className="w-4 h-4 text-emerald-600" />
-                </div>
                 <h2 className="text-xl font-semibold font-source text-primary">Recent Logged Symptoms</h2>
               </div>
               {symptoms.length > 1 && (
@@ -962,7 +963,7 @@ export default function Home() {
               {displayedSymptoms.map((symptom) => (
                 <div key={symptom.id}>
                 <div 
-                    className="card-inner p-6 cursor-pointer transition-all duration-200"
+                    className="card-inner p-6 cursor-pointer transition-all duration-200 border-l-4 border-emerald-500"
                   onClick={() => {
                     router.push(`/symptoms/${symptom.id}`)
                   }}
@@ -994,9 +995,6 @@ export default function Home() {
           <div className="mb-8 card">
             <div className="flex items-center justify-between mb-4">
               <div className="flex items-start gap-3">
-                <div className="w-8 h-8 bg-pink-100 rounded-lg flex items-center justify-center">
-                  <ChartLine className="w-4 h-4 text-pink-600" />
-                </div>
                 <h2 className="text-xl font-semibold font-source text-primary">Recent Tracked Medications</h2>
               </div>
               {trackedMedications.length > 1 && (
@@ -1178,16 +1176,16 @@ export default function Home() {
                 })
               }
 
-              // Filter to today only and sort by timestamp (most recent first)
-              const today = new Date()
-              today.setHours(0, 0, 0, 0)
+              // Filter to last 4 hours and sort by timestamp (most recent first)
+              const now = new Date()
+              const fourHoursAgo = new Date(now.getTime() - (4 * 60 * 60 * 1000)) // 4 hours in milliseconds
               
-              const todayActivities = activities
-                .filter(activity => activity.timestamp >= today)
+              const recentActivities = activities
+                .filter(activity => activity.timestamp >= fourHoursAgo)
                 .sort((a, b) => b.timestamp - a.timestamp)
                 .slice(0, 3) // Limit to 3 most recent
 
-              if (todayActivities.length === 0) {
+              if (recentActivities.length === 0) {
                 return (
                   <div className="text-center">
                     <div className="flex justify-center mb-3">
@@ -1201,7 +1199,7 @@ export default function Home() {
 
               return (
                 <div className="space-y-3">
-                  {todayActivities.map((activity, index) => {
+                  {recentActivities.map((activity, index) => {
                     return (
                       <div key={`${activity.type}-${activity.timestamp.getTime()}-${index}`} className="flex items-start gap-3 pt-2">
                         <span className="text-xl">🎉</span>

@@ -96,7 +96,7 @@ function MedicationsPageContent() {
           const today = new Date().toISOString().split('T')[0]
           
           // Store medication updated activity
-          const updatedKey = `flarecare-medication-updated-${today}`
+          const updatedKey = `flarecare-medication-updated-${user?.id}-${today}`
           localStorage.setItem(updatedKey, JSON.stringify({
             timestamp: new Date().toISOString(),
             oldMedicationName: oldMedication.name,
@@ -104,7 +104,7 @@ function MedicationsPageContent() {
           }))
           
           // Update individual medication takings if name changed
-          const individualTakingsKey = `flarecare-medication-individual-takings-${today}`
+          const individualTakingsKey = `flarecare-medication-individual-takings-${user?.id}-${today}`
           const individualTakingsData = localStorage.getItem(individualTakingsKey)
           if (individualTakingsData) {
             try {
@@ -164,7 +164,7 @@ function MedicationsPageContent() {
         
         // Store timestamp for Recent Activity on dashboard
         const today = new Date().toISOString().split('T')[0]
-        const activityKey = `flarecare-medication-added-${today}`
+        const activityKey = `flarecare-medication-added-${user?.id}-${today}`
         localStorage.setItem(activityKey, JSON.stringify({
           timestamp: new Date().toISOString(),
           medicationName: insertedMed.name
@@ -395,7 +395,7 @@ function MedicationsPageContent() {
       // Store deletion activity for Recent Activity
       if (medicationName) {
         const today = new Date().toISOString().split('T')[0]
-        const deletedKey = `flarecare-medication-deleted-${today}`
+        const deletedKey = `flarecare-medication-deleted-${user?.id}-${today}`
         localStorage.setItem(deletedKey, JSON.stringify({
           timestamp: new Date().toISOString(),
           medicationName: medicationName
@@ -488,7 +488,7 @@ function MedicationsPageContent() {
     const today = new Date().toISOString().split('T')[0] // YYYY-MM-DD format
     const storageKey = `flarecare-medications-taken-${today}`
     const timestampKey = `flarecare-medications-completed-${today}`
-    const individualTakingsKey = `flarecare-medication-individual-takings-${today}`
+    const individualTakingsKey = `flarecare-medication-individual-takings-${user?.id}-${today}`
     
     // Filter out "Medication Tracking" entries (same as dashboard does)
     const prescribedMedications = medications.filter(med => med.name !== 'Medication Tracking')

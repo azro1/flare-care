@@ -21,8 +21,7 @@ function ReportsPageContent() {
   const [medications, setMedications] = useState([])
   const [medicationTracking, setMedicationTracking] = useState([])
   const [reportData, setReportData] = useState(null)
-  const [isMounted, setIsMounted] = useState(true) // Start as true to show loading screen immediately
-  const [isReady, setIsReady] = useState(false)
+  const [isLoading, setIsLoading] = useState(true)
   const [dateRange, setDateRange] = useState(() => {
     const endDate = new Date()
     const startDate = new Date()
@@ -157,111 +156,20 @@ function ReportsPageContent() {
     fetchMedicationTracking()
   }, [user?.id])
 
+  // Reset loading when navigating to reports page
   useEffect(() => {
-    // Only run this when we're on the reports page
-    if (pathname !== '/reports') {
-      return
-    }
-    
-    // Clear reportData on mount/navigation to prevent stale data flash
-    setReportData(null)
-    // Ensure isReady starts as false
-    setIsReady(false)
-    
-    // Aggressively hide ALL content to prevent Next.js prefetched content from showing
-    // This includes main, body children, and any other potential content
-    const styleId = 'reports-page-hide-content'
-    let styleElement = document.getElementById(styleId)
-    if (!styleElement && typeof document !== 'undefined') {
-      styleElement = document.createElement('style')
-      styleElement.id = styleId
-      styleElement.textContent = `
-        main > *:not([data-reports-page]) {
-          visibility: hidden !important;
-          opacity: 0 !important;
-          display: none !important;
-        }
-        body > *:not(script):not(style):not([data-reports-page]) {
-          visibility: hidden !important;
-          opacity: 0 !important;
-        }
-      `
-      document.head.appendChild(styleElement)
-    }
-    
-    return () => {
-      // Remove style tag on unmount
-      const styleElement = document.getElementById(styleId)
-      if (styleElement) {
-        styleElement.remove()
-      }
-      // Restore visibility
-      const mainContent = document.querySelector('main')
-      if (mainContent) {
-        mainContent.style.visibility = ''
-        mainContent.style.opacity = ''
-        mainContent.style.display = ''
-      }
-    }
-  }, [pathname]) // Re-run when pathname changes to ensure reset on navigation
-
-  useEffect(() => {
-    // Reset ready state when pathname changes to ensure loading screen shows
     if (pathname === '/reports') {
-      setIsReady(false)
+      setIsLoading(true)
+      setReportData(null)
     }
   }, [pathname])
 
+  // Generate report when data is ready
   useEffect(() => {
-    if (isMounted && user && pathname === '/reports') {
+    if (user && pathname === '/reports') {
       generateReport()
     }
-  }, [symptoms, medications, medicationTracking, dateRange, isMounted, user, pathname])
-
-  // Only set ready when we have reportData and component is mounted
-  useEffect(() => {
-    const styleId = 'reports-page-hide-content'
-    const styleElement = document.getElementById(styleId)
-    
-    if (isMounted && reportData !== null && pathname === '/reports') {
-      // Use single requestAnimationFrame for faster render
-      requestAnimationFrame(() => {
-        setIsReady(true)
-        // Remove the hide style and restore main content visibility
-        if (styleElement) {
-          styleElement.remove()
-        }
-        // Restore main visibility (set by MainContent.js)
-        const main = document.querySelector('main')
-        if (main) {
-          main.style.visibility = 'visible'
-          main.style.opacity = '1'
-          main.style.pointerEvents = ''
-        }
-        // Show only our reports page content
-        const reportsContent = document.querySelector('[data-reports-page]')
-        if (reportsContent) {
-          reportsContent.style.visibility = 'visible'
-          reportsContent.style.opacity = '1'
-          reportsContent.style.display = ''
-        }
-      })
-    } else {
-      setIsReady(false)
-      // Ensure style is applied if not ready
-      if (!styleElement) {
-        const newStyleElement = document.createElement('style')
-        newStyleElement.id = styleId
-        newStyleElement.textContent = `
-          main {
-            visibility: hidden !important;
-            opacity: 0 !important;
-          }
-        `
-        document.head.appendChild(newStyleElement)
-      }
-    }
-  }, [isMounted, reportData])
+  }, [symptoms, medications, medicationTracking, dateRange, user, pathname])
 
   const generateReport = () => {
     // Filter symptoms by selected date range
@@ -379,6 +287,7 @@ function ReportsPageContent() {
         antibiotics: combinedAntibiotics
       }
     })
+    setIsLoading(false)
   }
 
   const hasDataToExport = () => {
@@ -869,46 +778,24 @@ function ReportsPageContent() {
     return `${day}/${month}/${year}`
   }
 
-  // Ensure we're on the correct route
-  const isCorrectRoute = pathname === '/reports'
-  
-  // Prevent hydration mismatch by not rendering until mounted and ready
-  // Show loading screen with maximum z-index to prevent flash of other content
-  // Also hide all other content to prevent Next.js prefetched content from showing
-  if (!isMounted || !reportData || !isReady || !isCorrectRoute) {
-    // Hide all content except our loading screen
-    if (typeof document !== 'undefined') {
-      const styleId = 'reports-page-hide-content'
-      let styleElement = document.getElementById(styleId)
-      if (!styleElement) {
-        styleElement = document.createElement('style')
-        styleElement.id = styleId
-        styleElement.textContent = `
-          main > *:not([data-reports-loading]) {
-            visibility: hidden !important;
-            opacity: 0 !important;
-            display: none !important;
-          }
-        `
-        document.head.appendChild(styleElement)
-      }
-    }
-    
+  // Simple loading state - render page structure like other pages
+  if (!user || isLoading || !reportData) {
     return (
-      <div 
-        className="fixed inset-0" 
-        style={{backgroundColor: 'var(--bg-main)', zIndex: 99999}}
-        data-reports-loading
-      />
+      <div className="w-full px-3 sm:px-4 md:px-6 lg:px-8 min-w-0">
+        <div className="max-w-4xl mx-auto">
+          <div className="mb-8 card">
+            <h1 className="text-2xl sm:text-3xl lg:text-4xl font-bold font-source text-primary mb-4">Health Reports</h1>
+            <p className="text-secondary font-roboto">
+              Generate detailed reports to share with your healthcare team
+            </p>
+          </div>
+        </div>
+      </div>
     )
   }
 
   return (
-    <div 
-      className="w-full px-3 sm:px-4 md:px-6 lg:px-8 min-w-0" 
-      style={{opacity: isReady ? 1 : 0}}
-      data-reports-page
-    >
+    <div className="w-full px-3 sm:px-4 md:px-6 lg:px-8 min-w-0 min-h-screen">
       <div className="max-w-4xl mx-auto">
       <div className="mb-8 card">
         <h1 className="text-2xl sm:text-3xl lg:text-4xl font-bold font-source text-primary mb-4">Health Reports</h1>
@@ -920,8 +807,8 @@ function ReportsPageContent() {
       {/* Date Range Selector */}
       <div className="card p-8 rounded-2xl mb-8">
         <div className="flex items-center mb-6">
-          <div className="hidden sm:flex bg-orange-100 w-12 h-12 rounded-xl mr-4 flex-shrink-0 items-center justify-center">
-            <Calendar className="w-6 h-6 text-orange-600" />
+          <div className="bg-orange-100 w-8 h-8 sm:w-12 sm:h-12 rounded-xl mr-3 sm:mr-4 flex-shrink-0 flex items-center justify-center">
+            <Calendar className="w-4 h-4 sm:w-6 sm:h-6 text-orange-600" />
           </div>
           <h2 className="text-xl font-semibold font-source text-primary flex-1">Select Report Period</h2>
         </div>
@@ -1047,8 +934,8 @@ function ReportsPageContent() {
       {/* Report Results */}
       <div className="card p-8 rounded-2xl mb-8">
         <div className="flex items-center mb-6">
-          <div className="hidden sm:flex bg-emerald-100 w-12 h-12 rounded-xl mr-4 flex-shrink-0 items-center justify-center">
-            <Thermometer className="w-6 h-6 text-emerald-600" />
+          <div className="bg-emerald-100 w-8 h-8 sm:w-12 sm:h-12 rounded-xl mr-3 sm:mr-4 flex-shrink-0 flex items-center justify-center">
+            <Thermometer className="w-5 h-5 sm:w-6 sm:h-6 text-emerald-600" />
           </div>
           <h2 className="text-xl font-semibold font-source text-primary flex-1">Symptom Report</h2>
         </div>
@@ -1137,8 +1024,8 @@ function ReportsPageContent() {
       {reportData.medications.length > 0 && (
         <div className="card p-8 rounded-2xl mb-8">
           <h2 className="text-xl font-semibold font-source text-primary mb-6 flex items-center">
-            <div className="bg-purple-100 w-12 h-12 rounded-xl mr-3 sm:mr-4 flex-shrink-0 flex items-center justify-center">
-              <Pill className="w-6 h-6 text-purple-600" />
+            <div className="bg-purple-100 w-8 h-8 sm:w-12 sm:h-12 rounded-xl mr-3 sm:mr-4 flex-shrink-0 flex items-center justify-center">
+              <Pill className="w-4 h-4 sm:w-6 sm:h-6 text-purple-600" />
             </div>
             Current Medications
           </h2>
