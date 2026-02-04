@@ -11,7 +11,7 @@ function SettingsPageContent() {
       <div className="max-w-5xl mx-auto px-3 sm:px-4 md:px-6 lg:px-8">
         {/* Header */}
         <div className="mb-8 card">
-          <div className="text-center">
+          <div className="">
             <h1 className="text-2xl sm:text-3xl lg:text-4xl font-bold font-source text-primary mb-4">Settings</h1>
             <p className="text-secondary font-roboto break-words">Manage your app preferences and settings</p>
           </div>

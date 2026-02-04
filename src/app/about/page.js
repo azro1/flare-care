@@ -6,9 +6,9 @@ import ConfirmationModal from '@/components/ConfirmationModal'
 export default function About() {
   const [blogModal, setBlogModal] = useState({ isOpen: false })
   return (
-    <div className="w-full px-3 sm:px-4 md:px-6 lg:px-8 min-w-0">
+    <div className="w-full px-3 sm:px-4 md:px-6 min-w-0">
       <div className="max-w-5xl mx-auto">
-      <div className="text-center mb-8 card">
+      <div className="md:text-center mb-4 sm:mb-6 card">
         <h1 className="text-2xl sm:text-3xl lg:text-4xl font-bold font-source text-primary mb-4">
           FlareCare
         </h1>
@@ -17,8 +17,8 @@ export default function About() {
         </p>
       </div>
 
-      <div className="grid md:grid-cols-2 gap-8 mb-8">
-        <div className="card p-8 rounded-2xl backdrop-blur-sm">
+      <div className="grid md:grid-cols-2 gap-4 mb-4 sm:gap-6 sm:mb-6">
+        <div className="card p-6 rounded-2xl backdrop-blur-sm">
           <h2 className="text-xl sm:text-2xl font-semibold font-source text-primary mb-4">My Story</h2>
           <div className="space-y-4 text-secondary font-roboto leading-relaxed">
             <p>
@@ -40,7 +40,7 @@ export default function About() {
           </div>
         </div>
 
-        <div className="card p-8 rounded-2xl backdrop-blur-sm">
+        <div className="card p-6 rounded-2xl backdrop-blur-sm">
           <h2 className="text-xl sm:text-2xl font-semibold font-source text-primary mb-4">Why FlareCare?</h2>
           <div className="space-y-4 text-secondary font-roboto leading-relaxed">
             <p>
@@ -77,7 +77,7 @@ export default function About() {
         </div>
       </div>
 
-      <div className="card p-8 rounded-2xl backdrop-blur-sm mb-8">
+      <div className="card p-6 rounded-2xl backdrop-blur-sm mb-4 sm:mb-6">
         <h2 className="text-xl sm:text-2xl font-semibold font-source text-primary mb-4">The Vision</h2>
         <div className="space-y-4 text-secondary font-roboto leading-relaxed">
           <p>
@@ -98,7 +98,7 @@ export default function About() {
         </div>
       </div>
 
-      <div className="card p-8 rounded-2xl">
+      <div className="card p-6 rounded-2xl">
         <h2 className="text-xl sm:text-2xl font-bold font-source text-primary mb-4">Stay Connected</h2>
         <p className="text-secondary mb-8 font-roboto leading-relaxed">
           Have questions, suggestions, or want to share your own story? 

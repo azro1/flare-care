@@ -206,7 +206,7 @@ export default function Navigation() {
           <Link href="/">
             <div className=" rounded-full flex items-center justify-center overflow-visible">
               <Image
-                src="/icons/pigeon.svg"
+                src="/icons/seagull.svg"
                 alt="FlareCare logo"
                 width={48}
                 height={48}

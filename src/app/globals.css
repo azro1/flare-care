@@ -742,18 +742,18 @@ select.input-field-wizard option[value=""] {
 
 /* Mobile responsiveness */
 @media (max-width: 640px) {
-  .react-datepicker-responsive {
-    width: 280px !important;
-  }
-  
   .react-datepicker-responsive .react-datepicker__month-container {
     display: none !important;
   }
   
   .react-datepicker-responsive .react-datepicker__time-container {
     border-left: none !important;
-    width: 100% !important;
     float: none !important;
+  }
+  
+  .react-datepicker-responsive .react-datepicker__time-list {
+    max-height: 200px !important;
+    overflow-y: auto !important;
   }
 }
 

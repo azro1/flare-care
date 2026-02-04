@@ -9,7 +9,7 @@ import 'react-datepicker/dist/react-datepicker.css'
 import ProtectedRoute from '@/components/ProtectedRoute'
 import { supabase, TABLES } from '@/lib/supabase'
 import { useAuth } from '@/lib/AuthContext'
-import { Calendar, FileText, Download, FileDown, BarChart3, Pill, Activity, TrendingUp, AlertCircle, Thermometer, Brain, Pizza } from 'lucide-react'
+import { Calendar, FileText, Download, FileDown, BarChart3, Pill, Activity, TrendingUp, AlertCircle, Thermometer, Brain, Pizza, ChartLine } from 'lucide-react'
 
 // Force dynamic rendering to prevent Vercel static generation issues
 export const dynamic = 'force-dynamic'
@@ -781,7 +781,7 @@ function ReportsPageContent() {
   // Simple loading state - render page structure like other pages
   if (!user || isLoading || !reportData) {
     return (
-      <div className="w-full px-3 sm:px-4 md:px-6 lg:px-8 min-w-0">
+      <div className="w-full px-3 sm:px-4 md:px-6 lg:px-8 min-w-0 min-h-screen">
         <div className="max-w-4xl mx-auto">
           <div className="mb-8 card">
             <h1 className="text-2xl sm:text-3xl lg:text-4xl font-bold font-source text-primary mb-4">Health Reports</h1>
@@ -797,7 +797,7 @@ function ReportsPageContent() {
   return (
     <div className="w-full px-3 sm:px-4 md:px-6 lg:px-8 min-w-0 min-h-screen">
       <div className="max-w-4xl mx-auto">
-      <div className="mb-8 card">
+      <div className="mb-4 sm:mb-6 card">
         <h1 className="text-2xl sm:text-3xl lg:text-4xl font-bold font-source text-primary mb-4">Health Reports</h1>
         <p className="text-secondary font-roboto">
           Generate detailed reports to share with your healthcare team
@@ -805,7 +805,7 @@ function ReportsPageContent() {
       </div>
 
       {/* Date Range Selector */}
-      <div className="card p-8 rounded-2xl mb-8">
+      <div className="card p-6 rounded-2xl mb-4 sm:mb-6">
         <div className="flex items-center mb-6">
           <div className="bg-orange-100 w-8 h-8 sm:w-12 sm:h-12 rounded-xl mr-3 sm:mr-4 flex-shrink-0 flex items-center justify-center">
             <Calendar className="w-4 h-4 sm:w-6 sm:h-6 text-orange-600" />
@@ -932,7 +932,7 @@ function ReportsPageContent() {
       </div>
 
       {/* Report Results */}
-      <div className="card p-8 rounded-2xl mb-8">
+      <div className="card rounded-2xl mb-4 sm:mb-6">
         <div className="flex items-center mb-6">
           <div className="bg-emerald-100 w-8 h-8 sm:w-12 sm:h-12 rounded-xl mr-3 sm:mr-4 flex-shrink-0 flex items-center justify-center">
             <Thermometer className="w-5 h-5 sm:w-6 sm:h-6 text-emerald-600" />
@@ -947,7 +947,7 @@ function ReportsPageContent() {
         )}
 
         {/* Summary Stats */}
-        <div className="grid grid-cols-1 lg:grid-cols-3 gap-6 mb-8">
+        <div className="grid grid-cols-1 lg:grid-cols-3 gap-4 mb-8">
           <div className="card-inner rounded-2xl p-6 text-center">
             <div className="text-3xl font-bold text-emerald-600 mb-2">
               {reportData.totalEntries}
@@ -982,7 +982,7 @@ function ReportsPageContent() {
                     </div>
                     <div className="flex-1 space-y-2">
                       <div className="flex items-center space-x-2">
-                        <span className="text-sm sm:text-xs font-medium text-secondary font-roboto w-16">Severity:</span>
+                        <span className="text-xs font-medium text-secondary font-roboto w-16">Severity:</span>
                         <div className="flex-1 bg-card rounded-full h-2">
                           <div 
                             className="h-2 rounded-full bg-rose-500" 
@@ -991,13 +991,13 @@ function ReportsPageContent() {
                             }}
                           ></div>
                         </div>
-                        <span className="px-2 py-1 rounded-full text-sm sm:text-xs font-medium font-roboto text-rose-500 bg-rose-100">
+                        <span className="px-2 py-1 rounded-full text-xs font-medium font-roboto text-rose-500 bg-rose-100">
                           {entry.severity}/10
                         </span>
                       </div>
                       {entry.stressLevel && (
                         <div className="flex items-center space-x-2">
-                          <span className="text-sm sm:text-xs font-medium text-secondary font-roboto w-16">Stress:</span>
+                          <span className="text-xs font-medium text-secondary font-roboto w-16">Stress:</span>
                           <div className="flex-1 bg-card rounded-full h-2">
                             <div 
                               className="h-2 rounded-full bg-cyan-600" 
@@ -1006,7 +1006,7 @@ function ReportsPageContent() {
                               }}
                             ></div>
                           </div>
-                          <span className="px-2 py-1 rounded-full text-sm sm:text-xs font-medium font-roboto text-cyan-600 bg-cyan-100">
+                          <span className="px-2 py-1 rounded-full text-xs font-medium font-roboto text-cyan-600 bg-cyan-100">
                             {entry.stressLevel}/10
                           </span>
                         </div>
@@ -1022,7 +1022,7 @@ function ReportsPageContent() {
 
       {/* Medications */}
       {reportData.medications.length > 0 && (
-        <div className="card p-8 rounded-2xl mb-8">
+        <div className="card rounded-2xl mb-4 sm:mb-6">
           <h2 className="text-xl font-semibold font-source text-primary mb-6 flex items-center">
             <div className="bg-purple-100 w-8 h-8 sm:w-12 sm:h-12 rounded-xl mr-3 sm:mr-4 flex-shrink-0 flex items-center justify-center">
               <Pill className="w-4 h-4 sm:w-6 sm:h-6 text-purple-600" />
@@ -1054,15 +1054,17 @@ function ReportsPageContent() {
         reportData.medicationTracking.nsaids.length > 0 || 
         reportData.medicationTracking.antibiotics.length > 0
       ) && (
-        <div className="card p-8 rounded-2xl mb-8">
-          <h3 className="text-lg font-semibold font-source text-primary mb-6 flex items-center">
-            <Activity className="w-5 h-5 mr-3 text-[#5F9EA0]" />
+        <div className="card rounded-2xl mb-4 sm:mb-6">
+          <h2 className="text-xl font-semibold font-source text-primary mb-6 flex items-center">
+            <div className="bg-pink-100 w-8 h-8 sm:w-12 sm:h-12 rounded-xl mr-3 sm:mr-4 flex-shrink-0 flex items-center justify-center">
+              <ChartLine className="w-5 h-5 sm:w-6 sm:h-6 text-pink-600" />
+            </div>
             Tracked Medications
-          </h3>
+          </h2>
           
           {/* Missed Medications */}
           {reportData.medicationTracking.missedMedications.length > 0 && (
-            <div className="mb-8">
+            <div className="mb-2">
               <h4 className="text-md font-semibold font-source text-primary mb-4 flex items-center">
                 <AlertCircle className="w-4 h-4 mr-3 text-red-500" />
                 Missed Medications
@@ -1163,8 +1165,8 @@ function ReportsPageContent() {
       {reportData.topFoods.length > 0 && (
         <div className="card p-8 rounded-2xl mb-8">
           <h2 className="text-xl font-semibold font-source text-primary mb-6 flex items-center">
-            <div className="bg-yellow-100 w-12 h-12 rounded-xl mr-3 sm:mr-4 flex-shrink-0 flex items-center justify-center">
-              <Pizza className="w-6 h-6 text-amber-500" />
+            <div className="bg-yellow-100 w-8 h-8 sm:w-12 sm:h-12 rounded-xl mr-3 sm:mr-4 flex-shrink-0 flex items-center justify-center">
+              <Pizza className="w-5 h-5 sm:w-6 sm:h-6 text-amber-500" />
             </div>
             Top 5 Most Logged Foods
           </h2>

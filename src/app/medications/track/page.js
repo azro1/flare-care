@@ -509,7 +509,6 @@ function MedicationTrackingWizard() {
                         className="input-field-wizard w-full sm:flex-1"
                         dateFormat="dd/MM/yyyy"
                         maxDate={new Date()}
-                        calendarClassName="react-datepicker-responsive"
                         enableTabLoop={false}
                       />
                       <select
@@ -651,7 +650,6 @@ function MedicationTrackingWizard() {
                         className="input-field-wizard w-full sm:flex-1"
                         dateFormat="dd/MM/yyyy"
                         maxDate={new Date()}
-                        calendarClassName="react-datepicker-responsive"
                         enableTabLoop={false}
                       />
                       <select
@@ -800,7 +798,6 @@ function MedicationTrackingWizard() {
                         className="input-field-wizard w-full sm:flex-1"
                         dateFormat="dd/MM/yyyy"
                         maxDate={new Date()}
-                        calendarClassName="react-datepicker-responsive"
                         enableTabLoop={false}
                       />
                       <select

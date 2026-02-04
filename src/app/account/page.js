@@ -92,16 +92,16 @@ function AccountPageContent() {
     <div>
       <div className="max-w-5xl mx-auto px-3 sm:px-4 md:px-6 lg:px-8">
         {/* Header */}
-        <div className="mb-8 card">
-          <div className="text-center">
-            <h1 className="text-2xl sm:text-3xl lg:text-4xl font-bold font-source text-primary mb-4">Account</h1>
+        <div className="mb-4 sm:mb-6 card">
+          <div className="md:text-center">
+            <h1 className="text-2xl sm:text-3xl lg:text-4xl font-bold font-source text-primary mb-4">My Account</h1>
             <p className="text-secondary font-roboto break-words">Manage your account settings and information</p>
           </div>
         </div>
 
         {/* Profile Section */}
-        <div className="card mb-8">
-          <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 mb-8 card-inner p-5 sm:p-6">
+        <div className="card mb-4 sm:mb-6">
+          <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 mb-5 sm:mb-6 card-inner p-4 sm:p-6">
             <div className="flex items-center min-w-0">
               <div className="mr-4 sm:mr-6 flex-shrink-0">
                 <div className="w-16 h-16 sm:w-20 sm:h-20 rounded-full overflow-hidden flex items-center justify-center bg-[var(--bg-icon)] dark:bg-[var(--bg-icon-charcoal)]">
@@ -146,27 +146,27 @@ function AccountPageContent() {
 
         {/* Account Information */}
       
-          <h3 className="text-lg sm:text-xl font-semibold font-source text-primary mb-4">Account Information</h3>
+          <h3 className="text-lg sm:text-xl font-semibold font-source text-primary mb-4">Profile Info</h3>
           
           <div className="space-y-4">
-            <div className="card-inner p-5 sm:p-6">
+            <div className="card-inner p-4 sm:p-6">
               <p className="text-sm font-medium text-secondary mb-1">Email</p>
               <p className="text-primary font-roboto">{user?.email || 'Not available'}</p>
             </div>
 
-            <div className="card-inner p-5 sm:p-6">
+            <div className="card-inner p-4 sm:p-6">
               <p className="text-sm font-medium text-secondary mb-1">Full Name</p>
               <p className="text-primary font-roboto">{user?.user_metadata?.full_name || 'Not set'}</p>
             </div>
 
-            <div className="card-inner p-5 sm:p-6">
+            <div className="card-inner p-4 sm:p-6">
               <p className="text-sm font-medium text-secondary mb-1">Account Created</p>
               <p className="text-primary font-roboto">
                 {user?.created_at ? new Date(user.created_at).toLocaleDateString('en-GB') : 'Not available'}
               </p>
             </div>
 
-            <div className="card-inner p-5 sm:p-6">
+            <div className="card-inner p-4 sm:p-6">
               <p className="text-sm font-medium text-secondary mb-1">User ID</p>
               <p className="text-primary font-roboto font-mono">{user?.id || 'Not available'}</p>
             </div>
@@ -174,7 +174,7 @@ function AccountPageContent() {
         </div>
 
         {/* Delete Account Section */}
-        <div className="card p-6 mb-8">
+        <div className="card mb-4 sm:mb-6">
           <div className="border-l-4 border-red-500 pl-4 mb-6">
             <h3 className="text-lg sm:text-xl font-semibold font-source text-primary mb-2">Delete Account</h3>
             <p className="text-secondary font-roboto mb-4">

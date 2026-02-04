@@ -770,12 +770,12 @@ export default function Home() {
         </div>
       )}
 
-      <div className="w-full px-3 sm:px-4 md:px-6 lg:px-8 min-h-screen">
-        <div className="flex flex-col lg:flex-row lg:gap-8 lg:justify-center">
+      <div className="w-full px-3 sm:px-4 md:px-6 min-h-screen">
+        <div className="flex flex-col lg:flex-row lg:gap-6 lg:justify-center">
           
           {/* Left Sidebar */}
           <div className="lg:w-72 lg:flex-shrink-0 order-2 lg:order-1">
-            <div className="sticky top-8 space-y-8">
+            <div className="sticky top-6 space-y-4 sm:space-y-6">
               
               {/* Quick Stats */}
               <div className=" card">
@@ -877,8 +877,8 @@ export default function Home() {
 
         
 
-        {/* Quick Actions */}
-        <div className="mt-8 md:mt-10 mb-8">
+        {/* Daily Tasks */}
+        <div className="my-6">
           <h2 className="text-xl font-semibold font-source text-primary mb-4">Daily Tasks</h2>
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 md:gap-6">
             <Link
@@ -927,7 +927,7 @@ export default function Home() {
 
 
         {/* Today's Summary */}
-        <div className="mb-8 card">
+        <div className="mb-4 sm:mb-6 card">
           <h2 className="text-xl font-semibold font-source text-primary mb-4">Today's Summary</h2>
             <div className="card-inner p-4">
               <div className="flex justify-between items-center p-2">
@@ -944,7 +944,7 @@ export default function Home() {
 
         {/* Recent Symptoms */}
         {displayedSymptoms.length > 0 && (
-          <div className="mb-8 card">
+          <div className="mb-4 sm:mb-6 card">
             <div className="flex items-center justify-between mb-4">
               <div className="flex items-start gap-3">
                 <h2 className="text-xl font-semibold font-source text-primary">Recent Logged Symptoms</h2>
@@ -963,7 +963,7 @@ export default function Home() {
               {displayedSymptoms.map((symptom) => (
                 <div key={symptom.id}>
                 <div 
-                    className="card-inner p-6 cursor-pointer transition-all duration-200 border-l-4 border-emerald-500"
+                    className="card-inner p-6 cursor-pointer transition-all duration-200"
                   onClick={() => {
                     router.push(`/symptoms/${symptom.id}`)
                   }}
@@ -992,7 +992,7 @@ export default function Home() {
 
         {/* Recent Medications */}
         {trackedMedications.length > 0 && (
-          <div className="mb-8 card">
+          <div className="mb-4 sm:mb-6 card">
             <div className="flex items-center justify-between mb-4">
               <div className="flex items-start gap-3">
                 <h2 className="text-xl font-semibold font-source text-primary">Recent Tracked Medications</h2>
@@ -1038,7 +1038,7 @@ export default function Home() {
 
 
         {/* Recent Activity */}
-        <div className="card mb-8">
+        <div className="card mb-6">
           <h2 className="text-xl font-semibold font-source text-primary">Recent Activity</h2>
           <div className="p-4 transition-all duration-300 ease-in-out">
                       {(() => {
@@ -1219,7 +1219,7 @@ export default function Home() {
         </div>
 
         {/* More Options */}
-        <div className="mb-8">
+        <div className="mb-6">
           <h2 className="text-xl font-semibold font-source text-primary mb-4">More</h2>
           <div className="grid grid-cols-2 gap-4 md:gap-6">
               <Link

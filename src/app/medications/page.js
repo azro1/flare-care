@@ -3,8 +3,6 @@
 import { useState, useEffect } from 'react'
 import ConfirmationModal from '@/components/ConfirmationModal'
 import reminderService from '@/lib/reminderService'
-import DatePicker from 'react-datepicker'
-import 'react-datepicker/dist/react-datepicker.css'
 import ProtectedRoute from '@/components/ProtectedRoute'
 import { sanitizeMedicationName, sanitizeNotes } from '@/lib/sanitize'
 import { Pill, ChevronDown } from 'lucide-react'
@@ -30,25 +28,19 @@ function MedicationsPageContent() {
   })
 
 
-  const timeOptions = [
-    { value: '07:00', label: '07:00' },
-    { value: '08:00', label: '08:00' },
-    { value: '09:00', label: '09:00' },
-    { value: '10:00', label: '10:00' },
-    { value: '11:00', label: '11:00' },
-    { value: '12:00', label: '12:00' },
-    { value: '13:00', label: '13:00' },
-    { value: '14:00', label: '14:00' },
-    { value: '15:00', label: '15:00' },
-    { value: '16:00', label: '16:00' },
-    { value: '17:00', label: '17:00' },
-    { value: '18:00', label: '18:00' },
-    { value: '19:00', label: '19:00' },
-    { value: '20:00', label: '20:00' },
-    { value: '21:00', label: '21:00' },
-    { value: '22:00', label: '22:00' },
-    { value: 'as-needed', label: 'As Needed' }
-  ]
+  // Generate all time options from 00:00 to 23:59
+  const generateTimeOptions = () => {
+    const options = []
+    for (let hour = 0; hour < 24; hour++) {
+      for (let minute = 0; minute < 60; minute += 15) { // 15-minute intervals
+        const timeString = `${hour.toString().padStart(2, '0')}:${minute.toString().padStart(2, '0')}`
+        options.push({ value: timeString, label: timeString })
+      }
+    }
+    return options
+  }
+
+  const timeOptions = generateTimeOptions()
 
   const handleSubmit = async (e) => {
     e.preventDefault()
@@ -540,10 +532,10 @@ function MedicationsPageContent() {
   }
 
   return (
-    <div className="max-w-4xl w-full mx-auto px-3 sm:px-4 md:px-6 lg:px-8 min-w-0">
+    <div className="max-w-4xl w-full mx-auto px-3 sm:px-4 md:px-6 min-w-0">
       {/* Header Section */}
-      <div className="mb-8">
-        <div className="card p-6 sm:p-8">
+      <div className="mb-4 sm:mb-6">
+        <div className="card">
           <div className="flex flex-col sm:flex-row sm:justify-between sm:items-start">
             <div className="min-w-0 flex-1">
               <h1 className="text-2xl sm:text-3xl lg:text-4xl font-bold font-source text-primary mb-4 sm:mb-6">
@@ -558,8 +550,8 @@ function MedicationsPageContent() {
       </div>
 
       {/* Your Medications Section */}
-      <div className="card mb-8 min-w-0">
-        <div className={`flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 ${isAdding || medications.length > 0 ? 'mb-6 sm:mb-8' : 'mb-0'} `}>
+      <div className="card mb-4 sm:mb-6 min-w-0">
+        <div className={`flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 ${isAdding || medications.length > 0 ? 'mb-5 sm:mb-6' : 'mb-0'} `}>
           <div className="flex items-center">
             <div className="hidden sm:flex w-12 h-12 bg-purple-100 rounded-xl items-center justify-center mr-4">
               {isAdding ? (
@@ -589,8 +581,8 @@ function MedicationsPageContent() {
 
         {/* Add/Edit Medication Form */}
         {isAdding && (
-          <div className="mb-8 min-w-0">
-            <form onSubmit={handleSubmit} className="space-y-6" autoComplete="off">
+          <div className="mb-6 min-w-0">
+            <form onSubmit={handleSubmit} className="space-y-4" autoComplete="off">
               <div className="grid lg:grid-cols-2 gap-6 min-w-0">
                 <div>
                   <label htmlFor="name" className="block text-base font-semibold font-roboto text-primary mb-3">
@@ -631,33 +623,20 @@ function MedicationsPageContent() {
                   <label className="block text-base font-semibold font-roboto text-primary mb-3">
                     Reminder Time
                   </label>
-                  <DatePicker
-                    selected={formData.timeOfDay && formData.timeOfDay !== 'as-needed' && formData.timeOfDay.match(/^\d{2}:\d{2}$/)
-                      ? new Date(`2000-01-01T${formData.timeOfDay}`) 
-                      : null}
-                    onChange={(time) => {
-                      if (time) {
-                        const hours = time.getHours().toString().padStart(2, '0')
-                        const minutes = time.getMinutes().toString().padStart(2, '0')
-                        setFormData(prev => ({ ...prev, timeOfDay: `${hours}:${minutes}` }))
-                      } else {
-                        setFormData(prev => ({ ...prev, timeOfDay: '' }))
-                      }
+                  <select
+                    value={formData.timeOfDay || ''}
+                    onChange={(e) => {
+                      setFormData(prev => ({ ...prev, timeOfDay: e.target.value || '' }))
                     }}
-                    showTimeSelect
-                    showTimeSelectOnly
-                    timeIntervals={1}
-                    timeCaption="Time"
-                    dateFormat="HH:mm"
-                    timeFormat="HH:mm"
-                    placeholderText="Select time"
-                    minTime={new Date(2000, 0, 1, 0, 0)}
-                    maxTime={new Date(2000, 0, 1, 23, 59)}
-                    className="input-field-wizard"
-                    calendarClassName="react-datepicker-responsive"
-                    enableTabLoop={false}
-                    autoComplete="off"
-                  />
+                    className={`input-field-wizard ${formData.timeOfDay ? 'has-value' : 'placeholder'}`}
+                  >
+                    <option value="">Select time</option>
+                    {timeOptions.map((option) => (
+                      <option key={option.value} value={option.value}>
+                        {option.label}
+                      </option>
+                    ))}
+                  </select>
                 </div>
               </div>
 
@@ -695,7 +674,7 @@ function MedicationsPageContent() {
                 />
               </div>
 
-              <div className="flex flex-col sm:flex-row gap-4 pt-4">
+              <div className="flex flex-col sm:flex-row gap-4">
                 <button 
                   type="submit" 
                   className="button-cadet px-4 py-2 text-lg font-semibold rounded-lg transition-colors"
@@ -749,7 +728,7 @@ function MedicationsPageContent() {
             {medications.map((medication) => {
               const isExpanded = expandedMedications.has(medication.id)
               return (
-                <div key={medication.id} className="mb-6 sm:mb-8 lg:mb-6">
+                <div key={medication.id} className="mb-4 sm:mb-0">
                   <div className="card-inner p-4 sm:p-6 min-w-0 rounded-xl">
                   <div className="flex flex-col sm:flex-row sm:justify-between sm:items-start mb-1">
                     <div className="flex-1 min-w-0 w-full sm:w-auto">
@@ -897,7 +876,7 @@ function MedicationsPageContent() {
 
 
       {/* Reminder Info */}
-      <div className="mt-6 sm:mt-8 card">
+      <div className="mt-4 sm:mt-6 card">
         <div>
           <h3 className="text-xl sm:text-lg font-semibold font-source text-primary mb-2 flex items-center space-x-2">
             <svg className="w-5 h-5 sm:w-6 sm:h-6 flex-shrink-0" style={{ color: 'var(--text-cadet-blue)' }} fill="none" stroke="currentColor" viewBox="0 0 24 24">
