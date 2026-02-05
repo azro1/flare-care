@@ -48,7 +48,7 @@ export default function ConfirmationModal({
       className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4"
       onClick={handleBackdropClick}
     >
-      <div className="bg-card rounded-lg shadow-xl max-w-md w-full transform transition-all" style={{backgroundColor: 'var(--bg-secondary)', borderColor: 'var(--border-card)', borderWidth: '1px', borderStyle: 'solid', opacity: 1}}>
+      <div className="bg-card rounded-lg shadow-xl max-w-md w-full transform transition-all" style={{backgroundColor: 'var(--bg-dropdown)', borderColor: 'var(--border-dropdown)', borderWidth: '1px', borderStyle: 'solid', opacity: 1}}>
         <div className="p-6">
           <div className="flex items-center mb-4">
             <div className={`w-10 h-10 rounded-full flex items-center justify-center mr-3 ${
