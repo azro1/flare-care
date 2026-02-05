@@ -113,7 +113,7 @@ function TrackedMedicationDetails() {
 
   return (
     <div>
-      <div className="max-w-4xl w-full mx-auto px-3 sm:px-4 md:px-6 lg:px-8 min-w-0">
+      <div className="max-w-4xl w-full mx-auto px-2 sm:px-4 md:px-6 lg:px-8 min-w-0">
       <button
         onClick={() => router.back()}
         className="mb-6 text-cadet-blue hover:text-cadet-blue/80 hover:underline text-base font-medium flex items-center"
@@ -142,7 +142,7 @@ function TrackedMedicationDetails() {
         </p>
       </div>
 
-      <div className="space-y-6">
+      <div className="space-y-4 sm:space-y-6">
         {/* Overview */}
         <div className="card p-6">
           <h2 className="text-xl font-semibold font-source text-primary mb-6">Overview</h2>
@@ -263,7 +263,7 @@ function TrackedMedicationDetails() {
       </div>
 
       {/* Bottom delete action (all screens) */}
-      <div className="mt-8">
+      <div className="mt-6">
         <button
           onClick={() => setShowDeleteModal(true)}
           disabled={isDeleting}

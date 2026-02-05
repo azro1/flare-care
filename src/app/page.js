@@ -770,7 +770,7 @@ export default function Home() {
         </div>
       )}
 
-      <div className="w-full px-3 sm:px-4 md:px-6 min-h-screen">
+      <div className="w-full px-2 sm:px-4 md:px-6 min-h-screen">
         <div className="flex flex-col lg:flex-row lg:gap-6 lg:justify-center">
           
           {/* Left Sidebar */}

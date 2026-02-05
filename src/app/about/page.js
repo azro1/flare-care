@@ -6,9 +6,9 @@ import ConfirmationModal from '@/components/ConfirmationModal'
 export default function About() {
   const [blogModal, setBlogModal] = useState({ isOpen: false })
   return (
-    <div className="w-full px-3 sm:px-4 md:px-6 min-w-0">
+    <div className="w-full px-2 sm:px-4 md:px-6 min-w-0">
       <div className="max-w-5xl mx-auto">
-      <div className="md:text-center mb-4 sm:mb-6 card">
+      <div className="text-center mb-4 sm:mb-6 card">
         <h1 className="text-2xl sm:text-3xl lg:text-4xl font-bold font-source text-primary mb-4">
           FlareCare
         </h1>
@@ -106,7 +106,7 @@ export default function About() {
           the Crohn's and Colitis community.
         </p>
         
-        <div className="grid md:grid-cols-2 gap-6">
+        <div className="grid gap-4 sm:gap-6 md:grid-cols-2">
           <div className="card-inner p-6 rounded-xl">
             <h3 className="text-lg font-semibold font-source text-primary mb-3">Email Support</h3>
             <p className="text-secondary mb-4 font-roboto text-sm leading-relaxed">

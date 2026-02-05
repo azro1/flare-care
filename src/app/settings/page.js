@@ -8,9 +8,9 @@ function SettingsPageContent() {
 
   return (
     <div>
-      <div className="max-w-5xl mx-auto px-3 sm:px-4 md:px-6 lg:px-8">
+      <div className="max-w-5xl mx-auto px-2 sm:px-4 md:px-6 lg:px-8">
         {/* Header */}
-        <div className="mb-8 card">
+        <div className="mb-4 sm:mb-6 card">
           <div className="">
             <h1 className="text-2xl sm:text-3xl lg:text-4xl font-bold font-source text-primary mb-4">Settings</h1>
             <p className="text-secondary font-roboto break-words">Manage your app preferences and settings</p>
@@ -18,7 +18,7 @@ function SettingsPageContent() {
         </div>
 
         {/* Theme Section */}
-        <div className="card mb-8">
+        <div className="card mb-4 sm:mb-6">
           <h3 className="text-lg sm:text-xl font-semibold font-source text-primary mb-4">Theme</h3>
           
           <div className="card-inner p-5 sm:p-6">

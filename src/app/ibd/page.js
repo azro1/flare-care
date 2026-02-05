@@ -36,7 +36,7 @@ export default function LearnPage() {
   }, [])
   
   return (
-    <div className="w-full px-3 sm:px-4 md:px-6 min-w-0">
+    <div className="w-full px-2 sm:px-4 md:px-6 min-w-0">
       <div className="flex flex-col lg:flex-row lg:gap-6 lg:justify-center">
         
         {/* Left Sidebar */}
@@ -137,7 +137,7 @@ export default function LearnPage() {
             Inflammatory Bowel Disease (IBD) is a term used to describe disorders that involve chronic inflammation of your digestive tract. The two main types are:
           </p>
           
-          <div className="grid md:grid-cols-2 gap-6">
+          <div className="grid gap-4 sm:gap-6 md:grid-cols-2">
             <div className="card-inner p-6 rounded-xl">
               <h3 className="text-lg font-semibold font-source text-primary mb-3 break-words">Crohn's Disease</h3>
               <ul className="text-secondary space-y-2 text-sm font-roboto break-words">
@@ -216,7 +216,7 @@ export default function LearnPage() {
       {/* Triggers Section */}
       <div className="card rounded-2xl mb-4 sm:mb-6">
         <h2 className="text-xl font-semibold font-source text-primary mb-6 break-words">Common Triggers</h2>
-        <div className="grid md:grid-cols-3 gap-6">
+        <div className="grid gap-4 sm:gap-6 md:grid-cols-3">
           <div className="card-inner p-6 text-center rounded-xl">
             <div className="w-16 h-16 rounded-full flex items-center justify-center mx-auto mb-4 bg-yellow-100">
               <Pizza className="w-8 h-8 text-amber-500" />

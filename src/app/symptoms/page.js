@@ -1144,7 +1144,7 @@ function SymptomsPageContent() {
   }
 
   return (
-    <div className={`max-w-4xl w-full mx-auto px-3 sm:px-4 md:px-6 lg:px-8 min-w-0 flex flex-col justify-center sm:flex-grow ${currentStep > 0 ? 'pb-20 lg:pb-0' : ''}`}>
+    <div className={`max-w-4xl w-full mx-auto px-2 sm:px-4 md:px-6 lg:px-8 min-w-0 flex flex-col justify-center sm:flex-grow ${currentStep > 0 ? 'pb-20 lg:pb-0' : ''}`}>
       {/* Back Button - Hide on landing page and first question */}
       {currentStep > 1 && (
         <div className="mb-4 sm:mb-8">
@@ -1199,7 +1199,7 @@ function SymptomsPageContent() {
           <div className="mb-5">
             <h3 className="text-2xl sm:text-2xl md:text-3xl font-source font-bold sm:font-semibold text-primary mb-2">When did your symptoms begin?</h3>
             <p className="text-sm text-muted mb-6">For example, '14 09 2014'</p>
-            <div className="flex space-x-5">
+            <div className="flex space-x-3">
               <div className="w-14">
                 <label className="block text-base font-medium text-secondary mb-2">Day</label>
                 <input
@@ -1344,7 +1344,7 @@ function SymptomsPageContent() {
           <div className="mb-5">
             <h3 className="text-2xl sm:text-2xl md:text-3xl font-source font-bold sm:font-semibold text-primary mb-2">When did symptoms end?</h3>
             <p className="text-sm text-muted mb-6">For example, '14 09 2014'</p>
-            <div className="flex space-x-5">
+            <div className="flex space-x-3">
               <div className="w-14">
                 <label className="block text-base font-medium text-secondary mb-2">Day</label>
                 <input

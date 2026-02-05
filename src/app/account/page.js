@@ -90,10 +90,10 @@ function AccountPageContent() {
 
   return (
     <div>
-      <div className="max-w-5xl mx-auto px-3 sm:px-4 md:px-6 lg:px-8">
+      <div className="max-w-5xl mx-auto px-2 sm:px-4 md:px-6 lg:px-8">
         {/* Header */}
         <div className="mb-4 sm:mb-6 card">
-          <div className="md:text-center">
+          <div className="text-center">
             <h1 className="text-2xl sm:text-3xl lg:text-4xl font-bold font-source text-primary mb-4">My Account</h1>
             <p className="text-secondary font-roboto break-words">Manage your account settings and information</p>
           </div>
@@ -174,7 +174,7 @@ function AccountPageContent() {
         </div>
 
         {/* Delete Account Section */}
-        <div className="card mb-4 sm:mb-6">
+        <div className="card sm:mb-6">
           <div className="border-l-4 border-red-500 pl-4 mb-6">
             <h3 className="text-lg sm:text-xl font-semibold font-source text-primary mb-2">Delete Account</h3>
             <p className="text-secondary font-roboto mb-4">
