@@ -6,7 +6,7 @@ import { useAuth } from '@/lib/AuthContext'
 import { useEffect, useState } from 'react'
 import { useRouter } from 'next/navigation'
 import { supabase, TABLES } from '@/lib/supabase'
-import { CupSoda, Pizza, Coffee, BookOpen, Smile, Thermometer, Pill, FileText, Activity, TrendingUp, PartyPopper, Clipboard, Cookie, ChartLine, Sparkles, ChevronRight, ChevronDown, Clock } from 'lucide-react'
+import { CupSoda, Pizza, Coffee, BookOpen, Smile, Thermometer, Pill, FileText, Activity, TrendingUp, PartyPopper, Clipboard, Cookie, ChartLine, Sparkles, ChevronRight, ChevronDown, Clock, Scale } from 'lucide-react'
 
 export default function Home() {
   const { isAuthenticated, loading, user } = useAuth()
@@ -32,6 +32,9 @@ export default function Home() {
   const [symptomDeleted, setSymptomDeleted] = useState(null)
   const [trackedMedicationDeleted, setTrackedMedicationDeleted] = useState(null)
   const [individualMedicationTakings, setIndividualMedicationTakings] = useState([])
+  const [weightEntries, setWeightEntries] = useState([])
+  const [weightDeleted, setWeightDeleted] = useState(null)
+  const [weightUpdated, setWeightUpdated] = useState(null)
 
   // Daily tips array
   const dailyTips = [
@@ -260,6 +263,55 @@ export default function Home() {
     return () => window.removeEventListener('focus', handleFocus)
   }, [user?.id, showMedicationToast])
 
+  // Fetch weight entries for Recent Activity
+  useEffect(() => {
+    const fetchWeightEntries = async () => {
+      if (!user?.id) {
+        setWeightEntries([])
+        return
+      }
+      try {
+        const { data, error } = await supabase
+          .from(TABLES.TRACK_WEIGHT)
+          .select('id, date, value_kg, created_at')
+          .eq('user_id', user.id)
+          .order('created_at', { ascending: false })
+          .limit(10)
+
+        if (error) throw error
+        setWeightEntries(data || [])
+      } catch (error) {
+        console.error('Error fetching weight entries:', error)
+        setWeightEntries([])
+      }
+    }
+
+    fetchWeightEntries()
+
+    const handleFocus = () => {
+      fetchWeightEntries()
+    }
+    const handleWeightAdded = () => {
+      fetchWeightEntries()
+    }
+    const handleWeightDeleted = () => {
+      fetchWeightEntries()
+    }
+    const handleWeightUpdated = () => {
+      fetchWeightEntries()
+    }
+    window.addEventListener('focus', handleFocus)
+    window.addEventListener('weight-added', handleWeightAdded)
+    window.addEventListener('weight-deleted', handleWeightDeleted)
+    window.addEventListener('weight-updated', handleWeightUpdated)
+    return () => {
+      window.removeEventListener('focus', handleFocus)
+      window.removeEventListener('weight-added', handleWeightAdded)
+      window.removeEventListener('weight-deleted', handleWeightDeleted)
+      window.removeEventListener('weight-updated', handleWeightUpdated)
+    }
+  }, [user?.id])
+
 
   // Track daily medication intake with localStorage
   useEffect(() => {
@@ -278,6 +330,8 @@ export default function Home() {
         const deletedKey = `flarecare-medication-deleted-${user.id}-${today}`
         const symptomDeletedKey = `flarecare-symptom-deleted-${user.id}-${today}`
         const trackedMedDeletedKey = `flarecare-tracked-medication-deleted-${user.id}-${today}`
+        const weightDeletedKey = `flarecare-weight-deleted-${user.id}-${today}`
+        const weightUpdatedKey = `flarecare-weight-updated-${user.id}-${today}`
         const individualTakingsKey = `flarecare-medication-individual-takings-${user.id}-${today}`
         for (let i = 0; i < localStorage.length; i++) {
           const key = localStorage.key(i)
@@ -289,6 +343,8 @@ export default function Home() {
             (key.startsWith(`flarecare-medication-deleted-${user.id}-`) && key !== deletedKey) ||
             (key.startsWith(`flarecare-symptom-deleted-${user.id}-`) && key !== symptomDeletedKey) ||
             (key.startsWith(`flarecare-tracked-medication-deleted-${user.id}-`) && key !== trackedMedDeletedKey) ||
+            (key.startsWith(`flarecare-weight-deleted-${user.id}-`) && key !== weightDeletedKey) ||
+            (key.startsWith(`flarecare-weight-updated-${user.id}-`) && key !== weightUpdatedKey) ||
             (key.startsWith(`flarecare-medication-individual-takings-${user.id}-`) && key !== individualTakingsKey)
           )) {
             keysToRemove.push(key)
@@ -387,6 +443,34 @@ export default function Home() {
       } else {
         setTrackedMedicationDeleted(null)
       }
+
+      // Load weight deleted activity
+      const weightDeletedKey = `flarecare-weight-deleted-${user.id}-${today}`
+      const weightDeletedData = localStorage.getItem(weightDeletedKey)
+      if (weightDeletedData) {
+        try {
+          setWeightDeleted(JSON.parse(weightDeletedData))
+        } catch (error) {
+          console.error('Error parsing weight deleted data:', error)
+          setWeightDeleted(null)
+        }
+      } else {
+        setWeightDeleted(null)
+      }
+
+      // Load weight updated activity
+      const weightUpdatedKey = `flarecare-weight-updated-${user.id}-${today}`
+      const weightUpdatedData = localStorage.getItem(weightUpdatedKey)
+      if (weightUpdatedData) {
+        try {
+          setWeightUpdated(JSON.parse(weightUpdatedData))
+        } catch (error) {
+          console.error('Error parsing weight updated data:', error)
+          setWeightUpdated(null)
+        }
+      } else {
+        setWeightUpdated(null)
+      }
       
       // Load individual medication takings
       const individualTakingsKey = `flarecare-medication-individual-takings-${user.id}-${today}`
@@ -421,6 +505,8 @@ export default function Home() {
         (e.key.startsWith('flarecare-medication-deleted-') && e.key.includes(`-${user.id}-`)) ||
         (e.key.startsWith('flarecare-symptom-deleted-') && e.key.includes(`-${user.id}-`)) ||
         (e.key.startsWith('flarecare-tracked-medication-deleted-') && e.key.includes(`-${user.id}-`)) ||
+        (e.key.startsWith('flarecare-weight-deleted-') && e.key.includes(`-${user.id}-`)) ||
+        (e.key.startsWith('flarecare-weight-updated-') && e.key.includes(`-${user.id}-`)) ||
         (e.key.startsWith('flarecare-medication-individual-takings-') && e.key.includes(`-${user.id}-`))
       )) {
         loadTakenMedications()
@@ -452,6 +538,18 @@ export default function Home() {
       loadTakenMedications()
     }
 
+    const handleWeightDeleted = () => {
+      loadTakenMedications()
+    }
+
+    const handleWeightUpdated = () => {
+      loadTakenMedications()
+    }
+
+    const handleWeightAdded = () => {
+      loadTakenMedications()
+    }
+
     window.addEventListener('storage', handleStorageChange)
     window.addEventListener('medication-taken', handleMedicationTaken)
     window.addEventListener('medication-added', handleMedicationAdded)
@@ -459,6 +557,9 @@ export default function Home() {
     window.addEventListener('medication-deleted', handleMedicationDeleted)
     window.addEventListener('symptom-deleted', handleSymptomDeleted)
     window.addEventListener('tracked-medication-deleted', handleTrackedMedicationDeleted)
+    window.addEventListener('weight-deleted', handleWeightDeleted)
+    window.addEventListener('weight-updated', handleWeightUpdated)
+    window.addEventListener('weight-added', handleWeightAdded)
     
     // Check when window gains focus (user navigates back to dashboard)
     const handleFocus = () => {
@@ -474,6 +575,9 @@ export default function Home() {
       window.removeEventListener('medication-deleted', handleMedicationDeleted)
       window.removeEventListener('symptom-deleted', handleSymptomDeleted)
       window.removeEventListener('tracked-medication-deleted', handleTrackedMedicationDeleted)
+      window.removeEventListener('weight-deleted', handleWeightDeleted)
+      window.removeEventListener('weight-updated', handleWeightUpdated)
+      window.removeEventListener('weight-added', handleWeightAdded)
       window.removeEventListener('focus', handleFocus)
     }
   }, [user?.id])
@@ -894,6 +998,7 @@ export default function Home() {
                     Log Symptoms
                   </h3>
                 </div>
+                <ChevronRight className="w-5 h-5 flex-shrink-0 text-secondary sm:hidden" />
               </div>
               <div className="pointer-events-none absolute right-3 -top-14 hidden w-52 sm:group-hover:flex sm:group-focus-visible:flex">
                 <div className="tooltip-card rounded-lg px-4 py-3 text-left text-sm text-secondary leading-snug shadow-lg font-roboto">
@@ -912,9 +1017,10 @@ export default function Home() {
                 </div>
                 <div className="flex-1 sm:w-full sm:text-center">
                   <h3 className="font-semibold text-primary leading-tight sm:leading-relaxed sm:justify-center">
-                    Track Meds
+                    Track Medications
                   </h3>
                 </div>
+                <ChevronRight className="w-5 h-5 flex-shrink-0 text-secondary sm:hidden" />
               </div>
               <div className="pointer-events-none absolute right-3 -top-14 hidden w-52 sm:group-hover:flex sm:group-focus-visible:flex">
                 <div className="tooltip-card rounded-lg px-4 py-3 text-left text-sm text-secondary leading-snug shadow-lg font-roboto">
@@ -1164,6 +1270,43 @@ export default function Home() {
                 })
               }
 
+              // Most recent weight entry (only when they added a new entry; if they updated today we show "Updated weight entry" instead)
+              if (weightEntries.length > 0 && !weightUpdated) {
+                const lastWeight = weightEntries[0]
+                activities.push({
+                  type: 'weight',
+                  timestamp: new Date(lastWeight.created_at),
+                  title: `Logged weight: ${Number(lastWeight.value_kg)} kg`,
+                  icon: Scale,
+                  iconBg: 'bg-indigo-100',
+                  iconColor: 'text-indigo-600'
+                })
+              }
+
+              // Weight deleted
+              if (weightDeleted) {
+                activities.push({
+                  type: 'deleted-weight',
+                  timestamp: new Date(weightDeleted.timestamp),
+                  title: 'Deleted weight entry',
+                  icon: Scale,
+                  iconBg: 'bg-indigo-100',
+                  iconColor: 'text-indigo-600'
+                })
+              }
+
+              // Weight updated
+              if (weightUpdated) {
+                activities.push({
+                  type: 'updated-weight',
+                  timestamp: new Date(weightUpdated.timestamp),
+                  title: 'Updated weight entry',
+                  icon: Scale,
+                  iconBg: 'bg-indigo-100',
+                  iconColor: 'text-indigo-600'
+                })
+              }
+
               // All medications taken
               if (allMedsTaken) {
                 activities.push({
@@ -1234,9 +1377,14 @@ export default function Home() {
                     <h3 className="font-semibold text-primary leading-tight sm:leading-relaxed">
                       My Meds
                     </h3>
-              </div>
-              </div>
-            </Link>
+                  </div>
+                </div>
+                <div className="pointer-events-none absolute right-3 -top-14 hidden w-52 sm:group-hover:flex sm:group-focus-visible:flex">
+                  <div className="tooltip-card rounded-lg px-4 py-3 text-left text-sm text-secondary leading-snug shadow-lg font-roboto w-full">
+                    Add and manage your prescribed medications
+                  </div>
+                </div>
+              </Link>
 
               <Link
                 href="/reports"
@@ -1253,8 +1401,29 @@ export default function Home() {
                   </div>
                 </div>
                 <div className="pointer-events-none absolute right-3 -top-14 hidden w-52 sm:group-hover:flex sm:group-focus-visible:flex">
-                  <div className="tooltip-card rounded-lg px-4 py-3 text-left text-sm text-secondary leading-snug shadow-lg font-roboto">
+                  <div className="tooltip-card rounded-lg px-4 py-3 text-left text-sm text-secondary leading-snug shadow-lg font-roboto w-full">
                     View insights and share data with your doctor
+                  </div>
+                </div>
+              </Link>
+
+              <Link
+                href="/weight"
+                className="card card-link p-6 transition-all group relative focus:outline-none focus-visible:outline-none focus-visible:ring-0 focus-visible:ring-offset-0 focus:ring-0"
+              >
+                <div className="flex flex-col items-center gap-3">
+                  <div className="w-8 h-8 lg:w-10 lg:h-10 bg-indigo-100 rounded-lg flex items-center justify-center flex-shrink-0">
+                    <Scale className="w-5 h-5 text-indigo-600" />
+                  </div>
+                  <div className="w-full text-center">
+                    <h3 className="font-semibold text-primary leading-tight sm:leading-relaxed">
+                      Track Weight
+                    </h3>
+                  </div>
+                </div>
+                <div className="pointer-events-none absolute right-3 -top-14 hidden w-52 sm:group-hover:flex sm:group-focus-visible:flex">
+                  <div className="tooltip-card rounded-lg px-4 py-3 text-left text-sm text-secondary leading-snug shadow-lg font-roboto w-full">
+                    Keep track of your weight for your appointments
                   </div>
                 </div>
               </Link>
