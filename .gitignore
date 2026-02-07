@@ -96,3 +96,6 @@ jspm_packages/
 
 # TernJS port file
 .tern-port
+
+# Session / working notes (do not commit)
+TODAY_NOTES.md
