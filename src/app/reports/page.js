@@ -781,7 +781,7 @@ function ReportsPageContent() {
   // Simple loading state - render page structure like other pages
   if (!user || isLoading || !reportData) {
     return (
-      <div className="w-full px-2 sm:px-4 md:px-6 lg:px-8 min-w-0 min-h-screen">
+      <div className="w-full sm:px-4 md:px-6 lg:px-8 min-w-0 min-h-screen">
         <div className="max-w-4xl mx-auto">
           <div className="mb-8 card">
             <h1 className="text-2xl sm:text-3xl lg:text-4xl font-bold font-source text-primary mb-4">Health Reports</h1>
@@ -795,7 +795,7 @@ function ReportsPageContent() {
   }
 
   return (
-    <div className="w-full px-2 sm:px-4 md:px-6 lg:px-8 min-w-0 min-h-screen">
+    <div className="w-full sm:px-4 md:px-6 lg:px-8 min-w-0 min-h-screen">
       <div className="max-w-4xl mx-auto">
       <div className="mb-4 sm:mb-6 card">
         <h1 className="text-2xl sm:text-3xl lg:text-4xl font-bold font-source text-primary mb-4">Health Reports</h1>
@@ -805,7 +805,7 @@ function ReportsPageContent() {
       </div>
 
       {/* Date Range Selector */}
-      <div className="card p-6 rounded-2xl mb-4 sm:mb-6">
+      <div className="card mb-4 sm:mb-6">
         <div className="flex items-center mb-6">
           <div className="bg-orange-100 w-8 h-8 sm:w-12 sm:h-12 rounded-xl mr-3 sm:mr-4 flex-shrink-0 flex items-center justify-center">
             <Calendar className="w-4 h-4 sm:w-6 sm:h-6 text-orange-600" />
@@ -825,7 +825,7 @@ function ReportsPageContent() {
                 endDate: endDate.toISOString().split('T')[0]
               })
             }}
-            className="px-4 py-2 sm:px-3 sm:py-1 text-sm card-inner hover:bg-card-hover rounded-lg transition-colors font-roboto"
+            className="px-4 py-2 sm:px-3 sm:py-1 text-sm card-inner hover:bg-card-hover transition-colors font-roboto"
           >
             Last 7 days
           </button>
@@ -839,7 +839,7 @@ function ReportsPageContent() {
                 endDate: endDate.toISOString().split('T')[0]
               })
             }}
-            className="px-4 py-2 sm:px-3 sm:py-1 text-sm card-inner hover:bg-card-hover rounded-lg transition-colors font-roboto"
+            className="px-4 py-2 sm:px-3 sm:py-1 text-sm card-inner hover:bg-card-hover transition-colors font-roboto"
           >
             Last 30 days
           </button>
@@ -853,7 +853,7 @@ function ReportsPageContent() {
                 endDate: endDate.toISOString().split('T')[0]
               })
             }}
-            className="px-4 py-2 sm:px-3 sm:py-1 text-sm card-inner hover:bg-card-hover rounded-lg transition-colors font-roboto"
+            className="px-4 py-2 sm:px-3 sm:py-1 text-sm card-inner hover:bg-card-hover transition-colors font-roboto"
           >
             Last 3 months
           </button>
@@ -867,7 +867,7 @@ function ReportsPageContent() {
                 })
               }
             }}
-            className="px-4 py-2 sm:px-3 sm:py-1 text-sm card-inner hover:bg-card-hover rounded-lg transition-colors font-roboto"
+            className="px-4 py-2 sm:px-3 sm:py-1 text-sm card-inner hover:bg-card-hover transition-colors font-roboto"
           >
             All time
           </button>
@@ -932,7 +932,7 @@ function ReportsPageContent() {
       </div>
 
       {/* Report Results */}
-      <div className="card rounded-2xl mb-4 sm:mb-6">
+      <div className="card mb-4 sm:mb-6">
         <div className="flex items-center mb-6">
           <div className="bg-emerald-100 w-8 h-8 sm:w-12 sm:h-12 rounded-xl mr-3 sm:mr-4 flex-shrink-0 flex items-center justify-center">
             <Thermometer className="w-5 h-5 sm:w-6 sm:h-6 text-emerald-600" />
@@ -948,19 +948,19 @@ function ReportsPageContent() {
 
         {/* Summary Stats */}
         <div className="grid grid-cols-1 lg:grid-cols-3 gap-4 mb-8">
-          <div className="card-inner rounded-2xl p-6 text-center">
+          <div className="card-inner p-6 text-center">
             <div className="text-3xl font-bold text-emerald-600 mb-2">
               {reportData.totalEntries}
             </div>
             <div className="text-secondary font-medium font-roboto">Symptom Episodes</div>
           </div>
-          <div className="card-inner rounded-2xl p-6 text-center">
+          <div className="card-inner p-6 text-center">
             <div className="text-3xl font-bold mb-2 text-rose-500">
               {reportData.averageSeverity}
             </div>
             <div className="text-secondary font-medium font-roboto">Average Severity</div>
           </div>
-          <div className="card-inner rounded-2xl p-6 text-center">
+          <div className="card-inner p-6 text-center">
             <div className="text-3xl font-bold mb-2 text-cyan-600">
               {reportData.averageStress != null && !isNaN(reportData.averageStress) ? reportData.averageStress : 0}
             </div>
@@ -974,7 +974,7 @@ function ReportsPageContent() {
             <h3 className="text-lg font-semibold font-source text-primary mb-4">Symptom Episodes</h3>
             <div className="space-y-4">
               {reportData.severityTrend.map((entry, index) => (
-                <div key={index} className="card-inner p-4 rounded-xl">
+                <div key={index} className="card-inner p-4">
                   <div className="flex flex-col sm:flex-row sm:items-start gap-4">
                     <div className="w-full sm:w-40 text-sm text-secondary font-roboto">
                       {formatUKDate(entry.date)}
@@ -1022,7 +1022,7 @@ function ReportsPageContent() {
 
       {/* Medications */}
       {reportData.medications.length > 0 && (
-        <div className="card rounded-2xl mb-4 sm:mb-6">
+        <div className="card mb-4 sm:mb-6">
           <h2 className="text-xl font-semibold font-source text-primary mb-6 flex items-center">
             <div className="bg-purple-100 w-8 h-8 sm:w-12 sm:h-12 rounded-xl mr-3 sm:mr-4 flex-shrink-0 flex items-center justify-center">
               <Pill className="w-4 h-4 sm:w-6 sm:h-6 text-purple-600" />
@@ -1031,7 +1031,7 @@ function ReportsPageContent() {
           </h2>
           <div className="space-y-4">
             {reportData.medications.map((med, index) => (
-              <div key={index} className="card-inner rounded-lg p-4">
+              <div key={index} className="card-inner p-4">
                 <div>
                   <h5 className="font-medium font-roboto text-primary text-base">{med.name}</h5>
                   {med.dosage && (
@@ -1054,7 +1054,7 @@ function ReportsPageContent() {
         reportData.medicationTracking.nsaids.length > 0 || 
         reportData.medicationTracking.antibiotics.length > 0
       ) && (
-        <div className="card rounded-2xl mb-4 sm:mb-6">
+        <div className="card mb-4 sm:mb-6">
           <h2 className="text-xl font-semibold font-source text-primary mb-6 flex items-center">
             <div className="bg-pink-100 w-8 h-8 sm:w-12 sm:h-12 rounded-xl mr-3 sm:mr-4 flex-shrink-0 flex items-center justify-center">
               <ChartLine className="w-5 h-5 sm:w-6 sm:h-6 text-pink-600" />
@@ -1071,7 +1071,7 @@ function ReportsPageContent() {
               </h4>
               <div className="space-y-4">
                 {reportData.medicationTracking.missedMedications.map((item, index) => (
-                  <div key={index} className="card-inner rounded-lg p-4">
+                  <div key={index} className="card-inner p-4">
                     <div className="flex flex-col sm:flex-row sm:justify-between sm:items-start gap-2">
                       <div className="flex-1">
                         <h5 className="font-medium font-roboto text-primary text-lg">{item.medication}</h5>
@@ -1100,7 +1100,7 @@ function ReportsPageContent() {
               </h4>
               <div className="space-y-4">
                 {reportData.medicationTracking.nsaids.map((item, index) => (
-                  <div key={index} className="card-inner rounded-lg p-4">
+                  <div key={index} className="card-inner p-4">
                     <div className="flex flex-col sm:flex-row sm:justify-between sm:items-start gap-2">
                       <div className="flex-1">
                         <h5 className="font-medium font-roboto text-primary text-lg">{item.medication}</h5>
@@ -1134,7 +1134,7 @@ function ReportsPageContent() {
               </h4>
               <div className="space-y-4">
                 {reportData.medicationTracking.antibiotics.map((item, index) => (
-                  <div key={index} className="card-inner rounded-lg p-4">
+                  <div key={index} className="card-inner p-4">
                     <div className="flex flex-col sm:flex-row sm:justify-between sm:items-start gap-2">
                       <div className="flex-1">
                         <h5 className="font-medium font-roboto text-primary text-lg">{item.medication}</h5>
@@ -1163,7 +1163,7 @@ function ReportsPageContent() {
 
       {/* Top Foods */}
       {reportData.topFoods.length > 0 && (
-        <div className="card p-8 rounded-2xl">
+        <div className="card p-8">
           <h2 className="text-xl font-semibold font-source text-primary mb-6 flex items-center">
             <div className="bg-yellow-100 w-8 h-8 sm:w-12 sm:h-12 rounded-xl mr-3 sm:mr-4 flex-shrink-0 flex items-center justify-center">
               <Pizza className="w-5 h-5 sm:w-6 sm:h-6 text-amber-500" />
@@ -1172,7 +1172,7 @@ function ReportsPageContent() {
           </h2>
           <div className="space-y-4">
             {reportData.topFoods.map(([food, count], index) => (
-              <div key={index} className="card-inner rounded-lg p-4">
+              <div key={index} className="card-inner p-4">
                 <div className="flex flex-col sm:flex-row sm:justify-between sm:items-center gap-2">
                   <div className="flex-1">
                     <h5 className="font-medium font-roboto text-primary text-base">{food}</h5>
@@ -1191,7 +1191,7 @@ function ReportsPageContent() {
 
       {/* No Data Message */}
       {reportData.totalEntries === 0 && reportData.medications.length === 0 && (
-        <div className="card p-8 rounded-2xl text-center">
+        <div className="card p-8 text-center">
           <div className="flex justify-center mb-3">
             <FileText className="w-10 h-10 text-secondary opacity-40" />
           </div>

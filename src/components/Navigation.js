@@ -268,38 +268,30 @@ export default function Navigation() {
                     </div>
                     
                     {/* User Dropdown Menu */}
-                    <div className="absolute top-full right-0 mt-2 w-48 rounded-md shadow-lg opacity-0 invisible group-hover:opacity-100 group-hover:visible transition-all duration-200 z-50 " style={{backgroundColor: 'var(--bg-dropdown)'}}>
+                    <div className="absolute top-full right-0 mt-2 w-48 shadow-lg opacity-0 invisible group-hover:opacity-100 group-hover:visible transition-all duration-200 z-50 " style={{backgroundColor: 'var(--bg-dropdown)'}}>
                       <div className="">
                         <Link
                           href="/account"
-                          className="block px-4 py-3 text-base font-roboto transition-colors cursor-pointer rounded-t-md"
-                          style={{color: 'var(--text-dropdown)', borderTopLeftRadius: '0.375rem', borderTopRightRadius: '0.375rem'}}
+                          className="block px-4 py-3 text-base font-roboto transition-colors cursor-pointer"
+                          style={{color: 'var(--text-dropdown)'}}
                           onMouseEnter={(e) => {
                             e.target.style.backgroundColor = 'var(--bg-icon)'
-                            e.target.style.borderTopLeftRadius = '0.375rem'
-                            e.target.style.borderTopRightRadius = '0.375rem'
                           }}
                           onMouseLeave={(e) => {
                             e.target.style.backgroundColor = 'transparent'
-                            e.target.style.borderTopLeftRadius = '0.375rem'
-                            e.target.style.borderTopRightRadius = '0.375rem'
                           }}
                         >
                           Account
                         </Link>
                         <Link
                           href="/settings"
-                          className="block px-4 py-3 text-base font-roboto transition-colors cursor-pointer rounded-b-md"
-                          style={{color: 'var(--text-dropdown)', borderBottomLeftRadius: '0.375rem', borderBottomRightRadius: '0.375rem'}}
+                          className="block px-4 py-3 text-base font-roboto transition-colors cursor-pointer"
+                          style={{color: 'var(--text-dropdown)'}}
                           onMouseEnter={(e) => {
                             e.target.style.backgroundColor = 'var(--bg-icon)'
-                            e.target.style.borderBottomLeftRadius = '0.375rem'
-                            e.target.style.borderBottomRightRadius = '0.375rem'
                           }}
                           onMouseLeave={(e) => {
                             e.target.style.backgroundColor = 'transparent'
-                            e.target.style.borderBottomLeftRadius = '0.375rem'
-                            e.target.style.borderBottomRightRadius = '0.375rem'
                           }}
                         >
                           Settings

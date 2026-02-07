@@ -77,7 +77,7 @@ export default function Foods() {
 
   return (
     <div>
-      <div className="w-full px-2 sm:px-4 md:px-6">
+      <div className="w-full sm:px-4 md:px-6">
         <div className="flex flex-col lg:flex-row lg:gap-6 lg:justify-center">
           
           {/* Main Content */}
@@ -95,7 +95,7 @@ export default function Foods() {
         {/* Food Categories */}
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-4 sm:gap-6 mb-4 sm:mb-6">
           {categories.map((category, index) => (
-            <div key={index} className="card rounded-2xl">
+            <div key={index} className="card">
               <div className="flex items-center gap-4 mb-4">
                 <span className="text-4xl">{category.emoji}</span>
                 <h2 className="text-xl font-semibold font-source text-primary">{category.title}</h2>
@@ -119,7 +119,7 @@ export default function Foods() {
         </div>
 
         {/* Tips Card */}
-        <div className="card rounded-2xl backdrop-blur-sm mb-4 sm:mb-6">
+        <div className="card backdrop-blur-sm mb-4 sm:mb-6">
           <h2 className="text-xl font-semibold font-source text-primary mb-4">💡 Helpful Tips</h2>
           <ul className="space-y-3">
             {tips.map((tip, index) => (
@@ -143,18 +143,18 @@ export default function Foods() {
               
 
               {/* IBD-Friendly Foods */}
-              <div className="card rounded-2xl">
+              <div className="card">
                 <h3 className="text-xl font-semibold font-source text-primary mb-4">IBD Foods</h3>
                 <div className="space-y-4">
-                  <div className="card-inner p-4 rounded-xl">
+                  <div className="card-inner p-4">
                     <h4 className="font-medium text-primary mb-2">✅ Generally Safe</h4>
                     <p className="text-sm text-secondary">Bananas, rice, applesauce, toast, oatmeal, lean proteins</p>
                   </div>
-                  <div className="card-inner p-4 rounded-xl">
+                  <div className="card-inner p-4">
                     <h4 className="font-medium text-primary mb-2">⚠️ Try Carefully</h4>
                     <p className="text-sm text-secondary">Dairy, high-fiber foods, spicy foods, raw vegetables</p>
                   </div>
-                  <div className="card-inner p-4 rounded-xl">
+                  <div className="card-inner p-4">
                     <h4 className="font-medium text-primary mb-2">❌ Avoid During Flares</h4>
                     <p className="text-sm text-secondary">Nuts, seeds, popcorn, alcohol, caffeine, fried foods</p>
                   </div>
@@ -162,7 +162,7 @@ export default function Foods() {
               </div>
 
               {/* Quick Food Tips */}
-              <div className="card p-4 sm:p-6 rounded-2xl">
+              <div className="card p-4 sm:p-6">
                 <h3 className="text-xl font-semibold font-source text-primary mb-4">Quick Food Tips</h3>
                 <div className="space-y-3">
                   <div className="flex items-center gap-3">
@@ -207,7 +207,7 @@ export default function Foods() {
       {/* Call to Action - Combined width (sidebar + content) */}
       <div>
         <div className="mt-4 sm:mt-6 max-w-[76rem] mx-auto px-3 sm:px-4 md:px-6 lg:px-0 lg:mt-0">
-          <div className="card p-8 rounded-2xl backdrop-blur-sm text-center">
+          <div className="card p-8 backdrop-blur-sm text-center">
           <h2 className="text-xl font-semibold font-source text-primary mb-4">Track Your Meals</h2>
           <p className="text-secondary font-roboto mb-6 leading-relaxed">
             Use the symptom tracker to log what you eat each day and monitor how different foods affect you.

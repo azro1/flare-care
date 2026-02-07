@@ -38,7 +38,7 @@ export default function Footer() {
   }, [])
   
   return (
-    <footer className={`py-8 sm:py-8 lg:py-12 px-4 sm:px-6 mt-auto ${needsFixedFooter ? 'fixed bottom-0 left-0 right-0 lg:static' : ''}`} style={{backgroundColor: 'var(--bg-nav-footer)'}}>
+    <footer className={`py-8 px-4 sm:px-6 mt-auto ${needsFixedFooter ? 'fixed bottom-0 left-0 right-0 lg:static' : ''}`} style={{backgroundColor: 'var(--bg-nav-footer)'}}>
       <div className="max-w-7xl mx-auto">
         {/* Mobile minimal footer */}
         <div className="lg:hidden">
@@ -50,15 +50,11 @@ export default function Footer() {
         {/* Desktop full footer */}
         <div className="hidden lg:flex lg:flex-col">
           <div className="flex flex-col md:flex-row justify-between items-center gap-6">
-            <p style={{color: 'var(--text-footer)'}}>© FlareCare 2025. All rights reserved</p>
-            <div className="flex gap-8 text-base" style={{color: 'var(--text-footer)'}}>
+            <p className="text-sm" style={{color: 'var(--text-footer)'}}>© FlareCare 2025. All rights reserved</p>
+            <div className="flex gap-8 text-sm" style={{color: 'var(--text-footer)'}}>
               <a href="#" className="transition-colors hover:text-[#5F9EA0]">Privacy Policy</a>
               <a href="#" className="transition-colors hover:text-[#5F9EA0]">Terms of Service</a>
             </div>
-          </div>
-
-          <div className="mt-8 pt-8 text-center text-sm" style={{borderTop: '1px solid var(--border-footer)', color: 'var(--text-footer)'}}>
-            Made with <span className="text-lg">💜</span> for the IBD community 
           </div>
         </div>
       </div>

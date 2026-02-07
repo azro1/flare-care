@@ -202,7 +202,7 @@ function WeightPageContent() {
   const closeDeleteModal = () => setDeleteModal({ isOpen: false, id: null })
 
   return (
-    <div className="max-w-4xl w-full mx-auto px-2 sm:px-4 md:px-6 min-w-0">
+    <div className="max-w-4xl w-full mx-auto sm:px-4 md:px-6 min-w-0">
       <div className="mb-4 sm:mb-6">
         <div className="card">
           <div className="flex flex-col sm:flex-row sm:justify-between sm:items-start">
@@ -331,7 +331,7 @@ function WeightPageContent() {
         ) : (
           <ul className="space-y-3">
             {entries.map((entry) => (
-              <li key={entry.id} className="card-inner p-4 sm:p-6 min-w-0 rounded-xl">
+              <li key={entry.id} className="card-inner p-4 sm:p-6 min-w-0">
                 <div className="flex flex-col sm:flex-row sm:justify-between sm:items-start gap-3">
                   <div className="flex-1 min-w-0">
                     <span className="font-semibold text-primary">{formatUKDate(entry.date)}</span>

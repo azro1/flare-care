@@ -637,7 +637,7 @@ export default function Home() {
               </Link>
             </div>
 
-            <div className="card p-8 md:p-10 rounded-2xl backdrop-blur-sm">
+            <div className="card p-8 md:p-10 backdrop-blur-sm">
               <div className="flex items-center gap-3 mb-6">
                 <div className="w-10 h-10 rounded-full bg-[#5F9EA0] flex items-center justify-center">
                   <span className="text-white text-sm font-medium">JD</span>
@@ -734,7 +734,7 @@ export default function Home() {
 
         <section className="py-12 md:py-24 px-6">
           <div className="max-w-3xl mx-auto">
-            <div className="card p-10 md:p-14 rounded-2xl backdrop-blur-sm">
+            <div className="card p-10 md:p-14 backdrop-blur-sm">
               <h2 className="text-2xl sm:text-3xl font-bold text-primary mb-6">
                 Why I built this
               </h2>
@@ -874,7 +874,7 @@ export default function Home() {
         </div>
       )}
 
-      <div className="w-full px-2 sm:px-4 md:px-6 min-h-screen">
+      <div className="w-full sm:px-4 md:px-6 min-h-screen">
         <div className="flex flex-col lg:flex-row lg:gap-6 lg:justify-center">
           
           {/* Left Sidebar */}
@@ -911,7 +911,7 @@ export default function Home() {
                 <h3 className="text-xl font-semibold font-source text-primary mb-4">Today's Goals</h3>
                 <div className="space-y-3">
                   <div className="flex items-center gap-3">
-                    <div className="w-6 h-6 card-inner rounded-lg flex items-center justify-center">
+                    <div className="w-6 h-6 card-inner flex items-center justify-center">
                       <Thermometer className="w-3 h-3" style={{color: 'var(--text-goal-icon-success)'}} />
                     </div>
                     <div className="flex-1 flex items-center justify-between">
@@ -926,7 +926,7 @@ export default function Home() {
                     </div>
                   </div>
                   <div className="flex items-center gap-3">
-                    <div className="w-6 h-6 card-inner rounded-lg flex items-center justify-center">
+                    <div className="w-6 h-6 card-inner flex items-center justify-center">
                       <Pill className="w-2.5 h-2.5" style={{color: 'var(--text-goal-icon-medication)'}} />
                     </div>
                     <div className="flex-1 flex items-center justify-between">
@@ -941,7 +941,7 @@ export default function Home() {
                     </div>
                   </div>
                   <div className="flex items-center gap-3">
-                    <div className="w-6 h-6 card-inner rounded-lg flex items-center justify-center">
+                    <div className="w-6 h-6 card-inner flex items-center justify-center">
                       <CupSoda className="w-3 h-3" style={{color: 'var(--text-goal-icon-hydration)'}} />
                     </div>
                     <span className="text-sm text-secondary">Stay hydrated</span>
@@ -1362,12 +1362,12 @@ export default function Home() {
         </div>
 
         {/* More Options */}
-        <div className="mb-6">
+        <div className="mb-6 lg:mb-0">
           <h2 className="text-xl font-semibold font-source text-primary mb-4">More</h2>
           <div className="grid grid-cols-2 gap-4 md:gap-6">
               <Link
                 href="/medications"
-                className="card card-link p-6 transition-all group relative focus:outline-none focus-visible:outline-none focus-visible:ring-0 focus-visible:ring-offset-0 focus:ring-0"
+                className="card card-link transition-all group relative focus:outline-none focus-visible:outline-none focus-visible:ring-0 focus-visible:ring-offset-0 focus:ring-0"
               >
                 <div className="flex flex-col items-center gap-3">
                   <div className="w-8 h-8 lg:w-10 lg:h-10 bg-purple-100 rounded-lg flex items-center justify-center flex-shrink-0">
@@ -1388,7 +1388,7 @@ export default function Home() {
 
               <Link
                 href="/reports"
-                className="card card-link p-6 transition-all group relative focus:outline-none focus-visible:outline-none focus-visible:ring-0 focus-visible:ring-offset-0 focus:ring-0"
+                className="card card-link transition-all group relative focus:outline-none focus-visible:outline-none focus-visible:ring-0 focus-visible:ring-offset-0 focus:ring-0"
               >
                 <div className="flex flex-col items-center gap-3">
                   <div className="w-8 h-8 lg:w-10 lg:h-10 bg-orange-100 rounded-lg flex items-center justify-center flex-shrink-0">
@@ -1409,7 +1409,7 @@ export default function Home() {
 
               <Link
                 href="/weight"
-                className="card card-link p-6 transition-all group relative focus:outline-none focus-visible:outline-none focus-visible:ring-0 focus-visible:ring-offset-0 focus:ring-0"
+                className="card card-link transition-all group relative focus:outline-none focus-visible:outline-none focus-visible:ring-0 focus-visible:ring-offset-0 focus:ring-0"
               >
                 <div className="flex flex-col items-center gap-3">
                   <div className="w-8 h-8 lg:w-10 lg:h-10 bg-indigo-100 rounded-lg flex items-center justify-center flex-shrink-0">

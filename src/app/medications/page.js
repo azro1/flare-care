@@ -532,7 +532,7 @@ function MedicationsPageContent() {
   }
 
   return (
-    <div className="max-w-4xl w-full mx-auto px-2 sm:px-4 md:px-6 min-w-0">
+    <div className="max-w-4xl w-full mx-auto sm:px-4 md:px-6 min-w-0">
       {/* Header Section */}
       <div className="mb-4 sm:mb-6">
         <div className="card">
@@ -640,7 +640,7 @@ function MedicationsPageContent() {
                 </div>
               </div>
 
-              <div className="flex items-start sm:items-center card-inner rounded-2xl p-4">
+              <div className="flex items-start sm:items-center card-inner p-4">
                  <input
                    type="checkbox"
                    id="remindersEnabled"
@@ -729,7 +729,7 @@ function MedicationsPageContent() {
               const isExpanded = expandedMedications.has(medication.id)
               return (
                 <div key={medication.id} className="mb-4 sm:mb-0">
-                  <div className="card-inner p-4 sm:p-6 min-w-0 rounded-xl">
+                  <div className="card-inner p-4 sm:p-6 min-w-0">
                   <div className="flex flex-col sm:flex-row sm:justify-between sm:items-start mb-1">
                     <div className="flex-1 min-w-0 w-full sm:w-auto">
                       <div className={`flex items-center gap-2 ${isExpanded ? 'mb-1' : ''} min-w-0`}>
@@ -846,7 +846,7 @@ function MedicationsPageContent() {
 
                   {isExpanded && medication.notes && (
                     <div className="mt-4 pt-4 min-w-0" style={{ borderTop: '1px solid', borderColor: 'var(--border-card-inner)' }}>
-                      <div className="card-inner rounded-xl p-3 min-w-0">
+                      <div className="card-inner p-3 min-w-0">
                         <p className="text-sm text-secondary font-roboto break-words">
                           <span className="font-semibold text-primary">Notes:</span> {medication.notes}
                         </p>
@@ -887,7 +887,7 @@ function MedicationsPageContent() {
           <p className="text-sm sm:text-base text-secondary font-roboto leading-relaxed">
             FlareCare will send browser notifications when it's time to take your medications
           </p>
-          <div className="card-inner rounded-lg sm:rounded-xl p-6 mt-4">
+          <div className="card-inner p-6 mt-4">
             <div className="flex items-center space-x-1">
               <span className="text-lg">💡</span>
               <p className="text-base sm:text-sm font-medium text-primary mb-2 font-roboto">Important to know:</p>

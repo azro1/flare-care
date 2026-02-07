@@ -849,7 +849,7 @@ function MedicationTrackingWizard() {
 
           {/* Missed Medications */}
           {(formData.missedMedications && formData.missedMedicationsList.filter(item => item.medication.trim()).length > 0) && (
-            <div className="card p-6 rounded-xl border" style={{borderColor: 'var(--border-card)'}}>
+            <div className="card border" style={{borderColor: 'var(--border-card)'}}>
               <h3 className="text-xl font-semibold text-cadet-blue mb-6 pb-4 border-b" style={{borderColor: 'var(--border-primary)'}}>Missed Medications</h3>
               <div className="space-y-4">
                 {formData.missedMedicationsList.filter(item => item.medication.trim()).map((item, index, array) => (
@@ -874,7 +874,7 @@ function MedicationTrackingWizard() {
 
           {/* NSAIDs */}
           {(formData.nsaidUsage && formData.nsaidList.filter(item => item.medication.trim()).length > 0) && (
-            <div className="card p-6 rounded-xl border" style={{borderColor: 'var(--border-card)'}}>
+            <div className="card border" style={{borderColor: 'var(--border-card)'}}>
               <h3 className="text-xl font-semibold text-cadet-blue mb-6 pb-4 border-b" style={{borderColor: 'var(--border-primary)'}}>NSAIDs</h3>
               <div className="space-y-4">
                 {formData.nsaidList.filter(item => item.medication.trim()).map((item, index, array) => (
@@ -903,7 +903,7 @@ function MedicationTrackingWizard() {
 
           {/* Antibiotics */}
           {(formData.antibioticUsage && formData.antibioticList.filter(item => item.medication.trim()).length > 0) && (
-            <div className="card p-6 rounded-xl border" style={{borderColor: 'var(--border-card)'}}>
+            <div className="card border" style={{borderColor: 'var(--border-card)'}}>
               <h3 className="text-xl font-semibold text-cadet-blue mb-6 pb-4 border-b" style={{borderColor: 'var(--border-primary)'}}>Antibiotics</h3>
               <div className="space-y-4">
                 {formData.antibioticList.filter(item => item.medication.trim()).map((item, index, array) => (
@@ -937,7 +937,7 @@ function MedicationTrackingWizard() {
   }
 
   return (
-    <div className={`max-w-4xl w-full mx-auto px-2 sm:px-4 md:px-6 lg:px-8 min-w-0 flex flex-col justify-center sm:flex-grow ${currentStep > 0 ? 'pb-20 lg:pb-0' : ''}`}>
+    <div className={`max-w-4xl w-full mx-auto sm:px-4 md:px-6 lg:px-8 min-w-0 flex flex-col justify-center sm:flex-grow ${currentStep > 0 ? 'pb-20 lg:pb-0' : ''}`}>
       {/* Back Button - Hide on landing page and first question */}
       {currentStep > 1 && (
         <div className="mb-4 sm:mb-8">

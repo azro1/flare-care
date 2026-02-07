@@ -1144,7 +1144,7 @@ function SymptomsPageContent() {
   }
 
   return (
-    <div className={`max-w-4xl w-full mx-auto px-2 sm:px-4 md:px-6 lg:px-8 min-w-0 flex flex-col justify-center sm:flex-grow ${currentStep > 0 ? 'pb-20 lg:pb-0' : ''}`}>
+    <div className={`max-w-4xl w-full mx-auto sm:px-4 md:px-6 lg:px-8 min-w-0 flex flex-col justify-center sm:flex-grow ${currentStep > 0 ? 'pb-20 lg:pb-0' : ''}`}>
       {/* Back Button - Hide on landing page and first question */}
       {currentStep > 1 && (
         <div className="mb-4 sm:mb-8">
@@ -2108,7 +2108,7 @@ function SymptomsPageContent() {
             </h2>
 
             {/* Basic Information */}
-            <div className="card p-6 rounded-xl border" style={{borderColor: 'var(--border-card)'}}>
+            <div className="card border" style={{borderColor: 'var(--border-card)'}}>
               <h3 className="text-xl font-semibold text-cadet-blue mb-6 pb-4 border-b" style={{borderColor: 'var(--border-primary)'}}>Basic Information</h3>
               <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 py-3">
                 <div>
@@ -2137,7 +2137,7 @@ function SymptomsPageContent() {
             </div>
 
             {/* Bathroom Frequency */}
-            <div className="card p-6 rounded-xl border" style={{borderColor: 'var(--border-card)'}}>
+            <div className="card border" style={{borderColor: 'var(--border-card)'}}>
               <h3 className="text-xl font-semibold text-cadet-blue mb-6 pb-4 border-b" style={{borderColor: 'var(--border-primary)'}}>Bathroom Frequency</h3>
               <div className="space-y-4">
                 <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 py-3">
@@ -2163,7 +2163,7 @@ function SymptomsPageContent() {
 
             {/* Lifestyle - Only show if first-time user (they actually answered these questions) */}
             {isFirstTimeUser && (formData.smoking !== undefined || formData.alcohol !== undefined) && (
-              <div className="card p-6 rounded-xl border" style={{borderColor: 'var(--border-card)'}}>
+              <div className="card border" style={{borderColor: 'var(--border-card)'}}>
                 <h3 className="text-xl font-semibold text-cadet-blue mb-6 pb-4 border-b" style={{borderColor: 'var(--border-primary)'}}>Lifestyle</h3>
                 <div className="space-y-4">
                   <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 py-3">
@@ -2197,7 +2197,7 @@ function SymptomsPageContent() {
               formData.lunch.some(item => item.food.trim()) || 
               formData.dinner.some(item => item.food.trim()) ||
               formData.breakfast_skipped || formData.lunch_skipped || formData.dinner_skipped) && (
-              <div className="card p-6 rounded-xl border" style={{borderColor: 'var(--border-card)'}}>
+              <div className="card border" style={{borderColor: 'var(--border-card)'}}>
                 <h3 className="text-xl font-semibold text-cadet-blue mb-6 pb-4 border-b" style={{borderColor: 'var(--border-primary)'}}>Meals</h3>
                 <div className="space-y-3">
                   {formData.breakfast.some(item => item.food.trim()) && (
@@ -2254,7 +2254,7 @@ function SymptomsPageContent() {
 
             {/* Notes */}
             {formData.notes && (
-              <div className="card p-6 rounded-xl border" style={{borderColor: 'var(--border-card)'}}>
+              <div className="card border" style={{borderColor: 'var(--border-card)'}}>
                 <h3 className="text-xl font-semibold text-cadet-blue mb-6 pb-4 border-b" style={{borderColor: 'var(--border-primary)'}}>Notes</h3>
                 <div className="py-3">
                   <p className="font-medium text-primary">{formData.notes}</p>

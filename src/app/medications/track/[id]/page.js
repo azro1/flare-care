@@ -113,7 +113,7 @@ function TrackedMedicationDetails() {
 
   return (
     <div>
-      <div className="max-w-4xl w-full mx-auto px-2 sm:px-4 md:px-6 lg:px-8 min-w-0">
+      <div className="max-w-4xl w-full mx-auto sm:px-4 md:px-6 lg:px-8 min-w-0">
       <button
         onClick={() => router.back()}
         className="mb-6 text-cadet-blue hover:text-cadet-blue/80 hover:underline text-base font-medium flex items-center"
@@ -144,24 +144,24 @@ function TrackedMedicationDetails() {
 
       <div className="space-y-4 sm:space-y-6">
         {/* Overview */}
-        <div className="card p-6">
+        <div className="card">
           <h2 className="text-xl font-semibold font-source text-primary mb-6">Overview</h2>
           <div className="space-y-4 sm:space-y-0 sm:grid sm:grid-cols-3 sm:gap-6">
-            <div className="card-inner rounded-xl p-4">
+            <div className="card-inner p-4">
               <span className="text-xs font-semibold text-secondary uppercase tracking-wide block">Missed doses</span>
               <p className={`mt-2 text-base font-semibold ${missedCount > 0 ? 'text-amber-600 dark:text-amber-300' : 'text-secondary'}`}>
                 {missedCount > 0 ? missedCount : 'None logged'}
               </p>
             </div>
 
-            <div className="card-inner rounded-xl p-4">
+            <div className="card-inner p-4">
               <span className="text-xs font-semibold text-secondary uppercase tracking-wide block">NSAIDs</span>
               <p className={`mt-2 text-base font-semibold ${nsaidCount > 0 ? 'text-emerald-600 dark:text-emerald-300' : 'text-secondary'}`}>
                 {nsaidCount > 0 ? nsaidCount : 'None logged'}
               </p>
             </div>
 
-            <div className="card-inner rounded-xl p-4">
+            <div className="card-inner p-4">
               <span className="text-xs font-semibold text-secondary uppercase tracking-wide block">Antibiotics</span>
               <p className={`mt-2 text-base font-semibold ${antibioticCount > 0 ? 'text-blue-600 dark:text-blue-300' : 'text-secondary'}`}>
                 {antibioticCount > 0 ? antibioticCount : 'None logged'}
@@ -176,8 +176,8 @@ function TrackedMedicationDetails() {
             <h2 className="text-lg font-semibold text-primary dark:text-primary mb-4">Missed Medications</h2>
             <div className="space-y-6">
               {trackedData.missed_medications_list.map((item, index) => (
-                <div key={index} className="card p-6">
-                  <div className="card-inner rounded-xl p-4">
+                <div key={index} className="card">
+                  <div className="card-inner p-4">
                     <div className="flex justify-between pb-4 border-b border-slate-300/30 dark:border-b" style={{borderColor: 'var(--border-card-inner)'}}>
                       <span className="text-secondary">Medication:</span>
                       <span className="font-medium text-primary">{item.medication}</span>
@@ -205,8 +205,8 @@ function TrackedMedicationDetails() {
             <h2 className="text-lg font-semibold text-primary dark:text-primary mb-4">NSAIDs</h2>
             <div className="space-y-6">
               {trackedData.nsaid_list.map((item, index) => (
-                <div key={index} className="card p-6">
-                  <div className="card-inner rounded-xl p-4">
+                <div key={index} className="card">
+                  <div className="card-inner p-4">
                     <div className="flex justify-between pb-4 border-b border-slate-300/30 dark-border-b" style={{borderColor: 'var(--border-card-inner)'}}>
                       <span className="text-secondary">Medication:</span>
                       <span className="font-medium text-primary">{item.medication}</span>
@@ -236,8 +236,8 @@ function TrackedMedicationDetails() {
             <h2 className="text-lg font-semibold text-primary dark:text-primary mb-4">Antibiotics</h2>
             <div className="space-y-6">
               {trackedData.antibiotic_list.map((item, index) => (
-                <div key={index} className="card p-6">
-                  <div className="card-inner rounded-xl p-4">
+                <div key={index} className="card">
+                  <div className="card-inner p-4">
                     <div className="flex justify-between pb-4 border-b border-slate-300/30 dark:border-b" style={{borderColor: 'var(--border-card-inner)'}}>
                       <span className="text-secondary">Medication:</span>
                       <span className="font-medium text-primary">{item.medication}</span>

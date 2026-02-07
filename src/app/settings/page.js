@@ -8,7 +8,7 @@ function SettingsPageContent() {
 
   return (
     <div>
-      <div className="max-w-5xl mx-auto px-2 sm:px-4 md:px-6 lg:px-8">
+      <div className="max-w-5xl mx-auto sm:px-4 md:px-6 lg:px-8">
         {/* Header */}
         <div className="mb-4 sm:mb-6 card">
           <div className="">

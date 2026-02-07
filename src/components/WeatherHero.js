@@ -143,7 +143,7 @@ export default function WeatherHero({
 
   return (
     <div
-      className="rounded-2xl overflow-hidden card"
+      className="overflow-hidden card"
       style={{ position: 'relative' }}
     >
       <div

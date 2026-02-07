@@ -130,7 +130,7 @@ function SymptomDetailContent() {
 
   return (
     <div>
-      <div className="max-w-4xl w-full mx-auto px-2 sm:px-4 md:px-6 lg:px-8 min-w-0">
+      <div className="max-w-4xl w-full mx-auto sm:px-4 md:px-6 lg:px-8 min-w-0">
         {/* Header */}
         <div className="mb-8">
           <div className="flex justify-between items-center mb-6">
@@ -171,7 +171,7 @@ function SymptomDetailContent() {
           <div className="card">
             <h2 className="text-xl font-semibold font-source text-primary mb-6">Overview</h2>
             <div className="space-y-4 sm:space-y-0 sm:grid sm:grid-cols-3 sm:gap-6">
-              <div className="card-inner rounded-xl p-4">
+              <div className="card-inner p-4">
                 <span className="text-xs font-semibold text-secondary uppercase tracking-wide block">Status</span>
                 <p className={`mt-2 text-base font-semibold ${
                   (symptom.is_ongoing || !symptom.symptom_end_date)
@@ -182,14 +182,14 @@ function SymptomDetailContent() {
                 </p>
               </div>
 
-              <div className="card-inner rounded-xl p-4">
+              <div className="card-inner p-4">
                 <span className="text-xs font-semibold text-secondary uppercase tracking-wide block">Severity</span>
                 <p className="mt-2 text-base font-semibold text-red-600 dark:text-red-300">
                   {symptom.severity ?? 'Not logged'}
                 </p>
               </div>
 
-              <div className="card-inner rounded-xl p-4">
+              <div className="card-inner p-4">
                 <span className="text-xs font-semibold text-secondary uppercase tracking-wide block">Stress level</span>
                 <p className="mt-2 text-base font-semibold text-cyan-600 dark:text-cyan-300">
                   {symptom.stress_level ?? 'Not logged'}
@@ -199,9 +199,9 @@ function SymptomDetailContent() {
           </div>
 
           {/* Timeline */}
-          <div className="card p-6">
+          <div className="card">
             <h2 className="text-xl font-semibold font-source text-primary mb-6">Timeline</h2>
-            <div className="card-inner rounded-xl p-4 space-y-4">
+            <div className="card-inner p-4 space-y-4">
               <div
                 className={`flex items-center justify-between  ${
                   !symptom.is_ongoing && symptom.symptom_end_date ? 'border-b border-slate-300/30 dark:border-b' : ''
@@ -233,9 +233,9 @@ function SymptomDetailContent() {
           </div>
 
           {/* Bathroom Frequency */}
-          <div className="card p-6">
+          <div className="card">
             <h2 className="text-xl font-semibold font-source text-primary mb-6">Bathroom Frequency</h2>
-            <div className="card-inner rounded-xl p-4">
+            <div className="card-inner p-4">
               <div
                 className={`flex items-center justify-between pb-4 ${
                   symptom.bathroom_frequency_changed ? 'border-b border-slate-300/30 dark:border-b' : ''
@@ -268,9 +268,9 @@ function SymptomDetailContent() {
           </div>
 
           {/* Lifestyle */}
-          <div className="card p-6">
+          <div className="card">
             <h2 className="text-xl font-semibold font-source text-primary mb-6">Lifestyle</h2>
-            <div className="card-inner rounded-xl p-4">
+            <div className="card-inner p-4">
               <div className="flex items-center justify-between pb-4 border-b border-slate-300/30 dark:border-b" style={{borderColor: 'var(--border-card-inner)'}}>
                 <span className="font-medium text-primary">Smoking</span>
                 <span className="text-secondary">{symptom.smoking ? 'Yes' : 'No'}</span>
@@ -301,9 +301,9 @@ function SymptomDetailContent() {
 
           {/* Meals */}
           {(symptom.breakfast?.length > 0 || symptom.lunch?.length > 0 || symptom.dinner?.length > 0) && (
-            <div className="card p-6">
+            <div className="card">
               <h2 className="text-xl font-semibold font-source text-primary mb-6">Meals</h2>
-              <div className="card-inner rounded-xl p-4 space-y-6">
+              <div className="card-inner p-4 space-y-6">
                 {symptom.breakfast?.length > 0 && (
                   <div>
                     <h3 className="font-medium text-primary mb-3">Breakfast</h3>
@@ -351,9 +351,9 @@ function SymptomDetailContent() {
 
           {/* Notes */}
           {symptom.notes && (
-            <div className="card p-6">
+            <div className="card">
               <h2 className="text-xl font-semibold font-source text-primary mb-6">Notes</h2>
-              <div className="card-inner rounded-xl p-4">
+              <div className="card-inner p-4">
                 <p className="text-secondary leading-relaxed">{symptom.notes}</p>
               </div>
             </div>

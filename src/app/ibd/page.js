@@ -36,7 +36,7 @@ export default function LearnPage() {
   }, [])
   
   return (
-    <div className="w-full px-2 sm:px-4 md:px-6 min-w-0">
+    <div className="w-full sm:px-4 md:px-6 min-w-0">
       <div className="flex flex-col lg:flex-row lg:gap-6 lg:justify-center">
         
         {/* Left Sidebar */}
@@ -75,7 +75,7 @@ export default function LearnPage() {
             </div>
 
             {/* Emergency Contacts */}
-            <div className="card rounded-2xl backdrop-blur-sm">
+            <div className="card backdrop-blur-sm">
               <h3 className="text-xl font-semibold font-source text-primary mb-4">Emergency Contacts</h3>
             <div className="space-y-3">
               <div className="border-l-4" style={{ borderColor: '#5F9EA0', opacity: 0.85 }}>
@@ -130,7 +130,7 @@ export default function LearnPage() {
       </div>
 
       {/* What is IBD Section */}
-      <div className="card p-6 rounded-2xl mb-4 sm:mb-6">
+      <div className="card mb-4 sm:mb-6">
         <h2 className="text-xl font-semibold font-source text-primary mb-6 break-words">What is Inflammatory Bowel Disease (IBD)?</h2>
         <div className="prose prose-gray max-w-none">
           <p className="text-secondary mb-6 font-roboto break-words">
@@ -138,7 +138,7 @@ export default function LearnPage() {
           </p>
           
           <div className="grid gap-4 sm:gap-6 md:grid-cols-2">
-            <div className="card-inner p-6 rounded-xl">
+            <div className="card-inner p-6">
               <h3 className="text-lg font-semibold font-source text-primary mb-3 break-words">Crohn's Disease</h3>
               <ul className="text-secondary space-y-2 text-sm font-roboto break-words">
                 <li><span className="text-[#5F9EA0] mr-2">•</span>Can affect any part of the digestive tract</li>
@@ -148,7 +148,7 @@ export default function LearnPage() {
               </ul>
             </div>
             
-            <div className="card-inner p-6 rounded-xl">
+            <div className="card-inner p-6">
               <h3 className="text-lg font-semibold font-source text-primary mb-3 break-words">Ulcerative Colitis</h3>
               <ul className="text-secondary space-y-2 text-sm font-roboto break-words">
                 <li><span className="text-[#5F9EA0] mr-2">•</span>Affects only the colon and rectum</li>
@@ -162,7 +162,7 @@ export default function LearnPage() {
       </div>
 
       {/* Common Symptoms Section */}
-      <div className="card p-6 rounded-2xl backdrop-blur-sm mb-4 sm:mb-6">
+      <div className="card backdrop-blur-sm mb-4 sm:mb-6">
         <h2 className="text-xl font-semibold font-source text-primary mb-6 break-words">Common Symptoms</h2>
         <div className="grid gap-2 md:gap-6 md:grid-cols-2">
           <ul className="space-y-2 text-secondary font-roboto break-words">
@@ -214,10 +214,10 @@ export default function LearnPage() {
       </div>
 
       {/* Triggers Section */}
-      <div className="card rounded-2xl mb-4 sm:mb-6">
+      <div className="card mb-4 sm:mb-6">
         <h2 className="text-xl font-semibold font-source text-primary mb-6 break-words">Common Triggers</h2>
         <div className="grid gap-4 sm:gap-6 md:grid-cols-3">
-          <div className="card-inner p-6 text-center rounded-xl">
+          <div className="card-inner p-6 text-center">
             <div className="w-16 h-16 rounded-full flex items-center justify-center mx-auto mb-4 bg-yellow-100">
               <Pizza className="w-8 h-8 text-amber-500" />
             </div>
@@ -226,7 +226,7 @@ export default function LearnPage() {
             </p>
           </div>
 
-          <div className="card-inner p-6 text-center rounded-xl">
+          <div className="card-inner p-6 text-center">
             <div className="w-16 h-16 rounded-full flex items-center justify-center mx-auto mb-4 bg-cyan-100">
               <Brain className="w-8 h-8 text-cyan-600" />
             </div>
@@ -235,7 +235,7 @@ export default function LearnPage() {
             </p>
           </div>
 
-          <div className="card-inner p-6 text-center rounded-xl">
+          <div className="card-inner p-6 text-center">
             <div className="w-16 h-16 rounded-full flex items-center justify-center mx-auto mb-4 bg-green-100">
               <Bug className="w-8 h-8 text-emerald-600" />
             </div>
@@ -247,7 +247,7 @@ export default function LearnPage() {
       </div>
 
       {/* How FlareCare Helps Section */}
-      <div className="card p-6 rounded-2xl backdrop-blur-sm mb-4 sm:mb-6">
+      <div className="card backdrop-blur-sm mb-4 sm:mb-6">
         <h2 className="text-xl font-semibold font-source text-primary mb-6">How FlareCare Can Help</h2>
         <div className="grid gap-3 md:gap-6 md:grid-cols-2">
           <div>
@@ -299,9 +299,9 @@ export default function LearnPage() {
       </div>
 
       {/* When to Seek Help Section */}
-      <div className="card p-6 rounded-2xl mb-4 sm:mb-6">
+      <div className="card mb-4 sm:mb-6">
         <h2 className="text-xl font-semibold font-source text-primary mb-6">When to Seek Medical Help</h2>
-        <div className="card-inner p-6 rounded-xl">
+        <div className="card-inner p-6">
           <h3 className="text-lg font-semibold font-source text-primary mb-4 leading-normal">Seek immediate medical attention if you experience:</h3>
           <ul className="space-y-2 text-secondary font-source">
             <li className="flex items-start">
@@ -329,7 +329,7 @@ export default function LearnPage() {
       </div>
 
       {/* Resources Section */}
-      <div className="card p-6 rounded-2xl backdrop-blur-sm mb-4 sm:mb-6">
+      <div className="card backdrop-blur-sm mb-4 sm:mb-6">
         <h2 className="text-xl font-semibold font-source text-primary mb-6">Helpful Resources</h2>
         <div className="grid gap-3 md:gap-6 md:grid-cols-2">
           <ul className="space-y-3 font-roboto">
@@ -391,7 +391,7 @@ export default function LearnPage() {
       {/* Call to Action */}
         <div className="mt-4 sm:mt-6 lg:mt-0">
           <div className="max-w-[76rem] mx-auto">
-            <div className="card p-8 rounded-2xl backdrop-blur-sm text-center">
+            <div className="card p-8 backdrop-blur-sm text-center">
           <h2 className="text-xl font-semibold font-source text-primary mb-4">Track Your Medications</h2>
           <p className="text-secondary font-roboto mb-6 leading-relaxed">
             Use the medications tracker to log missed medications to keep your healthcare team informed
