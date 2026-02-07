@@ -539,7 +539,7 @@ function MedicationsPageContent() {
           <div className="flex flex-col sm:flex-row sm:justify-between sm:items-start">
             <div className="min-w-0 flex-1">
               <h1 className="text-2xl sm:text-3xl lg:text-4xl font-bold font-source text-primary mb-4 sm:mb-6">
-                Manage Your Medications
+                My Medications
               </h1>
               <p className="text-secondary font-roboto">
                 Add your prescribed medications, set up reminders, and keep track of your medication schedule.
@@ -553,17 +553,17 @@ function MedicationsPageContent() {
       <div className="card mb-4 sm:mb-6 min-w-0">
         <div className={`flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 ${isAdding || medications.length > 0 ? 'mb-5 sm:mb-6' : 'mb-0'} `}>
           <div className="flex items-center">
-            <div className="hidden sm:flex w-12 h-12 bg-purple-100 rounded-xl items-center justify-center mr-4">
+            <div className="flex w-8 h-8 sm:w-12 sm:h-12 bg-purple-100 rounded-xl items-center justify-center mr-3 sm:mr-4 flex-shrink-0">
               {isAdding ? (
-                <svg className="w-6 h-6 text-purple-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <svg className="w-4 h-4 sm:w-6 sm:h-6 text-purple-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z" />
                 </svg>
               ) : (
-                <Pill className="w-6 h-6 text-purple-600" />
+                <Pill className="w-4 h-4 sm:w-6 sm:h-6 text-purple-600" />
               )}
             </div>
             <h2 className="text-xl font-semibold font-source text-primary">
-              {isAdding ? (editingId ? 'Edit Medication' : 'Add New Medication') : 'Your Medications'}
+              {isAdding ? (editingId ? 'Edit Medication' : 'Add New Medication') : 'Medications'}
             </h2>
           </div>
           {!isAdding && (

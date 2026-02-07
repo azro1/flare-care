@@ -221,11 +221,11 @@ function WeightPageContent() {
       <div className="card mb-4 sm:mb-6 min-w-0">
         <div className={`flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 ${isAdding || entries.length > 0 ? 'mb-5 sm:mb-6' : 'mb-0'}`}>
           <div className="flex items-center">
-            <div className="hidden sm:flex w-12 h-12 bg-indigo-100 rounded-xl items-center justify-center mr-4">
-              <Scale className="w-6 h-6 text-indigo-600" />
+            <div className="flex w-8 h-8 sm:w-12 sm:h-12 bg-indigo-100 rounded-xl items-center justify-center mr-3 sm:mr-4 flex-shrink-0">
+              <Scale className="w-4 h-4 sm:w-6 sm:h-6 text-indigo-600" />
             </div>
             <h2 className="text-xl font-semibold font-source text-primary">
-              {isAdding ? (editingId ? 'Edit entry' : 'Log Weight') : 'Your entries'}
+              {isAdding ? (editingId ? 'Edit entry' : 'Log Weight') : 'Weight entries'}
             </h2>
           </div>
           {!isAdding && (

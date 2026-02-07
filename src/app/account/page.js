@@ -93,7 +93,7 @@ function AccountPageContent() {
       <div className="max-w-5xl mx-auto sm:px-4 md:px-6 lg:px-8">
         {/* Header */}
         <div className="mb-4 sm:mb-6 card">
-          <div className="md:text-center">
+          <div className="text-center">
             <h1 className="text-2xl sm:text-3xl lg:text-4xl font-bold font-source text-primary mb-4">My Account</h1>
             <p className="text-secondary font-roboto break-words">Manage your account settings and information</p>
           </div>

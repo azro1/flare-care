@@ -1375,7 +1375,7 @@ export default function Home() {
                 </div>
                   <div className="w-full text-center">
                     <h3 className="font-semibold text-primary leading-tight sm:leading-relaxed">
-                      My Meds
+                      Medication
                     </h3>
                   </div>
                 </div>
@@ -1417,7 +1417,7 @@ export default function Home() {
                   </div>
                   <div className="w-full text-center">
                     <h3 className="font-semibold text-primary leading-tight sm:leading-relaxed">
-                      Track Weight
+                      Weight
                     </h3>
                   </div>
                 </div>

@@ -784,7 +784,7 @@ function ReportsPageContent() {
       <div className="w-full sm:px-4 md:px-6 lg:px-8 min-w-0 min-h-screen">
         <div className="max-w-4xl mx-auto">
           <div className="mb-8 card">
-            <h1 className="text-2xl sm:text-3xl lg:text-4xl font-bold font-source text-primary mb-4">Health Reports</h1>
+            <h1 className="text-2xl sm:text-3xl lg:text-4xl font-bold font-source text-primary mb-4">Reports</h1>
             <p className="text-secondary font-roboto">
               Generate detailed reports to share with your healthcare team
             </p>
@@ -798,7 +798,7 @@ function ReportsPageContent() {
     <div className="w-full sm:px-4 md:px-6 lg:px-8 min-w-0 min-h-screen">
       <div className="max-w-4xl mx-auto">
       <div className="mb-4 sm:mb-6 card">
-        <h1 className="text-2xl sm:text-3xl lg:text-4xl font-bold font-source text-primary mb-4">Health Reports</h1>
+        <h1 className="text-2xl sm:text-3xl lg:text-4xl font-bold font-source text-primary mb-4">Reports</h1>
         <p className="text-secondary font-roboto">
           Generate detailed reports to share with your healthcare team
         </p>
