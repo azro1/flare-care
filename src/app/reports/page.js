@@ -9,7 +9,7 @@ import 'react-datepicker/dist/react-datepicker.css'
 import ProtectedRoute from '@/components/ProtectedRoute'
 import { supabase, TABLES } from '@/lib/supabase'
 import { useAuth } from '@/lib/AuthContext'
-import { Calendar, FileText, Download, FileDown, BarChart3, Pill, Activity, TrendingUp, AlertCircle, Thermometer, Brain, Pizza, ChartLine } from 'lucide-react'
+import { Calendar, FileText, Download, FileDown, BarChart3, Pill, Activity, TrendingUp, Thermometer, Brain, Pizza, ChartLine } from 'lucide-react'
 
 // Force dynamic rendering to prevent Vercel static generation issues
 export const dynamic = 'force-dynamic'
@@ -970,7 +970,7 @@ function ReportsPageContent() {
 
         {/* Severity Trend */}
         {reportData.severityTrend.length > 0 && (
-          <div className="mb-8">
+          <div className="">
             <h3 className="text-lg font-semibold font-source text-primary mb-4">Symptom Episodes</h3>
             <div className="space-y-4">
               {reportData.severityTrend.map((entry, index) => (
@@ -1064,9 +1064,8 @@ function ReportsPageContent() {
           
           {/* Missed Medications */}
           {reportData.medicationTracking.missedMedications.length > 0 && (
-            <div className="mb-2">
-              <h4 className="text-md font-semibold font-source text-primary mb-4 flex items-center">
-                <AlertCircle className="w-4 h-4 mr-3 text-red-500" />
+            <div className="mb-6">
+              <h4 className="text-md font-semibold font-source text-primary mb-2">
                 Missed Medications
               </h4>
               <div className="space-y-4">
@@ -1093,9 +1092,8 @@ function ReportsPageContent() {
           
           {/* NSAIDs */}
           {reportData.medicationTracking.nsaids.length > 0 && (
-            <div className="mb-8">
-              <h4 className="text-md font-semibold font-source text-primary mb-4 flex items-center">
-                <Pill className="w-4 h-4 mr-3 text-orange-500" />
+            <div className="mb-6">
+              <h4 className="text-md font-semibold font-source text-primary mb-2">
                 NSAIDs Taken
               </h4>
               <div className="space-y-4">
@@ -1127,9 +1125,8 @@ function ReportsPageContent() {
           
           {/* Antibiotics */}
           {reportData.medicationTracking.antibiotics.length > 0 && (
-            <div className="mb-8">
-              <h4 className="text-md font-semibold font-source text-primary mb-4 flex items-center">
-                <Pill className="w-4 h-4 mr-3 text-blue-500" />
+            <div className="">
+              <h4 className="text-md font-semibold font-source text-primary mb-2">
                 Antibiotics Taken
               </h4>
               <div className="space-y-4">
