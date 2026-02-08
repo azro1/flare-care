@@ -288,7 +288,7 @@ function WeightPageContent() {
               </div>
               <div>
                 <label htmlFor="notes" className="block text-base font-semibold font-roboto text-primary mb-3">
-                  Notes (optional)
+                  Notes
                 </label>
                 <textarea
                   id="notes"

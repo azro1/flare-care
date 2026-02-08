@@ -728,7 +728,7 @@ function MedicationsPageContent() {
             {medications.map((medication) => {
               const isExpanded = expandedMedications.has(medication.id)
               return (
-                <div key={medication.id} className="mb-4 sm:mb-0">
+                <div key={medication.id}>
                   <div className="card-inner p-4 sm:p-6 min-w-0">
                   <div className="flex flex-col sm:flex-row sm:justify-between sm:items-start mb-1">
                     <div className="flex-1 min-w-0 w-full sm:w-auto">
@@ -853,19 +853,14 @@ function MedicationsPageContent() {
                       </div>
                     </div>
                   )}
-                  {isExpanded && (
-                    <div className="mt-4 pt-4 text-xs text-tertiary font-roboto" style={{ borderTop: '1px solid', borderColor: 'var(--border-card-inner)' }}>
-                      <div className="flex items-center">
-                        <svg className="w-3 h-3 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" />
-                        </svg>
-                        Added {formatUKDate(medication.createdAt)}
-                        {medication.updatedAt && medication.updatedAt !== medication.createdAt && (
-                          <span> • Updated {formatUKDate(medication.updatedAt)}</span>
-                        )}
-                      </div>
+                  <div className="mt-4 pt-4 text-xs text-tertiary font-roboto" style={{ borderTop: '1px solid', borderColor: 'var(--border-card-inner)' }}>
+                    <div className="flex items-center">
+                      <svg className="w-3 h-3 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" />
+                      </svg>
+                      Added {medication.createdAt ? formatUKDate(medication.createdAt) : '—'}
                     </div>
-                  )}
+                  </div>
                   </div>
                 </div>
               )

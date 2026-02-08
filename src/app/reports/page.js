@@ -9,7 +9,7 @@ import 'react-datepicker/dist/react-datepicker.css'
 import ProtectedRoute from '@/components/ProtectedRoute'
 import { supabase, TABLES } from '@/lib/supabase'
 import { useAuth } from '@/lib/AuthContext'
-import { Calendar, FileText, Download, FileDown, BarChart3, Pill, Activity, TrendingUp, Thermometer, Brain, Pizza, ChartLine } from 'lucide-react'
+import { Calendar, FileText, Download, FileDown, BarChart3, Pill, Activity, TrendingUp, Thermometer, Brain, Pizza, ChartLine, Scale } from 'lucide-react'
 
 // Force dynamic rendering to prevent Vercel static generation issues
 export const dynamic = 'force-dynamic'
@@ -20,6 +20,8 @@ function ReportsPageContent() {
   const [symptoms, setSymptoms] = useState([])
   const [medications, setMedications] = useState([])
   const [medicationTracking, setMedicationTracking] = useState([])
+  const [appointments, setAppointments] = useState([])
+  const [weightEntries, setWeightEntries] = useState([])
   const [reportData, setReportData] = useState(null)
   const [isLoading, setIsLoading] = useState(true)
   const [dateRange, setDateRange] = useState(() => {
@@ -156,6 +158,54 @@ function ReportsPageContent() {
     fetchMedicationTracking()
   }, [user?.id])
 
+  // Fetch appointments from Supabase
+  useEffect(() => {
+    const fetchAppointments = async () => {
+      if (!user?.id) {
+        setAppointments([])
+        return
+      }
+      try {
+        const { data, error } = await supabase
+          .from(TABLES.APPOINTMENTS)
+          .select('*')
+          .eq('user_id', user.id)
+          .order('date', { ascending: false })
+
+        if (error) throw error
+        setAppointments(data || [])
+      } catch (error) {
+        console.error('Error fetching appointments:', error)
+        setAppointments([])
+      }
+    }
+    fetchAppointments()
+  }, [user?.id])
+
+  // Fetch weight entries from Supabase
+  useEffect(() => {
+    const fetchWeight = async () => {
+      if (!user?.id) {
+        setWeightEntries([])
+        return
+      }
+      try {
+        const { data, error } = await supabase
+          .from(TABLES.TRACK_WEIGHT)
+          .select('*')
+          .eq('user_id', user.id)
+          .order('date', { ascending: false })
+
+        if (error) throw error
+        setWeightEntries(data || [])
+      } catch (error) {
+        console.error('Error fetching weight entries:', error)
+        setWeightEntries([])
+      }
+    }
+    fetchWeight()
+  }, [user?.id])
+
   // Reset loading when navigating to reports page
   useEffect(() => {
     if (pathname === '/reports') {
@@ -169,7 +219,7 @@ function ReportsPageContent() {
     if (user && pathname === '/reports') {
       generateReport()
     }
-  }, [symptoms, medications, medicationTracking, dateRange, user, pathname])
+  }, [symptoms, medications, medicationTracking, appointments, weightEntries, dateRange, user, pathname])
 
   const generateReport = () => {
     // Filter symptoms by selected date range
@@ -265,6 +315,27 @@ function ReportsPageContent() {
         combinedAntibiotics.push(...entry.antibiotic_list.filter(item => item.medication && item.medication.trim()))
       }
     })
+
+    // Appointments: include all (no date restriction - info for whoever reads the report)
+    const filteredAppointments = appointments
+      .sort((a, b) => new Date(a.date) - new Date(b.date))
+      .map(apt => ({
+        date: apt.date,
+        time: apt.time || '',
+        type: apt.type || '',
+        clinician_name: apt.clinician_name || '',
+        location: apt.location || '',
+        notes: apt.notes || ''
+      }))
+
+    // Weight: include all entries (no date restriction - info for whoever reads the report)
+    const filteredWeight = weightEntries
+      .sort((a, b) => new Date(a.date) - new Date(b.date))
+      .map(entry => ({
+        date: entry.date,
+        value_kg: entry.value_kg != null ? Number(entry.value_kg) : null,
+        notes: entry.notes || ''
+      }))
     
     setReportData({
       period: {
@@ -285,7 +356,9 @@ function ReportsPageContent() {
         missedMedications: combinedMissedMedications,
         nsaids: combinedNsaids,
         antibiotics: combinedAntibiotics
-      }
+      },
+      appointments: filteredAppointments,
+      weightEntries: filteredWeight
     })
     setIsLoading(false)
   }
@@ -297,7 +370,9 @@ function ReportsPageContent() {
       reportData.medicationTracking.nsaids.length > 0 || 
       reportData.medicationTracking.antibiotics.length > 0
     )
-    return reportData.totalEntries > 0 || reportData.medications.length > 0 || hasTrackingData
+    const hasAppointments = reportData.appointments && reportData.appointments.length > 0
+    const hasWeight = reportData.weightEntries && reportData.weightEntries.length > 0
+    return reportData.totalEntries > 0 || reportData.medications.length > 0 || hasTrackingData || hasAppointments || hasWeight
   }
 
   const handleExportClick = (exportFunction) => {
@@ -420,6 +495,83 @@ function ReportsPageContent() {
         yPosition += 5
       }
       
+      yPosition += 10
+    }
+
+    // Appointments Section
+    if (reportData.appointments && reportData.appointments.length > 0) {
+      if (yPosition > 250) {
+        doc.addPage()
+        yPosition = 20
+      }
+      doc.setFontSize(16)
+      doc.setFont('helvetica', 'bold')
+      doc.text('Upcoming Appointments', margin, yPosition)
+      yPosition += 10
+
+      doc.setFontSize(12)
+      doc.setFont('helvetica', 'normal')
+      reportData.appointments.forEach(apt => {
+        if (yPosition > 270) {
+          doc.addPage()
+          yPosition = 20
+        }
+        const dateText = apt.date ? formatUKDate(apt.date) : ''
+        const timeText = apt.time || ''
+        const typeText = apt.type || ''
+        const clinicianText = apt.clinician_name || ''
+        const locationText = apt.location || ''
+        const notesText = apt.notes || ''
+        doc.setFont('helvetica', 'bold')
+        doc.text(`${dateText}${timeText ? ' ' + timeText : ''}${typeText ? ' - ' + typeText : ''}`, margin, yPosition)
+        yPosition += 5
+        doc.setFont('helvetica', 'normal')
+        if (clinicianText) {
+          doc.text(`Clinician: ${clinicianText}`, margin + 5, yPosition)
+          yPosition += 5
+        }
+        if (locationText) {
+          doc.text(`Location: ${locationText}`, margin + 5, yPosition)
+          yPosition += 5
+        }
+        if (notesText) {
+          doc.text(`Notes: ${notesText}`, margin + 5, yPosition)
+          yPosition += 5
+        }
+        yPosition += 5
+      })
+      yPosition += 10
+    }
+
+    // Weight Section
+    if (reportData.weightEntries && reportData.weightEntries.length > 0) {
+      if (yPosition > 250) {
+        doc.addPage()
+        yPosition = 20
+      }
+      doc.setFontSize(16)
+      doc.setFont('helvetica', 'bold')
+      doc.text('Weight', margin, yPosition)
+      yPosition += 10
+
+      doc.setFontSize(12)
+      doc.setFont('helvetica', 'normal')
+      reportData.weightEntries.forEach(entry => {
+        if (yPosition > 270) {
+          doc.addPage()
+          yPosition = 20
+        }
+        const dateText = entry.date ? formatUKDate(entry.date) : ''
+        const weightText = entry.value_kg != null ? `${entry.value_kg} kg` : ''
+        const notesText = entry.notes || ''
+        doc.text(`${dateText} - ${weightText}`, margin, yPosition)
+        yPosition += 5
+        if (notesText) {
+          doc.text(`Notes: ${notesText}`, margin + 5, yPosition)
+          yPosition += 5
+        }
+        yPosition += 3
+      })
       yPosition += 10
     }
 
@@ -728,6 +880,39 @@ function ReportsPageContent() {
         })
         csvData.push([])
       }
+    }
+
+    // Appointments
+    if (reportData.appointments && reportData.appointments.length > 0) {
+      csvData.push([])
+      csvData.push(['UPCOMING APPOINTMENTS'])
+      csvData.push(['Date', 'Time', 'Type', 'Clinician', 'Location', 'Notes'])
+      reportData.appointments.forEach(apt => {
+        csvData.push([
+          apt.date ? formatUKDate(apt.date) : '',
+          apt.time || '',
+          apt.type || '',
+          apt.clinician_name || '',
+          apt.location || '',
+          apt.notes || ''
+        ])
+      })
+      csvData.push([])
+    }
+
+    // Weight
+    if (reportData.weightEntries && reportData.weightEntries.length > 0) {
+      csvData.push([])
+      csvData.push(['WEIGHT'])
+      csvData.push(['Date', 'Weight (kg)', 'Notes'])
+      reportData.weightEntries.forEach(entry => {
+        csvData.push([
+          entry.date ? formatUKDate(entry.date) : '',
+          entry.value_kg != null ? String(entry.value_kg) : '',
+          entry.notes || ''
+        ])
+      })
+      csvData.push([])
     }
 
     // Convert to CSV string
@@ -1158,6 +1343,82 @@ function ReportsPageContent() {
         </div>
       )}
 
+      {/* Upcoming Appointments */}
+      {reportData.appointments && reportData.appointments.length > 0 && (
+        <div className="card mb-4 sm:mb-6">
+          <h2 className="text-xl font-semibold font-source text-primary mb-6 flex items-center">
+            <div className="bg-sky-100 w-8 h-8 sm:w-12 sm:h-12 rounded-xl mr-3 sm:mr-4 flex-shrink-0 flex items-center justify-center">
+              <Calendar className="w-5 h-5 sm:w-6 sm:h-6 text-sky-600" />
+            </div>
+            Upcoming Appointments
+          </h2>
+          <div className="space-y-4">
+            {reportData.appointments.map((apt, index) => (
+              <div key={index} className="card-inner p-4">
+                <div className="flex flex-col gap-2">
+                  <div className="flex flex-wrap items-baseline gap-x-2 gap-y-1">
+                    <span className="font-semibold text-primary">{formatUKDate(apt.date)}</span>
+                    {apt.time && (
+                      <>
+                        <span className="text-secondary">·</span>
+                        <span className="text-primary font-roboto">{apt.time}</span>
+                      </>
+                    )}
+                    {apt.type && (
+                      <>
+                        <span className="text-secondary">·</span>
+                        <span className="font-medium text-primary">{apt.type}</span>
+                      </>
+                    )}
+                  </div>
+                  {apt.clinician_name && (
+                    <p className="text-sm text-secondary font-roboto"><span className="font-medium text-primary">Clinician:</span> {apt.clinician_name}</p>
+                  )}
+                  {apt.location && (
+                    <p className="text-sm text-secondary font-roboto"><span className="font-medium text-primary">Location:</span> {apt.location}</p>
+                  )}
+                  {apt.notes && (
+                    <p className="text-sm text-secondary font-roboto mt-1">{apt.notes}</p>
+                  )}
+                </div>
+              </div>
+            ))}
+          </div>
+        </div>
+      )}
+
+      {/* Weight */}
+      {reportData.weightEntries && reportData.weightEntries.length > 0 && (
+        <div className="card mb-4 sm:mb-6">
+          <h2 className="text-xl font-semibold font-source text-primary mb-6 flex items-center">
+            <div className="bg-emerald-100 w-8 h-8 sm:w-12 sm:h-12 rounded-xl mr-3 sm:mr-4 flex-shrink-0 flex items-center justify-center">
+              <Scale className="w-5 h-5 sm:w-6 sm:h-6 text-emerald-600" />
+            </div>
+            Weight
+          </h2>
+          <div className="space-y-4">
+            {reportData.weightEntries.map((entry, index) => (
+              <div key={index} className="card-inner p-4">
+                <div className="flex flex-col gap-2">
+                  <div className="flex flex-wrap items-baseline gap-x-2 gap-y-1">
+                    <span className="font-semibold text-primary">{formatUKDate(entry.date)}</span>
+                    {entry.value_kg != null && (
+                      <>
+                        <span className="text-secondary">·</span>
+                        <span className="font-medium text-primary font-roboto">{entry.value_kg} kg</span>
+                      </>
+                    )}
+                  </div>
+                  {entry.notes && (
+                    <p className="text-sm text-secondary font-roboto mt-1">{entry.notes}</p>
+                  )}
+                </div>
+              </div>
+            ))}
+          </div>
+        </div>
+      )}
+
       {/* Top Foods */}
       {reportData.topFoods.length > 0 && (
         <div className="card p-8">
@@ -1187,7 +1448,7 @@ function ReportsPageContent() {
       )}
 
       {/* No Data Message */}
-      {reportData.totalEntries === 0 && reportData.medications.length === 0 && (
+      {reportData.totalEntries === 0 && reportData.medications.length === 0 && (!reportData.appointments || reportData.appointments.length === 0) && (!reportData.weightEntries || reportData.weightEntries.length === 0) && !(reportData.medicationTracking && (reportData.medicationTracking.missedMedications.length > 0 || reportData.medicationTracking.nsaids.length > 0 || reportData.medicationTracking.antibiotics.length > 0)) && (
         <div className="card p-8 text-center">
           <div className="flex justify-center mb-3">
             <FileText className="w-10 h-10 text-secondary opacity-40" />

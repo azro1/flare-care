@@ -938,26 +938,23 @@ function MedicationTrackingWizard() {
 
   return (
     <div className={`max-w-4xl w-full mx-auto sm:px-4 md:px-6 lg:px-8 min-w-0 flex flex-col justify-center sm:flex-grow ${currentStep > 0 ? 'pb-20 lg:pb-0' : ''}`}>
-      {/* Back Button - Hide on landing page and first question */}
-      {currentStep > 1 && (
-        <div className="mb-4 sm:mb-8">
-          <button
-            onClick={prevStep}
-            className="text-cadet-blue hover:text-cadet-blue/80 hover:underline text-base font-medium flex items-center"
-          >
-            <svg className="w-4 h-4 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 19l-7-7 7-7" />
-            </svg>
-            Back
-          </button>
-        </div>
-      )}
-
-      {/* Section Header - Hide on landing page */}
+      {/* Header: Back when needed, then title - hide on landing */}
       {currentStep > 0 && (
         <div className="mb-8">
-          <h1 className="text-base sm:text-lg font-regular text-muted mb-3">Track Medications</h1>
-          <div className="border-b" style={{borderColor: '#5F9EA0'}}></div>
+          {currentStep > 1 && (
+            <button
+              onClick={prevStep}
+              className="text-cadet-blue hover:text-cadet-blue/80 hover:underline text-base font-medium flex items-center mb-3"
+            >
+              <svg className="w-4 h-4 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 19l-7-7 7-7" />
+              </svg>
+              Back
+            </button>
+          )}
+          <h1 className="text-sm sm:text-base font-normal text-primary underline">
+            Track Medications
+          </h1>
         </div>
       )}
 

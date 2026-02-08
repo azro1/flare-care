@@ -6,7 +6,7 @@ import { useAuth } from '@/lib/AuthContext'
 import { useEffect, useState } from 'react'
 import { useRouter } from 'next/navigation'
 import { supabase, TABLES } from '@/lib/supabase'
-import { CupSoda, Pizza, Coffee, BookOpen, Smile, Thermometer, Pill, FileText, Activity, TrendingUp, PartyPopper, Clipboard, Cookie, ChartLine, Sparkles, ChevronRight, ChevronDown, Clock, Scale } from 'lucide-react'
+import { CupSoda, Pizza, Coffee, BookOpen, Smile, Thermometer, Pill, FileText, Activity, TrendingUp, PartyPopper, Clipboard, Cookie, ChartLine, Sparkles, ChevronRight, ChevronDown, Clock, Scale, Calendar } from 'lucide-react'
 
 export default function Home() {
   const { isAuthenticated, loading, user } = useAuth()
@@ -35,6 +35,9 @@ export default function Home() {
   const [weightEntries, setWeightEntries] = useState([])
   const [weightDeleted, setWeightDeleted] = useState(null)
   const [weightUpdated, setWeightUpdated] = useState(null)
+  const [appointmentAdded, setAppointmentAdded] = useState(null)
+  const [appointmentUpdated, setAppointmentUpdated] = useState(null)
+  const [appointmentDeleted, setAppointmentDeleted] = useState(null)
 
   // Daily tips array
   const dailyTips = [
@@ -332,6 +335,9 @@ export default function Home() {
         const trackedMedDeletedKey = `flarecare-tracked-medication-deleted-${user.id}-${today}`
         const weightDeletedKey = `flarecare-weight-deleted-${user.id}-${today}`
         const weightUpdatedKey = `flarecare-weight-updated-${user.id}-${today}`
+        const appointmentAddedKey = `flarecare-appointment-added-${user.id}-${today}`
+        const appointmentUpdatedKey = `flarecare-appointment-updated-${user.id}-${today}`
+        const appointmentDeletedKey = `flarecare-appointment-deleted-${user.id}-${today}`
         const individualTakingsKey = `flarecare-medication-individual-takings-${user.id}-${today}`
         for (let i = 0; i < localStorage.length; i++) {
           const key = localStorage.key(i)
@@ -345,6 +351,9 @@ export default function Home() {
             (key.startsWith(`flarecare-tracked-medication-deleted-${user.id}-`) && key !== trackedMedDeletedKey) ||
             (key.startsWith(`flarecare-weight-deleted-${user.id}-`) && key !== weightDeletedKey) ||
             (key.startsWith(`flarecare-weight-updated-${user.id}-`) && key !== weightUpdatedKey) ||
+            (key.startsWith(`flarecare-appointment-added-${user.id}-`) && key !== appointmentAddedKey) ||
+            (key.startsWith(`flarecare-appointment-updated-${user.id}-`) && key !== appointmentUpdatedKey) ||
+            (key.startsWith(`flarecare-appointment-deleted-${user.id}-`) && key !== appointmentDeletedKey) ||
             (key.startsWith(`flarecare-medication-individual-takings-${user.id}-`) && key !== individualTakingsKey)
           )) {
             keysToRemove.push(key)
@@ -471,6 +480,48 @@ export default function Home() {
       } else {
         setWeightUpdated(null)
       }
+
+      // Load appointment added activity
+      const appointmentAddedKey = `flarecare-appointment-added-${user.id}-${today}`
+      const appointmentAddedData = localStorage.getItem(appointmentAddedKey)
+      if (appointmentAddedData) {
+        try {
+          setAppointmentAdded(JSON.parse(appointmentAddedData))
+        } catch (error) {
+          console.error('Error parsing appointment added data:', error)
+          setAppointmentAdded(null)
+        }
+      } else {
+        setAppointmentAdded(null)
+      }
+
+      // Load appointment updated activity
+      const appointmentUpdatedKey = `flarecare-appointment-updated-${user.id}-${today}`
+      const appointmentUpdatedData = localStorage.getItem(appointmentUpdatedKey)
+      if (appointmentUpdatedData) {
+        try {
+          setAppointmentUpdated(JSON.parse(appointmentUpdatedData))
+        } catch (error) {
+          console.error('Error parsing appointment updated data:', error)
+          setAppointmentUpdated(null)
+        }
+      } else {
+        setAppointmentUpdated(null)
+      }
+
+      // Load appointment deleted activity
+      const appointmentDeletedKey = `flarecare-appointment-deleted-${user.id}-${today}`
+      const appointmentDeletedData = localStorage.getItem(appointmentDeletedKey)
+      if (appointmentDeletedData) {
+        try {
+          setAppointmentDeleted(JSON.parse(appointmentDeletedData))
+        } catch (error) {
+          console.error('Error parsing appointment deleted data:', error)
+          setAppointmentDeleted(null)
+        }
+      } else {
+        setAppointmentDeleted(null)
+      }
       
       // Load individual medication takings
       const individualTakingsKey = `flarecare-medication-individual-takings-${user.id}-${today}`
@@ -507,6 +558,9 @@ export default function Home() {
         (e.key.startsWith('flarecare-tracked-medication-deleted-') && e.key.includes(`-${user.id}-`)) ||
         (e.key.startsWith('flarecare-weight-deleted-') && e.key.includes(`-${user.id}-`)) ||
         (e.key.startsWith('flarecare-weight-updated-') && e.key.includes(`-${user.id}-`)) ||
+        (e.key.startsWith('flarecare-appointment-added-') && e.key.includes(`-${user.id}-`)) ||
+        (e.key.startsWith('flarecare-appointment-updated-') && e.key.includes(`-${user.id}-`)) ||
+        (e.key.startsWith('flarecare-appointment-deleted-') && e.key.includes(`-${user.id}-`)) ||
         (e.key.startsWith('flarecare-medication-individual-takings-') && e.key.includes(`-${user.id}-`))
       )) {
         loadTakenMedications()
@@ -550,6 +604,18 @@ export default function Home() {
       loadTakenMedications()
     }
 
+    const handleAppointmentAdded = () => {
+      loadTakenMedications()
+    }
+
+    const handleAppointmentUpdated = () => {
+      loadTakenMedications()
+    }
+
+    const handleAppointmentDeleted = () => {
+      loadTakenMedications()
+    }
+
     window.addEventListener('storage', handleStorageChange)
     window.addEventListener('medication-taken', handleMedicationTaken)
     window.addEventListener('medication-added', handleMedicationAdded)
@@ -560,6 +626,9 @@ export default function Home() {
     window.addEventListener('weight-deleted', handleWeightDeleted)
     window.addEventListener('weight-updated', handleWeightUpdated)
     window.addEventListener('weight-added', handleWeightAdded)
+    window.addEventListener('appointment-added', handleAppointmentAdded)
+    window.addEventListener('appointment-updated', handleAppointmentUpdated)
+    window.addEventListener('appointment-deleted', handleAppointmentDeleted)
     
     // Check when window gains focus (user navigates back to dashboard)
     const handleFocus = () => {
@@ -578,6 +647,9 @@ export default function Home() {
       window.removeEventListener('weight-deleted', handleWeightDeleted)
       window.removeEventListener('weight-updated', handleWeightUpdated)
       window.removeEventListener('weight-added', handleWeightAdded)
+      window.removeEventListener('appointment-added', handleAppointmentAdded)
+      window.removeEventListener('appointment-updated', handleAppointmentUpdated)
+      window.removeEventListener('appointment-deleted', handleAppointmentDeleted)
       window.removeEventListener('focus', handleFocus)
     }
   }, [user?.id])
@@ -1307,6 +1379,42 @@ export default function Home() {
                 })
               }
 
+              // Appointment added
+              if (appointmentAdded) {
+                activities.push({
+                  type: 'added-appointment',
+                  timestamp: new Date(appointmentAdded.timestamp),
+                  title: appointmentAdded.type ? `Added appointment: ${appointmentAdded.type}` : 'Added appointment',
+                  icon: Calendar,
+                  iconBg: 'bg-sky-100',
+                  iconColor: 'text-sky-600'
+                })
+              }
+
+              // Appointment updated
+              if (appointmentUpdated) {
+                activities.push({
+                  type: 'updated-appointment',
+                  timestamp: new Date(appointmentUpdated.timestamp),
+                  title: 'Updated appointment',
+                  icon: Calendar,
+                  iconBg: 'bg-sky-100',
+                  iconColor: 'text-sky-600'
+                })
+              }
+
+              // Appointment deleted
+              if (appointmentDeleted) {
+                activities.push({
+                  type: 'deleted-appointment',
+                  timestamp: new Date(appointmentDeleted.timestamp),
+                  title: 'Deleted appointment',
+                  icon: Calendar,
+                  iconBg: 'bg-sky-100',
+                  iconColor: 'text-sky-600'
+                })
+              }
+
               // All medications taken
               if (allMedsTaken) {
                 activities.push({
@@ -1424,6 +1532,27 @@ export default function Home() {
                 <div className="pointer-events-none absolute right-3 -top-14 hidden w-52 sm:group-hover:flex sm:group-focus-visible:flex">
                   <div className="tooltip-card rounded-lg px-4 py-3 text-left text-sm text-secondary leading-snug shadow-lg font-roboto w-full">
                     Keep track of your weight for your appointments
+                  </div>
+                </div>
+              </Link>
+
+              <Link
+                href="/appointments"
+                className="card card-link transition-all group relative focus:outline-none focus-visible:outline-none focus-visible:ring-0 focus-visible:ring-offset-0 focus:ring-0"
+              >
+                <div className="flex flex-col items-center gap-3">
+                  <div className="w-8 h-8 lg:w-10 lg:h-10 bg-sky-100 rounded-lg flex items-center justify-center flex-shrink-0">
+                    <Calendar className="w-5 h-5 text-sky-600" />
+                  </div>
+                  <div className="w-full text-center">
+                    <h3 className="font-semibold text-primary leading-tight sm:leading-relaxed">
+                      Appointments
+                    </h3>
+                  </div>
+                </div>
+                <div className="pointer-events-none absolute right-3 -top-14 hidden w-52 sm:group-hover:flex sm:group-focus-visible:flex">
+                  <div className="tooltip-card rounded-lg px-4 py-3 text-left text-sm text-secondary leading-snug shadow-lg font-roboto w-full">
+                    View and manage your upcoming healthcare appointments
                   </div>
                 </div>
               </Link>

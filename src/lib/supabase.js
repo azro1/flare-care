@@ -11,6 +11,7 @@ export const TABLES = {
   MEDICATIONS: 'medications',  // This now points to the new table
   TRACK_MEDICATIONS: 'track_medications',  // Add this for the renamed table
   TRACK_WEIGHT: 'track_weight',
+  APPOINTMENTS: 'appointments',
   USER_SETTINGS: 'user_settings',
   USER_PREFERENCES: 'user_preferences'
 }
