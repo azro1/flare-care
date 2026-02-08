@@ -247,7 +247,7 @@ function SymptomsPageContent() {
       }
     }
   }, [])
-  
+
   const [dateErrors, setDateErrors] = useState({
     day: '',
     month: '',
@@ -256,6 +256,63 @@ function SymptomsPageContent() {
     endMonth: '',
     endYear: ''
   })
+
+  // Show "Date cannot be in the future" as soon as the full date is entered (same as year validation)
+  useEffect(() => {
+    const now = new Date()
+    const currentYear = now.getFullYear()
+    const currentMonth = now.getMonth() + 1
+    const currentDay = now.getDate()
+
+    if (currentStep === 1 && dateInputs.day && dateInputs.month && dateInputs.year) {
+      const day = parseInt(dateInputs.day)
+      const month = parseInt(dateInputs.month)
+      const year = parseInt(dateInputs.year)
+      if (day >= 1 && day <= 31 && month >= 1 && month <= 12 && year >= 2020 && year <= currentYear) {
+        const dateString = `${year}-${month.toString().padStart(2, '0')}-${day.toString().padStart(2, '0')}`
+        const testDate = new Date(dateString)
+        const valid = !isNaN(testDate.getTime()) && testDate.getDate() === day && testDate.getMonth() === (month - 1) && testDate.getFullYear() === year
+        if (valid) {
+          const isFuture = year > currentYear || (year === currentYear && month > currentMonth) || (year === currentYear && month === currentMonth && day > currentDay)
+          if (isFuture) {
+            setDateErrors(prev => ({ ...prev, day: 'Date cannot be in the future', month: '', year: '' }))
+          } else {
+            setDateErrors(prev => ({
+              ...prev,
+              day: prev.day === 'Date cannot be in the future' ? '' : prev.day,
+              month: prev.month === 'Date cannot be in the future' ? '' : prev.month,
+              year: prev.year === 'Date cannot be in the future' ? '' : prev.year
+            }))
+          }
+        }
+      }
+    }
+
+    if (currentStep === 3 && dateInputs.endDay && dateInputs.endMonth && dateInputs.endYear) {
+      const endDay = parseInt(dateInputs.endDay)
+      const endMonth = parseInt(dateInputs.endMonth)
+      const endYear = parseInt(dateInputs.endYear)
+      if (endDay >= 1 && endDay <= 31 && endMonth >= 1 && endMonth <= 12 && endYear >= 2020 && endYear <= currentYear) {
+        const endDateString = `${endYear}-${endMonth.toString().padStart(2, '0')}-${endDay.toString().padStart(2, '0')}`
+        const testEndDate = new Date(endDateString)
+        const valid = !isNaN(testEndDate.getTime()) && testEndDate.getDate() === endDay && testEndDate.getMonth() === (endMonth - 1) && testEndDate.getFullYear() === endYear
+        if (valid) {
+          const isFuture = endYear > currentYear || (endYear === currentYear && endMonth > currentMonth) || (endYear === currentYear && endMonth === currentMonth && endDay > currentDay)
+          if (isFuture) {
+            setDateErrors(prev => ({ ...prev, endDay: 'Date cannot be in the future', endMonth: '', endYear: '' }))
+          } else {
+            setDateErrors(prev => ({
+              ...prev,
+              endDay: prev.endDay === 'Date cannot be in the future' ? '' : prev.endDay,
+              endMonth: prev.endMonth === 'Date cannot be in the future' ? '' : prev.endMonth,
+              endYear: prev.endYear === 'Date cannot be in the future' ? '' : prev.endYear
+            }))
+          }
+        }
+      }
+    }
+  }, [currentStep, dateInputs.day, dateInputs.month, dateInputs.year, dateInputs.endDay, dateInputs.endMonth, dateInputs.endYear])
+
   const [fieldErrors, setFieldErrors] = useState({
     bathroom_frequency_change_details: '',
     smoking_details: '',
@@ -437,6 +494,20 @@ function SymptomsPageContent() {
         return
       }
       
+      // Date cannot be in the future (compare as numbers to avoid timezone issues)
+      const now = new Date()
+      const currentYear = now.getFullYear()
+      const currentMonth = now.getMonth() + 1
+      const currentDay = now.getDate()
+      if (year > currentYear || (year === currentYear && month > currentMonth) || (year === currentYear && month === currentMonth && day > currentDay)) {
+        setDateErrors({
+          day: 'Date cannot be in the future',
+          month: '',
+          year: ''
+        })
+        return
+      }
+      
       // Clear any existing errors since validation passed
       setDateErrors({ day: '', month: '', year: '', endDay: '', endMonth: '', endYear: '' })
       
@@ -500,6 +571,21 @@ function SymptomsPageContent() {
         setDateErrors(prev => ({
           ...prev,
           endDay: 'Please enter a valid date',
+          endMonth: '',
+          endYear: ''
+        }))
+        return
+      }
+      
+      // End date cannot be in the future (compare as numbers to avoid timezone issues)
+      const nowEnd = new Date()
+      const currentYearEnd = nowEnd.getFullYear()
+      const currentMonthEnd = nowEnd.getMonth() + 1
+      const currentDayEnd = nowEnd.getDate()
+      if (endYear > currentYearEnd || (endYear === currentYearEnd && endMonth > currentMonthEnd) || (endYear === currentYearEnd && endMonth === currentMonthEnd && endDay > currentDayEnd)) {
+        setDateErrors(prev => ({
+          ...prev,
+          endDay: 'Date cannot be in the future',
           endMonth: '',
           endYear: ''
         }))

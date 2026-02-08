@@ -174,11 +174,11 @@ function SymptomDetailContent() {
               <div className="card-inner p-4">
                 <span className="text-xs font-semibold text-secondary uppercase tracking-wide block">Status</span>
                 <p className={`mt-2 text-base font-semibold ${
-                  (symptom.is_ongoing || !symptom.symptom_end_date)
+                  (symptom.isOngoing || !symptom.symptomEndDate)
                     ? 'text-yellow-600 dark:text-yellow-300'
                     : 'text-green-600 dark:text-green-300'
                 }`}>
-                  {symptom.is_ongoing || !symptom.symptom_end_date ? 'Ongoing' : 'Resolved'}
+                  {symptom.isOngoing || !symptom.symptomEndDate ? 'Ongoing' : 'Resolved'}
                 </p>
               </div>
 
@@ -204,7 +204,7 @@ function SymptomDetailContent() {
             <div className="card-inner p-4 space-y-4">
               <div
                 className={`flex items-center justify-between  ${
-                  !symptom.is_ongoing && symptom.symptom_end_date ? 'border-b border-slate-300/30 dark:border-b' : ''
+                  !symptom.isOngoing && symptom.symptomEndDate ? 'border-b border-slate-300/30 dark:border-b' : ''
                 }`}
                 style={{ borderColor: 'var(--border-card-inner)' }}
               >
@@ -213,20 +213,20 @@ function SymptomDetailContent() {
                   <span className="font-medium text-primary">Started</span>
                 </div>
                 <span className="text-secondary">
-                  {symptom.symptom_start_date 
-                    ? new Date(symptom.symptom_start_date).toLocaleDateString() 
+                  {symptom.symptomStartDate 
+                    ? new Date(symptom.symptomStartDate).toLocaleDateString() 
                     : (symptom.created_at || symptom.createdAt 
                       ? new Date(symptom.created_at || symptom.createdAt).toLocaleDateString() 
                       : 'Not set')}
                 </span>
               </div>
-              {!symptom.is_ongoing && symptom.symptom_end_date && (
+              {!symptom.isOngoing && symptom.symptomEndDate && (
                 <div className="flex items-center justify-between py-3">
                   <div className="flex items-center gap-3">
                     <div className="w-3 h-3 bg-red-500 rounded-full"></div>
                     <span className="font-medium text-primary">Ended</span>
                   </div>
-                  <span className="text-secondary">{new Date(symptom.symptom_end_date).toLocaleDateString()}</span>
+                  <span className="text-secondary">{new Date(symptom.symptomEndDate).toLocaleDateString()}</span>
                 </div>
               )}
             </div>
