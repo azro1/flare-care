@@ -542,7 +542,7 @@ function MedicationsPageContent() {
                 My Medications
               </h1>
               <p className="text-secondary font-roboto">
-                Add your prescribed medications, set up reminders, and keep track of your medication schedule.
+                Add your prescribed medications, set up reminders, and keep track of your medication schedule
               </p>
             </div>
           </div>

@@ -989,7 +989,7 @@ export default function Home() {
               href="/symptoms"
               className="card card-link !py-4 !px-4 sm:!p-6 transition-all group relative focus:outline-none focus-visible:outline-none focus-visible:ring-0 focus-visible:ring-offset-0 focus:ring-0"
             >
-              <div className="flex items-center sm:flex-col sm:items-center gap-4 sm:gap-3">
+              <div className="flex items-center sm:flex-col sm:items-center gap-3 sm:gap-3">
                 <div className="w-8 h-8 lg:w-10 lg:h-10 bg-emerald-100 rounded-lg flex items-center justify-center flex-shrink-0">
                   <Thermometer className="w-5 h-5 sm:w-6 sm:h-6 text-emerald-600" />
                 </div>
@@ -1011,7 +1011,7 @@ export default function Home() {
               href="/medications/track"
               className="card card-link !py-4 !px-4 sm:!p-6 transition-all group relative focus:outline-none focus-visible:outline-none focus-visible:ring-0 focus-visible:ring-offset-0 focus:ring-0"
             >
-              <div className="flex items-center sm:flex-col sm:items-center gap-4 sm:gap-3">
+              <div className="flex items-center sm:flex-col sm:items-center gap-3 sm:gap-3">
                 <div className="w-8 h-8 lg:w-10 lg:h-10 bg-pink-100 rounded-lg flex items-center justify-center flex-shrink-0">
                   <ChartLine className="w-5 h-5 text-pink-600" />
                 </div>
@@ -1033,7 +1033,7 @@ export default function Home() {
 
 
         {/* Today's Summary */}
-        <div className="mb-4 sm:mb-6 card">
+        <div className="mb-6 sm:mb-6 card">
           <h2 className="text-xl font-semibold font-source text-primary mb-4">Today's Summary</h2>
             <div className="card-inner p-4">
               <div className="flex justify-between items-center p-2">
@@ -1098,7 +1098,7 @@ export default function Home() {
 
         {/* Recent Medications */}
         {trackedMedications.length > 0 && (
-          <div className="mb-4 sm:mb-6 card">
+          <div className="mb-6 sm:mb-6 card">
             <div className="flex items-center justify-between mb-4">
               <div className="flex items-start gap-3">
                 <h2 className="text-xl font-semibold font-source text-primary">Recent Tracked Medications</h2>
@@ -1375,7 +1375,7 @@ export default function Home() {
                 </div>
                   <div className="w-full text-center">
                     <h3 className="font-semibold text-primary leading-tight sm:leading-relaxed">
-                      Medication
+                      My Meds
                     </h3>
                   </div>
                 </div>

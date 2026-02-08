@@ -94,7 +94,7 @@ function AccountPageContent() {
         {/* Header */}
         <div className="mb-4 sm:mb-6 card">
           <div className="text-center">
-            <h1 className="text-2xl sm:text-3xl lg:text-4xl font-bold font-source text-primary mb-4">My Account</h1>
+            <h1 className="text-2xl sm:text-3xl lg:text-4xl font-bold font-source text-primary mb-4">Account</h1>
             <p className="text-secondary font-roboto break-words">Manage your account settings and information</p>
           </div>
         </div>

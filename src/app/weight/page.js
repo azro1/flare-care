@@ -58,6 +58,10 @@ function WeightPageContent() {
     fetchEntries()
   }, [user?.id])
 
+  useEffect(() => {
+    window.scrollTo(0, 0)
+  }, [])
+
   const formatUKDate = (dateString) => {
     if (!dateString) return ''
     const date = dateString.includes('T') ? new Date(dateString) : new Date(dateString + 'T12:00:00')
@@ -211,7 +215,7 @@ function WeightPageContent() {
                 Track Your Weight
               </h1>
               <p className="text-secondary font-roboto">
-                Record your weight over time to monitor trends and share with your healthcare team.
+                Record your weight over time to monitor trends and share with your healthcare team
               </p>
             </div>
           </div>

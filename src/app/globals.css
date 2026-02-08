@@ -228,7 +228,7 @@
     color: var(--text-primary);
     /* border: 1px solid; */
     /* border-color: var(--border-card); */
-    @apply rounded-lg shadow-sm p-6 transition-shadow duration-200 hover:shadow-md;
+    @apply rounded-xl shadow-sm p-6 transition-shadow duration-200 hover:shadow-md;
   }
   
   .card-link {
@@ -268,7 +268,7 @@
     background-color: var(--bg-card-inner);
     color: var(--text-card-inner);
     border: none;
-    @apply rounded-lg;
+    @apply rounded-xl;
   }
 
   .dark .card-inner {

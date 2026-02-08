@@ -247,7 +247,7 @@ function SymptomDetailContent() {
               </div>
               {symptom.bathroom_frequency_changed && (
                 <div
-                  className={`flex items-center justify-between  pt-4 ${
+                  className={`flex items-center justify-between pt-4 pb-4 ${
                     symptom.bathroom_frequency_changed === 'yes' && symptom.bathroom_frequency_change_details
                       ? 'border-b border-slate-300/30 dark:border-b'
                       : ''
