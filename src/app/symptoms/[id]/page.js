@@ -201,11 +201,9 @@ function SymptomDetailContent() {
           {/* Timeline */}
           <div className="card">
             <h2 className="text-xl font-semibold font-source text-primary mb-6">Timeline</h2>
-            <div className="card-inner p-4 space-y-4">
+            <div className="card-inner p-4">
               <div
-                className={`flex items-center justify-between  ${
-                  !symptom.isOngoing && symptom.symptomEndDate ? 'border-b border-slate-300/30 dark:border-b' : ''
-                }`}
+                className={`flex items-center justify-between ${!symptom.isOngoing && symptom.symptomEndDate ? 'pb-4 border-b border-slate-300/30 dark:border-b' : ''}`}
                 style={{ borderColor: 'var(--border-card-inner)' }}
               >
                 <div className="flex items-center gap-3">
@@ -221,7 +219,7 @@ function SymptomDetailContent() {
                 </span>
               </div>
               {!symptom.isOngoing && symptom.symptomEndDate && (
-                <div className="flex items-center justify-between py-3">
+                <div className="flex items-center justify-between pt-4">
                   <div className="flex items-center gap-3">
                     <div className="w-3 h-3 bg-red-500 rounded-full"></div>
                     <span className="font-medium text-primary">Ended</span>
@@ -249,7 +247,7 @@ function SymptomDetailContent() {
                 <div
                   className={`flex items-center justify-between pt-4 ${
                     symptom.bathroom_frequency_changed === 'yes' && symptom.bathroom_frequency_change_details
-                      ? 'border-b border-slate-300/30 dark:border-b'
+                      ? 'pb-4 border-b border-slate-300/30 dark:border-b'
                       : ''
                   }`}
                 style={{ borderColor: 'var(--border-card-inner)' }}
@@ -259,7 +257,7 @@ function SymptomDetailContent() {
                 </div>
               )}
               {symptom.bathroom_frequency_changed === 'yes' && symptom.bathroom_frequency_change_details && (
-                <div className="py-3 min-w-0">
+                <div className="pt-4 min-w-0">
                   <span className="font-medium text-primary block mb-2">Description</span>
                   <p className="text-secondary leading-relaxed line-clamp-3" title={symptom.bathroom_frequency_change_details}>{symptom.bathroom_frequency_change_details}</p>
                 </div>
@@ -276,14 +274,14 @@ function SymptomDetailContent() {
                 <span className="text-secondary">{symptom.smoking ? 'Yes' : 'No'}</span>
               </div>
               {symptom.smoking && symptom.smoking_details && (
-                <div className="py-3 border-b border-slate-300/30 dark:border-b min-w-0" style={{borderColor: 'var(--border-card-inner)'}}>
+                <div className="pt-4 pb-4 border-b border-slate-300/30 dark:border-b min-w-0" style={{borderColor: 'var(--border-card-inner)'}}>
                   <span className="font-medium text-primary block mb-2">Smoking details</span>
                   <p className="text-secondary leading-relaxed line-clamp-3" title={symptom.smoking_details}>{symptom.smoking_details}</p>
                 </div>
               )}
               <div
                 className={`flex items-center justify-between pt-4 ${
-                  symptom.alcohol && symptom.alcohol_units ? 'border-b border-slate-300/30 dark:border-b' : ''
+                  symptom.alcohol && symptom.alcohol_units ? 'pb-4 border-b border-slate-300/30 dark:border-b' : ''
                 }`}
                 style={{ borderColor: 'var(--border-card-inner)' }}
               >
@@ -291,7 +289,7 @@ function SymptomDetailContent() {
                 <span className="text-secondary">{symptom.alcohol ? 'Yes' : 'No'}</span>
               </div>
               {symptom.alcohol && symptom.alcohol_units && (
-                <div className="flex items-center justify-between py-3">
+                <div className="flex items-center justify-between pt-4">
                   <span className="font-medium text-primary">Alcohol units</span>
                   <span className="text-secondary">{symptom.alcohol_units} units/day</span>
                 </div>
