@@ -205,6 +205,9 @@ function MedicationTrackingWizard() {
     }))
   }
 
+  // Dosage: digits only; we add "mg" when saving and displaying
+  const normalizeDosage = (raw) => (raw || '').replace(/\D/g, '').slice(0, 5)
+
   // Missed medications list handlers
   const addMissedMedication = () => {
     setFormData(prev => ({
@@ -261,10 +264,11 @@ function MedicationTrackingWizard() {
   }
 
   const updateNsaid = (index, field, value) => {
+    const safeValue = field === 'dosage' ? normalizeDosage(value) : value
     setFormData(prev => ({
       ...prev,
       nsaidList: prev.nsaidList.map((item, i) =>
-        i === index ? { ...item, [field]: value } : item
+        i === index ? { ...item, [field]: safeValue } : item
       )
     }))
     
@@ -273,7 +277,7 @@ function MedicationTrackingWizard() {
       const newFormData = {
         ...formData,
         nsaidList: formData.nsaidList.map((item, i) =>
-          i === index ? { ...item, [field]: value } : item
+          i === index ? { ...item, [field]: safeValue } : item
         )
       }
       const hasCompleteEntry = newFormData.nsaidList.some(item => 
@@ -301,10 +305,11 @@ function MedicationTrackingWizard() {
   }
 
   const updateAntibiotic = (index, field, value) => {
+    const safeValue = field === 'dosage' ? normalizeDosage(value) : value
     setFormData(prev => ({
       ...prev,
       antibioticList: prev.antibioticList.map((item, i) =>
-        i === index ? { ...item, [field]: value } : item
+        i === index ? { ...item, [field]: safeValue } : item
       )
     }))
     
@@ -313,7 +318,7 @@ function MedicationTrackingWizard() {
       const newFormData = {
         ...formData,
         antibioticList: formData.antibioticList.map((item, i) =>
-          i === index ? { ...item, [field]: value } : item
+          i === index ? { ...item, [field]: safeValue } : item
         )
       }
       const hasCompleteEntry = newFormData.antibioticList.some(item => 
@@ -361,14 +366,14 @@ function MedicationTrackingWizard() {
       return
     }
 
-    // Create medication tracking entry following the same pattern as symptoms
+    // Create medication tracking entry (append "mg" to dosage for storage)
     const newMedicationTracking = {
       id: `medication-tracking-${Date.now()}`,
       user_id: user?.id,
       name: 'Medication Tracking',
       missed_medications_list: cleanedData.missedMedicationsList,
-      nsaid_list: cleanedData.nsaidList,
-      antibiotic_list: cleanedData.antibioticList,
+      nsaid_list: cleanedData.nsaidList.map(item => ({ ...item, dosage: item.dosage ? `${item.dosage}mg` : '' })),
+      antibiotic_list: cleanedData.antibioticList.map(item => ({ ...item, dosage: item.dosage ? `${item.dosage}mg` : '' })),
       created_at: new Date().toISOString()
     }
 
@@ -487,7 +492,8 @@ function MedicationTrackingWizard() {
                   {formData.missedMedicationsList.length > 1 && (
                     <button
                       onClick={() => removeMissedMedication(index)}
-                      className="absolute -right-2 -top-2 bg-red-500 rounded-full w-6 h-6 flex items-center justify-center shadow-md hover:bg-red-600 transition-all duration-200 z-10"
+                      className="absolute -right-2 -top-2 rounded-full w-6 h-6 flex items-center justify-center shadow-md hover:opacity-90 transition-all duration-200 z-10"
+                      style={{ backgroundColor: 'var(--text-cadet-blue)' }}
                       title="Remove item"
                     >
                       <span className="text-white text-sm font-bold leading-none">×</span>
@@ -628,7 +634,8 @@ function MedicationTrackingWizard() {
                   {formData.nsaidList.length > 1 && (
                     <button
                       onClick={() => removeNsaid(index)}
-                      className="absolute -right-2 -top-2 bg-red-500 rounded-full w-6 h-6 flex items-center justify-center shadow-md hover:bg-red-600 transition-all duration-200 z-10"
+                      className="absolute -right-2 -top-2 rounded-full w-6 h-6 flex items-center justify-center shadow-md hover:opacity-90 transition-all duration-200 z-10"
+                      style={{ backgroundColor: 'var(--text-cadet-blue)' }}
                       title="Remove item"
                     >
                       <span className="text-white text-sm font-bold leading-none">×</span>
@@ -664,13 +671,18 @@ function MedicationTrackingWizard() {
                         <option value="Night">Night</option>
                       </select>
                     </div>
-                    <input
-                      type="text"
-                      placeholder="Dosage (e.g., 200mg)"
-                      value={item.dosage}
-                      onChange={(e) => updateNsaid(index, 'dosage', e.target.value)}
-                      className="input-field-wizard max-w-xs"
-                    />
+                    <div className="flex items-center gap-2 max-w-xs">
+                      <input
+                        type="text"
+                        inputMode="numeric"
+                        placeholder="e.g. 200"
+                        value={item.dosage}
+                        onChange={(e) => updateNsaid(index, 'dosage', e.target.value)}
+                        maxLength={5}
+                        className="input-field-wizard flex-1 min-w-0"
+                      />
+                      <span className="text-primary font-roboto shrink-0">mg</span>
+                    </div>
                   </div>
                 </div>
               ))}
@@ -776,7 +788,8 @@ function MedicationTrackingWizard() {
                   {formData.antibioticList.length > 1 && (
                     <button
                       onClick={() => removeAntibiotic(index)}
-                      className="absolute -right-2 -top-2 bg-red-500 rounded-full w-6 h-6 flex items-center justify-center shadow-md hover:bg-red-600 transition-all duration-200 z-10"
+                      className="absolute -right-2 -top-2 rounded-full w-6 h-6 flex items-center justify-center shadow-md hover:opacity-90 transition-all duration-200 z-10"
+                      style={{ backgroundColor: 'var(--text-cadet-blue)' }}
                       title="Remove item"
                     >
                       <span className="text-white text-sm font-bold leading-none">×</span>
@@ -812,13 +825,18 @@ function MedicationTrackingWizard() {
                         <option value="Night">Night</option>
                       </select>
                     </div>
-                    <input
-                      type="text"
-                      placeholder="Dosage (e.g., 500mg)"
-                      value={item.dosage}
-                      onChange={(e) => updateAntibiotic(index, 'dosage', e.target.value)}
-                      className="input-field-wizard max-w-xs"
-                    />
+                    <div className="flex items-center gap-2 max-w-xs">
+                      <input
+                        type="text"
+                        inputMode="numeric"
+                        placeholder="e.g. 500"
+                        value={item.dosage}
+                        onChange={(e) => updateAntibiotic(index, 'dosage', e.target.value)}
+                        maxLength={5}
+                        className="input-field-wizard flex-1 min-w-0"
+                      />
+                      <span className="text-primary font-roboto shrink-0">mg</span>
+                    </div>
                   </div>
                 </div>
               ))}
@@ -854,11 +872,11 @@ function MedicationTrackingWizard() {
               <div className="space-y-4">
                 {formData.missedMedicationsList.filter(item => item.medication.trim()).map((item, index, array) => (
                   <div key={index} className={`grid grid-cols-1 sm:grid-cols-2 gap-3 py-3 ${index < array.length - 1 ? 'border-b' : ''}`} style={index < array.length - 1 ? {borderColor: 'var(--border-primary)'} : {}}>
-                    <div>
+                    <div className="min-w-0">
                       <span className="text-sm text-cadet-blue block mb-1">Medication</span>
-                      <span className="font-medium text-primary">{item.medication}</span>
+                      <span className="font-medium text-primary truncate block" title={item.medication}>{item.medication}</span>
                     </div>
-                    <div>
+                    <div className="min-w-0">
                       <span className="text-sm text-cadet-blue block mb-1">Date</span>
                       <span className="font-medium text-primary">{item.date ? new Date(item.date).toLocaleDateString('en-GB', { day: '2-digit', month: '2-digit', year: 'numeric' }) : 'N/A'}</span>
                     </div>
@@ -879,13 +897,13 @@ function MedicationTrackingWizard() {
               <div className="space-y-4">
                 {formData.nsaidList.filter(item => item.medication.trim()).map((item, index, array) => (
                   <div key={index} className={`grid grid-cols-1 sm:grid-cols-2 gap-3 py-3 ${index < array.length - 1 ? 'border-b' : ''}`} style={index < array.length - 1 ? {borderColor: 'var(--border-primary)'} : {}}>
-                    <div>
+                    <div className="min-w-0">
                       <span className="text-sm text-cadet-blue block mb-1">Medication</span>
-                      <span className="font-medium text-primary">{item.medication}</span>
+                      <span className="font-medium text-primary truncate block" title={item.medication}>{item.medication}</span>
                     </div>
-                    <div>
+                    <div className="min-w-0">
                       <span className="text-sm text-cadet-blue block mb-1">Dosage</span>
-                      <span className="font-medium text-primary">{item.dosage || 'N/A'}</span>
+                      <span className="font-medium text-primary block">{item.dosage ? `${item.dosage}mg` : 'N/A'}</span>
                     </div>
                     <div>
                       <span className="text-sm text-cadet-blue block mb-1">Date</span>
@@ -908,13 +926,13 @@ function MedicationTrackingWizard() {
               <div className="space-y-4">
                 {formData.antibioticList.filter(item => item.medication.trim()).map((item, index, array) => (
                   <div key={index} className={`grid grid-cols-1 sm:grid-cols-2 gap-3 py-3 ${index < array.length - 1 ? 'border-b' : ''}`} style={index < array.length - 1 ? {borderColor: 'var(--border-primary)'} : {}}>
-                    <div>
+                    <div className="min-w-0">
                       <span className="text-sm text-cadet-blue block mb-1">Medication</span>
-                      <span className="font-medium text-primary">{item.medication}</span>
+                      <span className="font-medium text-primary truncate block" title={item.medication}>{item.medication}</span>
                     </div>
-                    <div>
+                    <div className="min-w-0">
                       <span className="text-sm text-cadet-blue block mb-1">Dosage</span>
-                      <span className="font-medium text-primary">{item.dosage || 'N/A'}</span>
+                      <span className="font-medium text-primary block">{item.dosage ? `${item.dosage}mg` : 'N/A'}</span>
                     </div>
                     <div>
                       <span className="text-sm text-cadet-blue block mb-1">Date</span>
@@ -993,7 +1011,7 @@ function MedicationTrackingWizard() {
 
         {/* Navigation Buttons - Hide on landing page (step 0) */}
         {currentStep > 0 && (
-          <div className={`flex justify-start items-center ${currentStep === 7 ? 'mt-8' : 'mt-6'}`}>
+          <div className={`flex justify-start items-center ${currentStep === 7 ? 'mt-8 mb-8 sm:mb-0' : 'mt-6'}`}>
             {currentStep < 7 ? (
               <button
                 onClick={nextStep}

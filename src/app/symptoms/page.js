@@ -1891,37 +1891,37 @@ function SymptomsPageContent() {
           <div className="mb-5">
             <div className="space-y-6">
             {/* Breakfast */}
-              <div>
-                <div className="flex justify-between items-center mb-3">
-                  <div>
-                    <h3 className="text-2xl sm:text-2xl md:text-3xl font-source font-bold sm:font-semibold text-primary mb-2">
+              <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-3 mb-3">
+                <div>
+                  <h3 className="text-2xl sm:text-2xl md:text-3xl font-source font-bold sm:font-semibold text-primary mb-2">
                     {getMealLabel('breakfast')}
                   </h3>
-                  </div>
+                </div>
                 <button
                   type="button"
                   onClick={() => addMealItem('breakfast')}
-                    disabled={formData.breakfast.length > 0 && (formData.breakfast[formData.breakfast.length - 1]?.food === '' || formData.breakfast[formData.breakfast.length - 1]?.quantity === '')}
-                    className={`px-3 py-1 text-sm font-medium rounded-lg transition-colors ${
-                      formData.breakfast.length > 0 && (formData.breakfast[formData.breakfast.length - 1]?.food === '' || formData.breakfast[formData.breakfast.length - 1]?.quantity === '')
-                        ? 'button-disabled'
-                        : 'bg-[#5F9EA0] text-white hover:bg-button-cadet-hover'
-                    }`}
+                  disabled={formData.breakfast.length > 0 && (formData.breakfast[formData.breakfast.length - 1]?.food === '' || formData.breakfast[formData.breakfast.length - 1]?.quantity === '')}
+                  className={`px-4 py-2 text-sm font-medium rounded-lg transition-colors whitespace-nowrap ${
+                    formData.breakfast.length > 0 && (formData.breakfast[formData.breakfast.length - 1]?.food === '' || formData.breakfast[formData.breakfast.length - 1]?.quantity === '')
+                      ? 'button-disabled'
+                      : 'button-cadet'
+                  }`}
                 >
                   Add
                 </button>
               </div>
-                <div className="space-y-3">
+              <div className="space-y-4">
                 {formData.breakfast.map((item, index) => (
                   <div key={index} className="relative">
                     {formData.breakfast.length > 1 && (
                       <button
                         type="button"
                         onClick={() => removeMealItem('breakfast', index)}
-                          className="absolute -left-2 -top-2 bg-red-500 rounded-full w-[22px] h-[22px] flex items-center justify-center shadow-md hover:bg-red-600 transition-all duration-200"
+                        className="absolute -right-2 -top-2 rounded-full w-[22px] h-[22px] flex items-center justify-center shadow-md hover:opacity-90 transition-all duration-200"
+                        style={{ backgroundColor: 'var(--text-cadet-blue)' }}
                         title="Remove item"
                       >
-                          <span className="text-white text-sm font-bold leading-none">×</span>
+                        <span className="text-white text-sm font-bold leading-none">×</span>
                       </button>
                     )}
                     <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
@@ -1968,9 +1968,6 @@ function SymptomsPageContent() {
                 <span className="text-sm text-secondary">I didn't eat anything for breakfast</span>
               </div>
             </div>
-            </div>
-            
-            {/* Validation error message */}
             {fieldErrors.breakfast && (
               <div className="mt-6 p-3 rounded-lg border" style={{backgroundColor: 'var(--bg-error)', borderColor: 'var(--border-error)'}}>
                 <p className="text-sm" style={{color: 'var(--text-error)'}}>{fieldErrors.breakfast}</p>
@@ -1984,37 +1981,37 @@ function SymptomsPageContent() {
           <div className="mb-5">
             <div className="space-y-6">
             {/* Lunch */}
-              <div>
-                <div className="flex justify-between items-center mb-3">
-                  <div>
-                    <h3 className="text-2xl sm:text-2xl md:text-3xl font-source font-bold sm:font-semibold text-primary mb-2">
+              <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-3 mb-3">
+                <div>
+                  <h3 className="text-2xl sm:text-2xl md:text-3xl font-source font-bold sm:font-semibold text-primary mb-2">
                     {getMealLabel('lunch')}
                   </h3>
-                  </div>
+                </div>
                 <button
                   type="button"
                   onClick={() => addMealItem('lunch')}
-                    disabled={formData.lunch.length > 0 && (formData.lunch[formData.lunch.length - 1]?.food === '' || formData.lunch[formData.lunch.length - 1]?.quantity === '')}
-                    className={`px-3 py-1 text-sm font-medium rounded-lg transition-colors ${
-                      formData.lunch.length > 0 && (formData.lunch[formData.lunch.length - 1]?.food === '' || formData.lunch[formData.lunch.length - 1]?.quantity === '')
-                        ? 'button-disabled'
-                        : 'bg-[#5F9EA0] text-white hover:bg-button-cadet-hover'
-                    }`}
+                  disabled={formData.lunch.length > 0 && (formData.lunch[formData.lunch.length - 1]?.food === '' || formData.lunch[formData.lunch.length - 1]?.quantity === '')}
+                  className={`px-4 py-2 text-sm font-medium rounded-lg transition-colors whitespace-nowrap ${
+                    formData.lunch.length > 0 && (formData.lunch[formData.lunch.length - 1]?.food === '' || formData.lunch[formData.lunch.length - 1]?.quantity === '')
+                      ? 'button-disabled'
+                      : 'button-cadet'
+                  }`}
                 >
                   Add
                 </button>
               </div>
-                <div className="space-y-3">
+              <div className="space-y-4">
                 {formData.lunch.map((item, index) => (
                   <div key={index} className="relative">
                     {formData.lunch.length > 1 && (
                       <button
                         type="button"
                         onClick={() => removeMealItem('lunch', index)}
-                          className="absolute -left-2 -top-2 bg-red-500 rounded-full w-[22px] h-[22px] flex items-center justify-center shadow-md hover:bg-red-600 transition-all duration-200"
+                        className="absolute -right-2 -top-2 rounded-full w-[22px] h-[22px] flex items-center justify-center shadow-md hover:opacity-90 transition-all duration-200"
+                        style={{ backgroundColor: 'var(--text-cadet-blue)' }}
                         title="Remove item"
                       >
-                          <span className="text-white text-sm font-bold leading-none">×</span>
+                        <span className="text-white text-sm font-bold leading-none">×</span>
                       </button>
                     )}
                     <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
@@ -2061,9 +2058,6 @@ function SymptomsPageContent() {
                 <span className="text-sm text-secondary">I didn't eat anything for lunch</span>
               </div>
             </div>
-            </div>
-            
-            {/* Validation error message */}
             {fieldErrors.lunch && (
               <div className="mt-6 p-3 rounded-lg border" style={{backgroundColor: 'var(--bg-error)', borderColor: 'var(--border-error)'}}>
                 <p className="text-sm" style={{color: 'var(--text-error)'}}>{fieldErrors.lunch}</p>
@@ -2076,38 +2070,38 @@ function SymptomsPageContent() {
         {currentStep === 15 && (
           <div className="mb-5">
             <div className="space-y-6">
-            {/* Dinner */}
-              <div>
-                <div className="flex justify-between items-center mb-3">
-                  <div>
-                    <h3 className="text-2xl sm:text-2xl md:text-3xl font-source font-bold sm:font-semibold text-primary mb-2">
+{/* Dinner */}
+              <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-3 mb-3">
+                <div>
+                  <h3 className="text-2xl sm:text-2xl md:text-3xl font-source font-bold sm:font-semibold text-primary mb-2">
                     {getMealLabel('dinner')}
                   </h3>
-                  </div>
+                </div>
                 <button
                   type="button"
                   onClick={() => addMealItem('dinner')}
-                    disabled={formData.dinner.length > 0 && (formData.dinner[formData.dinner.length - 1]?.food === '' || formData.dinner[formData.dinner.length - 1]?.quantity === '')}
-                    className={`px-3 py-1 text-sm font-medium rounded-lg transition-colors ${
-                      formData.dinner.length > 0 && (formData.dinner[formData.dinner.length - 1]?.food === '' || formData.dinner[formData.dinner.length - 1]?.quantity === '')
-                        ? 'button-disabled'
-                        : 'bg-[#5F9EA0] text-white hover:bg-button-cadet-hover'
-                    }`}
+                  disabled={formData.dinner.length > 0 && (formData.dinner[formData.dinner.length - 1]?.food === '' || formData.dinner[formData.dinner.length - 1]?.quantity === '')}
+                  className={`px-4 py-2 text-sm font-medium rounded-lg transition-colors whitespace-nowrap ${
+                    formData.dinner.length > 0 && (formData.dinner[formData.dinner.length - 1]?.food === '' || formData.dinner[formData.dinner.length - 1]?.quantity === '')
+                      ? 'button-disabled'
+                      : 'button-cadet'
+                  }`}
                 >
                   Add
                 </button>
               </div>
-                <div className="space-y-3">
+              <div className="space-y-4">
                 {formData.dinner.map((item, index) => (
                   <div key={index} className="relative">
                     {formData.dinner.length > 1 && (
                       <button
                         type="button"
                         onClick={() => removeMealItem('dinner', index)}
-                          className="absolute -left-2 -top-2 bg-red-500 rounded-full w-[22px] h-[22px] flex items-center justify-center shadow-md hover:bg-red-600 transition-all duration-200"
+                        className="absolute -right-2 -top-2 rounded-full w-[22px] h-[22px] flex items-center justify-center shadow-md hover:opacity-90 transition-all duration-200"
+                        style={{ backgroundColor: 'var(--text-cadet-blue)' }}
                         title="Remove item"
                       >
-                          <span className="text-white text-sm font-bold leading-none">×</span>
+                        <span className="text-white text-sm font-bold leading-none">×</span>
                       </button>
                     )}
                     <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
@@ -2154,9 +2148,6 @@ function SymptomsPageContent() {
                 <span className="text-sm text-secondary">I didn't eat anything for dinner</span>
               </div>
             </div>
-            </div>
-            
-            {/* Validation error message */}
             {fieldErrors.dinner && (
               <div className="mt-6 p-3 rounded-lg border" style={{backgroundColor: 'var(--bg-error)', borderColor: 'var(--border-error)'}}>
                 <p className="text-sm" style={{color: 'var(--text-error)'}}>{fieldErrors.dinner}</p>
@@ -2236,9 +2227,9 @@ function SymptomsPageContent() {
                   )}
                 </div>
                 {formData.bathroom_frequency_changed === 'yes' && formData.bathroom_frequency_change_details && (
-                  <div className="py-3 border-t" style={{borderColor: 'var(--border-primary)'}}>
+                  <div className="py-3 border-t min-w-0" style={{borderColor: 'var(--border-primary)'}}>
                     <span className="text-sm text-cadet-blue block mb-1">Change Description</span>
-                    <span className="font-medium text-primary">{formData.bathroom_frequency_change_details}</span>
+                    <span className="font-medium text-primary line-clamp-2 block" title={formData.bathroom_frequency_change_details}>{formData.bathroom_frequency_change_details}</span>
                   </div>
                 )}
               </div>
@@ -2255,9 +2246,9 @@ function SymptomsPageContent() {
                       <span className="font-medium text-primary">{formData.smoking ? 'Yes' : 'No'}</span>
                     </div>
                     {formData.smoking && formData.smoking_details && (
-                      <div>
+                      <div className="min-w-0">
                         <span className="text-sm text-cadet-blue block mb-1">Smoking Habits</span>
-                        <span className="font-medium text-primary">{formData.smoking_details}</span>
+                        <span className="font-medium text-primary line-clamp-2 block" title={formData.smoking_details}>{formData.smoking_details}</span>
                       </div>
                     )}
                     <div>
@@ -2284,49 +2275,49 @@ function SymptomsPageContent() {
                 <h3 className="text-xl font-semibold text-cadet-blue mb-6 pb-4 border-b" style={{borderColor: 'var(--border-primary)'}}>Meals</h3>
                 <div className="space-y-3">
                   {formData.breakfast.some(item => item.food.trim()) && (
-                    <div className="py-3 border-b" style={{borderColor: 'var(--border-primary)'}}>
+                    <div className="py-3 border-b min-w-0" style={{borderColor: 'var(--border-primary)'}}>
                       <span className="text-sm text-cadet-blue block mb-2">Breakfast</span>
-                      <div className="space-y-1">
+                      <div className="space-y-1 min-w-0">
                         {formData.breakfast.filter(item => item.food.trim()).map((item, index) => (
-                          <div key={index} className="font-medium text-primary">{item.food} ({item.quantity})</div>
+                          <div key={index} className="font-medium text-primary truncate" title={`${item.food}${item.quantity ? ` (${item.quantity})` : ''}`}>{item.food} {item.quantity ? `(${item.quantity})` : ''}</div>
                         ))}
                       </div>
                     </div>
                   )}
                   {formData.breakfast_skipped && (
-                    <div className="py-3 border-b" style={{borderColor: 'var(--border-primary)'}}>
+                    <div className="py-3 border-b min-w-0" style={{borderColor: 'var(--border-primary)'}}>
                       <span className="text-sm text-cadet-blue block mb-2">Breakfast</span>
                       <span className="font-medium text-primary italic">Didn't eat anything</span>
                     </div>
                   )}
                   {formData.lunch.some(item => item.food.trim()) && (
-                    <div className="py-3 border-b" style={{borderColor: 'var(--border-primary)'}}>
+                    <div className="py-3 border-b min-w-0" style={{borderColor: 'var(--border-primary)'}}>
                       <span className="text-sm text-cadet-blue block mb-2">Lunch</span>
-                      <div className="space-y-1">
+                      <div className="space-y-1 min-w-0">
                         {formData.lunch.filter(item => item.food.trim()).map((item, index) => (
-                          <div key={index} className="font-medium text-primary">{item.food} ({item.quantity})</div>
+                          <div key={index} className="font-medium text-primary truncate" title={`${item.food}${item.quantity ? ` (${item.quantity})` : ''}`}>{item.food} {item.quantity ? `(${item.quantity})` : ''}</div>
                         ))}
                       </div>
                     </div>
                   )}
                   {formData.lunch_skipped && (
-                    <div className="py-3 border-b" style={{borderColor: 'var(--border-primary)'}}>
+                    <div className="py-3 border-b min-w-0" style={{borderColor: 'var(--border-primary)'}}>
                       <span className="text-sm text-cadet-blue block mb-2">Lunch</span>
                       <span className="font-medium text-primary italic">Didn't eat anything</span>
                     </div>
                   )}
                   {formData.dinner.some(item => item.food.trim()) && (
-                    <div className="py-3 border-b" style={{borderColor: 'var(--border-primary)'}}>
+                    <div className="py-3 border-b min-w-0" style={{borderColor: 'var(--border-primary)'}}>
                       <span className="text-sm text-cadet-blue block mb-2">Dinner</span>
-                      <div className="space-y-1">
+                      <div className="space-y-1 min-w-0">
                         {formData.dinner.filter(item => item.food.trim()).map((item, index) => (
-                          <div key={index} className="font-medium text-primary">{item.food} ({item.quantity})</div>
+                          <div key={index} className="font-medium text-primary truncate" title={`${item.food}${item.quantity ? ` (${item.quantity})` : ''}`}>{item.food} {item.quantity ? `(${item.quantity})` : ''}</div>
                         ))}
                       </div>
                     </div>
                   )}
                   {formData.dinner_skipped && (
-                    <div className="py-3">
+                    <div className="py-3 min-w-0">
                       <span className="text-sm text-cadet-blue block mb-2">Dinner</span>
                       <span className="font-medium text-primary italic">Didn't eat anything</span>
                     </div>
@@ -2337,10 +2328,10 @@ function SymptomsPageContent() {
 
             {/* Notes */}
             {formData.notes && (
-              <div className="card border" style={{borderColor: 'var(--border-card)'}}>
+              <div className="card border min-w-0" style={{borderColor: 'var(--border-card)'}}>
                 <h3 className="text-xl font-semibold text-cadet-blue mb-6 pb-4 border-b" style={{borderColor: 'var(--border-primary)'}}>Notes</h3>
-                <div className="py-3">
-                  <p className="font-medium text-primary">{formData.notes}</p>
+                <div className="py-3 min-w-0">
+                  <p className="font-medium text-primary line-clamp-3" title={formData.notes}>{formData.notes}</p>
                 </div>
               </div>
             )}
@@ -2354,7 +2345,7 @@ function SymptomsPageContent() {
 
         {/* Navigation Buttons - Hide on landing page (step 0) */}
         {currentStep > 0 && (
-          <div className={`flex justify-start items-center ${currentStep === 17 ? 'mt-8' : 'mt-6'}`}>
+          <div className={`flex justify-start items-center ${currentStep === 17 ? 'mt-8 mb-8 sm:mb-0' : 'mt-6'}`}>
             {currentStep < 17 ? (
               <button
                 onClick={nextStep}

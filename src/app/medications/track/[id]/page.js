@@ -178,9 +178,12 @@ function TrackedMedicationDetails() {
               {trackedData.missed_medications_list.map((item, index) => (
                 <div key={index} className="card">
                   <div className="card-inner p-4">
-                    <div className="flex justify-between pb-4 border-b border-slate-300/30 dark:border-b" style={{borderColor: 'var(--border-card-inner)'}}>
+                    <div
+                      className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-2 pb-4 border-b border-slate-300/30 dark:border-b"
+                      style={{borderColor: 'var(--border-card-inner)'}}
+                    >
                       <span className="text-secondary">Medication:</span>
-                      <span className="font-medium text-primary">{item.medication}</span>
+                      <span className="font-medium text-primary truncate min-w-0" title={item.medication}>{item.medication}</span>
                     </div>
                     <div className="flex justify-between py-4 border-b border-slate-300/30 dark:border-b" style={{borderColor: 'var(--border-card-inner)'}}>
                       <span className="text-secondary">Date:</span>
@@ -207,13 +210,19 @@ function TrackedMedicationDetails() {
               {trackedData.nsaid_list.map((item, index) => (
                 <div key={index} className="card">
                   <div className="card-inner p-4">
-                    <div className="flex justify-between pb-4 border-b border-slate-300/30 dark-border-b" style={{borderColor: 'var(--border-card-inner)'}}>
+                    <div
+                      className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-2 pb-4 border-b border-slate-300/30 dark-border-b"
+                      style={{borderColor: 'var(--border-card-inner)'}}
+                    >
                       <span className="text-secondary">Medication:</span>
-                      <span className="font-medium text-primary">{item.medication}</span>
+                      <span className="font-medium text-primary truncate min-w-0" title={item.medication}>{item.medication}</span>
                     </div>
-                    <div className="flex justify-between py-4 border-b border-slate-300/30 dark:border-b" style={{borderColor: 'var(--border-card-inner)'}}>
+                    <div
+                      className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-2 py-4 border-b border-slate-300/30 dark:border-b"
+                      style={{borderColor: 'var(--border-card-inner)'}}
+                    >
                       <span className="text-secondary">Dosage:</span>
-                      <span className="font-medium text-primary">{item.dosage || 'N/A'}</span>
+                      <span className="font-medium text-primary truncate min-w-0" title={item.dosage || 'N/A'}>{item.dosage || 'N/A'}</span>
                     </div>
                     <div className="flex justify-between py-4 border-b border-slate-300/30 dark:border-b" style={{borderColor: 'var(--border-card-inner)'}}>
                       <span className="text-secondary">Date:</span>
@@ -238,13 +247,19 @@ function TrackedMedicationDetails() {
               {trackedData.antibiotic_list.map((item, index) => (
                 <div key={index} className="card">
                   <div className="card-inner p-4">
-                    <div className="flex justify-between pb-4 border-b border-slate-300/30 dark:border-b" style={{borderColor: 'var(--border-card-inner)'}}>
+                    <div
+                      className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-2 pb-4 border-b border-slate-300/30 dark:border-b"
+                      style={{borderColor: 'var(--border-card-inner)'}}
+                    >
                       <span className="text-secondary">Medication:</span>
-                      <span className="font-medium text-primary">{item.medication}</span>
+                      <span className="font-medium text-primary truncate min-w-0" title={item.medication}>{item.medication}</span>
                     </div>
-                    <div className="flex justify-between py-4 border-b border-slate-300/30 dark-border-b" style={{borderColor: 'var(--border-card-inner)'}}>
+                    <div
+                      className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-2 py-4 border-b border-slate-300/30 dark:border-b"
+                      style={{borderColor: 'var(--border-card-inner)'}}
+                    >
                       <span className="text-secondary">Dosage:</span>
-                      <span className="font-medium text-primary">{item.dosage || 'N/A'}</span>
+                      <span className="font-medium text-primary truncate min-w-0" title={item.dosage || 'N/A'}>{item.dosage || 'N/A'}</span>
                     </div>
                     <div className="flex justify-between py-4 border-b border-slate-300/30 dark-border-b" style={{borderColor: 'var(--border-card-inner)'}}>
                       <span className="text-secondary">Date:</span>

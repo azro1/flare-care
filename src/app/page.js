@@ -1452,10 +1452,16 @@ export default function Home() {
                 <div className="space-y-3">
                   {recentActivities.map((activity, index) => {
                     return (
-                      <div key={`${activity.type}-${activity.timestamp.getTime()}-${index}`} className="flex items-start gap-3 pt-2">
-                        <span className="text-xl">🎉</span>
-                        <div className="flex-1">
-                          <p className="text-sm font-medium text-primary">{activity.title}</p>
+                      <div key={`${activity.type}-${activity.timestamp.getTime()}-${index}`} className="flex items-start gap-3 pt-2 min-w-0 overflow-hidden">
+                        <span className="text-xl flex-shrink-0">🎉</span>
+                        <div className="flex-1 min-w-0 overflow-hidden">
+                          <p
+                            className="text-sm font-medium text-primary min-w-0 line-clamp-2 overflow-hidden break-all"
+                            style={{ display: '-webkit-box', WebkitLineClamp: 2, WebkitBoxOrient: 'vertical' }}
+                            title={activity.title}
+                          >
+                            {activity.title}
+                          </p>
                           <p className="text-xs text-slate-400 dark:[color:var(--text-tertiary)] mt-1">
                             {formatRelativeTime(activity.timestamp)}
                           </p>
