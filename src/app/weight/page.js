@@ -4,7 +4,7 @@ import { useState, useEffect } from 'react'
 import ConfirmationModal from '@/components/ConfirmationModal'
 import ProtectedRoute from '@/components/ProtectedRoute'
 import { sanitizeNotes } from '@/lib/sanitize'
-import { Scale } from 'lucide-react'
+import { Scale, ChevronDown } from 'lucide-react'
 import { supabase, TABLES } from '@/lib/supabase'
 import { useAuth } from '@/lib/AuthContext'
 import DatePicker from 'react-datepicker'
@@ -17,6 +17,7 @@ function WeightPageContent() {
   const [isAdding, setIsAdding] = useState(false)
   const [editingId, setEditingId] = useState(null)
   const [deleteModal, setDeleteModal] = useState({ isOpen: false, id: null })
+  const [expandedWeightEntries, setExpandedWeightEntries] = useState(new Set())
   const [formData, setFormData] = useState({
     date: new Date().toISOString().split('T')[0],
     valueKg: '',
@@ -205,6 +206,15 @@ function WeightPageContent() {
 
   const closeDeleteModal = () => setDeleteModal({ isOpen: false, id: null })
 
+  const toggleWeightExpand = (id) => {
+    setExpandedWeightEntries(prev => {
+      const next = new Set(prev)
+      if (next.has(id)) next.delete(id)
+      else next.add(id)
+      return next
+    })
+  }
+
   return (
     <div className="max-w-4xl w-full mx-auto sm:px-4 md:px-6 min-w-0">
       <div className="mb-4 sm:mb-6">
@@ -222,32 +232,118 @@ function WeightPageContent() {
         </div>
       </div>
 
-      <div className="card mb-4 sm:mb-6 min-w-0">
-        <div className={`flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 ${isAdding || entries.length > 0 ? 'mb-5 sm:mb-6' : 'mb-0'}`}>
+      <div className="card mb-4 sm:mb-6 min-w-0 flex flex-col h-[68vh]">
+        <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 flex-shrink-0 mb-5 sm:mb-6">
           <div className="flex items-center">
             <div className="flex w-8 h-8 sm:w-12 sm:h-12 bg-indigo-100 rounded-xl items-center justify-center mr-3 sm:mr-4 flex-shrink-0">
               <Scale className="w-4 h-4 sm:w-6 sm:h-6 text-indigo-600" />
             </div>
             <h2 className="text-xl font-semibold font-source text-primary">
-              {isAdding ? (editingId ? 'Edit entry' : 'Log Weight') : 'Weight entries'}
+              Weight entries
             </h2>
           </div>
-          {!isAdding && (
-            <button
-              onClick={startAdding}
-              className="button-cadet px-4 py-2 text-lg font-semibold rounded-lg transition-colors self-start sm:self-auto"
-            >
-              <svg className="w-5 h-5 mr-2 inline" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 6v6m0 0v6m0-6h6m-6 0H6" />
-              </svg>
-              Log Weight
-            </button>
-          )}
         </div>
 
+        <div className="flex-1 min-h-0 overflow-auto">
+        {isLoading ? (
+          <p className="text-center py-12 text-secondary font-roboto">Loading...</p>
+        ) : entries.length === 0 ? (
+          <div className="text-center py-12 text-secondary">
+            <div className="card-inner rounded-full w-14 h-14 sm:w-20 sm:h-20 mx-auto mb-6 flex items-center justify-center">
+              <Scale className="w-6 h-6 sm:w-10 sm:h-10 text-secondary" />
+            </div>
+            <h3 className="text-lg font-semibold font-source text-primary mb-2">No entries yet</h3>
+            <p className="font-roboto text-secondary max-w-md mx-auto">
+              Add weight entries to track changes over time. Your weight data will be included in your report.
+            </p>
+          </div>
+        ) : (
+          <ul className="space-y-4">
+            {entries.map((entry) => {
+              const isExpanded = expandedWeightEntries.has(entry.id)
+              return (
+                <li key={entry.id} className="card-inner p-4 sm:p-6 min-w-0">
+                  <div className="flex flex-col sm:flex-row sm:justify-between sm:items-start gap-3">
+                    <div className="flex-1 min-w-0">
+                      <div className={`flex items-center gap-2 ${isExpanded ? 'mb-1' : ''} min-w-0`}>
+                        <div className="flex flex-wrap items-baseline gap-x-2 gap-y-1 min-w-0 flex-1">
+                          <span className="font-semibold text-primary">{formatUKDate(entry.date)}</span>
+                          <span className="text-secondary">·</span>
+                          <span className="text-primary font-roboto">{Number(entry.valueKg)} kg</span>
+                        </div>
+                        <button
+                          type="button"
+                          onClick={() => toggleWeightExpand(entry.id)}
+                          className="flex-shrink-0 p-1 rounded transition-colors hover:opacity-80 sm:self-start"
+                          style={{ color: 'var(--text-icon)' }}
+                          title={isExpanded ? 'Collapse details' : 'Expand details'}
+                        >
+                          <ChevronDown
+                            className={`w-5 h-5 transition-transform duration-200 ${isExpanded ? 'rotate-180' : ''}`}
+                          />
+                        </button>
+                      </div>
+                      {isExpanded && entry.notes && (
+                        <div className="mt-1 min-w-0 max-w-full overflow-hidden" title={entry.notes}>
+                          <p className="text-sm text-secondary font-roboto break-words line-clamp-2">{entry.notes}</p>
+                        </div>
+                      )}
+                    </div>
+                    <div className="flex space-x-2 flex-shrink-0">
+                      <button
+                        type="button"
+                        onClick={() => startEdit(entry)}
+                        disabled={editingId === entry.id}
+                        className="w-10 h-10 rounded-xl flex items-center justify-center transition-all duration-200 shadow-sm hover:shadow-md disabled:opacity-50 disabled:cursor-not-allowed disabled:hover:shadow-sm"
+                        style={{
+                          backgroundColor: 'var(--bg-card)',
+                          color: 'var(--text-icon)'
+                        }}
+                        title={editingId === entry.id ? 'Finish or cancel editing first' : 'Edit entry'}
+                      >
+                        <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z" />
+                        </svg>
+                      </button>
+                      <button
+                        type="button"
+                        onClick={() => setDeleteModal({ isOpen: true, id: entry.id })}
+                        disabled={editingId === entry.id}
+                        className="w-10 h-10 rounded-xl flex items-center justify-center transition-all duration-200 shadow-sm hover:shadow-md disabled:opacity-50 disabled:cursor-not-allowed disabled:hover:shadow-sm"
+                        style={{
+                          backgroundColor: 'var(--bg-card)',
+                          color: 'var(--text-icon)'
+                        }}
+                        title={editingId === entry.id ? 'Finish or cancel editing first' : 'Delete entry'}
+                      >
+                        <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
+                        </svg>
+                      </button>
+                    </div>
+                  </div>
+                  <div className="mt-4 pt-4 text-xs text-tertiary font-roboto" style={{ borderTop: '1px solid', borderColor: 'var(--border-card-inner)' }}>
+                    <div className="flex items-center">
+                      <svg className="w-3 h-3 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" />
+                      </svg>
+                      Added {formatUKDate(entry.createdAt)}
+                    </div>
+                  </div>
+                </li>
+              )
+            })}
+          </ul>
+        )}
+
         {isAdding && (
-          <div className="mb-6 min-w-0">
+          <div className="mt-6 min-w-0">
             <form onSubmit={handleSubmit} className="space-y-4" autoComplete="off">
+              <div className="mb-2">
+                <h3 className="text-xl font-semibold font-source text-primary">
+                  {editingId ? 'Edit entry' : 'New entry'}
+                </h3>
+              </div>
               <div className="grid sm:grid-cols-2 gap-6 min-w-0">
                 <div>
                   <label htmlFor="weight-date" className="block text-base font-semibold font-roboto text-primary mb-3">
@@ -272,15 +368,21 @@ function WeightPageContent() {
                     Weight (kg) *
                   </label>
                   <input
-                    type="number"
+                    type="text"
+                    inputMode="decimal"
                     id="valueKg"
                     name="valueKg"
                     value={formData.valueKg}
-                    onChange={(e) => setFormData(prev => ({ ...prev, valueKg: e.target.value }))}
+                    maxLength={7}
+                    onChange={(e) => {
+                      let v = e.target.value
+                      // Only digits and at most one decimal point (no 'e' or other chars)
+                      v = v.replace(/[^\d.]/g, '')
+                      const parts = v.split('.')
+                      if (parts.length > 2) v = parts[0] + '.' + parts.slice(1).join('')
+                      setFormData(prev => ({ ...prev, valueKg: v }))
+                    }}
                     placeholder="e.g. 70.5"
-                    min="1"
-                    max="500"
-                    step="0.1"
                     className="input-field-wizard w-full"
                     required
                   />
@@ -319,74 +421,20 @@ function WeightPageContent() {
             </form>
           </div>
         )}
+        </div>
 
-        {isLoading ? (
-          <p className="text-center py-12 text-secondary font-roboto">Loading...</p>
-        ) : entries.length === 0 ? (
-          <div className="text-center py-12 text-secondary">
-            <div className="card-inner rounded-full w-14 h-14 sm:w-20 sm:h-20 mx-auto mb-6 flex items-center justify-center">
-              <Scale className="w-6 h-6 sm:w-10 sm:h-10 text-secondary" />
-            </div>
-            <h3 className="text-lg font-semibold font-source text-primary mb-2">No entries yet</h3>
-            <p className="font-roboto text-secondary max-w-md mx-auto">
-              Add weight entries to track changes over time. Your weight data will be included in your report.
-            </p>
+        {!isAdding && (
+          <div className="mt-4 flex flex-shrink-0 sm:justify-start">
+            <button
+              onClick={startAdding}
+              className="button-cadet w-full sm:w-auto px-4 py-2 text-lg font-semibold rounded-lg transition-colors inline-flex items-center justify-center sm:justify-start"
+            >
+              <svg className="w-5 h-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 6v6m0 0v6m0-6h6m-6 0H6" />
+              </svg>
+              Log Weight
+            </button>
           </div>
-        ) : (
-          <ul className="space-y-3">
-            {entries.map((entry) => (
-              <li key={entry.id} className="card-inner p-4 sm:p-6 min-w-0">
-                <div className="flex flex-col sm:flex-row sm:justify-between sm:items-start gap-3">
-                  <div className="flex-1 min-w-0">
-                    <span className="font-semibold text-primary">{formatUKDate(entry.date)}</span>
-                    <span className="mx-2 text-secondary">·</span>
-                    <span className="text-primary font-roboto">{Number(entry.valueKg)} kg</span>
-                    {entry.notes && (
-                      <p className="text-sm text-secondary mt-1 font-roboto">{entry.notes}</p>
-                    )}
-                  </div>
-                  <div className="flex space-x-2 flex-shrink-0">
-                    <button
-                      type="button"
-                      onClick={() => startEdit(entry)}
-                      className="w-10 h-10 rounded-xl flex items-center justify-center transition-all duration-200 shadow-sm hover:shadow-md"
-                      style={{
-                        backgroundColor: 'var(--bg-card)',
-                        color: 'var(--text-icon)'
-                      }}
-                      title="Edit entry"
-                    >
-                      <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z" />
-                      </svg>
-                    </button>
-                    <button
-                      type="button"
-                      onClick={() => setDeleteModal({ isOpen: true, id: entry.id })}
-                      className="w-10 h-10 rounded-xl flex items-center justify-center transition-all duration-200 shadow-sm hover:shadow-md"
-                      style={{
-                        backgroundColor: 'var(--bg-card)',
-                        color: 'var(--text-icon)'
-                      }}
-                      title="Delete entry"
-                    >
-                      <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
-                      </svg>
-                    </button>
-                  </div>
-                </div>
-                <div className="mt-4 pt-4 text-xs text-tertiary font-roboto" style={{ borderTop: '1px solid', borderColor: 'var(--border-card-inner)' }}>
-                  <div className="flex items-center">
-                    <svg className="w-3 h-3 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" />
-                    </svg>
-                    Added {formatUKDate(entry.createdAt)}
-                  </div>
-                </div>
-              </li>
-            ))}
-          </ul>
         )}
       </div>
 

@@ -247,7 +247,7 @@ function SymptomDetailContent() {
               </div>
               {symptom.bathroom_frequency_changed && (
                 <div
-                  className={`flex items-center justify-between pt-4 pb-4 ${
+                  className={`flex items-center justify-between pt-4 ${
                     symptom.bathroom_frequency_changed === 'yes' && symptom.bathroom_frequency_change_details
                       ? 'border-b border-slate-300/30 dark:border-b'
                       : ''
@@ -259,9 +259,9 @@ function SymptomDetailContent() {
                 </div>
               )}
               {symptom.bathroom_frequency_changed === 'yes' && symptom.bathroom_frequency_change_details && (
-                <div className="py-3">
+                <div className="py-3 min-w-0">
                   <span className="font-medium text-primary block mb-2">Description</span>
-                  <p className="text-secondary leading-relaxed">{symptom.bathroom_frequency_change_details}</p>
+                  <p className="text-secondary leading-relaxed line-clamp-3" title={symptom.bathroom_frequency_change_details}>{symptom.bathroom_frequency_change_details}</p>
                 </div>
               )}
             </div>
@@ -276,9 +276,9 @@ function SymptomDetailContent() {
                 <span className="text-secondary">{symptom.smoking ? 'Yes' : 'No'}</span>
               </div>
               {symptom.smoking && symptom.smoking_details && (
-                <div className="py-3 border-b border-slate-300/30 dark:border-b" style={{borderColor: 'var(--border-card-inner)'}}>
+                <div className="py-3 border-b border-slate-300/30 dark:border-b min-w-0" style={{borderColor: 'var(--border-card-inner)'}}>
                   <span className="font-medium text-primary block mb-2">Smoking details</span>
-                  <p className="text-secondary leading-relaxed">{symptom.smoking_details}</p>
+                  <p className="text-secondary leading-relaxed line-clamp-3" title={symptom.smoking_details}>{symptom.smoking_details}</p>
                 </div>
               )}
               <div
@@ -303,43 +303,53 @@ function SymptomDetailContent() {
           {(symptom.breakfast?.length > 0 || symptom.lunch?.length > 0 || symptom.dinner?.length > 0) && (
             <div className="card">
               <h2 className="text-xl font-semibold font-source text-primary mb-6">Meals</h2>
-              <div className="card-inner p-4 space-y-6">
+              <div className="space-y-4">
                 {symptom.breakfast?.length > 0 && (
-                  <div>
-                    <h3 className="font-medium text-primary mb-3">Breakfast</h3>
-                    <div className="space-y-2">
+                  <div className="card-inner p-4 min-w-0">
+                    <h3 className="font-medium text-primary mb-4">Breakfast</h3>
+                    <div className="min-w-0">
                       {symptom.breakfast.map((meal, index) => (
-                        <div key={index} className="flex items-center justify-between py-2 border-b border-slate-300/30 dark:border-b" style={{borderColor: 'var(--border-card-inner)'}}>
-                          <span className="text-secondary">{meal.food}</span>
-                          <span className="text-secondary">{meal.quantity}</span>
+                        <div
+                          key={index}
+                          className={`flex flex-col sm:flex-row sm:items-center sm:justify-between gap-2 pt-4 pb-4 first:pt-0 last:pb-0 ${index < symptom.breakfast.length - 1 ? 'border-b border-slate-300/30 dark:border-b' : ''}`}
+                          style={index < symptom.breakfast.length - 1 ? { borderColor: 'var(--border-card-inner)' } : undefined}
+                        >
+                          <span className="text-secondary break-words min-w-0" title={meal.food}>{meal.food}</span>
+                          <span className="text-secondary break-words min-w-0" title={meal.quantity}>{meal.quantity}</span>
                         </div>
                       ))}
                     </div>
                   </div>
                 )}
-                
                 {symptom.lunch?.length > 0 && (
-                  <div>
-                    <h3 className="font-medium text-primary mb-3">Lunch</h3>
-                    <div className="space-y-2">
+                  <div className="card-inner p-4 min-w-0">
+                    <h3 className="font-medium text-primary mb-4">Lunch</h3>
+                    <div className="min-w-0">
                       {symptom.lunch.map((meal, index) => (
-                        <div key={index} className="flex items-center justify-between py-2 border-b border-slate-300/30 dark:border-b" style={{borderColor: 'var(--border-card-inner)'}}>
-                          <span className="text-secondary">{meal.food}</span>
-                          <span className="text-secondary">{meal.quantity}</span>
+                        <div
+                          key={index}
+                          className={`flex flex-col sm:flex-row sm:items-center sm:justify-between gap-2 pt-4 pb-4 first:pt-0 last:pb-0 ${index < symptom.lunch.length - 1 ? 'border-b border-slate-300/30 dark:border-b' : ''}`}
+                          style={index < symptom.lunch.length - 1 ? { borderColor: 'var(--border-card-inner)' } : undefined}
+                        >
+                          <span className="text-secondary break-words min-w-0" title={meal.food}>{meal.food}</span>
+                          <span className="text-secondary break-words min-w-0" title={meal.quantity}>{meal.quantity}</span>
                         </div>
                       ))}
                     </div>
                   </div>
                 )}
-                
                 {symptom.dinner?.length > 0 && (
-                  <div>
-                    <h3 className="font-medium text-primary mb-3">Dinner</h3>
-                    <div className="space-y-2">
+                  <div className="card-inner p-4 min-w-0">
+                    <h3 className="font-medium text-primary mb-4">Dinner</h3>
+                    <div className="min-w-0">
                       {symptom.dinner.map((meal, index) => (
-                        <div key={index} className="flex items-center justify-between py-2 border-b border-slate-300/30 dark:border-b" style={{borderColor: 'var(--border-card-inner)'}}>
-                          <span className="text-secondary">{meal.food}</span>
-                          <span className="text-secondary">{meal.quantity}</span>
+                        <div
+                          key={index}
+                          className={`flex flex-col sm:flex-row sm:items-center sm:justify-between gap-2 pt-4 pb-4 first:pt-0 last:pb-0 ${index < symptom.dinner.length - 1 ? 'border-b border-slate-300/30 dark:border-b' : ''}`}
+                          style={index < symptom.dinner.length - 1 ? { borderColor: 'var(--border-card-inner)' } : undefined}
+                        >
+                          <span className="text-secondary break-words min-w-0" title={meal.food}>{meal.food}</span>
+                          <span className="text-secondary break-words min-w-0" title={meal.quantity}>{meal.quantity}</span>
                         </div>
                       ))}
                     </div>
@@ -353,8 +363,8 @@ function SymptomDetailContent() {
           {symptom.notes && (
             <div className="card">
               <h2 className="text-xl font-semibold font-source text-primary mb-6">Notes</h2>
-              <div className="card-inner p-4">
-                <p className="text-secondary leading-relaxed">{symptom.notes}</p>
+              <div className="card-inner p-4 min-w-0">
+                <p className="text-secondary leading-relaxed line-clamp-3" title={symptom.notes}>{symptom.notes}</p>
               </div>
             </div>
           )}

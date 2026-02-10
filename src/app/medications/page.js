@@ -54,7 +54,7 @@ function MedicationsPageContent() {
         // Update existing medication
         const updatedMedication = {
           name: sanitizeMedicationName(formData.name),
-          dosage: formData.dosage,
+          dosage: formData.dosage ? `${formData.dosage}mg` : '',
           time_of_day: formData.timeOfDay,
           reminders_enabled: formData.remindersEnabled,
           notes: sanitizeNotes(formData.notes)
@@ -75,7 +75,7 @@ function MedicationsPageContent() {
         // Update local state
         const updatedMedications = medications.map(med => 
           med.id === editingId 
-            ? { ...med, ...formData, name: newMedicationName, notes: sanitizeNotes(formData.notes), updatedAt: new Date().toISOString() }
+            ? { ...med, ...formData, dosage: formData.dosage ? `${formData.dosage}mg` : '', name: newMedicationName, notes: sanitizeNotes(formData.notes), updatedAt: new Date().toISOString() }
             : med
         )
         setMedications(updatedMedications)
@@ -122,7 +122,7 @@ function MedicationsPageContent() {
         const newMedication = {
           user_id: user?.id,
           name: sanitizeMedicationName(formData.name),
-          dosage: formData.dosage,
+          dosage: formData.dosage ? `${formData.dosage}mg` : '',
           time_of_day: formData.timeOfDay,
           reminders_enabled: formData.remindersEnabled,
           notes: sanitizeNotes(formData.notes)
@@ -141,7 +141,7 @@ function MedicationsPageContent() {
         const localMedication = {
           id: insertedMed.id.toString(),
           name: insertedMed.name,
-          dosage: insertedMed.dosage || '',
+          dosage: insertedMed.dosage || (formData.dosage ? `${formData.dosage}mg` : ''),
           timeOfDay: insertedMed.time_of_day || '',
           remindersEnabled: insertedMed.reminders_enabled !== false,
           notes: insertedMed.notes || '',
@@ -192,17 +192,25 @@ function MedicationsPageContent() {
       await Notification.requestPermission()
       console.log('Permission result:', Notification.permission)
     }
-    
+
+    let newValue = type === 'checkbox' ? checked : value
+
+    // Dosage: digits only; we add "mg" when saving/displaying
+    if (name === 'dosage') {
+      newValue = value.replace(/\D/g, '').slice(0, 5) // e.g. up to 99999
+    }
+
     setFormData(prev => ({
       ...prev,
-      [name]: type === 'checkbox' ? checked : value
+      [name]: newValue
     }))
   }
 
   const startEdit = (medication) => {
+    const dosageNumber = (medication.dosage || '').replace(/mg$/i, '').replace(/\D/g, '')
     setFormData({
       name: medication.name,
-      dosage: medication.dosage,
+      dosage: dosageNumber,
       timeOfDay: medication.timeOfDay ?? '',
       remindersEnabled: medication.remindersEnabled !== false,
       notes: medication.notes || ''
@@ -539,7 +547,7 @@ function MedicationsPageContent() {
           <div className="flex flex-col sm:flex-row sm:justify-between sm:items-start">
             <div className="min-w-0 flex-1">
               <h1 className="text-2xl sm:text-3xl lg:text-4xl font-bold font-source text-primary mb-4 sm:mb-6">
-                My Medications
+                Medications
               </h1>
               <p className="text-secondary font-roboto">
                 Add your prescribed medications, set up reminders, and keep track of your medication schedule
@@ -550,8 +558,8 @@ function MedicationsPageContent() {
       </div>
 
       {/* Your Medications Section */}
-      <div className="card mb-4 sm:mb-6 min-w-0">
-        <div className={`flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 ${isAdding || medications.length > 0 ? 'mb-5 sm:mb-6' : 'mb-0'} `}>
+      <div className="card mb-4 sm:mb-6 min-w-0 flex flex-col h-[45vh]">
+        <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 flex-shrink-0 mb-5 sm:mb-6">
           <div className="flex items-center">
             <div className="flex w-8 h-8 sm:w-12 sm:h-12 bg-purple-100 rounded-xl items-center justify-center mr-3 sm:mr-4 flex-shrink-0">
               {isAdding ? (
@@ -563,26 +571,187 @@ function MedicationsPageContent() {
               )}
             </div>
             <h2 className="text-xl font-semibold font-source text-primary">
-              {isAdding ? (editingId ? 'Edit Medication' : 'Add New Medication') : 'Medications'}
+              Your medications
             </h2>
           </div>
-          {!isAdding && (
-            <button
-              onClick={startAdding}
-              className="button-cadet px-4 py-2 text-lg font-semibold rounded-lg transition-colors self-start sm:self-auto"
-            >
-              <svg className="w-5 h-5 mr-2 inline" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 6v6m0 0v6m0-6h6m-6 0H6" />
-              </svg>
-              Add Medication
-            </button>
-          )}
         </div>
 
-        {/* Add/Edit Medication Form */}
+        <div className="flex-1 min-h-0 overflow-auto">
+        {isLoading ? (
+          <div className="text-center py-12 text-secondary">
+            <p className="font-roboto">Loading medications...</p>
+          </div>
+        ) : medications.length === 0 ? (
+          <div className="text-center py-12 text-secondary">
+            <div className="card-inner rounded-full w-14 h-14 sm:w-20 sm:h-20 mx-auto mb-6 flex items-center justify-center">
+              <Pill className="w-6 h-6 sm:w-10 sm:h-10 text-secondary" />
+            </div>
+            <h3 className="text-lg font-semibold font-source text-primary mb-2">No medications added yet</h3>
+            <p className="font-roboto text-secondary max-w-md mx-auto">Add your medications to keep track of them and set up reminders to help you stay on schedule.</p>
+          </div>
+        ) : (
+          <Masonry
+            breakpointCols={{
+              default: 2,
+              1024: 2,
+              640: 1
+            }}
+            className="flex -ml-4 w-auto min-w-0"
+            columnClassName="pl-4 bg-clip-padding"
+          >
+            {medications.map((medication) => {
+              const isExpanded = expandedMedications.has(medication.id)
+              return (
+                <div key={medication.id} className="mb-4 last:mb-0">
+                  <div className="card-inner p-4 sm:p-6 min-w-0">
+                  <div className="flex flex-col sm:flex-row sm:justify-between sm:items-start mb-1">
+                    <div className="flex-1 min-w-0 w-full sm:w-auto">
+                      <div className={`flex items-center gap-2 ${isExpanded ? 'mb-1' : ''} min-w-0`}>
+                        <h3 className="text-lg font-semibold font-source text-primary truncate min-w-0 flex-1">
+                          {medication.name}
+                        </h3>
+                        <button
+                          onClick={() => toggleMedicationExpand(medication.id)}
+                          className="flex-shrink-0 p-1 rounded transition-colors hover:bg-opacity-20 sm:self-start"
+                          style={{ color: 'var(--text-icon)' }}
+                          title={isExpanded ? "Collapse details" : "Expand details"}
+                        >
+                          <ChevronDown 
+                            className={`w-5 h-5 transition-transform duration-200 ${isExpanded ? 'rotate-180' : ''}`}
+                          />
+                        </button>
+                      </div>
+                      {isExpanded && (
+                        <>
+                          {medication.dosage && (
+                            <p className="text-base text-secondary mb-3 font-roboto">
+                              <span className="font-semibold">Dosage:</span> {medication.dosage}
+                            </p>
+                          )}
+                          <div className="flex flex-wrap items-center gap-3 mb-3">
+                            {medication.timeOfDay && (
+                              <span className={`inline-flex items-center px-3 py-1.5 rounded-full text-sm font-medium font-roboto ${getTimeOfDayColor(medication.timeOfDay)}`}>
+                                <svg className="w-4 h-4 mr-1.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" />
+                                </svg>
+                                {getTimeOfDayLabel(medication)}
+                              </span>
+                            )}
+                            {medication.remindersEnabled !== false && (
+                              <span 
+                                className="inline-flex items-center px-3 py-1.5 rounded-full text-sm font-medium font-roboto"
+                                style={{ 
+                                  backgroundColor: 'var(--bg-card)',
+                                  color: 'var(--text-cadet-blue)'
+                                }}
+                              >
+                                <svg className="w-4 h-4 mr-1.5" fill="currentColor" viewBox="0 0 20 20">
+                                  <path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clipRule="evenodd" />
+                                </svg>
+                                <span>Reminders On</span>
+                              </span>
+                            )}
+                          </div>
+                          <div className="mt-2">
+                            <button
+                              onClick={() => handleMarkAsTaken(medication.id)}
+                              className="px-3 py-1.5 rounded-lg text-sm font-medium transition-all duration-200 inline-flex items-center justify-center"
+                              style={{
+                                border: '1px solid',
+                                borderColor: 'var(--border-card-inner)',
+                                ...(takenMedications.includes(medication.id) 
+                                  ? {
+                                      backgroundColor: 'var(--bg-button-cadet)',
+                                      color: 'white'
+                                    }
+                                  : {
+                                      color: 'var(--text-primary)',
+                                      backgroundColor: 'transparent'
+                                    }
+                                ),
+                                minWidth: '140px'
+                              }}
+                              title={takenMedications.includes(medication.id) ? "Mark as not taken" : "Mark as taken"}
+                            >
+                              {takenMedications.includes(medication.id) ? (
+                                <>
+                                  <svg className="w-4 h-4 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
+                                  </svg>
+                                  <span>Taken</span>
+                                </>
+                              ) : (
+                                <span>Mark as Taken</span>
+                              )}
+                            </button>
+                          </div>
+                        </>
+                      )}
+                    </div>
+                    <div className="flex space-x-2 mt-2 sm:mt-0 sm:ml-4 flex-shrink-0">
+                      <button
+                        onClick={() => startEdit(medication)}
+                        disabled={editingId === medication.id}
+                        className="w-10 h-10 rounded-xl flex items-center justify-center transition-all duration-200 shadow-sm hover:shadow-md disabled:opacity-50 disabled:cursor-not-allowed disabled:hover:shadow-md"
+                        style={{ 
+                          backgroundColor: 'var(--bg-card)',
+                          color: 'var(--text-icon)'
+                        }}
+                        title={editingId === medication.id ? 'Finish or cancel editing first' : 'Edit medication'}
+                      >
+                        <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z" />
+                        </svg>
+                      </button>
+                      <button
+                        onClick={() => handleDeleteMedication(medication.id)}
+                        disabled={editingId === medication.id}
+                        className="w-10 h-10 rounded-xl flex items-center justify-center transition-all duration-200 shadow-sm hover:shadow-md disabled:opacity-50 disabled:cursor-not-allowed disabled:hover:shadow-md"
+                        style={{ 
+                          backgroundColor: 'var(--bg-card)',
+                          color: 'var(--text-icon)'
+                        }}
+                        title={editingId === medication.id ? 'Finish or cancel editing first' : 'Delete medication'}
+                      >
+                        <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
+                        </svg>
+                      </button>
+                    </div>
+                  </div>
+
+                  {isExpanded && medication.notes && (
+                    <div className="mt-4 pt-4 min-w-0" style={{ borderTop: '1px solid', borderColor: 'var(--border-card-inner)' }}>
+                      <div className="card-inner p-3 min-w-0">
+                        <p className="text-sm text-secondary font-roboto truncate">
+                          <span className="font-semibold text-primary">Notes:</span> {medication.notes}
+                        </p>
+                      </div>
+                    </div>
+                  )}
+                  <div className="mt-4 pt-4 text-xs text-tertiary font-roboto" style={{ borderTop: '1px solid', borderColor: 'var(--border-card-inner)' }}>
+                    <div className="flex items-center">
+                      <svg className="w-3 h-3 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" />
+                      </svg>
+                      Added {medication.createdAt ? formatUKDate(medication.createdAt) : '—'}
+                    </div>
+                  </div>
+                  </div>
+                </div>
+              )
+            })}
+          </Masonry>
+        )}
+
         {isAdding && (
-          <div className="mb-6 min-w-0">
+          <div className="mt-6 min-w-0">
             <form onSubmit={handleSubmit} className="space-y-4" autoComplete="off">
+              <div className="mb-2">
+                <h3 className="text-xl font-semibold font-source text-primary">
+                  {editingId ? 'Edit medication' : 'New medication'}
+                </h3>
+              </div>
               <div className="grid lg:grid-cols-2 gap-6 min-w-0">
                 <div>
                   <label htmlFor="name" className="block text-base font-semibold font-roboto text-primary mb-3">
@@ -605,16 +774,21 @@ function MedicationsPageContent() {
                   <label htmlFor="dosage" className="block text-base font-semibold font-roboto text-primary mb-3">
                     Dosage (per day)
                   </label>
-                  <input
-                    type="text"
-                    id="dosage"
-                    name="dosage"
-                    value={formData.dosage}
-                    onChange={handleInputChange}
-                    placeholder="e.g., 500mg"
-                    className="input-field-wizard"
-                    autoComplete="off"
-                  />
+                  <div className="flex items-center gap-2">
+                    <input
+                      type="text"
+                      inputMode="numeric"
+                      id="dosage"
+                      name="dosage"
+                      value={formData.dosage}
+                      onChange={handleInputChange}
+                      placeholder="e.g. 500"
+                      maxLength={5}
+                      className="input-field-wizard flex-1 min-w-0"
+                      autoComplete="off"
+                    />
+                    <span className="text-primary font-roboto shrink-0">mg</span>
+                  </div>
                 </div>
               </div>
 
@@ -702,170 +876,20 @@ function MedicationsPageContent() {
             </form>
           </div>
         )}
+        </div>
 
-        {isLoading ? (
-          <div className="text-center py-12 text-secondary">
-            <p className="font-roboto">Loading medications...</p>
+        {!isAdding && (
+          <div className="mt-4 flex flex-shrink-0 sm:justify-start">
+            <button
+              onClick={startAdding}
+              className="button-cadet w-full sm:w-auto px-4 py-2 text-lg font-semibold rounded-lg transition-colors inline-flex items-center justify-center sm:justify-start"
+            >
+              <svg className="w-5 h-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 6v6m0 0v6m0-6h6m-6 0H6" />
+              </svg>
+              Add Medication
+            </button>
           </div>
-        ) : medications.length === 0 ? (
-          <div className="text-center py-12 text-secondary">
-            <div className="card-inner rounded-full w-14 h-14 sm:w-20 sm:h-20 mx-auto mb-6 flex items-center justify-center">
-              <Pill className="w-6 h-6 sm:w-10 sm:h-10 text-secondary" />
-            </div>
-            <h3 className="text-lg font-semibold font-source text-primary mb-2">No medications added yet</h3>
-            <p className="font-roboto text-secondary max-w-md mx-auto">Add your medications to keep track of them and set up reminders to help you stay on schedule.</p>
-          </div>
-        ) : (
-          <Masonry
-            breakpointCols={{
-              default: 2,
-              1024: 2,
-              640: 1
-            }}
-            className="flex -ml-6 w-auto min-w-0"
-            columnClassName="pl-6 bg-clip-padding"
-          >
-            {medications.map((medication) => {
-              const isExpanded = expandedMedications.has(medication.id)
-              return (
-                <div key={medication.id}>
-                  <div className="card-inner p-4 sm:p-6 min-w-0">
-                  <div className="flex flex-col sm:flex-row sm:justify-between sm:items-start mb-1">
-                    <div className="flex-1 min-w-0 w-full sm:w-auto">
-                      <div className={`flex items-center gap-2 ${isExpanded ? 'mb-1' : ''} min-w-0`}>
-                        <h3 className="text-lg font-semibold font-source text-primary break-words sm:truncate min-w-0 flex-1">
-                          {medication.name}
-                        </h3>
-                        <button
-                          onClick={() => toggleMedicationExpand(medication.id)}
-                          className="flex-shrink-0 p-1 rounded transition-colors hover:bg-opacity-20"
-                          style={{ color: 'var(--text-icon)' }}
-                          title={isExpanded ? "Collapse details" : "Expand details"}
-                        >
-                          <ChevronDown 
-                            className={`w-5 h-5 transition-transform duration-200 ${isExpanded ? 'rotate-180' : ''}`}
-                          />
-                        </button>
-                      </div>
-                      {isExpanded && (
-                        <>
-                          {medication.dosage && (
-                            <p className="text-base text-secondary mb-3 font-roboto break-words">
-                              <span className="font-semibold">Dosage:</span> {medication.dosage}
-                            </p>
-                          )}
-                          <div className="flex flex-wrap items-center gap-3 mb-3">
-                            {medication.timeOfDay && (
-                              <span className={`inline-flex items-center px-3 py-1.5 rounded-full text-sm font-medium font-roboto ${getTimeOfDayColor(medication.timeOfDay)}`}>
-                                <svg className="w-4 h-4 mr-1.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" />
-                                </svg>
-                                {getTimeOfDayLabel(medication)}
-                              </span>
-                            )}
-                            {medication.remindersEnabled !== false && (
-                              <span 
-                                className="inline-flex items-center px-3 py-1.5 rounded-full text-sm font-medium font-roboto"
-                                style={{ 
-                                  backgroundColor: 'var(--bg-card)',
-                                  color: 'var(--text-cadet-blue)'
-                                }}
-                              >
-                                <svg className="w-4 h-4 mr-1.5" fill="currentColor" viewBox="0 0 20 20">
-                                  <path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clipRule="evenodd" />
-                                </svg>
-                                <span>Reminders On</span>
-                              </span>
-                            )}
-                          </div>
-                          <div className="mt-2">
-                            <button
-                              onClick={() => handleMarkAsTaken(medication.id)}
-                              className="px-3 py-1.5 rounded-lg text-sm font-medium transition-all duration-200 inline-flex items-center justify-center"
-                              style={{
-                                border: '1px solid',
-                                borderColor: 'var(--border-card-inner)',
-                                ...(takenMedications.includes(medication.id) 
-                                  ? {
-                                      backgroundColor: 'var(--bg-button-cadet)',
-                                      color: 'white'
-                                    }
-                                  : {
-                                      color: 'var(--text-primary)',
-                                      backgroundColor: 'transparent'
-                                    }
-                                ),
-                                minWidth: '140px'
-                              }}
-                              title={takenMedications.includes(medication.id) ? "Mark as not taken" : "Mark as taken"}
-                            >
-                              {takenMedications.includes(medication.id) ? (
-                                <>
-                                  <svg className="w-4 h-4 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
-                                  </svg>
-                                  <span>Taken</span>
-                                </>
-                              ) : (
-                                <span>Mark as Taken</span>
-                              )}
-                            </button>
-                          </div>
-                        </>
-                      )}
-                    </div>
-                    <div className="flex space-x-2 mt-2 sm:mt-0 sm:ml-4 flex-shrink-0">
-                      <button
-                        onClick={() => startEdit(medication)}
-                        className="w-10 h-10 rounded-xl flex items-center justify-center transition-all duration-200 shadow-sm hover:shadow-md"
-                        style={{ 
-                          backgroundColor: 'var(--bg-card)',
-                          color: 'var(--text-icon)'
-                        }}
-                        title="Edit medication"
-                      >
-                        <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z" />
-                        </svg>
-                      </button>
-                      <button
-                        onClick={() => handleDeleteMedication(medication.id)}
-                        className="w-10 h-10 rounded-xl flex items-center justify-center transition-all duration-200 shadow-sm hover:shadow-md"
-                        style={{ 
-                          backgroundColor: 'var(--bg-card)',
-                          color: 'var(--text-icon)'
-                        }}
-                        title="Delete medication"
-                      >
-                        <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
-                        </svg>
-                      </button>
-                    </div>
-                  </div>
-
-                  {isExpanded && medication.notes && (
-                    <div className="mt-4 pt-4 min-w-0" style={{ borderTop: '1px solid', borderColor: 'var(--border-card-inner)' }}>
-                      <div className="card-inner p-3 min-w-0">
-                        <p className="text-sm text-secondary font-roboto break-words">
-                          <span className="font-semibold text-primary">Notes:</span> {medication.notes}
-                        </p>
-                      </div>
-                    </div>
-                  )}
-                  <div className="mt-4 pt-4 text-xs text-tertiary font-roboto" style={{ borderTop: '1px solid', borderColor: 'var(--border-card-inner)' }}>
-                    <div className="flex items-center">
-                      <svg className="w-3 h-3 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" />
-                      </svg>
-                      Added {medication.createdAt ? formatUKDate(medication.createdAt) : '—'}
-                    </div>
-                  </div>
-                  </div>
-                </div>
-              )
-            })}
-          </Masonry>
         )}
       </div>
 

@@ -225,6 +225,10 @@ function ReportsPageContent() {
     // Filter symptoms by selected date range
     const startDate = dateRange.startDate ? new Date(dateRange.startDate) : new Date(0) // Use epoch if no start date
     const endDate = dateRange.endDate ? new Date(dateRange.endDate) : new Date() // Use today if no end date
+    // Include full end day: set to 23:59:59.999 so entries created on that day are included
+    if (dateRange.endDate) {
+      endDate.setHours(23, 59, 59, 999)
+    }
     
     const allSymptoms = symptoms.filter(symptom => {
       const symptomStartDate = new Date(symptom.symptomStartDate)
@@ -551,7 +555,7 @@ function ReportsPageContent() {
       }
       doc.setFontSize(16)
       doc.setFont('helvetica', 'bold')
-      doc.text('Weight', margin, yPosition)
+      doc.text('Weight Logs', margin, yPosition)
       yPosition += 10
 
       doc.setFontSize(12)
@@ -1160,15 +1164,15 @@ function ReportsPageContent() {
             <div className="space-y-4">
               {reportData.severityTrend.map((entry, index) => (
                 <div key={index} className="card-inner p-4">
-                  <div className="flex flex-col sm:flex-row sm:items-start gap-4">
-                    <div className="w-full sm:w-40 text-sm text-secondary font-roboto">
+                  <div className="flex flex-col gap-3 min-w-0">
+                    <div className="text-sm text-secondary font-roboto">
                       {formatUKDate(entry.date)}
                       {entry.isOngoing ? ' (Ongoing)' : ` - ${formatUKDate(entry.endDate)}`}
                     </div>
-                    <div className="flex-1 space-y-2">
-                      <div className="flex items-center space-x-2">
-                        <span className="text-xs font-medium text-secondary font-roboto w-16">Severity:</span>
-                        <div className="flex-1 bg-card rounded-full h-2">
+                    <div className="flex flex-col gap-2">
+                      <div className="flex items-center gap-2">
+                        <span className="text-xs font-medium text-secondary font-roboto shrink-0">Severity:</span>
+                        <div className="flex-1 min-w-0 bg-card rounded-full h-2">
                           <div 
                             className="h-2 rounded-full bg-rose-500" 
                             style={{ 
@@ -1176,14 +1180,14 @@ function ReportsPageContent() {
                             }}
                           ></div>
                         </div>
-                        <span className="px-2 py-1 rounded-full text-xs font-medium font-roboto text-rose-500 bg-rose-100">
+                        <span className="px-2 py-1 rounded-full text-xs font-medium font-roboto text-rose-500 bg-rose-100 shrink-0">
                           {entry.severity}/10
                         </span>
                       </div>
                       {entry.stressLevel && (
-                        <div className="flex items-center space-x-2">
-                          <span className="text-xs font-medium text-secondary font-roboto w-16">Stress:</span>
-                          <div className="flex-1 bg-card rounded-full h-2">
+                        <div className="flex items-center gap-2">
+                          <span className="text-xs font-medium text-secondary font-roboto shrink-0">Stress:</span>
+                          <div className="flex-1 min-w-0 bg-card rounded-full h-2">
                             <div 
                               className="h-2 rounded-full bg-cyan-600" 
                               style={{ 
@@ -1191,7 +1195,7 @@ function ReportsPageContent() {
                               }}
                             ></div>
                           </div>
-                          <span className="px-2 py-1 rounded-full text-xs font-medium font-roboto text-cyan-600 bg-cyan-100">
+                          <span className="px-2 py-1 rounded-full text-xs font-medium font-roboto text-cyan-600 bg-cyan-100 shrink-0">
                             {entry.stressLevel}/10
                           </span>
                         </div>
@@ -1256,16 +1260,14 @@ function ReportsPageContent() {
               <div className="space-y-4">
                 {reportData.medicationTracking.missedMedications.map((item, index) => (
                   <div key={index} className="card-inner p-4">
-                    <div className="flex flex-col sm:flex-row sm:justify-between sm:items-start gap-2">
-                      <div className="flex-1">
-                        <h5 className="font-medium font-roboto text-primary text-lg">{item.medication}</h5>
-                        <div className="mt-2 flex flex-col sm:flex-row sm:gap-4 gap-1">
-                          <div className="text-sm text-secondary font-roboto">
-                            <span className="font-medium">Date:</span> {item.date ? formatUKDate(item.date) : 'Not specified'}
-                          </div>
-                          <div className="text-sm text-secondary font-roboto">
-                            <span className="font-medium">Time:</span> {item.timeOfDay || 'Not specified'}
-                          </div>
+                    <div className="min-w-0">
+                      <h5 className="font-medium font-roboto text-primary text-base break-words" title={item.medication}>{item.medication}</h5>
+                      <div className="mt-2 flex flex-col gap-1">
+                        <div className="text-sm text-secondary font-roboto">
+                          <span className="font-medium">Date:</span> {item.date ? formatUKDate(item.date) : 'Not specified'}
+                        </div>
+                        <div className="text-sm text-secondary font-roboto">
+                          <span className="font-medium">Time:</span> {item.timeOfDay || 'Not specified'}
                         </div>
                       </div>
                     </div>
@@ -1282,24 +1284,22 @@ function ReportsPageContent() {
                 NSAIDs Taken
               </h4>
               <div className="space-y-4">
-                {reportData.medicationTracking.nsaids.map((item, index) => (
+{reportData.medicationTracking.nsaids.map((item, index) => (
                   <div key={index} className="card-inner p-4">
-                    <div className="flex flex-col sm:flex-row sm:justify-between sm:items-start gap-2">
-                      <div className="flex-1">
-                        <h5 className="font-medium font-roboto text-primary text-lg">{item.medication}</h5>
-                        <div className="mt-2 flex flex-col sm:flex-row sm:gap-4 gap-1">
-                          <div className="text-sm text-secondary font-roboto">
-                            <span className="font-medium">Date:</span> {item.date ? formatUKDate(item.date) : 'Not specified'}
-                          </div>
-                          <div className="text-sm text-secondary font-roboto">
-                            <span className="font-medium">Time:</span> {item.timeOfDay || 'Not specified'}
-                          </div>
-                          {item.dosage && (
-                            <div className="text-sm text-secondary font-roboto">
-                              <span className="font-medium">Dosage:</span> {item.dosage}
-                            </div>
-                          )}
+                    <div className="min-w-0">
+                      <h5 className="font-medium font-roboto text-primary text-base break-words" title={item.medication}>{item.medication}</h5>
+                      <div className="mt-2 flex flex-col gap-1 min-w-0">
+                        <div className="text-sm text-secondary font-roboto">
+                          <span className="font-medium">Date:</span> {item.date ? formatUKDate(item.date) : 'Not specified'}
                         </div>
+                        <div className="text-sm text-secondary font-roboto">
+                          <span className="font-medium">Time:</span> {item.timeOfDay || 'Not specified'}
+                        </div>
+                        {item.dosage && (
+                          <div className="text-sm text-secondary font-roboto break-words min-w-0" title={item.dosage}>
+                            <span className="font-medium">Dosage:</span> {item.dosage}
+                          </div>
+                        )}
                       </div>
                     </div>
                   </div>
@@ -1307,7 +1307,7 @@ function ReportsPageContent() {
               </div>
             </div>
           )}
-          
+
           {/* Antibiotics */}
           {reportData.medicationTracking.antibiotics.length > 0 && (
             <div className="">
@@ -1317,22 +1317,20 @@ function ReportsPageContent() {
               <div className="space-y-4">
                 {reportData.medicationTracking.antibiotics.map((item, index) => (
                   <div key={index} className="card-inner p-4">
-                    <div className="flex flex-col sm:flex-row sm:justify-between sm:items-start gap-2">
-                      <div className="flex-1">
-                        <h5 className="font-medium font-roboto text-primary text-lg">{item.medication}</h5>
-                        <div className="mt-2 flex flex-col sm:flex-row sm:gap-4 gap-1">
-                          <div className="text-sm text-secondary font-roboto">
-                            <span className="font-medium">Date:</span> {item.date ? formatUKDate(item.date) : 'Not specified'}
-                          </div>
-                          <div className="text-sm text-secondary font-roboto">
-                            <span className="font-medium">Time:</span> {item.timeOfDay || 'Not specified'}
-                          </div>
-                          {item.dosage && (
-                            <div className="text-sm text-secondary font-roboto">
-                              <span className="font-medium">Dosage:</span> {item.dosage}
-                            </div>
-                          )}
+                    <div className="min-w-0">
+                      <h5 className="font-medium font-roboto text-primary text-base break-words" title={item.medication}>{item.medication}</h5>
+                      <div className="mt-2 flex flex-col gap-1 min-w-0">
+                        <div className="text-sm text-secondary font-roboto">
+                          <span className="font-medium">Date:</span> {item.date ? formatUKDate(item.date) : 'Not specified'}
                         </div>
+                        <div className="text-sm text-secondary font-roboto">
+                          <span className="font-medium">Time:</span> {item.timeOfDay || 'Not specified'}
+                        </div>
+                        {item.dosage && (
+                          <div className="text-sm text-secondary font-roboto break-words min-w-0" title={item.dosage}>
+                            <span className="font-medium">Dosage:</span> {item.dosage}
+                          </div>
+                        )}
                       </div>
                     </div>
                   </div>
@@ -1355,30 +1353,31 @@ function ReportsPageContent() {
           <div className="space-y-4">
             {reportData.appointments.map((apt, index) => (
               <div key={index} className="card-inner p-4">
-                <div className="flex flex-col gap-2">
-                  <div className="flex flex-wrap items-baseline gap-x-2 gap-y-1">
-                    <span className="font-semibold text-primary">{formatUKDate(apt.date)}</span>
+                <div className="flex flex-col gap-2 min-w-0">
+                  <div className="flex flex-wrap items-baseline gap-x-2 gap-y-1 min-w-0">
+                    <span className="font-semibold text-primary truncate">{formatUKDate(apt.date)}</span>
                     {apt.time && (
                       <>
                         <span className="text-secondary">·</span>
-                        <span className="text-primary font-roboto">{apt.time}</span>
-                      </>
-                    )}
-                    {apt.type && (
-                      <>
-                        <span className="text-secondary">·</span>
-                        <span className="font-medium text-primary">{apt.type}</span>
+                        <span className="text-primary font-roboto truncate">{apt.time}</span>
                       </>
                     )}
                   </div>
+                  {apt.type && (
+                    <p className="font-medium text-primary truncate" title={apt.type}>{apt.type}</p>
+                  )}
                   {apt.clinician_name && (
-                    <p className="text-sm text-secondary font-roboto"><span className="font-medium text-primary">Clinician:</span> {apt.clinician_name}</p>
+                    <p className="text-sm text-secondary font-roboto truncate" title={apt.clinician_name}>
+                      <span className="font-medium text-primary">Clinician:</span> {apt.clinician_name}
+                    </p>
                   )}
                   {apt.location && (
-                    <p className="text-sm text-secondary font-roboto"><span className="font-medium text-primary">Location:</span> {apt.location}</p>
+                    <p className="text-sm text-secondary font-roboto truncate" title={apt.location}>
+                      <span className="font-medium text-primary">Location:</span> {apt.location}
+                    </p>
                   )}
                   {apt.notes && (
-                    <p className="text-sm text-secondary font-roboto mt-1">{apt.notes}</p>
+                    <p className="text-sm text-secondary font-roboto mt-1 line-clamp-2" title={apt.notes}>{apt.notes}</p>
                   )}
                 </div>
               </div>
@@ -1394,7 +1393,7 @@ function ReportsPageContent() {
             <div className="bg-emerald-100 w-8 h-8 sm:w-12 sm:h-12 rounded-xl mr-3 sm:mr-4 flex-shrink-0 flex items-center justify-center">
               <Scale className="w-5 h-5 sm:w-6 sm:h-6 text-emerald-600" />
             </div>
-            Weight
+            Weight Logs
           </h2>
           <div className="space-y-4">
             {reportData.weightEntries.map((entry, index) => (
@@ -1431,9 +1430,9 @@ function ReportsPageContent() {
           <div className="space-y-4">
             {reportData.topFoods.map(([food, count], index) => (
               <div key={index} className="card-inner p-4">
-                <div className="flex flex-col sm:flex-row sm:justify-between sm:items-center gap-2">
-                  <div className="flex-1">
-                    <h5 className="font-medium font-roboto text-primary text-base">{food}</h5>
+                <div className="flex flex-col sm:flex-row sm:justify-between sm:items-center gap-2 min-w-0">
+                  <div className="flex-1 min-w-0">
+                    <h5 className="font-medium font-roboto text-primary text-base truncate" title={food}>{food}</h5>
                   </div>
                   <div className="flex items-center">
                     <span className="inline-flex items-center px-3 py-1 rounded-full text-xs font-medium font-roboto card-inner text-secondary">
