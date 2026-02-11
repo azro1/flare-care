@@ -1233,7 +1233,7 @@ function SymptomsPageContent() {
     <div className={`max-w-4xl w-full mx-auto sm:px-4 md:px-6 lg:px-8 min-w-0 flex flex-col justify-center sm:flex-grow ${currentStep > 0 ? 'pb-20 lg:pb-0' : ''}`}>
       {/* Header: Back when needed, then title - hide on landing */}
       {currentStep > 0 && (
-        <div className="mb-8">
+        <div className="pt-6 md:pt-0 mb-8">
           {currentStep > 1 && (
             <button
               onClick={prevStep}
@@ -1245,9 +1245,13 @@ function SymptomsPageContent() {
               Back
             </button>
           )}
-          <h1 className="text-sm sm:text-base font-normal text-primary underline">
+          <button
+            type="button"
+            onClick={() => setCurrentStep(0)}
+            className="text-sm sm:text-base font-normal text-primary underline hover:opacity-80 transition-opacity text-left"
+          >
             Log Symptoms
-          </h1>
+          </button>
         </div>
       )}
 
@@ -1255,7 +1259,7 @@ function SymptomsPageContent() {
       <div className="mb-4">
         {/* Step 0: Landing Page */}
         {currentStep === 0 && (
-          <div className="flex flex-col items-center justify-center text-center pt-16 sm:pt-0">
+          <div className="flex flex-col items-center justify-center text-center pt-20 sm:pt-0">
             {/* Icon - same as home page symptoms card */}
             <div className="w-14 h-14 bg-white dark:bg-emerald-100 rounded-2xl flex items-center justify-center mx-auto mb-6 shadow-sm">
               <Thermometer className="w-7 h-7 text-emerald-600" />
