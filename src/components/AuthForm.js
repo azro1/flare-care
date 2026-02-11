@@ -3,6 +3,7 @@
 import { useState, useEffect } from 'react'
 import { supabase } from '../lib/supabase'
 import { useRouter } from 'next/navigation'
+import Image from 'next/image'
 
 export default function AuthForm() {
   const [error, setError] = useState('')
@@ -56,10 +57,17 @@ export default function AuthForm() {
     <div className="pt-24 sm:pt-0 sm:flex-grow flex items-center justify-center px-4 sm:px-6 lg:px-8 pb-20 lg:pb-0">
       <div className="max-w-sm w-full space-y-4">
         <div className="text-center">
+            <Image
+              src="/icons/seagull.svg"
+              alt="FlareCare logo"
+              width={56}
+              height={56}
+              className="mx-auto mb-4"
+            />
             <h2 className="text-3xl font-bold font-source text-primary mb-6">
               FlareCare
             </h2>
-          <p className="text-sm font-roboto text-secondary sm:text-base mb-6 leading-relaxed">
+          <p className="text-sm font-roboto text-secondary mb-6 leading-relaxed">
            Your comprehensive health management app for Crohn's & Colitis
           </p>
         </div>
@@ -87,7 +95,7 @@ export default function AuthForm() {
         </div>
 
         <div className="text-center">
-          <p className="text-xs font-roboto text-tertiary sm:text-sm">
+          <p className="text-xs font-roboto text-tertiary">
             Secure sign-in with Google
           </p>
         </div>

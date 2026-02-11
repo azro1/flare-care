@@ -1,7 +1,5 @@
 import './globals.css'
-import Navigation from '@/components/Navigation'
-import Footer from '@/components/Footer'
-import MainContent from '@/components/MainContent'
+import AppShell from '@/components/AppShell'
 import ReminderProvider from '@/components/ReminderProvider'
 import NotificationBanner from '@/components/NotificationBanner'
 import { AuthProvider } from '@/lib/AuthContext'
@@ -54,13 +52,7 @@ export default function RootLayout({ children }) {
             <ReminderProvider />
             <NotificationBanner />
             <LoadingScreen>
-              <div className="min-h-screen flex flex-col relative">
-                <Navigation />
-                <MainContent>
-                  {children}
-                </MainContent>
-                <Footer />
-              </div>
+              <AppShell>{children}</AppShell>
             </LoadingScreen>
           </AuthProvider>
         </ThemeProvider>

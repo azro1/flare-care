@@ -275,14 +275,14 @@ function AppointmentsPageContent() {
                 Upcoming Appointments
               </h1>
               <p className="text-secondary font-roboto">
-                Add your clinic appointments in one place so you never miss a visit
+                Add your clinic appointments in one place so you never miss one
               </p>
             </div>
           </div>
         </div>
       </div>
 
-      <div className="card mb-4 sm:mb-6 min-w-0 flex flex-col h-[68vh]">
+      <div className="card mb-4 sm:mb-6 min-w-0 flex flex-col h-[60vh]">
         <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 flex-shrink-0 mb-5 sm:mb-6">
           <div className="flex items-center">
             <div className="flex w-8 h-8 sm:w-12 sm:h-12 bg-sky-100 rounded-xl items-center justify-center mr-3 sm:mr-4 flex-shrink-0">
@@ -304,7 +304,7 @@ function AppointmentsPageContent() {
             </div>
             <h3 className="text-lg font-semibold font-source text-primary mb-2">No upcoming appointments</h3>
             <p className="font-roboto text-secondary max-w-md mx-auto">
-              Add appointments to keep track of your healthcare visits
+              Add appointments to keep track of your healthcare
             </p>
           </div>
         ) : (

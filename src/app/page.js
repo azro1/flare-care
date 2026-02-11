@@ -6,7 +6,7 @@ import { useAuth } from '@/lib/AuthContext'
 import { useEffect, useState } from 'react'
 import { useRouter } from 'next/navigation'
 import { supabase, TABLES } from '@/lib/supabase'
-import { CupSoda, Pizza, Coffee, BookOpen, Smile, Thermometer, Pill, FileText, Activity, TrendingUp, PartyPopper, Clipboard, Cookie, ChartLine, Sparkles, ChevronRight, ChevronDown, Clock, Scale, Calendar } from 'lucide-react'
+import { CupSoda, Pizza, Coffee, BookOpen, Smile, Thermometer, Pill, FileText, Activity, TrendingUp, PartyPopper, Clipboard, Cookie, ChartLine, Sparkles, ChevronRight, ChevronDown, Clock, Scale, Calendar, Settings } from 'lucide-react'
 
 export default function Home() {
   const { isAuthenticated, loading, user } = useAuth()
@@ -1478,17 +1478,17 @@ export default function Home() {
         {/* More Options */}
         <div className="mb-6 lg:mb-0">
           <h2 className="text-xl font-semibold font-source text-primary mb-4">More</h2>
-          <div className="grid grid-cols-2 gap-4 md:gap-6">
+          <div className="grid grid-cols-2 lg:grid-cols-3 gap-4 md:gap-6 min-w-0">
               <Link
                 href="/medications"
-                className="card card-link transition-all group relative focus:outline-none focus-visible:outline-none focus-visible:ring-0 focus-visible:ring-offset-0 focus:ring-0"
+                className="card card-link transition-all group relative focus:outline-none focus-visible:outline-none focus-visible:ring-0 focus-visible:ring-offset-0 focus:ring-0 min-w-0"
               >
-                <div className="flex flex-col items-center gap-3">
+                <div className="flex flex-col items-center gap-3 min-w-0">
                   <div className="w-8 h-8 lg:w-10 lg:h-10 bg-purple-100 rounded-lg flex items-center justify-center flex-shrink-0">
                     <Pill className="w-5 h-5 text-purple-600" />
                 </div>
-                  <div className="w-full text-center">
-                    <h3 className="font-semibold text-primary leading-tight sm:leading-relaxed">
+                  <div className="w-full text-center min-w-0">
+                    <h3 className="font-semibold text-primary leading-tight sm:leading-relaxed break-words">
                       My Meds
                     </h3>
                   </div>
@@ -1502,14 +1502,14 @@ export default function Home() {
 
               <Link
                 href="/reports"
-                className="card card-link transition-all group relative focus:outline-none focus-visible:outline-none focus-visible:ring-0 focus-visible:ring-offset-0 focus:ring-0"
+                className="card card-link transition-all group relative focus:outline-none focus-visible:outline-none focus-visible:ring-0 focus-visible:ring-offset-0 focus:ring-0 min-w-0"
               >
-                <div className="flex flex-col items-center gap-3">
+                <div className="flex flex-col items-center gap-3 min-w-0">
                   <div className="w-8 h-8 lg:w-10 lg:h-10 bg-orange-100 rounded-lg flex items-center justify-center flex-shrink-0">
                     <FileText className="w-5 h-5 text-orange-600" />
                   </div>
-                  <div className="w-full text-center">
-                    <h3 className="font-semibold text-primary leading-tight sm:leading-relaxed">
+                  <div className="w-full text-center min-w-0">
+                    <h3 className="font-semibold text-primary leading-tight sm:leading-relaxed break-words">
                       Reports
                     </h3>
                   </div>
@@ -1523,14 +1523,14 @@ export default function Home() {
 
               <Link
                 href="/weight"
-                className="card card-link transition-all group relative focus:outline-none focus-visible:outline-none focus-visible:ring-0 focus-visible:ring-offset-0 focus:ring-0"
+                className="card card-link transition-all group relative focus:outline-none focus-visible:outline-none focus-visible:ring-0 focus-visible:ring-offset-0 focus:ring-0 min-w-0"
               >
-                <div className="flex flex-col items-center gap-3">
+                <div className="flex flex-col items-center gap-3 min-w-0">
                   <div className="w-8 h-8 lg:w-10 lg:h-10 bg-indigo-100 rounded-lg flex items-center justify-center flex-shrink-0">
                     <Scale className="w-5 h-5 text-indigo-600" />
                   </div>
-                  <div className="w-full text-center">
-                    <h3 className="font-semibold text-primary leading-tight sm:leading-relaxed">
+                  <div className="w-full text-center min-w-0">
+                    <h3 className="font-semibold text-primary leading-tight sm:leading-relaxed break-words">
                       Weight
                     </h3>
                   </div>
@@ -1544,21 +1544,64 @@ export default function Home() {
 
               <Link
                 href="/appointments"
-                className="card card-link transition-all group relative focus:outline-none focus-visible:outline-none focus-visible:ring-0 focus-visible:ring-offset-0 focus:ring-0"
+                className="card card-link transition-all group relative focus:outline-none focus-visible:outline-none focus-visible:ring-0 focus-visible:ring-offset-0 focus:ring-0 min-w-0"
               >
-                <div className="flex flex-col items-center gap-3">
+                <div className="flex flex-col items-center gap-3 min-w-0">
                   <div className="w-8 h-8 lg:w-10 lg:h-10 bg-sky-100 rounded-lg flex items-center justify-center flex-shrink-0">
                     <Calendar className="w-5 h-5 text-sky-600" />
                   </div>
-                  <div className="w-full text-center">
-                    <h3 className="font-semibold text-primary leading-tight sm:leading-relaxed">
-                      Appointments
+                  <div className="w-full text-center min-w-0">
+                    <h3 className="font-semibold text-primary leading-tight sm:leading-relaxed break-words">
+                      <span className="min-[376px]:hidden">Apts</span>
+                      <span className="hidden min-[376px]:inline">Appointments</span>
                     </h3>
                   </div>
                 </div>
                 <div className="pointer-events-none absolute right-3 -top-14 hidden w-52 sm:group-hover:flex sm:group-focus-visible:flex">
                   <div className="tooltip-card rounded-lg px-4 py-3 text-left text-sm text-secondary leading-snug shadow-lg font-roboto w-full">
                     View and manage your upcoming healthcare appointments
+                  </div>
+                </div>
+              </Link>
+
+              <Link
+                href="/foods"
+                className="card card-link transition-all group relative focus:outline-none focus-visible:outline-none focus-visible:ring-0 focus-visible:ring-offset-0 focus:ring-0 min-w-0"
+              >
+                <div className="flex flex-col items-center gap-3 min-w-0">
+                  <div className="w-8 h-8 lg:w-10 lg:h-10 bg-amber-100 rounded-lg flex items-center justify-center flex-shrink-0">
+                    <Cookie className="w-5 h-5 text-amber-600" />
+                  </div>
+                  <div className="w-full text-center min-w-0">
+                    <h3 className="font-semibold text-primary leading-tight sm:leading-relaxed break-words">
+                      Foods
+                    </h3>
+                  </div>
+                </div>
+                <div className="pointer-events-none absolute right-3 -top-14 hidden w-52 sm:group-hover:flex sm:group-focus-visible:flex">
+                  <div className="tooltip-card rounded-lg px-4 py-3 text-left text-sm text-secondary leading-snug shadow-lg font-roboto w-full">
+                    Log meals and see what works for your body
+                  </div>
+                </div>
+              </Link>
+
+              <Link
+                href="/settings"
+                className="card card-link transition-all group relative focus:outline-none focus-visible:outline-none focus-visible:ring-0 focus-visible:ring-offset-0 focus:ring-0 min-w-0"
+              >
+                <div className="flex flex-col items-center gap-3 min-w-0">
+                  <div className="w-8 h-8 lg:w-10 lg:h-10 bg-slate-100 rounded-lg flex items-center justify-center flex-shrink-0">
+                    <Settings className="w-5 h-5 text-slate-600" />
+                  </div>
+                  <div className="w-full text-center min-w-0">
+                    <h3 className="font-semibold text-primary leading-tight sm:leading-relaxed break-words">
+                      Settings
+                    </h3>
+                  </div>
+                </div>
+                <div className="pointer-events-none absolute right-3 -top-14 hidden w-52 sm:group-hover:flex sm:group-focus-visible:flex">
+                  <div className="tooltip-card rounded-lg px-4 py-3 text-left text-sm text-secondary leading-snug shadow-lg font-roboto w-full">
+                    Manage your account and app preferences
                   </div>
                 </div>
               </Link>

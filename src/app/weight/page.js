@@ -232,7 +232,7 @@ function WeightPageContent() {
         </div>
       </div>
 
-      <div className="card mb-4 sm:mb-6 min-w-0 flex flex-col h-[68vh]">
+      <div className="card mb-4 sm:mb-6 min-w-0 flex flex-col h-[60vh]">
         <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 flex-shrink-0 mb-5 sm:mb-6">
           <div className="flex items-center">
             <div className="flex w-8 h-8 sm:w-12 sm:h-12 bg-indigo-100 rounded-xl items-center justify-center mr-3 sm:mr-4 flex-shrink-0">
