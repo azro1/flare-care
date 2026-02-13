@@ -547,7 +547,7 @@ function MedicationsPageContent() {
           <div className="flex flex-col sm:flex-row sm:justify-between sm:items-start">
             <div className="min-w-0 flex-1">
               <h1 className="text-2xl sm:text-3xl lg:text-4xl font-bold font-source text-primary mb-4 sm:mb-6">
-                Medications
+                My Medications
               </h1>
               <p className="text-secondary font-roboto">
                 Add your prescribed medications, set up reminders, and keep track of your medication schedule

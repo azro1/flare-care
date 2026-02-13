@@ -4,10 +4,13 @@ import { useState, useEffect } from 'react'
 import { useRouter } from 'next/navigation'
 import Image from 'next/image'
 import { useAuth } from '@/lib/AuthContext'
+import { useTheme } from '@/lib/ThemeContext'
 import ProtectedRoute from '@/components/ProtectedRoute'
+import { Settings, LogOut, Trash2, FilePen } from 'lucide-react'
 
 function AccountPageContent() {
   const { user, signOut, deleteUser } = useAuth()
+  const { theme, toggleTheme } = useTheme()
   const router = useRouter()
   const [isSigningOut, setIsSigningOut] = useState(false)
   const [showSignOutModal, setShowSignOutModal] = useState(false)
@@ -90,109 +93,178 @@ function AccountPageContent() {
 
   return (
     <div>
-      <div className="max-w-5xl mx-auto sm:px-4 md:px-6 lg:px-8">
+      <div className="max-w-6xl mx-auto sm:px-4 md:px-6 lg:px-8">
         {/* Header */}
         <div className="mb-4 sm:mb-6 card">
-          <div className="text-center">
-            <h1 className="text-2xl sm:text-3xl lg:text-4xl font-bold font-source text-primary mb-4">Account</h1>
+          <div className="md:text-center">
+            <h1 className="text-2xl sm:text-3xl lg:text-4xl font-bold font-source text-primary mb-4">My Account</h1>
             <p className="text-secondary font-roboto break-words">Manage your account settings and information</p>
           </div>
         </div>
 
-        {/* Profile Section */}
-        <div className="card mb-4 sm:mb-6">
-          <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 mb-5 sm:mb-6 card-inner p-4 sm:p-6">
-            <div className="flex items-center min-w-0">
-              <div className="mr-4 sm:mr-6 flex-shrink-0">
-                <div className="w-16 h-16 sm:w-20 sm:h-20 rounded-full overflow-hidden flex items-center justify-center bg-[var(--bg-icon)] dark:bg-[var(--bg-icon-charcoal)]">
-                  {avatarUrl && !showFallbackAvatar ? (
-                    <img
-                      src={avatarUrl}
-                      alt="User avatar"
-                      className="w-full h-full object-cover"
-                      style={{ imageRendering: 'crisp-edges' }}
-                      onError={() => setShowFallbackAvatar(true)}
-                    />
-                  ) : (
-                    <div className="flex items-center justify-center w-full h-full rounded-full bg-[var(--bg-card)] dark:bg-[var(--bg-card)]">
-                      <Image
-                        src="/icons/person.svg"
-                        alt="User avatar placeholder"
-                        width={28}
-                        height={28}
-                        className="w-6 h-6 sm:w-7 sm:h-7 opacity-95 dark:opacity-90"
-                        priority
-                      />
+        <div className="flex flex-col lg:flex-row lg:gap-6">
+          {/* Main content */}
+          <div className="flex-1 min-w-0">
+            {/* Profile Section */}
+            <div className="card mb-4 sm:mb-6">
+              <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 mb-5 sm:mb-6 card-inner p-4 sm:p-6">
+                <div className="flex items-center min-w-0">
+                  <div className="mr-4 sm:mr-6 flex-shrink-0 ring-2 ring-[#5F9EA0]/30 rounded-full p-0.5">
+                    <div className="w-16 h-16 sm:w-20 sm:h-20 rounded-full overflow-hidden flex items-center justify-center bg-[var(--bg-icon)] dark:bg-[var(--bg-icon-charcoal)]">
+                      {avatarUrl && !showFallbackAvatar ? (
+                        <img
+                          src={avatarUrl}
+                          alt="User avatar"
+                          className="w-full h-full object-cover"
+                          style={{ imageRendering: 'crisp-edges' }}
+                          onError={() => setShowFallbackAvatar(true)}
+                        />
+                      ) : (
+                        <div className="flex items-center justify-center w-full h-full rounded-full bg-[var(--bg-card)] dark:bg-[var(--bg-card)]">
+                          <Image
+                            src="/icons/person.svg"
+                            alt="User avatar placeholder"
+                            width={28}
+                            height={28}
+                            className="w-6 h-6 sm:w-7 sm:h-7 opacity-95 dark:opacity-90"
+                            priority
+                          />
+                        </div>
+                      )}
                     </div>
-                  )}
+                  </div>
+                  <div className="min-w-0 flex-1">
+                    <h2 className="text-xl font-semibold font-source text-primary mb-1 truncate">
+                      {user?.user_metadata?.full_name || 'User'}
+                    </h2>
+                    <p className="text-secondary font-roboto truncate">{user?.email}</p>
+                  </div>
+                </div>
+                <button
+                  onClick={() => setShowSignOutModal(true)}
+                  disabled={isSigningOut}
+                  className="bg-[#5F9EA0] text-white font-semibold py-2 px-4 rounded-lg hover:bg-button-cadet-hover transition-colors disabled:opacity-50 self-start sm:self-auto inline-flex items-center gap-2"
+                >
+                  <LogOut className="w-4 h-4" />
+                  Sign Out
+                </button>
+              </div>
+
+              {/* Profile Info */}
+              <h3 className="text-lg sm:text-xl font-semibold font-source text-primary mb-4 flex items-center gap-2">
+                <FilePen className="w-5 h-5 text-[#5F9EA0]" />
+                Profile Info
+              </h3>
+              <div className="space-y-4">
+                <div className="card-inner p-4 sm:p-6">
+                  <p className="text-sm font-medium text-secondary mb-1">Email</p>
+                  <p className="text-primary font-roboto break-words">{user?.email || 'Not available'}</p>
+                </div>
+                <div className="card-inner p-4 sm:p-6">
+                  <p className="text-sm font-medium text-secondary mb-1">Full Name</p>
+                  <p className="text-primary font-roboto">{user?.user_metadata?.full_name || 'Not set'}</p>
+                </div>
+                <div className="card-inner p-4 sm:p-6">
+                  <p className="text-sm font-medium text-secondary mb-1">Account Created</p>
+                  <p className="text-primary font-roboto">
+                    {user?.created_at ? new Date(user.created_at).toLocaleDateString('en-GB') : 'Not available'}
+                  </p>
+                </div>
+                <div className="card-inner p-4 sm:p-6">
+                  <p className="text-sm font-medium text-secondary mb-1">User ID</p>
+                  <p className="text-primary font-roboto font-mono text-sm break-all">{user?.id || 'Not available'}</p>
                 </div>
               </div>
-              <div className="min-w-0 flex-1">
-                <h2 className="text-xl font-semibold font-source text-primary mb-1 truncate">
-                  {user?.user_metadata?.full_name || 'User'}
-                </h2>
-                <p className="text-secondary font-roboto truncate">{user?.email}</p>
+            </div>
+
+            {/* Settings – mobile only: above Delete Account */}
+            <div className="card mb-4 sm:mb-6 lg:hidden">
+              <div className="flex items-center gap-2 mb-4">
+                <Settings className="w-5 h-5 text-[#5F9EA0]" />
+                <h3 className="text-lg sm:text-xl font-semibold font-source text-primary">Settings</h3>
+              </div>
+              <div className="card-inner p-5 sm:p-6">
+                <div className="flex items-center justify-between">
+                  <div className="flex-1">
+                    <p className="text-sm font-medium text-secondary mb-1">Appearance</p>
+                    <p className="text-primary font-roboto text-sm">
+                      {theme === 'dark' ? 'Dark mode' : 'Light mode'}
+                    </p>
+                  </div>
+                  <button
+                    onClick={toggleTheme}
+                    className="relative inline-flex h-7 w-14 items-center rounded-full transition-colors focus:outline-none"
+                    style={{
+                      backgroundColor: theme === 'dark' ? '#5F9EA0' : '#cbd5e1'
+                    }}
+                    aria-label={`Switch to ${theme === 'dark' ? 'light' : 'dark'} mode`}
+                  >
+                    <span
+                      className={`inline-block h-5 w-5 transform rounded-full bg-white transition-transform ${
+                        theme === 'dark' ? 'translate-x-8' : 'translate-x-1'
+                      }`}
+                    />
+                    <span className="sr-only">Toggle theme</span>
+                  </button>
+                </div>
               </div>
             </div>
-            <button
-              onClick={() => setShowSignOutModal(true)}
-              disabled={isSigningOut}
-              className="bg-[#5F9EA0] text-white font-semibold py-2 px-4 rounded-lg hover:bg-button-cadet-hover transition-colors disabled:opacity-50 self-start sm:self-auto"
-            >
-              Sign Out
-            </button>
-          </div>
-        
 
-        {/* Account Information */}
-      
-          <h3 className="text-lg sm:text-xl font-semibold font-source text-primary mb-4">Profile Info</h3>
-          
-          <div className="space-y-4">
-            <div className="card-inner p-4 sm:p-6">
-              <p className="text-sm font-medium text-secondary mb-1">Email</p>
-              <p className="text-primary font-roboto">{user?.email || 'Not available'}</p>
-            </div>
-
-            <div className="card-inner p-4 sm:p-6">
-              <p className="text-sm font-medium text-secondary mb-1">Full Name</p>
-              <p className="text-primary font-roboto">{user?.user_metadata?.full_name || 'Not set'}</p>
-            </div>
-
-            <div className="card-inner p-4 sm:p-6">
-              <p className="text-sm font-medium text-secondary mb-1">Account Created</p>
-              <p className="text-primary font-roboto">
-                {user?.created_at ? new Date(user.created_at).toLocaleDateString('en-GB') : 'Not available'}
-              </p>
-            </div>
-
-            <div className="card-inner p-4 sm:p-6">
-              <p className="text-sm font-medium text-secondary mb-1">User ID</p>
-              <p className="text-primary font-roboto font-mono">{user?.id || 'Not available'}</p>
+            {/* Delete Account Section */}
+            <div className="card">
+              <div className="border-l-4 border-red-500 pl-4 mb-6">
+                <h3 className="text-lg sm:text-xl font-semibold font-source text-primary mb-2">Delete Account</h3>
+                <p className="text-secondary font-roboto mb-4">
+                  Permanently delete your account and all associated data
+                </p>
+              </div>
+              <div>
+                <button
+                  onClick={() => setShowDeleteModal(true)}
+                  className="button-delete inline-flex items-center gap-2"
+                >
+                  <Trash2 className="w-4 h-4" />
+                  Delete
+                </button>
+              </div>
             </div>
           </div>
+
+          {/* Sidebar – Settings: desktop only */}
+          <aside className="hidden lg:block lg:w-80 flex-shrink-0">
+            <div className="card lg:sticky lg:top-6">
+              <div className="flex items-center gap-2 mb-4">
+                <Settings className="w-5 h-5 text-[#5F9EA0]" />
+                <h3 className="text-lg sm:text-xl font-semibold font-source text-primary">Settings</h3>
+              </div>
+              <div className="card-inner p-5 sm:p-6">
+                <div className="flex items-center justify-between">
+                  <div className="flex-1">
+                    <p className="text-sm font-medium text-secondary mb-1">Appearance</p>
+                    <p className="text-primary font-roboto text-sm">
+                      {theme === 'dark' ? 'Dark mode' : 'Light mode'}
+                    </p>
+                  </div>
+                  <button
+                    onClick={toggleTheme}
+                    className="relative inline-flex h-7 w-14 items-center rounded-full transition-colors focus:outline-none"
+                    style={{
+                      backgroundColor: theme === 'dark' ? '#5F9EA0' : '#cbd5e1'
+                    }}
+                    aria-label={`Switch to ${theme === 'dark' ? 'light' : 'dark'} mode`}
+                  >
+                    <span
+                      className={`inline-block h-5 w-5 transform rounded-full bg-white transition-transform ${
+                        theme === 'dark' ? 'translate-x-8' : 'translate-x-1'
+                      }`}
+                    />
+                    <span className="sr-only">Toggle theme</span>
+                  </button>
+                </div>
+              </div>
+            </div>
+          </aside>
         </div>
-
-        {/* Delete Account Section */}
-        <div className="card">
-          <div className="border-l-4 border-red-500 pl-4 mb-6">
-            <h3 className="text-lg sm:text-xl font-semibold font-source text-primary mb-2">Delete Account</h3>
-            <p className="text-secondary font-roboto mb-4">
-              Permanently delete your account and all associated data
-            </p>
-          </div>
-          
-
-          <div>
-            <button
-              onClick={() => setShowDeleteModal(true)}
-              className="button-delete"
-            >
-              Delete
-            </button>
-          </div>
-        </div>
-
       </div>
 
       {/* Sign Out Confirmation Modal */}

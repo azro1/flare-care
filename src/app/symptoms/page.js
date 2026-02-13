@@ -2311,7 +2311,7 @@ function SymptomsPageContent() {
                     </div>
                   )}
                   {formData.dinner.some(item => item.food.trim()) && (
-                    <div className="py-3 border-b min-w-0" style={{borderColor: 'var(--border-primary)'}}>
+                    <div className="py-3 min-w-0">
                       <span className="text-sm text-cadet-blue block mb-2">Dinner</span>
                       <div className="space-y-1 min-w-0">
                         {formData.dinner.filter(item => item.food.trim()).map((item, index) => (
@@ -2340,11 +2340,6 @@ function SymptomsPageContent() {
               </div>
             )}
           </div>
-        )}
-
-        {/* Visual Separator for Review Page - only show if there are notes */}
-        {currentStep === 17 && formData.notes && (
-          <div className="my-8 border-t" style={{borderColor: 'var(--border-primary)'}}></div>
         )}
 
         {/* Navigation Buttons - Hide on landing page (step 0) */}

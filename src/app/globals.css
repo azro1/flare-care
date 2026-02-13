@@ -85,82 +85,73 @@
   }
 
   .dark {
-    /* Warm charcoal/slate dark theme - moving away from blue */
-        --bg-main: #1a1d24; /* Warm charcoal main background */
-        --bg-main-gradient: linear-gradient(135deg, #1a1d24 0%, #1a1d24 100%); /* Solid warm charcoal */
-        --bg-quick-actions-gradient: rgba(42, 45, 52, 0.6);
-        --bg-primary: #1a1d24; /* Warm charcoal primary */
-        --bg-secondary: #2a2d34; /* Warm neutral charcoal secondary */
-        --bg-tertiary: #1a1d24; /* Warm charcoal tertiary */
-        --bg-section: rgba(42, 45, 52, 0.5); /* Warm neutral charcoal section */
-        --bg-nav-footer: #111419; /* Darker warm charcoal for nav/footer contrast */
-        --bg-dropdown: #1e2128; /* Dropdown background - fully opaque */
-        --bg-dropdown-hover: rgba(42, 45, 52, 0.7); /* Dropdown item hover */
-        --border-dropdown: rgba(63, 68, 73, 0.5); /* Dropdown border */
-        --text-dropdown: #d1d5db; /* Dropdown text */
-    --bg-card: #2a2d34; /* Warm neutral charcoal card */
-    --bg-card-hover: #373a41; /* Lighter warm charcoal hover */
-    --bg-card-inner: #343740; /* Balanced charcoal inner card */
-    --text-card-inner: #e5e7eb; /* Lighter text for inner cards in dark mode */
-    --bg-icon: #2a2d34; /* Warm neutral charcoal icon background */
-    --bg-icon-charcoal: rgba(28, 30, 36, 0.95); /* Deeper charcoal option for icon backgrounds */
-    --bg-avatar-fallback-dark: #3a3e46; /* Charcoal avatar fallback background */
-    --bg-avatar: #2f333a; /* Charcoal avatar background for contrast in dark mode */
-    --text-icon: #d1d5db; /* Soft gray icon text */
-    --bg-input: #2a2d34; /* Warm neutral charcoal input */
-    --bg-input-dark: rgba(42, 45, 52, 0.7); /* Warm neutral charcoal input dark */
-    --border-input: #3f4449; /* Warm neutral border */
-    --border-input-dark: #555961; /* Lighter warm neutral border for better visibility */
-    --bg-button-primary: #6366f1; /* Warm indigo (less blue than before) */
-    --bg-button-primary-hover: #4f46e5; /* Deeper warm indigo */
-    --bg-button-cadet: #5F9EA0; /* Cadet blue button - keep original */
-    --bg-button-cadet-hover: rgba(95, 158, 160, 0.8); /* Cadet blue button hover */
-    --bg-button-delete: #ef4444; /* Red delete button background for dark mode */
-    --bg-button-delete-hover: #dc2626; /* Darker red delete button hover */
-    --bg-button-secondary: #2a2d34; /* Warm neutral charcoal secondary */
-    --bg-button-secondary-hover: rgba(55, 58, 65, 0.9); /* Warmer charcoal hover */
-    --bg-button-hover: rgba(55, 58, 65, 0.7); /* Warm neutral hover */
-    --bg-button-disabled: rgba(42, 45, 52, 0.5); /* Warm neutral charcoal disabled */
-    --text-button-disabled: #6b7280; /* Warm gray disabled text */
-    --bg-button-cancel: #3a3d44; /* Warm neutral charcoal cancel - solid for visibility */
-    --bg-button-cancel-hover: #4a4d54; /* Warmer charcoal cancel hover */
-    --bg-error: rgba(95, 158, 160, 0.15); /* Dark cadet blue error background */
-    --border-error: #7FB3B3; /* Lighter cadet blue error border for dark mode */
-    --text-error: #7FB3B3; /* Lighter cadet blue error text for dark mode */
-    
-    /* Cadet blue - keep original brand color */
-    --text-cadet-blue: #5F9EA0; /* Cadet blue - same as light mode */
-    
-    /* Radio button styling */
-    --radio-bg: rgba(42, 45, 52, 0.8); /* Warm neutral charcoal radio */
-    --radio-border: #3f4449; /* Warm neutral border */
-    --radio-checked-border: #059669; /* Warm emerald when checked */
-    
-    /* Goal colors */
-    --bg-goal-success: #064e3b; /* Dark green background for completed goals */
-    --text-goal-success: #10b981; /* Light green text for completed goals */
-    --bg-goal-icon-success: rgba(16, 185, 129, 0.1); /* Subtle green background for success icons */
-    --text-goal-icon-success: #10b981; /* Light green for success icons */
-    --bg-goal-icon-medication: rgba(196, 181, 253, 0.1); /* Subtle purple background for medication icons */
-    --text-goal-icon-medication: #c4b5fd; /* Brighter purple for medication icons */
-    --bg-goal-icon-hydration: rgba(59, 130, 246, 0.15); /* Subtle blue kept for hydration (water theme) */
-    --text-goal-icon-hydration: #60a5fa; /* Softer blue for hydration */
-    
-    --text-primary: #f3f4f6; /* Softer white for better contrast */
-    --text-secondary: #d1d5db; /* Warm light gray */
-    --text-tertiary: #9ca3af; /* Warm medium gray */
-    --text-muted: #9ca3af; /* Warm muted gray */
+    /* Dark mode – cadet-tinted slate, bright accents, proper dark backgrounds */
+    --bg-main: #1a2432;
+    --bg-main-gradient: linear-gradient(135deg, #1a2432 0%, #1e2d3d 50%, #1a2432 100%);
+    --bg-quick-actions-gradient: rgba(30, 45, 61, 0.6);
+    --bg-primary: #1a2432;
+    --bg-secondary: #243447;
+    --bg-tertiary: #1a2432;
+    --bg-section: rgba(36, 52, 71, 0.5);
+    --bg-nav-footer: #0f1820;
+    --bg-dropdown: #1e2d3d;
+    --bg-dropdown-hover: rgba(36, 52, 71, 0.8);
+    --border-dropdown: rgba(71, 95, 119, 0.5);
+    --text-dropdown: #e2e8f0;
+    --bg-card: #243447;
+    --bg-card-hover: #2d4157;
+    --bg-card-inner: #2a3d52;
+    --text-card-inner: #e5e7eb;
+    --bg-icon: #243447;
+    --bg-icon-charcoal: rgba(26, 36, 50, 0.95);
+    --bg-avatar-fallback-dark: #2a3d52;
+    --bg-avatar: #2a3d52;
+    --text-icon: #cbd5e1;
+    --bg-input: #243447;
+    --bg-input-dark: rgba(36, 52, 71, 0.8);
+    --border-input: #3d5266;
+    --border-input-dark: #4d6577;
+    --bg-button-primary: #5F9EA0;
+    --bg-button-primary-hover: #4a8a8c;
+    --bg-button-cadet: #5F9EA0;
+    --bg-button-cadet-hover: rgba(95, 158, 160, 0.85);
+    --bg-button-delete: #ef4444;
+    --bg-button-delete-hover: #dc2626;
+    --bg-button-secondary: #243447;
+    --bg-button-secondary-hover: #2d4157;
+    --bg-button-hover: rgba(45, 65, 87, 0.8);
+    --bg-button-disabled: rgba(36, 52, 71, 0.5);
+    --text-button-disabled: #94a3b8;
+    --bg-button-cancel: #2a3d52;
+    --bg-button-cancel-hover: #354a62;
+    --bg-error: rgba(95, 158, 160, 0.2);
+    --border-error: #7FB3B3;
+    --text-error: #7FB3B3;
+    --text-cadet-blue: #6eb5b7;
+    --radio-bg: rgba(36, 52, 71, 0.9);
+    --radio-border: #3d5266;
+    --radio-checked-border: #5F9EA0;
+    --bg-goal-success: #064e3b;
+    --text-goal-success: #34d399;
+    --bg-goal-icon-success: rgba(52, 211, 153, 0.15);
+    --text-goal-icon-success: #34d399;
+    --bg-goal-icon-medication: rgba(196, 181, 253, 0.15);
+    --text-goal-icon-medication: #c4b5fd;
+    --bg-goal-icon-hydration: rgba(94, 234, 212, 0.15);
+    --text-goal-icon-hydration: #5eead4;
+    --text-primary: #f1f5f9;
+    --text-secondary: #cbd5e1;
+    --text-tertiary: #94a3b8;
+    --text-muted: #94a3b8;
     --text-white: #ffffff;
-    
-    --border-primary: #353940; /* More subtle warm neutral primary border */
-    --border-secondary: #4f5459; /* Warm neutral secondary border */
-    --border-card: #3f4449; /* Warm neutral card border */
-    --border-card-hover: #52525b; /* Warmer card border on hover */
-    --border-card-inner: rgba(79, 84, 89, 0.6); /* Warmer inner card border */
-    
-    --shadow-sm: 0 1px 2px 0 rgb(0 0 0 / 0.3);
-    --shadow-md: 0 4px 6px -1px rgb(0 0 0 / 0.4), 0 2px 4px -2px rgb(0 0 0 / 0.4);
-    --shadow-lg: 0 10px 15px -3px rgb(0 0 0 / 0.4), 0 4px 6px -4px rgb(0 0 0 / 0.4);
+    --border-primary: #3d5266;
+    --border-secondary: #4d6577;
+    --border-card: #3d5266;
+    --border-card-hover: #5F9EA0;
+    --border-card-inner: rgba(71, 95, 119, 0.5);
+    --shadow-sm: 0 1px 2px 0 rgb(0 0 0 / 0.25);
+    --shadow-md: 0 4px 6px -1px rgb(0 0 0 / 0.35), 0 2px 4px -2px rgb(0 0 0 / 0.35);
+    --shadow-lg: 0 10px 15px -3px rgb(0 0 0 / 0.35), 0 4px 6px -4px rgb(0 0 0 / 0.35);
   }
 
   * {
@@ -250,9 +241,9 @@
 }
 
 .dark .tooltip-card {
-  background-color: rgba(50, 53, 60, 0.96);
+  background-color: rgba(36, 52, 71, 0.96);
   color: var(--text-card-inner);
-  box-shadow: 0 15px 35px rgba(0, 0, 0, 0.45);
+  box-shadow: 0 15px 35px rgba(0, 0, 0, 0.35);
 }
 
   .dark .card:hover {
@@ -369,13 +360,13 @@ select.input-field-wizard:focus {
     outline: none !important;
 }
 
-/* Dark mode placeholder color for wizard inputs - warm gray instead of blue slate */
+/* Dark mode placeholder – better contrast on cadet-tinted dark */
 .dark .input-field-wizard::placeholder {
-    color: #6b7280 !important; /* Dimmer warm gray for less prominent placeholders */
+    color: #94a3b8 !important;
 }
 
 .dark select.input-field-wizard.placeholder {
-    color: #6b7280 !important; /* Dimmer warm gray for less prominent placeholders */
+    color: #94a3b8 !important;
 }
 
 select.input-field-wizard option {
@@ -385,7 +376,7 @@ select.input-field-wizard option {
 
 /* Dark mode: Make select dropdown options match datepicker color */
 .dark select.input-field-wizard option {
-    background-color: #1e2128 !important;
+    background-color: #1e2d3d !important;
     color: var(--text-primary) !important;
 }
 
@@ -524,9 +515,9 @@ select.input-field-wizard option[value=""] {
   .dark input:-webkit-autofill:hover,
   .dark input:-webkit-autofill:focus,
   .dark input:-webkit-autofill:active {
-    -webkit-box-shadow: 0 0 0 1000px #2a2d34 inset !important;
+    -webkit-box-shadow: 0 0 0 1000px #243447 inset !important;
     -webkit-text-fill-color: var(--text-primary) !important;
-    background-color: #2a2d34 !important;
+    background-color: #243447 !important;
     border-radius: 0.5rem !important;
   }
 
@@ -534,9 +525,9 @@ select.input-field-wizard option[value=""] {
   .dark input.input-field-wizard:-webkit-autofill:hover,
   .dark input.input-field-wizard:-webkit-autofill:focus,
   .dark input.input-field-wizard:-webkit-autofill:active {
-    -webkit-box-shadow: 0 0 0 1000px #2a2d34 inset !important;
+    -webkit-box-shadow: 0 0 0 1000px #243447 inset !important;
     -webkit-text-fill-color: var(--text-primary) !important;
-    background-color: #2a2d34 !important;
+    background-color: #243447 !important;
     border-radius: 0.5rem !important;
   }
   
@@ -784,15 +775,15 @@ select.input-field-wizard option[value=""] {
   .dark .react-datepicker-popper-opaque .react-datepicker,
   .dark .react-datepicker-responsive,
   .dark .react-datepicker-responsive * {
-    background-color: #1e2128 !important;
-    background: #1e2128 !important;
+    background-color: #1e2d3d !important;
+    background: #1e2d3d !important;
     opacity: 1 !important;
   }
   
   /* Force ALL datepicker elements to be opaque on mobile in dark mode */
   .dark .react-datepicker *:not(.react-datepicker__day):not(.react-datepicker__day--selected):not(.react-datepicker__day--today):not(.react-datepicker__day:hover) {
-    background-color: #1e2128 !important;
-    background: #1e2128 !important;
+    background-color: #1e2d3d !important;
+    background: #1e2d3d !important;
     opacity: 1 !important;
   }
   
@@ -803,8 +794,8 @@ select.input-field-wizard option[value=""] {
   }
   
   .dark .react-datepicker {
-    background-color: #1e2128 !important;
-    background: #1e2128 !important;
+    background-color: #1e2d3d !important;
+    background: #1e2d3d !important;
     font-size: 12px !important;
     padding: 8px !important;
     border-radius: 12px !important;
@@ -834,7 +825,7 @@ select.input-field-wizard option[value=""] {
   }
   
   .dark .react-datepicker__month-container {
-    background-color: #1e2128 !important;
+    background-color: #1e2d3d !important;
   }
   
   .react-datepicker__time-container {
@@ -844,11 +835,11 @@ select.input-field-wizard option[value=""] {
   }
   
   .dark .react-datepicker__time-container {
-    background-color: #1e2128 !important;
+    background-color: #1e2d3d !important;
   }
   
   .dark .react-datepicker__time {
-    background-color: #1e2128 !important;
+    background-color: #1e2d3d !important;
   }
   
   .react-datepicker__time-box {
@@ -856,7 +847,7 @@ select.input-field-wizard option[value=""] {
   }
   
   .dark .react-datepicker__time-box {
-    background-color: #1e2128 !important;
+    background-color: #1e2d3d !important;
   }
   
   .react-datepicker::after {
@@ -895,7 +886,7 @@ select.input-field-wizard option[value=""] {
   }
   
   .dark .react-datepicker__day-name {
-    background-color: #1e2128 !important;
+    background-color: #1e2d3d !important;
   }
   
   .react-datepicker__current-month {
@@ -908,7 +899,7 @@ select.input-field-wizard option[value=""] {
   }
   
   .dark .react-datepicker__navigation {
-    background-color: #1e2128 !important;
+    background-color: #1e2d3d !important;
   }
   
   .react-datepicker__navigation-icon::before {
@@ -917,29 +908,29 @@ select.input-field-wizard option[value=""] {
   }
   
   .dark .react-datepicker__header {
-    background-color: #1e2128 !important;
+    background-color: #1e2d3d !important;
   }
   
   .dark .react-datepicker__month {
-    background-color: #1e2128 !important;
+    background-color: #1e2d3d !important;
   }
   
   .dark .react-datepicker__day-names {
-    background: #1e2128 !important;
-    background-color: #1e2128 !important;
+    background: #1e2d3d !important;
+    background-color: #1e2d3d !important;
   }
   
   .dark .react-datepicker__day-names > div {
-    background: #1e2128 !important;
-    background-color: #1e2128 !important;
+    background: #1e2d3d !important;
+    background-color: #1e2d3d !important;
   }
   
   .dark .react-datepicker__week {
-    background-color: #1e2128 !important;
+    background-color: #1e2d3d !important;
   }
   
   .dark .react-datepicker__current-month {
-    background-color: #1e2128 !important;
+    background-color: #1e2d3d !important;
   }
   
   /* Force all container elements to be opaque */
@@ -947,21 +938,21 @@ select.input-field-wizard option[value=""] {
   .dark .react-datepicker__month-container > div,
   .dark .react-datepicker__time-container > div,
   .dark .react-datepicker__month-container *:not(.react-datepicker__day):not(.react-datepicker__day--selected):not(.react-datepicker__day--today):not(.react-datepicker__day:hover) {
-    background-color: #1e2128 !important;
-    background: #1e2128 !important;
+    background-color: #1e2d3d !important;
+    background: #1e2d3d !important;
   }
   
   /* Make the entire datepicker and all its children opaque, except day cells */
   .dark .react-datepicker *:not(.react-datepicker__day):not(.react-datepicker__day--selected):not(.react-datepicker__day--today):not(.react-datepicker__day:hover):not(.react-datepicker__day--in-range) {
-    background-color: #1e2128 !important;
-    background: #1e2128 !important;
+    background-color: #1e2d3d !important;
+    background: #1e2d3d !important;
   }
   
   /* Force absolutely everything to be opaque - most aggressive */
   .dark .react-datepicker,
   .dark .react-datepicker * {
-    background-color: #1e2128 !important;
-    background: #1e2128 !important;
+    background-color: #1e2d3d !important;
+    background: #1e2d3d !important;
   }
   
   /* Exception: day cells should be transparent (unless hovered/selected) */
@@ -1172,7 +1163,7 @@ select.input-field-wizard option[value=""] {
 
 /* Dark mode specific adjustments */
 .dark .react-datepicker__input-container input {
-  background-color: #2a2d34 !important;
+  background-color: #243447 !important;
   color: var(--text-primary) !important;
   border-color: var(--border-input-dark) !important;
   box-shadow: none !important;
@@ -1180,7 +1171,7 @@ select.input-field-wizard option[value=""] {
 }
 
 .dark .react-datepicker__input-container input:focus {
-  background-color: #2a2d34 !important;
+  background-color: #243447 !important;
   color: var(--text-primary) !important;
   border-color: var(--border-input-dark) !important;
   box-shadow: none !important;
@@ -1188,7 +1179,7 @@ select.input-field-wizard option[value=""] {
 }
 
 .dark .react-datepicker__input-container input.input-field-wizard {
-  background-color: #2a2d34 !important;
+  background-color: #243447 !important;
   color: var(--text-primary) !important;
   border-color: var(--border-input-dark) !important;
   box-shadow: none !important;
@@ -1196,7 +1187,7 @@ select.input-field-wizard option[value=""] {
 }
 
 .dark .react-datepicker__input-container input.input-field-wizard:focus {
-  background-color: #2a2d34 !important;
+  background-color: #243447 !important;
   color: var(--text-primary) !important;
   border-color: var(--border-input-dark) !important;
   box-shadow: none !important;
@@ -1207,15 +1198,15 @@ select.input-field-wizard option[value=""] {
 .dark .react-datepicker__input-container input.input-field-wizard:-webkit-autofill:hover,
 .dark .react-datepicker__input-container input.input-field-wizard:-webkit-autofill:focus,
 .dark .react-datepicker__input-container input.input-field-wizard:-webkit-autofill:active {
-  -webkit-box-shadow: 0 0 0 1000px #2a2d34 inset !important;
+  -webkit-box-shadow: 0 0 0 1000px #243447 inset !important;
   -webkit-text-fill-color: var(--text-primary) !important;
-  background-color: #2a2d34 !important;
+  background-color: #243447 !important;
   border-radius: 0.5rem !important;
 }
 
 .dark input.input-field-wizard,
 .dark textarea.input-field-wizard {
-  background-color: #2a2d34 !important;
+  background-color: #243447 !important;
   color: var(--text-primary) !important;
   border-color: var(--border-input-dark) !important;
   box-shadow: none !important;
@@ -1224,7 +1215,7 @@ select.input-field-wizard option[value=""] {
 
 .dark input.input-field-wizard:focus,
 .dark textarea.input-field-wizard:focus {
-  background-color: #2a2d34 !important;
+  background-color: #243447 !important;
   color: var(--text-primary) !important;
   border-color: var(--border-input-dark) !important;
   box-shadow: none !important;

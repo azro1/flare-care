@@ -6,7 +6,7 @@ import { useAuth } from '@/lib/AuthContext'
 import { useEffect, useState } from 'react'
 import { useRouter } from 'next/navigation'
 import { supabase, TABLES } from '@/lib/supabase'
-import { CupSoda, Pizza, Coffee, BookOpen, Smile, Thermometer, Pill, FileText, Activity, TrendingUp, PartyPopper, Clipboard, Cookie, ChartLine, Sparkles, ChevronRight, ChevronDown, Clock, Scale, Calendar, Settings } from 'lucide-react'
+import { CupSoda, Pizza, Coffee, BookOpen, Smile, Thermometer, Pill, FileText, Activity, TrendingUp, PartyPopper, Clipboard, Cookie, ChartLine, Sparkles, ChevronRight, ChevronDown, Clock, Scale, Calendar } from 'lucide-react'
 
 export default function Home() {
   const { isAuthenticated, loading, user } = useAuth()
@@ -873,7 +873,7 @@ export default function Home() {
   })
 
   return (
-    <div>
+    <div className="flex-1 flex flex-col min-h-0">
       {/* Toast Notification */}
       {showToast && (
         <div className="fixed top-24 right-4 z-50 bg-green-100 text-green-600 px-6 py-3 rounded-lg shadow-lg flex items-center max-w-xs border border-green-600">
@@ -946,8 +946,9 @@ export default function Home() {
         </div>
       )}
 
-      <div className="w-full sm:px-4 md:px-6 min-h-screen">
-        <div className="flex flex-col lg:flex-row lg:gap-6 lg:justify-center">
+      <div className="w-full sm:px-4 md:px-6 flex-1 flex flex-col min-h-0">
+        <div className="flex-1 flex flex-col min-h-0">
+        <div className="flex-1 flex flex-col lg:flex-row lg:gap-6 lg:justify-center min-h-0">
           
           {/* Left Sidebar */}
           <div className="lg:w-72 lg:flex-shrink-0 order-2 lg:order-1">
@@ -1027,7 +1028,7 @@ export default function Home() {
                   <h3 className="text-xl font-semibold font-source text-primary mb-2">💡 Daily Tip</h3>
                   <p className={`text-sm text-secondary transition-opacity duration-500 ${isFading ? 'opacity-0' : 'opacity-100'}`}>
                     {dailyTips[currentTipIndex]}
-                </p>
+                  </p>
                 </div>
               </div>
 
@@ -1050,8 +1051,6 @@ export default function Home() {
             {new Date().toLocaleDateString('en-GB', { weekday: 'long', day: 'numeric', month: 'long' })}
           </p>
         </WeatherHero>
-
-        
 
         {/* Daily Tasks */}
         <div className="my-6">
@@ -1103,123 +1102,30 @@ export default function Home() {
           </div>
         </div>
 
-
-        {/* Today's Summary */}
-        <div className="mb-6 sm:mb-6 card">
-          <h2 className="text-xl font-semibold font-source text-primary mb-4">Today's Summary</h2>
+        <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 mb-6">
+          {/* Today's Summary */}
+          <div>
+            <h2 className="text-xl font-semibold font-source text-primary mb-3">Today's Summary</h2>
+            <div className="card">
             <div className="card-inner p-4">
               <div className="flex justify-between items-center p-2">
                 <span className="text-sm text-secondary">Symptoms Logged</span>
                 <span className="text-sm font-semibold text-primary">{todaySymptoms.length}</span>
-            </div>
+              </div>
               <div className="flex justify-between items-center p-2">
                 <span className="text-sm text-secondary">Medications Taken</span>
                 <span className="text-sm font-semibold text-primary">{takenMedications.length}/{medications.length}</span>
-            </div>
-          </div>
-        </div>
-
-
-        {/* Recent Symptoms */}
-        {displayedSymptoms.length > 0 && (
-          <div className="mb-4 sm:mb-6 card">
-            <div className="flex items-center justify-between mb-4">
-              <div className="flex items-start gap-3">
-                <h2 className="text-xl font-semibold font-source text-primary">Recent Logged Symptoms</h2>
               </div>
-              {symptoms.length > 1 && (
-                <button 
-                  onClick={() => setShowAllSymptoms(!showAllSymptoms)}
-                  className="text-[#5F9EA0] hover:text-[#5F9EA0]/80 flex items-center gap-1"
-                >
-                  <span className="hidden sm:inline text-sm font-medium">{showAllSymptoms ? 'Show Less' : 'View All'}</span>
-                  <ChevronDown className={`w-5 h-5 sm:hidden transition-transform duration-200 text-primary ${showAllSymptoms ? 'rotate-180' : ''}`} />
-                </button>
-              )}
             </div>
-            <div className="space-y-3 max-w-xs">
-              {displayedSymptoms.map((symptom) => (
-                <div key={symptom.id}>
-                <div 
-                    className="card-inner p-6 cursor-pointer transition-all duration-200"
-                  onClick={() => {
-                    router.push(`/symptoms/${symptom.id}`)
-                  }}
-                >
-                  <div className="space-y-4">
-                    <div className="flex items-center justify-between">
-                      <span className="text-sm font-medium text-primary">
-                        {formatUKDate(symptom.created_at || symptom.createdAt)}
-                      </span>
-                      <span className="text-xs text-slate-400 dark:[color:var(--text-tertiary)]">
-                        {new Date(symptom.created_at || symptom.createdAt).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
-                      </span>
-                    </div>
-                    <div className="flex gap-6 text-sm text-secondary">
-                      <span>View details</span>
-                    </div>
-                  </div>
-                  </div>
-                </div>
-              ))}
             </div>
           </div>
-        )}
 
-      
-
-        {/* Recent Medications */}
-        {trackedMedications.length > 0 && (
-          <div className="mb-6 sm:mb-6 card">
-            <div className="flex items-center justify-between mb-4">
-              <div className="flex items-start gap-3">
-                <h2 className="text-xl font-semibold font-source text-primary">Recent Tracked Medications</h2>
-              </div>
-              {trackedMedications.length > 1 && (
-                <button 
-                  onClick={() => setShowAllMedications(!showAllMedications)}
-                  className="text-[#5F9EA0] hover:text-[#5F9EA0]/80 flex items-center gap-1"
-                >
-                  <span className="hidden sm:inline text-sm font-medium">{showAllMedications ? 'Show Less' : 'View All'}</span>
-                  <ChevronDown className={`w-5 h-5 sm:hidden transition-transform duration-200 text-primary ${showAllMedications ? 'rotate-180' : ''}`} />
-                </button>
-              )}
-                  </div>
-            <div className="space-y-3 max-w-xs">
-              {(showAllMedications ? trackedMedications : trackedMedications.slice(0, 1)).map((tracked, index) => (
-                <div key={tracked.id}>
-                  <div 
-                    className="card-inner p-6  cursor-pointer transition-all duration-200"
-                    onClick={() => {
-                      router.push(`/medications/track/${tracked.id}`)
-                    }}
-                  >
-                  <div className="space-y-4">
-                    <div className="flex items-center justify-between">
-                      <span className="text-sm font-medium text-primary">
-                        {formatUKDate(tracked.created_at || tracked.createdAt)}
-                      </span>
-                      <span className="text-xs text-slate-400 dark:[color:var(--text-tertiary)]">
-                        {new Date(tracked.created_at || tracked.createdAt).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
-                      </span>
-                    </div>
-                    <div className="flex gap-6 text-sm text-secondary">
-                      <span>View details</span>
-                    </div>
-                  </div>
-                  </div>
-                </div>
-              ))}
-            </div>
-          </div>
-        )}
-
-
-        {/* Recent Activity */}
-        <div className="card mb-6">
-          <h2 className="text-xl font-semibold font-source text-primary">Recent Activity</h2>
-          <div className="p-4 transition-all duration-300 ease-in-out">
-                      {(() => {
+          {/* Recent Activity */}
+          <div>
+            <h2 className="text-xl font-semibold font-source text-primary mb-3">Recent Activity</h2>
+            <div className="card">
+            <div className="card-inner p-4 transition-all duration-300 ease-in-out">
+              {(() => {
               // Helper function to format relative time
               const formatRelativeTime = (date) => {
                         const now = new Date()
@@ -1472,8 +1378,102 @@ export default function Home() {
               </div>
               )
             })()}
+            </div>
+            </div>
           </div>
         </div>
+
+        {/* Recent Symptoms */}
+        {displayedSymptoms.length > 0 && (
+          <div className="mb-4 sm:mb-6 card">
+            <div className="flex items-center justify-between mb-4">
+              <div className="flex items-start gap-3">
+                <h2 className="text-xl font-semibold font-source text-primary">Recent Logged Symptoms</h2>
+              </div>
+              {symptoms.length > 1 && (
+                <button 
+                  onClick={() => setShowAllSymptoms(!showAllSymptoms)}
+                  className="text-[#5F9EA0] hover:text-[#5F9EA0]/80 flex items-center gap-1"
+                >
+                  <span className="hidden sm:inline text-sm font-medium">{showAllSymptoms ? 'Show Less' : 'View All'}</span>
+                  <ChevronDown className={`w-5 h-5 sm:hidden transition-transform duration-200 text-primary ${showAllSymptoms ? 'rotate-180' : ''}`} />
+                </button>
+              )}
+            </div>
+            <div className="space-y-3 max-w-xs">
+              {displayedSymptoms.map((symptom) => (
+                <div key={symptom.id}>
+                <div 
+                    className="card-inner p-6 cursor-pointer transition-all duration-200"
+                  onClick={() => {
+                    router.push(`/symptoms/${symptom.id}`)
+                  }}
+                >
+                  <div className="space-y-4">
+                    <div className="flex items-center justify-between">
+                      <span className="text-sm font-medium text-primary">
+                        {formatUKDate(symptom.created_at || symptom.createdAt)}
+                      </span>
+                      <span className="text-xs text-slate-400 dark:[color:var(--text-tertiary)]">
+                        {new Date(symptom.created_at || symptom.createdAt).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
+                      </span>
+                    </div>
+                    <div className="flex gap-6 text-sm text-secondary">
+                      <span>View details</span>
+                    </div>
+                  </div>
+                  </div>
+                </div>
+              ))}
+            </div>
+          </div>
+        )}
+
+        {/* Recent Medications */}
+        {trackedMedications.length > 0 && (
+          <div className="mb-6 sm:mb-6 card">
+            <div className="flex items-center justify-between mb-4">
+              <div className="flex items-start gap-3">
+                <h2 className="text-xl font-semibold font-source text-primary">Recent Tracked Medications</h2>
+              </div>
+              {trackedMedications.length > 1 && (
+                <button 
+                  onClick={() => setShowAllMedications(!showAllMedications)}
+                  className="text-[#5F9EA0] hover:text-[#5F9EA0]/80 flex items-center gap-1"
+                >
+                  <span className="hidden sm:inline text-sm font-medium">{showAllMedications ? 'Show Less' : 'View All'}</span>
+                  <ChevronDown className={`w-5 h-5 sm:hidden transition-transform duration-200 text-primary ${showAllMedications ? 'rotate-180' : ''}`} />
+                </button>
+              )}
+                  </div>
+            <div className="space-y-3 max-w-xs">
+              {(showAllMedications ? trackedMedications : trackedMedications.slice(0, 1)).map((tracked, index) => (
+                <div key={tracked.id}>
+                  <div 
+                    className="card-inner p-6  cursor-pointer transition-all duration-200"
+                    onClick={() => {
+                      router.push(`/medications/track/${tracked.id}`)
+                    }}
+                  >
+                  <div className="space-y-4">
+                    <div className="flex items-center justify-between">
+                      <span className="text-sm font-medium text-primary">
+                        {formatUKDate(tracked.created_at || tracked.createdAt)}
+                      </span>
+                      <span className="text-xs text-slate-400 dark:[color:var(--text-tertiary)]">
+                        {new Date(tracked.created_at || tracked.createdAt).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
+                      </span>
+                    </div>
+                    <div className="flex gap-6 text-sm text-secondary">
+                      <span>View details</span>
+                    </div>
+                  </div>
+                  </div>
+                </div>
+              ))}
+            </div>
+          </div>
+        )}
 
         {/* More Options */}
         <div className="mb-6 lg:mb-0">
@@ -1531,7 +1531,7 @@ export default function Home() {
                   </div>
                   <div className="w-full text-center min-w-0">
                     <h3 className="font-semibold text-primary leading-tight sm:leading-relaxed break-words">
-                      Weight
+                      My Weight
                     </h3>
                   </div>
                 </div>
@@ -1580,35 +1580,15 @@ export default function Home() {
                 </div>
                 <div className="pointer-events-none absolute right-3 -top-14 hidden w-52 sm:group-hover:flex sm:group-focus-visible:flex">
                   <div className="tooltip-card rounded-lg px-4 py-3 text-left text-sm text-secondary leading-snug shadow-lg font-roboto w-full">
-                    Log meals and see what works for your body
-                  </div>
-                </div>
-              </Link>
-
-              <Link
-                href="/settings"
-                className="card card-link transition-all group relative focus:outline-none focus-visible:outline-none focus-visible:ring-0 focus-visible:ring-offset-0 focus:ring-0 min-w-0"
-              >
-                <div className="flex flex-col items-center gap-3 min-w-0">
-                  <div className="w-8 h-8 lg:w-10 lg:h-10 bg-slate-100 rounded-lg flex items-center justify-center flex-shrink-0">
-                    <Settings className="w-5 h-5 text-slate-600" />
-                  </div>
-                  <div className="w-full text-center min-w-0">
-                    <h3 className="font-semibold text-primary leading-tight sm:leading-relaxed break-words">
-                      Settings
-                    </h3>
-                  </div>
-                </div>
-                <div className="pointer-events-none absolute right-3 -top-14 hidden w-52 sm:group-hover:flex sm:group-focus-visible:flex">
-                  <div className="tooltip-card rounded-lg px-4 py-3 text-left text-sm text-secondary leading-snug shadow-lg font-roboto w-full">
-                    Manage your account and app preferences
+                    Learn about food categories and nutrition to make informed diet choices
                   </div>
                 </div>
               </Link>
           </div>
         </div>
 
-          </div>
+        </div>
+        </div>
         </div>
       </div>
     </div>

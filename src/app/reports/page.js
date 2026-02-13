@@ -1078,7 +1078,6 @@ function ReportsPageContent() {
               dateFormat="dd/MM/yyyy"
               maxDate={dateRange.endDate ? new Date(dateRange.endDate) : new Date()}
               className="input-field-wizard w-full"
-              calendarClassName="react-datepicker-responsive"
               enableTabLoop={false}
             />
           </div>
@@ -1098,7 +1097,6 @@ function ReportsPageContent() {
               minDate={dateRange.startDate ? new Date(dateRange.startDate) : undefined}
               maxDate={new Date()}
               className="input-field-wizard w-full"
-              calendarClassName="react-datepicker-responsive"
               enableTabLoop={false}
             />
           </div>

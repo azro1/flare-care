@@ -222,7 +222,7 @@ function WeightPageContent() {
           <div className="flex flex-col sm:flex-row sm:justify-between sm:items-start">
             <div className="min-w-0 flex-1">
               <h1 className="text-2xl sm:text-3xl lg:text-4xl font-bold font-source text-primary mb-4 sm:mb-6">
-                Track Your Weight
+                My Weight
               </h1>
               <p className="text-secondary font-roboto">
                 Record your weight over time to monitor trends and share with your healthcare team
@@ -271,17 +271,19 @@ function WeightPageContent() {
                           <span className="text-secondary">·</span>
                           <span className="text-primary font-roboto">{Number(entry.valueKg)} kg</span>
                         </div>
-                        <button
-                          type="button"
-                          onClick={() => toggleWeightExpand(entry.id)}
-                          className="flex-shrink-0 p-1 rounded transition-colors hover:opacity-80 sm:self-start"
-                          style={{ color: 'var(--text-icon)' }}
-                          title={isExpanded ? 'Collapse details' : 'Expand details'}
-                        >
-                          <ChevronDown
-                            className={`w-5 h-5 transition-transform duration-200 ${isExpanded ? 'rotate-180' : ''}`}
-                          />
-                        </button>
+                        {entry.notes?.trim() && (
+                          <button
+                            type="button"
+                            onClick={() => toggleWeightExpand(entry.id)}
+                            className="flex-shrink-0 p-1 rounded transition-colors hover:opacity-80 sm:self-start"
+                            style={{ color: 'var(--text-icon)' }}
+                            title={isExpanded ? 'Collapse details' : 'Expand details'}
+                          >
+                            <ChevronDown
+                              className={`w-5 h-5 transition-transform duration-200 ${isExpanded ? 'rotate-180' : ''}`}
+                            />
+                          </button>
+                        )}
                       </div>
                       {isExpanded && entry.notes && (
                         <div className="mt-1 min-w-0 max-w-full overflow-hidden" title={entry.notes}>

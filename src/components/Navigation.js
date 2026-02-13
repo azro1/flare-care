@@ -10,7 +10,6 @@ import Image from 'next/image'
 export default function Navigation() {
   const pathname = usePathname()
   const [isMenuOpen, setIsMenuOpen] = useState(false)
-  const [isUserMenuOpen, setIsUserMenuOpen] = useState(false)
   const [scrollY, setScrollY] = useState(0)
   const hamburgerButtonRef = useRef(null)
   const { user, isAuthenticated, signOut } = useAuth()
@@ -238,12 +237,12 @@ export default function Navigation() {
               <div className="flex items-center space-x-6 ml-2 pl-2">
                 <div className="h-6 w-px" style={{backgroundColor: 'var(--border-primary)'}}></div>
                 <div className="flex items-center space-x-4">
-                  {/* User Avatar with Dropdown */}
-                  <div className="relative group">
-                    <div
-                      className="w-10 h-10 rounded-full overflow-hidden flex items-center justify-center"
-                      style={{ backgroundColor: 'var(--bg-dropdown-hover)' }}
-                    >
+                  {/* User Avatar - links to account */}
+                  <Link
+                    href="/account"
+                    className="w-10 h-10 rounded-full overflow-hidden flex items-center justify-center cursor-pointer"
+                    style={{ backgroundColor: 'var(--bg-dropdown-hover)' }}
+                  >
                     {avatarUrl && !showAvatarFallback ? (
                       <img 
                         src={avatarUrl} 
@@ -265,40 +264,7 @@ export default function Navigation() {
                         />
                       </div>
                     )}
-                    </div>
-                    
-                    {/* User Dropdown Menu */}
-                    <div className="absolute top-full right-0 mt-2 w-48 shadow-lg opacity-0 invisible group-hover:opacity-100 group-hover:visible transition-all duration-200 z-50 " style={{backgroundColor: 'var(--bg-dropdown)'}}>
-                      <div className="">
-                        <Link
-                          href="/account"
-                          className="block px-4 py-3 text-base font-roboto transition-colors cursor-pointer"
-                          style={{color: 'var(--text-dropdown)'}}
-                          onMouseEnter={(e) => {
-                            e.target.style.backgroundColor = 'var(--bg-icon)'
-                          }}
-                          onMouseLeave={(e) => {
-                            e.target.style.backgroundColor = 'transparent'
-                          }}
-                        >
-                          Account
-                        </Link>
-                        <Link
-                          href="/settings"
-                          className="block px-4 py-3 text-base font-roboto transition-colors cursor-pointer"
-                          style={{color: 'var(--text-dropdown)'}}
-                          onMouseEnter={(e) => {
-                            e.target.style.backgroundColor = 'var(--bg-icon)'
-                          }}
-                          onMouseLeave={(e) => {
-                            e.target.style.backgroundColor = 'transparent'
-                          }}
-                        >
-                          Settings
-                        </Link>
-                      </div>
-                    </div>
-                  </div>
+                  </Link>
                 </div>
               </div>
             )}
@@ -344,18 +310,20 @@ export default function Navigation() {
                 </Link>
               ))}
               
-            {/* Mobile user section for authenticated users */}
+            {/* Mobile user section for authenticated users - tap to go to account */}
               {isAuthenticated && (
               <div style={{borderColor: 'var(--border-dropdown)'}}>
-                <div className="flex items-center px-4 py-3 border-b border-dashed" style={{borderColor: 'var(--border-dropdown)'}}>
-                  {/* User Avatar - Clickable */}
-                  <button 
-                    onClick={() => setIsUserMenuOpen(!isUserMenuOpen)}
-                    className="w-10 h-10 rounded-full overflow-hidden border-2 mr-3 flex items-center justify-center focus:outline-none focus:ring-0 focus:ring-offset-0 transition-colors "
+                <Link
+                  href="/account"
+                  onClick={() => setIsMenuOpen(false)}
+                  className="flex items-center px-4 py-3 border-b border-dashed cursor-pointer"
+                  style={{borderColor: 'var(--border-dropdown)', color: 'var(--text-dropdown)'}}
+                  onMouseEnter={(e) => { e.currentTarget.style.color = 'var(--text-cadet-blue)' }}
+                  onMouseLeave={(e) => { e.currentTarget.style.color = 'var(--text-dropdown)' }}
+                >
+                  <div
+                    className="w-10 h-10 rounded-full overflow-hidden border-2 mr-3 flex items-center justify-center flex-shrink-0"
                     style={{borderColor: 'var(--border-dropdown)', backgroundColor: 'var(--bg-dropdown-hover)'}}
-                    onMouseEnter={(e) => e.target.style.borderColor = '#FF1493'}
-                    onMouseLeave={(e) => e.target.style.borderColor = 'var(--border-dropdown)'}
-                    onFocus={(e) => e.target.style.borderColor = 'var(--border-dropdown)'}
                   >
                     {avatarUrl && !showAvatarFallback ? (
                       <img 
@@ -377,47 +345,12 @@ export default function Navigation() {
                         />
                       </div>
                     )}
-                  </button>
-                  {/* User Name */}
-                  <div className="flex-1">
-                    <p className="text-base font-medium font-roboto" style={{color: 'var(--text-dropdown)'}}>
-                      {getUserDisplayName()}
-                    </p>
                   </div>
-                    </div>
-                
-                {/* Mobile User Menu Options - Conditionally shown */}
-                {isUserMenuOpen && (
-                  <div className="">
-                    <Link
-                      href="/account"
-                      className="block px-4 py-3 text-base font-roboto transition-colors rounded-lg border-b border-dashed"
-                      style={{color: 'var(--text-dropdown)', borderColor: 'var(--border-dropdown)'}}
-                      onMouseEnter={(e) => {e.target.style.backgroundColor = 'var(--bg-dropdown-hover)'; e.target.style.color = 'var(--text-cadet-blue)'}}
-                      onMouseLeave={(e) => {e.target.style.backgroundColor = 'transparent'; e.target.style.color = 'var(--text-dropdown)'}}
-                      onClick={() => {
-                        setIsMenuOpen(false)
-                        setIsUserMenuOpen(false)
-                      }}
-                    >
-                      Account
-                    </Link>
-                    <Link
-                      href="/settings"
-                      className="block px-4 py-3 text-base font-roboto transition-colors border-b"
-                      style={{color: 'var(--text-dropdown)', borderColor: 'var(--border-dropdown)'}}
-                      onMouseEnter={(e) => {e.target.style.backgroundColor = 'var(--bg-dropdown-hover)'; e.target.style.color = 'var(--text-cadet-blue)'}}
-                      onMouseLeave={(e) => {e.target.style.backgroundColor = 'transparent'; e.target.style.color = 'var(--text-dropdown)'}}
-                      onClick={() => {
-                        setIsMenuOpen(false)
-                        setIsUserMenuOpen(false)
-                      }}
-                    >
-                      Settings
-                    </Link>
-                  </div>
-                )}
-                </div>
+                  <p className="text-base font-medium font-roboto">
+                    {getUserDisplayName()}
+                  </p>
+                </Link>
+              </div>
               )}
             </div>
         </div>
