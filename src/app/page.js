@@ -6,7 +6,7 @@ import { useAuth } from '@/lib/AuthContext'
 import { useEffect, useState } from 'react'
 import { useRouter } from 'next/navigation'
 import { supabase, TABLES } from '@/lib/supabase'
-import { CupSoda, Pizza, Coffee, BookOpen, Smile, Thermometer, Pill, FileText, Activity, TrendingUp, PartyPopper, Clipboard, Cookie, ChartLine, Sparkles, ChevronRight, ChevronDown, Clock, Scale, Calendar } from 'lucide-react'
+import { CupSoda, Pizza, Coffee, BookOpen, Smile, Thermometer, Pill, FileText, Activity, TrendingUp, PartyPopper, Clipboard, Cookie, ChartLine, Sparkles, ChevronRight, ChevronDown, Clock, Scale, Calendar, Lightbulb } from 'lucide-react'
 
 export default function Home() {
   const { isAuthenticated, loading, user } = useAuth()
@@ -1025,7 +1025,10 @@ export default function Home() {
               {/* Daily Tip */}
               <div className="card">
                 <div>
-                  <h3 className="text-xl font-semibold font-source text-primary mb-2">💡 Daily Tip</h3>
+                  <h3 className="text-xl font-semibold font-source text-primary mb-2 flex items-center gap-2">
+                    <Lightbulb className="w-5 h-5 flex-shrink-0 text-amber-500 dark:text-white" />
+                    Daily Tip
+                  </h3>
                   <p className={`text-sm text-secondary transition-opacity duration-500 ${isFading ? 'opacity-0' : 'opacity-100'}`}>
                     {dailyTips[currentTipIndex]}
                   </p>
@@ -1055,14 +1058,55 @@ export default function Home() {
         {/* Daily Tasks */}
         <div className="my-6">
           <h2 className="text-xl font-semibold font-source text-primary mb-4">Daily Tasks</h2>
-          <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 md:gap-6">
+          {/* Mobile: single card with two rows + separator */}
+          <div className="block sm:hidden">
+            <div className="card !p-2 overflow-hidden">
+              <Link
+                href="/symptoms"
+className="flex items-center gap-3 px-3 pt-2.5 pb-4 transition-colors hover:opacity-90 group relative focus:outline-none focus-visible:outline-none focus-visible:ring-0 focus-visible:ring-offset-0 focus:ring-0"
+            >
+              <div className="w-10 h-10 bg-emerald-100 dashboard-icon-panel rounded-lg flex items-center justify-center flex-shrink-0">
+                  <Thermometer className="w-5 h-5 text-emerald-600 dark:text-white" />
+                </div>
+                <div className="flex-1 min-w-0">
+                  <h3 className="font-semibold text-primary leading-tight">Log Symptoms</h3>
+                </div>
+                <ChevronRight className="w-5 h-5 flex-shrink-0 text-secondary" />
+                <div className="pointer-events-none absolute right-3 -top-14 hidden w-52 sm:group-hover:flex sm:group-focus-visible:flex">
+                  <div className="tooltip-card rounded-lg px-4 py-3 text-left text-sm text-secondary leading-snug shadow-lg font-roboto">
+                    Record how you're feeling and track your symptoms
+                  </div>
+                </div>
+              </Link>
+              <div className="border-t min-w-0" style={{ borderColor: 'var(--border-card-inner)' }} />
+              <Link
+                href="/medications/track"
+className="flex items-center gap-3 px-3 pt-4 pb-2.5 transition-colors hover:opacity-90 group relative focus:outline-none focus-visible:outline-none focus-visible:ring-0 focus-visible:ring-offset-0 focus:ring-0"
+            >
+<div className="w-10 h-10 bg-pink-100 dashboard-icon-panel rounded-lg flex items-center justify-center flex-shrink-0">
+                <ChartLine className="w-5 h-5 text-pink-600 dark:text-white" />
+                </div>
+                <div className="flex-1 min-w-0">
+                  <h3 className="font-semibold text-primary leading-tight">Track Medications</h3>
+                </div>
+                <ChevronRight className="w-5 h-5 flex-shrink-0 text-secondary" />
+                <div className="pointer-events-none absolute right-3 -top-14 hidden w-52 sm:group-hover:flex sm:group-focus-visible:flex">
+                  <div className="tooltip-card rounded-lg px-4 py-3 text-left text-sm text-secondary leading-snug shadow-lg font-roboto">
+                    Log missed medications and track your adherence
+                  </div>
+                </div>
+              </Link>
+            </div>
+          </div>
+          {/* Desktop: two separate cards side by side */}
+          <div className="hidden sm:grid sm:grid-cols-2 gap-4 md:gap-6">
             <Link
               href="/symptoms"
               className="card card-link !py-4 !px-4 sm:!p-6 transition-all group relative focus:outline-none focus-visible:outline-none focus-visible:ring-0 focus-visible:ring-offset-0 focus:ring-0"
             >
               <div className="flex items-center sm:flex-col sm:items-center gap-3 sm:gap-3">
-                <div className="w-8 h-8 lg:w-10 lg:h-10 bg-emerald-100 rounded-lg flex items-center justify-center flex-shrink-0">
-                  <Thermometer className="w-5 h-5 sm:w-6 sm:h-6 text-emerald-600" />
+                <div className="w-10 h-10 bg-emerald-100 dashboard-icon-panel rounded-lg flex items-center justify-center flex-shrink-0">
+                  <Thermometer className="w-5 h-5 sm:w-6 sm:h-6 text-emerald-600 dark:text-white" />
                 </div>
                 <div className="flex-1 sm:w-full sm:text-center">
                   <h3 className="font-semibold text-primary leading-tight sm:leading-relaxed sm:justify-center">
@@ -1075,16 +1119,15 @@ export default function Home() {
                 <div className="tooltip-card rounded-lg px-4 py-3 text-left text-sm text-secondary leading-snug shadow-lg font-roboto">
                   Record how you're feeling and track your symptoms
                 </div>
-            </div>
-          </Link>
-
+              </div>
+            </Link>
             <Link
               href="/medications/track"
               className="card card-link !py-4 !px-4 sm:!p-6 transition-all group relative focus:outline-none focus-visible:outline-none focus-visible:ring-0 focus-visible:ring-offset-0 focus:ring-0"
             >
               <div className="flex items-center sm:flex-col sm:items-center gap-3 sm:gap-3">
-                <div className="w-8 h-8 lg:w-10 lg:h-10 bg-pink-100 rounded-lg flex items-center justify-center flex-shrink-0">
-                  <ChartLine className="w-5 h-5 text-pink-600" />
+                <div className="w-10 h-10 bg-pink-100 dashboard-icon-panel rounded-lg flex items-center justify-center flex-shrink-0">
+                  <ChartLine className="w-5 h-5 sm:w-6 sm:h-6 text-pink-600 dark:text-white" />
                 </div>
                 <div className="flex-1 sm:w-full sm:text-center">
                   <h3 className="font-semibold text-primary leading-tight sm:leading-relaxed sm:justify-center">
@@ -1097,8 +1140,8 @@ export default function Home() {
                 <div className="tooltip-card rounded-lg px-4 py-3 text-left text-sm text-secondary leading-snug shadow-lg font-roboto">
                   Log missed medications and track your adherence
                 </div>
-            </div>
-          </Link>
+              </div>
+            </Link>
           </div>
         </div>
 
@@ -1484,8 +1527,8 @@ export default function Home() {
                 className="card card-link transition-all group relative focus:outline-none focus-visible:outline-none focus-visible:ring-0 focus-visible:ring-offset-0 focus:ring-0 min-w-0"
               >
                 <div className="flex flex-col items-center gap-3 min-w-0">
-                  <div className="w-8 h-8 lg:w-10 lg:h-10 bg-purple-100 rounded-lg flex items-center justify-center flex-shrink-0">
-                    <Pill className="w-5 h-5 text-purple-600" />
+                  <div className="w-10 h-10 bg-purple-100 dashboard-icon-panel rounded-lg flex items-center justify-center flex-shrink-0">
+                    <Pill className="w-5 h-5 text-purple-600 dark:text-white" />
                 </div>
                   <div className="w-full text-center min-w-0">
                     <h3 className="font-semibold text-primary leading-tight sm:leading-relaxed break-words">
@@ -1505,8 +1548,8 @@ export default function Home() {
                 className="card card-link transition-all group relative focus:outline-none focus-visible:outline-none focus-visible:ring-0 focus-visible:ring-offset-0 focus:ring-0 min-w-0"
               >
                 <div className="flex flex-col items-center gap-3 min-w-0">
-                  <div className="w-8 h-8 lg:w-10 lg:h-10 bg-orange-100 rounded-lg flex items-center justify-center flex-shrink-0">
-                    <FileText className="w-5 h-5 text-orange-600" />
+                  <div className="w-10 h-10 bg-orange-100 dashboard-icon-panel rounded-lg flex items-center justify-center flex-shrink-0">
+                    <FileText className="w-5 h-5 text-orange-600 dark:text-white" />
                   </div>
                   <div className="w-full text-center min-w-0">
                     <h3 className="font-semibold text-primary leading-tight sm:leading-relaxed break-words">
@@ -1526,8 +1569,8 @@ export default function Home() {
                 className="card card-link transition-all group relative focus:outline-none focus-visible:outline-none focus-visible:ring-0 focus-visible:ring-offset-0 focus:ring-0 min-w-0"
               >
                 <div className="flex flex-col items-center gap-3 min-w-0">
-                  <div className="w-8 h-8 lg:w-10 lg:h-10 bg-indigo-100 rounded-lg flex items-center justify-center flex-shrink-0">
-                    <Scale className="w-5 h-5 text-indigo-600" />
+                  <div className="w-10 h-10 bg-indigo-100 dashboard-icon-panel rounded-lg flex items-center justify-center flex-shrink-0">
+                    <Scale className="w-5 h-5 text-indigo-600 dark:text-white" />
                   </div>
                   <div className="w-full text-center min-w-0">
                     <h3 className="font-semibold text-primary leading-tight sm:leading-relaxed break-words">
@@ -1547,8 +1590,8 @@ export default function Home() {
                 className="card card-link transition-all group relative focus:outline-none focus-visible:outline-none focus-visible:ring-0 focus-visible:ring-offset-0 focus:ring-0 min-w-0"
               >
                 <div className="flex flex-col items-center gap-3 min-w-0">
-                  <div className="w-8 h-8 lg:w-10 lg:h-10 bg-sky-100 rounded-lg flex items-center justify-center flex-shrink-0">
-                    <Calendar className="w-5 h-5 text-sky-600" />
+                  <div className="w-10 h-10 bg-sky-100 dashboard-icon-panel rounded-lg flex items-center justify-center flex-shrink-0">
+                    <Calendar className="w-5 h-5 text-sky-600 dark:text-white" />
                   </div>
                   <div className="w-full text-center min-w-0">
                     <h3 className="font-semibold text-primary leading-tight sm:leading-relaxed break-words">
@@ -1569,8 +1612,8 @@ export default function Home() {
                 className="card card-link transition-all group relative focus:outline-none focus-visible:outline-none focus-visible:ring-0 focus-visible:ring-offset-0 focus:ring-0 min-w-0"
               >
                 <div className="flex flex-col items-center gap-3 min-w-0">
-                  <div className="w-8 h-8 lg:w-10 lg:h-10 bg-amber-100 rounded-lg flex items-center justify-center flex-shrink-0">
-                    <Cookie className="w-5 h-5 text-amber-600" />
+                  <div className="w-10 h-10 bg-amber-100 dashboard-icon-panel rounded-lg flex items-center justify-center flex-shrink-0">
+                    <Cookie className="w-5 h-5 text-amber-600 dark:text-white" />
                   </div>
                   <div className="w-full text-center min-w-0">
                     <h3 className="font-semibold text-primary leading-tight sm:leading-relaxed break-words">

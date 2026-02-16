@@ -1261,8 +1261,8 @@ function SymptomsPageContent() {
         {currentStep === 0 && (
           <div className="flex flex-col items-center justify-center text-center pt-20 sm:pt-0">
             {/* Icon - same as home page symptoms card */}
-            <div className="w-14 h-14 bg-white dark:bg-emerald-100 rounded-2xl flex items-center justify-center mx-auto mb-6 shadow-sm">
-              <Thermometer className="w-7 h-7 text-emerald-600" />
+            <div className="w-14 h-14 bg-white dark:bg-[var(--bg-card-inner)] rounded-2xl flex items-center justify-center mx-auto mb-6 shadow-sm">
+              <Thermometer className="w-7 h-7 text-emerald-600 dark:text-white" />
           </div>
             
             {/* Title */}

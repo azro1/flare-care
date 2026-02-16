@@ -179,7 +179,7 @@ export default function WeatherHero({
               {previewCondition ? (previewSubtitle || 'preview') : (weather?.desc || error || 'Loading weather...')}
             </div>
           </div>
-          <div className="text-2xl sm:text-3xl font-bold" style={{ color: 'var(--text-cadet-blue)' }}>
+          <div className="text-2xl sm:text-3xl font-bold text-[var(--text-cadet-blue)] dark:text-white">
             {previewCondition ? (previewTemp != null ? `${previewTemp}°` : '--°') : (weather?.temp != null ? `${weather.temp}°` : '--°')}
           </div>
         </div>
