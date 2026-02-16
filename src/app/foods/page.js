@@ -1,9 +1,11 @@
 'use client'
 
 import Link from 'next/link'
+import { useAuth } from '@/lib/AuthContext'
 import { UtensilsCrossed, Soup, Snowflake, NotebookPen, CheckCircle, AlertTriangle, XCircle, Lightbulb } from 'lucide-react'
 
 export default function Foods() {
+  const { user } = useAuth()
   const categories = [
     {
       emoji: '🥩',
@@ -218,14 +220,14 @@ export default function Foods() {
 
       {/* Call to Action - Combined width (sidebar + content) */}
       <div>
-        <div className="mt-4 sm:mt-6 max-w-[76rem] mx-auto px-3 sm:px-4 md:px-6 lg:px-0 lg:mt-0">
+        <div className="mt-4 sm:mt-6 max-w-[76rem] mx-auto px-0 sm:px-4 md:px-6 lg:px-0 lg:mt-0">
           <div className="card p-8 backdrop-blur-sm text-center">
           <h2 className="text-xl font-semibold font-source text-primary mb-4">Track Your Meals</h2>
           <p className="text-secondary font-roboto mb-6 leading-relaxed">
             Use the symptom tracker to log what you eat each day and monitor how different foods affect you.
           </p>
           <Link 
-            href="/symptoms"
+            href={user ? '/symptoms' : '/auth'}
             className="inline-block bg-[#5F9EA0] text-white font-semibold px-8 py-3 rounded-lg hover:bg-[#5F9EA0]/80 transition-colors duration-200"
           >
             Start Tracking

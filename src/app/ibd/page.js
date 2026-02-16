@@ -400,7 +400,7 @@ export default function LearnPage() {
           </p>
           <div className="flex flex-col sm:flex-row justify-center items-center sm:items-stretch space-y-3 sm:space-y-0 sm:space-x-4">
             {isAuthenticated ? (
-              <Link href="/" className="bg-[#5F9EA0] hover:bg-button-cadet-hover text-white font-semibold py-3 px-6 rounded-xl transition-all duration-300 transform hover:scale-105 hover:shadow-lg active:scale-95 font-roboto w-auto">
+              <Link href="/medications/track" className="bg-[#5F9EA0] hover:bg-button-cadet-hover text-white font-semibold py-3 px-6 rounded-xl transition-all duration-300 transform hover:scale-105 hover:shadow-lg active:scale-95 font-roboto w-auto">
                 Track Meds
               </Link>
             ) : (
