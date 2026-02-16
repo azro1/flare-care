@@ -996,8 +996,8 @@ function ReportsPageContent() {
       {/* Date Range Selector */}
       <div className="card mb-4 sm:mb-6">
         <div className="flex items-center mb-6">
-          <div className="bg-orange-100 w-8 h-8 sm:w-12 sm:h-12 rounded-xl mr-3 sm:mr-4 flex-shrink-0 flex items-center justify-center">
-            <Calendar className="w-4 h-4 sm:w-6 sm:h-6 text-orange-600" />
+          <div className="flex w-10 h-10 bg-orange-100 dashboard-icon-panel rounded-lg items-center justify-center mr-3 sm:mr-4 flex-shrink-0">
+            <Calendar className="w-5 h-5 text-orange-600 dark:text-white" />
           </div>
           <h2 className="text-xl font-semibold font-source text-primary flex-1">Select Report Period</h2>
         </div>
@@ -1121,8 +1121,8 @@ function ReportsPageContent() {
       {/* Report Results */}
       <div className="card mb-4 sm:mb-6">
         <div className="flex items-center mb-6">
-          <div className="bg-emerald-100 w-8 h-8 sm:w-12 sm:h-12 rounded-xl mr-3 sm:mr-4 flex-shrink-0 flex items-center justify-center">
-            <Thermometer className="w-5 h-5 sm:w-6 sm:h-6 text-emerald-600" />
+          <div className="flex w-10 h-10 bg-emerald-100 dashboard-icon-panel rounded-lg items-center justify-center mr-3 sm:mr-4 flex-shrink-0">
+            <Thermometer className="w-5 h-5 text-emerald-600 dark:text-white" />
           </div>
           <h2 className="text-xl font-semibold font-source text-primary flex-1">Symptom Report</h2>
         </div>
@@ -1136,19 +1136,19 @@ function ReportsPageContent() {
         {/* Summary Stats */}
         <div className="grid grid-cols-1 lg:grid-cols-3 gap-4 mb-8">
           <div className="card-inner p-6 text-center">
-            <div className="text-3xl font-bold text-emerald-600 mb-2">
+            <div className="text-3xl font-bold text-emerald-600 dark:text-white mb-2">
               {reportData.totalEntries}
             </div>
             <div className="text-secondary font-medium font-roboto">Symptom Episodes</div>
           </div>
           <div className="card-inner p-6 text-center">
-            <div className="text-3xl font-bold mb-2 text-rose-500">
+            <div className="text-3xl font-bold mb-2 text-rose-500 dark:text-white">
               {reportData.averageSeverity}
             </div>
             <div className="text-secondary font-medium font-roboto">Average Severity</div>
           </div>
           <div className="card-inner p-6 text-center">
-            <div className="text-3xl font-bold mb-2 text-cyan-600">
+            <div className="text-3xl font-bold mb-2 text-cyan-600 dark:text-white">
               {reportData.averageStress != null && !isNaN(reportData.averageStress) ? reportData.averageStress : 0}
             </div>
             <div className="text-secondary font-medium font-roboto">Average Stress</div>
@@ -1172,13 +1172,13 @@ function ReportsPageContent() {
                         <span className="text-xs font-medium text-secondary font-roboto shrink-0">Severity:</span>
                         <div className="flex-1 min-w-0 bg-card rounded-full h-2">
                           <div 
-                            className="h-2 rounded-full bg-rose-500" 
+                            className="h-2 rounded-full bg-rose-500 dark:bg-gray-400" 
                             style={{ 
                               width: `${(entry.severity / 10) * 100}%`
                             }}
                           ></div>
                         </div>
-                        <span className="px-2 py-1 rounded-full text-xs font-medium font-roboto text-rose-500 bg-rose-100 shrink-0">
+                        <span className="px-2 py-1 rounded-full text-xs font-medium font-roboto text-rose-500 bg-rose-100 dark:text-white dark:bg-gray-600 shrink-0">
                           {entry.severity}/10
                         </span>
                       </div>
@@ -1187,13 +1187,13 @@ function ReportsPageContent() {
                           <span className="text-xs font-medium text-secondary font-roboto shrink-0">Stress:</span>
                           <div className="flex-1 min-w-0 bg-card rounded-full h-2">
                             <div 
-                              className="h-2 rounded-full bg-cyan-600" 
+                              className="h-2 rounded-full bg-cyan-600 dark:bg-gray-400" 
                               style={{ 
                                 width: `${(entry.stressLevel / 10) * 100}%`
                               }}
                             ></div>
                           </div>
-                          <span className="px-2 py-1 rounded-full text-xs font-medium font-roboto text-cyan-600 bg-cyan-100 shrink-0">
+                          <span className="px-2 py-1 rounded-full text-xs font-medium font-roboto text-cyan-600 bg-cyan-100 dark:text-white dark:bg-gray-600 shrink-0">
                             {entry.stressLevel}/10
                           </span>
                         </div>
@@ -1211,8 +1211,8 @@ function ReportsPageContent() {
       {reportData.medications.length > 0 && (
         <div className="card mb-4 sm:mb-6">
           <h2 className="text-xl font-semibold font-source text-primary mb-6 flex items-center">
-            <div className="bg-purple-100 w-8 h-8 sm:w-12 sm:h-12 rounded-xl mr-3 sm:mr-4 flex-shrink-0 flex items-center justify-center">
-              <Pill className="w-4 h-4 sm:w-6 sm:h-6 text-purple-600" />
+            <div className="flex w-10 h-10 bg-purple-100 dashboard-icon-panel rounded-lg items-center justify-center mr-3 sm:mr-4 flex-shrink-0">
+              <Pill className="w-5 h-5 text-purple-600 dark:text-white" />
             </div>
             Current Medications
           </h2>
@@ -1243,8 +1243,8 @@ function ReportsPageContent() {
       ) && (
         <div className="card mb-4 sm:mb-6">
           <h2 className="text-xl font-semibold font-source text-primary mb-6 flex items-center">
-            <div className="bg-pink-100 w-8 h-8 sm:w-12 sm:h-12 rounded-xl mr-3 sm:mr-4 flex-shrink-0 flex items-center justify-center">
-              <ChartLine className="w-5 h-5 sm:w-6 sm:h-6 text-pink-600" />
+            <div className="flex w-10 h-10 bg-pink-100 dashboard-icon-panel rounded-lg items-center justify-center mr-3 sm:mr-4 flex-shrink-0">
+              <ChartLine className="w-5 h-5 text-pink-600 dark:text-white" />
             </div>
             Tracked Medications
           </h2>
@@ -1343,8 +1343,8 @@ function ReportsPageContent() {
       {reportData.appointments && reportData.appointments.length > 0 && (
         <div className="card mb-4 sm:mb-6">
           <h2 className="text-xl font-semibold font-source text-primary mb-6 flex items-center">
-            <div className="bg-sky-100 w-8 h-8 sm:w-12 sm:h-12 rounded-xl mr-3 sm:mr-4 flex-shrink-0 flex items-center justify-center">
-              <Calendar className="w-5 h-5 sm:w-6 sm:h-6 text-sky-600" />
+            <div className="flex w-10 h-10 bg-sky-100 dashboard-icon-panel rounded-lg items-center justify-center mr-3 sm:mr-4 flex-shrink-0">
+              <Calendar className="w-5 h-5 text-sky-600 dark:text-white" />
             </div>
             Upcoming Appointments
           </h2>
@@ -1388,8 +1388,8 @@ function ReportsPageContent() {
       {reportData.weightEntries && reportData.weightEntries.length > 0 && (
         <div className="card mb-4 sm:mb-6">
           <h2 className="text-xl font-semibold font-source text-primary mb-6 flex items-center">
-            <div className="bg-emerald-100 w-8 h-8 sm:w-12 sm:h-12 rounded-xl mr-3 sm:mr-4 flex-shrink-0 flex items-center justify-center">
-              <Scale className="w-5 h-5 sm:w-6 sm:h-6 text-emerald-600" />
+            <div className="flex w-10 h-10 bg-indigo-100 dashboard-icon-panel rounded-lg items-center justify-center mr-3 sm:mr-4 flex-shrink-0">
+              <Scale className="w-5 h-5 text-indigo-600 dark:text-white" />
             </div>
             Weight Logs
           </h2>
@@ -1420,8 +1420,8 @@ function ReportsPageContent() {
       {reportData.topFoods.length > 0 && (
         <div className="card p-8">
           <h2 className="text-xl font-semibold font-source text-primary mb-6 flex items-center">
-            <div className="bg-yellow-100 w-8 h-8 sm:w-12 sm:h-12 rounded-xl mr-3 sm:mr-4 flex-shrink-0 flex items-center justify-center">
-              <Pizza className="w-5 h-5 sm:w-6 sm:h-6 text-amber-500" />
+            <div className="flex w-10 h-10 bg-yellow-100 dashboard-icon-panel rounded-lg items-center justify-center mr-3 sm:mr-4 flex-shrink-0">
+              <Pizza className="w-5 h-5 text-amber-500 dark:text-white" />
             </div>
             Top 5 Most Logged Foods
           </h2>

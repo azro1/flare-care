@@ -96,7 +96,7 @@ function AccountPageContent() {
       <div className="max-w-6xl mx-auto sm:px-4 md:px-6 lg:px-8">
         {/* Header */}
         <div className="mb-4 sm:mb-6 card">
-          <div className="md:text-center">
+          <div className="text-center">
             <h1 className="text-2xl sm:text-3xl lg:text-4xl font-bold font-source text-primary mb-4">My Account</h1>
             <p className="text-secondary font-roboto break-words">Manage your account settings and information</p>
           </div>
@@ -107,10 +107,10 @@ function AccountPageContent() {
           <div className="flex-1 min-w-0">
             {/* Profile Section */}
             <div className="card mb-4 sm:mb-6">
-              <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 mb-5 sm:mb-6 card-inner p-4 sm:p-6">
+              <div className="flex flex-col sm:flex-row sm:items-start sm:justify-between gap-4 mb-6 sm:mb-8 card-inner p-4 sm:p-6">
                 <div className="flex items-center min-w-0">
                   <div className="mr-4 sm:mr-6 flex-shrink-0 ring-2 ring-[#5F9EA0]/30 rounded-full p-0.5">
-                    <div className="w-16 h-16 sm:w-20 sm:h-20 rounded-full overflow-hidden flex items-center justify-center bg-[var(--bg-icon)] dark:bg-[var(--bg-icon-charcoal)]">
+                    <div className="w-12 h-12 sm:w-20 sm:h-20 rounded-full overflow-hidden flex items-center justify-center bg-[var(--bg-icon)] dark:bg-[var(--bg-icon-charcoal)]">
                       {avatarUrl && !showFallbackAvatar ? (
                         <img
                           src={avatarUrl}
@@ -145,14 +145,14 @@ function AccountPageContent() {
                   disabled={isSigningOut}
                   className="bg-[#5F9EA0] text-white font-semibold py-2 px-4 rounded-lg hover:bg-button-cadet-hover transition-colors disabled:opacity-50 self-start sm:self-auto inline-flex items-center gap-2"
                 >
-                  <LogOut className="w-4 h-4" />
+                  <LogOut className="w-4 h-4 dark:text-white" />
                   Sign Out
                 </button>
               </div>
 
               {/* Profile Info */}
               <h3 className="text-lg sm:text-xl font-semibold font-source text-primary mb-4 flex items-center gap-2">
-                <FilePen className="w-5 h-5 text-[#5F9EA0]" />
+                <FilePen className="w-5 h-5 text-[#5F9EA0] dark:text-white" />
                 Profile Info
               </h3>
               <div className="space-y-4">
@@ -180,7 +180,7 @@ function AccountPageContent() {
             {/* Settings – mobile only: above Delete Account */}
             <div className="card mb-4 sm:mb-6 lg:hidden">
               <div className="flex items-center gap-2 mb-4">
-                <Settings className="w-5 h-5 text-[#5F9EA0]" />
+                <Settings className="w-5 h-5 text-[#5F9EA0] dark:text-white" />
                 <h3 className="text-lg sm:text-xl font-semibold font-source text-primary">Settings</h3>
               </div>
               <div className="card-inner p-5 sm:p-6">
@@ -223,7 +223,7 @@ function AccountPageContent() {
                   onClick={() => setShowDeleteModal(true)}
                   className="button-delete inline-flex items-center gap-2"
                 >
-                  <Trash2 className="w-4 h-4" />
+                  <Trash2 className="w-4 h-4 dark:text-white" />
                   Delete
                 </button>
               </div>
@@ -234,7 +234,7 @@ function AccountPageContent() {
           <aside className="hidden lg:block lg:w-80 flex-shrink-0">
             <div className="card lg:sticky lg:top-6">
               <div className="flex items-center gap-2 mb-4">
-                <Settings className="w-5 h-5 text-[#5F9EA0]" />
+                <Settings className="w-5 h-5 text-[#5F9EA0] dark:text-white" />
                 <h3 className="text-lg sm:text-xl font-semibold font-source text-primary">Settings</h3>
               </div>
               <div className="card-inner p-5 sm:p-6">

@@ -3,7 +3,7 @@
 import Link from 'next/link'
 import { useEffect, useState } from 'react'
 import { useAuth } from '@/lib/AuthContext'
-import { Smartphone, Pizza, Brain, Bug, CupSoda, NotebookPen, Cookie, Stethoscope, BookOpen } from 'lucide-react'
+import { Smartphone, Pizza, Brain, Bug, CupSoda, NotebookPen, Cookie, Stethoscope, BookOpen, Check } from 'lucide-react'
 
 const QUICK_FACTS = [
   'IBD affects over 500,000 people in the UK',
@@ -49,25 +49,25 @@ export default function LearnPage() {
               <div className="space-y-3">
                 <div className="flex items-center gap-3">
                   <div className="w-8 h-8 min-w-[2rem] rounded-lg flex items-center justify-center card-inner">
-                    <NotebookPen className="w-4 h-4 text-emerald-600" />
+                    <NotebookPen className="w-4 h-4 text-emerald-600 dark:text-white" />
                   </div>
                   <p className="text-sm text-secondary">Keep a food diary to track triggers</p>
                 </div>
                 <div className="flex items-center gap-3">
                   <div className="w-8 h-8 min-w-[2rem] rounded-lg flex items-center justify-center card-inner">
-                    <CupSoda className="w-4 h-4 text-sky-600" />
+                    <CupSoda className="w-4 h-4 text-sky-600 dark:text-white" />
                   </div>
                   <p className="text-sm text-secondary">Stay hydrated throughout the day</p>
                 </div>
                 <div className="flex items-center gap-3">
                   <div className="w-8 h-8 min-w-[2rem] rounded-lg flex items-center justify-center card-inner">
-                    <Cookie className="w-4 h-4 text-amber-600" />
+                    <Cookie className="w-4 h-4 text-amber-600 dark:text-white" />
                   </div>
                   <p className="text-sm text-secondary">Eat smaller, frequent meals</p>
                 </div>
                 <div className="flex items-center gap-3">
                   <div className="w-8 h-8 min-w-[2rem] rounded-lg flex items-center justify-center card-inner">
-                    <Stethoscope className="w-4 h-4 text-indigo-400" />
+                    <Stethoscope className="w-4 h-4 text-indigo-400 dark:text-white" />
                   </div>
                   <p className="text-sm text-secondary">Follow your healthcare team's advice</p>
                 </div>
@@ -218,8 +218,8 @@ export default function LearnPage() {
         <h2 className="text-xl font-semibold font-source text-primary mb-6 break-words">Common Triggers</h2>
         <div className="grid gap-4 sm:gap-6 md:grid-cols-3">
           <div className="card-inner p-6 text-center">
-            <div className="w-16 h-16 rounded-full flex items-center justify-center mx-auto mb-4 bg-yellow-100">
-              <Pizza className="w-8 h-8 text-amber-500" />
+            <div className="w-16 h-16 rounded-full flex items-center justify-center mx-auto mb-4 bg-yellow-100 dark:bg-[var(--bg-card)]">
+              <Pizza className="w-8 h-8 text-amber-500 dark:text-white" />
             </div>
             <p className="text-sm text-secondary font-roboto break-words">
               Spicy foods, dairy, high-fiber foods, alcohol, and caffeine can trigger symptoms
@@ -227,8 +227,8 @@ export default function LearnPage() {
           </div>
 
           <div className="card-inner p-6 text-center">
-            <div className="w-16 h-16 rounded-full flex items-center justify-center mx-auto mb-4 bg-cyan-100">
-              <Brain className="w-8 h-8 text-cyan-600" />
+            <div className="w-16 h-16 rounded-full flex items-center justify-center mx-auto mb-4 bg-cyan-100 dark:bg-[var(--bg-card)]">
+              <Brain className="w-8 h-8 text-cyan-600 dark:text-white" />
             </div>
             <p className="text-sm text-secondary font-roboto break-words">
               Emotional stress and anxiety can worsen symptoms and trigger flare-ups
@@ -236,8 +236,8 @@ export default function LearnPage() {
           </div>
 
           <div className="card-inner p-6 text-center">
-            <div className="w-16 h-16 rounded-full flex items-center justify-center mx-auto mb-4 bg-green-100">
-              <Bug className="w-8 h-8 text-emerald-600" />
+            <div className="w-16 h-16 rounded-full flex items-center justify-center mx-auto mb-4 bg-green-100 dark:bg-[var(--bg-card)]">
+              <Bug className="w-8 h-8 text-emerald-600 dark:text-white" />
             </div>
             <p className="text-sm text-secondary font-roboto break-words">
               Viral or bacterial infections can trigger or worsen IBD symptoms
@@ -246,62 +246,10 @@ export default function LearnPage() {
         </div>
       </div>
 
-      {/* How FlareCare Helps Section */}
-      <div className="card backdrop-blur-sm mb-4 sm:mb-6">
-        <h2 className="text-xl font-semibold font-source text-primary mb-6">How FlareCare Can Help</h2>
-        <div className="grid gap-3 md:gap-6 md:grid-cols-2">
-          <div>
-            <ul className="space-y-3 text-secondary font-roboto">
-              <li className="flex items-start">
-                <div className="w-6 h-6 flex items-center justify-center mr-3 mt-0.5" style={{ color: 'var(--text-cadet-blue)' }}>
-                  <span className="text-sm">✓</span>
-                </div>
-                <span>Log daily symptoms with severity ratings</span>
-              </li>
-              <li className="flex items-start">
-                <div className="w-6 h-6 flex items-center justify-center mr-3 mt-0.5" style={{ color: 'var(--text-cadet-blue)' }}>
-                  <span className="text-sm">✓</span>
-                </div>
-                <span>Record foods that may trigger symptoms</span>
-              </li>
-              <li className="flex items-start">
-                <div className="w-6 h-6 flex items-center justify-center mr-3 mt-0.5" style={{ color: 'var(--text-cadet-blue)' }}>
-                  <span className="text-sm">✓</span>
-                </div>
-                <span>Track patterns and trends over time</span>
-              </li>
-            </ul>
-          </div>
-          
-          <div>
-            <ul className="space-y-3 text-secondary font-roboto">
-              <li className="flex items-start">
-                <div className="w-6 h-6 flex items-center justify-center mr-3 mt-0.5" style={{ color: 'var(--text-cadet-blue)' }}>
-                  <span className="text-sm">✓</span>
-                </div>
-                <span>Set medication reminders</span>
-              </li>
-              <li className="flex items-start">
-                <div className="w-6 h-6 flex items-center justify-center mr-3 mt-0.5" style={{ color: 'var(--text-cadet-blue)' }}>
-                  <span className="text-sm">✓</span>
-                </div>
-                <span>Track dosage and timing</span>
-              </li>
-              <li className="flex items-start">
-                <div className="w-6 h-6 flex items-center justify-center mr-3 mt-0.5" style={{ color: 'var(--text-cadet-blue)' }}>
-                  <span className="text-sm">✓</span>
-                </div>
-                <span>Generate reports for your doctor</span>
-              </li>
-            </ul>
-          </div>
-        </div>
-      </div>
-
       {/* When to Seek Help Section */}
       <div className="card mb-4 sm:mb-6">
         <h2 className="text-xl font-semibold font-source text-primary mb-6">When to Seek Medical Help</h2>
-        <div className="card-inner p-6">
+        <div>
           <h3 className="text-lg font-semibold font-source text-primary mb-4 leading-normal">Seek immediate medical attention if you experience:</h3>
           <ul className="space-y-2 text-secondary font-source">
             <li className="flex items-start">
@@ -325,6 +273,60 @@ export default function LearnPage() {
               <span>Rapid weight loss</span>
             </li>
           </ul>
+        </div>
+      </div>
+
+      {/* How FlareCare Helps Section */}
+      <div className="card backdrop-blur-sm mb-4 sm:mb-6">
+        <h2 className="text-xl font-semibold font-source text-primary mb-6">How FlareCare Can Help</h2>
+        <div className="card-inner p-6">
+        <div className="grid gap-3 md:gap-6 md:grid-cols-2">
+          <div>
+            <ul className="space-y-3 text-secondary font-roboto">
+              <li className="flex items-start">
+                <div className="w-4 h-4 flex items-center justify-center mr-2 mt-0.5 flex-shrink-0" style={{ color: 'var(--text-cadet-blue)' }}>
+                  <Check className="w-3.5 h-3.5" strokeWidth={2.5} />
+                </div>
+                <span>Log daily symptoms with severity ratings</span>
+              </li>
+              <li className="flex items-start">
+                <div className="w-4 h-4 flex items-center justify-center mr-2 mt-0.5 flex-shrink-0" style={{ color: 'var(--text-cadet-blue)' }}>
+                  <Check className="w-3.5 h-3.5" strokeWidth={2.5} />
+                </div>
+                <span>Record foods that may trigger symptoms</span>
+              </li>
+              <li className="flex items-start">
+                <div className="w-4 h-4 flex items-center justify-center mr-2 mt-0.5 flex-shrink-0" style={{ color: 'var(--text-cadet-blue)' }}>
+                  <Check className="w-3.5 h-3.5" strokeWidth={2.5} />
+                </div>
+                <span>Track patterns and trends over time</span>
+              </li>
+            </ul>
+          </div>
+          
+          <div>
+            <ul className="space-y-3 text-secondary font-roboto">
+              <li className="flex items-start">
+                <div className="w-4 h-4 flex items-center justify-center mr-2 mt-0.5 flex-shrink-0" style={{ color: 'var(--text-cadet-blue)' }}>
+                  <Check className="w-3.5 h-3.5" strokeWidth={2.5} />
+                </div>
+                <span>Set medication reminders</span>
+              </li>
+              <li className="flex items-start">
+                <div className="w-4 h-4 flex items-center justify-center mr-2 mt-0.5 flex-shrink-0" style={{ color: 'var(--text-cadet-blue)' }}>
+                  <Check className="w-3.5 h-3.5" strokeWidth={2.5} />
+                </div>
+                <span>Track dosage and timing</span>
+              </li>
+              <li className="flex items-start">
+                <div className="w-4 h-4 flex items-center justify-center mr-2 mt-0.5 flex-shrink-0" style={{ color: 'var(--text-cadet-blue)' }}>
+                  <Check className="w-3.5 h-3.5" strokeWidth={2.5} />
+                </div>
+                <span>Generate reports for your doctor</span>
+              </li>
+            </ul>
+          </div>
+        </div>
         </div>
       </div>
 

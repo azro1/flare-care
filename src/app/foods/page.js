@@ -1,7 +1,7 @@
 'use client'
 
 import Link from 'next/link'
-import { UtensilsCrossed, Soup, Snowflake, NotebookPen } from 'lucide-react'
+import { UtensilsCrossed, Soup, Snowflake, NotebookPen, CheckCircle, AlertTriangle, XCircle, Lightbulb } from 'lucide-react'
 
 export default function Foods() {
   const categories = [
@@ -120,11 +120,14 @@ export default function Foods() {
 
         {/* Tips Card */}
         <div className="card backdrop-blur-sm mb-4 sm:mb-6">
-          <h2 className="text-xl font-semibold font-source text-primary mb-4">💡 Helpful Tips</h2>
+          <h2 className="text-xl font-semibold font-source text-primary mb-4 flex items-center gap-2">
+            <Lightbulb className="w-5 h-5 flex-shrink-0 text-amber-500 dark:text-white" />
+            Helpful Tips
+          </h2>
           <ul className="space-y-3">
             {tips.map((tip, index) => (
               <li key={index} className="text-secondary font-roboto leading-relaxed flex items-start">
-                <span className="w-2 h-2 bg-[#5F9EA0] rounded-full mr-3 mt-2 flex-shrink-0"></span>
+                <span className="w-1.5 h-1.5 bg-[#5F9EA0] rounded-full mr-3 mt-2 flex-shrink-0"></span>
                 {tip}
               </li>
             ))}
@@ -147,15 +150,24 @@ export default function Foods() {
                 <h3 className="text-xl font-semibold font-source text-primary mb-4">IBD Foods</h3>
                 <div className="space-y-4">
                   <div className="card-inner p-4">
-                    <h4 className="font-medium text-primary mb-2">✅ Generally Safe</h4>
+                    <h4 className="font-medium text-primary mb-2 flex items-center gap-2">
+                      <CheckCircle className="w-5 h-5 text-emerald-600 dark:text-white flex-shrink-0" />
+                      Generally Safe
+                    </h4>
                     <p className="text-sm text-secondary">Bananas, rice, applesauce, toast, oatmeal, lean proteins</p>
                   </div>
                   <div className="card-inner p-4">
-                    <h4 className="font-medium text-primary mb-2">⚠️ Try Carefully</h4>
+                    <h4 className="font-medium text-primary mb-2 flex items-center gap-2">
+                      <AlertTriangle className="w-5 h-5 text-amber-600 dark:text-white flex-shrink-0" />
+                      Try Carefully
+                    </h4>
                     <p className="text-sm text-secondary">Dairy, high-fiber foods, spicy foods, raw vegetables</p>
                   </div>
                   <div className="card-inner p-4">
-                    <h4 className="font-medium text-primary mb-2">❌ Avoid During Flares</h4>
+                    <h4 className="font-medium text-primary mb-2 flex items-center gap-2">
+                      <XCircle className="w-5 h-5 text-red-500 dark:text-white flex-shrink-0" />
+                      Avoid During Flares
+                    </h4>
                     <p className="text-sm text-secondary">Nuts, seeds, popcorn, alcohol, caffeine, fried foods</p>
                   </div>
                 </div>
@@ -167,25 +179,25 @@ export default function Foods() {
                 <div className="space-y-3">
                   <div className="flex items-center gap-3">
                     <div className="w-8 h-8 min-w-[2rem] rounded-lg flex items-center justify-center card-inner">
-                      <UtensilsCrossed className="w-4 h-4 text-emerald-600" />
+                      <UtensilsCrossed className="w-4 h-4 text-emerald-600 dark:text-white" />
                     </div>
                     <p className="text-sm text-secondary">Pair carbs with protein to steady energy</p>
                   </div>
                   <div className="flex items-center gap-3">
                     <div className="w-8 h-8 min-w-[2rem] rounded-lg flex items-center justify-center card-inner">
-                      <Soup className="w-4 h-4 text-amber-600" />
+                      <Soup className="w-4 h-4 text-amber-600 dark:text-white" />
                     </div>
                     <p className="text-sm text-secondary">Keep simple foods ready for flare days</p>
                   </div>
                   <div className="flex items-center gap-3">
                     <div className="w-8 h-8 min-w-[2rem] rounded-lg flex items-center justify-center card-inner">
-                      <Snowflake className="w-4 h-4 text-blue-500" />
+                      <Snowflake className="w-4 h-4 text-blue-500 dark:text-white" />
                     </div>
                     <p className="text-sm text-secondary">Freeze single portions for low-energy days</p>
                   </div>
                   <div className="flex items-center gap-3">
                     <div className="w-8 h-8 min-w-[2rem] rounded-lg flex items-center justify-center card-inner">
-                      <NotebookPen className="w-4 h-4 text-indigo-400" />
+                      <NotebookPen className="w-4 h-4 text-indigo-400 dark:text-white" />
                     </div>
                     <p className="text-sm text-secondary">Note any new foods and how your gut reacts</p>
                   </div>

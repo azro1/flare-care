@@ -985,7 +985,7 @@ export default function Home() {
                 <div className="space-y-3">
                   <div className="flex items-center gap-3">
                     <div className="w-6 h-6 card-inner flex items-center justify-center">
-                      <Thermometer className="w-3 h-3" style={{color: 'var(--text-goal-icon-success)'}} />
+                      <Thermometer className="w-3.5 h-3.5" style={{color: 'var(--text-goal-icon-success)'}} />
                     </div>
                     <div className="flex-1 flex items-center justify-between">
                       <span className={`text-sm ${todaySymptoms.length > 0 ? '' : 'text-secondary'}`} style={{color: todaySymptoms.length > 0 ? 'var(--text-cadet-blue)' : undefined}}>
@@ -1000,7 +1000,7 @@ export default function Home() {
                   </div>
                   <div className="flex items-center gap-3">
                     <div className="w-6 h-6 card-inner flex items-center justify-center">
-                      <Pill className="w-2.5 h-2.5" style={{color: 'var(--text-goal-icon-medication)'}} />
+                      <Pill className="w-3 h-3" style={{color: 'var(--text-goal-icon-medication)'}} />
                     </div>
                     <div className="flex-1 flex items-center justify-between">
                       <span className={`text-sm ${takenMedications.length === medications.length && medications.length > 0 ? '' : 'text-secondary'}`} style={{color: takenMedications.length === medications.length && medications.length > 0 ? 'var(--text-cadet-blue)' : undefined}}>
@@ -1015,7 +1015,7 @@ export default function Home() {
                   </div>
                   <div className="flex items-center gap-3">
                     <div className="w-6 h-6 card-inner flex items-center justify-center">
-                      <CupSoda className="w-3 h-3" style={{color: 'var(--text-goal-icon-hydration)'}} />
+                      <CupSoda className="w-3.5 h-3.5" style={{color: 'var(--text-goal-icon-hydration)'}} />
                     </div>
                     <span className="text-sm text-secondary">Stay hydrated</span>
                   </div>
@@ -1073,7 +1073,7 @@ className="flex items-center gap-3 px-3 pt-2.5 pb-4 transition-colors hover:opac
                 </div>
                 <ChevronRight className="w-5 h-5 flex-shrink-0 text-secondary" />
                 <div className="pointer-events-none absolute right-3 -top-14 hidden w-52 sm:group-hover:flex sm:group-focus-visible:flex">
-                  <div className="tooltip-card rounded-lg px-4 py-3 text-left text-sm text-secondary leading-snug shadow-lg font-roboto">
+                  <div className="tooltip-card rounded-lg px-4 py-3 text-left text-xs text-secondary leading-snug shadow-lg font-roboto">
                     Record how you're feeling and track your symptoms
                   </div>
                 </div>
@@ -1091,7 +1091,7 @@ className="flex items-center gap-3 px-3 pt-4 pb-2.5 transition-colors hover:opac
                 </div>
                 <ChevronRight className="w-5 h-5 flex-shrink-0 text-secondary" />
                 <div className="pointer-events-none absolute right-3 -top-14 hidden w-52 sm:group-hover:flex sm:group-focus-visible:flex">
-                  <div className="tooltip-card rounded-lg px-4 py-3 text-left text-sm text-secondary leading-snug shadow-lg font-roboto">
+                  <div className="tooltip-card rounded-lg px-4 py-3 text-left text-xs text-secondary leading-snug shadow-lg font-roboto">
                     Log missed medications and track your adherence
                   </div>
                 </div>
@@ -1116,7 +1116,7 @@ className="flex items-center gap-3 px-3 pt-4 pb-2.5 transition-colors hover:opac
                 <ChevronRight className="w-5 h-5 flex-shrink-0 text-secondary sm:hidden" />
               </div>
               <div className="pointer-events-none absolute right-3 -top-14 hidden w-52 sm:group-hover:flex sm:group-focus-visible:flex">
-                <div className="tooltip-card rounded-lg px-4 py-3 text-left text-sm text-secondary leading-snug shadow-lg font-roboto">
+                <div className="tooltip-card rounded-lg px-4 py-3 text-left text-xs text-secondary leading-snug shadow-lg font-roboto">
                   Record how you're feeling and track your symptoms
                 </div>
               </div>
@@ -1137,7 +1137,7 @@ className="flex items-center gap-3 px-3 pt-4 pb-2.5 transition-colors hover:opac
                 <ChevronRight className="w-5 h-5 flex-shrink-0 text-secondary sm:hidden" />
               </div>
               <div className="pointer-events-none absolute right-3 -top-14 hidden w-52 sm:group-hover:flex sm:group-focus-visible:flex">
-                <div className="tooltip-card rounded-lg px-4 py-3 text-left text-sm text-secondary leading-snug shadow-lg font-roboto">
+                <div className="tooltip-card rounded-lg px-4 py-3 text-left text-xs text-secondary leading-snug shadow-lg font-roboto">
                   Log missed medications and track your adherence
                 </div>
               </div>
@@ -1279,15 +1279,21 @@ className="flex items-center gap-3 px-3 pt-4 pb-2.5 transition-colors hover:opac
                 })
               }
 
-              // Medication added
-              if (medicationAdded) {
-                activities.push({
-                  type: 'added-medication',
-                  timestamp: new Date(medicationAdded.timestamp),
-                  title: `Added ${medicationAdded.medicationName}`,
-                  icon: Pill,
-                  iconBg: 'bg-purple-100',
-                  iconColor: 'text-purple-600'
+              // Medication added (from DB so it syncs across devices)
+              const fourHoursAgoForAdded = new Date(Date.now() - 4 * 60 * 60 * 1000)
+              if (Array.isArray(medications) && medications.length > 0) {
+                medications.forEach((med) => {
+                  const created = med.createdAt || med.created_at
+                  if (created && new Date(created) >= fourHoursAgoForAdded) {
+                    activities.push({
+                      type: 'added-medication',
+                      timestamp: new Date(created),
+                      title: `Added ${med.name || 'medication'}`,
+                      icon: Pill,
+                      iconBg: 'bg-purple-100',
+                      iconColor: 'text-purple-600'
+                    })
+                  }
                 })
               }
 
@@ -1402,10 +1408,10 @@ className="flex items-center gap-3 px-3 pt-4 pb-2.5 transition-colors hover:opac
                   {recentActivities.map((activity, index) => {
                     return (
                       <div key={`${activity.type}-${activity.timestamp.getTime()}-${index}`} className="flex items-start gap-3 pt-2 min-w-0 overflow-hidden">
-                        <span className="text-xl flex-shrink-0">🎉</span>
+                        <PartyPopper className="w-5 h-5 flex-shrink-0 text-amber-500 dark:text-white" />
                         <div className="flex-1 min-w-0 overflow-hidden">
                           <p
-                            className="text-sm font-medium text-primary min-w-0 line-clamp-2 overflow-hidden break-all"
+                            className="text-sm font-medium text-primary min-w-0 line-clamp-2 overflow-hidden"
                             style={{ display: '-webkit-box', WebkitLineClamp: 2, WebkitBoxOrient: 'vertical' }}
                             title={activity.title}
                           >
@@ -1537,7 +1543,7 @@ className="flex items-center gap-3 px-3 pt-4 pb-2.5 transition-colors hover:opac
                   </div>
                 </div>
                 <div className="pointer-events-none absolute right-3 -top-14 hidden w-52 sm:group-hover:flex sm:group-focus-visible:flex">
-                  <div className="tooltip-card rounded-lg px-4 py-3 text-left text-sm text-secondary leading-snug shadow-lg font-roboto w-full">
+                  <div className="tooltip-card rounded-lg px-4 py-3 text-left text-xs text-secondary leading-snug shadow-lg font-roboto w-full">
                     Add and manage your prescribed medications
                   </div>
                 </div>
@@ -1558,7 +1564,7 @@ className="flex items-center gap-3 px-3 pt-4 pb-2.5 transition-colors hover:opac
                   </div>
                 </div>
                 <div className="pointer-events-none absolute right-3 -top-14 hidden w-52 sm:group-hover:flex sm:group-focus-visible:flex">
-                  <div className="tooltip-card rounded-lg px-4 py-3 text-left text-sm text-secondary leading-snug shadow-lg font-roboto w-full">
+                  <div className="tooltip-card rounded-lg px-4 py-3 text-left text-xs text-secondary leading-snug shadow-lg font-roboto w-full">
                     View insights and share data with your doctor
                   </div>
                 </div>
@@ -1579,7 +1585,7 @@ className="flex items-center gap-3 px-3 pt-4 pb-2.5 transition-colors hover:opac
                   </div>
                 </div>
                 <div className="pointer-events-none absolute right-3 -top-14 hidden w-52 sm:group-hover:flex sm:group-focus-visible:flex">
-                  <div className="tooltip-card rounded-lg px-4 py-3 text-left text-sm text-secondary leading-snug shadow-lg font-roboto w-full">
+                  <div className="tooltip-card rounded-lg px-4 py-3 text-left text-xs text-secondary leading-snug shadow-lg font-roboto w-full">
                     Keep track of your weight for your appointments
                   </div>
                 </div>
@@ -1601,7 +1607,7 @@ className="flex items-center gap-3 px-3 pt-4 pb-2.5 transition-colors hover:opac
                   </div>
                 </div>
                 <div className="pointer-events-none absolute right-3 -top-14 hidden w-52 sm:group-hover:flex sm:group-focus-visible:flex">
-                  <div className="tooltip-card rounded-lg px-4 py-3 text-left text-sm text-secondary leading-snug shadow-lg font-roboto w-full">
+                  <div className="tooltip-card rounded-lg px-4 py-3 text-left text-xs text-secondary leading-snug shadow-lg font-roboto w-full">
                     View and manage your upcoming healthcare appointments
                   </div>
                 </div>
@@ -1622,7 +1628,7 @@ className="flex items-center gap-3 px-3 pt-4 pb-2.5 transition-colors hover:opac
                   </div>
                 </div>
                 <div className="pointer-events-none absolute right-3 -top-14 hidden w-52 sm:group-hover:flex sm:group-focus-visible:flex">
-                  <div className="tooltip-card rounded-lg px-4 py-3 text-left text-sm text-secondary leading-snug shadow-lg font-roboto w-full">
+                  <div className="tooltip-card rounded-lg px-4 py-3 text-left text-xs text-secondary leading-snug shadow-lg font-roboto w-full">
                     Learn about food categories and nutrition to make informed diet choices
                   </div>
                 </div>

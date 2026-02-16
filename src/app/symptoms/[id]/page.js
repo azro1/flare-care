@@ -175,8 +175,8 @@ function SymptomDetailContent() {
                 <span className="text-xs font-semibold text-secondary uppercase tracking-wide block">Status</span>
                 <p className={`mt-2 text-base font-semibold ${
                   (symptom.isOngoing || !symptom.symptomEndDate)
-                    ? 'text-yellow-600 dark:text-yellow-300'
-                    : 'text-green-600 dark:text-green-300'
+                    ? 'text-yellow-600 dark:text-white'
+                    : 'text-green-600 dark:text-white'
                 }`}>
                   {symptom.isOngoing || !symptom.symptomEndDate ? 'Ongoing' : 'Resolved'}
                 </p>
@@ -184,14 +184,14 @@ function SymptomDetailContent() {
 
               <div className="card-inner p-4">
                 <span className="text-xs font-semibold text-secondary uppercase tracking-wide block">Severity</span>
-                <p className="mt-2 text-base font-semibold text-red-600 dark:text-red-300">
+                <p className="mt-2 text-base font-semibold text-red-600 dark:text-white">
                   {symptom.severity ?? 'Not logged'}
                 </p>
               </div>
 
               <div className="card-inner p-4">
                 <span className="text-xs font-semibold text-secondary uppercase tracking-wide block">Stress level</span>
-                <p className="mt-2 text-base font-semibold text-cyan-600 dark:text-cyan-300">
+                <p className="mt-2 text-base font-semibold text-cyan-600 dark:text-white">
                   {symptom.stress_level ?? 'Not logged'}
                 </p>
               </div>

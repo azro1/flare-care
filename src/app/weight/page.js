@@ -235,8 +235,8 @@ function WeightPageContent() {
       <div className="card mb-4 sm:mb-6 min-w-0 flex flex-col h-[60vh]">
         <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 flex-shrink-0 mb-5 sm:mb-6">
           <div className="flex items-center">
-            <div className="flex w-8 h-8 sm:w-12 sm:h-12 bg-indigo-100 rounded-xl items-center justify-center mr-3 sm:mr-4 flex-shrink-0">
-              <Scale className="w-4 h-4 sm:w-6 sm:h-6 text-indigo-600" />
+            <div className="flex w-10 h-10 bg-indigo-100 dashboard-icon-panel rounded-lg items-center justify-center mr-3 sm:mr-4 flex-shrink-0">
+              <Scale className="w-5 h-5 text-indigo-600 dark:text-white" />
             </div>
             <h2 className="text-xl font-semibold font-source text-primary">
               Weight entries

@@ -62,11 +62,11 @@
     --bg-goal-success: #dcfce7; /* Light green background for completed goals */
     --text-goal-success: #059669; /* Medium green text for completed goals */
     --bg-goal-icon-success: #dcfce7; /* Light green background for success icons */
-    --text-goal-icon-success: #16a34a; /* Dark green for success icons */
+    --text-goal-icon-success: #64748b; /* Neutral in light mode */
     --bg-goal-icon-medication: #f3e8ff; /* Light purple background for medication icons */
-    --text-goal-icon-medication: #9333ea; /* Dark purple for medication icons */
+    --text-goal-icon-medication: #64748b; /* Neutral in light mode */
     --bg-goal-icon-hydration: #dbeafe; /* Light blue background for hydration icons */
-    --text-goal-icon-hydration: #2563eb; /* Dark blue for hydration icons */
+    --text-goal-icon-hydration: #64748b; /* Neutral in light mode */
     
     --text-primary: #1e293b; /* Dark text for light background */
     --text-secondary: #475569; /* Medium dark text */
@@ -134,11 +134,11 @@
     --bg-goal-success: #064e3b;
     --text-goal-success: #10b981;
     --bg-goal-icon-success: rgba(16, 185, 129, 0.1);
-    --text-goal-icon-success: #10b981;
+    --text-goal-icon-success: #ffffff;
     --bg-goal-icon-medication: rgba(196, 181, 253, 0.1);
-    --text-goal-icon-medication: #c4b5fd;
+    --text-goal-icon-medication: #ffffff;
     --bg-goal-icon-hydration: rgba(59, 130, 246, 0.15);
-    --text-goal-icon-hydration: #60a5fa;
+    --text-goal-icon-hydration: #ffffff;
     --text-primary: #f3f4f6;
     --text-secondary: #d1d5db;
     --text-tertiary: #9ca3af;
@@ -266,7 +266,7 @@
     background-color: var(--bg-avatar-fallback-dark);
   }
 
-  /* Same as .dark .card-inner – same variable, same color */
+  /* Icon panels use same bright gray as card-inner divs (Recent Activity, Today's Summary, etc.) */
   .dark .dashboard-icon-panel {
     background-color: var(--bg-avatar-fallback-dark) !important;
   }
@@ -365,13 +365,18 @@ select.input-field-wizard:focus {
     outline: none !important;
 }
 
-/* Dark mode placeholder – better contrast on cadet-tinted dark */
+/* Dark mode placeholder – neutral gray (no blue tint) for all inputs */
+.dark input::placeholder,
+.dark textarea::placeholder {
+    color: var(--text-tertiary) !important;
+}
+
 .dark .input-field-wizard::placeholder {
-    color: #94a3b8 !important;
+    color: var(--text-tertiary) !important;
 }
 
 .dark select.input-field-wizard.placeholder {
-    color: #94a3b8 !important;
+    color: var(--text-tertiary) !important;
 }
 
 select.input-field-wizard option {
@@ -1173,6 +1178,10 @@ select.input-field-wizard option[value=""] {
   border-color: var(--border-input-dark) !important;
   box-shadow: none !important;
   outline: none !important;
+}
+
+.dark .react-datepicker__input-container input::placeholder {
+  color: var(--text-tertiary) !important;
 }
 
 .dark .react-datepicker__input-container input:focus {

@@ -5,7 +5,7 @@ import ConfirmationModal from '@/components/ConfirmationModal'
 import reminderService from '@/lib/reminderService'
 import ProtectedRoute from '@/components/ProtectedRoute'
 import { sanitizeMedicationName, sanitizeNotes } from '@/lib/sanitize'
-import { Pill, ChevronDown } from 'lucide-react'
+import { Pill, ChevronDown, Bell, Lightbulb } from 'lucide-react'
 import { supabase, TABLES } from '@/lib/supabase'
 import { useAuth } from '@/lib/AuthContext'
 import Masonry from 'react-masonry-css'
@@ -561,13 +561,13 @@ function MedicationsPageContent() {
       <div className="card mb-4 sm:mb-6 min-w-0 flex flex-col h-[60vh]">
         <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 flex-shrink-0 mb-5 sm:mb-6">
           <div className="flex items-center">
-            <div className="flex w-8 h-8 sm:w-12 sm:h-12 bg-purple-100 rounded-xl items-center justify-center mr-3 sm:mr-4 flex-shrink-0">
+            <div className="flex w-10 h-10 bg-purple-100 dashboard-icon-panel rounded-lg items-center justify-center mr-3 sm:mr-4 flex-shrink-0">
               {isAdding ? (
-                <svg className="w-4 h-4 sm:w-6 sm:h-6 text-purple-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <svg className="w-5 h-5 text-purple-600 dark:text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z" />
                 </svg>
               ) : (
-                <Pill className="w-4 h-4 sm:w-6 sm:h-6 text-purple-600" />
+                <Pill className="w-5 h-5 text-purple-600 dark:text-white" />
               )}
             </div>
             <h2 className="text-xl font-semibold font-source text-primary">
@@ -898,17 +898,15 @@ function MedicationsPageContent() {
       <div className="mt-4 sm:mt-6 card">
         <div>
           <h3 className="text-xl sm:text-lg font-semibold font-source text-primary mb-2 flex items-center space-x-2">
-            <svg className="w-5 h-5 sm:w-6 sm:h-6 flex-shrink-0" style={{ color: 'var(--text-cadet-blue)' }} fill="none" stroke="currentColor" viewBox="0 0 24 24">
-              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" />
-            </svg>
+            <Bell className="w-5 h-5 sm:w-6 sm:h-6 flex-shrink-0" style={{ color: 'var(--text-cadet-blue)' }} />
             <span>Medication Reminders</span>
           </h3>
           <p className="text-sm sm:text-base text-secondary font-roboto leading-relaxed">
             FlareCare will send browser notifications when it's time to take your medications
           </p>
           <div className="card-inner p-6 mt-4">
-            <div className="flex items-center space-x-1">
-              <span className="text-lg">💡</span>
+            <div className="flex items-center gap-2">
+              <Lightbulb className="w-5 h-5 flex-shrink-0 text-amber-500 dark:text-white" />
               <p className="text-base sm:text-sm font-medium text-primary mb-2 font-roboto">Important to know:</p>
             </div>
             <p className="text-sm  text-secondary font-roboto leading-relaxed">

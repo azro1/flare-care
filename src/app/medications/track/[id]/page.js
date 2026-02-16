@@ -149,21 +149,21 @@ function TrackedMedicationDetails() {
           <div className="space-y-4 sm:space-y-0 sm:grid sm:grid-cols-3 sm:gap-6">
             <div className="card-inner p-4">
               <span className="text-xs font-semibold text-secondary uppercase tracking-wide block">Missed doses</span>
-              <p className={`mt-2 text-base font-semibold ${missedCount > 0 ? 'text-amber-600 dark:text-amber-300' : 'text-secondary'}`}>
+              <p className={`mt-2 text-base font-semibold ${missedCount > 0 ? 'text-amber-600 dark:text-white' : 'text-secondary'}`}>
                 {missedCount > 0 ? missedCount : 'None logged'}
               </p>
             </div>
 
             <div className="card-inner p-4">
               <span className="text-xs font-semibold text-secondary uppercase tracking-wide block">NSAIDs</span>
-              <p className={`mt-2 text-base font-semibold ${nsaidCount > 0 ? 'text-emerald-600 dark:text-emerald-300' : 'text-secondary'}`}>
+              <p className={`mt-2 text-base font-semibold ${nsaidCount > 0 ? 'text-emerald-600 dark:text-white' : 'text-secondary'}`}>
                 {nsaidCount > 0 ? nsaidCount : 'None logged'}
               </p>
             </div>
 
             <div className="card-inner p-4">
               <span className="text-xs font-semibold text-secondary uppercase tracking-wide block">Antibiotics</span>
-              <p className={`mt-2 text-base font-semibold ${antibioticCount > 0 ? 'text-blue-600 dark:text-blue-300' : 'text-secondary'}`}>
+              <p className={`mt-2 text-base font-semibold ${antibioticCount > 0 ? 'text-blue-600 dark:text-white' : 'text-secondary'}`}>
                 {antibioticCount > 0 ? antibioticCount : 'None logged'}
               </p>
             </div>
