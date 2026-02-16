@@ -52,10 +52,10 @@ export default function ConfirmationModal({
         <div className="p-6">
           <div className="flex items-center mb-4">
             <div className={`w-10 h-10 rounded-full flex items-center justify-center mr-3 ${
-              isDestructive ? 'bg-red-100' : 'bg-[#5F9EA0]/20'
+              isDestructive ? 'bg-red-100 dark:bg-red-500/20' : 'bg-[#5F9EA0]/20 dark:bg-[#5F9EA0]/30'
             }`}>
               <svg 
-                className={`w-6 h-6 ${isDestructive ? 'text-red-600' : 'text-[#5F9EA0]'}`} 
+                className={`w-6 h-6 ${isDestructive ? 'text-red-600 dark:text-white' : 'text-[#5F9EA0] dark:text-white'}`} 
                 fill="none" 
                 stroke="currentColor" 
                 viewBox="0 0 24 24"
