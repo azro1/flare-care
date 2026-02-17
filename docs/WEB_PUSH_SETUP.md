@@ -27,15 +27,10 @@ The API route `POST /api/cron/send-reminders` sends Web Push for medications due
 - `SUPABASE_SERVICE_ROLE_KEY` – in Supabase: Project Settings → API → service_role.
 - `CRON_SECRET` – a secret you choose; the cron job must send `Authorization: Bearer <CRON_SECRET>`.
 
-Example (Vercel Cron in `vercel.json`):
+**Vercel Hobby:** Cron is limited to **once per day**. The project uses `0 0 * * *` (midnight UTC) so deployment succeeds. For **minute-level** reminders (so users get notified at the right time), use an external cron service:
 
-```json
-{
-  "crons": [{ "path": "/api/cron/send-reminders", "schedule": "* * * * *" }]
-}
-```
-
-Vercel will call the route every minute with the correct auth. For other hosts, call the URL every minute and set the `Authorization` header to `Bearer <CRON_SECRET>`.
+- e.g. [cron-job.org](https://cron-job.org) or [EasyCron](https://www.easycron.com): create a job that runs every minute and calls `POST https://your-app.vercel.app/api/cron/send-reminders` with header `Authorization: Bearer YOUR_CRON_SECRET`.
+- **Vercel Pro** allows more frequent crons; you could then use `* * * * *` in `vercel.json` to run every minute.
 
 ## 4. User flow
 
