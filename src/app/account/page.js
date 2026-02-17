@@ -107,7 +107,7 @@ function AccountPageContent() {
           <div className="flex-1 min-w-0">
             {/* Profile Section */}
             <div className="card mb-4 sm:mb-6">
-              <div className="flex flex-col sm:flex-row sm:items-start sm:justify-between gap-6 sm:gap-4 mb-6 sm:mb-8 card-inner p-4 sm:p-6">
+              <div className="flex flex-col sm:flex-row sm:items-start sm:justify-between gap-4 mb-6 sm:mb-8 card-inner p-4 sm:p-6">
                 <div className="flex items-center min-w-0">
                   <div className="mr-4 sm:mr-6 flex-shrink-0 ring-2 ring-[#5F9EA0]/30 rounded-full p-0.5">
                     <div className="w-12 h-12 sm:w-20 sm:h-20 rounded-full overflow-hidden flex items-center justify-center bg-[var(--bg-icon)] dark:bg-[var(--bg-icon-charcoal)]">
