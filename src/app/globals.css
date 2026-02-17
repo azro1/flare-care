@@ -717,7 +717,12 @@ select.input-field-wizard option[value=""] {
   background-color: var(--bg-input-dark) !important;
   color: var(--text-primary) !important;
   border-color: var(--border-input-dark) !important;
-  @apply px-3 py-2 border rounded-lg focus:outline-none transition-all duration-200 text-left text-base placeholder-slate-400;
+  @apply px-3 py-2 border rounded-lg transition-all duration-200 text-left text-base placeholder-slate-400;
+}
+
+.react-datepicker__input-container input:focus {
+  outline: none !important;
+  box-shadow: none !important;
 }
 
 /* Contain calendar so last column stays inside box (light + dark, all viewports) */
@@ -1370,6 +1375,14 @@ select.input-field-wizard option[value=""] {
 .dark ::-webkit-scrollbar {
   width: 12px;
   height: 12px;
+}
+
+/* Symptom report bars: neutral gray in light mode only; dark mode keeps original gray */
+.report-bar-fill {
+  background-color: var(--border-primary);
+}
+.dark .report-bar-fill {
+  background-color: #9ca3af; /* gray-400 - original dark mode bar color */
 }
 
 .dark ::-webkit-scrollbar-track {

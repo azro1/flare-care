@@ -6,7 +6,7 @@ import Image from 'next/image'
 import { useAuth } from '@/lib/AuthContext'
 import { useTheme } from '@/lib/ThemeContext'
 import ProtectedRoute from '@/components/ProtectedRoute'
-import { Settings, LogOut, Trash2, FilePen } from 'lucide-react'
+import { Settings, LogOut, Trash2, User } from 'lucide-react'
 
 function AccountPageContent() {
   const { user, signOut, deleteUser } = useAuth()
@@ -107,7 +107,7 @@ function AccountPageContent() {
           <div className="flex-1 min-w-0">
             {/* Profile Section */}
             <div className="card mb-4 sm:mb-6">
-              <div className="flex flex-col sm:flex-row sm:items-start sm:justify-between gap-4 mb-6 sm:mb-8 card-inner p-4 sm:p-6">
+              <div className="flex flex-col sm:flex-row sm:items-start sm:justify-between gap-6 sm:gap-4 mb-6 sm:mb-8 card-inner p-4 sm:p-6">
                 <div className="flex items-center min-w-0">
                   <div className="mr-4 sm:mr-6 flex-shrink-0 ring-2 ring-[#5F9EA0]/30 rounded-full p-0.5">
                     <div className="w-12 h-12 sm:w-20 sm:h-20 rounded-full overflow-hidden flex items-center justify-center bg-[var(--bg-icon)] dark:bg-[var(--bg-icon-charcoal)]">
@@ -143,7 +143,7 @@ function AccountPageContent() {
                 <button
                   onClick={() => setShowSignOutModal(true)}
                   disabled={isSigningOut}
-                  className="bg-[#5F9EA0] text-white font-semibold py-2 px-4 rounded-lg hover:bg-button-cadet-hover transition-colors disabled:opacity-50 self-start sm:self-auto inline-flex items-center gap-2"
+                  className="bg-[#5F9EA0] text-white font-semibold py-2 px-4 rounded-lg border border-transparent hover:bg-button-cadet-hover transition-colors disabled:opacity-50 self-start sm:self-auto inline-flex items-center gap-2"
                 >
                   <LogOut className="w-4 h-4 dark:text-white" />
                   Sign Out
@@ -152,7 +152,7 @@ function AccountPageContent() {
 
               {/* Profile Info */}
               <h3 className="text-lg sm:text-xl font-semibold font-source text-primary mb-4 flex items-center gap-2">
-                <FilePen className="w-5 h-5 text-[#5F9EA0] dark:text-white" />
+                <User className="w-5 h-5 text-[#5F9EA0] dark:text-white" />
                 Profile Info
               </h3>
               <div className="space-y-4">

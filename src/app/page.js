@@ -962,6 +962,7 @@ export default function Home() {
                       <span className="text-sm text-secondary">Total Symptoms</span>
                     <span className="font-semibold text-primary">{symptoms.length}</span>
                   </div>
+                  <div className="border-t border-[var(--border-card-inner)] my-0" aria-hidden="true" />
                   <div className="flex justify-between items-center">
                       <span className="text-sm text-secondary">This Week</span>
                     <span className="font-semibold text-primary">
@@ -972,6 +973,7 @@ export default function Home() {
                       }).length}
                     </span>
                   </div>
+                  <div className="border-t border-[var(--border-card-inner)] my-0" aria-hidden="true" />
                   <div className="flex justify-between items-center">
                       <span className="text-sm text-secondary">Today</span>
                     <span className="font-semibold text-primary">{todaySymptoms.length}</span>
@@ -1063,7 +1065,7 @@ export default function Home() {
             <div className="card !p-2 overflow-hidden">
               <Link
                 href="/symptoms"
-className="flex items-center gap-3 px-3 pt-2.5 pb-4 transition-colors hover:opacity-90 group relative focus:outline-none focus-visible:outline-none focus-visible:ring-0 focus-visible:ring-offset-0 focus:ring-0"
+className="flex items-center gap-3 px-3 py-2.5 transition-colors hover:opacity-90 group relative focus:outline-none focus-visible:outline-none focus-visible:ring-0 focus-visible:ring-offset-0 focus:ring-0"
             >
               <div className="w-10 h-10 bg-emerald-100 dashboard-icon-panel rounded-lg flex items-center justify-center flex-shrink-0">
                   <Thermometer className="w-5 h-5 text-emerald-600 dark:text-white" />
@@ -1081,7 +1083,7 @@ className="flex items-center gap-3 px-3 pt-2.5 pb-4 transition-colors hover:opac
               <div className="border-t min-w-0" style={{ borderColor: 'var(--border-card-inner)' }} />
               <Link
                 href="/medications/track"
-className="flex items-center gap-3 px-3 pt-4 pb-2.5 transition-colors hover:opacity-90 group relative focus:outline-none focus-visible:outline-none focus-visible:ring-0 focus-visible:ring-offset-0 focus:ring-0"
+className="flex items-center gap-3 px-3 py-2.5 transition-colors hover:opacity-90 group relative focus:outline-none focus-visible:outline-none focus-visible:ring-0 focus-visible:ring-offset-0 focus:ring-0"
             >
 <div className="w-10 h-10 bg-pink-100 dashboard-icon-panel rounded-lg flex items-center justify-center flex-shrink-0">
                 <ChartLine className="w-5 h-5 text-pink-600 dark:text-white" />
@@ -1155,6 +1157,7 @@ className="flex items-center gap-3 px-3 pt-4 pb-2.5 transition-colors hover:opac
                 <span className="text-sm text-secondary">Symptoms Logged</span>
                 <span className="text-sm font-semibold text-primary">{todaySymptoms.length}</span>
               </div>
+              <div className="border-t border-[var(--border-card-inner)] my-0" aria-hidden="true" />
               <div className="flex justify-between items-center p-2">
                 <span className="text-sm text-secondary">Medications Taken</span>
                 <span className="text-sm font-semibold text-primary">{takenMedications.length}/{medications.length}</span>

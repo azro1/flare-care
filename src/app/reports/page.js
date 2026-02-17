@@ -9,10 +9,12 @@ import 'react-datepicker/dist/react-datepicker.css'
 import ProtectedRoute from '@/components/ProtectedRoute'
 import { supabase, TABLES } from '@/lib/supabase'
 import { useAuth } from '@/lib/AuthContext'
-import { Calendar, FileText, Download, FileDown, BarChart3, Pill, Activity, TrendingUp, Thermometer, Brain, Pizza, ChartLine, Scale } from 'lucide-react'
+import { Calendar, FileText, Download, FileDown, BarChart3, Pill, Activity, TrendingUp, Thermometer, Brain, Pizza, ChartLine, Scale, ChevronDown, ChevronUp } from 'lucide-react'
 
 // Force dynamic rendering to prevent Vercel static generation issues
 export const dynamic = 'force-dynamic'
+
+const REPORT_PAGE_SIZE = 20
 
 function ReportsPageContent() {
   const { user } = useAuth()
@@ -34,6 +36,31 @@ function ReportsPageContent() {
     }
   })
   const [showNoDataModal, setShowNoDataModal] = useState(false)
+  const [openSections, setOpenSections] = useState({
+    symptomReport: false,
+    currentMeds: false,
+    trackedMeds: false,
+    appointments: false,
+    weight: false,
+    foods: false
+  })
+  const toggleSection = (key) => setOpenSections(prev => ({ ...prev, [key]: !prev[key] }))
+
+  const [openSubSections, setOpenSubSections] = useState({
+    symptomEpisodes: false,
+    missedMeds: false,
+    nsaids: false,
+    antibiotics: false
+  })
+  const toggleSubSection = (key) => setOpenSubSections(prev => ({ ...prev, [key]: !prev[key] }))
+
+  const [listPages, setListPages] = useState({
+    symptomEpisodes: 0,
+    missedMeds: 0,
+    nsaids: 0,
+    antibiotics: 0
+  })
+  const setListPage = (key, page) => setListPages(prev => ({ ...prev, [key]: Math.max(0, page) }))
 
   // Fetch symptoms directly from Supabase
   useEffect(() => {
@@ -221,10 +248,17 @@ function ReportsPageContent() {
     }
   }, [symptoms, medications, medicationTracking, appointments, weightEntries, dateRange, user, pathname])
 
+  useEffect(() => {
+    if (reportData) {
+      setListPages({ symptomEpisodes: 0, missedMeds: 0, nsaids: 0, antibiotics: 0 })
+    }
+  }, [reportData?.period?.start, reportData?.period?.end])
+
   const generateReport = () => {
     // Filter symptoms by selected date range
     const startDate = dateRange.startDate ? new Date(dateRange.startDate) : new Date(0) // Use epoch if no start date
     const endDate = dateRange.endDate ? new Date(dateRange.endDate) : new Date() // Use today if no end date
+    startDate.setHours(0, 0, 0, 0)
     // Include full end day: set to 23:59:59.999 so entries created on that day are included
     if (dateRange.endDate) {
       endDate.setHours(23, 59, 59, 999)
@@ -297,26 +331,30 @@ function ReportsPageContent() {
     const reportStartDate = dateRange.startDate ? new Date(dateRange.startDate) : new Date()
     const reportEndDate = dateRange.endDate ? new Date(dateRange.endDate) : new Date()
 
-    // Get medication tracking data - filter by date range and combine all entries
-    const filteredTrackingEntries = medicationTracking.filter(entry => {
-      const entryDate = new Date(entry.created_at)
-      return entryDate >= startDate && entryDate <= endDate
-    })
+    // Helper: true if item's date (when med was taken) falls within report range
+    const itemDateInRange = (item) => {
+      const raw = item.date ?? item.date_taken
+      if (!raw) return false
+      const d = new Date(raw)
+      if (isNaN(d.getTime())) return false
+      d.setHours(0, 0, 0, 0)
+      return d >= startDate && d <= endDate
+    }
 
-    // Combine all medication tracking data from filtered entries
+    // Combine all medication tracking data from all entries, then filter by each item's date (when med was taken)
     const combinedMissedMedications = []
     const combinedNsaids = []
     const combinedAntibiotics = []
 
-    filteredTrackingEntries.forEach(entry => {
+    medicationTracking.forEach(entry => {
       if (entry.missed_medications_list && Array.isArray(entry.missed_medications_list)) {
-        combinedMissedMedications.push(...entry.missed_medications_list.filter(item => item.medication && item.medication.trim()))
+        combinedMissedMedications.push(...entry.missed_medications_list.filter(item => item.medication && item.medication.trim() && itemDateInRange(item)))
       }
       if (entry.nsaid_list && Array.isArray(entry.nsaid_list)) {
-        combinedNsaids.push(...entry.nsaid_list.filter(item => item.medication && item.medication.trim()))
+        combinedNsaids.push(...entry.nsaid_list.filter(item => item.medication && item.medication.trim() && itemDateInRange(item)))
       }
       if (entry.antibiotic_list && Array.isArray(entry.antibiotic_list)) {
-        combinedAntibiotics.push(...entry.antibiotic_list.filter(item => item.medication && item.medication.trim()))
+        combinedAntibiotics.push(...entry.antibiotic_list.filter(item => item.medication && item.medication.trim() && itemDateInRange(item)))
       }
     })
 
@@ -510,7 +548,7 @@ function ReportsPageContent() {
       }
       doc.setFontSize(16)
       doc.setFont('helvetica', 'bold')
-      doc.text('Upcoming Appointments', margin, yPosition)
+      doc.text('Appointments', margin, yPosition)
       yPosition += 10
 
       doc.setFontSize(12)
@@ -1048,13 +1086,12 @@ function ReportsPageContent() {
           </button>
           <button 
             onClick={() => {
-              const allDates = symptoms.map(s => new Date(s.symptomStartDate)).sort((a, b) => a - b)
-              if (allDates.length > 0) {
-                setDateRange({
-                  startDate: allDates[0].toISOString().split('T')[0],
-                  endDate: allDates[allDates.length - 1].toISOString().split('T')[0]
-                })
-              }
+              const endDate = new Date()
+              const startDate = new Date(0) // epoch = true "all time"
+              setDateRange({
+                startDate: startDate.toISOString().split('T')[0],
+                endDate: endDate.toISOString().split('T')[0]
+              })
             }}
             className="px-4 py-2 sm:px-3 sm:py-1 text-sm card-inner hover:bg-card-hover transition-colors font-roboto"
           >
@@ -1118,15 +1155,23 @@ function ReportsPageContent() {
         </div>
       </div>
 
-      {/* Report Results */}
+      {/* Report Results - Collapsible */}
       <div className="card mb-4 sm:mb-6">
-        <div className="flex items-center mb-6">
+        <button
+          type="button"
+          onClick={() => toggleSection('symptomReport')}
+          className={`w-full flex items-center text-left focus:outline-none rounded-lg ${openSections.symptomReport ? 'mb-6' : ''}`}
+          aria-expanded={openSections.symptomReport}
+        >
           <div className="flex w-10 h-10 bg-emerald-100 dashboard-icon-panel rounded-lg items-center justify-center mr-3 sm:mr-4 flex-shrink-0">
             <Thermometer className="w-5 h-5 text-emerald-600 dark:text-white" />
           </div>
           <h2 className="text-xl font-semibold font-source text-primary flex-1">Symptom Report</h2>
-        </div>
-        
+          <span className="text-sm font-roboto text-secondary shrink-0">{openSections.symptomReport ? 'Hide' : 'Show'}</span>
+        </button>
+
+        {openSections.symptomReport && (
+        <>
         {reportData.totalEntries > 0 && (
           <div className="text-sm text-secondary mb-6 font-roboto">
             Found {reportData.totalEntries} symptom {reportData.totalEntries === 1 ? 'episode' : 'episodes'} in the selected period
@@ -1136,86 +1181,133 @@ function ReportsPageContent() {
         {/* Summary Stats */}
         <div className="grid grid-cols-1 lg:grid-cols-3 gap-4 mb-8">
           <div className="card-inner p-6 text-center">
-            <div className="text-3xl font-bold text-emerald-600 dark:text-white mb-2">
+            <div className="text-3xl font-bold text-primary mb-2">
               {reportData.totalEntries}
             </div>
             <div className="text-secondary font-medium font-roboto">Symptom Episodes</div>
           </div>
           <div className="card-inner p-6 text-center">
-            <div className="text-3xl font-bold mb-2 text-rose-500 dark:text-white">
+            <div className="text-3xl font-bold mb-2 text-primary">
               {reportData.averageSeverity}
             </div>
             <div className="text-secondary font-medium font-roboto">Average Severity</div>
           </div>
           <div className="card-inner p-6 text-center">
-            <div className="text-3xl font-bold mb-2 text-cyan-600 dark:text-white">
+            <div className="text-3xl font-bold mb-2 text-primary">
               {reportData.averageStress != null && !isNaN(reportData.averageStress) ? reportData.averageStress : 0}
             </div>
             <div className="text-secondary font-medium font-roboto">Average Stress</div>
           </div>
         </div>
 
-        {/* Severity Trend */}
+        {/* Symptom Episodes - sub-section (collapsible + paginated) */}
         {reportData.severityTrend.length > 0 && (
-          <div className="">
-            <h3 className="text-lg font-semibold font-source text-primary mb-4">Symptom Episodes</h3>
-            <div className="space-y-4">
-              {reportData.severityTrend.map((entry, index) => (
-                <div key={index} className="card-inner p-4">
-                  <div className="flex flex-col gap-3 min-w-0">
-                    <div className="text-sm text-secondary font-roboto">
-                      {formatUKDate(entry.date)}
-                      {entry.isOngoing ? ' (Ongoing)' : ` - ${formatUKDate(entry.endDate)}`}
-                    </div>
-                    <div className="flex flex-col gap-2">
-                      <div className="flex items-center gap-2">
-                        <span className="text-xs font-medium text-secondary font-roboto shrink-0">Severity:</span>
-                        <div className="flex-1 min-w-0 bg-card rounded-full h-2">
-                          <div 
-                            className="h-2 rounded-full bg-rose-500 dark:bg-gray-400" 
-                            style={{ 
-                              width: `${(entry.severity / 10) * 100}%`
-                            }}
-                          ></div>
-                        </div>
-                        <span className="px-2 py-1 rounded-full text-xs font-medium font-roboto text-rose-500 bg-rose-100 dark:text-white dark:bg-gray-600 shrink-0">
-                          {entry.severity}/10
-                        </span>
-                      </div>
-                      {entry.stressLevel && (
-                        <div className="flex items-center gap-2">
-                          <span className="text-xs font-medium text-secondary font-roboto shrink-0">Stress:</span>
-                          <div className="flex-1 min-w-0 bg-card rounded-full h-2">
-                            <div 
-                              className="h-2 rounded-full bg-cyan-600 dark:bg-gray-400" 
-                              style={{ 
-                                width: `${(entry.stressLevel / 10) * 100}%`
-                              }}
-                            ></div>
+          <div className="mt-6 border-l-2 border-secondary/30 pl-4">
+            <button
+              type="button"
+              onClick={() => toggleSubSection('symptomEpisodes')}
+              className="w-full flex items-center justify-between text-left focus:outline-none rounded py-2 -ml-1"
+              aria-expanded={openSubSections.symptomEpisodes}
+            >
+              <span className="text-base font-semibold font-source text-primary">Symptom Episodes ({reportData.severityTrend.length})</span>
+              {openSubSections.symptomEpisodes ? <ChevronUp className="w-4 h-4 text-secondary shrink-0" /> : <ChevronDown className="w-4 h-4 text-secondary shrink-0" />}
+            </button>
+            {openSubSections.symptomEpisodes && (
+              <>
+                <div className="space-y-4 mt-2">
+                  {reportData.severityTrend
+                    .slice(listPages.symptomEpisodes * REPORT_PAGE_SIZE, (listPages.symptomEpisodes + 1) * REPORT_PAGE_SIZE)
+                    .map((entry, idx) => {
+                      const index = listPages.symptomEpisodes * REPORT_PAGE_SIZE + idx
+                      return (
+                        <div key={index} className="card-inner p-4">
+                          <div className="flex flex-col gap-3 min-w-0">
+                            <div className="text-sm text-secondary font-roboto">
+                              {formatUKDate(entry.date)}
+                              {entry.isOngoing ? ' (Ongoing)' : ` - ${formatUKDate(entry.endDate)}`}
+                            </div>
+                            <div className="flex flex-col gap-2">
+                              <div className="flex items-center gap-2">
+                                <span className="text-xs font-medium text-secondary font-roboto shrink-0">Severity:</span>
+                                <div className="flex-1 min-w-0 bg-card rounded-full h-2">
+                                  <div 
+                                    className="h-2 rounded-full report-bar-fill" 
+                                    style={{ width: `${(entry.severity / 10) * 100}%` }}
+                                  ></div>
+                                </div>
+                                <span className="px-2 py-1 rounded-full text-xs font-medium font-roboto text-primary shrink-0">
+                                  {entry.severity}/10
+                                </span>
+                              </div>
+                              {entry.stressLevel && (
+                                <div className="flex items-center gap-2">
+                                  <span className="text-xs font-medium text-secondary font-roboto shrink-0">Stress:</span>
+                                  <div className="flex-1 min-w-0 bg-card rounded-full h-2">
+                                    <div 
+                                      className="h-2 rounded-full report-bar-fill" 
+                                      style={{ width: `${(entry.stressLevel / 10) * 100}%` }}
+                                    ></div>
+                                  </div>
+                                  <span className="px-2 py-1 rounded-full text-xs font-medium font-roboto text-primary shrink-0">
+                                    {entry.stressLevel}/10
+                                  </span>
+                                </div>
+                              )}
+                            </div>
                           </div>
-                          <span className="px-2 py-1 rounded-full text-xs font-medium font-roboto text-cyan-600 bg-cyan-100 dark:text-white dark:bg-gray-600 shrink-0">
-                            {entry.stressLevel}/10
-                          </span>
                         </div>
-                      )}
+                      )
+                    })}
+                </div>
+                {reportData.severityTrend.length > REPORT_PAGE_SIZE && (
+                  <div className="flex items-center justify-between mt-4 flex-wrap gap-2">
+                    <span className="text-sm text-secondary font-roboto">
+                      Showing {listPages.symptomEpisodes * REPORT_PAGE_SIZE + 1}–{Math.min((listPages.symptomEpisodes + 1) * REPORT_PAGE_SIZE, reportData.severityTrend.length)} of {reportData.severityTrend.length}
+                    </span>
+                    <div className="flex gap-2">
+                      <button
+                        type="button"
+                        onClick={() => setListPage('symptomEpisodes', listPages.symptomEpisodes - 1)}
+                        disabled={listPages.symptomEpisodes === 0}
+                        className="px-3 py-1.5 text-sm font-roboto button-cancel rounded-lg disabled:opacity-50"
+                      >
+                        Previous
+                      </button>
+                      <button
+                        type="button"
+                        onClick={() => setListPage('symptomEpisodes', listPages.symptomEpisodes + 1)}
+                        disabled={(listPages.symptomEpisodes + 1) * REPORT_PAGE_SIZE >= reportData.severityTrend.length}
+                        className="px-3 py-1.5 text-sm font-roboto button-cadet rounded-lg disabled:opacity-50"
+                      >
+                        Next
+                      </button>
                     </div>
                   </div>
-                </div>
-              ))}
-            </div>
+                )}
+                </>
+            )}
           </div>
+        )}
+        </>
         )}
       </div>
 
-      {/* Medications */}
+      {/* Medications - Collapsible */}
       {reportData.medications.length > 0 && (
         <div className="card mb-4 sm:mb-6">
-          <h2 className="text-xl font-semibold font-source text-primary mb-6 flex items-center">
+          <button
+            type="button"
+            onClick={() => toggleSection('currentMeds')}
+            className={`w-full flex items-center text-left focus:outline-none rounded-lg ${openSections.currentMeds ? 'mb-6' : ''}`}
+            aria-expanded={openSections.currentMeds}
+          >
             <div className="flex w-10 h-10 bg-purple-100 dashboard-icon-panel rounded-lg items-center justify-center mr-3 sm:mr-4 flex-shrink-0">
               <Pill className="w-5 h-5 text-purple-600 dark:text-white" />
             </div>
-            Current Medications
-          </h2>
+            <h2 className="text-xl font-semibold font-source text-primary flex-1">Current Medications</h2>
+            <span className="text-sm font-roboto text-secondary shrink-0">{openSections.currentMeds ? 'Hide' : 'Show'}</span>
+          </button>
+          {openSections.currentMeds && (
           <div className="space-y-4">
             {reportData.medications.map((med, index) => (
               <div key={index} className="card-inner p-4">
@@ -1232,122 +1324,217 @@ function ReportsPageContent() {
               </div>
             ))}
           </div>
+          )}
         </div>
       )}
 
-      {/* Tracked Medications */}
+      {/* Tracked Medications - Collapsible */}
       {reportData.medicationTracking && (
         reportData.medicationTracking.missedMedications.length > 0 || 
         reportData.medicationTracking.nsaids.length > 0 || 
         reportData.medicationTracking.antibiotics.length > 0
       ) && (
         <div className="card mb-4 sm:mb-6">
-          <h2 className="text-xl font-semibold font-source text-primary mb-6 flex items-center">
+          <button
+            type="button"
+            onClick={() => toggleSection('trackedMeds')}
+            className={`w-full flex items-center text-left focus:outline-none rounded-lg ${openSections.trackedMeds ? 'mb-6' : ''}`}
+            aria-expanded={openSections.trackedMeds}
+          >
             <div className="flex w-10 h-10 bg-pink-100 dashboard-icon-panel rounded-lg items-center justify-center mr-3 sm:mr-4 flex-shrink-0">
               <ChartLine className="w-5 h-5 text-pink-600 dark:text-white" />
             </div>
-            Tracked Medications
-          </h2>
-          
-          {/* Missed Medications */}
+            <h2 className="text-xl font-semibold font-source text-primary flex-1">Tracked Medications</h2>
+            <span className="text-sm font-roboto text-secondary shrink-0">{openSections.trackedMeds ? 'Hide' : 'Show'}</span>
+          </button>
+          {openSections.trackedMeds && (
+          <>
+          {/* Missed Medications - sub-section (collapsible + paginated) */}
           {reportData.medicationTracking.missedMedications.length > 0 && (
-            <div className="mb-6">
-              <h4 className="text-md font-semibold font-source text-primary mb-2">
-                Missed Medications
-              </h4>
-              <div className="space-y-4">
-                {reportData.medicationTracking.missedMedications.map((item, index) => (
-                  <div key={index} className="card-inner p-4">
-                    <div className="min-w-0">
-                      <h5 className="font-medium font-roboto text-primary text-base break-words" title={item.medication}>{item.medication}</h5>
-                      <div className="mt-2 flex flex-col gap-1">
-                        <div className="text-sm text-secondary font-roboto">
-                          <span className="font-medium">Date:</span> {item.date ? formatUKDate(item.date) : 'Not specified'}
-                        </div>
-                        <div className="text-sm text-secondary font-roboto">
-                          <span className="font-medium">Time:</span> {item.timeOfDay || 'Not specified'}
-                        </div>
-                      </div>
-                    </div>
-                  </div>
-                ))}
-              </div>
-            </div>
-          )}
-          
-          {/* NSAIDs */}
-          {reportData.medicationTracking.nsaids.length > 0 && (
-            <div className="mb-6">
-              <h4 className="text-md font-semibold font-source text-primary mb-2">
-                NSAIDs Taken
-              </h4>
-              <div className="space-y-4">
-{reportData.medicationTracking.nsaids.map((item, index) => (
-                  <div key={index} className="card-inner p-4">
-                    <div className="min-w-0">
-                      <h5 className="font-medium font-roboto text-primary text-base break-words" title={item.medication}>{item.medication}</h5>
-                      <div className="mt-2 flex flex-col gap-1 min-w-0">
-                        <div className="text-sm text-secondary font-roboto">
-                          <span className="font-medium">Date:</span> {item.date ? formatUKDate(item.date) : 'Not specified'}
-                        </div>
-                        <div className="text-sm text-secondary font-roboto">
-                          <span className="font-medium">Time:</span> {item.timeOfDay || 'Not specified'}
-                        </div>
-                        {item.dosage && (
-                          <div className="text-sm text-secondary font-roboto break-words min-w-0" title={item.dosage}>
-                            <span className="font-medium">Dosage:</span> {item.dosage}
+            <div className="mb-6 border-l-2 border-secondary/30 pl-4">
+              <button
+                type="button"
+                onClick={() => toggleSubSection('missedMeds')}
+                className="w-full flex items-center justify-between text-left focus:outline-none rounded py-2 -ml-1"
+                aria-expanded={openSubSections.missedMeds}
+              >
+                <span className="text-base font-semibold font-source text-primary">Missed Medications ({reportData.medicationTracking.missedMedications.length})</span>
+                {openSubSections.missedMeds ? <ChevronUp className="w-4 h-4 text-secondary shrink-0" /> : <ChevronDown className="w-4 h-4 text-secondary shrink-0" />}
+              </button>
+              {openSubSections.missedMeds && (
+                <>
+                  <div className="space-y-4 mt-2">
+                    {reportData.medicationTracking.missedMedications
+                      .slice(listPages.missedMeds * REPORT_PAGE_SIZE, (listPages.missedMeds + 1) * REPORT_PAGE_SIZE)
+                      .map((item, idx) => {
+                        const index = listPages.missedMeds * REPORT_PAGE_SIZE + idx
+                        return (
+                          <div key={index} className="card-inner p-4">
+                            <div className="min-w-0">
+                              <h5 className="font-medium font-roboto text-primary text-base break-words" title={item.medication}>{item.medication}</h5>
+                              <div className="mt-2 flex flex-col gap-1">
+                                <div className="text-sm text-secondary font-roboto">
+                                  <span className="font-medium">Date:</span> {item.date ? formatUKDate(item.date) : 'Not specified'}
+                                </div>
+                                <div className="text-sm text-secondary font-roboto">
+                                  <span className="font-medium">Time:</span> {item.timeOfDay || 'Not specified'}
+                                </div>
+                              </div>
+                            </div>
                           </div>
-                        )}
+                        )
+                      })}
+                  </div>
+                  {reportData.medicationTracking.missedMedications.length > REPORT_PAGE_SIZE && (
+                    <div className="flex items-center justify-between mt-4 flex-wrap gap-2">
+                      <span className="text-sm text-secondary font-roboto">
+                        Showing {listPages.missedMeds * REPORT_PAGE_SIZE + 1}–{Math.min((listPages.missedMeds + 1) * REPORT_PAGE_SIZE, reportData.medicationTracking.missedMedications.length)} of {reportData.medicationTracking.missedMedications.length}
+                      </span>
+                      <div className="flex gap-2">
+                        <button type="button" onClick={() => setListPage('missedMeds', listPages.missedMeds - 1)} disabled={listPages.missedMeds === 0} className="px-3 py-1.5 text-sm font-roboto button-cancel rounded-lg disabled:opacity-50">Previous</button>
+                        <button type="button" onClick={() => setListPage('missedMeds', listPages.missedMeds + 1)} disabled={(listPages.missedMeds + 1) * REPORT_PAGE_SIZE >= reportData.medicationTracking.missedMedications.length} className="px-3 py-1.5 text-sm font-roboto button-cadet rounded-lg disabled:opacity-50">Next</button>
                       </div>
                     </div>
-                  </div>
-                ))}
-              </div>
+                  )}
+                </>
+              )}
             </div>
           )}
 
-          {/* Antibiotics */}
-          {reportData.medicationTracking.antibiotics.length > 0 && (
-            <div className="">
-              <h4 className="text-md font-semibold font-source text-primary mb-2">
-                Antibiotics Taken
-              </h4>
-              <div className="space-y-4">
-                {reportData.medicationTracking.antibiotics.map((item, index) => (
-                  <div key={index} className="card-inner p-4">
-                    <div className="min-w-0">
-                      <h5 className="font-medium font-roboto text-primary text-base break-words" title={item.medication}>{item.medication}</h5>
-                      <div className="mt-2 flex flex-col gap-1 min-w-0">
-                        <div className="text-sm text-secondary font-roboto">
-                          <span className="font-medium">Date:</span> {item.date ? formatUKDate(item.date) : 'Not specified'}
-                        </div>
-                        <div className="text-sm text-secondary font-roboto">
-                          <span className="font-medium">Time:</span> {item.timeOfDay || 'Not specified'}
-                        </div>
-                        {item.dosage && (
-                          <div className="text-sm text-secondary font-roboto break-words min-w-0" title={item.dosage}>
-                            <span className="font-medium">Dosage:</span> {item.dosage}
+          {/* NSAIDs - sub-section (collapsible + paginated) */}
+          {reportData.medicationTracking.nsaids.length > 0 && (
+            <div className="mb-6 border-l-2 border-secondary/30 pl-4">
+              <button
+                type="button"
+                onClick={() => toggleSubSection('nsaids')}
+                className="w-full flex items-center justify-between text-left focus:outline-none rounded py-2 -ml-1"
+                aria-expanded={openSubSections.nsaids}
+              >
+                <span className="text-base font-semibold font-source text-primary">NSAIDs Taken ({reportData.medicationTracking.nsaids.length})</span>
+                {openSubSections.nsaids ? <ChevronUp className="w-4 h-4 text-secondary shrink-0" /> : <ChevronDown className="w-4 h-4 text-secondary shrink-0" />}
+              </button>
+              {openSubSections.nsaids && (
+                <>
+                  <div className="space-y-4 mt-2">
+                    {reportData.medicationTracking.nsaids
+                      .slice(listPages.nsaids * REPORT_PAGE_SIZE, (listPages.nsaids + 1) * REPORT_PAGE_SIZE)
+                      .map((item, idx) => {
+                        const index = listPages.nsaids * REPORT_PAGE_SIZE + idx
+                        return (
+                          <div key={index} className="card-inner p-4">
+                            <div className="min-w-0">
+                              <h5 className="font-medium font-roboto text-primary text-base break-words" title={item.medication}>{item.medication}</h5>
+                              <div className="mt-2 flex flex-col gap-1 min-w-0">
+                                <div className="text-sm text-secondary font-roboto">
+                                  <span className="font-medium">Date:</span> {item.date ? formatUKDate(item.date) : 'Not specified'}
+                                </div>
+                                <div className="text-sm text-secondary font-roboto">
+                                  <span className="font-medium">Time:</span> {item.timeOfDay || 'Not specified'}
+                                </div>
+                                {item.dosage && (
+                                  <div className="text-sm text-secondary font-roboto break-words min-w-0" title={item.dosage}>
+                                    <span className="font-medium">Dosage:</span> {item.dosage}
+                                  </div>
+                                )}
+                              </div>
+                            </div>
                           </div>
-                        )}
+                        )
+                      })}
+                  </div>
+                  {reportData.medicationTracking.nsaids.length > REPORT_PAGE_SIZE && (
+                    <div className="flex items-center justify-between mt-4 flex-wrap gap-2">
+                      <span className="text-sm text-secondary font-roboto">
+                        Showing {listPages.nsaids * REPORT_PAGE_SIZE + 1}–{Math.min((listPages.nsaids + 1) * REPORT_PAGE_SIZE, reportData.medicationTracking.nsaids.length)} of {reportData.medicationTracking.nsaids.length}
+                      </span>
+                      <div className="flex gap-2">
+                        <button type="button" onClick={() => setListPage('nsaids', listPages.nsaids - 1)} disabled={listPages.nsaids === 0} className="px-3 py-1.5 text-sm font-roboto button-cancel rounded-lg disabled:opacity-50">Previous</button>
+                        <button type="button" onClick={() => setListPage('nsaids', listPages.nsaids + 1)} disabled={(listPages.nsaids + 1) * REPORT_PAGE_SIZE >= reportData.medicationTracking.nsaids.length} className="px-3 py-1.5 text-sm font-roboto button-cadet rounded-lg disabled:opacity-50">Next</button>
                       </div>
                     </div>
-                  </div>
-                ))}
-              </div>
+                  )}
+                </>
+              )}
             </div>
+          )}
+
+          {/* Antibiotics - sub-section (collapsible + paginated) */}
+          {reportData.medicationTracking.antibiotics.length > 0 && (
+            <div className="border-l-2 border-secondary/30 pl-4">
+              <button
+                type="button"
+                onClick={() => toggleSubSection('antibiotics')}
+                className="w-full flex items-center justify-between text-left focus:outline-none rounded py-2 -ml-1"
+                aria-expanded={openSubSections.antibiotics}
+              >
+                <span className="text-base font-semibold font-source text-primary">Antibiotics Taken ({reportData.medicationTracking.antibiotics.length})</span>
+                {openSubSections.antibiotics ? <ChevronUp className="w-4 h-4 text-secondary shrink-0" /> : <ChevronDown className="w-4 h-4 text-secondary shrink-0" />}
+              </button>
+              {openSubSections.antibiotics && (
+                <>
+                  <div className="space-y-4 mt-2">
+                    {reportData.medicationTracking.antibiotics
+                      .slice(listPages.antibiotics * REPORT_PAGE_SIZE, (listPages.antibiotics + 1) * REPORT_PAGE_SIZE)
+                      .map((item, idx) => {
+                        const index = listPages.antibiotics * REPORT_PAGE_SIZE + idx
+                        return (
+                          <div key={index} className="card-inner p-4">
+                            <div className="min-w-0">
+                              <h5 className="font-medium font-roboto text-primary text-base break-words" title={item.medication}>{item.medication}</h5>
+                              <div className="mt-2 flex flex-col gap-1 min-w-0">
+                                <div className="text-sm text-secondary font-roboto">
+                                  <span className="font-medium">Date:</span> {item.date ? formatUKDate(item.date) : 'Not specified'}
+                                </div>
+                                <div className="text-sm text-secondary font-roboto">
+                                  <span className="font-medium">Time:</span> {item.timeOfDay || 'Not specified'}
+                                </div>
+                                {item.dosage && (
+                                  <div className="text-sm text-secondary font-roboto break-words min-w-0" title={item.dosage}>
+                                    <span className="font-medium">Dosage:</span> {item.dosage}
+                                  </div>
+                                )}
+                              </div>
+                            </div>
+                          </div>
+                        )
+                      })}
+                  </div>
+                  {reportData.medicationTracking.antibiotics.length > REPORT_PAGE_SIZE && (
+                    <div className="flex items-center justify-between mt-4 flex-wrap gap-2">
+                      <span className="text-sm text-secondary font-roboto">
+                        Showing {listPages.antibiotics * REPORT_PAGE_SIZE + 1}–{Math.min((listPages.antibiotics + 1) * REPORT_PAGE_SIZE, reportData.medicationTracking.antibiotics.length)} of {reportData.medicationTracking.antibiotics.length}
+                      </span>
+                      <div className="flex gap-2">
+                        <button type="button" onClick={() => setListPage('antibiotics', listPages.antibiotics - 1)} disabled={listPages.antibiotics === 0} className="px-3 py-1.5 text-sm font-roboto button-cancel rounded-lg disabled:opacity-50">Previous</button>
+                        <button type="button" onClick={() => setListPage('antibiotics', listPages.antibiotics + 1)} disabled={(listPages.antibiotics + 1) * REPORT_PAGE_SIZE >= reportData.medicationTracking.antibiotics.length} className="px-3 py-1.5 text-sm font-roboto button-cadet rounded-lg disabled:opacity-50">Next</button>
+                      </div>
+                    </div>
+                  )}
+                </>
+              )}
+            </div>
+          )}
+          </>
           )}
         </div>
       )}
 
-      {/* Upcoming Appointments */}
+      {/* Appointments - Collapsible */}
       {reportData.appointments && reportData.appointments.length > 0 && (
         <div className="card mb-4 sm:mb-6">
-          <h2 className="text-xl font-semibold font-source text-primary mb-6 flex items-center">
+          <button
+            type="button"
+            onClick={() => toggleSection('appointments')}
+            className={`w-full flex items-center text-left focus:outline-none rounded-lg ${openSections.appointments ? 'mb-6' : ''}`}
+            aria-expanded={openSections.appointments}
+          >
             <div className="flex w-10 h-10 bg-sky-100 dashboard-icon-panel rounded-lg items-center justify-center mr-3 sm:mr-4 flex-shrink-0">
               <Calendar className="w-5 h-5 text-sky-600 dark:text-white" />
             </div>
-            Upcoming Appointments
-          </h2>
+            <h2 className="text-xl font-semibold font-source text-primary flex-1">Appointments</h2>
+            <span className="text-sm font-roboto text-secondary shrink-0">{openSections.appointments ? 'Hide' : 'Show'}</span>
+          </button>
+          {openSections.appointments && (
           <div className="space-y-4">
             {reportData.appointments.map((apt, index) => (
               <div key={index} className="card-inner p-4">
@@ -1364,35 +1551,30 @@ function ReportsPageContent() {
                   {apt.type && (
                     <p className="font-medium text-primary truncate" title={apt.type}>{apt.type}</p>
                   )}
-                  {apt.clinician_name && (
-                    <p className="text-sm text-secondary font-roboto truncate" title={apt.clinician_name}>
-                      <span className="font-medium text-primary">Clinician:</span> {apt.clinician_name}
-                    </p>
-                  )}
-                  {apt.location && (
-                    <p className="text-sm text-secondary font-roboto truncate" title={apt.location}>
-                      <span className="font-medium text-primary">Location:</span> {apt.location}
-                    </p>
-                  )}
-                  {apt.notes && (
-                    <p className="text-sm text-secondary font-roboto mt-1 line-clamp-2" title={apt.notes}>{apt.notes}</p>
-                  )}
                 </div>
               </div>
             ))}
           </div>
+          )}
         </div>
       )}
 
-      {/* Weight */}
+      {/* Weight - Collapsible */}
       {reportData.weightEntries && reportData.weightEntries.length > 0 && (
         <div className="card mb-4 sm:mb-6">
-          <h2 className="text-xl font-semibold font-source text-primary mb-6 flex items-center">
+          <button
+            type="button"
+            onClick={() => toggleSection('weight')}
+            className={`w-full flex items-center text-left focus:outline-none rounded-lg ${openSections.weight ? 'mb-6' : ''}`}
+            aria-expanded={openSections.weight}
+          >
             <div className="flex w-10 h-10 bg-indigo-100 dashboard-icon-panel rounded-lg items-center justify-center mr-3 sm:mr-4 flex-shrink-0">
               <Scale className="w-5 h-5 text-indigo-600 dark:text-white" />
             </div>
-            Weight Logs
-          </h2>
+            <h2 className="text-xl font-semibold font-source text-primary flex-1">Weight Logs</h2>
+            <span className="text-sm font-roboto text-secondary shrink-0">{openSections.weight ? 'Hide' : 'Show'}</span>
+          </button>
+          {openSections.weight && (
           <div className="space-y-4">
             {reportData.weightEntries.map((entry, index) => (
               <div key={index} className="card-inner p-4">
@@ -1406,25 +1588,30 @@ function ReportsPageContent() {
                       </>
                     )}
                   </div>
-                  {entry.notes && (
-                    <p className="text-sm text-secondary font-roboto mt-1">{entry.notes}</p>
-                  )}
                 </div>
               </div>
             ))}
           </div>
+          )}
         </div>
       )}
 
-      {/* Top Foods */}
+      {/* Top Foods - Collapsible */}
       {reportData.topFoods.length > 0 && (
-        <div className="card p-8">
-          <h2 className="text-xl font-semibold font-source text-primary mb-6 flex items-center">
+        <div className="card mb-4 sm:mb-6">
+          <button
+            type="button"
+            onClick={() => toggleSection('foods')}
+            className={`w-full flex items-center text-left focus:outline-none rounded-lg ${openSections.foods ? 'mb-6' : ''}`}
+            aria-expanded={openSections.foods}
+          >
             <div className="flex w-10 h-10 bg-yellow-100 dashboard-icon-panel rounded-lg items-center justify-center mr-3 sm:mr-4 flex-shrink-0">
               <Pizza className="w-5 h-5 text-amber-500 dark:text-white" />
             </div>
-            Top 5 Most Logged Foods
-          </h2>
+            <h2 className="text-xl font-semibold font-source text-primary flex-1">Top 5 Foods</h2>
+            <span className="text-sm font-roboto text-secondary shrink-0">{openSections.foods ? 'Hide' : 'Show'}</span>
+          </button>
+          {openSections.foods && (
           <div className="space-y-4">
             {reportData.topFoods.map(([food, count], index) => (
               <div key={index} className="card-inner p-4">
@@ -1433,7 +1620,7 @@ function ReportsPageContent() {
                     <h5 className="font-medium font-roboto text-primary text-base truncate" title={food}>{food}</h5>
                   </div>
                   <div className="flex items-center">
-                    <span className="inline-flex items-center px-3 py-1 rounded-full text-xs font-medium font-roboto card-inner text-secondary">
+                    <span className="text-xs font-medium font-roboto text-secondary">
                       {count} time{count !== 1 ? 's' : ''}
                     </span>
                   </div>
@@ -1441,6 +1628,7 @@ function ReportsPageContent() {
               </div>
             ))}
           </div>
+          )}
         </div>
       )}
 
