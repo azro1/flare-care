@@ -2,6 +2,7 @@ import './globals.css'
 import AppShell from '@/components/AppShell'
 import ReminderProvider from '@/components/ReminderProvider'
 import NotificationBanner from '@/components/NotificationBanner'
+import PushEnableBanner from '@/components/PushEnableBanner'
 import { AuthProvider } from '@/lib/AuthContext'
 import { ThemeProvider } from '@/lib/ThemeContext'
 import LoadingScreen from '@/components/LoadingScreen'
@@ -51,6 +52,7 @@ export default function RootLayout({ children }) {
           <AuthProvider>
             <ReminderProvider />
             <NotificationBanner />
+            <PushEnableBanner />
             <LoadingScreen>
               <AppShell>{children}</AppShell>
             </LoadingScreen>

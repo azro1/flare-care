@@ -13,7 +13,8 @@ export const TABLES = {
   TRACK_WEIGHT: 'track_weight',
   APPOINTMENTS: 'appointments',
   USER_SETTINGS: 'user_settings',
-  USER_PREFERENCES: 'user_preferences'
+  USER_PREFERENCES: 'user_preferences',
+  PUSH_SUBSCRIPTIONS: 'push_subscriptions'
 }
 
 // Helper functions for data operations
