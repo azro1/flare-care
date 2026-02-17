@@ -94,8 +94,8 @@ function AppointmentsPageContent() {
   }, [user?.id])
 
   useEffect(() => {
-    window.scrollTo(0, 0)
-  }, [])
+    if (isAdding) window.scrollTo(0, 0)
+  }, [isAdding])
 
   const formatUKDate = (dateString) => {
     if (!dateString) return ''
@@ -282,9 +282,9 @@ function AppointmentsPageContent() {
         </div>
       </div>
 
-      <div className="card mb-4 sm:mb-6 min-w-0 flex flex-col h-[60vh]">
-        <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 flex-shrink-0 mb-5 sm:mb-6">
-          <div className="flex items-center">
+      <div className="card mb-4 sm:mb-6 min-w-0">
+        <div className="flex flex-row flex-wrap items-center justify-between gap-4 mb-5 sm:mb-6">
+          <div className="flex items-center min-w-0">
             <div className="flex w-10 h-10 bg-sky-100 dashboard-icon-panel rounded-lg items-center justify-center mr-3 sm:mr-4 flex-shrink-0">
               <Calendar className="w-5 h-5 text-sky-600 dark:text-white" />
             </div>
@@ -292,125 +292,22 @@ function AppointmentsPageContent() {
               Your appointments
             </h2>
           </div>
+          {!isAdding && (
+            <button
+              onClick={startAdding}
+              className="button-cadet flex-shrink-0 px-4 py-2 text-lg font-semibold rounded-lg transition-colors inline-flex items-center justify-center"
+            >
+              <svg className="w-5 h-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 6v6m0 0v6m0-6h6m-6 0H6" />
+              </svg>
+              Add
+            </button>
+          )}
         </div>
 
-        <div className="flex-1 min-h-0 overflow-auto">
-        {isLoading ? (
-          <p className="text-center py-12 text-secondary font-roboto">Loading...</p>
-        ) : appointments.length === 0 ? (
-          <div className="text-center py-12 text-secondary">
-            <div className="card-inner rounded-full w-14 h-14 sm:w-20 sm:h-20 mx-auto mb-6 flex items-center justify-center">
-              <Calendar className="w-6 h-6 sm:w-10 sm:h-10 text-secondary" />
-            </div>
-            <h3 className="text-lg font-semibold font-source text-primary mb-2">No upcoming appointments</h3>
-            <p className="font-roboto text-secondary max-w-md mx-auto">
-              Add appointments to keep track of your healthcare
-            </p>
-          </div>
-        ) : (
-          <Masonry
-            breakpointCols={{ default: 2, 1024: 2, 640: 1 }}
-            className="flex -ml-4 w-auto min-w-0"
-            columnClassName="pl-4 bg-clip-padding"
-          >
-            {appointments.map((apt) => {
-              const isExpanded = expandedAppointments.has(apt.id)
-              return (
-                <div key={apt.id} className="mb-4 last:mb-0">
-                  <div className="card-inner p-4 sm:p-6 min-w-0">
-                    <div className="flex flex-col sm:flex-row sm:justify-between sm:items-start gap-3">
-                      <div className="flex-1 min-w-0">
-                        <div className={`flex items-center gap-2 ${isExpanded ? 'mb-1' : ''} min-w-0`}>
-                          <div className="flex flex-wrap items-baseline gap-x-2 gap-y-1 min-w-0 flex-1">
-                            <span className="font-semibold text-primary truncate">{formatUKDate(apt.date)}</span>
-                            {apt.time && (
-                              <>
-                                <span className="text-secondary">·</span>
-                                <span className="text-primary font-roboto truncate">{apt.time}</span>
-                              </>
-                            )}
-                          </div>
-                          <button
-                            type="button"
-                            onClick={() => toggleAppointmentExpand(apt.id)}
-                            className="flex-shrink-0 p-1 rounded transition-colors hover:bg-opacity-20 sm:self-start"
-                            style={{ color: 'var(--text-icon)' }}
-                            title={isExpanded ? 'Collapse details' : 'Expand details'}
-                          >
-                            <ChevronDown
-                              className={`w-5 h-5 transition-transform duration-200 ${isExpanded ? 'rotate-180' : ''}`}
-                            />
-                          </button>
-                        </div>
-                        {apt.type && (
-                          <p className="font-medium text-primary mt-1 truncate" title={apt.type}>{apt.type}</p>
-                        )}
-                        {isExpanded && (
-                          <>
-                            {apt.clinicianName && (
-                              <p className="text-sm text-secondary font-roboto mt-0.5 truncate" title={apt.clinicianName}>{apt.clinicianName}</p>
-                            )}
-                            {apt.location && (
-                              <p className="text-sm text-secondary font-roboto truncate" title={apt.location}>{apt.location}</p>
-                            )}
-                            {apt.notes && (
-                              <div className="mt-1 min-w-0 max-w-full overflow-hidden" title={apt.notes}>
-                                <p className="text-sm text-secondary font-roboto break-words line-clamp-2">{apt.notes}</p>
-                              </div>
-                            )}
-                          </>
-                        )}
-                      </div>
-                      <div className="flex items-center gap-2 flex-shrink-0">
-                        <button
-                          type="button"
-                          onClick={() => startEdit(apt)}
-                          disabled={editingId === apt.id}
-                          className="p-2 rounded-lg transition-colors hover:opacity-80 disabled:opacity-50 disabled:cursor-not-allowed disabled:hover:opacity-50"
-                          style={{ backgroundColor: 'var(--bg-card)', color: 'var(--text-icon)' }}
-                          title={editingId === apt.id ? 'Finish or cancel editing first' : 'Edit appointment'}
-                        >
-                          <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z" />
-                          </svg>
-                        </button>
-                        <button
-                          type="button"
-                          onClick={() => setDeleteModal({ isOpen: true, id: apt.id })}
-                          disabled={editingId === apt.id}
-                          className="p-2 rounded-lg transition-colors hover:opacity-80 disabled:opacity-50 disabled:cursor-not-allowed disabled:hover:opacity-50"
-                          style={{ backgroundColor: 'var(--bg-card)', color: 'var(--text-icon)' }}
-                          title={editingId === apt.id ? 'Finish or cancel editing first' : 'Delete appointment'}
-                        >
-                          <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
-                          </svg>
-                        </button>
-                      </div>
-                    </div>
-                    <div className="mt-4 pt-4 text-xs text-tertiary font-roboto" style={{ borderTop: '1px solid', borderColor: 'var(--border-card-inner)' }}>
-                      <div className="flex items-center">
-                        <svg className="w-3 h-3 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" />
-                        </svg>
-                        Added {apt.createdAt ? formatUKDate(apt.createdAt) : '—'}
-                      </div>
-                    </div>
-                  </div>
-                </div>
-              )
-            })}
-          </Masonry>
-        )}
-
         {isAdding && (
-          <div className="mt-6 min-w-0">
+          <div className="mb-6 min-w-0">
             <form onSubmit={handleSubmit} className="space-y-4" autoComplete="off">
-              <div className="mb-2">
-                <h3 className="text-xl font-semibold font-source text-primary">
-                  {editingId ? 'Edit appointment' : 'New appointment'}
-                </h3>
-              </div>
               <div className="grid sm:grid-cols-2 gap-6 min-w-0">
                 <div>
                   <label htmlFor="apt-date" className="block text-base font-semibold font-roboto text-primary mb-3">
@@ -525,7 +422,7 @@ function AppointmentsPageContent() {
                   <svg className="w-5 h-5 mr-2 inline" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
                   </svg>
-                  {editingId ? 'Update' : 'Save'}
+                  Save
                 </button>
                 <button
                   type="button"
@@ -539,21 +436,116 @@ function AppointmentsPageContent() {
             </form>
           </div>
         )}
-        </div>
 
-        {!isAdding && (
-          <div className="mt-4 flex flex-shrink-0 sm:justify-start">
-            <button
-              onClick={startAdding}
-              className="button-cadet w-full sm:w-auto px-4 py-2 text-lg font-semibold rounded-lg transition-colors inline-flex items-center justify-center sm:justify-start"
-            >
-              <svg className="w-5 h-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 6v6m0 0v6m0-6h6m-6 0H6" />
-              </svg>
-              Add appointment
-            </button>
+        <div>
+        {isLoading ? (
+          <p className="text-center py-12 text-secondary font-roboto">Loading...</p>
+        ) : appointments.length === 0 ? (
+          <div className="text-center py-12 text-secondary">
+            <div className="card-inner rounded-full w-14 h-14 sm:w-20 sm:h-20 mx-auto mb-6 flex items-center justify-center">
+              <Calendar className="w-6 h-6 sm:w-10 sm:h-10 text-secondary" />
+            </div>
+            <h3 className="text-lg font-semibold font-source text-primary mb-2">No upcoming appointments</h3>
+            <p className="font-roboto text-secondary max-w-md mx-auto">
+              Add appointments to keep track of your healthcare
+            </p>
           </div>
+        ) : (
+          <Masonry
+            breakpointCols={{ default: 2, 1024: 2, 640: 1 }}
+            className="flex -ml-4 w-auto min-w-0"
+            columnClassName="pl-4 bg-clip-padding"
+          >
+            {appointments.map((apt) => {
+              const isExpanded = expandedAppointments.has(apt.id)
+              return (
+                <div key={apt.id} className="mb-4 last:mb-0">
+                  <div className="card-inner p-4 sm:p-6 min-w-0">
+                    <div className="flex flex-col sm:flex-row sm:justify-between sm:items-start gap-3">
+                      <div className="flex-1 min-w-0">
+                        <div className={`flex items-center gap-2 ${isExpanded ? 'mb-1' : ''} min-w-0`}>
+                          <div className="flex flex-wrap items-baseline gap-x-2 gap-y-1 min-w-0 flex-1">
+                            <span className="font-semibold text-primary truncate">{formatUKDate(apt.date)}</span>
+                            {apt.time && (
+                              <>
+                                <span className="text-secondary">·</span>
+                                <span className="text-primary font-roboto truncate">{apt.time}</span>
+                              </>
+                            )}
+                          </div>
+                          <button
+                            type="button"
+                            onClick={() => toggleAppointmentExpand(apt.id)}
+                            className="flex-shrink-0 p-1 rounded transition-colors hover:bg-opacity-20 sm:self-start"
+                            style={{ color: 'var(--text-icon)' }}
+                            title={isExpanded ? 'Collapse details' : 'Expand details'}
+                          >
+                            <ChevronDown
+                              className={`w-5 h-5 transition-transform duration-200 ${isExpanded ? 'rotate-180' : ''}`}
+                            />
+                          </button>
+                        </div>
+                        {apt.type && (
+                          <p className="font-medium text-primary mt-1 truncate" title={apt.type}>{apt.type}</p>
+                        )}
+                        {isExpanded && (
+                          <>
+                            {apt.clinicianName && (
+                              <p className="text-sm text-secondary font-roboto mt-0.5 truncate" title={apt.clinicianName}>{apt.clinicianName}</p>
+                            )}
+                            {apt.location && (
+                              <p className="text-sm text-secondary font-roboto truncate" title={apt.location}>{apt.location}</p>
+                            )}
+                            {apt.notes && (
+                              <div className="mt-1 min-w-0 max-w-full overflow-hidden" title={apt.notes}>
+                                <p className="text-sm text-secondary font-roboto break-words line-clamp-2">{apt.notes}</p>
+                              </div>
+                            )}
+                          </>
+                        )}
+                      </div>
+                      <div className="flex items-center gap-2 flex-shrink-0">
+                        <button
+                          type="button"
+                          onClick={() => startEdit(apt)}
+                          disabled={editingId === apt.id}
+                          className="p-2 rounded-lg transition-colors hover:opacity-80 disabled:opacity-50 disabled:cursor-not-allowed disabled:hover:opacity-50"
+                          style={{ backgroundColor: 'var(--bg-card)', color: 'var(--text-icon)' }}
+                          title={editingId === apt.id ? 'Finish or cancel editing first' : 'Edit appointment'}
+                        >
+                          <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z" />
+                          </svg>
+                        </button>
+                        <button
+                          type="button"
+                          onClick={() => setDeleteModal({ isOpen: true, id: apt.id })}
+                          disabled={editingId === apt.id}
+                          className="p-2 rounded-lg transition-colors hover:opacity-80 disabled:opacity-50 disabled:cursor-not-allowed disabled:hover:opacity-50"
+                          style={{ backgroundColor: 'var(--bg-card)', color: 'var(--text-icon)' }}
+                          title={editingId === apt.id ? 'Finish or cancel editing first' : 'Delete appointment'}
+                        >
+                          <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
+                          </svg>
+                        </button>
+                      </div>
+                    </div>
+                    <div className="mt-4 pt-4 text-xs text-tertiary font-roboto" style={{ borderTop: '1px solid', borderColor: 'var(--border-card-inner)' }}>
+                      <div className="flex items-center">
+                        <svg className="w-3 h-3 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" />
+                        </svg>
+                        Added {apt.createdAt ? formatUKDate(apt.createdAt) : '—'}
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              )
+            })}
+          </Masonry>
         )}
+        </div>
       </div>
 
       <ConfirmationModal

@@ -60,8 +60,8 @@ function WeightPageContent() {
   }, [user?.id])
 
   useEffect(() => {
-    window.scrollTo(0, 0)
-  }, [])
+    if (isAdding) window.scrollTo(0, 0)
+  }, [isAdding])
 
   const formatUKDate = (dateString) => {
     if (!dateString) return ''
@@ -232,9 +232,9 @@ function WeightPageContent() {
         </div>
       </div>
 
-      <div className="card mb-4 sm:mb-6 min-w-0 flex flex-col h-[60vh]">
-        <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 flex-shrink-0 mb-5 sm:mb-6">
-          <div className="flex items-center">
+      <div className="card mb-4 sm:mb-6 min-w-0">
+        <div className="flex flex-row flex-wrap items-center justify-between gap-4 mb-5 sm:mb-6">
+          <div className="flex items-center min-w-0">
             <div className="flex w-10 h-10 bg-indigo-100 dashboard-icon-panel rounded-lg items-center justify-center mr-3 sm:mr-4 flex-shrink-0">
               <Scale className="w-5 h-5 text-indigo-600 dark:text-white" />
             </div>
@@ -242,9 +242,100 @@ function WeightPageContent() {
               Weight entries
             </h2>
           </div>
+          {!isAdding && (
+            <button
+              onClick={startAdding}
+              className="button-cadet flex-shrink-0 px-4 py-2 text-lg font-semibold rounded-lg transition-colors inline-flex items-center justify-center"
+            >
+              <svg className="w-5 h-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 6v6m0 0v6m0-6h6m-6 0H6" />
+              </svg>
+              Add
+            </button>
+          )}
         </div>
 
-        <div className="flex-1 min-h-0 overflow-auto">
+        {isAdding && (
+          <div className="mb-6 min-w-0">
+            <form onSubmit={handleSubmit} className="space-y-4" autoComplete="off">
+              <div className="grid sm:grid-cols-2 gap-6 min-w-0">
+                <div>
+                  <label htmlFor="weight-date" className="block text-base font-semibold font-roboto text-primary mb-3">
+                    Date *
+                  </label>
+                  <DatePicker
+                    id="weight-date"
+                    selected={formData.date ? new Date(formData.date + 'T12:00:00') : null}
+                    onChange={(date) => setFormData(prev => ({
+                      ...prev,
+                      date: date ? date.toISOString().split('T')[0] : ''
+                    }))}
+                    placeholderText="Select date"
+                    dateFormat="dd/MM/yyyy"
+                    maxDate={new Date()}
+                    className="input-field-wizard w-full"
+                    enableTabLoop={false}
+                  />
+                </div>
+                <div>
+                  <label htmlFor="valueKg" className="block text-base font-semibold font-roboto text-primary mb-3">
+                    Weight (kg) *
+                  </label>
+                  <input
+                    type="text"
+                    inputMode="decimal"
+                    id="valueKg"
+                    name="valueKg"
+                    value={formData.valueKg}
+                    maxLength={7}
+                    onChange={(e) => {
+                      let v = e.target.value
+                      v = v.replace(/[^\d.]/g, '')
+                      const parts = v.split('.')
+                      if (parts.length > 2) v = parts[0] + '.' + parts.slice(1).join('')
+                      setFormData(prev => ({ ...prev, valueKg: v }))
+                    }}
+                    placeholder="e.g. 70.5"
+                    className="input-field-wizard w-full"
+                    required
+                  />
+                </div>
+              </div>
+              <div>
+                <label htmlFor="notes" className="block text-base font-semibold font-roboto text-primary mb-3">
+                  Notes
+                </label>
+                <textarea
+                  id="notes"
+                  name="notes"
+                  rows="2"
+                  value={formData.notes}
+                  onChange={(e) => setFormData(prev => ({ ...prev, notes: e.target.value }))}
+                  placeholder="e.g. morning, after breakfast"
+                  className="w-full px-4 py-3 input-field-wizard resize-none"
+                />
+              </div>
+              <div className="flex flex-col sm:flex-row gap-4">
+                <button type="submit" className="button-cadet px-4 py-2 text-lg font-semibold rounded-lg transition-colors">
+                  <svg className="w-5 h-5 mr-2 inline" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
+                  </svg>
+                  Save
+                </button>
+                <button
+                  type="button"
+                  onClick={cancelEdit}
+                  className="px-4 py-2 text-lg font-semibold rounded-lg transition-colors hover:opacity-80"
+                  style={{ backgroundColor: 'var(--bg-button-cancel)', color: 'var(--text-primary)' }}
+                >
+                  Cancel
+                </button>
+              </div>
+            </form>
+          </div>
+        )}
+
+        <div>
         {isLoading ? (
           <p className="text-center py-12 text-secondary font-roboto">Loading...</p>
         ) : entries.length === 0 ? (
@@ -337,107 +428,7 @@ function WeightPageContent() {
             })}
           </ul>
         )}
-
-        {isAdding && (
-          <div className="mt-6 min-w-0">
-            <form onSubmit={handleSubmit} className="space-y-4" autoComplete="off">
-              <div className="mb-2">
-                <h3 className="text-xl font-semibold font-source text-primary">
-                  {editingId ? 'Edit entry' : 'New entry'}
-                </h3>
-              </div>
-              <div className="grid sm:grid-cols-2 gap-6 min-w-0">
-                <div>
-                  <label htmlFor="weight-date" className="block text-base font-semibold font-roboto text-primary mb-3">
-                    Date *
-                  </label>
-                  <DatePicker
-                    id="weight-date"
-                    selected={formData.date ? new Date(formData.date + 'T12:00:00') : null}
-                    onChange={(date) => setFormData(prev => ({
-                      ...prev,
-                      date: date ? date.toISOString().split('T')[0] : ''
-                    }))}
-                    placeholderText="Select date"
-                    dateFormat="dd/MM/yyyy"
-                    maxDate={new Date()}
-                    className="input-field-wizard w-full"
-                    enableTabLoop={false}
-                  />
-                </div>
-                <div>
-                  <label htmlFor="valueKg" className="block text-base font-semibold font-roboto text-primary mb-3">
-                    Weight (kg) *
-                  </label>
-                  <input
-                    type="text"
-                    inputMode="decimal"
-                    id="valueKg"
-                    name="valueKg"
-                    value={formData.valueKg}
-                    maxLength={7}
-                    onChange={(e) => {
-                      let v = e.target.value
-                      // Only digits and at most one decimal point (no 'e' or other chars)
-                      v = v.replace(/[^\d.]/g, '')
-                      const parts = v.split('.')
-                      if (parts.length > 2) v = parts[0] + '.' + parts.slice(1).join('')
-                      setFormData(prev => ({ ...prev, valueKg: v }))
-                    }}
-                    placeholder="e.g. 70.5"
-                    className="input-field-wizard w-full"
-                    required
-                  />
-                </div>
-              </div>
-              <div>
-                <label htmlFor="notes" className="block text-base font-semibold font-roboto text-primary mb-3">
-                  Notes
-                </label>
-                <textarea
-                  id="notes"
-                  name="notes"
-                  rows="2"
-                  value={formData.notes}
-                  onChange={(e) => setFormData(prev => ({ ...prev, notes: e.target.value }))}
-                  placeholder="e.g. morning, after breakfast"
-                  className="w-full px-4 py-3 input-field-wizard resize-none"
-                />
-              </div>
-              <div className="flex flex-col sm:flex-row gap-4">
-                <button type="submit" className="button-cadet px-4 py-2 text-lg font-semibold rounded-lg transition-colors">
-                  <svg className="w-5 h-5 mr-2 inline" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
-                  </svg>
-                  {editingId ? 'Update' : 'Save'}
-                </button>
-                <button
-                  type="button"
-                  onClick={cancelEdit}
-                  className="px-4 py-2 text-lg font-semibold rounded-lg transition-colors hover:opacity-80"
-                  style={{ backgroundColor: 'var(--bg-button-cancel)', color: 'var(--text-primary)' }}
-                >
-                  Cancel
-                </button>
-              </div>
-            </form>
-          </div>
-        )}
         </div>
-
-        {!isAdding && (
-          <div className="mt-4 flex flex-shrink-0 sm:justify-start">
-            <button
-              onClick={startAdding}
-              className="button-cadet w-full sm:w-auto px-4 py-2 text-lg font-semibold rounded-lg transition-colors inline-flex items-center justify-center sm:justify-start"
-            >
-              <svg className="w-5 h-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 6v6m0 0v6m0-6h6m-6 0H6" />
-              </svg>
-              Log Weight
-            </button>
-          </div>
-        )}
       </div>
 
       <ConfirmationModal

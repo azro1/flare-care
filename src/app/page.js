@@ -1152,7 +1152,7 @@ className="flex items-center gap-3 px-3 py-2.5 transition-colors hover:opacity-9
           <div>
             <h2 className="text-xl font-semibold font-source text-primary mb-3">Today's Summary</h2>
             <div className="card">
-            <div className="card-inner p-4">
+            <div className="card-inner p-4 sm:p-6">
               <div className="flex justify-between items-center p-2">
                 <span className="text-sm text-secondary">Symptoms Logged</span>
                 <span className="text-sm font-semibold text-primary">{todaySymptoms.length}</span>
@@ -1170,7 +1170,7 @@ className="flex items-center gap-3 px-3 py-2.5 transition-colors hover:opacity-9
           <div>
             <h2 className="text-xl font-semibold font-source text-primary mb-3">Recent Activity</h2>
             <div className="card">
-            <div className="card-inner p-4 transition-all duration-300 ease-in-out">
+            <div className="card-inner p-4 sm:p-6 transition-all duration-300 ease-in-out">
               {(() => {
               // Helper function to format relative time
               const formatRelativeTime = (date) => {
@@ -1411,7 +1411,7 @@ className="flex items-center gap-3 px-3 py-2.5 transition-colors hover:opacity-9
                   {recentActivities.map((activity, index) => {
                     return (
                       <div key={`${activity.type}-${activity.timestamp.getTime()}-${index}`} className="flex items-start gap-3 pt-2 min-w-0 overflow-hidden">
-                        <PartyPopper className="w-5 h-5 flex-shrink-0 text-amber-500 dark:text-white" />
+                        <Activity className="w-5 h-5 flex-shrink-0" style={{ color: 'var(--text-cadet-blue)' }} />
                         <div className="flex-1 min-w-0 overflow-hidden">
                           <p
                             className="text-sm font-medium text-primary min-w-0 line-clamp-2 overflow-hidden"
@@ -1456,7 +1456,7 @@ className="flex items-center gap-3 px-3 py-2.5 transition-colors hover:opacity-9
               {displayedSymptoms.map((symptom) => (
                 <div key={symptom.id}>
                 <div 
-                    className="card-inner p-6 cursor-pointer transition-all duration-200"
+                    className="card-inner p-4 sm:p-6 cursor-pointer transition-all duration-200"
                   onClick={() => {
                     router.push(`/symptoms/${symptom.id}`)
                   }}
@@ -1502,7 +1502,7 @@ className="flex items-center gap-3 px-3 py-2.5 transition-colors hover:opacity-9
               {(showAllMedications ? trackedMedications : trackedMedications.slice(0, 1)).map((tracked, index) => (
                 <div key={tracked.id}>
                   <div 
-                    className="card-inner p-6  cursor-pointer transition-all duration-200"
+                    className="card-inner p-4 sm:p-6 cursor-pointer transition-all duration-200"
                     onClick={() => {
                       router.push(`/medications/track/${tracked.id}`)
                     }}
@@ -1533,7 +1533,7 @@ className="flex items-center gap-3 px-3 py-2.5 transition-colors hover:opacity-9
           <div className="grid grid-cols-2 lg:grid-cols-3 gap-4 md:gap-6 min-w-0">
               <Link
                 href="/medications"
-                className="card card-link transition-all group relative focus:outline-none focus-visible:outline-none focus-visible:ring-0 focus-visible:ring-offset-0 focus:ring-0 min-w-0"
+                className="card card-link !p-6 transition-all group relative focus:outline-none focus-visible:outline-none focus-visible:ring-0 focus-visible:ring-offset-0 focus:ring-0 min-w-0"
               >
                 <div className="flex flex-col items-center gap-3 min-w-0">
                   <div className="w-10 h-10 bg-purple-100 dashboard-icon-panel rounded-lg flex items-center justify-center flex-shrink-0">
@@ -1554,7 +1554,7 @@ className="flex items-center gap-3 px-3 py-2.5 transition-colors hover:opacity-9
 
               <Link
                 href="/reports"
-                className="card card-link transition-all group relative focus:outline-none focus-visible:outline-none focus-visible:ring-0 focus-visible:ring-offset-0 focus:ring-0 min-w-0"
+                className="card card-link !p-6 transition-all group relative focus:outline-none focus-visible:outline-none focus-visible:ring-0 focus-visible:ring-offset-0 focus:ring-0 min-w-0"
               >
                 <div className="flex flex-col items-center gap-3 min-w-0">
                   <div className="w-10 h-10 bg-orange-100 dashboard-icon-panel rounded-lg flex items-center justify-center flex-shrink-0">
@@ -1575,7 +1575,7 @@ className="flex items-center gap-3 px-3 py-2.5 transition-colors hover:opacity-9
 
               <Link
                 href="/weight"
-                className="card card-link transition-all group relative focus:outline-none focus-visible:outline-none focus-visible:ring-0 focus-visible:ring-offset-0 focus:ring-0 min-w-0"
+                className="card card-link !p-6 transition-all group relative focus:outline-none focus-visible:outline-none focus-visible:ring-0 focus-visible:ring-offset-0 focus:ring-0 min-w-0"
               >
                 <div className="flex flex-col items-center gap-3 min-w-0">
                   <div className="w-10 h-10 bg-indigo-100 dashboard-icon-panel rounded-lg flex items-center justify-center flex-shrink-0">
@@ -1596,7 +1596,7 @@ className="flex items-center gap-3 px-3 py-2.5 transition-colors hover:opacity-9
 
               <Link
                 href="/appointments"
-                className="card card-link transition-all group relative focus:outline-none focus-visible:outline-none focus-visible:ring-0 focus-visible:ring-offset-0 focus:ring-0 min-w-0"
+                className="card card-link !p-6 transition-all group relative focus:outline-none focus-visible:outline-none focus-visible:ring-0 focus-visible:ring-offset-0 focus:ring-0 min-w-0"
               >
                 <div className="flex flex-col items-center gap-3 min-w-0">
                   <div className="w-10 h-10 bg-sky-100 dashboard-icon-panel rounded-lg flex items-center justify-center flex-shrink-0">
@@ -1616,26 +1616,6 @@ className="flex items-center gap-3 px-3 py-2.5 transition-colors hover:opacity-9
                 </div>
               </Link>
 
-              <Link
-                href="/foods"
-                className="card card-link transition-all group relative focus:outline-none focus-visible:outline-none focus-visible:ring-0 focus-visible:ring-offset-0 focus:ring-0 min-w-0"
-              >
-                <div className="flex flex-col items-center gap-3 min-w-0">
-                  <div className="w-10 h-10 bg-amber-100 dashboard-icon-panel rounded-lg flex items-center justify-center flex-shrink-0">
-                    <Cookie className="w-5 h-5 text-amber-600 dark:text-white" />
-                  </div>
-                  <div className="w-full text-center min-w-0">
-                    <h3 className="font-semibold text-primary leading-tight sm:leading-relaxed break-words">
-                      Foods
-                    </h3>
-                  </div>
-                </div>
-                <div className="pointer-events-none absolute right-3 -top-14 hidden w-52 sm:group-hover:flex sm:group-focus-visible:flex">
-                  <div className="tooltip-card rounded-lg px-4 py-3 text-left text-xs text-secondary leading-snug shadow-lg font-roboto w-full">
-                    Learn about food categories and nutrition to make informed diet choices
-                  </div>
-                </div>
-              </Link>
           </div>
         </div>
 

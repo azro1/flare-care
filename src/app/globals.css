@@ -219,7 +219,7 @@
     color: var(--text-primary);
     /* border: 1px solid; */
     /* border-color: var(--border-card); */
-    @apply rounded-xl shadow-sm p-6 transition-shadow duration-200 hover:shadow-md;
+    @apply rounded-xl shadow-sm p-4 sm:p-6 transition-shadow duration-200 hover:shadow-md;
   }
   
   .card-link {
@@ -670,7 +670,7 @@ select.input-field-wizard option[value=""] {
 /* Mobile-first responsive utilities */
 @media (max-width: 640px) {
   .card {
-    @apply p-6;
+    @apply p-4 sm:p-6;
   }
   
   .btn-primary {

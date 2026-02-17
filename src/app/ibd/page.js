@@ -138,7 +138,7 @@ export default function LearnPage() {
           </p>
           
           <div className="grid gap-4 sm:gap-6 md:grid-cols-2">
-            <div className="card-inner p-6">
+            <div className="card-inner p-4 sm:p-6">
               <h3 className="text-lg font-semibold font-source text-primary mb-3 break-words">Crohn's Disease</h3>
               <ul className="text-secondary space-y-2 text-sm font-roboto break-words">
                 <li><span className="text-[#5F9EA0] mr-2">•</span>Can affect any part of the digestive tract</li>
@@ -148,7 +148,7 @@ export default function LearnPage() {
               </ul>
             </div>
             
-            <div className="card-inner p-6">
+            <div className="card-inner p-4 sm:p-6">
               <h3 className="text-lg font-semibold font-source text-primary mb-3 break-words">Ulcerative Colitis</h3>
               <ul className="text-secondary space-y-2 text-sm font-roboto break-words">
                 <li><span className="text-[#5F9EA0] mr-2">•</span>Affects only the colon and rectum</li>
@@ -217,7 +217,7 @@ export default function LearnPage() {
       <div className="card mb-4 sm:mb-6">
         <h2 className="text-xl font-semibold font-source text-primary mb-6 break-words">Common Triggers</h2>
         <div className="grid gap-4 sm:gap-6 md:grid-cols-3">
-          <div className="card-inner p-6 text-center">
+          <div className="card-inner p-4 sm:p-6 text-center">
             <div className="w-16 h-16 rounded-full flex items-center justify-center mx-auto mb-4 bg-yellow-100 dark:bg-[var(--bg-card)]">
               <Pizza className="w-8 h-8 text-amber-500 dark:text-white" />
             </div>
@@ -226,7 +226,7 @@ export default function LearnPage() {
             </p>
           </div>
 
-          <div className="card-inner p-6 text-center">
+          <div className="card-inner p-4 sm:p-6 text-center">
             <div className="w-16 h-16 rounded-full flex items-center justify-center mx-auto mb-4 bg-cyan-100 dark:bg-[var(--bg-card)]">
               <Brain className="w-8 h-8 text-cyan-600 dark:text-white" />
             </div>
@@ -235,7 +235,7 @@ export default function LearnPage() {
             </p>
           </div>
 
-          <div className="card-inner p-6 text-center">
+          <div className="card-inner p-4 sm:p-6 text-center">
             <div className="w-16 h-16 rounded-full flex items-center justify-center mx-auto mb-4 bg-green-100 dark:bg-[var(--bg-card)]">
               <Bug className="w-8 h-8 text-emerald-600 dark:text-white" />
             </div>
@@ -279,7 +279,7 @@ export default function LearnPage() {
       {/* How FlareCare Helps Section */}
       <div className="card backdrop-blur-sm mb-4 sm:mb-6">
         <h2 className="text-xl font-semibold font-source text-primary mb-6">How FlareCare Can Help</h2>
-        <div className="card-inner p-6">
+        <div className="card-inner p-4 sm:p-6">
         <div className="grid gap-3 md:gap-6 md:grid-cols-2">
           <div>
             <ul className="space-y-3 text-secondary font-roboto">

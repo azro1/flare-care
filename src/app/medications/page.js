@@ -353,6 +353,11 @@ function MedicationsPageContent() {
     }
   }, [medications])
 
+  // Scroll to top when form opens so it's visible (especially on mobile)
+  useEffect(() => {
+    if (isAdding) window.scrollTo(0, 0)
+  }, [isAdding])
+
   const handleDeleteMedication = (id) => {
     setDeleteModal({ isOpen: true, id })
   }
@@ -558,9 +563,9 @@ function MedicationsPageContent() {
       </div>
 
       {/* Your Medications Section */}
-      <div className="card mb-4 sm:mb-6 min-w-0 flex flex-col h-[60vh]">
-        <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 flex-shrink-0 mb-5 sm:mb-6">
-          <div className="flex items-center">
+      <div className="card mb-4 sm:mb-6 min-w-0">
+        <div className="flex flex-row flex-wrap items-center justify-between gap-4 mb-5 sm:mb-6">
+          <div className="flex items-center min-w-0">
             <div className="flex w-10 h-10 bg-purple-100 dashboard-icon-panel rounded-lg items-center justify-center mr-3 sm:mr-4 flex-shrink-0">
               {isAdding ? (
                 <svg className="w-5 h-5 text-purple-600 dark:text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -574,9 +579,148 @@ function MedicationsPageContent() {
               Your medications
             </h2>
           </div>
+          {!isAdding && (
+            <button
+              onClick={startAdding}
+              className="button-cadet flex-shrink-0 px-4 py-2 text-lg font-semibold rounded-lg transition-colors inline-flex items-center justify-center"
+            >
+              <svg className="w-5 h-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 6v6m0 0v6m0-6h6m-6 0H6" />
+              </svg>
+              Add
+            </button>
+          )}
         </div>
 
-        <div className="flex-1 min-h-0 overflow-auto">
+        {isAdding && (
+          <div className="mb-6 min-w-0">
+            <form onSubmit={handleSubmit} className="space-y-4" autoComplete="off">
+              <div className="grid lg:grid-cols-2 gap-6 min-w-0">
+                <div>
+                  <label htmlFor="name" className="block text-base font-semibold font-roboto text-primary mb-3">
+                    Medication Name *
+                  </label>
+                  <input
+                    type="text"
+                    id="name"
+                    name="name"
+                    value={formData.name}
+                    onChange={handleInputChange}
+                    placeholder="Medication name"
+                    className="input-field-wizard"
+                    autoComplete="off"
+                    required
+                  />
+                </div>
+
+                <div>
+                  <label htmlFor="dosage" className="block text-base font-semibold font-roboto text-primary mb-3">
+                    Dosage (per day)
+                  </label>
+                  <div className="flex items-center gap-2">
+                    <input
+                      type="text"
+                      inputMode="numeric"
+                      id="dosage"
+                      name="dosage"
+                      value={formData.dosage}
+                      onChange={handleInputChange}
+                      placeholder="e.g. 500"
+                      maxLength={5}
+                      className="input-field-wizard flex-1 min-w-0"
+                      autoComplete="off"
+                    />
+                    <span className="text-primary font-roboto shrink-0">mg</span>
+                  </div>
+                </div>
+              </div>
+
+              <div className="grid lg:grid-cols-2 gap-6 min-w-0">
+                <div>
+                  <label className="block text-base font-semibold font-roboto text-primary mb-3">
+                    Reminder Time
+                  </label>
+                  <select
+                    value={formData.timeOfDay || ''}
+                    onChange={(e) => {
+                      setFormData(prev => ({ ...prev, timeOfDay: e.target.value || '' }))
+                    }}
+                    className={`input-field-wizard ${formData.timeOfDay ? 'has-value' : 'placeholder'}`}
+                  >
+                    <option value="">Select time</option>
+                    {timeOptions.map((option) => (
+                      <option key={option.value} value={option.value}>
+                        {option.label}
+                      </option>
+                    ))}
+                  </select>
+                </div>
+              </div>
+
+              <div className="flex items-start sm:items-center card-inner p-4">
+                 <input
+                   type="checkbox"
+                   id="remindersEnabled"
+                   name="remindersEnabled"
+                   checked={formData.remindersEnabled}
+                   onChange={handleInputChange}
+                   className="h-5 w-5 sm:h-4 sm:w-4 focus:ring-0 focus:outline-none border-2 rounded"
+                   style={{ 
+                     borderColor: 'var(--border-input)',
+                     accentColor: 'var(--bg-button-cadet)'
+                   }}
+                 />
+                <label htmlFor="remindersEnabled" className="ml-3 block text-base font-roboto text-primary">
+                  Enable reminder notifications for this medication
+                </label>
+              </div>
+
+              <div>
+                <label htmlFor="notes" className="block text-base font-semibold font-roboto text-primary mb-3">
+                  Notes
+                </label>
+                <textarea
+                  id="notes"
+                  name="notes"
+                  rows="3"
+                  value={formData.notes}
+                  onChange={handleInputChange}
+                  placeholder="Any special instructions, side effects to watch for, etc."
+                  className="w-full px-4 py-3 input-field-wizard resize-none"
+                  autoComplete="off"
+                />
+              </div>
+
+              <div className="flex flex-col sm:flex-row gap-4">
+                <button 
+                  type="submit" 
+                  className="button-cadet px-4 py-2 text-lg font-semibold rounded-lg transition-colors"
+                >
+                  <svg className="w-5 h-5 mr-2 inline" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
+                  </svg>
+                  Save
+                </button>
+                <button 
+                  type="button" 
+                  onClick={cancelEdit} 
+                  className="px-4 py-2 text-lg font-semibold rounded-lg transition-colors hover:opacity-80"
+                  style={{ 
+                    backgroundColor: 'var(--bg-button-cancel)', 
+                    color: 'var(--text-primary)'
+                  }}
+                >
+                  <svg className="w-5 h-5 mr-2 inline" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+                  </svg>
+                  Cancel
+                </button>
+              </div>
+            </form>
+          </div>
+        )}
+
+        <div>
         {isLoading ? (
           <div className="text-center py-12 text-secondary">
             <p className="font-roboto">Loading medications...</p>
@@ -743,156 +887,8 @@ function MedicationsPageContent() {
             })}
           </Masonry>
         )}
-
-        {isAdding && (
-          <div className="mt-6 min-w-0">
-            <form onSubmit={handleSubmit} className="space-y-4" autoComplete="off">
-              <div className="mb-2">
-                <h3 className="text-xl font-semibold font-source text-primary">
-                  {editingId ? 'Edit medication' : 'New medication'}
-                </h3>
-              </div>
-              <div className="grid lg:grid-cols-2 gap-6 min-w-0">
-                <div>
-                  <label htmlFor="name" className="block text-base font-semibold font-roboto text-primary mb-3">
-                    Medication Name *
-                  </label>
-                  <input
-                    type="text"
-                    id="name"
-                    name="name"
-                    value={formData.name}
-                    onChange={handleInputChange}
-                    placeholder="Medication name"
-                    className="input-field-wizard"
-                    autoComplete="off"
-                    required
-                  />
-                </div>
-
-                <div>
-                  <label htmlFor="dosage" className="block text-base font-semibold font-roboto text-primary mb-3">
-                    Dosage (per day)
-                  </label>
-                  <div className="flex items-center gap-2">
-                    <input
-                      type="text"
-                      inputMode="numeric"
-                      id="dosage"
-                      name="dosage"
-                      value={formData.dosage}
-                      onChange={handleInputChange}
-                      placeholder="e.g. 500"
-                      maxLength={5}
-                      className="input-field-wizard flex-1 min-w-0"
-                      autoComplete="off"
-                    />
-                    <span className="text-primary font-roboto shrink-0">mg</span>
-                  </div>
-                </div>
-              </div>
-
-              <div className="grid lg:grid-cols-2 gap-6 min-w-0">
-                <div>
-                  <label className="block text-base font-semibold font-roboto text-primary mb-3">
-                    Reminder Time
-                  </label>
-                  <select
-                    value={formData.timeOfDay || ''}
-                    onChange={(e) => {
-                      setFormData(prev => ({ ...prev, timeOfDay: e.target.value || '' }))
-                    }}
-                    className={`input-field-wizard ${formData.timeOfDay ? 'has-value' : 'placeholder'}`}
-                  >
-                    <option value="">Select time</option>
-                    {timeOptions.map((option) => (
-                      <option key={option.value} value={option.value}>
-                        {option.label}
-                      </option>
-                    ))}
-                  </select>
-                </div>
-              </div>
-
-              <div className="flex items-start sm:items-center card-inner p-4">
-                 <input
-                   type="checkbox"
-                   id="remindersEnabled"
-                   name="remindersEnabled"
-                   checked={formData.remindersEnabled}
-                   onChange={handleInputChange}
-                   className="h-5 w-5 sm:h-4 sm:w-4 focus:ring-0 focus:outline-none border-2 rounded"
-                   style={{ 
-                     borderColor: 'var(--border-input)',
-                     accentColor: 'var(--bg-button-cadet)'
-                   }}
-                 />
-                <label htmlFor="remindersEnabled" className="ml-3 block text-base font-roboto text-primary">
-                  Enable reminder notifications for this medication
-                </label>
-              </div>
-
-              <div>
-                <label htmlFor="notes" className="block text-base font-semibold font-roboto text-primary mb-3">
-                  Notes
-                </label>
-                <textarea
-                  id="notes"
-                  name="notes"
-                  rows="3"
-                  value={formData.notes}
-                  onChange={handleInputChange}
-                  placeholder="Any special instructions, side effects to watch for, etc."
-                  className="w-full px-4 py-3 input-field-wizard resize-none"
-                  autoComplete="off"
-                />
-              </div>
-
-              <div className="flex flex-col sm:flex-row gap-4">
-                <button 
-                  type="submit" 
-                  className="button-cadet px-4 py-2 text-lg font-semibold rounded-lg transition-colors"
-                >
-                  <svg className="w-5 h-5 mr-2 inline" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
-                  </svg>
-                  {editingId ? 'Update' : 'Add Medication'}
-                </button>
-                <button 
-                  type="button" 
-                  onClick={cancelEdit} 
-                  className="px-4 py-2 text-lg font-semibold rounded-lg transition-colors hover:opacity-80"
-                  style={{ 
-                    backgroundColor: 'var(--bg-button-cancel)', 
-                    color: 'var(--text-primary)'
-                  }}
-                >
-                  <svg className="w-5 h-5 mr-2 inline" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
-                  </svg>
-                  Cancel
-                </button>
-              </div>
-            </form>
-          </div>
-        )}
         </div>
-
-        {!isAdding && (
-          <div className="mt-4 flex flex-shrink-0 sm:justify-start">
-            <button
-              onClick={startAdding}
-              className="button-cadet w-full sm:w-auto px-4 py-2 text-lg font-semibold rounded-lg transition-colors inline-flex items-center justify-center sm:justify-start"
-            >
-              <svg className="w-5 h-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 6v6m0 0v6m0-6h6m-6 0H6" />
-              </svg>
-              Add Medication
-            </button>
-          </div>
-        )}
       </div>
-
 
       {/* Reminder Info */}
       <div className="mt-4 sm:mt-6 card">
@@ -902,16 +898,15 @@ function MedicationsPageContent() {
             <span>Medication Reminders</span>
           </h3>
           <p className="text-sm sm:text-base text-secondary font-roboto leading-relaxed">
-            FlareCare will send browser notifications when it's time to take your medications
+            FlareCare can send notifications when it's time to take your medications — in your browser or as push notifications on your device.
           </p>
           <div className="card-inner p-6 mt-4">
-            <div className="flex items-center gap-2">
+            <div className="flex items-center gap-2 mb-2">
               <Lightbulb className="w-5 h-5 flex-shrink-0 text-amber-500 dark:text-white" />
-              <p className="text-base sm:text-sm font-medium text-primary mb-2 font-roboto">Important to know:</p>
+              <span className="text-base sm:text-sm font-medium text-primary font-roboto">Important to know:</span>
             </div>
-            <p className="text-sm  text-secondary font-roboto leading-relaxed">
-              Reminders only work in your web browser. They won't show up as push notifications on your phone. 
-              You can turn reminders on or off for each medication.
+            <p className="text-sm text-secondary font-roboto leading-relaxed">
+              Enable push notifications in Account → Settings to get reminders even when the app is closed. You can turn reminders on or off for each medication.
             </p>
           </div>
         </div>

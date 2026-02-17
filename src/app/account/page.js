@@ -7,6 +7,8 @@ import { useAuth } from '@/lib/AuthContext'
 import { useTheme } from '@/lib/ThemeContext'
 import ProtectedRoute from '@/components/ProtectedRoute'
 import { Settings, LogOut, Trash2, User } from 'lucide-react'
+import { supabase, TABLES } from '@/lib/supabase'
+import { isPushSupported, subscribeForPush, subscriptionToPayload } from '@/lib/pushSubscription'
 
 function AccountPageContent() {
   const { user, signOut, deleteUser } = useAuth()
@@ -18,6 +20,8 @@ function AccountPageContent() {
   const [showFallbackAvatar, setShowFallbackAvatar] = useState(false)
   const [isDeleting, setIsDeleting] = useState(false)
   const [deleteError, setDeleteError] = useState(null)
+  const [pushEnabling, setPushEnabling] = useState(false)
+  const [pushStatus, setPushStatus] = useState(null) // 'enabled' | 'unsupported' | null
 
   const handleSignOut = async () => {
     setIsSigningOut(true)
@@ -75,6 +79,32 @@ function AccountPageContent() {
   }
 
   const avatarUrl = getUserAvatar()
+
+  const handleEnablePush = async () => {
+    if (!user?.id || !isPushSupported()) return
+    setPushEnabling(true)
+    setPushStatus(null)
+    try {
+      const sub = await subscribeForPush()
+      if (!sub) {
+        setPushEnabling(false)
+        return
+      }
+      const payload = subscriptionToPayload(sub)
+      const { error } = await supabase.from(TABLES.PUSH_SUBSCRIPTIONS).upsert({
+        user_id: user.id,
+        endpoint: payload.endpoint,
+        p256dh_key: payload.p256dh_key,
+        auth_key: payload.auth_key,
+        user_agent: typeof navigator !== 'undefined' ? navigator.userAgent : null
+      }, { onConflict: 'endpoint' })
+      if (error) throw error
+      setPushStatus('enabled')
+    } catch (e) {
+      console.error('Push enable failed:', e)
+    }
+    setPushEnabling(false)
+  }
 
   useEffect(() => {
     setShowFallbackAvatar(false)
@@ -183,16 +213,17 @@ function AccountPageContent() {
                 <Settings className="w-5 h-5 text-[#5F9EA0] dark:text-white" />
                 <h3 className="text-lg sm:text-xl font-semibold font-source text-primary">Settings</h3>
               </div>
-              <div className="card-inner p-5 sm:p-6">
-                <div className="flex items-center justify-between">
-                  <div className="flex-1">
-                    <p className="text-sm font-medium text-secondary mb-1">Appearance</p>
-                    <p className="text-primary font-roboto text-sm">
+              <div className="space-y-4">
+                <div className="card-inner p-4 sm:p-6">
+                  <div className="flex items-center justify-between">
+                    <div className="flex-1">
+                      <p className="text-sm font-medium text-secondary mb-1">Appearance</p>
+                    <p className="text-primary font-roboto text-xs leading-relaxed">
                       {theme === 'dark' ? 'Dark mode' : 'Light mode'}
                     </p>
-                  </div>
-                  <button
-                    onClick={toggleTheme}
+                    </div>
+                    <button
+                      onClick={toggleTheme}
                     className="relative inline-flex h-7 w-14 items-center rounded-full transition-colors focus:outline-none"
                     style={{
                       backgroundColor: theme === 'dark' ? '#5F9EA0' : '#cbd5e1'
@@ -205,8 +236,32 @@ function AccountPageContent() {
                       }`}
                     />
                     <span className="sr-only">Toggle theme</span>
-                  </button>
+                    </button>
+                  </div>
                 </div>
+                {isPushSupported() && (
+                  <div className="card-inner p-4 sm:p-6">
+                    <div className="flex items-center justify-between gap-4">
+                      <div className="flex-1 min-w-0">
+                        <p className="text-sm font-medium text-secondary mb-1">Push notifications</p>
+                      <p className="text-primary font-roboto text-xs leading-relaxed">
+                        {pushStatus === 'enabled' ? 'Enabled – you’ll get reminders when the app is closed' : 'Get medication reminders even when the app is closed'}
+                      </p>
+                    </div>
+                    {pushStatus !== 'enabled' && (
+                      <button
+                        type="button"
+                        onClick={handleEnablePush}
+                        disabled={pushEnabling}
+                        className="px-4 py-2 rounded-lg text-white text-sm font-medium disabled:opacity-50 shrink-0"
+                        style={{ backgroundColor: '#5F9EA0' }}
+                      >
+                        {pushEnabling ? 'Enabling…' : 'Enable'}
+                        </button>
+                      )}
+                    </div>
+                  </div>
+                )}
               </div>
             </div>
 
@@ -237,16 +292,17 @@ function AccountPageContent() {
                 <Settings className="w-5 h-5 text-[#5F9EA0] dark:text-white" />
                 <h3 className="text-lg sm:text-xl font-semibold font-source text-primary">Settings</h3>
               </div>
-              <div className="card-inner p-5 sm:p-6">
-                <div className="flex items-center justify-between">
-                  <div className="flex-1">
-                    <p className="text-sm font-medium text-secondary mb-1">Appearance</p>
-                    <p className="text-primary font-roboto text-sm">
+              <div className="space-y-4">
+                <div className="card-inner p-4 sm:p-6">
+                  <div className="flex items-center justify-between">
+                    <div className="flex-1">
+                      <p className="text-sm font-medium text-secondary mb-1">Appearance</p>
+                    <p className="text-primary font-roboto text-xs leading-relaxed">
                       {theme === 'dark' ? 'Dark mode' : 'Light mode'}
                     </p>
-                  </div>
-                  <button
-                    onClick={toggleTheme}
+                    </div>
+                    <button
+                      onClick={toggleTheme}
                     className="relative inline-flex h-7 w-14 items-center rounded-full transition-colors focus:outline-none"
                     style={{
                       backgroundColor: theme === 'dark' ? '#5F9EA0' : '#cbd5e1'
@@ -259,8 +315,32 @@ function AccountPageContent() {
                       }`}
                     />
                     <span className="sr-only">Toggle theme</span>
-                  </button>
+                    </button>
+                  </div>
                 </div>
+                {isPushSupported() && (
+                  <div className="card-inner p-4 sm:p-6">
+                    <div className="flex items-center justify-between gap-4">
+                      <div className="flex-1 min-w-0">
+                        <p className="text-sm font-medium text-secondary mb-1">Push notifications</p>
+                      <p className="text-primary font-roboto text-xs leading-relaxed">
+                        {pushStatus === 'enabled' ? 'Enabled – you’ll get reminders when the app is closed' : 'Get medication reminders even when the app is closed'}
+                      </p>
+                    </div>
+                    {pushStatus !== 'enabled' && (
+                      <button
+                        type="button"
+                        onClick={handleEnablePush}
+                        disabled={pushEnabling}
+                        className="px-4 py-2 rounded-lg text-white text-sm font-medium disabled:opacity-50 shrink-0"
+                        style={{ backgroundColor: '#5F9EA0' }}
+                      >
+                        {pushEnabling ? 'Enabling…' : 'Enable'}
+                        </button>
+                      )}
+                    </div>
+                  </div>
+                )}
               </div>
             </div>
           </aside>
