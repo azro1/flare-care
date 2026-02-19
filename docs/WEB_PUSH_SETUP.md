@@ -2,10 +2,10 @@
 
 ## 1. Supabase
 
-Run the migration to create `push_subscriptions`:
+Run migrations in Supabase Dashboard → SQL Editor:
 
-- Open Supabase Dashboard → SQL Editor.
-- Run the contents of `supabase/migrations/20250207000000_push_subscriptions.sql`.
+- `supabase/migrations/20250207000000_push_subscriptions.sql` – creates `push_subscriptions`
+- `supabase/migrations/20250207100000_appointment_reminder_fields.sql` – adds reminder columns to `appointments`
 
 ## 2. VAPID keys
 
@@ -22,25 +22,35 @@ Add to `.env.local` (and to your host’s env, e.g. Vercel):
 
 ## 3. Cron (sending reminders)
 
-The API route `POST /api/cron/send-reminders` sends Web Push for medications due at the current minute. It needs:
+Two API routes send Web Push notifications:
+
+1. **`POST /api/cron/send-reminders`** – medication reminders (due at the current minute).
+2. **`POST /api/cron/send-appointment-reminders`** – appointment reminders (15 min, 1 hour, or 24 hours before).
+
+Both need:
 
 - `SUPABASE_SERVICE_ROLE_KEY` – in Supabase: Project Settings → API → service_role.
-- `CRON_SECRET` – a secret you choose; the cron job must send `Authorization: Bearer <CRON_SECRET>`.
+- `CRON_SECRET` – a secret you choose; each cron job must send `Authorization: Bearer <CRON_SECRET>`.
 
 **Vercel Hobby:** Cron is limited to **once per day**. The project uses `0 0 * * *` (midnight UTC) so deployment succeeds. For **minute-level** reminders, use cron-job.org (see below). **Vercel Pro** allows more frequent crons; you could then use `* * * * *` in `vercel.json` to run every minute.
 
 ### cron-job.org setup (free, runs every minute)
 
 1. Go to [cron-job.org](https://cron-job.org) and create a free account.
-2. **Create Cronjob** → set:
-   - **Title:** e.g. `FlareCare send reminders`
+2. **Create Cronjob #1 (medications):**
+   - **Title:** e.g. `FlareCare medication reminders`
    - **URL:** `https://flare-care.vercel.app/api/cron/send-reminders` (or your production URL)
    - **Request method:** POST
    - **Schedule:** Every minute (e.g. `* * * * *` or use the “Every minute” preset if available)
-3. **Request headers:** Add one header:
+3. **Create Cronjob #2 (appointments):**
+   - **Title:** e.g. `FlareCare appointment reminders`
+   - **URL:** `https://flare-care.vercel.app/api/cron/send-appointment-reminders`
+   - **Request method:** POST
+   - **Schedule:** Every minute
+4. For **both** jobs, add request header:
    - **Name:** `Authorization`
    - **Value:** `Bearer YOUR_CRON_SECRET` (the same value as in your Vercel env)
-4. Save. The job will call your API every minute so reminders fire at the right time.
+5. Save. Both crons will run every minute so medication and appointment reminders fire on time.
 
 ## 4. User flow
 

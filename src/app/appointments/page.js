@@ -19,6 +19,19 @@ const appointmentSchema = yup.object({
   type: yup.string().trim().required('Please enter type of appointment.')
 })
 
+// Reminder options: minutes before appointment (null = no reminder)
+const REMINDER_OPTIONS = [
+  { value: '', label: 'No reminder' },
+  { value: '5', label: '5 minutes before' },
+  { value: '10', label: '10 minutes before' },
+  { value: '15', label: '15 minutes before' },
+  { value: '30', label: '30 minutes before' },
+  { value: '45', label: '45 minutes before' },
+  { value: '60', label: '1 hour before' },
+  { value: '120', label: '2 hours before' },
+  { value: '1440', label: '24 hours before' }
+]
+
 // Generate time options from 00:00 to 23:59 (15-minute intervals), same as medications reminder time
 const generateTimeOptions = () => {
   const options = []
@@ -47,7 +60,8 @@ function AppointmentsPageContent() {
     type: '',
     clinicianName: '',
     location: '',
-    notes: ''
+    notes: '',
+    reminderMinutesBefore: null
   })
   const [saveError, setSaveError] = useState(null)
   const [dateError, setDateError] = useState(null)
@@ -77,6 +91,7 @@ function AppointmentsPageContent() {
         clinicianName: row.clinician_name || '',
         location: row.location || '',
         notes: row.notes || '',
+        reminderMinutesBefore: row.reminder_minutes_before ?? null,
         createdAt: row.created_at,
         updatedAt: row.updated_at
       }))
@@ -115,13 +130,16 @@ function AppointmentsPageContent() {
       return
     }
     try {
+      const reminderVal = formData.reminderMinutesBefore ? parseInt(formData.reminderMinutesBefore, 10) : null
       const payload = {
         date: formData.date,
         time: formData.time ? sanitizeInput(formData.time) : null,
         type: formData.type ? sanitizeInput(formData.type) : null,
         clinician_name: formData.clinicianName ? sanitizeInput(formData.clinicianName) : null,
         location: formData.location ? sanitizeInput(formData.location) : null,
-        notes: sanitizeNotes(formData.notes)
+        notes: sanitizeNotes(formData.notes),
+        reminder_minutes_before: reminderVal,
+        ...(editingId ? { reminder_sent_at: null } : {})
       }
 
       if (editingId) {
@@ -136,15 +154,14 @@ function AppointmentsPageContent() {
         setAppointments(prev => prev.map(apt => {
           if (apt.id !== editingId) return apt
           return {
-            id: apt.id,
+            ...apt,
             date: payload.date,
             time: payload.time || '',
             type: payload.type || '',
             clinicianName: formData.clinicianName || '',
             location: payload.location || '',
             notes: payload.notes ?? apt.notes ?? '',
-            createdAt: apt.createdAt,
-            updatedAt: apt.updatedAt
+            reminderMinutesBefore: reminderVal
           }
         }))
         setEditingId(null)
@@ -173,6 +190,7 @@ function AppointmentsPageContent() {
             clinicianName: inserted.clinician_name || '',
             location: inserted.location || '',
             notes: inserted.notes || '',
+            reminderMinutesBefore: inserted.reminder_minutes_before ?? null,
             createdAt: inserted.created_at,
             updatedAt: inserted.updated_at
           }, ...prev])
@@ -188,7 +206,7 @@ function AppointmentsPageContent() {
         }
       }
 
-      setFormData({ date: today, time: '', type: '', clinicianName: '', location: '', notes: '' })
+      setFormData({ date: today, time: '', type: '', clinicianName: '', location: '', notes: '', reminderMinutesBefore: null })
       setIsAdding(false)
     } catch (error) {
       console.error('Error saving appointment:', error)
@@ -205,7 +223,8 @@ function AppointmentsPageContent() {
       type: apt.type || '',
       clinicianName: apt.clinicianName || '',
       location: apt.location || '',
-      notes: apt.notes || ''
+      notes: apt.notes || '',
+      reminderMinutesBefore: apt.reminderMinutesBefore ?? null
     })
     setEditingId(apt.id)
     setIsAdding(true)
@@ -214,7 +233,7 @@ function AppointmentsPageContent() {
   const startAdding = () => {
     setSaveError(null)
     setDateError(null)
-    setFormData({ date: today, time: '', type: '', clinicianName: '', location: '', notes: '' })
+    setFormData({ date: today, time: '', type: '', clinicianName: '', location: '', notes: '', reminderMinutesBefore: null })
     setEditingId(null)
     setIsAdding(true)
   }
@@ -222,7 +241,7 @@ function AppointmentsPageContent() {
   const cancelEdit = () => {
     setSaveError(null)
     setDateError(null)
-    setFormData({ date: today, time: '', type: '', clinicianName: '', location: '', notes: '' })
+    setFormData({ date: today, time: '', type: '', clinicianName: '', location: '', notes: '', reminderMinutesBefore: null })
     setEditingId(null)
     setIsAdding(false)
   }
@@ -413,6 +432,26 @@ function AppointmentsPageContent() {
                   placeholder="e.g. Bring medication list"
                   className="w-full px-4 py-3 input-field-wizard resize-none"
                 />
+              </div>
+              <div>
+                <label htmlFor="apt-reminder" className="block text-base font-semibold font-roboto text-primary mb-3">
+                  Remind me
+                </label>
+                <select
+                  id="apt-reminder"
+                  value={formData.reminderMinutesBefore ?? ''}
+                  onChange={(e) => setFormData(prev => ({
+                    ...prev,
+                    reminderMinutesBefore: e.target.value ? parseInt(e.target.value, 10) : null
+                  }))}
+                  className={`input-field-wizard w-full ${formData.reminderMinutesBefore ? 'has-value' : 'placeholder'}`}
+                >
+                  {REMINDER_OPTIONS.map((opt) => (
+                    <option key={opt.value || 'none'} value={opt.value}>
+                      {opt.label}
+                    </option>
+                  ))}
+                </select>
               </div>
               {saveError && (
                 <p className="text-sm font-roboto" role="alert" style={{ color: 'var(--text-cadet-blue)' }}>{saveError}</p>
