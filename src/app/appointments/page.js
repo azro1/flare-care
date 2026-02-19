@@ -32,6 +32,24 @@ const REMINDER_OPTIONS = [
   { value: '1440', label: '24 hours before' }
 ]
 
+const getReminderLabel = (minutes) => {
+  const opt = REMINDER_OPTIONS.find(o => o.value && parseInt(o.value, 10) === minutes)
+  return opt ? opt.label : `${minutes} mins before`
+}
+
+/** Reminder fires at appointment time minus X minutes. Returns 24-hour time string (HH:mm) to match appointment display. */
+const getReminderTimeLabel = (dateStr, timeStr, minutesBefore) => {
+  if (!dateStr || !timeStr || !timeStr.match(/^\d{2}:\d{2}$/) || !minutesBefore) return ''
+  const aptDate = new Date(`${dateStr}T${timeStr}:00`)
+  if (isNaN(aptDate.getTime())) return ''
+  const reminderDate = new Date(aptDate.getTime() - minutesBefore * 60 * 1000)
+  const h = reminderDate.getHours().toString().padStart(2, '0')
+  const m = reminderDate.getMinutes().toString().padStart(2, '0')
+  return `${h}:${m}`
+}
+
+
+
 // Generate time options from 00:00 to 23:59 (15-minute intervals), same as medications reminder time
 const generateTimeOptions = () => {
   const options = []
@@ -78,8 +96,7 @@ function AppointmentsPageContent() {
         .select('*')
         .eq('user_id', user.id)
         .gte('date', today)
-        .order('date', { ascending: true })
-        .order('time', { ascending: true, nullsFirst: false })
+        .order('created_at', { ascending: false })
 
       if (error) throw error
 
@@ -182,7 +199,7 @@ function AppointmentsPageContent() {
 
         const inserted = data?.[0]
         if (inserted) {
-          setAppointments(prev => [{
+          const newApt = {
             id: inserted.id,
             date: inserted.date,
             time: inserted.time || '',
@@ -193,7 +210,8 @@ function AppointmentsPageContent() {
             reminderMinutesBefore: inserted.reminder_minutes_before ?? null,
             createdAt: inserted.created_at,
             updatedAt: inserted.updated_at
-          }, ...prev])
+          }
+          setAppointments(prev => [newApt, ...prev])
           const activityKey = `flarecare-appointment-added-${user.id}-${today}`
           localStorage.setItem(activityKey, JSON.stringify({
             timestamp: new Date().toISOString(),
@@ -529,16 +547,34 @@ function AppointmentsPageContent() {
                         )}
                         {isExpanded && (
                           <>
+                            {apt.reminderMinutesBefore && (
+                              <div className="flex flex-row flex-nowrap items-center gap-3 mt-3 mb-3">
+                                {apt.time && getReminderTimeLabel(apt.date, apt.time, apt.reminderMinutesBefore) && (
+                                  <span
+                                    className="inline-flex items-center px-3 py-1.5 rounded-full text-sm font-medium font-roboto shrink-0 bg-white text-black"
+                                  >
+                                    <svg className="w-4 h-4 mr-1.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" />
+                                    </svg>
+                                    {getReminderTimeLabel(apt.date, apt.time, apt.reminderMinutesBefore)}
+                                  </span>
+                                )}
+                                <span
+                                  className="inline-flex items-center px-3 py-1.5 rounded-full text-sm font-medium font-roboto shrink-0"
+                                  style={{ backgroundColor: 'var(--bg-card)', color: 'var(--text-cadet-blue)' }}
+                                >
+                                  <svg className="w-4 h-4 mr-1.5" fill="currentColor" viewBox="0 0 20 20">
+                                    <path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clipRule="evenodd" />
+                                  </svg>
+                                  {getReminderLabel(apt.reminderMinutesBefore)}
+                                </span>
+                              </div>
+                            )}
                             {apt.clinicianName && (
                               <p className="text-sm text-secondary font-roboto mt-0.5 truncate" title={apt.clinicianName}>{apt.clinicianName}</p>
                             )}
                             {apt.location && (
                               <p className="text-sm text-secondary font-roboto truncate" title={apt.location}>{apt.location}</p>
-                            )}
-                            {apt.notes && (
-                              <div className="mt-1 min-w-0 max-w-full overflow-hidden" title={apt.notes}>
-                                <p className="text-sm text-secondary font-roboto break-words line-clamp-2">{apt.notes}</p>
-                              </div>
                             )}
                           </>
                         )}
@@ -570,6 +606,16 @@ function AppointmentsPageContent() {
                         </button>
                       </div>
                     </div>
+
+                    {isExpanded && apt.notes && (
+                      <div className="mt-4 pt-4 min-w-0" style={{ borderTop: '1px solid', borderColor: 'var(--border-card-inner)' }}>
+                        <div className="card-inner min-w-0">
+                          <p className="text-sm text-secondary font-roboto truncate" title={apt.notes}>
+                            <span className="font-semibold text-primary">Notes:</span> {apt.notes}
+                          </p>
+                        </div>
+                      </div>
+                    )}
                     <div className="mt-4 pt-4 text-xs text-tertiary font-roboto" style={{ borderTop: '1px solid', borderColor: 'var(--border-card-inner)' }}>
                       <div className="flex items-center">
                         <svg className="w-3 h-3 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">

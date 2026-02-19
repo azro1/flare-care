@@ -182,14 +182,9 @@ function MedicationsPageContent() {
   const handleInputChange = async (e) => {
     const { name, value, type, checked } = e.target
     
-    console.log('Input change:', { name, value, type, checked })
-    console.log('Notification permission:', Notification.permission)
-    
     // Request notification permission when reminders checkbox is checked
     if (name === 'remindersEnabled' && checked && Notification.permission === 'default') {
-      console.log('Requesting notification permission...')
       await Notification.requestPermission()
-      console.log('Permission result:', Notification.permission)
     }
 
     let newValue = type === 'checkbox' ? checked : value
@@ -743,9 +738,9 @@ function MedicationsPageContent() {
                               <span className="font-semibold">Dosage:</span> {medication.dosage}
                             </p>
                           )}
-                          <div className="flex flex-wrap items-center gap-3 mb-3">
+                          <div className={`flex flex-wrap items-center gap-3 ${(medication.timeOfDay || medication.remindersEnabled !== false) ? 'mb-3' : ''}`}>
                             {medication.timeOfDay && (
-                              <span className={`inline-flex items-center px-3 py-1.5 rounded-full text-sm font-medium font-roboto ${getTimeOfDayColor(medication.timeOfDay)}`}>
+                              <span className="inline-flex items-center px-3 py-1.5 rounded-full text-sm font-medium font-roboto bg-white text-black">
                                 <svg className="w-4 h-4 mr-1.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" />
                                 </svg>
@@ -767,7 +762,7 @@ function MedicationsPageContent() {
                               </span>
                             )}
                           </div>
-                          <div className="mt-2">
+                          <div className={(medication.timeOfDay || medication.remindersEnabled !== false) ? 'mt-2' : ''}>
                             <button
                               onClick={() => handleMarkAsTaken(medication.id)}
                               className="px-3 py-1.5 rounded-lg text-sm font-medium transition-all duration-200 inline-flex items-center justify-center"
@@ -837,7 +832,7 @@ function MedicationsPageContent() {
 
                   {isExpanded && medication.notes && (
                     <div className="mt-4 pt-4 min-w-0" style={{ borderTop: '1px solid', borderColor: 'var(--border-card-inner)' }}>
-                      <div className="card-inner p-3 min-w-0">
+                      <div className="card-inner min-w-0">
                         <p className="text-sm text-secondary font-roboto truncate">
                           <span className="font-semibold text-primary">Notes:</span> {medication.notes}
                         </p>

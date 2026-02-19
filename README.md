@@ -29,7 +29,7 @@ A personal companion app for managing Crohn's & Colitis symptoms, built with Nex
 
 ### 💊 Medication Management
 - Add medications with dosage and timing
-- **Medication reminders** with browser notifications
+- **Medication reminders** with push notifications (work when app is closed)
 - Set specific times or custom times for each medication
 - Enable/disable reminders per medication
 - Add notes for each medication
@@ -41,6 +41,13 @@ A personal companion app for managing Crohn's & Colitis symptoms, built with Nex
 - **Detailed tracking** - Log specific medications with dates, times, and dosages
 - **Dashboard integration** - View recent medication tracking activity
 - **Supabase integration** - Cloud storage for medication tracking data
+
+### 🔔 Push Notifications (Web & Mobile)
+- **Medication reminders** – Get notified at your chosen time, even when the app is closed
+- **Appointment reminders** – Choose when to be reminded (5, 10, 15, 30, 45, 60 min, 2h, or 24h before)
+- **Web Push** – Works in desktop and mobile browsers (Chrome, Edge, Firefox, Safari)
+- **PWA support** – Add to home screen on mobile for reliable background notifications
+- Enable in **Account → Settings** → Push notifications
 
 ### 📈 Reports & Analytics
 - **Comprehensive health reports** - Combines symptoms, medications, and medication tracking data
@@ -124,15 +131,20 @@ A personal companion app for managing Crohn's & Colitis symptoms, built with Nex
    npm install
    ```
 
-3. **Set up environment variables** (optional - for cloud sync)
+3. **Set up environment variables** (optional - for cloud sync and push reminders)
    ```bash
    cp .env.example .env.local
    ```
-   Add your Supabase credentials to `.env.local`:
+   Add to `.env.local`:
    ```
    NEXT_PUBLIC_SUPABASE_URL=your_supabase_url
    NEXT_PUBLIC_SUPABASE_ANON_KEY=your_supabase_anon_key
+   # For push notifications (medication & appointment reminders):
+   NEXT_PUBLIC_VAPID_PUBLIC_KEY=your_vapid_public_key
+   VAPID_PRIVATE_KEY=your_vapid_private_key
+   CRON_SECRET=your_cron_secret
    ```
+   Generate VAPID keys with `npx web-push generate-vapid-keys`.
 
 4. **Run the development server**
    ```bash
