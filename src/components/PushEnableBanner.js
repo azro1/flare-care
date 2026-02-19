@@ -2,12 +2,13 @@
 
 import { useState, useEffect } from 'react'
 import { useAuth } from '@/lib/AuthContext'
-import { supabase, TABLES } from '@/lib/supabase'
+import { supabase } from '@/lib/supabase'
 import {
   isPushSupported,
   getNotificationPermission,
   subscribeForPush,
-  subscriptionToPayload
+  subscriptionToPayload,
+  savePushSubscriptionToServer
 } from '@/lib/pushSubscription'
 
 const DISMISS_KEY = 'flarecare-push-banner-dismissed'
@@ -29,20 +30,19 @@ export default function PushEnableBanner() {
   const handleEnable = async () => {
     setLoading(true)
     try {
+      const { data: { session } } = await supabase.auth.getSession()
+      if (!session?.access_token) {
+        console.error('Push enable failed: no session')
+        setLoading(false)
+        return
+      }
       const sub = await subscribeForPush()
       if (!sub) {
         setLoading(false)
         return
       }
       const payload = subscriptionToPayload(sub)
-      const { error } = await supabase.from(TABLES.PUSH_SUBSCRIPTIONS).upsert({
-        user_id: user.id,
-        endpoint: payload.endpoint,
-        p256dh_key: payload.p256dh_key,
-        auth_key: payload.auth_key,
-        user_agent: typeof navigator !== 'undefined' ? navigator.userAgent : null
-      }, { onConflict: 'endpoint' })
-      if (error) throw error
+      await savePushSubscriptionToServer(payload, session.access_token)
       setShow(false)
     } catch (e) {
       console.error('Push enable failed:', e)

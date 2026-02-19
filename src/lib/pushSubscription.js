@@ -81,6 +81,27 @@ function urlBase64ToUint8Array(base64String) {
   return output
 }
 
+/** Save subscription to server via API (bypasses RLS; requires accessToken from supabase.auth.getSession()). */
+export async function savePushSubscriptionToServer(payload, accessToken) {
+  const res = await fetch('/api/push/subscribe', {
+    method: 'POST',
+    headers: {
+      'Content-Type': 'application/json',
+      'Authorization': `Bearer ${accessToken}`
+    },
+    body: JSON.stringify({
+      endpoint: payload.endpoint,
+      p256dh_key: payload.p256dh_key,
+      auth_key: payload.auth_key,
+      user_agent: typeof navigator !== 'undefined' ? navigator.userAgent : null
+    })
+  })
+  if (!res.ok) {
+    const err = await res.json().catch(() => ({}))
+    throw new Error(err.error || res.statusText || 'Failed to save push subscription')
+  }
+}
+
 /** Unsubscribe current device (removes from PushManager; caller should delete from Supabase by endpoint). */
 export async function unsubscribePush() {
   if (!isPushSupported()) return

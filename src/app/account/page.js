@@ -8,7 +8,7 @@ import { useTheme } from '@/lib/ThemeContext'
 import ProtectedRoute from '@/components/ProtectedRoute'
 import { Settings, LogOut, Trash2, User } from 'lucide-react'
 import { supabase, TABLES } from '@/lib/supabase'
-import { isPushSupported, subscribeForPush, subscriptionToPayload } from '@/lib/pushSubscription'
+import { isPushSupported, subscribeForPush, subscriptionToPayload, savePushSubscriptionToServer } from '@/lib/pushSubscription'
 
 function AccountPageContent() {
   const { user, signOut, deleteUser } = useAuth()
@@ -85,20 +85,19 @@ function AccountPageContent() {
     setPushEnabling(true)
     setPushStatus(null)
     try {
+      const { data: { session } } = await supabase.auth.getSession()
+      if (!session?.access_token) {
+        console.error('Push enable failed: no session')
+        setPushEnabling(false)
+        return
+      }
       const sub = await subscribeForPush()
       if (!sub) {
         setPushEnabling(false)
         return
       }
       const payload = subscriptionToPayload(sub)
-      const { error } = await supabase.from(TABLES.PUSH_SUBSCRIPTIONS).upsert({
-        user_id: user.id,
-        endpoint: payload.endpoint,
-        p256dh_key: payload.p256dh_key,
-        auth_key: payload.auth_key,
-        user_agent: typeof navigator !== 'undefined' ? navigator.userAgent : null
-      }, { onConflict: 'endpoint' })
-      if (error) throw error
+      await savePushSubscriptionToServer(payload, session.access_token)
       setPushStatus('enabled')
     } catch (e) {
       console.error('Push enable failed:', e)
