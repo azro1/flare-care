@@ -218,7 +218,7 @@ function AccountPageContent() {
                   <div className="flex items-center justify-between">
                     <div className="flex-1">
                       <p className="text-sm font-medium text-secondary mb-1">Appearance</p>
-                    <p className="text-primary font-roboto text-xs leading-relaxed">
+                    <p className="text-primary font-roboto">
                       {theme === 'dark' ? 'Dark mode' : 'Light mode'}
                     </p>
                     </div>
@@ -244,7 +244,7 @@ function AccountPageContent() {
                     <div className="flex items-center justify-between gap-4">
                       <div className="flex-1 min-w-0">
                         <p className="text-sm font-medium text-secondary mb-1">Push notifications</p>
-                      <p className="text-primary font-roboto text-xs leading-relaxed">
+                      <p className="text-primary font-roboto">
                         {pushStatus === 'enabled' ? 'Enabled – you’ll get reminders when the app is closed' : 'Get medication reminders even when the app is closed'}
                       </p>
                     </div>
@@ -297,7 +297,7 @@ function AccountPageContent() {
                   <div className="flex items-center justify-between">
                     <div className="flex-1">
                       <p className="text-sm font-medium text-secondary mb-1">Appearance</p>
-                    <p className="text-primary font-roboto text-xs leading-relaxed">
+                    <p className="text-primary font-roboto">
                       {theme === 'dark' ? 'Dark mode' : 'Light mode'}
                     </p>
                     </div>
@@ -323,7 +323,7 @@ function AccountPageContent() {
                     <div className="flex items-center justify-between gap-4">
                       <div className="flex-1 min-w-0">
                         <p className="text-sm font-medium text-secondary mb-1">Push notifications</p>
-                      <p className="text-primary font-roboto text-xs leading-relaxed">
+                      <p className="text-primary font-roboto">
                         {pushStatus === 'enabled' ? 'Enabled – you’ll get reminders when the app is closed' : 'Get medication reminders even when the app is closed'}
                       </p>
                     </div>
