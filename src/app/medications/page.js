@@ -2,7 +2,6 @@
 
 import { useState, useEffect } from 'react'
 import ConfirmationModal from '@/components/ConfirmationModal'
-import reminderService from '@/lib/reminderService'
 import ProtectedRoute from '@/components/ProtectedRoute'
 import { sanitizeMedicationName, sanitizeNotes } from '@/lib/sanitize'
 import { Pill, ChevronDown, Bell, Lightbulb } from 'lucide-react'
@@ -324,34 +323,6 @@ function MedicationsPageContent() {
       setTakenMedications([])
     }
   }, [])
-
-  // Update global reminder service when medications change
-  useEffect(() => {
-    console.log('=== MEDICATIONS CHANGED ===')
-    console.log('Medications array:', medications)
-    medications.forEach((med, index) => {
-      console.log(`Medication ${index}:`, {
-        name: med.name,
-        timeOfDay: med.timeOfDay,
-        remindersEnabled: med.remindersEnabled,
-        updatedAt: med.updatedAt
-      })
-    })
-    
-    reminderService.updateMedications(medications)
-    
-    // Start the reminder service if there are medications with reminders enabled
-    const medicationsWithReminders = medications.filter(med => med.remindersEnabled)
-    console.log('Medications with reminders enabled:', medicationsWithReminders)
-    
-    if (medicationsWithReminders.length > 0) {
-      console.log('Starting reminder service...')
-      reminderService.start(medications)
-    } else {
-      console.log('No medications with reminders, stopping service...')
-      reminderService.stop()
-    }
-  }, [medications])
 
   // Scroll to top when form opens so it's visible (especially on mobile)
   useEffect(() => {

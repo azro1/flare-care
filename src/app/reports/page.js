@@ -1166,7 +1166,7 @@ function ReportsPageContent() {
           <div className="flex w-10 h-10 bg-emerald-100 dashboard-icon-panel rounded-lg items-center justify-center mr-3 sm:mr-4 flex-shrink-0">
             <Thermometer className="w-5 h-5 text-emerald-600 dark:text-white" />
           </div>
-          <h2 className="text-xl font-semibold font-source text-primary flex-1">Symptom Report</h2>
+          <h2 className="text-lg sm:text-xl font-semibold font-source text-primary flex-1">Symptom Report</h2>
           <span className="text-sm font-roboto text-secondary shrink-0">{openSections.symptomReport ? 'Hide' : 'Show'}</span>
         </button>
 
@@ -1304,7 +1304,7 @@ function ReportsPageContent() {
             <div className="flex w-10 h-10 bg-purple-100 dashboard-icon-panel rounded-lg items-center justify-center mr-3 sm:mr-4 flex-shrink-0">
               <Pill className="w-5 h-5 text-purple-600 dark:text-white" />
             </div>
-            <h2 className="text-xl font-semibold font-source text-primary flex-1">Current Medications</h2>
+            <h2 className="text-lg sm:text-xl font-semibold font-source text-primary flex-1">Current Medications</h2>
             <span className="text-sm font-roboto text-secondary shrink-0">{openSections.currentMeds ? 'Hide' : 'Show'}</span>
           </button>
           {openSections.currentMeds && (
@@ -1344,7 +1344,7 @@ function ReportsPageContent() {
             <div className="flex w-10 h-10 bg-pink-100 dashboard-icon-panel rounded-lg items-center justify-center mr-3 sm:mr-4 flex-shrink-0">
               <ChartLine className="w-5 h-5 text-pink-600 dark:text-white" />
             </div>
-            <h2 className="text-xl font-semibold font-source text-primary flex-1">Tracked Medications</h2>
+            <h2 className="text-lg sm:text-xl font-semibold font-source text-primary flex-1">Tracked Medications</h2>
             <span className="text-sm font-roboto text-secondary shrink-0">{openSections.trackedMeds ? 'Hide' : 'Show'}</span>
           </button>
           {openSections.trackedMeds && (
@@ -1531,7 +1531,7 @@ function ReportsPageContent() {
             <div className="flex w-10 h-10 bg-sky-100 dashboard-icon-panel rounded-lg items-center justify-center mr-3 sm:mr-4 flex-shrink-0">
               <Calendar className="w-5 h-5 text-sky-600 dark:text-white" />
             </div>
-            <h2 className="text-xl font-semibold font-source text-primary flex-1">Appointments</h2>
+            <h2 className="text-lg sm:text-xl font-semibold font-source text-primary flex-1">Appointments</h2>
             <span className="text-sm font-roboto text-secondary shrink-0">{openSections.appointments ? 'Hide' : 'Show'}</span>
           </button>
           {openSections.appointments && (
@@ -1571,7 +1571,7 @@ function ReportsPageContent() {
             <div className="flex w-10 h-10 bg-indigo-100 dashboard-icon-panel rounded-lg items-center justify-center mr-3 sm:mr-4 flex-shrink-0">
               <Scale className="w-5 h-5 text-indigo-600 dark:text-white" />
             </div>
-            <h2 className="text-xl font-semibold font-source text-primary flex-1">Weight Logs</h2>
+            <h2 className="text-lg sm:text-xl font-semibold font-source text-primary flex-1">Weight Logs</h2>
             <span className="text-sm font-roboto text-secondary shrink-0">{openSections.weight ? 'Hide' : 'Show'}</span>
           </button>
           {openSections.weight && (
@@ -1608,7 +1608,7 @@ function ReportsPageContent() {
             <div className="flex w-10 h-10 bg-yellow-100 dashboard-icon-panel rounded-lg items-center justify-center mr-3 sm:mr-4 flex-shrink-0">
               <Pizza className="w-5 h-5 text-amber-500 dark:text-white" />
             </div>
-            <h2 className="text-xl font-semibold font-source text-primary flex-1">Top 5 Foods</h2>
+            <h2 className="text-lg sm:text-xl font-semibold font-source text-primary flex-1">Top 5 Foods</h2>
             <span className="text-sm font-roboto text-secondary shrink-0">{openSections.foods ? 'Hide' : 'Show'}</span>
           </button>
           {openSections.foods && (

@@ -7,7 +7,7 @@ import * as yup from 'yup'
 import ConfirmationModal from '@/components/ConfirmationModal'
 import ProtectedRoute from '@/components/ProtectedRoute'
 import { sanitizeNotes, sanitizeInput } from '@/lib/sanitize'
-import { Calendar, ChevronDown } from 'lucide-react'
+import { Calendar, ChevronDown, Bell, Lightbulb } from 'lucide-react'
 import Masonry from 'react-masonry-css'
 import { supabase, TABLES } from '@/lib/supabase'
 import { useAuth } from '@/lib/AuthContext'
@@ -545,6 +545,28 @@ function AppointmentsPageContent() {
             })}
           </Masonry>
         )}
+        </div>
+      </div>
+
+      {/* Appointment Reminders Info */}
+      <div className="mt-4 sm:mt-6 card">
+        <div>
+          <h3 className="text-xl sm:text-lg font-semibold font-source text-primary mb-2 flex items-center space-x-2">
+            <Bell className="w-5 h-5 sm:w-6 sm:h-6 flex-shrink-0" style={{ color: 'var(--text-cadet-blue)' }} />
+            <span>Appointment Reminders</span>
+          </h3>
+          <p className="text-sm sm:text-base text-secondary font-roboto leading-relaxed">
+            FlareCare can send reminders so you don't miss an appointment — in your browser or as push notifications on your device.
+          </p>
+          <div className="card-inner p-6 mt-4">
+            <div className="flex items-center gap-2 mb-2">
+              <Lightbulb className="w-5 h-5 flex-shrink-0 text-amber-500 dark:text-white" />
+              <span className="text-base sm:text-sm font-medium text-primary font-roboto">Important to know:</span>
+            </div>
+            <p className="text-sm text-secondary font-roboto leading-relaxed">
+              Enable push notifications in Account → Settings to get reminders even when the app is closed. When adding or editing an appointment, choose how far in advance you want to be reminded.
+            </p>
+          </div>
         </div>
       </div>
 
