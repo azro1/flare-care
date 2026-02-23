@@ -9,6 +9,7 @@ A personal companion app for managing Crohn's & Colitis symptoms, built with Nex
 - Mobile-optimized hero section with responsive design
 - Feature cards with hover animations and visual indicators
 - Modern glass-morphism design with smooth transitions
+- **Health News carousel** – Curated health-related articles (Crohn's, colitis, IBD) with horizontal scroll and overlay arrows; NewsAPI for article images (optional), MedlinePlus + Google News fallback
 
 ### 📊 Symptom Tracking
 - **Multi-step wizard** with intuitive question flow
@@ -143,6 +144,8 @@ A personal companion app for managing Crohn's & Colitis symptoms, built with Nex
    NEXT_PUBLIC_VAPID_PUBLIC_KEY=your_vapid_public_key
    VAPID_PRIVATE_KEY=your_vapid_private_key
    CRON_SECRET=your_cron_secret
+   # Optional: For news feed article images (get free key at newsapi.org):
+   NEWSAPI_KEY=your_newsapi_key
    ```
    Generate VAPID keys with `npx web-push generate-vapid-keys`.
 
@@ -172,6 +175,8 @@ A personal companion app for managing Crohn's & Colitis symptoms, built with Nex
 ```
 src/
 ├── app/                    # Next.js App Router pages
+│   ├── api/
+│   │   └── news/          # Health news API (NewsAPI, MedlinePlus, Google News)
 │   ├── about/             # About page
 │   ├── auth/              # Authentication pages
 │   ├── medications/       # Medications management

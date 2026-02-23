@@ -1371,6 +1371,15 @@ select.input-field-wizard option[value=""] {
   color: var(--text-cadet-blue) !important;
 }
 
+/* Hide scrollbar but keep scroll */
+.scrollbar-hide {
+  -ms-overflow-style: none;
+  scrollbar-width: none;
+}
+.scrollbar-hide::-webkit-scrollbar {
+  display: none;
+}
+
 /* Dark mode scrollbar styling */
 .dark ::-webkit-scrollbar {
   width: 12px;

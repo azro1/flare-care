@@ -3,10 +3,10 @@
 import Link from 'next/link'
 import WeatherHero from '@/components/WeatherHero'
 import { useAuth } from '@/lib/AuthContext'
-import { useEffect, useState } from 'react'
+import { useEffect, useState, useRef } from 'react'
 import { useRouter } from 'next/navigation'
 import { supabase, TABLES } from '@/lib/supabase'
-import { CupSoda, Pizza, Coffee, BookOpen, Smile, Thermometer, Pill, FileText, Activity, TrendingUp, PartyPopper, Clipboard, Cookie, ChartLine, Sparkles, ChevronRight, ChevronDown, Clock, Scale, Calendar, Lightbulb } from 'lucide-react'
+import { CupSoda, Pizza, Coffee, BookOpen, Smile, Thermometer, Pill, FileText, Activity, TrendingUp, PartyPopper, Clipboard, Cookie, ChartLine, Sparkles, ChevronRight, ChevronDown, ChevronLeft, Clock, Scale, Calendar, Lightbulb, Newspaper } from 'lucide-react'
 
 export default function Home() {
   const { isAuthenticated, loading, user } = useAuth()
@@ -38,6 +38,12 @@ export default function Home() {
   const [appointmentAdded, setAppointmentAdded] = useState(null)
   const [appointmentUpdated, setAppointmentUpdated] = useState(null)
   const [appointmentDeleted, setAppointmentDeleted] = useState(null)
+  const [newsItems, setNewsItems] = useState([])
+  const [newsLoading, setNewsLoading] = useState(true)
+  const [newsError, setNewsError] = useState(null)
+  const newsScrollRef = useRef(null)
+  const [newsAtStart, setNewsAtStart] = useState(true)
+  const [newsAtEnd, setNewsAtEnd] = useState(false)
 
   // Daily tips array
   const dailyTips = [
@@ -315,6 +321,40 @@ export default function Home() {
     }
   }, [user?.id])
 
+  // Fetch Crohn's & Colitis news for dashboard
+  useEffect(() => {
+    if (!isAuthenticated) return
+    setNewsLoading(true)
+    setNewsError(null)
+    fetch('/api/news')
+      .then((res) => res.json())
+      .then((data) => {
+        setNewsItems(data.items || [])
+        if (data.error) setNewsError(data.error)
+      })
+      .catch(() => setNewsError('Failed to load news'))
+      .finally(() => setNewsLoading(false))
+  }, [isAuthenticated])
+
+  useEffect(() => {
+    if (!newsItems.length) return
+    const el = newsScrollRef.current
+    if (!el) return
+    const run = () => {
+      const atStart = el.scrollLeft <= 1
+      const atEnd = el.scrollLeft >= el.scrollWidth - el.clientWidth - 1
+      setNewsAtStart(atStart)
+      setNewsAtEnd(atEnd)
+    }
+    const id = setTimeout(run, 0)
+    el.addEventListener('scroll', run)
+    window.addEventListener('resize', run)
+    return () => {
+      clearTimeout(id)
+      el.removeEventListener('scroll', run)
+      window.removeEventListener('resize', run)
+    }
+  }, [newsItems])
 
   // Track daily medication intake with localStorage
   useEffect(() => {
@@ -948,10 +988,10 @@ export default function Home() {
 
       <div className="w-full sm:px-4 md:px-6 flex-1 flex flex-col min-h-0">
         <div className="flex-1 flex flex-col min-h-0">
-        <div className="flex-1 flex flex-col lg:flex-row lg:gap-6 lg:justify-center min-h-0">
+        <div className="flex-1 flex flex-col xl:flex-row xl:gap-6 xl:justify-center min-h-0">
           
           {/* Left Sidebar */}
-          <div className="lg:w-72 lg:flex-shrink-0 order-2 lg:order-1">
+          <div className="xl:w-72 xl:flex-shrink-0 order-2 xl:order-1">
             <div className="sticky top-6 space-y-4 sm:space-y-6">
               
               {/* Quick Stats */}
@@ -1041,7 +1081,7 @@ export default function Home() {
           </div>
 
           {/* Main Content */}
-          <div className="flex-1 lg:max-w-4xl order-1 lg:order-2">
+          <div className="flex-1 xl:max-w-4xl order-1 xl:order-2">
         {/* Weather Hero with Greeting & Date inside */}
         <WeatherHero>
           <h1 className="text-2xl sm:text-3xl lg:text-4xl font-bold font-source text-primary mb-2 sm:mb-3">
@@ -1435,6 +1475,127 @@ className="flex items-center gap-3 px-3 py-2.5 transition-colors hover:opacity-9
           </div>
         </div>
 
+        {/* Health News */}
+        {isAuthenticated && (
+          <div className="my-6">
+            <h2 className="text-xl font-semibold font-source text-primary mb-4">
+              Health News
+            </h2>
+            {newsLoading && (
+              <div className="flex items-center justify-center py-16">
+                <div className="animate-spin rounded-full h-10 w-10 border-b-2 border-[#5F9EA0]"></div>
+              </div>
+            )}
+            {newsError && !newsLoading && (
+              <div className="card">
+                <div className="card-inner p-8 text-center">
+                  <p className="text-secondary">Unable to load news. Try again later.</p>
+                </div>
+              </div>
+            )}
+            {!newsLoading && !newsError && newsItems.length === 0 && (
+              <div className="card">
+                <div className="card-inner p-8 text-center">
+                  <p className="text-secondary">No news available.</p>
+                </div>
+              </div>
+            )}
+            {!newsLoading && !newsError && newsItems.length > 0 && (
+                <div className="relative -mx-4 px-4 sm:mx-0 sm:px-0">
+                  <div
+                    ref={newsScrollRef}
+                    className="overflow-x-auto pb-2 scrollbar-hide"
+                  >
+                    <div className="flex gap-4 md:px-0" style={{ width: 'max-content' }}>
+                    {newsItems.map((item, idx) => (
+                              <a
+                                key={idx}
+                                href={item.link}
+                                target="_blank"
+                                rel="noopener noreferrer"
+                                className="card block overflow-hidden group hover:shadow-lg transition-all duration-200 flex-shrink-0 w-[260px] sm:w-[280px]"
+                              >
+                                <div className="flex flex-col h-full">
+                                  <div className="w-full aspect-[4/3] flex-shrink-0 bg-[var(--bg-card)] overflow-hidden relative">
+                                    <div
+                                      className="w-full h-full flex items-center justify-center absolute inset-0"
+                                      style={{
+                                        background: 'linear-gradient(135deg, rgba(95, 158, 160, 0.15) 0%, rgba(95, 158, 160, 0.05) 100%)'
+                                      }}
+                                      aria-hidden
+                                    >
+                                      <Newspaper className="w-10 h-10 opacity-40" style={{ color: 'var(--text-cadet-blue)' }} />
+                                    </div>
+                                    {item.imageUrl && (
+                                      <img
+                                        src={item.imageUrl}
+                                        alt=""
+                                        className="w-full h-full object-cover absolute inset-0 z-10"
+                                        loading="lazy"
+                                        onError={(e) => { e.target.style.display = 'none' }}
+                                      />
+                                    )}
+                                  </div>
+                                  <div className="min-w-0 pt-4">
+                                    <h3 className="font-semibold text-sm text-primary group-hover:text-[#5F9EA0] transition-colors line-clamp-2 leading-snug">
+                                      {item.headline || item.title}
+                                    </h3>
+                                    <div className="flex items-center gap-2 mt-2 flex-wrap">
+                                      {item.source && (
+                                        <span className="text-xs font-medium py-0.5 rounded" style={{ backgroundColor: 'var(--bg-card)', color: 'var(--text-cadet-blue)' }}>
+                                          {item.source}
+                                        </span>
+                                      )}
+                                      {item.pubDate && (
+                                        <span className="text-xs text-slate-400 dark:[color:var(--text-tertiary)]">
+                                          {new Date(item.pubDate).toLocaleDateString('en-GB', { day: 'numeric', month: 'short' })}
+                                        </span>
+                                      )}
+                                    </div>
+                                  </div>
+                                </div>
+                              </a>
+                            ))}
+                    </div>
+                  </div>
+                  {/* Overlay arrows - rendered on top so they capture clicks */}
+                  {!newsAtStart && (
+                    <div className="hidden md:flex absolute left-2 top-1/2 -translate-y-1/2 z-20 w-12 h-12 items-center justify-center">
+                      <button
+                        type="button"
+                        onClick={(e) => {
+                          e.preventDefault()
+                          e.stopPropagation()
+                          newsScrollRef.current?.scrollBy({ left: -592, behavior: 'smooth' })
+                        }}
+                        className="w-10 h-10 rounded-full flex items-center justify-center shadow-lg transition-opacity hover:opacity-90 bg-[var(--bg-card)] dark:bg-[var(--bg-card-inner)] text-[var(--text-cadet-blue)] dark:text-white"
+                        aria-label="Previous articles"
+                      >
+                        <ChevronLeft className="w-6 h-6" />
+                      </button>
+                    </div>
+                  )}
+                  {!newsAtEnd && (
+                    <div className="hidden md:flex absolute right-2 top-1/2 -translate-y-1/2 z-20 w-12 h-12 items-center justify-center">
+                      <button
+                        type="button"
+                        onClick={(e) => {
+                          e.preventDefault()
+                          e.stopPropagation()
+                          newsScrollRef.current?.scrollBy({ left: 592, behavior: 'smooth' })
+                        }}
+                        className="w-10 h-10 rounded-full flex items-center justify-center shadow-lg transition-opacity hover:opacity-90 bg-[var(--bg-card)] dark:bg-[var(--bg-card-inner)] text-[var(--text-cadet-blue)] dark:text-white"
+                        aria-label="Next articles"
+                      >
+                        <ChevronRight className="w-6 h-6" />
+                      </button>
+                    </div>
+                  )}
+                </div>
+            )}
+          </div>
+        )}
+
         {/* Recent Symptoms */}
         {displayedSymptoms.length > 0 && (
           <div className="mb-4 sm:mb-6 card">
@@ -1528,7 +1689,7 @@ className="flex items-center gap-3 px-3 py-2.5 transition-colors hover:opacity-9
         )}
 
         {/* More Options */}
-        <div className="mb-6 lg:mb-0">
+        <div className="mb-6 xl:mb-0">
           <h2 className="text-xl font-semibold font-source text-primary mb-4">More</h2>
           <div className="grid grid-cols-2 lg:grid-cols-3 gap-4 md:gap-6 min-w-0">
               <Link
