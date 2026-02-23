@@ -85,7 +85,7 @@ export default function Foods() {
           {/* Main Content */}
           <div className="flex-1 lg:max-w-4xl order-1 lg:order-2">
         {/* Header */}
-        <div className="mb-4 sm:mb-6 card ">
+        <div className="mb-5 sm:mb-6 card ">
           <h1 className="text-2xl sm:text-3xl lg:text-4xl font-bold font-source text-primary mb-4">
             Foods
           </h1>
@@ -95,7 +95,7 @@ export default function Foods() {
         </div>
 
         {/* Food Categories */}
-        <div className="grid grid-cols-1 lg:grid-cols-2 gap-4 sm:gap-6 mb-4 sm:mb-6">
+        <div className="grid grid-cols-1 lg:grid-cols-2 gap-5 mb-5 sm:gap-6 sm:mb-6">
           {categories.map((category, index) => (
             <div key={index} className="card">
               <div className="flex items-center gap-4 mb-4">
@@ -121,7 +121,7 @@ export default function Foods() {
         </div>
 
         {/* Tips Card */}
-        <div className="card backdrop-blur-sm mb-4 sm:mb-6">
+        <div className="card backdrop-blur-sm mb-5 sm:mb-6">
           <h2 className="text-xl font-semibold font-source text-primary mb-4 flex items-center gap-2">
             <Lightbulb className="w-5 h-5 flex-shrink-0 text-amber-500 dark:text-white" />
             Helpful Tips
@@ -144,7 +144,7 @@ export default function Foods() {
 
           {/* Left Sidebar */}
           <div className="lg:w-72 lg:flex-shrink-0 order-2 lg:order-1 lg:mb-6">
-            <div className="sticky top-6 space-y-4 sm:space-y-6">
+            <div className="sticky top-6 space-y-5 sm:space-y-6">
               
 
               {/* IBD-Friendly Foods */}
@@ -220,7 +220,7 @@ export default function Foods() {
 
       {/* Call to Action - Combined width (sidebar + content) */}
       <div>
-        <div className="mt-4 sm:mt-6 max-w-[76rem] mx-auto px-0 sm:px-4 md:px-6 lg:px-0 lg:mt-0">
+        <div className="mt-5 sm:mt-6 max-w-[76rem] mx-auto px-0 sm:px-4 md:px-6 lg:px-0 lg:mt-0">
           <div className="card p-8 backdrop-blur-sm text-center">
           <h2 className="text-xl font-semibold font-source text-primary mb-4">Track Your Meals</h2>
           <p className="text-secondary font-roboto mb-6 leading-relaxed">

@@ -346,13 +346,19 @@ export default function Home() {
       setNewsAtStart(atStart)
       setNewsAtEnd(atEnd)
     }
-    const id = setTimeout(run, 0)
+    run()
+    const id = setTimeout(run, 100)
+    const id2 = setTimeout(run, 500)
     el.addEventListener('scroll', run)
     window.addEventListener('resize', run)
+    const ro = new ResizeObserver(run)
+    ro.observe(el)
     return () => {
       clearTimeout(id)
+      clearTimeout(id2)
       el.removeEventListener('scroll', run)
       window.removeEventListener('resize', run)
+      ro.disconnect()
     }
   }, [newsItems])
 
@@ -992,11 +998,11 @@ export default function Home() {
           
           {/* Left Sidebar */}
           <div className="xl:w-72 xl:flex-shrink-0 order-2 xl:order-1">
-            <div className="sticky top-6 space-y-4 sm:space-y-6">
+            <div className="sticky top-6 space-y-5 sm:space-y-6">
               
               {/* Quick Stats */}
               <div className=" card">
-                <h3 className="text-xl font-semibold font-source text-primary mb-4">Your Progress</h3>
+                <h3 className="text-xl font-semibold font-source text-primary mb-3">Your Progress</h3>
                 <div className="card-inner p-5 space-y-2">
                   <div className="flex justify-between items-center">
                       <span className="text-sm text-secondary">Total Symptoms</span>
@@ -1023,7 +1029,7 @@ export default function Home() {
 
               {/* Today's Goals */}
               <div className="card no-hover-border p-4 sm:p-6">
-                <h3 className="text-xl font-semibold font-source text-primary mb-4">Today's Goals</h3>
+                <h3 className="text-xl font-semibold font-source text-primary mb-3">Today's Goals</h3>
                 <div className="space-y-3">
                   <div className="flex items-center gap-3">
                     <div className="w-6 h-6 card-inner flex items-center justify-center">
@@ -1067,7 +1073,7 @@ export default function Home() {
               {/* Daily Tip */}
               <div className="card">
                 <div>
-                  <h3 className="text-xl font-semibold font-source text-primary mb-2 flex items-center gap-2">
+                  <h3 className="text-xl font-semibold font-source text-primary mb-3 flex items-center gap-2">
                     <Lightbulb className="w-5 h-5 flex-shrink-0 text-amber-500 dark:text-white" />
                     Daily Tip
                   </h3>
@@ -1475,11 +1481,11 @@ className="flex items-center gap-3 px-3 py-2.5 transition-colors hover:opacity-9
           </div>
         </div>
 
-        {/* Health News */}
+        {/* Latest News */}
         {isAuthenticated && (
           <div className="my-6">
             <h2 className="text-xl font-semibold font-source text-primary mb-4">
-              Health News
+              Latest News
             </h2>
             {newsLoading && (
               <div className="flex items-center justify-center py-16">
@@ -1506,14 +1512,14 @@ className="flex items-center gap-3 px-3 py-2.5 transition-colors hover:opacity-9
                     ref={newsScrollRef}
                     className="overflow-x-auto pb-2 scrollbar-hide"
                   >
-                    <div className="flex gap-4 md:px-0" style={{ width: 'max-content' }}>
-                    {newsItems.map((item, idx) => (
+                    <div className="flex gap-4 md:gap-6 md:px-0" style={{ width: 'max-content' }}>
+                    {newsItems.map((item) => (
                               <a
-                                key={idx}
+                                key={item.link}
                                 href={item.link}
                                 target="_blank"
                                 rel="noopener noreferrer"
-                                className="card block overflow-hidden group hover:shadow-lg transition-all duration-200 flex-shrink-0 w-[260px] sm:w-[280px]"
+                                className="block overflow-hidden rounded-xl group hover:shadow-lg transition-all duration-200 flex-shrink-0 w-[260px] sm:w-[280px]"
                               >
                                 <div className="flex flex-col h-full">
                                   <div className="w-full aspect-[4/3] flex-shrink-0 bg-[var(--bg-card)] overflow-hidden relative">
@@ -1526,17 +1532,22 @@ className="flex items-center gap-3 px-3 py-2.5 transition-colors hover:opacity-9
                                     >
                                       <Newspaper className="w-10 h-10 opacity-40" style={{ color: 'var(--text-cadet-blue)' }} />
                                     </div>
-                                    {item.imageUrl && (
+                                    {item.imageUrl ? (
                                       <img
-                                        src={item.imageUrl}
+                                        src={`/api/image-proxy?url=${encodeURIComponent(item.imageUrl)}`}
                                         alt=""
                                         className="w-full h-full object-cover absolute inset-0 z-10"
                                         loading="lazy"
-                                        onError={(e) => { e.target.style.display = 'none' }}
+                                        onError={() => {
+                                          const payload = { headline: item.headline, source: item.source, imageUrl: item.imageUrl, link: item.link }
+                                          console.log('[News] Image failed to load:', payload)
+                                          fetch('/api/log-news-image-fail', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(payload) }).catch(() => {})
+                                          setNewsItems((prev) => prev.filter((i) => i.link !== item.link))
+                                        }}
                                       />
-                                    )}
+                                    ) : null}
                                   </div>
-                                  <div className="min-w-0 pt-4">
+                                  <div className="min-w-0 pt-4 px-4 pb-4 sm:px-6 sm:pb-6 rounded-b-xl bg-[var(--bg-card)]">
                                     <h3 className="font-semibold text-sm text-primary group-hover:text-[#5F9EA0] transition-colors line-clamp-2 leading-snug">
                                       {item.headline || item.title}
                                     </h3>
@@ -1558,7 +1569,6 @@ className="flex items-center gap-3 px-3 py-2.5 transition-colors hover:opacity-9
                             ))}
                     </div>
                   </div>
-                  {/* Overlay arrows - rendered on top so they capture clicks */}
                   {!newsAtStart && (
                     <div className="hidden md:flex absolute left-2 top-1/2 -translate-y-1/2 z-20 w-12 h-12 items-center justify-center">
                       <button

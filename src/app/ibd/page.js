@@ -41,7 +41,7 @@ export default function LearnPage() {
         
         {/* Left Sidebar */}
         <div className="lg:w-72 lg:flex-shrink-0 order-2 lg:order-1 lg:mb-6">
-          <div className="sticky top-6 space-y-4 sm:space-y-6">
+          <div className="sticky top-6 space-y-5 sm:space-y-6">
             
             {/* Daily Tips */}
             <div className="card">
@@ -122,7 +122,7 @@ export default function LearnPage() {
 
         {/* Main Content */}
         <div className="flex-1 lg:max-w-4xl order-1 lg:order-2">
-      <div className="mb-4 sm:mb-6 card">
+      <div className="mb-5 sm:mb-6 card">
         <h1 className="text-2xl sm:text-3xl lg:text-4xl font-bold font-source text-primary mb-4">IBD</h1>
         <p className="lg:text-lg text-secondary font-roboto break-words">
           Learn about Crohn's disease and Ulcerative Colitis, and how FlareCare can help you manage your condition
@@ -130,7 +130,7 @@ export default function LearnPage() {
       </div>
 
       {/* What is IBD Section */}
-      <div className="card mb-4 sm:mb-6">
+      <div className="card mb-5 sm:mb-6">
         <h2 className="text-xl font-semibold font-source text-primary mb-6 break-words">What is Inflammatory Bowel Disease (IBD)?</h2>
         <div className="prose prose-gray max-w-none">
           <p className="text-secondary mb-6 font-roboto break-words">
@@ -162,7 +162,7 @@ export default function LearnPage() {
       </div>
 
       {/* Common Symptoms Section */}
-      <div className="card backdrop-blur-sm mb-4 sm:mb-6">
+      <div className="card backdrop-blur-sm mb-5 sm:mb-6">
         <h2 className="text-xl font-semibold font-source text-primary mb-6 break-words">Common Symptoms</h2>
         <div className="grid gap-2 md:gap-6 md:grid-cols-2">
           <ul className="space-y-2 text-secondary font-roboto break-words">
@@ -214,7 +214,7 @@ export default function LearnPage() {
       </div>
 
       {/* Triggers Section */}
-      <div className="card mb-4 sm:mb-6">
+      <div className="card mb-5 sm:mb-6">
         <h2 className="text-xl font-semibold font-source text-primary mb-6 break-words">Common Triggers</h2>
         <div className="grid gap-4 sm:gap-6 md:grid-cols-3">
           <div className="card-inner p-4 sm:p-6 text-center">
@@ -247,7 +247,7 @@ export default function LearnPage() {
       </div>
 
       {/* When to Seek Help Section */}
-      <div className="card mb-4 sm:mb-6">
+      <div className="card mb-5 sm:mb-6">
         <h2 className="text-xl font-semibold font-source text-primary mb-6">When to Seek Medical Help</h2>
         <div>
           <h3 className="text-lg font-semibold font-source text-primary mb-4 leading-normal">Seek immediate medical attention if you experience:</h3>
@@ -277,7 +277,7 @@ export default function LearnPage() {
       </div>
 
       {/* How FlareCare Helps Section */}
-      <div className="card backdrop-blur-sm mb-4 sm:mb-6">
+      <div className="card backdrop-blur-sm mb-5 sm:mb-6">
         <h2 className="text-xl font-semibold font-source text-primary mb-6">How FlareCare Can Help</h2>
         <div className="card-inner p-4 sm:p-6">
         <div className="grid gap-3 md:gap-6 md:grid-cols-2">
@@ -331,7 +331,7 @@ export default function LearnPage() {
       </div>
 
       {/* Resources Section */}
-      <div className="card backdrop-blur-sm mb-4 sm:mb-6">
+      <div className="card backdrop-blur-sm mb-5 sm:mb-6">
         <h2 className="text-xl font-semibold font-source text-primary mb-6">Helpful Resources</h2>
         <div className="grid gap-3 md:gap-6 md:grid-cols-2">
           <ul className="space-y-3 font-roboto">
@@ -391,7 +391,7 @@ export default function LearnPage() {
       </div>
 
       {/* Call to Action */}
-        <div className="mt-4 sm:mt-6 lg:mt-0">
+        <div className="mt-5 sm:mt-6 lg:mt-0">
           <div className="max-w-[76rem] mx-auto">
             <div className="card p-8 backdrop-blur-sm text-center">
           <h2 className="text-xl font-semibold font-source text-primary mb-4">Track Your Medications</h2>

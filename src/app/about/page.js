@@ -8,7 +8,7 @@ export default function About() {
   return (
     <div className="w-full sm:px-4 md:px-6 min-w-0">
       <div className="max-w-5xl mx-auto">
-      <div className="text-center mb-4 sm:mb-6 card">
+      <div className="text-center mb-5 sm:mb-6 card">
         <h1 className="text-2xl sm:text-3xl lg:text-4xl font-bold font-source text-primary mb-4">
           FlareCare
         </h1>
@@ -17,7 +17,7 @@ export default function About() {
         </p>
       </div>
 
-      <div className="grid md:grid-cols-2 gap-4 mb-4 sm:gap-6 sm:mb-6">
+      <div className="grid md:grid-cols-2 gap-5 mb-5 sm:gap-6 sm:mb-6">
         <div className="card backdrop-blur-sm">
           <h2 className="text-xl sm:text-2xl font-semibold font-source text-primary mb-4">My Story</h2>
           <div className="space-y-4 text-secondary font-roboto leading-relaxed">
@@ -77,7 +77,7 @@ export default function About() {
         </div>
       </div>
 
-      <div className="card backdrop-blur-sm mb-4 sm:mb-6">
+      <div className="card backdrop-blur-sm mb-5 sm:mb-6">
         <h2 className="text-xl sm:text-2xl font-semibold font-source text-primary mb-4">The Vision</h2>
         <div className="space-y-4 text-secondary font-roboto leading-relaxed">
           <p>

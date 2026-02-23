@@ -124,7 +124,7 @@ function AccountPageContent() {
     <div>
       <div className="max-w-6xl mx-auto sm:px-4 md:px-6 lg:px-8">
         {/* Header */}
-        <div className="mb-4 sm:mb-6 card">
+        <div className="mb-5 sm:mb-6 card">
           <div className="text-center">
             <h1 className="text-2xl sm:text-3xl lg:text-4xl font-bold font-source text-primary mb-4">My Account</h1>
             <p className="text-secondary font-roboto break-words">Manage your account settings and information</p>
@@ -135,7 +135,7 @@ function AccountPageContent() {
           {/* Main content */}
           <div className="flex-1 min-w-0">
             {/* Profile Section */}
-            <div className="card mb-4 sm:mb-6">
+            <div className="card mb-5 sm:mb-6">
               <div className="flex flex-col sm:flex-row sm:items-start sm:justify-between gap-4 mb-6 sm:mb-8 card-inner p-4 sm:p-6">
                 <div className="flex items-center min-w-0">
                   <div className="mr-4 sm:mr-6 flex-shrink-0 ring-2 ring-[#5F9EA0]/30 rounded-full p-0.5">
@@ -207,7 +207,7 @@ function AccountPageContent() {
             </div>
 
             {/* Settings – mobile only: above Delete Account */}
-            <div className="card mb-4 sm:mb-6 lg:hidden">
+            <div className="card mb-5 sm:mb-6 lg:hidden">
               <div className="flex items-center gap-2 mb-4">
                 <Settings className="w-5 h-5 text-[#5F9EA0] dark:text-white" />
                 <h3 className="text-lg sm:text-xl font-semibold font-source text-primary">Settings</h3>
