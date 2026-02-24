@@ -126,7 +126,7 @@ function AccountPageContent() {
         {/* Header */}
         <div className="mb-5 sm:mb-6 card">
           <div className="text-center">
-            <h1 className="text-2xl sm:text-3xl lg:text-4xl font-bold font-source text-primary mb-4">Account</h1>
+            <h1 className="text-2xl sm:text-3xl lg:text-4xl font-bold font-source text-primary mb-4">Account settings</h1>
             <p className="text-secondary font-roboto break-words">Manage your account settings and information</p>
           </div>
         </div>
@@ -138,7 +138,9 @@ function AccountPageContent() {
             <div className="card mb-5 sm:mb-6">
               <div className="flex flex-col sm:flex-row sm:items-start sm:justify-between gap-4 mb-6 sm:mb-8 card-inner p-4 sm:p-6">
                 <div className="flex items-center min-w-0">
-                  <div className={`mr-4 sm:mr-6 flex-shrink-0 rounded-full p-0.5 ${avatarUrl && !showFallbackAvatar ? 'ring-1 ring-[var(--text-primary)]' : ''}`}>
+                  <div
+                    className={`mr-4 sm:mr-6 flex-shrink-0 rounded-full overflow-hidden ${avatarUrl && !showFallbackAvatar ? 'border-2 border-[var(--border-dropdown)]' : ''}`}
+                  >
                     <div className="w-12 h-12 sm:w-20 sm:h-20 rounded-full overflow-hidden flex items-center justify-center bg-[var(--bg-icon)] dark:bg-[var(--bg-icon-charcoal)]">
                       {avatarUrl && !showFallbackAvatar ? (
                         <img
