@@ -147,10 +147,10 @@ export default function WeatherHero({
       style={{ position: 'relative' }}
     >
       <div
-        className="sm:p-1"
+        className=""
       >
         {children && (
-          <div className="mb-6">
+          <div className="mb-3 sm:mb-4">
             {children}
           </div>
         )}

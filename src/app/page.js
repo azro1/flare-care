@@ -1003,7 +1003,7 @@ export default function Home() {
               {/* Quick Stats */}
               <div className=" card">
                 <h3 className="text-xl font-semibold font-source text-primary mb-3">Your Progress</h3>
-                <div className="card-inner p-5 space-y-2">
+                <div className="card-inner p-4 sm:p-5 space-y-2.5">
                   <div className="flex justify-between items-center">
                       <span className="text-sm text-secondary">Total Symptoms</span>
                     <span className="font-semibold text-primary">{symptoms.length}</span>
@@ -1108,11 +1108,11 @@ export default function Home() {
           <h2 className="text-xl font-semibold font-source text-primary mb-4">Daily Tasks</h2>
           {/* Mobile: single card with two rows + separator */}
           <div className="block sm:hidden">
-            <div className="card !p-2 overflow-hidden">
+            <div className="card !p-4 overflow-hidden">
               <Link
                 href="/symptoms"
-className="flex items-center gap-3 px-3 py-2.5 transition-colors hover:opacity-90 group relative focus:outline-none focus-visible:outline-none focus-visible:ring-0 focus-visible:ring-offset-0 focus:ring-0"
-            >
+                className="flex items-center gap-3 pb-3 transition-colors hover:opacity-90 group relative focus:outline-none focus-visible:outline-none focus-visible:ring-0 focus-visible:ring-offset-0 focus:ring-0"
+              >
               <div className="w-10 h-10 bg-emerald-100 dashboard-icon-panel rounded-lg flex items-center justify-center flex-shrink-0">
                   <Thermometer className="w-5 h-5 text-emerald-600 dark:text-white" />
                 </div>
@@ -1129,8 +1129,8 @@ className="flex items-center gap-3 px-3 py-2.5 transition-colors hover:opacity-9
               <div className="border-t min-w-0" style={{ borderColor: 'var(--border-card-inner)' }} />
               <Link
                 href="/medications/track"
-className="flex items-center gap-3 px-3 py-2.5 transition-colors hover:opacity-90 group relative focus:outline-none focus-visible:outline-none focus-visible:ring-0 focus-visible:ring-offset-0 focus:ring-0"
-            >
+                className="flex items-center gap-3 pt-3 transition-colors hover:opacity-90 group relative focus:outline-none focus-visible:outline-none focus-visible:ring-0 focus-visible:ring-offset-0 focus:ring-0"
+              >
 <div className="w-10 h-10 bg-pink-100 dashboard-icon-panel rounded-lg flex items-center justify-center flex-shrink-0">
                 <ChartLine className="w-5 h-5 text-pink-600 dark:text-white" />
                 </div>
@@ -1199,12 +1199,12 @@ className="flex items-center gap-3 px-3 py-2.5 transition-colors hover:opacity-9
             <h2 className="text-xl font-semibold font-source text-primary mb-3">Today's Summary</h2>
             <div className="card">
             <div className="card-inner p-4 sm:p-6">
-              <div className="flex justify-between items-center p-2">
+              <div className="flex justify-between items-center mb-3">
                 <span className="text-sm text-secondary">Symptoms Logged</span>
                 <span className="text-sm font-semibold text-primary">{todaySymptoms.length}</span>
               </div>
               <div className="border-t border-[var(--border-card-inner)] my-0" aria-hidden="true" />
-              <div className="flex justify-between items-center p-2">
+              <div className="flex justify-between items-center mt-3">
                 <span className="text-sm text-secondary">Medications Taken</span>
                 <span className="text-sm font-semibold text-primary">{takenMedications.length}/{medications.length}</span>
               </div>
@@ -1446,8 +1446,8 @@ className="flex items-center gap-3 px-3 py-2.5 transition-colors hover:opacity-9
                     <div className="flex justify-center mb-3">
                       <Clock className="w-10 h-10 text-secondary opacity-40" />
                     </div>
-                    <p className="text-secondary text-sm">No recent activity</p>
-                    <p className="text-xs text-secondary mt-1">Start tracking your symptoms and medications to see activity here</p>
+                    <p className="text-secondary text-sm leading-relaxed">No recent activity</p>
+                    <p className="text-xs text-secondary mt-1 leading-relaxed">Start tracking your symptoms and medications to see activity here</p>
                     </div>
                 )
               }

@@ -25,7 +25,7 @@ export default function MainContent({ children }) {
 
   // For all other pages, use the normal container
   return (
-    <main className="flex-grow flex flex-col container mx-auto px-4 py-6 sm:px-6 lg:px-8 sm:py-8">
+    <main className="flex-grow flex flex-col container mx-auto px-4 pt-5 pb-7 sm:px-6 lg:px-8 sm:py-8">
       {children}
     </main>
   )
