@@ -51,25 +51,25 @@ export default function LearnPage() {
                   <div className="w-8 h-8 min-w-[2rem] rounded-lg flex items-center justify-center card-inner">
                     <NotebookPen className="w-4 h-4 text-emerald-600 dark:text-white" />
                   </div>
-                  <p className="text-sm sm:text-base text-secondary">Keep a food diary to track triggers</p>
+                  <p className="text-[15px] sm:text-base text-secondary leading-relaxed">Keep a food diary to track triggers</p>
                 </div>
                 <div className="flex items-center gap-3">
                   <div className="w-8 h-8 min-w-[2rem] rounded-lg flex items-center justify-center card-inner">
                     <CupSoda className="w-4 h-4 text-sky-600 dark:text-white" />
                   </div>
-                  <p className="text-sm sm:text-base text-secondary">Stay hydrated throughout the day</p>
+                  <p className="text-[15px] sm:text-base text-secondary leading-relaxed">Stay hydrated throughout the day</p>
                 </div>
                 <div className="flex items-center gap-3">
                   <div className="w-8 h-8 min-w-[2rem] rounded-lg flex items-center justify-center card-inner">
                     <Cookie className="w-4 h-4 text-amber-600 dark:text-white" />
                   </div>
-                  <p className="text-sm sm:text-base text-secondary">Eat smaller, frequent meals</p>
+                  <p className="text-[15px] sm:text-base text-secondary leading-relaxed">Eat smaller, frequent meals</p>
                 </div>
                 <div className="flex items-center gap-3">
                   <div className="w-8 h-8 min-w-[2rem] rounded-lg flex items-center justify-center card-inner">
                     <Stethoscope className="w-4 h-4 text-indigo-400 dark:text-white" />
                   </div>
-                  <p className="text-sm sm:text-base text-secondary">Follow your healthcare team's advice</p>
+                  <p className="text-[15px] sm:text-base text-secondary leading-relaxed">Follow your healthcare team's advice</p>
                 </div>
               </div>
             </div>
@@ -81,22 +81,22 @@ export default function LearnPage() {
               <div className="border-l-4" style={{ borderColor: '#5F9EA0', opacity: 0.85 }}>
                   <div className="pl-3">
                     <h4 className="font-medium text-primary">NHS 111</h4>
-                    <p className="text-sm sm:text-base text-secondary">Non-emergency medical advice</p>
-                  <p className="text-sm sm:text-base font-medium" style={{ color: '#5F9EA0' }}>Call 111</p>
+                    <p className="text-[15px] sm:text-base text-secondary leading-relaxed">Non-emergency medical advice</p>
+                  <p className="text-[15px] sm:text-base font-medium leading-relaxed" style={{ color: '#5F9EA0' }}>Call 111</p>
                   </div>
                 </div>
               <div className="border-l-4" style={{ borderColor: '#5F9EA0', opacity: 0.85 }}>
                   <div className="pl-3">
                     <h4 className="font-medium text-primary">Crohn's & Colitis UK</h4>
-                    <p className="text-sm sm:text-base text-secondary">Support helpline</p>
-                  <p className="text-sm sm:text-base font-medium" style={{ color: '#5F9EA0' }}>0300 222 9099</p>
+                    <p className="text-[15px] sm:text-base text-secondary leading-relaxed">Support helpline</p>
+                  <p className="text-[15px] sm:text-base font-medium leading-relaxed" style={{ color: '#5F9EA0' }}>0300 222 9099</p>
                   </div>
                 </div>
               <div className="border-l-4" style={{ borderColor: '#5F9EA0', opacity: 0.85 }}>
                   <div className="pl-3">
                     <h4 className="font-medium text-primary">Emergency Services</h4>
-                    <p className="text-sm sm:text-base text-secondary">For life-threatening situations</p>
-                  <p className="text-sm sm:text-base font-medium" style={{ color: '#5F9EA0' }}>Call 999</p>
+                    <p className="text-[15px] sm:text-base text-secondary leading-relaxed">For life-threatening situations</p>
+                  <p className="text-[15px] sm:text-base font-medium leading-relaxed" style={{ color: '#5F9EA0' }}>Call 999</p>
                   </div>
                 </div>
               </div>
@@ -108,7 +108,7 @@ export default function LearnPage() {
               <div className="space-y-3">
                 <p
                   key={QUICK_FACTS[currentFactIndex]}
-                  className={`text-sm sm:text-base text-secondary font-roboto leading-relaxed transition-opacity duration-500 ${
+                  className={`text-[15px] sm:text-base text-secondary font-roboto leading-relaxed transition-opacity duration-500 ${
                     isFactFading ? 'opacity-0' : 'opacity-100'
                   }`}
                 >
@@ -124,7 +124,7 @@ export default function LearnPage() {
         <div className="flex-1 lg:max-w-4xl order-1 lg:order-2">
       <div className="mb-5 sm:mb-6 card">
         <h1 className="text-2xl sm:text-3xl lg:text-4xl font-bold font-source text-primary mb-4">IBD</h1>
-        <p className="text-sm sm:text-base lg:text-lg text-secondary font-roboto break-words leading-relaxed">
+        <p className="text-[15px] sm:text-base lg:text-lg text-secondary font-roboto break-words leading-relaxed">
           Learn about Crohn's disease and Ulcerative Colitis, and how FlareCare can help you manage your condition
         </p>
       </div>
@@ -133,28 +133,28 @@ export default function LearnPage() {
       <div className="card mb-5 sm:mb-6">
         <h2 className="text-xl font-semibold font-source text-primary mb-6 break-words">What is Inflammatory Bowel Disease (IBD)?</h2>
         <div className="prose prose-gray max-w-none">
-          <p className="text-sm sm:text-base text-secondary mb-6 font-roboto break-words">
+          <p className="text-[15px] sm:text-base text-secondary mb-6 font-roboto break-words leading-relaxed">
             Inflammatory Bowel Disease (IBD) is a term used to describe disorders that involve chronic inflammation of your digestive tract. The two main types are:
           </p>
           
           <div className="grid gap-4 sm:gap-6 md:grid-cols-2">
             <div className="card-inner p-4 sm:p-6">
               <h3 className="text-lg font-semibold font-source text-primary mb-3 break-words">Crohn's Disease</h3>
-              <ul className="text-secondary space-y-2 text-sm sm:text-base font-roboto break-words">
-                <li><span className="text-[#5F9EA0] mr-2">•</span>Can affect any part of the digestive tract</li>
-                <li><span className="text-[#5F9EA0] mr-2">•</span>Inflammation can be patchy with healthy areas in between</li>
-                <li><span className="text-[#5F9EA0] mr-2">•</span>Can affect the full thickness of the bowel wall</li>
-                <li><span className="text-[#5F9EA0] mr-2">•</span>May cause complications like fistulas and strictures</li>
+              <ul className="text-secondary space-y-2 text-[15px] sm:text-base font-roboto break-words">
+                <li className="leading-relaxed"><span className="text-[#5F9EA0] mr-2">•</span>Can affect any part of the digestive tract</li>
+                <li className="leading-relaxed"><span className="text-[#5F9EA0] mr-2">•</span>Inflammation can be patchy with healthy areas in between</li>
+                <li className="leading-relaxed"><span className="text-[#5F9EA0] mr-2">•</span>Can affect the full thickness of the bowel wall</li>
+                <li className="leading-relaxed"><span className="text-[#5F9EA0] mr-2">•</span>May cause complications like fistulas and strictures</li>
               </ul>
             </div>
             
             <div className="card-inner p-4 sm:p-6">
               <h3 className="text-lg font-semibold font-source text-primary mb-3 break-words">Ulcerative Colitis</h3>
-              <ul className="text-secondary space-y-2 text-sm sm:text-base font-roboto break-words">
-                <li><span className="text-[#5F9EA0] mr-2">•</span>Affects only the colon and rectum</li>
-                <li><span className="text-[#5F9EA0] mr-2">•</span>Inflammation is continuous, starting from the rectum</li>
-                <li><span className="text-[#5F9EA0] mr-2">•</span>Usually affects only the inner lining of the colon</li>
-                <li><span className="text-[#5F9EA0] mr-2">•</span>May increase risk of colon cancer over time</li>
+              <ul className="text-secondary space-y-2 text-[15px] sm:text-base font-roboto break-words">
+                <li className="leading-relaxed"><span className="text-[#5F9EA0] mr-2">•</span>Affects only the colon and rectum</li>
+                <li className="leading-relaxed"><span className="text-[#5F9EA0] mr-2">•</span>Inflammation is continuous, starting from the rectum</li>
+                <li className="leading-relaxed"><span className="text-[#5F9EA0] mr-2">•</span>Usually affects only the inner lining of the colon</li>
+                <li className="leading-relaxed"><span className="text-[#5F9EA0] mr-2">•</span>May increase risk of colon cancer over time</li>
               </ul>
             </div>
           </div>
@@ -165,47 +165,47 @@ export default function LearnPage() {
       <div className="card backdrop-blur-sm mb-5 sm:mb-6">
         <h2 className="text-xl font-semibold font-source text-primary mb-6 break-words">Common Symptoms</h2>
         <div className="grid gap-2 md:gap-6 md:grid-cols-2">
-          <ul className="space-y-2 text-sm sm:text-base text-secondary font-roboto break-words">
-            <li className="flex items-start">
+          <ul className="space-y-2 text-[15px] sm:text-base text-secondary font-roboto break-words">
+            <li className="flex items-start leading-relaxed">
               <span className="mr-2 mt-0.5 leading-tight">🤕</span>
               <span>Abdominal pain and cramping</span>
             </li>
-            <li className="flex items-start">
+            <li className="flex items-start leading-relaxed">
               <span className="mr-2 mt-0.5 leading-tight">💩</span>
               <span>Diarrhea (sometimes bloody)</span>
             </li>
-            <li className="flex items-start">
+            <li className="flex items-start leading-relaxed">
               <span className="mr-2 mt-0.5 leading-tight">🏃</span>
               <span>Urgent need to have a bowel movement</span>
             </li>
-            <li className="flex items-start">
+            <li className="flex items-start leading-relaxed">
               <span className="mr-2 mt-0.5 leading-tight">🔁</span>
               <span>Feeling of incomplete bowel movement</span>
             </li>
-            <li className="flex items-start">
+            <li className="flex items-start leading-relaxed">
               <span className="mr-2 mt-0.5 leading-tight">🤢</span>
               <span>Nausea and vomiting</span>
             </li>
           </ul>
           
-          <ul className="space-y-2 text-sm sm:text-base text-secondary font-roboto break-words">
-            <li className="flex items-start">
+          <ul className="space-y-2 text-[15px] sm:text-base text-secondary font-roboto break-words">
+            <li className="flex items-start leading-relaxed">
               <span className="mr-2 mt-0.5 leading-tight">😴</span>
               <span>Fatigue and low energy</span>
             </li>
-            <li className="flex items-start">
+            <li className="flex items-start leading-relaxed">
               <span className="mr-2 mt-0.5 leading-tight">⚖️</span>
               <span>Unintended weight loss</span>
             </li>
-            <li className="flex items-start">
+            <li className="flex items-start leading-relaxed">
               <span className="mr-2 mt-0.5 leading-tight">🍽️</span>
               <span>Loss of appetite</span>
             </li>
-            <li className="flex items-start">
+            <li className="flex items-start leading-relaxed">
               <span className="mr-2 mt-0.5 leading-tight">🌡️</span>
               <span>Fever during flare-ups</span>
             </li>
-            <li className="flex items-start">
+            <li className="flex items-start leading-relaxed">
               <span className="mr-2 mt-0.5 leading-tight">🦵</span>
               <span>Joint pain and swelling</span>
             </li>
@@ -221,7 +221,7 @@ export default function LearnPage() {
             <div className="w-16 h-16 rounded-full flex items-center justify-center mx-auto mb-4 bg-yellow-100 dark:bg-[var(--bg-card)]">
               <Pizza className="w-8 h-8 text-amber-500 dark:text-white" />
             </div>
-            <p className="text-sm sm:text-base text-secondary font-roboto break-words">
+            <p className="text-[15px] sm:text-base text-secondary font-roboto break-words leading-relaxed">
               Spicy foods, dairy, high-fiber foods, alcohol, and caffeine can trigger symptoms
             </p>
           </div>
@@ -230,7 +230,7 @@ export default function LearnPage() {
             <div className="w-16 h-16 rounded-full flex items-center justify-center mx-auto mb-4 bg-cyan-100 dark:bg-[var(--bg-card)]">
               <Brain className="w-8 h-8 text-cyan-600 dark:text-white" />
             </div>
-            <p className="text-sm sm:text-base text-secondary font-roboto break-words">
+            <p className="text-[15px] sm:text-base text-secondary font-roboto break-words leading-relaxed">
               Emotional stress and anxiety can worsen symptoms and trigger flare-ups
             </p>
           </div>
@@ -239,7 +239,7 @@ export default function LearnPage() {
             <div className="w-16 h-16 rounded-full flex items-center justify-center mx-auto mb-4 bg-green-100 dark:bg-[var(--bg-card)]">
               <Bug className="w-8 h-8 text-emerald-600 dark:text-white" />
             </div>
-            <p className="text-sm sm:text-base text-secondary font-roboto break-words">
+            <p className="text-[15px] sm:text-base text-secondary font-roboto break-words leading-relaxed">
               Viral or bacterial infections can trigger or worsen IBD symptoms
             </p>
           </div>
@@ -251,24 +251,24 @@ export default function LearnPage() {
         <h2 className="text-xl font-semibold font-source text-primary mb-6">When to Seek Medical Help</h2>
         <div>
           <h3 className="text-lg font-semibold font-source text-primary mb-4 leading-normal">Seek immediate medical attention if you experience:</h3>
-          <ul className="space-y-2 text-sm sm:text-base text-secondary font-source">
-            <li className="flex items-start">
+          <ul className="space-y-2 text-[15px] sm:text-base text-secondary font-source">
+            <li className="flex items-start leading-relaxed">
               <span className="text-red-500 mr-2 font-bold">•</span>
               <span>Severe abdominal pain</span>
             </li>
-            <li className="flex items-start">
+            <li className="flex items-start leading-relaxed">
               <span className="text-red-500 mr-2 font-bold">•</span>
               <span>High fever (over 101°F/38°C)</span>
             </li>
-            <li className="flex items-start">
+            <li className="flex items-start leading-relaxed">
               <span className="text-red-500 mr-2 font-bold">•</span>
               <span>Significant blood in stool</span>
             </li>
-            <li className="flex items-start">
+            <li className="flex items-start leading-relaxed">
               <span className="text-red-500 mr-2 font-bold">•</span>
               <span>Signs of dehydration (dizziness, dry mouth, no urination)</span>
             </li>
-            <li className="flex items-start">
+            <li className="flex items-start leading-relaxed">
               <span className="text-red-500 mr-2 font-bold">•</span>
               <span>Rapid weight loss</span>
             </li>
@@ -282,20 +282,20 @@ export default function LearnPage() {
         <div className="card-inner p-4 sm:p-6">
         <div className="grid gap-3 md:gap-6 md:grid-cols-2">
           <div>
-            <ul className="space-y-3 text-sm sm:text-base text-secondary font-roboto">
-              <li className="flex items-start">
+            <ul className="space-y-3 text-[15px] sm:text-base text-secondary font-roboto">
+              <li className="flex items-start leading-relaxed">
                 <div className="w-4 h-4 flex items-center justify-center mr-2 mt-0.5 flex-shrink-0" style={{ color: 'var(--text-cadet-blue)' }}>
                   <Check className="w-3.5 h-3.5" strokeWidth={2.5} />
                 </div>
                 <span>Log daily symptoms with severity ratings</span>
               </li>
-              <li className="flex items-start">
+              <li className="flex items-start leading-relaxed">
                 <div className="w-4 h-4 flex items-center justify-center mr-2 mt-0.5 flex-shrink-0" style={{ color: 'var(--text-cadet-blue)' }}>
                   <Check className="w-3.5 h-3.5" strokeWidth={2.5} />
                 </div>
                 <span>Record foods that may trigger symptoms</span>
               </li>
-              <li className="flex items-start">
+              <li className="flex items-start leading-relaxed">
                 <div className="w-4 h-4 flex items-center justify-center mr-2 mt-0.5 flex-shrink-0" style={{ color: 'var(--text-cadet-blue)' }}>
                   <Check className="w-3.5 h-3.5" strokeWidth={2.5} />
                 </div>
@@ -305,20 +305,20 @@ export default function LearnPage() {
           </div>
           
           <div>
-            <ul className="space-y-3 text-sm sm:text-base text-secondary font-roboto">
-              <li className="flex items-start">
+            <ul className="space-y-3 text-[15px] sm:text-base text-secondary font-roboto">
+              <li className="flex items-start leading-relaxed">
                 <div className="w-4 h-4 flex items-center justify-center mr-2 mt-0.5 flex-shrink-0" style={{ color: 'var(--text-cadet-blue)' }}>
                   <Check className="w-3.5 h-3.5" strokeWidth={2.5} />
                 </div>
                 <span>Set medication reminders</span>
               </li>
-              <li className="flex items-start">
+              <li className="flex items-start leading-relaxed">
                 <div className="w-4 h-4 flex items-center justify-center mr-2 mt-0.5 flex-shrink-0" style={{ color: 'var(--text-cadet-blue)' }}>
                   <Check className="w-3.5 h-3.5" strokeWidth={2.5} />
                 </div>
                 <span>Track dosage and timing</span>
               </li>
-              <li className="flex items-start">
+              <li className="flex items-start leading-relaxed">
                 <div className="w-4 h-4 flex items-center justify-center mr-2 mt-0.5 flex-shrink-0" style={{ color: 'var(--text-cadet-blue)' }}>
                   <Check className="w-3.5 h-3.5" strokeWidth={2.5} />
                 </div>
@@ -344,7 +344,7 @@ export default function LearnPage() {
               >
                 Crohn's & Colitis UK
               </a>
-              <p className="text-sm sm:text-base text-secondary font-roboto">Leading UK charity providing support and information</p>
+              <p className="text-[15px] sm:text-base text-secondary font-roboto leading-relaxed">Leading UK charity providing support and information</p>
             </li>
             <li>
               <a 
@@ -355,7 +355,7 @@ export default function LearnPage() {
               >
                 Crohn's & Colitis Foundation
               </a>
-              <p className="text-sm sm:text-base text-secondary font-roboto">US-based organization with comprehensive resources</p>
+              <p className="text-[15px] sm:text-base text-secondary font-roboto leading-relaxed">US-based organization with comprehensive resources</p>
             </li>
           </ul>
           
@@ -369,7 +369,7 @@ export default function LearnPage() {
               >
                 NHS Information
               </a>
-              <p className="text-sm sm:text-base text-secondary font-roboto">Official NHS guidance on IBD</p>
+              <p className="text-[15px] sm:text-base text-secondary font-roboto leading-relaxed">Official NHS guidance on IBD</p>
             </li>
             <li>
               <a 
@@ -380,7 +380,7 @@ export default function LearnPage() {
               >
                 Mayo Clinic Guide
               </a>
-              <p className="text-sm sm:text-base text-secondary font-roboto">Comprehensive medical information</p>
+              <p className="text-[15px] sm:text-base text-secondary font-roboto leading-relaxed">Comprehensive medical information</p>
             </li>
           </ul>
         </div>
@@ -395,7 +395,7 @@ export default function LearnPage() {
           <div className="max-w-[76rem] mx-auto">
             <div className="card p-8 backdrop-blur-sm text-center">
           <h2 className="text-xl font-semibold font-source text-primary mb-4">Track Your Medications</h2>
-          <p className="text-sm sm:text-base text-secondary font-roboto mb-6 leading-relaxed">
+          <p className="text-[15px] sm:text-base text-secondary font-roboto mb-6 leading-relaxed">
             Use the medications tracker to log missed medications to keep your healthcare team informed
           </p>
           <div className="flex flex-col sm:flex-row justify-center items-center sm:items-stretch space-y-3 sm:space-y-0 sm:space-x-4">

@@ -1248,7 +1248,7 @@ function SymptomsPageContent() {
           <button
             type="button"
             onClick={() => setCurrentStep(0)}
-            className="text-sm sm:text-base font-normal text-primary underline hover:opacity-80 transition-opacity text-left"
+            className="text-[15px] sm:text-base font-normal text-primary underline hover:opacity-80 transition-opacity text-left"
           >
             Log Symptoms
           </button>
@@ -2191,25 +2191,25 @@ function SymptomsPageContent() {
               <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
                 <div>
                   <span className="text-sm text-cadet-blue block mb-1">Start Date</span>
-                  <span className="text-sm sm:text-base font-medium text-primary">{formData.symptomStartDate ? new Date(formData.symptomStartDate).toLocaleDateString() : 'Not set'}</span>
+                  <span className="text-[15px] sm:text-base font-medium text-primary">{formData.symptomStartDate ? new Date(formData.symptomStartDate).toLocaleDateString() : 'Not set'}</span>
                 </div>
                 <div>
                   <span className="text-sm text-cadet-blue block mb-1">Status</span>
-                  <span className="text-sm sm:text-base font-medium text-primary">{formData.isOngoing ? 'Ongoing' : 'Ended'}</span>
+                  <span className="text-[15px] sm:text-base font-medium text-primary">{formData.isOngoing ? 'Ongoing' : 'Ended'}</span>
                 </div>
                 {!formData.isOngoing && formData.symptomEndDate && (
                   <div>
                     <span className="text-sm text-cadet-blue block mb-1">End Date</span>
-                    <span className="text-sm sm:text-base font-medium text-primary">{new Date(formData.symptomEndDate).toLocaleDateString()}</span>
+                    <span className="text-[15px] sm:text-base font-medium text-primary">{new Date(formData.symptomEndDate).toLocaleDateString()}</span>
                   </div>
                 )}
                 <div>
                   <span className="text-sm text-cadet-blue block mb-1">Severity</span>
-                  <span className="text-sm sm:text-base font-medium text-primary">{formData.severity}/10</span>
+                  <span className="text-[15px] sm:text-base font-medium text-primary">{formData.severity}/10</span>
                 </div>
                 <div>
                   <span className="text-sm text-cadet-blue block mb-1">Stress Level</span>
-                  <span className="text-sm sm:text-base font-medium text-primary">{formData.stress_level}/10</span>
+                  <span className="text-[15px] sm:text-base font-medium text-primary">{formData.stress_level}/10</span>
                 </div>
               </div>
             </div>
@@ -2221,19 +2221,19 @@ function SymptomsPageContent() {
                 <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
                   <div>
                     <span className="text-sm text-cadet-blue block mb-1">Frequency</span>
-                    <span className="text-sm sm:text-base font-medium text-primary">{formData.normal_bathroom_frequency || 'Not set'} times/day</span>
+                    <span className="text-[15px] sm:text-base font-medium text-primary">{formData.normal_bathroom_frequency || 'Not set'} times/day</span>
                   </div>
                   {formData.bathroom_frequency_changed && (
                     <div>
                       <span className="text-sm text-cadet-blue block mb-1">Frequency Changed</span>
-                      <span className="text-sm sm:text-base font-medium text-primary">{formData.bathroom_frequency_changed === 'yes' ? 'Yes' : 'No'}</span>
+                      <span className="text-[15px] sm:text-base font-medium text-primary">{formData.bathroom_frequency_changed === 'yes' ? 'Yes' : 'No'}</span>
                     </div>
                   )}
                 </div>
                 {formData.bathroom_frequency_changed === 'yes' && formData.bathroom_frequency_change_details && (
                   <div className="pt-3 border-t min-w-0" style={{borderColor: 'var(--border-primary)'}}>
                     <span className="text-sm text-cadet-blue block mb-1">Change Description</span>
-                    <span className="text-sm sm:text-base font-medium text-primary line-clamp-2 block" title={formData.bathroom_frequency_change_details}>{formData.bathroom_frequency_change_details}</span>
+                    <span className="text-[15px] sm:text-base font-medium text-primary line-clamp-2 block" title={formData.bathroom_frequency_change_details}>{formData.bathroom_frequency_change_details}</span>
                   </div>
                 )}
               </div>
@@ -2247,22 +2247,22 @@ function SymptomsPageContent() {
                   <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
                     <div>
                       <span className="text-sm text-cadet-blue block mb-1">Smoking</span>
-                      <span className="text-sm sm:text-base font-medium text-primary">{formData.smoking ? 'Yes' : 'No'}</span>
+                      <span className="text-[15px] sm:text-base font-medium text-primary">{formData.smoking ? 'Yes' : 'No'}</span>
                     </div>
                     {formData.smoking && formData.smoking_details && (
                       <div className="min-w-0">
                         <span className="text-sm text-cadet-blue block mb-1">Smoking Habits</span>
-                        <span className="text-sm sm:text-base font-medium text-primary line-clamp-2 block" title={formData.smoking_details}>{formData.smoking_details}</span>
+                        <span className="text-[15px] sm:text-base font-medium text-primary line-clamp-2 block" title={formData.smoking_details}>{formData.smoking_details}</span>
                       </div>
                     )}
                     <div>
                       <span className="text-sm text-cadet-blue block mb-1">Alcohol</span>
-                      <span className="text-sm sm:text-base font-medium text-primary">{formData.alcohol ? 'Yes' : 'No'}</span>
+                      <span className="text-[15px] sm:text-base font-medium text-primary">{formData.alcohol ? 'Yes' : 'No'}</span>
                     </div>
                     {formData.alcohol && formData.alcohol_units && (
                       <div>
                         <span className="text-sm text-cadet-blue block mb-1">Alcohol Units</span>
-                        <span className="text-sm sm:text-base font-medium text-primary">{formData.alcohol_units} units/day</span>
+                        <span className="text-[15px] sm:text-base font-medium text-primary">{formData.alcohol_units} units/day</span>
                       </div>
                     )}
                   </div>
@@ -2275,21 +2275,21 @@ function SymptomsPageContent() {
               const mealEntries = []
               if (formData.breakfast.some(item => item.food.trim())) {
                 mealEntries.push({ label: 'Breakfast', content: formData.breakfast.filter(item => item.food.trim()).map((item, index) => (
-                  <div key={index} className="text-sm sm:text-base font-medium text-primary truncate" title={`${item.food}${item.quantity ? ` (${item.quantity})` : ''}`}>{item.food} {item.quantity ? `(${item.quantity})` : ''}</div>
+                  <div key={index} className="text-[15px] sm:text-base font-medium text-primary truncate" title={`${item.food}${item.quantity ? ` (${item.quantity})` : ''}`}>{item.food} {item.quantity ? `(${item.quantity})` : ''}</div>
                 )) })
               } else if (formData.breakfast_skipped) {
                 mealEntries.push({ label: 'Breakfast', skipped: true })
               }
               if (formData.lunch.some(item => item.food.trim())) {
                 mealEntries.push({ label: 'Lunch', content: formData.lunch.filter(item => item.food.trim()).map((item, index) => (
-                  <div key={index} className="text-sm sm:text-base font-medium text-primary truncate" title={`${item.food}${item.quantity ? ` (${item.quantity})` : ''}`}>{item.food} {item.quantity ? `(${item.quantity})` : ''}</div>
+                  <div key={index} className="text-[15px] sm:text-base font-medium text-primary truncate" title={`${item.food}${item.quantity ? ` (${item.quantity})` : ''}`}>{item.food} {item.quantity ? `(${item.quantity})` : ''}</div>
                 )) })
               } else if (formData.lunch_skipped) {
                 mealEntries.push({ label: 'Lunch', skipped: true })
               }
               if (formData.dinner.some(item => item.food.trim())) {
                 mealEntries.push({ label: 'Dinner', content: formData.dinner.filter(item => item.food.trim()).map((item, index) => (
-                  <div key={index} className="text-sm sm:text-base font-medium text-primary truncate" title={`${item.food}${item.quantity ? ` (${item.quantity})` : ''}`}>{item.food} {item.quantity ? `(${item.quantity})` : ''}</div>
+                  <div key={index} className="text-[15px] sm:text-base font-medium text-primary truncate" title={`${item.food}${item.quantity ? ` (${item.quantity})` : ''}`}>{item.food} {item.quantity ? `(${item.quantity})` : ''}</div>
                 )) })
               } else if (formData.dinner_skipped) {
                 mealEntries.push({ label: 'Dinner', skipped: true })
@@ -2303,7 +2303,7 @@ function SymptomsPageContent() {
                       <div key={entry.label + index} className={`min-w-0 ${index < array.length - 1 ? 'border-b pb-3' : ''}`} style={index < array.length - 1 ? {borderColor: 'var(--border-primary)'} : {}}>
                         <span className="text-sm text-cadet-blue block mb-2">{entry.label}</span>
                         {entry.skipped ? (
-                          <span className="text-sm sm:text-base font-medium text-primary italic">Didn't eat anything</span>
+                          <span className="text-[15px] sm:text-base font-medium text-primary italic">Didn't eat anything</span>
                         ) : (
                           <div className="space-y-1 min-w-0">{entry.content}</div>
                         )}
@@ -2319,7 +2319,7 @@ function SymptomsPageContent() {
               <div className="card border min-w-0" style={{borderColor: 'var(--border-card)'}}>
                 <h3 className="text-xl font-semibold text-cadet-blue mb-4 pb-4 border-b" style={{borderColor: 'var(--border-primary)'}}>Notes</h3>
                 <div className="min-w-0">
-                  <p className="text-sm sm:text-base font-medium text-primary line-clamp-3" title={formData.notes}>{formData.notes}</p>
+                  <p className="text-[15px] sm:text-base font-medium text-primary line-clamp-3" title={formData.notes}>{formData.notes}</p>
                 </div>
               </div>
             )}

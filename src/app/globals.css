@@ -124,7 +124,7 @@
     --text-button-disabled: #6b7280;
     --bg-button-cancel: #3a3d44;
     --bg-button-cancel-hover: #4a4d54;
-    --bg-error: rgba(95, 158, 160, 0.2);
+    --bg-error: transparent;
     --border-error: #7FB3B3;
     --text-error: #7FB3B3;
     --text-cadet-blue: #5F9EA0;

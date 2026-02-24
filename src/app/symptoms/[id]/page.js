@@ -164,7 +164,7 @@ function SymptomDetailContent() {
           </div>
           
           <div className="mb-6">
-            <p className="text-sm sm:text-base text-secondary">
+            <p className="text-[15px] sm:text-base text-secondary">
               {new Date(symptom.created_at || symptom.createdAt).toLocaleDateString('en-GB', { 
                 weekday: 'long', 
                 year: 'numeric', 
@@ -184,7 +184,7 @@ function SymptomDetailContent() {
             <div className="space-y-4 sm:space-y-0 sm:grid sm:grid-cols-3 sm:gap-6">
               <div className="card-inner p-4">
                 <span className="text-xs font-semibold text-secondary uppercase tracking-wide block">Status</span>
-                <p className={`mt-2 text-sm sm:text-base font-semibold ${
+                <p className={`mt-2 text-[15px] sm:text-base font-semibold ${
                   (symptom.isOngoing || !symptom.symptomEndDate)
                     ? 'text-yellow-600 dark:text-white'
                     : 'text-green-600 dark:text-white'
@@ -195,14 +195,14 @@ function SymptomDetailContent() {
 
               <div className="card-inner p-4">
                 <span className="text-xs font-semibold text-secondary uppercase tracking-wide block">Severity</span>
-                <p className="mt-2 text-sm sm:text-base font-semibold text-red-600 dark:text-white">
+                <p className="mt-2 text-[15px] sm:text-base font-semibold text-red-600 dark:text-white">
                   {symptom.severity ?? 'Not logged'}
                 </p>
               </div>
 
               <div className="card-inner p-4">
                 <span className="text-xs font-semibold text-secondary uppercase tracking-wide block">Stress level</span>
-                <p className="mt-2 text-sm sm:text-base font-semibold text-cyan-600 dark:text-white">
+                <p className="mt-2 text-[15px] sm:text-base font-semibold text-cyan-600 dark:text-white">
                   {symptom.stress_level ?? 'Not logged'}
                 </p>
               </div>
@@ -219,9 +219,9 @@ function SymptomDetailContent() {
               >
                 <div className="flex items-center gap-3">
                   <div className="w-3 h-3 bg-green-500 rounded-full"></div>
-                  <span className="text-sm sm:text-base font-medium text-primary">Started</span>
+                  <span className="text-[15px] sm:text-base font-medium text-primary">Started</span>
                 </div>
-                <span className="text-sm sm:text-base text-secondary">
+                <span className="text-[15px] sm:text-base text-secondary">
                   {symptom.symptomStartDate 
                     ? new Date(symptom.symptomStartDate).toLocaleDateString() 
                     : (symptom.created_at || symptom.createdAt 
@@ -233,9 +233,9 @@ function SymptomDetailContent() {
                 <div className="flex items-center justify-between pt-4">
                   <div className="flex items-center gap-3">
                     <div className="w-3 h-3 bg-red-500 rounded-full"></div>
-                    <span className="text-sm sm:text-base font-medium text-primary">Ended</span>
+                    <span className="text-[15px] sm:text-base font-medium text-primary">Ended</span>
                   </div>
-                  <span className="text-sm sm:text-base text-secondary">{new Date(symptom.symptomEndDate).toLocaleDateString()}</span>
+                  <span className="text-[15px] sm:text-base text-secondary">{new Date(symptom.symptomEndDate).toLocaleDateString()}</span>
                 </div>
               )}
             </div>
@@ -251,8 +251,8 @@ function SymptomDetailContent() {
                 }`}
                 style={{ borderColor: 'var(--border-card-inner)' }}
               >
-                <span className="text-sm sm:text-base font-medium text-primary">Normal frequency</span>
-                <span className="text-sm sm:text-base text-secondary">{symptom.normal_bathroom_frequency || 'Not set'} times/day</span>
+                <span className="text-[15px] sm:text-base font-medium text-primary">Normal frequency</span>
+                <span className="text-[15px] sm:text-base text-secondary">{symptom.normal_bathroom_frequency || 'Not set'} times/day</span>
               </div>
               {symptom.bathroom_frequency_changed && (
                 <div
@@ -263,14 +263,14 @@ function SymptomDetailContent() {
                   }`}
                 style={{ borderColor: 'var(--border-card-inner)' }}
                 >
-                  <span className="text-sm sm:text-base font-medium text-primary">Frequency changed</span>
-                  <span className="text-sm sm:text-base text-secondary">{symptom.bathroom_frequency_changed === 'yes' ? 'Yes' : 'No'}</span>
+                  <span className="text-[15px] sm:text-base font-medium text-primary">Frequency changed</span>
+                  <span className="text-[15px] sm:text-base text-secondary">{symptom.bathroom_frequency_changed === 'yes' ? 'Yes' : 'No'}</span>
                 </div>
               )}
               {symptom.bathroom_frequency_changed === 'yes' && symptom.bathroom_frequency_change_details && (
                 <div className="pt-4 min-w-0">
-                  <span className="text-sm sm:text-base font-medium text-primary block mb-2">Description</span>
-                  <p className="text-sm sm:text-base text-secondary leading-relaxed line-clamp-3" title={symptom.bathroom_frequency_change_details}>{symptom.bathroom_frequency_change_details}</p>
+                  <span className="text-[15px] sm:text-base font-medium text-primary block mb-2">Description</span>
+                  <p className="text-[15px] sm:text-base text-secondary leading-relaxed line-clamp-3" title={symptom.bathroom_frequency_change_details}>{symptom.bathroom_frequency_change_details}</p>
                 </div>
               )}
             </div>
@@ -281,13 +281,13 @@ function SymptomDetailContent() {
             <h2 className="text-xl font-semibold font-source text-primary mb-4 sm:mb-6">Lifestyle</h2>
             <div className="card-inner p-4">
               <div className="flex items-center justify-between pb-4 border-b border-slate-300/30 dark:border-b" style={{borderColor: 'var(--border-card-inner)'}}>
-                <span className="text-sm sm:text-base font-medium text-primary">Smoking</span>
-                <span className="text-sm sm:text-base text-secondary">{symptom.smoking ? 'Yes' : 'No'}</span>
+                <span className="text-[15px] sm:text-base font-medium text-primary">Smoking</span>
+                <span className="text-[15px] sm:text-base text-secondary">{symptom.smoking ? 'Yes' : 'No'}</span>
               </div>
               {symptom.smoking && symptom.smoking_details && (
                 <div className="pt-4 pb-4 border-b border-slate-300/30 dark:border-b min-w-0" style={{borderColor: 'var(--border-card-inner)'}}>
-                  <span className="text-sm sm:text-base font-medium text-primary block mb-2">Smoking details</span>
-                  <p className="text-sm sm:text-base text-secondary leading-relaxed line-clamp-3" title={symptom.smoking_details}>{symptom.smoking_details}</p>
+                  <span className="text-[15px] sm:text-base font-medium text-primary block mb-2">Smoking details</span>
+                  <p className="text-[15px] sm:text-base text-secondary leading-relaxed line-clamp-3" title={symptom.smoking_details}>{symptom.smoking_details}</p>
                 </div>
               )}
               <div
@@ -296,13 +296,13 @@ function SymptomDetailContent() {
                 }`}
                 style={{ borderColor: 'var(--border-card-inner)' }}
               >
-                <span className="text-sm sm:text-base font-medium text-primary">Alcohol</span>
-                <span className="text-sm sm:text-base text-secondary">{symptom.alcohol ? 'Yes' : 'No'}</span>
+                <span className="text-[15px] sm:text-base font-medium text-primary">Alcohol</span>
+                <span className="text-[15px] sm:text-base text-secondary">{symptom.alcohol ? 'Yes' : 'No'}</span>
               </div>
               {symptom.alcohol && symptom.alcohol_units && (
                 <div className="flex items-center justify-between pt-4">
-                  <span className="text-sm sm:text-base font-medium text-primary">Alcohol units</span>
-                  <span className="text-sm sm:text-base text-secondary">{symptom.alcohol_units} units/day</span>
+                  <span className="text-[15px] sm:text-base font-medium text-primary">Alcohol units</span>
+                  <span className="text-[15px] sm:text-base text-secondary">{symptom.alcohol_units} units/day</span>
                 </div>
               )}
             </div>
@@ -323,8 +323,8 @@ function SymptomDetailContent() {
                           className={`flex flex-col sm:flex-row sm:items-center sm:justify-between gap-2 pt-4 pb-4 first:pt-0 last:pb-0 ${index < symptom.breakfast.length - 1 ? 'border-b border-slate-300/30 dark:border-b' : ''}`}
                           style={index < symptom.breakfast.length - 1 ? { borderColor: 'var(--border-card-inner)' } : undefined}
                         >
-                          <span className="text-sm sm:text-base text-secondary break-words min-w-0" title={meal.food}>{meal.food}</span>
-                          <span className="text-sm sm:text-base text-secondary break-words min-w-0" title={meal.quantity}>{meal.quantity}</span>
+                          <span className="text-[15px] sm:text-base text-secondary break-words min-w-0" title={meal.food}>{meal.food}</span>
+                          <span className="text-[15px] sm:text-base text-secondary break-words min-w-0" title={meal.quantity}>{meal.quantity}</span>
                         </div>
                       ))}
                     </div>
@@ -340,8 +340,8 @@ function SymptomDetailContent() {
                           className={`flex flex-col sm:flex-row sm:items-center sm:justify-between gap-2 pt-4 pb-4 first:pt-0 last:pb-0 ${index < symptom.lunch.length - 1 ? 'border-b border-slate-300/30 dark:border-b' : ''}`}
                           style={index < symptom.lunch.length - 1 ? { borderColor: 'var(--border-card-inner)' } : undefined}
                         >
-                          <span className="text-sm sm:text-base text-secondary break-words min-w-0" title={meal.food}>{meal.food}</span>
-                          <span className="text-sm sm:text-base text-secondary break-words min-w-0" title={meal.quantity}>{meal.quantity}</span>
+                          <span className="text-[15px] sm:text-base text-secondary break-words min-w-0" title={meal.food}>{meal.food}</span>
+                          <span className="text-[15px] sm:text-base text-secondary break-words min-w-0" title={meal.quantity}>{meal.quantity}</span>
                         </div>
                       ))}
                     </div>
@@ -357,8 +357,8 @@ function SymptomDetailContent() {
                           className={`flex flex-col sm:flex-row sm:items-center sm:justify-between gap-2 pt-4 pb-4 first:pt-0 last:pb-0 ${index < symptom.dinner.length - 1 ? 'border-b border-slate-300/30 dark:border-b' : ''}`}
                           style={index < symptom.dinner.length - 1 ? { borderColor: 'var(--border-card-inner)' } : undefined}
                         >
-                          <span className="text-sm sm:text-base text-secondary break-words min-w-0" title={meal.food}>{meal.food}</span>
-                          <span className="text-sm sm:text-base text-secondary break-words min-w-0" title={meal.quantity}>{meal.quantity}</span>
+                          <span className="text-[15px] sm:text-base text-secondary break-words min-w-0" title={meal.food}>{meal.food}</span>
+                          <span className="text-[15px] sm:text-base text-secondary break-words min-w-0" title={meal.quantity}>{meal.quantity}</span>
                         </div>
                       ))}
                     </div>
@@ -373,7 +373,7 @@ function SymptomDetailContent() {
             <div className="card">
               <h2 className="text-xl font-semibold font-source text-primary mb-4 sm:mb-6">Notes</h2>
               <div className="card-inner p-4 min-w-0">
-                <p className="text-sm sm:text-base text-secondary leading-relaxed line-clamp-3" title={symptom.notes}>{symptom.notes}</p>
+                <p className="text-[15px] sm:text-base text-secondary leading-relaxed line-clamp-3" title={symptom.notes}>{symptom.notes}</p>
               </div>
             </div>
           )}
@@ -393,7 +393,7 @@ function SymptomDetailContent() {
               </div>
               <h3 className="text-lg font-semibold text-primary">Delete Symptom Entry</h3>
             </div>
-            <p className="text-sm sm:text-base text-secondary mb-6">
+            <p className="text-[15px] sm:text-base text-secondary mb-6">
               Are you sure you want to delete this symptom entry? This action cannot be undone.
             </p>
             <div className="flex gap-3">

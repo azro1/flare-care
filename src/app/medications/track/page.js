@@ -874,15 +874,15 @@ function MedicationTrackingWizard() {
                   <div key={index} className={`grid grid-cols-1 sm:grid-cols-2 gap-3 ${index < array.length - 1 ? 'border-b pb-3' : ''}`} style={index < array.length - 1 ? {borderColor: 'var(--border-primary)'} : {}}>
                     <div className="min-w-0">
                       <span className="text-sm text-cadet-blue block mb-1">Medication</span>
-                      <span className="text-sm sm:text-base font-medium text-primary truncate block" title={item.medication}>{item.medication}</span>
+                      <span className="text-[15px] sm:text-base font-medium text-primary truncate block" title={item.medication}>{item.medication}</span>
                     </div>
                     <div className="min-w-0">
                       <span className="text-sm text-cadet-blue block mb-1">Date</span>
-                      <span className="text-sm sm:text-base font-medium text-primary">{item.date ? new Date(item.date).toLocaleDateString('en-GB', { day: '2-digit', month: '2-digit', year: 'numeric' }) : 'N/A'}</span>
+                      <span className="text-[15px] sm:text-base font-medium text-primary">{item.date ? new Date(item.date).toLocaleDateString('en-GB', { day: '2-digit', month: '2-digit', year: 'numeric' }) : 'N/A'}</span>
                     </div>
                     <div>
                       <span className="text-sm text-cadet-blue block mb-1">Time of Day</span>
-                      <span className="text-sm sm:text-base font-medium text-primary">{item.timeOfDay || 'N/A'}</span>
+                      <span className="text-[15px] sm:text-base font-medium text-primary">{item.timeOfDay || 'N/A'}</span>
                     </div>
                   </div>
                 ))}
@@ -899,19 +899,19 @@ function MedicationTrackingWizard() {
                   <div key={index} className={`grid grid-cols-1 sm:grid-cols-2 gap-3 ${index < array.length - 1 ? 'border-b pb-3' : ''}`} style={index < array.length - 1 ? {borderColor: 'var(--border-primary)'} : {}}>
                     <div className="min-w-0">
                       <span className="text-sm text-cadet-blue block mb-1">Medication</span>
-                      <span className="text-sm sm:text-base font-medium text-primary truncate block" title={item.medication}>{item.medication}</span>
+                      <span className="text-[15px] sm:text-base font-medium text-primary truncate block" title={item.medication}>{item.medication}</span>
                     </div>
                     <div className="min-w-0">
                       <span className="text-sm text-cadet-blue block mb-1">Dosage</span>
-                      <span className="text-sm sm:text-base font-medium text-primary block">{item.dosage ? `${item.dosage}mg` : 'N/A'}</span>
+                      <span className="text-[15px] sm:text-base font-medium text-primary block">{item.dosage ? `${item.dosage}mg` : 'N/A'}</span>
                     </div>
                     <div>
                       <span className="text-sm text-cadet-blue block mb-1">Date</span>
-                      <span className="text-sm sm:text-base font-medium text-primary">{item.date ? new Date(item.date).toLocaleDateString('en-GB', { day: '2-digit', month: '2-digit', year: 'numeric' }) : 'N/A'}</span>
+                      <span className="text-[15px] sm:text-base font-medium text-primary">{item.date ? new Date(item.date).toLocaleDateString('en-GB', { day: '2-digit', month: '2-digit', year: 'numeric' }) : 'N/A'}</span>
                     </div>
                     <div>
                       <span className="text-sm text-cadet-blue block mb-1">Time of Day</span>
-                      <span className="text-sm sm:text-base font-medium text-primary">{item.timeOfDay || 'N/A'}</span>
+                      <span className="text-[15px] sm:text-base font-medium text-primary">{item.timeOfDay || 'N/A'}</span>
                     </div>
                   </div>
                 ))}
@@ -928,19 +928,19 @@ function MedicationTrackingWizard() {
                   <div key={index} className={`grid grid-cols-1 sm:grid-cols-2 gap-3 ${index < array.length - 1 ? 'border-b pb-3' : ''}`} style={index < array.length - 1 ? {borderColor: 'var(--border-primary)'} : {}}>
                     <div className="min-w-0">
                       <span className="text-sm text-cadet-blue block mb-1">Medication</span>
-                      <span className="text-sm sm:text-base font-medium text-primary truncate block" title={item.medication}>{item.medication}</span>
+                      <span className="text-[15px] sm:text-base font-medium text-primary truncate block" title={item.medication}>{item.medication}</span>
                     </div>
                     <div className="min-w-0">
                       <span className="text-sm text-cadet-blue block mb-1">Dosage</span>
-                      <span className="text-sm sm:text-base font-medium text-primary block">{item.dosage ? `${item.dosage}mg` : 'N/A'}</span>
+                      <span className="text-[15px] sm:text-base font-medium text-primary block">{item.dosage ? `${item.dosage}mg` : 'N/A'}</span>
                     </div>
                     <div>
                       <span className="text-sm text-cadet-blue block mb-1">Date</span>
-                      <span className="text-sm sm:text-base font-medium text-primary">{item.date ? new Date(item.date).toLocaleDateString('en-GB', { day: '2-digit', month: '2-digit', year: 'numeric' }) : 'N/A'}</span>
+                      <span className="text-[15px] sm:text-base font-medium text-primary">{item.date ? new Date(item.date).toLocaleDateString('en-GB', { day: '2-digit', month: '2-digit', year: 'numeric' }) : 'N/A'}</span>
                     </div>
                     <div>
                       <span className="text-sm text-cadet-blue block mb-1">Time of Day</span>
-                      <span className="text-sm sm:text-base font-medium text-primary">{item.timeOfDay || 'N/A'}</span>
+                      <span className="text-[15px] sm:text-base font-medium text-primary">{item.timeOfDay || 'N/A'}</span>
                     </div>
                   </div>
                 ))}
@@ -973,7 +973,7 @@ function MedicationTrackingWizard() {
           <button
             type="button"
             onClick={() => setCurrentStep(0)}
-            className="text-sm sm:text-base font-normal text-primary underline hover:opacity-80 transition-opacity text-left"
+            className="text-[15px] sm:text-base font-normal text-primary underline hover:opacity-80 transition-opacity text-left"
           >
             Track Medications
           </button>

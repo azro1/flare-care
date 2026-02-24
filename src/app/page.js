@@ -755,7 +755,7 @@ export default function Home() {
               </Link>
             </div>
 
-            <div className="card p-8 md:p-10 backdrop-blur-sm">
+            <div className="card !p-6 md:p-10 backdrop-blur-sm">
               <div className="flex items-center gap-3 mb-6">
                 <div className="w-10 h-10 rounded-full bg-[#5F9EA0] flex items-center justify-center">
                   <span className="text-white text-sm font-medium">JD</span>
@@ -852,7 +852,7 @@ export default function Home() {
 
         <section className="py-12 md:py-24 px-6">
           <div className="max-w-3xl mx-auto">
-            <div className="card p-10 md:p-14 backdrop-blur-sm">
+            <div className="card !p-6 backdrop-blur-sm">
               <h2 className="text-2xl sm:text-3xl font-bold text-primary mb-6">
                 Why I built this
               </h2>
