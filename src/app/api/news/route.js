@@ -15,19 +15,23 @@ const IBD_RSS_FEEDS = [
 
 export const revalidate = 3600 // 1 hour
 
+const OG_FETCH_TIMEOUT_MS = 4000
+
 async function fetchOgImage(articleUrl) {
   try {
     const controller = new AbortController()
-    const timeout = setTimeout(() => controller.abort(), 5000)
+    const timeout = setTimeout(() => controller.abort(), OG_FETCH_TIMEOUT_MS)
     const res = await fetch(articleUrl, {
-      headers: { 'User-Agent': 'FlareCare/1.0 (IBD news)' },
+      headers: { 'User-Agent': 'Mozilla/5.0 (compatible; FlareCare/1.0; +https://flarecare.com)' },
       signal: controller.signal
     })
     clearTimeout(timeout)
     if (!res.ok) return null
     const html = await res.text()
-    const match = html.match(/<meta[^>]+property=["']og:image["'][^>]+content=["']([^"']+)["']|content=["']([^"']+)["'][^>]+property=["']og:image["']/i)
-    return match ? (match[1] || match[2]).trim() : null
+    const ogImageMatch = html.match(/<meta[^>]+property=["']og:image(?::url)?["'][^>]+content=["']([^"']+)["']|content=["']([^"']+)["'][^>]+property=["']og:image(?::url)?["']/i)
+    if (ogImageMatch) return (ogImageMatch[1] || ogImageMatch[2]).trim()
+    const imgMatch = html.match(/<meta[^>]+name=["']twitter:image["'][^>]+content=["']([^"']+)["']|content=["']([^"']+)["'][^>]+name=["']twitter:image["']/i)
+    return imgMatch ? (imgMatch[1] || imgMatch[2]).trim() : null
   } catch {
     return null
   }
@@ -38,7 +42,10 @@ function extractImageUrl(item) {
   const html = String(content)
   const imgMatch = html.match(/<img[^>]+src=["']([^"']+)["']/i)
   if (imgMatch) return imgMatch[1]
-  if (item.enclosure?.url && (item.enclosure.type || '').startsWith('image/')) return item.enclosure.url
+  if (item.enclosure?.url) {
+    const type = (item.enclosure.type || '').toLowerCase()
+    if (type.startsWith('image/') || /\.(jpe?g|png|gif|webp)(\?|$)/i.test(item.enclosure.url)) return item.enclosure.url
+  }
   return null
 }
 
@@ -88,12 +95,16 @@ export async function GET() {
     })
 
     const seen = new Set()
-    const all = []
-
-    for (const feed of IBD_RSS_FEEDS) {
-      const items = await fetchRssFeed(parser, feed, seen)
-      all.push(...items)
+    const feedResults = await Promise.all(
+      IBD_RSS_FEEDS.map((feed) => fetchRssFeed(parser, feed, seen))
+    )
+    const byLink = new Map()
+    for (const item of feedResults.flat()) {
+      const link = item.link
+      if (!link || byLink.has(link)) continue
+      byLink.set(link, item)
     }
+    const all = Array.from(byLink.values())
 
     all.sort((a, b) => {
       const da = a.pubDate ? new Date(a.pubDate).getTime() : 0
@@ -106,8 +117,8 @@ export async function GET() {
     const withoutImages = all.filter((i) => !i.imageUrl)
     let combined = [...withImages, ...withoutImages].slice(0, MAX_ITEMS)
 
-    // Fetch og:image from article pages for items missing images
-    const toFetch = combined.filter((i) => !i.imageUrl).slice(0, MAX_ITEMS)
+    // Fetch og:image from article pages for all items missing images
+    const toFetch = combined.filter((i) => !i.imageUrl)
     const results = await Promise.all(toFetch.map((item) => fetchOgImage(item.link)))
     const combinedMap = new Map(combined.map((i) => [i.link, { ...i }]))
     toFetch.forEach((item, idx) => {

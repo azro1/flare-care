@@ -304,7 +304,7 @@ function AppointmentsPageContent() {
 
   return (
     <div className="max-w-4xl w-full mx-auto sm:px-4 md:px-6 min-w-0">
-      <div className="mb-4 sm:mb-6">
+      <div className="mb-5 sm:mb-6">
         <div className="card">
           <div className="flex flex-col sm:flex-row sm:justify-between sm:items-start">
             <div className="min-w-0 flex-1">
@@ -319,7 +319,7 @@ function AppointmentsPageContent() {
         </div>
       </div>
 
-      <div className="card mb-4 sm:mb-6 min-w-0">
+      <div className="card mb-5 sm:mb-6 min-w-0">
         <div className="flex flex-row flex-wrap items-center justify-between gap-4 mb-5 sm:mb-6">
           <div className="flex items-center min-w-0">
             <div className="flex w-10 h-10 bg-sky-100 dashboard-icon-panel rounded-lg items-center justify-center mr-3 sm:mr-4 flex-shrink-0">

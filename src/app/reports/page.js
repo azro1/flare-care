@@ -1024,7 +1024,7 @@ function ReportsPageContent() {
   return (
     <div className="w-full sm:px-4 md:px-6 lg:px-8 min-w-0 min-h-screen">
       <div className="max-w-4xl mx-auto">
-      <div className="mb-4 sm:mb-6 card">
+      <div className="mb-5 sm:mb-6 card">
         <h1 className="text-2xl sm:text-3xl lg:text-4xl font-bold font-source text-primary mb-4">Reports</h1>
         <p className="text-secondary font-roboto">
           Generate detailed reports to share with your healthcare team
@@ -1032,7 +1032,7 @@ function ReportsPageContent() {
       </div>
 
       {/* Date Range Selector */}
-      <div className="card mb-4 sm:mb-6">
+      <div className="card mb-5 sm:mb-6">
         <div className="flex items-center mb-6">
           <div className="flex w-10 h-10 bg-orange-100 dashboard-icon-panel rounded-lg items-center justify-center mr-3 sm:mr-4 flex-shrink-0">
             <Calendar className="w-5 h-5 text-orange-600 dark:text-white" />
@@ -1156,7 +1156,7 @@ function ReportsPageContent() {
       </div>
 
       {/* Report Results - Collapsible */}
-      <div className="card mb-4 sm:mb-6">
+      <div className="card mb-5 sm:mb-6">
         <button
           type="button"
           onClick={() => toggleSection('symptomReport')}
@@ -1294,7 +1294,7 @@ function ReportsPageContent() {
 
       {/* Medications - Collapsible */}
       {reportData.medications.length > 0 && (
-        <div className="card mb-4 sm:mb-6">
+        <div className="card mb-5 sm:mb-6">
           <button
             type="button"
             onClick={() => toggleSection('currentMeds')}
@@ -1521,7 +1521,7 @@ function ReportsPageContent() {
 
       {/* Appointments - Collapsible */}
       {reportData.appointments && reportData.appointments.length > 0 && (
-        <div className="card mb-4 sm:mb-6">
+        <div className="card mb-5 sm:mb-6">
           <button
             type="button"
             onClick={() => toggleSection('appointments')}
@@ -1561,7 +1561,7 @@ function ReportsPageContent() {
 
       {/* Weight - Collapsible */}
       {reportData.weightEntries && reportData.weightEntries.length > 0 && (
-        <div className="card mb-4 sm:mb-6">
+        <div className="card mb-5 sm:mb-6">
           <button
             type="button"
             onClick={() => toggleSection('weight')}
@@ -1598,7 +1598,7 @@ function ReportsPageContent() {
 
       {/* Top Foods - Collapsible */}
       {reportData.topFoods.length > 0 && (
-        <div className="card mb-4 sm:mb-6">
+        <div className="card mb-5 sm:mb-6">
           <button
             type="button"
             onClick={() => toggleSection('foods')}

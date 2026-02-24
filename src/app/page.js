@@ -1539,10 +1539,9 @@ className="flex items-center gap-3 px-3 py-2.5 transition-colors hover:opacity-9
                                         className="w-full h-full object-cover absolute inset-0 z-10"
                                         loading="lazy"
                                         onError={() => {
-                                          const payload = { headline: item.headline, source: item.source, imageUrl: item.imageUrl, link: item.link }
-                                          console.log('[News] Image failed to load:', payload)
-                                          fetch('/api/log-news-image-fail', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(payload) }).catch(() => {})
-                                          setNewsItems((prev) => prev.filter((i) => i.link !== item.link))
+                                          setNewsItems((prev) =>
+                                            prev.map((i) => (i.link === item.link ? { ...i, imageUrl: null } : i))
+                                          )
                                         }}
                                       />
                                     ) : null}
