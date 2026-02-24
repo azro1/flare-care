@@ -76,7 +76,7 @@ export default function ConfirmationModal({
             </h3>
           </div>
           
-          <p className="text-secondary mb-6 font-roboto">
+          <p className="text-sm sm:text-base text-secondary mb-6 font-roboto">
             {message}
           </p>
 

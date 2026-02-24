@@ -1077,7 +1077,7 @@ export default function Home() {
                     <Lightbulb className="w-5 h-5 flex-shrink-0 text-amber-500 dark:text-white" />
                     Daily Tip
                   </h3>
-                  <p className={`text-sm text-secondary transition-opacity duration-500 ${isFading ? 'opacity-0' : 'opacity-100'}`}>
+                  <p className={`text-sm text-secondary leading-relaxed sm:leading-normal transition-opacity duration-500 ${isFading ? 'opacity-0' : 'opacity-100'}`}>
                     {dailyTips[currentTipIndex]}
                   </p>
                 </div>
@@ -1547,7 +1547,7 @@ export default function Home() {
                                     ) : null}
                                   </div>
                                   <div className="min-w-0 pt-4 px-4 pb-4 sm:px-6 sm:pb-6 rounded-b-xl bg-[var(--bg-card)]">
-                                    <h3 className="font-semibold text-sm text-primary group-hover:text-[#5F9EA0] transition-colors line-clamp-2 leading-snug">
+                                    <h3 className="font-semibold text-sm text-primary group-hover:text-[#5F9EA0] transition-colors line-clamp-2 leading-normal">
                                       {item.headline || item.title}
                                     </h3>
                                     <div className="flex items-center gap-2 mt-2 flex-wrap">

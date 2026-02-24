@@ -1012,7 +1012,7 @@ function ReportsPageContent() {
         <div className="max-w-4xl mx-auto">
           <div className="mb-8 card">
             <h1 className="text-2xl sm:text-3xl lg:text-4xl font-bold font-source text-primary mb-4">Reports</h1>
-            <p className="text-secondary font-roboto">
+            <p className="text-sm sm:text-base text-secondary font-roboto">
               Generate detailed reports to share with your healthcare team
             </p>
           </div>
@@ -1026,7 +1026,7 @@ function ReportsPageContent() {
       <div className="max-w-4xl mx-auto">
       <div className="mb-5 sm:mb-6 card">
         <h1 className="text-2xl sm:text-3xl lg:text-4xl font-bold font-source text-primary mb-4">Reports</h1>
-        <p className="text-secondary font-roboto">
+        <p className="text-sm sm:text-base text-secondary font-roboto">
           Generate detailed reports to share with your healthcare team
         </p>
       </div>

@@ -311,7 +311,7 @@ function AppointmentsPageContent() {
               <h1 className="text-2xl sm:text-3xl lg:text-4xl font-bold font-source text-primary mb-4 sm:mb-6">
                 Appointments
               </h1>
-              <p className="text-secondary font-roboto">
+              <p className="text-sm sm:text-base text-secondary font-roboto leading-relaxed">
                 Add your clinic appointments in one place so you never miss one
               </p>
             </div>
@@ -347,7 +347,7 @@ function AppointmentsPageContent() {
             <form onSubmit={handleSubmit} className="space-y-4" autoComplete="off">
               <div className="grid sm:grid-cols-2 gap-6 min-w-0">
                 <div>
-                  <label htmlFor="apt-date" className="block text-base font-semibold font-roboto text-primary mb-3">
+                  <label htmlFor="apt-date" className="block text-sm sm:text-base font-semibold font-roboto text-primary mb-2 sm:mb-3">
                     Date *
                   </label>
                   <input
@@ -378,7 +378,7 @@ function AppointmentsPageContent() {
                   )}
                 </div>
                 <div>
-                  <label htmlFor="apt-time" className="block text-base font-semibold font-roboto text-primary mb-3">
+                  <label htmlFor="apt-time" className="block text-sm sm:text-base font-semibold font-roboto text-primary mb-2 sm:mb-3">
                     Time *
                   </label>
                   <select
@@ -398,7 +398,7 @@ function AppointmentsPageContent() {
                 </div>
               </div>
               <div>
-                <label htmlFor="apt-type" className="block text-base font-semibold font-roboto text-primary mb-3">
+                <label htmlFor="apt-type" className="block text-sm sm:text-base font-semibold font-roboto text-primary mb-2 sm:mb-3">
                   Type of appointment *
                 </label>
                 <input
@@ -412,7 +412,7 @@ function AppointmentsPageContent() {
                 />
               </div>
               <div>
-                <label htmlFor="apt-clinician" className="block text-base font-semibold font-roboto text-primary mb-3">
+                <label htmlFor="apt-clinician" className="block text-sm sm:text-base font-semibold font-roboto text-primary mb-2 sm:mb-3">
                   Name of clinician
                 </label>
                 <input
@@ -425,7 +425,7 @@ function AppointmentsPageContent() {
                 />
               </div>
               <div>
-                <label htmlFor="apt-location" className="block text-base font-semibold font-roboto text-primary mb-3">
+                <label htmlFor="apt-location" className="block text-sm sm:text-base font-semibold font-roboto text-primary mb-2 sm:mb-3">
                   Location *
                 </label>
                 <input
@@ -439,7 +439,7 @@ function AppointmentsPageContent() {
                 />
               </div>
               <div>
-                <label htmlFor="apt-notes" className="block text-base font-semibold font-roboto text-primary mb-3">
+                <label htmlFor="apt-notes" className="block text-sm sm:text-base font-semibold font-roboto text-primary mb-2 sm:mb-3">
                   Notes
                 </label>
                 <textarea
@@ -452,7 +452,7 @@ function AppointmentsPageContent() {
                 />
               </div>
               <div>
-                <label htmlFor="apt-reminder" className="block text-base font-semibold font-roboto text-primary mb-3">
+                <label htmlFor="apt-reminder" className="block text-sm sm:text-base font-semibold font-roboto text-primary mb-2 sm:mb-3">
                   Remind me
                 </label>
                 <select
@@ -503,8 +503,8 @@ function AppointmentsPageContent() {
               <Calendar className="w-6 h-6 sm:w-10 sm:h-10 text-secondary" />
             </div>
             <h3 className="text-lg font-semibold font-source text-primary mb-2">No upcoming appointments</h3>
-            <p className="font-roboto text-secondary max-w-md mx-auto">
-              Add appointments to keep track of your healthcare
+            <p className="text-sm sm:text-base font-roboto text-secondary max-w-md mx-auto leading-relaxed">
+              Your appointments will show here once you add them
             </p>
           </div>
         ) : (
@@ -643,7 +643,7 @@ function AppointmentsPageContent() {
           <p className="text-sm sm:text-base text-secondary font-roboto leading-relaxed">
             FlareCare can send reminders so you don't miss an appointment — in your browser or as push notifications on your device.
           </p>
-          <div className="card-inner p-6 mt-4">
+          <div className="card-inner p-4 sm:p-6 mt-4">
             <div className="flex items-center gap-2 mb-2">
               <Lightbulb className="w-5 h-5 flex-shrink-0 text-amber-500 dark:text-white" />
               <span className="text-base sm:text-sm font-medium text-primary font-roboto">Important to know:</span>

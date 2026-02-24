@@ -477,7 +477,7 @@ function MedicationTrackingWizard() {
               <button
                 onClick={addMissedMedication}
                 disabled={!formData.missedMedicationsList[formData.missedMedicationsList.length - 1]?.medication || !formData.missedMedicationsList[formData.missedMedicationsList.length - 1]?.date || !formData.missedMedicationsList[formData.missedMedicationsList.length - 1]?.timeOfDay}
-                className={`px-4 py-2 text-sm font-medium rounded-lg transition-colors whitespace-nowrap ${
+                className={`px-4 py-2 text-sm font-semibold rounded-lg transition-colors whitespace-nowrap ${
                   !formData.missedMedicationsList[formData.missedMedicationsList.length - 1]?.medication || !formData.missedMedicationsList[formData.missedMedicationsList.length - 1]?.date || !formData.missedMedicationsList[formData.missedMedicationsList.length - 1]?.timeOfDay
                     ? 'button-disabled'
                     : 'button-cadet'
@@ -619,7 +619,7 @@ function MedicationTrackingWizard() {
               <button
                 onClick={addNsaid}
                 disabled={!formData.nsaidList[formData.nsaidList.length - 1]?.medication || !formData.nsaidList[formData.nsaidList.length - 1]?.date || !formData.nsaidList[formData.nsaidList.length - 1]?.timeOfDay || !formData.nsaidList[formData.nsaidList.length - 1]?.dosage}
-                className={`px-4 py-2 text-sm font-medium rounded-lg transition-colors whitespace-nowrap ${
+                className={`px-4 py-2 text-sm font-semibold rounded-lg transition-colors whitespace-nowrap ${
                   !formData.nsaidList[formData.nsaidList.length - 1]?.medication || !formData.nsaidList[formData.nsaidList.length - 1]?.date || !formData.nsaidList[formData.nsaidList.length - 1]?.timeOfDay || !formData.nsaidList[formData.nsaidList.length - 1]?.dosage
                     ? 'button-disabled'
                     : 'button-cadet'
@@ -773,7 +773,7 @@ function MedicationTrackingWizard() {
               <button
                 onClick={addAntibiotic}
                 disabled={!formData.antibioticList[formData.antibioticList.length - 1]?.medication || !formData.antibioticList[formData.antibioticList.length - 1]?.date || !formData.antibioticList[formData.antibioticList.length - 1]?.timeOfDay || !formData.antibioticList[formData.antibioticList.length - 1]?.dosage}
-                className={`px-4 py-2 text-sm font-medium rounded-lg transition-colors whitespace-nowrap ${
+                className={`px-4 py-2 text-sm font-semibold rounded-lg transition-colors whitespace-nowrap ${
                   !formData.antibioticList[formData.antibioticList.length - 1]?.medication || !formData.antibioticList[formData.antibioticList.length - 1]?.date || !formData.antibioticList[formData.antibioticList.length - 1]?.timeOfDay || !formData.antibioticList[formData.antibioticList.length - 1]?.dosage
                     ? 'button-disabled'
                     : 'button-cadet'
@@ -868,21 +868,21 @@ function MedicationTrackingWizard() {
           {/* Missed Medications */}
           {(formData.missedMedications && formData.missedMedicationsList.filter(item => item.medication.trim()).length > 0) && (
             <div className="card border" style={{borderColor: 'var(--border-card)'}}>
-              <h3 className="text-xl font-semibold text-cadet-blue mb-6 pb-4 border-b" style={{borderColor: 'var(--border-primary)'}}>Missed Medications</h3>
-              <div className="space-y-4">
+              <h3 className="text-xl font-semibold text-cadet-blue mb-4 pb-4 border-b" style={{borderColor: 'var(--border-primary)'}}>Missed Medications</h3>
+              <div className="space-y-3">
                 {formData.missedMedicationsList.filter(item => item.medication.trim()).map((item, index, array) => (
-                  <div key={index} className={`grid grid-cols-1 sm:grid-cols-2 gap-3 py-3 ${index < array.length - 1 ? 'border-b' : ''}`} style={index < array.length - 1 ? {borderColor: 'var(--border-primary)'} : {}}>
+                  <div key={index} className={`grid grid-cols-1 sm:grid-cols-2 gap-3 ${index < array.length - 1 ? 'border-b pb-3' : ''}`} style={index < array.length - 1 ? {borderColor: 'var(--border-primary)'} : {}}>
                     <div className="min-w-0">
                       <span className="text-sm text-cadet-blue block mb-1">Medication</span>
-                      <span className="font-medium text-primary truncate block" title={item.medication}>{item.medication}</span>
+                      <span className="text-sm sm:text-base font-medium text-primary truncate block" title={item.medication}>{item.medication}</span>
                     </div>
                     <div className="min-w-0">
                       <span className="text-sm text-cadet-blue block mb-1">Date</span>
-                      <span className="font-medium text-primary">{item.date ? new Date(item.date).toLocaleDateString('en-GB', { day: '2-digit', month: '2-digit', year: 'numeric' }) : 'N/A'}</span>
+                      <span className="text-sm sm:text-base font-medium text-primary">{item.date ? new Date(item.date).toLocaleDateString('en-GB', { day: '2-digit', month: '2-digit', year: 'numeric' }) : 'N/A'}</span>
                     </div>
                     <div>
                       <span className="text-sm text-cadet-blue block mb-1">Time of Day</span>
-                      <span className="font-medium text-primary">{item.timeOfDay || 'N/A'}</span>
+                      <span className="text-sm sm:text-base font-medium text-primary">{item.timeOfDay || 'N/A'}</span>
                     </div>
                   </div>
                 ))}
@@ -893,25 +893,25 @@ function MedicationTrackingWizard() {
           {/* NSAIDs */}
           {(formData.nsaidUsage && formData.nsaidList.filter(item => item.medication.trim()).length > 0) && (
             <div className="card border" style={{borderColor: 'var(--border-card)'}}>
-              <h3 className="text-xl font-semibold text-cadet-blue mb-6 pb-4 border-b" style={{borderColor: 'var(--border-primary)'}}>NSAIDs</h3>
-              <div className="space-y-4">
+              <h3 className="text-xl font-semibold text-cadet-blue mb-4 pb-4 border-b" style={{borderColor: 'var(--border-primary)'}}>NSAIDs</h3>
+              <div className="space-y-3">
                 {formData.nsaidList.filter(item => item.medication.trim()).map((item, index, array) => (
-                  <div key={index} className={`grid grid-cols-1 sm:grid-cols-2 gap-3 py-3 ${index < array.length - 1 ? 'border-b' : ''}`} style={index < array.length - 1 ? {borderColor: 'var(--border-primary)'} : {}}>
+                  <div key={index} className={`grid grid-cols-1 sm:grid-cols-2 gap-3 ${index < array.length - 1 ? 'border-b pb-3' : ''}`} style={index < array.length - 1 ? {borderColor: 'var(--border-primary)'} : {}}>
                     <div className="min-w-0">
                       <span className="text-sm text-cadet-blue block mb-1">Medication</span>
-                      <span className="font-medium text-primary truncate block" title={item.medication}>{item.medication}</span>
+                      <span className="text-sm sm:text-base font-medium text-primary truncate block" title={item.medication}>{item.medication}</span>
                     </div>
                     <div className="min-w-0">
                       <span className="text-sm text-cadet-blue block mb-1">Dosage</span>
-                      <span className="font-medium text-primary block">{item.dosage ? `${item.dosage}mg` : 'N/A'}</span>
+                      <span className="text-sm sm:text-base font-medium text-primary block">{item.dosage ? `${item.dosage}mg` : 'N/A'}</span>
                     </div>
                     <div>
                       <span className="text-sm text-cadet-blue block mb-1">Date</span>
-                      <span className="font-medium text-primary">{item.date ? new Date(item.date).toLocaleDateString('en-GB', { day: '2-digit', month: '2-digit', year: 'numeric' }) : 'N/A'}</span>
+                      <span className="text-sm sm:text-base font-medium text-primary">{item.date ? new Date(item.date).toLocaleDateString('en-GB', { day: '2-digit', month: '2-digit', year: 'numeric' }) : 'N/A'}</span>
                     </div>
                     <div>
                       <span className="text-sm text-cadet-blue block mb-1">Time of Day</span>
-                      <span className="font-medium text-primary">{item.timeOfDay || 'N/A'}</span>
+                      <span className="text-sm sm:text-base font-medium text-primary">{item.timeOfDay || 'N/A'}</span>
                     </div>
                   </div>
                 ))}
@@ -922,25 +922,25 @@ function MedicationTrackingWizard() {
           {/* Antibiotics */}
           {(formData.antibioticUsage && formData.antibioticList.filter(item => item.medication.trim()).length > 0) && (
             <div className="card border" style={{borderColor: 'var(--border-card)'}}>
-              <h3 className="text-xl font-semibold text-cadet-blue mb-6 pb-4 border-b" style={{borderColor: 'var(--border-primary)'}}>Antibiotics</h3>
-              <div className="space-y-4">
+              <h3 className="text-xl font-semibold text-cadet-blue mb-4 pb-4 border-b" style={{borderColor: 'var(--border-primary)'}}>Antibiotics</h3>
+              <div className="space-y-3">
                 {formData.antibioticList.filter(item => item.medication.trim()).map((item, index, array) => (
-                  <div key={index} className={`grid grid-cols-1 sm:grid-cols-2 gap-3 py-3 ${index < array.length - 1 ? 'border-b' : ''}`} style={index < array.length - 1 ? {borderColor: 'var(--border-primary)'} : {}}>
+                  <div key={index} className={`grid grid-cols-1 sm:grid-cols-2 gap-3 ${index < array.length - 1 ? 'border-b pb-3' : ''}`} style={index < array.length - 1 ? {borderColor: 'var(--border-primary)'} : {}}>
                     <div className="min-w-0">
                       <span className="text-sm text-cadet-blue block mb-1">Medication</span>
-                      <span className="font-medium text-primary truncate block" title={item.medication}>{item.medication}</span>
+                      <span className="text-sm sm:text-base font-medium text-primary truncate block" title={item.medication}>{item.medication}</span>
                     </div>
                     <div className="min-w-0">
                       <span className="text-sm text-cadet-blue block mb-1">Dosage</span>
-                      <span className="font-medium text-primary block">{item.dosage ? `${item.dosage}mg` : 'N/A'}</span>
+                      <span className="text-sm sm:text-base font-medium text-primary block">{item.dosage ? `${item.dosage}mg` : 'N/A'}</span>
                     </div>
                     <div>
                       <span className="text-sm text-cadet-blue block mb-1">Date</span>
-                      <span className="font-medium text-primary">{item.date ? new Date(item.date).toLocaleDateString('en-GB', { day: '2-digit', month: '2-digit', year: 'numeric' }) : 'N/A'}</span>
+                      <span className="text-sm sm:text-base font-medium text-primary">{item.date ? new Date(item.date).toLocaleDateString('en-GB', { day: '2-digit', month: '2-digit', year: 'numeric' }) : 'N/A'}</span>
                     </div>
                     <div>
                       <span className="text-sm text-cadet-blue block mb-1">Time of Day</span>
-                      <span className="font-medium text-primary">{item.timeOfDay || 'N/A'}</span>
+                      <span className="text-sm sm:text-base font-medium text-primary">{item.timeOfDay || 'N/A'}</span>
                     </div>
                   </div>
                 ))}
@@ -994,7 +994,7 @@ function MedicationTrackingWizard() {
             <h2 className="text-2xl sm:text-3xl lg:text-4xl font-bold font-source text-primary mb-4 sm:mb-6">Track Medications</h2>
             
             {/* Optional description */}
-            <p className="text-lg font-roboto text-muted mb-8 max-w-md">Track your medication adherence to identify patterns and triggers</p>
+            <p className="text-base sm:text-lg font-roboto text-muted mb-8 max-w-md">Track your medication adherence to identify patterns and triggers</p>
             
             {/* Start button */}
             <button

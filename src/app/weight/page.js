@@ -224,7 +224,7 @@ function WeightPageContent() {
               <h1 className="text-2xl sm:text-3xl lg:text-4xl font-bold font-source text-primary mb-4 sm:mb-6">
                 My Weight
               </h1>
-              <p className="text-secondary font-roboto">
+              <p className="text-sm sm:text-base text-secondary font-roboto leading-relaxed">
                 Record your weight over time to monitor trends and share with your healthcare team
               </p>
             </div>
@@ -260,7 +260,7 @@ function WeightPageContent() {
             <form onSubmit={handleSubmit} className="space-y-4" autoComplete="off">
               <div className="grid sm:grid-cols-2 gap-6 min-w-0">
                 <div>
-                  <label htmlFor="weight-date" className="block text-base font-semibold font-roboto text-primary mb-3">
+                  <label htmlFor="weight-date" className="block text-sm sm:text-base font-semibold font-roboto text-primary mb-2 sm:mb-3">
                     Date *
                   </label>
                   <DatePicker
@@ -278,7 +278,7 @@ function WeightPageContent() {
                   />
                 </div>
                 <div>
-                  <label htmlFor="valueKg" className="block text-base font-semibold font-roboto text-primary mb-3">
+                  <label htmlFor="valueKg" className="block text-sm sm:text-base font-semibold font-roboto text-primary mb-2 sm:mb-3">
                     Weight (kg) *
                   </label>
                   <input
@@ -302,7 +302,7 @@ function WeightPageContent() {
                 </div>
               </div>
               <div>
-                <label htmlFor="notes" className="block text-base font-semibold font-roboto text-primary mb-3">
+                <label htmlFor="notes" className="block text-sm sm:text-base font-semibold font-roboto text-primary mb-2 sm:mb-3">
                   Notes
                 </label>
                 <textarea
@@ -343,9 +343,9 @@ function WeightPageContent() {
             <div className="card-inner rounded-full w-14 h-14 sm:w-20 sm:h-20 mx-auto mb-6 flex items-center justify-center">
               <Scale className="w-6 h-6 sm:w-10 sm:h-10 text-secondary" />
             </div>
-            <h3 className="text-lg font-semibold font-source text-primary mb-2">No entries yet</h3>
-            <p className="font-roboto text-secondary max-w-md mx-auto">
-              Add weight entries to track changes over time. Your weight data will be included in your report.
+            <h3 className="text-lg font-semibold font-source text-primary mb-2">No weight entries</h3>
+            <p className="text-sm sm:text-base font-roboto text-secondary max-w-md mx-auto leading-relaxed">
+              Your weight entries will show here once you add them
             </p>
           </div>
         ) : (

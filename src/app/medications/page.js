@@ -520,7 +520,7 @@ function MedicationsPageContent() {
               <h1 className="text-2xl sm:text-3xl lg:text-4xl font-bold font-source text-primary mb-4 sm:mb-6">
                 My Medications
               </h1>
-              <p className="text-secondary font-roboto">
+              <p className="text-sm sm:text-base text-secondary font-roboto leading-relaxed">
                 Add your prescribed medications, set up reminders, and keep track of your medication schedule
               </p>
             </div>
@@ -559,11 +559,11 @@ function MedicationsPageContent() {
         </div>
 
         {isAdding && (
-          <div className="mb-6 min-w-0">
+          <div className="mb-6 min-w-0 leading-">
             <form onSubmit={handleSubmit} className="space-y-4" autoComplete="off">
               <div className="grid lg:grid-cols-2 gap-6 min-w-0">
                 <div>
-                  <label htmlFor="name" className="block text-base font-semibold font-roboto text-primary mb-3">
+                  <label htmlFor="name" className="block text-sm sm:text-base font-semibold font-roboto text-primary mb-2 sm:mb-3">
                     Medication Name *
                   </label>
                   <input
@@ -580,7 +580,7 @@ function MedicationsPageContent() {
                 </div>
 
                 <div>
-                  <label htmlFor="dosage" className="block text-base font-semibold font-roboto text-primary mb-3">
+                  <label htmlFor="dosage" className="block text-sm sm:text-base font-semibold font-roboto text-primary mb-2 sm:mb-3">
                     Dosage (per day)
                   </label>
                   <div className="flex items-center gap-2">
@@ -596,14 +596,14 @@ function MedicationsPageContent() {
                       className="input-field-wizard flex-1 min-w-0"
                       autoComplete="off"
                     />
-                    <span className="text-primary font-roboto shrink-0">mg</span>
+                    <span className="text-sm sm:text-base text-primary font-roboto shrink-0">mg</span>
                   </div>
                 </div>
               </div>
 
               <div className="grid lg:grid-cols-2 gap-6 min-w-0">
                 <div>
-                  <label className="block text-base font-semibold font-roboto text-primary mb-3">
+                  <label className="block text-sm sm:text-base font-semibold font-roboto text-primary mb-2 sm:mb-3">
                     Reminder Time
                   </label>
                   <select
@@ -623,7 +623,7 @@ function MedicationsPageContent() {
                 </div>
               </div>
 
-              <div className="flex items-start sm:items-center card-inner p-4">
+              <div className="flex items-start sm:items-center card-inner p-4 rounded-xl ring-2 ring-[#5F9EA0]/50">
                  <input
                    type="checkbox"
                    id="remindersEnabled"
@@ -636,13 +636,13 @@ function MedicationsPageContent() {
                      accentColor: 'var(--bg-button-cadet)'
                    }}
                  />
-                <label htmlFor="remindersEnabled" className="ml-3 block text-base font-roboto text-primary">
+                <label htmlFor="remindersEnabled" className="ml-3 block text-sm sm:text-base font-roboto text-primary">
                   Enable reminder notifications for this medication
                 </label>
               </div>
 
               <div>
-                <label htmlFor="notes" className="block text-base font-semibold font-roboto text-primary mb-3">
+                <label htmlFor="notes" className="block text-sm sm:text-base font-semibold font-roboto text-primary mb-2 sm:mb-3">
                   Notes
                 </label>
                 <textarea
@@ -696,8 +696,8 @@ function MedicationsPageContent() {
             <div className="card-inner rounded-full w-14 h-14 sm:w-20 sm:h-20 mx-auto mb-6 flex items-center justify-center">
               <Pill className="w-6 h-6 sm:w-10 sm:h-10 text-secondary" />
             </div>
-            <h3 className="text-lg font-semibold font-source text-primary mb-2">No medications added yet</h3>
-            <p className="font-roboto text-secondary max-w-md mx-auto">Add your medications to keep track of them and set up reminders to help you stay on schedule.</p>
+            <h3 className="text-lg font-semibold font-source text-primary mb-2">No medications</h3>
+            <p className="text-sm sm:text-base font-roboto text-secondary max-w-md mx-auto">Your medications will show here once you add them</p>
           </div>
         ) : (
           <Masonry
@@ -734,7 +734,7 @@ function MedicationsPageContent() {
                       {isExpanded && (
                         <>
                           {medication.dosage && (
-                            <p className="text-base text-secondary mb-3 font-roboto">
+                            <p className="text-sm text-secondary mb-3 font-roboto">
                               <span className="font-semibold">Dosage:</span> {medication.dosage}
                             </p>
                           )}
@@ -765,14 +765,13 @@ function MedicationsPageContent() {
                           <div className={(medication.timeOfDay || medication.remindersEnabled !== false) ? 'mt-2' : ''}>
                             <button
                               onClick={() => handleMarkAsTaken(medication.id)}
-                              className="px-3 py-1.5 rounded-lg text-sm font-medium transition-all duration-200 inline-flex items-center justify-center"
+                              className="px-3 py-1.5 rounded-lg text-sm font-medium transition-all duration-200 inline-flex items-center justify-center border border-[#5F9EA0]/40 dark:border-[#5F9EA0]/60"
                               style={{
-                                border: '1px solid',
-                                borderColor: 'var(--border-card-inner)',
                                 ...(takenMedications.includes(medication.id) 
                                   ? {
                                       backgroundColor: 'var(--bg-button-cadet)',
-                                      color: 'white'
+                                      color: 'white',
+                                      borderColor: 'var(--bg-button-cadet)'
                                     }
                                   : {
                                       color: 'var(--text-primary)',
@@ -866,7 +865,7 @@ function MedicationsPageContent() {
           <p className="text-sm sm:text-base text-secondary font-roboto leading-relaxed">
             FlareCare can send notifications when it's time to take your medications — in your browser or as push notifications on your device.
           </p>
-          <div className="card-inner p-6 mt-4">
+          <div className="card-inner p-4 sm:p-6 mt-4">
             <div className="flex items-center gap-2 mb-2">
               <Lightbulb className="w-5 h-5 flex-shrink-0 text-amber-500 dark:text-white" />
               <span className="text-base sm:text-sm font-medium text-primary font-roboto">Important to know:</span>

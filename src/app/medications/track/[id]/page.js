@@ -145,7 +145,7 @@ function TrackedMedicationDetails() {
       </div>
 
       <div className="mb-6">
-        <p className="text-secondary">
+        <p className="text-sm sm:text-base text-secondary">
           {new Date(trackedData.created_at || trackedData.createdAt).toLocaleDateString('en-GB', { 
             weekday: 'long', 
             day: 'numeric', 
@@ -158,25 +158,25 @@ function TrackedMedicationDetails() {
       <div className="space-y-4 sm:space-y-6">
         {/* Overview */}
         <div className="card">
-          <h2 className="text-xl font-semibold font-source text-primary mb-6">Overview</h2>
+          <h2 className="text-xl font-semibold font-source text-primary mb-4 sm:mb-6">Overview</h2>
           <div className="space-y-4 sm:space-y-0 sm:grid sm:grid-cols-3 sm:gap-6">
             <div className="card-inner p-4">
               <span className="text-xs font-semibold text-secondary uppercase tracking-wide block">Missed doses</span>
-              <p className={`mt-2 text-base font-semibold ${missedCount > 0 ? 'text-amber-600 dark:text-white' : 'text-secondary'}`}>
+              <p className={`mt-2 text-sm sm:text-base font-semibold ${missedCount > 0 ? 'text-amber-600 dark:text-white' : 'text-secondary'}`}>
                 {missedCount > 0 ? missedCount : 'None logged'}
               </p>
             </div>
 
             <div className="card-inner p-4">
               <span className="text-xs font-semibold text-secondary uppercase tracking-wide block">NSAIDs</span>
-              <p className={`mt-2 text-base font-semibold ${nsaidCount > 0 ? 'text-emerald-600 dark:text-white' : 'text-secondary'}`}>
+              <p className={`mt-2 text-sm sm:text-base font-semibold ${nsaidCount > 0 ? 'text-emerald-600 dark:text-white' : 'text-secondary'}`}>
                 {nsaidCount > 0 ? nsaidCount : 'None logged'}
               </p>
             </div>
 
             <div className="card-inner p-4">
               <span className="text-xs font-semibold text-secondary uppercase tracking-wide block">Antibiotics</span>
-              <p className={`mt-2 text-base font-semibold ${antibioticCount > 0 ? 'text-blue-600 dark:text-white' : 'text-secondary'}`}>
+              <p className={`mt-2 text-sm sm:text-base font-semibold ${antibioticCount > 0 ? 'text-blue-600 dark:text-white' : 'text-secondary'}`}>
                 {antibioticCount > 0 ? antibioticCount : 'None logged'}
               </p>
             </div>
@@ -192,21 +192,21 @@ function TrackedMedicationDetails() {
                 <div key={index} className="card">
                   <div className="card-inner p-4">
                     <div
-                      className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-2 pb-4 border-b border-slate-300/30 dark:border-b"
+                      className="flex items-center justify-between gap-2 pb-4 border-b border-slate-300/30 dark:border-b min-w-0"
                       style={{borderColor: 'var(--border-card-inner)'}}
                     >
-                      <span className="text-secondary">Medication:</span>
-                      <span className="font-medium text-primary truncate min-w-0" title={item.medication}>{item.medication}</span>
+                      <span className="text-sm sm:text-base text-secondary shrink-0 whitespace-nowrap">Medication:</span>
+                      <span className="text-sm sm:text-base font-medium text-primary truncate min-w-0 text-right" title={item.medication}>{item.medication}</span>
                     </div>
-                    <div className="flex justify-between py-4 border-b border-slate-300/30 dark:border-b" style={{borderColor: 'var(--border-card-inner)'}}>
-                      <span className="text-secondary">Date:</span>
-                      <span className="font-medium text-primary">
+                    <div className="flex justify-between py-4 border-b border-slate-300/30 dark:border-b min-w-0" style={{borderColor: 'var(--border-card-inner)'}}>
+                      <span className="text-sm sm:text-base text-secondary shrink-0">Date:</span>
+                      <span className="text-sm sm:text-base font-medium text-primary">
                         {item.date ? new Date(item.date).toLocaleDateString('en-GB', { day: '2-digit', month: '2-digit', year: 'numeric' }) : 'N/A'}
                       </span>
                     </div>
-                    <div className="flex justify-between pt-4">
-                      <span className="text-secondary">Time of Day:</span>
-                      <span className="font-medium text-primary">{item.timeOfDay || 'N/A'}</span>
+                    <div className="flex justify-between pt-4 min-w-0">
+                      <span className="text-sm sm:text-base text-secondary shrink-0">Time of Day:</span>
+                      <span className="text-sm sm:text-base font-medium text-primary">{item.timeOfDay || 'N/A'}</span>
                     </div>
                   </div>
                 </div>
@@ -224,26 +224,26 @@ function TrackedMedicationDetails() {
                 <div key={index} className="card">
                   <div className="card-inner p-4">
                     <div
-                      className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-2 pb-4 border-b border-slate-300/30 dark-border-b"
+                      className="flex items-center justify-between gap-2 pb-4 border-b border-slate-300/30 dark:border-b min-w-0"
                       style={{borderColor: 'var(--border-card-inner)'}}
                     >
-                      <span className="text-secondary">Medication:</span>
-                      <span className="font-medium text-primary truncate min-w-0" title={item.medication}>{item.medication}</span>
+                      <span className="text-sm sm:text-base text-secondary shrink-0 whitespace-nowrap">Medication:</span>
+                      <span className="text-sm sm:text-base font-medium text-primary truncate min-w-0 text-right" title={item.medication}>{item.medication}</span>
                     </div>
                     <div
-                      className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-2 py-4 border-b border-slate-300/30 dark:border-b"
+                      className="flex items-center justify-between gap-2 py-4 border-b border-slate-300/30 dark:border-b min-w-0"
                       style={{borderColor: 'var(--border-card-inner)'}}
                     >
-                      <span className="text-secondary">Dosage:</span>
-                      <span className="font-medium text-primary truncate min-w-0" title={item.dosage || 'N/A'}>{item.dosage || 'N/A'}</span>
+                      <span className="text-sm sm:text-base text-secondary shrink-0 whitespace-nowrap">Dosage:</span>
+                      <span className="text-sm sm:text-base font-medium text-primary truncate min-w-0 text-right" title={item.dosage || 'N/A'}>{item.dosage || 'N/A'}</span>
                     </div>
-                    <div className="flex justify-between py-4 border-b border-slate-300/30 dark:border-b" style={{borderColor: 'var(--border-card-inner)'}}>
-                      <span className="text-secondary">Date:</span>
-                      <span className="font-medium text-primary">{item.date ? new Date(item.date).toLocaleDateString('en-GB', { day: '2-digit', month: '2-digit', year: 'numeric' }) : 'N/A'}</span>
+                    <div className="flex justify-between py-4 border-b border-slate-300/30 dark:border-b min-w-0" style={{borderColor: 'var(--border-card-inner)'}}>
+                      <span className="text-sm sm:text-base text-secondary shrink-0">Date:</span>
+                      <span className="text-sm sm:text-base font-medium text-primary">{item.date ? new Date(item.date).toLocaleDateString('en-GB', { day: '2-digit', month: '2-digit', year: 'numeric' }) : 'N/A'}</span>
                     </div>
-                    <div className="flex justify-between pt-4">
-                      <span className="text-secondary">Time of Day:</span>
-                      <span className="font-medium text-primary">{item.timeOfDay || 'N/A'}</span>
+                    <div className="flex justify-between pt-4 min-w-0">
+                      <span className="text-sm sm:text-base text-secondary shrink-0">Time of Day:</span>
+                      <span className="text-sm sm:text-base font-medium text-primary">{item.timeOfDay || 'N/A'}</span>
                     </div>
                   </div>
                 </div>
@@ -261,26 +261,26 @@ function TrackedMedicationDetails() {
                 <div key={index} className="card">
                   <div className="card-inner p-4">
                     <div
-                      className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-2 pb-4 border-b border-slate-300/30 dark:border-b"
+                      className="flex items-center justify-between gap-2 pb-4 border-b border-slate-300/30 dark:border-b min-w-0"
                       style={{borderColor: 'var(--border-card-inner)'}}
                     >
-                      <span className="text-secondary">Medication:</span>
-                      <span className="font-medium text-primary truncate min-w-0" title={item.medication}>{item.medication}</span>
+                      <span className="text-sm sm:text-base text-secondary shrink-0 whitespace-nowrap">Medication:</span>
+                      <span className="text-sm sm:text-base font-medium text-primary truncate min-w-0 text-right" title={item.medication}>{item.medication}</span>
                     </div>
                     <div
-                      className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-2 py-4 border-b border-slate-300/30 dark:border-b"
+                      className="flex items-center justify-between gap-2 py-4 border-b border-slate-300/30 dark:border-b min-w-0"
                       style={{borderColor: 'var(--border-card-inner)'}}
                     >
-                      <span className="text-secondary">Dosage:</span>
-                      <span className="font-medium text-primary truncate min-w-0" title={item.dosage || 'N/A'}>{item.dosage || 'N/A'}</span>
+                      <span className="text-sm sm:text-base text-secondary shrink-0 whitespace-nowrap">Dosage:</span>
+                      <span className="text-sm sm:text-base font-medium text-primary truncate min-w-0 text-right" title={item.dosage || 'N/A'}>{item.dosage || 'N/A'}</span>
                     </div>
-                    <div className="flex justify-between py-4 border-b border-slate-300/30 dark-border-b" style={{borderColor: 'var(--border-card-inner)'}}>
-                      <span className="text-secondary">Date:</span>
-                      <span className="font-medium text-primary">{item.date ? new Date(item.date).toLocaleDateString('en-GB', { day: '2-digit', month: '2-digit', year: 'numeric' }) : 'N/A'}</span>
+                    <div className="flex justify-between py-4 border-b border-slate-300/30 dark:border-b min-w-0" style={{borderColor: 'var(--border-card-inner)'}}>
+                      <span className="text-sm sm:text-base text-secondary shrink-0">Date:</span>
+                      <span className="text-sm sm:text-base font-medium text-primary">{item.date ? new Date(item.date).toLocaleDateString('en-GB', { day: '2-digit', month: '2-digit', year: 'numeric' }) : 'N/A'}</span>
                     </div>
-                    <div className="flex justify-between pt-4">
-                      <span className="text-secondary">Time of Day:</span>
-                      <span className="font-medium text-primary">{item.timeOfDay || 'N/A'}</span>
+                    <div className="flex justify-between pt-4 min-w-0">
+                      <span className="text-sm sm:text-base text-secondary shrink-0">Time of Day:</span>
+                      <span className="text-sm sm:text-base font-medium text-primary">{item.timeOfDay || 'N/A'}</span>
                     </div>
                   </div>
                 </div>
@@ -304,7 +304,7 @@ function TrackedMedicationDetails() {
               <h3 className="text-lg font-semibold text-primary">Delete Medication Entry</h3>
             </div>
             
-            <p className="text-secondary mb-6">
+            <p className="text-sm sm:text-base text-secondary mb-6">
               Are you sure you want to delete this medication tracking entry? This action cannot be undone.
             </p>
             
