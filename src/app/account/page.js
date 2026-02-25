@@ -182,21 +182,21 @@ function AccountPageContent() {
               </div>
 
               {/* Profile Info */}
-              <div className="border-t-2 border-slate-100 dark:border-white/15 pt-5 sm:pt-6">
-                <h3 className="text-lg sm:text-xl font-semibold font-source text-primary mb-4 flex items-center gap-2">
+              <div className="border-t border-[var(--border-card-inner)] pt-4 sm:pt-6">
+                <h3 className="text-lg sm:text-xl font-semibold font-source text-primary mb-2 flex items-center gap-2">
                   <User className="w-5 h-5 text-[#5F9EA0] dark:text-white" />
                   Profile Info
                 </h3>
                 <div className="space-y-0">
-                  <div className="py-4 sm:py-5 border-b-2 border-slate-100 dark:border-white/15">
+                  <div className="py-4 sm:py-5 border-b border-[var(--border-card-inner)]">
                     <p className="text-sm font-medium text-secondary mb-1">Email</p>
                     <p className="text-[15px] sm:text-base text-primary font-roboto break-words">{user?.email || 'Not available'}</p>
                   </div>
-                  <div className="py-4 sm:py-5 border-b-2 border-slate-100 dark:border-white/15">
+                  <div className="py-4 sm:py-5 border-b border-[var(--border-card-inner)]">
                     <p className="text-sm font-medium text-secondary mb-1">Full Name</p>
                     <p className="text-[15px] sm:text-base text-primary font-roboto">{user?.user_metadata?.full_name || 'Not set'}</p>
                   </div>
-                  <div className="py-4 sm:py-5 border-b-2 border-slate-100 dark:border-white/15">
+                  <div className="py-4 sm:py-5 border-b border-[var(--border-card-inner)]">
                     <p className="text-sm font-medium text-secondary mb-1">Account Created</p>
                     <p className="text-[15px] sm:text-base text-primary font-roboto">
                       {user?.created_at ? new Date(user.created_at).toLocaleDateString('en-GB') : 'Not available'}
@@ -217,7 +217,7 @@ function AccountPageContent() {
                 <h3 className="text-lg sm:text-xl font-semibold font-source text-primary">Settings</h3>
               </div>
               <div className="space-y-0">
-                <div className="pb-4 sm:pb-5 border-b-2 border-slate-100 dark:border-white/15">
+                <div className="pb-4 sm:pb-5 border-b border-[var(--border-card-inner)]">
                   <div className="flex items-center justify-between">
                     <div className="flex-1">
                       <p className="text-sm font-medium text-secondary mb-1">Appearance</p>
@@ -296,7 +296,7 @@ function AccountPageContent() {
                 <h3 className="text-lg sm:text-xl font-semibold font-source text-primary">Settings</h3>
               </div>
               <div className="space-y-0">
-                <div className="pb-4 sm:pb-5 border-b-2 border-slate-100 dark:border-white/15">
+                <div className="pb-4 sm:pb-5 border-b border-[var(--border-card-inner)]">
                   <div className="flex items-center justify-between">
                     <div className="flex-1">
                       <p className="text-sm font-medium text-secondary mb-1">Appearance</p>
