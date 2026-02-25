@@ -151,7 +151,7 @@ function AccountPageContent() {
                           onError={() => setShowFallbackAvatar(true)}
                         />
                       ) : (
-                        <div className="flex items-center justify-center w-full h-full rounded-full bg-[var(--bg-card)] dark:bg-[var(--bg-card)]">
+                        <div className="flex items-center justify-center w-full h-full rounded-full bg-[var(--bg-icon)] dark:bg-[var(--bg-avatar-fallback-dark)]">
                           <Image
                             src="/icons/person.svg"
                             alt="User avatar placeholder"
