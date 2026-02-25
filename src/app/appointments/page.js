@@ -646,7 +646,7 @@ function AppointmentsPageContent() {
           <div className="card-inner p-5 sm:p-6 mt-4">
             <div className="flex items-center gap-2 mb-2">
               <Lightbulb className="w-5 h-5 flex-shrink-0 text-amber-500 dark:text-white" />
-              <span className="text-base sm:text-sm font-medium text-primary font-roboto">Important to know:</span>
+              <span className="text-base sm:text-sm font-semibold text-primary font-source">Important to know:</span>
             </div>
             <p className="text-sm text-secondary font-roboto leading-relaxed">
               Enable push notifications in Account → Settings to get reminders even when the app is closed. When adding or editing an appointment, choose how far in advance you want to be reminded.

@@ -136,7 +136,7 @@ function AccountPageContent() {
           <div className="flex-1 min-w-0">
             {/* Profile Section */}
             <div className="card mb-5 sm:mb-6">
-              <div className="flex flex-col sm:flex-row sm:items-start sm:justify-between gap-4 mb-6 sm:mb-8 card-inner p-4 sm:p-6">
+              <div className="flex flex-col sm:flex-row sm:items-start sm:justify-between gap-4 mb-4 sm:gap-6 sm:mb-6">
                 <div className="flex items-center min-w-0">
                   <div
                     className={`mr-4 sm:mr-6 flex-shrink-0 rounded-full overflow-hidden ${avatarUrl && !showFallbackAvatar ? 'border-2 border-[var(--border-dropdown)]' : ''}`}
@@ -165,10 +165,10 @@ function AccountPageContent() {
                     </div>
                   </div>
                   <div className="min-w-0 flex-1">
-                    <h2 className="text-xl font-semibold font-source text-primary mb-1 truncate">
+                    <h2 className="text-sm font-medium font-roboto text-secondary mb-1 truncate">
                       {user?.user_metadata?.full_name || 'User'}
                     </h2>
-                    <p className="text-[15px] sm:text-base text-secondary font-roboto truncate">{user?.email}</p>
+                    <p className="text-[15px] sm:text-base text-primary font-roboto truncate">{user?.email}</p>
                   </div>
                 </div>
                 <button
@@ -182,28 +182,30 @@ function AccountPageContent() {
               </div>
 
               {/* Profile Info */}
-              <h3 className="text-lg sm:text-xl font-semibold font-source text-primary mb-4 flex items-center gap-2">
-                <User className="w-5 h-5 text-[#5F9EA0] dark:text-white" />
-                Profile Info
-              </h3>
-              <div className="space-y-4">
-                <div className="card-inner p-4 sm:p-6">
-                  <p className="text-sm font-medium text-secondary mb-1">Email</p>
-                  <p className="text-[15px] sm:text-base text-primary font-roboto break-words">{user?.email || 'Not available'}</p>
-                </div>
-                <div className="card-inner p-4 sm:p-6">
-                  <p className="text-sm font-medium text-secondary mb-1">Full Name</p>
-                  <p className="text-[15px] sm:text-base text-primary font-roboto">{user?.user_metadata?.full_name || 'Not set'}</p>
-                </div>
-                <div className="card-inner p-4 sm:p-6">
-                  <p className="text-sm font-medium text-secondary mb-1">Account Created</p>
-                  <p className="text-[15px] sm:text-base text-primary font-roboto">
-                    {user?.created_at ? new Date(user.created_at).toLocaleDateString('en-GB') : 'Not available'}
-                  </p>
-                </div>
-                <div className="card-inner p-4 sm:p-6">
-                  <p className="text-sm font-medium text-secondary mb-1">User ID</p>
-                  <p className="text-[15px] sm:text-base text-primary font-roboto font-mono break-all">{user?.id || 'Not available'}</p>
+              <div className="border-t-2 border-slate-100 dark:border-white/15 pt-5 sm:pt-6">
+                <h3 className="text-lg sm:text-xl font-semibold font-source text-primary mb-4 flex items-center gap-2">
+                  <User className="w-5 h-5 text-[#5F9EA0] dark:text-white" />
+                  Profile Info
+                </h3>
+                <div className="space-y-0">
+                  <div className="py-4 sm:py-5 border-b-2 border-slate-100 dark:border-white/15">
+                    <p className="text-sm font-medium text-secondary mb-1">Email</p>
+                    <p className="text-[15px] sm:text-base text-primary font-roboto break-words">{user?.email || 'Not available'}</p>
+                  </div>
+                  <div className="py-4 sm:py-5 border-b-2 border-slate-100 dark:border-white/15">
+                    <p className="text-sm font-medium text-secondary mb-1">Full Name</p>
+                    <p className="text-[15px] sm:text-base text-primary font-roboto">{user?.user_metadata?.full_name || 'Not set'}</p>
+                  </div>
+                  <div className="py-4 sm:py-5 border-b-2 border-slate-100 dark:border-white/15">
+                    <p className="text-sm font-medium text-secondary mb-1">Account Created</p>
+                    <p className="text-[15px] sm:text-base text-primary font-roboto">
+                      {user?.created_at ? new Date(user.created_at).toLocaleDateString('en-GB') : 'Not available'}
+                    </p>
+                  </div>
+                  <div className="pt-4 sm:pt-5">
+                    <p className="text-sm font-medium text-secondary mb-1">User ID</p>
+                    <p className="text-[15px] sm:text-base text-primary font-roboto font-mono break-all">{user?.id || 'Not available'}</p>
+                  </div>
                 </div>
               </div>
             </div>
@@ -214,34 +216,34 @@ function AccountPageContent() {
                 <Settings className="w-5 h-5 text-[#5F9EA0] dark:text-white" />
                 <h3 className="text-lg sm:text-xl font-semibold font-source text-primary">Settings</h3>
               </div>
-              <div className="space-y-4">
-                <div className="card-inner p-4 sm:p-6">
+              <div className="space-y-0">
+                <div className="pb-4 sm:pb-5 border-b-2 border-slate-100 dark:border-white/15">
                   <div className="flex items-center justify-between">
                     <div className="flex-1">
                       <p className="text-sm font-medium text-secondary mb-1">Appearance</p>
-                    <p className="text-[15px] sm:text-base text-primary font-roboto">
-                      {theme === 'dark' ? 'Dark mode' : 'Light mode'}
-                    </p>
+                      <p className="text-[15px] sm:text-base text-primary font-roboto">
+                        {theme === 'dark' ? 'Dark mode' : 'Light mode'}
+                      </p>
                     </div>
                     <button
                       onClick={toggleTheme}
-                    className="relative inline-flex h-7 w-14 items-center rounded-full transition-colors focus:outline-none"
-                    style={{
-                      backgroundColor: theme === 'dark' ? '#5F9EA0' : '#cbd5e1'
-                    }}
-                    aria-label={`Switch to ${theme === 'dark' ? 'light' : 'dark'} mode`}
-                  >
-                    <span
-                      className={`inline-block h-5 w-5 transform rounded-full bg-white transition-transform ${
-                        theme === 'dark' ? 'translate-x-8' : 'translate-x-1'
-                      }`}
-                    />
-                    <span className="sr-only">Toggle theme</span>
+                      className="relative inline-flex h-7 w-14 items-center rounded-full transition-colors focus:outline-none"
+                      style={{
+                        backgroundColor: theme === 'dark' ? '#5F9EA0' : '#cbd5e1'
+                      }}
+                      aria-label={`Switch to ${theme === 'dark' ? 'light' : 'dark'} mode`}
+                    >
+                      <span
+                        className={`inline-block h-5 w-5 transform rounded-full bg-white transition-transform ${
+                          theme === 'dark' ? 'translate-x-8' : 'translate-x-1'
+                        }`}
+                      />
+                      <span className="sr-only">Toggle theme</span>
                     </button>
                   </div>
                 </div>
                 {isPushSupported() && (
-                  <div className="card-inner p-4 sm:p-6">
+                  <div className="pt-4 sm:pt-5">
                     <div className="flex items-center justify-between gap-4">
                       <div className="flex-1 min-w-0">
                         <p className="text-sm font-medium text-secondary mb-1">Push notifications</p>
@@ -268,7 +270,7 @@ function AccountPageContent() {
 
             {/* Delete Account Section */}
             <div className="card">
-              <div className="border-l-4 border-red-500 pl-4 mb-6">
+              <div className="border-l-4 border-red-500 pl-4 mb-4 sm:mb-6">
                 <h3 className="text-lg sm:text-xl font-semibold font-source text-primary mb-2">Delete Account</h3>
                 <p className="text-[15px] sm:text-base text-secondary font-roboto mb-4">
                   Permanently delete your account and all associated data
@@ -289,38 +291,38 @@ function AccountPageContent() {
           {/* Sidebar – Settings: desktop only */}
           <aside className="hidden lg:block lg:w-80 flex-shrink-0">
             <div className="card lg:sticky lg:top-6">
-              <div className="flex items-center gap-2 mb-4">
+              <div className="flex items-center gap-2 mb-5">
                 <Settings className="w-5 h-5 text-[#5F9EA0] dark:text-white" />
                 <h3 className="text-lg sm:text-xl font-semibold font-source text-primary">Settings</h3>
               </div>
-              <div className="space-y-4">
-                <div className="card-inner p-4 sm:p-6">
+              <div className="space-y-0">
+                <div className="pb-4 sm:pb-5 border-b-2 border-slate-100 dark:border-white/15">
                   <div className="flex items-center justify-between">
                     <div className="flex-1">
                       <p className="text-sm font-medium text-secondary mb-1">Appearance</p>
-                    <p className="text-[15px] sm:text-base text-primary font-roboto">
-                      {theme === 'dark' ? 'Dark mode' : 'Light mode'}
-                    </p>
+                      <p className="text-[15px] sm:text-base text-primary font-roboto">
+                        {theme === 'dark' ? 'Dark mode' : 'Light mode'}
+                      </p>
                     </div>
                     <button
                       onClick={toggleTheme}
-                    className="relative inline-flex h-7 w-14 items-center rounded-full transition-colors focus:outline-none"
-                    style={{
-                      backgroundColor: theme === 'dark' ? '#5F9EA0' : '#cbd5e1'
-                    }}
-                    aria-label={`Switch to ${theme === 'dark' ? 'light' : 'dark'} mode`}
-                  >
-                    <span
-                      className={`inline-block h-5 w-5 transform rounded-full bg-white transition-transform ${
-                        theme === 'dark' ? 'translate-x-8' : 'translate-x-1'
-                      }`}
-                    />
-                    <span className="sr-only">Toggle theme</span>
+                      className="relative inline-flex h-7 w-14 items-center rounded-full transition-colors focus:outline-none"
+                      style={{
+                        backgroundColor: theme === 'dark' ? '#5F9EA0' : '#cbd5e1'
+                      }}
+                      aria-label={`Switch to ${theme === 'dark' ? 'light' : 'dark'} mode`}
+                    >
+                      <span
+                        className={`inline-block h-5 w-5 transform rounded-full bg-white transition-transform ${
+                          theme === 'dark' ? 'translate-x-8' : 'translate-x-1'
+                        }`}
+                      />
+                      <span className="sr-only">Toggle theme</span>
                     </button>
                   </div>
                 </div>
                 {isPushSupported() && (
-                  <div className="card-inner p-4 sm:p-6">
+                  <div className="pt-4 sm:pt-5">
                     <div className="flex items-center justify-between gap-4">
                       <div className="flex-1 min-w-0">
                         <p className="text-sm font-medium text-secondary mb-1">Push notifications</p>

@@ -581,7 +581,7 @@ function MedicationsPageContent() {
 
                 <div>
                   <label htmlFor="dosage" className="block text-[15px] sm:text-base font-semibold font-roboto text-primary mb-2 sm:mb-3">
-                    Dosage (per day)
+                    Dosage
                   </label>
                   <div className="flex items-center gap-2">
                     <input
@@ -868,7 +868,7 @@ function MedicationsPageContent() {
           <div className="card-inner p-5 sm:p-6 mt-4">
             <div className="flex items-center gap-2 mb-2">
               <Lightbulb className="w-5 h-5 flex-shrink-0 text-amber-500 dark:text-white" />
-              <span className="text-base sm:text-sm font-medium text-primary font-roboto">Important to know:</span>
+              <span className="text-base sm:text-sm font-semibold text-primary font-source">Important to know:</span>
             </div>
             <p className="text-sm text-secondary font-roboto leading-relaxed">
               Enable push notifications in Account → Settings to get reminders even when the app is closed. You can turn reminders on or off for each medication.

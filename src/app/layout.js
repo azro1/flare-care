@@ -44,7 +44,9 @@ export default function RootLayout({ children }) {
         <link rel="apple-touch-icon" href="/icons/seagull.svg" />
         <link rel="preconnect" href="https://fonts.googleapis.com" />
         <link rel="preconnect" href="https://fonts.gstatic.com" crossOrigin="anonymous" />
+        <link rel="preconnect" href="https://cdn.jsdelivr.net" crossOrigin="anonymous" />
         <link href="https://fonts.googleapis.com/css2?family=Merriweather:wght@300;400;700;900&family=Playfair+Display:wght@400;500;600;700;800;900&family=Inter:wght@400;500;600;700;800;900&family=Nunito:wght@300;400;500;600;700&family=Roboto:wght@300;400;500;700;900&family=Lato:wght@300;400;700;900&family=Montserrat:wght@300;400;500;600;700;800;900&family=Raleway:wght@300;400;500;600;700;800;900&family=Source+Sans+Pro:wght@300;400;600;700;900&family=Barlow:wght@300;400;500;600;700;800;900&display=swap" rel="stylesheet" />
+        <link href="https://cdn.jsdelivr.net/npm/@fontsource/google-sans-code@5.1.0/400-700.css" rel="stylesheet" />
       </head>
       <body className="min-h-screen" style={{backgroundColor: 'var(--bg-main)'}} id="body">
         <ThemeProvider>

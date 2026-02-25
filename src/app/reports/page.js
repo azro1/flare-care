@@ -1037,7 +1037,7 @@ function ReportsPageContent() {
           <div className="flex w-10 h-10 bg-orange-100 dashboard-icon-panel rounded-lg items-center justify-center mr-3 sm:mr-4 flex-shrink-0">
             <Calendar className="w-5 h-5 text-orange-600 dark:text-white" />
           </div>
-          <h2 className="text-xl font-semibold font-source text-primary flex-1">Select Report Period</h2>
+          <h2 className="text-xl font-semibold text-primary flex-1">Select Report Period</h2>
         </div>
         
         {/* Quick Presets */}
@@ -1166,7 +1166,7 @@ function ReportsPageContent() {
           <div className="flex w-10 h-10 bg-emerald-100 dashboard-icon-panel rounded-lg items-center justify-center mr-3 sm:mr-4 flex-shrink-0">
             <Thermometer className="w-5 h-5 text-emerald-600 dark:text-white" />
           </div>
-          <h2 className="text-lg sm:text-xl font-semibold font-source text-primary flex-1">Symptom Report</h2>
+          <h2 className="text-sm sm:text-lg font-semibold text-primary flex-1">Symptom Report</h2>
           <span className="text-sm font-roboto text-secondary shrink-0">{openSections.symptomReport ? 'Hide' : 'Show'}</span>
         </button>
 
@@ -1181,22 +1181,22 @@ function ReportsPageContent() {
         {/* Summary Stats */}
         <div className="grid grid-cols-1 lg:grid-cols-3 gap-4 mb-8">
           <div className="card-inner p-6 text-center">
-            <div className="text-3xl font-bold text-primary mb-2">
+            <div className="text-2xl sm:text-3xl font-bold text-primary mb-2">
               {reportData.totalEntries}
             </div>
-            <div className="text-secondary font-medium font-roboto">Symptom Episodes</div>
+            <div className="text-xs sm:text-sm text-secondary font-medium font-roboto">Symptom Episodes</div>
           </div>
           <div className="card-inner p-6 text-center">
-            <div className="text-3xl font-bold mb-2 text-primary">
+            <div className="text-2xl sm:text-3xl font-bold mb-2 text-primary">
               {reportData.averageSeverity}
             </div>
-            <div className="text-secondary font-medium font-roboto">Average Severity</div>
+            <div className="text-xs sm:text-sm text-secondary font-medium font-roboto">Average Severity</div>
           </div>
           <div className="card-inner p-6 text-center">
-            <div className="text-3xl font-bold mb-2 text-primary">
+            <div className="text-2xl sm:text-3xl font-bold mb-2 text-primary">
               {reportData.averageStress != null && !isNaN(reportData.averageStress) ? reportData.averageStress : 0}
             </div>
-            <div className="text-secondary font-medium font-roboto">Average Stress</div>
+            <div className="text-xs sm:text-sm text-secondary font-medium font-roboto">Average Stress</div>
           </div>
         </div>
 
@@ -1209,7 +1209,7 @@ function ReportsPageContent() {
               className="w-full flex items-center justify-between text-left focus:outline-none rounded py-2 -ml-1"
               aria-expanded={openSubSections.symptomEpisodes}
             >
-              <span className="text-base font-semibold font-source text-primary">Symptom Episodes ({reportData.severityTrend.length})</span>
+              <span className="text-sm sm:text-base font-semibold font-source text-primary">Symptom Episodes ({reportData.severityTrend.length})</span>
               {openSubSections.symptomEpisodes ? <ChevronUp className="w-4 h-4 text-secondary shrink-0" /> : <ChevronDown className="w-4 h-4 text-secondary shrink-0" />}
             </button>
             {openSubSections.symptomEpisodes && (
@@ -1304,7 +1304,7 @@ function ReportsPageContent() {
             <div className="flex w-10 h-10 bg-purple-100 dashboard-icon-panel rounded-lg items-center justify-center mr-3 sm:mr-4 flex-shrink-0">
               <Pill className="w-5 h-5 text-purple-600 dark:text-white" />
             </div>
-            <h2 className="text-lg sm:text-xl font-semibold font-source text-primary flex-1">Current Medications</h2>
+            <h2 className="text-sm sm:text-lg font-semibold text-primary flex-1">Current Medications</h2>
             <span className="text-sm font-roboto text-secondary shrink-0">{openSections.currentMeds ? 'Hide' : 'Show'}</span>
           </button>
           {openSections.currentMeds && (
@@ -1312,7 +1312,7 @@ function ReportsPageContent() {
             {reportData.medications.map((med, index) => (
               <div key={index} className="card-inner p-4">
                 <div>
-                  <h5 className="font-medium font-roboto text-primary text-base">{med.name}</h5>
+                  <h5 className="font-medium font-roboto text-primary text-sm sm:text-base">{med.name}</h5>
                   {med.dosage && (
                     <div className="mt-2">
                       <span className="text-xs text-secondary font-roboto">
@@ -1344,7 +1344,7 @@ function ReportsPageContent() {
             <div className="flex w-10 h-10 bg-pink-100 dashboard-icon-panel rounded-lg items-center justify-center mr-3 sm:mr-4 flex-shrink-0">
               <ChartLine className="w-5 h-5 text-pink-600 dark:text-white" />
             </div>
-            <h2 className="text-lg sm:text-xl font-semibold font-source text-primary flex-1">Tracked Medications</h2>
+            <h2 className="text-sm sm:text-lg font-semibold text-primary flex-1">Tracked Medications</h2>
             <span className="text-sm font-roboto text-secondary shrink-0">{openSections.trackedMeds ? 'Hide' : 'Show'}</span>
           </button>
           {openSections.trackedMeds && (
@@ -1358,7 +1358,7 @@ function ReportsPageContent() {
                 className="w-full flex items-center justify-between text-left focus:outline-none rounded py-2 -ml-1"
                 aria-expanded={openSubSections.missedMeds}
               >
-                <span className="text-base font-semibold font-source text-primary">Missed Medications ({reportData.medicationTracking.missedMedications.length})</span>
+                <span className="text-sm sm:text-base font-semibold font-source text-primary">Missed Medications ({reportData.medicationTracking.missedMedications.length})</span>
                 {openSubSections.missedMeds ? <ChevronUp className="w-4 h-4 text-secondary shrink-0" /> : <ChevronDown className="w-4 h-4 text-secondary shrink-0" />}
               </button>
               {openSubSections.missedMeds && (
@@ -1371,7 +1371,7 @@ function ReportsPageContent() {
                         return (
                           <div key={index} className="card-inner p-4">
                             <div className="min-w-0">
-                              <h5 className="font-medium font-roboto text-primary text-base break-words" title={item.medication}>{item.medication}</h5>
+                              <h5 className="font-medium font-roboto text-primary text-sm sm:text-base break-words" title={item.medication}>{item.medication}</h5>
                               <div className="mt-2 flex flex-col gap-1">
                                 <div className="text-sm text-secondary font-roboto">
                                   <span className="font-medium">Date:</span> {item.date ? formatUKDate(item.date) : 'Not specified'}
@@ -1410,7 +1410,7 @@ function ReportsPageContent() {
                 className="w-full flex items-center justify-between text-left focus:outline-none rounded py-2 -ml-1"
                 aria-expanded={openSubSections.nsaids}
               >
-                <span className="text-base font-semibold font-source text-primary">NSAIDs Taken ({reportData.medicationTracking.nsaids.length})</span>
+                <span className="text-sm sm:text-base font-semibold font-source text-primary">NSAIDs Taken ({reportData.medicationTracking.nsaids.length})</span>
                 {openSubSections.nsaids ? <ChevronUp className="w-4 h-4 text-secondary shrink-0" /> : <ChevronDown className="w-4 h-4 text-secondary shrink-0" />}
               </button>
               {openSubSections.nsaids && (
@@ -1423,7 +1423,7 @@ function ReportsPageContent() {
                         return (
                           <div key={index} className="card-inner p-4">
                             <div className="min-w-0">
-                              <h5 className="font-medium font-roboto text-primary text-base break-words" title={item.medication}>{item.medication}</h5>
+                              <h5 className="font-medium font-roboto text-primary text-sm sm:text-base break-words" title={item.medication}>{item.medication}</h5>
                               <div className="mt-2 flex flex-col gap-1 min-w-0">
                                 <div className="text-sm text-secondary font-roboto">
                                   <span className="font-medium">Date:</span> {item.date ? formatUKDate(item.date) : 'Not specified'}
@@ -1467,7 +1467,7 @@ function ReportsPageContent() {
                 className="w-full flex items-center justify-between text-left focus:outline-none rounded py-2 -ml-1"
                 aria-expanded={openSubSections.antibiotics}
               >
-                <span className="text-base font-semibold font-source text-primary">Antibiotics Taken ({reportData.medicationTracking.antibiotics.length})</span>
+                <span className="text-sm sm:text-base font-semibold font-source text-primary">Antibiotics Taken ({reportData.medicationTracking.antibiotics.length})</span>
                 {openSubSections.antibiotics ? <ChevronUp className="w-4 h-4 text-secondary shrink-0" /> : <ChevronDown className="w-4 h-4 text-secondary shrink-0" />}
               </button>
               {openSubSections.antibiotics && (
@@ -1480,7 +1480,7 @@ function ReportsPageContent() {
                         return (
                           <div key={index} className="card-inner p-4">
                             <div className="min-w-0">
-                              <h5 className="font-medium font-roboto text-primary text-base break-words" title={item.medication}>{item.medication}</h5>
+                              <h5 className="font-medium font-roboto text-primary text-sm sm:text-base break-words" title={item.medication}>{item.medication}</h5>
                               <div className="mt-2 flex flex-col gap-1 min-w-0">
                                 <div className="text-sm text-secondary font-roboto">
                                   <span className="font-medium">Date:</span> {item.date ? formatUKDate(item.date) : 'Not specified'}
@@ -1531,7 +1531,7 @@ function ReportsPageContent() {
             <div className="flex w-10 h-10 bg-sky-100 dashboard-icon-panel rounded-lg items-center justify-center mr-3 sm:mr-4 flex-shrink-0">
               <Calendar className="w-5 h-5 text-sky-600 dark:text-white" />
             </div>
-            <h2 className="text-lg sm:text-xl font-semibold font-source text-primary flex-1">Appointments</h2>
+            <h2 className="text-sm sm:text-lg font-semibold text-primary flex-1">Appointments</h2>
             <span className="text-sm font-roboto text-secondary shrink-0">{openSections.appointments ? 'Hide' : 'Show'}</span>
           </button>
           {openSections.appointments && (
@@ -1540,16 +1540,16 @@ function ReportsPageContent() {
               <div key={index} className="card-inner p-4">
                 <div className="flex flex-col gap-2 min-w-0">
                   <div className="flex flex-wrap items-baseline gap-x-2 gap-y-1 min-w-0">
-                    <span className="font-semibold text-primary truncate">{formatUKDate(apt.date)}</span>
+                    <span className="text-sm sm:text-base font-semibold text-primary truncate">{formatUKDate(apt.date)}</span>
                     {apt.time && (
                       <>
                         <span className="text-secondary">·</span>
-                        <span className="text-primary font-roboto truncate">{apt.time}</span>
+                        <span className="text-sm sm:text-base text-primary font-roboto truncate">{apt.time}</span>
                       </>
                     )}
                   </div>
                   {apt.type && (
-                    <p className="font-medium text-primary truncate" title={apt.type}>{apt.type}</p>
+                    <p className="text-sm sm:text-base font-medium text-primary truncate" title={apt.type}>{apt.type}</p>
                   )}
                 </div>
               </div>
@@ -1571,7 +1571,7 @@ function ReportsPageContent() {
             <div className="flex w-10 h-10 bg-indigo-100 dashboard-icon-panel rounded-lg items-center justify-center mr-3 sm:mr-4 flex-shrink-0">
               <Scale className="w-5 h-5 text-indigo-600 dark:text-white" />
             </div>
-            <h2 className="text-lg sm:text-xl font-semibold font-source text-primary flex-1">Weight Logs</h2>
+            <h2 className="text-sm sm:text-lg font-semibold text-primary flex-1">Weight Logs</h2>
             <span className="text-sm font-roboto text-secondary shrink-0">{openSections.weight ? 'Hide' : 'Show'}</span>
           </button>
           {openSections.weight && (
@@ -1580,11 +1580,11 @@ function ReportsPageContent() {
               <div key={index} className="card-inner p-4">
                 <div className="flex flex-col gap-2">
                   <div className="flex flex-wrap items-baseline gap-x-2 gap-y-1">
-                    <span className="font-semibold text-primary">{formatUKDate(entry.date)}</span>
+                    <span className="text-sm sm:text-base font-semibold text-primary">{formatUKDate(entry.date)}</span>
                     {entry.value_kg != null && (
                       <>
                         <span className="text-secondary">·</span>
-                        <span className="font-medium text-primary font-roboto">{entry.value_kg} kg</span>
+                        <span className="text-sm sm:text-base font-medium text-primary font-roboto">{entry.value_kg} kg</span>
                       </>
                     )}
                   </div>
@@ -1608,7 +1608,7 @@ function ReportsPageContent() {
             <div className="flex w-10 h-10 bg-yellow-100 dashboard-icon-panel rounded-lg items-center justify-center mr-3 sm:mr-4 flex-shrink-0">
               <Pizza className="w-5 h-5 text-amber-500 dark:text-white" />
             </div>
-            <h2 className="text-lg sm:text-xl font-semibold font-source text-primary flex-1">Top 5 Foods</h2>
+            <h2 className="text-sm sm:text-lg font-semibold text-primary flex-1">Top 5 Foods</h2>
             <span className="text-sm font-roboto text-secondary shrink-0">{openSections.foods ? 'Hide' : 'Show'}</span>
           </button>
           {openSections.foods && (
@@ -1617,7 +1617,7 @@ function ReportsPageContent() {
               <div key={index} className="card-inner p-4">
                 <div className="flex flex-col sm:flex-row sm:justify-between sm:items-center gap-2 min-w-0">
                   <div className="flex-1 min-w-0">
-                    <h5 className="font-medium font-roboto text-primary text-base truncate" title={food}>{food}</h5>
+                    <h5 className="font-medium font-roboto text-primary text-sm sm:text-base truncate" title={food}>{food}</h5>
                   </div>
                   <div className="flex items-center">
                     <span className="text-xs font-medium font-roboto text-secondary">

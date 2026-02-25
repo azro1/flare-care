@@ -1005,12 +1005,12 @@ export default function Home() {
                 <h3 className="text-xl font-semibold font-source text-primary mb-3">Your Progress</h3>
                 <div className="card-inner p-4 sm:p-5 space-y-2.5">
                   <div className="flex justify-between items-center">
-                      <span className="text-sm text-secondary">Total Symptoms</span>
+                      <span className="text-sm text-primary">Total Symptoms</span>
                     <span className="font-semibold text-primary">{symptoms.length}</span>
                   </div>
                   <div className="border-t border-[var(--border-card-inner)] my-0" aria-hidden="true" />
                   <div className="flex justify-between items-center">
-                      <span className="text-sm text-secondary">This Week</span>
+                      <span className="text-sm text-primary">This Week</span>
                     <span className="font-semibold text-primary">
                       {symptoms.filter(s => {
                         const weekAgo = new Date()
@@ -1021,7 +1021,7 @@ export default function Home() {
                   </div>
                   <div className="border-t border-[var(--border-card-inner)] my-0" aria-hidden="true" />
                   <div className="flex justify-between items-center">
-                      <span className="text-sm text-secondary">Today</span>
+                      <span className="text-sm text-primary">Today</span>
                     <span className="font-semibold text-primary">{todaySymptoms.length}</span>
                   </div>
                 </div>
@@ -1036,7 +1036,7 @@ export default function Home() {
                       <Thermometer className="w-3.5 h-3.5" style={{color: 'var(--text-goal-icon-success)'}} />
                     </div>
                     <div className="flex-1 flex items-center justify-between">
-                      <span className={`text-sm ${todaySymptoms.length > 0 ? '' : 'text-secondary'}`} style={{color: todaySymptoms.length > 0 ? 'var(--text-cadet-blue)' : undefined}}>
+                      <span className={`text-sm ${todaySymptoms.length > 0 ? '' : 'text-primary'}`} style={{color: todaySymptoms.length > 0 ? 'var(--text-cadet-blue)' : undefined}}>
                         Log symptoms
                       </span>
                       {todaySymptoms.length > 0 && (
@@ -1051,7 +1051,7 @@ export default function Home() {
                       <Pill className="w-3 h-3" style={{color: 'var(--text-goal-icon-medication)'}} />
                     </div>
                     <div className="flex-1 flex items-center justify-between">
-                      <span className={`text-sm ${takenMedications.length === medications.length && medications.length > 0 ? '' : 'text-secondary'}`} style={{color: takenMedications.length === medications.length && medications.length > 0 ? 'var(--text-cadet-blue)' : undefined}}>
+                      <span className={`text-sm ${takenMedications.length === medications.length && medications.length > 0 ? '' : 'text-primary'}`} style={{color: takenMedications.length === medications.length && medications.length > 0 ? 'var(--text-cadet-blue)' : undefined}}>
                         Take medications
                       </span>
                       {takenMedications.length === medications.length && medications.length > 0 && (
@@ -1065,7 +1065,7 @@ export default function Home() {
                     <div className="w-6 h-6 card-inner flex items-center justify-center">
                       <CupSoda className="w-3.5 h-3.5" style={{color: 'var(--text-goal-icon-hydration)'}} />
                     </div>
-                    <span className="text-sm text-secondary">Stay hydrated</span>
+                    <span className="text-sm text-primary">Stay hydrated</span>
                   </div>
                 </div>
               </div>
@@ -1077,7 +1077,7 @@ export default function Home() {
                     <Lightbulb className="w-5 h-5 flex-shrink-0 text-amber-500 dark:text-white" />
                     Daily Tip
                   </h3>
-                  <p className={`text-sm text-secondary leading-relaxed sm:leading-normal transition-opacity duration-500 ${isFading ? 'opacity-0' : 'opacity-100'}`}>
+                  <p className={`text-sm text-primary leading-relaxed sm:leading-normal transition-opacity duration-500 ${isFading ? 'opacity-0' : 'opacity-100'}`}>
                     {dailyTips[currentTipIndex]}
                   </p>
                 </div>
@@ -1117,7 +1117,7 @@ export default function Home() {
                   <Thermometer className="w-5 h-5 text-emerald-600 dark:text-white" />
                 </div>
                 <div className="flex-1 min-w-0">
-                  <h3 className="font-semibold text-primary leading-tight">Log Symptoms</h3>
+                  <h3 className="text-sm sm:text-base font-semibold text-primary leading-tight">Log Symptoms</h3>
                 </div>
                 <ChevronRight className="w-5 h-5 flex-shrink-0 text-secondary" />
                 <div className="pointer-events-none absolute right-3 -top-14 hidden w-52 sm:group-hover:flex sm:group-focus-visible:flex">
@@ -1135,7 +1135,7 @@ export default function Home() {
                 <ChartLine className="w-5 h-5 text-pink-600 dark:text-white" />
                 </div>
                 <div className="flex-1 min-w-0">
-                  <h3 className="font-semibold text-primary leading-tight">Track Medications</h3>
+                  <h3 className="text-sm sm:text-base font-semibold text-primary leading-tight">Track Medications</h3>
                 </div>
                 <ChevronRight className="w-5 h-5 flex-shrink-0 text-secondary" />
                 <div className="pointer-events-none absolute right-3 -top-14 hidden w-52 sm:group-hover:flex sm:group-focus-visible:flex">
@@ -1157,7 +1157,7 @@ export default function Home() {
                   <Thermometer className="w-5 h-5 sm:w-6 sm:h-6 text-emerald-600 dark:text-white" />
                 </div>
                 <div className="flex-1 sm:w-full sm:text-center">
-                  <h3 className="font-semibold text-primary leading-tight sm:leading-relaxed sm:justify-center">
+                  <h3 className="text-sm sm:text-base font-semibold text-primary leading-tight sm:leading-relaxed sm:justify-center">
                     Log Symptoms
                   </h3>
                 </div>
@@ -1178,7 +1178,7 @@ export default function Home() {
                   <ChartLine className="w-5 h-5 sm:w-6 sm:h-6 text-pink-600 dark:text-white" />
                 </div>
                 <div className="flex-1 sm:w-full sm:text-center">
-                  <h3 className="font-semibold text-primary leading-tight sm:leading-relaxed sm:justify-center">
+                  <h3 className="text-sm sm:text-base font-semibold text-primary leading-tight sm:leading-relaxed sm:justify-center">
                     Track Medications
                   </h3>
                 </div>
@@ -1200,12 +1200,12 @@ export default function Home() {
             <div className="card">
             <div className="card-inner p-4 sm:p-6">
               <div className="flex justify-between items-center mb-3">
-                <span className="text-sm text-secondary">Symptoms Logged</span>
+                <span className="text-sm text-primary">Symptoms Logged</span>
                 <span className="text-sm font-semibold text-primary">{todaySymptoms.length}</span>
               </div>
               <div className="border-t border-[var(--border-card-inner)] my-0" aria-hidden="true" />
               <div className="flex justify-between items-center mt-3">
-                <span className="text-sm text-secondary">Medications Taken</span>
+                <span className="text-sm text-primary">Medications Taken</span>
                 <span className="text-sm font-semibold text-primary">{takenMedications.length}/{medications.length}</span>
               </div>
             </div>
@@ -1444,10 +1444,10 @@ export default function Home() {
                 return (
                   <div className="text-center">
                     <div className="flex justify-center mb-3">
-                      <Clock className="w-10 h-10 text-secondary opacity-40" />
+                      <Clock className="w-10 h-10 text-primary opacity-40" />
                     </div>
-                    <p className="text-secondary text-sm leading-relaxed">No recent activity</p>
-                    <p className="text-xs text-secondary mt-1 leading-relaxed">Start tracking your symptoms and medications to see activity here</p>
+                    <p className="text-primary text-sm leading-relaxed">No recent activity</p>
+                    <p className="text-xs text-primary mt-1 leading-relaxed opacity-80">Start tracking your symptoms and medications to see activity here</p>
                     </div>
                 )
               }
@@ -1495,14 +1495,14 @@ export default function Home() {
             {newsError && !newsLoading && (
               <div className="card">
                 <div className="card-inner p-8 text-center">
-                  <p className="text-secondary">Unable to load news. Try again later.</p>
+                  <p className="text-primary">Unable to load news. Try again later.</p>
                 </div>
               </div>
             )}
             {!newsLoading && !newsError && newsItems.length === 0 && (
               <div className="card">
                 <div className="card-inner p-8 text-center">
-                  <p className="text-secondary">No news available.</p>
+                  <p className="text-primary">No news available.</p>
                 </div>
               </div>
             )}
@@ -1640,7 +1640,7 @@ export default function Home() {
                         {new Date(symptom.created_at || symptom.createdAt).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
                       </span>
                     </div>
-                    <div className="flex gap-6 text-sm text-secondary">
+                    <div className="flex gap-6 text-sm text-primary opacity-80">
                       <span>View details</span>
                     </div>
                   </div>
@@ -1686,7 +1686,7 @@ export default function Home() {
                         {new Date(tracked.created_at || tracked.createdAt).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
                       </span>
                     </div>
-                    <div className="flex gap-6 text-sm text-secondary">
+                    <div className="flex gap-6 text-sm text-primary opacity-80">
                       <span>View details</span>
                     </div>
                   </div>
@@ -1710,7 +1710,7 @@ export default function Home() {
                     <Pill className="w-5 h-5 text-purple-600 dark:text-white" />
                 </div>
                   <div className="w-full text-center min-w-0">
-                    <h3 className="font-semibold text-primary leading-tight sm:leading-relaxed break-words">
+                    <h3 className="text-sm sm:text-base font-semibold text-primary leading-tight sm:leading-relaxed break-words">
                       My Meds
                     </h3>
                   </div>
@@ -1731,7 +1731,7 @@ export default function Home() {
                     <FileText className="w-5 h-5 text-orange-600 dark:text-white" />
                   </div>
                   <div className="w-full text-center min-w-0">
-                    <h3 className="font-semibold text-primary leading-tight sm:leading-relaxed break-words">
+                    <h3 className="text-sm sm:text-base font-semibold text-primary leading-tight sm:leading-relaxed break-words">
                       Reports
                     </h3>
                   </div>
@@ -1752,7 +1752,7 @@ export default function Home() {
                     <Scale className="w-5 h-5 text-indigo-600 dark:text-white" />
                   </div>
                   <div className="w-full text-center min-w-0">
-                    <h3 className="font-semibold text-primary leading-tight sm:leading-relaxed break-words">
+                    <h3 className="text-sm sm:text-base font-semibold text-primary leading-tight sm:leading-relaxed break-words">
                       My Weight
                     </h3>
                   </div>
@@ -1773,7 +1773,7 @@ export default function Home() {
                     <Calendar className="w-5 h-5 text-sky-600 dark:text-white" />
                   </div>
                   <div className="w-full text-center min-w-0">
-                    <h3 className="font-semibold text-primary leading-tight sm:leading-relaxed break-words">
+                    <h3 className="text-sm sm:text-base font-semibold text-primary leading-tight sm:leading-relaxed break-words">
                       <span className="min-[376px]:hidden">Apts</span>
                       <span className="hidden min-[376px]:inline">Appointments</span>
                     </h3>

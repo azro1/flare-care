@@ -251,7 +251,7 @@ export default function LearnPage() {
         <h2 className="text-xl font-semibold font-source text-primary mb-6">When to Seek Medical Help</h2>
         <div>
           <h3 className="text-lg font-semibold font-source text-primary mb-4 leading-normal">Seek immediate medical attention if you experience:</h3>
-          <ul className="space-y-2 text-[15px] sm:text-base text-secondary font-source">
+          <ul className="space-y-2 text-sm text-secondary font-roboto">
             <li className="flex items-start leading-relaxed">
               <span className="text-red-500 mr-2 font-bold">•</span>
               <span>Severe abdominal pain</span>
