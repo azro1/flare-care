@@ -1284,7 +1284,7 @@ function SymptomsPageContent() {
         {/* Step 1: When did symptoms begin? */}
         {currentStep === 1 && (
           <div className="mb-5">
-            <h3 className="text-xl sm:text-2xl font-source font-bold sm:font-semibold text-primary mb-2">When did your symptoms begin?</h3>
+            <h3 className="text-2xl sm:text-2xl md:text-3xl font-source font-bold sm:font-semibold text-primary mb-2">When did your symptoms begin?</h3>
             <p className="text-sm text-muted mb-6">For example, '14 09 2014'</p>
             <div className="flex space-x-3">
               <div className="w-14">
@@ -1368,7 +1368,7 @@ function SymptomsPageContent() {
         {/* Step 2: Are symptoms still ongoing? */}
         {currentStep === 2 && (
           <div className="mb-5">
-            <h3 className="text-xl sm:text-2xl font-source font-bold sm:font-semibold text-primary mb-6">Are symptoms still ongoing?</h3>
+            <h3 className="text-2xl sm:text-2xl md:text-3xl font-source font-bold sm:font-semibold text-primary mb-6">Are symptoms still ongoing?</h3>
             <div className="flex space-x-8">
               <label className="flex items-center cursor-pointer">
                   <div className="relative">
@@ -1429,7 +1429,7 @@ function SymptomsPageContent() {
         {/* Step 3: When did symptoms end? (only if not ongoing) */}
         {currentStep === 3 && (
           <div className="mb-5">
-            <h3 className="text-xl sm:text-2xl font-source font-bold sm:font-semibold text-primary mb-2">When did symptoms end?</h3>
+            <h3 className="text-2xl sm:text-2xl md:text-3xl font-source font-bold sm:font-semibold text-primary mb-2">When did symptoms end?</h3>
             <p className="text-sm text-muted mb-6">For example, '14 09 2014'</p>
             <div className="flex space-x-3">
               <div className="w-14">
@@ -1513,7 +1513,7 @@ function SymptomsPageContent() {
         {/* Step 4: Symptom Severity */}
         {currentStep === 4 && (
           <div className="mb-5">
-            <h3 className="text-xl sm:text-2xl font-source font-bold sm:font-semibold text-primary mb-2">
+            <h3 className="text-2xl sm:text-2xl md:text-3xl font-source font-bold sm:font-semibold text-primary mb-2">
               {formData.isOngoing ? 'How severe are your symptoms?' : 'How severe were your symptoms?'}
             </h3>
             <p className="text-sm text-muted mb-6">Rate from 1 (mild) to 10 (severe)</p>
@@ -1546,7 +1546,7 @@ function SymptomsPageContent() {
         {/* Step 5: Stress Level */}
         {currentStep === 5 && (
           <div className="mb-5">
-            <h3 className="text-xl sm:text-2xl font-source font-bold sm:font-semibold text-primary mb-2">
+            <h3 className="text-2xl sm:text-2xl md:text-3xl font-source font-bold sm:font-semibold text-primary mb-2">
               {formData.isOngoing ? 'How stressed are you feeling?' : 'How stressed were you feeling during that time?'}
             </h3>
             <p className="text-sm text-muted mb-6">Rate from 1 (calm) to 10 (very stressed)</p>
@@ -1579,7 +1579,7 @@ function SymptomsPageContent() {
         {/* Step 6: Bathroom Frequency */}
         {currentStep === 6 && (
           <div className="mb-5">
-            <h3 className="text-xl sm:text-2xl font-source font-bold sm:font-semibold text-primary mb-2">How many times a day do you usually empty your bowels?</h3>
+            <h3 className="text-2xl sm:text-2xl md:text-3xl font-source font-bold sm:font-semibold text-primary mb-2">How many times a day do you usually empty your bowels?</h3>
             <p className="text-sm text-muted mb-6">For example, '3' or '5'</p>
 
             <div className="w-14">
@@ -1611,7 +1611,7 @@ function SymptomsPageContent() {
         {/* Step 7: Bathroom Frequency Change Question */}
         {currentStep === 7 && (
           <div className="mb-5">
-            <h3 className="text-xl sm:text-2xl font-source font-bold sm:font-semibold text-primary mb-6">
+            <h3 className="text-2xl sm:text-2xl md:text-3xl font-source font-bold sm:font-semibold text-primary mb-6">
               {formData.isOngoing ? 'Have you noticed a change in bathroom frequency since symptoms started?' : 'Did you notice a change in bathroom frequency during that time?'}
             </h3>
             <div className="flex space-x-8">
@@ -1674,7 +1674,7 @@ function SymptomsPageContent() {
         {/* Step 8: Bathroom Frequency Change Details */}
         {currentStep === 8 && (
           <div className="mb-5">
-            <h3 className="text-xl sm:text-2xl font-source font-bold sm:font-semibold text-primary mb-2">Describe your change</h3>
+            <h3 className="text-2xl sm:text-2xl md:text-3xl font-source font-bold sm:font-semibold text-primary mb-2">Describe your change</h3>
             <p className="text-sm text-muted mb-6">For example, 'increased to 8-10 times per day, blood present, mucus, loose stools'</p>
             <textarea
               id="bathroom_frequency_change_details"
@@ -1696,11 +1696,11 @@ function SymptomsPageContent() {
         {currentStep === 9 && (
           <div className="mb-5">
             {isFirstTimeUser ? (
-              <h3 className="text-xl sm:text-2xl font-source font-bold sm:font-semibold text-primary mb-6">Do you smoke?</h3>
+              <h3 className="text-2xl sm:text-2xl md:text-3xl font-source font-bold sm:font-semibold text-primary mb-6">Do you smoke?</h3>
             ) : userPreferences?.isSmoker ? (
-              <h3 className="text-xl sm:text-2xl font-source font-bold sm:font-semibold text-primary mb-6">Did you smoke on {new Date(formData.symptomStartDate).toLocaleDateString('en-GB', { day: 'numeric', month: 'short' })}?</h3>
+              <h3 className="text-2xl sm:text-2xl md:text-3xl font-source font-bold sm:font-semibold text-primary mb-6">Did you smoke on {new Date(formData.symptomStartDate).toLocaleDateString('en-GB', { day: 'numeric', month: 'short' })}?</h3>
             ) : (
-              <h3 className="text-xl sm:text-2xl font-source font-bold sm:font-semibold text-primary mb-6">Do you smoke?</h3>
+              <h3 className="text-2xl sm:text-2xl md:text-3xl font-source font-bold sm:font-semibold text-primary mb-6">Do you smoke?</h3>
             )}
             <div className="flex space-x-8">
               <label className="flex items-center cursor-pointer">
@@ -1762,7 +1762,7 @@ function SymptomsPageContent() {
         {/* Step 10: Smoking details (only if they smoke) */}
         {currentStep === 10 && (
           <div className="mb-5">
-            <h3 className="text-xl sm:text-2xl font-source font-bold sm:font-semibold text-primary mb-2">
+            <h3 className="text-2xl sm:text-2xl md:text-3xl font-source font-bold sm:font-semibold text-primary mb-2">
               {isFirstTimeUser ? 'Please describe your smoking habits' : `How much did you smoke on ${new Date(formData.symptomStartDate).toLocaleDateString('en-GB', { day: 'numeric', month: 'short' })}?`}
             </h3>
             <p className="text-sm text-muted mb-6">
@@ -1792,11 +1792,11 @@ function SymptomsPageContent() {
         {currentStep === 11 && (
           <div className="mb-5">
             {isFirstTimeUser ? (
-              <h3 className="text-xl sm:text-2xl font-source font-bold sm:font-semibold text-primary mb-6">Do you drink alcohol?</h3>
+              <h3 className="text-2xl sm:text-2xl md:text-3xl font-source font-bold sm:font-semibold text-primary mb-6">Do you drink alcohol?</h3>
             ) : userPreferences?.isDrinker ? (
-              <h3 className="text-xl sm:text-2xl font-source font-bold sm:font-semibold text-primary mb-6">Did you drink alcohol on {new Date(formData.symptomStartDate).toLocaleDateString('en-GB', { day: 'numeric', month: 'short' })}?</h3>
+              <h3 className="text-2xl sm:text-2xl md:text-3xl font-source font-bold sm:font-semibold text-primary mb-6">Did you drink alcohol on {new Date(formData.symptomStartDate).toLocaleDateString('en-GB', { day: 'numeric', month: 'short' })}?</h3>
             ) : (
-              <h3 className="text-xl sm:text-2xl font-source font-bold sm:font-semibold text-primary mb-6">Do you drink alcohol?</h3>
+              <h3 className="text-2xl sm:text-2xl md:text-3xl font-source font-bold sm:font-semibold text-primary mb-6">Do you drink alcohol?</h3>
             )}
             <div className="flex space-x-8">
               <label className="flex items-center cursor-pointer">
@@ -1858,7 +1858,7 @@ function SymptomsPageContent() {
         {/* Step 12: Alcohol details (only if they drink) */}
         {currentStep === 12 && (
           <div className="mb-5">
-            <h3 className="text-xl sm:text-2xl font-source font-bold sm:font-semibold text-primary mb-2">
+            <h3 className="text-2xl sm:text-2xl md:text-3xl font-source font-bold sm:font-semibold text-primary mb-2">
               {!isFirstTimeUser && userPreferences?.isDrinker 
                 ? `How many units of alcohol did you drink on ${new Date(formData.symptomStartDate).toLocaleDateString('en-GB', { day: 'numeric', month: 'short' })}?` 
                 : 'How many units of alcohol do you drink per day?'}
@@ -1897,7 +1897,7 @@ function SymptomsPageContent() {
             {/* Breakfast */}
               <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-3 mb-3">
                 <div>
-                  <h3 className="text-xl sm:text-2xl font-source font-bold sm:font-semibold text-primary mb-2">
+                  <h3 className="text-2xl sm:text-2xl md:text-3xl font-source font-bold sm:font-semibold text-primary mb-2">
                     {getMealLabel('breakfast')}
                   </h3>
                 </div>
@@ -1987,7 +1987,7 @@ function SymptomsPageContent() {
             {/* Lunch */}
               <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-3 mb-3">
                 <div>
-                  <h3 className="text-xl sm:text-2xl font-source font-bold sm:font-semibold text-primary mb-2">
+                  <h3 className="text-2xl sm:text-2xl md:text-3xl font-source font-bold sm:font-semibold text-primary mb-2">
                     {getMealLabel('lunch')}
                   </h3>
                 </div>
@@ -2077,7 +2077,7 @@ function SymptomsPageContent() {
 {/* Dinner */}
               <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-3 mb-3">
                 <div>
-                  <h3 className="text-xl sm:text-2xl font-source font-bold sm:font-semibold text-primary mb-2">
+                  <h3 className="text-2xl sm:text-2xl md:text-3xl font-source font-bold sm:font-semibold text-primary mb-2">
                     {getMealLabel('dinner')}
                   </h3>
                 </div>
@@ -2163,7 +2163,7 @@ function SymptomsPageContent() {
         {/* Step 16: Additional Notes */}
         {currentStep === 16 && (
           <div className="mb-5">
-            <h3 className="text-xl sm:text-2xl font-source font-bold sm:font-semibold text-primary mb-6">Additional notes</h3>
+            <h3 className="text-2xl sm:text-2xl md:text-3xl font-source font-bold sm:font-semibold text-primary mb-6">Additional notes</h3>
             <p className="text-sm text-muted mb-4">Share any other details about your symptoms, how you're feeling, or triggers you noticed</p>            
             <div>
               <textarea
@@ -2180,8 +2180,8 @@ function SymptomsPageContent() {
 
         {/* Step 17: Review */}
         {currentStep === 17 && (
-          <div className="space-y-8">
-            <h2 className="text-xl sm:text-2xl font-semibold font-source text-primary mb-8">
+          <div className="space-y-6 sm:space-y-8">
+            <h2 className="text-2xl sm:text-2xl md:text-3xl font-bold sm:font-semibold font-source text-primary mb-6 sm:mb-8">
               Review your entry
             </h2>
 
@@ -2328,7 +2328,7 @@ function SymptomsPageContent() {
 
         {/* Navigation Buttons - Hide on landing page (step 0) */}
         {currentStep > 0 && (
-          <div className={`flex justify-start items-center ${currentStep === 17 ? 'mt-8 mb-8 sm:mb-0' : 'mt-6'}`}>
+          <div className={`flex justify-start items-center ${currentStep === 17 ? 'mt-6 mb-6 sm:mb-0' : 'mt-6'}`}>
             {currentStep < 17 ? (
               <button
                 onClick={nextStep}

@@ -393,7 +393,7 @@ function SymptomDetailContent() {
               </div>
               <h3 className="text-lg font-semibold text-primary">Delete Symptom Entry</h3>
             </div>
-            <p className="text-sm sm:text-base text-secondary mb-6">
+            <p className="text-[15px] sm:text-base text-secondary mb-6">
               Are you sure you want to delete this symptom entry? This action cannot be undone.
             </p>
             <div className="flex gap-3">

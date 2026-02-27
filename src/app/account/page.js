@@ -136,7 +136,7 @@ function AccountPageContent() {
           <div className="flex-1 min-w-0">
             {/* Profile Section */}
             <div className="card mb-5 sm:mb-6">
-              <div className="flex flex-col sm:flex-row sm:items-start sm:justify-between gap-4 mb-4 sm:gap-6 sm:mb-6">
+              <div className="flex items-start justify-between gap-4 mb-4 sm:gap-6 sm:mb-6">
                 <div className="flex items-center min-w-0">
                   <div
                     className={`mr-4 sm:mr-6 flex-shrink-0 rounded-full overflow-hidden ${avatarUrl && !showFallbackAvatar ? 'border-2 border-[var(--border-dropdown)]' : ''}`}
@@ -165,16 +165,16 @@ function AccountPageContent() {
                     </div>
                   </div>
                   <div className="min-w-0 flex-1">
-                    <h2 className="text-sm font-medium font-roboto text-secondary mb-1 truncate">
+                    <h2 className="text-sm font-medium font-roboto text-secondary mb-0 sm:mb-1 truncate">
                       {user?.user_metadata?.full_name || 'User'}
                     </h2>
-                    <p className="text-sm sm:text-base text-primary font-roboto truncate">{user?.email}</p>
+                    <p className="hidden sm:block text-sm sm:text-base text-primary font-roboto truncate">{user?.email}</p>
                   </div>
                 </div>
                 <button
                   onClick={() => setShowSignOutModal(true)}
                   disabled={isSigningOut}
-                  className="bg-[#5F9EA0] text-white font-semibold py-2 px-4 rounded-lg border border-transparent hover:bg-button-cadet-hover transition-colors disabled:opacity-50 self-start sm:self-auto inline-flex items-center gap-2"
+                  className="bg-[#5F9EA0] text-white font-semibold py-2 px-4 rounded-lg border border-transparent hover:bg-button-cadet-hover transition-colors disabled:opacity-50 inline-flex items-center gap-2 flex-shrink-0"
                 >
                   <LogOut className="w-4 h-4 dark:text-white" />
                   Sign Out
@@ -363,7 +363,7 @@ function AccountPageContent() {
               <h3 className="text-lg font-semibold text-primary">Sign Out</h3>
             </div>
             
-            <p className="text-sm sm:text-base text-secondary mb-6">
+            <p className="text-[15px] sm:text-base text-secondary mb-6">
               Are you sure you want to sign out of your account?
             </p>
             
@@ -400,13 +400,13 @@ function AccountPageContent() {
               <h3 className="text-lg font-semibold text-primary">Delete Account</h3>
             </div>
             
-            <p className="text-sm sm:text-base text-secondary mb-6">
+            <p className="text-[15px] sm:text-base text-secondary mb-6">
               Are you sure you want to permanently delete your account? This action cannot be undone and all your data will be lost.
             </p>
             
             {deleteError && (
               <div className="mb-4 p-3 bg-red-500/10 border border-red-500/20 rounded-lg">
-                <p className="text-sm text-red-400">{deleteError}</p>
+                <p className="text-[15px] sm:text-base text-red-400">{deleteError}</p>
               </div>
             )}
             

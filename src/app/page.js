@@ -894,7 +894,7 @@ export default function Home() {
               <Link href="/auth" className="inline-block px-8 py-2.5 bg-[#5F9EA0] text-white rounded-lg hover:bg-button-cadet-hover transition-colors text-lg sm:text-xl font-bold">
               Sign In
           </Link>
-            <p className="text-sm text-tertiary">Your data stays private, always</p>
+            <p className="text-sm text-tertiary">Your data stays private and secure.</p>
         </div>
         </section>
       </div>
