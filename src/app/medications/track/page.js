@@ -406,7 +406,7 @@ function MedicationTrackingWizard() {
     if (currentStep === 1) {
       return (
         <div className="mb-5">
-          <h3 className="text-2xl sm:text-2xl md:text-3xl font-source font-bold sm:font-semibold text-primary mb-6">Did you miss any prescribed medications recently?</h3>
+          <h3 className="text-xl sm:text-2xl font-source font-bold sm:font-semibold text-primary mb-6">Did you miss any prescribed medications recently?</h3>
           <div className="flex space-x-8">
             <label className="flex items-center cursor-pointer">
               <div className="relative">
@@ -472,7 +472,7 @@ function MedicationTrackingWizard() {
           <div className="space-y-6">
             <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-3 mb-3">
               <div>
-                <h3 className="text-2xl sm:text-2xl md:text-3xl font-source font-bold sm:font-semibold text-primary mb-2">Which medications did you miss?</h3>
+                <h3 className="text-xl sm:text-2xl font-source font-bold sm:font-semibold text-primary mb-2">Which medications did you miss?</h3>
               </div>
               <button
                 onClick={addMissedMedication}
@@ -548,7 +548,7 @@ function MedicationTrackingWizard() {
     if (currentStep === 3) {
       return (
         <div className="mb-5">
-          <h3 className="text-2xl sm:text-2xl md:text-3xl font-source font-bold sm:font-semibold text-primary mb-6">Did you take any NSAIDs (ibuprofen, naproxen, aspirin) recently?</h3>
+          <h3 className="text-xl sm:text-2xl font-source font-bold sm:font-semibold text-primary mb-6">Did you take any NSAIDs (ibuprofen, naproxen, aspirin) recently?</h3>
           <div className="flex space-x-8">
             <label className="flex items-center cursor-pointer">
               <div className="relative">
@@ -614,7 +614,7 @@ function MedicationTrackingWizard() {
           <div className="space-y-6">
             <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-3 mb-3">
               <div>
-                <h3 className="text-2xl sm:text-2xl md:text-3xl font-source font-bold sm:font-semibold text-primary mb-2">Which NSAIDs did you take?</h3>
+                <h3 className="text-xl sm:text-2xl font-source font-bold sm:font-semibold text-primary mb-2">Which NSAIDs did you take?</h3>
               </div>
               <button
                 onClick={addNsaid}
@@ -702,7 +702,7 @@ function MedicationTrackingWizard() {
     if (currentStep === 5) {
       return (
         <div className="mb-5">
-          <h3 className="text-2xl sm:text-2xl md:text-3xl font-source font-bold sm:font-semibold text-primary mb-6">Did you take any antibiotics recently?</h3>
+          <h3 className="text-xl sm:text-2xl font-source font-bold sm:font-semibold text-primary mb-6">Did you take any antibiotics recently?</h3>
           <div className="flex space-x-8">
             <label className="flex items-center cursor-pointer">
               <div className="relative">
@@ -768,7 +768,7 @@ function MedicationTrackingWizard() {
           <div className="space-y-6">
             <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-3 mb-3">
               <div>
-                <h3 className="text-2xl sm:text-2xl md:text-3xl font-source font-bold sm:font-semibold text-primary mb-2">Which antibiotics did you take?</h3>
+                <h3 className="text-xl sm:text-2xl font-source font-bold sm:font-semibold text-primary mb-2">Which antibiotics did you take?</h3>
               </div>
               <button
                 onClick={addAntibiotic}
@@ -861,28 +861,28 @@ function MedicationTrackingWizard() {
 
       return (
         <div className="space-y-8">
-          <h2 className="text-2xl font-semibold font-source text-primary mb-8">
+          <h2 className="text-xl sm:text-2xl font-semibold font-source text-primary mb-8">
             Review your entry
           </h2>
 
           {/* Missed Medications */}
           {(formData.missedMedications && formData.missedMedicationsList.filter(item => item.medication.trim()).length > 0) && (
             <div className="card border" style={{borderColor: 'var(--border-card)'}}>
-              <h3 className="text-xl font-semibold text-cadet-blue mb-4 pb-4 border-b" style={{borderColor: 'var(--border-primary)'}}>Missed Medications</h3>
+              <h3 className="text-sm sm:text-lg font-semibold text-cadet-blue mb-4 pb-4 border-b" style={{borderColor: 'var(--border-primary)'}}>Missed Medications</h3>
               <div className="space-y-3">
                 {formData.missedMedicationsList.filter(item => item.medication.trim()).map((item, index, array) => (
                   <div key={index} className={`grid grid-cols-1 sm:grid-cols-2 gap-3 ${index < array.length - 1 ? 'border-b pb-3' : ''}`} style={index < array.length - 1 ? {borderColor: 'var(--border-primary)'} : {}}>
                     <div className="min-w-0">
                       <span className="text-sm text-cadet-blue block mb-1">Medication</span>
-                      <span className="text-[15px] sm:text-base font-medium text-primary truncate block" title={item.medication}>{item.medication}</span>
+                      <span className="text-sm sm:text-base font-medium text-primary truncate block" title={item.medication}>{item.medication}</span>
                     </div>
                     <div className="min-w-0">
                       <span className="text-sm text-cadet-blue block mb-1">Date</span>
-                      <span className="text-[15px] sm:text-base font-medium text-primary">{item.date ? new Date(item.date).toLocaleDateString('en-GB', { day: '2-digit', month: '2-digit', year: 'numeric' }) : 'N/A'}</span>
+                      <span className="text-sm sm:text-base font-medium text-primary">{item.date ? new Date(item.date).toLocaleDateString('en-GB', { day: '2-digit', month: '2-digit', year: 'numeric' }) : 'N/A'}</span>
                     </div>
                     <div>
                       <span className="text-sm text-cadet-blue block mb-1">Time of Day</span>
-                      <span className="text-[15px] sm:text-base font-medium text-primary">{item.timeOfDay || 'N/A'}</span>
+                      <span className="text-sm sm:text-base font-medium text-primary">{item.timeOfDay || 'N/A'}</span>
                     </div>
                   </div>
                 ))}
@@ -893,25 +893,25 @@ function MedicationTrackingWizard() {
           {/* NSAIDs */}
           {(formData.nsaidUsage && formData.nsaidList.filter(item => item.medication.trim()).length > 0) && (
             <div className="card border" style={{borderColor: 'var(--border-card)'}}>
-              <h3 className="text-xl font-semibold text-cadet-blue mb-4 pb-4 border-b" style={{borderColor: 'var(--border-primary)'}}>NSAIDs</h3>
+              <h3 className="text-sm sm:text-lg font-semibold text-cadet-blue mb-4 pb-4 border-b" style={{borderColor: 'var(--border-primary)'}}>NSAIDs</h3>
               <div className="space-y-3">
                 {formData.nsaidList.filter(item => item.medication.trim()).map((item, index, array) => (
                   <div key={index} className={`grid grid-cols-1 sm:grid-cols-2 gap-3 ${index < array.length - 1 ? 'border-b pb-3' : ''}`} style={index < array.length - 1 ? {borderColor: 'var(--border-primary)'} : {}}>
                     <div className="min-w-0">
                       <span className="text-sm text-cadet-blue block mb-1">Medication</span>
-                      <span className="text-[15px] sm:text-base font-medium text-primary truncate block" title={item.medication}>{item.medication}</span>
+                      <span className="text-sm sm:text-base font-medium text-primary truncate block" title={item.medication}>{item.medication}</span>
                     </div>
                     <div className="min-w-0">
                       <span className="text-sm text-cadet-blue block mb-1">Dosage</span>
-                      <span className="text-[15px] sm:text-base font-medium text-primary block">{item.dosage ? `${item.dosage}mg` : 'N/A'}</span>
+                      <span className="text-sm sm:text-base font-medium text-primary block">{item.dosage ? `${item.dosage}mg` : 'N/A'}</span>
                     </div>
                     <div>
                       <span className="text-sm text-cadet-blue block mb-1">Date</span>
-                      <span className="text-[15px] sm:text-base font-medium text-primary">{item.date ? new Date(item.date).toLocaleDateString('en-GB', { day: '2-digit', month: '2-digit', year: 'numeric' }) : 'N/A'}</span>
+                      <span className="text-sm sm:text-base font-medium text-primary">{item.date ? new Date(item.date).toLocaleDateString('en-GB', { day: '2-digit', month: '2-digit', year: 'numeric' }) : 'N/A'}</span>
                     </div>
                     <div>
                       <span className="text-sm text-cadet-blue block mb-1">Time of Day</span>
-                      <span className="text-[15px] sm:text-base font-medium text-primary">{item.timeOfDay || 'N/A'}</span>
+                      <span className="text-sm sm:text-base font-medium text-primary">{item.timeOfDay || 'N/A'}</span>
                     </div>
                   </div>
                 ))}
@@ -922,25 +922,25 @@ function MedicationTrackingWizard() {
           {/* Antibiotics */}
           {(formData.antibioticUsage && formData.antibioticList.filter(item => item.medication.trim()).length > 0) && (
             <div className="card border" style={{borderColor: 'var(--border-card)'}}>
-              <h3 className="text-xl font-semibold text-cadet-blue mb-4 pb-4 border-b" style={{borderColor: 'var(--border-primary)'}}>Antibiotics</h3>
+              <h3 className="text-sm sm:text-lg font-semibold text-cadet-blue mb-4 pb-4 border-b" style={{borderColor: 'var(--border-primary)'}}>Antibiotics</h3>
               <div className="space-y-3">
                 {formData.antibioticList.filter(item => item.medication.trim()).map((item, index, array) => (
                   <div key={index} className={`grid grid-cols-1 sm:grid-cols-2 gap-3 ${index < array.length - 1 ? 'border-b pb-3' : ''}`} style={index < array.length - 1 ? {borderColor: 'var(--border-primary)'} : {}}>
                     <div className="min-w-0">
                       <span className="text-sm text-cadet-blue block mb-1">Medication</span>
-                      <span className="text-[15px] sm:text-base font-medium text-primary truncate block" title={item.medication}>{item.medication}</span>
+                      <span className="text-sm sm:text-base font-medium text-primary truncate block" title={item.medication}>{item.medication}</span>
                     </div>
                     <div className="min-w-0">
                       <span className="text-sm text-cadet-blue block mb-1">Dosage</span>
-                      <span className="text-[15px] sm:text-base font-medium text-primary block">{item.dosage ? `${item.dosage}mg` : 'N/A'}</span>
+                      <span className="text-sm sm:text-base font-medium text-primary block">{item.dosage ? `${item.dosage}mg` : 'N/A'}</span>
                     </div>
                     <div>
                       <span className="text-sm text-cadet-blue block mb-1">Date</span>
-                      <span className="text-[15px] sm:text-base font-medium text-primary">{item.date ? new Date(item.date).toLocaleDateString('en-GB', { day: '2-digit', month: '2-digit', year: 'numeric' }) : 'N/A'}</span>
+                      <span className="text-sm sm:text-base font-medium text-primary">{item.date ? new Date(item.date).toLocaleDateString('en-GB', { day: '2-digit', month: '2-digit', year: 'numeric' }) : 'N/A'}</span>
                     </div>
                     <div>
                       <span className="text-sm text-cadet-blue block mb-1">Time of Day</span>
-                      <span className="text-[15px] sm:text-base font-medium text-primary">{item.timeOfDay || 'N/A'}</span>
+                      <span className="text-sm sm:text-base font-medium text-primary">{item.timeOfDay || 'N/A'}</span>
                     </div>
                   </div>
                 ))}
@@ -973,7 +973,7 @@ function MedicationTrackingWizard() {
           <button
             type="button"
             onClick={() => setCurrentStep(0)}
-            className="text-[15px] sm:text-base font-normal text-primary underline hover:opacity-80 transition-opacity text-left"
+            className="text-sm sm:text-base font-normal text-primary underline hover:opacity-80 transition-opacity text-left"
           >
             Track Medications
           </button>

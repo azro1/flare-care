@@ -520,7 +520,7 @@ function MedicationsPageContent() {
               <h1 className="text-2xl sm:text-3xl lg:text-4xl font-bold font-source text-primary mb-4 sm:mb-6">
                 My Medications
               </h1>
-              <p className="text-[15px] sm:text-base text-secondary font-roboto leading-relaxed">
+              <p className="text-sm sm:text-base text-secondary font-roboto leading-relaxed">
                 Add your prescribed medications, set up reminders, and keep track of your medication schedule
               </p>
             </div>
@@ -563,7 +563,7 @@ function MedicationsPageContent() {
             <form onSubmit={handleSubmit} className="space-y-4" autoComplete="off">
               <div className="grid lg:grid-cols-2 gap-6 min-w-0">
                 <div>
-                  <label htmlFor="name" className="block text-[15px] sm:text-base font-semibold font-roboto text-primary mb-2 sm:mb-3">
+                  <label htmlFor="name" className="block text-sm sm:text-base font-semibold font-roboto text-primary mb-2 sm:mb-3">
                     Medication Name *
                   </label>
                   <input
@@ -580,7 +580,7 @@ function MedicationsPageContent() {
                 </div>
 
                 <div>
-                  <label htmlFor="dosage" className="block text-[15px] sm:text-base font-semibold font-roboto text-primary mb-2 sm:mb-3">
+                  <label htmlFor="dosage" className="block text-sm sm:text-base font-semibold font-roboto text-primary mb-2 sm:mb-3">
                     Dosage
                   </label>
                   <div className="flex items-center gap-2">
@@ -596,14 +596,14 @@ function MedicationsPageContent() {
                       className="input-field-wizard flex-1 min-w-0"
                       autoComplete="off"
                     />
-                    <span className="text-[15px] sm:text-base text-primary font-roboto shrink-0">mg</span>
+                    <span className="text-sm sm:text-base text-primary font-roboto shrink-0">mg</span>
                   </div>
                 </div>
               </div>
 
               <div className="grid lg:grid-cols-2 gap-6 min-w-0">
                 <div>
-                  <label className="block text-[15px] sm:text-base font-semibold font-roboto text-primary mb-2 sm:mb-3">
+                  <label className="block text-sm sm:text-base font-semibold font-roboto text-primary mb-2 sm:mb-3">
                     Reminder Time
                   </label>
                   <select
@@ -636,13 +636,13 @@ function MedicationsPageContent() {
                      accentColor: 'var(--bg-button-cadet)'
                    }}
                  />
-                <label htmlFor="remindersEnabled" className="ml-3 block text-[15px] sm:text-base font-roboto text-primary">
+                <label htmlFor="remindersEnabled" className="ml-3 block text-sm sm:text-base font-roboto text-primary">
                   Enable reminder notifications for this medication
                 </label>
               </div>
 
               <div>
-                <label htmlFor="notes" className="block text-[15px] sm:text-base font-semibold font-roboto text-primary mb-2 sm:mb-3">
+                <label htmlFor="notes" className="block text-sm sm:text-base font-semibold font-roboto text-primary mb-2 sm:mb-3">
                   Notes
                 </label>
                 <textarea
@@ -697,7 +697,7 @@ function MedicationsPageContent() {
               <Pill className="w-6 h-6 sm:w-10 sm:h-10 text-secondary" />
             </div>
             <h3 className="text-lg font-semibold font-source text-primary mb-2">No medications</h3>
-            <p className="text-[15px] font-roboto text-secondary max-w-md mx-auto">Your medications will show here once you add them</p>
+            <p className="text-sm font-roboto text-secondary max-w-md mx-auto">Your medications will show here once you add them</p>
           </div>
         ) : (
           <Masonry
@@ -870,7 +870,7 @@ function MedicationsPageContent() {
               <Lightbulb className="w-5 h-5 flex-shrink-0 text-amber-500 dark:text-white" />
               <span className="text-base sm:text-sm font-semibold text-primary font-source">Important to know:</span>
             </div>
-            <p className="text-sm text-secondary font-roboto leading-relaxed">
+            <p className="text-xs text-secondary font-roboto leading-relaxed">
               Enable push notifications in Account → Settings to get reminders even when the app is closed. You can turn reminders on or off for each medication.
             </p>
           </div>

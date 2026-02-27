@@ -171,11 +171,11 @@ export default function WeatherHero({
               </span>
             )}
           </div>
-          <div className="flex-1 min-w-0">
-            <div className="text-base sm:text-lg font-medium text-primary truncate">
+          <div className="flex-1 min-w-0 sm:space-y-0.5">
+            <div className="text-sm sm:text-base font-medium text-primary truncate">
               {previewCondition ? (previewTitle || previewCondition) : (weather?.city || 'Fetching location...')}
             </div>
-            <div className="text-sm text-secondary capitalize truncate">
+            <div className="pl-4 text-sm text-secondary capitalize truncate">
               {previewCondition ? (previewSubtitle || 'preview') : (weather?.desc || error || 'Loading weather...')}
             </div>
           </div>

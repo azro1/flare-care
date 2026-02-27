@@ -300,7 +300,7 @@ export default function Navigation() {
                 <Link
                   key={item.href}
                   href={item.href}
-                  className="flex items-center gap-3 px-4 py-3 text-base font-roboto transition-colors border-b border-dashed last:border-b-0"
+                  className="flex items-center gap-3 px-4 py-3 text-sm sm:text-base font-roboto transition-colors border-b border-dashed last:border-b-0"
                   style={{color: 'var(--text-dropdown)', borderColor: 'var(--border-dropdown)'}}
                   onMouseEnter={(e) => e.target.style.color = 'var(--text-cadet-blue)'}
                   onMouseLeave={(e) => e.target.style.color = 'var(--text-dropdown)'}
@@ -346,7 +346,7 @@ export default function Navigation() {
                       </div>
                     )}
                   </div>
-                  <p className="text-base font-medium font-roboto">
+                  <p className="text-sm sm:text-base font-medium font-roboto">
                     {getUserDisplayName()}
                   </p>
                 </Link>

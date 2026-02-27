@@ -1005,12 +1005,12 @@ export default function Home() {
                 <h3 className="text-xl font-semibold font-source text-primary mb-3">Your Progress</h3>
                 <div className="card-inner p-4 sm:p-5 space-y-2.5">
                   <div className="flex justify-between items-center">
-                      <span className="text-sm text-primary">Total Symptoms</span>
+                      <span className="text-sm text-primary">Total symptoms</span>
                     <span className="font-semibold text-primary">{symptoms.length}</span>
                   </div>
                   <div className="border-t border-[var(--border-card-inner)] my-0" aria-hidden="true" />
                   <div className="flex justify-between items-center">
-                      <span className="text-sm text-primary">This Week</span>
+                      <span className="text-sm text-primary">This week</span>
                     <span className="font-semibold text-primary">
                       {symptoms.filter(s => {
                         const weekAgo = new Date()
@@ -1195,10 +1195,10 @@ export default function Home() {
 
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 mb-6">
           {/* Today's Summary */}
-          <div>
+          <div className="order-2 lg:order-1">
             <h2 className="text-xl font-semibold font-source text-primary mb-3">Today's Summary</h2>
             <div className="card">
-            <div className="card-inner p-4 sm:p-6">
+            <div>
               <div className="flex justify-between items-center mb-3">
                 <span className="text-sm text-primary">Symptoms Logged</span>
                 <span className="text-sm font-semibold text-primary">{todaySymptoms.length}</span>
@@ -1213,7 +1213,7 @@ export default function Home() {
           </div>
 
           {/* Recent Activity */}
-          <div>
+          <div className="order-1 lg:order-2">
             <h2 className="text-xl font-semibold font-source text-primary mb-3">Recent Activity</h2>
             <div className="card">
             <div className="card-inner p-4 sm:p-6 transition-all duration-300 ease-in-out">
@@ -1519,7 +1519,7 @@ export default function Home() {
                                 href={item.link}
                                 target="_blank"
                                 rel="noopener noreferrer"
-                                className="block overflow-hidden rounded-xl group hover:shadow-lg transition-all duration-200 flex-shrink-0 w-[260px] sm:w-[280px]"
+                                className="block overflow-hidden group hover:shadow-lg transition-all duration-200 flex-shrink-0 w-[260px] sm:w-[280px] sm:rounded-xl"
                               >
                                 <div className="flex flex-col h-full">
                                   <div className="w-full aspect-[4/3] flex-shrink-0 bg-[var(--bg-card)] overflow-hidden relative">
@@ -1546,7 +1546,7 @@ export default function Home() {
                                       />
                                     ) : null}
                                   </div>
-                                  <div className="min-w-0 pt-4 px-4 pb-4 sm:px-6 sm:pb-6 rounded-b-xl bg-[var(--bg-card)]">
+                                  <div className="min-w-0 pt-4 px-4 pb-4 sm:px-6 sm:pb-6 bg-[var(--bg-card)] sm:rounded-b-xl">
                                     <h3 className="font-semibold text-sm text-primary group-hover:text-[#5F9EA0] transition-colors line-clamp-2 leading-normal">
                                       {item.headline || item.title}
                                     </h3>

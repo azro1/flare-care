@@ -224,7 +224,7 @@ function WeightPageContent() {
               <h1 className="text-2xl sm:text-3xl lg:text-4xl font-bold font-source text-primary mb-4 sm:mb-6">
                 My Weight
               </h1>
-              <p className="text-[15px] sm:text-base text-secondary font-roboto leading-relaxed">
+              <p className="text-sm sm:text-base text-secondary font-roboto leading-relaxed">
                 Record your weight over time to monitor trends and share with your healthcare team
               </p>
             </div>
@@ -260,7 +260,7 @@ function WeightPageContent() {
             <form onSubmit={handleSubmit} className="space-y-4" autoComplete="off">
               <div className="grid sm:grid-cols-2 gap-6 min-w-0">
                 <div>
-                  <label htmlFor="weight-date" className="block text-[15px] sm:text-base font-semibold font-roboto text-primary mb-2 sm:mb-3">
+                  <label htmlFor="weight-date" className="block text-sm sm:text-base font-semibold font-roboto text-primary mb-2 sm:mb-3">
                     Date *
                   </label>
                   <DatePicker
@@ -278,7 +278,7 @@ function WeightPageContent() {
                   />
                 </div>
                 <div>
-                  <label htmlFor="valueKg" className="block text-[15px] sm:text-base font-semibold font-roboto text-primary mb-2 sm:mb-3">
+                  <label htmlFor="valueKg" className="block text-sm sm:text-base font-semibold font-roboto text-primary mb-2 sm:mb-3">
                     Weight (kg) *
                   </label>
                   <input
@@ -302,7 +302,7 @@ function WeightPageContent() {
                 </div>
               </div>
               <div>
-                <label htmlFor="notes" className="block text-[15px] sm:text-base font-semibold font-roboto text-primary mb-2 sm:mb-3">
+                <label htmlFor="notes" className="block text-sm sm:text-base font-semibold font-roboto text-primary mb-2 sm:mb-3">
                   Notes
                 </label>
                 <textarea
@@ -344,7 +344,7 @@ function WeightPageContent() {
               <Scale className="w-6 h-6 sm:w-10 sm:h-10 text-secondary" />
             </div>
             <h3 className="text-lg font-semibold font-source text-primary mb-2">No weight entries</h3>
-            <p className="text-[15px] font-roboto text-secondary max-w-md mx-auto leading-relaxed">
+            <p className="text-sm font-roboto text-secondary max-w-md mx-auto leading-relaxed">
               Your weight entries will show here once you add them
             </p>
           </div>
