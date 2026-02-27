@@ -1026,7 +1026,7 @@ function ReportsPageContent() {
       <div className="max-w-4xl mx-auto">
       <div className="mb-5 sm:mb-6 card">
         <h1 className="text-2xl sm:text-3xl lg:text-4xl font-bold font-source text-primary mb-4">Reports</h1>
-        <p className="text-sm sm:text-base text-secondary font-roboto">
+        <p className="text-sm sm:text-base text-secondary font-roboto leading-relaxed">
           Generate detailed reports to share with your healthcare team
         </p>
       </div>
@@ -1100,7 +1100,7 @@ function ReportsPageContent() {
         </div>
 
         <div className="flex flex-col lg:flex-row gap-4 mb-6">
-          <div>
+          <div className="w-full lg:flex-1">
             <label htmlFor="startDate" className="block text-sm font-medium font-roboto text-primary mb-2">
               Start Date
             </label>
@@ -1114,11 +1114,12 @@ function ReportsPageContent() {
               placeholderText="Select start date"
               dateFormat="dd/MM/yyyy"
               maxDate={dateRange.endDate ? new Date(dateRange.endDate) : new Date()}
-              className="input-field-wizard w-full"
+              className="w-full"
+              wrapperClassName="w-full"
               enableTabLoop={false}
             />
           </div>
-          <div>
+          <div className="w-full lg:flex-1">
             <label htmlFor="endDate" className="block text-sm font-medium font-roboto text-primary mb-2">
               End Date
             </label>
@@ -1133,7 +1134,8 @@ function ReportsPageContent() {
               dateFormat="dd/MM/yyyy"
               minDate={dateRange.startDate ? new Date(dateRange.startDate) : undefined}
               maxDate={new Date()}
-              className="input-field-wizard w-full"
+              className="w-full"
+              wrapperClassName="w-full"
               enableTabLoop={false}
             />
           </div>

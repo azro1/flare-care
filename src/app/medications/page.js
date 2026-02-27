@@ -591,12 +591,11 @@ function MedicationsPageContent() {
                       name="dosage"
                       value={formData.dosage}
                       onChange={handleInputChange}
-                      placeholder="e.g. 500"
+                      placeholder="10mg"
                       maxLength={5}
                       className="input-field-wizard flex-1 min-w-0"
                       autoComplete="off"
                     />
-                    <span className="text-sm sm:text-base text-primary font-roboto shrink-0">mg</span>
                   </div>
                 </div>
               </div>

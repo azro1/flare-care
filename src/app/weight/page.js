@@ -259,7 +259,7 @@ function WeightPageContent() {
           <div className="mb-6 min-w-0">
             <form onSubmit={handleSubmit} className="space-y-4" autoComplete="off">
               <div className="grid sm:grid-cols-2 gap-6 min-w-0">
-                <div>
+                <div className="w-full">
                   <label htmlFor="weight-date" className="block text-sm sm:text-base font-semibold font-roboto text-primary mb-2 sm:mb-3">
                     Date *
                   </label>
@@ -274,6 +274,7 @@ function WeightPageContent() {
                     dateFormat="dd/MM/yyyy"
                     maxDate={new Date()}
                     className="input-field-wizard w-full"
+                    wrapperClassName="w-full"
                     enableTabLoop={false}
                   />
                 </div>
@@ -328,6 +329,9 @@ function WeightPageContent() {
                   className="px-4 py-2 text-lg font-semibold rounded-lg transition-colors hover:opacity-80"
                   style={{ backgroundColor: 'var(--bg-button-cancel)', color: 'var(--text-primary)' }}
                 >
+                  <svg className="w-5 h-5 mr-2 inline" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+                  </svg>
                   Cancel
                 </button>
               </div>
