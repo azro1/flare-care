@@ -131,7 +131,7 @@ function SymptomsPageContent() {
 
       try {
         const { data, error } = await supabase
-          .from(TABLES.SYMPTOMS)
+          .from(TABLES.LOG_SYMPTOMS)
           .select('*')
           .eq('user_id', user.id)
           .order('created_at', { ascending: false })
@@ -811,12 +811,13 @@ function SymptomsPageContent() {
         }
       }
       
-      // Alcohol units: 0-30 (2 digits max)
+      // Alcohol units: 0-30, allow decimals (e.g. 0.2, 0.5)
       if (name === 'alcohol_units') {
-        if (value.length > 2) {
-          return // Don't update if more than 2 digits
+        if (value && value.length > 5) {
+          return // e.g. "99.99" max length
         }
-        if (value && (numValue < 0 || numValue > 30)) {
+        const floatVal = parseFloat(value)
+        if (value && (isNaN(floatVal) || floatVal < 0 || floatVal > 30)) {
           return // Don't update if invalid range
         }
       }
@@ -971,7 +972,7 @@ function SymptomsPageContent() {
     try {
       // Save to Supabase
       const { error } = await supabase
-        .from(TABLES.SYMPTOMS)
+        .from(TABLES.LOG_SYMPTOMS)
         .insert([newSymptom])
 
       if (error) throw error
@@ -1050,7 +1051,7 @@ function SymptomsPageContent() {
   const confirmDelete = async () => {
     if (deleteModal.id && user?.id) {
       try {
-        const result = await deleteFromSupabase(TABLES.SYMPTOMS, deleteModal.id, user.id)
+        const result = await deleteFromSupabase(TABLES.LOG_SYMPTOMS, deleteModal.id, user.id)
         
         if (result.success) {
           // Remove from local state
@@ -1863,19 +1864,20 @@ function SymptomsPageContent() {
                 ? `How many units of alcohol did you drink on ${new Date(formData.symptomStartDate).toLocaleDateString('en-GB', { day: 'numeric', month: 'short' })}?` 
                 : 'How many units of alcohol do you drink per day?'}
             </h3>
-            <p className="text-sm text-muted mb-6">For example, '2' or '5'</p>
-            <div className="w-14">
+            <p className="text-sm text-muted mb-6">For example, 0.5, 2 or 5</p>
+            <div className="w-20">
                 <input
                 type="number"
                   id="alcohol_units"
                   name="alcohol_units"
                 min="0"
                 max="30"
+                step="0.1"
                   value={formData.alcohol_units}
                   onChange={handleInputChange}
                   onKeyDown={(e) => {
-                    // Prevent 'e', 'E', '+', '-', '.' from being entered
-                    if (['e', 'E', '+', '-', '.'].includes(e.key)) {
+                    // Prevent 'e', 'E', '+', '-' (allow '.' for decimals)
+                    if (['e', 'E', '+', '-'].includes(e.key)) {
                       e.preventDefault();
                     }
                   }}
@@ -2239,8 +2241,8 @@ function SymptomsPageContent() {
               </div>
             </div>
 
-            {/* Lifestyle - Only show if first-time user (they actually answered these questions) */}
-            {isFirstTimeUser && (formData.smoking !== undefined || formData.alcohol !== undefined) && (
+            {/* Lifestyle - show when user answered smoking/alcohol (first-time or returning, date-specific) */}
+            {(formData.smoking !== undefined || formData.alcohol !== undefined) && (
               <div className="card border" style={{borderColor: 'var(--border-card)'}}>
                 <h3 className="text-sm sm:text-lg font-semibold text-cadet-blue mb-4 pb-4 border-b" style={{borderColor: 'var(--border-primary)'}}>Lifestyle</h3>
                 <div className="space-y-4">

@@ -94,23 +94,6 @@ function MedicationsPageContent() {
             newMedicationName: newMedicationName
           }))
           
-          // Update individual medication takings if name changed
-          const individualTakingsKey = `flarecare-medication-individual-takings-${user?.id}-${today}`
-          const individualTakingsData = localStorage.getItem(individualTakingsKey)
-          if (individualTakingsData) {
-            try {
-              const takings = JSON.parse(individualTakingsData)
-              const updatedTakings = takings.map(taking => 
-                taking.medicationId === editingId 
-                  ? { ...taking, medicationName: newMedicationName }
-                  : taking
-              )
-              localStorage.setItem(individualTakingsKey, JSON.stringify(updatedTakings))
-            } catch (error) {
-              console.error('Error updating individual medication takings:', error)
-            }
-          }
-          
           // Dispatch custom event to notify dashboard
           window.dispatchEvent(new Event('medication-updated'))
         }
@@ -281,43 +264,26 @@ function MedicationsPageContent() {
     fetchMedications()
   }, [user?.id])
 
-  // Load today's taken medications from localStorage
+  // Load today's taken medications from database
   useEffect(() => {
-    const today = new Date().toISOString().split('T')[0] // YYYY-MM-DD format
-    const storageKey = `flarecare-medications-taken-${today}`
-    
-    // Clean up old entries (keep only today's)
-    const cleanupOldEntries = () => {
-      const keysToRemove = []
-      const timestampKey = `flarecare-medications-completed-${today}`
-      for (let i = 0; i < localStorage.length; i++) {
-        const key = localStorage.key(i)
-        if (key && (
-          (key.startsWith('flarecare-medications-taken-') && key !== storageKey) ||
-          (key.startsWith('flarecare-medications-completed-') && key !== timestampKey)
-        )) {
-          keysToRemove.push(key)
-        }
-      }
-      keysToRemove.forEach(key => localStorage.removeItem(key))
-    }
-    
-    // Clean up on mount
-    cleanupOldEntries()
-    
-    // Load today's data
-    const stored = localStorage.getItem(storageKey)
-    if (stored) {
+    const fetchTakenMedications = async () => {
+      if (!user?.id) return
+      const today = new Date().toISOString().split('T')[0]
       try {
-        setTakenMedications(JSON.parse(stored))
+        const { data, error } = await supabase
+          .from(TABLES.MEDICATION_TAKEN)
+          .select('medication_id')
+          .eq('user_id', user.id)
+          .eq('taken_date', today)
+        if (error) throw error
+        setTakenMedications((data || []).map(row => row.medication_id))
       } catch (error) {
-        console.error('Error parsing taken medications:', error)
+        console.error('Error fetching taken medications:', error)
         setTakenMedications([])
       }
-    } else {
-      setTakenMedications([])
     }
-  }, [])
+    fetchTakenMedications()
+  }, [user?.id])
 
   // Scroll to top when form opens so it's visible (especially on mobile)
   useEffect(() => {
@@ -372,24 +338,16 @@ function MedicationsPageContent() {
           medicationName: medicationName
         }))
         
-        // Remove from taken medications list
-        const storageKey = `flarecare-medications-taken-${today}`
-        const takenData = localStorage.getItem(storageKey)
-        if (takenData) {
-          try {
-            const taken = JSON.parse(takenData)
-            const filteredTaken = taken.filter(id => id !== deleteModal.id)
-            localStorage.setItem(storageKey, JSON.stringify(filteredTaken))
-            
-            // Check if we need to remove the completion timestamp
-            const timestampKey = `flarecare-medications-completed-${today}`
-            const prescribedMedications = updatedMedications.filter(med => med.name !== 'Medication Tracking')
-            if (filteredTaken.length !== prescribedMedications.length) {
-              localStorage.removeItem(timestampKey)
-            }
-          } catch (error) {
-            console.error('Error removing from taken medications:', error)
-          }
+        // Remove from medication_taken in DB (cascade would handle if we had FK, but we don't)
+        try {
+          await supabase
+            .from(TABLES.MEDICATION_TAKEN)
+            .delete()
+            .eq('user_id', user.id)
+            .eq('medication_id', String(deleteModal.id))
+          setTakenMedications(prev => prev.filter(id => String(id) !== String(deleteModal.id)))
+        } catch (err) {
+          console.error('Error removing from medication_taken:', err)
         }
         
         // Dispatch custom event to notify dashboard
@@ -455,59 +413,39 @@ function MedicationsPageContent() {
     return `${day}/${month}/${year}`
   }
 
-  const handleMarkAsTaken = (medicationId) => {
-    const today = new Date().toISOString().split('T')[0] // YYYY-MM-DD format
-    const storageKey = `flarecare-medications-taken-${today}`
-    const timestampKey = `flarecare-medications-completed-${today}`
-    const individualTakingsKey = `flarecare-medication-individual-takings-${user?.id}-${today}`
-    
-    // Filter out "Medication Tracking" entries (same as dashboard does)
-    const prescribedMedications = medications.filter(med => med.name !== 'Medication Tracking')
-    const medication = medications.find(med => med.id === medicationId)
-    
-    // Check if already taken today
-    if (takenMedications.includes(medicationId)) {
-      // Remove from taken list
-      const updated = takenMedications.filter(id => id !== medicationId)
-      setTakenMedications(updated)
-      localStorage.setItem(storageKey, JSON.stringify(updated))
-      // Remove timestamp if not all medications are taken
-      if (updated.length !== prescribedMedications.length) {
-        localStorage.removeItem(timestampKey)
+  const handleMarkAsTaken = async (medicationId) => {
+    if (!user?.id) return
+    const today = new Date().toISOString().split('T')[0]
+    const medIdStr = medicationId.toString()
+
+    try {
+      if (takenMedications.some(id => String(id) === medIdStr)) {
+        // Remove from taken - delete from DB
+        const { error } = await supabase
+          .from(TABLES.MEDICATION_TAKEN)
+          .delete()
+          .eq('user_id', user.id)
+          .eq('medication_id', medIdStr)
+          .eq('taken_date', today)
+        if (error) throw error
+        setTakenMedications(prev => prev.filter(id => String(id) !== medIdStr))
+      } else {
+        // Add to taken - insert into DB
+        const { error } = await supabase
+          .from(TABLES.MEDICATION_TAKEN)
+          .upsert({
+            user_id: user.id,
+            medication_id: medIdStr,
+            taken_date: today
+          }, { onConflict: 'user_id,medication_id,taken_date' })
+        if (error) throw error
+        setTakenMedications(prev => [...prev, medIdStr])
       }
-      
-      // Remove from individual takings
-      const individualTakings = JSON.parse(localStorage.getItem(individualTakingsKey) || '[]')
-      const updatedTakings = individualTakings.filter(taking => taking.medicationId !== medicationId)
-      localStorage.setItem(individualTakingsKey, JSON.stringify(updatedTakings))
-    } else {
-      // Add to taken list
-      const updated = [...takenMedications, medicationId]
-      setTakenMedications(updated)
-      localStorage.setItem(storageKey, JSON.stringify(updated))
-      
-      // Store individual medication taking
-      if (medication) {
-        const individualTakings = JSON.parse(localStorage.getItem(individualTakingsKey) || '[]')
-        // Remove any existing entry for this medication (in case they're re-marking it)
-        const filteredTakings = individualTakings.filter(taking => taking.medicationId !== medicationId)
-        // Add new entry
-        filteredTakings.push({
-          medicationId: medicationId,
-          medicationName: medication.name,
-          timestamp: new Date().toISOString()
-        })
-        localStorage.setItem(individualTakingsKey, JSON.stringify(filteredTakings))
-      }
-      
-      // If all medications are now taken, store timestamp
-      if (updated.length === prescribedMedications.length && prescribedMedications.length > 0) {
-        localStorage.setItem(timestampKey, new Date().toISOString())
-      }
+      window.dispatchEvent(new Event('medication-taken'))
+    } catch (error) {
+      console.error('Error updating medication taken:', error)
+      alert('Failed to update. Please try again.')
     }
-    
-    // Dispatch custom event to notify other components (like dashboard)
-    window.dispatchEvent(new Event('medication-taken'))
   }
 
   return (
@@ -766,7 +704,7 @@ function MedicationsPageContent() {
                               onClick={() => handleMarkAsTaken(medication.id)}
                               className="px-3 py-1.5 rounded-lg text-sm font-medium transition-all duration-200 inline-flex items-center justify-center border border-[#5F9EA0]/40 dark:border-[#5F9EA0]/60"
                               style={{
-                                ...(takenMedications.includes(medication.id) 
+                                ...(takenMedications.some(id => String(id) === String(medication.id)) 
                                   ? {
                                       backgroundColor: 'var(--bg-button-cadet)',
                                       color: 'white',
@@ -779,9 +717,9 @@ function MedicationsPageContent() {
                                 ),
                                 minWidth: '140px'
                               }}
-                              title={takenMedications.includes(medication.id) ? "Mark as not taken" : "Mark as taken"}
+                              title={takenMedications.some(id => String(id) === String(medication.id)) ? "Mark as not taken" : "Mark as taken"}
                             >
-                              {takenMedications.includes(medication.id) ? (
+                              {takenMedications.some(id => String(id) === String(medication.id)) ? (
                                 <>
                                   <svg className="w-4 h-4 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
@@ -870,7 +808,7 @@ function MedicationsPageContent() {
               <span className="text-base sm:text-sm font-semibold text-primary font-source">Important to know:</span>
             </div>
             <p className="text-xs text-secondary font-roboto leading-relaxed">
-              Enable push notifications in Account → Settings to get reminders even when the app is closed. You can turn reminders on or off for each medication.
+              Tap your avatar to open Account settings. In the Settings section tap Enable next to Push notifications to get reminders even when the app is closed. You can turn reminders on or off for each medication.
             </p>
           </div>
         </div>

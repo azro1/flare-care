@@ -4,6 +4,7 @@ import { useState, useEffect } from 'react'
 import { useParams, useRouter } from 'next/navigation'
 import { useAuth } from '@/lib/AuthContext'
 import { supabase, deleteFromSupabase, TABLES } from '@/lib/supabase'
+import { getUserPreferences } from '@/lib/userPreferences'
 import ProtectedRoute from '@/components/ProtectedRoute'
 
 function SymptomDetailContent() {
@@ -12,6 +13,7 @@ function SymptomDetailContent() {
   const { user } = useAuth()
   const [symptoms, setSymptoms] = useState([])
   const [symptom, setSymptom] = useState(null)
+  const [userPreferences, setUserPreferences] = useState(null)
   const [isDeleting, setIsDeleting] = useState(false)
   const [showDeleteModal, setShowDeleteModal] = useState(false)
   const [isRedirecting, setIsRedirecting] = useState(false)
@@ -26,7 +28,7 @@ function SymptomDetailContent() {
 
       try {
         const { data, error } = await supabase
-          .from(TABLES.SYMPTOMS)
+          .from(TABLES.LOG_SYMPTOMS)
           .select('*')
           .eq('user_id', user.id)
           .order('created_at', { ascending: false })
@@ -66,6 +68,18 @@ function SymptomDetailContent() {
   }, [user?.id])
 
   useEffect(() => {
+    const fetchPrefs = async () => {
+      if (!user?.id) {
+        setUserPreferences(null)
+        return
+      }
+      const prefs = await getUserPreferences(user.id)
+      setUserPreferences(prefs)
+    }
+    fetchPrefs()
+  }, [user?.id])
+
+  useEffect(() => {
     const foundSymptom = symptoms.find(s => s.id === params.id)
     if (foundSymptom) {
       setSymptom(foundSymptom)
@@ -81,7 +95,7 @@ function SymptomDetailContent() {
     
     setIsDeleting(true)
     try {
-      const result = await deleteFromSupabase(TABLES.SYMPTOMS, symptom.id, user.id)
+      const result = await deleteFromSupabase(TABLES.LOG_SYMPTOMS, symptom.id, user.id)
       
       if (result.success) {
         // Set redirecting flag to prevent useEffect redirect
@@ -282,7 +296,9 @@ function SymptomDetailContent() {
             <div className="card-inner p-4">
               <div className="flex items-center justify-between pb-4 border-b border-slate-300/30 dark:border-b" style={{borderColor: 'var(--border-card-inner)'}}>
                 <span className="text-sm sm:text-base font-medium text-primary">Smoking</span>
-                <span className="text-sm sm:text-base text-secondary">{symptom.smoking ? 'Yes' : 'No'}</span>
+                <span className="text-sm sm:text-base text-secondary">
+                  {symptom.smoking ? 'Yes' : symptom.smoking === false ? (userPreferences?.isSmoker === false ? 'Non-smoker' : 'No') : 'Not recorded'}
+                </span>
               </div>
               {symptom.smoking && symptom.smoking_details && (
                 <div className="pt-4 pb-4 border-b border-slate-300/30 dark:border-b min-w-0" style={{borderColor: 'var(--border-card-inner)'}}>
@@ -297,7 +313,9 @@ function SymptomDetailContent() {
                 style={{ borderColor: 'var(--border-card-inner)' }}
               >
                 <span className="text-sm sm:text-base font-medium text-primary">Alcohol</span>
-                <span className="text-sm sm:text-base text-secondary">{symptom.alcohol ? 'Yes' : 'No'}</span>
+                <span className="text-sm sm:text-base text-secondary">
+                  {symptom.alcohol ? 'Yes' : symptom.alcohol === false ? (userPreferences?.isDrinker === false ? 'Non-drinker' : 'No') : 'Not recorded'}
+                </span>
               </div>
               {symptom.alcohol && symptom.alcohol_units && (
                 <div className="flex items-center justify-between pt-4">

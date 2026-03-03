@@ -145,7 +145,7 @@ export default function Home() {
 
       try {
         const { data, error } = await supabase
-          .from(TABLES.SYMPTOMS)
+          .from(TABLES.LOG_SYMPTOMS)
           .select('*')
           .eq('user_id', user.id)
           .order('created_at', { ascending: false })
@@ -246,7 +246,7 @@ export default function Home() {
 
       try {
         const { data, error } = await supabase
-          .from(TABLES.TRACK_MEDICATIONS)
+          .from(TABLES.LOG_MEDICATIONS)
           .select('*')
           .eq('user_id', user.id)
           .order('created_at', { ascending: false })
@@ -362,18 +362,16 @@ export default function Home() {
     }
   }, [newsItems])
 
-  // Track daily medication intake with localStorage
+  // Track daily medication intake - from DB and localStorage (other activity)
   useEffect(() => {
-    const loadTakenMedications = () => {
+    const loadTakenMedications = async () => {
       if (!user?.id) return
       
-      const today = new Date().toISOString().split('T')[0] // YYYY-MM-DD format
-      const storageKey = `flarecare-medications-taken-${today}`
+      const today = new Date().toISOString().split('T')[0]
       
-      // Clean up old entries (keep only today's for current user)
+      // Clean up old localStorage entries (activity keys only - medication_taken is now in DB)
       const cleanupOldEntries = () => {
         const keysToRemove = []
-        const timestampKey = `flarecare-medications-completed-${today}`
         const activityKey = `flarecare-medication-added-${user.id}-${today}`
         const updatedKey = `flarecare-medication-updated-${user.id}-${today}`
         const deletedKey = `flarecare-medication-deleted-${user.id}-${today}`
@@ -384,12 +382,9 @@ export default function Home() {
         const appointmentAddedKey = `flarecare-appointment-added-${user.id}-${today}`
         const appointmentUpdatedKey = `flarecare-appointment-updated-${user.id}-${today}`
         const appointmentDeletedKey = `flarecare-appointment-deleted-${user.id}-${today}`
-        const individualTakingsKey = `flarecare-medication-individual-takings-${user.id}-${today}`
         for (let i = 0; i < localStorage.length; i++) {
           const key = localStorage.key(i)
           if (key && (
-            (key.startsWith('flarecare-medications-taken-') && key !== storageKey) ||
-            (key.startsWith('flarecare-medications-completed-') && key !== timestampKey) ||
             (key.startsWith(`flarecare-medication-added-${user.id}-`) && key !== activityKey) ||
             (key.startsWith(`flarecare-medication-updated-${user.id}-`) && key !== updatedKey) ||
             (key.startsWith(`flarecare-medication-deleted-${user.id}-`) && key !== deletedKey) ||
@@ -399,8 +394,7 @@ export default function Home() {
             (key.startsWith(`flarecare-weight-updated-${user.id}-`) && key !== weightUpdatedKey) ||
             (key.startsWith(`flarecare-appointment-added-${user.id}-`) && key !== appointmentAddedKey) ||
             (key.startsWith(`flarecare-appointment-updated-${user.id}-`) && key !== appointmentUpdatedKey) ||
-            (key.startsWith(`flarecare-appointment-deleted-${user.id}-`) && key !== appointmentDeletedKey) ||
-            (key.startsWith(`flarecare-medication-individual-takings-${user.id}-`) && key !== individualTakingsKey)
+            (key.startsWith(`flarecare-appointment-deleted-${user.id}-`) && key !== appointmentDeletedKey)
           )) {
             keysToRemove.push(key)
           }
@@ -408,26 +402,43 @@ export default function Home() {
         keysToRemove.forEach(key => localStorage.removeItem(key))
       }
       
-      // Clean up old entries
       cleanupOldEntries()
       
-      // Load today's taken medications
-      const stored = localStorage.getItem(storageKey)
-      if (stored) {
-        try {
-          setTakenMedications(JSON.parse(stored))
-        } catch (error) {
-          console.error('Error parsing taken medications:', error)
-          setTakenMedications([])
+      // Fetch medication_taken from DB
+      try {
+        const { data: takenData, error } = await supabase
+          .from(TABLES.MEDICATION_TAKEN)
+          .select('medication_id, created_at')
+          .eq('user_id', user.id)
+          .eq('taken_date', today)
+        if (error) throw error
+        const taken = (takenData || []).map(row => row.medication_id)
+        setTakenMedications(taken)
+        // Completed at = max created_at when all meds taken
+        const prescribedMeds = medications.filter(m => m.name !== 'Medication Tracking')
+        if (taken.length === prescribedMeds.length && prescribedMeds.length > 0 && takenData?.length > 0) {
+          const maxCreated = takenData.reduce((max, r) => {
+            const d = new Date(r.created_at)
+            return d > max ? d : max
+          }, new Date(0))
+          setMedicationsCompletedAt(maxCreated.toISOString())
+        } else {
+          setMedicationsCompletedAt(null)
         }
-      } else {
+        // Individual takings for recent activity
+        const takings = (takenData || [])
+          .map(row => {
+            const med = medications.find(m => String(m.id) === String(row.medication_id))
+            return { medicationId: row.medication_id, medicationName: med?.name || 'Medication', timestamp: row.created_at }
+          })
+          .sort((a, b) => new Date(b.timestamp) - new Date(a.timestamp))
+        setIndividualMedicationTakings(takings)
+      } catch (error) {
+        console.error('Error fetching medication_taken:', error)
         setTakenMedications([])
+        setMedicationsCompletedAt(null)
+        setIndividualMedicationTakings([])
       }
-      
-      // Load completion timestamp
-      const timestampKey = `flarecare-medications-completed-${today}`
-      const completedTimestamp = localStorage.getItem(timestampKey)
-      setMedicationsCompletedAt(completedTimestamp || null)
       
       // Load medication added activity
       const activityKey = `flarecare-medication-added-${user.id}-${today}`
@@ -568,35 +579,15 @@ export default function Home() {
       } else {
         setAppointmentDeleted(null)
       }
-      
-      // Load individual medication takings
-      const individualTakingsKey = `flarecare-medication-individual-takings-${user.id}-${today}`
-      const individualTakingsData = localStorage.getItem(individualTakingsKey)
-      if (individualTakingsData) {
-        try {
-          const takings = JSON.parse(individualTakingsData)
-          // Sort by timestamp, most recent first
-          takings.sort((a, b) => new Date(b.timestamp) - new Date(a.timestamp))
-          setIndividualMedicationTakings(takings)
-        } catch (error) {
-          console.error('Error parsing individual medication takings:', error)
-          setIndividualMedicationTakings([])
-        }
-      } else {
-        setIndividualMedicationTakings([])
-      }
     }
 
-    // Load on mount and when user changes
     loadTakenMedications()
 
-    // Listen for storage changes (when medications are marked as taken in other tabs/windows)
+    // Listen for storage changes (other activity - medication-taken comes from custom event)
     const handleStorageChange = (e) => {
       if (!user?.id) return
       
       if (e.key && (
-        e.key.startsWith('flarecare-medications-taken-') ||
-        e.key.startsWith('flarecare-medications-completed-') ||
         (e.key.startsWith('flarecare-medication-added-') && e.key.includes(`-${user.id}-`)) ||
         (e.key.startsWith('flarecare-medication-updated-') && e.key.includes(`-${user.id}-`)) ||
         (e.key.startsWith('flarecare-medication-deleted-') && e.key.includes(`-${user.id}-`)) ||
@@ -606,8 +597,7 @@ export default function Home() {
         (e.key.startsWith('flarecare-weight-updated-') && e.key.includes(`-${user.id}-`)) ||
         (e.key.startsWith('flarecare-appointment-added-') && e.key.includes(`-${user.id}-`)) ||
         (e.key.startsWith('flarecare-appointment-updated-') && e.key.includes(`-${user.id}-`)) ||
-        (e.key.startsWith('flarecare-appointment-deleted-') && e.key.includes(`-${user.id}-`)) ||
-        (e.key.startsWith('flarecare-medication-individual-takings-') && e.key.includes(`-${user.id}-`))
+        (e.key.startsWith('flarecare-appointment-deleted-') && e.key.includes(`-${user.id}-`))
       )) {
         loadTakenMedications()
       }
@@ -698,7 +688,7 @@ export default function Home() {
       window.removeEventListener('appointment-deleted', handleAppointmentDeleted)
       window.removeEventListener('focus', handleFocus)
     }
-  }, [user?.id])
+  }, [user?.id, medications])
 
 
 
@@ -918,6 +908,12 @@ export default function Home() {
     return today === symptomDate
   })
 
+  const todayTrackedMedication = trackedMedications.some(entry => {
+    const today = new Date().toDateString()
+    const entryDate = new Date(entry.created_at).toDateString()
+    return today === entryDate
+  })
+
   return (
     <div className="flex-1 flex flex-col min-h-0">
       {/* Toast Notification */}
@@ -952,7 +948,7 @@ export default function Home() {
 
       {showMedicationToast && (
         <div className="fixed top-24 right-4 z-50 bg-pink-100 text-pink-600 px-6 py-3 rounded-lg shadow-lg flex items-center max-w-xs border border-pink-600">
-          <span className="font-medium">Medications tracked successfully!</span>
+          <span className="font-medium">Medications entry added successfully!</span>
           <button
             onClick={() => setShowMedicationToast(false)}
             className="ml-3 text-pink-600/80 hover:text-pink-600"
@@ -1028,42 +1024,42 @@ export default function Home() {
             </div>
 
               {/* Today's Goals */}
-              <div className="card no-hover-border p-4 sm:p-6">
+              <div className="card no-hover-border">
                 <h3 className="text-xl font-semibold font-source text-primary mb-3">Today's Goals</h3>
-                <div className="space-y-3">
+                <div className="card-inner p-4 sm:p-5 space-y-3">
                   <div className="flex items-center gap-3">
-                    <div className="w-6 h-6 card-inner flex items-center justify-center">
-                      <Thermometer className="w-3.5 h-3.5" style={{color: 'var(--text-goal-icon-success)'}} />
+                    <div className="w-6 h-6 bg-white dark:bg-[var(--bg-card-inner)] flex items-center justify-center rounded-lg">
+                      <Thermometer className="w-3.5 h-3.5 text-primary" />
                     </div>
                     <div className="flex-1 flex items-center justify-between">
-                      <span className={`text-sm ${todaySymptoms.length > 0 ? '' : 'text-primary'}`} style={{color: todaySymptoms.length > 0 ? 'var(--text-cadet-blue)' : undefined}}>
+                      <span className={`text-sm text-primary ${todaySymptoms.length > 0 ? 'line-through' : ''}`}>
                         Log symptoms
                       </span>
-                      {todaySymptoms.length > 0 && (
-                        <svg className="w-5 h-5" style={{color: 'var(--text-cadet-blue)'}} fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
-                        </svg>
-                      )}
                     </div>
                   </div>
-                  <div className="flex items-center gap-3">
-                    <div className="w-6 h-6 card-inner flex items-center justify-center">
-                      <Pill className="w-3 h-3" style={{color: 'var(--text-goal-icon-medication)'}} />
+                  <Link href="/medications/track" className="flex items-center gap-3">
+                    <div className="w-6 h-6 bg-white dark:bg-[var(--bg-card-inner)] flex items-center justify-center rounded-lg">
+                      <ChartLine className="w-3.5 h-3.5 text-primary" />
                     </div>
                     <div className="flex-1 flex items-center justify-between">
-                      <span className={`text-sm ${takenMedications.length === medications.length && medications.length > 0 ? '' : 'text-primary'}`} style={{color: takenMedications.length === medications.length && medications.length > 0 ? 'var(--text-cadet-blue)' : undefined}}>
+                      <span className={`text-sm text-primary ${todayTrackedMedication ? 'line-through' : ''}`}>
+                        Log medications
+                      </span>
+                    </div>
+                  </Link>
+                  <div className="flex items-center gap-3">
+                    <div className="w-6 h-6 bg-white dark:bg-[var(--bg-card-inner)] flex items-center justify-center rounded-lg">
+                      <Pill className="w-3 h-3 text-primary" />
+                    </div>
+                    <div className="flex-1 flex items-center justify-between">
+                      <span className={`text-sm text-primary ${takenMedications.length === medications.length && medications.length > 0 ? 'line-through' : ''}`}>
                         Take medications
                       </span>
-                      {takenMedications.length === medications.length && medications.length > 0 && (
-                        <svg className="w-5 h-5" style={{color: 'var(--text-cadet-blue)'}} fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
-                  </svg>
-                      )}
                     </div>
                   </div>
                   <div className="flex items-center gap-3">
-                    <div className="w-6 h-6 card-inner flex items-center justify-center">
-                      <CupSoda className="w-3.5 h-3.5" style={{color: 'var(--text-goal-icon-hydration)'}} />
+                    <div className="w-6 h-6 bg-white dark:bg-[var(--bg-card-inner)] flex items-center justify-center rounded-lg">
+                      <CupSoda className="w-3.5 h-3.5 text-primary" />
                     </div>
                     <span className="text-sm text-primary">Stay hydrated</span>
                   </div>
@@ -1135,7 +1131,7 @@ export default function Home() {
                 <ChartLine className="w-5 h-5 text-pink-600 dark:text-white" />
                 </div>
                 <div className="flex-1 min-w-0">
-                  <h3 className="text-sm sm:text-base font-semibold text-primary leading-tight">Track Medications</h3>
+                  <h3 className="text-sm sm:text-base font-semibold text-primary leading-tight">Log medications</h3>
                 </div>
                 <ChevronRight className="w-5 h-5 flex-shrink-0 text-secondary" />
                 <div className="pointer-events-none absolute right-3 -top-14 hidden w-52 sm:group-hover:flex sm:group-focus-visible:flex">
@@ -1179,7 +1175,7 @@ export default function Home() {
                 </div>
                 <div className="flex-1 sm:w-full sm:text-center">
                   <h3 className="text-sm sm:text-base font-semibold text-primary leading-tight sm:leading-relaxed sm:justify-center">
-                    Track Medications
+                    Log medications
                   </h3>
                 </div>
                 <ChevronRight className="w-5 h-5 flex-shrink-0 text-secondary sm:hidden" />
@@ -1266,7 +1262,7 @@ export default function Home() {
                 activities.push({
                   type: 'tracked-medication',
                   timestamp: new Date(lastMedication.created_at || lastMedication.createdAt),
-                  title: "Completed Today's goal \"Track Medications\"",
+                  title: "Completed Today's goal \"Log medications\"",
                   icon: ChartLine,
                   iconBg: 'bg-pink-100',
                   iconColor: 'text-pink-600'
@@ -1424,7 +1420,7 @@ export default function Home() {
                 activities.push({
                   type: 'all-medications-taken',
                   timestamp: new Date(medicationsCompletedAt),
-                  title: "Completed Today's goal \"Take Medications\"",
+                  title: "Completed Today's goal \"Take medications\"",
                   icon: Pill,
                   iconBg: 'bg-purple-100',
                   iconColor: 'text-purple-600'
@@ -1656,7 +1652,7 @@ export default function Home() {
           <div className="mb-6 sm:mb-6 card">
             <div className="flex items-center justify-between mb-4">
               <div className="flex items-start gap-3">
-                <h2 className="text-xl font-semibold font-source text-primary">Recent Tracked Medications</h2>
+                <h2 className="text-xl font-semibold font-source text-primary">Recent Logged Medications</h2>
               </div>
               {trackedMedications.length > 1 && (
                 <button 

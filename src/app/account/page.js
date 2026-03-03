@@ -139,7 +139,7 @@ function AccountPageContent() {
               <div className="flex items-start justify-between gap-4 mb-4 sm:gap-6 sm:mb-6">
                 <div className="flex items-center min-w-0">
                   <div
-                    className={`mr-4 sm:mr-6 flex-shrink-0 rounded-full overflow-hidden ${avatarUrl && !showFallbackAvatar ? 'border-2 border-[var(--border-dropdown)]' : ''}`}
+                    className={`mr-3 sm:mr-6 flex-shrink-0 rounded-full overflow-hidden ${avatarUrl && !showFallbackAvatar ? 'border-2 border-[var(--border-dropdown)]' : ''}`}
                   >
                     <div className="w-12 h-12 sm:w-20 sm:h-20 rounded-full overflow-hidden flex items-center justify-center bg-[var(--bg-icon)] dark:bg-[var(--bg-icon-charcoal)]">
                       {avatarUrl && !showFallbackAvatar ? (

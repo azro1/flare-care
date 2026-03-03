@@ -22,7 +22,7 @@ function TrackedMedicationDetails() {
       
       try {
         const { data, error } = await supabase
-          .from(TABLES.TRACK_MEDICATIONS)
+          .from(TABLES.LOG_MEDICATIONS)
           .select('*')
           .eq('id', medicationId)
           .eq('user_id', user.id)
@@ -67,7 +67,7 @@ function TrackedMedicationDetails() {
     
     setIsDeleting(true)
     try {
-      const result = await deleteFromSupabase(TABLES.TRACK_MEDICATIONS, trackedData.id, user.id)
+      const result = await deleteFromSupabase(TABLES.LOG_MEDICATIONS, trackedData.id, user.id)
       
       if (result.success) {
         // Set redirecting flag to prevent useEffect redirect
@@ -140,7 +140,7 @@ function TrackedMedicationDetails() {
       <div className="flex items-center gap-3 mb-6">
         <div className="w-2 h-8 bg-pink-500 rounded-full"></div>
         <h1 className="text-2xl sm:text-3xl font-bold font-source text-primary">
-          Medication Tracking Details
+          Medication log
         </h1>
       </div>
 
@@ -305,7 +305,7 @@ function TrackedMedicationDetails() {
             </div>
             
             <p className="text-[15px] sm:text-base text-secondary mb-6">
-              Are you sure you want to delete this medication tracking entry? This action cannot be undone.
+              Are you sure you want to delete this medication log? This action cannot be undone.
             </p>
             
             <div className="flex gap-3">

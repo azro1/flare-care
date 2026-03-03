@@ -380,7 +380,7 @@ function MedicationTrackingWizard() {
     try {
       // Save to Supabase - following the exact same pattern as symptoms
       const { error } = await supabase
-        .from(TABLES.TRACK_MEDICATIONS)
+        .from(TABLES.LOG_MEDICATIONS)
         .insert([newMedicationTracking])
 
       if (error) throw error
@@ -975,7 +975,7 @@ function MedicationTrackingWizard() {
             onClick={() => setCurrentStep(0)}
             className="text-sm sm:text-base font-normal text-primary underline hover:opacity-80 transition-opacity text-left"
           >
-            Track Medications
+            Log medications
           </button>
         </div>
       )}
@@ -991,7 +991,7 @@ function MedicationTrackingWizard() {
             </div>
             
             {/* Title */}
-            <h2 className="text-2xl sm:text-3xl lg:text-4xl font-bold font-source text-primary mb-4 sm:mb-6">Track Medications</h2>
+            <h2 className="text-2xl sm:text-3xl lg:text-4xl font-bold font-source text-primary mb-4 sm:mb-6">Log medications</h2>
             
             {/* Optional description */}
             <p className="text-base sm:text-lg font-roboto text-muted mb-8 max-w-md">Track your medication adherence to identify patterns and triggers</p>
@@ -1060,7 +1060,7 @@ function MedicationTrackingWizard() {
         isOpen={showCancelModal}
         onClose={() => setShowCancelModal(false)}
         onConfirm={handlePatternModalCancel}
-        title="Cancel medication tracking?"
+        title="Cancel logging?"
         message="Are you sure you want to cancel? Your progress will be lost."
         confirmText="Yes, cancel"
         cancelText="No, continue"

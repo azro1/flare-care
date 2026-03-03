@@ -396,12 +396,12 @@ export default function LearnPage() {
             <div className="card p-8 backdrop-blur-sm text-center">
           <h2 className="text-xl font-semibold font-source text-primary mb-4">Track Your Medications</h2>
           <p className="text-sm sm:text-base text-secondary font-roboto mb-6 leading-relaxed">
-            Use the medications tracker to log missed medications to keep your healthcare team informed
+            Log missed medications and NSAIDs to keep your healthcare team informed to keep your healthcare team informed
           </p>
           <div className="flex flex-col sm:flex-row justify-center items-center sm:items-stretch space-y-3 sm:space-y-0 sm:space-x-4">
             {isAuthenticated ? (
               <Link href="/medications/track" className="bg-[#5F9EA0] hover:bg-button-cadet-hover text-white font-semibold py-3 px-6 rounded-xl transition-all duration-300 transform hover:scale-105 hover:shadow-lg active:scale-95 font-roboto w-auto">
-                Track Meds
+                Log meds
               </Link>
             ) : (
               <>

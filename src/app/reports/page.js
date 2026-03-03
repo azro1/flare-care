@@ -9,6 +9,7 @@ import 'react-datepicker/dist/react-datepicker.css'
 import ProtectedRoute from '@/components/ProtectedRoute'
 import { supabase, TABLES } from '@/lib/supabase'
 import { useAuth } from '@/lib/AuthContext'
+import { getUserPreferences } from '@/lib/userPreferences'
 import { Calendar, FileText, Download, FileDown, BarChart3, Pill, Activity, TrendingUp, Thermometer, Brain, Pizza, ChartLine, Scale, ChevronDown, ChevronUp } from 'lucide-react'
 
 // Force dynamic rendering to prevent Vercel static generation issues
@@ -25,6 +26,7 @@ function ReportsPageContent() {
   const [appointments, setAppointments] = useState([])
   const [weightEntries, setWeightEntries] = useState([])
   const [reportData, setReportData] = useState(null)
+  const [userPreferences, setUserPreferences] = useState(null)
   const [isLoading, setIsLoading] = useState(true)
   const [dateRange, setDateRange] = useState(() => {
     const endDate = new Date()
@@ -72,7 +74,7 @@ function ReportsPageContent() {
 
       try {
         const { data, error } = await supabase
-          .from(TABLES.SYMPTOMS)
+          .from(TABLES.LOG_SYMPTOMS)
           .select('*')
           .eq('user_id', user.id)
           .order('created_at', { ascending: false })
@@ -166,7 +168,7 @@ function ReportsPageContent() {
 
       try {
         const { data, error } = await supabase
-          .from(TABLES.TRACK_MEDICATIONS)
+          .from(TABLES.LOG_MEDICATIONS)
           .select('*')
           .eq('user_id', user.id)
           .order('created_at', { ascending: false })
@@ -183,6 +185,19 @@ function ReportsPageContent() {
     }
 
     fetchMedicationTracking()
+  }, [user?.id])
+
+  // Fetch user preferences (isSmoker, isDrinker) for export labels
+  useEffect(() => {
+    const fetchPrefs = async () => {
+      if (!user?.id) {
+        setUserPreferences(null)
+        return
+      }
+      const prefs = await getUserPreferences(user.id)
+      setUserPreferences(prefs)
+    }
+    fetchPrefs()
   }, [user?.id])
 
   // Fetch appointments from Supabase
@@ -484,7 +499,7 @@ function ReportsPageContent() {
     if (hasTrackingData) {
       doc.setFontSize(16)
       doc.setFont('helvetica', 'bold')
-      doc.text('Tracked Medications', margin, yPosition)
+      doc.text('Medication logs', margin, yPosition)
       yPosition += 10
 
       doc.setFontSize(12)
@@ -676,21 +691,29 @@ function ReportsPageContent() {
           yPosition += splitNotes.length * 5
         }
         
-        // Display smoking status
-        if (symptom.smoking) {
+        // Display smoking: "Non-smoker" if habit is no, "No" if didn't smoke that day
+        if (symptom.smoking === true) {
           const smokingText = symptom.smoking_details 
             ? `   Smoking: ${symptom.smoking_details}`
             : `   Smoking: Yes`
           doc.text(smokingText, margin, yPosition)
           yPosition += 5
+        } else if (symptom.smoking === false) {
+          const smokingLabel = userPreferences?.isSmoker === false ? 'Non-smoker' : 'No'
+          doc.text(`   Smoking: ${smokingLabel}`, margin, yPosition)
+          yPosition += 5
         }
         
-        // Display alcohol consumption
-        if (symptom.alcohol) {
+        // Display alcohol: "Non-drinker" if habit is no, "No" if didn't drink that day
+        if (symptom.alcohol === true) {
           const alcoholText = symptom.alcohol_units 
             ? `   Alcohol: ${symptom.alcohol_units} ${symptom.alcohol_units === '1' ? 'unit' : 'units'} per day`
             : `   Alcohol: Yes`
           doc.text(alcoholText, margin, yPosition)
+          yPosition += 5
+        } else if (symptom.alcohol === false) {
+          const alcoholLabel = userPreferences?.isDrinker === false ? 'Non-drinker' : 'No'
+          doc.text(`   Alcohol: ${alcoholLabel}`, margin, yPosition)
           yPosition += 5
         }
         
@@ -835,15 +858,19 @@ function ReportsPageContent() {
           foodsData = symptom.foods || ''
         }
         
-        // Format smoking data
-        const smokingData = symptom.smoking 
+        // Format smoking: "Non-smoker" if habit is no, "No" if didn't smoke that day, details if yes
+        const smokingData = symptom.smoking === true
           ? (symptom.smoking_details || 'Yes')
-          : ''
+          : symptom.smoking === false
+            ? (userPreferences?.isSmoker === false ? 'Non-smoker' : 'No')
+            : ''
         
-        // Format alcohol data
-        const alcoholData = symptom.alcohol 
+        // Format alcohol: "Non-drinker" if habit is no, "No" if didn't drink that day, details if yes
+        const alcoholData = symptom.alcohol === true
           ? (symptom.alcohol_units ? `${symptom.alcohol_units} ${symptom.alcohol_units === '1' ? 'unit' : 'units'} per day` : 'Yes')
-          : ''
+          : symptom.alcohol === false
+            ? (userPreferences?.isDrinker === false ? 'Non-drinker' : 'No')
+            : ''
         
         // Format bathroom frequency data
         const normalBathroomData = symptom.normal_bathroom_frequency || ''
@@ -876,7 +903,7 @@ function ReportsPageContent() {
     if (hasTrackingData) {
       // Add section separator
       csvData.push([])
-      csvData.push(['TRACKED MEDICATIONS'])
+      csvData.push(['MEDICATION LOGS'])
       csvData.push([])
       
       // Missed Medications
@@ -1211,7 +1238,7 @@ function ReportsPageContent() {
               className="w-full flex items-center justify-between text-left focus:outline-none rounded py-2 -ml-1"
               aria-expanded={openSubSections.symptomEpisodes}
             >
-              <span className="text-sm sm:text-base font-semibold font-source text-primary">Symptom Episodes ({reportData.severityTrend.length})</span>
+              <span className="text-sm sm:text-base font-semibold text-primary">Symptom Episodes ({reportData.severityTrend.length})</span>
               {openSubSections.symptomEpisodes ? <ChevronUp className="w-4 h-4 text-secondary shrink-0" /> : <ChevronDown className="w-4 h-4 text-secondary shrink-0" />}
             </button>
             {openSubSections.symptomEpisodes && (
@@ -1330,7 +1357,7 @@ function ReportsPageContent() {
         </div>
       )}
 
-      {/* Tracked Medications - Collapsible */}
+      {/* Medication logs - Collapsible */}
       {reportData.medicationTracking && (
         reportData.medicationTracking.missedMedications.length > 0 || 
         reportData.medicationTracking.nsaids.length > 0 || 
@@ -1346,7 +1373,7 @@ function ReportsPageContent() {
             <div className="flex w-10 h-10 bg-pink-100 dashboard-icon-panel rounded-lg items-center justify-center mr-3 sm:mr-4 flex-shrink-0">
               <ChartLine className="w-5 h-5 text-pink-600 dark:text-white" />
             </div>
-            <h2 className="text-sm sm:text-lg font-semibold text-primary flex-1">Tracked Medications</h2>
+            <h2 className="text-sm sm:text-lg font-semibold text-primary flex-1">Medication logs</h2>
             <span className="text-sm font-roboto text-secondary shrink-0">{openSections.trackedMeds ? 'Hide' : 'Show'}</span>
           </button>
           {openSections.trackedMeds && (
@@ -1360,7 +1387,7 @@ function ReportsPageContent() {
                 className="w-full flex items-center justify-between text-left focus:outline-none rounded py-2 -ml-1"
                 aria-expanded={openSubSections.missedMeds}
               >
-                <span className="text-sm sm:text-base font-semibold font-source text-primary">Missed Medications ({reportData.medicationTracking.missedMedications.length})</span>
+                <span className="text-sm sm:text-base font-semibold text-primary">Missed Medications ({reportData.medicationTracking.missedMedications.length})</span>
                 {openSubSections.missedMeds ? <ChevronUp className="w-4 h-4 text-secondary shrink-0" /> : <ChevronDown className="w-4 h-4 text-secondary shrink-0" />}
               </button>
               {openSubSections.missedMeds && (
@@ -1412,7 +1439,7 @@ function ReportsPageContent() {
                 className="w-full flex items-center justify-between text-left focus:outline-none rounded py-2 -ml-1"
                 aria-expanded={openSubSections.nsaids}
               >
-                <span className="text-sm sm:text-base font-semibold font-source text-primary">NSAIDs Taken ({reportData.medicationTracking.nsaids.length})</span>
+                <span className="text-sm sm:text-base font-semibold text-primary">NSAIDs Taken ({reportData.medicationTracking.nsaids.length})</span>
                 {openSubSections.nsaids ? <ChevronUp className="w-4 h-4 text-secondary shrink-0" /> : <ChevronDown className="w-4 h-4 text-secondary shrink-0" />}
               </button>
               {openSubSections.nsaids && (
@@ -1469,7 +1496,7 @@ function ReportsPageContent() {
                 className="w-full flex items-center justify-between text-left focus:outline-none rounded py-2 -ml-1"
                 aria-expanded={openSubSections.antibiotics}
               >
-                <span className="text-sm sm:text-base font-semibold font-source text-primary">Antibiotics Taken ({reportData.medicationTracking.antibiotics.length})</span>
+                <span className="text-sm sm:text-base font-semibold text-primary">Antibiotics Taken ({reportData.medicationTracking.antibiotics.length})</span>
                 {openSubSections.antibiotics ? <ChevronUp className="w-4 h-4 text-secondary shrink-0" /> : <ChevronDown className="w-4 h-4 text-secondary shrink-0" />}
               </button>
               {openSubSections.antibiotics && (

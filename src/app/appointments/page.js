@@ -653,7 +653,7 @@ function AppointmentsPageContent() {
               <span className="text-base sm:text-sm font-semibold text-primary font-source">Important to know:</span>
             </div>
             <p className="text-xs text-secondary font-roboto leading-relaxed">
-              Enable push notifications in Account → Settings to get reminders even when the app is closed. When adding or editing an appointment, choose how far in advance you want to be reminded.
+              Tap your avatar to open Account settings. In the Settings section tap Enable next to Push notifications to get reminders even when the app is closed.
             </p>
           </div>
         </div>
