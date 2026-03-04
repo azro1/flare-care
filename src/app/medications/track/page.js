@@ -975,7 +975,7 @@ function MedicationTrackingWizard() {
             onClick={() => setCurrentStep(0)}
             className="text-sm sm:text-base font-normal text-primary underline hover:opacity-80 transition-opacity text-left"
           >
-            Log medications
+            Log Medications
           </button>
         </div>
       )}
@@ -991,7 +991,7 @@ function MedicationTrackingWizard() {
             </div>
             
             {/* Title */}
-            <h2 className="text-2xl sm:text-3xl lg:text-4xl font-bold font-source text-primary mb-4 sm:mb-6">Log medications</h2>
+            <h2 className="text-2xl sm:text-3xl lg:text-4xl font-bold font-source text-primary mb-4 sm:mb-6">Log Medications</h2>
             
             {/* Optional description */}
             <p className="text-base sm:text-lg font-roboto text-muted mb-8 max-w-md">Track your medication adherence to identify patterns and triggers</p>

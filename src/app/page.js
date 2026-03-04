@@ -1043,7 +1043,7 @@ export default function Home() {
                     </div>
                     <div className="flex-1 flex items-center justify-between">
                       <span className={`text-sm text-primary ${todayTrackedMedication ? 'line-through' : ''}`}>
-                        Log medications
+                        Log Medications
                       </span>
                     </div>
                   </Link>
@@ -1131,7 +1131,7 @@ export default function Home() {
                 <ChartLine className="w-5 h-5 text-pink-600 dark:text-white" />
                 </div>
                 <div className="flex-1 min-w-0">
-                  <h3 className="text-sm sm:text-base font-semibold text-primary leading-tight">Log medications</h3>
+                  <h3 className="text-sm sm:text-base font-semibold text-primary leading-tight">Log Medications</h3>
                 </div>
                 <ChevronRight className="w-5 h-5 flex-shrink-0 text-secondary" />
                 <div className="pointer-events-none absolute right-3 -top-14 hidden w-52 sm:group-hover:flex sm:group-focus-visible:flex">
@@ -1175,7 +1175,7 @@ export default function Home() {
                 </div>
                 <div className="flex-1 sm:w-full sm:text-center">
                   <h3 className="text-sm sm:text-base font-semibold text-primary leading-tight sm:leading-relaxed sm:justify-center">
-                    Log medications
+                    Log Medications
                   </h3>
                 </div>
                 <ChevronRight className="w-5 h-5 flex-shrink-0 text-secondary sm:hidden" />
@@ -1262,7 +1262,7 @@ export default function Home() {
                 activities.push({
                   type: 'tracked-medication',
                   timestamp: new Date(lastMedication.created_at || lastMedication.createdAt),
-                  title: "Completed Today's goal \"Log medications\"",
+                  title: "Completed Today's goal \"Log Medications\"",
                   icon: ChartLine,
                   iconBg: 'bg-pink-100',
                   iconColor: 'text-pink-600'
