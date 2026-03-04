@@ -28,6 +28,13 @@ A personal companion app for managing Crohn's & Colitis symptoms, built with Nex
 - **Enhanced detail pages** - Clean, organized view of individual symptom entries
 - **Improved visual hierarchy** - Better spacing and typography for readability
 
+### 💧 Hydration Tracking
+- Daily glass count with a simple +1 tap interface
+- Goal of 6 glasses per day (customizable)
+- Visual feedback when goal is met
+- Dashboard integration with "Stay hydrated" in Today's Goals
+- Included in Reports (CSV/PDF export) for healthcare team sharing
+
 ### 💊 Medication Management
 - Add medications with dosage and timing
 - **Medication reminders** with push notifications (work when app is closed)
@@ -55,6 +62,7 @@ A personal companion app for managing Crohn's & Colitis symptoms, built with Nex
 - **Flexible date ranges** - Last 7 days, 30 days, 3 months, or custom periods with react-datepicker
 - **Quick preset buttons** for common time periods
 - **Symptom report section** - Average severity, average stress levels, and detailed symptom episodes
+- **Hydration section** - Daily glass counts and trends over the report period
 - **Medication tracking integration** - Includes missed medications, NSAIDs, and antibiotics with dosages
 - **Current medications display** - Shows all prescribed medications for the report period
 - **Top foods analysis** - Displays most frequently logged foods during the period
@@ -163,7 +171,8 @@ A personal companion app for managing Crohn's & Colitis symptoms, built with Nex
 1. **Sign in** - Click "Continue with Google" to sign in securely
 2. **Start by logging symptoms** - Click "Symptoms" and add your first entry
 3. **Add medications** - Go to "Medications" to set up your medication schedule
-4. **Generate reports** - Use the "Reports" page to create summaries for your healthcare team
+4. **Track hydration** - Use "Hydration" to log daily water intake and meet your goal
+5. **Generate reports** - Use the "Reports" page to create summaries for your healthcare team
 
 ### Cloud Sync (Optional)
 1. **Enable sync** - Toggle the sync switch on Symptoms or Medications pages
@@ -179,6 +188,7 @@ src/
 │   │   └── news/          # Health news API (NewsAPI, MedlinePlus, Google News)
 │   ├── about/             # About page
 │   ├── auth/              # Authentication pages
+│   ├── hydration/         # Hydration tracking
 │   ├── medications/       # Medications management
 │   ├── reports/           # Reports and analytics
 │   ├── symptoms/          # Symptom tracking
