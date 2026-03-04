@@ -10,7 +10,7 @@ import ProtectedRoute from '@/components/ProtectedRoute'
 import { supabase, TABLES } from '@/lib/supabase'
 import { useAuth } from '@/lib/AuthContext'
 import { getUserPreferences } from '@/lib/userPreferences'
-import { Calendar, FileText, Download, FileDown, BarChart3, Pill, Activity, TrendingUp, Thermometer, Brain, Pizza, ChartLine, Scale, ChevronDown, ChevronUp } from 'lucide-react'
+import { Calendar, FileText, Download, FileDown, BarChart3, Pill, Activity, TrendingUp, Thermometer, Brain, Pizza, ChartLine, Scale, ChevronDown, ChevronUp, CupSoda } from 'lucide-react'
 
 // Force dynamic rendering to prevent Vercel static generation issues
 export const dynamic = 'force-dynamic'
@@ -25,6 +25,7 @@ function ReportsPageContent() {
   const [medicationTracking, setMedicationTracking] = useState([])
   const [appointments, setAppointments] = useState([])
   const [weightEntries, setWeightEntries] = useState([])
+  const [hydrationEntries, setHydrationEntries] = useState([])
   const [reportData, setReportData] = useState(null)
   const [userPreferences, setUserPreferences] = useState(null)
   const [isLoading, setIsLoading] = useState(true)
@@ -44,6 +45,7 @@ function ReportsPageContent() {
     trackedMeds: false,
     appointments: false,
     weight: false,
+    hydration: false,
     foods: false
   })
   const toggleSection = (key) => setOpenSections(prev => ({ ...prev, [key]: !prev[key] }))
@@ -248,6 +250,30 @@ function ReportsPageContent() {
     fetchWeight()
   }, [user?.id])
 
+  // Fetch hydration entries from Supabase
+  useEffect(() => {
+    const fetchHydration = async () => {
+      if (!user?.id) {
+        setHydrationEntries([])
+        return
+      }
+      try {
+        const { data, error } = await supabase
+          .from(TABLES.DAILY_HYDRATION)
+          .select('*')
+          .eq('user_id', user.id)
+          .order('date', { ascending: false })
+
+        if (error) throw error
+        setHydrationEntries(data || [])
+      } catch (error) {
+        console.error('Error fetching hydration entries:', error)
+        setHydrationEntries([])
+      }
+    }
+    fetchHydration()
+  }, [user?.id])
+
   // Reset loading when navigating to reports page
   useEffect(() => {
     if (pathname === '/reports') {
@@ -261,7 +287,7 @@ function ReportsPageContent() {
     if (user && pathname === '/reports') {
       generateReport()
     }
-  }, [symptoms, medications, medicationTracking, appointments, weightEntries, dateRange, user, pathname])
+  }, [symptoms, medications, medicationTracking, appointments, weightEntries, hydrationEntries, dateRange, user, pathname])
 
   useEffect(() => {
     if (reportData) {
@@ -393,6 +419,22 @@ function ReportsPageContent() {
         value_kg: entry.value_kg != null ? Number(entry.value_kg) : null,
         notes: entry.notes || ''
       }))
+
+    // Hydration: filter by date range
+    const HYDRATION_TARGET = 6
+    const filteredHydration = hydrationEntries
+      .filter(entry => {
+        const d = new Date(entry.date)
+        if (isNaN(d.getTime())) return false
+        d.setHours(0, 0, 0, 0)
+        return d >= startDate && d <= endDate
+      })
+      .sort((a, b) => new Date(a.date) - new Date(b.date))
+      .map(entry => ({
+        date: entry.date,
+        glasses: entry.glasses ?? 0,
+        targetMet: (entry.glasses ?? 0) >= HYDRATION_TARGET
+      }))
     
     setReportData({
       period: {
@@ -415,7 +457,9 @@ function ReportsPageContent() {
         antibiotics: combinedAntibiotics
       },
       appointments: filteredAppointments,
-      weightEntries: filteredWeight
+      weightEntries: filteredWeight,
+      hydrationEntries: filteredHydration,
+      hydrationTarget: HYDRATION_TARGET
     })
     setIsLoading(false)
   }
@@ -429,7 +473,8 @@ function ReportsPageContent() {
     )
     const hasAppointments = reportData.appointments && reportData.appointments.length > 0
     const hasWeight = reportData.weightEntries && reportData.weightEntries.length > 0
-    return reportData.totalEntries > 0 || reportData.medications.length > 0 || hasTrackingData || hasAppointments || hasWeight
+    const hasHydration = reportData.hydrationEntries && reportData.hydrationEntries.length > 0
+    return reportData.totalEntries > 0 || reportData.medications.length > 0 || hasTrackingData || hasAppointments || hasWeight || hasHydration
   }
 
   const handleExportClick = (exportFunction) => {
@@ -628,6 +673,33 @@ function ReportsPageContent() {
           yPosition += 5
         }
         yPosition += 3
+      })
+      yPosition += 10
+    }
+
+    // Hydration Section
+    if (reportData.hydrationEntries && reportData.hydrationEntries.length > 0) {
+      if (yPosition > 250) {
+        doc.addPage()
+        yPosition = 20
+      }
+      doc.setFontSize(16)
+      doc.setFont('helvetica', 'bold')
+      doc.text('Hydration', margin, yPosition)
+      yPosition += 10
+
+      doc.setFontSize(12)
+      doc.setFont('helvetica', 'normal')
+      reportData.hydrationEntries.forEach(entry => {
+        if (yPosition > 270) {
+          doc.addPage()
+          yPosition = 20
+        }
+        const dateText = entry.date ? formatUKDate(entry.date) : ''
+        const glassesText = `${entry.glasses}/${reportData.hydrationTarget || 6} glasses`
+        const targetMet = entry.targetMet ? ' (Target met)' : ''
+        doc.text(`${dateText} - ${glassesText}${targetMet}`, margin, yPosition)
+        yPosition += 8
       })
       yPosition += 10
     }
@@ -979,6 +1051,23 @@ function ReportsPageContent() {
           entry.date ? formatUKDate(entry.date) : '',
           entry.value_kg != null ? String(entry.value_kg) : '',
           entry.notes || ''
+        ])
+      })
+      csvData.push([])
+    }
+
+    // Hydration
+    if (reportData.hydrationEntries && reportData.hydrationEntries.length > 0) {
+      csvData.push([])
+      csvData.push(['HYDRATION'])
+      csvData.push(['Date', 'Glasses', 'Target', 'Target Met'])
+      const target = reportData.hydrationTarget || 6
+      reportData.hydrationEntries.forEach(entry => {
+        csvData.push([
+          entry.date ? formatUKDate(entry.date) : '',
+          String(entry.glasses ?? 0),
+          String(target),
+          entry.targetMet ? 'Yes' : 'No'
         ])
       })
       csvData.push([])
@@ -1557,8 +1646,8 @@ function ReportsPageContent() {
             className={`w-full flex items-center text-left focus:outline-none rounded-lg ${openSections.appointments ? 'mb-6' : ''}`}
             aria-expanded={openSections.appointments}
           >
-            <div className="flex w-10 h-10 bg-sky-100 dashboard-icon-panel rounded-lg items-center justify-center mr-3 sm:mr-4 flex-shrink-0">
-              <Calendar className="w-5 h-5 text-sky-600 dark:text-white" />
+            <div className="flex w-10 h-10 bg-slate-200 dark:bg-slate-600/50 dashboard-icon-panel rounded-lg items-center justify-center mr-3 sm:mr-4 flex-shrink-0">
+              <Calendar className="w-5 h-5 text-slate-700 dark:text-white" />
             </div>
             <h2 className="text-sm sm:text-lg font-semibold text-primary flex-1">Appointments</h2>
             <span className="text-sm font-roboto text-secondary shrink-0">{openSections.appointments ? 'Hide' : 'Show'}</span>
@@ -1625,6 +1714,45 @@ function ReportsPageContent() {
         </div>
       )}
 
+      {/* Hydration - Collapsible */}
+      {reportData.hydrationEntries && reportData.hydrationEntries.length > 0 && (
+        <div className="card mb-5 sm:mb-6">
+          <button
+            type="button"
+            onClick={() => toggleSection('hydration')}
+            className={`w-full flex items-center text-left focus:outline-none rounded-lg ${openSections.hydration ? 'mb-6' : ''}`}
+            aria-expanded={openSections.hydration}
+          >
+            <div className="flex w-10 h-10 bg-sky-100 dashboard-icon-panel rounded-lg items-center justify-center mr-3 sm:mr-4 flex-shrink-0">
+              <CupSoda className="w-5 h-5 text-sky-600 dark:text-white" />
+            </div>
+            <h2 className="text-sm sm:text-lg font-semibold text-primary flex-1">Hydration</h2>
+            <span className="text-sm font-roboto text-secondary shrink-0">{openSections.hydration ? 'Hide' : 'Show'}</span>
+          </button>
+          {openSections.hydration && (
+          <div className="space-y-4">
+            {reportData.hydrationEntries.map((entry, index) => (
+              <div key={index} className="card-inner p-4">
+                <div className="flex flex-col gap-2">
+                  <div className="flex flex-wrap items-baseline gap-x-2 gap-y-1">
+                    <span className="text-sm sm:text-base font-semibold text-primary">{formatUKDate(entry.date)}</span>
+                    <span className="text-secondary">·</span>
+                    <span className="text-sm sm:text-base font-medium text-primary font-roboto">{entry.glasses}/{reportData.hydrationTarget || 6} glasses</span>
+                    {entry.targetMet && (
+                      <>
+                        <span className="text-secondary">·</span>
+                        <span className="text-sm font-medium text-green-600 dark:text-green-400">Target met</span>
+                      </>
+                    )}
+                  </div>
+                </div>
+              </div>
+            ))}
+          </div>
+          )}
+        </div>
+      )}
+
       {/* Top Foods - Collapsible */}
       {reportData.topFoods.length > 0 && (
         <div className="card mb-5 sm:mb-6">
@@ -1662,7 +1790,7 @@ function ReportsPageContent() {
       )}
 
       {/* No Data Message */}
-      {reportData.totalEntries === 0 && reportData.medications.length === 0 && (!reportData.appointments || reportData.appointments.length === 0) && (!reportData.weightEntries || reportData.weightEntries.length === 0) && !(reportData.medicationTracking && (reportData.medicationTracking.missedMedications.length > 0 || reportData.medicationTracking.nsaids.length > 0 || reportData.medicationTracking.antibiotics.length > 0)) && (
+      {reportData.totalEntries === 0 && reportData.medications.length === 0 && (!reportData.appointments || reportData.appointments.length === 0) && (!reportData.weightEntries || reportData.weightEntries.length === 0) && (!reportData.hydrationEntries || reportData.hydrationEntries.length === 0) && !(reportData.medicationTracking && (reportData.medicationTracking.missedMedications.length > 0 || reportData.medicationTracking.nsaids.length > 0 || reportData.medicationTracking.antibiotics.length > 0)) && (
         <div className="card p-8 text-center">
           <div className="flex justify-center mb-3">
             <FileText className="w-10 h-10 text-secondary opacity-40" />

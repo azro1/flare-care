@@ -396,7 +396,7 @@ export default function LearnPage() {
             <div className="card p-8 backdrop-blur-sm text-center">
           <h2 className="text-xl font-semibold font-source text-primary mb-4">Track Your Medications</h2>
           <p className="text-sm sm:text-base text-secondary font-roboto mb-6 leading-relaxed">
-            Log missed medications and NSAIDs to keep your healthcare team informed to keep your healthcare team informed
+            Log missed medications and NSAIDs to keep your healthcare team informed
           </p>
           <div className="flex flex-col sm:flex-row justify-center items-center sm:items-stretch space-y-3 sm:space-y-0 sm:space-x-4">
             {isAuthenticated ? (
