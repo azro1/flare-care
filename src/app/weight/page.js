@@ -236,7 +236,7 @@ function WeightPageContent() {
         <div className="flex flex-row flex-wrap items-center justify-between gap-4 mb-5 sm:mb-6">
           <div className="flex items-center min-w-0">
             <div className="flex w-10 h-10 bg-indigo-100 dashboard-icon-panel rounded-lg items-center justify-center mr-3 sm:mr-4 flex-shrink-0">
-              <Scale className="w-5 h-5 text-indigo-600 dark:text-white" />
+              <Scale className="w-5 h-5 text-indigo-600 dark:[color:var(--text-icon-more-weight)]" />
             </div>
             <h2 className="text-xl font-semibold font-source text-primary">
               Weight entries

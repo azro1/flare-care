@@ -6,7 +6,7 @@ import { useAuth } from '@/lib/AuthContext'
 import { useEffect, useState, useRef } from 'react'
 import { useRouter } from 'next/navigation'
 import { supabase, TABLES } from '@/lib/supabase'
-import { CupSoda, Pizza, Coffee, BookOpen, Smile, Thermometer, Pill, FileText, Activity, TrendingUp, PartyPopper, Clipboard, Cookie, ChartLine, Sparkles, ChevronRight, ChevronDown, ChevronLeft, Clock, Scale, Calendar, Lightbulb, Newspaper } from 'lucide-react'
+import { CupSoda, Pizza, Coffee, BookOpen, Smile, Thermometer, Pill, FileText, Activity, TrendingUp, PartyPopper, Clipboard, Cookie, ChartLine, Sparkles, ChevronRight, ChevronDown, ChevronLeft, Clock, Scale, Calendar, Lightbulb, Newspaper, Check } from 'lucide-react'
 
 export default function Home() {
   const { isAuthenticated, loading, user } = useAuth()
@@ -43,6 +43,7 @@ export default function Home() {
   const [newsLoading, setNewsLoading] = useState(true)
   const [todayHydrationGlasses, setTodayHydrationGlasses] = useState(0)
   const [hydrationCompletedAt, setHydrationCompletedAt] = useState(null)
+  const [hydrationReset, setHydrationReset] = useState(null)
   const hydrationTarget = 6
   const [newsError, setNewsError] = useState(null)
   const newsScrollRef = useRef(null)
@@ -386,6 +387,7 @@ export default function Home() {
         const appointmentAddedKey = `flarecare-appointment-added-${user.id}-${today}`
         const appointmentUpdatedKey = `flarecare-appointment-updated-${user.id}-${today}`
         const appointmentDeletedKey = `flarecare-appointment-deleted-${user.id}-${today}`
+        const hydrationResetKey = `flarecare-hydration-reset-${user.id}-${today}`
         for (let i = 0; i < localStorage.length; i++) {
           const key = localStorage.key(i)
           if (key && (
@@ -398,7 +400,8 @@ export default function Home() {
             (key.startsWith(`flarecare-weight-updated-${user.id}-`) && key !== weightUpdatedKey) ||
             (key.startsWith(`flarecare-appointment-added-${user.id}-`) && key !== appointmentAddedKey) ||
             (key.startsWith(`flarecare-appointment-updated-${user.id}-`) && key !== appointmentUpdatedKey) ||
-            (key.startsWith(`flarecare-appointment-deleted-${user.id}-`) && key !== appointmentDeletedKey)
+            (key.startsWith(`flarecare-appointment-deleted-${user.id}-`) && key !== appointmentDeletedKey) ||
+            (key.startsWith(`flarecare-hydration-reset-${user.id}-`) && key !== hydrationResetKey)
           )) {
             keysToRemove.push(key)
           }
@@ -605,6 +608,20 @@ export default function Home() {
       } else {
         setAppointmentDeleted(null)
       }
+
+      // Load hydration reset activity
+      const hydrationResetKey = `flarecare-hydration-reset-${user.id}-${today}`
+      const hydrationResetData = localStorage.getItem(hydrationResetKey)
+      if (hydrationResetData) {
+        try {
+          setHydrationReset(JSON.parse(hydrationResetData))
+        } catch (error) {
+          console.error('Error parsing hydration reset data:', error)
+          setHydrationReset(null)
+        }
+      } else {
+        setHydrationReset(null)
+      }
     }
 
     loadTakenMedications()
@@ -623,7 +640,8 @@ export default function Home() {
         (e.key.startsWith('flarecare-weight-updated-') && e.key.includes(`-${user.id}-`)) ||
         (e.key.startsWith('flarecare-appointment-added-') && e.key.includes(`-${user.id}-`)) ||
         (e.key.startsWith('flarecare-appointment-updated-') && e.key.includes(`-${user.id}-`)) ||
-        (e.key.startsWith('flarecare-appointment-deleted-') && e.key.includes(`-${user.id}-`))
+        (e.key.startsWith('flarecare-appointment-deleted-') && e.key.includes(`-${user.id}-`)) ||
+        (e.key.startsWith('flarecare-hydration-reset-') && e.key.includes(`-${user.id}-`))
       )) {
         loadTakenMedications()
       }
@@ -682,6 +700,10 @@ export default function Home() {
       loadTakenMedications()
     }
 
+    const handleHydrationReset = () => {
+      loadTakenMedications()
+    }
+
     window.addEventListener('storage', handleStorageChange)
     window.addEventListener('medication-taken', handleMedicationTaken)
     window.addEventListener('medication-added', handleMedicationAdded)
@@ -696,6 +718,7 @@ export default function Home() {
     window.addEventListener('appointment-updated', handleAppointmentUpdated)
     window.addEventListener('appointment-deleted', handleAppointmentDeleted)
     window.addEventListener('hydration-completed', handleHydrationCompleted)
+    window.addEventListener('hydration-reset', handleHydrationReset)
     
     // Check when window gains focus (user navigates back to dashboard)
     const handleFocus = () => {
@@ -718,6 +741,7 @@ export default function Home() {
       window.removeEventListener('appointment-updated', handleAppointmentUpdated)
       window.removeEventListener('appointment-deleted', handleAppointmentDeleted)
       window.removeEventListener('hydration-completed', handleHydrationCompleted)
+      window.removeEventListener('hydration-reset', handleHydrationReset)
       window.removeEventListener('focus', handleFocus)
     }
   }, [user?.id, medications])
@@ -1061,41 +1085,39 @@ export default function Home() {
                 <div className="card-inner p-4 sm:p-5 space-y-3">
                   <div className="flex items-center gap-3">
                     <div className="w-6 h-6 bg-white dark:bg-[var(--bg-card-inner)] flex items-center justify-center rounded-lg">
-                      <Thermometer className="w-3.5 h-3.5 text-primary" />
+                      <Thermometer className="w-3.5 h-3.5 text-emerald-600 dark:[color:var(--text-goal-icon-success)]" />
                     </div>
                     <div className="flex-1 flex items-center justify-between">
-                      <span className={`text-sm text-primary ${todaySymptoms.length > 0 ? 'line-through' : ''}`}>
-                        Log symptoms
-                      </span>
+                      <span className="text-sm text-primary">Log Symptoms</span>
+                      {todaySymptoms.length > 0 && <Check className="w-4 h-4 text-emerald-600 dark:[color:var(--text-goal-icon-success)] flex-shrink-0" />}
                     </div>
                   </div>
                   <Link href="/medications/track" className="flex items-center gap-3">
                     <div className="w-6 h-6 bg-white dark:bg-[var(--bg-card-inner)] flex items-center justify-center rounded-lg">
-                      <ChartLine className="w-3.5 h-3.5 text-primary" />
+                      <ChartLine className="w-3.5 h-3.5 text-pink-500 dark:[color:var(--text-goal-icon-medication)]" />
                     </div>
                     <div className="flex-1 flex items-center justify-between">
-                      <span className={`text-sm text-primary ${todayTrackedMedication ? 'line-through' : ''}`}>
-                        Log medications
-                      </span>
+                      <span className="text-sm text-primary">Log Medications</span>
+                      {todayTrackedMedication && <Check className="w-4 h-4 text-pink-500 dark:[color:var(--text-goal-icon-medication)] flex-shrink-0" />}
                     </div>
                   </Link>
                   <div className="flex items-center gap-3">
                     <div className="w-6 h-6 bg-white dark:bg-[var(--bg-card-inner)] flex items-center justify-center rounded-lg">
-                      <Pill className="w-3 h-3 text-primary" />
+                      <Pill className="w-3 h-3 text-purple-600 dark:[color:var(--text-icon-more-meds)]" />
                     </div>
                     <div className="flex-1 flex items-center justify-between">
-                      <span className={`text-sm text-primary ${takenMedications.length === medications.length && medications.length > 0 ? 'line-through' : ''}`}>
-                        Take medications
-                      </span>
+                      <span className="text-sm text-primary">Take Medications</span>
+                      {takenMedications.length === medications.length && medications.length > 0 && <Check className="w-4 h-4 text-purple-600 dark:[color:var(--text-icon-more-meds)] flex-shrink-0" />}
                     </div>
                   </div>
                   <div className="flex items-center gap-3">
                     <div className="w-6 h-6 bg-white dark:bg-[var(--bg-card-inner)] flex items-center justify-center rounded-lg">
-                      <CupSoda className="w-3.5 h-3.5 text-primary" />
+                      <CupSoda className="w-3.5 h-3.5 text-sky-600 dark:[color:var(--text-goal-icon-hydration)]" />
                     </div>
-                    <span className={`text-sm text-primary ${todayHydrationGlasses >= hydrationTarget ? 'line-through' : ''}`}>
-                      Stay hydrated
-                    </span>
+                    <div className="flex-1 flex items-center justify-between">
+                      <span className="text-sm text-primary">Stay Hydrated</span>
+                      {todayHydrationGlasses >= hydrationTarget && <Check className="w-4 h-4 text-sky-600 dark:[color:var(--text-goal-icon-hydration)] flex-shrink-0" />}
+                    </div>
                   </div>
                 </div>
               </div>
@@ -1104,7 +1126,7 @@ export default function Home() {
               <div className="card order-[8] xl:order-none mb-6 xl:mb-0">
                 <div>
                   <h3 className="text-xl font-semibold font-source text-primary mb-3 flex items-center gap-2">
-                    <Lightbulb className="w-5 h-5 flex-shrink-0 text-amber-500 dark:text-white" />
+                    <Lightbulb className="w-5 h-5 flex-shrink-0 text-amber-500" />
                     Daily Tip
                   </h3>
                   <p className={`text-sm text-primary leading-relaxed sm:leading-normal transition-opacity duration-500 ${isFading ? 'opacity-0' : 'opacity-100'}`}>
@@ -1146,8 +1168,8 @@ export default function Home() {
                 href="/symptoms"
                 className="card card-link flex-shrink-0 w-[75vw] min-w-[140px] max-w-[180px] !p-6 flex flex-col items-center justify-center gap-3 snap-center transition-all group"
               >
-                <div className="w-10 h-10 bg-emerald-100 dashboard-icon-panel rounded-lg flex items-center justify-center">
-                  <Thermometer className="w-5 h-5 text-emerald-600 dark:text-white" />
+                <div className="w-10 h-10 dashboard-icon-panel rounded-lg flex items-center justify-center" style={{ backgroundColor: 'var(--bg-goal-icon-success)' }}>
+                  <Thermometer className="w-5 h-5 text-emerald-600" />
                 </div>
                 <h3 className="text-sm sm:text-base font-semibold text-primary text-center leading-tight sm:leading-relaxed">Log Symptoms</h3>
               </Link>
@@ -1155,17 +1177,17 @@ export default function Home() {
                 href="/medications/track"
                 className="card card-link flex-shrink-0 w-[75vw] min-w-[140px] max-w-[180px] !p-6 flex flex-col items-center justify-center gap-3 snap-center transition-all group"
               >
-                <div className="w-10 h-10 bg-pink-100 dashboard-icon-panel rounded-lg flex items-center justify-center">
-                  <ChartLine className="w-5 h-5 text-pink-600 dark:text-white" />
+                <div className="w-10 h-10 dashboard-icon-panel rounded-lg flex items-center justify-center" style={{ backgroundColor: 'var(--bg-goal-icon-medication)' }}>
+                  <ChartLine className="w-5 h-5 text-pink-500" />
                 </div>
-                <h3 className="text-sm sm:text-base font-semibold text-primary text-center leading-tight sm:leading-relaxed">Log medications</h3>
+                <h3 className="text-sm sm:text-base font-semibold text-primary text-center leading-tight sm:leading-relaxed">Log Medications</h3>
               </Link>
               <Link
                 href="/hydration"
                 className="card card-link flex-shrink-0 w-[75vw] min-w-[140px] max-w-[180px] !p-6 flex flex-col items-center justify-center gap-3 snap-center transition-all group"
               >
-                <div className="w-10 h-10 bg-sky-100 dashboard-icon-panel rounded-lg flex items-center justify-center">
-                  <CupSoda className="w-5 h-5 text-sky-600 dark:text-white" />
+                <div className="w-10 h-10 dashboard-icon-panel rounded-lg flex items-center justify-center" style={{ backgroundColor: 'var(--bg-goal-icon-hydration)' }}>
+                  <CupSoda className="w-5 h-5 text-sky-600" />
                 </div>
                 <h3 className="text-sm sm:text-base font-semibold text-primary text-center leading-tight sm:leading-relaxed">My Hydration</h3>
               </Link>
@@ -1179,8 +1201,8 @@ export default function Home() {
               className="card card-link !p-6 transition-all group relative focus:outline-none focus-visible:outline-none focus-visible:ring-0 focus-visible:ring-offset-0 focus:ring-0 flex items-center justify-center"
             >
               <div className="flex items-center sm:flex-col sm:items-center sm:justify-center gap-3 sm:gap-3 w-full">
-                <div className="w-10 h-10 bg-emerald-100 dashboard-icon-panel rounded-lg flex items-center justify-center flex-shrink-0">
-                  <Thermometer className="w-5 h-5 sm:w-6 sm:h-6 text-emerald-600 dark:text-white" />
+                <div className="w-10 h-10 dashboard-icon-panel rounded-lg flex items-center justify-center flex-shrink-0" style={{ backgroundColor: 'var(--bg-goal-icon-success)' }}>
+                  <Thermometer className="w-5 h-5 sm:w-6 sm:h-6 text-emerald-600" />
                 </div>
                 <div className="flex-1 sm:w-full sm:text-center">
                   <h3 className="text-sm sm:text-base font-semibold text-primary leading-tight sm:leading-relaxed sm:justify-center">
@@ -1200,12 +1222,12 @@ export default function Home() {
               className="card card-link !p-6 transition-all group relative focus:outline-none focus-visible:outline-none focus-visible:ring-0 focus-visible:ring-offset-0 focus:ring-0 flex items-center justify-center"
             >
               <div className="flex items-center sm:flex-col sm:items-center sm:justify-center gap-3 sm:gap-3 w-full">
-                <div className="w-10 h-10 bg-pink-100 dashboard-icon-panel rounded-lg flex items-center justify-center flex-shrink-0">
-                  <ChartLine className="w-5 h-5 sm:w-6 sm:h-6 text-pink-600 dark:text-white" />
+                <div className="w-10 h-10 dashboard-icon-panel rounded-lg flex items-center justify-center flex-shrink-0" style={{ backgroundColor: 'var(--bg-goal-icon-medication)' }}>
+                  <ChartLine className="w-5 h-5 sm:w-6 sm:h-6 text-pink-500" />
                 </div>
                 <div className="flex-1 sm:w-full sm:text-center">
                   <h3 className="text-sm sm:text-base font-semibold text-primary leading-tight sm:leading-relaxed sm:justify-center">
-                    Log medications
+                    Log Medications
                   </h3>
                 </div>
                 <ChevronRight className="w-5 h-5 flex-shrink-0 text-secondary sm:hidden" />
@@ -1221,8 +1243,8 @@ export default function Home() {
               className="card card-link !p-6 transition-all group relative focus:outline-none focus-visible:outline-none focus-visible:ring-0 focus-visible:ring-offset-0 focus:ring-0 flex items-center justify-center"
             >
               <div className="flex items-center sm:flex-col sm:items-center sm:justify-center gap-3 sm:gap-3 w-full">
-                <div className="w-10 h-10 bg-sky-100 dashboard-icon-panel rounded-lg flex items-center justify-center flex-shrink-0">
-                  <CupSoda className="w-5 h-5 sm:w-6 sm:h-6 text-sky-600 dark:text-white" />
+                <div className="w-10 h-10 dashboard-icon-panel rounded-lg flex items-center justify-center flex-shrink-0" style={{ backgroundColor: 'var(--bg-goal-icon-hydration)' }}>
+                  <CupSoda className="w-5 h-5 sm:w-6 sm:h-6 text-sky-600" />
                 </div>
                 <div className="flex-1 sm:w-full sm:text-center">
                   <h3 className="text-sm sm:text-base font-semibold text-primary leading-tight sm:leading-relaxed sm:justify-center">
@@ -1247,17 +1269,32 @@ export default function Home() {
             <div className="card">
             <div className="card-inner p-4 sm:p-6">
               <div className="flex justify-between items-center mb-3">
-                <span className="text-sm text-primary">Symptoms Logged</span>
+                <span className="text-sm text-primary flex items-center gap-3">
+                  <div className="w-6 h-6 bg-white dark:bg-[var(--bg-card-inner)] flex items-center justify-center rounded-lg flex-shrink-0">
+                    <Thermometer className="w-3.5 h-3.5 text-emerald-600 dark:[color:var(--text-goal-icon-success)]" />
+                  </div>
+                  Symptoms Logged
+                </span>
                 <span className="text-sm font-semibold text-primary">{todaySymptoms.length}</span>
               </div>
               <div className="border-t border-[var(--border-card-inner)] my-0" aria-hidden="true" />
               <div className="flex justify-between items-center mt-3 mb-3">
-                <span className="text-sm text-primary">Medications Taken</span>
+                <span className="text-sm text-primary flex items-center gap-3">
+                  <div className="w-6 h-6 bg-white dark:bg-[var(--bg-card-inner)] flex items-center justify-center rounded-lg flex-shrink-0">
+                    <Pill className="w-3 h-3 text-purple-600 dark:[color:var(--text-icon-more-meds)]" />
+                  </div>
+                  Medications Taken
+                </span>
                 <span className="text-sm font-semibold text-primary">{takenMedications.length}/{medications.length}</span>
               </div>
               <div className="border-t border-[var(--border-card-inner)] my-0" aria-hidden="true" />
               <div className="flex justify-between items-center mt-3">
-                <span className="text-sm text-primary">Hydration</span>
+                <span className="text-sm text-primary flex items-center gap-3">
+                  <div className="w-6 h-6 bg-white dark:bg-[var(--bg-card-inner)] flex items-center justify-center rounded-lg flex-shrink-0">
+                    <CupSoda className="w-3.5 h-3.5 text-sky-600 dark:[color:var(--text-goal-icon-hydration)]" />
+                  </div>
+                  Hydration
+                </span>
                 <span className="text-sm font-semibold text-primary">{todayHydrationGlasses}/{hydrationTarget}</span>
               </div>
             </div>
@@ -1495,6 +1532,18 @@ export default function Home() {
                 })
               }
 
+              // Hydration reset
+              if (hydrationReset) {
+                activities.push({
+                  type: 'hydration-reset',
+                  timestamp: new Date(hydrationReset.timestamp),
+                  title: 'Reset hydration progress',
+                  icon: CupSoda,
+                  iconBg: 'bg-sky-100',
+                  iconColor: 'text-sky-600'
+                })
+              }
+
               // Filter to last 4 hours and sort by timestamp (most recent first)
               const now = new Date()
               const fourHoursAgo = new Date(now.getTime() - (4 * 60 * 60 * 1000)) // 4 hours in milliseconds
@@ -1502,7 +1551,7 @@ export default function Home() {
               const recentActivities = activities
                 .filter(activity => activity.timestamp >= fourHoursAgo)
                 .sort((a, b) => b.timestamp - a.timestamp)
-                .slice(0, 3) // Limit to 3 most recent
+                .slice(0, 2) // Limit to 2 most recent
 
               if (recentActivities.length === 0) {
                 return (
@@ -1547,7 +1596,7 @@ export default function Home() {
 
         {/* Latest News */}
         {isAuthenticated && (
-          <div className="my-6 order-[9] xl:order-none">
+          <div className="mb-6 xl:my-6 order-[9] xl:order-none">
             <h2 className="text-xl font-semibold font-source text-primary mb-4">
               Latest News
             </h2>
@@ -1616,7 +1665,7 @@ export default function Home() {
                                     </h3>
                                     <div className="flex items-center gap-2 mt-2 flex-wrap">
                                       {item.source && (
-                                        <span className="text-xs font-medium py-0.5 rounded" style={{ backgroundColor: 'var(--bg-card)', color: 'var(--text-cadet-blue)' }}>
+                                        <span className="text-xs font-medium text-slate-400 dark:[color:var(--text-tertiary)]">
                                           {item.source}
                                         </span>
                                       )}
@@ -1804,7 +1853,7 @@ export default function Home() {
               >
                 <div className="flex flex-col items-center gap-3 min-w-0">
                   <div className="w-10 h-10 bg-purple-100 dashboard-icon-panel rounded-lg flex items-center justify-center flex-shrink-0">
-                    <Pill className="w-5 h-5 text-purple-600 dark:text-white" />
+                    <Pill className="w-5 h-5 text-purple-600 dark:[color:var(--text-icon-more-meds)]" />
                 </div>
                   <div className="w-full text-center min-w-0">
                     <h3 className="text-sm sm:text-base font-semibold text-primary leading-tight sm:leading-relaxed break-words">
@@ -1825,7 +1874,7 @@ export default function Home() {
               >
                 <div className="flex flex-col items-center gap-3 min-w-0">
                   <div className="w-10 h-10 bg-orange-100 dashboard-icon-panel rounded-lg flex items-center justify-center flex-shrink-0">
-                    <FileText className="w-5 h-5 text-orange-600 dark:text-white" />
+                    <FileText className="w-5 h-5 text-orange-600 dark:[color:var(--text-icon-more-reports)]" />
                   </div>
                   <div className="w-full text-center min-w-0">
                     <h3 className="text-sm sm:text-base font-semibold text-primary leading-tight sm:leading-relaxed break-words">
@@ -1846,7 +1895,7 @@ export default function Home() {
               >
                 <div className="flex flex-col items-center gap-3 min-w-0">
                   <div className="w-10 h-10 bg-indigo-100 dashboard-icon-panel rounded-lg flex items-center justify-center flex-shrink-0">
-                    <Scale className="w-5 h-5 text-indigo-600 dark:text-white" />
+                    <Scale className="w-5 h-5 text-indigo-600 dark:[color:var(--text-icon-more-weight)]" />
                   </div>
                   <div className="w-full text-center min-w-0">
                     <h3 className="text-sm sm:text-base font-semibold text-primary leading-tight sm:leading-relaxed break-words">
@@ -1867,7 +1916,7 @@ export default function Home() {
               >
                 <div className="flex flex-col items-center gap-3 min-w-0">
                   <div className="w-10 h-10 bg-slate-200 dark:bg-slate-600/50 dashboard-icon-panel rounded-lg flex items-center justify-center flex-shrink-0">
-                    <Calendar className="w-5 h-5 text-slate-700 dark:text-white" />
+                    <Calendar className="w-5 h-5 text-slate-700 dark:[color:var(--text-icon-more-appointments)]" />
                   </div>
                   <div className="w-full text-center min-w-0">
                     <h3 className="text-sm sm:text-base font-semibold text-primary leading-tight sm:leading-relaxed break-words">

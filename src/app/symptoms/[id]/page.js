@@ -160,7 +160,7 @@ function SymptomDetailContent() {
             <button
               onClick={() => setShowDeleteModal(true)}
               disabled={isDeleting}
-              className="p-2.5 rounded-lg text-red-600 dark:text-white sm:hover:bg-red-500/10 sm:dark:hover:bg-[var(--bg-card-inner)] focus:outline-none disabled:opacity-50 transition-colors"
+              className="p-2.5 rounded-lg text-red-600 dark:[color:var(--text-trash)] sm:hover:bg-red-500/10 sm:dark:hover:bg-[var(--bg-card-inner)] focus:outline-none disabled:opacity-50 transition-colors"
               title="Delete entry"
               aria-label="Delete entry"
             >

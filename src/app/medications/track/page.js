@@ -987,7 +987,7 @@ function MedicationTrackingWizard() {
           <div className="flex flex-col items-center justify-center text-center pt-20 sm:pt-0">
             {/* Icon - same as home page medications card */}
             <div className="w-14 h-14 bg-white dark:bg-[var(--bg-card-inner)] rounded-2xl flex items-center justify-center mx-auto mb-6 shadow-sm">
-              <ChartLine className="w-7 h-7 text-pink-600 dark:text-white" />
+              <ChartLine className="w-7 h-7 text-pink-600 dark:[color:var(--text-goal-icon-medication)]" />
             </div>
             
             {/* Title */}

@@ -472,11 +472,11 @@ function MedicationsPageContent() {
           <div className="flex items-center min-w-0">
             <div className="flex w-10 h-10 bg-purple-100 dashboard-icon-panel rounded-lg items-center justify-center mr-3 sm:mr-4 flex-shrink-0">
               {isAdding ? (
-                <svg className="w-5 h-5 text-purple-600 dark:text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <svg className="w-5 h-5 text-purple-600 dark:[color:var(--text-icon-more-meds)]" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z" />
                 </svg>
               ) : (
-                <Pill className="w-5 h-5 text-purple-600 dark:text-white" />
+                <Pill className="w-5 h-5 text-purple-600 dark:[color:var(--text-icon-more-meds)]" />
               )}
             </div>
             <h2 className="text-xl font-semibold font-source text-primary">
@@ -804,7 +804,7 @@ function MedicationsPageContent() {
           </p>
           <div className="card-inner p-5 sm:p-6 mt-4">
             <div className="flex items-center gap-2 mb-2">
-              <Lightbulb className="w-5 h-5 flex-shrink-0 text-amber-500 dark:text-white" />
+              <Lightbulb className="w-5 h-5 flex-shrink-0 text-amber-500" />
               <span className="text-base sm:text-sm font-semibold text-primary font-source">Important to know:</span>
             </div>
             <p className="text-xs text-secondary font-roboto leading-relaxed">

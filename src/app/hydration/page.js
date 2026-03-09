@@ -71,6 +71,10 @@ function HydrationPageContent() {
         )
       if (error) throw error
       setGlasses(0)
+      setShowResetModal(false)
+      const key = `flarecare-hydration-reset-${user.id}-${today}`
+      localStorage.setItem(key, JSON.stringify({ timestamp: new Date().toISOString() }))
+      window.dispatchEvent(new Event('hydration-reset'))
     } catch (err) {
       console.error('Error resetting hydration:', err)
     }
@@ -97,7 +101,7 @@ function HydrationPageContent() {
         <div className="flex flex-row flex-wrap items-center justify-between gap-4 mb-5 sm:mb-6">
           <div className="flex items-center min-w-0">
             <div className="flex w-10 h-10 bg-sky-100 dashboard-icon-panel rounded-lg items-center justify-center mr-3 sm:mr-4 flex-shrink-0">
-              <CupSoda className="w-5 h-5 text-sky-600 dark:text-white" />
+              <CupSoda className="w-5 h-5 text-sky-600 dark:[color:var(--text-goal-icon-hydration)]" />
             </div>
             <h2 className="text-xl font-semibold font-source text-primary">
               Today&apos;s progress
@@ -149,7 +153,7 @@ function HydrationPageContent() {
           </p>
           <div className="card-inner p-5 sm:p-6 mt-4">
             <div className="flex items-center gap-2 mb-2">
-              <Lightbulb className="w-5 h-5 flex-shrink-0 text-amber-500 dark:text-white" />
+              <Lightbulb className="w-5 h-5 flex-shrink-0 text-amber-500" />
               <span className="text-base sm:text-sm font-semibold text-primary font-source">Important to know:</span>
             </div>
             <p className="text-xs text-secondary font-roboto leading-relaxed">

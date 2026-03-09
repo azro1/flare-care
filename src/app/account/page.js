@@ -277,7 +277,7 @@ function AccountPageContent() {
                   onClick={() => setShowDeleteModal(true)}
                   className="button-delete inline-flex items-center gap-2"
                 >
-                  <Trash2 className="w-4 h-4 dark:text-white" />
+                  <Trash2 className="w-4 h-4 text-white" />
                   Delete
                 </button>
               </div>

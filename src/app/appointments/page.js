@@ -323,7 +323,7 @@ function AppointmentsPageContent() {
         <div className="flex flex-row flex-wrap items-center justify-between gap-4 mb-5 sm:mb-6">
           <div className="flex items-center min-w-0">
             <div className="flex w-10 h-10 bg-slate-200 dark:bg-slate-600/50 dashboard-icon-panel rounded-lg items-center justify-center mr-3 sm:mr-4 flex-shrink-0">
-              <Calendar className="w-5 h-5 text-slate-700 dark:text-white" />
+              <Calendar className="w-5 h-5 text-slate-700 dark:[color:var(--text-icon-more-appointments)]" />
             </div>
             <h2 className="text-xl font-semibold font-source text-primary">
               Your appointments
@@ -649,7 +649,7 @@ function AppointmentsPageContent() {
           </p>
           <div className="card-inner p-5 sm:p-6 mt-4">
             <div className="flex items-center gap-2 mb-2">
-              <Lightbulb className="w-5 h-5 flex-shrink-0 text-amber-500 dark:text-white" />
+              <Lightbulb className="w-5 h-5 flex-shrink-0 text-amber-500" />
               <span className="text-base sm:text-sm font-semibold text-primary font-source">Important to know:</span>
             </div>
             <p className="text-xs text-secondary font-roboto leading-relaxed">

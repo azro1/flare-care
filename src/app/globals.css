@@ -61,12 +61,17 @@
     /* Goal colors */
     --bg-goal-success: #dcfce7; /* Light green background for completed goals */
     --text-goal-success: #059669; /* Medium green text for completed goals */
-    --bg-goal-icon-success: #dcfce7; /* Light green background for success icons */
+    --bg-goal-icon-success: #dcfce7; /* Success icons (e.g. Log symptoms) */
     --text-goal-icon-success: #64748b; /* Neutral in light mode */
-    --bg-goal-icon-medication: #f3e8ff; /* Light purple background for medication icons */
+    --bg-goal-icon-medication: #fce7f3; /* Log medications / tracked med logging (not My Meds prescribed list) */
     --text-goal-icon-medication: #64748b; /* Neutral in light mode */
-    --bg-goal-icon-hydration: #dbeafe; /* Light blue background for hydration icons */
+    --bg-goal-icon-hydration: #dbeafe; /* Hydration icons (e.g. My Hydration, Stay hydrated goal) */
     --text-goal-icon-hydration: #64748b; /* Neutral in light mode */
+    /* More section icon colors (My Meds, Reports, Weight, Appointments) */
+    --text-icon-more-meds: #9333ea;
+    --text-icon-more-reports: #ea580c;
+    --text-icon-more-weight: #4f46e5;
+    --text-icon-more-appointments: #64748b;
     
     --text-primary: #1e293b; /* Dark text for light background */
     --text-secondary: #475569; /* Medium dark text */
@@ -117,6 +122,7 @@
     --bg-button-cadet-hover: rgba(95, 158, 160, 0.8);
     --bg-button-delete: #ef4444;
     --bg-button-delete-hover: #dc2626;
+    --text-trash: #e04545; /* Soft red for trash icon in dark mode */
     --bg-button-secondary: #2a2d34;
     --bg-button-secondary-hover: rgba(55, 58, 65, 0.9);
     --bg-button-hover: rgba(55, 58, 65, 0.7);
@@ -133,12 +139,18 @@
     --radio-checked-border: #059669;
     --bg-goal-success: #064e3b;
     --text-goal-success: #10b981;
-    --bg-goal-icon-success: rgba(16, 185, 129, 0.1);
-    --text-goal-icon-success: #ffffff;
-    --bg-goal-icon-medication: rgba(196, 181, 253, 0.1);
-    --text-goal-icon-medication: #ffffff;
-    --bg-goal-icon-hydration: rgba(59, 130, 246, 0.15);
-    --text-goal-icon-hydration: #ffffff;
+    --bg-goal-icon-success: rgba(16, 185, 129, 0.1); /* Success (Log symptoms) */
+    --text-goal-icon-success: #34d399;
+    --bg-goal-icon-medication: rgba(236, 72, 153, 0.15); /* Log medications / tracked med logging */
+    --text-goal-icon-medication: #f472b6;
+    --bg-goal-icon-hydration: rgba(59, 130, 246, 0.15); /* Hydration */
+    --text-goal-icon-hydration: #60a5fa;
+    /* More section icon colors - dark mode */
+    --text-icon-more-foods: #fbbf24;
+    --text-icon-more-meds: #c084fc;
+    --text-icon-more-reports: #fb923c;
+    --text-icon-more-weight: #818cf8;
+    --text-icon-more-appointments: #94a3b8;
     --text-primary: #f3f4f6;
     --text-secondary: #d1d5db;
     --text-tertiary: #9ca3af;

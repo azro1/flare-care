@@ -86,10 +86,10 @@ export default function Foods() {
           <div className="flex-1 lg:max-w-4xl order-1 lg:order-2">
         {/* Header */}
         <div className="mb-5 sm:mb-6 card ">
-          <h1 className="text-2xl sm:text-3xl lg:text-4xl font-bold font-source text-primary mb-4">
+          <h1 className="text-2xl sm:text-3xl lg:text-4xl font-bold font-source text-primary mb-4 sm:mb-6">
             Foods
           </h1>
-          <p className="text-sm sm:text-base lg:text-lg text-secondary font-roboto break-words leading-relaxed">
+          <p className="text-sm sm:text-base text-secondary break-words leading-relaxed">
             Learn about different food categories and their nutritional properties to help you make informed choices about your diet
           </p>
         </div>
@@ -102,14 +102,14 @@ export default function Foods() {
                 <span className="text-4xl">{category.emoji}</span>
                 <h2 className="text-xl font-semibold font-source text-primary">{category.title}</h2>
               </div>
-              <p className="text-sm sm:text-base text-secondary font-roboto mb-4 leading-relaxed">{category.description}</p>
+              <p className="text-sm sm:text-base text-secondary  mb-4 leading-relaxed">{category.description}</p>
               <div>
-                <h3 className="text-sm font-semibold text-primary mb-3">Examples:</h3>
+                <h3 className="text-sm font-semibold text-primary mb-3 sm:mb-4">Examples:</h3>
                 <div className="flex flex-wrap gap-2">
                   {category.examples.map((example, i) => (
                     <span 
                       key={i} 
-                      className="inline-block px-3 py-1 card-inner text-secondary text-sm rounded-full font-roboto"
+                      className="inline-block px-3 py-1 card-inner text-secondary text-sm rounded-full "
                     >
                       {example}
                     </span>
@@ -122,13 +122,13 @@ export default function Foods() {
 
         {/* Tips Card */}
         <div className="card backdrop-blur-sm mb-5 sm:mb-6">
-          <h2 className="text-xl font-semibold font-source text-primary mb-4 flex items-center gap-2">
-            <Lightbulb className="w-5 h-5 flex-shrink-0 text-amber-500 dark:text-white" />
+          <h2 className="text-xl font-semibold font-source text-primary mb-4 sm:mb-6 flex items-center gap-2">
+            <Lightbulb className="w-5 h-5 flex-shrink-0 text-amber-500" />
             Helpful Tips
           </h2>
           <ul className="space-y-3">
             {tips.map((tip, index) => (
-              <li key={index} className="text-sm sm:text-base text-secondary font-roboto leading-relaxed flex items-start">
+              <li key={index} className="text-sm sm:text-base text-secondary  leading-relaxed flex items-start">
                 <span className="w-1.5 h-1.5 bg-[#5F9EA0] rounded-full mr-3 mt-2 flex-shrink-0"></span>
                 {tip}
               </li>
@@ -149,66 +149,66 @@ export default function Foods() {
 
               {/* IBD-Friendly Foods */}
               <div className="card">
-                <h3 className="text-xl font-semibold font-source text-primary mb-4">IBD Foods</h3>
+                <h3 className="text-xl font-semibold font-source text-primary mb-4 sm:mb-6">IBD Foods</h3>
                 <div className="space-y-4">
                   <div className="card-inner p-4">
                     <h4 className="font-medium text-primary mb-2 flex items-center gap-2">
                       <CheckCircle className="w-5 h-5 text-emerald-600 dark:text-white flex-shrink-0" />
                       Generally Safe
                     </h4>
-                    <p className="text-sm sm:text-base text-secondary">Bananas, rice, applesauce, toast, oatmeal, lean proteins</p>
+                    <p className="text-sm text-secondary">Bananas, rice, applesauce, toast, oatmeal, lean proteins</p>
                   </div>
                   <div className="card-inner p-4">
                     <h4 className="font-medium text-primary mb-2 flex items-center gap-2">
                       <AlertTriangle className="w-5 h-5 text-amber-600 dark:text-white flex-shrink-0" />
                       Try Carefully
                     </h4>
-                    <p className="text-sm sm:text-base text-secondary">Dairy, high-fiber foods, spicy foods, raw vegetables</p>
+                    <p className="text-sm text-secondary">Dairy, high-fiber foods, spicy foods, raw vegetables</p>
                   </div>
                   <div className="card-inner p-4">
                     <h4 className="font-medium text-primary mb-2 flex items-center gap-2">
                       <XCircle className="w-5 h-5 text-red-500 dark:text-white flex-shrink-0" />
                       Avoid During Flares
                     </h4>
-                    <p className="text-sm sm:text-base text-secondary">Nuts, seeds, popcorn, alcohol, caffeine, fried foods</p>
+                    <p className="text-sm text-secondary">Nuts, seeds, popcorn, alcohol, caffeine, fried foods</p>
                   </div>
                 </div>
               </div>
 
               {/* Quick Food Tips */}
               <div className="card p-4 sm:p-6">
-                <h3 className="text-xl font-semibold font-source text-primary mb-4">Quick Food Tips</h3>
+                <h3 className="text-xl font-semibold font-source text-primary mb-4 sm:mb-6">Quick Food Tips</h3>
                 <div className="space-y-3">
                   <div className="flex items-center gap-3">
                     <div className="w-8 h-8 min-w-[2rem] rounded-lg flex items-center justify-center card-inner">
                       <UtensilsCrossed className="w-4 h-4 text-emerald-600 dark:text-white" />
                     </div>
-                    <p className="text-sm sm:text-base text-secondary">Pair carbs with protein to steady energy</p>
+                    <p className="text-sm text-secondary">Pair carbs with protein to steady energy</p>
                   </div>
                   <div className="flex items-center gap-3">
                     <div className="w-8 h-8 min-w-[2rem] rounded-lg flex items-center justify-center card-inner">
                       <Soup className="w-4 h-4 text-amber-600 dark:text-white" />
                     </div>
-                    <p className="text-sm sm:text-base text-secondary">Keep simple foods ready for flare days</p>
+                    <p className="text-sm text-secondary">Keep simple foods ready for flare days</p>
                   </div>
                   <div className="flex items-center gap-3">
                     <div className="w-8 h-8 min-w-[2rem] rounded-lg flex items-center justify-center card-inner">
                       <Snowflake className="w-4 h-4 text-blue-500 dark:text-white" />
                     </div>
-                    <p className="text-sm sm:text-base text-secondary">Freeze single portions for low-energy days</p>
+                    <p className="text-sm text-secondary">Freeze single portions for low-energy days</p>
                   </div>
                   <div className="flex items-center gap-3">
                     <div className="w-8 h-8 min-w-[2rem] rounded-lg flex items-center justify-center card-inner">
                       <NotebookPen className="w-4 h-4 text-indigo-400 dark:text-white" />
                     </div>
-                    <p className="text-sm sm:text-base text-secondary">Note any new foods and how your gut reacts</p>
+                    <p className="text-sm text-secondary">Note any new foods and how your gut reacts</p>
                   </div>
                 </div>
               </div>
               
               {/* Note */}
               <div className="card">
-                <p className="text-sm sm:text-base text-secondary font-roboto leading-relaxed">
+                <p className="text-sm text-secondary leading-relaxed">
                   <span className="font-semibold">Note:</span> This is a general food reference guide. Always follow the specific dietary advice provided by your doctor or registered dietitian.
                 </p>
               </div>
@@ -222,8 +222,8 @@ export default function Foods() {
       <div>
         <div className="mt-5 sm:mt-6 max-w-[76rem] mx-auto px-0 sm:px-4 md:px-6 lg:px-0 lg:mt-0">
           <div className="card p-8 backdrop-blur-sm text-center">
-          <h2 className="text-xl font-semibold font-source text-primary mb-4">Track Your Meals</h2>
-          <p className="text-sm sm:text-base text-secondary font-roboto mb-6 leading-relaxed">
+          <h2 className="text-xl font-semibold font-source text-primary mb-4 sm:mb-6">Track Your Meals</h2>
+          <p className="text-sm sm:text-base text-secondary  mb-6 leading-relaxed">
             Use the symptom tracker to log what you eat each day and monitor how different foods affect you.
           </p>
           <Link 
