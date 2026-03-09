@@ -1053,7 +1053,7 @@ export default function Home() {
             <div className="contents xl:block xl:sticky xl:top-6 xl:space-y-6">
               
               {/* Quick Stats */}
-              <div className="card order-[6] xl:order-none mb-6 xl:mb-0">
+              <div className="card order-[5] xl:order-none mb-6 xl:mb-0">
                 <h3 className="text-xl font-semibold font-source text-primary mb-3">Your Progress</h3>
                 <div className="card-inner p-4 sm:p-5 space-y-2.5">
                   <div className="flex justify-between items-center">
@@ -1080,7 +1080,7 @@ export default function Home() {
             </div>
 
               {/* Today's Goals */}
-              <div className="card no-hover-border order-[3] xl:order-none mb-6 xl:mb-0">
+              <div className="card no-hover-border order-[11] xl:order-none mb-6 xl:mb-0">
                 <h3 className="text-xl font-semibold font-source text-primary mb-3">Today's Goals</h3>
                 <div className="card-inner p-4 sm:p-5 space-y-3">
                   <div className="flex items-center gap-3">
@@ -1123,7 +1123,7 @@ export default function Home() {
               </div>
 
               {/* Daily Tip */}
-              <div className="card order-[8] xl:order-none mb-6 xl:mb-0">
+              <div className="card order-[6] xl:order-none mb-6 xl:mb-0">
                 <div>
                   <h3 className="text-xl font-semibold font-source text-primary mb-3 flex items-center gap-2">
                     <Lightbulb className="w-5 h-5 flex-shrink-0 text-amber-500" />
@@ -1302,7 +1302,7 @@ export default function Home() {
           </div>
 
           {/* Recent Activity */}
-          <div className="order-[5] lg:order-2 mb-6 lg:mb-0">
+          <div className="order-[8] lg:order-2 mb-6 lg:mb-0">
             <h2 className="text-xl font-semibold font-source text-primary mb-3">Recent Activity</h2>
             <div className="card">
             <div className="card-inner p-4 sm:p-6 transition-all duration-300 ease-in-out">
@@ -1355,7 +1355,7 @@ export default function Home() {
                 activities.push({
                   type: 'tracked-medication',
                   timestamp: new Date(lastMedication.created_at || lastMedication.createdAt),
-                  title: "Completed Today's goal \"Log medications\"",
+                  title: "Completed Today's goal \"Log Medications\"",
                   icon: ChartLine,
                   iconBg: 'bg-pink-100',
                   iconColor: 'text-pink-600'
@@ -1513,7 +1513,7 @@ export default function Home() {
                 activities.push({
                   type: 'all-medications-taken',
                   timestamp: new Date(medicationsCompletedAt),
-                  title: "Completed Today's goal \"Take medications\"",
+                  title: "Completed Today's goal \"Take Medications\"",
                   icon: Pill,
                   iconBg: 'bg-purple-100',
                   iconColor: 'text-purple-600'
@@ -1525,7 +1525,7 @@ export default function Home() {
                 activities.push({
                   type: 'hydration-goal-completed',
                   timestamp: new Date(hydrationCompletedAt),
-                  title: "Completed Today's goal \"Stay hydrated\"",
+                  title: "Completed Today's goal \"Stay Hydrated\"",
                   icon: CupSoda,
                   iconBg: 'bg-sky-100',
                   iconColor: 'text-sky-600'
@@ -1844,7 +1844,7 @@ export default function Home() {
         )}
 
         {/* More Options */}
-        <div className="mb-6 xl:mb-0 order-[11] xl:order-none">
+        <div className="mb-6 xl:mb-0 order-[12] xl:order-none">
           <h2 className="text-xl font-semibold font-source text-primary mb-4">More</h2>
           <div className="grid grid-cols-2 lg:grid-cols-3 gap-4 md:gap-6 min-w-0">
               <Link
