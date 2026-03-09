@@ -126,6 +126,10 @@ function AppointmentsPageContent() {
   }, [user?.id])
 
   useEffect(() => {
+    window.scrollTo(0, 0)
+  }, [])
+
+  useEffect(() => {
     if (isAdding) window.scrollTo(0, 0)
   }, [isAdding])
 
