@@ -15,6 +15,7 @@ export default function Home() {
   const router = useRouter()
   const [showAllSymptoms, setShowAllSymptoms] = useState(false)
   const [showAllMedications, setShowAllMedications] = useState(false)
+  const [recentTab, setRecentTab] = useState('symptoms')
   const [trackedMedications, setTrackedMedications] = useState([])
   const [showToast, setShowToast] = useState(false)
   const [showDeleteToast, setShowDeleteToast] = useState(false)
@@ -932,7 +933,7 @@ export default function Home() {
   }
 
   // Get symptoms to display (1 by default, all if expanded)
-  const displayedSymptoms = showAllSymptoms ? symptoms : symptoms.slice(0, 1)
+  const displayedSymptoms = showAllSymptoms ? symptoms : symptoms.slice(0, 2)
   const todaySymptoms = symptoms.filter(symptom => {
     const today = new Date().toDateString()
     const symptomDate = new Date(symptom.created_at || symptom.createdAt).toDateString()
@@ -1023,12 +1024,12 @@ export default function Home() {
         <div className="flex-1 flex flex-col min-h-0">
         <div className="flex-1 flex flex-col xl:flex-row xl:gap-6 xl:justify-center min-h-0">
           
-          {/* Left Sidebar */}
-          <div className="xl:w-72 xl:flex-shrink-0 order-2 xl:order-1">
-            <div className="sticky top-6 space-y-5 sm:space-y-6">
+          {/* Left Sidebar - contents on mobile so cards become flex siblings for interleaving */}
+          <div className="contents xl:block xl:w-72 xl:flex-shrink-0 xl:order-1">
+            <div className="contents xl:block xl:sticky xl:top-6 xl:space-y-6">
               
               {/* Quick Stats */}
-              <div className=" card">
+              <div className="card order-[6] xl:order-none mb-6 xl:mb-0">
                 <h3 className="text-xl font-semibold font-source text-primary mb-3">Your Progress</h3>
                 <div className="card-inner p-4 sm:p-5 space-y-2.5">
                   <div className="flex justify-between items-center">
@@ -1055,7 +1056,7 @@ export default function Home() {
             </div>
 
               {/* Today's Goals */}
-              <div className="card no-hover-border">
+              <div className="card no-hover-border order-[3] xl:order-none mb-6 xl:mb-0">
                 <h3 className="text-xl font-semibold font-source text-primary mb-3">Today's Goals</h3>
                 <div className="card-inner p-4 sm:p-5 space-y-3">
                   <div className="flex items-center gap-3">
@@ -1074,7 +1075,7 @@ export default function Home() {
                     </div>
                     <div className="flex-1 flex items-center justify-between">
                       <span className={`text-sm text-primary ${todayTrackedMedication ? 'line-through' : ''}`}>
-                        Log Medications
+                        Log medications
                       </span>
                     </div>
                   </Link>
@@ -1100,7 +1101,7 @@ export default function Home() {
               </div>
 
               {/* Daily Tip */}
-              <div className="card">
+              <div className="card order-[8] xl:order-none mb-6 xl:mb-0">
                 <div>
                   <h3 className="text-xl font-semibold font-source text-primary mb-3 flex items-center gap-2">
                     <Lightbulb className="w-5 h-5 flex-shrink-0 text-amber-500 dark:text-white" />
@@ -1115,9 +1116,10 @@ export default function Home() {
             </div>
           </div>
 
-          {/* Main Content */}
-          <div className="flex-1 xl:max-w-4xl order-1 xl:order-2">
+          {/* Main Content - contents on mobile so sections become flex siblings for interleaving */}
+          <div className="contents xl:block flex-1 xl:max-w-4xl xl:order-2">
         {/* Weather Hero with Greeting & Date inside */}
+        <div className="order-1 xl:order-none">
         <WeatherHero>
           <h1 className="text-2xl sm:text-3xl lg:text-4xl font-bold font-source text-primary mb-2 sm:mb-3">
             {(() => {
@@ -1131,73 +1133,50 @@ export default function Home() {
             {new Date().toLocaleDateString('en-GB', { weekday: 'long', day: 'numeric', month: 'long' })}
           </p>
         </WeatherHero>
+        </div>
 
         {/* Daily Tasks */}
-        <div className="my-6">
+        <div className="my-6 order-[2] xl:order-none">
           <h2 className="text-xl font-semibold font-source text-primary mb-4">Daily Tasks</h2>
-          {/* Mobile: single card with two rows + separator */}
-          <div className="block sm:hidden">
-            <div className="card !p-4 overflow-hidden">
+          {/* Mobile: horizontal scroll cards */}
+          <div className="block sm:hidden -mx-4 px-4">
+            <div className="overflow-x-auto pb-2 overscroll-x-contain scrollbar-hide snap-x snap-mandatory" style={{ WebkitOverflowScrolling: 'touch' }}>
+              <div className="flex gap-3">
               <Link
                 href="/symptoms"
-                className="flex items-center gap-3 pb-3 transition-colors hover:opacity-90 group relative focus:outline-none focus-visible:outline-none focus-visible:ring-0 focus-visible:ring-offset-0 focus:ring-0"
+                className="card card-link flex-shrink-0 w-[75vw] min-w-[140px] max-w-[180px] !p-6 flex flex-col items-center justify-center gap-3 snap-center transition-all group"
               >
-              <div className="w-10 h-10 bg-emerald-100 dashboard-icon-panel rounded-lg flex items-center justify-center flex-shrink-0">
+                <div className="w-10 h-10 bg-emerald-100 dashboard-icon-panel rounded-lg flex items-center justify-center">
                   <Thermometer className="w-5 h-5 text-emerald-600 dark:text-white" />
                 </div>
-                <div className="flex-1 min-w-0">
-                  <h3 className="text-sm sm:text-base font-semibold text-primary leading-tight">Log Symptoms</h3>
-                </div>
-                <ChevronRight className="w-5 h-5 flex-shrink-0 text-secondary" />
-                <div className="pointer-events-none absolute right-3 -top-14 hidden w-52 sm:group-hover:flex sm:group-focus-visible:flex">
-                  <div className="tooltip-card rounded-lg px-4 py-3 text-left text-xs text-secondary leading-snug shadow-lg font-roboto">
-                    Record how you're feeling to track your symptoms
-                  </div>
-                </div>
+                <h3 className="text-sm sm:text-base font-semibold text-primary text-center leading-tight sm:leading-relaxed">Log Symptoms</h3>
               </Link>
-              <div className="border-t min-w-0" style={{ borderColor: 'var(--border-card-inner)' }} />
               <Link
                 href="/medications/track"
-                className="flex items-center gap-3 pt-3 pb-3 transition-colors hover:opacity-90 group relative focus:outline-none focus-visible:outline-none focus-visible:ring-0 focus-visible:ring-offset-0 focus:ring-0"
+                className="card card-link flex-shrink-0 w-[75vw] min-w-[140px] max-w-[180px] !p-6 flex flex-col items-center justify-center gap-3 snap-center transition-all group"
               >
-<div className="w-10 h-10 bg-pink-100 dashboard-icon-panel rounded-lg flex items-center justify-center flex-shrink-0">
-                <ChartLine className="w-5 h-5 text-pink-600 dark:text-white" />
+                <div className="w-10 h-10 bg-pink-100 dashboard-icon-panel rounded-lg flex items-center justify-center">
+                  <ChartLine className="w-5 h-5 text-pink-600 dark:text-white" />
                 </div>
-                <div className="flex-1 min-w-0">
-                  <h3 className="text-sm sm:text-base font-semibold text-primary leading-tight">Log Medications</h3>
-                </div>
-                <ChevronRight className="w-5 h-5 flex-shrink-0 text-secondary" />
-                <div className="pointer-events-none absolute right-3 -top-14 hidden w-52 sm:group-hover:flex sm:group-focus-visible:flex">
-                  <div className="tooltip-card rounded-lg px-4 py-3 text-left text-xs text-secondary leading-snug shadow-lg font-roboto">
-                    Log missed medications to track your adherence
-                  </div>
-                </div>
+                <h3 className="text-sm sm:text-base font-semibold text-primary text-center leading-tight sm:leading-relaxed">Log medications</h3>
               </Link>
-              <div className="border-t min-w-0" style={{ borderColor: 'var(--border-card-inner)' }} />
               <Link
                 href="/hydration"
-                className="flex items-center gap-3 pt-3 transition-colors hover:opacity-90 group relative focus:outline-none focus-visible:outline-none focus-visible:ring-0 focus-visible:ring-offset-0 focus:ring-0"
+                className="card card-link flex-shrink-0 w-[75vw] min-w-[140px] max-w-[180px] !p-6 flex flex-col items-center justify-center gap-3 snap-center transition-all group"
               >
-                <div className="w-10 h-10 bg-sky-100 dashboard-icon-panel rounded-lg flex items-center justify-center flex-shrink-0">
+                <div className="w-10 h-10 bg-sky-100 dashboard-icon-panel rounded-lg flex items-center justify-center">
                   <CupSoda className="w-5 h-5 text-sky-600 dark:text-white" />
                 </div>
-                <div className="flex-1 min-w-0">
-                  <h3 className="text-sm sm:text-base font-semibold text-primary leading-tight">Hydration</h3>
-                </div>
-                <ChevronRight className="w-5 h-5 flex-shrink-0 text-secondary" />
-                <div className="pointer-events-none absolute right-3 -top-14 hidden w-52 sm:group-hover:flex sm:group-focus-visible:flex">
-                  <div className="tooltip-card rounded-lg px-4 py-3 text-left text-xs text-secondary leading-snug shadow-lg font-roboto">
-                    Track your daily water intake to hit your hydration goal
-                  </div>
-                </div>
+                <h3 className="text-sm sm:text-base font-semibold text-primary text-center leading-tight sm:leading-relaxed">My Hydration</h3>
               </Link>
+              </div>
             </div>
           </div>
           {/* Desktop: three cards in a row */}
           <div className="hidden sm:grid sm:grid-cols-3 gap-4 md:gap-6">
             <Link
               href="/symptoms"
-              className="card card-link !py-4 !px-4 sm:!p-6 transition-all group relative focus:outline-none focus-visible:outline-none focus-visible:ring-0 focus-visible:ring-offset-0 focus:ring-0 flex items-center justify-center"
+              className="card card-link !p-6 transition-all group relative focus:outline-none focus-visible:outline-none focus-visible:ring-0 focus-visible:ring-offset-0 focus:ring-0 flex items-center justify-center"
             >
               <div className="flex items-center sm:flex-col sm:items-center sm:justify-center gap-3 sm:gap-3 w-full">
                 <div className="w-10 h-10 bg-emerald-100 dashboard-icon-panel rounded-lg flex items-center justify-center flex-shrink-0">
@@ -1218,7 +1197,7 @@ export default function Home() {
             </Link>
             <Link
               href="/medications/track"
-              className="card card-link !py-4 !px-4 sm:!p-6 transition-all group relative focus:outline-none focus-visible:outline-none focus-visible:ring-0 focus-visible:ring-offset-0 focus:ring-0 flex items-center justify-center"
+              className="card card-link !p-6 transition-all group relative focus:outline-none focus-visible:outline-none focus-visible:ring-0 focus-visible:ring-offset-0 focus:ring-0 flex items-center justify-center"
             >
               <div className="flex items-center sm:flex-col sm:items-center sm:justify-center gap-3 sm:gap-3 w-full">
                 <div className="w-10 h-10 bg-pink-100 dashboard-icon-panel rounded-lg flex items-center justify-center flex-shrink-0">
@@ -1226,7 +1205,7 @@ export default function Home() {
                 </div>
                 <div className="flex-1 sm:w-full sm:text-center">
                   <h3 className="text-sm sm:text-base font-semibold text-primary leading-tight sm:leading-relaxed sm:justify-center">
-                    Log Medications
+                    Log medications
                   </h3>
                 </div>
                 <ChevronRight className="w-5 h-5 flex-shrink-0 text-secondary sm:hidden" />
@@ -1239,7 +1218,7 @@ export default function Home() {
             </Link>
             <Link
               href="/hydration"
-              className="card card-link !py-4 !px-4 sm:!p-6 transition-all group relative focus:outline-none focus-visible:outline-none focus-visible:ring-0 focus-visible:ring-offset-0 focus:ring-0 flex items-center justify-center"
+              className="card card-link !p-6 transition-all group relative focus:outline-none focus-visible:outline-none focus-visible:ring-0 focus-visible:ring-offset-0 focus:ring-0 flex items-center justify-center"
             >
               <div className="flex items-center sm:flex-col sm:items-center sm:justify-center gap-3 sm:gap-3 w-full">
                 <div className="w-10 h-10 bg-sky-100 dashboard-icon-panel rounded-lg flex items-center justify-center flex-shrink-0">
@@ -1247,7 +1226,7 @@ export default function Home() {
                 </div>
                 <div className="flex-1 sm:w-full sm:text-center">
                   <h3 className="text-sm sm:text-base font-semibold text-primary leading-tight sm:leading-relaxed sm:justify-center">
-                    Hydration
+                    My Hydration
                   </h3>
                 </div>
                 <ChevronRight className="w-5 h-5 flex-shrink-0 text-secondary sm:hidden" />
@@ -1261,9 +1240,9 @@ export default function Home() {
           </div>
         </div>
 
-        <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 mb-6">
+        <div className="contents lg:grid grid-cols-1 lg:grid-cols-2 gap-6 mb-6 lg:order-5 xl:order-none">
           {/* Today's Summary */}
-          <div className="order-2 lg:order-1">
+          <div className="order-[7] lg:order-1 mb-6 lg:mb-0">
             <h2 className="text-xl font-semibold font-source text-primary mb-3">Today's Summary</h2>
             <div className="card">
             <div className="card-inner p-4 sm:p-6">
@@ -1279,14 +1258,14 @@ export default function Home() {
               <div className="border-t border-[var(--border-card-inner)] my-0" aria-hidden="true" />
               <div className="flex justify-between items-center mt-3">
                 <span className="text-sm text-primary">Hydration</span>
-                <span className="text-sm font-semibold text-primary">{todayHydrationGlasses}/{hydrationTarget} glasses</span>
+                <span className="text-sm font-semibold text-primary">{todayHydrationGlasses}/{hydrationTarget}</span>
               </div>
             </div>
             </div>
           </div>
 
           {/* Recent Activity */}
-          <div className="order-1 lg:order-2">
+          <div className="order-[5] lg:order-2 mb-6 lg:mb-0">
             <h2 className="text-xl font-semibold font-source text-primary mb-3">Recent Activity</h2>
             <div className="card">
             <div className="card-inner p-4 sm:p-6 transition-all duration-300 ease-in-out">
@@ -1339,7 +1318,7 @@ export default function Home() {
                 activities.push({
                   type: 'tracked-medication',
                   timestamp: new Date(lastMedication.created_at || lastMedication.createdAt),
-                  title: "Completed Today's goal \"Log Medications\"",
+                  title: "Completed Today's goal \"Log medications\"",
                   icon: ChartLine,
                   iconBg: 'bg-pink-100',
                   iconColor: 'text-pink-600'
@@ -1568,7 +1547,7 @@ export default function Home() {
 
         {/* Latest News */}
         {isAuthenticated && (
-          <div className="my-6">
+          <div className="my-6 order-[9] xl:order-none">
             <h2 className="text-xl font-semibold font-source text-primary mb-4">
               Latest News
             </h2>
@@ -1690,100 +1669,133 @@ export default function Home() {
           </div>
         )}
 
-        {/* Recent Symptoms */}
-        {displayedSymptoms.length > 0 && (
-          <div className="mb-4 sm:mb-6 card">
-            <div className="flex items-center justify-between mb-4">
-              <div className="flex items-start gap-3">
-                <h2 className="text-xl font-semibold font-source text-primary">Recent Logged Symptoms</h2>
-              </div>
-              {symptoms.length > 1 && (
-                <button 
-                  onClick={() => setShowAllSymptoms(!showAllSymptoms)}
-                  className="text-[#5F9EA0] hover:text-[#5F9EA0]/80 flex items-center gap-1"
-                >
-                  <span className="hidden sm:inline text-sm font-medium">{showAllSymptoms ? 'Show Less' : 'View All'}</span>
-                  <ChevronDown className={`w-5 h-5 sm:hidden transition-transform duration-200 text-primary ${showAllSymptoms ? 'rotate-180' : ''}`} />
-                </button>
-              )}
+        {/* Recent Symptoms & Medications (tabbed) */}
+        {(displayedSymptoms.length > 0 || trackedMedications.length > 0) && (
+          <div className="mb-6 order-[10] xl:order-none">
+            <h2 className="text-xl font-semibold font-source text-primary mb-4">Recent Logs</h2>
+            <div className="card">
+            <div className="flex border-b border-[var(--border-card-inner)] mb-4">
+              <button
+                type="button"
+                onClick={() => setRecentTab('symptoms')}
+                className={`px-4 py-2 text-sm font-medium border-b-2 -mb-px transition-colors ${
+                  recentTab === 'symptoms'
+                    ? 'border-[#5F9EA0] text-[#5F9EA0]'
+                    : 'border-transparent text-secondary hover:text-primary'
+                }`}
+              >
+                Symptoms {symptoms.length > 0 && `(${symptoms.length})`}
+              </button>
+              <button
+                type="button"
+                onClick={() => setRecentTab('medications')}
+                className={`px-4 py-2 text-sm font-medium border-b-2 -mb-px transition-colors ${
+                  recentTab === 'medications'
+                    ? 'border-[#5F9EA0] text-[#5F9EA0]'
+                    : 'border-transparent text-secondary hover:text-primary'
+                }`}
+              >
+                Medications {trackedMedications.length > 0 && `(${trackedMedications.length})`}
+              </button>
             </div>
-            <div className="space-y-3 max-w-xs">
-              {displayedSymptoms.map((symptom) => (
-                <div key={symptom.id}>
-                <div 
-                    className="card-inner p-4 sm:p-6 cursor-pointer transition-all duration-200"
-                  onClick={() => {
-                    router.push(`/symptoms/${symptom.id}`)
-                  }}
-                >
-                  <div className="space-y-4">
-                    <div className="flex items-center justify-between">
-                      <span className="text-sm font-medium text-primary">
-                        {formatUKDate(symptom.created_at || symptom.createdAt)}
-                      </span>
-                      <span className="text-xs text-slate-400 dark:[color:var(--text-tertiary)]">
-                        {new Date(symptom.created_at || symptom.createdAt).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
-                      </span>
-                    </div>
-                    <div className="flex gap-6 text-sm text-primary opacity-80">
-                      <span>View details</span>
-                    </div>
-                  </div>
-                  </div>
-                </div>
-              ))}
-            </div>
-          </div>
-        )}
 
-        {/* Recent Medications */}
-        {trackedMedications.length > 0 && (
-          <div className="mb-6 sm:mb-6 card">
-            <div className="flex items-center justify-between mb-4">
-              <div className="flex items-start gap-3">
-                <h2 className="text-xl font-semibold font-source text-primary">Recent Logged Medications</h2>
+            {recentTab === 'symptoms' && (
+              <div>
+                {displayedSymptoms.length > 0 ? (
+                  <>
+                    <div className="flex items-center justify-end mb-3">
+                      {symptoms.length > 2 && (
+                        <button
+                          onClick={() => setShowAllSymptoms(!showAllSymptoms)}
+                          className="text-[#5F9EA0] hover:text-[#5F9EA0]/80 flex items-center gap-1 text-sm font-medium"
+                        >
+                          {showAllSymptoms ? 'Show Less' : 'View All'}
+                          <ChevronDown className={`w-4 h-4 transition-transform ${showAllSymptoms ? 'rotate-180' : ''}`} />
+                        </button>
+                      )}
+                    </div>
+                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                      {displayedSymptoms.map((symptom) => (
+                        <div
+                          key={symptom.id}
+                          className="card-inner p-4 sm:p-5 cursor-pointer transition-all duration-200 flex items-center justify-between"
+                          onClick={() => router.push(`/symptoms/${symptom.id}`)}
+                          role="button"
+                          tabIndex={0}
+                          onKeyDown={(e) => e.key === 'Enter' && router.push(`/symptoms/${symptom.id}`)}
+                        >
+                          <span className="text-sm font-medium text-primary">
+                            {formatUKDate(symptom.created_at || symptom.createdAt)}
+                          </span>
+                          <span className="text-xs text-slate-400 dark:[color:var(--text-tertiary)]">
+                            {new Date(symptom.created_at || symptom.createdAt).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
+                          </span>
+                        </div>
+                      ))}
+                    </div>
+                  </>
+                ) : (
+                  <div className="py-8 text-center">
+                    <p className="text-sm text-secondary mb-2">No symptoms logged yet</p>
+                    <Link href="/symptoms" className="text-[#5F9EA0] hover:text-[#5F9EA0]/80 text-sm font-medium">
+                      Log symptoms
+                    </Link>
+                  </div>
+                )}
               </div>
-              {trackedMedications.length > 1 && (
-                <button 
-                  onClick={() => setShowAllMedications(!showAllMedications)}
-                  className="text-[#5F9EA0] hover:text-[#5F9EA0]/80 flex items-center gap-1"
-                >
-                  <span className="hidden sm:inline text-sm font-medium">{showAllMedications ? 'Show Less' : 'View All'}</span>
-                  <ChevronDown className={`w-5 h-5 sm:hidden transition-transform duration-200 text-primary ${showAllMedications ? 'rotate-180' : ''}`} />
-                </button>
-              )}
-                  </div>
-            <div className="space-y-3 max-w-xs">
-              {(showAllMedications ? trackedMedications : trackedMedications.slice(0, 1)).map((tracked, index) => (
-                <div key={tracked.id}>
-                  <div 
-                    className="card-inner p-4 sm:p-6 cursor-pointer transition-all duration-200"
-                    onClick={() => {
-                      router.push(`/medications/track/${tracked.id}`)
-                    }}
-                  >
-                  <div className="space-y-4">
-                    <div className="flex items-center justify-between">
-                      <span className="text-sm font-medium text-primary">
-                        {formatUKDate(tracked.created_at || tracked.createdAt)}
-                      </span>
-                      <span className="text-xs text-slate-400 dark:[color:var(--text-tertiary)]">
-                        {new Date(tracked.created_at || tracked.createdAt).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
-                      </span>
+            )}
+
+            {recentTab === 'medications' && (
+              <div>
+                {trackedMedications.length > 0 ? (
+                  <>
+                    <div className="flex items-center justify-end mb-3">
+                      {trackedMedications.length > 2 && (
+                        <button
+                          onClick={() => setShowAllMedications(!showAllMedications)}
+                          className="text-[#5F9EA0] hover:text-[#5F9EA0]/80 flex items-center gap-1 text-sm font-medium"
+                        >
+                          {showAllMedications ? 'Show Less' : 'View All'}
+                          <ChevronDown className={`w-4 h-4 transition-transform ${showAllMedications ? 'rotate-180' : ''}`} />
+                        </button>
+                      )}
                     </div>
-                    <div className="flex gap-6 text-sm text-primary opacity-80">
-                      <span>View details</span>
+                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                      {(showAllMedications ? trackedMedications : trackedMedications.slice(0, 2)).map((tracked) => (
+                        <div
+                          key={tracked.id}
+                          className="card-inner p-4 sm:p-5 cursor-pointer transition-all duration-200 flex items-center justify-between"
+                          onClick={() => router.push(`/medications/track/${tracked.id}`)}
+                          role="button"
+                          tabIndex={0}
+                          onKeyDown={(e) => e.key === 'Enter' && router.push(`/medications/track/${tracked.id}`)}
+                        >
+                          <span className="text-sm font-medium text-primary">
+                            {formatUKDate(tracked.created_at || tracked.createdAt)}
+                          </span>
+                          <span className="text-xs text-slate-400 dark:[color:var(--text-tertiary)]">
+                            {new Date(tracked.created_at || tracked.createdAt).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
+                          </span>
+                        </div>
+                      ))}
                     </div>
+                  </>
+                ) : (
+                  <div className="py-8 text-center">
+                    <p className="text-sm text-secondary mb-2">No medications logged yet</p>
+                    <Link href="/medications/track" className="text-[#5F9EA0] hover:text-[#5F9EA0]/80 text-sm font-medium">
+                      Log medications
+                    </Link>
                   </div>
-                  </div>
-                </div>
-              ))}
+                )}
+              </div>
+            )}
             </div>
           </div>
         )}
 
         {/* More Options */}
-        <div className="mb-6 xl:mb-0">
+        <div className="mb-6 xl:mb-0 order-[11] xl:order-none">
           <h2 className="text-xl font-semibold font-source text-primary mb-4">More</h2>
           <div className="grid grid-cols-2 lg:grid-cols-3 gap-4 md:gap-6 min-w-0">
               <Link

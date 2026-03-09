@@ -6,7 +6,7 @@ import Image from 'next/image'
 import { useAuth } from '@/lib/AuthContext'
 import { useTheme } from '@/lib/ThemeContext'
 import ProtectedRoute from '@/components/ProtectedRoute'
-import { Settings, LogOut, Trash2, User } from 'lucide-react'
+import { LogOut, Trash2 } from 'lucide-react'
 import { supabase, TABLES } from '@/lib/supabase'
 import { isPushSupported, subscribeForPush, subscriptionToPayload, savePushSubscriptionToServer } from '@/lib/pushSubscription'
 
@@ -183,8 +183,7 @@ function AccountPageContent() {
 
               {/* Profile Info */}
               <div className="border-t border-[var(--border-card-inner)] pt-4 sm:pt-6">
-                <h3 className="text-lg sm:text-xl font-semibold font-source text-primary mb-2 flex items-center gap-2">
-                  <User className="w-5 h-5 text-[#5F9EA0] dark:text-white" />
+                <h3 className="text-lg sm:text-xl font-semibold font-source text-primary mb-2">
                   Profile Info
                 </h3>
                 <div className="space-y-0">
@@ -212,10 +211,7 @@ function AccountPageContent() {
 
             {/* Settings – mobile only: above Delete Account */}
             <div className="card mb-5 sm:mb-6 lg:hidden">
-              <div className="flex items-center gap-2 mb-4">
-                <Settings className="w-5 h-5 text-[#5F9EA0] dark:text-white" />
-                <h3 className="text-lg sm:text-xl font-semibold font-source text-primary">Settings</h3>
-              </div>
+              <h3 className="text-lg sm:text-xl font-semibold font-source text-primary mb-4">Settings</h3>
               <div className="space-y-0">
                 <div className="pb-4 sm:pb-5 border-b border-[var(--border-card-inner)]">
                   <div className="flex items-center justify-between">
@@ -291,10 +287,7 @@ function AccountPageContent() {
           {/* Sidebar – Settings: desktop only */}
           <aside className="hidden lg:block lg:w-80 flex-shrink-0">
             <div className="card lg:sticky lg:top-6">
-              <div className="flex items-center gap-2 mb-5">
-                <Settings className="w-5 h-5 text-[#5F9EA0] dark:text-white" />
-                <h3 className="text-lg sm:text-xl font-semibold font-source text-primary">Settings</h3>
-              </div>
+              <h3 className="text-lg sm:text-xl font-semibold font-source text-primary mb-5">Settings</h3>
               <div className="space-y-0">
                 <div className="pb-4 sm:pb-5 border-b border-[var(--border-card-inner)]">
                   <div className="flex items-center justify-between">

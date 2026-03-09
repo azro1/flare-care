@@ -3,6 +3,7 @@
 import { useState, useEffect } from 'react'
 import { useAuth } from '@/lib/AuthContext'
 import ProtectedRoute from '@/components/ProtectedRoute'
+import ConfirmationModal from '@/components/ConfirmationModal'
 import { CupSoda, Lightbulb } from 'lucide-react'
 import { supabase, TABLES } from '@/lib/supabase'
 
@@ -12,6 +13,7 @@ function HydrationPageContent() {
   const { user } = useAuth()
   const [glasses, setGlasses] = useState(0)
   const [isLoading, setIsLoading] = useState(true)
+  const [showResetModal, setShowResetModal] = useState(false)
 
   const today = new Date().toISOString().split('T')[0]
 
@@ -58,6 +60,22 @@ function HydrationPageContent() {
     }
   }
 
+  const handleReset = async () => {
+    if (!user?.id) return
+    try {
+      const { error } = await supabase
+        .from(TABLES.DAILY_HYDRATION)
+        .upsert(
+          { user_id: user.id, date: today, glasses: 0, updated_at: new Date().toISOString() },
+          { onConflict: 'user_id,date' }
+        )
+      if (error) throw error
+      setGlasses(0)
+    } catch (err) {
+      console.error('Error resetting hydration:', err)
+    }
+  }
+
   return (
     <div className="max-w-4xl w-full mx-auto sm:px-4 md:px-6 lg:px-8 min-w-0">
       <div className="mb-5 sm:mb-6">
@@ -65,7 +83,7 @@ function HydrationPageContent() {
           <div className="flex flex-col sm:flex-row sm:justify-between sm:items-start">
             <div className="min-w-0 flex-1">
               <h1 className="text-2xl sm:text-3xl lg:text-4xl font-bold font-source text-primary mb-4 sm:mb-6">
-                Hydration
+                My Hydration
               </h1>
               <p className="text-sm sm:text-base text-secondary font-roboto leading-relaxed">
                 Track your daily water intake to hit your goal each day
@@ -94,6 +112,16 @@ function HydrationPageContent() {
             <div>
               <span className="text-3xl sm:text-4xl font-bold text-primary">{glasses}</span>
               <span className="text-xl text-secondary ml-1">/ {HYDRATION_TARGET} glasses</span>
+              <div className="min-h-6 mt-2">
+                {glasses > 0 && (
+                  <button
+                    onClick={() => setShowResetModal(true)}
+                    className="text-sm text-secondary hover:text-primary underline"
+                  >
+                    Reset
+                  </button>
+                )}
+              </div>
             </div>
             {glasses < HYDRATION_TARGET ? (
               <button
@@ -130,6 +158,17 @@ function HydrationPageContent() {
           </div>
         </div>
       </div>
+
+      <ConfirmationModal
+        isOpen={showResetModal}
+        onClose={() => setShowResetModal(false)}
+        onConfirm={handleReset}
+        title="Reset today's count?"
+        message="Your hydration progress will be reset to 0. If you did not mean to do this click Cancel to close."
+        confirmText="Reset"
+        cancelText="Cancel"
+        isDestructive={false}
+      />
     </div>
   )
 }
