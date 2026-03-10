@@ -1138,12 +1138,12 @@ export default function Home() {
                 </div>
               </div>
 
-              {/* Helpful Tips */}
+              {/* Hints */}
               <div className="card order-[6] xl:order-none mb-6 xl:mb-0">
                 <div>
                   <h3 className="text-xl font-semibold font-source text-primary mb-3 flex items-center gap-2">
                     <Lightbulb className="w-5 h-5 flex-shrink-0 text-amber-500" />
-                    Helpful Tips
+                    Hint
                   </h3>
                   <p className={`text-sm text-primary leading-relaxed sm:leading-normal transition-opacity duration-500 ${isFading ? 'opacity-0' : 'opacity-100'}`}>
                     {dailyTips[currentTipIndex]}

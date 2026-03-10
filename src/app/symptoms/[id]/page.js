@@ -230,12 +230,12 @@ function SymptomDetailContent() {
             <h2 className="text-xl font-semibold font-source text-primary mb-3 sm:mb-4">Details</h2>
             <div className="space-y-0 [&>*:last-child]:pb-0">
                 <div className="flex justify-between items-center pt-0 pb-4 border-b min-w-0" style={{ borderColor: 'var(--border-card-inner)' }}>
-                  <span className="text-sm sm:text-base text-secondary font-roboto">Normal frequency</span>
+                  <span className="text-sm sm:text-base text-secondary font-roboto">Bathroom frequency</span>
                   <span className="text-sm sm:text-base font-medium text-primary font-roboto">{symptom.normal_bathroom_frequency || 'Not set'} times/day</span>
                 </div>
                 {symptom.bathroom_frequency_changed && (
                   <>
-                    <div className="flex justify-between items-center py-4 border-b min-w-0" style={{ borderColor: 'var(--border-card-inner)' }}>
+                    <div className={`flex justify-between items-center py-4 min-w-0 ${symptom.bathroom_frequency_changed !== 'yes' || !symptom.bathroom_frequency_change_details ? 'border-b' : ''}`} style={{ borderColor: 'var(--border-card-inner)' }}>
                       <span className="text-sm sm:text-base text-secondary font-roboto">Frequency changed</span>
                       <span className="text-sm sm:text-base font-medium text-primary font-roboto">{symptom.bathroom_frequency_changed === 'yes' ? 'Yes' : 'No'}</span>
                     </div>

@@ -187,25 +187,25 @@ export default function Foods() {
                 <div className="space-y-3">
                   <div className="flex items-center gap-3">
                     <div className="w-8 h-8 min-w-[2rem] rounded-lg flex items-center justify-center card-inner">
-                      <UtensilsCrossed className="w-4 h-4 text-emerald-600" />
+                      <UtensilsCrossed className="w-4 h-4 text-indigo-500" />
                     </div>
                     <p className="text-sm text-secondary">Pair carbs with protein to steady energy</p>
                   </div>
                   <div className="flex items-center gap-3">
                     <div className="w-8 h-8 min-w-[2rem] rounded-lg flex items-center justify-center card-inner">
-                      <Soup className="w-4 h-4 text-amber-600" />
+                      <Soup className="w-4 h-4 text-amber-500 dark:[color:var(--text-icon-more-foods)]" />
                     </div>
                     <p className="text-sm text-secondary">Keep simple foods ready for flare days</p>
                   </div>
                   <div className="flex items-center gap-3">
                     <div className="w-8 h-8 min-w-[2rem] rounded-lg flex items-center justify-center card-inner">
-                      <Snowflake className="w-4 h-4 text-blue-500" />
+                      <Snowflake className="w-4 h-4" style={{ color: 'var(--text-goal-icon-hydration)' }} />
                     </div>
                     <p className="text-sm text-secondary">Freeze single portions for low-energy days</p>
                   </div>
                   <div className="flex items-center gap-3">
                     <div className="w-8 h-8 min-w-[2rem] rounded-lg flex items-center justify-center card-inner">
-                      <NotebookPen className="w-4 h-4 text-indigo-400" />
+                      <NotebookPen className="w-4 h-4" style={{ color: 'var(--text-goal-icon-success)' }} />
                     </div>
                     <p className="text-sm text-secondary">Note any new foods and how your gut reacts</p>
                   </div>
