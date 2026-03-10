@@ -764,20 +764,6 @@ export default function Home() {
   if (!isAuthenticated) {
     return (
       <div className="min-h-screen">
-        {/* Account Deleted Toast */}
-        {showAccountDeletedToast && (
-          <div className="fixed top-24 right-4 z-50 bg-red-100 text-red-600 px-6 py-3 rounded-lg shadow-lg flex items-center max-w-xs border border-red-600">
-            <span className="font-medium">Account deleted successfully!</span>
-            <button
-              onClick={() => setShowAccountDeletedToast(false)}
-              className="ml-3 text-red-600/80 hover:text-red-600"
-            >
-              <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
-              </svg>
-            </button>
-          </div>
-        )}
         <section className="pt-32 pb-12 sm:pt-40 md:pb-24 px-6">
           <div className="max-w-4xl mx-auto">
             <div className="text-center space-y-6 mb-12 md:mb-20">
@@ -974,11 +960,17 @@ export default function Home() {
     <div className="flex-1 flex flex-col min-h-0">
       {/* Toast Notification */}
       {showToast && (
-        <div className="fixed top-24 right-4 z-50 bg-green-100 text-green-600 px-6 py-3 rounded-lg shadow-lg flex items-center max-w-xs border border-green-600">
-          <span className="font-medium">Symptom entry added successfully!</span>
+        <div className="fixed top-24 right-4 z-50 rounded-xl shadow-lg flex items-center gap-3 px-4 py-3 max-w-sm" style={{ backgroundColor: 'var(--bg-dropdown)' }}>
+          <div className="flex-shrink-0 flex items-center justify-center">
+            <svg className="w-5 h-5 text-emerald-600 dark:text-emerald-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
+            </svg>
+          </div>
+          <span className="flex-1 text-sm font-medium font-roboto" style={{ color: 'var(--text-primary)' }}>Symptom log added successfully!</span>
           <button
             onClick={() => setShowToast(false)}
-            className="ml-3 text-green-600/80 hover:text-green-600"
+            className="flex-shrink-0 p-1 rounded-md hover:bg-black/5 dark:hover:bg-white/10 transition-colors"
+            style={{ color: 'var(--text-secondary)' }}
           >
             <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
@@ -989,11 +981,17 @@ export default function Home() {
 
       {/* Delete Toast Notification */}
       {showDeleteToast && (
-        <div className="fixed top-24 right-4 z-50 bg-red-100 text-red-600 px-6 py-3 rounded-lg shadow-lg flex items-center max-w-xs border border-red-600">
-          <span className="font-medium">Symptom entry deleted successfully!</span>
+        <div className="fixed top-24 right-4 z-50 rounded-xl shadow-lg flex items-center gap-3 px-4 py-3 max-w-sm" style={{ backgroundColor: 'var(--bg-dropdown)' }}>
+          <div className="flex-shrink-0 flex items-center justify-center">
+            <svg className="w-5 h-5 text-emerald-600 dark:text-emerald-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
+            </svg>
+          </div>
+          <span className="flex-1 text-sm font-medium font-roboto" style={{ color: 'var(--text-primary)' }}>Symptom log deleted successfully!</span>
           <button
             onClick={() => setShowDeleteToast(false)}
-            className="ml-3 text-red-600/80 hover:text-red-600"
+            className="flex-shrink-0 p-1 rounded-md hover:bg-black/5 dark:hover:bg-white/10 transition-colors"
+            style={{ color: 'var(--text-secondary)' }}
           >
             <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
@@ -1003,11 +1001,17 @@ export default function Home() {
       )}
 
       {showMedicationToast && (
-        <div className="fixed top-24 right-4 z-50 bg-pink-100 text-pink-600 px-6 py-3 rounded-lg shadow-lg flex items-center max-w-xs border border-pink-600">
-          <span className="font-medium">Medications entry added successfully!</span>
+        <div className="fixed top-24 right-4 z-50 rounded-xl shadow-lg flex items-center gap-3 px-4 py-3 max-w-sm" style={{ backgroundColor: 'var(--bg-dropdown)' }}>
+          <div className="flex-shrink-0 flex items-center justify-center">
+            <svg className="w-5 h-5 text-emerald-600 dark:text-emerald-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
+            </svg>
+          </div>
+          <span className="flex-1 text-sm font-medium font-roboto" style={{ color: 'var(--text-primary)' }}>Medication log added successfully!</span>
           <button
             onClick={() => setShowMedicationToast(false)}
-            className="ml-3 text-pink-600/80 hover:text-pink-600"
+            className="flex-shrink-0 p-1 rounded-md hover:bg-black/5 dark:hover:bg-white/10 transition-colors"
+            style={{ color: 'var(--text-secondary)' }}
           >
             <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
@@ -1017,11 +1021,17 @@ export default function Home() {
       )}
 
       {showMedicationDeleteToast && (
-        <div className="fixed top-24 right-4 z-50 bg-red-100 text-red-600 px-6 py-3 rounded-lg shadow-lg flex items-center max-w-xs border border-red-600">
-          <span className="font-medium">Medication entry deleted successfully!</span>
+        <div className="fixed top-24 right-4 z-50 rounded-xl shadow-lg flex items-center gap-3 px-4 py-3 max-w-sm" style={{ backgroundColor: 'var(--bg-dropdown)' }}>
+          <div className="flex-shrink-0 flex items-center justify-center">
+            <svg className="w-5 h-5 text-emerald-600 dark:text-emerald-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
+            </svg>
+          </div>
+          <span className="flex-1 text-sm font-medium font-roboto" style={{ color: 'var(--text-primary)' }}>Medication log deleted successfully!</span>
           <button
             onClick={() => setShowMedicationDeleteToast(false)}
-            className="ml-3 text-red-600/80 hover:text-red-600"
+            className="flex-shrink-0 p-1 rounded-md hover:bg-black/5 dark:hover:bg-white/10 transition-colors"
+            style={{ color: 'var(--text-secondary)' }}
           >
             <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
@@ -1031,11 +1041,17 @@ export default function Home() {
       )}
 
       {showAccountDeletedToast && (
-        <div className="fixed top-24 right-4 z-50 bg-red-100 text-red-600 px-6 py-3 rounded-lg shadow-lg flex items-center max-w-xs border border-red-600">
-          <span className="font-medium">Account deleted successfully!</span>
+        <div className="fixed top-24 right-4 z-50 rounded-xl shadow-lg flex items-center gap-3 px-4 py-3 max-w-sm" style={{ backgroundColor: 'var(--bg-dropdown)' }}>
+          <div className="flex-shrink-0 flex items-center justify-center">
+            <svg className="w-5 h-5 text-emerald-600 dark:text-emerald-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
+            </svg>
+          </div>
+          <span className="flex-1 text-sm font-medium font-roboto" style={{ color: 'var(--text-primary)' }}>Account deleted successfully!</span>
           <button
             onClick={() => setShowAccountDeletedToast(false)}
-            className="ml-3 text-red-600/80 hover:text-red-600"
+            className="flex-shrink-0 p-1 rounded-md hover:bg-black/5 dark:hover:bg-white/10 transition-colors"
+            style={{ color: 'var(--text-secondary)' }}
           >
             <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
@@ -1122,12 +1138,12 @@ export default function Home() {
                 </div>
               </div>
 
-              {/* Daily Tip */}
+              {/* Helpful Tips */}
               <div className="card order-[6] xl:order-none mb-6 xl:mb-0">
                 <div>
                   <h3 className="text-xl font-semibold font-source text-primary mb-3 flex items-center gap-2">
                     <Lightbulb className="w-5 h-5 flex-shrink-0 text-amber-500" />
-                    Daily Tip
+                    Helpful Tips
                   </h3>
                   <p className={`text-sm text-primary leading-relaxed sm:leading-normal transition-opacity duration-500 ${isFading ? 'opacity-0' : 'opacity-100'}`}>
                     {dailyTips[currentTipIndex]}

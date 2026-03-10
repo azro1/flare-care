@@ -49,25 +49,25 @@ export default function LearnPage() {
               <div className="space-y-3">
                 <div className="flex items-center gap-3">
                   <div className="w-8 h-8 min-w-[2rem] rounded-lg flex items-center justify-center card-inner">
-                    <NotebookPen className="w-4 h-4 text-emerald-600 dark:text-white" />
+                    <NotebookPen className="w-4 h-4 text-emerald-600 dark:[color:var(--text-goal-icon-success)]" />
                   </div>
                   <p className="text-sm text-secondary leading-relaxed">Keep a food diary to track triggers</p>
                 </div>
                 <div className="flex items-center gap-3">
                   <div className="w-8 h-8 min-w-[2rem] rounded-lg flex items-center justify-center card-inner">
-                    <CupSoda className="w-4 h-4 text-sky-600 dark:text-white" />
+                    <CupSoda className="w-4 h-4 text-sky-600 dark:[color:var(--text-goal-icon-hydration)]" />
                   </div>
                   <p className="text-sm text-secondary leading-relaxed">Stay hydrated throughout the day</p>
                 </div>
                 <div className="flex items-center gap-3">
                   <div className="w-8 h-8 min-w-[2rem] rounded-lg flex items-center justify-center card-inner">
-                    <Cookie className="w-4 h-4 text-amber-600 dark:text-white" />
+                    <Cookie className="w-4 h-4 text-amber-600 dark:[color:var(--text-icon-more-foods)]" />
                   </div>
-                  <p className="text-sm sm:text-base text-secondary leading-relaxed">Eat smaller, frequent meals</p>
+                  <p className="text-sm text-secondary leading-relaxed">Eat smaller, frequent meals</p>
                 </div>
                 <div className="flex items-center gap-3">
                   <div className="w-8 h-8 min-w-[2rem] rounded-lg flex items-center justify-center card-inner">
-                    <Stethoscope className="w-4 h-4 text-indigo-400 dark:text-white" />
+                    <Stethoscope className="w-4 h-4 text-indigo-400 dark:[color:var(--text-icon-more-meds)]" />
                   </div>
                   <p className="text-sm text-secondary leading-relaxed">Follow your healthcare team's advice</p>
                 </div>
@@ -219,7 +219,7 @@ export default function LearnPage() {
         <div className="grid gap-4 sm:gap-6 md:grid-cols-3">
           <div className="card-inner p-4 sm:p-6 text-center">
             <div className="w-16 h-16 rounded-full flex items-center justify-center mx-auto mb-4 bg-yellow-100 dark:bg-[var(--bg-card)]">
-              <Pizza className="w-8 h-8 text-amber-500 dark:text-white" />
+              <Pizza className="w-8 h-8 text-amber-500 dark:[color:var(--text-icon-more-foods)]" />
             </div>
             <p className="text-sm sm:text-base text-secondary font-sans break-words leading-relaxed">
               Spicy foods, dairy, high-fiber foods, alcohol, and caffeine can trigger symptoms
@@ -227,8 +227,8 @@ export default function LearnPage() {
           </div>
 
           <div className="card-inner p-4 sm:p-6 text-center">
-            <div className="w-16 h-16 rounded-full flex items-center justify-center mx-auto mb-4 bg-cyan-100 dark:bg-[var(--bg-card)]">
-              <Brain className="w-8 h-8 text-cyan-600 dark:text-white" />
+            <div className="w-16 h-16 rounded-full flex items-center justify-center mx-auto mb-4 bg-red-100 dark:bg-[var(--bg-card)]">
+              <Brain className="w-8 h-8 text-red-600 dark:text-red-400" />
             </div>
             <p className="text-sm sm:text-base text-secondary font-sans break-words leading-relaxed">
               Emotional stress and anxiety can worsen symptoms and trigger flare-ups
@@ -236,8 +236,8 @@ export default function LearnPage() {
           </div>
 
           <div className="card-inner p-4 sm:p-6 text-center">
-            <div className="w-16 h-16 rounded-full flex items-center justify-center mx-auto mb-4 bg-green-100 dark:bg-[var(--bg-card)]">
-              <Bug className="w-8 h-8 text-emerald-600 dark:text-white" />
+            <div className="w-16 h-16 rounded-full flex items-center justify-center mx-auto mb-4 bg-stone-200 dark:bg-[var(--bg-card)]">
+              <Bug className="w-8 h-8 text-stone-600 dark:text-stone-400" />
             </div>
             <p className="text-sm sm:text-base text-secondary font-sans break-words leading-relaxed">
               Viral or bacterial infections can trigger or worsen IBD symptoms

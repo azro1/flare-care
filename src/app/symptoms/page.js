@@ -1231,7 +1231,7 @@ function SymptomsPageContent() {
   }
 
   return (
-    <div className={`max-w-4xl w-full mx-auto sm:px-4 md:px-6 lg:px-8 min-w-0 flex flex-col justify-center sm:flex-grow ${currentStep > 0 ? 'pb-20 lg:pb-0' : ''}`}>
+    <div className={`symptoms-wizard max-w-4xl w-full mx-auto sm:px-4 md:px-6 lg:px-8 min-w-0 flex flex-col justify-center sm:flex-grow ${currentStep > 0 ? 'pb-20 lg:pb-0' : ''}`}>
       {/* Header: Back when needed, then title - hide on landing */}
       {currentStep > 0 && (
         <div className="pt-6 md:pt-0 mb-8">

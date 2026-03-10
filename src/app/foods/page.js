@@ -153,21 +153,27 @@ export default function Foods() {
                 <div className="space-y-4">
                   <div className="card-inner p-4">
                     <h4 className="font-medium text-primary mb-2 flex items-center gap-2">
-                      <CheckCircle className="w-5 h-5 text-emerald-600 dark:text-white flex-shrink-0" />
+                      <div className="w-8 h-8 rounded-lg flex items-center justify-center bg-white dark:bg-[var(--bg-card-inner)] flex-shrink-0">
+                        <CheckCircle className="w-5 h-5 text-emerald-600" />
+                      </div>
                       Generally Safe
                     </h4>
                     <p className="text-sm text-secondary">Bananas, rice, applesauce, toast, oatmeal, lean proteins</p>
                   </div>
                   <div className="card-inner p-4">
                     <h4 className="font-medium text-primary mb-2 flex items-center gap-2">
-                      <AlertTriangle className="w-5 h-5 text-amber-600 dark:text-white flex-shrink-0" />
+                      <div className="w-8 h-8 rounded-lg flex items-center justify-center bg-white dark:bg-[var(--bg-card-inner)] flex-shrink-0">
+                        <AlertTriangle className="w-5 h-5 text-amber-600" />
+                      </div>
                       Try Carefully
                     </h4>
                     <p className="text-sm text-secondary">Dairy, high-fiber foods, spicy foods, raw vegetables</p>
                   </div>
                   <div className="card-inner p-4">
                     <h4 className="font-medium text-primary mb-2 flex items-center gap-2">
-                      <XCircle className="w-5 h-5 text-red-500 dark:text-white flex-shrink-0" />
+                      <div className="w-8 h-8 rounded-lg flex items-center justify-center bg-white dark:bg-[var(--bg-card-inner)] flex-shrink-0">
+                        <XCircle className="w-5 h-5 text-red-500" />
+                      </div>
                       Avoid During Flares
                     </h4>
                     <p className="text-sm text-secondary">Nuts, seeds, popcorn, alcohol, caffeine, fried foods</p>
@@ -181,25 +187,25 @@ export default function Foods() {
                 <div className="space-y-3">
                   <div className="flex items-center gap-3">
                     <div className="w-8 h-8 min-w-[2rem] rounded-lg flex items-center justify-center card-inner">
-                      <UtensilsCrossed className="w-4 h-4 text-emerald-600 dark:text-white" />
+                      <UtensilsCrossed className="w-4 h-4 text-emerald-600" />
                     </div>
                     <p className="text-sm text-secondary">Pair carbs with protein to steady energy</p>
                   </div>
                   <div className="flex items-center gap-3">
                     <div className="w-8 h-8 min-w-[2rem] rounded-lg flex items-center justify-center card-inner">
-                      <Soup className="w-4 h-4 text-amber-600 dark:text-white" />
+                      <Soup className="w-4 h-4 text-amber-600" />
                     </div>
                     <p className="text-sm text-secondary">Keep simple foods ready for flare days</p>
                   </div>
                   <div className="flex items-center gap-3">
                     <div className="w-8 h-8 min-w-[2rem] rounded-lg flex items-center justify-center card-inner">
-                      <Snowflake className="w-4 h-4 text-blue-500 dark:text-white" />
+                      <Snowflake className="w-4 h-4 text-blue-500" />
                     </div>
                     <p className="text-sm text-secondary">Freeze single portions for low-energy days</p>
                   </div>
                   <div className="flex items-center gap-3">
                     <div className="w-8 h-8 min-w-[2rem] rounded-lg flex items-center justify-center card-inner">
-                      <NotebookPen className="w-4 h-4 text-indigo-400 dark:text-white" />
+                      <NotebookPen className="w-4 h-4 text-indigo-400" />
                     </div>
                     <p className="text-sm text-secondary">Note any new foods and how your gut reacts</p>
                   </div>

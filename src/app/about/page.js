@@ -9,12 +9,14 @@ export default function About() {
     <div className="w-full sm:px-4 md:px-6 min-w-0">
       <div className="max-w-5xl mx-auto">
       <div className="text-center mb-5 sm:mb-6 card">
+        <div>
         <h1 className="text-2xl sm:text-3xl lg:text-4xl font-bold font-source text-primary mb-4">
           FlareCare
         </h1>
         <p className="text-sm sm:text-base lg:text-lg font-roboto text-secondary leading-relaxed">
           A personal journey turned into a tool for the community
         </p>
+        </div>
       </div>
 
       <div className="grid md:grid-cols-2 gap-5 mb-5 sm:gap-6 sm:mb-6">

@@ -477,7 +477,7 @@ function MedicationTrackingWizard() {
               <button
                 onClick={addMissedMedication}
                 disabled={!formData.missedMedicationsList[formData.missedMedicationsList.length - 1]?.medication || !formData.missedMedicationsList[formData.missedMedicationsList.length - 1]?.date || !formData.missedMedicationsList[formData.missedMedicationsList.length - 1]?.timeOfDay}
-                className={`px-4 py-2 text-sm font-semibold rounded-lg transition-colors whitespace-nowrap ${
+                className={`px-4 py-2 text-sm font-medium rounded-lg transition-colors whitespace-nowrap ${
                   !formData.missedMedicationsList[formData.missedMedicationsList.length - 1]?.medication || !formData.missedMedicationsList[formData.missedMedicationsList.length - 1]?.date || !formData.missedMedicationsList[formData.missedMedicationsList.length - 1]?.timeOfDay
                     ? 'button-disabled'
                     : 'button-cadet'
@@ -499,36 +499,34 @@ function MedicationTrackingWizard() {
                       <span className="text-white text-sm font-bold leading-none">×</span>
                     </button>
                   )}
-                  <div className="card p-4">
-                    <div className="flex flex-col sm:flex-row gap-3">
-                      <input
-                        type="text"
-                        placeholder="Medication name"
-                        value={item.medication}
-                        onChange={(e) => updateMissedMedication(index, 'medication', e.target.value)}
-                        className="input-field-wizard w-full sm:flex-1"
-                      />
-                      <DatePicker
-                        selected={item.date}
-                        onChange={(date) => updateMissedMedication(index, 'date', date)}
-                        placeholderText="Select date missed"
-                        className="input-field-wizard w-full sm:flex-1"
-                        dateFormat="dd/MM/yyyy"
-                        maxDate={new Date()}
-                        enableTabLoop={false}
-                      />
-                      <select
-                        value={item.timeOfDay}
-                        onChange={(e) => updateMissedMedication(index, 'timeOfDay', e.target.value)}
-                        className={`input-field-wizard w-full sm:flex-1 ${item.timeOfDay ? 'has-value' : 'placeholder'}`}
-                      >
+                  <div className="flex flex-col sm:flex-row gap-3">
+                    <input
+                      type="text"
+                      placeholder="Medication name"
+                      value={item.medication}
+                      onChange={(e) => updateMissedMedication(index, 'medication', e.target.value)}
+                      className="input-field-wizard w-full sm:flex-1 min-w-0"
+                    />
+                    <DatePicker
+                      selected={item.date}
+                      onChange={(date) => updateMissedMedication(index, 'date', date)}
+                      placeholderText="Select date missed"
+                      className="input-field-wizard w-full sm:flex-1 min-w-0"
+                      dateFormat="dd/MM/yyyy"
+                      maxDate={new Date()}
+                      enableTabLoop={false}
+                    />
+                    <select
+                      value={item.timeOfDay}
+                      onChange={(e) => updateMissedMedication(index, 'timeOfDay', e.target.value)}
+                      className={`input-field-wizard w-full sm:flex-1 min-w-0 ${item.timeOfDay ? 'has-value' : 'placeholder'}`}
+                    >
                         <option value="">Select time of day</option>
                         <option value="Morning">Morning</option>
                         <option value="Afternoon">Afternoon</option>
                         <option value="Evening">Evening</option>
                         <option value="Night">Night</option>
                       </select>
-                    </div>
                   </div>
                 </div>
               ))}
@@ -619,7 +617,7 @@ function MedicationTrackingWizard() {
               <button
                 onClick={addNsaid}
                 disabled={!formData.nsaidList[formData.nsaidList.length - 1]?.medication || !formData.nsaidList[formData.nsaidList.length - 1]?.date || !formData.nsaidList[formData.nsaidList.length - 1]?.timeOfDay || !formData.nsaidList[formData.nsaidList.length - 1]?.dosage}
-                className={`px-4 py-2 text-sm font-semibold rounded-lg transition-colors whitespace-nowrap ${
+                className={`px-4 py-2 text-sm font-medium rounded-lg transition-colors whitespace-nowrap ${
                   !formData.nsaidList[formData.nsaidList.length - 1]?.medication || !formData.nsaidList[formData.nsaidList.length - 1]?.date || !formData.nsaidList[formData.nsaidList.length - 1]?.timeOfDay || !formData.nsaidList[formData.nsaidList.length - 1]?.dosage
                     ? 'button-disabled'
                     : 'button-cadet'
@@ -641,48 +639,44 @@ function MedicationTrackingWizard() {
                       <span className="text-white text-sm font-bold leading-none">×</span>
                     </button>
                   )}
-                  <div className="card p-4 space-y-3">
-                    <div className="flex flex-col sm:flex-row gap-3">
-                      <input
-                        type="text"
-                        placeholder="e.g., Ibuprofen"
-                        value={item.medication}
-                        onChange={(e) => updateNsaid(index, 'medication', e.target.value)}
-                        className="input-field-wizard w-full sm:flex-1"
-                      />
-                      <DatePicker
-                        selected={item.date}
-                        onChange={(date) => updateNsaid(index, 'date', date)}
-                        placeholderText="Select date taken"
-                        className="input-field-wizard w-full sm:flex-1"
-                        dateFormat="dd/MM/yyyy"
-                        maxDate={new Date()}
-                        enableTabLoop={false}
-                      />
-                      <select
-                        value={item.timeOfDay}
-                        onChange={(e) => updateNsaid(index, 'timeOfDay', e.target.value)}
-                        className={`input-field-wizard w-full sm:flex-1 ${item.timeOfDay ? 'has-value' : 'placeholder'}`}
-                      >
-                        <option value="">Select time of day</option>
-                        <option value="Morning">Morning</option>
-                        <option value="Afternoon">Afternoon</option>
-                        <option value="Evening">Evening</option>
-                        <option value="Night">Night</option>
-                      </select>
-                    </div>
-                    <div className="flex items-center gap-2 max-w-xs">
-                      <input
-                        type="text"
-                        inputMode="numeric"
-                        placeholder="e.g. 200"
-                        value={item.dosage}
-                        onChange={(e) => updateNsaid(index, 'dosage', e.target.value)}
-                        maxLength={5}
-                        className="input-field-wizard flex-1 min-w-0"
-                      />
-                      <span className="text-primary font-roboto shrink-0">mg</span>
-                    </div>
+                  <div className="flex flex-col sm:flex-row gap-3">
+                    <input
+                      type="text"
+                      placeholder="e.g., Ibuprofen"
+                      value={item.medication}
+                      onChange={(e) => updateNsaid(index, 'medication', e.target.value)}
+                      className="input-field-wizard w-full sm:flex-1 min-w-0"
+                    />
+                    <DatePicker
+                      selected={item.date}
+                      onChange={(date) => updateNsaid(index, 'date', date)}
+                      placeholderText="Select date taken"
+                      className="input-field-wizard w-full sm:flex-1 min-w-0"
+                      dateFormat="dd/MM/yyyy"
+                      maxDate={new Date()}
+                      enableTabLoop={false}
+                    />
+                    <select
+                      value={item.timeOfDay}
+                      onChange={(e) => updateNsaid(index, 'timeOfDay', e.target.value)}
+                      className={`input-field-wizard w-full sm:flex-1 min-w-0 ${item.timeOfDay ? 'has-value' : 'placeholder'}`}
+                    >
+                      <option value="">Select time of day</option>
+                      <option value="Morning">Morning</option>
+                      <option value="Afternoon">Afternoon</option>
+                      <option value="Evening">Evening</option>
+                      <option value="Night">Night</option>
+                    </select>
+                    <input
+                      type="text"
+                      inputMode="numeric"
+                      placeholder="10mg"
+                      value={item.dosage}
+                      onChange={(e) => updateNsaid(index, 'dosage', e.target.value)}
+                      maxLength={5}
+                      className="input-field-wizard w-full sm:w-20 flex-1 sm:flex-initial min-w-0"
+                      autoComplete="off"
+                    />
                   </div>
                 </div>
               ))}
@@ -773,7 +767,7 @@ function MedicationTrackingWizard() {
               <button
                 onClick={addAntibiotic}
                 disabled={!formData.antibioticList[formData.antibioticList.length - 1]?.medication || !formData.antibioticList[formData.antibioticList.length - 1]?.date || !formData.antibioticList[formData.antibioticList.length - 1]?.timeOfDay || !formData.antibioticList[formData.antibioticList.length - 1]?.dosage}
-                className={`px-4 py-2 text-sm font-semibold rounded-lg transition-colors whitespace-nowrap ${
+                className={`px-4 py-2 text-sm font-medium rounded-lg transition-colors whitespace-nowrap ${
                   !formData.antibioticList[formData.antibioticList.length - 1]?.medication || !formData.antibioticList[formData.antibioticList.length - 1]?.date || !formData.antibioticList[formData.antibioticList.length - 1]?.timeOfDay || !formData.antibioticList[formData.antibioticList.length - 1]?.dosage
                     ? 'button-disabled'
                     : 'button-cadet'
@@ -795,48 +789,44 @@ function MedicationTrackingWizard() {
                       <span className="text-white text-sm font-bold leading-none">×</span>
                     </button>
                   )}
-                  <div className="card p-4 space-y-3">
-                    <div className="flex flex-col sm:flex-row gap-3">
-                      <input
-                        type="text"
-                        placeholder="e.g., Amoxicillin"
-                        value={item.medication}
-                        onChange={(e) => updateAntibiotic(index, 'medication', e.target.value)}
-                        className="input-field-wizard w-full sm:flex-1"
-                      />
-                      <DatePicker
-                        selected={item.date}
-                        onChange={(date) => updateAntibiotic(index, 'date', date)}
-                        placeholderText="Select date taken"
-                        className="input-field-wizard w-full sm:flex-1"
-                        dateFormat="dd/MM/yyyy"
-                        maxDate={new Date()}
-                        enableTabLoop={false}
-                      />
-                      <select
-                        value={item.timeOfDay}
-                        onChange={(e) => updateAntibiotic(index, 'timeOfDay', e.target.value)}
-                        className={`input-field-wizard w-full sm:flex-1 ${item.timeOfDay ? 'has-value' : 'placeholder'}`}
-                      >
-                        <option value="">Select time of day</option>
-                        <option value="Morning">Morning</option>
-                        <option value="Afternoon">Afternoon</option>
-                        <option value="Evening">Evening</option>
-                        <option value="Night">Night</option>
-                      </select>
-                    </div>
-                    <div className="flex items-center gap-2 max-w-xs">
-                      <input
-                        type="text"
-                        inputMode="numeric"
-                        placeholder="e.g. 500"
-                        value={item.dosage}
-                        onChange={(e) => updateAntibiotic(index, 'dosage', e.target.value)}
-                        maxLength={5}
-                        className="input-field-wizard flex-1 min-w-0"
-                      />
-                      <span className="text-primary font-roboto shrink-0">mg</span>
-                    </div>
+                  <div className="flex flex-col sm:flex-row gap-3">
+                    <input
+                      type="text"
+                      placeholder="e.g., Amoxicillin"
+                      value={item.medication}
+                      onChange={(e) => updateAntibiotic(index, 'medication', e.target.value)}
+                      className="input-field-wizard w-full sm:flex-1 min-w-0"
+                    />
+                    <DatePicker
+                      selected={item.date}
+                      onChange={(date) => updateAntibiotic(index, 'date', date)}
+                      placeholderText="Select date taken"
+                      className="input-field-wizard w-full sm:flex-1 min-w-0"
+                      dateFormat="dd/MM/yyyy"
+                      maxDate={new Date()}
+                      enableTabLoop={false}
+                    />
+                    <select
+                      value={item.timeOfDay}
+                      onChange={(e) => updateAntibiotic(index, 'timeOfDay', e.target.value)}
+                      className={`input-field-wizard w-full sm:flex-1 min-w-0 ${item.timeOfDay ? 'has-value' : 'placeholder'}`}
+                    >
+                      <option value="">Select time of day</option>
+                      <option value="Morning">Morning</option>
+                      <option value="Afternoon">Afternoon</option>
+                      <option value="Evening">Evening</option>
+                      <option value="Night">Night</option>
+                    </select>
+                    <input
+                      type="text"
+                      inputMode="numeric"
+                      placeholder="10mg"
+                      value={item.dosage}
+                      onChange={(e) => updateAntibiotic(index, 'dosage', e.target.value)}
+                      maxLength={5}
+                      className="input-field-wizard w-full sm:w-20 flex-1 sm:flex-initial min-w-0"
+                      autoComplete="off"
+                    />
                   </div>
                 </div>
               ))}

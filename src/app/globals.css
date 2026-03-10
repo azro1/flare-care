@@ -155,6 +155,7 @@
     --text-secondary: #d1d5db;
     --text-tertiary: #9ca3af;
     --text-muted: #9ca3af;
+    --text-placeholder: var(--border-input-dark); /* Dark mode - matches input-field-wizard border */
     --text-white: #ffffff;
     --border-primary: #353940;
     --border-secondary: #4f5459;
@@ -377,18 +378,22 @@ select.input-field-wizard:focus {
     outline: none !important;
 }
 
-/* Dark mode placeholder – neutral gray (no blue tint) for all inputs */
+/* Dark mode placeholder – uses --text-placeholder for consistent styling */
 .dark input::placeholder,
 .dark textarea::placeholder {
-    color: var(--text-tertiary) !important;
+    color: var(--text-placeholder) !important;
 }
 
 .dark .input-field-wizard::placeholder {
-    color: var(--text-tertiary) !important;
+    color: var(--text-placeholder) !important;
 }
 
 .dark select.input-field-wizard.placeholder {
-    color: var(--text-tertiary) !important;
+    color: var(--text-placeholder) !important;
+}
+
+.dark select.input-field-wizard {
+    background-image: url("data:image/svg+xml,%3csvg xmlns='http://www.w3.org/2000/svg' fill='none' viewBox='0 0 20 20'%3e%3cpath stroke='%23555961' stroke-linecap='round' stroke-linejoin='round' stroke-width='1.5' d='m6 8 4 4 4-4'/%3e%3c/svg%3e") !important;
 }
 
 select.input-field-wizard option {
@@ -404,6 +409,18 @@ select.input-field-wizard option {
 
 select.input-field-wizard option[value=""] {
     color: var(--text-secondary) !important;
+}
+
+/* Symptoms wizard: ensure all inputs use same background as input-field-wizard */
+.symptoms-wizard input.input-field-wizard,
+.symptoms-wizard textarea.input-field-wizard,
+.symptoms-wizard select.input-field-wizard {
+    background-color: var(--bg-input-dark) !important;
+}
+.symptoms-wizard input.input-field-wizard:focus,
+.symptoms-wizard textarea.input-field-wizard:focus,
+.symptoms-wizard select.input-field-wizard:focus {
+    background-color: var(--bg-input-dark) !important;
 }
 
   .icon-container {
@@ -547,9 +564,9 @@ select.input-field-wizard option[value=""] {
   .dark input.input-field-wizard:-webkit-autofill:hover,
   .dark input.input-field-wizard:-webkit-autofill:focus,
   .dark input.input-field-wizard:-webkit-autofill:active {
-    -webkit-box-shadow: 0 0 0 1000px #2a2d34 inset !important;
+    -webkit-box-shadow: 0 0 0 1000px var(--bg-input-dark) inset !important;
     -webkit-text-fill-color: var(--text-primary) !important;
-    background-color: #2a2d34 !important;
+    background-color: var(--bg-input-dark) !important;
     border-radius: 0.5rem !important;
   }
   
@@ -1198,7 +1215,7 @@ select.input-field-wizard option[value=""] {
 }
 
 .dark .react-datepicker__input-container input::placeholder {
-  color: var(--text-tertiary) !important;
+  color: var(--text-placeholder) !important;
 }
 
 .dark .react-datepicker__input-container input:focus {
@@ -1210,7 +1227,7 @@ select.input-field-wizard option[value=""] {
 }
 
 .dark .react-datepicker__input-container input.input-field-wizard {
-  background-color: #2a2d34 !important;
+  background-color: var(--bg-input-dark) !important;
   color: var(--text-primary) !important;
   border-color: var(--border-input-dark) !important;
   box-shadow: none !important;
@@ -1218,7 +1235,7 @@ select.input-field-wizard option[value=""] {
 }
 
 .dark .react-datepicker__input-container input.input-field-wizard:focus {
-  background-color: #2a2d34 !important;
+  background-color: var(--bg-input-dark) !important;
   color: var(--text-primary) !important;
   border-color: var(--border-input-dark) !important;
   box-shadow: none !important;
@@ -1229,15 +1246,15 @@ select.input-field-wizard option[value=""] {
 .dark .react-datepicker__input-container input.input-field-wizard:-webkit-autofill:hover,
 .dark .react-datepicker__input-container input.input-field-wizard:-webkit-autofill:focus,
 .dark .react-datepicker__input-container input.input-field-wizard:-webkit-autofill:active {
-  -webkit-box-shadow: 0 0 0 1000px #2a2d34 inset !important;
+  -webkit-box-shadow: 0 0 0 1000px var(--bg-input-dark) inset !important;
   -webkit-text-fill-color: var(--text-primary) !important;
-  background-color: #2a2d34 !important;
+  background-color: var(--bg-input-dark) !important;
   border-radius: 0.5rem !important;
 }
 
 .dark input.input-field-wizard,
 .dark textarea.input-field-wizard {
-  background-color: #2a2d34 !important;
+  background-color: var(--bg-input-dark) !important;
   color: var(--text-primary) !important;
   border-color: var(--border-input-dark) !important;
   box-shadow: none !important;
@@ -1246,7 +1263,7 @@ select.input-field-wizard option[value=""] {
 
 .dark input.input-field-wizard:focus,
 .dark textarea.input-field-wizard:focus {
-  background-color: #2a2d34 !important;
+  background-color: var(--bg-input-dark) !important;
   color: var(--text-primary) !important;
   border-color: var(--border-input-dark) !important;
   box-shadow: none !important;
