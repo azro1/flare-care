@@ -764,6 +764,26 @@ export default function Home() {
   if (!isAuthenticated) {
     return (
       <div className="min-h-screen">
+        {/* Account deleted toast - must be here since we return early when unauthenticated */}
+        {showAccountDeletedToast && (
+          <div className="fixed top-24 right-4 z-50 rounded-xl shadow-lg flex items-center gap-3 px-4 py-3 max-w-sm" style={{ backgroundColor: 'var(--bg-dropdown)' }}>
+            <div className="flex-shrink-0 flex items-center justify-center">
+              <svg className="w-5 h-5 text-emerald-600 dark:text-emerald-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
+              </svg>
+            </div>
+            <span className="flex-1 text-sm font-medium font-roboto" style={{ color: 'var(--text-primary)' }}>Account deleted successfully!</span>
+            <button
+              onClick={() => setShowAccountDeletedToast(false)}
+              className="flex-shrink-0 p-1 rounded-md hover:bg-black/5 dark:hover:bg-white/10 transition-colors"
+              style={{ color: 'var(--text-secondary)' }}
+            >
+              <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+              </svg>
+            </button>
+          </div>
+        )}
         <section className="pt-32 pb-12 sm:pt-40 md:pb-24 px-6">
           <div className="max-w-4xl mx-auto">
             <div className="text-center space-y-6 mb-12 md:mb-20">
@@ -1589,8 +1609,7 @@ export default function Home() {
                         <Activity className="w-5 h-5 flex-shrink-0" style={{ color: 'var(--text-cadet-blue)' }} />
                         <div className="flex-1 min-w-0 overflow-hidden">
                           <p
-                            className="text-sm font-medium text-primary min-w-0 line-clamp-2 overflow-hidden"
-                            style={{ display: '-webkit-box', WebkitLineClamp: 2, WebkitBoxOrient: 'vertical' }}
+                            className="text-sm font-medium text-primary min-w-0 truncate"
                             title={activity.title}
                           >
                             {activity.title}

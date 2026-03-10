@@ -1429,8 +1429,8 @@ function ReportsPageContent() {
           <div className="space-y-4">
             {reportData.medications.map((med, index) => (
               <div key={index} className="card-inner p-4">
-                <div>
-                  <h5 className="font-medium font-roboto text-primary text-sm sm:text-base">{med.name}</h5>
+                <div className="min-w-0 overflow-hidden">
+                  <h5 className="font-medium font-roboto text-primary text-sm sm:text-base truncate" title={med.name}>{med.name}</h5>
                   {med.dosage && (
                     <div className="mt-2">
                       <span className="text-xs text-secondary font-roboto">
@@ -1488,8 +1488,8 @@ function ReportsPageContent() {
                         const index = listPages.missedMeds * REPORT_PAGE_SIZE + idx
                         return (
                           <div key={index} className="card-inner p-4">
-                            <div className="min-w-0">
-                              <h5 className="font-medium font-roboto text-primary text-sm sm:text-base break-words" title={item.medication}>{item.medication}</h5>
+                            <div className="min-w-0 overflow-hidden">
+                              <h5 className="font-medium font-roboto text-primary text-sm sm:text-base truncate" title={item.medication}>{item.medication}</h5>
                               <div className="mt-2 flex flex-col gap-1">
                                 <div className="text-sm text-secondary font-roboto">
                                   <span className="font-medium">Date:</span> {item.date ? formatUKDate(item.date) : 'Not specified'}
@@ -1540,8 +1540,8 @@ function ReportsPageContent() {
                         const index = listPages.nsaids * REPORT_PAGE_SIZE + idx
                         return (
                           <div key={index} className="card-inner p-4">
-                            <div className="min-w-0">
-                              <h5 className="font-medium font-roboto text-primary text-sm sm:text-base break-words" title={item.medication}>{item.medication}</h5>
+                            <div className="min-w-0 overflow-hidden">
+                              <h5 className="font-medium font-roboto text-primary text-sm sm:text-base truncate" title={item.medication}>{item.medication}</h5>
                               <div className="mt-2 flex flex-col gap-1 min-w-0">
                                 <div className="text-sm text-secondary font-roboto">
                                   <span className="font-medium">Date:</span> {item.date ? formatUKDate(item.date) : 'Not specified'}
@@ -1597,8 +1597,8 @@ function ReportsPageContent() {
                         const index = listPages.antibiotics * REPORT_PAGE_SIZE + idx
                         return (
                           <div key={index} className="card-inner p-4">
-                            <div className="min-w-0">
-                              <h5 className="font-medium font-roboto text-primary text-sm sm:text-base break-words" title={item.medication}>{item.medication}</h5>
+                            <div className="min-w-0 overflow-hidden">
+                              <h5 className="font-medium font-roboto text-primary text-sm sm:text-base truncate" title={item.medication}>{item.medication}</h5>
                               <div className="mt-2 flex flex-col gap-1 min-w-0">
                                 <div className="text-sm text-secondary font-roboto">
                                   <span className="font-medium">Date:</span> {item.date ? formatUKDate(item.date) : 'Not specified'}

@@ -2233,9 +2233,9 @@ function SymptomsPageContent() {
                   )}
                 </div>
                 {formData.bathroom_frequency_changed === 'yes' && formData.bathroom_frequency_change_details && (
-                  <div className="pt-3 border-t min-w-0" style={{borderColor: 'var(--border-primary)'}}>
+                  <div className="pt-3 border-t min-w-0 overflow-hidden" style={{borderColor: 'var(--border-primary)'}}>
                     <span className="text-sm text-cadet-blue block mb-1">Change Description</span>
-                    <span className="text-sm sm:text-base font-medium text-primary line-clamp-2 block" title={formData.bathroom_frequency_change_details}>{formData.bathroom_frequency_change_details}</span>
+                    <span className="text-sm sm:text-base font-medium text-primary truncate block" title={formData.bathroom_frequency_change_details}>{formData.bathroom_frequency_change_details}</span>
                   </div>
                 )}
               </div>
@@ -2252,9 +2252,9 @@ function SymptomsPageContent() {
                       <span className="text-sm sm:text-base font-medium text-primary">{formData.smoking ? 'Yes' : 'No'}</span>
                     </div>
                     {formData.smoking && formData.smoking_details && (
-                      <div className="min-w-0">
+                      <div className="min-w-0 overflow-hidden">
                         <span className="text-sm text-cadet-blue block mb-1">Smoking Habits</span>
-                        <span className="text-sm sm:text-base font-medium text-primary line-clamp-2 block" title={formData.smoking_details}>{formData.smoking_details}</span>
+                        <span className="text-sm sm:text-base font-medium text-primary truncate block" title={formData.smoking_details}>{formData.smoking_details}</span>
                       </div>
                     )}
                     <div>
@@ -2318,10 +2318,10 @@ function SymptomsPageContent() {
 
             {/* Notes */}
             {formData.notes && (
-              <div className="card border min-w-0" style={{borderColor: 'var(--border-card)'}}>
+              <div className="card border min-w-0 overflow-hidden" style={{borderColor: 'var(--border-card)'}}>
                 <h3 className="text-sm sm:text-lg font-semibold text-cadet-blue mb-4 pb-4 border-b" style={{borderColor: 'var(--border-primary)'}}>Notes</h3>
-                <div className="min-w-0">
-                  <p className="text-sm sm:text-base font-medium text-primary line-clamp-3" title={formData.notes}>{formData.notes}</p>
+                <div className="min-w-0 overflow-hidden">
+                  <p className="text-sm sm:text-base font-medium text-primary truncate" title={formData.notes}>{formData.notes}</p>
                 </div>
               </div>
             )}
