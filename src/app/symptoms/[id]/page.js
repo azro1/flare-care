@@ -204,7 +204,7 @@ function SymptomDetailContent() {
           <div className="card min-w-0 overflow-hidden">
             <h2 className="text-xl font-semibold font-source text-primary mb-3 sm:mb-4">Timeline</h2>
             <div>
-                <div className={`flex items-center justify-between gap-4 min-w-0 overflow-hidden ${!symptom.isOngoing && symptom.symptomEndDate ? 'pb-4 border-b' : ''}`} style={{ borderColor: 'var(--border-card-inner)' }}>
+                <div className={`flex items-center justify-between gap-4 min-w-0 overflow-hidden ${!symptom.isOngoing && symptom.symptomEndDate ? 'pb-4 border-b' : ''}`} style={{ borderColor: 'var(--separator-card)' }}>
                   <div className="flex items-center gap-3">
                     <div className="w-2.5 h-2.5 bg-emerald-500 rounded-full flex-shrink-0"></div>
                     <span className="text-sm sm:text-base font-medium text-primary font-roboto">Started</span>
@@ -229,37 +229,37 @@ function SymptomDetailContent() {
           <div className="card min-w-0 overflow-hidden">
             <h2 className="text-xl font-semibold font-source text-primary mb-3 sm:mb-4">Details</h2>
             <div className="space-y-0 [&>*:last-child]:pb-0">
-                <div className="flex justify-between items-center gap-4 pt-0 pb-4 border-b min-w-0 overflow-hidden" style={{ borderColor: 'var(--border-card-inner)' }}>
+                <div className="flex justify-between items-center gap-4 pt-0 pb-4 border-b min-w-0 overflow-hidden" style={{ borderColor: 'var(--separator-card)' }}>
                   <span className="text-sm sm:text-base text-secondary font-roboto shrink-0">Bathroom frequency</span>
                   <span className="text-sm sm:text-base font-medium text-primary font-roboto min-w-0 break-words text-right">{symptom.normal_bathroom_frequency || 'Not set'} times/day</span>
                 </div>
                 {symptom.bathroom_frequency_changed && (
                   <>
-                    <div className={`flex justify-between items-center gap-4 py-4 min-w-0 overflow-hidden ${symptom.bathroom_frequency_changed !== 'yes' || !symptom.bathroom_frequency_change_details ? 'border-b' : ''}`} style={{ borderColor: 'var(--border-card-inner)' }}>
+                    <div className={`flex justify-between items-center gap-4 py-4 min-w-0 overflow-hidden ${symptom.bathroom_frequency_changed !== 'yes' || !symptom.bathroom_frequency_change_details ? 'border-b' : ''}`} style={{ borderColor: 'var(--separator-card)' }}>
                       <span className="text-sm sm:text-base text-secondary font-roboto shrink-0">Frequency changed</span>
                       <span className="text-sm sm:text-base font-medium text-primary font-roboto min-w-0 break-words text-right">{symptom.bathroom_frequency_changed === 'yes' ? 'Yes' : 'No'}</span>
                     </div>
                     {symptom.bathroom_frequency_changed === 'yes' && symptom.bathroom_frequency_change_details && (
-                      <div className="py-4 border-b min-w-0 overflow-hidden" style={{ borderColor: 'var(--border-card-inner)' }}>
+                      <div className="py-4 border-b min-w-0 overflow-hidden" style={{ borderColor: 'var(--separator-card)' }}>
                         <span className="text-sm sm:text-base font-medium text-primary block mb-2 font-roboto">Description</span>
                         <p className="text-sm sm:text-base text-secondary leading-relaxed font-roboto break-words" title={symptom.bathroom_frequency_change_details}>{symptom.bathroom_frequency_change_details}</p>
                       </div>
                     )}
                   </>
                 )}
-                <div className="flex justify-between items-center gap-4 py-4 border-b min-w-0 overflow-hidden" style={{ borderColor: 'var(--border-card-inner)' }}>
+                <div className="flex justify-between items-center gap-4 py-4 border-b min-w-0 overflow-hidden" style={{ borderColor: 'var(--separator-card)' }}>
                   <span className="text-sm sm:text-base text-secondary font-roboto shrink-0">Smoking</span>
                   <span className="text-sm sm:text-base font-medium text-primary font-roboto min-w-0 break-words text-right">
                     {symptom.smoking ? 'Yes' : symptom.smoking === false ? (userPreferences?.isSmoker === false ? 'Non-smoker' : 'No') : 'Not recorded'}
                   </span>
                 </div>
                 {symptom.smoking && symptom.smoking_details && (
-                  <div className="py-4 border-b min-w-0 overflow-hidden" style={{ borderColor: 'var(--border-card-inner)' }}>
+                  <div className="py-4 border-b min-w-0 overflow-hidden" style={{ borderColor: 'var(--separator-card)' }}>
                     <span className="text-sm sm:text-base font-medium text-primary block mb-2 font-roboto">Smoking details</span>
                     <p className="text-sm sm:text-base text-secondary leading-relaxed font-roboto break-words" title={symptom.smoking_details}>{symptom.smoking_details}</p>
                   </div>
                 )}
-                <div className={`flex justify-between items-center gap-4 py-4 ${symptom.alcohol && symptom.alcohol_units ? 'border-b' : ''} min-w-0 overflow-hidden`} style={{ borderColor: 'var(--border-card-inner)' }}>
+                <div className={`flex justify-between items-center gap-4 py-4 ${symptom.alcohol && symptom.alcohol_units ? 'border-b' : ''} min-w-0 overflow-hidden`} style={{ borderColor: 'var(--separator-card)' }}>
                   <span className="text-sm sm:text-base text-secondary font-roboto shrink-0">Alcohol</span>
                   <span className="text-sm sm:text-base font-medium text-primary font-roboto min-w-0 break-words text-right">
                     {symptom.alcohol ? 'Yes' : symptom.alcohol === false ? (userPreferences?.isDrinker === false ? 'Non-drinker' : 'No') : 'Not recorded'}

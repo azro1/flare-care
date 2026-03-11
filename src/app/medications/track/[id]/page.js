@@ -175,12 +175,12 @@ function TrackedMedicationDetails() {
               <h2 className="text-xl font-semibold font-source text-primary mb-3 sm:mb-4">Missed Medications</h2>
               <div className="space-y-0 [&>*:last-child>*:last-child]:pb-0">
                 {trackedData.missed_medications_list.map((item, index) => (
-                  <div key={index} className={index > 0 ? 'pt-4 border-t min-w-0' : 'min-w-0'} style={index > 0 ? { borderColor: 'var(--border-card-inner)' } : undefined}>
-                    <div className="flex items-center justify-between gap-4 pt-0 pb-4 border-b min-w-0 overflow-hidden" style={{ borderColor: 'var(--border-card-inner)' }}>
+                  <div key={index} className={index > 0 ? 'pt-4 border-t min-w-0' : 'min-w-0'} style={index > 0 ? { borderColor: 'var(--separator-card)' } : undefined}>
+                    <div className="flex items-center justify-between gap-4 pt-0 pb-4 border-b min-w-0 overflow-hidden" style={{ borderColor: 'var(--separator-card)' }}>
                       <span className="text-sm sm:text-base text-secondary shrink-0 whitespace-nowrap font-roboto">Medication</span>
                       <span className="text-sm sm:text-base font-medium text-primary truncate min-w-0 text-right font-roboto" title={item.medication}>{item.medication}</span>
                     </div>
-                    <div className="flex justify-between gap-4 py-4 border-b min-w-0 overflow-hidden" style={{ borderColor: 'var(--border-card-inner)' }}>
+                    <div className="flex justify-between gap-4 py-4 border-b min-w-0 overflow-hidden" style={{ borderColor: 'var(--separator-card)' }}>
                       <span className="text-sm sm:text-base text-secondary shrink-0 font-roboto">Date</span>
                       <span className="text-sm sm:text-base font-medium text-primary font-roboto min-w-0 break-words text-right">
                         {item.date ? new Date(item.date).toLocaleDateString('en-GB', { day: '2-digit', month: '2-digit', year: 'numeric' }) : 'N/A'}
@@ -202,16 +202,16 @@ function TrackedMedicationDetails() {
               <h2 className="text-xl font-semibold font-source text-primary mb-3 sm:mb-4">NSAIDs</h2>
               <div className="space-y-0 [&>*:last-child>*:last-child]:pb-0">
                 {trackedData.nsaid_list.map((item, index) => (
-                  <div key={index} className={index > 0 ? 'pt-4 border-t min-w-0' : 'min-w-0'} style={index > 0 ? { borderColor: 'var(--border-card-inner)' } : undefined}>
-                    <div className="flex items-center justify-between gap-4 pt-0 pb-4 border-b min-w-0 overflow-hidden" style={{ borderColor: 'var(--border-card-inner)' }}>
+                  <div key={index} className={index > 0 ? 'pt-4 border-t min-w-0' : 'min-w-0'} style={index > 0 ? { borderColor: 'var(--separator-card)' } : undefined}>
+                    <div className="flex items-center justify-between gap-4 pt-0 pb-4 border-b min-w-0 overflow-hidden" style={{ borderColor: 'var(--separator-card)' }}>
                       <span className="text-sm sm:text-base text-secondary shrink-0 whitespace-nowrap font-roboto">Medication</span>
                       <span className="text-sm sm:text-base font-medium text-primary truncate min-w-0 text-right font-roboto" title={item.medication}>{item.medication}</span>
                     </div>
-                    <div className="flex items-center justify-between gap-4 py-4 border-b min-w-0 overflow-hidden" style={{ borderColor: 'var(--border-card-inner)' }}>
+                    <div className="flex items-center justify-between gap-4 py-4 border-b min-w-0 overflow-hidden" style={{ borderColor: 'var(--separator-card)' }}>
                       <span className="text-sm sm:text-base text-secondary shrink-0 whitespace-nowrap font-roboto">Dosage</span>
                       <span className="text-sm sm:text-base font-medium text-primary truncate min-w-0 text-right font-roboto" title={item.dosage || 'N/A'}>{item.dosage || 'N/A'}</span>
                     </div>
-                    <div className="flex justify-between gap-4 py-4 border-b min-w-0 overflow-hidden" style={{ borderColor: 'var(--border-card-inner)' }}>
+                    <div className="flex justify-between gap-4 py-4 border-b min-w-0 overflow-hidden" style={{ borderColor: 'var(--separator-card)' }}>
                       <span className="text-sm sm:text-base text-secondary shrink-0 font-roboto">Date</span>
                       <span className="text-sm sm:text-base font-medium text-primary font-roboto min-w-0 break-words text-right">{item.date ? new Date(item.date).toLocaleDateString('en-GB', { day: '2-digit', month: '2-digit', year: 'numeric' }) : 'N/A'}</span>
                     </div>
@@ -231,16 +231,16 @@ function TrackedMedicationDetails() {
               <h2 className="text-xl font-semibold font-source text-primary mb-3 sm:mb-4">Antibiotics</h2>
               <div className="space-y-0 [&>*:last-child>*:last-child]:pb-0">
                 {trackedData.antibiotic_list.map((item, index) => (
-                  <div key={index} className={index > 0 ? 'pt-4 border-t min-w-0' : 'min-w-0'} style={index > 0 ? { borderColor: 'var(--border-card-inner)' } : undefined}>
-                    <div className="flex items-center justify-between gap-4 pt-0 pb-4 border-b min-w-0 overflow-hidden" style={{ borderColor: 'var(--border-card-inner)' }}>
+                  <div key={index} className={index > 0 ? 'pt-4 border-t min-w-0' : 'min-w-0'} style={index > 0 ? { borderColor: 'var(--separator-card)' } : undefined}>
+                    <div className="flex items-center justify-between gap-4 pt-0 pb-4 border-b min-w-0 overflow-hidden" style={{ borderColor: 'var(--separator-card)' }}>
                       <span className="text-sm sm:text-base text-secondary shrink-0 whitespace-nowrap font-roboto">Medication</span>
                       <span className="text-sm sm:text-base font-medium text-primary truncate min-w-0 text-right font-roboto" title={item.medication}>{item.medication}</span>
                     </div>
-                    <div className="flex items-center justify-between gap-4 py-4 border-b min-w-0 overflow-hidden" style={{ borderColor: 'var(--border-card-inner)' }}>
+                    <div className="flex items-center justify-between gap-4 py-4 border-b min-w-0 overflow-hidden" style={{ borderColor: 'var(--separator-card)' }}>
                       <span className="text-sm sm:text-base text-secondary shrink-0 whitespace-nowrap font-roboto">Dosage</span>
                       <span className="text-sm sm:text-base font-medium text-primary truncate min-w-0 text-right font-roboto" title={item.dosage || 'N/A'}>{item.dosage || 'N/A'}</span>
                     </div>
-                    <div className="flex justify-between gap-4 py-4 border-b min-w-0 overflow-hidden" style={{ borderColor: 'var(--border-card-inner)' }}>
+                    <div className="flex justify-between gap-4 py-4 border-b min-w-0 overflow-hidden" style={{ borderColor: 'var(--separator-card)' }}>
                       <span className="text-sm sm:text-base text-secondary shrink-0 font-roboto">Date</span>
                       <span className="text-sm sm:text-base font-medium text-primary font-roboto min-w-0 break-words text-right">{item.date ? new Date(item.date).toLocaleDateString('en-GB', { day: '2-digit', month: '2-digit', year: 'numeric' }) : 'N/A'}</span>
                     </div>

@@ -1262,7 +1262,7 @@ function SymptomsPageContent() {
         {currentStep === 0 && (
           <div className="flex flex-col items-center justify-center text-center pt-20 sm:pt-0">
             {/* Icon - same as home page symptoms card */}
-            <div className="w-14 h-14 bg-white dark:bg-[var(--bg-card-inner)] rounded-2xl flex items-center justify-center mx-auto mb-6 shadow-sm">
+            <div className="w-14 h-14 bg-white dark:bg-[var(--bg-icon-container)] rounded-2xl flex items-center justify-center mx-auto mb-6 shadow-sm">
               <Thermometer className="w-7 h-7 text-emerald-600 dark:[color:var(--text-goal-icon-success)]" />
           </div>
             
@@ -2189,7 +2189,7 @@ function SymptomsPageContent() {
 
             {/* Basic Information */}
             <div className="card border" style={{borderColor: 'var(--border-card)'}}>
-              <h3 className="text-sm sm:text-lg font-semibold text-cadet-blue mb-4 pb-4 border-b" style={{borderColor: 'var(--border-primary)'}}>Basic Information</h3>
+              <h3 className="text-sm sm:text-lg font-semibold text-cadet-blue mb-4 pb-4 border-b" style={{borderColor: 'var(--separator-card)'}}>Basic Information</h3>
               <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
                 <div>
                   <span className="text-sm text-cadet-blue block mb-1">Start Date</span>
@@ -2218,7 +2218,7 @@ function SymptomsPageContent() {
 
             {/* Bathroom Frequency */}
             <div className="card border" style={{borderColor: 'var(--border-card)'}}>
-              <h3 className="text-sm sm:text-lg font-semibold text-cadet-blue mb-4 pb-4 border-b" style={{borderColor: 'var(--border-primary)'}}>Bathroom Frequency</h3>
+              <h3 className="text-sm sm:text-lg font-semibold text-cadet-blue mb-4 pb-4 border-b" style={{borderColor: 'var(--separator-card)'}}>Bathroom Frequency</h3>
               <div className="space-y-4">
                 <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
                   <div>
@@ -2233,7 +2233,7 @@ function SymptomsPageContent() {
                   )}
                 </div>
                 {formData.bathroom_frequency_changed === 'yes' && formData.bathroom_frequency_change_details && (
-                  <div className="pt-3 border-t min-w-0 overflow-hidden" style={{borderColor: 'var(--border-primary)'}}>
+                  <div className="pt-3 border-t min-w-0 overflow-hidden" style={{borderColor: 'var(--separator-card)'}}>
                     <span className="text-sm text-cadet-blue block mb-1">Change Description</span>
                     <span className="text-sm sm:text-base font-medium text-primary truncate block" title={formData.bathroom_frequency_change_details}>{formData.bathroom_frequency_change_details}</span>
                   </div>
@@ -2244,7 +2244,7 @@ function SymptomsPageContent() {
             {/* Lifestyle - show when user answered smoking/alcohol (first-time or returning, date-specific) */}
             {(formData.smoking !== undefined || formData.alcohol !== undefined) && (
               <div className="card border" style={{borderColor: 'var(--border-card)'}}>
-                <h3 className="text-sm sm:text-lg font-semibold text-cadet-blue mb-4 pb-4 border-b" style={{borderColor: 'var(--border-primary)'}}>Lifestyle</h3>
+                <h3 className="text-sm sm:text-lg font-semibold text-cadet-blue mb-4 pb-4 border-b" style={{borderColor: 'var(--separator-card)'}}>Lifestyle</h3>
                 <div className="space-y-4">
                   <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
                     <div>
@@ -2299,10 +2299,10 @@ function SymptomsPageContent() {
               if (mealEntries.length === 0) return null
               return (
                 <div className="card border" style={{borderColor: 'var(--border-card)'}}>
-                  <h3 className="text-sm sm:text-lg font-semibold text-cadet-blue mb-4 pb-4 border-b" style={{borderColor: 'var(--border-primary)'}}>Meals</h3>
+                  <h3 className="text-sm sm:text-lg font-semibold text-cadet-blue mb-4 pb-4 border-b" style={{borderColor: 'var(--separator-card)'}}>Meals</h3>
                   <div className="space-y-3">
                     {mealEntries.map((entry, index, array) => (
-                      <div key={entry.label + index} className={`min-w-0 ${index < array.length - 1 ? 'border-b pb-3' : ''}`} style={index < array.length - 1 ? {borderColor: 'var(--border-primary)'} : {}}>
+                      <div key={entry.label + index} className={`min-w-0 ${index < array.length - 1 ? 'border-b pb-3' : ''}`} style={index < array.length - 1 ? {borderColor: 'var(--separator-card)'} : {}}>
                         <span className="text-sm text-cadet-blue block mb-2">{entry.label}</span>
                         {entry.skipped ? (
                           <span className="text-sm sm:text-base font-medium text-primary italic">Didn't eat anything</span>
@@ -2319,7 +2319,7 @@ function SymptomsPageContent() {
             {/* Notes */}
             {formData.notes && (
               <div className="card border min-w-0 overflow-hidden" style={{borderColor: 'var(--border-card)'}}>
-                <h3 className="text-sm sm:text-lg font-semibold text-cadet-blue mb-4 pb-4 border-b" style={{borderColor: 'var(--border-primary)'}}>Notes</h3>
+                <h3 className="text-sm sm:text-lg font-semibold text-cadet-blue mb-4 pb-4 border-b" style={{borderColor: 'var(--separator-card)'}}>Notes</h3>
                 <div className="min-w-0 overflow-hidden">
                   <p className="text-sm sm:text-base font-medium text-primary truncate" title={formData.notes}>{formData.notes}</p>
                 </div>

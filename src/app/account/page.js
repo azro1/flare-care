@@ -182,20 +182,20 @@ function AccountPageContent() {
               </div>
 
               {/* Profile Info */}
-              <div className="border-t border-[var(--border-card-inner)] pt-4 sm:pt-6">
+              <div className="border-t border-[var(--separator-card)] pt-4 sm:pt-6">
                 <h3 className="text-lg sm:text-xl font-semibold font-source text-primary mb-2">
                   Profile Info
                 </h3>
                 <div className="space-y-0">
-                  <div className="py-4 sm:py-5 border-b border-[var(--border-card-inner)]">
+                  <div className="py-4 sm:py-5 border-b border-[var(--separator-card)]">
                     <p className="text-sm font-medium text-secondary mb-1">Email</p>
                     <p className="text-sm sm:text-base text-primary font-roboto break-words">{user?.email || 'Not available'}</p>
                   </div>
-                  <div className="py-4 sm:py-5 border-b border-[var(--border-card-inner)]">
+                  <div className="py-4 sm:py-5 border-b border-[var(--separator-card)]">
                     <p className="text-sm font-medium text-secondary mb-1">Full Name</p>
                     <p className="text-sm sm:text-base text-primary font-roboto">{user?.user_metadata?.full_name || 'Not set'}</p>
                   </div>
-                  <div className="py-4 sm:py-5 border-b border-[var(--border-card-inner)]">
+                  <div className="py-4 sm:py-5 border-b border-[var(--separator-card)]">
                     <p className="text-sm font-medium text-secondary mb-1">Account Created</p>
                     <p className="text-sm sm:text-base text-primary font-roboto">
                       {user?.created_at ? new Date(user.created_at).toLocaleDateString('en-GB') : 'Not available'}
@@ -213,7 +213,7 @@ function AccountPageContent() {
             <div className="card mb-5 sm:mb-6 lg:hidden">
               <h3 className="text-lg sm:text-xl font-semibold font-source text-primary mb-4">Settings</h3>
               <div className="space-y-0">
-                <div className="pb-4 sm:pb-5 border-b border-[var(--border-card-inner)]">
+                <div className="pb-4 sm:pb-5 border-b border-[var(--separator-card)]">
                   <div className="flex items-center justify-between">
                     <div className="flex-1">
                       <p className="text-sm font-medium text-secondary mb-1">Appearance</p>
@@ -289,7 +289,7 @@ function AccountPageContent() {
             <div className="card lg:sticky lg:top-6">
               <h3 className="text-lg sm:text-xl font-semibold font-source text-primary mb-5">Settings</h3>
               <div className="space-y-0">
-                <div className="pb-4 sm:pb-5 border-b border-[var(--border-card-inner)]">
+                <div className="pb-4 sm:pb-5 border-b border-[var(--separator-card)]">
                   <div className="flex items-center justify-between">
                     <div className="flex-1">
                       <p className="text-sm font-medium text-secondary mb-1">Appearance</p>

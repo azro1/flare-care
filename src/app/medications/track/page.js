@@ -858,10 +858,10 @@ function MedicationTrackingWizard() {
           {/* Missed Medications */}
           {(formData.missedMedications && formData.missedMedicationsList.filter(item => item.medication.trim()).length > 0) && (
             <div className="card border" style={{borderColor: 'var(--border-card)'}}>
-              <h3 className="text-sm sm:text-lg font-semibold text-cadet-blue mb-4 pb-4 border-b" style={{borderColor: 'var(--border-primary)'}}>Missed Medications</h3>
+              <h3 className="text-sm sm:text-lg font-semibold text-cadet-blue mb-4 pb-4 border-b" style={{borderColor: 'var(--separator-card)'}}>Missed Medications</h3>
               <div className="space-y-3">
                 {formData.missedMedicationsList.filter(item => item.medication.trim()).map((item, index, array) => (
-                  <div key={index} className={`grid grid-cols-1 sm:grid-cols-2 gap-3 ${index < array.length - 1 ? 'border-b pb-3' : ''}`} style={index < array.length - 1 ? {borderColor: 'var(--border-primary)'} : {}}>
+                  <div key={index} className={`grid grid-cols-1 sm:grid-cols-2 gap-3 ${index < array.length - 1 ? 'border-b pb-3' : ''}`} style={index < array.length - 1 ? {borderColor: 'var(--separator-card)'} : {}}>
                     <div className="min-w-0">
                       <span className="text-sm text-cadet-blue block mb-1">Medication</span>
                       <span className="text-sm sm:text-base font-medium text-primary truncate block" title={item.medication}>{item.medication}</span>
@@ -883,10 +883,10 @@ function MedicationTrackingWizard() {
           {/* NSAIDs */}
           {(formData.nsaidUsage && formData.nsaidList.filter(item => item.medication.trim()).length > 0) && (
             <div className="card border" style={{borderColor: 'var(--border-card)'}}>
-              <h3 className="text-sm sm:text-lg font-semibold text-cadet-blue mb-4 pb-4 border-b" style={{borderColor: 'var(--border-primary)'}}>NSAIDs</h3>
+              <h3 className="text-sm sm:text-lg font-semibold text-cadet-blue mb-4 pb-4 border-b" style={{borderColor: 'var(--separator-card)'}}>NSAIDs</h3>
               <div className="space-y-3">
                 {formData.nsaidList.filter(item => item.medication.trim()).map((item, index, array) => (
-                  <div key={index} className={`grid grid-cols-1 sm:grid-cols-2 gap-3 ${index < array.length - 1 ? 'border-b pb-3' : ''}`} style={index < array.length - 1 ? {borderColor: 'var(--border-primary)'} : {}}>
+                  <div key={index} className={`grid grid-cols-1 sm:grid-cols-2 gap-3 ${index < array.length - 1 ? 'border-b pb-3' : ''}`} style={index < array.length - 1 ? {borderColor: 'var(--separator-card)'} : {}}>
                     <div className="min-w-0">
                       <span className="text-sm text-cadet-blue block mb-1">Medication</span>
                       <span className="text-sm sm:text-base font-medium text-primary truncate block" title={item.medication}>{item.medication}</span>
@@ -912,10 +912,10 @@ function MedicationTrackingWizard() {
           {/* Antibiotics */}
           {(formData.antibioticUsage && formData.antibioticList.filter(item => item.medication.trim()).length > 0) && (
             <div className="card border" style={{borderColor: 'var(--border-card)'}}>
-              <h3 className="text-sm sm:text-lg font-semibold text-cadet-blue mb-4 pb-4 border-b" style={{borderColor: 'var(--border-primary)'}}>Antibiotics</h3>
+              <h3 className="text-sm sm:text-lg font-semibold text-cadet-blue mb-4 pb-4 border-b" style={{borderColor: 'var(--separator-card)'}}>Antibiotics</h3>
               <div className="space-y-3">
                 {formData.antibioticList.filter(item => item.medication.trim()).map((item, index, array) => (
-                  <div key={index} className={`grid grid-cols-1 sm:grid-cols-2 gap-3 ${index < array.length - 1 ? 'border-b pb-3' : ''}`} style={index < array.length - 1 ? {borderColor: 'var(--border-primary)'} : {}}>
+                  <div key={index} className={`grid grid-cols-1 sm:grid-cols-2 gap-3 ${index < array.length - 1 ? 'border-b pb-3' : ''}`} style={index < array.length - 1 ? {borderColor: 'var(--separator-card)'} : {}}>
                     <div className="min-w-0">
                       <span className="text-sm text-cadet-blue block mb-1">Medication</span>
                       <span className="text-sm sm:text-base font-medium text-primary truncate block" title={item.medication}>{item.medication}</span>
@@ -976,7 +976,7 @@ function MedicationTrackingWizard() {
         {currentStep === 0 && (
           <div className="flex flex-col items-center justify-center text-center pt-20 sm:pt-0">
             {/* Icon - same as home page medications card */}
-            <div className="w-14 h-14 bg-white dark:bg-[var(--bg-card-inner)] rounded-2xl flex items-center justify-center mx-auto mb-6 shadow-sm">
+            <div className="w-14 h-14 bg-white dark:bg-[var(--bg-icon-container)] rounded-2xl flex items-center justify-center mx-auto mb-6 shadow-sm">
               <ChartLine className="w-7 h-7 text-pink-600 dark:[color:var(--text-goal-icon-medication)]" />
             </div>
             

@@ -82,7 +82,8 @@
     --border-primary: #cbd5e1; /* Light primary border */
     --border-secondary: #94a3b8; /* Light secondary border */
     --border-card: #cbd5e1; /* Light card border */
-    --border-card-inner: rgba(148, 163, 184, 0.25); /* Light inner card border */
+    --separator-card: var(--border-primary); /* Separators on .card background */
+    --separator-card-inner: rgba(148, 163, 184, 0.25); /* Separators on .card-inner background */
     
     --shadow-sm: 0 1px 2px 0 rgb(0 0 0 / 0.05);
     --shadow-md: 0 4px 6px -1px rgb(0 0 0 / 0.1), 0 2px 4px -2px rgb(0 0 0 / 0.1);
@@ -161,7 +162,9 @@
     --border-secondary: #4f5459;
     --border-card: #3f4449;
     --border-card-hover: #52525b;
-    --border-card-inner: rgba(79, 84, 89, 0.6);
+    --bg-icon-container: var(--bg-card); /* Icon containers on card-inner - matches .card for cut-out effect in dark mode */
+    --separator-card: var(--bg-main); /* Separators on .card - matches page background in dark mode */
+    --separator-card-inner: var(--bg-card); /* Separators on .card-inner - matches .card background in dark mode */
     --shadow-sm: 0 1px 2px 0 rgb(0 0 0 / 0.3);
     --shadow-md: 0 4px 6px -1px rgb(0 0 0 / 0.4), 0 2px 4px -2px rgb(0 0 0 / 0.4);
     --shadow-lg: 0 10px 15px -3px rgb(0 0 0 / 0.4), 0 4px 6px -4px rgb(0 0 0 / 0.4);
@@ -873,7 +876,7 @@ select.input-field-wizard option[value=""] {
   }
   
   .react-datepicker__time-container {
-    border-left: 1px solid var(--border-card-inner) !important;
+    border-left: 1px solid var(--separator-card-inner) !important;
     width: 70px !important;
     float: right !important;
   }
@@ -1008,7 +1011,7 @@ select.input-field-wizard option[value=""] {
 
 .react-datepicker__header {
   background-color: transparent !important;
-  border-bottom: 1px solid var(--border-card-inner) !important;
+  border-bottom: 1px solid var(--separator-card-inner) !important;
   border-radius: 0 !important;
   padding: 12px 8px 8px 8px !important;
 }
@@ -1279,7 +1282,7 @@ select.input-field-wizard option[value=""] {
 
   .dark .react-datepicker__time-container {
     background-color: var(--bg-card) !important;
-    border-left-color: var(--border-card-inner) !important;
+    border-left-color: var(--separator-card-inner) !important;
   }
 
   .dark .react-datepicker__time {
@@ -1331,13 +1334,13 @@ select.input-field-wizard option[value=""] {
 
 .dark .react-datepicker__header {
   background-color: var(--bg-card-inner) !important;
-  border-bottom-color: var(--border-card-inner) !important;
+  border-bottom-color: var(--separator-card-inner) !important;
 }
 
 /* General dark mode time picker styling (applies to all screen sizes) */
 .dark .react-datepicker__time-container {
   background-color: var(--bg-card) !important;
-  border-left-color: var(--border-card-inner) !important;
+  border-left-color: var(--separator-card-inner) !important;
 }
 
 .dark .react-datepicker__time {
@@ -1429,7 +1432,7 @@ select.input-field-wizard option[value=""] {
 }
 
 .dark ::-webkit-scrollbar-thumb {
-  background: var(--border-card-inner);
+  background: var(--separator-card-inner);
   border-radius: 6px;
   border: 2px solid var(--bg-card);
 }
@@ -1441,5 +1444,5 @@ select.input-field-wizard option[value=""] {
 /* Firefox scrollbar */
 .dark {
   scrollbar-width: thin;
-  scrollbar-color: var(--border-card-inner) var(--bg-card);
+  scrollbar-color: var(--separator-card-inner) var(--bg-card);
 }

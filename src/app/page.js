@@ -883,7 +883,7 @@ export default function Home() {
                 <div className="w-12 h-12 icon-container landing-icon">
                   <Pill className="w-6 h-6 text-purple-500" />
                 </div>
-                <h3 className="text-xl sm:text-2xl font-semibold text-primary">Medication tracking</h3>
+                <h3 className="text-xl sm:text-2xl font-semibold text-primary">Medication reminders</h3>
                 <p className="text-secondary leading-relaxed">
                   Never forget a dose. Simple reminders that actually work.
                 </p>
@@ -1089,14 +1089,14 @@ export default function Home() {
             <div className="contents xl:block xl:sticky xl:top-6 xl:space-y-6">
               
               {/* Quick Stats */}
-              <div className="card order-[5] xl:order-none mb-6 xl:mb-0">
+              <div className="card order-[10] xl:order-none mb-6 xl:mb-0">
                 <h3 className="text-xl font-semibold font-source text-primary mb-3">Your Progress</h3>
                 <div className="card-inner p-4 sm:p-5 space-y-2.5">
                   <div className="flex justify-between items-center">
                       <span className="text-sm text-primary">Total symptoms</span>
                     <span className="font-semibold text-primary">{symptoms.length}</span>
                   </div>
-                  <div className="border-t border-[var(--border-card-inner)] my-0" aria-hidden="true" />
+                  <div className="border-t border-[var(--separator-card-inner)] my-0" aria-hidden="true" />
                   <div className="flex justify-between items-center">
                       <span className="text-sm text-primary">This week</span>
                     <span className="font-semibold text-primary">
@@ -1107,7 +1107,7 @@ export default function Home() {
                       }).length}
                     </span>
                   </div>
-                  <div className="border-t border-[var(--border-card-inner)] my-0" aria-hidden="true" />
+                  <div className="border-t border-[var(--separator-card-inner)] my-0" aria-hidden="true" />
                   <div className="flex justify-between items-center">
                       <span className="text-sm text-primary">Today</span>
                     <span className="font-semibold text-primary">{todaySymptoms.length}</span>
@@ -1116,50 +1116,53 @@ export default function Home() {
             </div>
 
               {/* Today's Goals */}
-              <div className="card no-hover-border order-[11] xl:order-none mb-6 xl:mb-0">
+              <div className="card no-hover-border order-[5] xl:order-none mb-6 xl:mb-0">
                 <h3 className="text-xl font-semibold font-source text-primary mb-3">Today's Goals</h3>
-                <div className="card-inner p-4 sm:p-5 space-y-3">
-                  <div className="flex items-center gap-3">
-                    <div className="w-6 h-6 bg-white dark:bg-[var(--bg-card-inner)] flex items-center justify-center rounded-lg">
-                      <Thermometer className="w-3.5 h-3.5 text-emerald-600 dark:[color:var(--text-goal-icon-success)]" />
+                <div className="card-inner p-4 sm:p-5 space-y-0">
+                  <div className="flex items-center gap-3 pb-3">
+                    <div className="w-6 h-6 bg-white dark:bg-[var(--bg-icon-container)] flex items-center justify-center rounded-lg">
+                      <Thermometer className="w-3.5 h-3.5 text-primary dark:text-white" />
                     </div>
                     <div className="flex-1 flex items-center justify-between">
                       <span className="text-sm text-primary">Log Symptoms</span>
-                      {todaySymptoms.length > 0 && <Check className="w-4 h-4 text-emerald-600 dark:[color:var(--text-goal-icon-success)] flex-shrink-0" />}
+                      {todaySymptoms.length > 0 && <Check className="w-4 h-4 flex-shrink-0" style={{ color: 'var(--text-cadet-blue)' }} />}
                     </div>
                   </div>
-                  <Link href="/medications/track" className="flex items-center gap-3">
-                    <div className="w-6 h-6 bg-white dark:bg-[var(--bg-card-inner)] flex items-center justify-center rounded-lg">
-                      <ChartLine className="w-3.5 h-3.5 text-pink-500 dark:[color:var(--text-goal-icon-medication)]" />
+                  <div className="border-t border-[var(--separator-card-inner)] my-0" aria-hidden="true" />
+                  <Link href="/medications/track" className="flex items-center gap-3 py-3">
+                    <div className="w-6 h-6 bg-white dark:bg-[var(--bg-icon-container)] flex items-center justify-center rounded-lg">
+                      <ChartLine className="w-3.5 h-3.5 text-primary dark:text-white" />
                     </div>
                     <div className="flex-1 flex items-center justify-between">
                       <span className="text-sm text-primary">Log Medications</span>
-                      {todayTrackedMedication && <Check className="w-4 h-4 text-pink-500 dark:[color:var(--text-goal-icon-medication)] flex-shrink-0" />}
+                      {todayTrackedMedication && <Check className="w-4 h-4 flex-shrink-0" style={{ color: 'var(--text-cadet-blue)' }} />}
                     </div>
                   </Link>
-                  <div className="flex items-center gap-3">
-                    <div className="w-6 h-6 bg-white dark:bg-[var(--bg-card-inner)] flex items-center justify-center rounded-lg">
-                      <Pill className="w-3 h-3 text-purple-600 dark:[color:var(--text-icon-more-meds)]" />
+                  <div className="border-t border-[var(--separator-card-inner)] my-0" aria-hidden="true" />
+                  <div className="flex items-center gap-3 py-3">
+                    <div className="w-6 h-6 bg-white dark:bg-[var(--bg-icon-container)] flex items-center justify-center rounded-lg">
+                      <Pill className="w-3 h-3 text-primary dark:text-white" />
                     </div>
                     <div className="flex-1 flex items-center justify-between">
                       <span className="text-sm text-primary">Take Medications</span>
-                      {takenMedications.length === medications.length && medications.length > 0 && <Check className="w-4 h-4 text-purple-600 dark:[color:var(--text-icon-more-meds)] flex-shrink-0" />}
+                      {takenMedications.length === medications.length && medications.length > 0 && <Check className="w-4 h-4 flex-shrink-0" style={{ color: 'var(--text-cadet-blue)' }} />}
                     </div>
                   </div>
-                  <div className="flex items-center gap-3">
-                    <div className="w-6 h-6 bg-white dark:bg-[var(--bg-card-inner)] flex items-center justify-center rounded-lg">
-                      <CupSoda className="w-3.5 h-3.5 text-sky-600 dark:[color:var(--text-goal-icon-hydration)]" />
+                  <div className="border-t border-[var(--separator-card-inner)] my-0" aria-hidden="true" />
+                  <div className="flex items-center gap-3 pt-3">
+                    <div className="w-6 h-6 bg-white dark:bg-[var(--bg-icon-container)] flex items-center justify-center rounded-lg">
+                      <CupSoda className="w-3.5 h-3.5 text-primary dark:text-white" />
                     </div>
                     <div className="flex-1 flex items-center justify-between">
                       <span className="text-sm text-primary">Stay Hydrated</span>
-                      {todayHydrationGlasses >= hydrationTarget && <Check className="w-4 h-4 text-sky-600 dark:[color:var(--text-goal-icon-hydration)] flex-shrink-0" />}
+                      {todayHydrationGlasses >= hydrationTarget && <Check className="w-4 h-4 flex-shrink-0" style={{ color: 'var(--text-cadet-blue)' }} />}
                     </div>
                   </div>
                 </div>
               </div>
 
               {/* Hints */}
-              <div className="card order-[6] xl:order-none mb-6 xl:mb-0">
+              <div className="card order-[8] xl:order-none mb-6 xl:mb-0">
                 <div>
                   <h3 className="text-xl font-semibold font-source text-primary mb-3 flex items-center gap-2">
                     <Lightbulb className="w-5 h-5 flex-shrink-0 text-amber-500" />
@@ -1193,9 +1196,9 @@ export default function Home() {
         </WeatherHero>
         </div>
 
-        {/* Daily Tasks */}
+        {/* Daily Check-in */}
         <div className="my-6 order-[2] xl:order-none">
-          <h2 className="text-xl font-semibold font-source text-primary mb-4">Daily Tasks</h2>
+          <h2 className="text-xl font-semibold font-source text-primary mb-4">Daily Check-in</h2>
           {/* Mobile: horizontal scroll cards */}
           <div className="block sm:hidden -mx-4 px-4">
             <div className="overflow-x-auto pb-2 overscroll-x-contain scrollbar-hide snap-x snap-mandatory" style={{ WebkitOverflowScrolling: 'touch' }}>
@@ -1306,28 +1309,28 @@ export default function Home() {
             <div className="card-inner p-4 sm:p-6">
               <div className="flex justify-between items-center mb-3">
                 <span className="text-sm text-primary flex items-center gap-3">
-                  <div className="w-6 h-6 bg-white dark:bg-[var(--bg-card-inner)] flex items-center justify-center rounded-lg flex-shrink-0">
-                    <Thermometer className="w-3.5 h-3.5 text-emerald-600 dark:[color:var(--text-goal-icon-success)]" />
+                  <div className="w-6 h-6 bg-white dark:bg-[var(--bg-icon-container)] flex items-center justify-center rounded-lg flex-shrink-0">
+                    <Thermometer className="w-3.5 h-3.5 text-primary dark:text-white" />
                   </div>
                   Symptoms Logged
                 </span>
                 <span className="text-sm font-semibold text-primary">{todaySymptoms.length}</span>
               </div>
-              <div className="border-t border-[var(--border-card-inner)] my-0" aria-hidden="true" />
+              <div className="border-t border-[var(--separator-card-inner)] my-0" aria-hidden="true" />
               <div className="flex justify-between items-center mt-3 mb-3">
                 <span className="text-sm text-primary flex items-center gap-3">
-                  <div className="w-6 h-6 bg-white dark:bg-[var(--bg-card-inner)] flex items-center justify-center rounded-lg flex-shrink-0">
-                    <Pill className="w-3 h-3 text-purple-600 dark:[color:var(--text-icon-more-meds)]" />
+                  <div className="w-6 h-6 bg-white dark:bg-[var(--bg-icon-container)] flex items-center justify-center rounded-lg flex-shrink-0">
+                    <Pill className="w-3 h-3 text-primary dark:text-white" />
                   </div>
                   Medications Taken
                 </span>
                 <span className="text-sm font-semibold text-primary">{takenMedications.length}/{medications.length}</span>
               </div>
-              <div className="border-t border-[var(--border-card-inner)] my-0" aria-hidden="true" />
+              <div className="border-t border-[var(--separator-card-inner)] my-0" aria-hidden="true" />
               <div className="flex justify-between items-center mt-3">
                 <span className="text-sm text-primary flex items-center gap-3">
-                  <div className="w-6 h-6 bg-white dark:bg-[var(--bg-card-inner)] flex items-center justify-center rounded-lg flex-shrink-0">
-                    <CupSoda className="w-3.5 h-3.5 text-sky-600 dark:[color:var(--text-goal-icon-hydration)]" />
+                  <div className="w-6 h-6 bg-white dark:bg-[var(--bg-icon-container)] flex items-center justify-center rounded-lg flex-shrink-0">
+                    <CupSoda className="w-3.5 h-3.5 text-primary dark:text-white" />
                   </div>
                   Hydration
                 </span>
@@ -1338,7 +1341,7 @@ export default function Home() {
           </div>
 
           {/* Recent Activity */}
-          <div className="order-[8] lg:order-2 mb-6 lg:mb-0">
+          <div className="order-[9] lg:order-2 mb-6 lg:mb-0">
             <h2 className="text-xl font-semibold font-source text-primary mb-3">Recent Activity</h2>
             <div className="card">
             <div className="card-inner p-4 sm:p-6 transition-all duration-300 ease-in-out">
@@ -1631,7 +1634,7 @@ export default function Home() {
 
         {/* Latest News */}
         {isAuthenticated && (
-          <div className="mb-6 xl:my-6 order-[9] xl:order-none">
+          <div className="mb-6 xl:my-6 order-[11] xl:order-none">
             <h2 className="text-xl font-semibold font-source text-primary mb-4">
               Latest News
             </h2>
@@ -1725,7 +1728,7 @@ export default function Home() {
                           e.stopPropagation()
                           newsScrollRef.current?.scrollBy({ left: -592, behavior: 'smooth' })
                         }}
-                        className="w-10 h-10 rounded-full flex items-center justify-center shadow-lg transition-opacity hover:opacity-90 bg-[var(--bg-card)] dark:bg-[var(--bg-card-inner)] text-[var(--text-cadet-blue)] dark:text-white"
+                        className="w-10 h-10 rounded-full flex items-center justify-center shadow-lg transition-opacity hover:opacity-90 bg-[var(--bg-card)] dark:bg-[var(--bg-icon-container)] text-[var(--text-cadet-blue)] dark:text-white"
                         aria-label="Previous articles"
                       >
                         <ChevronLeft className="w-6 h-6" />
@@ -1741,7 +1744,7 @@ export default function Home() {
                           e.stopPropagation()
                           newsScrollRef.current?.scrollBy({ left: 592, behavior: 'smooth' })
                         }}
-                        className="w-10 h-10 rounded-full flex items-center justify-center shadow-lg transition-opacity hover:opacity-90 bg-[var(--bg-card)] dark:bg-[var(--bg-card-inner)] text-[var(--text-cadet-blue)] dark:text-white"
+                        className="w-10 h-10 rounded-full flex items-center justify-center shadow-lg transition-opacity hover:opacity-90 bg-[var(--bg-card)] dark:bg-[var(--bg-icon-container)] text-[var(--text-cadet-blue)] dark:text-white"
                         aria-label="Next articles"
                       >
                         <ChevronRight className="w-6 h-6" />
@@ -1755,10 +1758,10 @@ export default function Home() {
 
         {/* Recent Symptoms & Medications (tabbed) */}
         {(displayedSymptoms.length > 0 || trackedMedications.length > 0) && (
-          <div className="mb-6 order-[10] xl:order-none">
+          <div className="mb-6 order-[6] xl:order-none">
             <h2 className="text-xl font-semibold font-source text-primary mb-4">Recent Logs</h2>
             <div className="card">
-            <div className="flex border-b border-[var(--border-card-inner)] mb-4">
+            <div className="flex border-b border-[var(--separator-card-inner)] mb-4">
               <button
                 type="button"
                 onClick={() => setRecentTab('symptoms')}

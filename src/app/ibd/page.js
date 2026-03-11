@@ -236,8 +236,8 @@ export default function LearnPage() {
           </div>
 
           <div className="card-inner p-4 sm:p-6 text-center">
-            <div className="w-16 h-16 rounded-full flex items-center justify-center mx-auto mb-4 bg-stone-200 dark:bg-[var(--bg-card)]">
-              <Bug className="w-8 h-8 text-stone-600 dark:text-stone-400" />
+            <div className="w-16 h-16 rounded-full flex items-center justify-center mx-auto mb-4 bg-emerald-100 dark:bg-[var(--bg-card)]">
+              <Bug className="w-8 h-8 text-emerald-600 dark:text-emerald-400" />
             </div>
             <p className="text-sm sm:text-base text-secondary font-sans break-words leading-relaxed">
               Viral or bacterial infections can trigger or worsen IBD symptoms
