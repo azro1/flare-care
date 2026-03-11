@@ -1281,8 +1281,8 @@ function ReportsPageContent() {
           className={`w-full flex items-center text-left focus:outline-none rounded-lg ${openSections.symptomReport ? 'mb-6' : ''}`}
           aria-expanded={openSections.symptomReport}
         >
-          <div className="flex w-10 h-10 bg-emerald-100 dashboard-icon-panel rounded-lg items-center justify-center mr-3 sm:mr-4 flex-shrink-0">
-            <Thermometer className="w-5 h-5 text-emerald-600 dark:[color:var(--text-goal-icon-success)]" />
+          <div className="flex w-8 h-8 sm:w-10 sm:h-10 bg-emerald-100 dashboard-icon-panel rounded-lg items-center justify-center mr-3 sm:mr-4 flex-shrink-0">
+            <Thermometer className="w-4 h-4 sm:w-5 sm:h-5 text-emerald-600 dark:[color:var(--text-goal-icon-success)]" />
           </div>
           <h2 className="text-sm sm:text-lg font-semibold text-primary flex-1">Symptom Report</h2>
           <span className="text-sm font-roboto text-secondary shrink-0">{openSections.symptomReport ? 'Hide' : 'Show'}</span>
@@ -1419,8 +1419,8 @@ function ReportsPageContent() {
             className={`w-full flex items-center text-left focus:outline-none rounded-lg ${openSections.currentMeds ? 'mb-6' : ''}`}
             aria-expanded={openSections.currentMeds}
           >
-            <div className="flex w-10 h-10 bg-purple-100 dashboard-icon-panel rounded-lg items-center justify-center mr-3 sm:mr-4 flex-shrink-0">
-              <Pill className="w-5 h-5 text-purple-600 dark:[color:var(--text-icon-more-meds)]" />
+            <div className="flex w-8 h-8 sm:w-10 sm:h-10 bg-purple-100 dashboard-icon-panel rounded-lg items-center justify-center mr-3 sm:mr-4 flex-shrink-0">
+              <Pill className="w-4 h-4 sm:w-5 sm:h-5 text-purple-600 dark:[color:var(--text-icon-more-meds)]" />
             </div>
             <h2 className="text-sm sm:text-lg font-semibold text-primary flex-1">Current Medications</h2>
             <span className="text-sm font-roboto text-secondary shrink-0">{openSections.currentMeds ? 'Hide' : 'Show'}</span>
@@ -1459,8 +1459,8 @@ function ReportsPageContent() {
             className={`w-full flex items-center text-left focus:outline-none rounded-lg ${openSections.trackedMeds ? 'mb-6' : ''}`}
             aria-expanded={openSections.trackedMeds}
           >
-            <div className="flex w-10 h-10 bg-pink-100 dashboard-icon-panel rounded-lg items-center justify-center mr-3 sm:mr-4 flex-shrink-0">
-              <ChartLine className="w-5 h-5 text-pink-600 dark:[color:var(--text-goal-icon-medication)]" />
+            <div className="flex w-8 h-8 sm:w-10 sm:h-10 bg-pink-100 dashboard-icon-panel rounded-lg items-center justify-center mr-3 sm:mr-4 flex-shrink-0">
+              <ChartLine className="w-4 h-4 sm:w-5 sm:h-5 text-pink-600 dark:[color:var(--text-goal-icon-medication)]" />
             </div>
             <h2 className="text-sm sm:text-lg font-semibold text-primary flex-1">Medication logs</h2>
             <span className="text-sm font-roboto text-secondary shrink-0">{openSections.trackedMeds ? 'Hide' : 'Show'}</span>
@@ -1646,8 +1646,8 @@ function ReportsPageContent() {
             className={`w-full flex items-center text-left focus:outline-none rounded-lg ${openSections.appointments ? 'mb-6' : ''}`}
             aria-expanded={openSections.appointments}
           >
-            <div className="flex w-10 h-10 bg-slate-200 dark:bg-slate-600/50 dashboard-icon-panel rounded-lg items-center justify-center mr-3 sm:mr-4 flex-shrink-0">
-              <Calendar className="w-5 h-5 text-slate-700 dark:[color:var(--text-icon-more-appointments)]" />
+            <div className="flex w-8 h-8 sm:w-10 sm:h-10 bg-slate-200 dark:bg-slate-600/50 dashboard-icon-panel rounded-lg items-center justify-center mr-3 sm:mr-4 flex-shrink-0">
+              <Calendar className="w-4 h-4 sm:w-5 sm:h-5 text-slate-700 dark:[color:var(--text-icon-more-appointments)]" />
             </div>
             <h2 className="text-sm sm:text-lg font-semibold text-primary flex-1">Appointments</h2>
             <span className="text-sm font-roboto text-secondary shrink-0">{openSections.appointments ? 'Hide' : 'Show'}</span>
@@ -1686,8 +1686,8 @@ function ReportsPageContent() {
             className={`w-full flex items-center text-left focus:outline-none rounded-lg ${openSections.weight ? 'mb-6' : ''}`}
             aria-expanded={openSections.weight}
           >
-            <div className="flex w-10 h-10 bg-indigo-100 dashboard-icon-panel rounded-lg items-center justify-center mr-3 sm:mr-4 flex-shrink-0">
-              <Scale className="w-5 h-5 text-indigo-600 dark:[color:var(--text-icon-more-weight)]" />
+            <div className="flex w-8 h-8 sm:w-10 sm:h-10 bg-indigo-100 dashboard-icon-panel rounded-lg items-center justify-center mr-3 sm:mr-4 flex-shrink-0">
+              <Scale className="w-4 h-4 sm:w-5 sm:h-5 text-indigo-600 dark:[color:var(--text-icon-more-weight)]" />
             </div>
             <h2 className="text-sm sm:text-lg font-semibold text-primary flex-1">Weight Logs</h2>
             <span className="text-sm font-roboto text-secondary shrink-0">{openSections.weight ? 'Hide' : 'Show'}</span>
@@ -1723,8 +1723,8 @@ function ReportsPageContent() {
             className={`w-full flex items-center text-left focus:outline-none rounded-lg ${openSections.hydration ? 'mb-6' : ''}`}
             aria-expanded={openSections.hydration}
           >
-            <div className="flex w-10 h-10 bg-sky-100 dashboard-icon-panel rounded-lg items-center justify-center mr-3 sm:mr-4 flex-shrink-0">
-              <CupSoda className="w-5 h-5 text-sky-600 dark:[color:var(--text-goal-icon-hydration)]" />
+            <div className="flex w-8 h-8 sm:w-10 sm:h-10 bg-sky-100 dashboard-icon-panel rounded-lg items-center justify-center mr-3 sm:mr-4 flex-shrink-0">
+              <CupSoda className="w-4 h-4 sm:w-5 sm:h-5 text-sky-600 dark:[color:var(--text-goal-icon-hydration)]" />
             </div>
             <h2 className="text-sm sm:text-lg font-semibold text-primary flex-1">Hydration</h2>
             <span className="text-sm font-roboto text-secondary shrink-0">{openSections.hydration ? 'Hide' : 'Show'}</span>
@@ -1762,8 +1762,8 @@ function ReportsPageContent() {
             className={`w-full flex items-center text-left focus:outline-none rounded-lg ${openSections.foods ? 'mb-6' : ''}`}
             aria-expanded={openSections.foods}
           >
-            <div className="flex w-10 h-10 bg-yellow-100 dashboard-icon-panel rounded-lg items-center justify-center mr-3 sm:mr-4 flex-shrink-0">
-              <Pizza className="w-5 h-5 text-amber-500 dark:[color:var(--text-icon-more-foods)]" />
+            <div className="flex w-8 h-8 sm:w-10 sm:h-10 bg-yellow-100 dashboard-icon-panel rounded-lg items-center justify-center mr-3 sm:mr-4 flex-shrink-0">
+              <Pizza className="w-4 h-4 sm:w-5 sm:h-5 text-amber-500 dark:[color:var(--text-icon-more-foods)]" />
             </div>
             <h2 className="text-sm sm:text-lg font-semibold text-primary flex-1">Top 5 Foods</h2>
             <span className="text-sm font-roboto text-secondary shrink-0">{openSections.foods ? 'Hide' : 'Show'}</span>
