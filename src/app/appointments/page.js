@@ -592,8 +592,8 @@ function AppointmentsPageContent() {
                           type="button"
                           onClick={() => startEdit(apt)}
                           disabled={editingId === apt.id}
-                          className="p-2 rounded-lg transition-colors hover:opacity-80 disabled:opacity-50 disabled:cursor-not-allowed disabled:hover:opacity-50"
-                          style={{ backgroundColor: 'var(--bg-card)', color: 'var(--text-icon)' }}
+                          className="p-2 rounded-lg transition-colors hover:opacity-80 disabled:opacity-50 disabled:cursor-not-allowed disabled:hover:opacity-50 bg-white dark:bg-[var(--bg-icon-container)]"
+                          style={{ color: 'var(--text-icon)' }}
                           title={editingId === apt.id ? 'Finish or cancel editing first' : 'Edit appointment'}
                         >
                           <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -604,8 +604,8 @@ function AppointmentsPageContent() {
                           type="button"
                           onClick={() => setDeleteModal({ isOpen: true, id: apt.id })}
                           disabled={editingId === apt.id}
-                          className="p-2 rounded-lg transition-colors hover:opacity-80 disabled:opacity-50 disabled:cursor-not-allowed disabled:hover:opacity-50"
-                          style={{ backgroundColor: 'var(--bg-card)', color: 'var(--text-icon)' }}
+                          className="p-2 rounded-lg transition-colors hover:opacity-80 disabled:opacity-50 disabled:cursor-not-allowed disabled:hover:opacity-50 bg-white dark:bg-[var(--bg-icon-container)]"
+                          style={{ color: 'var(--text-icon)' }}
                           title={editingId === apt.id ? 'Finish or cancel editing first' : 'Delete appointment'}
                         >
                           <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">

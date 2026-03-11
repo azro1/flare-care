@@ -253,7 +253,7 @@ export default function Navigation() {
                       />
                     ) : null}
                     {(!avatarUrl || showAvatarFallback) && (
-                      <div className="flex items-center justify-center w-full h-full rounded-full bg-[var(--bg-icon)] dark:bg-[var(--bg-avatar-fallback-dark)]">
+                      <div className="flex items-center justify-center w-full h-full rounded-full bg-[var(--separator-card)] dark:bg-[var(--separator-card)]">
                         <Image
                           src="/icons/person.svg"
                           alt="User avatar placeholder"
@@ -334,7 +334,7 @@ export default function Navigation() {
                         onError={() => setShowAvatarFallback(true)}
                       />
                     ) : (
-                      <div className="flex items-center justify-center w-full h-full rounded-full bg-[var(--bg-icon)] dark:bg-[var(--bg-avatar-fallback-dark)]">
+                      <div className="flex items-center justify-center w-full h-full rounded-full bg-[var(--separator-card)] dark:bg-[var(--separator-card)]">
                         <Image
                           src="/icons/person.svg"
                           alt="User avatar placeholder"

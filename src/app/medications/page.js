@@ -738,11 +738,8 @@ function MedicationsPageContent() {
                       <button
                         onClick={() => startEdit(medication)}
                         disabled={editingId === medication.id}
-                        className="w-10 h-10 rounded-xl flex items-center justify-center transition-all duration-200 shadow-sm hover:shadow-md disabled:opacity-50 disabled:cursor-not-allowed disabled:hover:shadow-md"
-                        style={{ 
-                          backgroundColor: 'var(--bg-card)',
-                          color: 'var(--text-icon)'
-                        }}
+                        className="w-10 h-10 rounded-xl flex items-center justify-center transition-all duration-200 shadow-sm hover:shadow-md disabled:opacity-50 disabled:cursor-not-allowed disabled:hover:shadow-md bg-white dark:bg-[var(--bg-icon-container)]"
+                        style={{ color: 'var(--text-icon)' }}
                         title={editingId === medication.id ? 'Finish or cancel editing first' : 'Edit medication'}
                       >
                         <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -752,11 +749,8 @@ function MedicationsPageContent() {
                       <button
                         onClick={() => handleDeleteMedication(medication.id)}
                         disabled={editingId === medication.id}
-                        className="w-10 h-10 rounded-xl flex items-center justify-center transition-all duration-200 shadow-sm hover:shadow-md disabled:opacity-50 disabled:cursor-not-allowed disabled:hover:shadow-md"
-                        style={{ 
-                          backgroundColor: 'var(--bg-card)',
-                          color: 'var(--text-icon)'
-                        }}
+                        className="w-10 h-10 rounded-xl flex items-center justify-center transition-all duration-200 shadow-sm hover:shadow-md disabled:opacity-50 disabled:cursor-not-allowed disabled:hover:shadow-md bg-white dark:bg-[var(--bg-icon-container)]"
+                        style={{ color: 'var(--text-icon)' }}
                         title={editingId === medication.id ? 'Finish or cancel editing first' : 'Delete medication'}
                       >
                         <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
