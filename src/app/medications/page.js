@@ -699,10 +699,10 @@ function MedicationsPageContent() {
                               </span>
                             )}
                           </div>
-                          <div className={(medication.timeOfDay || medication.remindersEnabled !== false) ? 'mt-2' : ''}>
+                          <div className={`flex flex-wrap items-center gap-3 ${(medication.timeOfDay || medication.remindersEnabled !== false) ? 'mt-2' : ''}`}>
                             <button
                               onClick={() => handleMarkAsTaken(medication.id)}
-                              className="px-3 py-1.5 rounded-lg text-sm font-medium transition-all duration-200 inline-flex items-center justify-center border border-[#5F9EA0]/40 dark:border-[#5F9EA0]/60"
+                              className="px-3 py-1.5 rounded-lg text-sm font-medium transition-all duration-200 inline-flex items-center justify-center border border-[#5F9EA0]/40 dark:border-white/50"
                               style={{
                                 ...(takenMedications.some(id => String(id) === String(medication.id)) 
                                   ? {
@@ -730,38 +730,38 @@ function MedicationsPageContent() {
                                 <span>Mark as Taken</span>
                               )}
                             </button>
+                            <div className="flex items-center gap-2">
+                              <button
+                                onClick={() => startEdit(medication)}
+                                disabled={editingId === medication.id}
+                                className="w-9 h-9 rounded-lg flex items-center justify-center transition-all duration-200 hover:opacity-80 disabled:opacity-50 disabled:cursor-not-allowed bg-white dark:bg-[var(--bg-icon-container)]"
+                                style={{ color: 'var(--text-icon)' }}
+                                title={editingId === medication.id ? 'Finish or cancel editing first' : 'Edit medication'}
+                              >
+                                <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z" />
+                                </svg>
+                              </button>
+                              <button
+                                onClick={() => handleDeleteMedication(medication.id)}
+                                disabled={editingId === medication.id}
+                                className="w-9 h-9 rounded-lg flex items-center justify-center transition-all duration-200 hover:opacity-80 disabled:opacity-50 disabled:cursor-not-allowed bg-white dark:bg-[var(--bg-icon-container)]"
+                                style={{ color: 'var(--text-icon)' }}
+                                title={editingId === medication.id ? 'Finish or cancel editing first' : 'Delete medication'}
+                              >
+                                <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
+                                </svg>
+                              </button>
+                            </div>
                           </div>
                         </>
                       )}
                     </div>
-                    <div className="flex space-x-2 mt-2 sm:mt-0 sm:ml-4 flex-shrink-0">
-                      <button
-                        onClick={() => startEdit(medication)}
-                        disabled={editingId === medication.id}
-                        className="w-10 h-10 rounded-xl flex items-center justify-center transition-all duration-200 shadow-sm hover:shadow-md disabled:opacity-50 disabled:cursor-not-allowed disabled:hover:shadow-md bg-white dark:bg-[var(--bg-icon-container)]"
-                        style={{ color: 'var(--text-icon)' }}
-                        title={editingId === medication.id ? 'Finish or cancel editing first' : 'Edit medication'}
-                      >
-                        <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z" />
-                        </svg>
-                      </button>
-                      <button
-                        onClick={() => handleDeleteMedication(medication.id)}
-                        disabled={editingId === medication.id}
-                        className="w-10 h-10 rounded-xl flex items-center justify-center transition-all duration-200 shadow-sm hover:shadow-md disabled:opacity-50 disabled:cursor-not-allowed disabled:hover:shadow-md bg-white dark:bg-[var(--bg-icon-container)]"
-                        style={{ color: 'var(--text-icon)' }}
-                        title={editingId === medication.id ? 'Finish or cancel editing first' : 'Delete medication'}
-                      >
-                        <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
-                        </svg>
-                      </button>
-                    </div>
                   </div>
 
                   {isExpanded && medication.notes && (
-                    <div className="mt-4 pt-4 min-w-0" style={{ borderTop: '1px solid', borderColor: 'var(--separator-card-inner)' }}>
+                    <div className="mt-4 min-w-0">
                       <div className="card-inner min-w-0">
                         <p className="text-sm text-secondary font-roboto truncate">
                           <span className="font-semibold text-primary">Notes:</span> {medication.notes}
@@ -769,7 +769,7 @@ function MedicationsPageContent() {
                       </div>
                     </div>
                   )}
-                  <div className="mt-4 pt-4 text-xs text-tertiary font-roboto" style={{ borderTop: '1px solid', borderColor: 'var(--separator-card-inner)' }}>
+                  <div className="mt-2 text-xs text-tertiary font-roboto">
                     <div className="flex items-center">
                       <svg className="w-3 h-3 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                         <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" />

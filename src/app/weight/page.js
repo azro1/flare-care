@@ -5,6 +5,7 @@ import ConfirmationModal from '@/components/ConfirmationModal'
 import ProtectedRoute from '@/components/ProtectedRoute'
 import { sanitizeNotes } from '@/lib/sanitize'
 import { Scale, ChevronDown } from 'lucide-react'
+import Masonry from 'react-masonry-css'
 import { supabase, TABLES } from '@/lib/supabase'
 import { useAuth } from '@/lib/AuthContext'
 import DatePicker from 'react-datepicker'
@@ -259,6 +260,7 @@ function WeightPageContent() {
           )}
         </div>
 
+        <div>
         {isAdding && (
           <div className="mb-6 min-w-0">
             <form onSubmit={handleSubmit} className="space-y-4" autoComplete="off">
@@ -357,11 +359,20 @@ function WeightPageContent() {
             </p>
           </div>
         ) : (
-          <ul className="space-y-4">
+          <Masonry
+            breakpointCols={{
+              default: 2,
+              1024: 2,
+              640: 1
+            }}
+            className="flex -ml-4 w-auto min-w-0"
+            columnClassName="pl-4 bg-clip-padding"
+          >
             {entries.map((entry) => {
               const isExpanded = expandedWeightEntries.has(entry.id)
               return (
-                <li key={entry.id} className="card-inner p-4 sm:p-6 min-w-0">
+                <div key={entry.id} className="mb-4 last:mb-0">
+                  <div className="card-inner p-4 sm:p-6 min-w-0">
                   <div className="flex flex-col sm:flex-row sm:justify-between sm:items-start gap-3">
                     <div className="flex-1 min-w-0">
                       <div className={`flex items-center gap-2 ${isExpanded ? 'mb-1' : ''} min-w-0`}>
@@ -370,54 +381,58 @@ function WeightPageContent() {
                           <span className="text-secondary">·</span>
                           <span className="text-primary font-roboto">{Number(entry.valueKg)} kg</span>
                         </div>
-                        {entry.notes?.trim() && (
-                          <button
-                            type="button"
-                            onClick={() => toggleWeightExpand(entry.id)}
-                            className="flex-shrink-0 p-1 rounded transition-colors hover:opacity-80 sm:self-start"
-                            style={{ color: 'var(--text-icon)' }}
-                            title={isExpanded ? 'Collapse details' : 'Expand details'}
-                          >
-                            <ChevronDown
-                              className={`w-5 h-5 transition-transform duration-200 ${isExpanded ? 'rotate-180' : ''}`}
-                            />
-                          </button>
-                        )}
+                        <button
+                          type="button"
+                          onClick={() => toggleWeightExpand(entry.id)}
+                          className="flex-shrink-0 p-1 rounded transition-colors hover:opacity-80 sm:self-start"
+                          style={{ color: 'var(--text-icon)' }}
+                          title={isExpanded ? 'Collapse details' : 'Expand details'}
+                        >
+                          <ChevronDown
+                            className={`w-5 h-5 transition-transform duration-200 ${isExpanded ? 'rotate-180' : ''}`}
+                          />
+                        </button>
                       </div>
-                      {isExpanded && entry.notes && (
-                        <div className="mt-1 min-w-0 max-w-full overflow-hidden" title={entry.notes}>
-                          <p className="text-sm text-secondary font-roboto break-words line-clamp-2">{entry.notes}</p>
-                        </div>
+                      {isExpanded && (
+                        <>
+                          {entry.notes?.trim() && (
+                            <div className="mt-1 mb-3 min-w-0 max-w-full overflow-hidden" title={entry.notes}>
+                              <p className="text-sm text-secondary font-roboto break-words line-clamp-2">
+                                <span className="font-semibold text-primary">Notes:</span> {entry.notes}
+                              </p>
+                            </div>
+                          )}
+                          <div className="flex flex-wrap items-center gap-2">
+                            <button
+                              type="button"
+                              onClick={() => startEdit(entry)}
+                              disabled={editingId === entry.id}
+                              className="w-9 h-9 rounded-lg flex items-center justify-center transition-all duration-200 hover:opacity-80 disabled:opacity-50 disabled:cursor-not-allowed bg-white dark:bg-[var(--bg-icon-container)]"
+                              style={{ color: 'var(--text-icon)' }}
+                              title={editingId === entry.id ? 'Finish or cancel editing first' : 'Edit entry'}
+                            >
+                              <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z" />
+                              </svg>
+                            </button>
+                            <button
+                              type="button"
+                              onClick={() => setDeleteModal({ isOpen: true, id: entry.id })}
+                              disabled={editingId === entry.id}
+                              className="w-9 h-9 rounded-lg flex items-center justify-center transition-all duration-200 hover:opacity-80 disabled:opacity-50 disabled:cursor-not-allowed bg-white dark:bg-[var(--bg-icon-container)]"
+                              style={{ color: 'var(--text-icon)' }}
+                              title={editingId === entry.id ? 'Finish or cancel editing first' : 'Delete entry'}
+                            >
+                              <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
+                              </svg>
+                            </button>
+                          </div>
+                        </>
                       )}
                     </div>
-                    <div className="flex space-x-2 flex-shrink-0">
-                      <button
-                        type="button"
-                        onClick={() => startEdit(entry)}
-                        disabled={editingId === entry.id}
-                        className="w-10 h-10 rounded-xl flex items-center justify-center transition-all duration-200 shadow-sm hover:shadow-md disabled:opacity-50 disabled:cursor-not-allowed disabled:hover:shadow-sm bg-white dark:bg-[var(--bg-icon-container)]"
-                        style={{ color: 'var(--text-icon)' }}
-                        title={editingId === entry.id ? 'Finish or cancel editing first' : 'Edit entry'}
-                      >
-                        <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z" />
-                        </svg>
-                      </button>
-                      <button
-                        type="button"
-                        onClick={() => setDeleteModal({ isOpen: true, id: entry.id })}
-                        disabled={editingId === entry.id}
-                        className="w-10 h-10 rounded-xl flex items-center justify-center transition-all duration-200 shadow-sm hover:shadow-md disabled:opacity-50 disabled:cursor-not-allowed disabled:hover:shadow-sm bg-white dark:bg-[var(--bg-icon-container)]"
-                        style={{ color: 'var(--text-icon)' }}
-                        title={editingId === entry.id ? 'Finish or cancel editing first' : 'Delete entry'}
-                      >
-                        <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
-                        </svg>
-                      </button>
-                    </div>
                   </div>
-                  <div className="mt-4 pt-4 text-xs text-tertiary font-roboto" style={{ borderTop: '1px solid', borderColor: 'var(--separator-card-inner)' }}>
+                  <div className="mt-2 text-xs text-tertiary font-roboto">
                     <div className="flex items-center">
                       <svg className="w-3 h-3 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                         <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" />
@@ -425,11 +440,13 @@ function WeightPageContent() {
                       Added {formatUKDate(entry.createdAt)}
                     </div>
                   </div>
-                </li>
+                  </div>
+                </div>
               )
             })}
-          </ul>
+          </Masonry>
         )}
+        </div>
         </div>
       </div>
 
@@ -437,8 +454,8 @@ function WeightPageContent() {
         isOpen={deleteModal.isOpen}
         onClose={closeDeleteModal}
         onConfirm={confirmDelete}
-        title="Delete weight entry?"
-        message="This entry will be removed. You can add a new entry anytime."
+        title="Delete Weight Entry"
+        message="Are you sure you want to delete this entry? This action cannot be undone."
         confirmText="Delete"
         cancelText="Cancel"
         isDestructive

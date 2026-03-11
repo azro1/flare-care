@@ -1303,7 +1303,7 @@ export default function Home() {
 
         <div className="contents lg:grid grid-cols-1 lg:grid-cols-2 gap-6 mb-6 lg:order-5 xl:order-none">
           {/* Today's Summary */}
-          <div className="order-[7] lg:order-1 mb-6 lg:mb-0">
+          <div className="order-[9] lg:order-1 mb-6 lg:mb-0">
             <h2 className="text-xl font-semibold font-source text-primary mb-3">Today's Summary</h2>
             <div className="card">
             <div className="card-inner p-4 sm:p-6">
@@ -1341,7 +1341,7 @@ export default function Home() {
           </div>
 
           {/* Recent Activity */}
-          <div className="order-[9] lg:order-2 mb-6 lg:mb-0">
+          <div className="order-[7] lg:order-2 mb-6 lg:mb-0">
             <h2 className="text-xl font-semibold font-source text-primary mb-3">Recent Activity</h2>
             <div className="card">
             <div className="card-inner p-4 sm:p-6 transition-all duration-300 ease-in-out">
