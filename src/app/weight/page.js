@@ -395,14 +395,7 @@ function WeightPageContent() {
                       </div>
                       {isExpanded && (
                         <>
-                          {entry.notes?.trim() && (
-                            <div className="mt-1 mb-3 min-w-0 max-w-full overflow-hidden" title={entry.notes}>
-                              <p className="text-sm text-secondary font-roboto break-words line-clamp-2">
-                                <span className="font-semibold text-primary">Notes:</span> {entry.notes}
-                              </p>
-                            </div>
-                          )}
-                          <div className="flex flex-wrap items-center gap-2">
+                          <div className="flex flex-wrap items-center gap-2 mt-3">
                             <button
                               type="button"
                               onClick={() => startEdit(entry)}
@@ -432,6 +425,15 @@ function WeightPageContent() {
                       )}
                     </div>
                   </div>
+                  {isExpanded && entry.notes?.trim() && (
+                    <div className="mt-4 min-w-0">
+                      <div className="card-inner min-w-0">
+                        <p className="text-sm text-secondary font-roboto break-words line-clamp-2" title={entry.notes}>
+                          <span className="font-semibold text-primary">Notes:</span> {entry.notes}
+                        </p>
+                      </div>
+                    </div>
+                  )}
                   <div className="mt-2 text-xs text-tertiary font-roboto">
                     <div className="flex items-center">
                       <svg className="w-3 h-3 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
