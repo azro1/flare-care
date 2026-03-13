@@ -9,6 +9,7 @@ import ProtectedRoute from '@/components/ProtectedRoute'
 import { sanitizeNotes, sanitizeInput } from '@/lib/sanitize'
 import { Calendar, ChevronDown, Bell, Lightbulb } from 'lucide-react'
 import Masonry from 'react-masonry-css'
+import { motion } from 'framer-motion'
 import { supabase, TABLES } from '@/lib/supabase'
 import { useAuth } from '@/lib/AuthContext'
 import DatePicker from 'react-datepicker'
@@ -528,7 +529,7 @@ function AppointmentsPageContent() {
                   <div className="card-inner p-4 sm:p-6 min-w-0">
                     <div className="flex flex-col sm:flex-row sm:justify-between sm:items-start gap-3">
                       <div className="flex-1 min-w-0">
-                        <div className={`flex items-center gap-2 ${isExpanded ? 'mb-1' : ''} min-w-0`}>
+                        <div className="flex items-center gap-2 min-w-0">
                           <div className="flex flex-wrap items-baseline gap-x-2 gap-y-1 min-w-0 flex-1">
                             <span className="font-semibold text-primary truncate">{formatUKDate(apt.date)}</span>
                             {apt.time && (
@@ -553,8 +554,15 @@ function AppointmentsPageContent() {
                         {apt.type && (
                           <p className="font-medium text-primary mt-1 truncate" title={apt.type}>{apt.type}</p>
                         )}
-                        {isExpanded && (
-                          <>
+                        <motion.div
+                          initial={false}
+                          animate={{
+                            height: isExpanded ? 'auto' : 0,
+                            opacity: isExpanded ? 1 : 0
+                          }}
+                          transition={{ duration: 0.2, ease: 'easeOut' }}
+                          style={{ overflow: 'hidden' }}
+                        >
                             {apt.reminderMinutesBefore && (
                               <div className="flex flex-row flex-nowrap items-center gap-3 mt-3 mb-3">
                                 {apt.time && getReminderTimeLabel(apt.date, apt.time, apt.reminderMinutesBefore) && (
@@ -610,13 +618,12 @@ function AppointmentsPageContent() {
                                 </svg>
                               </button>
                             </div>
-                          </>
-                        )}
+                        </motion.div>
                       </div>
                     </div>
 
                     {isExpanded && apt.notes && (
-                      <div className="mt-4 min-w-0">
+                      <div className="mt-2 min-w-0">
                         <div className="card-inner min-w-0">
                           <p className="text-sm text-secondary font-roboto truncate" title={apt.notes}>
                             <span className="font-semibold text-primary">Notes:</span> {apt.notes}
@@ -624,7 +631,7 @@ function AppointmentsPageContent() {
                         </div>
                       </div>
                     )}
-                    <div className="mt-2 text-xs text-tertiary font-roboto">
+                    <div className={`${isExpanded ? 'mt-2' : 'mt-1'} text-xs text-tertiary font-roboto`}>
                       <div className="flex items-center">
                         <svg className="w-3 h-3 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                           <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" />

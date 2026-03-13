@@ -17,6 +17,7 @@
     "@supabase/supabase-js": "^2.57.4",
     "@types/dompurify": "^3.0.5",
     "dompurify": "^3.2.7",
+    "framer-motion": "^12.36.0",
     "html2canvas": "^1.4.1",
     "jspdf": "^3.0.2",
     "lucide-react": "^0.546.0",

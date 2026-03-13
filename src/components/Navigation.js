@@ -3,6 +3,7 @@
 import Link from 'next/link'
 import { usePathname } from 'next/navigation'
 import { useState, useEffect, useRef } from 'react'
+import { motion } from 'framer-motion'
 import { useAuth } from '../lib/AuthContext'
 import { Sandwich, Activity } from "lucide-react"
 import Image from 'next/image'
@@ -280,7 +281,7 @@ export default function Navigation() {
             aria-label="Toggle mobile menu"
             aria-pressed={isMenuOpen}
           >
-            <svg className="w-6 h-6 " fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
               {isMenuOpen ? (
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
               ) : (
@@ -291,9 +292,16 @@ export default function Navigation() {
         </div>
 
         {/* Mobile Navigation */}
-        <div className={`lg:hidden absolute top-full left-0 right-0 shadow-lg border-t transition-all duration-300 ease-out overflow-hidden ${
-          isMenuOpen ? 'max-h-screen opacity-100' : 'max-h-0 opacity-0'
-        }`} style={{backgroundColor: 'var(--bg-dropdown)', borderColor: 'var(--border-dropdown)'}}>
+        <motion.div
+          className="lg:hidden absolute top-full left-0 right-0 shadow-lg border-t overflow-hidden"
+          style={{ backgroundColor: 'var(--bg-dropdown)', borderColor: 'var(--border-dropdown)' }}
+          initial={false}
+          animate={{
+            height: isMenuOpen ? 'auto' : 0,
+            opacity: isMenuOpen ? 1 : 0
+          }}
+          transition={{ duration: 0.25, ease: 'easeOut' }}
+        >
           <div className="container mx-auto px-3 sm:px-6 lg:px-8">
               {/* All Navigation Links */}
               {[...(isAuthenticated ? mainNavItems : unauthenticatedNavItems)].map((item, idx, arr) => (
@@ -353,7 +361,7 @@ export default function Navigation() {
               </div>
               )}
             </div>
-        </div>
+        </motion.div>
       </div>
     </nav>
   )

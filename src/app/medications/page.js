@@ -8,6 +8,7 @@ import { Pill, ChevronDown, Bell, Lightbulb } from 'lucide-react'
 import { supabase, TABLES } from '@/lib/supabase'
 import { useAuth } from '@/lib/AuthContext'
 import Masonry from 'react-masonry-css'
+import { motion } from 'framer-motion'
 
 function MedicationsPageContent() {
   const { user } = useAuth()
@@ -651,7 +652,7 @@ function MedicationsPageContent() {
               return (
                 <div key={medication.id} className="mb-4 last:mb-0">
                   <div className="card-inner p-4 sm:p-6 min-w-0">
-                  <div className="flex flex-col sm:flex-row sm:justify-between sm:items-start mb-1">
+                  <div className="flex flex-col sm:flex-row sm:justify-between sm:items-start">
                     <div className="flex-1 min-w-0 w-full sm:w-auto">
                       <div className={`flex items-center gap-2 ${isExpanded ? 'mb-1' : ''} min-w-0`}>
                         <h3 className="text-lg font-semibold font-source text-primary truncate min-w-0 flex-1">
@@ -668,8 +669,15 @@ function MedicationsPageContent() {
                           />
                         </button>
                       </div>
-                      {isExpanded && (
-                        <>
+                      <motion.div
+                        initial={false}
+                        animate={{
+                          height: isExpanded ? 'auto' : 0,
+                          opacity: isExpanded ? 1 : 0
+                        }}
+                        transition={{ duration: 0.2, ease: 'easeOut' }}
+                        style={{ overflow: 'hidden' }}
+                      >
                           {medication.dosage && (
                             <p className="text-sm text-secondary mb-3 font-roboto">
                               <span className="font-semibold">Dosage:</span> {medication.dosage}
@@ -755,13 +763,12 @@ function MedicationsPageContent() {
                               </svg>
                             </button>
                           </div>
-                        </>
-                      )}
+                      </motion.div>
                     </div>
                   </div>
 
                   {isExpanded && medication.notes && (
-                    <div className="mt-4 min-w-0">
+                    <div className="mt-2 min-w-0">
                       <div className="card-inner min-w-0">
                         <p className="text-sm text-secondary font-roboto truncate">
                           <span className="font-semibold text-primary">Notes:</span> {medication.notes}
@@ -769,7 +776,7 @@ function MedicationsPageContent() {
                       </div>
                     </div>
                   )}
-                  <div className="mt-2 text-xs text-tertiary font-roboto">
+                  <div className={`${isExpanded ? 'mt-2' : 'mt-1'} text-xs text-tertiary font-roboto`}>
                     <div className="flex items-center">
                       <svg className="w-3 h-3 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                         <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" />
