@@ -664,7 +664,7 @@ function MedicationsPageContent() {
                   <div className="flex flex-col sm:flex-row sm:justify-between sm:items-start">
                     <div className="flex-1 min-w-0 w-full sm:w-auto">
                       <div className={`flex items-center gap-2 ${isExpanded ? 'mb-1' : ''} min-w-0`}>
-                        <h3 className="text-lg font-semibold font-source text-primary truncate min-w-0 flex-1">
+                        <h3 className="font-semibold font-roboto text-primary truncate min-w-0 flex-1">
                           {medication.name}
                         </h3>
                         <button
