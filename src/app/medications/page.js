@@ -569,7 +569,7 @@ function MedicationsPageContent() {
                 </div>
               </div>
 
-              <div className="flex items-start sm:items-center card-inner p-4 rounded-xl ring-2 ring-[#5F9EA0]/50">
+              <div className="flex items-start sm:items-center card-inner p-4 rounded-xl">
                  <input
                    type="checkbox"
                    id="remindersEnabled"

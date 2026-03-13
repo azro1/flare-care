@@ -1201,11 +1201,11 @@ export default function Home() {
           <h2 className="text-xl font-semibold font-source text-primary mb-4">Daily Check-in</h2>
           {/* Mobile: horizontal scroll cards */}
           <div className="block sm:hidden -mx-4 px-4">
-            <div className="overflow-x-auto pb-2 overscroll-x-contain scrollbar-hide snap-x snap-mandatory" style={{ WebkitOverflowScrolling: 'touch' }}>
+            <div className="overflow-x-auto pb-1 overscroll-x-contain scrollbar-hide snap-x snap-mandatory" style={{ WebkitOverflowScrolling: 'touch' }}>
               <div className="flex gap-3">
               <Link
                 href="/symptoms"
-                className="card card-link flex-shrink-0 w-[75vw] min-w-[140px] max-w-[180px] !p-6 flex flex-col items-center justify-center gap-3 snap-center transition-all group"
+                className="card card-link flex-shrink-0 w-[72vw] min-w-[135px] max-w-[168px] !p-6 flex flex-col items-center justify-center gap-3 snap-center transition-all group"
               >
                 <div className="w-10 h-10 dashboard-icon-panel rounded-lg flex items-center justify-center" style={{ backgroundColor: 'var(--bg-goal-icon-success)' }}>
                   <Thermometer className="w-5 h-5 text-emerald-600" />
@@ -1214,7 +1214,7 @@ export default function Home() {
               </Link>
               <Link
                 href="/medications/track"
-                className="card card-link flex-shrink-0 w-[75vw] min-w-[140px] max-w-[180px] !p-6 flex flex-col items-center justify-center gap-3 snap-center transition-all group"
+                className="card card-link flex-shrink-0 w-[72vw] min-w-[135px] max-w-[168px] !p-6 flex flex-col items-center justify-center gap-3 snap-center transition-all group"
               >
                 <div className="w-10 h-10 dashboard-icon-panel rounded-lg flex items-center justify-center" style={{ backgroundColor: 'var(--bg-goal-icon-medication)' }}>
                   <ChartLine className="w-5 h-5 text-pink-500" />
@@ -1223,7 +1223,7 @@ export default function Home() {
               </Link>
               <Link
                 href="/hydration"
-                className="card card-link flex-shrink-0 w-[75vw] min-w-[140px] max-w-[180px] !p-6 flex flex-col items-center justify-center gap-3 snap-center transition-all group"
+                className="card card-link flex-shrink-0 w-[72vw] min-w-[135px] max-w-[168px] !p-6 flex flex-col items-center justify-center gap-3 snap-center transition-all group"
               >
                 <div className="w-10 h-10 dashboard-icon-panel rounded-lg flex items-center justify-center" style={{ backgroundColor: 'var(--bg-goal-icon-hydration)' }}>
                   <CupSoda className="w-5 h-5 text-sky-600" />
@@ -1661,7 +1661,7 @@ export default function Home() {
                 <div className="relative -mx-4 px-4 sm:mx-0 sm:px-0">
                   <div
                     ref={newsScrollRef}
-                    className="overflow-x-auto pb-2 scrollbar-hide"
+                    className="overflow-x-auto scrollbar-hide"
                   >
                     <div className="flex gap-4 md:gap-6 md:px-0" style={{ width: 'max-content' }}>
                     {newsItems.map((item) => (
