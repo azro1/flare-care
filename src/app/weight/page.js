@@ -6,7 +6,7 @@ import ProtectedRoute from '@/components/ProtectedRoute'
 import { sanitizeNotes } from '@/lib/sanitize'
 import { Scale, ChevronDown } from 'lucide-react'
 import Masonry from 'react-masonry-css'
-import { motion } from 'framer-motion'
+import { motion, AnimatePresence } from 'framer-motion'
 import { supabase, TABLES } from '@/lib/supabase'
 import { useAuth } from '@/lib/AuthContext'
 import DatePicker from 'react-datepicker'
@@ -262,8 +262,16 @@ function WeightPageContent() {
         </div>
 
         <div>
+        <AnimatePresence>
         {isAdding && (
-          <div className="mb-6 min-w-0">
+          <motion.div
+            key="add-form"
+            initial={{ height: 0, opacity: 0 }}
+            animate={{ height: 'auto', opacity: 1 }}
+            exit={{ height: 0, opacity: 0 }}
+            transition={{ duration: 0.2, ease: 'easeOut' }}
+            className="mb-6 min-w-0 overflow-hidden"
+          >
             <form onSubmit={handleSubmit} className="space-y-4" autoComplete="off">
               <div className="grid sm:grid-cols-2 gap-6 min-w-0">
                 <div className="w-full">
@@ -343,8 +351,9 @@ function WeightPageContent() {
                 </button>
               </div>
             </form>
-          </div>
+          </motion.div>
         )}
+        </AnimatePresence>
 
         <div>
         {isLoading ? (

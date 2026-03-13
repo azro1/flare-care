@@ -8,7 +8,7 @@ import { Pill, ChevronDown, Bell, Lightbulb } from 'lucide-react'
 import { supabase, TABLES } from '@/lib/supabase'
 import { useAuth } from '@/lib/AuthContext'
 import Masonry from 'react-masonry-css'
-import { motion } from 'framer-motion'
+import { motion, AnimatePresence } from 'framer-motion'
 
 function MedicationsPageContent() {
   const { user } = useAuth()
@@ -497,8 +497,16 @@ function MedicationsPageContent() {
           )}
         </div>
 
+        <AnimatePresence>
         {isAdding && (
-          <div className="mb-6 min-w-0 leading-">
+          <motion.div
+            key="add-form"
+            initial={{ height: 0, opacity: 0 }}
+            animate={{ height: 'auto', opacity: 1 }}
+            exit={{ height: 0, opacity: 0 }}
+            transition={{ duration: 0.2, ease: 'easeOut' }}
+            className="mb-6 min-w-0 overflow-hidden"
+          >
             <form onSubmit={handleSubmit} className="space-y-4" autoComplete="off">
               <div className="grid lg:grid-cols-2 gap-6 min-w-0">
                 <div>
@@ -621,8 +629,9 @@ function MedicationsPageContent() {
                 </button>
               </div>
             </form>
-          </div>
+          </motion.div>
         )}
+        </AnimatePresence>
 
         <div>
         {isLoading ? (
