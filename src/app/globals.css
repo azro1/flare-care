@@ -230,6 +230,17 @@
     border-color: var(--border-secondary);
   }
 
+  .dark .btn-secondary {
+    background-color: var(--bg-input-dark);
+    border-color: var(--border-input-dark);
+    box-shadow: none;
+  }
+
+  .dark .btn-secondary:hover {
+    background-color: var(--bg-button-secondary-hover);
+    border-color: var(--border-input-dark);
+  }
+
   .card {
     background-color: var(--bg-card);
     color: var(--text-primary);

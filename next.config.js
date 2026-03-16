@@ -1,5 +1,10 @@
 /** @type {import('next').NextConfig} */
 const nextConfig = {
+  env: {
+    MAILTRAP_API_TOKEN: process.env.MAILTRAP_API_TOKEN,
+    MAILTRAP_SENDER_EMAIL: process.env.MAILTRAP_SENDER_EMAIL,
+    MAILTRAP_SENDER_NAME: process.env.MAILTRAP_SENDER_NAME,
+  },
   // App Router is now stable in Next.js 13+, no experimental flag needed
   images: {
     remotePatterns: [

@@ -3,6 +3,7 @@
 import { useState, useEffect } from 'react'
 import { usePathname } from 'next/navigation'
 import jsPDF from 'jspdf'
+import { motion, AnimatePresence } from 'framer-motion'
 import ConfirmationModal from '@/components/ConfirmationModal'
 import DatePicker from 'react-datepicker'
 import 'react-datepicker/dist/react-datepicker.css'
@@ -10,7 +11,7 @@ import ProtectedRoute from '@/components/ProtectedRoute'
 import { supabase, TABLES } from '@/lib/supabase'
 import { useAuth } from '@/lib/AuthContext'
 import { getUserPreferences } from '@/lib/userPreferences'
-import { Calendar, FileText, Download, FileDown, BarChart3, Pill, Activity, TrendingUp, Thermometer, Brain, Pizza, ChartLine, Scale, ChevronDown, ChevronUp, CupSoda } from 'lucide-react'
+import { Calendar, FileText, Download, FileDown, BarChart3, Pill, Activity, TrendingUp, Thermometer, Brain, Pizza, ChartLine, Scale, ChevronDown, ChevronUp, CupSoda, Mail } from 'lucide-react'
 
 // Force dynamic rendering to prevent Vercel static generation issues
 export const dynamic = 'force-dynamic'
@@ -65,6 +66,92 @@ function ReportsPageContent() {
     antibiotics: 0
   })
   const setListPage = (key, page) => setListPages(prev => ({ ...prev, [key]: Math.max(0, page) }))
+
+  const [isEmailModalOpen, setIsEmailModalOpen] = useState(false)
+  const [emailForm, setEmailForm] = useState({
+    consultantEmail: '',
+    consultantName: '',
+    note: ''
+  })
+  const [emailError, setEmailError] = useState('')
+  const [isSendingEmail, setIsSendingEmail] = useState(false)
+
+  const openEmailModal = () => {
+    if (!hasDataToExport() || !reportData) {
+      setShowNoDataModal(true)
+      return
+    }
+    setEmailError('')
+    setIsEmailModalOpen(true)
+  }
+
+  const closeEmailModal = () => {
+    if (isSendingEmail) return
+    setIsEmailModalOpen(false)
+  }
+
+  const handleEmailFormChange = (event) => {
+    const { name, value } = event.target
+    setEmailForm(prev => ({ ...prev, [name]: value }))
+  }
+
+  const handleSendReportEmail = async (event) => {
+    event.preventDefault()
+    if (!reportData) return
+
+    const email = emailForm.consultantEmail.trim()
+    if (!email || !/^[^@\s]+@[^@\s]+\.[^@\s]+$/.test(email)) {
+      setEmailError('Please enter a valid email address.')
+      return
+    }
+
+    setIsSendingEmail(true)
+    setEmailError('')
+
+    try {
+      const response = await fetch('/api/send-report-email', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          consultantEmail: email,
+          consultantName: emailForm.consultantName.trim() || null,
+          note: emailForm.note.trim() || null,
+          period: reportData.period,
+          summary: {
+            totalEntries: reportData.totalEntries,
+            averageSeverity: reportData.averageSeverity,
+            severityTrend: reportData.severityTrend,
+            medications: reportData.medications,
+            medicationTracking: reportData.medicationTracking,
+            appointments: reportData.appointments,
+            weightEntries: reportData.weightEntries,
+            hydrationEntries: reportData.hydrationEntries,
+            hydrationTarget: reportData.hydrationTarget
+          }
+        })
+      })
+
+      if (!response.ok) {
+        let errorMessage = 'Failed to send email. Please try again.'
+        try {
+          const data = await response.json()
+          if (data?.error) errorMessage = data.error
+        } catch {
+          // ignore JSON parse errors
+        }
+        throw new Error(errorMessage)
+      }
+
+      setIsEmailModalOpen(false)
+      setEmailForm({ consultantEmail: '', consultantName: '', note: '' })
+      alert('Report emailed successfully.')
+    } catch (error) {
+      console.error('Error sending report email:', error)
+      setEmailError(error.message || 'Failed to send email. Please try again.')
+    } finally {
+      setIsSendingEmail(false)
+    }
+  }
 
   // Fetch symptoms directly from Supabase
   useEffect(() => {
@@ -1256,18 +1343,27 @@ function ReportsPageContent() {
             />
           </div>
         </div>
-        <div className="flex flex-col sm:flex-row sm:justify-between sm:items-center gap-4">
+        <div className="flex flex-col xl:flex-row xl:justify-between xl:items-center gap-4">
           <div className="text-sm text-secondary sm:max-w-md sm:pr-4 font-roboto flex-1">
             Showing symptoms from {formatUKDate(dateRange.startDate)} to {formatUKDate(dateRange.endDate)}
           </div>
           <div className="flex flex-col sm:flex-row gap-3 items-center sm:items-stretch">
-            <button onClick={() => handleExportClick(exportToPDF)} className="inline-flex items-center justify-center px-6 py-3 button-cadet rounded-xl shadow-lg hover:shadow-xl transition-all duration-300 whitespace-nowrap w-full sm:w-auto font-roboto">
+            <button onClick={() => handleExportClick(exportToPDF)} className="inline-flex items-center justify-center px-6 py-3 btn-secondary rounded-xl whitespace-nowrap w-full sm:w-auto font-roboto">
               <FileText className="w-5 h-5 mr-2" />
               Export PDF
             </button>
-            <button onClick={() => handleExportClick(exportToCSV)} className="inline-flex items-center justify-center px-6 py-3 btn-secondary whitespace-nowrap w-full sm:w-auto font-roboto">
+            <button onClick={() => handleExportClick(exportToCSV)} className="inline-flex items-center justify-center px-6 py-3 btn-secondary rounded-xl whitespace-nowrap w-full sm:w-auto font-roboto">
               <FileDown className="w-5 h-5 mr-2" />
               Export CSV
+            </button>
+            <button
+              type="button"
+              onClick={openEmailModal}
+              className="inline-flex items-center justify-center px-6 py-3 btn-secondary rounded-xl whitespace-nowrap w-full sm:w-auto font-roboto disabled:opacity-50 disabled:cursor-not-allowed"
+              disabled={isLoading || !reportData || !hasDataToExport()}
+            >
+              <Mail className="w-5 h-5 mr-2" />
+              Email report
             </button>
           </div>
         </div>
@@ -1284,130 +1380,139 @@ function ReportsPageContent() {
           <div className="flex w-8 h-8 sm:w-10 sm:h-10 bg-emerald-100 dashboard-icon-panel rounded-lg items-center justify-center mr-3 sm:mr-4 flex-shrink-0">
             <Thermometer className="w-4 h-4 sm:w-5 sm:h-5 text-emerald-600 dark:[color:var(--text-goal-icon-success)]" />
           </div>
-          <h2 className="text-sm sm:text-lg font-semibold text-primary flex-1">Symptom Report</h2>
+          <h2 className="text-sm sm:text-lg font-semibold text-primary flex-1">Symptoms</h2>
           <span className="text-sm font-roboto text-secondary shrink-0">{openSections.symptomReport ? 'Hide' : 'Show'}</span>
         </button>
 
-        {openSections.symptomReport && (
-        <>
-        {reportData.totalEntries > 0 && (
-          <div className="text-sm text-secondary mb-6 font-roboto">
-            Found {reportData.totalEntries} symptom {reportData.totalEntries === 1 ? 'episode' : 'episodes'} in the selected period
-          </div>
-        )}
-
-        {/* Summary Stats */}
-        <div className="grid grid-cols-1 lg:grid-cols-3 gap-4 mb-8">
-          <div className="card-inner p-6 text-center">
-            <div className="text-2xl sm:text-3xl font-bold text-primary mb-2">
-              {reportData.totalEntries}
-            </div>
-            <div className="text-xs sm:text-sm text-secondary font-medium font-roboto">Symptom Episodes</div>
-          </div>
-          <div className="card-inner p-6 text-center">
-            <div className="text-2xl sm:text-3xl font-bold mb-2 text-primary">
-              {reportData.averageSeverity}
-            </div>
-            <div className="text-xs sm:text-sm text-secondary font-medium font-roboto">Average Severity</div>
-          </div>
-          <div className="card-inner p-6 text-center">
-            <div className="text-2xl sm:text-3xl font-bold mb-2 text-primary">
-              {reportData.averageStress != null && !isNaN(reportData.averageStress) ? reportData.averageStress : 0}
-            </div>
-            <div className="text-xs sm:text-sm text-secondary font-medium font-roboto">Average Stress</div>
-          </div>
-        </div>
-
-        {/* Symptom Episodes - sub-section (collapsible + paginated) */}
-        {reportData.severityTrend.length > 0 && (
-          <div className="mt-6 border-l-2 border-secondary/30 pl-4">
-            <button
-              type="button"
-              onClick={() => toggleSubSection('symptomEpisodes')}
-              className="w-full flex items-center justify-between text-left focus:outline-none rounded py-2 -ml-1"
-              aria-expanded={openSubSections.symptomEpisodes}
+        <AnimatePresence>
+          {openSections.symptomReport && (
+            <motion.div
+              key="symptom-report"
+              initial={{ height: 0, opacity: 0 }}
+              animate={{ height: 'auto', opacity: 1 }}
+              exit={{ height: 0, opacity: 0 }}
+              transition={{ duration: 0.2, ease: 'easeOut' }}
+              className="overflow-hidden"
             >
-              <span className="text-sm sm:text-base font-semibold text-primary">Symptom Episodes ({reportData.severityTrend.length})</span>
-              {openSubSections.symptomEpisodes ? <ChevronUp className="w-4 h-4 text-secondary shrink-0" /> : <ChevronDown className="w-4 h-4 text-secondary shrink-0" />}
-            </button>
-            {openSubSections.symptomEpisodes && (
-              <>
-                <div className="space-y-4 mt-2">
-                  {reportData.severityTrend
-                    .slice(listPages.symptomEpisodes * REPORT_PAGE_SIZE, (listPages.symptomEpisodes + 1) * REPORT_PAGE_SIZE)
-                    .map((entry, idx) => {
-                      const index = listPages.symptomEpisodes * REPORT_PAGE_SIZE + idx
-                      return (
-                        <div key={index} className="card-inner p-4">
-                          <div className="flex flex-col gap-3 min-w-0">
-                            <div className="text-sm text-secondary font-roboto">
-                              {formatUKDate(entry.date)}
-                              {entry.isOngoing ? ' (Ongoing)' : ` - ${formatUKDate(entry.endDate)}`}
-                            </div>
-                            <div className="flex flex-col gap-2">
-                              <div className="flex items-center gap-2">
-                                <span className="text-xs font-medium text-secondary font-roboto shrink-0">Severity:</span>
-                                <div className="flex-1 min-w-0 bg-card rounded-full h-2">
-                                  <div 
-                                    className="h-2 rounded-full report-bar-fill" 
-                                    style={{ width: `${(entry.severity / 10) * 100}%` }}
-                                  ></div>
-                                </div>
-                                <span className="px-2 py-1 rounded-full text-xs font-medium font-roboto text-primary shrink-0">
-                                  {entry.severity}/10
-                                </span>
-                              </div>
-                              {entry.stressLevel && (
-                                <div className="flex items-center gap-2">
-                                  <span className="text-xs font-medium text-secondary font-roboto shrink-0">Stress:</span>
-                                  <div className="flex-1 min-w-0 bg-card rounded-full h-2">
-                                    <div 
-                                      className="h-2 rounded-full report-bar-fill" 
-                                      style={{ width: `${(entry.stressLevel / 10) * 100}%` }}
-                                    ></div>
+              {reportData.totalEntries > 0 && (
+                <div className="text-sm text-secondary mb-6 font-roboto">
+                  Found {reportData.totalEntries} {reportData.totalEntries === 1 ? 'episode' : 'episodes'} in the selected period
+                </div>
+              )}
+
+              {/* Summary Stats */}
+              <div className="grid grid-cols-1 lg:grid-cols-3 gap-4 mb-8">
+                <div className="card-inner p-6 text-center">
+                  <div className="text-2xl sm:text-3xl font-bold text-primary mb-2">
+                    {reportData.totalEntries}
+                  </div>
+                  <div className="text-xs sm:text-sm text-secondary font-medium font-roboto">Symptom Episodes</div>
+                </div>
+                <div className="card-inner p-6 text-center">
+                  <div className="text-2xl sm:text-3xl font-bold mb-2 text-primary">
+                    {reportData.averageSeverity}
+                  </div>
+                  <div className="text-xs sm:text-sm text-secondary font-medium font-roboto">Average Severity</div>
+                </div>
+                <div className="card-inner p-6 text-center">
+                  <div className="text-2xl sm:text-3xl font-bold mb-2 text-primary">
+                    {reportData.averageStress != null && !isNaN(reportData.averageStress) ? reportData.averageStress : 0}
+                  </div>
+                  <div className="text-xs sm:text-sm text-secondary font-medium font-roboto">Average Stress</div>
+                </div>
+              </div>
+
+              {/* Symptom Episodes - sub-section (collapsible + paginated) */}
+              {reportData.severityTrend.length > 0 && (
+                <div className="mt-6 border-l-2 border-secondary/30 pl-4">
+                  <button
+                    type="button"
+                    onClick={() => toggleSubSection('symptomEpisodes')}
+                    className="w-full flex items-center justify-between text-left focus:outline-none rounded py-2 -ml-1"
+                    aria-expanded={openSubSections.symptomEpisodes}
+                  >
+                    <span className="text-sm sm:text-base font-semibold text-primary">Symptom Episodes ({reportData.severityTrend.length})</span>
+                    {openSubSections.symptomEpisodes ? <ChevronUp className="w-4 h-4 text-secondary shrink-0" /> : <ChevronDown className="w-4 h-4 text-secondary shrink-0" />}
+                  </button>
+                  {openSubSections.symptomEpisodes && (
+                    <>
+                      <div className="space-y-4 mt-2">
+                        {reportData.severityTrend
+                          .slice(listPages.symptomEpisodes * REPORT_PAGE_SIZE, (listPages.symptomEpisodes + 1) * REPORT_PAGE_SIZE)
+                          .map((entry, idx) => {
+                            const index = listPages.symptomEpisodes * REPORT_PAGE_SIZE + idx
+                            return (
+                              <div key={index} className="card-inner p-4">
+                                <div className="flex flex-col gap-3 min-w-0">
+                                  <div className="text-sm text-secondary font-roboto">
+                                    {formatUKDate(entry.date)}
+                                    {entry.isOngoing ? ' (Ongoing)' : ` - ${formatUKDate(entry.endDate)}`}
                                   </div>
-                                  <span className="px-2 py-1 rounded-full text-xs font-medium font-roboto text-primary shrink-0">
-                                    {entry.stressLevel}/10
-                                  </span>
+                                  <div className="flex flex-col gap-2">
+                                    <div className="flex items-center gap-2">
+                                      <span className="text-xs font-medium text-secondary font-roboto shrink-0">Severity:</span>
+                                      <div className="flex-1 min-w-0 bg-card rounded-full h-2">
+                                        <div 
+                                          className="h-2 rounded-full report-bar-fill" 
+                                          style={{ width: `${(entry.severity / 10) * 100}%` }}
+                                        ></div>
+                                      </div>
+                                      <span className="px-2 py-1 rounded-full text-xs font-medium font-roboto text-primary shrink-0">
+                                        {entry.severity}/10
+                                      </span>
+                                    </div>
+                                    {entry.stressLevel && (
+                                      <div className="flex items-center gap-2">
+                                        <span className="text-xs font-medium text-secondary font-roboto shrink-0">Stress:</span>
+                                        <div className="flex-1 min-w-0 bg-card rounded-full h-2">
+                                          <div 
+                                            className="h-2 rounded-full report-bar-fill" 
+                                            style={{ width: `${(entry.stressLevel / 10) * 100}%` }}
+                                          ></div>
+                                        </div>
+                                        <span className="px-2 py-1 rounded-full text-xs font-medium font-roboto text-primary shrink-0">
+                                          {entry.stressLevel}/10
+                                        </span>
+                                      </div>
+                                    )}
+                                  </div>
                                 </div>
-                              )}
-                            </div>
+                              </div>
+                            )
+                          })}
+                      </div>
+                      {reportData.severityTrend.length > REPORT_PAGE_SIZE && (
+                        <div className="flex items-center justify-between mt-4 flex-wrap gap-2">
+                          <span className="text-sm text-secondary font-roboto">
+                            Showing {listPages.symptomEpisodes * REPORT_PAGE_SIZE + 1}–{Math.min((listPages.symptomEpisodes + 1) * REPORT_PAGE_SIZE, reportData.severityTrend.length)} of {reportData.severityTrend.length}
+                          </span>
+                          <div className="flex gap-2">
+                            <button
+                              type="button"
+                              onClick={() => setListPage('symptomEpisodes', listPages.symptomEpisodes - 1)}
+                              disabled={listPages.symptomEpisodes === 0}
+                              className="px-3 py-1.5 text-sm font-roboto button-cancel rounded-lg disabled:opacity-50"
+                            >
+                              Previous
+                            </button>
+                            <button
+                              type="button"
+                              onClick={() => setListPage('symptomEpisodes', listPages.symptomEpisodes + 1)}
+                              disabled={(listPages.symptomEpisodes + 1) * REPORT_PAGE_SIZE >= reportData.severityTrend.length}
+                              className="px-3 py-1.5 text-sm font-roboto button-cadet rounded-lg disabled:opacity-50"
+                            >
+                              Next
+                            </button>
                           </div>
                         </div>
-                      )
-                    })}
+                      )}
+                    </>
+                  )}
                 </div>
-                {reportData.severityTrend.length > REPORT_PAGE_SIZE && (
-                  <div className="flex items-center justify-between mt-4 flex-wrap gap-2">
-                    <span className="text-sm text-secondary font-roboto">
-                      Showing {listPages.symptomEpisodes * REPORT_PAGE_SIZE + 1}–{Math.min((listPages.symptomEpisodes + 1) * REPORT_PAGE_SIZE, reportData.severityTrend.length)} of {reportData.severityTrend.length}
-                    </span>
-                    <div className="flex gap-2">
-                      <button
-                        type="button"
-                        onClick={() => setListPage('symptomEpisodes', listPages.symptomEpisodes - 1)}
-                        disabled={listPages.symptomEpisodes === 0}
-                        className="px-3 py-1.5 text-sm font-roboto button-cancel rounded-lg disabled:opacity-50"
-                      >
-                        Previous
-                      </button>
-                      <button
-                        type="button"
-                        onClick={() => setListPage('symptomEpisodes', listPages.symptomEpisodes + 1)}
-                        disabled={(listPages.symptomEpisodes + 1) * REPORT_PAGE_SIZE >= reportData.severityTrend.length}
-                        className="px-3 py-1.5 text-sm font-roboto button-cadet rounded-lg disabled:opacity-50"
-                      >
-                        Next
-                      </button>
-                    </div>
-                  </div>
-                )}
-                </>
-            )}
-          </div>
-        )}
-        </>
-        )}
+              )}
+            </motion.div>
+          )}
+        </AnimatePresence>
       </div>
 
       {/* Medications - Collapsible */}
@@ -1425,24 +1530,35 @@ function ReportsPageContent() {
             <h2 className="text-sm sm:text-lg font-semibold text-primary flex-1">Current Medications</h2>
             <span className="text-sm font-roboto text-secondary shrink-0">{openSections.currentMeds ? 'Hide' : 'Show'}</span>
           </button>
-          {openSections.currentMeds && (
-          <div className="space-y-4">
-            {reportData.medications.map((med, index) => (
-              <div key={index} className="card-inner p-4">
-                <div className="min-w-0 overflow-hidden">
-                  <h5 className="font-medium font-roboto text-primary text-sm sm:text-base truncate" title={med.name}>{med.name}</h5>
-                  {med.dosage && (
-                    <div className="mt-2">
-                      <span className="text-xs text-secondary font-roboto">
-                        <span className="font-medium">Dosage:</span> {med.dosage}
-                      </span>
+          <AnimatePresence>
+            {openSections.currentMeds && (
+              <motion.div
+                key="current-meds"
+                initial={{ height: 0, opacity: 0 }}
+                animate={{ height: 'auto', opacity: 1 }}
+                exit={{ height: 0, opacity: 0 }}
+                transition={{ duration: 0.2, ease: 'easeOut' }}
+                className="overflow-hidden"
+              >
+                <div className="space-y-4">
+                  {reportData.medications.map((med, index) => (
+                    <div key={index} className="card-inner p-4">
+                      <div className="min-w-0 overflow-hidden">
+                        <h5 className="font-medium font-roboto text-primary text-sm sm:text-base truncate" title={med.name}>{med.name}</h5>
+                        {med.dosage && (
+                          <div className="mt-2">
+                            <span className="text-xs text-secondary font-roboto">
+                              <span className="font-medium">Dosage:</span> {med.dosage}
+                            </span>
+                          </div>
+                        )}
+                      </div>
                     </div>
-                  )}
+                  ))}
                 </div>
-              </div>
-            ))}
-          </div>
-          )}
+              </motion.div>
+            )}
+          </AnimatePresence>
         </div>
       )}
 
@@ -1465,175 +1581,211 @@ function ReportsPageContent() {
             <h2 className="text-sm sm:text-lg font-semibold text-primary flex-1">Medication logs</h2>
             <span className="text-sm font-roboto text-secondary shrink-0">{openSections.trackedMeds ? 'Hide' : 'Show'}</span>
           </button>
-          {openSections.trackedMeds && (
-          <>
-          {/* Missed Medications - sub-section (collapsible + paginated) */}
-          {reportData.medicationTracking.missedMedications.length > 0 && (
-            <div className="mb-6 border-l-2 border-secondary/30 pl-4">
-              <button
-                type="button"
-                onClick={() => toggleSubSection('missedMeds')}
-                className="w-full flex items-center justify-between text-left focus:outline-none rounded py-2 -ml-1"
-                aria-expanded={openSubSections.missedMeds}
+          <AnimatePresence>
+            {openSections.trackedMeds && (
+              <motion.div
+                key="tracked-meds"
+                initial={{ height: 0, opacity: 0 }}
+                animate={{ height: 'auto', opacity: 1 }}
+                exit={{ height: 0, opacity: 0 }}
+                transition={{ duration: 0.2, ease: 'easeOut' }}
+                className="overflow-hidden"
               >
-                <span className="text-sm sm:text-base font-semibold text-primary">Missed Medications ({reportData.medicationTracking.missedMedications.length})</span>
-                {openSubSections.missedMeds ? <ChevronUp className="w-4 h-4 text-secondary shrink-0" /> : <ChevronDown className="w-4 h-4 text-secondary shrink-0" />}
-              </button>
-              {openSubSections.missedMeds && (
-                <>
-                  <div className="space-y-4 mt-2">
-                    {reportData.medicationTracking.missedMedications
-                      .slice(listPages.missedMeds * REPORT_PAGE_SIZE, (listPages.missedMeds + 1) * REPORT_PAGE_SIZE)
-                      .map((item, idx) => {
-                        const index = listPages.missedMeds * REPORT_PAGE_SIZE + idx
-                        return (
-                          <div key={index} className="card-inner p-4">
-                            <div className="min-w-0 overflow-hidden">
-                              <h5 className="font-medium font-roboto text-primary text-sm sm:text-base truncate" title={item.medication}>{item.medication}</h5>
-                              <div className="mt-2 flex flex-col gap-1">
-                                <div className="text-sm text-secondary font-roboto">
-                                  <span className="font-medium">Date:</span> {item.date ? formatUKDate(item.date) : 'Not specified'}
-                                </div>
-                                <div className="text-sm text-secondary font-roboto">
-                                  <span className="font-medium">Time:</span> {item.timeOfDay || 'Not specified'}
-                                </div>
-                              </div>
-                            </div>
-                          </div>
-                        )
-                      })}
-                  </div>
-                  {reportData.medicationTracking.missedMedications.length > REPORT_PAGE_SIZE && (
-                    <div className="flex items-center justify-between mt-4 flex-wrap gap-2">
-                      <span className="text-sm text-secondary font-roboto">
-                        Showing {listPages.missedMeds * REPORT_PAGE_SIZE + 1}–{Math.min((listPages.missedMeds + 1) * REPORT_PAGE_SIZE, reportData.medicationTracking.missedMedications.length)} of {reportData.medicationTracking.missedMedications.length}
-                      </span>
-                      <div className="flex gap-2">
-                        <button type="button" onClick={() => setListPage('missedMeds', listPages.missedMeds - 1)} disabled={listPages.missedMeds === 0} className="px-3 py-1.5 text-sm font-roboto button-cancel rounded-lg disabled:opacity-50">Previous</button>
-                        <button type="button" onClick={() => setListPage('missedMeds', listPages.missedMeds + 1)} disabled={(listPages.missedMeds + 1) * REPORT_PAGE_SIZE >= reportData.medicationTracking.missedMedications.length} className="px-3 py-1.5 text-sm font-roboto button-cadet rounded-lg disabled:opacity-50">Next</button>
-                      </div>
-                    </div>
-                  )}
-                </>
-              )}
-            </div>
-          )}
-
-          {/* NSAIDs - sub-section (collapsible + paginated) */}
-          {reportData.medicationTracking.nsaids.length > 0 && (
-            <div className="mb-6 border-l-2 border-secondary/30 pl-4">
-              <button
-                type="button"
-                onClick={() => toggleSubSection('nsaids')}
-                className="w-full flex items-center justify-between text-left focus:outline-none rounded py-2 -ml-1"
-                aria-expanded={openSubSections.nsaids}
-              >
-                <span className="text-sm sm:text-base font-semibold text-primary">NSAIDs Taken ({reportData.medicationTracking.nsaids.length})</span>
-                {openSubSections.nsaids ? <ChevronUp className="w-4 h-4 text-secondary shrink-0" /> : <ChevronDown className="w-4 h-4 text-secondary shrink-0" />}
-              </button>
-              {openSubSections.nsaids && (
-                <>
-                  <div className="space-y-4 mt-2">
-                    {reportData.medicationTracking.nsaids
-                      .slice(listPages.nsaids * REPORT_PAGE_SIZE, (listPages.nsaids + 1) * REPORT_PAGE_SIZE)
-                      .map((item, idx) => {
-                        const index = listPages.nsaids * REPORT_PAGE_SIZE + idx
-                        return (
-                          <div key={index} className="card-inner p-4">
-                            <div className="min-w-0 overflow-hidden">
-                              <h5 className="font-medium font-roboto text-primary text-sm sm:text-base truncate" title={item.medication}>{item.medication}</h5>
-                              <div className="mt-2 flex flex-col gap-1 min-w-0">
-                                <div className="text-sm text-secondary font-roboto">
-                                  <span className="font-medium">Date:</span> {item.date ? formatUKDate(item.date) : 'Not specified'}
-                                </div>
-                                <div className="text-sm text-secondary font-roboto">
-                                  <span className="font-medium">Time:</span> {item.timeOfDay || 'Not specified'}
-                                </div>
-                                {item.dosage && (
-                                  <div className="text-sm text-secondary font-roboto break-words min-w-0" title={item.dosage}>
-                                    <span className="font-medium">Dosage:</span> {item.dosage}
+                {/* Missed Medications - sub-section (collapsible + paginated) */}
+                {reportData.medicationTracking.missedMedications.length > 0 && (
+                  <div className="mb-6 border-l-2 border-secondary/30 pl-4">
+                    <button
+                      type="button"
+                      onClick={() => toggleSubSection('missedMeds')}
+                      className="w-full flex items-center justify-between text-left focus:outline-none rounded py-2 -ml-1"
+                      aria-expanded={openSubSections.missedMeds}
+                    >
+                      <span className="text-sm sm:text-base font-semibold text-primary">Missed Medications ({reportData.medicationTracking.missedMedications.length})</span>
+                      {openSubSections.missedMeds ? <ChevronUp className="w-4 h-4 text-secondary shrink-0" /> : <ChevronDown className="w-4 h-4 text-secondary shrink-0" />}
+                    </button>
+                    <AnimatePresence>
+                      {openSubSections.missedMeds && (
+                        <motion.div
+                          key="missed-meds"
+                          initial={{ height: 0, opacity: 0 }}
+                          animate={{ height: 'auto', opacity: 1 }}
+                          exit={{ height: 0, opacity: 0 }}
+                          transition={{ duration: 0.2, ease: 'easeOut' }}
+                          className="overflow-hidden"
+                        >
+                          <div className="space-y-4 mt-2">
+                            {reportData.medicationTracking.missedMedications
+                              .slice(listPages.missedMeds * REPORT_PAGE_SIZE, (listPages.missedMeds + 1) * REPORT_PAGE_SIZE)
+                              .map((item, idx) => {
+                                const index = listPages.missedMeds * REPORT_PAGE_SIZE + idx
+                                return (
+                                  <div key={index} className="card-inner p-4">
+                                    <div className="min-w-0 overflow-hidden">
+                                      <h5 className="font-medium font-roboto text-primary text-sm sm:text-base truncate" title={item.medication}>{item.medication}</h5>
+                                      <div className="mt-2 flex flex-col gap-1">
+                                        <div className="text-sm text-secondary font-roboto">
+                                          <span className="font-medium">Date:</span> {item.date ? formatUKDate(item.date) : 'Not specified'}
+                                        </div>
+                                        <div className="text-sm text-secondary font-roboto">
+                                          <span className="font-medium">Time:</span> {item.timeOfDay || 'Not specified'}
+                                        </div>
+                                      </div>
+                                    </div>
                                   </div>
-                                )}
+                                )
+                              })}
+                          </div>
+                          {reportData.medicationTracking.missedMedications.length > REPORT_PAGE_SIZE && (
+                            <div className="flex items-center justify-between mt-4 flex-wrap gap-2">
+                              <span className="text-sm text-secondary font-roboto">
+                                Showing {listPages.missedMeds * REPORT_PAGE_SIZE + 1}–{Math.min((listPages.missedMeds + 1) * REPORT_PAGE_SIZE, reportData.medicationTracking.missedMedications.length)} of {reportData.medicationTracking.missedMedications.length}
+                              </span>
+                              <div className="flex gap-2">
+                                <button type="button" onClick={() => setListPage('missedMeds', listPages.missedMeds - 1)} disabled={listPages.missedMeds === 0} className="px-3 py-1.5 text-sm font-roboto button-cancel rounded-lg disabled:opacity-50">Previous</button>
+                                <button type="button" onClick={() => setListPage('missedMeds', listPages.missedMeds + 1)} disabled={(listPages.missedMeds + 1) * REPORT_PAGE_SIZE >= reportData.medicationTracking.missedMedications.length} className="px-3 py-1.5 text-sm font-roboto button-cadet rounded-lg disabled:opacity-50">Next</button>
                               </div>
                             </div>
-                          </div>
-                        )
-                      })}
+                          )}
+                        </motion.div>
+                      )}
+                    </AnimatePresence>
                   </div>
-                  {reportData.medicationTracking.nsaids.length > REPORT_PAGE_SIZE && (
-                    <div className="flex items-center justify-between mt-4 flex-wrap gap-2">
-                      <span className="text-sm text-secondary font-roboto">
-                        Showing {listPages.nsaids * REPORT_PAGE_SIZE + 1}–{Math.min((listPages.nsaids + 1) * REPORT_PAGE_SIZE, reportData.medicationTracking.nsaids.length)} of {reportData.medicationTracking.nsaids.length}
-                      </span>
-                      <div className="flex gap-2">
-                        <button type="button" onClick={() => setListPage('nsaids', listPages.nsaids - 1)} disabled={listPages.nsaids === 0} className="px-3 py-1.5 text-sm font-roboto button-cancel rounded-lg disabled:opacity-50">Previous</button>
-                        <button type="button" onClick={() => setListPage('nsaids', listPages.nsaids + 1)} disabled={(listPages.nsaids + 1) * REPORT_PAGE_SIZE >= reportData.medicationTracking.nsaids.length} className="px-3 py-1.5 text-sm font-roboto button-cadet rounded-lg disabled:opacity-50">Next</button>
-                      </div>
-                    </div>
-                  )}
-                </>
-              )}
-            </div>
-          )}
+                )}
 
-          {/* Antibiotics - sub-section (collapsible + paginated) */}
-          {reportData.medicationTracking.antibiotics.length > 0 && (
-            <div className="border-l-2 border-secondary/30 pl-4">
-              <button
-                type="button"
-                onClick={() => toggleSubSection('antibiotics')}
-                className="w-full flex items-center justify-between text-left focus:outline-none rounded py-2 -ml-1"
-                aria-expanded={openSubSections.antibiotics}
-              >
-                <span className="text-sm sm:text-base font-semibold text-primary">Antibiotics Taken ({reportData.medicationTracking.antibiotics.length})</span>
-                {openSubSections.antibiotics ? <ChevronUp className="w-4 h-4 text-secondary shrink-0" /> : <ChevronDown className="w-4 h-4 text-secondary shrink-0" />}
-              </button>
-              {openSubSections.antibiotics && (
-                <>
-                  <div className="space-y-4 mt-2">
-                    {reportData.medicationTracking.antibiotics
-                      .slice(listPages.antibiotics * REPORT_PAGE_SIZE, (listPages.antibiotics + 1) * REPORT_PAGE_SIZE)
-                      .map((item, idx) => {
-                        const index = listPages.antibiotics * REPORT_PAGE_SIZE + idx
-                        return (
-                          <div key={index} className="card-inner p-4">
-                            <div className="min-w-0 overflow-hidden">
-                              <h5 className="font-medium font-roboto text-primary text-sm sm:text-base truncate" title={item.medication}>{item.medication}</h5>
-                              <div className="mt-2 flex flex-col gap-1 min-w-0">
-                                <div className="text-sm text-secondary font-roboto">
-                                  <span className="font-medium">Date:</span> {item.date ? formatUKDate(item.date) : 'Not specified'}
-                                </div>
-                                <div className="text-sm text-secondary font-roboto">
-                                  <span className="font-medium">Time:</span> {item.timeOfDay || 'Not specified'}
-                                </div>
-                                {item.dosage && (
-                                  <div className="text-sm text-secondary font-roboto break-words min-w-0" title={item.dosage}>
-                                    <span className="font-medium">Dosage:</span> {item.dosage}
+                {/* NSAIDs - sub-section (collapsible + paginated) */}
+                {reportData.medicationTracking.nsaids.length > 0 && (
+                  <div className="mb-6 border-l-2 border-secondary/30 pl-4">
+                    <button
+                      type="button"
+                      onClick={() => toggleSubSection('nsaids')}
+                      className="w-full flex items-center justify-between text-left focus:outline-none rounded py-2 -ml-1"
+                      aria-expanded={openSubSections.nsaids}
+                    >
+                      <span className="text-sm sm:text-base font-semibold text-primary">NSAIDs Taken ({reportData.medicationTracking.nsaids.length})</span>
+                      {openSubSections.nsaids ? <ChevronUp className="w-4 h-4 text-secondary shrink-0" /> : <ChevronDown className="w-4 h-4 text-secondary shrink-0" />}
+                    </button>
+                    <AnimatePresence>
+                      {openSubSections.nsaids && (
+                        <motion.div
+                          key="nsaids"
+                          initial={{ height: 0, opacity: 0 }}
+                          animate={{ height: 'auto', opacity: 1 }}
+                          exit={{ height: 0, opacity: 0 }}
+                          transition={{ duration: 0.2, ease: 'easeOut' }}
+                          className="overflow-hidden"
+                        >
+                          <div className="space-y-4 mt-2">
+                            {reportData.medicationTracking.nsaids
+                              .slice(listPages.nsaids * REPORT_PAGE_SIZE, (listPages.nsaids + 1) * REPORT_PAGE_SIZE)
+                              .map((item, idx) => {
+                                const index = listPages.nsaids * REPORT_PAGE_SIZE + idx
+                                return (
+                                  <div key={index} className="card-inner p-4">
+                                    <div className="min-w-0 overflow-hidden">
+                                      <h5 className="font-medium font-roboto text-primary text-sm sm:text-base truncate" title={item.medication}>{item.medication}</h5>
+                                      <div className="mt-2 flex flex-col gap-1 min-w-0">
+                                        <div className="text-sm text-secondary font-roboto">
+                                          <span className="font-medium">Date:</span> {item.date ? formatUKDate(item.date) : 'Not specified'}
+                                        </div>
+                                        <div className="text-sm text-secondary font-roboto">
+                                          <span className="font-medium">Time:</span> {item.timeOfDay || 'Not specified'}
+                                        </div>
+                                        {item.dosage && (
+                                          <div className="text-sm text-secondary font-roboto break-words min-w-0" title={item.dosage}>
+                                            <span className="font-medium">Dosage:</span> {item.dosage}
+                                          </div>
+                                        )}
+                                      </div>
+                                    </div>
                                   </div>
-                                )}
+                                )
+                              })}
+                          </div>
+                          {reportData.medicationTracking.nsaids.length > REPORT_PAGE_SIZE && (
+                            <div className="flex items-center justify-between mt-4 flex-wrap gap-2">
+                              <span className="text-sm text-secondary font-roboto">
+                                Showing {listPages.nsaids * REPORT_PAGE_SIZE + 1}–{Math.min((listPages.nsaids + 1) * REPORT_PAGE_SIZE, reportData.medicationTracking.nsaids.length)} of {reportData.medicationTracking.nsaids.length}
+                              </span>
+                              <div className="flex gap-2">
+                                <button type="button" onClick={() => setListPage('nsaids', listPages.nsaids - 1)} disabled={listPages.nsaids === 0} className="px-3 py-1.5 text-sm font-roboto button-cancel rounded-lg disabled:opacity-50">Previous</button>
+                                <button type="button" onClick={() => setListPage('nsaids', listPages.nsaids + 1)} disabled={(listPages.nsaids + 1) * REPORT_PAGE_SIZE >= reportData.medicationTracking.nsaids.length} className="px-3 py-1.5 text-sm font-roboto button-cadet rounded-lg disabled:opacity-50">Next</button>
                               </div>
                             </div>
-                          </div>
-                        )
-                      })}
+                          )}
+                        </motion.div>
+                      )}
+                    </AnimatePresence>
                   </div>
-                  {reportData.medicationTracking.antibiotics.length > REPORT_PAGE_SIZE && (
-                    <div className="flex items-center justify-between mt-4 flex-wrap gap-2">
-                      <span className="text-sm text-secondary font-roboto">
-                        Showing {listPages.antibiotics * REPORT_PAGE_SIZE + 1}–{Math.min((listPages.antibiotics + 1) * REPORT_PAGE_SIZE, reportData.medicationTracking.antibiotics.length)} of {reportData.medicationTracking.antibiotics.length}
-                      </span>
-                      <div className="flex gap-2">
-                        <button type="button" onClick={() => setListPage('antibiotics', listPages.antibiotics - 1)} disabled={listPages.antibiotics === 0} className="px-3 py-1.5 text-sm font-roboto button-cancel rounded-lg disabled:opacity-50">Previous</button>
-                        <button type="button" onClick={() => setListPage('antibiotics', listPages.antibiotics + 1)} disabled={(listPages.antibiotics + 1) * REPORT_PAGE_SIZE >= reportData.medicationTracking.antibiotics.length} className="px-3 py-1.5 text-sm font-roboto button-cadet rounded-lg disabled:opacity-50">Next</button>
-                      </div>
-                    </div>
-                  )}
-                </>
-              )}
-            </div>
-          )}
-          </>
-          )}
+                )}
+
+                {/* Antibiotics - sub-section (collapsible + paginated) */}
+                {reportData.medicationTracking.antibiotics.length > 0 && (
+                  <div className="border-l-2 border-secondary/30 pl-4">
+                    <button
+                      type="button"
+                      onClick={() => toggleSubSection('antibiotics')}
+                      className="w-full flex items-center justify-between text-left focus:outline-none rounded py-2 -ml-1"
+                      aria-expanded={openSubSections.antibiotics}
+                    >
+                      <span className="text-sm sm:text-base font-semibold text-primary">Antibiotics Taken ({reportData.medicationTracking.antibiotics.length})</span>
+                      {openSubSections.antibiotics ? <ChevronUp className="w-4 h-4 text-secondary shrink-0" /> : <ChevronDown className="w-4 h-4 text-secondary shrink-0" />}
+                    </button>
+                    <AnimatePresence>
+                      {openSubSections.antibiotics && (
+                        <motion.div
+                          key="antibiotics"
+                          initial={{ height: 0, opacity: 0 }}
+                          animate={{ height: 'auto', opacity: 1 }}
+                          exit={{ height: 0, opacity: 0 }}
+                          transition={{ duration: 0.2, ease: 'easeOut' }}
+                          className="overflow-hidden"
+                        >
+                          <div className="space-y-4 mt-2">
+                            {reportData.medicationTracking.antibiotics
+                              .slice(listPages.antibiotics * REPORT_PAGE_SIZE, (listPages.antibiotics + 1) * REPORT_PAGE_SIZE)
+                              .map((item, idx) => {
+                                const index = listPages.antibiotics * REPORT_PAGE_SIZE + idx
+                                return (
+                                  <div key={index} className="card-inner p-4">
+                                    <div className="min-w-0 overflow-hidden">
+                                      <h5 className="font-medium font-roboto text-primary text-sm sm:text-base truncate" title={item.medication}>{item.medication}</h5>
+                                      <div className="mt-2 flex flex-col gap-1 min-w-0">
+                                        <div className="text-sm text-secondary font-roboto">
+                                          <span className="font-medium">Date:</span> {item.date ? formatUKDate(item.date) : 'Not specified'}
+                                        </div>
+                                        <div className="text-sm text-secondary font-roboto">
+                                          <span className="font-medium">Time:</span> {item.timeOfDay || 'Not specified'}
+                                        </div>
+                                        {item.dosage && (
+                                          <div className="text-sm text-secondary font-roboto break-words min-w-0" title={item.dosage}>
+                                            <span className="font-medium">Dosage:</span> {item.dosage}
+                                          </div>
+                                        )}
+                                      </div>
+                                    </div>
+                                  </div>
+                                )
+                              })}
+                          </div>
+                          {reportData.medicationTracking.antibiotics.length > REPORT_PAGE_SIZE && (
+                            <div className="flex items-center justify-between mt-4 flex-wrap gap-2">
+                              <span className="text-sm text-secondary font-roboto">
+                                Showing {listPages.antibiotics * REPORT_PAGE_SIZE + 1}–{Math.min((listPages.antibiotics + 1) * REPORT_PAGE_SIZE, reportData.medicationTracking.antibiotics.length)} of {reportData.medicationTracking.antibiotics.length}
+                              </span>
+                              <div className="flex gap-2">
+                                <button type="button" onClick={() => setListPage('antibiotics', listPages.antibiotics - 1)} disabled={listPages.antibiotics === 0} className="px-3 py-1.5 text-sm font-roboto button-cancel rounded-lg disabled:opacity-50">Previous</button>
+                                <button type="button" onClick={() => setListPage('antibiotics', listPages.antibiotics + 1)} disabled={(listPages.antibiotics + 1) * REPORT_PAGE_SIZE >= reportData.medicationTracking.antibiotics.length} className="px-3 py-1.5 text-sm font-roboto button-cadet rounded-lg disabled:opacity-50">Next</button>
+                              </div>
+                            </div>
+                          )}
+                        </motion.div>
+                      )}
+                    </AnimatePresence>
+                  </div>
+                )}
+              </motion.div>
+            )}
+          </AnimatePresence>
         </div>
       )}
 
@@ -1652,28 +1804,39 @@ function ReportsPageContent() {
             <h2 className="text-sm sm:text-lg font-semibold text-primary flex-1">Appointments</h2>
             <span className="text-sm font-roboto text-secondary shrink-0">{openSections.appointments ? 'Hide' : 'Show'}</span>
           </button>
-          {openSections.appointments && (
-          <div className="space-y-4">
-            {reportData.appointments.map((apt, index) => (
-              <div key={index} className="card-inner p-4">
-                <div className="flex flex-col gap-2 min-w-0">
-                  <div className="flex flex-wrap items-baseline gap-x-2 gap-y-1 min-w-0">
-                    <span className="text-sm sm:text-base font-semibold text-primary truncate">{formatUKDate(apt.date)}</span>
-                    {apt.time && (
-                      <>
-                        <span className="text-secondary">·</span>
-                        <span className="text-sm sm:text-base text-primary font-roboto truncate">{apt.time}</span>
-                      </>
-                    )}
-                  </div>
-                  {apt.type && (
-                    <p className="text-sm sm:text-base font-medium text-primary truncate" title={apt.type}>{apt.type}</p>
-                  )}
+          <AnimatePresence>
+            {openSections.appointments && (
+              <motion.div
+                key="appointments"
+                initial={{ height: 0, opacity: 0 }}
+                animate={{ height: 'auto', opacity: 1 }}
+                exit={{ height: 0, opacity: 0 }}
+                transition={{ duration: 0.2, ease: 'easeOut' }}
+                className="overflow-hidden"
+              >
+                <div className="space-y-4">
+                  {reportData.appointments.map((apt, index) => (
+                    <div key={index} className="card-inner p-4">
+                      <div className="flex flex-col gap-2 min-w-0">
+                        <div className="flex flex-wrap items-baseline gap-x-2 gap-y-1 min-w-0">
+                          <span className="text-sm sm:text-base font-semibold text-primary truncate">{formatUKDate(apt.date)}</span>
+                          {apt.time && (
+                            <>
+                              <span className="text-secondary">·</span>
+                              <span className="text-sm sm:text-base text-primary font-roboto truncate">{apt.time}</span>
+                            </>
+                          )}
+                        </div>
+                        {apt.type && (
+                          <p className="text-sm sm:text-base font-medium text-primary truncate" title={apt.type}>{apt.type}</p>
+                        )}
+                      </div>
+                    </div>
+                  ))}
                 </div>
-              </div>
-            ))}
-          </div>
-          )}
+              </motion.div>
+            )}
+          </AnimatePresence>
         </div>
       )}
 
@@ -1692,25 +1855,36 @@ function ReportsPageContent() {
             <h2 className="text-sm sm:text-lg font-semibold text-primary flex-1">Weight Logs</h2>
             <span className="text-sm font-roboto text-secondary shrink-0">{openSections.weight ? 'Hide' : 'Show'}</span>
           </button>
-          {openSections.weight && (
-          <div className="space-y-4">
-            {reportData.weightEntries.map((entry, index) => (
-              <div key={index} className="card-inner p-4">
-                <div className="flex flex-col gap-2">
-                  <div className="flex flex-wrap items-baseline gap-x-2 gap-y-1">
-                    <span className="text-sm sm:text-base font-semibold text-primary">{formatUKDate(entry.date)}</span>
-                    {entry.value_kg != null && (
-                      <>
-                        <span className="text-secondary">·</span>
-                        <span className="text-sm sm:text-base font-medium text-primary font-roboto">{entry.value_kg} kg</span>
-                      </>
-                    )}
-                  </div>
+          <AnimatePresence>
+            {openSections.weight && (
+              <motion.div
+                key="weight"
+                initial={{ height: 0, opacity: 0 }}
+                animate={{ height: 'auto', opacity: 1 }}
+                exit={{ height: 0, opacity: 0 }}
+                transition={{ duration: 0.2, ease: 'easeOut' }}
+                className="overflow-hidden"
+              >
+                <div className="space-y-4">
+                  {reportData.weightEntries.map((entry, index) => (
+                    <div key={index} className="card-inner p-4">
+                      <div className="flex flex-col gap-2">
+                        <div className="flex flex-wrap items-baseline gap-x-2 gap-y-1">
+                          <span className="text-sm sm:text-base font-semibold text-primary">{formatUKDate(entry.date)}</span>
+                          {entry.value_kg != null && (
+                            <>
+                              <span className="text-secondary">·</span>
+                              <span className="text-sm sm:text-base font-medium text-primary font-roboto">{entry.value_kg} kg</span>
+                            </>
+                          )}
+                        </div>
+                      </div>
+                    </div>
+                  ))}
                 </div>
-              </div>
-            ))}
-          </div>
-          )}
+              </motion.div>
+            )}
+          </AnimatePresence>
         </div>
       )}
 
@@ -1729,27 +1903,38 @@ function ReportsPageContent() {
             <h2 className="text-sm sm:text-lg font-semibold text-primary flex-1">Hydration</h2>
             <span className="text-sm font-roboto text-secondary shrink-0">{openSections.hydration ? 'Hide' : 'Show'}</span>
           </button>
-          {openSections.hydration && (
-          <div className="space-y-4">
-            {reportData.hydrationEntries.map((entry, index) => (
-              <div key={index} className="card-inner p-4">
-                <div className="flex flex-col gap-2">
-                  <div className="flex flex-wrap items-baseline gap-x-2 gap-y-1">
-                    <span className="text-sm sm:text-base font-semibold text-primary">{formatUKDate(entry.date)}</span>
-                    <span className="text-secondary">·</span>
-                    <span className="text-sm sm:text-base font-medium text-primary font-roboto">{entry.glasses}/{reportData.hydrationTarget || 6} glasses</span>
-                    {entry.targetMet && (
-                      <>
-                        <span className="text-secondary">·</span>
-                        <span className="text-sm font-medium text-green-600 dark:text-green-400">Target met</span>
-                      </>
-                    )}
-                  </div>
+          <AnimatePresence>
+            {openSections.hydration && (
+              <motion.div
+                key="hydration"
+                initial={{ height: 0, opacity: 0 }}
+                animate={{ height: 'auto', opacity: 1 }}
+                exit={{ height: 0, opacity: 0 }}
+                transition={{ duration: 0.2, ease: 'easeOut' }}
+                className="overflow-hidden"
+              >
+                <div className="space-y-4">
+                  {reportData.hydrationEntries.map((entry, index) => (
+                    <div key={index} className="card-inner p-4">
+                      <div className="flex flex-col gap-2">
+                        <div className="flex flex-wrap items-baseline gap-x-2 gap-y-1">
+                          <span className="text-sm sm:text-base font-semibold text-primary">{formatUKDate(entry.date)}</span>
+                          <span className="text-secondary">·</span>
+                          <span className="text-sm sm:text-base font-medium text-primary font-roboto">{entry.glasses}/{reportData.hydrationTarget || 6} glasses</span>
+                          {entry.targetMet && (
+                            <>
+                              <span className="text-secondary">·</span>
+                              <span className="text-sm font-medium text-green-600 dark:text-green-400">Target met</span>
+                            </>
+                          )}
+                        </div>
+                      </div>
+                    </div>
+                  ))}
                 </div>
-              </div>
-            ))}
-          </div>
-          )}
+              </motion.div>
+            )}
+          </AnimatePresence>
         </div>
       )}
 
@@ -1768,24 +1953,35 @@ function ReportsPageContent() {
             <h2 className="text-sm sm:text-lg font-semibold text-primary flex-1">Top 5 Foods</h2>
             <span className="text-sm font-roboto text-secondary shrink-0">{openSections.foods ? 'Hide' : 'Show'}</span>
           </button>
-          {openSections.foods && (
-          <div className="space-y-4">
-            {reportData.topFoods.map(([food, count], index) => (
-              <div key={index} className="card-inner p-4">
-                <div className="flex flex-col sm:flex-row sm:justify-between sm:items-center gap-2 min-w-0">
-                  <div className="flex-1 min-w-0">
-                    <h5 className="font-medium font-roboto text-primary text-sm sm:text-base truncate" title={food}>{food}</h5>
-                  </div>
-                  <div className="flex items-center">
-                    <span className="text-xs font-medium font-roboto text-secondary">
-                      {count} time{count !== 1 ? 's' : ''}
-                    </span>
-                  </div>
+          <AnimatePresence>
+            {openSections.foods && (
+              <motion.div
+                key="foods"
+                initial={{ height: 0, opacity: 0 }}
+                animate={{ height: 'auto', opacity: 1 }}
+                exit={{ height: 0, opacity: 0 }}
+                transition={{ duration: 0.2, ease: 'easeOut' }}
+                className="overflow-hidden"
+              >
+                <div className="space-y-4">
+                  {reportData.topFoods.map(([food, count], index) => (
+                    <div key={index} className="card-inner p-4">
+                      <div className="flex flex-col sm:flex-row sm:justify-between sm:items-center gap-2 min-w-0">
+                        <div className="flex-1 min-w-0">
+                          <h5 className="font-medium font-roboto text-primary text-sm sm:text-base truncate" title={food}>{food}</h5>
+                        </div>
+                        <div className="flex items-center">
+                          <span className="text-xs font-medium font-roboto text-secondary">
+                            {count} time{count !== 1 ? 's' : ''}
+                          </span>
+                        </div>
+                      </div>
+                    </div>
+                  ))}
                 </div>
-              </div>
-            ))}
-          </div>
-          )}
+              </motion.div>
+            )}
+          </AnimatePresence>
         </div>
       )}
 
@@ -1802,6 +1998,91 @@ function ReportsPageContent() {
           <div className="flex flex-col sm:flex-row justify-center space-y-3 sm:space-y-0 sm:space-x-3 mt-6">
             <a href="/symptoms" className="inline-flex items-center justify-center px-6 py-3 button-cadet rounded-xl shadow-lg hover:shadow-xl transition-all duration-300 whitespace-nowrap font-roboto">Log Symptoms</a>
             <a href="/medications" className="btn-secondary whitespace-nowrap font-roboto hover:shadow-none">Add Medications</a>
+          </div>
+        </div>
+      )}
+      {isEmailModalOpen && (
+        <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 px-4">
+          <div className="bg-card rounded-xl shadow-xl max-w-md w-full" style={{ backgroundColor: 'var(--bg-dropdown)', borderColor: 'var(--border-dropdown)', borderWidth: '1px', borderStyle: 'solid' }}>
+            <form onSubmit={handleSendReportEmail} className="p-6 space-y-4">
+              <h3 className="text-xl sm:text-2xl font-semibold font-source text-primary mb-1">Email this report</h3>
+              <p className="text-sm text-secondary font-roboto">
+                Please fill in the fields below to send this report summary to your clinician.
+              </p>
+              <div className="space-y-3 mt-2">
+                <div>
+                  <label htmlFor="consultantEmail" className="block text-sm font-semibold font-roboto text-primary mb-2">
+                    Consultant email *
+                  </label>
+                  <input
+                    id="consultantEmail"
+                    name="consultantEmail"
+                    type="email"
+                    className="input-field-wizard w-full"
+                    value={emailForm.consultantEmail}
+                    onChange={handleEmailFormChange}
+                    placeholder="dr.smith@example.com"
+                    required
+                  />
+                  {emailError && (
+                    <p className="mt-1 text-xs text-[var(--text-error)] font-roboto">
+                      {emailError}
+                    </p>
+                  )}
+                </div>
+                <div>
+                  <label htmlFor="consultantName" className="block text-sm font-semibold font-roboto text-primary mb-2">
+                    Consultant name (optional)
+                  </label>
+                  <input
+                    id="consultantName"
+                    name="consultantName"
+                    type="text"
+                    className="input-field-wizard w-full"
+                    value={emailForm.consultantName}
+                    onChange={handleEmailFormChange}
+                    placeholder="e.g. Dr Smith, IBD Nurse"
+                  />
+                </div>
+                <div>
+                  <label htmlFor="note" className="block text-sm font-semibold font-roboto text-primary mb-2">
+                    Note to include (optional)
+                  </label>
+                  <textarea
+                    id="note"
+                    name="note"
+                    rows={3}
+                    className="input-field-wizard w-full resize-none"
+                    value={emailForm.note}
+                    onChange={handleEmailFormChange}
+                    placeholder="Any context you want to share with your clinician."
+                  />
+                </div>
+                {reportData?.period && (
+                  <div className="text-xs text-secondary font-roboto bg-[var(--bg-card)]/60 rounded-lg pb-2">
+                    This report will cover the period from{' '}
+                    {formatUKDate(reportData.period.start)} to {formatUKDate(reportData.period.end)}.
+                  </div>
+                )}
+              </div>
+              <div className="flex justify-end gap-3 mt-4">
+                <button
+                  type="button"
+                  onClick={closeEmailModal}
+                  className="px-4 py-2 text-sm font-medium font-roboto button-cancel"
+                  disabled={isSendingEmail}
+                >
+                  Cancel
+                </button>
+                <button
+                  type="submit"
+                  className="px-4 py-2 text-sm font-medium font-roboto button-cadet rounded-lg inline-flex items-center justify-center disabled:opacity-50 disabled:cursor-not-allowed"
+                  disabled={isSendingEmail}
+                >
+                  {isSendingEmail ? 'Sending…' : 'Send report'}
+                </button>
+              </div>
+            </form>
           </div>
         </div>
       )}
