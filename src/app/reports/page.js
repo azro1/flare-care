@@ -109,6 +109,36 @@ function ReportsPageContent() {
     setEmailError('')
 
     try {
+      // Build detailed symptoms for email (same overlap logic as PDF export)
+      const startDate = new Date(dateRange.startDate)
+      const endDate = new Date(dateRange.endDate)
+      const detailedSymptomsForEmail = (symptoms || [])
+        .filter(symptom => {
+          const symptomStartDate = new Date(symptom.symptomStartDate)
+          const symptomEndDate = symptom.symptomEndDate ? new Date(symptom.symptomEndDate) : new Date()
+          return (symptomStartDate <= endDate && symptomEndDate >= startDate)
+        })
+        .sort((a, b) => new Date(a.symptomStartDate) - new Date(b.symptomStartDate))
+        .map(symptom => ({
+          symptomStartDate: symptom.symptomStartDate,
+          symptomEndDate: symptom.symptomEndDate,
+          isOngoing: !!symptom.isOngoing,
+          severity: symptom.severity,
+          stress_level: symptom.stress_level,
+          notes: symptom.notes,
+          smoking: symptom.smoking,
+          smoking_details: symptom.smoking_details,
+          alcohol: symptom.alcohol,
+          alcohol_units: symptom.alcohol_units,
+          normal_bathroom_frequency: symptom.normal_bathroom_frequency,
+          bathroom_frequency_changed: symptom.bathroom_frequency_changed,
+          bathroom_frequency_change_details: symptom.bathroom_frequency_change_details,
+          breakfast: symptom.breakfast,
+          lunch: symptom.lunch,
+          dinner: symptom.dinner,
+          foods: symptom.foods,
+        }))
+
       const response = await fetch('/api/send-report-email', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
@@ -117,10 +147,16 @@ function ReportsPageContent() {
           consultantName: emailForm.consultantName.trim() || null,
           note: emailForm.note.trim() || null,
           period: reportData.period,
+          prefs: {
+            isSmoker: userPreferences?.isSmoker,
+            isDrinker: userPreferences?.isDrinker,
+          },
+          detailedSymptoms: detailedSymptomsForEmail,
           summary: {
             totalEntries: reportData.totalEntries,
             averageSeverity: reportData.averageSeverity,
             severityTrend: reportData.severityTrend,
+            topFoods: reportData.topFoods,
             medications: reportData.medications,
             medicationTracking: reportData.medicationTracking,
             appointments: reportData.appointments,
@@ -791,11 +827,11 @@ function ReportsPageContent() {
       yPosition += 10
     }
 
-    // Detailed Symptoms Section
+      // Detailed Symptoms Section
     if (reportData.severityTrend.length > 0) {
       doc.setFontSize(16)
       doc.setFont('helvetica', 'bold')
-      doc.text('Symptom Details', margin, yPosition)
+        doc.text('Symptoms', margin, yPosition)
       yPosition += 10
 
       doc.setFontSize(12)
@@ -841,13 +877,6 @@ function ReportsPageContent() {
         } else {
           doc.text(`   Status: Resolved`, margin, yPosition)
           yPosition += 5
-        }
-        
-        if (symptom.notes && symptom.notes.trim()) {
-          const notesText = `   Notes: ${symptom.notes}`
-          const splitNotes = doc.splitTextToSize(notesText, pageWidth - 2 * margin)
-          doc.text(splitNotes, margin, yPosition)
-          yPosition += splitNotes.length * 5
         }
         
         // Display smoking: "Non-smoker" if habit is no, "No" if didn't smoke that day
@@ -930,6 +959,14 @@ function ReportsPageContent() {
           doc.text(splitFoods, margin, yPosition)
           yPosition += splitFoods.length * 5
         }
+
+        // Notes last (matches email + CSV ordering)
+        if (symptom.notes && symptom.notes.trim()) {
+          const notesText = `   Notes: ${symptom.notes}`
+          const splitNotes = doc.splitTextToSize(notesText, pageWidth - 2 * margin)
+          doc.text(splitNotes, margin, yPosition)
+          yPosition += splitNotes.length * 5
+        }
         
         yPosition += 8
       })
@@ -972,7 +1009,7 @@ function ReportsPageContent() {
     const csvData = []
     
     // Add header
-    csvData.push(['Symptom Start Date', 'Symptom End Date', 'Ongoing', 'Severity', 'Stress Level', 'Normal Bathroom Frequency', 'Bathroom Frequency Changed', 'Bathroom Change Details', 'Notes', 'Smoking', 'Alcohol', 'Foods'])
+    csvData.push(['Symptom Start Date', 'Symptom End Date', 'Ongoing', 'Severity', 'Stress Level', 'Normal Bathroom Frequency', 'Bathroom Frequency Changed', 'Bathroom Change Details', 'Smoking', 'Alcohol', 'Foods', 'Notes'])
     
     // Filter symptoms by selected date range (same logic as generateReport)
     const startDate = new Date(dateRange.startDate)
@@ -1045,10 +1082,10 @@ function ReportsPageContent() {
           normalBathroomData,
           bathroomChangedData,
           bathroomChangeDetailsData,
-          symptom.notes || '',
           smokingData,
           alcoholData,
-          foodsData
+          foodsData,
+          symptom.notes || '',
         ])
       })
 
