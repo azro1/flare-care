@@ -2096,7 +2096,7 @@ function ReportsPageContent() {
                   />
                 </div>
                 {reportData?.period && (
-                  <div className="text-xs text-secondary font-roboto bg-[var(--bg-card)]/60 rounded-lg pb-2">
+                  <div className="text-xs leading-normal text-secondary font-roboto bg-[var(--bg-card)]/60 rounded-lg pb-2">
                     This report will cover the period from{' '}
                     {formatUKDate(reportData.period.start)} to {formatUKDate(reportData.period.end)}.
                   </div>

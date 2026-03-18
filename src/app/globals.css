@@ -83,7 +83,7 @@
     --border-secondary: #94a3b8; /* Light secondary border */
     --border-card: #cbd5e1; /* Light card border */
     --separator-card: var(--border-primary); /* Separators on .card background */
-    --separator-card-inner: rgba(148, 163, 184, 0.25); /* Separators on .card-inner background */
+    --separator-card-inner: var(--separator-card); /* Use same separator color for inner card in light mode */
     
     --shadow-sm: 0 1px 2px 0 rgb(0 0 0 / 0.05);
     --shadow-md: 0 4px 6px -1px rgb(0 0 0 / 0.1), 0 2px 4px -2px rgb(0 0 0 / 0.1);
@@ -163,8 +163,8 @@
     --border-card: #3f4449;
     --border-card-hover: #52525b;
     --bg-icon-container: var(--bg-card); /* Icon containers on card-inner - matches .card for cut-out effect in dark mode */
-    --separator-card: var(--bg-main); /* Separators on .card - matches page background in dark mode */
-    --separator-card-inner: var(--bg-card); /* Separators on .card-inner - matches .card background in dark mode */
+    --separator-card: rgba(255, 255, 255, 0.2); /* Separators on .card - subtle white in dark mode */
+    --separator-card-inner: var(--separator-card); /* Use same separator color for inner card in dark mode */
     --shadow-sm: 0 1px 2px 0 rgb(0 0 0 / 0.3);
     --shadow-md: 0 4px 6px -1px rgb(0 0 0 / 0.4), 0 2px 4px -2px rgb(0 0 0 / 0.4);
     --shadow-lg: 0 10px 15px -3px rgb(0 0 0 / 0.4), 0 4px 6px -4px rgb(0 0 0 / 0.4);
