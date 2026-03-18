@@ -2106,14 +2106,14 @@ function ReportsPageContent() {
                 <button
                   type="button"
                   onClick={closeEmailModal}
-                  className="px-4 py-2 text-sm font-medium font-roboto button-cancel"
+                  className="px-4 py-2 text-base font-medium font-roboto button-cancel"
                   disabled={isSendingEmail}
                 >
                   Cancel
                 </button>
                 <button
                   type="submit"
-                  className="px-4 py-2 text-sm font-medium font-roboto button-cadet rounded-lg inline-flex items-center justify-center disabled:opacity-50 disabled:cursor-not-allowed"
+                  className="px-4 py-2 text-base font-medium font-roboto button-cadet rounded-lg inline-flex items-center justify-center disabled:opacity-50 disabled:cursor-not-allowed"
                   disabled={isSendingEmail}
                 >
                   {isSendingEmail ? 'Sending…' : 'Send report'}
