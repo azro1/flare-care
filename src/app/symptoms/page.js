@@ -1,15 +1,43 @@
 'use client'
 
-import { useState, useEffect } from 'react'
+import { useState, useEffect, useRef, forwardRef } from 'react'
 import ConfirmationModal from '@/components/ConfirmationModal'
-import DatePicker from '@/components/DatePicker'
+import DatePicker from 'react-datepicker'
+import 'react-datepicker/dist/react-datepicker.css'
 import ProtectedRoute from '@/components/ProtectedRoute'
 import { sanitizeNotes, sanitizeFoodTriggers } from '@/lib/sanitize'
 import { supabase, TABLES, deleteFromSupabase } from '@/lib/supabase'
 import { useRouter, usePathname } from 'next/navigation'
 import { useAuth } from '@/lib/AuthContext'
 import { getUserPreferences, saveUserPreferences, updatePreference, checkHabitPattern } from '@/lib/userPreferences'
-import { Thermometer } from 'lucide-react'
+import { Thermometer, Calendar } from 'lucide-react'
+
+const SymptomDateInput = forwardRef(({ value, onClick, onChange, placeholder, id, className, onIconClick, ...rest }, ref) => (
+  <div className={`symptom-date-input-wrapper flex items-center input-field-wizard ${className ?? ''}`.trim()}>
+    <input
+      ref={ref}
+      readOnly
+      value={value ?? ''}
+      onChange={onChange}
+      placeholder={placeholder}
+      id={id}
+      className="flex-1 min-w-0 !border-0 !p-0 !bg-transparent outline-none cursor-default text-inherit placeholder-slate-400"
+      onMouseDown={(e) => e.preventDefault()}
+      onClick={(e) => e.preventDefault()}
+      style={{ caretColor: 'transparent' }}
+      {...rest}
+    />
+    <button
+      type="button"
+      onClick={(e) => { e.preventDefault(); onIconClick?.() }}
+      className="flex-shrink-0 p-0.5 cursor-pointer hover:opacity-80 transition-opacity ml-1"
+      aria-label="Open date picker"
+    >
+      <Calendar className="w-5 h-5 text-secondary" />
+    </button>
+  </div>
+))
+SymptomDateInput.displayName = 'SymptomDateInput'
 
 function SymptomsPageContent() {
   const router = useRouter()
@@ -33,7 +61,7 @@ function SymptomsPageContent() {
     if (typeof window !== 'undefined') {
       const savedFormData = localStorage.getItem('symptoms-wizard-form')
       return savedFormData ? JSON.parse(savedFormData) : {
-        symptomStartDate: '',
+        symptomStartDate: new Date().toISOString().split('T')[0],
         isOngoing: true,
         symptomEndDate: '',
         severity: '',
@@ -201,6 +229,34 @@ function SymptomsPageContent() {
     }
   }, [currentStep])
 
+  // Default symptom start date to today when empty (runs on client mount)
+  useEffect(() => {
+    if (typeof window !== 'undefined' && !formData.symptomStartDate) {
+      setFormData(prev => ({ ...prev, symptomStartDate: new Date().toISOString().split('T')[0] }))
+    }
+  }, [])
+
+  // Default symptom end date to today when reaching step 3 and empty
+  useEffect(() => {
+    if (currentStep === 3 && !formData.symptomEndDate) {
+      setFormData(prev => ({ ...prev, symptomEndDate: new Date().toISOString().split('T')[0] }))
+    }
+  }, [currentStep])
+
+  // Default severity to 1 when reaching step 4 and empty (slider default)
+  useEffect(() => {
+    if (currentStep === 4 && (formData.severity === '' || formData.severity === undefined)) {
+      setFormData(prev => ({ ...prev, severity: '1' }))
+    }
+  }, [currentStep])
+
+  // Default stress_level to 1 when reaching step 5 and empty (slider default)
+  useEffect(() => {
+    if (currentStep === 5 && (formData.stress_level === '' || formData.stress_level === undefined)) {
+      setFormData(prev => ({ ...prev, stress_level: '1' }))
+    }
+  }, [currentStep])
+
   // Persist form data to localStorage
   useEffect(() => {
     if (typeof window !== 'undefined') {
@@ -223,19 +279,7 @@ function SymptomsPageContent() {
       }
     }
     
-    // When on step 3 (end date), populate from formData.symptomEndDate
-    if (currentStep === 3 && formData.symptomEndDate) {
-      const date = new Date(formData.symptomEndDate)
-      if (!isNaN(date.getTime())) {
-        setDateInputs(prev => ({
-          ...prev,
-          endDay: date.getDate().toString(),
-          endMonth: (date.getMonth() + 1).toString(),
-          endYear: date.getFullYear().toString()
-        }))
-      }
-    }
-  }, [currentStep, formData.symptomStartDate, formData.symptomEndDate])
+  }, [currentStep, formData.symptomStartDate])
 
   // Cleanup wizard state when component unmounts (user navigates away)
   useEffect(() => {
@@ -248,6 +292,9 @@ function SymptomsPageContent() {
     }
   }, [])
 
+  const datePickerRef = useRef(null)
+  const datePickerEndRef = useRef(null)
+
   const [dateErrors, setDateErrors] = useState({
     day: '',
     month: '',
@@ -256,62 +303,6 @@ function SymptomsPageContent() {
     endMonth: '',
     endYear: ''
   })
-
-  // Show "Date cannot be in the future" as soon as the full date is entered (same as year validation)
-  useEffect(() => {
-    const now = new Date()
-    const currentYear = now.getFullYear()
-    const currentMonth = now.getMonth() + 1
-    const currentDay = now.getDate()
-
-    if (currentStep === 1 && dateInputs.day && dateInputs.month && dateInputs.year) {
-      const day = parseInt(dateInputs.day)
-      const month = parseInt(dateInputs.month)
-      const year = parseInt(dateInputs.year)
-      if (day >= 1 && day <= 31 && month >= 1 && month <= 12 && year >= 2020 && year <= currentYear) {
-        const dateString = `${year}-${month.toString().padStart(2, '0')}-${day.toString().padStart(2, '0')}`
-        const testDate = new Date(dateString)
-        const valid = !isNaN(testDate.getTime()) && testDate.getDate() === day && testDate.getMonth() === (month - 1) && testDate.getFullYear() === year
-        if (valid) {
-          const isFuture = year > currentYear || (year === currentYear && month > currentMonth) || (year === currentYear && month === currentMonth && day > currentDay)
-          if (isFuture) {
-            setDateErrors(prev => ({ ...prev, day: 'Date cannot be in the future', month: '', year: '' }))
-          } else {
-            setDateErrors(prev => ({
-              ...prev,
-              day: prev.day === 'Date cannot be in the future' ? '' : prev.day,
-              month: prev.month === 'Date cannot be in the future' ? '' : prev.month,
-              year: prev.year === 'Date cannot be in the future' ? '' : prev.year
-            }))
-          }
-        }
-      }
-    }
-
-    if (currentStep === 3 && dateInputs.endDay && dateInputs.endMonth && dateInputs.endYear) {
-      const endDay = parseInt(dateInputs.endDay)
-      const endMonth = parseInt(dateInputs.endMonth)
-      const endYear = parseInt(dateInputs.endYear)
-      if (endDay >= 1 && endDay <= 31 && endMonth >= 1 && endMonth <= 12 && endYear >= 2020 && endYear <= currentYear) {
-        const endDateString = `${endYear}-${endMonth.toString().padStart(2, '0')}-${endDay.toString().padStart(2, '0')}`
-        const testEndDate = new Date(endDateString)
-        const valid = !isNaN(testEndDate.getTime()) && testEndDate.getDate() === endDay && testEndDate.getMonth() === (endMonth - 1) && testEndDate.getFullYear() === endYear
-        if (valid) {
-          const isFuture = endYear > currentYear || (endYear === currentYear && endMonth > currentMonth) || (endYear === currentYear && endMonth === currentMonth && endDay > currentDay)
-          if (isFuture) {
-            setDateErrors(prev => ({ ...prev, endDay: 'Date cannot be in the future', endMonth: '', endYear: '' }))
-          } else {
-            setDateErrors(prev => ({
-              ...prev,
-              endDay: prev.endDay === 'Date cannot be in the future' ? '' : prev.endDay,
-              endMonth: prev.endMonth === 'Date cannot be in the future' ? '' : prev.endMonth,
-              endYear: prev.endYear === 'Date cannot be in the future' ? '' : prev.endYear
-            }))
-          }
-        }
-      }
-    }
-  }, [currentStep, dateInputs.day, dateInputs.month, dateInputs.year, dateInputs.endDay, dateInputs.endMonth, dateInputs.endYear])
 
   const [fieldErrors, setFieldErrors] = useState({
     bathroom_frequency_change_details: '',
@@ -438,151 +429,44 @@ function SymptomsPageContent() {
   const nextStep = () => {
     // Validate current step before proceeding
     if (currentStep === 1) {
-      // Check if date inputs are filled
-      if (!dateInputs.day || !dateInputs.month || !dateInputs.year) {
+      // Check if date is selected (react-datepicker)
+      if (!formData.symptomStartDate) {
         setDateErrors({
-          day: 'Please enter the date your symptoms began',
+          day: 'Please select the date your symptoms began',
           month: '',
           year: ''
         })
         return
       }
-      
-      // Validate date values
-      const day = parseInt(dateInputs.day)
-      const month = parseInt(dateInputs.month)
-      const year = parseInt(dateInputs.year)
-      
-      // Check for valid ranges
-      if (day < 1 || day > 31) {
-        setDateErrors({
-          day: 'Day must be between 1 and 31',
-          month: '',
-          year: ''
-        })
-        return
-      }
-      
-      if (month < 1 || month > 12) {
-        setDateErrors({
-          day: '',
-          month: 'Month must be between 1 and 12',
-          year: ''
-        })
-        return
-      }
-      
-      if (year < 2020 || year > new Date().getFullYear()) {
-        setDateErrors({
-          day: '',
-          month: '',
-          year: `Year must be between 2020 and ${new Date().getFullYear()}`
-        })
-        return
-      }
-      
-      // Check if it's a valid date
-      const dateString = `${year}-${month.toString().padStart(2, '0')}-${day.toString().padStart(2, '0')}`
-      const testDate = new Date(dateString)
-      
-      if (isNaN(testDate.getTime()) || testDate.getDate() !== day || testDate.getMonth() !== (month - 1) || testDate.getFullYear() !== year) {
-        setDateErrors({
-          day: 'Please enter a valid date',
-          month: '',
-          year: ''
-        })
-        return
-      }
-      
-      // Date cannot be in the future (compare as numbers to avoid timezone issues)
-      const now = new Date()
-      const currentYear = now.getFullYear()
-      const currentMonth = now.getMonth() + 1
-      const currentDay = now.getDate()
-      if (year > currentYear || (year === currentYear && month > currentMonth) || (year === currentYear && month === currentMonth && day > currentDay)) {
-        setDateErrors({
-          day: 'Date cannot be in the future',
-          month: '',
-          year: ''
-        })
-        return
-      }
-      
       // Clear any existing errors since validation passed
       setDateErrors({ day: '', month: '', year: '', endDay: '', endMonth: '', endYear: '' })
-      
-      // Create the date string and store it
-      setFormData(prev => ({ ...prev, symptomStartDate: dateString }))
     }
     
     // Validate step 3 (end date) if symptoms are not ongoing
     if (currentStep === 3) {
-      if (!dateInputs.endDay || !dateInputs.endMonth || !dateInputs.endYear) {
+      if (!formData.symptomEndDate) {
         setDateErrors(prev => ({
           ...prev,
-          endDay: 'Please enter the date your symptoms ended',
+          endDay: 'Please select the date your symptoms ended',
           endMonth: '',
           endYear: ''
         }))
         return
       }
       
-      // Validate end date values
-      const endDay = parseInt(dateInputs.endDay)
-      const endMonth = parseInt(dateInputs.endMonth)
-      const endYear = parseInt(dateInputs.endYear)
-      
-      // Check for valid ranges
-      if (endDay < 1 || endDay > 31) {
+      const testEndDate = new Date(formData.symptomEndDate + 'T12:00:00')
+      if (isNaN(testEndDate.getTime())) {
         setDateErrors(prev => ({
           ...prev,
-          endDay: 'Day must be between 1 and 31',
+          endDay: 'Please select a valid date',
           endMonth: '',
           endYear: ''
         }))
         return
       }
       
-      if (endMonth < 1 || endMonth > 12) {
-        setDateErrors(prev => ({
-          ...prev,
-          endDay: '',
-          endMonth: 'Month must be between 1 and 12',
-          endYear: ''
-        }))
-        return
-      }
-      
-      if (endYear < 2020 || endYear > new Date().getFullYear()) {
-        setDateErrors(prev => ({
-          ...prev,
-          endDay: '',
-          endMonth: '',
-          endYear: `Year must be between 2020 and ${new Date().getFullYear()}`
-        }))
-        return
-      }
-      
-      // Check if it's a valid date
-      const endDateString = `${endYear}-${endMonth.toString().padStart(2, '0')}-${endDay.toString().padStart(2, '0')}`
-      const testEndDate = new Date(endDateString)
-      
-      if (isNaN(testEndDate.getTime()) || testEndDate.getDate() !== endDay || testEndDate.getMonth() !== (endMonth - 1) || testEndDate.getFullYear() !== endYear) {
-        setDateErrors(prev => ({
-          ...prev,
-          endDay: 'Please enter a valid date',
-          endMonth: '',
-          endYear: ''
-        }))
-        return
-      }
-      
-      // End date cannot be in the future (compare as numbers to avoid timezone issues)
-      const nowEnd = new Date()
-      const currentYearEnd = nowEnd.getFullYear()
-      const currentMonthEnd = nowEnd.getMonth() + 1
-      const currentDayEnd = nowEnd.getDate()
-      if (endYear > currentYearEnd || (endYear === currentYearEnd && endMonth > currentMonthEnd) || (endYear === currentYearEnd && endMonth === currentMonthEnd && endDay > currentDayEnd)) {
+      // End date cannot be in the future (DatePicker has maxDate but double-check)
+      if (testEndDate > new Date()) {
         setDateErrors(prev => ({
           ...prev,
           endDay: 'Date cannot be in the future',
@@ -594,9 +478,6 @@ function SymptomsPageContent() {
       
       // Clear any existing errors since validation passed
       setDateErrors({ day: '', month: '', year: '', endDay: '', endMonth: '', endYear: '' })
-      
-      // Create the end date string and store it
-      setFormData(prev => ({ ...prev, symptomEndDate: endDateString }))
     }
     
     // Skip step 3 (end date) if symptoms are ongoing
@@ -1153,16 +1034,16 @@ function SymptomsPageContent() {
   }
 
   const getSeverityColor = (severity) => {
-    if (severity <= 3) return 'text-green-600 bg-green-100'
-    if (severity <= 6) return 'text-yellow-600 bg-yellow-100'
-    return 'text-red-600 bg-red-100'
+    if (severity <= 3) return { text: 'text-sky-500', bg: 'bg-sky-100', hex: '#0ea5e9' }
+    if (severity <= 6) return { text: 'text-orange-500', bg: 'bg-orange-100', hex: '#f97316' }
+    return { text: 'text-red-500', bg: 'bg-red-100', hex: '#ef4444' }
   }
 
   const getSeverityLabel = (severity) => {
     if (severity <= 3) return 'Mild'
     if (severity <= 6) return 'Moderate'
     if (severity <= 8) return 'Severe'
-    return 'Very Severe'
+    return 'Extreme'
   }
 
   const getStressLabel = (stress) => {
@@ -1173,9 +1054,9 @@ function SymptomsPageContent() {
   }
 
   const getStressColor = (stress) => {
-    if (stress <= 3) return 'text-green-600 bg-green-100'
-    if (stress <= 6) return 'text-yellow-600 bg-yellow-100'
-    return 'text-red-600 bg-red-100'
+    if (stress <= 3) return 'text-sky-500'
+    if (stress <= 6) return 'text-orange-500'
+    return 'text-red-500'
   }
 
   const getMealLabel = (mealType) => {
@@ -1286,80 +1167,32 @@ function SymptomsPageContent() {
         {currentStep === 1 && (
           <div className="mb-5">
             <h3 className="text-2xl sm:text-2xl md:text-3xl font-source font-bold sm:font-semibold text-primary mb-2">When did your symptoms begin?</h3>
-            <p className="text-sm text-muted mb-6">For example, '14 09 2014'</p>
-            <div className="flex space-x-3">
-              <div className="w-14">
-                <label className="block text-base font-medium text-secondary mb-2">Day</label>
-                <input
-                  type="number"
-                  min="1"
-                  max="31"
-                  value={dateInputs.day}
-                  onChange={(e) => {
-                    let value = e.target.value;
-                    if (value.length > 2) {
-                      value = value.slice(0, 2);
-                    }
-                    handleDateInputChange('day', value);
+            <p className="text-sm text-muted mb-6">Select the date your symptoms started</p>
+            <div>
+              <label className="block text-base font-medium text-secondary mb-2">Date</label>
+              <div className="relative w-full sm:max-w-[150px]">
+                <DatePicker
+                  ref={datePickerRef}
+                  id="symptom-start-date"
+                  selected={formData.symptomStartDate ? new Date(formData.symptomStartDate + 'T12:00:00') : null}
+                  openToDate={formData.symptomStartDate ? new Date(formData.symptomStartDate + 'T12:00:00') : new Date()}
+                  onChange={(date) => {
+                    setFormData(prev => ({ ...prev, symptomStartDate: date ? date.toISOString().split('T')[0] : '' }))
+                    setDateErrors(prev => ({ ...prev, day: '', month: '', year: '' }))
                   }}
-                  onKeyDown={(e) => {
-                    // Prevent 'e', 'E', '+', '-', '.' from being entered
-                    if (['e', 'E', '+', '-', '.'].includes(e.key)) {
-                      e.preventDefault();
-                    }
-                  }}
-                  className="input-field-wizard [appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none"
-              />
-            </div>
-              <div className="w-14">
-                <label className="block text-base font-medium text-secondary mb-2">Month</label>
-                <input
-                  type="number"
-                  min="1"
-                  max="12"
-                  value={dateInputs.month}
-                  onChange={(e) => {
-                    let value = e.target.value;
-                    if (value.length > 2) {
-                      value = value.slice(0, 2);
-                    }
-                    handleDateInputChange('month', value);
-                  }}
-                  onKeyDown={(e) => {
-                    // Prevent 'e', 'E', '+', '-', '.' from being entered
-                    if (['e', 'E', '+', '-', '.'].includes(e.key)) {
-                      e.preventDefault();
-                    }
-                  }}
-                  className="input-field-wizard [appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none"
-                />
-              </div>
-              <div className="w-24">
-                <label className="block text-base font-medium text-secondary mb-2">Year</label>
-                <input
-                  type="number"
-                  min="2020"
-                  max={new Date().getFullYear()}
-                  value={dateInputs.year}
-                  onChange={(e) => {
-                    let value = e.target.value;
-                    if (value.length > 4) {
-                      value = value.slice(0, 4);
-                    }
-                    handleDateInputChange('year', value);
-                  }}
-                  onKeyDown={(e) => {
-                    // Prevent 'e', 'E', '+', '-', '.' from being entered
-                    if (['e', 'E', '+', '-', '.'].includes(e.key)) {
-                      e.preventDefault();
-                    }
-                  }}
-                  className="input-field-wizard [appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none"
+                  customInput={<SymptomDateInput onIconClick={() => datePickerRef.current?.setOpen?.(true)} />}
+                  placeholderText="e.g. 14/09/2014"
+                  dateFormat="dd/MM/yyyy"
+                  minDate={new Date(2020, 0, 1)}
+                  maxDate={new Date()}
+                  preventOpenOnFocus
+                  wrapperClassName="w-full"
+                  enableTabLoop={false}
                 />
               </div>
             </div>
             {(dateErrors.day || dateErrors.month || dateErrors.year) && (
-              <div className="mt-6 p-3 rounded-lg border" style={{backgroundColor: 'var(--bg-error)', borderColor: 'var(--border-error)'}}>
+              <div className="mt-4 p-3 rounded-lg border" style={{backgroundColor: 'var(--bg-error)', borderColor: 'var(--border-error)'}}>
                 <p className="text-sm" style={{color: 'var(--text-error)'}}>{dateErrors.day || dateErrors.month || dateErrors.year}</p>
               </div>
             )}
@@ -1431,80 +1264,32 @@ function SymptomsPageContent() {
         {currentStep === 3 && (
           <div className="mb-5">
             <h3 className="text-2xl sm:text-2xl md:text-3xl font-source font-bold sm:font-semibold text-primary mb-2">When did symptoms end?</h3>
-            <p className="text-sm text-muted mb-6">For example, '14 09 2014'</p>
-            <div className="flex space-x-3">
-              <div className="w-14">
-                <label className="block text-base font-medium text-secondary mb-2">Day</label>
-                <input
-                  type="number"
-                  min="1"
-                  max="31"
-                  value={dateInputs.endDay || ''}
-                  onChange={(e) => {
-                    let value = e.target.value;
-                    if (value.length > 2) {
-                      value = value.slice(0, 2);
-                    }
-                    handleDateInputChange('endDay', value);
+            <p className="text-sm text-muted mb-6">Select the date your symptoms ended</p>
+            <div>
+              <label className="block text-base font-medium text-secondary mb-2">Date</label>
+              <div className="relative w-full sm:max-w-[150px]">
+                <DatePicker
+                  ref={datePickerEndRef}
+                  id="symptom-end-date"
+                  selected={formData.symptomEndDate ? new Date(formData.symptomEndDate + 'T12:00:00') : null}
+                  openToDate={formData.symptomEndDate ? new Date(formData.symptomEndDate + 'T12:00:00') : new Date()}
+                  onChange={(date) => {
+                    setFormData(prev => ({ ...prev, symptomEndDate: date ? date.toISOString().split('T')[0] : '' }))
+                    setDateErrors(prev => ({ ...prev, endDay: '', endMonth: '', endYear: '' }))
                   }}
-                  onKeyDown={(e) => {
-                    // Prevent 'e', 'E', '+', '-', '.' from being entered
-                    if (['e', 'E', '+', '-', '.'].includes(e.key)) {
-                      e.preventDefault();
-                    }
-                  }}
-                  className="input-field-wizard [appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none"
-              />
-            </div>
-              <div className="w-14">
-                <label className="block text-base font-medium text-secondary mb-2">Month</label>
-                <input
-                  type="number"
-                  min="1"
-                  max="12"
-                  value={dateInputs.endMonth || ''}
-                  onChange={(e) => {
-                    let value = e.target.value;
-                    if (value.length > 2) {
-                      value = value.slice(0, 2);
-                    }
-                    handleDateInputChange('endMonth', value);
-                  }}
-                  onKeyDown={(e) => {
-                    // Prevent 'e', 'E', '+', '-', '.' from being entered
-                    if (['e', 'E', '+', '-', '.'].includes(e.key)) {
-                      e.preventDefault();
-                    }
-                  }}
-                  className="input-field-wizard [appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none"
-                />
-                </div>
-              <div className="w-24">
-                <label className="block text-base font-medium text-secondary mb-2">Year</label>
-                <input
-                  type="number"
-                  min="2020"
-                  max={new Date().getFullYear()}
-                  value={dateInputs.endYear || ''}
-                  onChange={(e) => {
-                    let value = e.target.value;
-                    if (value.length > 4) {
-                      value = value.slice(0, 4);
-                    }
-                    handleDateInputChange('endYear', value);
-                  }}
-                  onKeyDown={(e) => {
-                    // Prevent 'e', 'E', '+', '-', '.' from being entered
-                    if (['e', 'E', '+', '-', '.'].includes(e.key)) {
-                      e.preventDefault();
-                    }
-                  }}
-                  className="input-field-wizard [appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none"
+                  customInput={<SymptomDateInput onIconClick={() => datePickerEndRef.current?.setOpen?.(true)} />}
+                  placeholderText="e.g. 14/09/2014"
+                  dateFormat="dd/MM/yyyy"
+                  minDate={formData.symptomStartDate ? new Date(formData.symptomStartDate + 'T12:00:00') : new Date(2020, 0, 1)}
+                  maxDate={new Date()}
+                  preventOpenOnFocus
+                  wrapperClassName="w-full"
+                  enableTabLoop={false}
                 />
               </div>
             </div>
             {(dateErrors.endDay || dateErrors.endMonth || dateErrors.endYear) && (
-              <div className="mt-6 p-3 rounded-lg border" style={{backgroundColor: 'var(--bg-error)', borderColor: 'var(--border-error)'}}>
+              <div className="mt-4 p-3 rounded-lg border" style={{backgroundColor: 'var(--bg-error)', borderColor: 'var(--border-error)'}}>
                 <p className="text-sm" style={{color: 'var(--text-error)'}}>{dateErrors.endDay || dateErrors.endMonth || dateErrors.endYear}</p>
               </div>
             )}
@@ -1518,30 +1303,42 @@ function SymptomsPageContent() {
               {formData.isOngoing ? 'How severe are your symptoms?' : 'How severe were your symptoms?'}
             </h3>
             <p className="text-sm text-muted mb-6">Rate from 1 (mild) to 10 (severe)</p>
-            <div className="w-14">
-                <input
-                  type="number"
-                  id="severity"
-                  name="severity"
-                  min="1"
-                  max="10"
-                  value={formData.severity}
-                  onChange={handleInputChange}
-                  onKeyDown={(e) => {
-                    // Prevent 'e', 'E', '+', '-', '.' from being entered
-                    if (['e', 'E', '+', '-', '.'].includes(e.key)) {
-                      e.preventDefault();
-                    }
-                  }}
-                  className="input-field-wizard [appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none"
-                />
+            <div className="w-full">
+              <div className="flex items-center justify-between mb-3">
+                <span className="text-xs text-muted">Mild</span>
+                <div className="flex items-baseline gap-2">
+                  <span
+                    className={`text-3xl font-bold transition-colors duration-200 ${formData.severity ? getSeverityColor(Number(formData.severity)).text : 'text-muted'}`}
+                  >
+                    {formData.severity || '–'}
+                  </span>
+                  <span className="text-muted">/10</span>
+                  {formData.severity && (
+                    <span className={`text-sm font-medium ${getSeverityColor(Number(formData.severity)).text}`}>
+                      {getSeverityLabel(Number(formData.severity))}
+                    </span>
+                  )}
                 </div>
-                {fieldErrors.severity && (
-                  <div className="mt-6 p-3 rounded-lg border" style={{backgroundColor: 'var(--bg-error)', borderColor: 'var(--border-error)'}}>
-                    <p className="text-sm" style={{color: 'var(--text-error)'}}>{fieldErrors.severity}</p>
+                <span className="text-xs text-muted">Extreme</span>
               </div>
-                )}
+              <input
+                type="range"
+                id="severity"
+                name="severity"
+                min="1"
+                max="10"
+                step="1"
+                value={formData.severity || 1}
+                onChange={handleInputChange}
+                className="severity-slider w-full h-3 rounded-full appearance-none cursor-pointer"
+              />
+            </div>
+            {fieldErrors.severity && (
+              <div className="mt-4 p-3 rounded-lg border" style={{backgroundColor: 'var(--bg-error)', borderColor: 'var(--border-error)'}}>
+                <p className="text-sm" style={{color: 'var(--text-error)'}}>{fieldErrors.severity}</p>
               </div>
+            )}
+          </div>
         )}
 
         {/* Step 5: Stress Level */}
@@ -1551,28 +1348,40 @@ function SymptomsPageContent() {
               {formData.isOngoing ? 'How stressed are you feeling?' : 'How stressed were you feeling during that time?'}
             </h3>
             <p className="text-sm text-muted mb-6">Rate from 1 (calm) to 10 (very stressed)</p>
-            <div className="w-14">
-                <input
-                  type="number"
-                  id="stress_level"
-                  name="stress_level"
-                  min="1"
-                  max="10"
-                  value={formData.stress_level}
-                  onChange={handleInputChange}
-                  onKeyDown={(e) => {
-                    // Prevent 'e', 'E', '+', '-', '.' from being entered
-                    if (['e', 'E', '+', '-', '.'].includes(e.key)) {
-                      e.preventDefault();
-                    }
-                  }}
-                  className="input-field-wizard [appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none"
-                />
+            <div className="w-full">
+              <div className="flex items-center justify-between mb-3">
+                <span className="text-xs text-muted">Calm</span>
+                <div className="flex items-baseline gap-2">
+                  <span
+                    className={`text-3xl font-bold transition-colors duration-200 ${formData.stress_level ? getStressColor(Number(formData.stress_level)) : 'text-muted'}`}
+                  >
+                    {formData.stress_level || '–'}
+                  </span>
+                  <span className="text-muted">/10</span>
+                  {formData.stress_level && (
+                    <span className={`text-sm font-medium ${getStressColor(Number(formData.stress_level))}`}>
+                      {getStressLabel(Number(formData.stress_level))}
+                    </span>
+                  )}
                 </div>
-                {fieldErrors.stress_level && (
-                  <div className="mt-6 p-3 rounded-lg border" style={{backgroundColor: 'var(--bg-error)', borderColor: 'var(--border-error)'}}>
-                    <p className="text-sm" style={{color: 'var(--text-error)'}}>{fieldErrors.stress_level}</p>
+                <span className="text-xs text-muted">Very stressed</span>
               </div>
+              <input
+                type="range"
+                id="stress_level"
+                name="stress_level"
+                min="1"
+                max="10"
+                step="1"
+                value={formData.stress_level || 1}
+                onChange={handleInputChange}
+                className="severity-slider w-full h-3 rounded-full appearance-none cursor-pointer"
+              />
+            </div>
+                {fieldErrors.stress_level && (
+                  <div className="mt-4 p-3 rounded-lg border" style={{backgroundColor: 'var(--bg-error)', borderColor: 'var(--border-error)'}}>
+                    <p className="text-sm" style={{color: 'var(--text-error)'}}>{fieldErrors.stress_level}</p>
+                  </div>
                 )}
               </div>
         )}

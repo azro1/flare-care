@@ -31,6 +31,7 @@
     --text-icon: #475569; /* Light icon text */
     --bg-input: #ffffff;
     --bg-input-dark: #f1f5f9; /* Light input background */
+    --bg-wizard-input: #f1f5f9; /* Wizard inputs - same as input-field-wizard */
     --border-input: #cbd5e1; /* Light input border */
     --border-input-dark: #cbd5e1; /* Light input border */
     --bg-button-primary: #3b82f6;
@@ -115,6 +116,7 @@
     --text-icon: #d1d5db;
     --bg-input: #2a2d34;
     --bg-input-dark: rgba(42, 45, 52, 0.7);
+    --bg-wizard-input: rgba(42, 45, 52, 0.7); /* Wizard inputs - lighter/less heavy */
     --border-input: #3f4449;
     --border-input-dark: #555961;
     --bg-button-primary: #6366f1;
@@ -425,16 +427,39 @@ select.input-field-wizard option[value=""] {
     color: var(--text-secondary) !important;
 }
 
-/* Symptoms wizard: ensure all inputs use same background as input-field-wizard */
+/* Wizard inputs (symptoms + medications): all use --bg-wizard-input */
 .symptoms-wizard input.input-field-wizard,
 .symptoms-wizard textarea.input-field-wizard,
-.symptoms-wizard select.input-field-wizard {
-    background-color: var(--bg-input-dark) !important;
+.symptoms-wizard select.input-field-wizard,
+.symptoms-wizard .symptom-date-input-wrapper,
+.medications-wizard input.input-field-wizard,
+.medications-wizard textarea.input-field-wizard,
+.medications-wizard select.input-field-wizard,
+.medications-wizard .symptom-date-input-wrapper {
+    background-color: var(--bg-wizard-input) !important;
 }
 .symptoms-wizard input.input-field-wizard:focus,
 .symptoms-wizard textarea.input-field-wizard:focus,
-.symptoms-wizard select.input-field-wizard:focus {
-    background-color: var(--bg-input-dark) !important;
+.symptoms-wizard select.input-field-wizard:focus,
+.medications-wizard input.input-field-wizard:focus,
+.medications-wizard textarea.input-field-wizard:focus,
+.medications-wizard select.input-field-wizard:focus {
+    background-color: var(--bg-wizard-input) !important;
+}
+.symptoms-wizard select.input-field-wizard option,
+.medications-wizard select.input-field-wizard option {
+    background-color: var(--bg-wizard-input) !important;
+}
+.dark .symptoms-wizard input.input-field-wizard:-webkit-autofill,
+.dark .symptoms-wizard input.input-field-wizard:-webkit-autofill:hover,
+.dark .symptoms-wizard input.input-field-wizard:-webkit-autofill:focus,
+.dark .symptoms-wizard input.input-field-wizard:-webkit-autofill:active,
+.dark .medications-wizard input.input-field-wizard:-webkit-autofill,
+.dark .medications-wizard input.input-field-wizard:-webkit-autofill:hover,
+.dark .medications-wizard input.input-field-wizard:-webkit-autofill:focus,
+.dark .medications-wizard input.input-field-wizard:-webkit-autofill:active {
+    -webkit-box-shadow: 0 0 0 1000px var(--bg-wizard-input) inset !important;
+    background-color: var(--bg-wizard-input) !important;
 }
 
   .icon-container {
@@ -1018,6 +1043,21 @@ select.input-field-wizard option[value=""] {
     background-color: transparent !important;
     background: transparent !important;
   }
+
+  /* Restore selected + today styling on mobile (overrides aggressive opaque rule above) */
+  .dark .react-datepicker__day.react-datepicker__day--selected {
+    background-color: var(--bg-button-cadet) !important;
+    color: white !important;
+  }
+  .dark .react-datepicker__day.react-datepicker__day--today {
+    background-color: transparent !important;
+    color: var(--text-cadet-blue) !important;
+    font-weight: 700 !important;
+  }
+  .dark .react-datepicker__day.react-datepicker__day--today.react-datepicker__day--selected {
+    background-color: var(--bg-button-cadet) !important;
+    color: white !important;
+  }
 }
 
 .react-datepicker__header {
@@ -1225,6 +1265,46 @@ select.input-field-wizard option[value=""] {
   color: var(--text-primary) !important;
   border-color: var(--border-input-dark) !important;
   box-shadow: none !important;
+  outline: none !important;
+}
+/* Date inputs with calendar icon: transparent so wrapper shows through (no shade difference) */
+.react-datepicker__input-container .symptom-date-input-wrapper input,
+.react-datepicker__input-container .symptom-date-input-wrapper input:focus {
+  background-color: transparent !important;
+  background: transparent !important;
+  box-shadow: none !important;
+  -webkit-box-shadow: none !important;
+}
+.dark .react-datepicker__input-container .symptom-date-input-wrapper input,
+.dark .react-datepicker__input-container .symptom-date-input-wrapper input:focus {
+  background-color: transparent !important;
+  background: transparent !important;
+  box-shadow: none !important;
+  -webkit-box-shadow: none !important;
+  color: var(--text-primary) !important;
+  border-color: var(--border-input-dark) !important;
+  outline: none !important;
+}
+/* Wizard date inputs (same styling, scoped to wizard) */
+.symptoms-wizard .react-datepicker__input-container input,
+.symptoms-wizard .react-datepicker__input-container input:focus,
+.medications-wizard .react-datepicker__input-container input,
+.medications-wizard .react-datepicker__input-container input:focus {
+  background-color: transparent !important;
+  background: transparent !important;
+  box-shadow: none !important;
+  -webkit-box-shadow: none !important;
+}
+.dark .symptoms-wizard .react-datepicker__input-container input,
+.dark .symptoms-wizard .react-datepicker__input-container input:focus,
+.dark .medications-wizard .react-datepicker__input-container input,
+.dark .medications-wizard .react-datepicker__input-container input:focus {
+  background-color: transparent !important;
+  background: transparent !important;
+  box-shadow: none !important;
+  -webkit-box-shadow: none !important;
+  color: var(--text-primary) !important;
+  border-color: var(--border-input-dark) !important;
   outline: none !important;
 }
 
@@ -1456,4 +1536,55 @@ select.input-field-wizard option[value=""] {
 .dark {
   scrollbar-width: thin;
   scrollbar-color: var(--separator-card-inner) var(--bg-card);
+}
+
+/* Severity slider - gradient track, styled thumb */
+.severity-slider {
+  -webkit-appearance: none;
+  appearance: none;
+  height: 12px;
+  border-radius: 9999px;
+}
+.severity-slider::-webkit-slider-thumb {
+  -webkit-appearance: none;
+  appearance: none;
+  width: 24px;
+  height: 24px;
+  margin-top: -6px; /* Center 24px thumb on 12px track */
+  border-radius: 50%;
+  background: white;
+  border: 2px solid var(--border-input-dark);
+  box-shadow: 0 2px 6px rgba(0, 0, 0, 0.15);
+  cursor: pointer;
+  transition: transform 0.15s ease, box-shadow 0.15s ease;
+}
+.severity-slider::-webkit-slider-thumb:hover {
+  transform: scale(1.08);
+  box-shadow: 0 3px 10px rgba(0, 0, 0, 0.2);
+}
+.severity-slider::-webkit-slider-runnable-track {
+  height: 12px;
+  border-radius: 9999px;
+  /* Smooth gradient: blue (mild) -> orange (moderate) -> red (extreme). Stops tuned so value 4 sits in orange */
+  background: linear-gradient(to right, #7dd3fc 0%, #38bdf8 18%, #fdba74 32%, #fb923c 55%, #ef4444 85%, #dc2626 100%);
+}
+.severity-slider::-moz-range-thumb {
+  width: 24px;
+  height: 24px;
+  border-radius: 50%;
+  background: white;
+  border: 2px solid var(--border-input-dark);
+  box-shadow: 0 2px 6px rgba(0, 0, 0, 0.15);
+  cursor: pointer;
+  transition: transform 0.15s ease, box-shadow 0.15s ease;
+}
+.severity-slider::-moz-range-thumb:hover {
+  transform: scale(1.08);
+  box-shadow: 0 3px 10px rgba(0, 0, 0, 0.2);
+}
+.severity-slider::-moz-range-track {
+  height: 12px;
+  border-radius: 9999px;
+  /* Smooth gradient: blue (mild) -> orange (moderate) -> red (extreme). Stops tuned so value 4 sits in orange */
+  background: linear-gradient(to right, #7dd3fc 0%, #38bdf8 18%, #fdba74 32%, #fb923c 55%, #ef4444 85%, #dc2626 100%);
 }

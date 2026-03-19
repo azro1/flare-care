@@ -1,8 +1,9 @@
 'use client'
 
-import { useState, useEffect } from 'react'
+import { useState, useEffect, useRef } from 'react'
 import ConfirmationModal from '@/components/ConfirmationModal'
 import ProtectedRoute from '@/components/ProtectedRoute'
+import DateInputWithCalendar from '@/components/DateInputWithCalendar'
 import { sanitizeNotes } from '@/lib/sanitize'
 import { Scale, ChevronDown } from 'lucide-react'
 import Masonry from 'react-masonry-css'
@@ -20,6 +21,7 @@ function WeightPageContent() {
   const [editingId, setEditingId] = useState(null)
   const [deleteModal, setDeleteModal] = useState({ isOpen: false, id: null })
   const [expandedWeightEntries, setExpandedWeightEntries] = useState(new Set())
+  const weightDatePickerRef = useRef(null)
   const [formData, setFormData] = useState({
     date: new Date().toISOString().split('T')[0],
     valueKg: '',
@@ -278,7 +280,9 @@ function WeightPageContent() {
                   <label htmlFor="weight-date" className="block text-sm sm:text-base font-semibold font-roboto text-primary mb-2 sm:mb-3">
                     Date *
                   </label>
+                  <div className="w-full sm:max-w-[150px]">
                   <DatePicker
+                    ref={weightDatePickerRef}
                     id="weight-date"
                     selected={formData.date ? new Date(formData.date + 'T12:00:00') : null}
                     onChange={(date) => setFormData(prev => ({
@@ -286,12 +290,14 @@ function WeightPageContent() {
                       date: date ? date.toISOString().split('T')[0] : ''
                     }))}
                     placeholderText="Select date"
+                    customInput={<DateInputWithCalendar onIconClick={() => weightDatePickerRef.current?.setOpen?.(true)} />}
                     dateFormat="dd/MM/yyyy"
                     maxDate={new Date()}
-                    className="input-field-wizard w-full"
+                    preventOpenOnFocus
                     wrapperClassName="w-full"
                     enableTabLoop={false}
                   />
+                  </div>
                 </div>
                 <div>
                   <label htmlFor="valueKg" className="block text-sm sm:text-base font-semibold font-roboto text-primary mb-2 sm:mb-3">

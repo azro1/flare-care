@@ -1,11 +1,12 @@
 'use client'
 
-import { useState, useEffect } from 'react'
+import { useState, useEffect, useRef } from 'react'
 import { useForm, Controller } from 'react-hook-form'
 import { yupResolver } from '@hookform/resolvers/yup'
 import * as yup from 'yup'
 import ConfirmationModal from '@/components/ConfirmationModal'
 import ProtectedRoute from '@/components/ProtectedRoute'
+import DateInputWithCalendar from '@/components/DateInputWithCalendar'
 import { sanitizeNotes, sanitizeInput } from '@/lib/sanitize'
 import { Calendar, ChevronDown, Bell, Lightbulb } from 'lucide-react'
 import Masonry from 'react-masonry-css'
@@ -84,6 +85,7 @@ function AppointmentsPageContent() {
   })
   const [saveError, setSaveError] = useState(null)
   const [dateError, setDateError] = useState(null)
+  const appointmentDatePickerRef = useRef(null)
 
   const fetchAppointments = async () => {
     if (!user?.id) {
@@ -370,7 +372,9 @@ function AppointmentsPageContent() {
                     readOnly
                     aria-hidden
                   />
+                  <div className="w-full sm:max-w-[150px]">
                   <DatePicker
+                    ref={appointmentDatePickerRef}
                     id="apt-date"
                     selected={formData.date ? new Date(formData.date + 'T12:00:00') : null}
                     onChange={(date) => {
@@ -381,12 +385,14 @@ function AppointmentsPageContent() {
                       }))
                     }}
                     placeholderText="Select date"
+                    customInput={<DateInputWithCalendar onIconClick={() => appointmentDatePickerRef.current?.setOpen?.(true)} />}
                     dateFormat="dd/MM/yyyy"
                     minDate={new Date()}
-                    className="input-field-wizard w-full"
+                    preventOpenOnFocus
                     wrapperClassName="w-full"
                     enableTabLoop={false}
                   />
+                  </div>
                   {dateError && (
                     <p className="text-sm font-roboto mt-1" role="alert" style={{ color: 'var(--text-cadet-blue)' }}>{dateError}</p>
                   )}

@@ -450,7 +450,7 @@ function MedicationsPageContent() {
   }
 
   return (
-    <div className="max-w-4xl w-full mx-auto sm:px-4 md:px-6 min-w-0">
+    <div className="medications-wizard max-w-4xl w-full mx-auto sm:px-4 md:px-6 min-w-0">
       {/* Header Section */}
       <div className="mb-5 sm:mb-6">
         <div className="card">

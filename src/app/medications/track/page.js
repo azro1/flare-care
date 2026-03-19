@@ -1,14 +1,41 @@
 'use client'
 
-import { useState, useEffect } from 'react'
+import { useState, useEffect, useRef, forwardRef } from 'react'
 import { useRouter } from 'next/navigation'
 import { useAuth } from '@/lib/AuthContext'
 import ConfirmationModal from '@/components/ConfirmationModal'
 import ProtectedRoute from '@/components/ProtectedRoute'
 import DatePicker from 'react-datepicker'
 import 'react-datepicker/dist/react-datepicker.css'
-import { ChartLine } from 'lucide-react'
+import { ChartLine, Calendar } from 'lucide-react'
 import { supabase, TABLES } from '@/lib/supabase'
+
+const MedicationDateInput = forwardRef(({ value, onClick, onChange, placeholder, id, className, onIconClick, ...rest }, ref) => (
+  <div className={`symptom-date-input-wrapper flex items-center input-field-wizard ${className ?? ''}`.trim()}>
+    <input
+      ref={ref}
+      readOnly
+      value={value ?? ''}
+      onChange={onChange}
+      placeholder={placeholder}
+      id={id}
+      className="flex-1 min-w-0 !border-0 !p-0 !bg-transparent outline-none cursor-default text-inherit placeholder-slate-400"
+      onMouseDown={(e) => e.preventDefault()}
+      onClick={(e) => e.preventDefault()}
+      style={{ caretColor: 'transparent' }}
+      {...rest}
+    />
+    <button
+      type="button"
+      onClick={(e) => { e.preventDefault(); onIconClick?.() }}
+      className="flex-shrink-0 p-0.5 cursor-pointer hover:opacity-80 transition-opacity ml-1"
+      aria-label="Open date picker"
+    >
+      <Calendar className="w-5 h-5 text-secondary" />
+    </button>
+  </div>
+))
+MedicationDateInput.displayName = 'MedicationDateInput'
 
 function MedicationTrackingWizard() {
   const router = useRouter()
@@ -28,20 +55,20 @@ function MedicationTrackingWizard() {
       const savedFormData = localStorage.getItem('medication-wizard-form')
       return savedFormData ? JSON.parse(savedFormData) : {
         missedMedications: false,
-        missedMedicationsList: [{ medication: '', date: null, timeOfDay: '' }],
+        missedMedicationsList: [{ medication: '', date: new Date(), timeOfDay: '' }],
         nsaidUsage: false,
-        nsaidList: [{ medication: '', date: null, timeOfDay: '', dosage: '' }],
+        nsaidList: [{ medication: '', date: new Date(), timeOfDay: '', dosage: '' }],
         antibioticUsage: false,
-        antibioticList: [{ medication: '', date: null, timeOfDay: '', dosage: '' }]
+        antibioticList: [{ medication: '', date: new Date(), timeOfDay: '', dosage: '' }]
       }
     }
     return {
       missedMedications: false,
-      missedMedicationsList: [{ medication: '', date: null, timeOfDay: '' }],
+      missedMedicationsList: [{ medication: '', date: new Date(), timeOfDay: '' }],
       nsaidUsage: false,
-      nsaidList: [{ medication: '', date: null, timeOfDay: '', dosage: '' }],
+      nsaidList: [{ medication: '', date: new Date(), timeOfDay: '', dosage: '' }],
       antibioticUsage: false,
-      antibioticList: [{ medication: '', date: null, timeOfDay: '', dosage: '' }]
+      antibioticList: [{ medication: '', date: new Date(), timeOfDay: '', dosage: '' }]
     }
   })
 
@@ -51,6 +78,9 @@ function MedicationTrackingWizard() {
   const [fieldErrors, setFieldErrors] = useState({})
   const [isSubmitting, setIsSubmitting] = useState(false)
   const [isMobile, setIsMobile] = useState(false)
+  const missedMedDatePickerRefs = useRef({})
+  const nsaidDatePickerRefs = useRef({})
+  const antibioticDatePickerRefs = useRef({})
 
   // Detect mobile for DatePicker
   useEffect(() => {
@@ -74,6 +104,43 @@ function MedicationTrackingWizard() {
       localStorage.setItem('medication-wizard-form', JSON.stringify(formData))
     }
   }, [formData])
+
+  // Default date to today when reaching relevant step for any items with null/empty date
+  useEffect(() => {
+    if (currentStep === 2) {
+      const hasNullDate = formData.missedMedicationsList.some(item => !item.date)
+      if (hasNullDate) {
+        setFormData(prev => ({
+          ...prev,
+          missedMedicationsList: prev.missedMedicationsList.map(item =>
+            !item.date ? { ...item, date: new Date() } : item
+          )
+        }))
+      }
+    }
+    if (currentStep === 4) {
+      const hasNullDate = formData.nsaidList.some(item => !item.date)
+      if (hasNullDate) {
+        setFormData(prev => ({
+          ...prev,
+          nsaidList: prev.nsaidList.map(item =>
+            !item.date ? { ...item, date: new Date() } : item
+          )
+        }))
+      }
+    }
+    if (currentStep === 6) {
+      const hasNullDate = formData.antibioticList.some(item => !item.date)
+      if (hasNullDate) {
+        setFormData(prev => ({
+          ...prev,
+          antibioticList: prev.antibioticList.map(item =>
+            !item.date ? { ...item, date: new Date() } : item
+          )
+        }))
+      }
+    }
+  }, [currentStep, formData.missedMedicationsList, formData.nsaidList, formData.antibioticList])
 
   // Clear localStorage when component unmounts (user navigates away)
   useEffect(() => {
@@ -212,7 +279,7 @@ function MedicationTrackingWizard() {
   const addMissedMedication = () => {
     setFormData(prev => ({
       ...prev,
-      missedMedicationsList: [...prev.missedMedicationsList, { medication: '', date: null, timeOfDay: '' }]
+      missedMedicationsList: [...prev.missedMedicationsList, { medication: '', date: new Date(), timeOfDay: '' }]
     }))
   }
 
@@ -252,7 +319,7 @@ function MedicationTrackingWizard() {
   const addNsaid = () => {
     setFormData(prev => ({
       ...prev,
-      nsaidList: [...prev.nsaidList, { medication: '', date: null, timeOfDay: '', dosage: '' }]
+      nsaidList: [...prev.nsaidList, { medication: '', date: new Date(), timeOfDay: '', dosage: '' }]
     }))
   }
 
@@ -293,7 +360,7 @@ function MedicationTrackingWizard() {
   const addAntibiotic = () => {
     setFormData(prev => ({
       ...prev,
-      antibioticList: [...prev.antibioticList, { medication: '', date: null, timeOfDay: '', dosage: '' }]
+      antibioticList: [...prev.antibioticList, { medication: '', date: new Date(), timeOfDay: '', dosage: '' }]
     }))
   }
 
@@ -502,18 +569,21 @@ function MedicationTrackingWizard() {
                   <div className="flex flex-col sm:flex-row gap-3">
                     <input
                       type="text"
-                      placeholder="Medication name"
+                      placeholder="Medication"
                       value={item.medication}
                       onChange={(e) => updateMissedMedication(index, 'medication', e.target.value)}
                       className="input-field-wizard w-full sm:flex-1 min-w-0"
                     />
                     <DatePicker
+                      ref={(el) => { missedMedDatePickerRefs.current[index] = el }}
                       selected={item.date}
                       onChange={(date) => updateMissedMedication(index, 'date', date)}
                       placeholderText="Select date missed"
-                      className="input-field-wizard w-full sm:flex-1 min-w-0"
+                      customInput={<MedicationDateInput onIconClick={() => missedMedDatePickerRefs.current?.[index]?.setOpen?.(true)} />}
                       dateFormat="dd/MM/yyyy"
                       maxDate={new Date()}
+                      preventOpenOnFocus
+                      wrapperClassName="w-full sm:w-auto sm:flex-initial min-w-0"
                       enableTabLoop={false}
                     />
                     <select
@@ -642,18 +712,21 @@ function MedicationTrackingWizard() {
                   <div className="flex flex-col sm:flex-row gap-3">
                     <input
                       type="text"
-                      placeholder="e.g., Ibuprofen"
+                      placeholder="Medication"
                       value={item.medication}
                       onChange={(e) => updateNsaid(index, 'medication', e.target.value)}
                       className="input-field-wizard w-full sm:flex-1 min-w-0"
                     />
                     <DatePicker
+                      ref={(el) => { nsaidDatePickerRefs.current[index] = el }}
                       selected={item.date}
                       onChange={(date) => updateNsaid(index, 'date', date)}
                       placeholderText="Select date taken"
-                      className="input-field-wizard w-full sm:flex-1 min-w-0"
+                      customInput={<MedicationDateInput onIconClick={() => nsaidDatePickerRefs.current?.[index]?.setOpen?.(true)} />}
                       dateFormat="dd/MM/yyyy"
                       maxDate={new Date()}
+                      preventOpenOnFocus
+                      wrapperClassName="w-full sm:w-auto sm:flex-initial min-w-0"
                       enableTabLoop={false}
                     />
                     <select
@@ -670,7 +743,7 @@ function MedicationTrackingWizard() {
                     <input
                       type="text"
                       inputMode="numeric"
-                      placeholder="10mg"
+                      placeholder="Dose"
                       value={item.dosage}
                       onChange={(e) => updateNsaid(index, 'dosage', e.target.value)}
                       maxLength={5}
@@ -792,18 +865,21 @@ function MedicationTrackingWizard() {
                   <div className="flex flex-col sm:flex-row gap-3">
                     <input
                       type="text"
-                      placeholder="e.g., Amoxicillin"
+                      placeholder="Medication"
                       value={item.medication}
                       onChange={(e) => updateAntibiotic(index, 'medication', e.target.value)}
                       className="input-field-wizard w-full sm:flex-1 min-w-0"
                     />
                     <DatePicker
+                      ref={(el) => { antibioticDatePickerRefs.current[index] = el }}
                       selected={item.date}
                       onChange={(date) => updateAntibiotic(index, 'date', date)}
                       placeholderText="Select date taken"
-                      className="input-field-wizard w-full sm:flex-1 min-w-0"
+                      customInput={<MedicationDateInput onIconClick={() => antibioticDatePickerRefs.current?.[index]?.setOpen?.(true)} />}
                       dateFormat="dd/MM/yyyy"
                       maxDate={new Date()}
+                      preventOpenOnFocus
+                      wrapperClassName="w-full sm:w-auto sm:flex-initial min-w-0"
                       enableTabLoop={false}
                     />
                     <select
@@ -820,7 +896,7 @@ function MedicationTrackingWizard() {
                     <input
                       type="text"
                       inputMode="numeric"
-                      placeholder="10mg"
+                      placeholder="Dose"
                       value={item.dosage}
                       onChange={(e) => updateAntibiotic(index, 'dosage', e.target.value)}
                       maxLength={5}
@@ -945,7 +1021,7 @@ function MedicationTrackingWizard() {
   }
 
   return (
-    <div className={`max-w-4xl w-full mx-auto sm:px-4 md:px-6 lg:px-8 min-w-0 flex flex-col justify-center sm:flex-grow ${currentStep > 0 ? 'pb-20 lg:pb-0' : ''}`}>
+    <div className={`medications-wizard max-w-4xl w-full mx-auto sm:px-4 md:px-6 lg:px-8 min-w-0 flex flex-col justify-center sm:flex-grow ${currentStep > 0 ? 'pb-20 lg:pb-0' : ''}`}>
       {/* Header: Back when needed, then title - hide on landing */}
       {currentStep > 0 && (
         <div className="pt-6 md:pt-0 mb-8">

@@ -1,12 +1,13 @@
 'use client'
 
-import { useState, useEffect } from 'react'
+import { useState, useEffect, useRef } from 'react'
 import { usePathname } from 'next/navigation'
 import jsPDF from 'jspdf'
 import { motion, AnimatePresence } from 'framer-motion'
 import ConfirmationModal from '@/components/ConfirmationModal'
 import DatePicker from 'react-datepicker'
 import 'react-datepicker/dist/react-datepicker.css'
+import DateInputWithCalendar from '@/components/DateInputWithCalendar'
 import ProtectedRoute from '@/components/ProtectedRoute'
 import { supabase, TABLES } from '@/lib/supabase'
 import { useAuth } from '@/lib/AuthContext'
@@ -68,6 +69,8 @@ function ReportsPageContent() {
   const setListPage = (key, page) => setListPages(prev => ({ ...prev, [key]: Math.max(0, page) }))
 
   const [isEmailModalOpen, setIsEmailModalOpen] = useState(false)
+  const reportStartDatePickerRef = useRef(null)
+  const reportEndDatePickerRef = useRef(null)
   const [emailForm, setEmailForm] = useState({
     consultantEmail: '',
     consultantName: '',
@@ -1339,52 +1342,60 @@ function ReportsPageContent() {
           </button>
         </div>
 
-        <div className="flex flex-col lg:flex-row gap-4 mb-6">
-          <div className="w-full lg:flex-1">
+        <div className="flex flex-col sm:flex-row gap-4 sm:gap-6 mb-6">
+          <div className="w-full sm:w-auto">
             <label htmlFor="startDate" className="block text-sm font-medium font-roboto text-primary mb-2">
               Start Date
             </label>
-            <DatePicker
-              id="startDate"
-              selected={dateRange.startDate ? new Date(dateRange.startDate) : null}
-              onChange={(date) => setDateRange(prev => ({ 
-                ...prev, 
-                startDate: date ? date.toISOString().split('T')[0] : '' 
-              }))}
-              placeholderText="Select start date"
-              dateFormat="dd/MM/yyyy"
-              maxDate={dateRange.endDate ? new Date(dateRange.endDate) : new Date()}
-              className="w-full"
-              wrapperClassName="w-full"
-              enableTabLoop={false}
-            />
+            <div className="w-full sm:max-w-[150px]">
+              <DatePicker
+                ref={reportStartDatePickerRef}
+                id="startDate"
+                selected={dateRange.startDate ? new Date(dateRange.startDate) : null}
+                onChange={(date) => setDateRange(prev => ({ 
+                  ...prev, 
+                  startDate: date ? date.toISOString().split('T')[0] : '' 
+                }))}
+                placeholderText="Select start date"
+                customInput={<DateInputWithCalendar onIconClick={() => reportStartDatePickerRef.current?.setOpen?.(true)} />}
+                dateFormat="dd/MM/yyyy"
+                maxDate={dateRange.endDate ? new Date(dateRange.endDate) : new Date()}
+                preventOpenOnFocus
+                wrapperClassName="w-full"
+                enableTabLoop={false}
+              />
+            </div>
           </div>
-          <div className="w-full lg:flex-1">
+          <div className="w-full sm:w-auto">
             <label htmlFor="endDate" className="block text-sm font-medium font-roboto text-primary mb-2">
               End Date
             </label>
-            <DatePicker
-              id="endDate"
-              selected={dateRange.endDate ? new Date(dateRange.endDate) : null}
-              onChange={(date) => setDateRange(prev => ({ 
-                ...prev, 
-                endDate: date ? date.toISOString().split('T')[0] : '' 
-              }))}
-              placeholderText="Select end date"
-              dateFormat="dd/MM/yyyy"
-              minDate={dateRange.startDate ? new Date(dateRange.startDate) : undefined}
-              maxDate={new Date()}
-              className="w-full"
-              wrapperClassName="w-full"
-              enableTabLoop={false}
-            />
+            <div className="w-full sm:max-w-[150px]">
+              <DatePicker
+                ref={reportEndDatePickerRef}
+                id="endDate"
+                selected={dateRange.endDate ? new Date(dateRange.endDate) : null}
+                onChange={(date) => setDateRange(prev => ({ 
+                  ...prev, 
+                  endDate: date ? date.toISOString().split('T')[0] : '' 
+                }))}
+                placeholderText="Select end date"
+                customInput={<DateInputWithCalendar onIconClick={() => reportEndDatePickerRef.current?.setOpen?.(true)} />}
+                dateFormat="dd/MM/yyyy"
+                minDate={dateRange.startDate ? new Date(dateRange.startDate) : undefined}
+                maxDate={new Date()}
+                preventOpenOnFocus
+                wrapperClassName="w-full"
+                enableTabLoop={false}
+              />
+            </div>
           </div>
         </div>
-        <div className="flex flex-col xl:flex-row xl:justify-between xl:items-center gap-4">
-          <div className="text-sm text-secondary sm:max-w-md sm:pr-4 font-roboto flex-1">
+        <div className="flex flex-col gap-4">
+          <div className="text-sm text-secondary font-roboto">
             Showing symptoms from {formatUKDate(dateRange.startDate)} to {formatUKDate(dateRange.endDate)}
           </div>
-          <div className="flex flex-col sm:flex-row gap-3 items-center sm:items-stretch">
+          <div className="flex flex-col sm:flex-row gap-3 items-stretch sm:items-center">
             <button onClick={() => handleExportClick(exportToPDF)} className="inline-flex items-center justify-center px-6 py-3 btn-secondary rounded-xl whitespace-nowrap w-full sm:w-auto font-roboto">
               <FileText className="w-5 h-5 mr-2" />
               Export PDF
