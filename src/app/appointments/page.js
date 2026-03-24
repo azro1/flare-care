@@ -323,7 +323,7 @@ function AppointmentsPageContent() {
               <h1 className="text-2xl sm:text-3xl lg:text-4xl font-bold font-source text-primary mb-4 sm:mb-6">
                 My Appointments
               </h1>
-              <p className="text-sm sm:text-base font-semibold text-secondary font-roboto leading-relaxed">
+              <p className="text-sm sm:text-base text-secondary font-roboto leading-relaxed">
                 Add your clinic appointments in one place so you never miss one
               </p>
             </div>

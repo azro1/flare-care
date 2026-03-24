@@ -121,11 +121,16 @@ export async function POST(request) {
     }
     textLines.push('')
     if (currentMeds.length) {
-      textLines.push('Current Medications')
+      textLines.push('Medications')
       currentMeds.forEach((med) => {
         const name = med.name || 'Unnamed medication'
-        const dosage = med.dosage ? ` (${med.dosage})` : ''
-        textLines.push(`• ${name}${dosage}`)
+        textLines.push(`• ${name}`)
+        if (med.dosage != null && String(med.dosage).trim()) {
+          textLines.push(`   Dosage: ${String(med.dosage).trim()}`)
+        }
+        if (med.timeOfDay != null && String(med.timeOfDay).trim()) {
+          textLines.push(`   Time of day: ${String(med.timeOfDay).trim()}`)
+        }
       })
       textLines.push('')
     }
@@ -169,12 +174,19 @@ export async function POST(request) {
       textLines.push('Appointments')
       appointments.forEach((apt) => {
         const date = formatUKDate(apt.date)
-        const time = apt.time ? ` ${apt.time}` : ''
-        const type = apt.type ? ` - ${apt.type}` : ''
-        textLines.push(`${date}${time}${type}`)
-        if (apt.clinician_name) textLines.push(`Clinician: ${apt.clinician_name}`)
-        if (apt.location) textLines.push(`Location: ${apt.location}`)
-        if (apt.notes) textLines.push(`Notes: ${apt.notes}`)
+        const time = apt.time?.toString().trim() || ''
+        const type = apt.type?.toString().trim() || ''
+        const headline = `${date || '—'}${time ? ` ${time}` : ''}${type ? ` — ${type}` : ''}`
+        textLines.push(headline)
+        if (apt.clinician_name?.toString().trim()) {
+          textLines.push(`   Clinician: ${apt.clinician_name.toString().trim()}`)
+        }
+        if (apt.location?.toString().trim()) {
+          textLines.push(`   Location: ${apt.location.toString().trim()}`)
+        }
+        if (apt.notes?.toString().trim()) {
+          textLines.push(`   Notes: ${apt.notes.toString().trim()}`)
+        }
         textLines.push('')
       })
     }
@@ -184,12 +196,14 @@ export async function POST(request) {
         const date = formatUKDate(entry.date)
         const value = entry.value_kg != null ? `${entry.value_kg} kg` : 'no value recorded'
         textLines.push(`${date} - ${value}`)
-        if (entry.notes) textLines.push(`Notes: ${entry.notes}`)
+        if (entry.notes?.toString().trim()) {
+          textLines.push(`   Notes: ${entry.notes.toString().trim()}`)
+        }
         textLines.push('')
       })
     }
     if (hydrationEntries.length) {
-      textLines.push('Hydration')
+      textLines.push(`Hydration Logs (${hydrationEntries.length})`)
       hydrationEntries.forEach((entry) => {
         const date = formatUKDate(entry.date)
         const glasses = entry.glasses != null ? entry.glasses : 'n/a'
@@ -307,13 +321,20 @@ export async function POST(request) {
 
     if (currentMeds.length) {
       htmlParts.push(
-        `<h2 style="margin-top: 24px; margin-bottom: 3px; font-size: 16px; font-weight: 600; font-family: Arial, Helvetica, sans-serif;">Current Medications</h2>`,
+        `<h2 style="margin-top: 24px; margin-bottom: 3px; font-size: 16px; font-weight: 600; font-family: Arial, Helvetica, sans-serif;">Medications</h2>`,
         `<ul style="${ulStyle}">`
       )
       currentMeds.forEach((med) => {
         const name = med.name || 'Unnamed medication'
-        const dosage = med.dosage ? ` (${safe(med.dosage)})` : ''
-        htmlParts.push(`<li style="margin: 0 0 4px 0;">• ${safe(name)}${dosage}</li>`)
+        const dosage =
+          med.dosage != null && String(med.dosage).trim()
+            ? `<br><span style="margin-left: 1em;">Dosage: ${safe(String(med.dosage).trim())}</span>`
+            : ''
+        const tod =
+          med.timeOfDay != null && String(med.timeOfDay).trim()
+            ? `<br><span style="margin-left: 1em;">Time of day: ${safe(String(med.timeOfDay).trim())}</span>`
+            : ''
+        htmlParts.push(`<li style="margin: 0 0 8px 0;">• ${safe(name)}${dosage}${tod}</li>`)
       })
       htmlParts.push('</ul>')
     }
@@ -362,13 +383,20 @@ export async function POST(request) {
       )
       appointments.forEach((apt) => {
         const date = formatUKDate(apt.date)
-        const time = apt.time ? ` ${safe(apt.time)}` : ''
-        const type = apt.type ? ` - ${safe(apt.type)}` : ''
-        htmlParts.push('<div style="margin: 0 0 10px 0;">')
-        htmlParts.push(`<p style="margin: 0 0 2px 0;">${safe(date)}${time}${type}</p>`)
-        if (apt.clinician_name) htmlParts.push(`<p style="margin: 0 0 2px 0;">Clinician: ${safe(apt.clinician_name)}</p>`)
-        if (apt.location) htmlParts.push(`<p style="margin: 0 0 2px 0;">Location: ${safe(apt.location)}</p>`)
-        if (apt.notes) htmlParts.push(`<p style="margin: 0;">Notes: ${safe(apt.notes)}</p>`)
+        const time = apt.time?.toString().trim() || ''
+        const type = apt.type?.toString().trim() || ''
+        const headline = `${safe(date || '—')}${time ? ` ${safe(time)}` : ''}${type ? ` — ${safe(type)}` : ''}`
+        htmlParts.push('<div style="margin: 0 0 12px 0;">')
+        htmlParts.push(`<p style="margin: 0 0 2px 0; font-weight: 600;">${headline}</p>`)
+        if (apt.clinician_name?.toString().trim()) {
+          htmlParts.push(`<p style="margin: 0 0 2px 0;">Clinician: ${safe(apt.clinician_name.toString().trim())}</p>`)
+        }
+        if (apt.location?.toString().trim()) {
+          htmlParts.push(`<p style="margin: 0 0 2px 0;">Location: ${safe(apt.location.toString().trim())}</p>`)
+        }
+        if (apt.notes?.toString().trim()) {
+          htmlParts.push(`<p style="margin: 0;">Notes: ${safe(apt.notes.toString().trim())}</p>`)
+        }
         htmlParts.push('</div>')
       })
     }
@@ -380,15 +408,18 @@ export async function POST(request) {
       weightEntries.forEach((entry) => {
         const date = formatUKDate(entry.date)
         const value = entry.value_kg != null ? `${entry.value_kg} kg` : 'no value recorded'
-        htmlParts.push(`<p style="margin: 0 0 3px 0;">${safe(date)} - ${safe(value)}</p>`)
-        if (entry.notes) htmlParts.push(`<p style="margin: 0 0 10px 0;">Notes: ${safe(entry.notes)}</p>`)
-        else htmlParts.push(`<div style="height: 10px;"></div>`)
+        htmlParts.push('<div style="margin: 0 0 12px 0;">')
+        htmlParts.push(`<p style="margin: 0 0 2px 0;">${safe(date)} - ${safe(value)}</p>`)
+        if (entry.notes?.toString().trim()) {
+          htmlParts.push(`<p style="margin: 0;">Notes: ${safe(entry.notes.toString().trim())}</p>`)
+        }
+        htmlParts.push('</div>')
       })
     }
 
     if (hydrationEntries.length) {
       htmlParts.push(
-        `<h2 style="margin-top: 24px; margin-bottom: 3px; font-size: 16px; font-weight: 600; font-family: Arial, Helvetica, sans-serif;">Hydration</h2>`,
+        `<h2 style="margin-top: 24px; margin-bottom: 3px; font-size: 16px; font-weight: 600; font-family: Arial, Helvetica, sans-serif;">Hydration Logs (${hydrationEntries.length})</h2>`,
         `<ul style="${ulStyle}">`
       )
       hydrationEntries.forEach((entry) => {

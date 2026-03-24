@@ -1,6 +1,7 @@
 'use client'
 
 import { useState, useEffect, useRef } from 'react'
+import { createPortal } from 'react-dom'
 import { usePathname } from 'next/navigation'
 import jsPDF from 'jspdf'
 import ConfirmationModal from '@/components/ConfirmationModal'
@@ -41,6 +42,8 @@ function ReportsPageContent() {
     }
   })
   const [showNoDataModal, setShowNoDataModal] = useState(false)
+  /** Same modal as export; copy differs when opened from Email report */
+  const [noDataModalIsEmail, setNoDataModalIsEmail] = useState(false)
 
   const [listPages, setListPages] = useState({
     symptomEpisodes: 0,
@@ -72,9 +75,23 @@ function ReportsPageContent() {
   })
   const [emailError, setEmailError] = useState('')
   const [isSendingEmail, setIsSendingEmail] = useState(false)
+  const [showEmailSentToast, setShowEmailSentToast] = useState(false)
+  const [emailToastPortalReady, setEmailToastPortalReady] = useState(false)
+  const emailSentToastTimerRef = useRef(null)
+
+  useEffect(() => {
+    setEmailToastPortalReady(true)
+    return () => {
+      if (emailSentToastTimerRef.current) {
+        clearTimeout(emailSentToastTimerRef.current)
+        emailSentToastTimerRef.current = null
+      }
+    }
+  }, [])
 
   const openEmailModal = () => {
     if (!hasDataToExport() || !reportData) {
+      setNoDataModalIsEmail(true)
       setShowNoDataModal(true)
       return
     }
@@ -177,7 +194,14 @@ function ReportsPageContent() {
 
       setIsEmailModalOpen(false)
       setEmailForm({ consultantEmail: '', consultantName: '', note: '' })
-      alert('Report emailed successfully.')
+      if (emailSentToastTimerRef.current) {
+        clearTimeout(emailSentToastTimerRef.current)
+      }
+      setShowEmailSentToast(true)
+      emailSentToastTimerRef.current = setTimeout(() => {
+        setShowEmailSentToast(false)
+        emailSentToastTimerRef.current = null
+      }, 4000)
     } catch (error) {
       console.error('Error sending report email:', error)
       setEmailError(error.message || 'Failed to send email. Please try again.')
@@ -599,6 +623,7 @@ function ReportsPageContent() {
 
   const handleExportClick = (exportFunction) => {
     if (!hasDataToExport()) {
+      setNoDataModalIsEmail(false)
       setShowNoDataModal(true)
       return
     }
@@ -648,8 +673,19 @@ function ReportsPageContent() {
       doc.setFontSize(12)
       doc.setFont('helvetica', 'normal')
       reportData.medications.forEach(med => {
-        doc.text(`• ${med.name}${med.dosage ? ` (${med.dosage})` : ''}`, margin, yPosition)
-        yPosition += 6
+        doc.setFont('helvetica', 'bold')
+        doc.text(`• ${med.name || '—'}`, margin, yPosition)
+        yPosition += 5
+        doc.setFont('helvetica', 'normal')
+        if (med.dosage?.toString().trim()) {
+          doc.text(`   Dosage: ${med.dosage}`, margin, yPosition)
+          yPosition += 5
+        }
+        if (med.timeOfDay?.toString().trim()) {
+          doc.text(`   Time of day: ${med.timeOfDay}`, margin, yPosition)
+          yPosition += 5
+        }
+        yPosition += 3
       })
       yPosition += 10
     }
@@ -739,26 +775,28 @@ function ReportsPageContent() {
           yPosition = 20
         }
         const dateText = apt.date ? formatUKDate(apt.date) : ''
-        const timeText = apt.time || ''
-        const typeText = apt.type || ''
-        const clinicianText = apt.clinician_name || ''
-        const locationText = apt.location || ''
-        const notesText = apt.notes || ''
+        const timeText = apt.time?.toString().trim() || ''
+        const typeText = apt.type?.toString().trim() || ''
+        const clinicianText = apt.clinician_name?.toString().trim() || ''
+        const locationText = apt.location?.toString().trim() || ''
+        const notesText = apt.notes?.toString().trim() || ''
         doc.setFont('helvetica', 'bold')
-        doc.text(`${dateText}${timeText ? ' ' + timeText : ''}${typeText ? ' - ' + typeText : ''}`, margin, yPosition)
+        const headline = `${dateText || '—'}${timeText ? ` ${timeText}` : ''}${typeText ? ` — ${typeText}` : ''}`
+        doc.text(headline, margin, yPosition)
         yPosition += 5
         doc.setFont('helvetica', 'normal')
         if (clinicianText) {
-          doc.text(`Clinician: ${clinicianText}`, margin + 5, yPosition)
+          doc.text(`   Clinician: ${clinicianText}`, margin, yPosition)
           yPosition += 5
         }
         if (locationText) {
-          doc.text(`Location: ${locationText}`, margin + 5, yPosition)
+          doc.text(`   Location: ${locationText}`, margin, yPosition)
           yPosition += 5
         }
         if (notesText) {
-          doc.text(`Notes: ${notesText}`, margin + 5, yPosition)
-          yPosition += 5
+          const splitNotes = doc.splitTextToSize(`   Notes: ${notesText}`, pageWidth - 2 * margin)
+          doc.text(splitNotes, margin, yPosition)
+          yPosition += splitNotes.length * 5
         }
         yPosition += 5
       })
@@ -785,19 +823,20 @@ function ReportsPageContent() {
         }
         const dateText = entry.date ? formatUKDate(entry.date) : ''
         const weightText = entry.value_kg != null ? `${entry.value_kg} kg` : ''
-        const notesText = entry.notes || ''
+        const notesText = entry.notes?.toString().trim() || ''
         doc.text(`${dateText} - ${weightText}`, margin, yPosition)
         yPosition += 5
         if (notesText) {
-          doc.text(`Notes: ${notesText}`, margin + 5, yPosition)
-          yPosition += 5
+          const splitNotes = doc.splitTextToSize(`   Notes: ${notesText}`, pageWidth - 2 * margin)
+          doc.text(splitNotes, margin, yPosition)
+          yPosition += splitNotes.length * 5
         }
         yPosition += 3
       })
       yPosition += 10
     }
 
-    // Hydration Section
+    // Hydration logs section
     if (reportData.hydrationEntries && reportData.hydrationEntries.length > 0) {
       if (yPosition > 250) {
         doc.addPage()
@@ -805,7 +844,7 @@ function ReportsPageContent() {
       }
       doc.setFontSize(16)
       doc.setFont('helvetica', 'bold')
-      doc.text('Hydration', margin, yPosition)
+      doc.text(`Hydration Logs (${reportData.hydrationEntries.length})`, margin, yPosition)
       yPosition += 10
 
       doc.setFontSize(12)
@@ -1086,6 +1125,20 @@ function ReportsPageContent() {
         ])
       })
 
+    if (reportData.medications.length > 0) {
+      csvData.push([])
+      csvData.push(['CURRENT MEDICATIONS'])
+      csvData.push(['Name', 'Dosage', 'Time of Day'])
+      reportData.medications.forEach((med) => {
+        csvData.push([
+          med.name || '',
+          med.dosage?.toString() || '',
+          med.timeOfDay?.toString() || '',
+        ])
+      })
+      csvData.push([])
+    }
+
     // Add medication tracking data if available
     const hasTrackingData = reportData.medicationTracking && (
       reportData.medicationTracking.missedMedications.length > 0 || 
@@ -1152,11 +1205,11 @@ function ReportsPageContent() {
       reportData.appointments.forEach(apt => {
         csvData.push([
           apt.date ? formatUKDate(apt.date) : '',
-          apt.time || '',
-          apt.type || '',
-          apt.clinician_name || '',
-          apt.location || '',
-          apt.notes || ''
+          apt.time?.toString().trim() || '',
+          apt.type?.toString().trim() || '',
+          apt.clinician_name?.toString().trim() || '',
+          apt.location?.toString().trim() || '',
+          apt.notes?.toString().trim() || '',
         ])
       })
       csvData.push([])
@@ -1171,16 +1224,16 @@ function ReportsPageContent() {
         csvData.push([
           entry.date ? formatUKDate(entry.date) : '',
           entry.value_kg != null ? String(entry.value_kg) : '',
-          entry.notes || ''
+          entry.notes?.toString().trim() || '',
         ])
       })
       csvData.push([])
     }
 
-    // Hydration
+    // Hydration logs
     if (reportData.hydrationEntries && reportData.hydrationEntries.length > 0) {
       csvData.push([])
-      csvData.push(['HYDRATION'])
+      csvData.push(['HYDRATION LOGS'])
       csvData.push(['Date', 'Glasses', 'Target', 'Target Met'])
       const target = reportData.hydrationTarget || 6
       reportData.hydrationEntries.forEach(entry => {
@@ -1242,6 +1295,46 @@ function ReportsPageContent() {
     return `${day}/${month}/${year}`
   }
 
+  const emailSentToastEl =
+    showEmailSentToast && emailToastPortalReady ? (
+      <div
+        className="fixed z-[9999] top-24 right-4 max-w-[min(24rem,calc(100vw-2rem))] rounded-xl shadow-lg border border-white/10 dark:border-white/15 flex items-center gap-3 px-4 py-3"
+        style={{ backgroundColor: 'var(--bg-dropdown)' }}
+        role="status"
+      >
+        <div className="flex-shrink-0 flex items-center justify-center w-7 h-7 rounded-full bg-emerald-100 dark:bg-white">
+          <svg className="w-5 h-5 text-emerald-600 dark:text-emerald-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.4} d="M5 13l4 4L19 7" />
+          </svg>
+        </div>
+        <span className="flex-1 text-sm font-medium font-roboto" style={{ color: 'var(--text-primary)' }}>
+          Report sent successfully!
+        </span>
+        <button
+          type="button"
+          onClick={() => {
+            if (emailSentToastTimerRef.current) {
+              clearTimeout(emailSentToastTimerRef.current)
+              emailSentToastTimerRef.current = null
+            }
+            setShowEmailSentToast(false)
+          }}
+          className="flex-shrink-0 p-1 rounded-md hover:bg-black/5 dark:hover:bg-white/10 transition-colors"
+          style={{ color: 'var(--text-secondary)' }}
+          aria-label="Dismiss"
+        >
+          <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+          </svg>
+        </button>
+      </div>
+    ) : null
+
+  const emailToastPortal =
+    emailToastPortalReady && typeof document !== 'undefined' && emailSentToastEl
+      ? createPortal(emailSentToastEl, document.body)
+      : null
+
   // Simple loading state - render page structure like other pages
   if (!user || isLoading || !reportData) {
     return (
@@ -1258,8 +1351,14 @@ function ReportsPageContent() {
     )
   }
 
+  const medicationLogsTotal =
+    (reportData.medicationTracking?.missedMedications?.length ?? 0) +
+    (reportData.medicationTracking?.nsaids?.length ?? 0) +
+    (reportData.medicationTracking?.antibiotics?.length ?? 0)
+
   return (
     <div className="w-full sm:px-4 md:px-6 lg:px-8 min-w-0 min-h-screen">
+      {emailToastPortal}
       <div className="max-w-4xl mx-auto">
       <div className="mb-5 sm:mb-6 card">
         <h1 className="text-2xl sm:text-3xl lg:text-4xl font-bold font-source text-primary mb-4">Reports</h1>
@@ -1386,7 +1485,7 @@ function ReportsPageContent() {
           </div>
         </div>
         <div className="flex flex-col gap-4">
-          <div className="text-sm text-secondary font-roboto">
+          <div className="text-sm text-secondary font-roboto leading-relaxed">
             Showing symptoms from {formatUKDate(dateRange.startDate)} to {formatUKDate(dateRange.endDate)}
           </div>
           <div className="flex flex-wrap gap-3">
@@ -1401,8 +1500,7 @@ function ReportsPageContent() {
             <button
               type="button"
               onClick={openEmailModal}
-              className="inline-flex items-center justify-center px-4 py-2.5 sm:px-6 sm:py-3 button-cadet rounded-xl whitespace-nowrap text-sm sm:text-base disabled:opacity-50 disabled:cursor-not-allowed"
-              disabled={isLoading || !reportData || !hasDataToExport()}
+              className="inline-flex items-center justify-center px-4 py-2.5 sm:px-6 sm:py-3 button-cadet rounded-xl whitespace-nowrap text-sm sm:text-base"
             >
               <Mail className="w-4 h-4 sm:w-5 sm:h-5 mr-2 shrink-0" />
               Email report
@@ -1413,7 +1511,8 @@ function ReportsPageContent() {
 
       {/* Report Results */}
       <div className="space-y-4 sm:space-y-6 mb-5 sm:mb-6">
-        {/* Symptoms Section */}
+        {/* Symptoms Section — only when there are symptom episodes in range */}
+        {reportData.totalEntries > 0 && (
         <div className="card min-w-0 overflow-hidden">
           <button
             type="button"
@@ -1432,12 +1531,16 @@ function ReportsPageContent() {
             transition={{ duration: 0.2, ease: 'easeOut' }}
             style={{ overflow: 'hidden' }}
           >
-          {reportData.totalEntries > 0 && (
-            <p className="text-sm text-secondary font-roboto mb-4">
-              Found {reportData.totalEntries} {reportData.totalEntries === 1 ? 'episode' : 'episodes'} in the selected period
-            </p>
-          )}
-          <div className="space-y-4 sm:space-y-0 sm:grid sm:grid-cols-3 sm:gap-6 mb-6">
+          <p className="text-sm text-secondary font-roboto mb-4">
+            Found {reportData.totalEntries} {reportData.totalEntries === 1 ? 'episode' : 'episodes'} in the selected period
+          </p>
+          <div
+            className={
+              reportData.severityTrend.length > 0
+                ? 'space-y-4 sm:space-y-0 sm:grid sm:grid-cols-3 sm:gap-6 mb-6'
+                : 'space-y-4 sm:space-y-0 sm:grid sm:grid-cols-3 sm:gap-6'
+            }
+          >
             <div>
               <span className="text-xs sm:text-sm font-semibold text-secondary tracking-wide block font-roboto">Episodes</span>
               <p className="mt-1 sm:mt-2 text-sm sm:text-base font-semibold text-primary font-roboto">{reportData.totalEntries}</p>
@@ -1463,7 +1566,7 @@ function ReportsPageContent() {
                   onClick={() => toggleSection('symptomEpisodes')}
                   className={`flex items-center justify-between w-full text-left group ${expandedSections.symptomEpisodes ? 'mb-3' : ''}`}
                 >
-                  <h3 className="text-lg sm:text-xl font-semibold text-primary font-source">Symptom Episodes</h3>
+                  <h3 className="text-lg sm:text-xl font-semibold text-primary font-source">Symptom Episodes ({reportData.severityTrend.length})</h3>
                   <ChevronDown className={`w-5 h-5 text-secondary shrink-0 transition-transform ${expandedSections.symptomEpisodes ? 'rotate-180' : ''}`} />
                 </button>
                 <motion.div
@@ -1493,16 +1596,12 @@ function ReportsPageContent() {
                             <>
                               <Row label="Started" value={formatUKDate(entry.date)} />
                               <Row label="Ended" value={formatUKDate(entry.endDate)} />
-                              <Row label="Status" value="Resolved" />
-                              <Row label="Severity" value={entry.severity != null ? `${entry.severity}/10` : '—'} />
-                              <Row label="Stress Level" value={entry.stressLevel != null ? `${entry.stressLevel}/10` : '—'} isLast />
+                              <Row label="Status" value="Resolved" isLast />
                             </>
                           ) : (
                             <>
                               <Row label="Started" value={entry.date ? formatUKDate(entry.date) : '—'} />
-                              <Row label="Status" value="Ongoing" />
-                              <Row label="Severity" value={entry.severity != null ? `${entry.severity}/10` : '—'} />
-                              <Row label="Stress Level" value={entry.stressLevel != null ? `${entry.stressLevel}/10` : '—'} isLast />
+                              <Row label="Status" value="Ongoing" isLast />
                             </>
                           )}
                         </div>
@@ -1540,6 +1639,7 @@ function ReportsPageContent() {
           )}
           </motion.div>
         </div>
+        )}
 
         {/* Current Medications */}
         {reportData.medications.length > 0 && (
@@ -1549,7 +1649,7 @@ function ReportsPageContent() {
               onClick={() => toggleSection('currentMeds')}
               className={`flex items-center justify-between w-full text-left group ${expandedSections.currentMeds ? 'mb-3 sm:mb-4' : ''}`}
             >
-              <h2 className="text-lg sm:text-xl font-semibold font-source text-primary">Current Medications</h2>
+              <h2 className="text-lg sm:text-xl font-semibold font-source text-primary">Current Medications ({reportData.medications.length})</h2>
               <ChevronDown className={`w-5 h-5 text-secondary shrink-0 transition-transform ${expandedSections.currentMeds ? 'rotate-180' : ''}`} />
             </button>
             <motion.div
@@ -1562,26 +1662,36 @@ function ReportsPageContent() {
               style={{ overflow: 'hidden' }}
             >
             <div className="space-y-0 [&>*:last-child]:pb-0">
-              {reportData.medications.map((med, index) => (
+              {reportData.medications.map((med, index) => {
+                const hasDosage = !!med.dosage
+                const hasTime = !!med.timeOfDay
+                return (
                 <div key={index} className={index > 0 ? 'pt-4 border-t' : ''} style={index > 0 ? { borderColor: 'var(--separator-card)' } : undefined}>
-                  <div className="flex justify-between items-center gap-4 py-3 border-b min-w-0 overflow-hidden" style={{ borderColor: 'var(--separator-card)' }}>
+                  <div
+                    className={`flex justify-between items-center gap-4 py-3 min-w-0 overflow-hidden ${hasDosage || hasTime ? 'border-b' : ''}`}
+                    style={hasDosage || hasTime ? { borderColor: 'var(--separator-card)' } : undefined}
+                  >
                     <span className="text-sm sm:text-base text-secondary font-roboto shrink-0">Medication</span>
                     <span className="text-sm sm:text-base font-medium text-primary font-roboto truncate min-w-0 text-right" title={med.name}>{med.name}</span>
                   </div>
-                  {med.dosage && (
-                    <div className="flex justify-between items-center gap-4 py-3 border-b min-w-0 overflow-hidden" style={{ borderColor: 'var(--separator-card)' }}>
+                  {hasDosage && (
+                    <div
+                      className={`flex justify-between items-center gap-4 py-3 min-w-0 overflow-hidden ${hasTime ? 'border-b' : ''}`}
+                      style={hasTime ? { borderColor: 'var(--separator-card)' } : undefined}
+                    >
                       <span className="text-sm sm:text-base text-secondary font-roboto shrink-0">Dosage</span>
                       <span className="text-sm sm:text-base font-medium text-primary font-roboto min-w-0 text-right">{med.dosage}</span>
                     </div>
                   )}
-                  {med.timeOfDay && (
+                  {hasTime && (
                     <div className="flex justify-between items-center gap-4 py-3 min-w-0 overflow-hidden">
                       <span className="text-sm sm:text-base text-secondary font-roboto shrink-0">Time of day</span>
                       <span className="text-sm sm:text-base font-medium text-primary font-roboto min-w-0 text-right">{med.timeOfDay}</span>
                     </div>
                   )}
                 </div>
-              ))}
+                )
+              })}
             </div>
             </motion.div>
           </div>
@@ -1601,9 +1711,11 @@ function ReportsPageContent() {
             >
               <h2 className="text-lg sm:text-xl font-semibold font-source text-primary">
                 {expandedSections.medicationLogs ? (
-                  <span className="inline-block pb-0.5 border-b" style={{ borderColor: 'var(--separator-card)' }}>Medication logs</span>
+                  <span className="inline-block pb-0.5 border-b" style={{ borderColor: 'var(--separator-card)' }}>
+                    Medication logs ({medicationLogsTotal})
+                  </span>
                 ) : (
-                  'Medication logs'
+                  `Medication logs (${medicationLogsTotal})`
                 )}
               </h2>
               <ChevronDown className={`w-5 h-5 text-secondary shrink-0 transition-transform ${expandedSections.medicationLogs ? 'rotate-180' : ''}`} />
@@ -1618,26 +1730,41 @@ function ReportsPageContent() {
               style={{ overflow: 'hidden' }}
             >
             {reportData.medicationTracking.missedMedications.length > 0 && (
-              <div className="mb-6">
-                <h3 className="text-base font-semibold text-primary mb-3 font-roboto">Missed Medications</h3>
+              <div
+                className={
+                  reportData.medicationTracking.nsaids.length > 0 ||
+                  reportData.medicationTracking.antibiotics.length > 0
+                    ? 'mb-6'
+                    : ''
+                }
+              >
+                <h3 className="text-base font-semibold text-primary mb-3 font-roboto">Missed Medications ({reportData.medicationTracking.missedMedications.length})</h3>
                 <div className="space-y-0 [&>*:last-child>*:last-child]:pb-0">
                   {reportData.medicationTracking.missedMedications
                     .slice(listPages.missedMeds * REPORT_PAGE_SIZE, (listPages.missedMeds + 1) * REPORT_PAGE_SIZE)
                     .map((item, idx) => {
                       const index = listPages.missedMeds * REPORT_PAGE_SIZE + idx
+                      const hasDate = !!item.date
+                      const hasTime = !!item.timeOfDay
                       return (
                         <div key={index} className={index > 0 ? 'pt-4 border-t' : ''} style={index > 0 ? { borderColor: 'var(--separator-card)' } : undefined}>
-                          <div className="flex justify-between items-center gap-4 py-3 border-b min-w-0 overflow-hidden" style={{ borderColor: 'var(--separator-card)' }}>
+                          <div
+                            className={`flex justify-between items-center gap-4 py-3 min-w-0 overflow-hidden ${hasDate || hasTime ? 'border-b' : ''}`}
+                            style={hasDate || hasTime ? { borderColor: 'var(--separator-card)' } : undefined}
+                          >
                             <span className="text-sm sm:text-base text-secondary font-roboto shrink-0">Medication</span>
                             <span className="text-sm sm:text-base font-medium text-primary font-roboto truncate min-w-0 text-right" title={item.medication}>{item.medication}</span>
                           </div>
-                          {item.date && (
-                            <div className="flex justify-between items-center gap-4 py-3 border-b min-w-0 overflow-hidden" style={{ borderColor: 'var(--separator-card)' }}>
+                          {hasDate && (
+                            <div
+                              className={`flex justify-between items-center gap-4 py-3 min-w-0 overflow-hidden ${hasTime ? 'border-b' : ''}`}
+                              style={hasTime ? { borderColor: 'var(--separator-card)' } : undefined}
+                            >
                               <span className="text-sm sm:text-base text-secondary font-roboto shrink-0">Date</span>
                               <span className="text-sm sm:text-base font-medium text-primary font-roboto">{formatUKDate(item.date)}</span>
                             </div>
                           )}
-                          {item.timeOfDay && (
+                          {hasTime && (
                             <div className="flex justify-between items-center gap-4 py-3 min-w-0 overflow-hidden">
                               <span className="text-sm sm:text-base text-secondary font-roboto shrink-0">Time</span>
                               <span className="text-sm sm:text-base font-medium text-primary font-roboto">{item.timeOfDay}</span>
@@ -1662,32 +1789,44 @@ function ReportsPageContent() {
             )}
 
             {reportData.medicationTracking.nsaids.length > 0 && (
-              <div className="mb-6">
-                <h3 className="text-base font-semibold text-primary mb-3 font-roboto">NSAIDs Taken</h3>
+              <div className={reportData.medicationTracking.antibiotics.length > 0 ? 'mb-6' : ''}>
+                <h3 className="text-base font-semibold text-primary mb-3 font-roboto">NSAIDs Taken ({reportData.medicationTracking.nsaids.length})</h3>
                 <div className="space-y-0 [&>*:last-child>*:last-child]:pb-0">
                   {reportData.medicationTracking.nsaids
                     .slice(listPages.nsaids * REPORT_PAGE_SIZE, (listPages.nsaids + 1) * REPORT_PAGE_SIZE)
                     .map((item, idx) => {
                       const index = listPages.nsaids * REPORT_PAGE_SIZE + idx
+                      const hasDate = !!item.date
+                      const hasDosage = !!item.dosage
+                      const hasTime = !!item.timeOfDay
                       return (
                         <div key={index} className={index > 0 ? 'pt-4 border-t' : ''} style={index > 0 ? { borderColor: 'var(--separator-card)' } : undefined}>
-                          <div className="flex justify-between items-center gap-4 py-3 border-b min-w-0 overflow-hidden" style={{ borderColor: 'var(--separator-card)' }}>
+                          <div
+                            className={`flex justify-between items-center gap-4 py-3 min-w-0 overflow-hidden ${hasDate || hasDosage || hasTime ? 'border-b' : ''}`}
+                            style={hasDate || hasDosage || hasTime ? { borderColor: 'var(--separator-card)' } : undefined}
+                          >
                             <span className="text-sm sm:text-base text-secondary font-roboto shrink-0">Medication</span>
                             <span className="text-sm sm:text-base font-medium text-primary font-roboto truncate min-w-0 text-right" title={item.medication}>{item.medication}</span>
                           </div>
-                          {item.date && (
-                            <div className="flex justify-between items-center gap-4 py-3 border-b min-w-0 overflow-hidden" style={{ borderColor: 'var(--separator-card)' }}>
+                          {hasDate && (
+                            <div
+                              className={`flex justify-between items-center gap-4 py-3 min-w-0 overflow-hidden ${hasDosage || hasTime ? 'border-b' : ''}`}
+                              style={hasDosage || hasTime ? { borderColor: 'var(--separator-card)' } : undefined}
+                            >
                               <span className="text-sm sm:text-base text-secondary font-roboto shrink-0">Date</span>
                               <span className="text-sm sm:text-base font-medium text-primary font-roboto">{formatUKDate(item.date)}</span>
                             </div>
                           )}
-                          {item.dosage && (
-                            <div className="flex justify-between items-center gap-4 py-3 border-b min-w-0 overflow-hidden" style={{ borderColor: 'var(--separator-card)' }}>
+                          {hasDosage && (
+                            <div
+                              className={`flex justify-between items-center gap-4 py-3 min-w-0 overflow-hidden ${hasTime ? 'border-b' : ''}`}
+                              style={hasTime ? { borderColor: 'var(--separator-card)' } : undefined}
+                            >
                               <span className="text-sm sm:text-base text-secondary font-roboto shrink-0">Dosage</span>
                               <span className="text-sm sm:text-base font-medium text-primary font-roboto truncate min-w-0 text-right" title={item.dosage}>{item.dosage}</span>
                             </div>
                           )}
-                          {item.timeOfDay && (
+                          {hasTime && (
                             <div className="flex justify-between items-center gap-4 py-3 min-w-0 overflow-hidden">
                               <span className="text-sm sm:text-base text-secondary font-roboto shrink-0">Time</span>
                               <span className="text-sm sm:text-base font-medium text-primary font-roboto">{item.timeOfDay}</span>
@@ -1768,7 +1907,7 @@ function ReportsPageContent() {
               onClick={() => toggleSection('appointments')}
               className={`flex items-center justify-between w-full text-left group ${expandedSections.appointments ? 'mb-3 sm:mb-4' : ''}`}
             >
-              <h2 className="text-lg sm:text-xl font-semibold font-source text-primary">Appointments</h2>
+              <h2 className="text-lg sm:text-xl font-semibold font-source text-primary">Appointments ({reportData.appointments.length})</h2>
               <ChevronDown className={`w-5 h-5 text-secondary shrink-0 transition-transform ${expandedSections.appointments ? 'rotate-180' : ''}`} />
             </button>
             <motion.div
@@ -1784,28 +1923,12 @@ function ReportsPageContent() {
               {reportData.appointments.map((apt, index) => (
                 <div key={index} className={index > 0 ? 'pt-4 border-t' : ''} style={index > 0 ? { borderColor: 'var(--separator-card)' } : undefined}>
                   <div className="flex justify-between items-center gap-4 py-3 border-b min-w-0 overflow-hidden" style={{ borderColor: 'var(--separator-card)' }}>
-                    <span className="text-sm sm:text-base text-secondary font-roboto">Date</span>
+                    <span className="text-sm sm:text-base text-secondary font-roboto shrink-0">Date</span>
                     <span className="text-sm sm:text-base font-medium text-primary font-roboto">{apt.date ? formatUKDate(apt.date) : '—'}</span>
                   </div>
-                  <div className="flex justify-between items-center gap-4 py-3 border-b min-w-0 overflow-hidden" style={{ borderColor: 'var(--separator-card)' }}>
-                    <span className="text-sm sm:text-base text-secondary font-roboto">Time</span>
-                    <span className="text-sm sm:text-base font-medium text-primary font-roboto">{apt.time || '—'}</span>
-                  </div>
-                  <div className="flex justify-between items-center gap-4 py-3 border-b min-w-0 overflow-hidden" style={{ borderColor: 'var(--separator-card)' }}>
-                    <span className="text-sm sm:text-base text-secondary font-roboto">Type</span>
-                    <span className="text-sm sm:text-base font-medium text-primary font-roboto truncate min-w-0 text-right" title={apt.type}>{apt.type || '—'}</span>
-                  </div>
-                  <div className="flex justify-between items-center gap-4 py-3 border-b min-w-0 overflow-hidden" style={{ borderColor: 'var(--separator-card)' }}>
-                    <span className="text-sm sm:text-base text-secondary font-roboto">Clinician</span>
-                    <span className="text-sm sm:text-base font-medium text-primary font-roboto truncate min-w-0 text-right" title={apt.clinician_name}>{apt.clinician_name || '—'}</span>
-                  </div>
-                  <div className="flex justify-between items-center gap-4 py-3 border-b min-w-0 overflow-hidden" style={{ borderColor: 'var(--separator-card)' }}>
-                    <span className="text-sm sm:text-base text-secondary font-roboto">Location</span>
-                    <span className="text-sm sm:text-base font-medium text-primary font-roboto truncate min-w-0 text-right" title={apt.location}>{apt.location || '—'}</span>
-                  </div>
                   <div className="flex justify-between items-center gap-4 py-3 min-w-0 overflow-hidden">
-                    <span className="text-sm sm:text-base text-secondary font-roboto">Notes</span>
-                    <span className="text-sm sm:text-base font-medium text-primary font-roboto truncate min-w-0 text-right" title={apt.notes}>{apt.notes || '—'}</span>
+                    <span className="text-sm sm:text-base text-secondary font-roboto shrink-0">Type</span>
+                    <span className="text-sm sm:text-base font-medium text-primary font-roboto truncate min-w-0 text-right" title={apt.type}>{apt.type?.toString().trim() || '—'}</span>
                   </div>
                 </div>
               ))}
@@ -1822,7 +1945,7 @@ function ReportsPageContent() {
               onClick={() => toggleSection('weightLogs')}
               className={`flex items-center justify-between w-full text-left group ${expandedSections.weightLogs ? 'mb-3 sm:mb-4' : ''}`}
             >
-              <h2 className="text-lg sm:text-xl font-semibold font-source text-primary">Weight Logs</h2>
+              <h2 className="text-lg sm:text-xl font-semibold font-source text-primary">Weight Logs ({reportData.weightEntries.length})</h2>
               <ChevronDown className={`w-5 h-5 text-secondary shrink-0 transition-transform ${expandedSections.weightLogs ? 'rotate-180' : ''}`} />
             </button>
             <motion.div
@@ -1841,13 +1964,9 @@ function ReportsPageContent() {
                     <span className="text-sm sm:text-base text-secondary font-roboto">Date</span>
                     <span className="text-sm sm:text-base font-medium text-primary font-roboto">{formatUKDate(entry.date)}</span>
                   </div>
-                  <div className="flex justify-between items-center gap-4 py-3 border-b min-w-0 overflow-hidden" style={{ borderColor: 'var(--separator-card)' }}>
+                  <div className="flex justify-between items-center gap-4 py-3 min-w-0 overflow-hidden">
                     <span className="text-sm sm:text-base text-secondary font-roboto">Weight</span>
                     <span className="text-sm sm:text-base font-medium text-primary font-roboto">{entry.value_kg != null ? `${entry.value_kg} kg` : '—'}</span>
-                  </div>
-                  <div className="flex justify-between items-center gap-4 py-3 min-w-0 overflow-hidden">
-                    <span className="text-sm sm:text-base text-secondary font-roboto">Notes</span>
-                    <span className="text-sm sm:text-base font-medium text-primary font-roboto truncate min-w-0 text-right" title={entry.notes}>{entry.notes || '—'}</span>
                   </div>
                 </div>
               ))}
@@ -1856,7 +1975,7 @@ function ReportsPageContent() {
           </div>
         )}
 
-        {/* Hydration */}
+        {/* Hydration logs */}
         {reportData.hydrationEntries && reportData.hydrationEntries.length > 0 && (
           <div className="card min-w-0 overflow-hidden">
             <button
@@ -1864,7 +1983,7 @@ function ReportsPageContent() {
               onClick={() => toggleSection('hydration')}
               className={`flex items-center justify-between w-full text-left group ${expandedSections.hydration ? 'mb-3 sm:mb-4' : ''}`}
             >
-              <h2 className="text-lg sm:text-xl font-semibold font-source text-primary">Hydration</h2>
+              <h2 className="text-lg sm:text-xl font-semibold font-source text-primary">Hydration Logs ({reportData.hydrationEntries.length})</h2>
               <ChevronDown className={`w-5 h-5 text-secondary shrink-0 transition-transform ${expandedSections.hydration ? 'rotate-180' : ''}`} />
             </button>
             <motion.div
@@ -1939,8 +2058,8 @@ function ReportsPageContent() {
           <div className="flex justify-center mb-3">
             <FileText className="w-10 h-10 text-secondary opacity-40" />
           </div>
-          <p className="text-secondary text-sm">No Data Available</p>
-          <p className="text-xs text-secondary mt-1 mb-4">
+          <h3 className="text-lg font-semibold font-source text-primary mb-2">No Data Available</h3>
+          <p className="text-sm font-roboto text-secondary max-w-md mx-auto leading-relaxed mb-4">
             Start logging symptoms and adding medications to generate meaningful reports
           </p>
           <div className="flex flex-col sm:flex-row justify-center space-y-3 sm:space-y-0 sm:space-x-3 mt-6">
@@ -2041,8 +2160,12 @@ function ReportsPageContent() {
         isOpen={showNoDataModal}
         onClose={() => setShowNoDataModal(false)}
         onConfirm={() => setShowNoDataModal(false)}
-        title="No Data to Export"
-        message="There's no data available for the selected period. Please log some symptoms or add medications before exporting a report."
+        title={noDataModalIsEmail ? 'No Data to Email' : 'No Data to Export'}
+        message={
+          noDataModalIsEmail
+            ? "There's no data available for the selected period. Please log some symptoms or add medications before emailing a report."
+            : "There's no data available for the selected period. Please log some symptoms or add medications before exporting a report."
+        }
         confirmText="OK"
         cancelText={null}
         isDestructive={false}
