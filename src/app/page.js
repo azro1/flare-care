@@ -1071,7 +1071,7 @@ export default function Home() {
             <div className="contents xl:block xl:sticky xl:top-6 xl:space-y-6">
               
               {/* Quick Stats */}
-              <div className="card order-[8] xl:order-none mb-6 xl:mb-0">
+              <div className="card order-[5] xl:order-none mb-6 xl:mb-0">
                 <h3 className="text-xl font-semibold font-source text-primary mb-3">Your Progress</h3>
                 <div className="card-inner p-4 sm:p-5 space-y-2.5">
                   <div className="flex justify-between items-center">
@@ -1144,7 +1144,7 @@ export default function Home() {
               </div>
 
               {/* Hints */}
-              <div className="card order-[7] xl:order-none mb-6 xl:mb-0">
+              <div className="card order-[4] xl:order-none mb-6 xl:mb-0">
                 <div>
                   <h3 className="text-xl font-semibold font-source text-primary mb-3 flex items-center gap-2">
                     <Lightbulb className="w-5 h-5 flex-shrink-0 text-amber-500" />
@@ -1285,7 +1285,7 @@ export default function Home() {
 
         <div className="contents lg:grid grid-cols-1 lg:grid-cols-2 gap-6 mb-6 lg:order-5 xl:order-none">
           {/* Today's Summary */}
-          <div className="order-[4] lg:order-1 mb-6 lg:mb-0">
+          <div className="order-[6] lg:order-1 mb-6 lg:mb-0">
             <h2 className="text-xl font-semibold font-source text-primary mb-3">Today's Summary</h2>
             <div className="card">
             <div className="card-inner p-4 sm:p-6">
@@ -1323,7 +1323,7 @@ export default function Home() {
           </div>
 
           {/* Recent Activity */}
-          <div className="order-[6] lg:order-2 mb-6 lg:mb-0">
+          <div className="order-[8] lg:order-2 mb-6 lg:mb-0">
             <h2 className="text-xl font-semibold font-source text-primary mb-3">Recent Activity</h2>
             <div className="card">
             <div className="card-inner p-4 sm:p-6 transition-all duration-300 ease-in-out">
@@ -1616,7 +1616,7 @@ export default function Home() {
 
         {/* Latest News */}
         {isAuthenticated && (
-          <div className="mb-6 xl:my-6 order-[9] xl:order-none">
+          <div className="mb-6 xl:my-6 order-[10] xl:order-none">
             <h2 className="text-xl font-semibold font-source text-primary mb-4">
               Latest News
             </h2>
@@ -1740,7 +1740,7 @@ export default function Home() {
 
         {/* Recent Symptoms & Medications (tabbed) */}
         {(displayedSymptoms.length > 0 || trackedMedications.length > 0) && (
-          <div className="mb-6 order-[6] xl:order-none">
+          <div className="mb-6 order-[9] xl:order-none">
             <h2 className="text-xl font-semibold font-source text-primary mb-4">Recent Logs</h2>
             <div className="card">
             <div className="flex border-b border-[var(--separator-card-inner)] mb-4">
@@ -1864,7 +1864,7 @@ export default function Home() {
         )}
 
         {/* More Options */}
-        <div className="mb-6 xl:mb-0 order-[10] xl:order-none">
+        <div className="mb-6 xl:mb-0 order-[7] xl:order-none">
           <h2 className="text-xl font-semibold font-source text-primary mb-4">More</h2>
           <div className="grid grid-cols-2 lg:grid-cols-3 gap-4 md:gap-6 min-w-0">
               <Link

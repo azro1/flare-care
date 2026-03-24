@@ -172,11 +172,12 @@ function AccountPageContent() {
                   </div>
                 </div>
                 <button
+                  type="button"
                   onClick={() => setShowSignOutModal(true)}
                   disabled={isSigningOut}
-                  className="inline-flex items-center justify-center gap-2 px-5 py-3 sm:px-6 sm:py-3 button-cadet rounded-lg whitespace-nowrap text-sm sm:text-base tracking-wide disabled:opacity-50 flex-shrink-0"
+                  className="button-cadet flex-shrink-0 px-4 py-2 text-base sm:text-lg font-semibold rounded-lg transition-colors inline-flex items-center justify-center whitespace-nowrap disabled:opacity-50"
                 >
-                  <LogOut className="w-4 h-4 sm:w-5 sm:h-5 shrink-0" />
+                  <LogOut className="w-5 h-5 mr-2 shrink-0" strokeWidth={2} aria-hidden />
                   Sign Out
                 </button>
               </div>
@@ -274,10 +275,11 @@ function AccountPageContent() {
               </div>
               <div>
                 <button
+                  type="button"
                   onClick={() => setShowDeleteModal(true)}
-                  className="button-delete inline-flex items-center justify-center gap-2 py-2.5 rounded-lg whitespace-nowrap text-sm sm:text-base"
+                  className="button-delete flex-shrink-0 inline-flex items-center justify-center text-base sm:text-lg whitespace-nowrap"
                 >
-                  <Trash2 className="w-4 h-4 sm:w-5 sm:h-5 shrink-0" />
+                  <Trash2 className="w-5 h-5 mr-2 shrink-0" strokeWidth={2} aria-hidden />
                   Delete
                 </button>
               </div>
