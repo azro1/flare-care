@@ -213,7 +213,7 @@
   .btn-primary {
     background-color: var(--bg-button-primary);
     color: var(--text-white);
-    @apply font-semibold py-3 px-6 rounded-xl transition-all duration-300 transform hover:scale-105 hover:shadow-lg active:scale-95;
+    @apply font-semibold font-sans py-3 px-6 rounded-xl transition-all duration-300 transform hover:scale-105 hover:shadow-lg active:scale-95;
   }
 
   .btn-primary:hover {
@@ -223,7 +223,7 @@
   .btn-secondary {
     background-color: var(--bg-button-secondary);
     color: var(--text-primary);
-    @apply font-medium py-3 px-6 rounded-xl border transition-all duration-200 shadow-sm hover:shadow-md;
+    @apply font-medium font-sans py-3 px-6 rounded-xl border transition-all duration-200 shadow-sm hover:shadow-md;
     border-color: var(--border-primary);
   }
 
@@ -312,7 +312,7 @@
     background-color: var(--bg-button-delete);
     color: white; /* White text for light mode solid red background */
     border-color: #dc2626; /* Red border for light mode */
-    @apply px-4 py-2 rounded-lg transition-colors border hover:border-red-700 font-semibold;
+    @apply px-4 py-2 rounded-lg transition-colors border hover:border-red-700 font-semibold font-sans;
   }
   .dark .button-delete {
     color: white; /* White text for dark mode red background */
@@ -325,7 +325,7 @@
   .button-cancel {
     background-color: var(--bg-button-cancel);
     color: var(--text-secondary);
-    @apply px-4 py-2 rounded-lg transition-colors;
+    @apply px-4 py-2 rounded-lg transition-colors font-medium font-sans;
   }
   .button-cancel:hover {
     background-color: var(--bg-button-cancel-hover);
@@ -491,7 +491,7 @@ select.input-field-wizard option[value=""] {
 
   .button-cadet {
     background-color: var(--bg-button-cadet);
-    @apply text-white font-semibold transition-all duration-300;
+    @apply text-white font-semibold font-sans transition-all duration-300;
   }
   
   .button-cadet:hover {

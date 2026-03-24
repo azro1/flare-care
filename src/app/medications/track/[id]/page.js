@@ -114,55 +114,52 @@ function TrackedMedicationDetails() {
   return (
     <div className="w-full sm:px-4 md:px-6 min-w-0 overflow-hidden">
       <div className="max-w-4xl w-full mx-auto min-w-0">
-        {/* Header */}
-        <div className="mb-5 sm:mb-6">
-          <div className="flex justify-between items-center gap-4">
-            <h1 className="text-2xl sm:text-3xl lg:text-4xl font-bold font-source text-primary">
-              Medication log
-            </h1>
-            <button
-              onClick={() => setShowDeleteModal(true)}
-              disabled={isDeleting}
-              className="p-2.5 rounded-lg text-red-600 dark:[color:var(--text-trash)] sm:hover:bg-red-500/10 sm:dark:hover:bg-[var(--bg-card-inner)] focus:outline-none disabled:opacity-50 transition-colors flex-shrink-0"
-              title="Delete entry"
-              aria-label="Delete entry"
-            >
-              <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden>
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
-              </svg>
-            </button>
-          </div>
-          <p className="text-sm text-tertiary font-roboto mt-1 sm:mt-2">
-            {new Date(trackedData.created_at || trackedData.createdAt).toLocaleDateString('en-GB', { 
-              weekday: 'long', 
-              day: 'numeric', 
-              month: 'short', 
-              year: 'numeric' 
-            })} at {new Date(trackedData.created_at || trackedData.createdAt).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
-          </p>
-        </div>
-
         {/* Main Content */}
         <div className="space-y-4 sm:space-y-6">
           {/* Overview */}
           <div className="card min-w-0 overflow-hidden">
-            <h2 className="text-xl font-semibold font-source text-primary mb-3 sm:mb-4">Overview</h2>
+            <div className="flex justify-between items-start gap-4 mb-4 pb-4 border-b" style={{ borderColor: 'var(--separator-card)' }}>
+              <div>
+                <h1 className="text-2xl sm:text-3xl lg:text-4xl font-bold font-source text-primary">
+                  Medication log
+                </h1>
+                <p className="text-sm text-tertiary font-roboto mt-1 sm:mt-2">
+                  {new Date(trackedData.created_at || trackedData.createdAt).toLocaleDateString('en-GB', { 
+                    weekday: 'long', 
+                    day: 'numeric', 
+                    month: 'short', 
+                    year: 'numeric' 
+                  })} at {new Date(trackedData.created_at || trackedData.createdAt).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
+                </p>
+              </div>
+              <button
+                onClick={() => setShowDeleteModal(true)}
+                disabled={isDeleting}
+                className="p-2.5 rounded-lg text-red-600 dark:[color:var(--text-trash)] sm:hover:bg-red-500/10 sm:dark:hover:bg-[var(--bg-card-inner)] focus:outline-none disabled:opacity-50 transition-colors flex-shrink-0"
+                title="Delete entry"
+                aria-label="Delete entry"
+              >
+                <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden>
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
+                </svg>
+              </button>
+            </div>
             <div className="space-y-4 sm:space-y-0 sm:grid sm:grid-cols-3 sm:gap-6">
               <div>
                 <span className="text-xs sm:text-sm font-semibold text-secondary tracking-wide block font-roboto">Missed doses</span>
-                <p className={`mt-2 text-sm sm:text-base font-semibold font-roboto ${missedCount > 0 ? 'text-amber-600 dark:text-white' : 'text-secondary'}`}>
+                <p className={`mt-1 sm:mt-2 text-sm sm:text-base font-semibold font-roboto ${missedCount > 0 ? 'text-amber-600 dark:text-white' : 'text-secondary'}`}>
                   {missedCount}
                 </p>
               </div>
               <div>
                 <span className="text-xs sm:text-sm font-semibold text-secondary tracking-wide block font-roboto">NSAIDs</span>
-                <p className={`mt-2 text-sm sm:text-base font-semibold font-roboto ${nsaidCount > 0 ? 'text-emerald-600 dark:text-white' : 'text-secondary'}`}>
+                <p className={`mt-1 sm:mt-2 text-sm sm:text-base font-semibold font-roboto ${nsaidCount > 0 ? 'text-emerald-600 dark:text-white' : 'text-secondary'}`}>
                   {nsaidCount}
                 </p>
               </div>
               <div>
                 <span className="text-xs sm:text-sm font-semibold text-secondary tracking-wide block font-roboto">Antibiotics</span>
-                <p className={`mt-2 text-sm sm:text-base font-semibold font-roboto ${antibioticCount > 0 ? 'text-blue-600 dark:text-white' : 'text-secondary'}`}>
+                <p className={`mt-1 sm:mt-2 text-sm sm:text-base font-semibold font-roboto ${antibioticCount > 0 ? 'text-blue-600 dark:text-white' : 'text-secondary'}`}>
                   {antibioticCount}
                 </p>
               </div>
@@ -172,7 +169,7 @@ function TrackedMedicationDetails() {
           {/* Missed Medications */}
           {trackedData.missed_medications_list && trackedData.missed_medications_list.length > 0 && (
             <div className="card min-w-0 overflow-hidden">
-              <h2 className="text-xl font-semibold font-source text-primary mb-3 sm:mb-4">Missed Medications</h2>
+              <h2 className="text-xl font-bold font-source text-primary mb-3 sm:mb-4">Missed Medications</h2>
               <div className="space-y-0 [&>*:last-child>*:last-child]:pb-0">
                 {trackedData.missed_medications_list.map((item, index) => (
                   <div key={index} className={index > 0 ? 'pt-4 border-t min-w-0' : 'min-w-0'} style={index > 0 ? { borderColor: 'var(--separator-card)' } : undefined}>
@@ -199,7 +196,7 @@ function TrackedMedicationDetails() {
           {/* NSAIDs */}
           {trackedData.nsaid_list && trackedData.nsaid_list.length > 0 && (
             <div className="card min-w-0 overflow-hidden">
-              <h2 className="text-xl font-semibold font-source text-primary mb-3 sm:mb-4">NSAIDs</h2>
+              <h2 className="text-xl font-bold font-source text-primary mb-3 sm:mb-4">NSAIDs</h2>
               <div className="space-y-0 [&>*:last-child>*:last-child]:pb-0">
                 {trackedData.nsaid_list.map((item, index) => (
                   <div key={index} className={index > 0 ? 'pt-4 border-t min-w-0' : 'min-w-0'} style={index > 0 ? { borderColor: 'var(--separator-card)' } : undefined}>
@@ -228,7 +225,7 @@ function TrackedMedicationDetails() {
           {/* Antibiotics */}
           {trackedData.antibiotic_list && trackedData.antibiotic_list.length > 0 && (
             <div className="card min-w-0 overflow-hidden">
-              <h2 className="text-xl font-semibold font-source text-primary mb-3 sm:mb-4">Antibiotics</h2>
+              <h2 className="text-xl font-bold font-source text-primary mb-3 sm:mb-4">Antibiotics</h2>
               <div className="space-y-0 [&>*:last-child>*:last-child]:pb-0">
                 {trackedData.antibiotic_list.map((item, index) => (
                   <div key={index} className={index > 0 ? 'pt-4 border-t min-w-0' : 'min-w-0'} style={index > 0 ? { borderColor: 'var(--separator-card)' } : undefined}>

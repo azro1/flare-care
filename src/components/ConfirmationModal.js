@@ -84,14 +84,14 @@ export default function ConfirmationModal({
             {cancelText && (
               <button
                 onClick={onClose}
-                className="px-4 py-2 text-base font-medium font-roboto button-cancel"
+                className="px-4 py-2 text-base font-medium button-cancel"
               >
                 {cancelText}
               </button>
             )}
             <button
               onClick={handleConfirm}
-              className={`px-4 py-2 text-base font-medium font-roboto rounded-lg transition-colors duration-200 ${
+              className={`px-4 py-2 text-base rounded-lg transition-colors duration-200 ${
                 isDestructive 
                   ? 'button-delete' 
                   : 'button-cadet'

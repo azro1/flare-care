@@ -83,7 +83,7 @@ export default function PushEnableBanner() {
           <button
             type="button"
             onClick={handleDismiss}
-            className="px-4 py-2 rounded-lg text-sm font-roboto transition-colors border"
+            className="px-4 py-2 rounded-lg text-sm font-sans transition-colors border"
             style={{
               backgroundColor: 'var(--bg-button-cancel)',
               borderColor: 'var(--border-primary)',

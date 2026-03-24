@@ -473,7 +473,7 @@ function MedicationTrackingWizard() {
     if (currentStep === 1) {
       return (
         <div className="mb-5">
-          <h3 className="text-2xl sm:text-2xl md:text-3xl font-source font-bold sm:font-semibold text-primary mb-6">Did you miss any prescribed medications recently?</h3>
+          <h3 className="text-2xl sm:text-2xl md:text-3xl font-source font-bold text-primary mb-6">Did you miss any prescribed medications recently?</h3>
           <div className="flex space-x-8">
             <label className="flex items-center cursor-pointer">
               <div className="relative">
@@ -539,7 +539,7 @@ function MedicationTrackingWizard() {
           <div className="space-y-6">
             <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-3 mb-3">
               <div>
-                <h3 className="text-2xl sm:text-2xl md:text-3xl font-source font-bold sm:font-semibold text-primary mb-2">Which medications did you miss?</h3>
+                <h3 className="text-2xl sm:text-2xl md:text-3xl font-source font-bold text-primary mb-2">Which medications did you miss?</h3>
               </div>
               <button
                 onClick={addMissedMedication}
@@ -616,7 +616,7 @@ function MedicationTrackingWizard() {
     if (currentStep === 3) {
       return (
         <div className="mb-5">
-          <h3 className="text-2xl sm:text-2xl md:text-3xl font-source font-bold sm:font-semibold text-primary mb-6">Did you take any NSAIDs (ibuprofen, naproxen, aspirin) recently?</h3>
+          <h3 className="text-2xl sm:text-2xl md:text-3xl font-source font-bold text-primary mb-6">Did you take any NSAIDs (ibuprofen, naproxen, aspirin) recently?</h3>
           <div className="flex space-x-8">
             <label className="flex items-center cursor-pointer">
               <div className="relative">
@@ -682,7 +682,7 @@ function MedicationTrackingWizard() {
           <div className="space-y-6">
             <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-3 mb-3">
               <div>
-                <h3 className="text-2xl sm:text-2xl md:text-3xl font-source font-bold sm:font-semibold text-primary mb-2">Which NSAIDs did you take?</h3>
+                <h3 className="text-2xl sm:text-2xl md:text-3xl font-source font-bold text-primary mb-2">Which NSAIDs did you take?</h3>
               </div>
               <button
                 onClick={addNsaid}
@@ -769,7 +769,7 @@ function MedicationTrackingWizard() {
     if (currentStep === 5) {
       return (
         <div className="mb-5">
-          <h3 className="text-2xl sm:text-2xl md:text-3xl font-source font-bold sm:font-semibold text-primary mb-6">Did you take any antibiotics recently?</h3>
+          <h3 className="text-2xl sm:text-2xl md:text-3xl font-source font-bold text-primary mb-6">Did you take any antibiotics recently?</h3>
           <div className="flex space-x-8">
             <label className="flex items-center cursor-pointer">
               <div className="relative">
@@ -835,7 +835,7 @@ function MedicationTrackingWizard() {
           <div className="space-y-6">
             <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-3 mb-3">
               <div>
-                <h3 className="text-2xl sm:text-2xl md:text-3xl font-source font-bold sm:font-semibold text-primary mb-2">Which antibiotics did you take?</h3>
+                <h3 className="text-2xl sm:text-2xl md:text-3xl font-source font-bold text-primary mb-2">Which antibiotics did you take?</h3>
               </div>
               <button
                 onClick={addAntibiotic}
@@ -927,7 +927,7 @@ function MedicationTrackingWizard() {
 
       return (
         <div className="space-y-6 sm:space-y-8">
-          <h2 className="text-2xl sm:text-2xl md:text-3xl font-bold sm:font-semibold font-source text-primary mb-6 sm:mb-8">
+          <h2 className="text-2xl sm:text-2xl md:text-3xl font-bold font-source text-primary mb-6 sm:mb-8">
             Review your entry
           </h2>
 
@@ -1060,12 +1060,12 @@ function MedicationTrackingWizard() {
             <h2 className="text-2xl sm:text-3xl lg:text-4xl font-bold font-source text-primary mb-4 sm:mb-6">Log Medications</h2>
             
             {/* Optional description */}
-            <p className="text-base sm:text-lg font-roboto text-muted mb-8 max-w-md">Track your medication adherence to identify patterns and triggers</p>
+            <p className="text-base sm:text-lg font-roboto text-muted mb-6 max-w-md">Track your medication adherence to identify patterns and triggers</p>
             
             {/* Start button */}
             <button
               onClick={nextStep}
-              className="button-cadet px-4 py-2 text-lg font-bold rounded-lg transition-colors"
+              className="button-cadet px-4 py-2 text-base sm:text-lg font-semibold tracking-wide rounded-lg transition-colors"
             >
               Start now
             </button>
@@ -1085,7 +1085,7 @@ function MedicationTrackingWizard() {
             {currentStep < 7 ? (
               <button
                 onClick={nextStep}
-                className="button-cadet px-4 py-2 text-lg font-semibold rounded-lg transition-colors"
+                className="button-cadet px-4 py-2 text-base sm:text-lg font-semibold rounded-lg transition-colors"
               >
                 Next
               </button>
@@ -1093,7 +1093,7 @@ function MedicationTrackingWizard() {
               <button
                 onClick={handleSubmit}
                 disabled={isSubmitting}
-                className="button-cadet px-4 py-2 text-lg font-semibold rounded-lg transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+                className="button-cadet px-4 py-2 text-base sm:text-lg font-semibold rounded-lg transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
               >
                 {isSubmitting ? 'Submitting...' : 'Submit'}
               </button>

@@ -243,17 +243,17 @@ function WeightPageContent() {
       <div className="card mb-5 sm:mb-6 min-w-0">
         <div className="flex flex-row flex-wrap items-center justify-between gap-4 mb-5 sm:mb-6">
           <div className="flex items-center min-w-0">
-            <div className="flex w-10 h-10 bg-indigo-100 dashboard-icon-panel rounded-lg items-center justify-center mr-3 sm:mr-4 flex-shrink-0">
+            <div className="hidden sm:flex w-10 h-10 bg-indigo-100 dashboard-icon-panel rounded-lg items-center justify-center mr-3 sm:mr-4 flex-shrink-0">
               <Scale className="w-5 h-5 text-indigo-600 dark:[color:var(--text-icon-more-weight)]" />
             </div>
-            <h2 className="text-xl font-semibold font-source text-primary">
+            <h2 className="text-xl font-bold font-source text-primary">
               Weight entries
             </h2>
           </div>
           {!isAdding && (
             <button
               onClick={startAdding}
-              className="button-cadet flex-shrink-0 px-4 py-2 text-lg font-semibold rounded-lg transition-colors inline-flex items-center justify-center"
+              className="button-cadet flex-shrink-0 px-4 py-2 text-base sm:text-lg font-semibold rounded-lg transition-colors inline-flex items-center justify-center"
             >
               <svg className="w-5 h-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 6v6m0 0v6m0-6h6m-6 0H6" />
@@ -338,7 +338,7 @@ function WeightPageContent() {
                 />
               </div>
               <div className="flex flex-col sm:flex-row gap-4">
-                <button type="submit" className="button-cadet px-4 py-2 text-lg font-semibold rounded-lg transition-colors">
+                <button type="submit" className="button-cadet px-4 py-2 text-base sm:text-lg font-semibold rounded-lg transition-colors">
                   <svg className="w-5 h-5 mr-2 inline" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
                   </svg>
@@ -347,7 +347,7 @@ function WeightPageContent() {
                 <button
                   type="button"
                   onClick={cancelEdit}
-                  className="px-4 py-2 text-lg font-semibold rounded-lg transition-colors hover:opacity-80"
+                  className="px-4 py-2 text-base sm:text-lg font-medium font-sans rounded-lg transition-colors hover:opacity-80"
                   style={{ backgroundColor: 'var(--bg-button-cancel)', color: 'var(--text-primary)' }}
                 >
                   <svg className="w-5 h-5 mr-2 inline" fill="none" stroke="currentColor" viewBox="0 0 24 24">

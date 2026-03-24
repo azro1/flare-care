@@ -145,55 +145,52 @@ function SymptomDetailContent() {
   return (
     <div className="w-full sm:px-4 md:px-6 min-w-0 overflow-hidden">
       <div className="max-w-4xl w-full mx-auto min-w-0">
-        {/* Header */}
-        <div className="mb-5 sm:mb-6">
-          <div className="flex justify-between items-center gap-4">
-            <h1 className="text-2xl sm:text-3xl lg:text-4xl font-bold font-source text-primary">
-              Symptom log
-            </h1>
-            <button
-              onClick={() => setShowDeleteModal(true)}
-              disabled={isDeleting}
-              className="p-2.5 rounded-lg text-red-600 dark:[color:var(--text-trash)] sm:hover:bg-red-500/10 sm:dark:hover:bg-[var(--bg-card-inner)] focus:outline-none disabled:opacity-50 transition-colors flex-shrink-0"
-              title="Delete entry"
-              aria-label="Delete entry"
-            >
-              <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden>
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
-              </svg>
-            </button>
-          </div>
-          <p className="text-sm text-tertiary font-roboto mt-1 sm:mt-2">
-            {new Date(symptom.created_at || symptom.createdAt).toLocaleDateString('en-GB', { 
-              weekday: 'long', 
-              day: 'numeric', 
-              month: 'short', 
-              year: 'numeric' 
-            })} at {new Date(symptom.created_at || symptom.createdAt).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
-          </p>
-        </div>
-
         {/* Main Content */}
         <div className="space-y-4 sm:space-y-6">
           {/* Overview */}
           <div className="card min-w-0 overflow-hidden">
-            <h2 className="text-xl font-semibold font-source text-primary mb-3 sm:mb-4">Overview</h2>
+            <div className="flex justify-between items-start gap-4 mb-4 pb-4 border-b" style={{ borderColor: 'var(--separator-card)' }}>
+              <div>
+                <h1 className="text-2xl sm:text-3xl lg:text-4xl font-bold font-source text-primary">
+                  Symptom log
+                </h1>
+                <p className="text-sm text-tertiary font-roboto mt-1 sm:mt-2">
+                  {new Date(symptom.created_at || symptom.createdAt).toLocaleDateString('en-GB', { 
+                    weekday: 'long', 
+                    day: 'numeric', 
+                    month: 'short', 
+                    year: 'numeric' 
+                  })} at {new Date(symptom.created_at || symptom.createdAt).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
+                </p>
+              </div>
+              <button
+                onClick={() => setShowDeleteModal(true)}
+                disabled={isDeleting}
+                className="p-2.5 rounded-lg text-red-600 dark:[color:var(--text-trash)] sm:hover:bg-red-500/10 sm:dark:hover:bg-[var(--bg-card-inner)] focus:outline-none disabled:opacity-50 transition-colors flex-shrink-0"
+                title="Delete entry"
+                aria-label="Delete entry"
+              >
+                <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden>
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
+                </svg>
+              </button>
+            </div>
             <div className="space-y-4 sm:space-y-0 sm:grid sm:grid-cols-3 sm:gap-6">
                 <div>
                   <span className="text-xs sm:text-sm font-semibold text-secondary tracking-wide block font-roboto">Status</span>
-                  <p className={`mt-2 text-sm sm:text-base font-semibold font-roboto ${(symptom.isOngoing || !symptom.symptomEndDate) ? 'text-amber-600' : 'text-emerald-600'}`}>
+                  <p className={`mt-1 sm:mt-2 text-sm sm:text-base font-semibold font-roboto ${(symptom.isOngoing || !symptom.symptomEndDate) ? 'text-amber-600' : 'text-emerald-600'}`}>
                     {symptom.isOngoing || !symptom.symptomEndDate ? 'Ongoing' : 'Resolved'}
                   </p>
                 </div>
                 <div>
                   <span className="text-xs sm:text-sm font-semibold text-secondary tracking-wide block font-roboto">Severity</span>
-                  <p className="mt-2 text-sm sm:text-base font-semibold text-primary font-roboto">
+                  <p className="mt-1 sm:mt-2 text-sm sm:text-base font-semibold text-primary font-roboto">
                     {symptom.severity ?? 'Not logged'}
                   </p>
                 </div>
                 <div>
                   <span className="text-xs sm:text-sm font-semibold text-secondary tracking-wide block font-roboto">Stress level</span>
-                  <p className="mt-2 text-sm sm:text-base font-semibold text-primary font-roboto">
+                  <p className="mt-1 sm:mt-2 text-sm sm:text-base font-semibold text-primary font-roboto">
                     {symptom.stress_level ?? 'Not logged'}
                   </p>
                 </div>
@@ -202,7 +199,7 @@ function SymptomDetailContent() {
 
           {/* Timeline */}
           <div className="card min-w-0 overflow-hidden">
-            <h2 className="text-xl font-semibold font-source text-primary mb-3 sm:mb-4">Timeline</h2>
+            <h2 className="text-xl font-bold font-source text-primary mb-3 sm:mb-4">Timeline</h2>
             <div>
                 <div className={`flex items-center justify-between gap-4 min-w-0 overflow-hidden ${!symptom.isOngoing && symptom.symptomEndDate ? 'pb-4 border-b' : ''}`} style={{ borderColor: 'var(--separator-card)' }}>
                   <div className="flex items-center gap-3">
@@ -227,7 +224,7 @@ function SymptomDetailContent() {
 
           {/* Bathroom & Lifestyle */}
           <div className="card min-w-0 overflow-hidden">
-            <h2 className="text-xl font-semibold font-source text-primary mb-3 sm:mb-4">Details</h2>
+            <h2 className="text-xl font-bold font-source text-primary mb-3 sm:mb-4">Details</h2>
             <div className="space-y-0 [&>*:last-child]:pb-0">
                 <div className="flex justify-between items-center gap-4 pt-0 pb-4 border-b min-w-0 overflow-hidden" style={{ borderColor: 'var(--separator-card)' }}>
                   <span className="text-sm sm:text-base text-secondary font-roboto shrink-0">Bathroom frequency</span>
@@ -277,43 +274,37 @@ function SymptomDetailContent() {
           {/* Meals */}
           {(symptom.breakfast?.length > 0 || symptom.lunch?.length > 0 || symptom.dinner?.length > 0) && (
             <div className="card min-w-0 overflow-hidden">
-              <h2 className="text-xl font-semibold font-source text-primary mb-3 sm:mb-4">Meals</h2>
-              <div className="space-y-4">
+              <h2 className="text-xl font-bold font-source text-primary mb-3 sm:mb-4">Meals</h2>
+              <div className="space-y-3 sm:space-y-4">
                   {symptom.breakfast?.length > 0 && (
                     <div className="min-w-0">
-                      <h3 className="text-sm sm:text-base font-semibold text-primary mb-2 font-roboto">Breakfast</h3>
+                      <h3 className="text-sm sm:text-base font-semibold text-primary mb-1 sm:mb-2 font-roboto">Breakfast</h3>
                       {symptom.breakfast.map((meal, index) => (
-                        <div key={index} className="min-w-0 py-2">
-                          <div className="min-w-0">
-                            <span className="text-sm sm:text-base text-secondary font-roboto break-words block" title={meal.food}>{meal.food}</span>
-                            {meal.quantity && <span className="text-sm sm:text-base text-primary font-medium font-roboto block mt-0.5 break-words">{meal.quantity}</span>}
-                          </div>
+                        <div key={index} className="min-w-0 py-1 sm:py-2 flex items-center justify-between gap-3">
+                          <span className="text-sm sm:text-base text-secondary font-roboto break-words min-w-0" title={meal.food}>{meal.food}</span>
+                          {meal.quantity && <span className="text-sm sm:text-base text-primary font-medium font-roboto flex-shrink-0">{meal.quantity}</span>}
                         </div>
                       ))}
                     </div>
                   )}
                   {symptom.lunch?.length > 0 && (
                     <div className="min-w-0">
-                      <h3 className="text-sm sm:text-base font-semibold text-primary mb-2 font-roboto">Lunch</h3>
+                      <h3 className="text-sm sm:text-base font-semibold text-primary mb-1 sm:mb-2 font-roboto">Lunch</h3>
                       {symptom.lunch.map((meal, index) => (
-                        <div key={index} className="min-w-0 py-2">
-                          <div className="min-w-0">
-                            <span className="text-sm sm:text-base text-secondary font-roboto break-words block" title={meal.food}>{meal.food}</span>
-                            {meal.quantity && <span className="text-sm sm:text-base text-primary font-medium font-roboto block mt-0.5 break-words">{meal.quantity}</span>}
-                          </div>
+                        <div key={index} className="min-w-0 py-1 sm:py-2 flex items-center justify-between gap-3">
+                          <span className="text-sm sm:text-base text-secondary font-roboto break-words min-w-0" title={meal.food}>{meal.food}</span>
+                          {meal.quantity && <span className="text-sm sm:text-base text-primary font-medium font-roboto flex-shrink-0">{meal.quantity}</span>}
                         </div>
                       ))}
                     </div>
                   )}
                   {symptom.dinner?.length > 0 && (
                     <div className="min-w-0">
-                      <h3 className="text-sm sm:text-base font-semibold text-primary mb-2 font-roboto">Dinner</h3>
+                      <h3 className="text-sm sm:text-base font-semibold text-primary mb-1 sm:mb-2 font-roboto">Dinner</h3>
                       {symptom.dinner.map((meal, index) => (
-                        <div key={index} className="min-w-0 py-2">
-                          <div className="min-w-0">
-                            <span className="text-sm sm:text-base text-secondary font-roboto break-words block" title={meal.food}>{meal.food}</span>
-                            {meal.quantity && <span className="text-sm sm:text-base text-primary font-medium font-roboto block mt-0.5 break-words">{meal.quantity}</span>}
-                          </div>
+                        <div key={index} className="min-w-0 py-1 sm:py-2 flex items-center justify-between gap-3">
+                          <span className="text-sm sm:text-base text-secondary font-roboto break-words min-w-0" title={meal.food}>{meal.food}</span>
+                          {meal.quantity && <span className="text-sm sm:text-base text-primary font-medium font-roboto flex-shrink-0">{meal.quantity}</span>}
                         </div>
                       ))}
                     </div>
@@ -325,7 +316,7 @@ function SymptomDetailContent() {
           {/* Notes */}
           {symptom.notes && (
             <div className="card min-w-0 overflow-hidden">
-              <h2 className="text-xl font-semibold font-source text-primary mb-3 sm:mb-4">Notes</h2>
+              <h2 className="text-xl font-bold font-source text-primary mb-3 sm:mb-4">Notes</h2>
               <p className="text-sm sm:text-base text-secondary leading-relaxed font-roboto break-words" title={symptom.notes}>{symptom.notes}</p>
             </div>
           )}

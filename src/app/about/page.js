@@ -21,7 +21,7 @@ export default function About() {
 
       <div className="grid md:grid-cols-2 gap-5 mb-5 sm:gap-6 sm:mb-6">
         <div className="card backdrop-blur-sm">
-          <h2 className="text-xl sm:text-2xl font-semibold font-source text-primary mb-4">My Story</h2>
+          <h2 className="text-xl sm:text-2xl font-bold font-source text-primary mb-4">My Story</h2>
           <div className="space-y-4 text-sm sm:text-base text-secondary font-roboto">
             <p className="leading-relaxed">
               Hi, I'm Simon, and I was diagnosed with Crohn's disease in 2005. Like many others, 
@@ -43,7 +43,7 @@ export default function About() {
         </div>
 
         <div className="card backdrop-blur-sm">
-          <h2 className="text-xl sm:text-2xl font-semibold font-source text-primary mb-4">Why FlareCare?</h2>
+          <h2 className="text-xl sm:text-2xl font-bold font-source text-primary mb-4">Why FlareCare?</h2>
           <div className="space-y-4 text-sm sm:text-base text-secondary font-roboto">
             <p className="leading-relaxed">
               FlareCare was born from my personal need for a simple, effective way to 
@@ -80,7 +80,7 @@ export default function About() {
       </div>
 
       <div className="card backdrop-blur-sm mb-5 sm:mb-6">
-        <h2 className="text-xl sm:text-2xl font-semibold font-source text-primary mb-4">The Vision</h2>
+        <h2 className="text-xl sm:text-2xl font-bold font-source text-primary mb-4">The Vision</h2>
         <div className="space-y-4 text-sm sm:text-base text-secondary font-roboto">
           <p className="leading-relaxed">
             Living with Crohn's or Colitis can feel isolating, but you're not alone. 
@@ -116,7 +116,7 @@ export default function About() {
             </p>
             <a 
               href="mailto:support@flarecare.app" 
-              className="button-cadet font-roboto py-3 px-6 rounded-xl hover:shadow-lg inline-block"
+              className="button-cadet py-3 px-6 rounded-xl hover:shadow-lg inline-block"
             >
               Contact Support
             </a>
@@ -128,7 +128,7 @@ export default function About() {
               Share experiences, tips, and connect with others on similar journeys.
             </p>
             <button 
-              className="bg-white hover:bg-gray-50 text-gray-800 font-medium font-roboto py-3 px-6 rounded-xl border border-gray-200 hover:border-gray-300 transition-all duration-200 shadow-sm hover:shadow-md inline-block"
+              className="bg-white hover:bg-gray-50 text-gray-800 font-medium font-sans py-3 px-6 rounded-xl border border-gray-200 hover:border-gray-300 transition-all duration-200 shadow-sm hover:shadow-md inline-block"
               onClick={() => setBlogModal({ isOpen: true })}
             >
               Coming Soon

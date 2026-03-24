@@ -471,7 +471,7 @@ function MedicationsPageContent() {
       <div className="card mb-5 sm:mb-6 min-w-0">
         <div className="flex flex-row flex-wrap items-center justify-between gap-4 mb-5 sm:mb-6">
           <div className="flex items-center min-w-0">
-            <div className="flex w-10 h-10 bg-purple-100 dashboard-icon-panel rounded-lg items-center justify-center mr-3 sm:mr-4 flex-shrink-0">
+            <div className="hidden sm:flex w-10 h-10 bg-purple-100 dashboard-icon-panel rounded-lg items-center justify-center mr-3 sm:mr-4 flex-shrink-0">
               {isAdding ? (
                 <svg className="w-5 h-5 text-purple-600 dark:[color:var(--text-icon-more-meds)]" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z" />
@@ -480,14 +480,14 @@ function MedicationsPageContent() {
                 <Pill className="w-5 h-5 text-purple-600 dark:[color:var(--text-icon-more-meds)]" />
               )}
             </div>
-            <h2 className="text-xl font-semibold font-source text-primary">
+            <h2 className="text-xl font-bold font-source text-primary">
               Your medications
             </h2>
           </div>
           {!isAdding && (
             <button
               onClick={startAdding}
-              className="button-cadet flex-shrink-0 px-4 py-2 text-lg font-semibold rounded-lg transition-colors inline-flex items-center justify-center"
+              className="button-cadet flex-shrink-0 px-4 py-2 text-base sm:text-lg font-semibold rounded-lg transition-colors inline-flex items-center justify-center"
             >
               <svg className="w-5 h-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 6v6m0 0v6m0-6h6m-6 0H6" />
@@ -606,7 +606,7 @@ function MedicationsPageContent() {
               <div className="flex flex-col sm:flex-row gap-4">
                 <button 
                   type="submit" 
-                  className="button-cadet px-4 py-2 text-lg font-semibold rounded-lg transition-colors"
+                  className="button-cadet px-4 py-2 text-base sm:text-lg font-semibold rounded-lg transition-colors"
                 >
                   <svg className="w-5 h-5 mr-2 inline" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
@@ -616,9 +616,9 @@ function MedicationsPageContent() {
                 <button 
                   type="button" 
                   onClick={cancelEdit} 
-                  className="px-4 py-2 text-lg font-semibold rounded-lg transition-colors hover:opacity-80"
-                  style={{ 
-                    backgroundColor: 'var(--bg-button-cancel)', 
+className="px-4 py-2 text-base sm:text-lg font-medium font-sans rounded-lg transition-colors hover:opacity-80"
+                  style={{
+                    backgroundColor: 'var(--bg-button-cancel)',
                     color: 'var(--text-primary)'
                   }}
                 >
@@ -669,7 +669,7 @@ function MedicationsPageContent() {
                         </h3>
                         <button
                           onClick={() => toggleMedicationExpand(medication.id)}
-                          className="flex-shrink-0 p-1 rounded transition-colors hover:bg-opacity-20 sm:self-start"
+                          className="flex-shrink-0 p-1 rounded font-sans transition-colors hover:bg-opacity-20 sm:self-start"
                           style={{ color: 'var(--text-icon)' }}
                           title={isExpanded ? "Collapse details" : "Expand details"}
                         >
@@ -719,7 +719,7 @@ function MedicationsPageContent() {
                           <div className={`${(medication.timeOfDay || medication.remindersEnabled !== false) ? 'mt-2' : ''}`}>
                             <button
                               onClick={() => handleMarkAsTaken(medication.id)}
-                              className="px-3 py-1.5 rounded-lg text-sm font-medium transition-all duration-200 inline-flex items-center justify-center border border-[#5F9EA0]/40 dark:border-white/50"
+                              className="px-3 py-1.5 rounded-lg text-sm font-medium font-sans transition-all duration-200 inline-flex items-center justify-center border border-[#5F9EA0]/40 dark:border-white/50"
                               style={{
                                 ...(takenMedications.some(id => String(id) === String(medication.id)) 
                                   ? {
@@ -752,7 +752,7 @@ function MedicationsPageContent() {
                             <button
                               onClick={() => startEdit(medication)}
                               disabled={editingId === medication.id}
-                              className="w-9 h-9 rounded-lg flex items-center justify-center transition-all duration-200 hover:opacity-80 disabled:opacity-50 disabled:cursor-not-allowed bg-white dark:bg-[var(--bg-icon-container)]"
+                              className="w-9 h-9 rounded-lg flex items-center justify-center font-sans transition-all duration-200 hover:opacity-80 disabled:opacity-50 disabled:cursor-not-allowed bg-white dark:bg-[var(--bg-icon-container)]"
                               style={{ color: 'var(--text-icon)' }}
                               title={editingId === medication.id ? 'Finish or cancel editing first' : 'Edit medication'}
                             >
@@ -763,7 +763,7 @@ function MedicationsPageContent() {
                             <button
                               onClick={() => handleDeleteMedication(medication.id)}
                               disabled={editingId === medication.id}
-                              className="w-9 h-9 rounded-lg flex items-center justify-center transition-all duration-200 hover:opacity-80 disabled:opacity-50 disabled:cursor-not-allowed bg-white dark:bg-[var(--bg-icon-container)]"
+                              className="w-9 h-9 rounded-lg flex items-center justify-center font-sans transition-all duration-200 hover:opacity-80 disabled:opacity-50 disabled:cursor-not-allowed bg-white dark:bg-[var(--bg-icon-container)]"
                               style={{ color: 'var(--text-icon)' }}
                               title={editingId === medication.id ? 'Finish or cancel editing first' : 'Delete medication'}
                             >
@@ -805,7 +805,7 @@ function MedicationsPageContent() {
       {/* Reminder Info */}
       <div className="mt-4 sm:mt-6 card">
         <div>
-          <h3 className="text-xl sm:text-lg font-semibold font-source text-primary mb-2 flex items-center space-x-2">
+          <h3 className="text-xl sm:text-lg font-bold font-source text-primary mb-2 flex items-center space-x-2">
             <Bell className="w-5 h-5 sm:w-6 sm:h-6 flex-shrink-0" style={{ color: 'var(--text-cadet-blue)' }} />
             <span>Medication Reminders</span>
           </h3>

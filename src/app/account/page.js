@@ -174,9 +174,9 @@ function AccountPageContent() {
                 <button
                   onClick={() => setShowSignOutModal(true)}
                   disabled={isSigningOut}
-                  className="bg-[#5F9EA0] text-white font-semibold py-2 px-4 rounded-lg border border-transparent hover:bg-button-cadet-hover transition-colors disabled:opacity-50 inline-flex items-center gap-2 flex-shrink-0"
+                  className="inline-flex items-center justify-center gap-2 px-5 py-3 sm:px-6 sm:py-3 button-cadet rounded-lg whitespace-nowrap text-sm sm:text-base tracking-wide disabled:opacity-50 flex-shrink-0"
                 >
-                  <LogOut className="w-4 h-4 dark:text-white" />
+                  <LogOut className="w-4 h-4 sm:w-5 sm:h-5 shrink-0" />
                   Sign Out
                 </button>
               </div>
@@ -275,9 +275,9 @@ function AccountPageContent() {
               <div>
                 <button
                   onClick={() => setShowDeleteModal(true)}
-                  className="button-delete inline-flex items-center gap-2"
+                  className="button-delete inline-flex items-center justify-center gap-2 py-2.5 rounded-lg whitespace-nowrap text-sm sm:text-base"
                 >
-                  <Trash2 className="w-4 h-4 text-white" />
+                  <Trash2 className="w-4 h-4 sm:w-5 sm:h-5 shrink-0" />
                   Delete
                 </button>
               </div>
@@ -371,7 +371,7 @@ function AccountPageContent() {
               <button
                 onClick={handleSignOut}
                 disabled={isSigningOut}
-                className="flex-1 px-4 py-2 bg-[#5F9EA0] text-white hover:bg-button-cadet-hover rounded-lg transition-colors disabled:opacity-50"
+                className="flex-1 px-4 py-2 bg-[#5F9EA0] text-white hover:bg-button-cadet-hover rounded-lg transition-colors font-semibold font-sans disabled:opacity-50"
               >
                 {isSigningOut ? 'Signing Out...' : 'Sign Out'}
               </button>
