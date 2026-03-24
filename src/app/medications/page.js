@@ -18,6 +18,7 @@ function MedicationsPageContent() {
   const [editingId, setEditingId] = useState(null)
   const [deleteModal, setDeleteModal] = useState({ isOpen: false, id: null })
   const [expandedMedications, setExpandedMedications] = useState(new Set())
+  const [medicationsPanelOpen, setMedicationsPanelOpen] = useState(false)
   const [takenMedications, setTakenMedications] = useState([])
   const [formData, setFormData] = useState({
     name: '',
@@ -41,6 +42,10 @@ function MedicationsPageContent() {
   }
 
   const timeOptions = generateTimeOptions()
+
+  useEffect(() => {
+    if (isAdding) setMedicationsPanelOpen(true)
+  }, [isAdding])
 
   const handleSubmit = async (e) => {
     e.preventDefault()
@@ -469,23 +474,37 @@ function MedicationsPageContent() {
 
       {/* Your Medications Section */}
       <div className="card mb-5 sm:mb-6 min-w-0">
-        <div className="flex flex-row flex-wrap items-center justify-between gap-4 mb-5 sm:mb-6">
-          <div className="flex items-center min-w-0">
-            <div className="hidden sm:flex w-10 h-10 bg-purple-100 dashboard-icon-panel rounded-lg items-center justify-center mr-3 sm:mr-4 flex-shrink-0">
-              {isAdding ? (
-                <svg className="w-5 h-5 text-purple-600 dark:[color:var(--text-icon-more-meds)]" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z" />
-                </svg>
-              ) : (
-                <Pill className="w-5 h-5 text-purple-600 dark:[color:var(--text-icon-more-meds)]" />
-              )}
-            </div>
-            <h2 className="text-xl font-bold font-source text-primary">
-              Your medications
-            </h2>
+        <div className="flex w-full min-w-0 items-center gap-2 sm:gap-3">
+          <button
+            type="button"
+            id="medications-panel-trigger"
+            aria-expanded={medicationsPanelOpen}
+            aria-controls="medications-list-panel"
+            aria-label={medicationsPanelOpen ? 'Collapse medications' : 'Expand medications'}
+            onClick={() => setMedicationsPanelOpen((o) => !o)}
+            className="inline-flex flex-shrink-0 items-center justify-center rounded-none border-0 bg-transparent p-2 -m-2 shadow-none cursor-pointer [-webkit-tap-highlight-color:transparent] text-secondary hover:opacity-70 focus:outline-none focus-visible:ring-1 focus-visible:ring-[#5F9EA0]/45 focus-visible:ring-offset-0 touch-manipulation"
+          >
+            <ChevronDown
+              className={`h-5 w-5 shrink-0 transition-transform duration-200 ${medicationsPanelOpen ? 'rotate-180' : ''}`}
+              strokeWidth={2}
+              aria-hidden
+            />
+          </button>
+          <div className="hidden sm:flex w-10 h-10 flex-shrink-0 items-center justify-center rounded-lg bg-purple-100 dashboard-icon-panel">
+            {isAdding ? (
+              <svg className="w-5 h-5 text-purple-600 dark:[color:var(--text-icon-more-meds)]" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z" />
+              </svg>
+            ) : (
+              <Pill className="w-5 h-5 text-purple-600 dark:[color:var(--text-icon-more-meds)]" />
+            )}
           </div>
-          {!isAdding && (
+          <h2 id="medications-panel-heading" className="min-w-0 flex-1 text-xl font-semibold font-source text-primary">
+            Medications
+          </h2>
+          {medicationsPanelOpen && !isAdding && (
             <button
+              type="button"
               onClick={startAdding}
               className="button-cadet flex-shrink-0 px-4 py-2 text-base sm:text-lg font-semibold rounded-lg transition-colors inline-flex items-center justify-center"
             >
@@ -497,6 +516,21 @@ function MedicationsPageContent() {
           )}
         </div>
 
+        <AnimatePresence initial={false}>
+          {medicationsPanelOpen && (
+            <motion.div
+              key="medications-panel"
+              id="medications-list-panel"
+              role="region"
+              aria-labelledby="medications-panel-heading"
+              initial={{ height: 0, opacity: 0 }}
+              animate={{ height: 'auto', opacity: 1 }}
+              exit={{ height: 0, opacity: 0 }}
+              transition={{ duration: 0.2, ease: 'easeOut' }}
+              className="overflow-hidden min-w-0"
+            >
+              <div className="min-w-0 space-y-4 pt-5 sm:pt-3 sm:space-y-5">
+
         <AnimatePresence>
         {isAdding && (
           <motion.div
@@ -505,7 +539,7 @@ function MedicationsPageContent() {
             animate={{ height: 'auto', opacity: 1 }}
             exit={{ height: 0, opacity: 0 }}
             transition={{ duration: 0.2, ease: 'easeOut' }}
-            className="mb-6 min-w-0 overflow-hidden"
+            className="min-w-0 overflow-hidden"
           >
             <form onSubmit={handleSubmit} className="space-y-4" autoComplete="off">
               <div className="grid lg:grid-cols-2 gap-6 min-w-0">
@@ -800,12 +834,16 @@ className="px-4 py-2 text-base sm:text-lg font-medium font-sans rounded-lg trans
           </Masonry>
         )}
         </div>
+              </div>
+            </motion.div>
+          )}
+        </AnimatePresence>
       </div>
 
       {/* Reminder Info */}
       <div className="mt-4 sm:mt-6 card">
         <div>
-          <h3 className="text-xl sm:text-lg font-bold font-source text-primary mb-2 flex items-center space-x-2">
+          <h3 className="text-xl sm:text-lg font-semibold font-source text-primary mb-2 flex items-center space-x-2">
             <Bell className="w-5 h-5 sm:w-6 sm:h-6 flex-shrink-0" style={{ color: 'var(--text-cadet-blue)' }} />
             <span>Medication Reminders</span>
           </h3>

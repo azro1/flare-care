@@ -1274,7 +1274,7 @@ function ReportsPageContent() {
           <div className="flex w-10 h-10 bg-orange-100 dashboard-icon-panel rounded-lg items-center justify-center mr-3 sm:mr-4 flex-shrink-0">
             <Calendar className="w-5 h-5 text-orange-600 dark:[color:var(--text-icon-more-reports)]" />
           </div>
-          <h2 className="text-xl sm:text-2xl font-bold font-source text-primary flex-1">Select report period</h2>
+          <h2 className="text-xl sm:text-2xl font-semibold font-source text-primary flex-1">Select report period</h2>
         </div>
         
         {/* Quick Presets */}

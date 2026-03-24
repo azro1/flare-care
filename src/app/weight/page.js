@@ -21,6 +21,7 @@ function WeightPageContent() {
   const [editingId, setEditingId] = useState(null)
   const [deleteModal, setDeleteModal] = useState({ isOpen: false, id: null })
   const [expandedWeightEntries, setExpandedWeightEntries] = useState(new Set())
+  const [weightPanelOpen, setWeightPanelOpen] = useState(false)
   const weightDatePickerRef = useRef(null)
   const [formData, setFormData] = useState({
     date: new Date().toISOString().split('T')[0],
@@ -69,6 +70,10 @@ function WeightPageContent() {
 
   useEffect(() => {
     if (isAdding) window.scrollTo(0, 0)
+  }, [isAdding])
+
+  useEffect(() => {
+    if (isAdding) setWeightPanelOpen(true)
   }, [isAdding])
 
   const formatUKDate = (dateString) => {
@@ -232,7 +237,7 @@ function WeightPageContent() {
               <h1 className="text-2xl sm:text-3xl lg:text-4xl font-bold font-source text-primary mb-4 sm:mb-6">
                 My Weight
               </h1>
-              <p className="text-sm sm:text-base text-secondary font-roboto leading-relaxed">
+              <p className="text-sm sm:text-base font-semibold text-secondary font-roboto leading-relaxed">
                 Record your weight over time to monitor trends and share with your healthcare team
               </p>
             </div>
@@ -241,17 +246,37 @@ function WeightPageContent() {
       </div>
 
       <div className="card mb-5 sm:mb-6 min-w-0">
-        <div className="flex flex-row flex-wrap items-center justify-between gap-4 mb-5 sm:mb-6">
-          <div className="flex items-center min-w-0">
-            <div className="hidden sm:flex w-10 h-10 bg-indigo-100 dashboard-icon-panel rounded-lg items-center justify-center mr-3 sm:mr-4 flex-shrink-0">
+        <div className="flex w-full min-w-0 items-center gap-2 sm:gap-3">
+          <button
+            type="button"
+            id="weight-panel-trigger"
+            aria-expanded={weightPanelOpen}
+            aria-controls="weight-list-panel"
+            aria-label={weightPanelOpen ? 'Collapse weight logs' : 'Expand weight logs'}
+            onClick={() => setWeightPanelOpen((o) => !o)}
+            className="inline-flex flex-shrink-0 items-center justify-center rounded-none border-0 bg-transparent p-2 -m-2 shadow-none cursor-pointer [-webkit-tap-highlight-color:transparent] text-secondary hover:opacity-70 focus:outline-none focus-visible:ring-1 focus-visible:ring-[#5F9EA0]/45 focus-visible:ring-offset-0 touch-manipulation"
+          >
+            <ChevronDown
+              className={`h-5 w-5 shrink-0 transition-transform duration-200 ${weightPanelOpen ? 'rotate-180' : ''}`}
+              strokeWidth={2}
+              aria-hidden
+            />
+          </button>
+          <div className="hidden sm:flex w-10 h-10 flex-shrink-0 items-center justify-center rounded-lg bg-indigo-100 dashboard-icon-panel">
+            {isAdding ? (
+              <svg className="w-5 h-5 text-indigo-600 dark:[color:var(--text-icon-more-weight)]" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z" />
+              </svg>
+            ) : (
               <Scale className="w-5 h-5 text-indigo-600 dark:[color:var(--text-icon-more-weight)]" />
-            </div>
-            <h2 className="text-xl font-bold font-source text-primary">
-              Weight entries
-            </h2>
+            )}
           </div>
-          {!isAdding && (
+          <h2 id="weight-panel-heading" className="min-w-0 flex-1 text-xl font-semibold font-source text-primary">
+            Weight logs
+          </h2>
+          {weightPanelOpen && !isAdding && (
             <button
+              type="button"
               onClick={startAdding}
               className="button-cadet flex-shrink-0 px-4 py-2 text-base sm:text-lg font-semibold rounded-lg transition-colors inline-flex items-center justify-center"
             >
@@ -263,7 +288,20 @@ function WeightPageContent() {
           )}
         </div>
 
-        <div>
+        <AnimatePresence initial={false}>
+          {weightPanelOpen && (
+            <motion.div
+              key="weight-panel"
+              id="weight-list-panel"
+              role="region"
+              aria-labelledby="weight-panel-heading"
+              initial={{ height: 0, opacity: 0 }}
+              animate={{ height: 'auto', opacity: 1 }}
+              exit={{ height: 0, opacity: 0 }}
+              transition={{ duration: 0.2, ease: 'easeOut' }}
+              className="overflow-hidden min-w-0"
+            >
+              <div className="min-w-0 space-y-4 pt-5 sm:pt-3 sm:space-y-5">
         <AnimatePresence>
         {isAdding && (
           <motion.div
@@ -272,7 +310,7 @@ function WeightPageContent() {
             animate={{ height: 'auto', opacity: 1 }}
             exit={{ height: 0, opacity: 0 }}
             transition={{ duration: 0.2, ease: 'easeOut' }}
-            className="mb-6 min-w-0 overflow-hidden"
+            className="min-w-0 overflow-hidden"
           >
             <form onSubmit={handleSubmit} className="space-y-4" autoComplete="off">
               <div className="grid sm:grid-cols-2 gap-6 min-w-0">
@@ -361,7 +399,6 @@ function WeightPageContent() {
         )}
         </AnimatePresence>
 
-        <div>
         {isLoading ? (
           <p className="text-center py-12 text-secondary font-roboto">Loading...</p>
         ) : entries.length === 0 ? (
@@ -369,9 +406,9 @@ function WeightPageContent() {
             <div className="card-inner rounded-full w-14 h-14 sm:w-20 sm:h-20 mx-auto mb-6 flex items-center justify-center">
               <Scale className="w-6 h-6 sm:w-10 sm:h-10 text-secondary" />
             </div>
-            <h3 className="text-lg font-semibold font-source text-primary mb-2">No weight entries</h3>
+            <h3 className="text-lg font-semibold font-source text-primary mb-2">No weight logs</h3>
             <p className="text-sm font-roboto text-secondary max-w-md mx-auto leading-relaxed">
-              Your weight entries will show here once you add them
+              Your weight logs will show here once you add them
             </p>
           </div>
         ) : (
@@ -470,8 +507,10 @@ function WeightPageContent() {
             })}
           </Masonry>
         )}
-        </div>
-        </div>
+              </div>
+            </motion.div>
+          )}
+        </AnimatePresence>
       </div>
 
       <ConfirmationModal

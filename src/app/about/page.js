@@ -21,7 +21,7 @@ export default function About() {
 
       <div className="grid md:grid-cols-2 gap-5 mb-5 sm:gap-6 sm:mb-6">
         <div className="card backdrop-blur-sm">
-          <h2 className="text-xl sm:text-2xl font-bold font-source text-primary mb-4">My Story</h2>
+          <h2 className="text-xl sm:text-2xl font-semibold font-source text-primary mb-4">My Story</h2>
           <div className="space-y-4 text-sm sm:text-base text-secondary font-roboto">
             <p className="leading-relaxed">
               Hi, I'm Simon, and I was diagnosed with Crohn's disease in 2005. Like many others, 
@@ -43,7 +43,7 @@ export default function About() {
         </div>
 
         <div className="card backdrop-blur-sm">
-          <h2 className="text-xl sm:text-2xl font-bold font-source text-primary mb-4">Why FlareCare?</h2>
+          <h2 className="text-xl sm:text-2xl font-semibold font-source text-primary mb-4">Why FlareCare?</h2>
           <div className="space-y-4 text-sm sm:text-base text-secondary font-roboto">
             <p className="leading-relaxed">
               FlareCare was born from my personal need for a simple, effective way to 
@@ -80,7 +80,7 @@ export default function About() {
       </div>
 
       <div className="card backdrop-blur-sm mb-5 sm:mb-6">
-        <h2 className="text-xl sm:text-2xl font-bold font-source text-primary mb-4">The Vision</h2>
+        <h2 className="text-xl sm:text-2xl font-semibold font-source text-primary mb-4">The Vision</h2>
         <div className="space-y-4 text-sm sm:text-base text-secondary font-roboto">
           <p className="leading-relaxed">
             Living with Crohn's or Colitis can feel isolating, but you're not alone. 
@@ -101,7 +101,7 @@ export default function About() {
       </div>
 
       <div className="card">
-        <h2 className="text-xl sm:text-2xl font-bold font-source text-primary mb-4">Stay Connected</h2>
+        <h2 className="text-xl sm:text-2xl font-semibold font-source text-primary mb-4">Stay Connected</h2>
         <p className="text-sm sm:text-base text-secondary mb-6 font-roboto leading-relaxed">
           Have questions, suggestions, or want to share your own story? 
           I'd love to hear from you and learn how FlareCare can better serve 

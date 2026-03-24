@@ -4,7 +4,7 @@ import { useState, useEffect } from 'react'
 import { useAuth } from '@/lib/AuthContext'
 import ProtectedRoute from '@/components/ProtectedRoute'
 import ConfirmationModal from '@/components/ConfirmationModal'
-import { CupSoda, Lightbulb } from 'lucide-react'
+import { CupSoda, Lightbulb, Minus, Plus } from 'lucide-react'
 import { supabase, TABLES } from '@/lib/supabase'
 
 const HYDRATION_TARGET = 6
@@ -40,25 +40,28 @@ function HydrationPageContent() {
     fetchToday()
   }, [user?.id])
 
-  const handleAddGlass = async () => {
+  const persistGlasses = async (next) => {
     if (!user?.id) return
-    const newGlasses = glasses + 1
+    const clamped = Math.max(0, Math.min(next, HYDRATION_TARGET))
     try {
       const { error } = await supabase
         .from(TABLES.DAILY_HYDRATION)
         .upsert(
-          { user_id: user.id, date: today, glasses: newGlasses, updated_at: new Date().toISOString() },
+          { user_id: user.id, date: today, glasses: clamped, updated_at: new Date().toISOString() },
           { onConflict: 'user_id,date' }
         )
       if (error) throw error
-      setGlasses(newGlasses)
-      if (newGlasses >= HYDRATION_TARGET) {
+      setGlasses(clamped)
+      if (clamped >= HYDRATION_TARGET) {
         window.dispatchEvent(new Event('hydration-completed'))
       }
     } catch (err) {
-      console.error('Error adding hydration:', err)
+      console.error('Error updating hydration:', err)
     }
   }
+
+  const handleIncrement = () => persistGlasses(glasses + 1)
+  const handleDecrement = () => persistGlasses(glasses - 1)
 
   const handleReset = async () => {
     if (!user?.id) return
@@ -100,11 +103,11 @@ function HydrationPageContent() {
       <div className="card mb-5 sm:mb-6 min-w-0">
         <div className="flex flex-row flex-wrap items-center justify-between gap-4 mb-5 sm:mb-6">
           <div className="flex items-center min-w-0">
-            <div className="flex w-10 h-10 bg-sky-100 dashboard-icon-panel rounded-lg items-center justify-center mr-3 sm:mr-4 flex-shrink-0">
+            <div className="hidden sm:flex w-10 h-10 bg-sky-100 dashboard-icon-panel rounded-lg items-center justify-center mr-3 sm:mr-4 flex-shrink-0">
               <CupSoda className="w-5 h-5 text-sky-600 dark:[color:var(--text-goal-icon-hydration)]" />
             </div>
             <h2 className="text-xl font-semibold font-source text-primary">
-              Today&apos;s progress
+              Your daily intake
             </h2>
           </div>
         </div>
@@ -127,20 +130,26 @@ function HydrationPageContent() {
                 )}
               </div>
             </div>
-            {glasses < HYDRATION_TARGET ? (
+            <div className="flex items-center gap-2">
               <button
-                onClick={handleAddGlass}
-                className="px-6 py-3 rounded-lg text-base font-semibold transition-colors bg-[#5F9EA0] text-white hover:bg-[#5F9EA0]/90"
+                type="button"
+                onClick={handleDecrement}
+                disabled={glasses === 0}
+                aria-label="Remove one glass"
+                className="card-inner inline-flex h-10 w-10 shrink-0 items-center justify-center rounded-lg border border-[var(--border-primary)] transition-colors hover:opacity-90 disabled:cursor-not-allowed disabled:opacity-40"
               >
-                +1 glass
+                <Minus className="w-4 h-4" strokeWidth={2.5} />
               </button>
-            ) : (
-              <div className="w-12 h-12 rounded-full bg-green-100 dashboard-icon-panel flex items-center justify-center">
-                <svg className="w-8 h-8 text-green-600 dark:text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
-                </svg>
-              </div>
-            )}
+              <button
+                type="button"
+                onClick={handleIncrement}
+                disabled={glasses >= HYDRATION_TARGET}
+                aria-label="Add one glass"
+                className="inline-flex h-10 w-10 items-center justify-center rounded-lg bg-[#5F9EA0] text-white transition-colors hover:bg-[#5F9EA0]/90 disabled:cursor-not-allowed disabled:opacity-50"
+              >
+                <Plus className="w-4 h-4" strokeWidth={2.5} />
+              </button>
+            </div>
           </div>
         )}
         </div>
@@ -149,7 +158,7 @@ function HydrationPageContent() {
       <div className="mt-4 sm:mt-6 card">
         <div>
           <p className="text-sm sm:text-base text-secondary font-roboto leading-relaxed">
-            Tap +1 each time you have a glass of water. Your target is {HYDRATION_TARGET} glasses per day (roughly 250ml each).
+            Use − and + to update your daily intake count. Your target is {HYDRATION_TARGET} glasses per day (roughly 250ml each).
           </p>
           <div className="card-inner p-5 sm:p-6 mt-4">
             <div className="flex items-center gap-2 mb-2">

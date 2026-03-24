@@ -169,7 +169,7 @@ function TrackedMedicationDetails() {
           {/* Missed Medications */}
           {trackedData.missed_medications_list && trackedData.missed_medications_list.length > 0 && (
             <div className="card min-w-0 overflow-hidden">
-              <h2 className="text-xl font-bold font-source text-primary mb-3 sm:mb-4">Missed Medications</h2>
+              <h2 className="text-xl font-semibold font-source text-primary mb-3 sm:mb-4">Missed Medications</h2>
               <div className="space-y-0 [&>*:last-child>*:last-child]:pb-0">
                 {trackedData.missed_medications_list.map((item, index) => (
                   <div key={index} className={index > 0 ? 'pt-4 border-t min-w-0' : 'min-w-0'} style={index > 0 ? { borderColor: 'var(--separator-card)' } : undefined}>
@@ -196,7 +196,7 @@ function TrackedMedicationDetails() {
           {/* NSAIDs */}
           {trackedData.nsaid_list && trackedData.nsaid_list.length > 0 && (
             <div className="card min-w-0 overflow-hidden">
-              <h2 className="text-xl font-bold font-source text-primary mb-3 sm:mb-4">NSAIDs</h2>
+              <h2 className="text-xl font-semibold font-source text-primary mb-3 sm:mb-4">NSAIDs</h2>
               <div className="space-y-0 [&>*:last-child>*:last-child]:pb-0">
                 {trackedData.nsaid_list.map((item, index) => (
                   <div key={index} className={index > 0 ? 'pt-4 border-t min-w-0' : 'min-w-0'} style={index > 0 ? { borderColor: 'var(--separator-card)' } : undefined}>
@@ -225,7 +225,7 @@ function TrackedMedicationDetails() {
           {/* Antibiotics */}
           {trackedData.antibiotic_list && trackedData.antibiotic_list.length > 0 && (
             <div className="card min-w-0 overflow-hidden">
-              <h2 className="text-xl font-bold font-source text-primary mb-3 sm:mb-4">Antibiotics</h2>
+              <h2 className="text-xl font-semibold font-source text-primary mb-3 sm:mb-4">Antibiotics</h2>
               <div className="space-y-0 [&>*:last-child>*:last-child]:pb-0">
                 {trackedData.antibiotic_list.map((item, index) => (
                   <div key={index} className={index > 0 ? 'pt-4 border-t min-w-0' : 'min-w-0'} style={index > 0 ? { borderColor: 'var(--separator-card)' } : undefined}>

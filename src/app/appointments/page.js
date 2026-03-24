@@ -73,6 +73,7 @@ function AppointmentsPageContent() {
   const [editingId, setEditingId] = useState(null)
   const [deleteModal, setDeleteModal] = useState({ isOpen: false, id: null })
   const [expandedAppointments, setExpandedAppointments] = useState(new Set())
+  const [appointmentsPanelOpen, setAppointmentsPanelOpen] = useState(false)
   const today = new Date().toISOString().split('T')[0]
   const [formData, setFormData] = useState({
     date: today,
@@ -134,6 +135,10 @@ function AppointmentsPageContent() {
 
   useEffect(() => {
     if (isAdding) window.scrollTo(0, 0)
+  }, [isAdding])
+
+  useEffect(() => {
+    if (isAdding) setAppointmentsPanelOpen(true)
   }, [isAdding])
 
   const formatUKDate = (dateString) => {
@@ -316,9 +321,9 @@ function AppointmentsPageContent() {
           <div className="flex flex-col sm:flex-row sm:justify-between sm:items-start">
             <div className="min-w-0 flex-1">
               <h1 className="text-2xl sm:text-3xl lg:text-4xl font-bold font-source text-primary mb-4 sm:mb-6">
-                Appointments
+                My Appointments
               </h1>
-              <p className="text-sm sm:text-base text-secondary font-roboto leading-relaxed">
+              <p className="text-sm sm:text-base font-semibold text-secondary font-roboto leading-relaxed">
                 Add your clinic appointments in one place so you never miss one
               </p>
             </div>
@@ -327,17 +332,37 @@ function AppointmentsPageContent() {
       </div>
 
       <div className="card mb-5 sm:mb-6 min-w-0">
-        <div className="flex flex-row flex-wrap items-center justify-between gap-4 mb-5 sm:mb-6">
-          <div className="flex items-center min-w-0">
-            <div className="hidden sm:flex w-10 h-10 bg-slate-200 dark:bg-slate-600/50 dashboard-icon-panel rounded-lg items-center justify-center mr-3 sm:mr-4 flex-shrink-0">
+        <div className="flex w-full min-w-0 items-center gap-2 sm:gap-3">
+          <button
+            type="button"
+            id="appointments-panel-trigger"
+            aria-expanded={appointmentsPanelOpen}
+            aria-controls="appointments-list-panel"
+            aria-label={appointmentsPanelOpen ? 'Collapse your appointments' : 'Expand your appointments'}
+            onClick={() => setAppointmentsPanelOpen((o) => !o)}
+            className="inline-flex flex-shrink-0 items-center justify-center rounded-none border-0 bg-transparent p-2 -m-2 shadow-none cursor-pointer [-webkit-tap-highlight-color:transparent] text-secondary hover:opacity-70 focus:outline-none focus-visible:ring-1 focus-visible:ring-[#5F9EA0]/45 focus-visible:ring-offset-0 touch-manipulation"
+          >
+            <ChevronDown
+              className={`h-5 w-5 shrink-0 transition-transform duration-200 ${appointmentsPanelOpen ? 'rotate-180' : ''}`}
+              strokeWidth={2}
+              aria-hidden
+            />
+          </button>
+          <div className="hidden sm:flex w-10 h-10 flex-shrink-0 items-center justify-center rounded-lg bg-slate-200 dark:bg-slate-600/50 dashboard-icon-panel">
+            {isAdding ? (
+              <svg className="w-5 h-5 text-slate-700 dark:[color:var(--text-icon-more-appointments)]" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z" />
+              </svg>
+            ) : (
               <Calendar className="w-5 h-5 text-slate-700 dark:[color:var(--text-icon-more-appointments)]" />
-            </div>
-            <h2 className="text-xl font-bold font-source text-primary">
-              Your appointments
-            </h2>
+            )}
           </div>
-          {!isAdding && (
+          <h2 id="appointments-panel-heading" className="min-w-0 flex-1 text-xl font-semibold font-source text-primary">
+            Appointments
+          </h2>
+          {appointmentsPanelOpen && !isAdding && (
             <button
+              type="button"
               onClick={startAdding}
               className="button-cadet flex-shrink-0 px-4 py-2 text-base sm:text-lg font-semibold rounded-lg transition-colors inline-flex items-center justify-center"
             >
@@ -349,6 +374,20 @@ function AppointmentsPageContent() {
           )}
         </div>
 
+        <AnimatePresence initial={false}>
+          {appointmentsPanelOpen && (
+            <motion.div
+              key="appointments-panel"
+              id="appointments-list-panel"
+              role="region"
+              aria-labelledby="appointments-panel-heading"
+              initial={{ height: 0, opacity: 0 }}
+              animate={{ height: 'auto', opacity: 1 }}
+              exit={{ height: 0, opacity: 0 }}
+              transition={{ duration: 0.2, ease: 'easeOut' }}
+              className="overflow-hidden min-w-0"
+            >
+              <div className="min-w-0 space-y-4 pt-5 sm:pt-3 sm:space-y-5">
         <AnimatePresence>
         {isAdding && (
           <motion.div
@@ -357,7 +396,7 @@ function AppointmentsPageContent() {
             animate={{ height: 'auto', opacity: 1 }}
             exit={{ height: 0, opacity: 0 }}
             transition={{ duration: 0.2, ease: 'easeOut' }}
-            className="mb-6 min-w-0 overflow-hidden"
+            className="min-w-0 overflow-hidden"
           >
             <form onSubmit={handleSubmit} className="space-y-4" autoComplete="off">
               <div className="grid sm:grid-cols-2 gap-6 min-w-0">
@@ -518,7 +557,6 @@ function AppointmentsPageContent() {
         )}
         </AnimatePresence>
 
-        <div>
         {isLoading ? (
           <p className="text-center py-12 text-secondary font-roboto">Loading...</p>
         ) : appointments.length === 0 ? (
@@ -660,13 +698,16 @@ function AppointmentsPageContent() {
             })}
           </Masonry>
         )}
-        </div>
+              </div>
+            </motion.div>
+          )}
+        </AnimatePresence>
       </div>
 
       {/* Appointment Reminders Info */}
       <div className="mt-4 sm:mt-6 card">
         <div>
-          <h3 className="text-xl sm:text-lg font-bold font-source text-primary mb-2 flex items-center space-x-2">
+          <h3 className="text-xl sm:text-lg font-semibold font-source text-primary mb-2 flex items-center space-x-2">
             <Bell className="w-5 h-5 sm:w-6 sm:h-6 flex-shrink-0" style={{ color: 'var(--text-cadet-blue)' }} />
             <span>Appointment Reminders</span>
           </h3>
