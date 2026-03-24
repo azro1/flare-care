@@ -1063,20 +1063,12 @@ function SymptomsPageContent() {
     if (!formData.symptomStartDate) {
       return `What did you have for ${mealType}?`
     }
-    
-    const symptomDate = new Date(formData.symptomStartDate)
-    const today = new Date()
-    const isToday = symptomDate.toDateString() === today.toDateString()
-    
-    if (isToday) {
-      return `What did you have for ${mealType}?`
-    } else {
-      const dateStr = symptomDate.toLocaleDateString('en-GB', {
-        day: 'numeric',
-        month: 'short'
-      })
-      return `What did you have for ${mealType} on ${dateStr}?`
-    }
+    const symptomDate = new Date(`${formData.symptomStartDate}T12:00:00`)
+    const dateStr = symptomDate.toLocaleDateString('en-GB', {
+      day: 'numeric',
+      month: 'short'
+    })
+    return `What did you have for ${mealType} on ${dateStr}?`
   }
 
   const addMealItem = (mealType) => {
