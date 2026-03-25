@@ -33,11 +33,17 @@ function MedicationsPageContent() {
 
   const FREQUENCY_PRESETS = [
     'once a day',
-    'two times a day',
+    'twice a day',
     'three times a day',
     'four times a day',
     'five times a day'
   ]
+
+  // Backward-compatible mapping for older saved values
+  const normalizeFrequencyPreset = (value) => {
+    if (value === 'two times a day') return 'twice a day'
+    return value
+  }
 
 
   // Generate all time options from 00:00 to 23:59
@@ -221,7 +227,7 @@ function MedicationsPageContent() {
   const startEdit = (medication) => {
     const dosageNumber = (medication.dosage || '').replace(/mg$/i, '').replace(/\D/g, '')
 
-    const medFrequency = medication.frequency || ''
+    const medFrequency = normalizeFrequencyPreset(medication.frequency || '')
     const frequencyMode = FREQUENCY_PRESETS.includes(medFrequency) ? 'preset' : 'custom'
     setFormData({
       name: medication.name,
@@ -801,9 +807,9 @@ className="px-4 py-2 text-base sm:text-lg font-medium font-sans rounded-lg trans
                       {medication.frequency && (
                         <p
                           className={`text-sm text-secondary font-roboto mt-1 min-w-0 truncate ${isExpanded ? 'mb-2' : ''}`}
-                          title={medication.frequency}
+                          title={normalizeFrequencyPreset(medication.frequency)}
                         >
-                          <span className="font-semibold text-primary">To be taken:</span> {medication.frequency}
+                          <span className="font-semibold text-primary">To be taken:</span> {normalizeFrequencyPreset(medication.frequency)}
                         </p>
                       )}
                       <motion.div
