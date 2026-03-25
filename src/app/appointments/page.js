@@ -73,6 +73,7 @@ function AppointmentsPageContent() {
   const [editingId, setEditingId] = useState(null)
   const [deleteModal, setDeleteModal] = useState({ isOpen: false, id: null })
   const [expandedAppointments, setExpandedAppointments] = useState(new Set())
+  const [appointmentsTab, setAppointmentsTab] = useState('upcoming') // 'upcoming' | 'past'
   const [appointmentsPanelOpen, setAppointmentsPanelOpen] = useState(false)
   const today = new Date().toISOString().split('T')[0]
   const [formData, setFormData] = useState({
@@ -99,7 +100,6 @@ function AppointmentsPageContent() {
         .from(TABLES.APPOINTMENTS)
         .select('*')
         .eq('user_id', user.id)
-        .gte('date', today)
         .order('created_at', { ascending: false })
 
       if (error) throw error
@@ -149,6 +149,41 @@ function AppointmentsPageContent() {
     const year = date.getFullYear()
     return `${day}/${month}/${year}`
   }
+
+  // Upcoming vs Past classification helper.
+  // Treat missing/empty `time` as end-of-day (23:59).
+  const getAppointmentDateTime = (apt) => {
+    if (!apt?.date) return null
+    const normalizedTime = typeof apt.time === 'string' && apt.time.match(/^\d{2}:\d{2}$/) ? apt.time : '23:59'
+    const dt = new Date(`${apt.date}T${normalizedTime}:00`)
+    if (isNaN(dt.getTime())) return null
+    return dt
+  }
+
+  const nowMs = Date.now()
+  const appointmentsWithDateTime = appointments
+    .map((apt) => ({ apt, dt: getAppointmentDateTime(apt) }))
+    .filter((x) => x.dt)
+
+  const upcomingAppointments = appointmentsWithDateTime
+    .filter((x) => x.dt.getTime() >= nowMs)
+    .map((x) => x.apt)
+    .sort((a, b) => {
+      const aMs = getAppointmentDateTime(a)?.getTime() ?? 0
+      const bMs = getAppointmentDateTime(b)?.getTime() ?? 0
+      return aMs - bMs
+    })
+
+  const pastAppointments = appointmentsWithDateTime
+    .filter((x) => x.dt.getTime() < nowMs)
+    .map((x) => x.apt)
+    .sort((a, b) => {
+      const aMs = getAppointmentDateTime(a)?.getTime() ?? 0
+      const bMs = getAppointmentDateTime(b)?.getTime() ?? 0
+      return bMs - aMs
+    })
+
+  const visibleAppointments = appointmentsTab === 'past' ? pastAppointments : upcomingAppointments
 
   const handleSubmit = async (e) => {
     e.preventDefault()
@@ -557,16 +592,55 @@ function AppointmentsPageContent() {
         )}
         </AnimatePresence>
 
+        {!isAdding && (
+          <div className="flex items-center gap-2 sm:gap-3">
+            <button
+              type="button"
+              onClick={() => {
+                setAppointmentsTab('upcoming')
+                setExpandedAppointments(new Set())
+              }}
+              className={`px-3 py-1.5 rounded-lg text-sm font-semibold transition-colors border ${
+                appointmentsTab === 'upcoming'
+                  ? 'bg-[#5F9EA0] text-white border-transparent'
+                  : 'bg-[var(--bg-card)] dark:bg-[var(--bg-icon-container)] text-primary border-[var(--border-primary)]'
+              }`}
+              aria-pressed={appointmentsTab === 'upcoming'}
+            >
+              Upcoming
+            </button>
+            <button
+              type="button"
+              onClick={() => {
+                setAppointmentsTab('past')
+                setExpandedAppointments(new Set())
+              }}
+              className={`px-3 py-1.5 rounded-lg text-sm font-semibold transition-colors border ${
+                appointmentsTab === 'past'
+                  ? 'bg-[#5F9EA0] text-white border-transparent'
+                  : 'bg-[var(--bg-card)] dark:bg-[var(--bg-icon-container)] text-primary border-[var(--border-primary)]'
+              }`}
+              aria-pressed={appointmentsTab === 'past'}
+            >
+              Past
+            </button>
+          </div>
+        )}
+
         {isLoading ? (
           <p className="text-center py-12 text-secondary font-roboto">Loading...</p>
-        ) : appointments.length === 0 ? (
+        ) : visibleAppointments.length === 0 ? (
           <div className="text-center py-12 text-secondary">
             <div className="card-inner rounded-full w-14 h-14 sm:w-20 sm:h-20 mx-auto mb-6 flex items-center justify-center">
               <Calendar className="w-6 h-6 sm:w-10 sm:h-10 text-secondary" />
             </div>
-            <h3 className="text-lg font-semibold font-source text-primary mb-2">No upcoming appointments</h3>
+            <h3 className="text-lg font-semibold font-source text-primary mb-2">
+              {appointmentsTab === 'past' ? 'No past appointments' : 'No upcoming appointments'}
+            </h3>
             <p className="text-sm font-roboto text-secondary max-w-md mx-auto leading-relaxed">
-              Your appointments will show here once you add them
+              {appointmentsTab === 'past'
+                ? 'Your past appointments will appear here once they have taken place.'
+                : 'Your appointments will show here once you add them'}
             </p>
           </div>
         ) : (
@@ -575,7 +649,7 @@ function AppointmentsPageContent() {
             className="flex -ml-4 w-auto min-w-0"
             columnClassName="pl-4 bg-clip-padding"
           >
-            {appointments.map((apt) => {
+            {visibleAppointments.map((apt) => {
               const isExpanded = expandedAppointments.has(apt.id)
               return (
                 <div key={apt.id} className="mb-4 last:mb-0">
