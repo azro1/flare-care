@@ -128,8 +128,8 @@ export async function POST(request) {
         if (med.dosage != null && String(med.dosage).trim()) {
           textLines.push(`   Dosage: ${String(med.dosage).trim()}`)
         }
-        if (med.timeOfDay != null && String(med.timeOfDay).trim()) {
-          textLines.push(`   Time of day: ${String(med.timeOfDay).trim()}`)
+        if (med.frequency != null && String(med.frequency).trim()) {
+          textLines.push(`   Frequency: ${String(med.frequency).trim()}`)
         }
       })
       textLines.push('')
@@ -330,11 +330,11 @@ export async function POST(request) {
           med.dosage != null && String(med.dosage).trim()
             ? `<br><span style="margin-left: 1em;">Dosage: ${safe(String(med.dosage).trim())}</span>`
             : ''
-        const tod =
-          med.timeOfDay != null && String(med.timeOfDay).trim()
-            ? `<br><span style="margin-left: 1em;">Time of day: ${safe(String(med.timeOfDay).trim())}</span>`
+        const freq =
+          med.frequency != null && String(med.frequency).trim()
+            ? `<br><span style="margin-left: 1em;">Frequency: ${safe(String(med.frequency).trim())}</span>`
             : ''
-        htmlParts.push(`<li style="margin: 0 0 8px 0;">• ${safe(name)}${dosage}${tod}</li>`)
+        htmlParts.push(`<li style="margin: 0 0 8px 0;">• ${safe(name)}${dosage}${freq}</li>`)
       })
       htmlParts.push('</ul>')
     }

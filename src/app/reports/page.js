@@ -593,7 +593,8 @@ function ReportsPageContent() {
       medications: medications.filter(med => med.name !== 'Medication Tracking').map(med => ({
         name: med.name,
         dosage: med.dosage,
-        timeOfDay: med.timeOfDay
+        timeOfDay: med.timeOfDay,
+        frequency: med.frequency
       })),
       medicationTracking: {
         missedMedications: combinedMissedMedications,
@@ -681,8 +682,8 @@ function ReportsPageContent() {
           doc.text(`   Dosage: ${med.dosage}`, margin, yPosition)
           yPosition += 5
         }
-        if (med.timeOfDay?.toString().trim()) {
-          doc.text(`   Time of day: ${med.timeOfDay}`, margin, yPosition)
+        if (med.frequency?.toString().trim()) {
+          doc.text(`   Frequency: ${med.frequency}`, margin, yPosition)
           yPosition += 5
         }
         yPosition += 3
@@ -1128,12 +1129,12 @@ function ReportsPageContent() {
     if (reportData.medications.length > 0) {
       csvData.push([])
       csvData.push(['CURRENT MEDICATIONS'])
-      csvData.push(['Name', 'Dosage', 'Time of Day'])
+      csvData.push(['Name', 'Dosage', 'Frequency'])
       reportData.medications.forEach((med) => {
         csvData.push([
           med.name || '',
           med.dosage?.toString() || '',
-          med.timeOfDay?.toString() || '',
+          med.frequency?.toString() || '',
         ])
       })
       csvData.push([])
@@ -1302,8 +1303,8 @@ function ReportsPageContent() {
         style={{ backgroundColor: 'var(--bg-dropdown)' }}
         role="status"
       >
-        <div className="flex-shrink-0 flex items-center justify-center w-7 h-7 rounded-full bg-emerald-100 dark:bg-white">
-          <svg className="w-5 h-5 text-emerald-600 dark:text-emerald-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+        <div className="flex-shrink-0 flex items-center justify-center w-5 h-5 rounded-full bg-emerald-100 dark:bg-white">
+          <svg className="w-3.5 h-3.5 text-black" fill="none" stroke="currentColor" viewBox="0 0 24 24">
             <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.4} d="M5 13l4 4L19 7" />
           </svg>
         </div>
@@ -1664,29 +1665,29 @@ function ReportsPageContent() {
             <div className="space-y-0 [&>*:last-child]:pb-0">
               {reportData.medications.map((med, index) => {
                 const hasDosage = !!med.dosage
-                const hasTime = !!med.timeOfDay
+                const hasFrequency = !!med.frequency
                 return (
                 <div key={index} className={index > 0 ? 'pt-4 border-t' : ''} style={index > 0 ? { borderColor: 'var(--separator-card)' } : undefined}>
                   <div
-                    className={`flex justify-between items-center gap-4 py-3 min-w-0 overflow-hidden ${hasDosage || hasTime ? 'border-b' : ''}`}
-                    style={hasDosage || hasTime ? { borderColor: 'var(--separator-card)' } : undefined}
+                    className={`flex justify-between items-center gap-4 py-3 min-w-0 overflow-hidden ${hasDosage || hasFrequency ? 'border-b' : ''}`}
+                    style={hasDosage || hasFrequency ? { borderColor: 'var(--separator-card)' } : undefined}
                   >
                     <span className="text-sm sm:text-base text-secondary font-roboto shrink-0">Medication</span>
                     <span className="text-sm sm:text-base font-medium text-primary font-roboto truncate min-w-0 text-right" title={med.name}>{med.name}</span>
                   </div>
                   {hasDosage && (
                     <div
-                      className={`flex justify-between items-center gap-4 py-3 min-w-0 overflow-hidden ${hasTime ? 'border-b' : ''}`}
-                      style={hasTime ? { borderColor: 'var(--separator-card)' } : undefined}
+                      className={`flex justify-between items-center gap-4 py-3 min-w-0 overflow-hidden ${hasFrequency ? 'border-b' : ''}`}
+                      style={hasFrequency ? { borderColor: 'var(--separator-card)' } : undefined}
                     >
                       <span className="text-sm sm:text-base text-secondary font-roboto shrink-0">Dosage</span>
                       <span className="text-sm sm:text-base font-medium text-primary font-roboto min-w-0 text-right">{med.dosage}</span>
                     </div>
                   )}
-                  {hasTime && (
+                  {hasFrequency && (
                     <div className="flex justify-between items-center gap-4 py-3 min-w-0 overflow-hidden">
-                      <span className="text-sm sm:text-base text-secondary font-roboto shrink-0">Time of day</span>
-                      <span className="text-sm sm:text-base font-medium text-primary font-roboto min-w-0 text-right">{med.timeOfDay}</span>
+                      <span className="text-sm sm:text-base text-secondary font-roboto shrink-0">Frequency</span>
+                      <span className="text-sm sm:text-base font-medium text-primary font-roboto min-w-0 text-right">{med.frequency}</span>
                     </div>
                   )}
                 </div>

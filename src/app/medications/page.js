@@ -24,9 +24,20 @@ function MedicationsPageContent() {
     name: '',
     dosage: '',
     timeOfDay: '',
+    // Frequency is stored in the DB as a human label (e.g. "once a day", "five times a day")
+    frequency: 'once a day',
+    frequencyMode: 'preset', // 'preset' | 'custom' (controls which UI input is shown)
     remindersEnabled: false,
     notes: ''
   })
+
+  const FREQUENCY_PRESETS = [
+    'once a day',
+    'two times a day',
+    'three times a day',
+    'four times a day',
+    'five times a day'
+  ]
 
 
   // Generate all time options from 00:00 to 23:59
@@ -54,6 +65,11 @@ function MedicationsPageContent() {
       return
     }
 
+    if (!formData.frequency || !formData.frequency.trim()) {
+      alert('Please select a frequency.')
+      return
+    }
+
     try {
       if (editingId) {
         // Update existing medication
@@ -61,6 +77,7 @@ function MedicationsPageContent() {
           name: sanitizeMedicationName(formData.name),
           dosage: formData.dosage ? `${formData.dosage}mg` : '',
           time_of_day: formData.timeOfDay,
+          frequency: formData.frequency,
           reminders_enabled: formData.remindersEnabled,
           notes: sanitizeNotes(formData.notes)
         }
@@ -78,11 +95,19 @@ function MedicationsPageContent() {
         const newMedicationName = sanitizeMedicationName(formData.name)
         
         // Update local state
-        const updatedMedications = medications.map(med => 
-          med.id === editingId 
-            ? { ...med, ...formData, dosage: formData.dosage ? `${formData.dosage}mg` : '', name: newMedicationName, notes: sanitizeNotes(formData.notes), updatedAt: new Date().toISOString() }
-            : med
-        )
+        const updatedMedications = medications.map(med => (med.id === editingId
+          ? {
+              ...med,
+              name: newMedicationName,
+              dosage: formData.dosage ? `${formData.dosage}mg` : '',
+              timeOfDay: formData.timeOfDay,
+              remindersEnabled: formData.remindersEnabled,
+              frequency: formData.frequency,
+              notes: sanitizeNotes(formData.notes),
+              updatedAt: new Date().toISOString()
+            }
+          : med
+        ))
         setMedications(updatedMedications)
         
         // Also save to localStorage for reports
@@ -112,6 +137,7 @@ function MedicationsPageContent() {
           name: sanitizeMedicationName(formData.name),
           dosage: formData.dosage ? `${formData.dosage}mg` : '',
           time_of_day: formData.timeOfDay,
+          frequency: formData.frequency,
           reminders_enabled: formData.remindersEnabled,
           notes: sanitizeNotes(formData.notes)
         }
@@ -131,6 +157,7 @@ function MedicationsPageContent() {
           name: insertedMed.name,
           dosage: insertedMed.dosage || (formData.dosage ? `${formData.dosage}mg` : ''),
           timeOfDay: insertedMed.time_of_day || '',
+          frequency: insertedMed.frequency || formData.frequency || '',
           remindersEnabled: insertedMed.reminders_enabled !== false,
           notes: insertedMed.notes || '',
           createdAt: insertedMed.created_at,
@@ -158,6 +185,8 @@ function MedicationsPageContent() {
         name: '',
         dosage: '',
         timeOfDay: '7:00',
+        frequency: 'once a day',
+        frequencyMode: 'preset',
         remindersEnabled: true,
         notes: ''
       })
@@ -191,10 +220,15 @@ function MedicationsPageContent() {
 
   const startEdit = (medication) => {
     const dosageNumber = (medication.dosage || '').replace(/mg$/i, '').replace(/\D/g, '')
+
+    const medFrequency = medication.frequency || ''
+    const frequencyMode = FREQUENCY_PRESETS.includes(medFrequency) ? 'preset' : 'custom'
     setFormData({
       name: medication.name,
       dosage: dosageNumber,
       timeOfDay: medication.timeOfDay ?? '',
+      frequency: medFrequency || 'once a day',
+      frequencyMode,
       remindersEnabled: medication.remindersEnabled !== false,
       notes: medication.notes || ''
     })
@@ -207,6 +241,8 @@ function MedicationsPageContent() {
       name: '',
       dosage: '',
       timeOfDay: '',
+      frequency: 'once a day',
+      frequencyMode: 'preset',
       remindersEnabled: false,
       notes: ''
     })
@@ -219,6 +255,8 @@ function MedicationsPageContent() {
       name: '',
       dosage: '',
       timeOfDay: '',
+      frequency: 'once a day',
+      frequencyMode: 'preset',
       remindersEnabled: false,
       notes: ''
     })
@@ -250,6 +288,7 @@ function MedicationsPageContent() {
           name: med.name,
           dosage: med.dosage || '',
           timeOfDay: med.time_of_day || '',
+          frequency: med.frequency || '',
           remindersEnabled: med.reminders_enabled !== false,
           notes: med.notes || '',
           createdAt: med.created_at,
@@ -583,6 +622,48 @@ function MedicationsPageContent() {
 
               <div className="grid lg:grid-cols-2 gap-6 min-w-0">
                 <div>
+                  <label htmlFor="frequencySelect" className="block text-sm sm:text-base font-semibold font-roboto text-primary mb-2 sm:mb-3">
+                    Frequency *
+                  </label>
+                  <select
+                    id="frequencySelect"
+                    value={formData.frequencyMode === 'custom' ? 'custom' : (formData.frequency || FREQUENCY_PRESETS[0])}
+                    onChange={(e) => {
+                      const v = e.target.value
+                      if (v === 'custom') {
+                        setFormData(prev => ({ ...prev, frequencyMode: 'custom', frequency: '' }))
+                      } else {
+                        setFormData(prev => ({ ...prev, frequencyMode: 'preset', frequency: v }))
+                      }
+                    }}
+                    className="input-field-wizard"
+                  >
+                    {FREQUENCY_PRESETS.map(preset => (
+                      <option key={preset} value={preset}>
+                        {preset}
+                      </option>
+                    ))}
+                    <option value="custom">Custom</option>
+                  </select>
+
+                  {formData.frequencyMode === 'custom' && (
+                    <input
+                      type="text"
+                      id="frequency"
+                      name="frequency"
+                      value={formData.frequency}
+                      onChange={handleInputChange}
+                      placeholder="e.g. 3 times a day"
+                      className="input-field-wizard mt-2"
+                      autoComplete="off"
+                      required
+                    />
+                  )}
+                </div>
+              </div>
+
+              <div className="grid lg:grid-cols-2 gap-6 min-w-0">
+                <div>
                   <label className="block text-sm sm:text-base font-semibold font-roboto text-primary mb-2 sm:mb-3">
                     Reminder Time
                   </label>
@@ -697,10 +778,15 @@ className="px-4 py-2 text-base sm:text-lg font-medium font-sans rounded-lg trans
                   <div className="card-inner p-4 sm:p-6 min-w-0">
                   <div className="flex flex-col sm:flex-row sm:justify-between sm:items-start">
                     <div className="flex-1 min-w-0 w-full sm:w-auto">
-                      <div className={`flex items-center gap-2 ${isExpanded ? 'mb-1' : ''} min-w-0`}>
+                      <div className={`flex items-center gap-2 flex-nowrap ${isExpanded ? 'mb-1' : ''} min-w-0`}>
                         <h3 className="font-semibold font-roboto text-primary truncate min-w-0 flex-1">
                           {medication.name}
                         </h3>
+                        {medication.dosage && (
+                          <span className="text-sm text-secondary font-roboto whitespace-nowrap flex-shrink-0">
+                            {medication.dosage}
+                          </span>
+                        )}
                         <button
                           onClick={() => toggleMedicationExpand(medication.id)}
                           className="flex-shrink-0 p-1 rounded font-sans transition-colors hover:bg-opacity-20 sm:self-start"
@@ -712,6 +798,14 @@ className="px-4 py-2 text-base sm:text-lg font-medium font-sans rounded-lg trans
                           />
                         </button>
                       </div>
+                      {medication.frequency && (
+                        <p
+                          className={`text-sm text-secondary font-roboto mt-1 min-w-0 truncate ${isExpanded ? 'mb-2' : ''}`}
+                          title={medication.frequency}
+                        >
+                          <span className="font-semibold text-primary">To be taken:</span> {medication.frequency}
+                        </p>
+                      )}
                       <motion.div
                         initial={false}
                         animate={{
@@ -721,11 +815,6 @@ className="px-4 py-2 text-base sm:text-lg font-medium font-sans rounded-lg trans
                         transition={{ duration: 0.2, ease: 'easeOut' }}
                         style={{ overflow: 'hidden' }}
                       >
-                          {medication.dosage && (
-                            <p className="text-sm text-secondary mb-3 font-roboto">
-                              <span className="font-semibold">Dosage:</span> {medication.dosage}
-                            </p>
-                          )}
                           <div className={`flex flex-wrap items-center gap-3 ${(medication.timeOfDay || medication.remindersEnabled !== false) ? 'mb-3' : ''}`}>
                             {medication.timeOfDay && (
                               <span className="inline-flex items-center px-3 py-1.5 rounded-full text-sm font-medium font-roboto bg-white text-black">
@@ -750,7 +839,7 @@ className="px-4 py-2 text-base sm:text-lg font-medium font-sans rounded-lg trans
                               </span>
                             )}
                           </div>
-                          <div className={`${(medication.timeOfDay || medication.remindersEnabled !== false) ? 'mt-2' : ''}`}>
+                          <div>
                             <button
                               onClick={() => handleMarkAsTaken(medication.id)}
                               className="px-3 py-1.5 rounded-lg text-sm font-medium font-sans transition-all duration-200 inline-flex items-center justify-center border border-[#5F9EA0]/40 dark:border-white/50"
