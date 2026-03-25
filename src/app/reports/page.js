@@ -1343,7 +1343,7 @@ function ReportsPageContent() {
           <div className="mb-8 card">
             <h1 className="text-2xl sm:text-3xl lg:text-4xl font-bold font-source text-primary mb-4">Reports</h1>
             <p className="text-sm sm:text-base text-secondary font-roboto">
-              Generate detailed reports to share with your healthcare team
+              Generate detailed reports from your records to help you and your healthcare team stay on top of your care
             </p>
           </div>
         </div>
@@ -1363,7 +1363,7 @@ function ReportsPageContent() {
       <div className="mb-5 sm:mb-6 card">
         <h1 className="text-2xl sm:text-3xl lg:text-4xl font-bold font-source text-primary mb-4">Reports</h1>
         <p className="text-sm sm:text-base text-secondary font-roboto leading-relaxed">
-          Generate detailed reports to share with your healthcare team
+          Generate detailed reports from your records to help you and your healthcare team stay on top of your care
         </p>
       </div>
 
@@ -1489,21 +1489,21 @@ function ReportsPageContent() {
             Showing symptoms from {formatUKDate(dateRange.startDate)} to {formatUKDate(dateRange.endDate)}
           </div>
           <div className="flex flex-wrap gap-3">
-            <button onClick={() => handleExportClick(exportToPDF)} className="inline-flex items-center justify-center px-4 py-2.5 sm:px-6 sm:py-3 button-cadet rounded-xl whitespace-nowrap text-sm sm:text-base">
+            <button onClick={() => handleExportClick(exportToPDF)} className="inline-flex items-center justify-center px-4 py-2.5 sm:px-6 sm:py-3 button-cadet rounded-lg whitespace-nowrap text-sm sm:text-base">
               <FileText className="w-4 h-4 sm:w-5 sm:h-5 mr-2 shrink-0" />
               Export PDF
             </button>
-            <button onClick={() => handleExportClick(exportToCSV)} className="inline-flex items-center justify-center px-4 py-2.5 sm:px-6 sm:py-3 button-cadet rounded-xl whitespace-nowrap text-sm sm:text-base">
+            <button onClick={() => handleExportClick(exportToCSV)} className="inline-flex items-center justify-center px-4 py-2.5 sm:px-6 sm:py-3 button-cadet rounded-lg whitespace-nowrap text-sm sm:text-base">
               <FileDown className="w-4 h-4 sm:w-5 sm:h-5 mr-2 shrink-0" />
               Export CSV
             </button>
             <button
               type="button"
               onClick={openEmailModal}
-              className="inline-flex items-center justify-center px-4 py-2.5 sm:px-6 sm:py-3 button-cadet rounded-xl whitespace-nowrap text-sm sm:text-base"
+              className="inline-flex items-center justify-center px-4 py-2.5 sm:px-6 sm:py-3 button-cadet rounded-lg whitespace-nowrap text-sm sm:text-base"
             >
               <Mail className="w-4 h-4 sm:w-5 sm:h-5 mr-2 shrink-0" />
-              Email report
+              Email Report
             </button>
           </div>
         </div>

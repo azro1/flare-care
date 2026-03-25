@@ -324,7 +324,7 @@ function AppointmentsPageContent() {
                 My Appointments
               </h1>
               <p className="text-sm sm:text-base text-secondary font-roboto leading-relaxed">
-                Add your clinic appointments in one place so you never miss one
+                Add and manage your appointments in one place so you can easily keep track of upcoming visits
               </p>
             </div>
           </div>

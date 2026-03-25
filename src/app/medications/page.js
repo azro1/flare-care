@@ -465,7 +465,7 @@ function MedicationsPageContent() {
                 My Medications
               </h1>
               <p className="text-sm sm:text-base text-secondary font-roboto leading-relaxed">
-                Add your prescribed medications, set up reminders, and keep track of your medication schedule
+                Add your prescribed medications and set reminders to make managing your treatment easier and more organised
               </p>
             </div>
           </div>

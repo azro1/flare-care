@@ -1078,7 +1078,6 @@ export default function Home() {
                       <span className="text-sm text-primary">Total symptoms</span>
                     <span className="font-semibold text-primary">{symptoms.length}</span>
                   </div>
-                  <div className="border-t border-[var(--separator-card-inner)] my-0" aria-hidden="true" />
                   <div className="flex justify-between items-center">
                       <span className="text-sm text-primary">This week</span>
                     <span className="font-semibold text-primary">
@@ -1089,7 +1088,6 @@ export default function Home() {
                       }).length}
                     </span>
                   </div>
-                  <div className="border-t border-[var(--separator-card-inner)] my-0" aria-hidden="true" />
                   <div className="flex justify-between items-center">
                       <span className="text-sm text-primary">Today</span>
                     <span className="font-semibold text-primary">{todaySymptoms.length}</span>
@@ -1110,8 +1108,7 @@ export default function Home() {
                       {todaySymptoms.length > 0 && <Check className="w-4 h-4 flex-shrink-0" style={{ color: 'var(--text-cadet-blue)' }} />}
                     </div>
                   </div>
-                  <div className="border-t border-[var(--separator-card-inner)] my-0" aria-hidden="true" />
-                  <Link href="/medications/track" className="flex items-center gap-3 py-3">
+                  <Link href="/medications/track" className="flex items-center gap-3 pb-3">
                     <div className="w-6 h-6 bg-white dark:bg-[var(--bg-icon-container)] flex items-center justify-center rounded-md">
                       <ChartLine className="w-3.5 h-3.5 text-primary dark:text-white" />
                     </div>
@@ -1120,8 +1117,7 @@ export default function Home() {
                       {todayTrackedMedication && <Check className="w-4 h-4 flex-shrink-0" style={{ color: 'var(--text-cadet-blue)' }} />}
                     </div>
                   </Link>
-                  <div className="border-t border-[var(--separator-card-inner)] my-0" aria-hidden="true" />
-                  <div className="flex items-center gap-3 py-3">
+                  <div className="flex items-center gap-3 pb-3">
                     <div className="w-6 h-6 bg-white dark:bg-[var(--bg-icon-container)] flex items-center justify-center rounded-md">
                       <Pill className="w-3 h-3 text-primary dark:text-white" />
                     </div>
@@ -1130,8 +1126,7 @@ export default function Home() {
                       {takenMedications.length === medications.length && medications.length > 0 && <Check className="w-4 h-4 flex-shrink-0" style={{ color: 'var(--text-cadet-blue)' }} />}
                     </div>
                   </div>
-                  <div className="border-t border-[var(--separator-card-inner)] my-0" aria-hidden="true" />
-                  <div className="flex items-center gap-3 pt-3">
+                  <div className="flex items-center gap-3">
                     <div className="w-6 h-6 bg-white dark:bg-[var(--bg-icon-container)] flex items-center justify-center rounded-md">
                       <CupSoda className="w-3.5 h-3.5 text-primary dark:text-white" />
                     </div>
@@ -1298,7 +1293,6 @@ export default function Home() {
                 </span>
                 <span className="text-sm font-semibold text-primary">{todaySymptoms.length}</span>
               </div>
-              <div className="border-t border-[var(--separator-card-inner)] my-0" aria-hidden="true" />
               <div className="flex justify-between items-center mt-3 mb-3">
                 <span className="text-sm text-primary flex items-center gap-3">
                   <div className="w-6 h-6 bg-white dark:bg-[var(--bg-icon-container)] flex items-center justify-center rounded-md flex-shrink-0">
@@ -1308,7 +1302,6 @@ export default function Home() {
                 </span>
                 <span className="text-sm font-semibold text-primary">{takenMedications.length}/{medications.length}</span>
               </div>
-              <div className="border-t border-[var(--separator-card-inner)] my-0" aria-hidden="true" />
               <div className="flex justify-between items-center mt-3">
                 <span className="text-sm text-primary flex items-center gap-3">
                   <div className="w-6 h-6 bg-white dark:bg-[var(--bg-icon-container)] flex items-center justify-center rounded-md flex-shrink-0">

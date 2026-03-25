@@ -238,7 +238,7 @@ function WeightPageContent() {
                 My Weight
               </h1>
               <p className="text-sm sm:text-base text-secondary font-roboto leading-relaxed">
-                Record your weight over time to monitor trends and share with your healthcare team
+                Track your weight at your own pace to better understand how your body is changing
               </p>
             </div>
           </div>

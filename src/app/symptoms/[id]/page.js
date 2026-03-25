@@ -184,7 +184,13 @@ function SymptomDetailContent() {
                 </div>
                 <div>
                   <span className="text-xs sm:text-sm font-semibold text-secondary tracking-wide block font-roboto">Severity</span>
-                  <p className="mt-1 sm:mt-2 text-sm sm:text-base font-semibold text-primary font-roboto">
+                  <p
+                    className={`mt-1 sm:mt-2 text-sm sm:text-base font-semibold font-roboto ${
+                      (symptom.severity ?? null) !== null
+                        ? 'text-red-600 dark:text-primary'
+                        : 'text-secondary'
+                    }`}
+                  >
                     {symptom.severity ?? 'Not logged'}
                   </p>
                 </div>
@@ -277,8 +283,11 @@ function SymptomDetailContent() {
               <h2 className="text-xl font-semibold font-source text-primary mb-3 sm:mb-4">Meals</h2>
               <div className="space-y-3 sm:space-y-4">
                   {symptom.breakfast?.length > 0 && (
-                    <div className="min-w-0">
-                      <h3 className="text-sm sm:text-base font-semibold text-primary mb-1 sm:mb-2 font-roboto">Breakfast</h3>
+                    <div
+                      className={`min-w-0 ${symptom.lunch?.length > 0 ? 'pb-3 sm:pb-4 border-b' : ''}`}
+                      style={{ borderColor: 'var(--separator-card)' }}
+                    >
+                      <h3 className="text-sm sm:text-base font-medium text-primary mb-1 sm:mb-2 font-roboto">Breakfast</h3>
                       {symptom.breakfast.map((meal, index) => (
                         <div key={index} className="min-w-0 py-1 sm:py-2 flex items-center justify-between gap-3">
                           <span className="text-sm sm:text-base text-secondary font-roboto break-words min-w-0" title={meal.food}>{meal.food}</span>
@@ -288,8 +297,11 @@ function SymptomDetailContent() {
                     </div>
                   )}
                   {symptom.lunch?.length > 0 && (
-                    <div className="min-w-0">
-                      <h3 className="text-sm sm:text-base font-semibold text-primary mb-1 sm:mb-2 font-roboto">Lunch</h3>
+                    <div
+                      className={`min-w-0 ${symptom.dinner?.length > 0 ? 'pb-3 sm:pb-4 border-b' : ''}`}
+                      style={{ borderColor: 'var(--separator-card)' }}
+                    >
+                      <h3 className="text-sm sm:text-base font-medium text-primary mb-1 sm:mb-2 font-roboto">Lunch</h3>
                       {symptom.lunch.map((meal, index) => (
                         <div key={index} className="min-w-0 py-1 sm:py-2 flex items-center justify-between gap-3">
                           <span className="text-sm sm:text-base text-secondary font-roboto break-words min-w-0" title={meal.food}>{meal.food}</span>
@@ -300,7 +312,7 @@ function SymptomDetailContent() {
                   )}
                   {symptom.dinner?.length > 0 && (
                     <div className="min-w-0">
-                      <h3 className="text-sm sm:text-base font-semibold text-primary mb-1 sm:mb-2 font-roboto">Dinner</h3>
+                      <h3 className="text-sm sm:text-base font-medium text-primary mb-1 sm:mb-2 font-roboto">Dinner</h3>
                       {symptom.dinner.map((meal, index) => (
                         <div key={index} className="min-w-0 py-1 sm:py-2 flex items-center justify-between gap-3">
                           <span className="text-sm sm:text-base text-secondary font-roboto break-words min-w-0" title={meal.food}>{meal.food}</span>

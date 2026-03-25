@@ -107,7 +107,7 @@ function HydrationPageContent() {
               <CupSoda className="w-5 h-5 text-sky-600 dark:[color:var(--text-goal-icon-hydration)]" />
             </div>
             <h2 className="text-xl font-semibold font-source text-primary">
-              Your daily intake
+              Daily intake
             </h2>
           </div>
         </div>

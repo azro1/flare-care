@@ -1034,9 +1034,9 @@ function SymptomsPageContent() {
   }
 
   const getSeverityColor = (severity) => {
-    if (severity <= 3) return { text: 'text-sky-500', bg: 'bg-sky-100', hex: '#0ea5e9' }
-    if (severity <= 6) return { text: 'text-orange-500', bg: 'bg-orange-100', hex: '#f97316' }
-    return { text: 'text-red-500', bg: 'bg-red-100', hex: '#ef4444' }
+    if (severity <= 3) return { color: 'var(--severity-accent-low)', label: 'Mild', sliderAccent: 'var(--severity-accent-low)' }
+    if (severity <= 6) return { color: 'var(--severity-accent-mid)', label: 'Moderate', sliderAccent: 'var(--severity-accent-mid)' }
+    return { color: 'var(--severity-accent-high)', label: 'Severe', sliderAccent: 'var(--severity-accent-high)' }
   }
 
   const getSeverityLabel = (severity) => {
@@ -1054,9 +1054,9 @@ function SymptomsPageContent() {
   }
 
   const getStressColor = (stress) => {
-    if (stress <= 3) return 'text-sky-500'
-    if (stress <= 6) return 'text-orange-500'
-    return 'text-red-500'
+    if (stress <= 3) return { color: 'var(--stress-accent-low)', sliderAccent: 'var(--stress-accent-low)' }
+    if (stress <= 6) return { color: 'var(--stress-accent-mid)', sliderAccent: 'var(--stress-accent-mid)' }
+    return { color: 'var(--stress-accent-high)', sliderAccent: 'var(--stress-accent-high)' }
   }
 
   const getMealLabel = (mealType) => {
@@ -1299,17 +1299,29 @@ function SymptomsPageContent() {
               <div className="flex items-center justify-between mb-3">
                 <span className="text-xs text-muted">Mild</span>
                 <div className="flex items-baseline gap-2">
-                  <span
-                    className={`text-3xl font-bold transition-colors duration-200 ${formData.severity ? getSeverityColor(Number(formData.severity)).text : 'text-muted'}`}
-                  >
-                    {formData.severity || '–'}
-                  </span>
-                  <span className="text-muted">/10</span>
-                  {formData.severity && (
-                    <span className={`text-sm font-medium ${getSeverityColor(Number(formData.severity)).text}`}>
-                      {getSeverityLabel(Number(formData.severity))}
-                    </span>
-                  )}
+                  {(() => {
+                    const sevValue = Number(formData.severity || 1)
+                    const sevMeta = getSeverityColor(sevValue)
+                    return (
+                      <>
+                        <span
+                          className="text-3xl font-bold transition-colors duration-200"
+                          style={{ color: sevMeta.color }}
+                        >
+                          {formData.severity || '–'}
+                        </span>
+                        <span className="text-muted">/10</span>
+                        {formData.severity && (
+                          <span
+                            className="text-sm font-medium"
+                            style={{ color: sevMeta.color }}
+                          >
+                            {getSeverityLabel(sevValue)}
+                          </span>
+                        )}
+                      </>
+                    )
+                  })()}
                 </div>
                 <span className="text-xs text-muted">Extreme</span>
               </div>
@@ -1323,6 +1335,10 @@ function SymptomsPageContent() {
                 value={formData.severity || 1}
                 onChange={handleInputChange}
                 className="severity-slider w-full h-3 rounded-full appearance-none cursor-pointer"
+                style={{
+                  '--slider-percent': `${(((Number(formData.severity || 1) - 1) / 9) * 100).toFixed(2)}%`,
+                  '--slider-accent': getSeverityColor(Number(formData.severity || 1)).sliderAccent
+                }}
               />
             </div>
             {fieldErrors.severity && (
@@ -1344,17 +1360,29 @@ function SymptomsPageContent() {
               <div className="flex items-center justify-between mb-3">
                 <span className="text-xs text-muted">Calm</span>
                 <div className="flex items-baseline gap-2">
-                  <span
-                    className={`text-3xl font-bold transition-colors duration-200 ${formData.stress_level ? getStressColor(Number(formData.stress_level)) : 'text-muted'}`}
-                  >
-                    {formData.stress_level || '–'}
-                  </span>
-                  <span className="text-muted">/10</span>
-                  {formData.stress_level && (
-                    <span className={`text-sm font-medium ${getStressColor(Number(formData.stress_level))}`}>
-                      {getStressLabel(Number(formData.stress_level))}
-                    </span>
-                  )}
+                  {(() => {
+                    const stressValue = Number(formData.stress_level || 1)
+                    const stressMeta = getStressColor(stressValue)
+                    return (
+                      <>
+                        <span
+                          className="text-3xl font-bold transition-colors duration-200"
+                          style={{ color: stressMeta.color }}
+                        >
+                          {formData.stress_level || '–'}
+                        </span>
+                        <span className="text-muted">/10</span>
+                        {formData.stress_level && (
+                          <span
+                            className="text-sm font-medium"
+                            style={{ color: stressMeta.color }}
+                          >
+                            {getStressLabel(stressValue)}
+                          </span>
+                        )}
+                      </>
+                    )
+                  })()}
                 </div>
                 <span className="text-xs text-muted">Very stressed</span>
               </div>
@@ -1368,6 +1396,10 @@ function SymptomsPageContent() {
                 value={formData.stress_level || 1}
                 onChange={handleInputChange}
                 className="severity-slider w-full h-3 rounded-full appearance-none cursor-pointer"
+                style={{
+                  '--slider-percent': `${(((Number(formData.stress_level || 1) - 1) / 9) * 100).toFixed(2)}%`,
+                  '--slider-accent': getStressColor(Number(formData.stress_level || 1)).sliderAccent
+                }}
               />
             </div>
                 {fieldErrors.stress_level && (
