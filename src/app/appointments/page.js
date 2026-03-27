@@ -758,14 +758,16 @@ function AppointmentsPageContent() {
                         </div>
                       </div>
                     )}
-                    <div className={`${isExpanded ? 'mt-2' : 'mt-1'} text-xs text-tertiary font-roboto`}>
-                      <div className="flex items-center">
-                        <svg className="w-3 h-3 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" />
-                        </svg>
-                        Added {apt.createdAt ? formatUKDate(apt.createdAt) : '—'}
+                    {isExpanded && (
+                      <div className="mt-2 text-xs text-tertiary font-roboto">
+                        <div className="flex items-center">
+                          <svg className="w-3 h-3 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" />
+                          </svg>
+                          Added {apt.createdAt ? formatUKDate(apt.createdAt) : '—'}
+                        </div>
                       </div>
-                    </div>
+                    )}
                   </div>
                 </div>
               )

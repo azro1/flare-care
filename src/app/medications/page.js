@@ -804,9 +804,9 @@ className="px-4 py-2 text-base sm:text-lg font-medium font-sans rounded-lg trans
                           />
                         </button>
                       </div>
-                      {medication.frequency && (
+                      {isExpanded && medication.frequency && (
                         <p
-                          className={`text-sm text-secondary font-roboto mt-1 min-w-0 truncate ${isExpanded ? 'mb-2' : ''}`}
+                          className="text-sm text-secondary font-roboto mt-1 min-w-0 truncate mb-2"
                           title={normalizeFrequencyPreset(medication.frequency)}
                         >
                           <span className="font-semibold text-primary">To be taken:</span> {normalizeFrequencyPreset(medication.frequency)}
@@ -914,14 +914,16 @@ className="px-4 py-2 text-base sm:text-lg font-medium font-sans rounded-lg trans
                       </div>
                     </div>
                   )}
-                  <div className={`${isExpanded ? 'mt-2' : 'mt-1'} text-xs text-tertiary font-roboto`}>
-                    <div className="flex items-center">
-                      <svg className="w-3 h-3 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" />
-                      </svg>
-                      Added {medication.createdAt ? formatUKDate(medication.createdAt) : '—'}
+                  {isExpanded && (
+                    <div className="mt-2 text-xs text-tertiary font-roboto">
+                      <div className="flex items-center">
+                        <svg className="w-3 h-3 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" />
+                        </svg>
+                        Added {medication.createdAt ? formatUKDate(medication.createdAt) : '—'}
+                      </div>
                     </div>
-                  </div>
+                  )}
                   </div>
                 </div>
               )

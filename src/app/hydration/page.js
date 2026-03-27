@@ -166,7 +166,7 @@ function HydrationPageContent() {
               <span className="text-base sm:text-sm font-semibold text-primary font-source">Important to know:</span>
             </div>
             <p className="text-xs text-secondary font-roboto leading-relaxed">
-              Most guidelines recommend around 1.5–2 litres (about 6–8 glasses) of water per day for adults. It varies with size, activity, and climate.
+              Most guidelines recommend around 1.5–2 litres (about 6–8 glasses) of water per day for adults.
             </p>
           </div>
         </div>
