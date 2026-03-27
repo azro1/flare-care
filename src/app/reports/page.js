@@ -1376,6 +1376,9 @@ function ReportsPageContent() {
           </div>
           <h2 className="text-xl sm:text-2xl font-semibold font-source text-primary flex-1">Select report period</h2>
         </div>
+        <p className="text-sm text-secondary font-roboto leading-relaxed mb-6">
+          Choose a date range to include symptom episodes in the report.
+        </p>
         
         {/* Quick Presets */}
         <div className="flex flex-wrap gap-3 sm:gap-2 mb-6">
@@ -1486,9 +1489,34 @@ function ReportsPageContent() {
           </div>
         </div>
         <div className="flex flex-col gap-4">
-          <div className="text-sm text-secondary font-roboto leading-relaxed">
-            Showing symptoms from {formatUKDate(dateRange.startDate)} to {formatUKDate(dateRange.endDate)}
-          </div>
+          <p className="text-sm text-secondary font-roboto leading-relaxed">
+            Found {reportData.totalEntries} {reportData.totalEntries === 1 ? 'episode' : 'episodes'} in the selected period
+          </p>
+          {reportData.totalEntries > 0 && (
+            <div className="card-inner p-4 sm:p-5">
+              <div className="grid grid-cols-1 sm:grid-cols-3 gap-4 sm:gap-6">
+                <div>
+                  <span className="text-xs sm:text-sm font-semibold text-secondary tracking-wide block font-roboto">Episodes</span>
+                  <p className="mt-1 sm:mt-2 text-sm sm:text-base font-semibold text-primary font-roboto">{reportData.totalEntries}</p>
+                </div>
+                <div>
+                  <span className="text-xs sm:text-sm font-semibold text-secondary tracking-wide block font-roboto">Average severity</span>
+                  <p className="mt-1 sm:mt-2 text-sm sm:text-base font-semibold text-primary font-roboto">{reportData.averageSeverity}</p>
+                </div>
+                <div>
+                  <span className="text-xs sm:text-sm font-semibold text-secondary tracking-wide block font-roboto">Average stress</span>
+                  <p className="mt-1 sm:mt-2 text-sm sm:text-base font-semibold text-primary font-roboto">
+                    {reportData.averageStress != null && !isNaN(reportData.averageStress) ? reportData.averageStress : 0}
+                  </p>
+                </div>
+              </div>
+            </div>
+          )}
+          {reportData.totalEntries > 0 && (
+            <div className="text-sm text-secondary font-roboto leading-relaxed">
+              Showing symptoms from {formatUKDate(dateRange.startDate)} to {formatUKDate(dateRange.endDate)}
+            </div>
+          )}
           <div className="flex flex-wrap gap-3">
             <button onClick={() => handleExportClick(exportToPDF)} className="inline-flex items-center justify-center px-4 py-2.5 sm:px-6 sm:py-3 button-cadet rounded-lg whitespace-nowrap text-sm sm:text-base">
               <FileText className="w-4 h-4 sm:w-5 sm:h-5 mr-2 shrink-0" />
@@ -1512,136 +1540,6 @@ function ReportsPageContent() {
 
       {/* Report Results */}
       <div className="space-y-4 sm:space-y-6 mb-5 sm:mb-6">
-        {/* Symptoms Section — only when there are symptom episodes in range */}
-        {reportData.totalEntries > 0 && (
-        <div className="card min-w-0 overflow-hidden">
-          <button
-            type="button"
-            onClick={() => toggleSection('symptoms')}
-            className={`flex items-center justify-between w-full text-left group ${expandedSections.symptoms ? 'mb-3 sm:mb-4' : ''}`}
-          >
-            <h2 className="text-lg sm:text-xl font-semibold font-source text-primary">Symptoms</h2>
-            <ChevronDown className={`w-5 h-5 text-secondary shrink-0 transition-transform ${expandedSections.symptoms ? 'rotate-180' : ''}`} />
-          </button>
-          <motion.div
-            initial={false}
-            animate={{
-              height: expandedSections.symptoms ? 'auto' : 0,
-              opacity: expandedSections.symptoms ? 1 : 0
-            }}
-            transition={{ duration: 0.2, ease: 'easeOut' }}
-            style={{ overflow: 'hidden' }}
-          >
-          <p className="text-sm text-secondary font-roboto mb-4">
-            Found {reportData.totalEntries} {reportData.totalEntries === 1 ? 'episode' : 'episodes'} in the selected period
-          </p>
-          <div
-            className={
-              reportData.severityTrend.length > 0
-                ? 'space-y-4 sm:space-y-0 sm:grid sm:grid-cols-3 sm:gap-6 mb-6'
-                : 'space-y-4 sm:space-y-0 sm:grid sm:grid-cols-3 sm:gap-6'
-            }
-          >
-            <div>
-              <span className="text-xs sm:text-sm font-semibold text-secondary tracking-wide block font-roboto">Episodes</span>
-              <p className="mt-1 sm:mt-2 text-sm sm:text-base font-semibold text-primary font-roboto">{reportData.totalEntries}</p>
-            </div>
-            <div>
-              <span className="text-xs sm:text-sm font-semibold text-secondary tracking-wide block font-roboto">Average severity</span>
-              <p className="mt-1 sm:mt-2 text-sm sm:text-base font-semibold text-primary font-roboto">{reportData.averageSeverity}</p>
-            </div>
-            <div>
-              <span className="text-xs sm:text-sm font-semibold text-secondary tracking-wide block font-roboto">Average stress</span>
-              <p className="mt-1 sm:mt-2 text-sm sm:text-base font-semibold text-primary font-roboto">
-                {reportData.averageStress != null && !isNaN(reportData.averageStress) ? reportData.averageStress : 0}
-              </p>
-            </div>
-          </div>
-
-          {/* Symptom Episodes - stacked rows per episode */}
-          {reportData.severityTrend.length > 0 && (
-            <>
-              <div className="pt-4 border-t" style={{ borderColor: 'var(--separator-card)' }}>
-                <button
-                  type="button"
-                  onClick={() => toggleSection('symptomEpisodes')}
-                  className={`flex items-center justify-between w-full text-left group ${expandedSections.symptomEpisodes ? 'mb-3' : ''}`}
-                >
-                  <h3 className="text-lg sm:text-xl font-semibold text-primary font-source">Symptom Episodes ({reportData.severityTrend.length})</h3>
-                  <ChevronDown className={`w-5 h-5 text-secondary shrink-0 transition-transform ${expandedSections.symptomEpisodes ? 'rotate-180' : ''}`} />
-                </button>
-                <motion.div
-                  initial={false}
-                  animate={{
-                    height: expandedSections.symptomEpisodes ? 'auto' : 0,
-                    opacity: expandedSections.symptomEpisodes ? 1 : 0
-                  }}
-                  transition={{ duration: 0.2, ease: 'easeOut' }}
-                  style={{ overflow: 'hidden' }}
-                >
-                <div className="space-y-0 [&>*:last-child]:pb-0">
-                  {reportData.severityTrend
-                    .slice(listPages.symptomEpisodes * REPORT_PAGE_SIZE, (listPages.symptomEpisodes + 1) * REPORT_PAGE_SIZE)
-                    .map((entry, idx) => {
-                      const index = listPages.symptomEpisodes * REPORT_PAGE_SIZE + idx
-                      const isResolved = !entry.isOngoing && entry.date && entry.endDate
-                      const Row = ({ label, value, isLast = false }) => (
-                        <div className={`flex justify-between items-center gap-4 py-3 min-w-0 overflow-hidden ${isLast ? '' : 'border-b'}`} style={!isLast ? { borderColor: 'var(--separator-card)' } : undefined}>
-                          <span className="text-sm sm:text-base text-secondary font-roboto">{label}</span>
-                          <span className="text-sm sm:text-base font-medium text-primary font-roboto">{value}</span>
-                        </div>
-                      )
-                      return (
-                        <div key={index} className={index > 0 ? 'pt-4 border-t' : ''} style={index > 0 ? { borderColor: 'var(--separator-card)' } : undefined}>
-                          {isResolved ? (
-                            <>
-                              <Row label="Started" value={formatUKDate(entry.date)} />
-                              <Row label="Ended" value={formatUKDate(entry.endDate)} />
-                              <Row label="Status" value="Resolved" isLast />
-                            </>
-                          ) : (
-                            <>
-                              <Row label="Started" value={entry.date ? formatUKDate(entry.date) : '—'} />
-                              <Row label="Status" value="Ongoing" isLast />
-                            </>
-                          )}
-                        </div>
-                      )
-                    })}
-                </div>
-              {reportData.severityTrend.length > REPORT_PAGE_SIZE && (
-                <div className="flex items-center justify-between mt-4 flex-wrap gap-2 pt-4 border-t" style={{ borderColor: 'var(--separator-card)' }}>
-                  <span className="text-sm text-secondary font-roboto">
-                    {listPages.symptomEpisodes * REPORT_PAGE_SIZE + 1}–{Math.min((listPages.symptomEpisodes + 1) * REPORT_PAGE_SIZE, reportData.severityTrend.length)} of {reportData.severityTrend.length}
-                  </span>
-                  <div className="flex gap-2">
-                    <button
-                      type="button"
-                      onClick={() => setListPage('symptomEpisodes', listPages.symptomEpisodes - 1)}
-                      disabled={listPages.symptomEpisodes === 0}
-                      className="px-3 py-1.5 text-sm button-cancel rounded-lg disabled:opacity-50"
-                    >
-                      Previous
-                    </button>
-                    <button
-                      type="button"
-                      onClick={() => setListPage('symptomEpisodes', listPages.symptomEpisodes + 1)}
-                      disabled={(listPages.symptomEpisodes + 1) * REPORT_PAGE_SIZE >= reportData.severityTrend.length}
-                      className="px-3 py-1.5 text-sm button-cadet rounded-lg disabled:opacity-50"
-                    >
-                      Next
-                    </button>
-                  </div>
-                </div>
-              )}
-                </motion.div>
-              </div>
-            </>
-          )}
-          </motion.div>
-        </div>
-        )}
-
         {/* Current Medications */}
         {reportData.medications.length > 0 && (
           <div className="card min-w-0 overflow-hidden">

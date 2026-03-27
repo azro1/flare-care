@@ -743,7 +743,7 @@ function MedicationTrackingWizard() {
                     <input
                       type="text"
                       inputMode="numeric"
-                      placeholder="Dose"
+                      placeholder="50mg"
                       value={item.dosage}
                       onChange={(e) => updateNsaid(index, 'dosage', e.target.value)}
                       maxLength={5}
@@ -896,7 +896,7 @@ function MedicationTrackingWizard() {
                     <input
                       type="text"
                       inputMode="numeric"
-                      placeholder="Dose"
+                      placeholder="50mg"
                       value={item.dosage}
                       onChange={(e) => updateAntibiotic(index, 'dosage', e.target.value)}
                       maxLength={5}
