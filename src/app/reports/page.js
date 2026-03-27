@@ -1344,7 +1344,7 @@ function ReportsPageContent() {
           <div className="mb-8 card">
             <h1 className="text-2xl sm:text-3xl lg:text-4xl font-bold font-source text-primary mb-4">Reports</h1>
             <p className="text-sm sm:text-base text-secondary font-roboto">
-              Generate detailed reports from your records to help you and your healthcare team stay on top of your care
+              Generate reports from your records to support informed decisions about your care.
             </p>
           </div>
         </div>
@@ -1364,7 +1364,7 @@ function ReportsPageContent() {
       <div className="mb-5 sm:mb-6 card">
         <h1 className="text-2xl sm:text-3xl lg:text-4xl font-bold font-source text-primary mb-4">Reports</h1>
         <p className="text-sm sm:text-base text-secondary font-roboto leading-relaxed">
-          Generate detailed reports from your records to help you and your healthcare team stay on top of your care
+          Generate reports from your records to support informed decisions about your care.
         </p>
       </div>
 

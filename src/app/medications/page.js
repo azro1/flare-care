@@ -510,7 +510,7 @@ function MedicationsPageContent() {
                 My Medications
               </h1>
               <p className="text-sm sm:text-base text-secondary font-roboto leading-relaxed">
-                Add your prescribed medications and set reminders to make managing your treatment easier and more organised
+                Add your medications and set reminders to stay on track.
               </p>
             </div>
           </div>
@@ -943,15 +943,15 @@ className="px-4 py-2 text-base sm:text-lg font-medium font-sans rounded-lg trans
             <span>Medication Reminders</span>
           </h3>
           <p className="text-sm text-secondary font-roboto leading-relaxed">
-            FlareCare can send notifications when it's time to take your medications — in your browser or as push notifications on your device.
+            Get notified when it's time to take your medications, in your browser or on your device.
           </p>
           <div className="card-inner p-5 sm:p-6 mt-4">
             <div className="flex items-center gap-2 mb-2">
               <Lightbulb className="w-5 h-5 flex-shrink-0 text-amber-500" />
-              <span className="text-base sm:text-sm font-semibold text-primary font-source">Important to know:</span>
+              <span className="text-base sm:text-sm font-semibold text-primary font-source">Important:</span>
             </div>
             <p className="text-xs text-secondary font-roboto leading-relaxed">
-              Tap your avatar to open Account settings. In the Settings section tap Enable next to Push notifications to get reminders even when the app is closed. You can turn reminders on or off for each medication.
+              Enable Push notifications in Account settings to get reminders when the app is closed.
             </p>
           </div>
         </div>

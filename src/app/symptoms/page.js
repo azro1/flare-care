@@ -1047,10 +1047,10 @@ function SymptomsPageContent() {
   }
 
   const getStressLabel = (stress) => {
-    if (stress <= 3) return 'Low'
+    if (stress <= 3) return 'Calm'
     if (stress <= 6) return 'Moderate'
-    if (stress <= 8) return 'High'
-    return 'Very High'
+    if (stress <= 8) return 'Stressed'
+    return 'Very stressed'
   }
 
   const getStressColor = (stress) => {
@@ -1294,7 +1294,7 @@ function SymptomsPageContent() {
             <h3 className="text-2xl sm:text-2xl md:text-3xl font-source font-bold text-primary mb-2">
               {formData.isOngoing ? 'How severe are your symptoms?' : 'How severe were your symptoms?'}
             </h3>
-            <p className="text-sm text-muted mb-6">Rate from 1 (mild) to 10 (severe)</p>
+            <p className="text-sm text-muted mb-6">Rate from 1 (mild) to 10 (extreme)</p>
             <div className="w-full">
               <div className="flex items-center justify-between mb-3">
                 <span className="text-xs text-muted">Mild</span>

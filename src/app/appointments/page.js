@@ -359,7 +359,7 @@ function AppointmentsPageContent() {
                 My Appointments
               </h1>
               <p className="text-sm sm:text-base text-secondary font-roboto leading-relaxed">
-                Add and manage your appointments in one place so you can easily keep track of upcoming visits
+                Manage your appointments to keep track of past and upcoming visits.
               </p>
             </div>
           </div>
@@ -786,15 +786,15 @@ function AppointmentsPageContent() {
             <span>Appointment Reminders</span>
           </h3>
           <p className="text-sm text-secondary font-roboto leading-relaxed">
-            FlareCare can send reminders so you don't miss an appointment — in your browser or as push notifications on your device.
+            Get notified so you do not miss an appointment, in your browser or on your device.
           </p>
           <div className="card-inner p-5 sm:p-6 mt-4">
             <div className="flex items-center gap-2 mb-2">
               <Lightbulb className="w-5 h-5 flex-shrink-0 text-amber-500" />
-              <span className="text-base sm:text-sm font-semibold text-primary font-source">Important to know:</span>
+              <span className="text-base sm:text-sm font-semibold text-primary font-source">Important:</span>
             </div>
             <p className="text-xs text-secondary font-roboto leading-relaxed">
-              Tap your avatar to open Account settings. In the Settings section tap Enable next to Push notifications to get reminders even when the app is closed.
+              Enable Push notifications in Account settings to get reminders when the app is closed.
             </p>
           </div>
         </div>

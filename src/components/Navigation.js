@@ -97,15 +97,6 @@ export default function Navigation() {
 
   const mainNavItems = [
     { 
-      href: '/', 
-      label: 'Home', 
-      icon: (
-        <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 12l2-2m0 0l7-7 7 7M5 10v10a1 1 0 001 1h3m10-11l2 2m-2-2v10a1 1 0 01-1 1h-3m-6 0a1 1 0 001-1v-4a1 1 0 011-1h2a1 1 0 011 1v4a1 1 0 001 1m-6 0h6" />
-        </svg>
-      )
-    },
-    { 
       href: '/about', 
       label: 'About', 
       icon: (
@@ -131,15 +122,6 @@ export default function Navigation() {
   ]
 
   const unauthenticatedNavItems = [
-    { 
-      href: '/', 
-      label: 'Home', 
-      icon: (
-        <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 12l2-2m0 0l7-7 7 7M5 10v10a1 1 0 001 1h3m10-11l2 2m-2-2v10a1 1 0 01-1 1h-3m-6 0a1 1 0 001-1v-4a1 1 0 011-1h2a1 1 0 011 1v4a1 1 0 001 1m-6 0h6" />
-        </svg>
-      )
-    },
     { 
       href: '/about', 
       label: 'About', 
@@ -210,7 +192,7 @@ export default function Navigation() {
                 alt="FlareCare logo"
                 width={48}
                 height={48}
-                className="w-8 h-8 md:w-10 md:h-10"
+                className="w-8 h-8 md:w-9 md:h-9"
                 priority={true}
               />
             </div>
@@ -242,7 +224,7 @@ export default function Navigation() {
                   <Link
                     href="/account"
                     className="w-10 h-10 rounded-full overflow-hidden flex items-center justify-center cursor-pointer"
-                    style={{ backgroundColor: 'var(--bg-dropdown-hover)' }}
+                    style={{ backgroundColor: 'transparent' }}
                   >
                     {avatarUrl && !showAvatarFallback ? (
                       <img 
@@ -254,7 +236,7 @@ export default function Navigation() {
                       />
                     ) : null}
                     {(!avatarUrl || showAvatarFallback) && (
-                      <div className="flex items-center justify-center w-full h-full rounded-full bg-[var(--separator-card)] dark:bg-[var(--separator-card)]">
+                      <div className="flex items-center justify-center w-full h-full rounded-full bg-[var(--bg-icon)] dark:bg-[var(--bg-main)] border border-[var(--border-dropdown)]">
                         <Image
                           src="/icons/person.svg"
                           alt="User avatar placeholder"
@@ -330,8 +312,8 @@ export default function Navigation() {
                   onMouseLeave={(e) => { e.currentTarget.style.color = 'var(--text-dropdown)' }}
                 >
                   <div
-                    className="w-10 h-10 rounded-full overflow-hidden border-2 mr-3 flex items-center justify-center flex-shrink-0"
-                    style={{borderColor: 'var(--border-dropdown)', backgroundColor: 'var(--bg-dropdown-hover)'}}
+                    className="w-10 h-10 rounded-full overflow-hidden mr-3 flex items-center justify-center flex-shrink-0"
+                    style={{ backgroundColor: 'transparent' }}
                   >
                     {avatarUrl && !showAvatarFallback ? (
                       <img 
@@ -342,7 +324,7 @@ export default function Navigation() {
                         onError={() => setShowAvatarFallback(true)}
                       />
                     ) : (
-                      <div className="flex items-center justify-center w-full h-full rounded-full bg-[var(--separator-card)] dark:bg-[var(--separator-card)]">
+                      <div className="flex items-center justify-center w-full h-full rounded-full bg-[var(--bg-icon)] dark:bg-[var(--bg-main)] border border-[var(--border-dropdown)]">
                         <Image
                           src="/icons/person.svg"
                           alt="User avatar placeholder"

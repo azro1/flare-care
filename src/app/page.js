@@ -1615,7 +1615,9 @@ export default function Home() {
             </h2>
             {newsLoading && (
               <div className="flex items-center justify-center py-16">
-                <div className="animate-spin rounded-full h-10 w-10 border-b-2 border-[#5F9EA0]"></div>
+                <p className="text-sm sm:text-base text-secondary font-roboto">
+                  Loading latest news…
+                </p>
               </div>
             )}
             {newsError && !newsLoading && (
