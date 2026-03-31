@@ -1,4 +1,5 @@
 import { NextResponse } from 'next/server'
+import { formatBristolLine } from '@/lib/bristolStoolScale'
 
 export const runtime = 'nodejs'
 
@@ -15,6 +16,29 @@ function formatUKDate(value) {
   } catch {
     return String(value)
   }
+}
+
+function formatUKDateTime(iso) {
+  if (!iso) return '—'
+  try {
+    const d = new Date(iso)
+    if (Number.isNaN(d.getTime())) return String(iso)
+    return d.toLocaleString('en-GB', {
+      day: '2-digit',
+      month: 'short',
+      year: 'numeric',
+      hour: '2-digit',
+      minute: '2-digit',
+    })
+  } catch {
+    return String(iso)
+  }
+}
+
+function formatBowelYesNo(value) {
+  if (value === true) return 'Yes'
+  if (value === false) return 'No'
+  return '—'
 }
 
 function getSeverityLabel(severity) {
@@ -101,6 +125,7 @@ export async function POST(request) {
     const weightEntries = Array.isArray(summary?.weightEntries) ? summary.weightEntries : []
     const hydrationEntries = Array.isArray(summary?.hydrationEntries) ? summary.hydrationEntries : []
     const hydrationTarget = summary?.hydrationTarget || 6
+    const bowelMovementEntries = Array.isArray(summary?.bowelMovementEntries) ? summary.bowelMovementEntries : []
     const topFoods = Array.isArray(summary?.topFoods) ? summary.topFoods : []
 
     // Plain-text fallback (simple version of the HTML)
@@ -203,7 +228,7 @@ export async function POST(request) {
       })
     }
     if (hydrationEntries.length) {
-      textLines.push(`Hydration Logs (${hydrationEntries.length})`)
+      textLines.push('Hydration Logs')
       hydrationEntries.forEach((entry) => {
         const date = formatUKDate(entry.date)
         const glasses = entry.glasses != null ? entry.glasses : 'n/a'
@@ -211,6 +236,22 @@ export async function POST(request) {
         textLines.push(`${date} - ${glasses}/${hydrationTarget} glasses${met}`)
       })
       textLines.push('')
+    }
+
+    if (bowelMovementEntries.length) {
+      textLines.push(`Bowel movements (${bowelMovementEntries.length})`)
+      bowelMovementEntries.forEach((entry) => {
+        const when = formatUKDateTime(entry.occurredAt)
+        const bristol = formatBristolLine(entry.bristolType)
+        textLines.push(`${when} — ${bristol}`)
+        textLines.push(`   Blood: ${formatBowelYesNo(entry.blood)}`)
+        textLines.push(`   Strain: ${formatBowelYesNo(entry.strain)}`)
+        textLines.push(`   Urgency: ${formatBowelYesNo(entry.urgency)}`)
+        if (entry.notes && String(entry.notes).trim()) {
+          textLines.push(`   Notes: ${String(entry.notes).trim()}`)
+        }
+        textLines.push('')
+      })
     }
 
     if (topFoods.length) {
@@ -429,6 +470,25 @@ export async function POST(request) {
         htmlParts.push(`<li style="margin: 0 0 4px 0;">• ${safe(date)} - ${safe(glasses)}/${hydrationTarget} glasses${safe(met)}</li>`)
       })
       htmlParts.push('</ul>')
+    }
+
+    if (bowelMovementEntries.length) {
+      htmlParts.push(
+        `<h2 style="margin-top: 24px; margin-bottom: 3px; font-size: 16px; font-weight: 600; font-family: Arial, Helvetica, sans-serif;">Bowel movements (${bowelMovementEntries.length})</h2>`
+      )
+      bowelMovementEntries.forEach((entry) => {
+        const when = formatUKDateTime(entry.occurredAt)
+        const bristol = formatBristolLine(entry.bristolType)
+        htmlParts.push('<div style="margin: 0 0 12px 0;">')
+        htmlParts.push(`<p style="margin: 0 0 2px 0; font-weight: 600;">${safe(when)} — ${safe(bristol)}</p>`)
+        htmlParts.push(`<p style="margin: 0 0 2px 0;">Blood: ${safe(formatBowelYesNo(entry.blood))}</p>`)
+        htmlParts.push(`<p style="margin: 0 0 2px 0;">Strain: ${safe(formatBowelYesNo(entry.strain))}</p>`)
+        htmlParts.push(`<p style="margin: 0 0 2px 0;">Urgency: ${safe(formatBowelYesNo(entry.urgency))}</p>`)
+        if (entry.notes && String(entry.notes).trim()) {
+          htmlParts.push(`<p style="margin: 0;">Notes: ${safe(String(entry.notes).trim())}</p>`)
+        }
+        htmlParts.push('</div>')
+      })
     }
 
     if (symptomDetails.length) {

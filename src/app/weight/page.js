@@ -429,7 +429,7 @@ function WeightPageContent() {
                   <div className="flex flex-col sm:flex-row sm:justify-between sm:items-start gap-3">
                     <div className="flex-1 min-w-0">
                       <div className="flex items-center gap-2 min-w-0">
-                        <div className="flex flex-wrap items-baseline gap-x-2 gap-y-1 min-w-0 flex-1">
+                        <div className="flex flex-wrap items-baseline gap-x-2 gap-y-1 min-w-0 flex-1 text-sm">
                           <span className="font-semibold text-primary">{formatUKDate(entry.date)}</span>
                           <span className="text-secondary">·</span>
                           <span className="text-primary font-roboto">{Number(entry.valueKg)} kg</span>

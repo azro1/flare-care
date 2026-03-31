@@ -99,3 +99,6 @@ jspm_packages/
 
 # Session / working notes (do not commit)
 TODAY_NOTES.md
+
+# Local Supabase SQL / migrations (not pushed)
+supabase/

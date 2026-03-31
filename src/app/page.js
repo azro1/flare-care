@@ -3,10 +3,11 @@
 import Link from 'next/link'
 import WeatherHero from '@/components/WeatherHero'
 import { useAuth } from '@/lib/AuthContext'
-import { useEffect, useState, useRef } from 'react'
+import { useEffect, useLayoutEffect, useState, useRef, useCallback } from 'react'
 import { useRouter } from 'next/navigation'
 import { supabase, TABLES } from '@/lib/supabase'
-import { CupSoda, Pizza, Coffee, BookOpen, Smile, Thermometer, Pill, FileText, Activity, TrendingUp, PartyPopper, Clipboard, Cookie, ChartLine, Sparkles, ChevronRight, ChevronDown, ChevronLeft, Clock, Scale, Calendar, Lightbulb, Newspaper, Check } from 'lucide-react'
+import { formatBristolTypeOnly } from '@/lib/bristolStoolScale'
+import { CupSoda, Pizza, Coffee, BookOpen, Smile, Thermometer, Pill, FileText, Activity, TrendingUp, PartyPopper, Clipboard, Cookie, ChartLine, Sparkles, ChevronRight, ChevronDown, ChevronLeft, Clock, Scale, Calendar, Lightbulb, Newspaper, Check, CircleDot } from 'lucide-react'
 
 export default function Home() {
   const { isAuthenticated, loading, user } = useAuth()
@@ -34,6 +35,8 @@ export default function Home() {
   const [trackedMedicationDeleted, setTrackedMedicationDeleted] = useState(null)
   const [individualMedicationTakings, setIndividualMedicationTakings] = useState([])
   const [weightEntries, setWeightEntries] = useState([])
+  const [bowelMovementEntries, setBowelMovementEntries] = useState([])
+  const [bowelMovementDeleted, setBowelMovementDeleted] = useState(null)
   const [weightDeleted, setWeightDeleted] = useState(null)
   const [weightUpdated, setWeightUpdated] = useState(null)
   const [appointmentAdded, setAppointmentAdded] = useState(null)
@@ -49,6 +52,10 @@ export default function Home() {
   const newsScrollRef = useRef(null)
   const [newsAtStart, setNewsAtStart] = useState(true)
   const [newsAtEnd, setNewsAtEnd] = useState(false)
+
+  const dailyCheckinScrollRef = useRef(null)
+  const [dailyCheckinAtStart, setDailyCheckinAtStart] = useState(true)
+  const [dailyCheckinAtEnd, setDailyCheckinAtEnd] = useState(false)
 
   // Daily tips array
   const dailyTips = [
@@ -326,6 +333,50 @@ export default function Home() {
     }
   }, [user?.id])
 
+  // Fetch bowel movements for Recent Activity
+  useEffect(() => {
+    const fetchBowelMovements = async () => {
+      if (!user?.id) {
+        setBowelMovementEntries([])
+        return
+      }
+      try {
+        const { data, error } = await supabase
+          .from(TABLES.BOWEL_MOVEMENTS)
+          .select('id, created_at, updated_at, bristol_type')
+          .eq('user_id', user.id)
+          .order('updated_at', { ascending: false })
+          .limit(10)
+
+        if (error) throw error
+        setBowelMovementEntries(data || [])
+      } catch (err) {
+        console.error('Error fetching bowel movements:', err)
+        setBowelMovementEntries([])
+      }
+    }
+
+    fetchBowelMovements()
+
+    const handleFocus = () => {
+      fetchBowelMovements()
+    }
+    const handleBowelSaved = () => {
+      fetchBowelMovements()
+    }
+    const handleBowelDeleted = () => {
+      fetchBowelMovements()
+    }
+    window.addEventListener('focus', handleFocus)
+    window.addEventListener('bowel-movement-saved', handleBowelSaved)
+    window.addEventListener('bowel-movement-deleted', handleBowelDeleted)
+    return () => {
+      window.removeEventListener('focus', handleFocus)
+      window.removeEventListener('bowel-movement-saved', handleBowelSaved)
+      window.removeEventListener('bowel-movement-deleted', handleBowelDeleted)
+    }
+  }, [user?.id])
+
   // Fetch Crohn's & Colitis news for dashboard
   useEffect(() => {
     if (!isAuthenticated) return
@@ -367,6 +418,59 @@ export default function Home() {
     }
   }, [newsItems])
 
+  const updateDailyCheckinScrollEdges = useCallback(() => {
+    const el = dailyCheckinScrollRef.current
+    if (!el || el.clientWidth < 2) {
+      setDailyCheckinAtStart(true)
+      setDailyCheckinAtEnd(true)
+      return
+    }
+    const maxScroll = Math.max(0, el.scrollWidth - el.clientWidth)
+    const sl = el.scrollLeft
+    const edgePx = 4
+    const atStart = sl <= edgePx
+    const atEnd = maxScroll <= edgePx || sl >= maxScroll - edgePx
+    setDailyCheckinAtStart(atStart)
+    setDailyCheckinAtEnd(atEnd)
+  }, [])
+
+  useLayoutEffect(() => {
+    if (!isAuthenticated) return
+    const el = dailyCheckinScrollRef.current
+    if (!el) return
+    const run = updateDailyCheckinScrollEdges
+    run()
+    const t1 = setTimeout(run, 100)
+    const t2 = setTimeout(run, 500)
+    el.addEventListener('scroll', run, { passive: true })
+    el.addEventListener('scrollend', run)
+    window.addEventListener('resize', run)
+    const ro = new ResizeObserver(run)
+    ro.observe(el)
+    return () => {
+      clearTimeout(t1)
+      clearTimeout(t2)
+      el.removeEventListener('scroll', run)
+      el.removeEventListener('scrollend', run)
+      window.removeEventListener('resize', run)
+      ro.disconnect()
+    }
+  }, [isAuthenticated, updateDailyCheckinScrollEdges])
+
+  const scrollDailyCheckin = (direction) => {
+    const el = dailyCheckinScrollRef.current
+    if (!el) return
+    const slide = el.querySelector('[data-daily-checkin-slide]')
+    const gap = typeof window !== 'undefined' && window.matchMedia('(min-width: 768px)').matches ? 24 : 16
+    const w = slide?.getBoundingClientRect().width ?? el.clientWidth * 0.32
+    el.scrollBy({ left: direction * (w + gap), behavior: 'smooth' })
+    requestAnimationFrame(() => {
+      updateDailyCheckinScrollEdges()
+      setTimeout(updateDailyCheckinScrollEdges, 120)
+      setTimeout(updateDailyCheckinScrollEdges, 400)
+    })
+  }
+
   // Track daily medication intake - from DB and localStorage (other activity)
   useEffect(() => {
     const loadTakenMedications = async () => {
@@ -383,6 +487,7 @@ export default function Home() {
         const symptomDeletedKey = `flarecare-symptom-deleted-${user.id}-${today}`
         const trackedMedDeletedKey = `flarecare-tracked-medication-deleted-${user.id}-${today}`
         const weightDeletedKey = `flarecare-weight-deleted-${user.id}-${today}`
+        const bowelMovementDeletedKey = `flarecare-bowel-movement-deleted-${user.id}-${today}`
         const weightUpdatedKey = `flarecare-weight-updated-${user.id}-${today}`
         const appointmentAddedKey = `flarecare-appointment-added-${user.id}-${today}`
         const appointmentUpdatedKey = `flarecare-appointment-updated-${user.id}-${today}`
@@ -397,6 +502,7 @@ export default function Home() {
             (key.startsWith(`flarecare-symptom-deleted-${user.id}-`) && key !== symptomDeletedKey) ||
             (key.startsWith(`flarecare-tracked-medication-deleted-${user.id}-`) && key !== trackedMedDeletedKey) ||
             (key.startsWith(`flarecare-weight-deleted-${user.id}-`) && key !== weightDeletedKey) ||
+            (key.startsWith(`flarecare-bowel-movement-deleted-${user.id}-`) && key !== bowelMovementDeletedKey) ||
             (key.startsWith(`flarecare-weight-updated-${user.id}-`) && key !== weightUpdatedKey) ||
             (key.startsWith(`flarecare-appointment-added-${user.id}-`) && key !== appointmentAddedKey) ||
             (key.startsWith(`flarecare-appointment-updated-${user.id}-`) && key !== appointmentUpdatedKey) ||
@@ -553,6 +659,20 @@ export default function Home() {
         setWeightDeleted(null)
       }
 
+      // Load bowel movement deleted activity
+      const bowelMovementDeletedKey = `flarecare-bowel-movement-deleted-${user.id}-${today}`
+      const bowelMovementDeletedData = localStorage.getItem(bowelMovementDeletedKey)
+      if (bowelMovementDeletedData) {
+        try {
+          setBowelMovementDeleted(JSON.parse(bowelMovementDeletedData))
+        } catch (error) {
+          console.error('Error parsing bowel movement deleted data:', error)
+          setBowelMovementDeleted(null)
+        }
+      } else {
+        setBowelMovementDeleted(null)
+      }
+
       // Load weight updated activity
       const weightUpdatedKey = `flarecare-weight-updated-${user.id}-${today}`
       const weightUpdatedData = localStorage.getItem(weightUpdatedKey)
@@ -637,6 +757,7 @@ export default function Home() {
         (e.key.startsWith('flarecare-symptom-deleted-') && e.key.includes(`-${user.id}-`)) ||
         (e.key.startsWith('flarecare-tracked-medication-deleted-') && e.key.includes(`-${user.id}-`)) ||
         (e.key.startsWith('flarecare-weight-deleted-') && e.key.includes(`-${user.id}-`)) ||
+        (e.key.startsWith('flarecare-bowel-movement-deleted-') && e.key.includes(`-${user.id}-`)) ||
         (e.key.startsWith('flarecare-weight-updated-') && e.key.includes(`-${user.id}-`)) ||
         (e.key.startsWith('flarecare-appointment-added-') && e.key.includes(`-${user.id}-`)) ||
         (e.key.startsWith('flarecare-appointment-updated-') && e.key.includes(`-${user.id}-`)) ||
@@ -676,6 +797,10 @@ export default function Home() {
       loadTakenMedications()
     }
 
+    const handleBowelMovementDeleted = () => {
+      loadTakenMedications()
+    }
+
     const handleWeightUpdated = () => {
       loadTakenMedications()
     }
@@ -712,6 +837,7 @@ export default function Home() {
     window.addEventListener('symptom-deleted', handleSymptomDeleted)
     window.addEventListener('tracked-medication-deleted', handleTrackedMedicationDeleted)
     window.addEventListener('weight-deleted', handleWeightDeleted)
+    window.addEventListener('bowel-movement-deleted', handleBowelMovementDeleted)
     window.addEventListener('weight-updated', handleWeightUpdated)
     window.addEventListener('weight-added', handleWeightAdded)
     window.addEventListener('appointment-added', handleAppointmentAdded)
@@ -735,6 +861,7 @@ export default function Home() {
       window.removeEventListener('symptom-deleted', handleSymptomDeleted)
       window.removeEventListener('tracked-medication-deleted', handleTrackedMedicationDeleted)
       window.removeEventListener('weight-deleted', handleWeightDeleted)
+      window.removeEventListener('bowel-movement-deleted', handleBowelMovementDeleted)
       window.removeEventListener('weight-updated', handleWeightUpdated)
       window.removeEventListener('weight-added', handleWeightAdded)
       window.removeEventListener('appointment-added', handleAppointmentAdded)
@@ -773,7 +900,7 @@ export default function Home() {
               </svg>
             </div>
             <span className="flex-1 text-sm font-medium font-roboto" style={{ color: 'var(--text-primary)' }}>Account deleted successfully!</span>
-            <button
+            <button               
               type="button"
               onClick={() => setShowAccountDeletedToast(false)}
               className="flex-shrink-0 p-1 rounded-md hover:bg-black/5 dark:hover:bg-white/10 transition-colors"
@@ -972,12 +1099,6 @@ export default function Home() {
     return today === symptomDate
   })
 
-  const todayTrackedMedication = trackedMedications.some(entry => {
-    const today = new Date().toDateString()
-    const entryDate = new Date(entry.created_at).toDateString()
-    return today === entryDate
-  })
-
   return (
     <div className="flex-1 flex flex-col min-h-0">
       {/* Toast Notification */}
@@ -1070,7 +1191,7 @@ export default function Home() {
           <div className="contents xl:block xl:w-72 xl:flex-shrink-0 xl:order-1">
             <div className="contents xl:block xl:sticky xl:top-6 xl:space-y-6">
               
-              {/* Quick Stats */}
+              {/* Your Progress */}
               <div className="card order-[5] xl:order-none mb-6 xl:mb-0">
                 <h3 className="text-xl font-semibold font-source text-primary mb-3">Your Progress</h3>
                 <div className="card-inner p-4 sm:p-5 space-y-2.5">
@@ -1101,24 +1222,6 @@ export default function Home() {
                 <div className="card-inner p-4 sm:p-5 space-y-0">
                   <div className="flex items-center gap-3 pb-3">
                     <div className="w-6 h-6 bg-white dark:bg-[var(--bg-icon-container)] flex items-center justify-center rounded-md">
-                      <Thermometer className="w-3.5 h-3.5 text-primary dark:text-white" />
-                    </div>
-                    <div className="flex-1 flex items-center justify-between">
-                      <span className="text-sm text-primary">Log Symptoms</span>
-                      {todaySymptoms.length > 0 && <Check className="w-4 h-4 flex-shrink-0" style={{ color: 'var(--text-cadet-blue)' }} />}
-                    </div>
-                  </div>
-                  <Link href="/medications/track" className="flex items-center gap-3 pb-3">
-                    <div className="w-6 h-6 bg-white dark:bg-[var(--bg-icon-container)] flex items-center justify-center rounded-md">
-                      <ChartLine className="w-3.5 h-3.5 text-primary dark:text-white" />
-                    </div>
-                    <div className="flex-1 flex items-center justify-between">
-                      <span className="text-sm text-primary">Log Medications</span>
-                      {todayTrackedMedication && <Check className="w-4 h-4 flex-shrink-0" style={{ color: 'var(--text-cadet-blue)' }} />}
-                    </div>
-                  </Link>
-                  <div className="flex items-center gap-3 pb-3">
-                    <div className="w-6 h-6 bg-white dark:bg-[var(--bg-icon-container)] flex items-center justify-center rounded-md">
                       <Pill className="w-3 h-3 text-primary dark:text-white" />
                     </div>
                     <div className="flex-1 flex items-center justify-between">
@@ -1145,7 +1248,7 @@ export default function Home() {
                     <Lightbulb className="w-5 h-5 flex-shrink-0 text-amber-500" />
                     Hint
                   </h3>
-                  <p className={`text-sm text-primary leading-relaxed sm:leading-normal transition-opacity duration-500 ${isFading ? 'opacity-0' : 'opacity-100'}`}>
+                  <p className={`text-sm text-primary leading-relaxed transition-opacity duration-500 ${isFading ? 'opacity-0' : 'opacity-100'}`}>
                     {dailyTips[currentTipIndex]}
                   </p>
                 </div>
@@ -1174,115 +1277,189 @@ export default function Home() {
         </div>
 
         {/* Daily Check-in */}
-        <div className="my-6 order-[2] xl:order-none">
+        <div className="my-6 order-[2] xl:order-none w-full min-w-0 max-w-full">
           <h2 className="text-xl font-semibold font-source text-primary mb-4">Daily Check-in</h2>
-          {/* Mobile: horizontal scroll cards */}
-          <div className="block sm:hidden -mx-4 px-4">
+          {/* Mobile: horizontal scroll — card width matches More (2-col grid, gap-4) */}
+          <div className="block sm:hidden w-full min-w-0 [container-type:inline-size]">
             <div className="overflow-x-auto pb-1 overscroll-x-contain scrollbar-hide snap-x snap-mandatory" style={{ WebkitOverflowScrolling: 'touch' }}>
-              <div className="flex gap-3">
-              <Link
-                href="/symptoms"
-                className="card card-link flex-shrink-0 w-[72vw] min-w-[135px] max-w-[168px] !p-6 flex flex-col items-center justify-center gap-3 snap-center transition-all group"
-              >
-                <div className="w-10 h-10 dashboard-icon-panel rounded-lg flex items-center justify-center" style={{ backgroundColor: 'var(--bg-goal-icon-success)' }}>
-                  <Thermometer className="w-5 h-5 text-emerald-600" />
-                </div>
-                <h3 className="text-sm sm:text-base font-semibold text-primary text-center leading-tight sm:leading-relaxed">Log Symptoms</h3>
-              </Link>
-              <Link
-                href="/medications/track"
-                className="card card-link flex-shrink-0 w-[72vw] min-w-[135px] max-w-[168px] !p-6 flex flex-col items-center justify-center gap-3 snap-center transition-all group"
-              >
-                <div className="w-10 h-10 dashboard-icon-panel rounded-lg flex items-center justify-center" style={{ backgroundColor: 'var(--bg-goal-icon-medication)' }}>
-                  <ChartLine className="w-5 h-5 text-pink-500" />
-                </div>
-                <h3 className="text-sm sm:text-base font-semibold text-primary text-center leading-tight sm:leading-relaxed">Log Medications</h3>
-              </Link>
-              <Link
-                href="/hydration"
-                className="card card-link flex-shrink-0 w-[72vw] min-w-[135px] max-w-[168px] !p-6 flex flex-col items-center justify-center gap-3 snap-center transition-all group"
-              >
-                <div className="w-10 h-10 dashboard-icon-panel rounded-lg flex items-center justify-center" style={{ backgroundColor: 'var(--bg-goal-icon-hydration)' }}>
-                  <CupSoda className="w-5 h-5 text-sky-600" />
-                </div>
-                <h3 className="text-sm sm:text-base font-semibold text-primary text-center leading-tight sm:leading-relaxed">My Hydration</h3>
-              </Link>
+              <div className="flex gap-4 w-max">
+                <Link
+                  href="/symptoms"
+                  className="card card-link flex-shrink-0 min-w-0 w-[calc((100cqi-1rem)/2)] !p-6 flex flex-col justify-center snap-center transition-all"
+                >
+                  <div className="flex flex-col items-center gap-3 min-w-0 w-full">
+                    <div className="w-10 h-10 dashboard-icon-panel rounded-lg flex items-center justify-center flex-shrink-0" style={{ backgroundColor: 'var(--bg-goal-icon-success)' }}>
+                      <Thermometer className="w-5 h-5 text-emerald-600" />
+                    </div>
+                    <div className="w-full min-w-0 text-center">
+                      <h3
+                        className="text-sm font-semibold text-primary leading-tight min-w-0 w-full truncate"
+                        title="Log Symptoms"
+                      >
+                        Log Symptoms
+                      </h3>
+                    </div>
+                  </div>
+                </Link>
+                <Link
+                  href="/medications/track"
+                  className="card card-link flex-shrink-0 min-w-0 w-[calc((100cqi-1rem)/2)] !p-6 flex flex-col justify-center snap-center transition-all"
+                >
+                  <div className="flex flex-col items-center gap-3 min-w-0 w-full">
+                    <div className="w-10 h-10 dashboard-icon-panel rounded-lg flex items-center justify-center flex-shrink-0" style={{ backgroundColor: 'var(--bg-goal-icon-medication)' }}>
+                      <ChartLine className="w-5 h-5 text-pink-500" />
+                    </div>
+                    <div className="w-full min-w-0 text-center">
+                      <h3
+                        className="text-sm font-semibold text-primary leading-tight min-w-0 w-full truncate"
+                        title="Log Medications"
+                      >
+                        Log Medications
+                      </h3>
+                    </div>
+                  </div>
+                </Link>
+                <Link
+                  href="/hydration"
+                  className="card card-link flex-shrink-0 min-w-0 w-[calc((100cqi-1rem)/2)] !p-6 flex flex-col justify-center snap-center transition-all"
+                >
+                  <div className="flex flex-col items-center gap-3 min-w-0 w-full">
+                    <div className="w-10 h-10 dashboard-icon-panel rounded-lg flex items-center justify-center flex-shrink-0" style={{ backgroundColor: 'var(--bg-goal-icon-hydration)' }}>
+                      <CupSoda className="w-5 h-5 text-sky-600" />
+                    </div>
+                    <div className="w-full min-w-0 text-center">
+                      <h3
+                        className="text-sm font-semibold text-primary leading-tight min-w-0 w-full truncate"
+                        title="My Hydration"
+                      >
+                        My Hydration
+                      </h3>
+                    </div>
+                  </div>
+                </Link>
+                <Link
+                  href="/bowel-movements"
+                  className="card card-link flex-shrink-0 min-w-0 w-[calc((100cqi-1rem)/2)] !p-6 flex flex-col justify-center snap-center transition-all"
+                >
+                  <div className="flex flex-col items-center gap-3 min-w-0 w-full">
+                    <div className="w-10 h-10 dashboard-icon-panel rounded-lg flex items-center justify-center flex-shrink-0 bg-amber-100 dark:bg-amber-950/40">
+                      <CircleDot className="w-5 h-5 text-amber-800 dark:text-amber-400" />
+                    </div>
+                    <div className="w-full min-w-0 text-center">
+                      <h3
+                        className="text-sm font-semibold text-primary leading-tight min-w-0 w-full truncate"
+                        title="Bowel Movements"
+                      >
+                        Bowel Movements
+                      </h3>
+                    </div>
+                  </div>
+                </Link>
               </div>
             </div>
           </div>
-          {/* Desktop: three cards in a row */}
-          <div className="hidden sm:grid sm:grid-cols-3 gap-4 md:gap-6">
-            <Link
-              href="/symptoms"
-              className="card card-link !p-6 transition-all group relative focus:outline-none focus-visible:outline-none focus-visible:ring-0 focus-visible:ring-offset-0 focus:ring-0 flex items-center justify-center"
+          {/* Desktop: horizontal scroll, hidden scrollbar, chevrons like Latest News */}
+          <div className="hidden sm:block relative w-full min-w-0 max-w-full [container-type:inline-size]">
+            <div
+              ref={dailyCheckinScrollRef}
+              className="w-full min-w-0 overflow-x-auto scroll-smooth overscroll-x-contain snap-x snap-mandatory touch-pan-x scrollbar-hide"
             >
-              <div className="flex items-center sm:flex-col sm:items-center sm:justify-center gap-3 sm:gap-3 w-full">
-                <div className="w-10 h-10 dashboard-icon-panel rounded-lg flex items-center justify-center flex-shrink-0" style={{ backgroundColor: 'var(--bg-goal-icon-success)' }}>
-                  <Thermometer className="w-5 h-5 sm:w-6 sm:h-6 text-emerald-600" />
-                </div>
-                <div className="flex-1 sm:w-full sm:text-center">
-                  <h3 className="text-sm sm:text-base font-semibold text-primary leading-tight sm:leading-relaxed sm:justify-center">
-                    Log Symptoms
-                  </h3>
-                </div>
-                <ChevronRight className="w-5 h-5 flex-shrink-0 text-secondary sm:hidden" />
+              <div className="flex flex-nowrap items-stretch gap-4 md:gap-6 w-max pr-1">
+                <Link
+                  data-daily-checkin-slide
+                  href="/symptoms"
+                  className="card card-link shrink-0 snap-center snap-always !p-6 transition-all focus:outline-none focus-visible:outline-none focus-visible:ring-0 focus-visible:ring-offset-0 min-w-0 [flex-basis:calc((100cqi-2rem)/3)] md:[flex-basis:calc((100cqi-3rem)/3)]"
+                >
+                  <div className="flex flex-col items-center gap-3 min-w-0 w-full">
+                    <div className="w-10 h-10 dashboard-icon-panel rounded-lg flex items-center justify-center flex-shrink-0" style={{ backgroundColor: 'var(--bg-goal-icon-success)' }}>
+                      <Thermometer className="w-5 h-5 text-emerald-600" />
+                    </div>
+                    <div className="w-full text-center min-w-0">
+                      <h3 className="text-sm sm:text-base font-semibold text-primary leading-tight sm:leading-relaxed break-words">Log Symptoms</h3>
+                    </div>
+                  </div>
+                </Link>
+                <Link
+                  href="/medications/track"
+                  className="card card-link shrink-0 snap-center snap-always !p-6 transition-all focus:outline-none focus-visible:outline-none focus-visible:ring-0 focus-visible:ring-offset-0 min-w-0 [flex-basis:calc((100cqi-2rem)/3)] md:[flex-basis:calc((100cqi-3rem)/3)]"
+                >
+                  <div className="flex flex-col items-center gap-3 min-w-0 w-full">
+                    <div className="w-10 h-10 dashboard-icon-panel rounded-lg flex items-center justify-center flex-shrink-0" style={{ backgroundColor: 'var(--bg-goal-icon-medication)' }}>
+                      <ChartLine className="w-5 h-5 text-pink-500" />
+                    </div>
+                    <div className="w-full text-center min-w-0">
+                      <h3 className="text-sm sm:text-base font-semibold text-primary leading-tight sm:leading-relaxed break-words">Log Medications</h3>
+                    </div>
+                  </div>
+                </Link>
+                <Link
+                  href="/hydration"
+                  className="card card-link shrink-0 snap-center snap-always !p-6 transition-all focus:outline-none focus-visible:outline-none focus-visible:ring-0 focus-visible:ring-offset-0 min-w-0 [flex-basis:calc((100cqi-2rem)/3)] md:[flex-basis:calc((100cqi-3rem)/3)]"
+                >
+                  <div className="flex flex-col items-center gap-3 min-w-0 w-full">
+                    <div className="w-10 h-10 dashboard-icon-panel rounded-lg flex items-center justify-center flex-shrink-0" style={{ backgroundColor: 'var(--bg-goal-icon-hydration)' }}>
+                      <CupSoda className="w-5 h-5 text-sky-600" />
+                    </div>
+                    <div className="w-full text-center min-w-0">
+                      <h3 className="text-sm sm:text-base font-semibold text-primary leading-tight sm:leading-relaxed break-words">My Hydration</h3>
+                    </div>
+                  </div>
+                </Link>
+                <Link
+                  href="/bowel-movements"
+                  className="card card-link shrink-0 snap-center snap-always !p-6 transition-all focus:outline-none focus-visible:outline-none focus-visible:ring-0 focus-visible:ring-offset-0 min-w-0 [flex-basis:calc((100cqi-2rem)/3)] md:[flex-basis:calc((100cqi-3rem)/3)]"
+                >
+                  <div className="flex flex-col items-center gap-3 min-w-0 w-full">
+                    <div className="w-10 h-10 dashboard-icon-panel rounded-lg flex items-center justify-center flex-shrink-0 bg-amber-100 dark:bg-amber-950/40">
+                      <CircleDot className="w-5 h-5 text-amber-800 dark:text-amber-400" />
+                    </div>
+                    <div className="w-full text-center min-w-0">
+                      <h3 className="text-sm sm:text-base font-semibold text-primary leading-tight sm:leading-relaxed break-words">Bowel Movements</h3>
+                    </div>
+                  </div>
+                </Link>
               </div>
-              <div className="pointer-events-none absolute right-3 -top-14 hidden w-52 sm:group-hover:flex sm:group-focus-visible:flex">
-                <div className="tooltip-card rounded-lg px-4 py-3 text-left text-xs text-secondary leading-snug shadow-lg font-roboto">
-                  Record how you're feeling to track your symptoms
-                </div>
+            </div>
+            {!dailyCheckinAtStart && (
+              <div className="hidden sm:flex absolute left-2 top-1/2 -translate-y-1/2 z-30 w-12 h-12 items-center justify-center pointer-events-none">
+                <button
+                  type="button"
+                  onClick={(e) => {
+                    e.preventDefault()
+                    e.stopPropagation()
+                    scrollDailyCheckin(-1)
+                  }}
+                  className="pointer-events-auto flex h-10 w-10 items-center justify-center rounded-full bg-transparent text-[var(--text-cadet-blue)] dark:text-white transition-opacity hover:opacity-80 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--text-cadet-blue)] focus-visible:ring-offset-2 dark:focus-visible:ring-white dark:focus-visible:ring-offset-[var(--bg-main)]"
+                  aria-label="Previous check-in cards"
+                >
+                  <ChevronLeft className="w-6 h-6" />
+                </button>
               </div>
-            </Link>
-            <Link
-              href="/medications/track"
-              className="card card-link !p-6 transition-all group relative focus:outline-none focus-visible:outline-none focus-visible:ring-0 focus-visible:ring-offset-0 focus:ring-0 flex items-center justify-center"
-            >
-              <div className="flex items-center sm:flex-col sm:items-center sm:justify-center gap-3 sm:gap-3 w-full">
-                <div className="w-10 h-10 dashboard-icon-panel rounded-lg flex items-center justify-center flex-shrink-0" style={{ backgroundColor: 'var(--bg-goal-icon-medication)' }}>
-                  <ChartLine className="w-5 h-5 sm:w-6 sm:h-6 text-pink-500" />
-                </div>
-                <div className="flex-1 sm:w-full sm:text-center">
-                  <h3 className="text-sm sm:text-base font-semibold text-primary leading-tight sm:leading-relaxed sm:justify-center">
-                    Log Medications
-                  </h3>
-                </div>
-                <ChevronRight className="w-5 h-5 flex-shrink-0 text-secondary sm:hidden" />
+            )}
+            {!dailyCheckinAtEnd && (
+              <div className="hidden sm:flex absolute right-2 top-1/2 -translate-y-1/2 z-30 w-12 h-12 items-center justify-center pointer-events-none">
+                <button
+                  type="button"
+                  onClick={(e) => {
+                    e.preventDefault()
+                    e.stopPropagation()
+                    scrollDailyCheckin(1)
+                  }}
+                  className="pointer-events-auto flex h-10 w-10 items-center justify-center rounded-full bg-transparent text-[var(--text-cadet-blue)] dark:text-white transition-opacity hover:opacity-80 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--text-cadet-blue)] focus-visible:ring-offset-2 dark:focus-visible:ring-white dark:focus-visible:ring-offset-[var(--bg-main)]"
+                  aria-label="Next check-in cards"
+                >
+                  <ChevronRight className="w-6 h-6" />
+                </button>
               </div>
-              <div className="pointer-events-none absolute right-3 -top-14 hidden w-52 sm:group-hover:flex sm:group-focus-visible:flex">
-                <div className="tooltip-card rounded-lg px-4 py-3 text-left text-xs text-secondary leading-snug shadow-lg font-roboto">
-                  Log missed medications to track your adherence
-                </div>
-              </div>
-            </Link>
-            <Link
-              href="/hydration"
-              className="card card-link !p-6 transition-all group relative focus:outline-none focus-visible:outline-none focus-visible:ring-0 focus-visible:ring-offset-0 focus:ring-0 flex items-center justify-center"
-            >
-              <div className="flex items-center sm:flex-col sm:items-center sm:justify-center gap-3 sm:gap-3 w-full">
-                <div className="w-10 h-10 dashboard-icon-panel rounded-lg flex items-center justify-center flex-shrink-0" style={{ backgroundColor: 'var(--bg-goal-icon-hydration)' }}>
-                  <CupSoda className="w-5 h-5 sm:w-6 sm:h-6 text-sky-600" />
-                </div>
-                <div className="flex-1 sm:w-full sm:text-center">
-                  <h3 className="text-sm sm:text-base font-semibold text-primary leading-tight sm:leading-relaxed sm:justify-center">
-                    My Hydration
-                  </h3>
-                </div>
-                <ChevronRight className="w-5 h-5 flex-shrink-0 text-secondary sm:hidden" />
-              </div>
-              <div className="pointer-events-none absolute right-3 -top-14 hidden w-52 sm:group-hover:flex sm:group-focus-visible:flex">
-                <div className="tooltip-card rounded-lg px-4 py-3 text-left text-xs text-secondary leading-snug shadow-lg font-roboto">
-                  Track your daily water intake to hit your hydration goal
-                </div>
-              </div>
-            </Link>
+            )}
           </div>
         </div>
 
-        <div className="contents lg:grid grid-cols-1 lg:grid-cols-2 gap-6 mb-6 lg:order-5 xl:order-none">
+        <div className="contents lg:grid grid-cols-1 lg:grid-cols-2 lg:items-stretch gap-6 mb-6 lg:order-5 xl:order-none">
           {/* Today's Summary */}
-          <div className="order-[6] lg:order-1 mb-6 lg:mb-0">
+          <div className="order-[6] lg:order-1 mb-6 lg:mb-0 lg:flex lg:flex-col lg:min-h-0 lg:h-full">
             <h2 className="text-xl font-semibold font-source text-primary mb-3">Today's Summary</h2>
-            <div className="card">
+            <div className="card lg:flex-1 lg:flex lg:flex-col lg:min-h-0">
             <div className="card-inner p-4 sm:p-6">
               <div className="flex justify-between items-center mb-3">
                 <span className="text-sm text-primary flex items-center gap-3">
@@ -1316,9 +1493,9 @@ export default function Home() {
           </div>
 
           {/* Recent Activity */}
-          <div className="order-[8] lg:order-2 mb-6 lg:mb-0">
+          <div className="order-[8] lg:order-2 mb-6 lg:mb-0 lg:flex lg:flex-col lg:min-h-0 lg:h-full">
             <h2 className="text-xl font-semibold font-source text-primary mb-3">Recent Activity</h2>
-            <div className="card">
+            <div className="card lg:flex-1 lg:flex lg:flex-col lg:min-h-0">
             <div className="card-inner p-4 sm:p-6 transition-all duration-300 ease-in-out">
               {(() => {
               // Helper function to format relative time
@@ -1344,7 +1521,7 @@ export default function Home() {
                 activities.push({
                   type: 'symptom',
                   timestamp: new Date(lastSymptom.created_at || lastSymptom.createdAt),
-                  title: "Completed Today's goal \"Log Symptoms\"",
+                  title: 'Logged symptom',
                   icon: Thermometer,
                   iconBg: 'bg-emerald-100',
                   iconColor: 'text-emerald-600'
@@ -1356,7 +1533,7 @@ export default function Home() {
                 activities.push({
                   type: 'deleted-symptom',
                   timestamp: new Date(symptomDeleted.timestamp),
-                  title: 'Deleted symptom entry',
+                  title: 'deleted symptom log',
                   icon: Thermometer,
                   iconBg: 'bg-emerald-100',
                   iconColor: 'text-emerald-600'
@@ -1369,7 +1546,7 @@ export default function Home() {
                 activities.push({
                   type: 'tracked-medication',
                   timestamp: new Date(lastMedication.created_at || lastMedication.createdAt),
-                  title: "Completed Today's goal \"Log Medications\"",
+                  title: 'Logged medication',
                   icon: ChartLine,
                   iconBg: 'bg-pink-100',
                   iconColor: 'text-pink-600'
@@ -1381,7 +1558,7 @@ export default function Home() {
                 activities.push({
                   type: 'deleted-tracked-medication',
                   timestamp: new Date(trackedMedicationDeleted.timestamp),
-                  title: 'Deleted tracked medication',
+                  title: 'deleted medication log',
                   icon: ChartLine,
                   iconBg: 'bg-pink-100',
                   iconColor: 'text-pink-600'
@@ -1462,15 +1639,40 @@ export default function Home() {
                 })
               }
 
+              // Most recent bowel movement log (timestamp when saved or last updated)
+              if (bowelMovementEntries.length > 0) {
+                const lastBowel = bowelMovementEntries[0]
+                activities.push({
+                  type: 'bowel-movement',
+                  timestamp: new Date(lastBowel.updated_at || lastBowel.created_at),
+                  title: `Logged bowel movement (${formatBristolTypeOnly(lastBowel.bristol_type)})`,
+                  icon: CircleDot,
+                  iconBg: 'bg-amber-100',
+                  iconColor: 'text-amber-800 dark:text-amber-400',
+                })
+              }
+
               // Weight deleted
               if (weightDeleted) {
                 activities.push({
                   type: 'deleted-weight',
                   timestamp: new Date(weightDeleted.timestamp),
-                  title: 'Deleted weight entry',
+                  title: 'delete weight log',
                   icon: Scale,
                   iconBg: 'bg-indigo-100',
                   iconColor: 'text-indigo-600'
+                })
+              }
+
+              // Bowel movement deleted
+              if (bowelMovementDeleted) {
+                activities.push({
+                  type: 'deleted-bowel-movement',
+                  timestamp: new Date(bowelMovementDeleted.timestamp),
+                  title: 'Deleted bowel log',
+                  icon: CircleDot,
+                  iconBg: 'bg-amber-100',
+                  iconColor: 'text-amber-800 dark:text-amber-400',
                 })
               }
 
@@ -1574,7 +1776,7 @@ export default function Home() {
                       <Clock className="w-10 h-10 text-primary opacity-40" />
                     </div>
                     <p className="text-primary text-sm leading-relaxed">No recent activity</p>
-                    <p className="text-xs text-primary mt-1 leading-relaxed opacity-80">Start tracking your symptoms and medications to see activity here</p>
+                    <p className="text-xs text-primary mt-1 leading-relaxed opacity-80">Start tracking symptoms, medications, and bowel movements to see activity here</p>
                     </div>
                 )
               }
@@ -1609,14 +1811,14 @@ export default function Home() {
 
         {/* Latest News */}
         {isAuthenticated && (
-          <div className="mb-6 xl:my-6 order-[10] xl:order-none">
+          <div className="mb-6 order-[10] xl:order-none">
             <h2 className="text-xl font-semibold font-source text-primary mb-4">
               Latest News
             </h2>
             {newsLoading && (
               <div className="flex items-center justify-center py-16">
                 <p className="text-sm sm:text-base text-secondary font-roboto">
-                  Loading latest news…
+                  Getting the latest news...
                 </p>
               </div>
             )}
@@ -1864,7 +2066,7 @@ export default function Home() {
           <div className="grid grid-cols-2 lg:grid-cols-3 gap-4 md:gap-6 min-w-0">
               <Link
                 href="/medications"
-                className="card card-link !p-6 transition-all group relative focus:outline-none focus-visible:outline-none focus-visible:ring-0 focus-visible:ring-offset-0 focus:ring-0 min-w-0"
+                className="card card-link !p-6 transition-all focus:outline-none focus-visible:outline-none focus-visible:ring-0 focus-visible:ring-offset-0 focus:ring-0 min-w-0"
               >
                 <div className="flex flex-col items-center gap-3 min-w-0">
                   <div className="w-10 h-10 bg-purple-100 dashboard-icon-panel rounded-lg flex items-center justify-center flex-shrink-0">
@@ -1876,16 +2078,11 @@ export default function Home() {
                     </h3>
                   </div>
                 </div>
-                <div className="pointer-events-none absolute right-3 -top-14 hidden w-52 sm:group-hover:flex sm:group-focus-visible:flex">
-                  <div className="tooltip-card rounded-lg px-4 py-3 text-left text-xs text-secondary leading-snug shadow-lg font-roboto w-full">
-                    Add to manage your prescribed medications
-                  </div>
-                </div>
               </Link>
 
               <Link
                 href="/reports"
-                className="card card-link !p-6 transition-all group relative focus:outline-none focus-visible:outline-none focus-visible:ring-0 focus-visible:ring-offset-0 focus:ring-0 min-w-0"
+                className="card card-link !p-6 transition-all focus:outline-none focus-visible:outline-none focus-visible:ring-0 focus-visible:ring-offset-0 focus:ring-0 min-w-0"
               >
                 <div className="flex flex-col items-center gap-3 min-w-0">
                   <div className="w-10 h-10 bg-orange-100 dashboard-icon-panel rounded-lg flex items-center justify-center flex-shrink-0">
@@ -1897,16 +2094,11 @@ export default function Home() {
                     </h3>
                   </div>
                 </div>
-                <div className="pointer-events-none absolute right-3 -top-14 hidden w-52 sm:group-hover:flex sm:group-focus-visible:flex">
-                  <div className="tooltip-card rounded-lg px-4 py-3 text-left text-xs text-secondary leading-snug shadow-lg font-roboto w-full">
-                    View insights and share data with your doctor
-                  </div>
-                </div>
               </Link>
 
               <Link
                 href="/weight"
-                className="card card-link !p-6 transition-all group relative focus:outline-none focus-visible:outline-none focus-visible:ring-0 focus-visible:ring-offset-0 focus:ring-0 min-w-0"
+                className="card card-link !p-6 transition-all focus:outline-none focus-visible:outline-none focus-visible:ring-0 focus-visible:ring-offset-0 focus:ring-0 min-w-0"
               >
                 <div className="flex flex-col items-center gap-3 min-w-0">
                   <div className="w-10 h-10 bg-indigo-100 dashboard-icon-panel rounded-lg flex items-center justify-center flex-shrink-0">
@@ -1918,31 +2110,21 @@ export default function Home() {
                     </h3>
                   </div>
                 </div>
-                <div className="pointer-events-none absolute right-3 -top-14 hidden w-52 sm:group-hover:flex sm:group-focus-visible:flex">
-                  <div className="tooltip-card rounded-lg px-4 py-3 text-left text-xs text-secondary leading-snug shadow-lg font-roboto w-full">
-                    Keep track of your weight for your appointments
-                  </div>
-                </div>
               </Link>
 
               <Link
                 href="/appointments"
-                className="card card-link !p-6 transition-all group relative focus:outline-none focus-visible:outline-none focus-visible:ring-0 focus-visible:ring-offset-0 focus:ring-0 min-w-0"
+                className="card card-link !p-6 transition-all focus:outline-none focus-visible:outline-none focus-visible:ring-0 focus-visible:ring-offset-0 focus:ring-0 min-w-0"
+                title="Appointments"
               >
-                <div className="flex flex-col items-center gap-3 min-w-0">
+                <div className="flex flex-col items-center gap-3 min-w-0 w-full">
                   <div className="w-10 h-10 bg-slate-200 dark:bg-slate-600/50 dashboard-icon-panel rounded-lg flex items-center justify-center flex-shrink-0">
                     <Calendar className="w-5 h-5 text-slate-700 dark:[color:var(--text-icon-more-appointments)]" />
                   </div>
                   <div className="w-full text-center min-w-0">
-                    <h3 className="text-sm sm:text-base font-semibold text-primary leading-tight sm:leading-relaxed break-words">
-                      <span className="min-[376px]:hidden">Apts</span>
-                      <span className="hidden min-[376px]:inline">Appointments</span>
+                    <h3 className="text-sm sm:text-base font-semibold text-primary leading-tight sm:leading-relaxed min-w-0 w-full truncate">
+                      Appointments
                     </h3>
-                  </div>
-                </div>
-                <div className="pointer-events-none absolute right-3 -top-14 hidden w-52 sm:group-hover:flex sm:group-focus-visible:flex">
-                  <div className="tooltip-card rounded-lg px-4 py-3 text-left text-xs text-secondary leading-snug shadow-lg font-roboto w-full">
-                    View to manage your upcoming healthcare appointments
                   </div>
                 </div>
               </Link>

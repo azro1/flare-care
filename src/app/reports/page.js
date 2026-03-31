@@ -12,6 +12,7 @@ import ProtectedRoute from '@/components/ProtectedRoute'
 import { supabase, TABLES } from '@/lib/supabase'
 import { useAuth } from '@/lib/AuthContext'
 import { getUserPreferences } from '@/lib/userPreferences'
+import { formatBristolLine } from '@/lib/bristolStoolScale'
 import { Calendar, FileText, Download, FileDown, BarChart3, Pill, Activity, TrendingUp, Thermometer, Brain, Pizza, ChartLine, Scale, CupSoda, Mail, ChevronDown } from 'lucide-react'
 import { motion } from 'framer-motion'
 
@@ -19,6 +20,34 @@ import { motion } from 'framer-motion'
 export const dynamic = 'force-dynamic'
 
 const REPORT_PAGE_SIZE = 20
+
+/** Local calendar date DD/MM/YYYY from an ISO instant — matches bowel / weight logs */
+function formatUKDateFromOccurredAt(iso) {
+  if (!iso) return '—'
+  const date = new Date(iso)
+  if (Number.isNaN(date.getTime())) return '—'
+  const day = date.getDate().toString().padStart(2, '0')
+  const month = (date.getMonth() + 1).toString().padStart(2, '0')
+  const year = date.getFullYear()
+  return `${day}/${month}/${year}`
+}
+
+/** Local time HH:mm from an ISO instant — matches bowel log list */
+function formatUKTimeFromOccurredAt(iso) {
+  if (!iso) return '—'
+  const date = new Date(iso)
+  if (Number.isNaN(date.getTime())) return '—'
+  const h = date.getHours().toString().padStart(2, '0')
+  const m = date.getMinutes().toString().padStart(2, '0')
+  return `${h}:${m}`
+}
+
+/** PDF/CSV/email: bowel tri-state booleans */
+function formatBowelYesNo(value) {
+  if (value === true) return 'Yes'
+  if (value === false) return 'No'
+  return '—'
+}
 
 function ReportsPageContent() {
   const { user } = useAuth()
@@ -29,6 +58,7 @@ function ReportsPageContent() {
   const [appointments, setAppointments] = useState([])
   const [weightEntries, setWeightEntries] = useState([])
   const [hydrationEntries, setHydrationEntries] = useState([])
+  const [bowelMovementLogs, setBowelMovementLogs] = useState([])
   const [reportData, setReportData] = useState(null)
   const [userPreferences, setUserPreferences] = useState(null)
   const [isLoading, setIsLoading] = useState(true)
@@ -61,6 +91,7 @@ function ReportsPageContent() {
     appointments: false,
     weightLogs: false,
     hydration: false,
+    bowelMovements: false,
     topFoods: false
   })
   const toggleSection = (key) => setExpandedSections(prev => ({ ...prev, [key]: !prev[key] }))
@@ -176,7 +207,8 @@ function ReportsPageContent() {
             appointments: reportData.appointments,
             weightEntries: reportData.weightEntries,
             hydrationEntries: reportData.hydrationEntries,
-            hydrationTarget: reportData.hydrationTarget
+            hydrationTarget: reportData.hydrationTarget,
+            bowelMovementEntries: reportData.bowelMovementEntries
           }
         })
       })
@@ -418,6 +450,29 @@ function ReportsPageContent() {
     fetchHydration()
   }, [user?.id])
 
+  useEffect(() => {
+    const fetchBowel = async () => {
+      if (!user?.id) {
+        setBowelMovementLogs([])
+        return
+      }
+      try {
+        const { data, error } = await supabase
+          .from(TABLES.BOWEL_MOVEMENTS)
+          .select('*')
+          .eq('user_id', user.id)
+          .order('occurred_at', { ascending: false })
+
+        if (error) throw error
+        setBowelMovementLogs(data || [])
+      } catch (error) {
+        console.error('Error fetching bowel movements:', error)
+        setBowelMovementLogs([])
+      }
+    }
+    fetchBowel()
+  }, [user?.id])
+
   // Reset loading when navigating to reports page
   useEffect(() => {
     if (pathname === '/reports') {
@@ -431,7 +486,7 @@ function ReportsPageContent() {
     if (user && pathname === '/reports') {
       generateReport()
     }
-  }, [symptoms, medications, medicationTracking, appointments, weightEntries, hydrationEntries, dateRange, user, pathname])
+  }, [symptoms, medications, medicationTracking, appointments, weightEntries, hydrationEntries, bowelMovementLogs, dateRange, user, pathname])
 
   useEffect(() => {
     if (reportData) {
@@ -579,6 +634,22 @@ function ReportsPageContent() {
         glasses: entry.glasses ?? 0,
         targetMet: (entry.glasses ?? 0) >= HYDRATION_TARGET
       }))
+
+    const filteredBowelMovements = bowelMovementLogs
+      .filter((row) => {
+        const t = row.occurred_at ? new Date(row.occurred_at) : null
+        if (!t || Number.isNaN(t.getTime())) return false
+        return t >= startDate && t <= endDate
+      })
+      .sort((a, b) => new Date(a.occurred_at) - new Date(b.occurred_at))
+      .map((row) => ({
+        occurredAt: row.occurred_at,
+        bristolType: row.bristol_type,
+        blood: row.blood,
+        strain: row.strain,
+        urgency: row.urgency,
+        notes: row.notes || ''
+      }))
     
     setReportData({
       period: {
@@ -604,7 +675,8 @@ function ReportsPageContent() {
       appointments: filteredAppointments,
       weightEntries: filteredWeight,
       hydrationEntries: filteredHydration,
-      hydrationTarget: HYDRATION_TARGET
+      hydrationTarget: HYDRATION_TARGET,
+      bowelMovementEntries: filteredBowelMovements
     })
     setIsLoading(false)
   }
@@ -619,7 +691,17 @@ function ReportsPageContent() {
     const hasAppointments = reportData.appointments && reportData.appointments.length > 0
     const hasWeight = reportData.weightEntries && reportData.weightEntries.length > 0
     const hasHydration = reportData.hydrationEntries && reportData.hydrationEntries.length > 0
-    return reportData.totalEntries > 0 || reportData.medications.length > 0 || hasTrackingData || hasAppointments || hasWeight || hasHydration
+    const hasBowel =
+      reportData.bowelMovementEntries && reportData.bowelMovementEntries.length > 0
+    return (
+      reportData.totalEntries > 0 ||
+      reportData.medications.length > 0 ||
+      hasTrackingData ||
+      hasAppointments ||
+      hasWeight ||
+      hasHydration ||
+      hasBowel
+    )
   }
 
   const handleExportClick = (exportFunction) => {
@@ -675,7 +757,7 @@ function ReportsPageContent() {
       doc.setFont('helvetica', 'normal')
       reportData.medications.forEach(med => {
         doc.setFont('helvetica', 'bold')
-        doc.text(`• ${med.name || '—'}`, margin, yPosition)
+        doc.text(med.name || '—', margin, yPosition)
         yPosition += 5
         doc.setFont('helvetica', 'normal')
         if (med.dosage?.toString().trim()) {
@@ -831,8 +913,8 @@ function ReportsPageContent() {
           const splitNotes = doc.splitTextToSize(`   Notes: ${notesText}`, pageWidth - 2 * margin)
           doc.text(splitNotes, margin, yPosition)
           yPosition += splitNotes.length * 5
+          yPosition += 5
         }
-        yPosition += 3
       })
       yPosition += 10
     }
@@ -845,7 +927,7 @@ function ReportsPageContent() {
       }
       doc.setFontSize(16)
       doc.setFont('helvetica', 'bold')
-      doc.text(`Hydration Logs (${reportData.hydrationEntries.length})`, margin, yPosition)
+      doc.text('Hydration Logs', margin, yPosition)
       yPosition += 10
 
       doc.setFontSize(12)
@@ -860,6 +942,52 @@ function ReportsPageContent() {
         const targetMet = entry.targetMet ? ' (Target met)' : ''
         doc.text(`${dateText} - ${glassesText}${targetMet}`, margin, yPosition)
         yPosition += 8
+      })
+      yPosition += 10
+    }
+
+    if (reportData.bowelMovementEntries && reportData.bowelMovementEntries.length > 0) {
+      if (yPosition > 250) {
+        doc.addPage()
+        yPosition = 20
+      }
+      doc.setFontSize(16)
+      doc.setFont('helvetica', 'bold')
+      doc.text('Bowel movements', margin, yPosition)
+      yPosition += 10
+
+      doc.setFontSize(12)
+      doc.setFont('helvetica', 'normal')
+      reportData.bowelMovementEntries.forEach((entry) => {
+        if (yPosition > 270) {
+          doc.addPage()
+          yPosition = 20
+        }
+        const dateText = formatUKDateFromOccurredAt(entry.occurredAt)
+        const timeText = formatUKTimeFromOccurredAt(entry.occurredAt)
+        const whenParts = []
+        if (dateText !== '—') whenParts.push(dateText)
+        if (timeText !== '—') whenParts.push(timeText)
+        const whenText = whenParts.length ? whenParts.join(' ') : ''
+        const bristol = formatBristolLine(entry.bristolType)
+        const linePrefix = whenText ? `${whenText} — ` : ''
+        doc.setFont('helvetica', 'bold')
+        doc.text(`${linePrefix}${bristol}`, margin, yPosition)
+        yPosition += 5
+        doc.setFont('helvetica', 'normal')
+        doc.text(`   Blood: ${formatBowelYesNo(entry.blood)}`, margin, yPosition)
+        yPosition += 5
+        doc.text(`   Strain: ${formatBowelYesNo(entry.strain)}`, margin, yPosition)
+        yPosition += 5
+        doc.text(`   Urgency: ${formatBowelYesNo(entry.urgency)}`, margin, yPosition)
+        yPosition += 5
+        const bowelNotes = entry.notes?.toString().trim() || ''
+        if (bowelNotes) {
+          const splitBowelNotes = doc.splitTextToSize(`   Notes: ${bowelNotes}`, pageWidth - 2 * margin)
+          doc.text(splitBowelNotes, margin, yPosition)
+          yPosition += splitBowelNotes.length * 5
+          yPosition += 5
+        }
       })
       yPosition += 10
     }
@@ -1243,6 +1371,26 @@ function ReportsPageContent() {
           String(entry.glasses ?? 0),
           String(target),
           entry.targetMet ? 'Yes' : 'No'
+        ])
+      })
+      csvData.push([])
+    }
+
+    if (reportData.bowelMovementEntries && reportData.bowelMovementEntries.length > 0) {
+      csvData.push([])
+      csvData.push(['BOWEL MOVEMENTS'])
+      csvData.push(['Date', 'Time', 'Bristol type', 'Blood', 'Strain', 'Urgency', 'Notes'])
+      reportData.bowelMovementEntries.forEach((entry) => {
+        const dateStr = formatUKDateFromOccurredAt(entry.occurredAt)
+        const timeStr = formatUKTimeFromOccurredAt(entry.occurredAt)
+        csvData.push([
+          dateStr === '—' ? '' : dateStr,
+          timeStr === '—' ? '' : timeStr,
+          formatBristolLine(entry.bristolType),
+          formatBowelYesNo(entry.blood),
+          formatBowelYesNo(entry.strain),
+          formatBowelYesNo(entry.urgency),
+          entry.notes?.toString().trim() || '',
         ])
       })
       csvData.push([])
@@ -1874,6 +2022,60 @@ function ReportsPageContent() {
           </div>
         )}
 
+        {/* Bowel movements */}
+        {reportData.bowelMovementEntries && reportData.bowelMovementEntries.length > 0 && (
+          <div className="card min-w-0 overflow-hidden">
+            <button
+              type="button"
+              onClick={() => toggleSection('bowelMovements')}
+              className={`flex items-center justify-between w-full text-left group ${expandedSections.bowelMovements ? 'mb-3 sm:mb-4' : ''}`}
+            >
+              <h2 className="min-w-0 pr-2 text-lg sm:text-xl font-semibold font-source text-primary">
+                Bowel movements ({reportData.bowelMovementEntries.length})
+              </h2>
+              <ChevronDown className={`w-5 h-5 text-secondary shrink-0 transition-transform ${expandedSections.bowelMovements ? 'rotate-180' : ''}`} />
+            </button>
+            <motion.div
+              initial={false}
+              animate={{
+                height: expandedSections.bowelMovements ? 'auto' : 0,
+                opacity: expandedSections.bowelMovements ? 1 : 0
+              }}
+              transition={{ duration: 0.2, ease: 'easeOut' }}
+              style={{ overflow: 'hidden' }}
+            >
+            <div className="space-y-0 [&>*:last-child]:pb-0">
+              {reportData.bowelMovementEntries.map((entry, index) => {
+                const dateStr = formatUKDateFromOccurredAt(entry.occurredAt)
+                const timeStr = formatUKTimeFromOccurredAt(entry.occurredAt)
+                return (
+                  <div key={index} className={index > 0 ? 'pt-4 border-t' : ''} style={index > 0 ? { borderColor: 'var(--separator-card)' } : undefined}>
+                    <div className="flex justify-between items-center gap-4 py-3 border-b min-w-0 overflow-hidden" style={{ borderColor: 'var(--separator-card)' }}>
+                      <span className="text-sm sm:text-base text-secondary font-roboto">Date</span>
+                      <span className="text-sm sm:text-base font-medium text-primary font-roboto text-right">{dateStr}</span>
+                    </div>
+                    <div className="flex justify-between items-center gap-4 py-3 border-b min-w-0 overflow-hidden" style={{ borderColor: 'var(--separator-card)' }}>
+                      <span className="text-sm sm:text-base text-secondary font-roboto">Time</span>
+                      <span className="text-sm sm:text-base font-medium text-primary font-roboto text-right tabular-nums">{timeStr}</span>
+                    </div>
+                    <div className="flex justify-between items-center gap-4 py-3 min-w-0 overflow-hidden">
+                      <span className="text-sm sm:text-base text-secondary font-roboto">Type</span>
+                      <span className="text-sm sm:text-base font-medium text-primary font-roboto text-right tabular-nums">
+                        {entry.bristolType != null &&
+                        entry.bristolType !== '' &&
+                        !Number.isNaN(Number(entry.bristolType))
+                          ? Number(entry.bristolType)
+                          : '—'}
+                      </span>
+                    </div>
+                  </div>
+                )
+              })}
+            </div>
+            </motion.div>
+          </div>
+        )}
+
         {/* Hydration logs */}
         {reportData.hydrationEntries && reportData.hydrationEntries.length > 0 && (
           <div className="card min-w-0 overflow-hidden">
@@ -1952,7 +2154,7 @@ function ReportsPageContent() {
       </div>
 
       {/* No Data Message */}
-      {reportData.totalEntries === 0 && reportData.medications.length === 0 && (!reportData.appointments || reportData.appointments.length === 0) && (!reportData.weightEntries || reportData.weightEntries.length === 0) && (!reportData.hydrationEntries || reportData.hydrationEntries.length === 0) && !(reportData.medicationTracking && (reportData.medicationTracking.missedMedications.length > 0 || reportData.medicationTracking.nsaids.length > 0 || reportData.medicationTracking.antibiotics.length > 0)) && (
+      {reportData.totalEntries === 0 && reportData.medications.length === 0 && (!reportData.appointments || reportData.appointments.length === 0) && (!reportData.weightEntries || reportData.weightEntries.length === 0) && (!reportData.hydrationEntries || reportData.hydrationEntries.length === 0) && (!reportData.bowelMovementEntries || reportData.bowelMovementEntries.length === 0) && !(reportData.medicationTracking && (reportData.medicationTracking.missedMedications.length > 0 || reportData.medicationTracking.nsaids.length > 0 || reportData.medicationTracking.antibiotics.length > 0)) && (
         <div className="card p-8 text-center">
           <div className="flex justify-center mb-3">
             <FileText className="w-10 h-10 text-secondary opacity-40" />

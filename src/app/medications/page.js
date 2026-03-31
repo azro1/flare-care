@@ -785,11 +785,11 @@ className="px-4 py-2 text-base sm:text-lg font-medium font-sans rounded-lg trans
                   <div className="flex flex-col sm:flex-row sm:justify-between sm:items-start">
                     <div className="flex-1 min-w-0 w-full sm:w-auto">
                       <div className={`flex items-center gap-2 flex-nowrap ${isExpanded ? 'mb-1' : ''} min-w-0`}>
-                        <h3 className="font-semibold font-roboto text-primary truncate min-w-0 flex-1">
+                        <h3 className="text-sm font-semibold font-roboto text-primary truncate min-w-0 flex-1">
                           {medication.name}
                         </h3>
                         {medication.dosage && (
-                          <span className="text-sm text-secondary font-roboto whitespace-nowrap flex-shrink-0">
+                          <span className="text-xs sm:text-sm text-secondary font-roboto whitespace-nowrap flex-shrink-0">
                             {medication.dosage}
                           </span>
                         )}
@@ -806,7 +806,7 @@ className="px-4 py-2 text-base sm:text-lg font-medium font-sans rounded-lg trans
                       </div>
                       {isExpanded && medication.frequency && (
                         <p
-                          className="text-sm text-secondary font-roboto mt-1 min-w-0 truncate mb-2"
+                          className="text-xs sm:text-sm text-secondary font-roboto mt-1 min-w-0 truncate mb-2"
                           title={normalizeFrequencyPreset(medication.frequency)}
                         >
                           <span className="font-semibold text-primary">To be taken:</span> {normalizeFrequencyPreset(medication.frequency)}
@@ -823,7 +823,7 @@ className="px-4 py-2 text-base sm:text-lg font-medium font-sans rounded-lg trans
                       >
                           <div className={`flex flex-wrap items-center gap-3 ${(medication.timeOfDay || medication.remindersEnabled !== false) ? 'mb-3' : ''}`}>
                             {medication.timeOfDay && (
-                              <span className="inline-flex items-center px-3 py-1.5 rounded-full text-sm font-medium font-roboto bg-white text-black">
+                              <span className="inline-flex items-center px-3 py-1.5 rounded-full text-xs sm:text-sm font-medium font-roboto bg-white text-black">
                                 <svg className="w-4 h-4 mr-1.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" />
                                 </svg>
@@ -832,7 +832,7 @@ className="px-4 py-2 text-base sm:text-lg font-medium font-sans rounded-lg trans
                             )}
                             {medication.remindersEnabled !== false && (
                               <span 
-                                className="inline-flex items-center px-3 py-1.5 rounded-full text-sm font-medium font-roboto"
+                                className="inline-flex items-center px-3 py-1.5 rounded-full text-xs sm:text-sm font-medium font-roboto"
                                 style={{ 
                                   backgroundColor: 'var(--bg-card)',
                                   color: 'var(--text-cadet-blue)'
@@ -848,7 +848,7 @@ className="px-4 py-2 text-base sm:text-lg font-medium font-sans rounded-lg trans
                           <div>
                             <button
                               onClick={() => handleMarkAsTaken(medication.id)}
-                              className="px-3 py-1.5 rounded-lg text-sm font-medium font-sans transition-all duration-200 inline-flex items-center justify-center border border-[#5F9EA0]/40 dark:border-white/50"
+                              className="px-3 py-1.5 rounded-lg text-xs sm:text-sm font-medium font-sans transition-all duration-200 inline-flex items-center justify-center border border-[#5F9EA0]/40 dark:border-white/50"
                               style={{
                                 ...(takenMedications.some(id => String(id) === String(medication.id)) 
                                   ? {
@@ -908,7 +908,7 @@ className="px-4 py-2 text-base sm:text-lg font-medium font-sans rounded-lg trans
                   {isExpanded && medication.notes && (
                     <div className="mt-2 min-w-0">
                       <div className="card-inner min-w-0">
-                        <p className="text-sm text-secondary font-roboto truncate">
+                        <p className="text-xs sm:text-sm text-secondary font-roboto truncate">
                           <span className="font-semibold text-primary">Notes:</span> {medication.notes}
                         </p>
                       </div>

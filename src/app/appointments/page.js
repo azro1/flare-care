@@ -471,7 +471,7 @@ function AppointmentsPageContent() {
                     <p className="text-sm font-roboto mt-1" role="alert" style={{ color: 'var(--text-cadet-blue)' }}>{dateError}</p>
                   )}
                 </div>
-                <div>
+                <div className="w-full">
                   <label htmlFor="apt-time" className="block text-sm sm:text-base font-semibold font-roboto text-primary mb-2 sm:mb-3">
                     Time *
                   </label>
@@ -479,7 +479,7 @@ function AppointmentsPageContent() {
                     id="apt-time"
                     value={formData.time || ''}
                     onChange={(e) => setFormData(prev => ({ ...prev, time: e.target.value || '' }))}
-                    className={`input-field-wizard w-full ${formData.time ? 'has-value' : 'placeholder'}`}
+                    className={`input-field-wizard w-full sm:max-w-[150px] ${formData.time ? 'has-value' : 'placeholder'}`}
                     required
                   >
                     <option value="">Select time</option>
@@ -657,7 +657,7 @@ function AppointmentsPageContent() {
                     <div className="flex flex-col sm:flex-row sm:justify-between sm:items-start gap-3">
                       <div className="flex-1 min-w-0">
                         <div className="flex items-center gap-2 min-w-0">
-                          <div className="flex flex-wrap items-baseline gap-x-2 gap-y-1 min-w-0 flex-1">
+                          <div className="flex flex-wrap items-baseline gap-x-2 gap-y-1 min-w-0 flex-1 text-sm">
                             <span className="font-semibold text-primary truncate">{formatUKDate(apt.date)}</span>
                             {apt.time && (
                               <>
@@ -679,7 +679,7 @@ function AppointmentsPageContent() {
                           </button>
                         </div>
                         {apt.type && (
-                          <p className="font-medium text-primary mt-1 truncate" title={apt.type}>{apt.type}</p>
+                          <p className="text-xs sm:text-sm font-medium text-primary mt-1 truncate" title={apt.type}>{apt.type}</p>
                         )}
                         <motion.div
                           initial={false}
@@ -694,7 +694,7 @@ function AppointmentsPageContent() {
                               <div className="flex flex-row flex-nowrap items-center gap-3 mt-3 mb-3">
                                 {apt.time && getReminderTimeLabel(apt.date, apt.time, apt.reminderMinutesBefore) && (
                                   <span
-                                    className="inline-flex items-center px-3 py-1.5 rounded-full text-sm font-medium font-roboto shrink-0 bg-white text-black"
+                                    className="inline-flex items-center px-3 py-1.5 rounded-full text-xs sm:text-sm font-medium font-roboto shrink-0 bg-white text-black"
                                   >
                                     <svg className="w-4 h-4 mr-1.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                       <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" />
@@ -703,7 +703,7 @@ function AppointmentsPageContent() {
                                   </span>
                                 )}
                                 <span
-                                  className="inline-flex items-center px-3 py-1.5 rounded-full text-sm font-medium font-roboto shrink-0"
+                                  className="inline-flex items-center px-3 py-1.5 rounded-full text-xs sm:text-sm font-medium font-roboto shrink-0"
                                   style={{ backgroundColor: 'var(--bg-card)', color: 'var(--text-cadet-blue)' }}
                                 >
                                   <svg className="w-4 h-4 mr-1.5" fill="currentColor" viewBox="0 0 20 20">
@@ -714,10 +714,10 @@ function AppointmentsPageContent() {
                               </div>
                             )}
                             {apt.clinicianName && (
-                              <p className="text-sm text-secondary font-roboto mt-0.5 truncate" title={apt.clinicianName}>{apt.clinicianName}</p>
+                              <p className="text-xs sm:text-sm text-secondary font-roboto mt-0.5 truncate" title={apt.clinicianName}>{apt.clinicianName}</p>
                             )}
                             {apt.location && (
-                              <p className="text-sm text-secondary font-roboto truncate" title={apt.location}>{apt.location}</p>
+                              <p className="text-xs sm:text-sm text-secondary font-roboto truncate" title={apt.location}>{apt.location}</p>
                             )}
                             <div className="flex flex-wrap items-center gap-2 mt-3">
                               <button
@@ -752,7 +752,7 @@ function AppointmentsPageContent() {
                     {isExpanded && apt.notes && (
                       <div className="mt-2 min-w-0">
                         <div className="card-inner min-w-0">
-                          <p className="text-sm text-secondary font-roboto truncate" title={apt.notes}>
+                          <p className="text-xs sm:text-sm text-secondary font-roboto truncate" title={apt.notes}>
                             <span className="font-semibold text-primary">Notes:</span> {apt.notes}
                           </p>
                         </div>

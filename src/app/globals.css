@@ -1525,6 +1525,32 @@ select.input-field-wizard option[value=""] {
   display: none;
 }
 
+/* Daily Check-in: hide scrollbar on small screens (swipe); show thin bar on md+ so desktop users see a carousel */
+.daily-checkin-scroll {
+  scrollbar-width: none;
+}
+.daily-checkin-scroll::-webkit-scrollbar {
+  display: none;
+}
+@media (min-width: 768px) {
+  .daily-checkin-scroll {
+    scrollbar-width: thin;
+    scrollbar-color: var(--separator-card-inner) transparent;
+  }
+  .daily-checkin-scroll::-webkit-scrollbar {
+    display: block;
+    height: 8px;
+  }
+  .daily-checkin-scroll::-webkit-scrollbar-track {
+    background: transparent;
+    border-radius: 4px;
+  }
+  .daily-checkin-scroll::-webkit-scrollbar-thumb {
+    background-color: var(--separator-card-inner);
+    border-radius: 4px;
+  }
+}
+
 /* Dark mode scrollbar styling */
 .dark ::-webkit-scrollbar {
   width: 12px;
