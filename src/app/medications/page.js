@@ -24,25 +24,34 @@ function MedicationsPageContent() {
     name: '',
     dosage: '',
     timeOfDay: '',
-    // Frequency is stored in the DB as a human label (e.g. "once a day", "five times a day")
-    frequency: 'once a day',
+    // Frequency is stored in the DB as a human label (e.g. "Once a day", "Five times a day")
+    frequency: 'Once a day',
     frequencyMode: 'preset', // 'preset' | 'custom' (controls which UI input is shown)
     remindersEnabled: false,
     notes: ''
   })
 
   const FREQUENCY_PRESETS = [
-    'once a day',
-    'twice a day',
-    'three times a day',
-    'four times a day',
-    'five times a day'
+    'Once a day',
+    'Twice a day',
+    'Three times a day',
+    'Four times a day',
+    'Five times a day'
   ]
 
-  // Backward-compatible mapping for older saved values
+  /** Display + form: capitalized presets; maps legacy lowercase / "two times a day" from DB */
   const normalizeFrequencyPreset = (value) => {
-    if (value === 'two times a day') return 'twice a day'
-    return value
+    if (!value || typeof value !== 'string') return value
+    const key = value.trim().toLowerCase()
+    if (key === 'two times a day') return 'Twice a day'
+    const legacyToDisplay = {
+      'once a day': 'Once a day',
+      'twice a day': 'Twice a day',
+      'three times a day': 'Three times a day',
+      'four times a day': 'Four times a day',
+      'five times a day': 'Five times a day'
+    }
+    return legacyToDisplay[key] ?? value
   }
 
 
@@ -212,7 +221,7 @@ function MedicationsPageContent() {
         name: '',
         dosage: '',
         timeOfDay: '7:00',
-        frequency: 'once a day',
+        frequency: 'Once a day',
         frequencyMode: 'preset',
         remindersEnabled: true,
         notes: ''
@@ -254,7 +263,7 @@ function MedicationsPageContent() {
       name: medication.name,
       dosage: dosageNumber,
       timeOfDay: medication.timeOfDay ?? '',
-      frequency: medFrequency || 'once a day',
+      frequency: medFrequency || 'Once a day',
       frequencyMode,
       remindersEnabled: medication.remindersEnabled !== false,
       notes: medication.notes || ''
@@ -268,7 +277,7 @@ function MedicationsPageContent() {
       name: '',
       dosage: '',
       timeOfDay: '',
-      frequency: 'once a day',
+      frequency: 'Once a day',
       frequencyMode: 'preset',
       remindersEnabled: false,
       notes: ''
@@ -282,7 +291,7 @@ function MedicationsPageContent() {
       name: '',
       dosage: '',
       timeOfDay: '',
-      frequency: 'once a day',
+      frequency: 'Once a day',
       frequencyMode: 'preset',
       remindersEnabled: false,
       notes: ''
@@ -565,8 +574,17 @@ function MedicationsPageContent() {
               <Pill className="w-5 h-5 text-purple-600 dark:[color:var(--text-icon-more-meds)]" />
             )}
           </div>
-          <h2 id="medications-panel-heading" className="min-w-0 flex-1 text-xl font-semibold font-source text-primary">
-            Medications
+          <h2 id="medications-panel-heading" className="min-w-0 flex-1 text-xl font-semibold font-source text-primary m-0">
+            <button
+              type="button"
+              className="sm:hidden w-full min-w-0 text-left text-xl font-semibold font-source text-primary bg-transparent border-0 p-0 min-h-11 flex items-center cursor-pointer touch-manipulation [-webkit-tap-highlight-color:transparent] rounded-md -ml-1 pl-1 pr-2 focus:outline-none focus-visible:ring-1 focus-visible:ring-[#5F9EA0]/45 focus-visible:ring-offset-0"
+              onClick={() => setMedicationsPanelOpen((o) => !o)}
+              aria-expanded={medicationsPanelOpen}
+              aria-controls="medications-list-panel"
+            >
+              Medications
+            </button>
+            <span className="hidden sm:inline">Medications</span>
           </h2>
           {medicationsPanelOpen && !isAdding && (
             <button

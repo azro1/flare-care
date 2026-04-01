@@ -416,8 +416,17 @@ function AppointmentsPageContent() {
               <Calendar className="w-5 h-5 text-slate-700 dark:[color:var(--text-icon-more-appointments)]" />
             )}
           </div>
-          <h2 id="appointments-panel-heading" className="min-w-0 flex-1 text-xl font-semibold font-source text-primary">
-            Appointments
+          <h2 id="appointments-panel-heading" className="min-w-0 flex-1 text-xl font-semibold font-source text-primary m-0">
+            <button
+              type="button"
+              className="sm:hidden w-full min-w-0 text-left text-xl font-semibold font-source text-primary bg-transparent border-0 p-0 min-h-11 flex items-center cursor-pointer touch-manipulation [-webkit-tap-highlight-color:transparent] rounded-md -ml-1 pl-1 pr-2 focus:outline-none focus-visible:ring-1 focus-visible:ring-[#5F9EA0]/45 focus-visible:ring-offset-0"
+              onClick={() => setAppointmentsPanelOpen((o) => !o)}
+              aria-expanded={appointmentsPanelOpen}
+              aria-controls="appointments-list-panel"
+            >
+              Appointments
+            </button>
+            <span className="hidden sm:inline">Appointments</span>
           </h2>
           {appointmentsPanelOpen && !isAdding && (
             <button

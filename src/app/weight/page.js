@@ -291,8 +291,17 @@ function WeightPageContent() {
               <Scale className="w-5 h-5 text-indigo-600 dark:[color:var(--text-icon-more-weight)]" />
             )}
           </div>
-          <h2 id="weight-panel-heading" className="min-w-0 flex-1 text-xl font-semibold font-source text-primary">
-            Weight logs
+          <h2 id="weight-panel-heading" className="min-w-0 flex-1 text-xl font-semibold font-source text-primary m-0">
+            <button
+              type="button"
+              className="sm:hidden w-full min-w-0 text-left text-xl font-semibold font-source text-primary bg-transparent border-0 p-0 min-h-11 flex items-center cursor-pointer touch-manipulation [-webkit-tap-highlight-color:transparent] rounded-md -ml-1 pl-1 pr-2 focus:outline-none focus-visible:ring-1 focus-visible:ring-[#5F9EA0]/45 focus-visible:ring-offset-0"
+              onClick={() => setWeightPanelOpen((o) => !o)}
+              aria-expanded={weightPanelOpen}
+              aria-controls="weight-list-panel"
+            >
+              Weight logs
+            </button>
+            <span className="hidden sm:inline">Weight logs</span>
           </h2>
           {weightPanelOpen && !isAdding && (
             <button
