@@ -1,6 +1,6 @@
 'use client'
 
-import { useState, useEffect } from 'react'
+import { useState, useEffect, useRef } from 'react'
 import ConfirmationModal from '@/components/ConfirmationModal'
 import ProtectedRoute from '@/components/ProtectedRoute'
 import { sanitizeMedicationName, sanitizeNotes } from '@/lib/sanitize'
@@ -59,6 +59,27 @@ function MedicationsPageContent() {
   }
 
   const timeOptions = generateTimeOptions()
+
+  /** After fetch: open panel if no meds (easier first add); closed if list has items. Ref tracks transitions 0↔non-zero only. */
+  const medicationsCountPrevRef = useRef(null)
+
+  useEffect(() => {
+    medicationsCountPrevRef.current = null
+  }, [user?.id])
+
+  useEffect(() => {
+    if (isLoading) return
+    const n = medications.length
+    const prev = medicationsCountPrevRef.current
+    if (prev === null) {
+      setMedicationsPanelOpen(n === 0)
+    } else if (prev > 0 && n === 0) {
+      setMedicationsPanelOpen(true)
+    } else if (prev === 0 && n > 0) {
+      setMedicationsPanelOpen(false)
+    }
+    medicationsCountPrevRef.current = n
+  }, [isLoading, medications.length])
 
   useEffect(() => {
     if (isAdding) setMedicationsPanelOpen(true)
@@ -845,10 +866,11 @@ className="px-4 py-2 text-base sm:text-lg font-medium font-sans rounded-lg trans
                               </span>
                             )}
                           </div>
-                          <div>
+                          <div className="flex flex-wrap items-center gap-2 sm:gap-3">
                             <button
+                              type="button"
                               onClick={() => handleMarkAsTaken(medication.id)}
-                              className="px-3 py-1.5 rounded-lg text-xs sm:text-sm font-medium font-sans transition-all duration-200 inline-flex items-center justify-center border border-[#5F9EA0]/40 dark:border-white/50"
+                              className="w-fit shrink-0 px-3 py-1.5 rounded-lg text-xs sm:text-sm font-semibold font-sans transition-all duration-200 inline-flex items-center justify-center border border-[#5F9EA0]/40 dark:border-white/50"
                               style={{
                                 ...(takenMedications.some(id => String(id) === String(medication.id)) 
                                   ? {
@@ -861,7 +883,6 @@ className="px-4 py-2 text-base sm:text-lg font-medium font-sans rounded-lg trans
                                       backgroundColor: 'transparent'
                                     }
                                 ),
-                                minWidth: '140px'
                               }}
                               title={takenMedications.some(id => String(id) === String(medication.id)) ? "Mark as not taken" : "Mark as taken"}
                             >

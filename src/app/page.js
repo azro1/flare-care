@@ -6,7 +6,7 @@ import { useAuth } from '@/lib/AuthContext'
 import { useEffect, useLayoutEffect, useState, useRef, useCallback } from 'react'
 import { useRouter } from 'next/navigation'
 import { supabase, TABLES } from '@/lib/supabase'
-import { formatBristolTypeOnly } from '@/lib/bristolStoolScale'
+import { formatBristolTypeOnly } from '@/lib/bristolStoolChart'
 import { CupSoda, Pizza, Coffee, BookOpen, Smile, Thermometer, Pill, FileText, Activity, TrendingUp, PartyPopper, Clipboard, Cookie, ChartLine, Sparkles, ChevronRight, ChevronDown, ChevronLeft, Clock, Scale, Calendar, Lightbulb, Newspaper, Check, CircleDot } from 'lucide-react'
 
 export default function Home() {

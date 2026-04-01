@@ -5,7 +5,7 @@ import ConfirmationModal from '@/components/ConfirmationModal'
 import ProtectedRoute from '@/components/ProtectedRoute'
 import DateInputWithCalendar from '@/components/DateInputWithCalendar'
 import { sanitizeNotes } from '@/lib/sanitize'
-import { Scale, ChevronDown } from 'lucide-react'
+import { Scale, ChevronDown, Lightbulb } from 'lucide-react'
 import Masonry from 'react-masonry-css'
 import { motion, AnimatePresence } from 'framer-motion'
 import { supabase, TABLES } from '@/lib/supabase'
@@ -23,6 +23,8 @@ function WeightPageContent() {
   const [expandedWeightEntries, setExpandedWeightEntries] = useState(new Set())
   const [weightPanelOpen, setWeightPanelOpen] = useState(false)
   const weightDatePickerRef = useRef(null)
+  /** After fetch: open panel if no logs; closed if any exist. Ref tracks 0↔non-zero transitions only. */
+  const weightEntriesCountPrevRef = useRef(null)
   const [formData, setFormData] = useState({
     date: new Date().toISOString().split('T')[0],
     valueKg: '',
@@ -63,6 +65,24 @@ function WeightPageContent() {
   useEffect(() => {
     fetchEntries()
   }, [user?.id])
+
+  useEffect(() => {
+    weightEntriesCountPrevRef.current = null
+  }, [user?.id])
+
+  useEffect(() => {
+    if (isLoading) return
+    const n = entries.length
+    const prev = weightEntriesCountPrevRef.current
+    if (prev === null) {
+      setWeightPanelOpen(n === 0)
+    } else if (prev > 0 && n === 0) {
+      setWeightPanelOpen(true)
+    } else if (prev === 0 && n > 0) {
+      setWeightPanelOpen(false)
+    }
+    weightEntriesCountPrevRef.current = n
+  }, [isLoading, entries.length])
 
   useEffect(() => {
     window.scrollTo(0, 0)
@@ -513,6 +533,23 @@ function WeightPageContent() {
             </motion.div>
           )}
         </AnimatePresence>
+      </div>
+
+      <div className="mt-4 sm:mt-6 card">
+        <div>
+          <p className="text-sm text-secondary font-roboto leading-relaxed">
+            Keeping your entries consistent helps make changes easier to understand over time.
+          </p>
+          <div className="card-inner p-5 sm:p-6 mt-4">
+            <div className="flex items-center gap-2 mb-2">
+              <Lightbulb className="w-5 h-5 flex-shrink-0 text-amber-500" />
+              <span className="text-base sm:text-sm font-semibold text-primary font-source">Important:</span>
+            </div>
+            <p className="text-xs text-secondary font-roboto leading-relaxed">
+              Weight can be affected by hydration, salt intake, and digestion, not just body fat.
+            </p>
+          </div>
+        </div>
       </div>
 
       <ConfirmationModal

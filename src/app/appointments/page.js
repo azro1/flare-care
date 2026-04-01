@@ -64,6 +64,15 @@ const generateTimeOptions = () => {
   return options
 }
 
+// Treat missing/empty `time` as end-of-day (23:59). Used for upcoming vs past and panel open logic.
+const getAppointmentDateTime = (apt) => {
+  if (!apt?.date) return null
+  const normalizedTime = typeof apt.time === 'string' && apt.time.match(/^\d{2}:\d{2}$/) ? apt.time : '23:59'
+  const dt = new Date(`${apt.date}T${normalizedTime}:00`)
+  if (isNaN(dt.getTime())) return null
+  return dt
+}
+
 function AppointmentsPageContent() {
   const { user } = useAuth()
   const timeOptions = generateTimeOptions()
@@ -88,6 +97,8 @@ function AppointmentsPageContent() {
   const [saveError, setSaveError] = useState(null)
   const [dateError, setDateError] = useState(null)
   const appointmentDatePickerRef = useRef(null)
+  /** Panel follows upcoming count (not total). Ref tracks 0↔non-zero transitions only. */
+  const upcomingCountPrevRef = useRef(null)
 
   const fetchAppointments = async () => {
     if (!user?.id) {
@@ -130,6 +141,29 @@ function AppointmentsPageContent() {
   }, [user?.id])
 
   useEffect(() => {
+    upcomingCountPrevRef.current = null
+  }, [user?.id])
+
+  useEffect(() => {
+    if (isLoading) return
+    const now = Date.now()
+    const n = appointments.reduce((acc, apt) => {
+      const dt = getAppointmentDateTime(apt)
+      if (dt && dt.getTime() >= now) return acc + 1
+      return acc
+    }, 0)
+    const prev = upcomingCountPrevRef.current
+    if (prev === null) {
+      setAppointmentsPanelOpen(n === 0)
+    } else if (prev > 0 && n === 0) {
+      setAppointmentsPanelOpen(true)
+    } else if (prev === 0 && n > 0) {
+      setAppointmentsPanelOpen(false)
+    }
+    upcomingCountPrevRef.current = n
+  }, [isLoading, appointments])
+
+  useEffect(() => {
     window.scrollTo(0, 0)
   }, [])
 
@@ -148,16 +182,6 @@ function AppointmentsPageContent() {
     const month = (date.getMonth() + 1).toString().padStart(2, '0')
     const year = date.getFullYear()
     return `${day}/${month}/${year}`
-  }
-
-  // Upcoming vs Past classification helper.
-  // Treat missing/empty `time` as end-of-day (23:59).
-  const getAppointmentDateTime = (apt) => {
-    if (!apt?.date) return null
-    const normalizedTime = typeof apt.time === 'string' && apt.time.match(/^\d{2}:\d{2}$/) ? apt.time : '23:59'
-    const dt = new Date(`${apt.date}T${normalizedTime}:00`)
-    if (isNaN(dt.getTime())) return null
-    return dt
   }
 
   const nowMs = Date.now()
@@ -807,7 +831,7 @@ function AppointmentsPageContent() {
         onClose={closeDeleteModal}
         onConfirm={confirmDelete}
         title="Delete appointment?"
-        message="This appointment will be removed. You can add a new one anytime."
+        message="This appointment will be removed. Are you sure you want to delete it?"
         confirmText="Delete"
         cancelText="Cancel"
         isDestructive={true}

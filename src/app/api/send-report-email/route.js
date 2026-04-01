@@ -1,5 +1,5 @@
 import { NextResponse } from 'next/server'
-import { formatBristolLine } from '@/lib/bristolStoolScale'
+import { formatBristolLine } from '@/lib/bristolStoolChart'
 
 export const runtime = 'nodejs'
 

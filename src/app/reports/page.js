@@ -12,7 +12,7 @@ import ProtectedRoute from '@/components/ProtectedRoute'
 import { supabase, TABLES } from '@/lib/supabase'
 import { useAuth } from '@/lib/AuthContext'
 import { getUserPreferences } from '@/lib/userPreferences'
-import { formatBristolLine } from '@/lib/bristolStoolScale'
+import { formatBristolLine } from '@/lib/bristolStoolChart'
 import { Calendar, FileText, Download, FileDown, BarChart3, Pill, Activity, TrendingUp, Thermometer, Brain, Pizza, ChartLine, Scale, CupSoda, Mail, ChevronDown } from 'lucide-react'
 import { motion } from 'framer-motion'
 

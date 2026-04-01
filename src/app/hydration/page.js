@@ -84,7 +84,7 @@ function HydrationPageContent() {
   }
 
   return (
-    <div className="max-w-4xl w-full mx-auto sm:px-4 md:px-6 lg:px-8 min-w-0">
+    <div className="max-w-4xl w-full mx-auto sm:px-4 md:px-6 min-w-0">
       <div className="mb-5 sm:mb-6">
         <div className="card">
           <div className="flex flex-col sm:flex-row sm:justify-between sm:items-start">
@@ -157,7 +157,7 @@ function HydrationPageContent() {
 
       <div className="mt-4 sm:mt-6 card">
         <div>
-          <p className="text-sm sm:text-base text-secondary font-roboto leading-relaxed">
+          <p className="text-sm text-secondary font-roboto leading-relaxed">
             Use − and + to update your daily intake count. Your target is {HYDRATION_TARGET} glasses per day (roughly 250ml each).
           </p>
           <div className="card-inner p-5 sm:p-6 mt-4">

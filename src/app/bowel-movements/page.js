@@ -11,7 +11,7 @@ import {
   BRISTOL_TYPES,
   formatBristolDetailLabel,
   formatBristolTypeOnly,
-} from '@/lib/bristolStoolScale'
+} from '@/lib/bristolStoolChart'
 import { Lightbulb, ChevronDown, CircleDot } from 'lucide-react'
 import Masonry from 'react-masonry-css'
 import { motion, AnimatePresence } from 'framer-motion'
@@ -123,12 +123,14 @@ function BowelMovementsPageContent() {
   const [entries, setEntries] = useState([])
   const [isLoading, setIsLoading] = useState(true)
   const [isAdding, setIsAdding] = useState(false)
-  const [bowelPanelOpen, setBowelPanelOpen] = useState(true)
+  const [bowelPanelOpen, setBowelPanelOpen] = useState(false)
   const [isSaving, setIsSaving] = useState(false)
   const [saveError, setSaveError] = useState('')
   const [deleteModal, setDeleteModal] = useState({ isOpen: false, id: null })
   const [editingId, setEditingId] = useState(null)
   const [expandedBowelEntries, setExpandedBowelEntries] = useState(() => new Set())
+  /** After fetch: open panel if no logs; closed if any exist. Ref tracks 0↔non-zero transitions only. */
+  const bowelEntriesCountPrevRef = useRef(null)
 
   const fetchEntries = async () => {
     if (!user?.id) {
@@ -156,6 +158,24 @@ function BowelMovementsPageContent() {
   useEffect(() => {
     fetchEntries()
   }, [user?.id])
+
+  useEffect(() => {
+    bowelEntriesCountPrevRef.current = null
+  }, [user?.id])
+
+  useEffect(() => {
+    if (isLoading) return
+    const n = entries.length
+    const prev = bowelEntriesCountPrevRef.current
+    if (prev === null) {
+      setBowelPanelOpen(n === 0)
+    } else if (prev > 0 && n === 0) {
+      setBowelPanelOpen(true)
+    } else if (prev === 0 && n > 0) {
+      setBowelPanelOpen(false)
+    }
+    bowelEntriesCountPrevRef.current = n
+  }, [isLoading, entries.length])
 
   useEffect(() => {
     window.scrollTo(0, 0)
@@ -773,7 +793,10 @@ function BowelMovementsPageContent() {
 
       <div className="mt-4 sm:mt-6 card">
         <div>
-          <div className="card-inner p-5 sm:p-6">
+          <p className="text-sm text-secondary font-roboto leading-relaxed">
+            Recording bowel movements and stool type helps build a clearer picture of your condition.
+          </p>
+          <div className="card-inner p-5 sm:p-6 mt-4">
             <div className="flex items-center gap-2 mb-2">
               <Lightbulb className="w-5 h-5 flex-shrink-0 text-amber-500" />
               <span className="text-base sm:text-sm font-semibold text-primary font-source">Note:</span>
