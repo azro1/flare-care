@@ -743,13 +743,12 @@ function AppointmentsPageContent() {
                             {apt.location && (
                               <p className="text-xs sm:text-sm text-secondary font-roboto truncate" title={apt.location}>{apt.location}</p>
                             )}
-                            <div className="flex flex-wrap items-center gap-2 mt-3">
+                            <div className="flex flex-wrap items-center gap-2 mt-2">
                               <button
                                 type="button"
                                 onClick={() => startEdit(apt)}
                                 disabled={editingId === apt.id}
-                                className="w-9 h-9 rounded-lg flex items-center justify-center transition-all duration-200 hover:opacity-80 disabled:opacity-50 disabled:cursor-not-allowed bg-white dark:bg-[var(--bg-icon-container)]"
-                                style={{ color: 'var(--text-icon)' }}
+                                className="btn-card-icon-action"
                                 title={editingId === apt.id ? 'Finish or cancel editing first' : 'Edit appointment'}
                               >
                                 <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -760,8 +759,7 @@ function AppointmentsPageContent() {
                                 type="button"
                                 onClick={() => setDeleteModal({ isOpen: true, id: apt.id })}
                                 disabled={editingId === apt.id}
-                                className="w-9 h-9 rounded-lg flex items-center justify-center transition-all duration-200 hover:opacity-80 disabled:opacity-50 disabled:cursor-not-allowed bg-white dark:bg-[var(--bg-icon-container)]"
-                                style={{ color: 'var(--text-icon)' }}
+                                className="btn-card-icon-action"
                                 title={editingId === apt.id ? 'Finish or cancel editing first' : 'Delete appointment'}
                               >
                                 <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -776,7 +774,7 @@ function AppointmentsPageContent() {
                     {isExpanded && apt.notes && (
                       <div className="mt-2 min-w-0">
                         <div className="card-inner min-w-0">
-                          <p className="text-xs sm:text-sm text-secondary font-roboto truncate" title={apt.notes}>
+                          <p className="text-sm text-secondary font-roboto leading-normal line-clamp-2" title={apt.notes}>
                             <span className="font-semibold text-primary">Notes:</span> {apt.notes}
                           </p>
                         </div>

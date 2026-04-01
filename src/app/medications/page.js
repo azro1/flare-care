@@ -800,6 +800,7 @@ className="px-4 py-2 text-base sm:text-lg font-medium font-sans rounded-lg trans
           >
             {medications.map((medication) => {
               const isExpanded = expandedMedications.has(medication.id)
+              const isTaken = takenMedications.some((id) => String(id) === String(medication.id))
               return (
                 <div key={medication.id} className="mb-4 last:mb-0">
                   <div className="card-inner p-4 sm:p-6 min-w-0">
@@ -827,7 +828,7 @@ className="px-4 py-2 text-base sm:text-lg font-medium font-sans rounded-lg trans
                       </div>
                       {isExpanded && medication.frequency && (
                         <p
-                          className="text-xs sm:text-sm text-secondary font-roboto mt-1 min-w-0 truncate mb-2"
+                          className="text-xs sm:text-sm text-secondary font-roboto mt-1 min-w-0 truncate mb-3"
                           title={normalizeFrequencyPreset(medication.frequency)}
                         >
                           <span className="font-semibold text-primary">To be taken:</span> {normalizeFrequencyPreset(medication.frequency)}
@@ -866,44 +867,42 @@ className="px-4 py-2 text-base sm:text-lg font-medium font-sans rounded-lg trans
                               </span>
                             )}
                           </div>
-                          <div className="flex flex-wrap items-center gap-2 sm:gap-3">
-                            <button
-                              type="button"
-                              onClick={() => handleMarkAsTaken(medication.id)}
-                              className="w-fit shrink-0 px-3 py-1.5 rounded-lg text-xs sm:text-sm font-semibold font-sans transition-all duration-200 inline-flex items-center justify-center border border-[#5F9EA0]/40 dark:border-white/50"
-                              style={{
-                                ...(takenMedications.some(id => String(id) === String(medication.id)) 
-                                  ? {
-                                      backgroundColor: 'var(--bg-button-cadet)',
-                                      color: 'white',
-                                      borderColor: 'var(--bg-button-cadet)'
-                                    }
-                                  : {
-                                      color: 'var(--text-primary)',
-                                      backgroundColor: 'transparent'
-                                    }
-                                ),
-                              }}
-                              title={takenMedications.some(id => String(id) === String(medication.id)) ? "Mark as not taken" : "Mark as taken"}
-                            >
-                              {takenMedications.some(id => String(id) === String(medication.id)) ? (
-                                <>
-                                  <svg className="w-4 h-4 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
-                                  </svg>
-                                  <span>Taken</span>
-                                </>
-                              ) : (
-                                <span>Mark as Taken</span>
-                              )}
-                            </button>
-                          </div>
+                          <button
+                            type="button"
+                            onClick={() => handleMarkAsTaken(medication.id)}
+                            className="w-fit shrink-0 inline-flex items-center justify-center px-3 py-1.5 rounded-lg text-sm font-semibold font-sans transition-colors border border-[#5F9EA0]/40 dark:border-white/50"
+                            style={
+                              isTaken
+                                ? {
+                                    backgroundColor: 'var(--bg-button-cadet)',
+                                    color: 'white',
+                                    borderColor: 'var(--bg-button-cadet)',
+                                  }
+                                : {
+                                    color: 'var(--text-primary)',
+                                    backgroundColor: 'transparent',
+                                  }
+                            }
+                            aria-pressed={isTaken}
+                            title={isTaken ? "Mark as not taken" : "Mark as taken"}
+                          >
+                            {isTaken ? (
+                              <>
+                                <svg className="w-4 h-4 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
+                                </svg>
+                                <span>Taken</span>
+                              </>
+                            ) : (
+                              <span>Mark as Taken</span>
+                            )}
+                          </button>
                           <div className="flex flex-wrap items-center gap-2 mt-3">
                             <button
+                              type="button"
                               onClick={() => startEdit(medication)}
                               disabled={editingId === medication.id}
-                              className="w-9 h-9 rounded-lg flex items-center justify-center font-sans transition-all duration-200 hover:opacity-80 disabled:opacity-50 disabled:cursor-not-allowed bg-white dark:bg-[var(--bg-icon-container)]"
-                              style={{ color: 'var(--text-icon)' }}
+                              className="btn-card-icon-action"
                               title={editingId === medication.id ? 'Finish or cancel editing first' : 'Edit medication'}
                             >
                               <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -911,10 +910,10 @@ className="px-4 py-2 text-base sm:text-lg font-medium font-sans rounded-lg trans
                               </svg>
                             </button>
                             <button
+                              type="button"
                               onClick={() => handleDeleteMedication(medication.id)}
                               disabled={editingId === medication.id}
-                              className="w-9 h-9 rounded-lg flex items-center justify-center font-sans transition-all duration-200 hover:opacity-80 disabled:opacity-50 disabled:cursor-not-allowed bg-white dark:bg-[var(--bg-icon-container)]"
-                              style={{ color: 'var(--text-icon)' }}
+                              className="btn-card-icon-action"
                               title={editingId === medication.id ? 'Finish or cancel editing first' : 'Delete medication'}
                             >
                               <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -929,7 +928,10 @@ className="px-4 py-2 text-base sm:text-lg font-medium font-sans rounded-lg trans
                   {isExpanded && medication.notes && (
                     <div className="mt-2 min-w-0">
                       <div className="card-inner min-w-0">
-                        <p className="text-xs sm:text-sm text-secondary font-roboto truncate">
+                        <p
+                          className="text-sm text-secondary font-roboto leading-normal break-words line-clamp-2"
+                          title={medication.notes}
+                        >
                           <span className="font-semibold text-primary">Notes:</span> {medication.notes}
                         </p>
                       </div>

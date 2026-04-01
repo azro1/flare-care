@@ -43,6 +43,11 @@
     --bg-button-secondary: #ffffff;
     --bg-button-secondary-hover: #f1f5f9;
     --bg-button-hover: #e2e8f0; /* Light button hover */
+    /* Card row edit/delete icon buttons (shared across pages) */
+    --bg-card-icon-action: #ffffff;
+    --bg-card-icon-action-hover: var(--bg-button-hover);
+    --text-card-icon-action: var(--text-icon);
+    --text-card-icon-action-hover: var(--text-icon);
     --bg-button-disabled: #cbd5e1; /* Light disabled button background */
     --text-button-disabled: #475569; /* Light disabled button text */
     --bg-button-cancel: #e2e8f0; /* Light cancel button background */
@@ -187,6 +192,10 @@
     --border-card: #3f4449;
     --border-card-hover: #52525b;
     --bg-icon-container: var(--bg-card); /* Icon containers on card-inner - matches .card for cut-out effect in dark mode */
+    --bg-card-icon-action: var(--bg-icon-container);
+    --bg-card-icon-action-hover: var(--bg-button-cadet);
+    --text-card-icon-action: var(--text-icon);
+    --text-card-icon-action-hover: var(--text-white);
     --separator-card: rgba(255, 255, 255, 0.2); /* Separators on .card - subtle white in dark mode */
     --separator-card-inner: var(--separator-card); /* Use same separator color for inner card in dark mode */
     --shadow-sm: 0 1px 2px 0 rgb(0 0 0 / 0.3);
@@ -263,6 +272,22 @@
   .dark .btn-secondary:hover {
     background-color: var(--bg-button-secondary-hover);
     border-color: var(--border-input-dark);
+  }
+
+  /* Edit / delete icon buttons on medication, appointment, weight, bowel cards */
+  .btn-card-icon-action {
+    @apply w-9 h-9 rounded-lg flex items-center justify-center font-sans shrink-0 transition-colors duration-200;
+    background-color: var(--bg-card-icon-action);
+    color: var(--text-card-icon-action);
+  }
+
+  .btn-card-icon-action:hover:not(:disabled) {
+    background-color: var(--bg-card-icon-action-hover);
+    color: var(--text-card-icon-action-hover);
+  }
+
+  .btn-card-icon-action:disabled {
+    @apply opacity-50 cursor-not-allowed;
   }
 
   .card {
