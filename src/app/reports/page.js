@@ -1490,7 +1490,7 @@ function ReportsPageContent() {
       <div className="w-full sm:px-4 md:px-6 lg:px-8 min-w-0 min-h-screen">
         <div className="max-w-4xl mx-auto">
           <div className="mb-8 card">
-            <h1 className="text-2xl sm:text-3xl lg:text-4xl font-bold font-source text-primary mb-4">Reports</h1>
+            <h1 className="text-2xl sm:text-3xl lg:text-4xl font-bold font-title text-primary mb-4">Reports</h1>
             <p className="text-sm sm:text-base text-secondary font-roboto">
               Generate reports from your records to support informed decisions about your care.
             </p>
@@ -1510,7 +1510,7 @@ function ReportsPageContent() {
       {emailToastPortal}
       <div className="max-w-4xl mx-auto">
       <div className="mb-5 sm:mb-6 card">
-        <h1 className="text-2xl sm:text-3xl lg:text-4xl font-bold font-source text-primary mb-4">Reports</h1>
+        <h1 className="text-2xl sm:text-3xl lg:text-4xl font-bold font-title text-primary mb-4">Reports</h1>
         <p className="text-sm sm:text-base text-secondary font-roboto leading-relaxed">
           Generate reports from your records to support informed decisions about your care.
         </p>
@@ -1522,7 +1522,7 @@ function ReportsPageContent() {
           <div className="flex w-10 h-10 bg-orange-100 dashboard-icon-panel rounded-lg items-center justify-center mr-3 sm:mr-4 flex-shrink-0">
             <Calendar className="w-5 h-5 text-orange-600 dark:[color:var(--text-icon-more-reports)]" />
           </div>
-          <h2 className="text-xl sm:text-2xl font-semibold font-source text-primary flex-1">Select report period</h2>
+          <h2 className="text-xl sm:text-2xl font-semibold font-title text-primary flex-1 capitalize">Select report period</h2>
         </div>
         <p className="text-sm text-secondary font-roboto leading-relaxed mb-6">
           Choose a date range to include symptom episodes in the report.
@@ -1696,7 +1696,7 @@ function ReportsPageContent() {
               onClick={() => toggleSection('currentMeds')}
               className={`flex items-center justify-between w-full text-left group ${expandedSections.currentMeds ? 'mb-3 sm:mb-4' : ''}`}
             >
-              <h2 className="text-lg sm:text-xl font-semibold font-source text-primary">Current Medications ({reportData.medications.length})</h2>
+              <h2 className="text-lg sm:text-xl font-semibold font-title text-primary">Current Medications ({reportData.medications.length})</h2>
               <ChevronDown className={`w-5 h-5 text-secondary shrink-0 transition-transform ${expandedSections.currentMeds ? 'rotate-180' : ''}`} />
             </button>
             <motion.div
@@ -1756,7 +1756,7 @@ function ReportsPageContent() {
               onClick={() => toggleSection('medicationLogs')}
               className={`flex items-center justify-between w-full text-left group ${expandedSections.medicationLogs ? 'mb-3 sm:mb-4' : ''}`}
             >
-              <h2 className="text-lg sm:text-xl font-semibold font-source text-primary">
+              <h2 className="text-lg sm:text-xl font-semibold font-title text-primary">
                 {expandedSections.medicationLogs ? (
                   <span className="inline-block pb-0.5 border-b" style={{ borderColor: 'var(--separator-card)' }}>
                     Medication logs ({medicationLogsTotal})
@@ -1954,7 +1954,7 @@ function ReportsPageContent() {
               onClick={() => toggleSection('appointments')}
               className={`flex items-center justify-between w-full text-left group ${expandedSections.appointments ? 'mb-3 sm:mb-4' : ''}`}
             >
-              <h2 className="text-lg sm:text-xl font-semibold font-source text-primary">Appointments ({reportData.appointments.length})</h2>
+              <h2 className="text-lg sm:text-xl font-semibold font-title text-primary">Appointments ({reportData.appointments.length})</h2>
               <ChevronDown className={`w-5 h-5 text-secondary shrink-0 transition-transform ${expandedSections.appointments ? 'rotate-180' : ''}`} />
             </button>
             <motion.div
@@ -1992,7 +1992,7 @@ function ReportsPageContent() {
               onClick={() => toggleSection('weightLogs')}
               className={`flex items-center justify-between w-full text-left group ${expandedSections.weightLogs ? 'mb-3 sm:mb-4' : ''}`}
             >
-              <h2 className="text-lg sm:text-xl font-semibold font-source text-primary">Weight Logs ({reportData.weightEntries.length})</h2>
+              <h2 className="text-lg sm:text-xl font-semibold font-title text-primary">Weight Logs ({reportData.weightEntries.length})</h2>
               <ChevronDown className={`w-5 h-5 text-secondary shrink-0 transition-transform ${expandedSections.weightLogs ? 'rotate-180' : ''}`} />
             </button>
             <motion.div
@@ -2030,7 +2030,7 @@ function ReportsPageContent() {
               onClick={() => toggleSection('bowelMovements')}
               className={`flex items-center justify-between w-full text-left group ${expandedSections.bowelMovements ? 'mb-3 sm:mb-4' : ''}`}
             >
-              <h2 className="min-w-0 pr-2 text-lg sm:text-xl font-semibold font-source text-primary">
+              <h2 className="min-w-0 pr-2 text-lg sm:text-xl font-semibold font-title text-primary">
                 Bowel movements ({reportData.bowelMovementEntries.length})
               </h2>
               <ChevronDown className={`w-5 h-5 text-secondary shrink-0 transition-transform ${expandedSections.bowelMovements ? 'rotate-180' : ''}`} />
@@ -2084,7 +2084,7 @@ function ReportsPageContent() {
               onClick={() => toggleSection('hydration')}
               className={`flex items-center justify-between w-full text-left group ${expandedSections.hydration ? 'mb-3 sm:mb-4' : ''}`}
             >
-              <h2 className="text-lg sm:text-xl font-semibold font-source text-primary">Hydration Logs ({reportData.hydrationEntries.length})</h2>
+              <h2 className="text-lg sm:text-xl font-semibold font-title text-primary">Hydration Logs ({reportData.hydrationEntries.length})</h2>
               <ChevronDown className={`w-5 h-5 text-secondary shrink-0 transition-transform ${expandedSections.hydration ? 'rotate-180' : ''}`} />
             </button>
             <motion.div
@@ -2126,7 +2126,7 @@ function ReportsPageContent() {
               onClick={() => toggleSection('topFoods')}
               className={`flex items-center justify-between w-full text-left group ${expandedSections.topFoods ? 'mb-3 sm:mb-4' : ''}`}
             >
-              <h2 className="text-lg sm:text-xl font-semibold font-source text-primary">Top 5 Foods</h2>
+              <h2 className="text-lg sm:text-xl font-semibold font-title text-primary">Top 5 Foods</h2>
               <ChevronDown className={`w-5 h-5 text-secondary shrink-0 transition-transform ${expandedSections.topFoods ? 'rotate-180' : ''}`} />
             </button>
             <motion.div
@@ -2159,7 +2159,7 @@ function ReportsPageContent() {
           <div className="flex justify-center mb-3">
             <FileText className="w-10 h-10 text-secondary opacity-40" />
           </div>
-          <h3 className="text-lg font-semibold font-source text-primary mb-2">No Data Available</h3>
+          <h3 className="text-lg font-semibold font-title text-primary mb-2">No Data Available</h3>
           <p className="text-sm font-roboto text-secondary max-w-md mx-auto leading-relaxed mb-4">
             Start logging symptoms and adding medications to generate meaningful reports
           </p>
@@ -2173,7 +2173,7 @@ function ReportsPageContent() {
         <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 px-4">
           <div className="bg-card rounded-xl shadow-xl max-w-md w-full" style={{ backgroundColor: 'var(--bg-dropdown)', borderColor: 'var(--border-dropdown)', borderWidth: '1px', borderStyle: 'solid' }}>
             <form onSubmit={handleSendReportEmail} className="p-6 space-y-4">
-              <h3 className="text-xl sm:text-2xl font-semibold font-source text-primary mb-1">Email this report</h3>
+              <h3 className="text-xl sm:text-2xl font-semibold font-title text-primary mb-1">Email this report</h3>
               <p className="text-sm text-secondary font-roboto">
                 Please fill in the fields below to send this report summary to your clinician.
               </p>

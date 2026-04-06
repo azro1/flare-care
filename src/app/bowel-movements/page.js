@@ -361,7 +361,7 @@ function BowelMovementsPageContent() {
         <div className="card">
           <div className="flex flex-col sm:flex-row sm:justify-between sm:items-start">
             <div className="min-w-0 flex-1">
-              <h1 className="text-2xl sm:text-3xl lg:text-4xl font-bold font-source text-primary mb-4 sm:mb-6">
+              <h1 className="text-2xl sm:text-3xl lg:text-4xl font-bold font-title text-primary mb-4 sm:mb-6">
                 Bowel Movements
               </h1>
               <p className="text-sm sm:text-base text-secondary font-roboto leading-relaxed">
@@ -409,10 +409,10 @@ function BowelMovementsPageContent() {
               <CircleDot className="w-5 h-5 text-amber-800 dark:text-amber-400" aria-hidden />
             )}
           </div>
-          <h2 id="bowel-panel-heading" className="min-w-0 flex-1 text-xl font-semibold font-source text-primary m-0">
+          <h2 id="bowel-panel-heading" className="min-w-0 flex-1 text-xl font-semibold font-title text-primary m-0">
             <button
               type="button"
-              className="sm:hidden w-full min-w-0 text-left text-xl font-semibold font-source text-primary bg-transparent border-0 p-0 min-h-11 flex items-center cursor-pointer touch-manipulation [-webkit-tap-highlight-color:transparent] rounded-md -ml-1 pl-1 pr-2 focus:outline-none focus-visible:ring-1 focus-visible:ring-[#5F9EA0]/45 focus-visible:ring-offset-0"
+              className="sm:hidden w-full min-w-0 text-left text-xl font-semibold font-title text-primary bg-transparent border-0 p-0 min-h-11 flex items-center cursor-pointer touch-manipulation [-webkit-tap-highlight-color:transparent] rounded-md -ml-1 pl-1 pr-2 focus:outline-none focus-visible:ring-1 focus-visible:ring-[#5F9EA0]/45 focus-visible:ring-offset-0"
               onClick={() => setBowelPanelOpen((o) => !o)}
               aria-expanded={bowelPanelOpen}
               aria-controls="bowel-list-panel"
@@ -652,7 +652,7 @@ function BowelMovementsPageContent() {
                     <div className="card-inner rounded-full w-14 h-14 sm:w-20 sm:h-20 mx-auto mb-6 flex items-center justify-center">
                       <CircleDot className="w-6 h-6 sm:w-10 sm:h-10 text-secondary" />
                     </div>
-                    <h3 className="text-lg font-semibold font-source text-primary mb-2">No bowel logs</h3>
+                    <h3 className="text-lg font-semibold font-title text-primary mb-2">No bowel logs</h3>
                     <p className="text-sm font-roboto text-secondary max-w-md mx-auto leading-relaxed">
                       Your bowel logs will show here once you add them
                     </p>
@@ -809,7 +809,7 @@ function BowelMovementsPageContent() {
           <div className="card-inner p-5 sm:p-6 mt-4">
             <div className="flex items-center gap-2 mb-2">
               <Lightbulb className="w-5 h-5 flex-shrink-0 text-amber-500" />
-              <span className="text-base sm:text-sm font-semibold text-primary font-source">Note:</span>
+              <span className="text-base sm:text-sm font-semibold text-primary font-title">Note:</span>
             </div>
             <p className="text-xs text-secondary font-roboto leading-relaxed">
               Types 1–2 are harder, 3–4 are often ideal, and 5–7 are looser or diarrhoea-like.

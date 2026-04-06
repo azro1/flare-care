@@ -126,7 +126,7 @@ function AccountPageContent() {
         {/* Header */}
         <div className="mb-5 sm:mb-6 card">
           <div className="text-center">
-            <h1 className="text-2xl sm:text-3xl lg:text-4xl font-bold font-source text-primary mb-4">My Account</h1>
+            <h1 className="text-2xl sm:text-3xl lg:text-4xl font-bold font-title text-primary mb-4">My Account</h1>
             <p className="text-sm sm:text-base text-secondary font-roboto break-words leading-relaxed">Manage your account settings and profile information</p>
           </div>
         </div>
@@ -184,7 +184,7 @@ function AccountPageContent() {
 
               {/* Profile Info */}
               <div className="border-t border-[var(--separator-card)] pt-4 sm:pt-6">
-                <h3 className="text-lg sm:text-xl font-semibold font-source text-primary mb-2">
+                <h3 className="text-lg sm:text-xl font-semibold font-title text-primary mb-2">
                   Profile Info
                 </h3>
                 <div className="space-y-0">
@@ -212,7 +212,7 @@ function AccountPageContent() {
 
             {/* Settings – mobile only: above Delete Account */}
             <div className="card mb-5 sm:mb-6 lg:hidden">
-              <h3 className="text-lg sm:text-xl font-semibold font-source text-primary mb-4">Settings</h3>
+              <h3 className="text-lg sm:text-xl font-semibold font-title text-primary mb-4">Settings</h3>
               <div className="space-y-0">
                 <div className="pb-4 sm:pb-5 border-b border-[var(--separator-card)]">
                   <div className="flex items-center justify-between">
@@ -268,7 +268,7 @@ function AccountPageContent() {
             {/* Delete Account Section */}
             <div className="card">
               <div className="border-l-4 border-red-500 pl-4 mb-4 sm:mb-6">
-                <h3 className="text-lg sm:text-xl font-semibold font-source text-primary mb-2">Delete Account</h3>
+                <h3 className="text-lg sm:text-xl font-semibold font-title text-primary mb-2">Delete Account</h3>
                 <p className="text-sm sm:text-base text-secondary font-roboto mb-4">
                   Permanently delete your account and all associated data
                 </p>
@@ -289,7 +289,7 @@ function AccountPageContent() {
           {/* Sidebar – Settings: desktop only */}
           <aside className="hidden lg:block lg:w-80 flex-shrink-0">
             <div className="card lg:sticky lg:top-6">
-              <h3 className="text-lg sm:text-xl font-semibold font-source text-primary mb-5">Settings</h3>
+              <h3 className="text-lg sm:text-xl font-semibold font-title text-primary mb-5">Settings</h3>
               <div className="space-y-0">
                 <div className="pb-4 sm:pb-5 border-b border-[var(--separator-card)]">
                   <div className="flex items-center justify-between">

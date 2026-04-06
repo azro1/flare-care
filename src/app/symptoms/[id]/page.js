@@ -151,7 +151,7 @@ function SymptomDetailContent() {
           <div className="card min-w-0 overflow-hidden">
             <div className="flex justify-between items-start gap-4 mb-4 pb-4 border-b" style={{ borderColor: 'var(--separator-card)' }}>
               <div>
-                <h1 className="text-2xl sm:text-3xl lg:text-4xl font-bold font-source text-primary">
+                <h1 className="text-2xl sm:text-3xl lg:text-4xl font-bold font-title text-primary">
                   Symptom log
                 </h1>
                 <p className="text-sm text-tertiary font-roboto mt-1 sm:mt-2">
@@ -205,7 +205,7 @@ function SymptomDetailContent() {
 
           {/* Timeline */}
           <div className="card min-w-0 overflow-hidden">
-            <h2 className="text-xl font-semibold font-source text-primary mb-3 sm:mb-4">Timeline</h2>
+            <h2 className="text-xl font-semibold font-title text-primary mb-3 sm:mb-4">Timeline</h2>
             <div>
                 <div className={`flex items-center justify-between gap-4 min-w-0 overflow-hidden ${!symptom.isOngoing && symptom.symptomEndDate ? 'pb-4 border-b' : ''}`} style={{ borderColor: 'var(--separator-card)' }}>
                   <div className="flex items-center gap-3">
@@ -230,7 +230,7 @@ function SymptomDetailContent() {
 
           {/* Bathroom & Lifestyle */}
           <div className="card min-w-0 overflow-hidden">
-            <h2 className="text-xl font-semibold font-source text-primary mb-3 sm:mb-4">Details</h2>
+            <h2 className="text-xl font-semibold font-title text-primary mb-3 sm:mb-4">Details</h2>
             <div className="space-y-0 [&>*:last-child]:pb-0">
                 <div className="flex justify-between items-center gap-4 pt-0 pb-4 border-b min-w-0 overflow-hidden" style={{ borderColor: 'var(--separator-card)' }}>
                   <span className="text-sm sm:text-base text-secondary font-roboto shrink-0">Bathroom frequency</span>
@@ -280,7 +280,7 @@ function SymptomDetailContent() {
           {/* Meals */}
           {(symptom.breakfast?.length > 0 || symptom.lunch?.length > 0 || symptom.dinner?.length > 0) && (
             <div className="card min-w-0 overflow-hidden">
-              <h2 className="text-xl font-semibold font-source text-primary mb-3 sm:mb-4">Meals</h2>
+              <h2 className="text-xl font-semibold font-title text-primary mb-3 sm:mb-4">Meals</h2>
               <div className="space-y-3 sm:space-y-4">
                   {symptom.breakfast?.length > 0 && (
                     <div
@@ -328,7 +328,7 @@ function SymptomDetailContent() {
           {/* Notes */}
           {symptom.notes && (
             <div className="card min-w-0 overflow-hidden">
-              <h2 className="text-xl font-semibold font-source text-primary mb-3 sm:mb-4">Notes</h2>
+              <h2 className="text-xl font-semibold font-title text-primary mb-3 sm:mb-4">Notes</h2>
               <p className="text-sm sm:text-base text-secondary leading-relaxed font-roboto break-words" title={symptom.notes}>{symptom.notes}</p>
             </div>
           )}

@@ -917,7 +917,7 @@ export default function Home() {
           <div className="max-w-4xl mx-auto">
             <div className="text-center space-y-6 mb-12 md:mb-20">
               <div>
-                <div className="text-cadet-blue text-xl font-medium font-source mb-1.5">FlareCare</div>
+                <div className="text-cadet-blue text-xl font-medium font-title mb-1.5">FlareCare</div>
                 <h1 className="text-4xl md:text-5xl lg:text-6xl font-bold text-primary leading-tight">
               Take control of
                 <br />
@@ -1193,7 +1193,7 @@ export default function Home() {
               
               {/* Your Progress */}
               <div className="card order-[5] xl:order-none mb-6 xl:mb-0">
-                <h3 className="text-xl font-semibold font-source text-primary mb-3">Your Progress</h3>
+                <h3 className="text-xl font-semibold font-title text-primary mb-3">Your Progress</h3>
                 <div className="card-inner p-4 sm:p-5 space-y-2.5">
                   <div className="flex justify-between items-center">
                       <span className="text-sm text-primary">Total symptoms</span>
@@ -1218,7 +1218,7 @@ export default function Home() {
 
               {/* Today's Goals */}
               <div className="card no-hover-border order-[3] xl:order-none mb-6 xl:mb-0">
-                <h3 className="text-xl font-semibold font-source text-primary mb-3">Today's Goals</h3>
+                <h3 className="text-xl font-semibold font-title text-primary mb-3">Today's Goals</h3>
                 <div className="card-inner p-4 sm:p-5 space-y-0">
                   <div className="flex items-center gap-3 pb-3">
                     <div className="w-6 h-6 bg-white dark:bg-[var(--bg-icon-container)] flex items-center justify-center rounded-md">
@@ -1244,7 +1244,7 @@ export default function Home() {
               {/* Hints */}
               <div className="card order-[4] xl:order-none mb-6 xl:mb-0">
                 <div>
-                  <h3 className="text-xl font-semibold font-source text-primary mb-3 flex items-center gap-2">
+                  <h3 className="text-xl font-semibold font-title text-primary mb-3 flex items-center gap-2">
                     <Lightbulb className="w-5 h-5 flex-shrink-0 text-amber-500" />
                     Hint
                   </h3>
@@ -1262,7 +1262,7 @@ export default function Home() {
         {/* Weather Hero with Greeting & Date inside */}
         <div className="order-1 xl:order-none">
         <WeatherHero>
-          <h1 className="text-2xl sm:text-3xl lg:text-4xl font-bold font-source text-primary mb-2 sm:mb-3">
+          <h1 className="text-2xl sm:text-3xl lg:text-4xl font-bold font-title text-primary mb-2 sm:mb-3">
             {(() => {
               const hour = new Date().getHours()
               if (hour < 12) return 'Good morning'
@@ -1278,7 +1278,7 @@ export default function Home() {
 
         {/* Daily Check-in */}
         <div className="my-6 order-[2] xl:order-none w-full min-w-0 max-w-full">
-          <h2 className="text-xl font-semibold font-source text-primary mb-4">Daily Check-in</h2>
+          <h2 className="text-xl font-semibold font-title text-primary mb-4">Daily Check-in</h2>
           {/* Mobile: horizontal scroll — card width matches More (2-col grid, gap-4) */}
           <div className="block sm:hidden w-full min-w-0 [container-type:inline-size]">
             <div className="overflow-x-auto pb-1 overscroll-x-contain scrollbar-hide snap-x snap-mandatory" style={{ WebkitOverflowScrolling: 'touch' }}>
@@ -1293,7 +1293,7 @@ export default function Home() {
                     </div>
                     <div className="w-full min-w-0 text-center">
                       <h3
-                        className="text-sm font-semibold text-primary leading-tight min-w-0 w-full truncate"
+                        className="text-base font-semibold font-title text-primary leading-tight min-w-0 w-full truncate"
                         title="Log Symptoms"
                       >
                         Log Symptoms
@@ -1311,7 +1311,7 @@ export default function Home() {
                     </div>
                     <div className="w-full min-w-0 text-center">
                       <h3
-                        className="text-sm font-semibold text-primary leading-tight min-w-0 w-full truncate"
+                        className="text-base font-semibold font-title text-primary leading-tight min-w-0 w-full truncate"
                         title="Log Medications"
                       >
                         Log Medications
@@ -1329,7 +1329,7 @@ export default function Home() {
                     </div>
                     <div className="w-full min-w-0 text-center">
                       <h3
-                        className="text-sm font-semibold text-primary leading-tight min-w-0 w-full truncate"
+                        className="text-base font-semibold font-title text-primary leading-tight min-w-0 w-full truncate"
                         title="My Hydration"
                       >
                         My Hydration
@@ -1347,7 +1347,7 @@ export default function Home() {
                     </div>
                     <div className="w-full min-w-0 text-center">
                       <h3
-                        className="text-sm font-semibold text-primary leading-tight min-w-0 w-full truncate"
+                        className="text-base font-semibold font-title text-primary leading-tight min-w-0 w-full truncate"
                         title="Bowel Movements"
                       >
                         Bowel Movements
@@ -1375,7 +1375,7 @@ export default function Home() {
                       <Thermometer className="w-5 h-5 text-emerald-600" />
                     </div>
                     <div className="w-full text-center min-w-0">
-                      <h3 className="text-sm sm:text-base font-semibold text-primary leading-tight sm:leading-relaxed break-words">Log Symptoms</h3>
+                      <h3 className="text-base font-semibold font-title text-primary leading-tight sm:leading-relaxed break-words">Log Symptoms</h3>
                     </div>
                   </div>
                 </Link>
@@ -1388,7 +1388,7 @@ export default function Home() {
                       <ChartLine className="w-5 h-5 text-pink-500" />
                     </div>
                     <div className="w-full text-center min-w-0">
-                      <h3 className="text-sm sm:text-base font-semibold text-primary leading-tight sm:leading-relaxed break-words">Log Medications</h3>
+                      <h3 className="text-base font-semibold font-title text-primary leading-tight sm:leading-relaxed break-words">Log Medications</h3>
                     </div>
                   </div>
                 </Link>
@@ -1401,7 +1401,7 @@ export default function Home() {
                       <CupSoda className="w-5 h-5 text-sky-600" />
                     </div>
                     <div className="w-full text-center min-w-0">
-                      <h3 className="text-sm sm:text-base font-semibold text-primary leading-tight sm:leading-relaxed break-words">My Hydration</h3>
+                      <h3 className="text-base font-semibold font-title text-primary leading-tight sm:leading-relaxed break-words">My Hydration</h3>
                     </div>
                   </div>
                 </Link>
@@ -1414,7 +1414,7 @@ export default function Home() {
                       <CircleDot className="w-5 h-5 text-amber-800 dark:text-amber-400" />
                     </div>
                     <div className="w-full text-center min-w-0">
-                      <h3 className="text-sm sm:text-base font-semibold text-primary leading-tight sm:leading-relaxed break-words">Bowel Movements</h3>
+                      <h3 className="text-base font-semibold font-title text-primary leading-tight sm:leading-relaxed break-words">Bowel Movements</h3>
                     </div>
                   </div>
                 </Link>
@@ -1458,7 +1458,7 @@ export default function Home() {
         <div className="contents lg:grid grid-cols-1 lg:grid-cols-2 lg:items-stretch gap-6 mb-6 lg:order-5 xl:order-none">
           {/* Today's Summary */}
           <div className="order-[6] lg:order-1 mb-6 lg:mb-0 lg:flex lg:flex-col lg:min-h-0 lg:h-full">
-            <h2 className="text-xl font-semibold font-source text-primary mb-3">Today's Summary</h2>
+            <h2 className="text-xl font-semibold font-title text-primary mb-3">Today's Summary</h2>
             <div className="card lg:flex-1 lg:flex lg:flex-col lg:min-h-0">
             <div className="card-inner p-4 sm:p-6">
               <div className="flex justify-between items-center mb-3">
@@ -1494,7 +1494,7 @@ export default function Home() {
 
           {/* Recent Activity */}
           <div className="order-[8] lg:order-2 mb-6 lg:mb-0 lg:flex lg:flex-col lg:min-h-0 lg:h-full">
-            <h2 className="text-xl font-semibold font-source text-primary mb-3">Recent Activity</h2>
+            <h2 className="text-xl font-semibold font-title text-primary mb-3">Recent Activity</h2>
             <div className="card lg:flex-1 lg:flex lg:flex-col lg:min-h-0">
             <div className="card-inner p-4 sm:p-6 transition-all duration-300 ease-in-out">
               {(() => {
@@ -1812,7 +1812,7 @@ export default function Home() {
         {/* Latest News */}
         {isAuthenticated && (
           <div className="mb-6 order-[10] xl:order-none">
-            <h2 className="text-xl font-semibold font-source text-primary mb-4">
+            <h2 className="text-xl font-semibold font-title text-primary mb-4">
               Latest News
             </h2>
             {newsLoading && (
@@ -1938,7 +1938,7 @@ export default function Home() {
         {/* Recent Symptoms & Medications (tabbed) */}
         {(displayedSymptoms.length > 0 || trackedMedications.length > 0) && (
           <div className="mb-6 order-[9] xl:order-none">
-            <h2 className="text-xl font-semibold font-source text-primary mb-4">Recent Logs</h2>
+            <h2 className="text-xl font-semibold font-title text-primary mb-4">Recent Logs</h2>
             <div className="card">
             <div className="flex border-b border-[var(--separator-card-inner)] mb-4">
               <button
@@ -2062,7 +2062,7 @@ export default function Home() {
 
         {/* More Options */}
         <div className="mb-6 xl:mb-0 order-[7] xl:order-none">
-          <h2 className="text-xl font-semibold font-source text-primary mb-4">More</h2>
+          <h2 className="text-xl font-semibold font-title text-primary mb-4">More</h2>
           <div className="grid grid-cols-2 lg:grid-cols-3 gap-4 md:gap-6 min-w-0">
               <Link
                 href="/medications"
@@ -2073,7 +2073,7 @@ export default function Home() {
                     <Pill className="w-5 h-5 text-purple-600 dark:[color:var(--text-icon-more-meds)]" />
                 </div>
                   <div className="w-full text-center min-w-0">
-<h3 className="text-sm sm:text-base font-semibold text-primary leading-tight sm:leading-relaxed break-words">
+<h3 className="text-base font-semibold font-title text-primary leading-tight sm:leading-relaxed break-words">
                     My Meds
                     </h3>
                   </div>
@@ -2089,7 +2089,7 @@ export default function Home() {
                     <FileText className="w-5 h-5 text-orange-600 dark:[color:var(--text-icon-more-reports)]" />
                   </div>
                   <div className="w-full text-center min-w-0">
-                    <h3 className="text-sm sm:text-base font-semibold text-primary leading-tight sm:leading-relaxed break-words">
+                    <h3 className="text-base font-semibold font-title text-primary leading-tight sm:leading-relaxed break-words">
                       Reports
                     </h3>
                   </div>
@@ -2105,7 +2105,7 @@ export default function Home() {
                     <Scale className="w-5 h-5 text-indigo-600 dark:[color:var(--text-icon-more-weight)]" />
                   </div>
                   <div className="w-full text-center min-w-0">
-                    <h3 className="text-sm sm:text-base font-semibold text-primary leading-tight sm:leading-relaxed break-words">
+                    <h3 className="text-base font-semibold font-title text-primary leading-tight sm:leading-relaxed break-words">
                       My Weight
                     </h3>
                   </div>
@@ -2122,7 +2122,7 @@ export default function Home() {
                     <Calendar className="w-5 h-5 text-slate-700 dark:[color:var(--text-icon-more-appointments)]" />
                   </div>
                   <div className="w-full text-center min-w-0">
-                    <h3 className="text-sm sm:text-base font-semibold text-primary leading-tight sm:leading-relaxed min-w-0 w-full truncate">
+                    <h3 className="text-base font-semibold font-title text-primary leading-tight sm:leading-relaxed min-w-0 w-full truncate">
                       Appointments
                     </h3>
                   </div>

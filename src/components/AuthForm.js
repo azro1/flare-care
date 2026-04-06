@@ -64,7 +64,7 @@ export default function AuthForm() {
               height={56}
               className="mx-auto mb-4"
             />
-            <h2 className="text-3xl font-bold font-source text-primary mb-6">
+            <h2 className="text-3xl font-bold font-title text-primary mb-6">
               FlareCare
             </h2>
           <p className="text-sm font-roboto text-secondary mb-6 leading-relaxed">

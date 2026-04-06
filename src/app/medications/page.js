@@ -536,7 +536,7 @@ function MedicationsPageContent() {
         <div className="card">
           <div className="flex flex-col sm:flex-row sm:justify-between sm:items-start">
             <div className="min-w-0 flex-1">
-              <h1 className="text-2xl sm:text-3xl lg:text-4xl font-bold font-source text-primary mb-4 sm:mb-6">
+              <h1 className="text-2xl sm:text-3xl lg:text-4xl font-bold font-title text-primary mb-4 sm:mb-6">
                 My Medications
               </h1>
               <p className="text-sm sm:text-base text-secondary font-roboto leading-relaxed">
@@ -574,10 +574,10 @@ function MedicationsPageContent() {
               <Pill className="w-5 h-5 text-purple-600 dark:[color:var(--text-icon-more-meds)]" />
             )}
           </div>
-          <h2 id="medications-panel-heading" className="min-w-0 flex-1 text-xl font-semibold font-source text-primary m-0">
+          <h2 id="medications-panel-heading" className="min-w-0 flex-1 text-xl font-semibold font-title text-primary m-0">
             <button
               type="button"
-              className="sm:hidden w-full min-w-0 text-left text-xl font-semibold font-source text-primary bg-transparent border-0 p-0 min-h-11 flex items-center cursor-pointer touch-manipulation [-webkit-tap-highlight-color:transparent] rounded-md -ml-1 pl-1 pr-2 focus:outline-none focus-visible:ring-1 focus-visible:ring-[#5F9EA0]/45 focus-visible:ring-offset-0"
+              className="sm:hidden w-full min-w-0 text-left text-xl font-semibold font-title text-primary bg-transparent border-0 p-0 min-h-11 flex items-center cursor-pointer touch-manipulation [-webkit-tap-highlight-color:transparent] rounded-md -ml-1 pl-1 pr-2 focus:outline-none focus-visible:ring-1 focus-visible:ring-[#5F9EA0]/45 focus-visible:ring-offset-0"
               onClick={() => setMedicationsPanelOpen((o) => !o)}
               aria-expanded={medicationsPanelOpen}
               aria-controls="medications-list-panel"
@@ -803,7 +803,7 @@ className="px-4 py-2 text-base sm:text-lg font-medium font-sans rounded-lg trans
             <div className="card-inner rounded-full w-14 h-14 sm:w-20 sm:h-20 mx-auto mb-6 flex items-center justify-center">
               <Pill className="w-6 h-6 sm:w-10 sm:h-10 text-secondary" />
             </div>
-            <h3 className="text-lg font-semibold font-source text-primary mb-2">No medications</h3>
+            <h3 className="text-lg font-semibold font-title text-primary mb-2">No medications</h3>
             <p className="text-sm font-roboto text-secondary max-w-md mx-auto">Your medications will show here once you add them</p>
           </div>
         ) : (
@@ -981,7 +981,7 @@ className="px-4 py-2 text-base sm:text-lg font-medium font-sans rounded-lg trans
       {/* Reminder Info */}
       <div className="mt-4 sm:mt-6 card">
         <div>
-          <h3 className="text-xl sm:text-lg font-semibold font-source text-primary mb-2 flex items-center space-x-2">
+          <h3 className="text-xl sm:text-lg font-semibold font-title text-primary mb-2 flex items-center space-x-2">
             <Bell className="w-5 h-5 sm:w-6 sm:h-6 flex-shrink-0" style={{ color: 'var(--text-cadet-blue)' }} />
             <span>Medication Reminders</span>
           </h3>
@@ -991,7 +991,7 @@ className="px-4 py-2 text-base sm:text-lg font-medium font-sans rounded-lg trans
           <div className="card-inner p-5 sm:p-6 mt-4">
             <div className="flex items-center gap-2 mb-2">
               <Lightbulb className="w-5 h-5 flex-shrink-0 text-amber-500" />
-              <span className="text-base sm:text-sm font-semibold text-primary font-source">Important:</span>
+              <span className="text-base sm:text-sm font-semibold text-primary font-title">Important:</span>
             </div>
             <p className="text-xs text-secondary font-roboto leading-relaxed">
               Enable Push notifications in Account settings to get reminders when the app is closed.

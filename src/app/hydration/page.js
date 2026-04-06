@@ -89,7 +89,7 @@ function HydrationPageContent() {
         <div className="card">
           <div className="flex flex-col sm:flex-row sm:justify-between sm:items-start">
             <div className="min-w-0 flex-1">
-              <h1 className="text-2xl sm:text-3xl lg:text-4xl font-bold font-source text-primary mb-4 sm:mb-6">
+              <h1 className="text-2xl sm:text-3xl lg:text-4xl font-bold font-title text-primary mb-4 sm:mb-6">
                 My Hydration
               </h1>
               <p className="text-sm sm:text-base text-secondary font-roboto leading-relaxed">
@@ -106,7 +106,7 @@ function HydrationPageContent() {
             <div className="hidden sm:flex w-10 h-10 bg-sky-100 dashboard-icon-panel rounded-lg items-center justify-center mr-3 sm:mr-4 flex-shrink-0">
               <CupSoda className="w-5 h-5 text-sky-600 dark:[color:var(--text-goal-icon-hydration)]" />
             </div>
-            <h2 className="text-xl font-semibold font-source text-primary">
+            <h2 className="text-xl font-semibold font-title text-primary">
               Daily intake
             </h2>
           </div>
@@ -163,7 +163,7 @@ function HydrationPageContent() {
           <div className="card-inner p-5 sm:p-6 mt-4">
             <div className="flex items-center gap-2 mb-2">
               <Lightbulb className="w-5 h-5 flex-shrink-0 text-amber-500" />
-              <span className="text-base sm:text-sm font-semibold text-primary font-source">Important to know:</span>
+              <span className="text-base sm:text-sm font-semibold text-primary font-title">Important to know:</span>
             </div>
             <p className="text-xs text-secondary font-roboto leading-relaxed">
               Most guidelines recommend around 1.5–2 litres (about 6–8 glasses) of water per day for adults.
