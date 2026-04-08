@@ -3,6 +3,7 @@
 import { useState, useEffect, useRef } from 'react'
 import ConfirmationModal from '@/components/ConfirmationModal'
 import ProtectedRoute from '@/components/ProtectedRoute'
+import reminderService from '@/lib/reminderService'
 import { sanitizeMedicationName, sanitizeNotes } from '@/lib/sanitize'
 import { Pill, ChevronDown, Bell, Lightbulb } from 'lucide-react'
 import { supabase, TABLES } from '@/lib/supabase'
@@ -365,6 +366,17 @@ function MedicationsPageContent() {
     }
     fetchTakenMedications()
   }, [user?.id])
+
+  // Restore in-browser fallback reminders (works even without push delivery)
+  useEffect(() => {
+    reminderService.updateMedications(medications)
+    const medicationsWithReminders = medications.filter(med => med.remindersEnabled)
+    if (medicationsWithReminders.length > 0) {
+      reminderService.start(medications)
+    } else {
+      reminderService.stop()
+    }
+  }, [medications])
 
   // Scroll to top when form opens so it's visible (especially on mobile)
   useEffect(() => {

@@ -1,5 +1,6 @@
 import './globals.css'
 import AppShell from '@/components/AppShell'
+import ReminderProvider from '@/components/ReminderProvider'
 import NotificationBanner from '@/components/NotificationBanner'
 import PushEnableBanner from '@/components/PushEnableBanner'
 import { AuthProvider } from '@/lib/AuthContext'
@@ -49,6 +50,7 @@ export default function RootLayout({ children }) {
       <body className="min-h-screen" style={{backgroundColor: 'var(--bg-main)'}} id="body">
         <ThemeProvider>
           <AuthProvider>
+            <ReminderProvider />
             <NotificationBanner />
             <PushEnableBanner />
             <LoadingScreen>
