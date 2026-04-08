@@ -131,7 +131,7 @@ module.exports = {
       lato: ['Lato', 'system-ui', 'sans-serif'],
       montserrat: ['Montserrat', 'system-ui', 'sans-serif'],
       raleway: ['Raleway', 'system-ui', 'sans-serif'],
-      title: ['Ubuntu Mono', 'ui-monospace', 'monospace'],
+      title: ['LXGW Marker Gothic', 'ui-monospace', 'monospace'],
       barlow: ['Barlow', 'system-ui', 'sans-serif'],
       opensans: ['Open Sans', 'system-ui', 'sans-serif'],
     },
