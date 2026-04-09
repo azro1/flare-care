@@ -1,16 +1,13 @@
 import { createClient } from '@supabase/supabase-js'
 import webPush from 'web-push'
-import { parseUkLocalDateTime } from '@/lib/reminderTimezones'
 
 const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL
 const supabaseServiceKey = process.env.SUPABASE_SERVICE_ROLE_KEY
 const vapidPrivateKey = process.env.VAPID_PRIVATE_KEY
 const cronSecret = process.env.CRON_SECRET
 
-// Window in ms: reminder became due in this window (UK time math; wider helps DST + cron jitter)
-const REMINDER_WINDOW_MS = 60 * 60 * 1000
-
-const PUSH_TTL_SECONDS = 3600
+// Window in ms: only send if reminder became due in the last 15 minutes (avoids resending if cron was down)
+const REMINDER_WINDOW_MS = 15 * 60 * 1000
 
 export async function POST(request) {
   if (!cronSecret || request.headers.get('authorization') !== `Bearer ${cronSecret}`) {
@@ -44,8 +41,8 @@ export async function POST(request) {
   // Filter: reminder due time must be in [windowStart, now]
   const dueAppointments = []
   for (const apt of appointments) {
-    const timeStr = apt.time && /^\d{1,2}:\d{2}/.test(apt.time) ? apt.time : '00:00'
-    const aptDate = parseUkLocalDateTime(apt.date, timeStr)
+    const timeStr = apt.time && /^\d{2}:\d{2}/.test(apt.time) ? apt.time : '00:00'
+    const aptDate = new Date(`${apt.date}T${timeStr}:00`)
     if (isNaN(aptDate.getTime())) continue
     const reminderDueMs = aptDate.getTime() - (apt.reminder_minutes_before * 60 * 1000)
     const reminderDue = new Date(reminderDueMs)
@@ -101,7 +98,7 @@ export async function POST(request) {
             }
           },
           JSON.stringify(payload),
-          { TTL: PUSH_TTL_SECONDS }
+          { TTL: 60 }
         )
         sent++
       } catch (e) {

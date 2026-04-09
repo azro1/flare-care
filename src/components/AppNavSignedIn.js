@@ -38,7 +38,7 @@ export default function AppNavSignedIn() {
               style={!active ? { color: 'var(--text-footer)' } : undefined}
             >
               <Icon className="w-6 h-6" strokeWidth={active ? 2.5 : 2} />
-              <span className="text-xs font-medium font-roboto">{item.label}</span>
+              <span className="text-xs font-medium font-sans">{item.label}</span>
             </Link>
           )
         })}

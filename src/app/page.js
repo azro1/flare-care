@@ -899,7 +899,7 @@ export default function Home() {
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.4} d="M5 13l4 4L19 7" />
               </svg>
             </div>
-            <span className="flex-1 text-sm font-medium font-roboto" style={{ color: 'var(--text-primary)' }}>Account deleted successfully!</span>
+            <span className="flex-1 text-sm font-medium font-sans" style={{ color: 'var(--text-primary)' }}>Account deleted successfully!</span>
             <button               
               type="button"
               onClick={() => setShowAccountDeletedToast(false)}
@@ -1109,7 +1109,7 @@ export default function Home() {
               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.4} d="M5 13l4 4L19 7" />
             </svg>
           </div>
-          <span className="flex-1 text-sm font-medium font-roboto" style={{ color: 'var(--text-primary)' }}>Symptom log added successfully!</span>
+          <span className="flex-1 text-sm font-medium font-sans" style={{ color: 'var(--text-primary)' }}>Symptom log added successfully!</span>
           <button
             onClick={() => setShowToast(false)}
             className="flex-shrink-0 p-1 rounded-md hover:bg-black/5 dark:hover:bg-white/10 transition-colors"
@@ -1130,7 +1130,7 @@ export default function Home() {
               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.4} d="M5 13l4 4L19 7" />
             </svg>
           </div>
-          <span className="flex-1 text-sm font-medium font-roboto" style={{ color: 'var(--text-primary)' }}>Symptom log deleted successfully!</span>
+          <span className="flex-1 text-sm font-medium font-sans" style={{ color: 'var(--text-primary)' }}>Symptom log deleted successfully!</span>
           <button
             onClick={() => setShowDeleteToast(false)}
             className="flex-shrink-0 p-1 rounded-md hover:bg-black/5 dark:hover:bg-white/10 transition-colors"
@@ -1150,7 +1150,7 @@ export default function Home() {
               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.4} d="M5 13l4 4L19 7" />
             </svg>
           </div>
-          <span className="flex-1 text-sm font-medium font-roboto" style={{ color: 'var(--text-primary)' }}>Medication log added successfully!</span>
+          <span className="flex-1 text-sm font-medium font-sans" style={{ color: 'var(--text-primary)' }}>Medication log added successfully!</span>
           <button
             onClick={() => setShowMedicationToast(false)}
             className="flex-shrink-0 p-1 rounded-md hover:bg-black/5 dark:hover:bg-white/10 transition-colors"
@@ -1170,7 +1170,7 @@ export default function Home() {
               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.4} d="M5 13l4 4L19 7" />
             </svg>
           </div>
-          <span className="flex-1 text-sm font-medium font-roboto" style={{ color: 'var(--text-primary)' }}>Medication log deleted successfully!</span>
+          <span className="flex-1 text-sm font-medium font-sans" style={{ color: 'var(--text-primary)' }}>Medication log deleted successfully!</span>
           <button
             onClick={() => setShowMedicationDeleteToast(false)}
             className="flex-shrink-0 p-1 rounded-md hover:bg-black/5 dark:hover:bg-white/10 transition-colors"
@@ -1270,7 +1270,7 @@ export default function Home() {
               return 'Good evening'
             })()}, {user?.user_metadata?.full_name?.split(' ')[0] || 'User'}
           </h1>
-          <p className="text-sm font-roboto text-secondary">
+          <p className="text-sm font-sans text-secondary">
             {new Date().toLocaleDateString('en-GB', { weekday: 'long', day: 'numeric', month: 'long' })}
           </p>
         </WeatherHero>
@@ -1817,7 +1817,7 @@ export default function Home() {
             </h2>
             {newsLoading && (
               <div className="flex items-center justify-center py-16">
-                <p className="text-sm sm:text-base text-secondary font-roboto">
+                <p className="text-sm sm:text-base text-secondary font-sans">
                   Getting the latest news...
                 </p>
               </div>

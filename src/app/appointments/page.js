@@ -382,7 +382,7 @@ function AppointmentsPageContent() {
               <h1 className="text-2xl sm:text-3xl lg:text-4xl font-bold font-title text-primary mb-4 sm:mb-6">
                 My Appointments
               </h1>
-              <p className="text-sm sm:text-base text-secondary font-roboto leading-relaxed">
+              <p className="text-sm sm:text-base text-secondary font-sans leading-relaxed">
                 Manage your appointments to keep track of past and upcoming visits.
               </p>
             </div>
@@ -469,7 +469,7 @@ function AppointmentsPageContent() {
             <form onSubmit={handleSubmit} className="space-y-4" autoComplete="off">
               <div className="grid sm:grid-cols-2 gap-6 min-w-0">
                 <div className="w-full">
-                  <label htmlFor="apt-date" className="block text-sm sm:text-base font-semibold font-roboto text-primary mb-2 sm:mb-3">
+                  <label htmlFor="apt-date" className="block text-sm sm:text-base font-semibold font-sans text-primary mb-2 sm:mb-3">
                     Date *
                   </label>
                   <input
@@ -501,11 +501,11 @@ function AppointmentsPageContent() {
                   />
                   </div>
                   {dateError && (
-                    <p className="text-sm font-roboto mt-1" role="alert" style={{ color: 'var(--text-cadet-blue)' }}>{dateError}</p>
+                    <p className="text-sm font-sans mt-1" role="alert" style={{ color: 'var(--text-cadet-blue)' }}>{dateError}</p>
                   )}
                 </div>
                 <div className="w-full">
-                  <label htmlFor="apt-time" className="block text-sm sm:text-base font-semibold font-roboto text-primary mb-2 sm:mb-3">
+                  <label htmlFor="apt-time" className="block text-sm sm:text-base font-semibold font-sans text-primary mb-2 sm:mb-3">
                     Time *
                   </label>
                   <select
@@ -525,7 +525,7 @@ function AppointmentsPageContent() {
                 </div>
               </div>
               <div>
-                <label htmlFor="apt-type" className="block text-sm sm:text-base font-semibold font-roboto text-primary mb-2 sm:mb-3">
+                <label htmlFor="apt-type" className="block text-sm sm:text-base font-semibold font-sans text-primary mb-2 sm:mb-3">
                   Type of appointment *
                 </label>
                 <input
@@ -539,7 +539,7 @@ function AppointmentsPageContent() {
                 />
               </div>
               <div>
-                <label htmlFor="apt-clinician" className="block text-sm sm:text-base font-semibold font-roboto text-primary mb-2 sm:mb-3">
+                <label htmlFor="apt-clinician" className="block text-sm sm:text-base font-semibold font-sans text-primary mb-2 sm:mb-3">
                   Name of clinician
                 </label>
                 <input
@@ -552,7 +552,7 @@ function AppointmentsPageContent() {
                 />
               </div>
               <div>
-                <label htmlFor="apt-location" className="block text-sm sm:text-base font-semibold font-roboto text-primary mb-2 sm:mb-3">
+                <label htmlFor="apt-location" className="block text-sm sm:text-base font-semibold font-sans text-primary mb-2 sm:mb-3">
                   Location *
                 </label>
                 <input
@@ -566,7 +566,7 @@ function AppointmentsPageContent() {
                 />
               </div>
               <div>
-                <label htmlFor="apt-notes" className="block text-sm sm:text-base font-semibold font-roboto text-primary mb-2 sm:mb-3">
+                <label htmlFor="apt-notes" className="block text-sm sm:text-base font-semibold font-sans text-primary mb-2 sm:mb-3">
                   Notes
                 </label>
                 <textarea
@@ -579,7 +579,7 @@ function AppointmentsPageContent() {
                 />
               </div>
               <div>
-                <label htmlFor="apt-reminder" className="block text-sm sm:text-base font-semibold font-roboto text-primary mb-2 sm:mb-3">
+                <label htmlFor="apt-reminder" className="block text-sm sm:text-base font-semibold font-sans text-primary mb-2 sm:mb-3">
                   Remind me
                 </label>
                 <select
@@ -599,7 +599,7 @@ function AppointmentsPageContent() {
                 </select>
               </div>
               {saveError && (
-                <p className="text-sm font-roboto" role="alert" style={{ color: 'var(--text-cadet-blue)' }}>{saveError}</p>
+                <p className="text-sm font-sans" role="alert" style={{ color: 'var(--text-cadet-blue)' }}>{saveError}</p>
               )}
               <div className="flex flex-col sm:flex-row gap-4">
                 <button type="submit" className="button-cadet px-4 py-2 text-base sm:text-lg font-semibold rounded-lg transition-colors">
@@ -661,7 +661,7 @@ function AppointmentsPageContent() {
         )}
 
         {isLoading ? (
-          <p className="text-center py-12 text-secondary font-roboto">Loading...</p>
+          <p className="text-center py-12 text-secondary font-sans">Loading...</p>
         ) : visibleAppointments.length === 0 ? (
           <div className="text-center py-12 text-secondary">
             <div className="card-inner rounded-full w-14 h-14 sm:w-20 sm:h-20 mx-auto mb-6 flex items-center justify-center">
@@ -670,7 +670,7 @@ function AppointmentsPageContent() {
             <h3 className="text-lg font-semibold font-title text-primary mb-2">
               {appointmentsTab === 'past' ? 'No past appointments' : 'No upcoming appointments'}
             </h3>
-            <p className="text-sm font-roboto text-secondary max-w-md mx-auto leading-relaxed">
+            <p className="text-sm font-sans text-secondary max-w-md mx-auto leading-relaxed">
               {appointmentsTab === 'past'
                 ? 'Your past appointments will appear here once they have taken place.'
                 : 'Your appointments will show here once you add them'}
@@ -695,7 +695,7 @@ function AppointmentsPageContent() {
                             {apt.time && (
                               <>
                                 <span className="text-secondary">·</span>
-                                <span className="text-primary font-roboto truncate">{apt.time}</span>
+                                <span className="text-primary font-sans truncate">{apt.time}</span>
                               </>
                             )}
                           </div>
@@ -727,7 +727,7 @@ function AppointmentsPageContent() {
                               <div className="flex flex-row flex-nowrap items-center gap-3 mt-3 mb-3">
                                 {apt.time && getReminderTimeLabel(apt.date, apt.time, apt.reminderMinutesBefore) && (
                                   <span
-                                    className="inline-flex items-center px-3 py-1.5 rounded-full text-xs sm:text-sm font-medium font-roboto shrink-0 bg-white text-black"
+                                    className="inline-flex items-center px-3 py-1.5 rounded-full text-xs sm:text-sm font-medium font-sans shrink-0 bg-white text-black"
                                   >
                                     <svg className="w-4 h-4 mr-1.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                       <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" />
@@ -736,7 +736,7 @@ function AppointmentsPageContent() {
                                   </span>
                                 )}
                                 <span
-                                  className="inline-flex items-center px-3 py-1.5 rounded-full text-xs sm:text-sm font-medium font-roboto shrink-0"
+                                  className="inline-flex items-center px-3 py-1.5 rounded-full text-xs sm:text-sm font-medium font-sans shrink-0"
                                   style={{ backgroundColor: 'var(--bg-card)', color: 'var(--text-cadet-blue)' }}
                                 >
                                   <svg className="w-4 h-4 mr-1.5" fill="currentColor" viewBox="0 0 20 20">
@@ -747,10 +747,10 @@ function AppointmentsPageContent() {
                               </div>
                             )}
                             {apt.clinicianName && (
-                              <p className="text-xs sm:text-sm text-secondary font-roboto mt-0.5 truncate" title={apt.clinicianName}>{apt.clinicianName}</p>
+                              <p className="text-xs sm:text-sm text-secondary font-sans mt-0.5 truncate" title={apt.clinicianName}>{apt.clinicianName}</p>
                             )}
                             {apt.location && (
-                              <p className="text-xs sm:text-sm text-secondary font-roboto truncate" title={apt.location}>{apt.location}</p>
+                              <p className="text-xs sm:text-sm text-secondary font-sans truncate" title={apt.location}>{apt.location}</p>
                             )}
                             <div className="flex flex-wrap items-center gap-2 mt-2">
                               <button
@@ -783,14 +783,14 @@ function AppointmentsPageContent() {
                     {isExpanded && apt.notes && (
                       <div className="mt-2 min-w-0">
                         <div className="card-inner min-w-0">
-                          <p className="text-sm text-secondary font-roboto leading-normal line-clamp-2" title={apt.notes}>
+                          <p className="text-sm text-secondary font-sans leading-normal line-clamp-2" title={apt.notes}>
                             <span className="font-semibold text-primary">Notes:</span> {apt.notes}
                           </p>
                         </div>
                       </div>
                     )}
                     {isExpanded && (
-                      <div className="mt-2 text-xs text-tertiary font-roboto">
+                      <div className="mt-2 text-xs text-tertiary font-sans">
                         <div className="flex items-center">
                           <svg className="w-3 h-3 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                             <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" />
@@ -818,7 +818,7 @@ function AppointmentsPageContent() {
             <Bell className="w-5 h-5 sm:w-6 sm:h-6 flex-shrink-0" style={{ color: 'var(--text-cadet-blue)' }} />
             <span>Appointment Reminders</span>
           </h3>
-          <p className="text-sm text-secondary font-roboto leading-relaxed">
+          <p className="text-sm text-secondary font-sans leading-relaxed">
             Get notified so you do not miss an appointment, in your browser or on your device.
           </p>
           <div className="card-inner p-5 sm:p-6 mt-4">
@@ -826,7 +826,7 @@ function AppointmentsPageContent() {
               <Lightbulb className="w-5 h-5 flex-shrink-0 text-amber-500" />
               <span className="text-base sm:text-sm font-semibold text-primary font-title">Important:</span>
             </div>
-            <p className="text-xs text-secondary font-roboto leading-relaxed">
+            <p className="text-xs text-secondary font-sans leading-relaxed">
               Enable Push notifications in Account settings to get reminders when the app is closed.
             </p>
           </div>

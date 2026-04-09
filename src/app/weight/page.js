@@ -257,7 +257,7 @@ function WeightPageContent() {
               <h1 className="text-2xl sm:text-3xl lg:text-4xl font-bold font-title text-primary mb-4 sm:mb-6">
                 My Weight
               </h1>
-              <p className="text-sm sm:text-base text-secondary font-roboto leading-relaxed">
+              <p className="text-sm sm:text-base text-secondary font-sans leading-relaxed">
                 Record your weight to help your doctor build a clearer picture over time.
               </p>
             </div>
@@ -344,7 +344,7 @@ function WeightPageContent() {
             <form onSubmit={handleSubmit} className="space-y-4" autoComplete="off">
               <div className="grid sm:grid-cols-2 gap-6 min-w-0">
                 <div className="w-full">
-                  <label htmlFor="weight-date" className="block text-sm sm:text-base font-semibold font-roboto text-primary mb-2 sm:mb-3">
+                  <label htmlFor="weight-date" className="block text-sm sm:text-base font-semibold font-sans text-primary mb-2 sm:mb-3">
                     Date *
                   </label>
                   <div className="w-full sm:max-w-[150px]">
@@ -367,7 +367,7 @@ function WeightPageContent() {
                   </div>
                 </div>
                 <div>
-                  <label htmlFor="valueKg" className="block text-sm sm:text-base font-semibold font-roboto text-primary mb-2 sm:mb-3">
+                  <label htmlFor="valueKg" className="block text-sm sm:text-base font-semibold font-sans text-primary mb-2 sm:mb-3">
                     Weight (kg) *
                   </label>
                   <input
@@ -391,7 +391,7 @@ function WeightPageContent() {
                 </div>
               </div>
               <div>
-                <label htmlFor="notes" className="block text-sm sm:text-base font-semibold font-roboto text-primary mb-2 sm:mb-3">
+                <label htmlFor="notes" className="block text-sm sm:text-base font-semibold font-sans text-primary mb-2 sm:mb-3">
                   Notes
                 </label>
                 <textarea
@@ -429,14 +429,14 @@ function WeightPageContent() {
         </AnimatePresence>
 
         {isLoading ? (
-          <p className="text-center py-12 text-secondary font-roboto">Loading...</p>
+          <p className="text-center py-12 text-secondary font-sans">Loading...</p>
         ) : entries.length === 0 ? (
           <div className="text-center py-12 text-secondary">
             <div className="card-inner rounded-full w-14 h-14 sm:w-20 sm:h-20 mx-auto mb-6 flex items-center justify-center">
               <Scale className="w-6 h-6 sm:w-10 sm:h-10 text-secondary" />
             </div>
             <h3 className="text-lg font-semibold font-title text-primary mb-2">No weight logs</h3>
-            <p className="text-sm font-roboto text-secondary max-w-md mx-auto leading-relaxed">
+            <p className="text-sm font-sans text-secondary max-w-md mx-auto leading-relaxed">
               Your weight logs will show here once you add them
             </p>
           </div>
@@ -461,7 +461,7 @@ function WeightPageContent() {
                         <div className="flex flex-wrap items-baseline gap-x-2 gap-y-1 min-w-0 flex-1 text-sm">
                           <span className="font-semibold text-primary">{formatUKDate(entry.date)}</span>
                           <span className="text-secondary">·</span>
-                          <span className="text-primary font-roboto">{Number(entry.valueKg)} kg</span>
+                          <span className="text-primary font-sans">{Number(entry.valueKg)} kg</span>
                         </div>
                         <button
                           type="button"
@@ -514,14 +514,14 @@ function WeightPageContent() {
                   {isExpanded && entry.notes?.trim() && (
                     <div className="mt-2 min-w-0">
                       <div className="card-inner min-w-0">
-                        <p className="text-sm text-secondary font-roboto leading-normal break-words line-clamp-2" title={entry.notes}>
+                        <p className="text-sm text-secondary font-sans leading-normal break-words line-clamp-2" title={entry.notes}>
                           <span className="font-semibold text-primary">Notes:</span> {entry.notes}
                         </p>
                       </div>
                     </div>
                   )}
                   {isExpanded && (
-                    <div className="mt-2 text-xs text-tertiary font-roboto">
+                    <div className="mt-2 text-xs text-tertiary font-sans">
                       <div className="flex items-center">
                         <svg className="w-3 h-3 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                           <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" />
@@ -544,7 +544,7 @@ function WeightPageContent() {
 
       <div className="mt-4 sm:mt-6 card">
         <div>
-          <p className="text-sm text-secondary font-roboto leading-relaxed">
+          <p className="text-sm text-secondary font-sans leading-relaxed">
             Keeping your entries consistent helps make changes easier to understand over time.
           </p>
           <div className="card-inner p-5 sm:p-6 mt-4">
@@ -552,7 +552,7 @@ function WeightPageContent() {
               <Lightbulb className="w-5 h-5 flex-shrink-0 text-amber-500" />
               <span className="text-base sm:text-sm font-semibold text-primary font-title">Important:</span>
             </div>
-            <p className="text-xs text-secondary font-roboto leading-relaxed">
+            <p className="text-xs text-secondary font-sans leading-relaxed">
               Weight can be affected by hydration, salt intake, and digestion, not just body fat.
             </p>
           </div>

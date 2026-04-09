@@ -13,7 +13,7 @@ function SettingsPageContent() {
         <div className="mb-4 sm:mb-6 card">
           <div className="">
             <h1 className="text-2xl sm:text-3xl lg:text-4xl font-bold font-title text-primary mb-4">Settings</h1>
-            <p className="text-[15px] sm:text-base text-secondary font-roboto break-words">Manage your app preferences and settings</p>
+            <p className="text-[15px] sm:text-base text-secondary font-sans break-words">Manage your app preferences and settings</p>
           </div>
         </div>
 
@@ -25,7 +25,7 @@ function SettingsPageContent() {
             <div className="flex items-center justify-between">
               <div className="flex-1">
                 <p className="text-sm font-medium text-secondary mb-1">Appearance</p>
-                <p className="text-primary font-roboto text-sm">
+                <p className="text-primary font-sans text-sm">
                   {theme === 'dark' ? 'Dark mode' : 'Light mode'}
                 </p>
               </div>

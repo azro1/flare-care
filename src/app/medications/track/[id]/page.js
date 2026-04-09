@@ -123,7 +123,7 @@ function TrackedMedicationDetails() {
                 <h1 className="text-2xl sm:text-3xl lg:text-4xl font-bold font-title text-primary">
                   Medication log
                 </h1>
-                <p className="text-sm text-tertiary font-roboto mt-1 sm:mt-2">
+                <p className="text-sm text-tertiary font-sans mt-1 sm:mt-2">
                   {new Date(trackedData.created_at || trackedData.createdAt).toLocaleDateString('en-GB', { 
                     weekday: 'long', 
                     day: 'numeric', 
@@ -146,20 +146,20 @@ function TrackedMedicationDetails() {
             </div>
             <div className="space-y-4 sm:space-y-0 sm:grid sm:grid-cols-3 sm:gap-6">
               <div>
-                <span className="text-xs sm:text-sm font-semibold text-secondary tracking-wide block font-roboto">Missed doses</span>
-                <p className={`mt-1 sm:mt-2 text-sm sm:text-base font-semibold font-roboto ${missedCount > 0 ? 'text-amber-600 dark:text-white' : 'text-secondary'}`}>
+                <span className="text-xs sm:text-sm font-semibold text-secondary tracking-wide block font-sans">Missed doses</span>
+                <p className={`mt-1 sm:mt-2 text-sm sm:text-base font-semibold font-sans ${missedCount > 0 ? 'text-amber-600 dark:text-white' : 'text-secondary'}`}>
                   {missedCount}
                 </p>
               </div>
               <div>
-                <span className="text-xs sm:text-sm font-semibold text-secondary tracking-wide block font-roboto">NSAIDs</span>
-                <p className={`mt-1 sm:mt-2 text-sm sm:text-base font-semibold font-roboto ${nsaidCount > 0 ? 'text-emerald-600 dark:text-white' : 'text-secondary'}`}>
+                <span className="text-xs sm:text-sm font-semibold text-secondary tracking-wide block font-sans">NSAIDs</span>
+                <p className={`mt-1 sm:mt-2 text-sm sm:text-base font-semibold font-sans ${nsaidCount > 0 ? 'text-emerald-600 dark:text-white' : 'text-secondary'}`}>
                   {nsaidCount}
                 </p>
               </div>
               <div>
-                <span className="text-xs sm:text-sm font-semibold text-secondary tracking-wide block font-roboto">Antibiotics</span>
-                <p className={`mt-1 sm:mt-2 text-sm sm:text-base font-semibold font-roboto ${antibioticCount > 0 ? 'text-blue-600 dark:text-white' : 'text-secondary'}`}>
+                <span className="text-xs sm:text-sm font-semibold text-secondary tracking-wide block font-sans">Antibiotics</span>
+                <p className={`mt-1 sm:mt-2 text-sm sm:text-base font-semibold font-sans ${antibioticCount > 0 ? 'text-blue-600 dark:text-white' : 'text-secondary'}`}>
                   {antibioticCount}
                 </p>
               </div>
@@ -174,18 +174,18 @@ function TrackedMedicationDetails() {
                 {trackedData.missed_medications_list.map((item, index) => (
                   <div key={index} className={index > 0 ? 'pt-4 border-t min-w-0' : 'min-w-0'} style={index > 0 ? { borderColor: 'var(--separator-card)' } : undefined}>
                     <div className="flex items-center justify-between gap-4 pt-0 pb-4 border-b min-w-0 overflow-hidden" style={{ borderColor: 'var(--separator-card)' }}>
-                      <span className="text-sm sm:text-base text-secondary shrink-0 whitespace-nowrap font-roboto">Medication</span>
-                      <span className="text-sm sm:text-base font-medium text-primary truncate min-w-0 text-right font-roboto" title={item.medication}>{item.medication}</span>
+                      <span className="text-sm sm:text-base text-secondary shrink-0 whitespace-nowrap font-sans">Medication</span>
+                      <span className="text-sm sm:text-base font-medium text-primary truncate min-w-0 text-right font-sans" title={item.medication}>{item.medication}</span>
                     </div>
                     <div className="flex justify-between gap-4 py-4 border-b min-w-0 overflow-hidden" style={{ borderColor: 'var(--separator-card)' }}>
-                      <span className="text-sm sm:text-base text-secondary shrink-0 font-roboto">Date</span>
-                      <span className="text-sm sm:text-base font-medium text-primary font-roboto min-w-0 break-words text-right">
+                      <span className="text-sm sm:text-base text-secondary shrink-0 font-sans">Date</span>
+                      <span className="text-sm sm:text-base font-medium text-primary font-sans min-w-0 break-words text-right">
                         {item.date ? new Date(item.date).toLocaleDateString('en-GB', { day: '2-digit', month: '2-digit', year: 'numeric' }) : 'N/A'}
                       </span>
                     </div>
                     <div className="flex justify-between gap-4 py-4 min-w-0 overflow-hidden">
-                      <span className="text-sm sm:text-base text-secondary shrink-0 font-roboto">Time of Day</span>
-                      <span className="text-sm sm:text-base font-medium text-primary min-w-0 break-words text-right font-roboto">{item.timeOfDay || 'N/A'}</span>
+                      <span className="text-sm sm:text-base text-secondary shrink-0 font-sans">Time of Day</span>
+                      <span className="text-sm sm:text-base font-medium text-primary min-w-0 break-words text-right font-sans">{item.timeOfDay || 'N/A'}</span>
                     </div>
                   </div>
                 ))}
@@ -201,20 +201,20 @@ function TrackedMedicationDetails() {
                 {trackedData.nsaid_list.map((item, index) => (
                   <div key={index} className={index > 0 ? 'pt-4 border-t min-w-0' : 'min-w-0'} style={index > 0 ? { borderColor: 'var(--separator-card)' } : undefined}>
                     <div className="flex items-center justify-between gap-4 pt-0 pb-4 border-b min-w-0 overflow-hidden" style={{ borderColor: 'var(--separator-card)' }}>
-                      <span className="text-sm sm:text-base text-secondary shrink-0 whitespace-nowrap font-roboto">Medication</span>
-                      <span className="text-sm sm:text-base font-medium text-primary truncate min-w-0 text-right font-roboto" title={item.medication}>{item.medication}</span>
+                      <span className="text-sm sm:text-base text-secondary shrink-0 whitespace-nowrap font-sans">Medication</span>
+                      <span className="text-sm sm:text-base font-medium text-primary truncate min-w-0 text-right font-sans" title={item.medication}>{item.medication}</span>
                     </div>
                     <div className="flex items-center justify-between gap-4 py-4 border-b min-w-0 overflow-hidden" style={{ borderColor: 'var(--separator-card)' }}>
-                      <span className="text-sm sm:text-base text-secondary shrink-0 whitespace-nowrap font-roboto">Dosage</span>
-                      <span className="text-sm sm:text-base font-medium text-primary truncate min-w-0 text-right font-roboto" title={item.dosage || 'N/A'}>{item.dosage || 'N/A'}</span>
+                      <span className="text-sm sm:text-base text-secondary shrink-0 whitespace-nowrap font-sans">Dosage</span>
+                      <span className="text-sm sm:text-base font-medium text-primary truncate min-w-0 text-right font-sans" title={item.dosage || 'N/A'}>{item.dosage || 'N/A'}</span>
                     </div>
                     <div className="flex justify-between gap-4 py-4 border-b min-w-0 overflow-hidden" style={{ borderColor: 'var(--separator-card)' }}>
-                      <span className="text-sm sm:text-base text-secondary shrink-0 font-roboto">Date</span>
-                      <span className="text-sm sm:text-base font-medium text-primary font-roboto min-w-0 break-words text-right">{item.date ? new Date(item.date).toLocaleDateString('en-GB', { day: '2-digit', month: '2-digit', year: 'numeric' }) : 'N/A'}</span>
+                      <span className="text-sm sm:text-base text-secondary shrink-0 font-sans">Date</span>
+                      <span className="text-sm sm:text-base font-medium text-primary font-sans min-w-0 break-words text-right">{item.date ? new Date(item.date).toLocaleDateString('en-GB', { day: '2-digit', month: '2-digit', year: 'numeric' }) : 'N/A'}</span>
                     </div>
                     <div className="flex justify-between gap-4 py-4 min-w-0 overflow-hidden">
-                      <span className="text-sm sm:text-base text-secondary shrink-0 font-roboto">Time of Day</span>
-                      <span className="text-sm sm:text-base font-medium text-primary min-w-0 break-words text-right font-roboto">{item.timeOfDay || 'N/A'}</span>
+                      <span className="text-sm sm:text-base text-secondary shrink-0 font-sans">Time of Day</span>
+                      <span className="text-sm sm:text-base font-medium text-primary min-w-0 break-words text-right font-sans">{item.timeOfDay || 'N/A'}</span>
                     </div>
                   </div>
                 ))}
@@ -230,20 +230,20 @@ function TrackedMedicationDetails() {
                 {trackedData.antibiotic_list.map((item, index) => (
                   <div key={index} className={index > 0 ? 'pt-4 border-t min-w-0' : 'min-w-0'} style={index > 0 ? { borderColor: 'var(--separator-card)' } : undefined}>
                     <div className="flex items-center justify-between gap-4 pt-0 pb-4 border-b min-w-0 overflow-hidden" style={{ borderColor: 'var(--separator-card)' }}>
-                      <span className="text-sm sm:text-base text-secondary shrink-0 whitespace-nowrap font-roboto">Medication</span>
-                      <span className="text-sm sm:text-base font-medium text-primary truncate min-w-0 text-right font-roboto" title={item.medication}>{item.medication}</span>
+                      <span className="text-sm sm:text-base text-secondary shrink-0 whitespace-nowrap font-sans">Medication</span>
+                      <span className="text-sm sm:text-base font-medium text-primary truncate min-w-0 text-right font-sans" title={item.medication}>{item.medication}</span>
                     </div>
                     <div className="flex items-center justify-between gap-4 py-4 border-b min-w-0 overflow-hidden" style={{ borderColor: 'var(--separator-card)' }}>
-                      <span className="text-sm sm:text-base text-secondary shrink-0 whitespace-nowrap font-roboto">Dosage</span>
-                      <span className="text-sm sm:text-base font-medium text-primary truncate min-w-0 text-right font-roboto" title={item.dosage || 'N/A'}>{item.dosage || 'N/A'}</span>
+                      <span className="text-sm sm:text-base text-secondary shrink-0 whitespace-nowrap font-sans">Dosage</span>
+                      <span className="text-sm sm:text-base font-medium text-primary truncate min-w-0 text-right font-sans" title={item.dosage || 'N/A'}>{item.dosage || 'N/A'}</span>
                     </div>
                     <div className="flex justify-between gap-4 py-4 border-b min-w-0 overflow-hidden" style={{ borderColor: 'var(--separator-card)' }}>
-                      <span className="text-sm sm:text-base text-secondary shrink-0 font-roboto">Date</span>
-                      <span className="text-sm sm:text-base font-medium text-primary font-roboto min-w-0 break-words text-right">{item.date ? new Date(item.date).toLocaleDateString('en-GB', { day: '2-digit', month: '2-digit', year: 'numeric' }) : 'N/A'}</span>
+                      <span className="text-sm sm:text-base text-secondary shrink-0 font-sans">Date</span>
+                      <span className="text-sm sm:text-base font-medium text-primary font-sans min-w-0 break-words text-right">{item.date ? new Date(item.date).toLocaleDateString('en-GB', { day: '2-digit', month: '2-digit', year: 'numeric' }) : 'N/A'}</span>
                     </div>
                     <div className="flex justify-between gap-4 py-4 min-w-0 overflow-hidden">
-                      <span className="text-sm sm:text-base text-secondary shrink-0 font-roboto">Time of Day</span>
-                      <span className="text-sm sm:text-base font-medium text-primary min-w-0 break-words text-right font-roboto">{item.timeOfDay || 'N/A'}</span>
+                      <span className="text-sm sm:text-base text-secondary shrink-0 font-sans">Time of Day</span>
+                      <span className="text-sm sm:text-base font-medium text-primary min-w-0 break-words text-right font-sans">{item.timeOfDay || 'N/A'}</span>
                     </div>
                   </div>
                 ))}

@@ -1456,7 +1456,7 @@ function ReportsPageContent() {
             <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.4} d="M5 13l4 4L19 7" />
           </svg>
         </div>
-        <span className="flex-1 text-sm font-medium font-roboto" style={{ color: 'var(--text-primary)' }}>
+        <span className="flex-1 text-sm font-medium font-sans" style={{ color: 'var(--text-primary)' }}>
           Report sent successfully!
         </span>
         <button
@@ -1491,7 +1491,7 @@ function ReportsPageContent() {
         <div className="max-w-4xl mx-auto">
           <div className="mb-8 card">
             <h1 className="text-2xl sm:text-3xl lg:text-4xl font-bold font-title text-primary mb-4">Reports</h1>
-            <p className="text-sm sm:text-base text-secondary font-roboto">
+            <p className="text-sm sm:text-base text-secondary font-sans">
               Generate reports from your records to support informed decisions about your care.
             </p>
           </div>
@@ -1511,7 +1511,7 @@ function ReportsPageContent() {
       <div className="max-w-4xl mx-auto">
       <div className="mb-5 sm:mb-6 card">
         <h1 className="text-2xl sm:text-3xl lg:text-4xl font-bold font-title text-primary mb-4">Reports</h1>
-        <p className="text-sm sm:text-base text-secondary font-roboto leading-relaxed">
+        <p className="text-sm sm:text-base text-secondary font-sans leading-relaxed">
           Generate reports from your records to support informed decisions about your care.
         </p>
       </div>
@@ -1524,7 +1524,7 @@ function ReportsPageContent() {
           </div>
           <h2 className="text-xl sm:text-2xl font-semibold font-title text-primary flex-1 capitalize">Select report period</h2>
         </div>
-        <p className="text-sm text-secondary font-roboto leading-relaxed mb-6">
+        <p className="text-sm text-secondary font-sans leading-relaxed mb-6">
           Choose a date range to include symptom episodes in the report.
         </p>
         
@@ -1589,7 +1589,7 @@ function ReportsPageContent() {
 
         <div className="flex flex-col sm:flex-row gap-4 sm:gap-6 mb-6">
           <div className="w-full sm:w-auto">
-            <label htmlFor="startDate" className="block text-sm font-medium font-roboto text-primary mb-2">
+            <label htmlFor="startDate" className="block text-sm font-medium font-sans text-primary mb-2">
               Start Date
             </label>
             <div className="w-full sm:max-w-[150px]">
@@ -1612,7 +1612,7 @@ function ReportsPageContent() {
             </div>
           </div>
           <div className="w-full sm:w-auto">
-            <label htmlFor="endDate" className="block text-sm font-medium font-roboto text-primary mb-2">
+            <label htmlFor="endDate" className="block text-sm font-medium font-sans text-primary mb-2">
               End Date
             </label>
             <div className="w-full sm:max-w-[150px]">
@@ -1637,23 +1637,23 @@ function ReportsPageContent() {
           </div>
         </div>
         <div className="flex flex-col gap-4">
-          <p className="text-sm text-secondary font-roboto leading-relaxed">
+          <p className="text-sm text-secondary font-sans leading-relaxed">
             Found {reportData.totalEntries} {reportData.totalEntries === 1 ? 'episode' : 'episodes'} in the selected period
           </p>
           {reportData.totalEntries > 0 && (
             <div className="card-inner p-4 sm:p-5">
               <div className="grid grid-cols-1 sm:grid-cols-3 gap-4 sm:gap-6">
                 <div>
-                  <span className="text-xs sm:text-sm font-semibold text-secondary tracking-wide block font-roboto">Episodes</span>
-                  <p className="mt-1 sm:mt-2 text-sm sm:text-base font-semibold text-primary font-roboto">{reportData.totalEntries}</p>
+                  <span className="text-xs sm:text-sm font-semibold text-secondary tracking-wide block font-sans">Episodes</span>
+                  <p className="mt-1 sm:mt-2 text-sm sm:text-base font-semibold text-primary font-sans">{reportData.totalEntries}</p>
                 </div>
                 <div>
-                  <span className="text-xs sm:text-sm font-semibold text-secondary tracking-wide block font-roboto">Average severity</span>
-                  <p className="mt-1 sm:mt-2 text-sm sm:text-base font-semibold text-primary font-roboto">{reportData.averageSeverity}</p>
+                  <span className="text-xs sm:text-sm font-semibold text-secondary tracking-wide block font-sans">Average severity</span>
+                  <p className="mt-1 sm:mt-2 text-sm sm:text-base font-semibold text-primary font-sans">{reportData.averageSeverity}</p>
                 </div>
                 <div>
-                  <span className="text-xs sm:text-sm font-semibold text-secondary tracking-wide block font-roboto">Average stress</span>
-                  <p className="mt-1 sm:mt-2 text-sm sm:text-base font-semibold text-primary font-roboto">
+                  <span className="text-xs sm:text-sm font-semibold text-secondary tracking-wide block font-sans">Average stress</span>
+                  <p className="mt-1 sm:mt-2 text-sm sm:text-base font-semibold text-primary font-sans">
                     {reportData.averageStress != null && !isNaN(reportData.averageStress) ? reportData.averageStress : 0}
                   </p>
                 </div>
@@ -1661,7 +1661,7 @@ function ReportsPageContent() {
             </div>
           )}
           {reportData.totalEntries > 0 && (
-            <div className="text-sm text-secondary font-roboto leading-relaxed">
+            <div className="text-sm text-secondary font-sans leading-relaxed">
               Showing symptoms from {formatUKDate(dateRange.startDate)} to {formatUKDate(dateRange.endDate)}
             </div>
           )}
@@ -1718,22 +1718,22 @@ function ReportsPageContent() {
                     className={`flex justify-between items-center gap-4 py-3 min-w-0 overflow-hidden ${hasDosage || hasFrequency ? 'border-b' : ''}`}
                     style={hasDosage || hasFrequency ? { borderColor: 'var(--separator-card)' } : undefined}
                   >
-                    <span className="text-sm sm:text-base text-secondary font-roboto shrink-0">Medication</span>
-                    <span className="text-sm sm:text-base font-medium text-primary font-roboto truncate min-w-0 text-right" title={med.name}>{med.name}</span>
+                    <span className="text-sm sm:text-base text-secondary font-sans shrink-0">Medication</span>
+                    <span className="text-sm sm:text-base font-medium text-primary font-sans truncate min-w-0 text-right" title={med.name}>{med.name}</span>
                   </div>
                   {hasDosage && (
                     <div
                       className={`flex justify-between items-center gap-4 py-3 min-w-0 overflow-hidden ${hasFrequency ? 'border-b' : ''}`}
                       style={hasFrequency ? { borderColor: 'var(--separator-card)' } : undefined}
                     >
-                      <span className="text-sm sm:text-base text-secondary font-roboto shrink-0">Dosage</span>
-                      <span className="text-sm sm:text-base font-medium text-primary font-roboto min-w-0 text-right">{med.dosage}</span>
+                      <span className="text-sm sm:text-base text-secondary font-sans shrink-0">Dosage</span>
+                      <span className="text-sm sm:text-base font-medium text-primary font-sans min-w-0 text-right">{med.dosage}</span>
                     </div>
                   )}
                   {hasFrequency && (
                     <div className="flex justify-between items-center gap-4 py-3 min-w-0 overflow-hidden">
-                      <span className="text-sm sm:text-base text-secondary font-roboto shrink-0">Frequency</span>
-                      <span className="text-sm sm:text-base font-medium text-primary font-roboto min-w-0 text-right">{med.frequency}</span>
+                      <span className="text-sm sm:text-base text-secondary font-sans shrink-0">Frequency</span>
+                      <span className="text-sm sm:text-base font-medium text-primary font-sans min-w-0 text-right">{med.frequency}</span>
                     </div>
                   )}
                 </div>
@@ -1785,7 +1785,7 @@ function ReportsPageContent() {
                     : ''
                 }
               >
-                <h3 className="text-base font-semibold text-primary mb-3 font-roboto">Missed Medications ({reportData.medicationTracking.missedMedications.length})</h3>
+                <h3 className="text-base font-semibold text-primary mb-3 font-sans">Missed Medications ({reportData.medicationTracking.missedMedications.length})</h3>
                 <div className="space-y-0 [&>*:last-child>*:last-child]:pb-0">
                   {reportData.medicationTracking.missedMedications
                     .slice(listPages.missedMeds * REPORT_PAGE_SIZE, (listPages.missedMeds + 1) * REPORT_PAGE_SIZE)
@@ -1799,22 +1799,22 @@ function ReportsPageContent() {
                             className={`flex justify-between items-center gap-4 py-3 min-w-0 overflow-hidden ${hasDate || hasTime ? 'border-b' : ''}`}
                             style={hasDate || hasTime ? { borderColor: 'var(--separator-card)' } : undefined}
                           >
-                            <span className="text-sm sm:text-base text-secondary font-roboto shrink-0">Medication</span>
-                            <span className="text-sm sm:text-base font-medium text-primary font-roboto truncate min-w-0 text-right" title={item.medication}>{item.medication}</span>
+                            <span className="text-sm sm:text-base text-secondary font-sans shrink-0">Medication</span>
+                            <span className="text-sm sm:text-base font-medium text-primary font-sans truncate min-w-0 text-right" title={item.medication}>{item.medication}</span>
                           </div>
                           {hasDate && (
                             <div
                               className={`flex justify-between items-center gap-4 py-3 min-w-0 overflow-hidden ${hasTime ? 'border-b' : ''}`}
                               style={hasTime ? { borderColor: 'var(--separator-card)' } : undefined}
                             >
-                              <span className="text-sm sm:text-base text-secondary font-roboto shrink-0">Date</span>
-                              <span className="text-sm sm:text-base font-medium text-primary font-roboto">{formatUKDate(item.date)}</span>
+                              <span className="text-sm sm:text-base text-secondary font-sans shrink-0">Date</span>
+                              <span className="text-sm sm:text-base font-medium text-primary font-sans">{formatUKDate(item.date)}</span>
                             </div>
                           )}
                           {hasTime && (
                             <div className="flex justify-between items-center gap-4 py-3 min-w-0 overflow-hidden">
-                              <span className="text-sm sm:text-base text-secondary font-roboto shrink-0">Time</span>
-                              <span className="text-sm sm:text-base font-medium text-primary font-roboto">{item.timeOfDay}</span>
+                              <span className="text-sm sm:text-base text-secondary font-sans shrink-0">Time</span>
+                              <span className="text-sm sm:text-base font-medium text-primary font-sans">{item.timeOfDay}</span>
                             </div>
                           )}
                         </div>
@@ -1823,7 +1823,7 @@ function ReportsPageContent() {
                 </div>
                 {reportData.medicationTracking.missedMedications.length > REPORT_PAGE_SIZE && (
                   <div className="flex items-center justify-between mt-4 flex-wrap gap-2 pt-4 border-t" style={{ borderColor: 'var(--separator-card)' }}>
-                    <span className="text-sm text-secondary font-roboto">
+                    <span className="text-sm text-secondary font-sans">
                       {listPages.missedMeds * REPORT_PAGE_SIZE + 1}–{Math.min((listPages.missedMeds + 1) * REPORT_PAGE_SIZE, reportData.medicationTracking.missedMedications.length)} of {reportData.medicationTracking.missedMedications.length}
                     </span>
                     <div className="flex gap-2">
@@ -1837,7 +1837,7 @@ function ReportsPageContent() {
 
             {reportData.medicationTracking.nsaids.length > 0 && (
               <div className={reportData.medicationTracking.antibiotics.length > 0 ? 'mb-6' : ''}>
-                <h3 className="text-base font-semibold text-primary mb-3 font-roboto">NSAIDs Taken ({reportData.medicationTracking.nsaids.length})</h3>
+                <h3 className="text-base font-semibold text-primary mb-3 font-sans">NSAIDs Taken ({reportData.medicationTracking.nsaids.length})</h3>
                 <div className="space-y-0 [&>*:last-child>*:last-child]:pb-0">
                   {reportData.medicationTracking.nsaids
                     .slice(listPages.nsaids * REPORT_PAGE_SIZE, (listPages.nsaids + 1) * REPORT_PAGE_SIZE)
@@ -1852,16 +1852,16 @@ function ReportsPageContent() {
                             className={`flex justify-between items-center gap-4 py-3 min-w-0 overflow-hidden ${hasDate || hasDosage || hasTime ? 'border-b' : ''}`}
                             style={hasDate || hasDosage || hasTime ? { borderColor: 'var(--separator-card)' } : undefined}
                           >
-                            <span className="text-sm sm:text-base text-secondary font-roboto shrink-0">Medication</span>
-                            <span className="text-sm sm:text-base font-medium text-primary font-roboto truncate min-w-0 text-right" title={item.medication}>{item.medication}</span>
+                            <span className="text-sm sm:text-base text-secondary font-sans shrink-0">Medication</span>
+                            <span className="text-sm sm:text-base font-medium text-primary font-sans truncate min-w-0 text-right" title={item.medication}>{item.medication}</span>
                           </div>
                           {hasDate && (
                             <div
                               className={`flex justify-between items-center gap-4 py-3 min-w-0 overflow-hidden ${hasDosage || hasTime ? 'border-b' : ''}`}
                               style={hasDosage || hasTime ? { borderColor: 'var(--separator-card)' } : undefined}
                             >
-                              <span className="text-sm sm:text-base text-secondary font-roboto shrink-0">Date</span>
-                              <span className="text-sm sm:text-base font-medium text-primary font-roboto">{formatUKDate(item.date)}</span>
+                              <span className="text-sm sm:text-base text-secondary font-sans shrink-0">Date</span>
+                              <span className="text-sm sm:text-base font-medium text-primary font-sans">{formatUKDate(item.date)}</span>
                             </div>
                           )}
                           {hasDosage && (
@@ -1869,14 +1869,14 @@ function ReportsPageContent() {
                               className={`flex justify-between items-center gap-4 py-3 min-w-0 overflow-hidden ${hasTime ? 'border-b' : ''}`}
                               style={hasTime ? { borderColor: 'var(--separator-card)' } : undefined}
                             >
-                              <span className="text-sm sm:text-base text-secondary font-roboto shrink-0">Dosage</span>
-                              <span className="text-sm sm:text-base font-medium text-primary font-roboto truncate min-w-0 text-right" title={item.dosage}>{item.dosage}</span>
+                              <span className="text-sm sm:text-base text-secondary font-sans shrink-0">Dosage</span>
+                              <span className="text-sm sm:text-base font-medium text-primary font-sans truncate min-w-0 text-right" title={item.dosage}>{item.dosage}</span>
                             </div>
                           )}
                           {hasTime && (
                             <div className="flex justify-between items-center gap-4 py-3 min-w-0 overflow-hidden">
-                              <span className="text-sm sm:text-base text-secondary font-roboto shrink-0">Time</span>
-                              <span className="text-sm sm:text-base font-medium text-primary font-roboto">{item.timeOfDay}</span>
+                              <span className="text-sm sm:text-base text-secondary font-sans shrink-0">Time</span>
+                              <span className="text-sm sm:text-base font-medium text-primary font-sans">{item.timeOfDay}</span>
                             </div>
                           )}
                         </div>
@@ -1885,7 +1885,7 @@ function ReportsPageContent() {
                 </div>
                 {reportData.medicationTracking.nsaids.length > REPORT_PAGE_SIZE && (
                   <div className="flex items-center justify-between mt-4 flex-wrap gap-2 pt-4 border-t" style={{ borderColor: 'var(--separator-card)' }}>
-                    <span className="text-sm text-secondary font-roboto">
+                    <span className="text-sm text-secondary font-sans">
                       {listPages.nsaids * REPORT_PAGE_SIZE + 1}–{Math.min((listPages.nsaids + 1) * REPORT_PAGE_SIZE, reportData.medicationTracking.nsaids.length)} of {reportData.medicationTracking.nsaids.length}
                     </span>
                     <div className="flex gap-2">
@@ -1899,7 +1899,7 @@ function ReportsPageContent() {
 
             {reportData.medicationTracking.antibiotics.length > 0 && (
               <div>
-                <h3 className="text-base font-semibold text-primary mb-3 font-roboto">Antibiotics Taken ({reportData.medicationTracking.antibiotics.length})</h3>
+                <h3 className="text-base font-semibold text-primary mb-3 font-sans">Antibiotics Taken ({reportData.medicationTracking.antibiotics.length})</h3>
                 <div className="space-y-0 [&>*:last-child>*:last-child]:pb-0">
                   {reportData.medicationTracking.antibiotics
                     .slice(listPages.antibiotics * REPORT_PAGE_SIZE, (listPages.antibiotics + 1) * REPORT_PAGE_SIZE)
@@ -1908,22 +1908,22 @@ function ReportsPageContent() {
                       return (
                         <div key={index} className={index > 0 ? 'pt-4 border-t' : ''} style={index > 0 ? { borderColor: 'var(--separator-card)' } : undefined}>
                           <div className="flex justify-between items-center gap-4 py-3 border-b min-w-0 overflow-hidden" style={{ borderColor: 'var(--separator-card)' }}>
-                            <span className="text-sm sm:text-base text-secondary font-roboto shrink-0">Medication</span>
-                            <span className="text-sm sm:text-base font-medium text-primary font-roboto truncate min-w-0 text-right" title={item.medication}>{item.medication}</span>
+                            <span className="text-sm sm:text-base text-secondary font-sans shrink-0">Medication</span>
+                            <span className="text-sm sm:text-base font-medium text-primary font-sans truncate min-w-0 text-right" title={item.medication}>{item.medication}</span>
                           </div>
                           <div className="flex justify-between items-center gap-4 py-3 border-b min-w-0 overflow-hidden" style={{ borderColor: 'var(--separator-card)' }}>
-                            <span className="text-sm sm:text-base text-secondary font-roboto shrink-0">Date</span>
-                            <span className="text-sm sm:text-base font-medium text-primary font-roboto">{item.date ? formatUKDate(item.date) : 'Not specified'}</span>
+                            <span className="text-sm sm:text-base text-secondary font-sans shrink-0">Date</span>
+                            <span className="text-sm sm:text-base font-medium text-primary font-sans">{item.date ? formatUKDate(item.date) : 'Not specified'}</span>
                           </div>
                           {item.dosage && (
                             <div className="flex justify-between items-center gap-4 py-3 border-b min-w-0 overflow-hidden" style={{ borderColor: 'var(--separator-card)' }}>
-                              <span className="text-sm sm:text-base text-secondary font-roboto shrink-0">Dosage</span>
-                              <span className="text-sm sm:text-base font-medium text-primary font-roboto truncate min-w-0 text-right" title={item.dosage}>{item.dosage}</span>
+                              <span className="text-sm sm:text-base text-secondary font-sans shrink-0">Dosage</span>
+                              <span className="text-sm sm:text-base font-medium text-primary font-sans truncate min-w-0 text-right" title={item.dosage}>{item.dosage}</span>
                             </div>
                           )}
                           <div className="flex justify-between items-center gap-4 py-3 min-w-0 overflow-hidden">
-                            <span className="text-sm sm:text-base text-secondary font-roboto shrink-0">Time</span>
-                            <span className="text-sm sm:text-base font-medium text-primary font-roboto">{item.timeOfDay || 'Not specified'}</span>
+                            <span className="text-sm sm:text-base text-secondary font-sans shrink-0">Time</span>
+                            <span className="text-sm sm:text-base font-medium text-primary font-sans">{item.timeOfDay || 'Not specified'}</span>
                           </div>
                         </div>
                       )
@@ -1931,7 +1931,7 @@ function ReportsPageContent() {
                 </div>
                 {reportData.medicationTracking.antibiotics.length > REPORT_PAGE_SIZE && (
                   <div className="flex items-center justify-between mt-4 flex-wrap gap-2 pt-4 border-t" style={{ borderColor: 'var(--separator-card)' }}>
-                    <span className="text-sm text-secondary font-roboto">
+                    <span className="text-sm text-secondary font-sans">
                       {listPages.antibiotics * REPORT_PAGE_SIZE + 1}–{Math.min((listPages.antibiotics + 1) * REPORT_PAGE_SIZE, reportData.medicationTracking.antibiotics.length)} of {reportData.medicationTracking.antibiotics.length}
                     </span>
                     <div className="flex gap-2">
@@ -1970,12 +1970,12 @@ function ReportsPageContent() {
               {reportData.appointments.map((apt, index) => (
                 <div key={index} className={index > 0 ? 'pt-4 border-t' : ''} style={index > 0 ? { borderColor: 'var(--separator-card)' } : undefined}>
                   <div className="flex justify-between items-center gap-4 py-3 border-b min-w-0 overflow-hidden" style={{ borderColor: 'var(--separator-card)' }}>
-                    <span className="text-sm sm:text-base text-secondary font-roboto shrink-0">Date</span>
-                    <span className="text-sm sm:text-base font-medium text-primary font-roboto">{apt.date ? formatUKDate(apt.date) : '—'}</span>
+                    <span className="text-sm sm:text-base text-secondary font-sans shrink-0">Date</span>
+                    <span className="text-sm sm:text-base font-medium text-primary font-sans">{apt.date ? formatUKDate(apt.date) : '—'}</span>
                   </div>
                   <div className="flex justify-between items-center gap-4 py-3 min-w-0 overflow-hidden">
-                    <span className="text-sm sm:text-base text-secondary font-roboto shrink-0">Type</span>
-                    <span className="text-sm sm:text-base font-medium text-primary font-roboto truncate min-w-0 text-right" title={apt.type}>{apt.type?.toString().trim() || '—'}</span>
+                    <span className="text-sm sm:text-base text-secondary font-sans shrink-0">Type</span>
+                    <span className="text-sm sm:text-base font-medium text-primary font-sans truncate min-w-0 text-right" title={apt.type}>{apt.type?.toString().trim() || '—'}</span>
                   </div>
                 </div>
               ))}
@@ -2008,12 +2008,12 @@ function ReportsPageContent() {
               {reportData.weightEntries.map((entry, index) => (
                 <div key={index} className={index > 0 ? 'pt-4 border-t' : ''} style={index > 0 ? { borderColor: 'var(--separator-card)' } : undefined}>
                   <div className="flex justify-between items-center gap-4 py-3 border-b min-w-0 overflow-hidden" style={{ borderColor: 'var(--separator-card)' }}>
-                    <span className="text-sm sm:text-base text-secondary font-roboto">Date</span>
-                    <span className="text-sm sm:text-base font-medium text-primary font-roboto">{formatUKDate(entry.date)}</span>
+                    <span className="text-sm sm:text-base text-secondary font-sans">Date</span>
+                    <span className="text-sm sm:text-base font-medium text-primary font-sans">{formatUKDate(entry.date)}</span>
                   </div>
                   <div className="flex justify-between items-center gap-4 py-3 min-w-0 overflow-hidden">
-                    <span className="text-sm sm:text-base text-secondary font-roboto">Weight</span>
-                    <span className="text-sm sm:text-base font-medium text-primary font-roboto">{entry.value_kg != null ? `${entry.value_kg} kg` : '—'}</span>
+                    <span className="text-sm sm:text-base text-secondary font-sans">Weight</span>
+                    <span className="text-sm sm:text-base font-medium text-primary font-sans">{entry.value_kg != null ? `${entry.value_kg} kg` : '—'}</span>
                   </div>
                 </div>
               ))}
@@ -2051,16 +2051,16 @@ function ReportsPageContent() {
                 return (
                   <div key={index} className={index > 0 ? 'pt-4 border-t' : ''} style={index > 0 ? { borderColor: 'var(--separator-card)' } : undefined}>
                     <div className="flex justify-between items-center gap-4 py-3 border-b min-w-0 overflow-hidden" style={{ borderColor: 'var(--separator-card)' }}>
-                      <span className="text-sm sm:text-base text-secondary font-roboto">Date</span>
-                      <span className="text-sm sm:text-base font-medium text-primary font-roboto text-right">{dateStr}</span>
+                      <span className="text-sm sm:text-base text-secondary font-sans">Date</span>
+                      <span className="text-sm sm:text-base font-medium text-primary font-sans text-right">{dateStr}</span>
                     </div>
                     <div className="flex justify-between items-center gap-4 py-3 border-b min-w-0 overflow-hidden" style={{ borderColor: 'var(--separator-card)' }}>
-                      <span className="text-sm sm:text-base text-secondary font-roboto">Time</span>
-                      <span className="text-sm sm:text-base font-medium text-primary font-roboto text-right tabular-nums">{timeStr}</span>
+                      <span className="text-sm sm:text-base text-secondary font-sans">Time</span>
+                      <span className="text-sm sm:text-base font-medium text-primary font-sans text-right tabular-nums">{timeStr}</span>
                     </div>
                     <div className="flex justify-between items-center gap-4 py-3 min-w-0 overflow-hidden">
-                      <span className="text-sm sm:text-base text-secondary font-roboto">Type</span>
-                      <span className="text-sm sm:text-base font-medium text-primary font-roboto text-right tabular-nums">
+                      <span className="text-sm sm:text-base text-secondary font-sans">Type</span>
+                      <span className="text-sm sm:text-base font-medium text-primary font-sans text-right tabular-nums">
                         {entry.bristolType != null &&
                         entry.bristolType !== '' &&
                         !Number.isNaN(Number(entry.bristolType))
@@ -2100,16 +2100,16 @@ function ReportsPageContent() {
               {reportData.hydrationEntries.map((entry, index) => (
                 <div key={index} className={index > 0 ? 'pt-4 border-t' : ''} style={index > 0 ? { borderColor: 'var(--separator-card)' } : undefined}>
                   <div className="flex justify-between items-center gap-4 py-3 border-b min-w-0 overflow-hidden" style={{ borderColor: 'var(--separator-card)' }}>
-                    <span className="text-sm sm:text-base text-secondary font-roboto">Date</span>
-                    <span className="text-sm sm:text-base font-medium text-primary font-roboto">{formatUKDate(entry.date)}</span>
+                    <span className="text-sm sm:text-base text-secondary font-sans">Date</span>
+                    <span className="text-sm sm:text-base font-medium text-primary font-sans">{formatUKDate(entry.date)}</span>
                   </div>
                   <div className="flex justify-between items-center gap-4 py-3 border-b min-w-0 overflow-hidden" style={{ borderColor: 'var(--separator-card)' }}>
-                    <span className="text-sm sm:text-base text-secondary font-roboto">Glasses</span>
-                    <span className="text-sm sm:text-base font-medium text-primary font-roboto">{entry.glasses}/{reportData.hydrationTarget || 6}</span>
+                    <span className="text-sm sm:text-base text-secondary font-sans">Glasses</span>
+                    <span className="text-sm sm:text-base font-medium text-primary font-sans">{entry.glasses}/{reportData.hydrationTarget || 6}</span>
                   </div>
                   <div className="flex justify-between items-center gap-4 py-3 min-w-0 overflow-hidden">
-                    <span className="text-sm sm:text-base text-secondary font-roboto">Target met</span>
-                    <span className="text-sm sm:text-base font-medium font-roboto text-primary">{entry.targetMet ? 'Yes' : 'No'}</span>
+                    <span className="text-sm sm:text-base text-secondary font-sans">Target met</span>
+                    <span className="text-sm sm:text-base font-medium font-sans text-primary">{entry.targetMet ? 'Yes' : 'No'}</span>
                   </div>
                 </div>
               ))}
@@ -2142,8 +2142,8 @@ function ReportsPageContent() {
               {reportData.topFoods.map(([food, count], index) => (
                 <div key={index} className={index > 0 ? 'pt-3 border-t' : ''} style={index > 0 ? { borderColor: 'var(--separator-card)' } : undefined}>
                   <div className="flex justify-between items-center gap-4 py-3 min-w-0 overflow-hidden">
-                    <span className="text-sm sm:text-base font-medium text-primary font-roboto truncate min-w-0" title={food}>{food}</span>
-                    <span className="text-sm sm:text-base font-medium text-primary font-roboto shrink-0">{count} time{count !== 1 ? 's' : ''}</span>
+                    <span className="text-sm sm:text-base font-medium text-primary font-sans truncate min-w-0" title={food}>{food}</span>
+                    <span className="text-sm sm:text-base font-medium text-primary font-sans shrink-0">{count} time{count !== 1 ? 's' : ''}</span>
                   </div>
                 </div>
               ))}
@@ -2160,7 +2160,7 @@ function ReportsPageContent() {
             <FileText className="w-10 h-10 text-secondary opacity-40" />
           </div>
           <h3 className="text-lg font-semibold font-title text-primary mb-2">No Data Available</h3>
-          <p className="text-sm font-roboto text-secondary max-w-md mx-auto leading-relaxed mb-4">
+          <p className="text-sm font-sans text-secondary max-w-md mx-auto leading-relaxed mb-4">
             Start logging symptoms and adding medications to generate meaningful reports
           </p>
           <div className="flex flex-col sm:flex-row justify-center space-y-3 sm:space-y-0 sm:space-x-3 mt-6">
@@ -2174,12 +2174,12 @@ function ReportsPageContent() {
           <div className="bg-card rounded-xl shadow-xl max-w-md w-full" style={{ backgroundColor: 'var(--bg-dropdown)', borderColor: 'var(--border-dropdown)', borderWidth: '1px', borderStyle: 'solid' }}>
             <form onSubmit={handleSendReportEmail} className="p-6 space-y-4">
               <h3 className="text-xl sm:text-2xl font-semibold font-title text-primary mb-1">Email this report</h3>
-              <p className="text-sm text-secondary font-roboto">
+              <p className="text-sm text-secondary font-sans">
                 Please fill in the fields below to send this report summary to your clinician.
               </p>
               <div className="space-y-3 mt-2">
                 <div>
-                  <label htmlFor="consultantEmail" className="block text-sm font-semibold font-roboto text-primary mb-2">
+                  <label htmlFor="consultantEmail" className="block text-sm font-semibold font-sans text-primary mb-2">
                     Consultant email *
                   </label>
                   <input
@@ -2193,13 +2193,13 @@ function ReportsPageContent() {
                     required
                   />
                   {emailError && (
-                    <p className="mt-1 text-xs text-[var(--text-error)] font-roboto">
+                    <p className="mt-1 text-xs text-[var(--text-error)] font-sans">
                       {emailError}
                     </p>
                   )}
                 </div>
                 <div>
-                  <label htmlFor="consultantName" className="block text-sm font-semibold font-roboto text-primary mb-2">
+                  <label htmlFor="consultantName" className="block text-sm font-semibold font-sans text-primary mb-2">
                     Consultant name (optional)
                   </label>
                   <input
@@ -2213,7 +2213,7 @@ function ReportsPageContent() {
                   />
                 </div>
                 <div>
-                  <label htmlFor="note" className="block text-sm font-semibold font-roboto text-primary mb-2">
+                  <label htmlFor="note" className="block text-sm font-semibold font-sans text-primary mb-2">
                     Note to include (optional)
                   </label>
                   <textarea
@@ -2227,7 +2227,7 @@ function ReportsPageContent() {
                   />
                 </div>
                 {reportData?.period && (
-                  <div className="text-xs leading-normal text-secondary font-roboto bg-[var(--bg-card)]/60 rounded-lg pb-2">
+                  <div className="text-xs leading-normal text-secondary font-sans bg-[var(--bg-card)]/60 rounded-lg pb-2">
                     This report will cover the period from{' '}
                     {formatUKDate(reportData.period.start)} to {formatUKDate(reportData.period.end)}.
                   </div>

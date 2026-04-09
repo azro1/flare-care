@@ -551,7 +551,7 @@ function MedicationsPageContent() {
               <h1 className="text-2xl sm:text-3xl lg:text-4xl font-bold font-title text-primary mb-4 sm:mb-6">
                 My Medications
               </h1>
-              <p className="text-sm sm:text-base text-secondary font-roboto leading-relaxed">
+              <p className="text-sm sm:text-base text-secondary font-sans leading-relaxed">
                 Add your medications and set reminders to stay on track.
               </p>
             </div>
@@ -640,7 +640,7 @@ function MedicationsPageContent() {
             <form onSubmit={handleSubmit} className="space-y-4" autoComplete="off">
               <div className="grid lg:grid-cols-2 gap-6 min-w-0">
                 <div>
-                  <label htmlFor="name" className="block text-sm sm:text-base font-semibold font-roboto text-primary mb-2 sm:mb-3">
+                  <label htmlFor="name" className="block text-sm sm:text-base font-semibold font-sans text-primary mb-2 sm:mb-3">
                     Medication Name *
                   </label>
                   <input
@@ -657,7 +657,7 @@ function MedicationsPageContent() {
                 </div>
 
                 <div>
-                  <label htmlFor="dosage" className="block text-sm sm:text-base font-semibold font-roboto text-primary mb-2 sm:mb-3">
+                  <label htmlFor="dosage" className="block text-sm sm:text-base font-semibold font-sans text-primary mb-2 sm:mb-3">
                     Dosage
                   </label>
                   <div className="flex items-center gap-2">
@@ -679,7 +679,7 @@ function MedicationsPageContent() {
 
               <div className="grid lg:grid-cols-2 gap-6 min-w-0">
                 <div>
-                  <label htmlFor="frequencySelect" className="block text-sm sm:text-base font-semibold font-roboto text-primary mb-2 sm:mb-3">
+                  <label htmlFor="frequencySelect" className="block text-sm sm:text-base font-semibold font-sans text-primary mb-2 sm:mb-3">
                     Frequency *
                   </label>
                   <select
@@ -721,7 +721,7 @@ function MedicationsPageContent() {
 
               <div className="grid lg:grid-cols-2 gap-6 min-w-0">
                 <div>
-                  <label className="block text-sm sm:text-base font-semibold font-roboto text-primary mb-2 sm:mb-3">
+                  <label className="block text-sm sm:text-base font-semibold font-sans text-primary mb-2 sm:mb-3">
                     Reminder Time
                   </label>
                   <select
@@ -754,13 +754,13 @@ function MedicationsPageContent() {
                      accentColor: 'var(--bg-button-cadet)'
                    }}
                  />
-                <label htmlFor="remindersEnabled" className="ml-3 block text-sm sm:text-base font-roboto text-primary">
+                <label htmlFor="remindersEnabled" className="ml-3 block text-sm sm:text-base font-sans text-primary">
                   Enable reminder notifications for this medication
                 </label>
               </div>
 
               <div>
-                <label htmlFor="notes" className="block text-sm sm:text-base font-semibold font-roboto text-primary mb-2 sm:mb-3">
+                <label htmlFor="notes" className="block text-sm sm:text-base font-semibold font-sans text-primary mb-2 sm:mb-3">
                   Notes
                 </label>
                 <textarea
@@ -808,7 +808,7 @@ className="px-4 py-2 text-base sm:text-lg font-medium font-sans rounded-lg trans
         <div>
         {isLoading ? (
           <div className="text-center py-12 text-secondary">
-            <p className="font-roboto">Loading medications...</p>
+            <p className="font-sans">Loading medications...</p>
           </div>
         ) : medications.length === 0 ? (
           <div className="text-center py-12 text-secondary">
@@ -816,7 +816,7 @@ className="px-4 py-2 text-base sm:text-lg font-medium font-sans rounded-lg trans
               <Pill className="w-6 h-6 sm:w-10 sm:h-10 text-secondary" />
             </div>
             <h3 className="text-lg font-semibold font-title text-primary mb-2">No medications</h3>
-            <p className="text-sm font-roboto text-secondary max-w-md mx-auto">Your medications will show here once you add them</p>
+            <p className="text-sm font-sans text-secondary max-w-md mx-auto">Your medications will show here once you add them</p>
           </div>
         ) : (
           <Masonry
@@ -837,11 +837,11 @@ className="px-4 py-2 text-base sm:text-lg font-medium font-sans rounded-lg trans
                   <div className="flex flex-col sm:flex-row sm:justify-between sm:items-start">
                     <div className="flex-1 min-w-0 w-full sm:w-auto">
                       <div className={`flex items-center gap-2 flex-nowrap ${isExpanded ? 'mb-1' : ''} min-w-0`}>
-                        <h3 className="text-sm font-semibold font-roboto text-primary truncate min-w-0 flex-1">
+                        <h3 className="text-sm font-semibold font-sans text-primary truncate min-w-0 flex-1">
                           {medication.name}
                         </h3>
                         {medication.dosage && (
-                          <span className="text-xs sm:text-sm text-secondary font-roboto whitespace-nowrap flex-shrink-0">
+                          <span className="text-xs sm:text-sm text-secondary font-sans whitespace-nowrap flex-shrink-0">
                             {medication.dosage}
                           </span>
                         )}
@@ -858,7 +858,7 @@ className="px-4 py-2 text-base sm:text-lg font-medium font-sans rounded-lg trans
                       </div>
                       {isExpanded && medication.frequency && (
                         <p
-                          className="text-xs sm:text-sm text-secondary font-roboto mt-1 min-w-0 truncate mb-3"
+                          className="text-xs sm:text-sm text-secondary font-sans mt-1 min-w-0 truncate mb-3"
                           title={normalizeFrequencyPreset(medication.frequency)}
                         >
                           <span className="font-semibold text-primary">To be taken:</span> {normalizeFrequencyPreset(medication.frequency)}
@@ -875,7 +875,7 @@ className="px-4 py-2 text-base sm:text-lg font-medium font-sans rounded-lg trans
                       >
                           <div className={`flex flex-wrap items-center gap-3 ${(medication.timeOfDay || medication.remindersEnabled !== false) ? 'mb-3' : ''}`}>
                             {medication.timeOfDay && (
-                              <span className="inline-flex items-center px-3 py-1.5 rounded-full text-xs sm:text-sm font-medium font-roboto bg-white text-black">
+                              <span className="inline-flex items-center px-3 py-1.5 rounded-full text-xs sm:text-sm font-medium font-sans bg-white text-black">
                                 <svg className="w-4 h-4 mr-1.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" />
                                 </svg>
@@ -884,7 +884,7 @@ className="px-4 py-2 text-base sm:text-lg font-medium font-sans rounded-lg trans
                             )}
                             {medication.remindersEnabled !== false && (
                               <span 
-                                className="inline-flex items-center px-3 py-1.5 rounded-full text-xs sm:text-sm font-medium font-roboto"
+                                className="inline-flex items-center px-3 py-1.5 rounded-full text-xs sm:text-sm font-medium font-sans"
                                 style={{ 
                                   backgroundColor: 'var(--bg-card)',
                                   color: 'var(--text-cadet-blue)'
@@ -959,7 +959,7 @@ className="px-4 py-2 text-base sm:text-lg font-medium font-sans rounded-lg trans
                     <div className="mt-2 min-w-0">
                       <div className="card-inner min-w-0">
                         <p
-                          className="text-sm text-secondary font-roboto leading-normal break-words line-clamp-2"
+                          className="text-sm text-secondary font-sans leading-normal break-words line-clamp-2"
                           title={medication.notes}
                         >
                           <span className="font-semibold text-primary">Notes:</span> {medication.notes}
@@ -968,7 +968,7 @@ className="px-4 py-2 text-base sm:text-lg font-medium font-sans rounded-lg trans
                     </div>
                   )}
                   {isExpanded && (
-                    <div className="mt-2 text-xs text-tertiary font-roboto">
+                    <div className="mt-2 text-xs text-tertiary font-sans">
                       <div className="flex items-center">
                         <svg className="w-3 h-3 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                           <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" />
@@ -997,7 +997,7 @@ className="px-4 py-2 text-base sm:text-lg font-medium font-sans rounded-lg trans
             <Bell className="w-5 h-5 sm:w-6 sm:h-6 flex-shrink-0" style={{ color: 'var(--text-cadet-blue)' }} />
             <span>Medication Reminders</span>
           </h3>
-          <p className="text-sm text-secondary font-roboto leading-relaxed">
+          <p className="text-sm text-secondary font-sans leading-relaxed">
             Get notified when it's time to take your medications, in your browser or on your device.
           </p>
           <div className="card-inner p-5 sm:p-6 mt-4">
@@ -1005,7 +1005,7 @@ className="px-4 py-2 text-base sm:text-lg font-medium font-sans rounded-lg trans
               <Lightbulb className="w-5 h-5 flex-shrink-0 text-amber-500" />
               <span className="text-base sm:text-sm font-semibold text-primary font-title">Important:</span>
             </div>
-            <p className="text-xs text-secondary font-roboto leading-relaxed">
+            <p className="text-xs text-secondary font-sans leading-relaxed">
               Enable Push notifications in Account settings to get reminders when the app is closed.
             </p>
           </div>

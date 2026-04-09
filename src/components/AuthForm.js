@@ -67,7 +67,7 @@ export default function AuthForm() {
             <h2 className="text-3xl font-bold font-title text-primary mb-6">
               FlareCare
             </h2>
-          <p className="text-sm font-roboto text-secondary mb-6 leading-relaxed">
+          <p className="text-sm font-sans text-secondary mb-6 leading-relaxed">
            Your comprehensive health management app for Crohn's & Colitis
           </p>
         </div>
@@ -75,7 +75,7 @@ export default function AuthForm() {
         <div className="space-y-6">
           {error && (
             <div className="rounded-xl bg-red-100 dark:bg-red-900/50 border border-red-200 dark:border-red-700/50 p-4">
-              <div className="text-sm font-roboto text-red-600 dark:text-red-300">{error}</div>
+              <div className="text-sm font-sans text-red-600 dark:text-red-300">{error}</div>
             </div>
           )}
 
@@ -95,7 +95,7 @@ export default function AuthForm() {
         </div>
 
         <div className="text-center">
-          <p className="text-xs font-roboto text-tertiary">
+          <p className="text-xs font-sans text-tertiary">
             Secure sign-in with Google
           </p>
         </div>

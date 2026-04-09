@@ -1,6 +1,5 @@
 import { createClient } from '@supabase/supabase-js'
 import webPush from 'web-push'
-import { getLondonTimeHHmm, timeOfDayQueryVariants } from '@/lib/reminderTimezones'
 
 // Use service role so we can read all medications and push_subscriptions
 const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL
@@ -23,16 +22,15 @@ export async function POST(request) {
   )
 
   const now = new Date()
-  const currentTime = getLondonTimeHHmm(now)
-  const timeVariants = timeOfDayQueryVariants(currentTime)
+  const currentTime = now.getHours().toString().padStart(2, '0') + ':' + now.getMinutes().toString().padStart(2, '0')
   const supabase = createClient(supabaseUrl, supabaseServiceKey)
 
-  // Medications with reminders at this time (exact match, UK wall clock)
+  // Medications with reminders at this time (exact match)
   const { data: meds, error: medsError } = await supabase
     .from('medications')
     .select('id, name, user_id, time_of_day, reminders_enabled')
     .eq('reminders_enabled', true)
-    .in('time_of_day', timeVariants)
+    .eq('time_of_day', currentTime)
     .neq('name', 'Medication Tracking')
 
   if (medsError || !meds?.length) {
@@ -67,7 +65,7 @@ export async function POST(request) {
           }
         },
         JSON.stringify(payload),
-        { TTL: 3600 }
+        { TTL: 60 }
       )
       sent++
     } catch (e) {

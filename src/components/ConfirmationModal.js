@@ -71,12 +71,12 @@ export default function ConfirmationModal({
                 />
               </svg>
             </div>
-            <h3 className="text-lg font-semibold font-roboto text-primary">
+            <h3 className="text-lg font-semibold font-sans text-primary">
               {title}
             </h3>
           </div>
           
-          <p className="text-[15px] sm:text-base text-secondary mb-6 font-roboto">
+          <p className="text-[15px] sm:text-base text-secondary mb-6 font-sans">
             {message}
           </p>
 

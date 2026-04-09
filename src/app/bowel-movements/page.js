@@ -364,7 +364,7 @@ function BowelMovementsPageContent() {
               <h1 className="text-2xl sm:text-3xl lg:text-4xl font-bold font-title text-primary mb-4 sm:mb-6">
                 Bowel Movements
               </h1>
-              <p className="text-sm sm:text-base text-secondary font-roboto leading-relaxed">
+              <p className="text-sm sm:text-base text-secondary font-sans leading-relaxed">
                 Log your bowel movements and record stool type using the Bristol Stool Chart.
               </p>
             </div>
@@ -464,7 +464,7 @@ function BowelMovementsPageContent() {
                           <div className="w-full">
                             <label
                               htmlFor="bowel-date"
-                              className="block text-sm sm:text-base font-semibold font-roboto text-primary mb-2 sm:mb-3"
+                              className="block text-sm sm:text-base font-semibold font-sans text-primary mb-2 sm:mb-3"
                             >
                               Date *
                             </label>
@@ -496,7 +496,7 @@ function BowelMovementsPageContent() {
                           <div className="w-full">
                             <label
                               htmlFor="bowel-time"
-                              className="block text-sm sm:text-base font-semibold font-roboto text-primary mb-2 sm:mb-3"
+                              className="block text-sm sm:text-base font-semibold font-sans text-primary mb-2 sm:mb-3"
                             >
                               Time *
                             </label>
@@ -518,7 +518,7 @@ function BowelMovementsPageContent() {
                         </div>
 
                         <div>
-                          <p className="text-sm text-secondary font-roboto leading-relaxed mb-4 sm:mb-6">
+                          <p className="text-sm text-secondary font-sans leading-relaxed mb-4 sm:mb-6">
                             Select the type that best matches this movement.
                           </p>
                           <div className="grid grid-cols-1 sm:grid-cols-2 gap-2 sm:gap-3">
@@ -529,7 +529,7 @@ function BowelMovementsPageContent() {
                                   key={t.type}
                                   type="button"
                                   onClick={() => setFormState((prev) => ({ ...prev, bristolType: t.type }))}
-                                  className={`flex gap-3 items-start text-left rounded-lg border px-3 py-2.5 sm:px-4 sm:py-3 transition-colors font-roboto text-sm ${
+                                  className={`flex gap-3 items-start text-left rounded-lg border px-3 py-2.5 sm:px-4 sm:py-3 transition-colors font-sans text-sm ${
                                     selected
                                       ? 'border-[#5F9EA0] bg-[#5F9EA0]/10'
                                       : 'border-[var(--border-primary)] bg-[var(--bg-input)] hover:border-[var(--border-primary)]'
@@ -568,7 +568,7 @@ function BowelMovementsPageContent() {
                           <div>
                             <label
                               htmlFor="bowel-blood"
-                              className="block text-sm sm:text-base font-semibold font-roboto text-primary mb-2 sm:mb-3"
+                              className="block text-sm sm:text-base font-semibold font-sans text-primary mb-2 sm:mb-3"
                             >
                               Blood visible?
                             </label>
@@ -577,7 +577,7 @@ function BowelMovementsPageContent() {
                           <div>
                             <label
                               htmlFor="bowel-strain"
-                              className="block text-sm sm:text-base font-semibold font-roboto text-primary mb-2 sm:mb-3"
+                              className="block text-sm sm:text-base font-semibold font-sans text-primary mb-2 sm:mb-3"
                             >
                               Pain or straining?
                             </label>
@@ -586,7 +586,7 @@ function BowelMovementsPageContent() {
                           <div>
                             <label
                               htmlFor="bowel-urgency"
-                              className="block text-sm sm:text-base font-semibold font-roboto text-primary mb-2 sm:mb-3"
+                              className="block text-sm sm:text-base font-semibold font-sans text-primary mb-2 sm:mb-3"
                             >
                               Urgent need to go?
                             </label>
@@ -597,7 +597,7 @@ function BowelMovementsPageContent() {
                         <div>
                           <label
                             htmlFor="bowel-notes"
-                            className="block text-sm sm:text-base font-semibold font-roboto text-primary mb-2 sm:mb-3"
+                            className="block text-sm sm:text-base font-semibold font-sans text-primary mb-2 sm:mb-3"
                           >
                             Notes
                           </label>
@@ -612,7 +612,7 @@ function BowelMovementsPageContent() {
                         </div>
 
                         {saveError && (
-                          <p className="text-sm font-roboto" role="alert" style={{ color: 'var(--text-cadet-blue)' }}>
+                          <p className="text-sm font-sans" role="alert" style={{ color: 'var(--text-cadet-blue)' }}>
                             {saveError}
                           </p>
                         )}
@@ -646,14 +646,14 @@ function BowelMovementsPageContent() {
                 </AnimatePresence>
 
                 {isLoading ? (
-                  <p className="text-center py-12 text-secondary font-roboto">Loading...</p>
+                  <p className="text-center py-12 text-secondary font-sans">Loading...</p>
                 ) : entries.length === 0 ? (
                   <div className="text-center py-12 text-secondary">
                     <div className="card-inner rounded-full w-14 h-14 sm:w-20 sm:h-20 mx-auto mb-6 flex items-center justify-center">
                       <CircleDot className="w-6 h-6 sm:w-10 sm:h-10 text-secondary" />
                     </div>
                     <h3 className="text-lg font-semibold font-title text-primary mb-2">No bowel logs</h3>
-                    <p className="text-sm font-roboto text-secondary max-w-md mx-auto leading-relaxed">
+                    <p className="text-sm font-sans text-secondary max-w-md mx-auto leading-relaxed">
                       Your bowel logs will show here once you add them
                     </p>
                   </div>
@@ -686,7 +686,7 @@ function BowelMovementsPageContent() {
                                     {timeLabel ? (
                                       <>
                                         <span className="text-secondary">·</span>
-                                        <span className="text-primary font-roboto">{timeLabel}</span>
+                                        <span className="text-primary font-sans">{timeLabel}</span>
                                       </>
                                     ) : null}
                                   </div>
@@ -718,7 +718,7 @@ function BowelMovementsPageContent() {
                                   style={{ overflow: 'hidden' }}
                                 >
                                   {flags.length > 0 && (
-                                    <p className="text-sm text-secondary font-roboto mt-2">{flags.join(' · ')}</p>
+                                    <p className="text-sm text-secondary font-sans mt-2">{flags.join(' · ')}</p>
                                   )}
                                   <div className="flex flex-wrap items-center gap-2 mt-2">
                                     <button
@@ -761,7 +761,7 @@ function BowelMovementsPageContent() {
                               <div className="mt-2 min-w-0">
                                 <div className="card-inner min-w-0">
                                   <p
-                                    className="text-sm text-secondary font-roboto leading-normal line-clamp-2 break-words"
+                                    className="text-sm text-secondary font-sans leading-normal line-clamp-2 break-words"
                                     title={row.notes.trim()}
                                   >
                                     <span className="font-semibold text-primary">Notes:</span> {row.notes.trim()}
@@ -770,7 +770,7 @@ function BowelMovementsPageContent() {
                               </div>
                             )}
                             {isExpanded && (
-                              <div className="mt-2 text-xs text-tertiary font-roboto">
+                              <div className="mt-2 text-xs text-tertiary font-sans">
                                 <div className="flex items-center">
                                   <svg
                                     className="w-3 h-3 mr-1"
@@ -803,7 +803,7 @@ function BowelMovementsPageContent() {
 
       <div className="mt-4 sm:mt-6 card">
         <div>
-          <p className="text-sm text-secondary font-roboto leading-relaxed">
+          <p className="text-sm text-secondary font-sans leading-relaxed">
             Recording bowel movements and stool type helps build a clearer picture of your condition.
           </p>
           <div className="card-inner p-5 sm:p-6 mt-4">
@@ -811,7 +811,7 @@ function BowelMovementsPageContent() {
               <Lightbulb className="w-5 h-5 flex-shrink-0 text-amber-500" />
               <span className="text-base sm:text-sm font-semibold text-primary font-title">Note:</span>
             </div>
-            <p className="text-xs text-secondary font-roboto leading-relaxed">
+            <p className="text-xs text-secondary font-sans leading-relaxed">
               Types 1–2 are harder, 3–4 are often ideal, and 5–7 are looser or diarrhoea-like.
             </p>
           </div>

@@ -13,7 +13,7 @@ export default function About() {
         <h1 className="text-2xl sm:text-3xl lg:text-4xl font-bold font-title text-primary mb-4">
           FlareCare
         </h1>
-        <p className="text-sm sm:text-base lg:text-lg font-roboto text-secondary leading-relaxed">
+        <p className="text-sm sm:text-base lg:text-lg font-sans text-secondary leading-relaxed">
           A personal journey turned into a tool for the community
         </p>
         </div>
@@ -22,7 +22,7 @@ export default function About() {
       <div className="grid md:grid-cols-2 gap-5 mb-5 sm:gap-6 sm:mb-6">
         <div className="card backdrop-blur-sm">
           <h2 className="text-xl sm:text-2xl font-semibold font-title text-primary mb-4">My Story</h2>
-          <div className="space-y-4 text-sm sm:text-base text-secondary font-roboto">
+          <div className="space-y-4 text-sm sm:text-base text-secondary font-sans">
             <p className="leading-relaxed">
               Hi, I'm Simon, and I was diagnosed with Crohn's disease in 2005. Like many others, 
               I quickly learned that managing this condition requires constant attention 
@@ -44,12 +44,12 @@ export default function About() {
 
         <div className="card backdrop-blur-sm">
           <h2 className="text-xl sm:text-2xl font-semibold font-title text-primary mb-4">Why FlareCare?</h2>
-          <div className="space-y-4 text-sm sm:text-base text-secondary font-roboto">
+          <div className="space-y-4 text-sm sm:text-base text-secondary font-sans">
             <p className="leading-relaxed">
               FlareCare was born from my personal need for a simple, effective way to 
               track my health journey. I wanted something that would:
             </p>
-            <ul className="space-y-2 ml-4 font-roboto">
+            <ul className="space-y-2 ml-4 font-sans">
               <li className="flex items-start">
                 <span className="w-1.5 h-1.5 bg-[#5F9EA0] rounded-full mt-2 mr-3 flex-shrink-0"></span>
                 <span>Make symptom logging quick and intuitive</span>
@@ -81,7 +81,7 @@ export default function About() {
 
       <div className="card backdrop-blur-sm mb-5 sm:mb-6">
         <h2 className="text-xl sm:text-2xl font-semibold font-title text-primary mb-4">The Vision</h2>
-        <div className="space-y-4 text-sm sm:text-base text-secondary font-roboto">
+        <div className="space-y-4 text-sm sm:text-base text-secondary font-sans">
           <p className="leading-relaxed">
             Living with Crohn's or Colitis can feel isolating, but you're not alone. 
             FlareCare is built by someone who understands the daily challenges of 
@@ -102,7 +102,7 @@ export default function About() {
 
       <div className="card">
         <h2 className="text-xl sm:text-2xl font-semibold font-title text-primary mb-4">Stay Connected</h2>
-        <p className="text-sm sm:text-base text-secondary mb-6 font-roboto leading-relaxed">
+        <p className="text-sm sm:text-base text-secondary mb-6 font-sans leading-relaxed">
           Have questions, suggestions, or want to share your own story? 
           I'd love to hear from you and learn how FlareCare can better serve 
           the Crohn's and Colitis community.
@@ -111,7 +111,7 @@ export default function About() {
         <div className="grid gap-4 sm:gap-6 md:grid-cols-2">
           <div className="card-inner p-4 sm:p-6">
             <h3 className="text-lg font-semibold font-title text-primary mb-3">Email Support</h3>
-            <p className="text-secondary mb-4 font-roboto text-sm leading-relaxed">
+            <p className="text-secondary mb-4 font-sans text-sm leading-relaxed">
               For technical support, feature requests, or general questions by email.
             </p>
             <a 
@@ -124,7 +124,7 @@ export default function About() {
           
           <div className="card-inner p-4 sm:p-6">
             <h3 className="text-lg font-semibold font-title text-primary mb-3">Community Blog</h3>
-            <p className="text-secondary mb-4 font-roboto text-sm leading-relaxed">
+            <p className="text-secondary mb-4 font-sans text-sm leading-relaxed">
               Share experiences, tips, and connect with others on similar journeys.
             </p>
             <button 
@@ -136,7 +136,7 @@ export default function About() {
           </div>
         </div>
         
-        <p className="text-sm sm:text-base text-secondary mt-6 text-center font-roboto leading-relaxed">
+        <p className="text-sm sm:text-base text-secondary mt-6 text-center font-sans leading-relaxed">
           Together, we're building a better way to manage IBD
         </p>
       </div>

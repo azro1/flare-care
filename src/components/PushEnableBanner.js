@@ -67,7 +67,7 @@ export default function PushEnableBanner() {
           borderColor: 'var(--border-dropdown)'
         }}
       >
-        <p className="text-sm font-roboto text-primary">
+        <p className="text-sm font-sans text-primary">
           Enable push notifications so you get medication reminders even when the app is closed.
         </p>
         <div className="flex gap-2">

@@ -1143,7 +1143,7 @@ function SymptomsPageContent() {
             <h2 className="text-2xl sm:text-3xl lg:text-4xl font-bold font-title text-primary mb-4 sm:mb-6">Log Symptoms</h2>
             
             {/* Optional description */}
-            <p className="text-base sm:text-lg font-roboto text-muted mb-6 max-w-md">Track your daily symptoms to identify patterns and triggers</p>
+            <p className="text-base sm:text-lg font-sans text-muted mb-6 max-w-md">Track your daily symptoms to identify patterns and triggers</p>
             
             {/* Start button */}
             <button
