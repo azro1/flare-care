@@ -125,7 +125,7 @@ module.exports = {
       },
     fontFamily: {
       sans: ['Inter', 'system-ui', 'sans-serif'],
-      title: ['Ubuntu', 'system-ui', 'sans-serif'],
+      title: ['Hind Siliguri', 'system-ui', 'sans-serif'],
     },
       spacing: {
         '18': '4.5rem',
