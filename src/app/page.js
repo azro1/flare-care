@@ -1293,7 +1293,7 @@ export default function Home() {
                     </div>
                     <div className="w-full min-w-0 text-center">
                       <h3
-                        className="text-base font-semibold font-title text-primary leading-tight min-w-0 w-full truncate"
+                        className="text-base sm:text-lg font-semibold font-title text-primary leading-tight min-w-0 w-full truncate"
                         title="Log Symptoms"
                       >
                         Log Symptoms
@@ -1311,7 +1311,7 @@ export default function Home() {
                     </div>
                     <div className="w-full min-w-0 text-center">
                       <h3
-                        className="text-base font-semibold font-title text-primary leading-tight min-w-0 w-full truncate"
+                        className="text-base sm:text-lg font-semibold font-title text-primary leading-tight min-w-0 w-full truncate"
                         title="Log Medications"
                       >
                         Log Medications
@@ -1329,7 +1329,7 @@ export default function Home() {
                     </div>
                     <div className="w-full min-w-0 text-center">
                       <h3
-                        className="text-base font-semibold font-title text-primary leading-tight min-w-0 w-full truncate"
+                        className="text-base sm:text-lg font-semibold font-title text-primary leading-tight min-w-0 w-full truncate"
                         title="My Hydration"
                       >
                         My Hydration
@@ -1347,7 +1347,7 @@ export default function Home() {
                     </div>
                     <div className="w-full min-w-0 text-center">
                       <h3
-                        className="text-base font-semibold font-title text-primary leading-tight min-w-0 w-full truncate"
+                        className="text-base sm:text-lg font-semibold font-title text-primary leading-tight min-w-0 w-full truncate"
                         title="Bowel Movements"
                       >
                         Bowel Movements
@@ -1375,7 +1375,7 @@ export default function Home() {
                       <Thermometer className="w-5 h-5 text-emerald-600" />
                     </div>
                     <div className="w-full text-center min-w-0">
-                      <h3 className="text-base font-semibold font-title text-primary leading-tight sm:leading-relaxed break-words">Log Symptoms</h3>
+                      <h3 className="text-base sm:text-lg font-semibold font-title text-primary leading-tight sm:leading-relaxed break-words">Log Symptoms</h3>
                     </div>
                   </div>
                 </Link>
@@ -1388,7 +1388,7 @@ export default function Home() {
                       <ChartLine className="w-5 h-5 text-pink-500" />
                     </div>
                     <div className="w-full text-center min-w-0">
-                      <h3 className="text-base font-semibold font-title text-primary leading-tight sm:leading-relaxed break-words">Log Medications</h3>
+                      <h3 className="text-base sm:text-lg font-semibold font-title text-primary leading-tight sm:leading-relaxed break-words">Log Medications</h3>
                     </div>
                   </div>
                 </Link>
@@ -1401,7 +1401,7 @@ export default function Home() {
                       <CupSoda className="w-5 h-5 text-sky-600" />
                     </div>
                     <div className="w-full text-center min-w-0">
-                      <h3 className="text-base font-semibold font-title text-primary leading-tight sm:leading-relaxed break-words">My Hydration</h3>
+                      <h3 className="text-base sm:text-lg font-semibold font-title text-primary leading-tight sm:leading-relaxed break-words">My Hydration</h3>
                     </div>
                   </div>
                 </Link>
@@ -1414,7 +1414,7 @@ export default function Home() {
                       <CircleDot className="w-5 h-5 text-amber-800 dark:text-amber-400" />
                     </div>
                     <div className="w-full text-center min-w-0">
-                      <h3 className="text-base font-semibold font-title text-primary leading-tight sm:leading-relaxed break-words">Bowel Movements</h3>
+                      <h3 className="text-base sm:text-lg font-semibold font-title text-primary leading-tight sm:leading-relaxed break-words">Bowel Movements</h3>
                     </div>
                   </div>
                 </Link>
@@ -2073,8 +2073,8 @@ export default function Home() {
                     <Pill className="w-5 h-5 text-purple-600 dark:[color:var(--text-icon-more-meds)]" />
                 </div>
                   <div className="w-full text-center min-w-0">
-<h3 className="text-base font-semibold font-title text-primary leading-tight sm:leading-relaxed break-words">
-                    My Meds
+                    <h3 className="text-base sm:text-lg font-semibold font-title text-primary leading-tight sm:leading-relaxed break-words">
+                      My Meds
                     </h3>
                   </div>
                 </div>
@@ -2089,7 +2089,7 @@ export default function Home() {
                     <FileText className="w-5 h-5 text-orange-600 dark:[color:var(--text-icon-more-reports)]" />
                   </div>
                   <div className="w-full text-center min-w-0">
-                    <h3 className="text-base font-semibold font-title text-primary leading-tight sm:leading-relaxed break-words">
+                    <h3 className="text-base sm:text-lg font-semibold font-title text-primary leading-tight sm:leading-relaxed break-words">
                       Reports
                     </h3>
                   </div>
@@ -2105,7 +2105,7 @@ export default function Home() {
                     <Scale className="w-5 h-5 text-indigo-600 dark:[color:var(--text-icon-more-weight)]" />
                   </div>
                   <div className="w-full text-center min-w-0">
-                    <h3 className="text-base font-semibold font-title text-primary leading-tight sm:leading-relaxed break-words">
+                    <h3 className="text-base sm:text-lg font-semibold font-title text-primary leading-tight sm:leading-relaxed break-words">
                       My Weight
                     </h3>
                   </div>
@@ -2122,7 +2122,7 @@ export default function Home() {
                     <Calendar className="w-5 h-5 text-slate-700 dark:[color:var(--text-icon-more-appointments)]" />
                   </div>
                   <div className="w-full text-center min-w-0">
-                    <h3 className="text-base font-semibold font-title text-primary leading-tight sm:leading-relaxed min-w-0 w-full truncate">
+                    <h3 className="text-base sm:text-lg font-semibold font-title text-primary leading-tight sm:leading-relaxed break-words">
                       Appointments
                     </h3>
                   </div>

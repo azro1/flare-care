@@ -125,7 +125,7 @@ module.exports = {
       },
     fontFamily: {
       sans: ['Inter', 'system-ui', 'sans-serif'],
-      title: ['Assistant', 'system-ui', 'sans-serif'],
+      title: ['Tajawal', 'system-ui', 'sans-serif'],
     },
       spacing: {
         '18': '4.5rem',
