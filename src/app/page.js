@@ -1278,7 +1278,7 @@ export default function Home() {
 
         {/* Daily Check-in */}
         <div className="my-6 order-[2] xl:order-none w-full min-w-0 max-w-full">
-          <h2 className="text-xl font-semibold font-title text-primary mb-4">Daily Check-in</h2>
+          <h2 className="text-xl font-semibold font-title text-primary mb-3">Daily Check-in</h2>
           {/* Mobile: horizontal scroll — card width matches More (2-col grid, gap-4) */}
           <div className="block sm:hidden w-full min-w-0 [container-type:inline-size]">
             <div className="overflow-x-auto pb-1 overscroll-x-contain scrollbar-hide snap-x snap-mandatory" style={{ WebkitOverflowScrolling: 'touch' }}>
@@ -1812,7 +1812,7 @@ export default function Home() {
         {/* Latest News */}
         {isAuthenticated && (
           <div className="mb-6 order-[10] xl:order-none">
-            <h2 className="text-xl font-semibold font-title text-primary mb-4">
+            <h2 className="text-xl font-semibold font-title text-primary mb-3">
               Latest News
             </h2>
             {newsLoading && (
@@ -1938,7 +1938,7 @@ export default function Home() {
         {/* Recent Symptoms & Medications (tabbed) */}
         {(displayedSymptoms.length > 0 || trackedMedications.length > 0) && (
           <div className="mb-6 order-[9] xl:order-none">
-            <h2 className="text-xl font-semibold font-title text-primary mb-4">Recent Logs</h2>
+            <h2 className="text-xl font-semibold font-title text-primary mb-3">Recent Logs</h2>
             <div className="card">
             <div className="flex border-b border-[var(--separator-card-inner)] mb-4">
               <button
@@ -2062,7 +2062,7 @@ export default function Home() {
 
         {/* More Options */}
         <div className="mb-6 xl:mb-0 order-[7] xl:order-none">
-          <h2 className="text-xl font-semibold font-title text-primary mb-4">More</h2>
+          <h2 className="text-xl font-semibold font-title text-primary mb-3">More</h2>
           <div className="grid grid-cols-2 lg:grid-cols-3 gap-4 md:gap-6 min-w-0">
               <Link
                 href="/medications"
