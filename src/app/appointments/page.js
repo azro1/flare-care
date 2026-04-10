@@ -13,6 +13,7 @@ import Masonry from 'react-masonry-css'
 import { motion, AnimatePresence } from 'framer-motion'
 import { supabase, TABLES } from '@/lib/supabase'
 import { useAuth } from '@/lib/AuthContext'
+import { parseUkLocalDateTime, APP_TIMEZONE } from '@/lib/reminderTimezones'
 import DatePicker from 'react-datepicker'
 import 'react-datepicker/dist/react-datepicker.css'
 
@@ -39,15 +40,21 @@ const getReminderLabel = (minutes) => {
   return opt ? opt.label : `${minutes} mins before`
 }
 
-/** Reminder fires at appointment time minus X minutes. Returns 24-hour time string (HH:mm) to match appointment display. */
+/** Reminder fires at appointment time minus X minutes. Uses Europe/London (same as cron server math). */
 const getReminderTimeLabel = (dateStr, timeStr, minutesBefore) => {
   if (!dateStr || !timeStr || !timeStr.match(/^\d{2}:\d{2}$/) || !minutesBefore) return ''
-  const aptDate = new Date(`${dateStr}T${timeStr}:00`)
+  const aptDate = parseUkLocalDateTime(dateStr, timeStr)
   if (isNaN(aptDate.getTime())) return ''
   const reminderDate = new Date(aptDate.getTime() - minutesBefore * 60 * 1000)
-  const h = reminderDate.getHours().toString().padStart(2, '0')
-  const m = reminderDate.getMinutes().toString().padStart(2, '0')
-  return `${h}:${m}`
+  const parts = new Intl.DateTimeFormat('en-GB', {
+    timeZone: APP_TIMEZONE,
+    hour: '2-digit',
+    minute: '2-digit',
+    hour12: false
+  }).formatToParts(reminderDate)
+  const h = parts.find(p => p.type === 'hour')?.value ?? '00'
+  const m = parts.find(p => p.type === 'minute')?.value ?? '00'
+  return `${h.padStart(2, '0')}:${m.padStart(2, '0')}`
 }
 
 

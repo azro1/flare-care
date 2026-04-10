@@ -1,15 +1,21 @@
 import { createClient } from '@supabase/supabase-js'
 import webPush from 'web-push'
+import { parseUkLocalDateTime } from '@/lib/reminderTimezones'
 
 const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL
 const supabaseServiceKey = process.env.SUPABASE_SERVICE_ROLE_KEY
 const vapidPrivateKey = process.env.VAPID_PRIVATE_KEY
 const cronSecret = process.env.CRON_SECRET
 
-// Window in ms: only send if reminder became due in the last 15 minutes (avoids resending if cron was down)
-const REMINDER_WINDOW_MS = 15 * 60 * 1000
+// Eligible if reminder became due in the last N ms. A 1h window felt "random": miss that hour
+// (late curl, cron jitter, no push yet) and the row was skipped forever while reminder_sent_at stayed null.
+const REMINDER_WINDOW_MS = 24 * 60 * 60 * 1000
 
-export async function POST(request) {
+const PUSH_TTL_SECONDS = 3600
+
+export const dynamic = 'force-dynamic'
+
+async function runAppointmentReminders(request) {
   if (!cronSecret || request.headers.get('authorization') !== `Bearer ${cronSecret}`) {
     return new Response('Unauthorized', { status: 401 })
   }
@@ -38,13 +44,15 @@ export async function POST(request) {
     return Response.json({ sent: 0, message: 'No due appointment reminders or error' })
   }
 
-  // Filter: reminder due time must be in [windowStart, now]
+  // Filter: reminder is due (<= now), became due within the last REMINDER_WINDOW_MS, not yet sent
   const dueAppointments = []
   for (const apt of appointments) {
-    const timeStr = apt.time && /^\d{2}:\d{2}/.test(apt.time) ? apt.time : '00:00'
-    const aptDate = new Date(`${apt.date}T${timeStr}:00`)
+    const timeStr = apt.time && /^\d{1,2}:\d{2}/.test(apt.time) ? apt.time : '00:00'
+    const aptDate = parseUkLocalDateTime(apt.date, timeStr)
     if (isNaN(aptDate.getTime())) continue
-    const reminderDueMs = aptDate.getTime() - (apt.reminder_minutes_before * 60 * 1000)
+    const minutesBefore = parseInt(String(apt.reminder_minutes_before), 10)
+    if (Number.isNaN(minutesBefore) || minutesBefore < 0) continue
+    const reminderDueMs = aptDate.getTime() - minutesBefore * 60 * 1000
     const reminderDue = new Date(reminderDueMs)
     if (reminderDue <= now && reminderDue >= windowStart) {
       dueAppointments.push(apt)
@@ -98,7 +106,7 @@ export async function POST(request) {
             }
           },
           JSON.stringify(payload),
-          { TTL: 60 }
+          { TTL: PUSH_TTL_SECONDS }
         )
         sent++
       } catch (e) {
@@ -118,4 +126,13 @@ export async function POST(request) {
   }
 
   return Response.json({ sent, appointments: dueAppointments.length })
+}
+
+/** External cron (e.g. cron-job.org) may use GET or POST with Bearer CRON_SECRET */
+export async function GET(request) {
+  return runAppointmentReminders(request)
+}
+
+export async function POST(request) {
+  return runAppointmentReminders(request)
 }

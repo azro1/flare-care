@@ -1,5 +1,6 @@
 import { createClient } from '@supabase/supabase-js'
 import webPush from 'web-push'
+import { getLondonTimeHHmm, timeOfDayQueryVariants } from '@/lib/reminderTimezones'
 
 // Use service role so we can read all medications and push_subscriptions
 const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL
@@ -7,7 +8,11 @@ const supabaseServiceKey = process.env.SUPABASE_SERVICE_ROLE_KEY
 const vapidPrivateKey = process.env.VAPID_PRIVATE_KEY
 const cronSecret = process.env.CRON_SECRET
 
-export async function POST(request) {
+const PUSH_TTL_SECONDS = 3600
+
+export const dynamic = 'force-dynamic'
+
+async function runMedicationReminders(request) {
   if (!cronSecret || request.headers.get('authorization') !== `Bearer ${cronSecret}`) {
     return new Response('Unauthorized', { status: 401 })
   }
@@ -22,15 +27,16 @@ export async function POST(request) {
   )
 
   const now = new Date()
-  const currentTime = now.getHours().toString().padStart(2, '0') + ':' + now.getMinutes().toString().padStart(2, '0')
+  const currentTime = getLondonTimeHHmm(now)
+  const timeVariants = timeOfDayQueryVariants(currentTime)
   const supabase = createClient(supabaseUrl, supabaseServiceKey)
 
-  // Medications with reminders at this time (exact match)
+  // Medications with reminders at this time (exact match, UK wall clock)
   const { data: meds, error: medsError } = await supabase
     .from('medications')
     .select('id, name, user_id, time_of_day, reminders_enabled')
     .eq('reminders_enabled', true)
-    .eq('time_of_day', currentTime)
+    .in('time_of_day', timeVariants)
     .neq('name', 'Medication Tracking')
 
   if (medsError || !meds?.length) {
@@ -65,7 +71,7 @@ export async function POST(request) {
           }
         },
         JSON.stringify(payload),
-        { TTL: 60 }
+        { TTL: PUSH_TTL_SECONDS }
       )
       sent++
     } catch (e) {
@@ -76,4 +82,13 @@ export async function POST(request) {
   }
 
   return Response.json({ sent, total: subs.length })
+}
+
+/** External cron (e.g. cron-job.org) may use GET or POST with Bearer CRON_SECRET */
+export async function GET(request) {
+  return runMedicationReminders(request)
+}
+
+export async function POST(request) {
+  return runMedicationReminders(request)
 }
