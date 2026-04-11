@@ -39,6 +39,37 @@ const SymptomDateInput = forwardRef(({ value, onClick, onChange, placeholder, id
 ))
 SymptomDateInput.displayName = 'SymptomDateInput'
 
+/** Band anchors for the five word options (still stored as 1–10 strings in formData). */
+const WIZARD_RATING_BAND_VALUES = [2, 4, 6, 8, 10]
+
+const SEVERITY_WORD_OPTIONS = [
+  { label: 'Mild', value: 2 },
+  { label: 'Slight', value: 4 },
+  { label: 'Moderate', value: 6 },
+  { label: 'Severe', value: 8 },
+  { label: 'Extreme', value: 10 },
+]
+
+const STRESS_WORD_OPTIONS = [
+  { label: 'Calm', value: 2 },
+  { label: 'A little', value: 4 },
+  { label: 'Moderate', value: 6 },
+  { label: 'Stressed', value: 8 },
+  { label: 'Very stressed', value: 10 },
+]
+
+/** Map any stored 1–10 value to the nearest band (so older precise entries still show one option selected). */
+function wizardRatingToBand(value) {
+  const v = Math.min(10, Math.max(1, Number(value) || 1))
+  return WIZARD_RATING_BAND_VALUES[Math.min(4, Math.floor((v - 1) / 2))]
+}
+
+/** Selected chip style — cadet blue, same family as bowel Yes/No radios (`--text-cadet-blue`). */
+const WIZARD_RATING_SELECTED_CHIP_STYLE = {
+  borderColor: 'var(--text-cadet-blue)',
+  backgroundColor: 'color-mix(in srgb, var(--text-cadet-blue) 18%, var(--bg-card-inner))',
+}
+
 function SymptomsPageContent() {
   const router = useRouter()
   const pathname = usePathname()
@@ -243,17 +274,17 @@ function SymptomsPageContent() {
     }
   }, [currentStep])
 
-  // Default severity to 1 when reaching step 4 and empty (slider default)
+  // Default severity to 1 when reaching step 4 and empty
   useEffect(() => {
     if (currentStep === 4 && (formData.severity === '' || formData.severity === undefined)) {
-      setFormData(prev => ({ ...prev, severity: '1' }))
+      setFormData(prev => ({ ...prev, severity: '2' }))
     }
   }, [currentStep])
 
-  // Default stress_level to 1 when reaching step 5 and empty (slider default)
+  // Default stress_level to 1 when reaching step 5 and empty
   useEffect(() => {
     if (currentStep === 5 && (formData.stress_level === '' || formData.stress_level === undefined)) {
-      setFormData(prev => ({ ...prev, stress_level: '1' }))
+      setFormData(prev => ({ ...prev, stress_level: '2' }))
     }
   }, [currentStep])
 
@@ -741,6 +772,12 @@ function SymptomsPageContent() {
     }
   }
 
+  const setWizardRating = (name, value) => {
+    if (value < 1 || value > 10) return
+    setFormData((prev) => ({ ...prev, [name]: String(value) }))
+    setFieldErrors((prev) => ({ ...prev, [name]: '' }))
+  }
+
   const handleDateInputChange = (field, value) => {
     // Update the input value
     setDateInputs(prev => ({ ...prev, [field]: value }))
@@ -1033,32 +1070,6 @@ function SymptomsPageContent() {
     router.push('/')
   }
 
-  const getSeverityColor = (severity) => {
-    if (severity <= 3) return { color: 'var(--severity-accent-low)', label: 'Mild', sliderAccent: 'var(--severity-accent-low)' }
-    if (severity <= 6) return { color: 'var(--severity-accent-mid)', label: 'Moderate', sliderAccent: 'var(--severity-accent-mid)' }
-    return { color: 'var(--severity-accent-high)', label: 'Severe', sliderAccent: 'var(--severity-accent-high)' }
-  }
-
-  const getSeverityLabel = (severity) => {
-    if (severity <= 3) return 'Mild'
-    if (severity <= 6) return 'Moderate'
-    if (severity <= 8) return 'Severe'
-    return 'Extreme'
-  }
-
-  const getStressLabel = (stress) => {
-    if (stress <= 3) return 'Calm'
-    if (stress <= 6) return 'Moderate'
-    if (stress <= 8) return 'Stressed'
-    return 'Very stressed'
-  }
-
-  const getStressColor = (stress) => {
-    if (stress <= 3) return { color: 'var(--stress-accent-low)', sliderAccent: 'var(--stress-accent-low)' }
-    if (stress <= 6) return { color: 'var(--stress-accent-mid)', sliderAccent: 'var(--stress-accent-mid)' }
-    return { color: 'var(--stress-accent-high)', sliderAccent: 'var(--stress-accent-high)' }
-  }
-
   const getMealLabel = (mealType) => {
     if (!formData.symptomStartDate) {
       return `What did you have for ${mealType}?`
@@ -1294,52 +1305,35 @@ function SymptomsPageContent() {
             <h3 className="text-2xl sm:text-2xl md:text-3xl font-title font-bold text-primary mb-2">
               {formData.isOngoing ? 'How severe are your symptoms?' : 'How severe were your symptoms?'}
             </h3>
-            <p className="text-sm text-muted mb-6">Rate from 1 (mild) to 10 (extreme)</p>
+            <p className="text-sm text-muted mb-4">Choose the closest match.</p>
             <div className="w-full">
-              <div className="flex items-center justify-between mb-3">
-                <span className="text-xs text-muted">Mild</span>
-                <div className="flex items-baseline gap-2">
-                  {(() => {
-                    const sevValue = Number(formData.severity || 1)
-                    const sevMeta = getSeverityColor(sevValue)
-                    return (
-                      <>
-                        <span
-                          className="text-3xl font-bold transition-colors duration-200"
-                          style={{ color: sevMeta.color }}
-                        >
-                          {formData.severity || '–'}
-                        </span>
-                        <span className="text-muted">/10</span>
-                        {formData.severity && (
-                          <span
-                            className="text-sm font-medium"
-                            style={{ color: sevMeta.color }}
-                          >
-                            {getSeverityLabel(sevValue)}
-                          </span>
-                        )}
-                      </>
-                    )
-                  })()}
-                </div>
-                <span className="text-xs text-muted">Extreme</span>
+              <div
+                role="group"
+                aria-label="Symptom severity: mild through extreme"
+                className="grid grid-cols-2 gap-2 sm:grid-cols-5 sm:gap-2"
+              >
+                {SEVERITY_WORD_OPTIONS.map((opt) => {
+                  const band = formData.severity ? wizardRatingToBand(formData.severity) : wizardRatingToBand(2)
+                  const selected = band === opt.value
+                  return (
+                    <button
+                      key={opt.value}
+                      type="button"
+                      onClick={() => setWizardRating('severity', opt.value)}
+                      aria-pressed={selected}
+                      title={`${opt.value} out of 10`}
+                      className={`min-h-[2.75rem] rounded-lg px-2 py-2.5 text-center text-sm font-medium leading-snug touch-manipulation transition-colors sm:min-h-11 sm:px-3 sm:text-base ${
+                        selected
+                          ? 'border-2 text-primary'
+                          : 'border border-[var(--border-input)] bg-[var(--bg-card-inner)] text-primary'
+                      }`}
+                      style={selected ? WIZARD_RATING_SELECTED_CHIP_STYLE : undefined}
+                    >
+                      {opt.label}
+                    </button>
+                  )
+                })}
               </div>
-              <input
-                type="range"
-                id="severity"
-                name="severity"
-                min="1"
-                max="10"
-                step="1"
-                value={formData.severity || 1}
-                onChange={handleInputChange}
-                className="severity-slider w-full h-3 rounded-full appearance-none cursor-pointer"
-                style={{
-                  '--slider-percent': `${(((Number(formData.severity || 1) - 1) / 9) * 100).toFixed(2)}%`,
-                  '--slider-accent': getSeverityColor(Number(formData.severity || 1)).sliderAccent
-                }}
-              />
             </div>
             {fieldErrors.severity && (
               <div className="mt-4 p-3 rounded-lg border" style={{backgroundColor: 'var(--bg-error)', borderColor: 'var(--border-error)'}}>
@@ -1355,59 +1349,42 @@ function SymptomsPageContent() {
             <h3 className="text-2xl sm:text-2xl md:text-3xl font-title font-bold text-primary mb-2">
               {formData.isOngoing ? 'How stressed are you feeling?' : 'How stressed were you feeling during that time?'}
             </h3>
-            <p className="text-sm text-muted mb-6">Rate from 1 (calm) to 10 (very stressed)</p>
+            <p className="text-sm text-muted mb-4">Choose the closest match.</p>
             <div className="w-full">
-              <div className="flex items-center justify-between mb-3">
-                <span className="text-xs text-muted">Calm</span>
-                <div className="flex items-baseline gap-2">
-                  {(() => {
-                    const stressValue = Number(formData.stress_level || 1)
-                    const stressMeta = getStressColor(stressValue)
-                    return (
-                      <>
-                        <span
-                          className="text-3xl font-bold transition-colors duration-200"
-                          style={{ color: stressMeta.color }}
-                        >
-                          {formData.stress_level || '–'}
-                        </span>
-                        <span className="text-muted">/10</span>
-                        {formData.stress_level && (
-                          <span
-                            className="text-sm font-medium"
-                            style={{ color: stressMeta.color }}
-                          >
-                            {getStressLabel(stressValue)}
-                          </span>
-                        )}
-                      </>
-                    )
-                  })()}
-                </div>
-                <span className="text-xs text-muted">Very stressed</span>
+              <div
+                role="group"
+                aria-label="Stress level: calm through very stressed"
+                className="grid grid-cols-2 gap-2 sm:grid-cols-5 sm:gap-2"
+              >
+                {STRESS_WORD_OPTIONS.map((opt) => {
+                  const band = formData.stress_level ? wizardRatingToBand(formData.stress_level) : wizardRatingToBand(2)
+                  const selected = band === opt.value
+                  return (
+                    <button
+                      key={opt.value}
+                      type="button"
+                      onClick={() => setWizardRating('stress_level', opt.value)}
+                      aria-pressed={selected}
+                      title={`${opt.value} out of 10`}
+                      className={`min-h-[2.75rem] rounded-lg px-2 py-2.5 text-center text-sm font-medium leading-snug touch-manipulation transition-colors sm:min-h-11 sm:px-3 sm:text-base ${
+                        selected
+                          ? 'border-2 text-primary'
+                          : 'border border-[var(--border-input)] bg-[var(--bg-card-inner)] text-primary'
+                      }`}
+                      style={selected ? WIZARD_RATING_SELECTED_CHIP_STYLE : undefined}
+                    >
+                      {opt.label}
+                    </button>
+                  )
+                })}
               </div>
-              <input
-                type="range"
-                id="stress_level"
-                name="stress_level"
-                min="1"
-                max="10"
-                step="1"
-                value={formData.stress_level || 1}
-                onChange={handleInputChange}
-                className="severity-slider w-full h-3 rounded-full appearance-none cursor-pointer"
-                style={{
-                  '--slider-percent': `${(((Number(formData.stress_level || 1) - 1) / 9) * 100).toFixed(2)}%`,
-                  '--slider-accent': getStressColor(Number(formData.stress_level || 1)).sliderAccent
-                }}
-              />
             </div>
-                {fieldErrors.stress_level && (
-                  <div className="mt-4 p-3 rounded-lg border" style={{backgroundColor: 'var(--bg-error)', borderColor: 'var(--border-error)'}}>
-                    <p className="text-sm" style={{color: 'var(--text-error)'}}>{fieldErrors.stress_level}</p>
-                  </div>
-                )}
+            {fieldErrors.stress_level && (
+              <div className="mt-4 p-3 rounded-lg border" style={{backgroundColor: 'var(--bg-error)', borderColor: 'var(--border-error)'}}>
+                <p className="text-sm" style={{color: 'var(--text-error)'}}>{fieldErrors.stress_level}</p>
               </div>
+            )}
+          </div>
         )}
 
         {/* Step 6: Bathroom Frequency */}

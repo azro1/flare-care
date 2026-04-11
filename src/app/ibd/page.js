@@ -45,7 +45,7 @@ export default function LearnPage() {
             
             {/* Daily Tips */}
             <div className="card">
-              <h3 className="text-xl font-semibold font-title text-primary mb-4">Daily Tips</h3>
+              <h3 className="text-xl font-semibold font-title text-primary mb-3 sm:mb-4">Daily Tips</h3>
               <div className="space-y-3">
                 <div className="flex items-center gap-3">
                   <div className="w-8 h-8 min-w-[2rem] rounded-lg flex items-center justify-center card-inner">
@@ -76,7 +76,7 @@ export default function LearnPage() {
 
             {/* Emergency Contacts */}
             <div className="card backdrop-blur-sm">
-              <h3 className="text-xl font-semibold font-title text-primary mb-4">Emergency Contacts</h3>
+              <h3 className="text-xl font-semibold font-title text-primary mb-3 sm:mb-4">Emergency Contacts</h3>
             <div className="space-y-3">
               <div className="border-l-4" style={{ borderColor: '#5F9EA0', opacity: 0.85 }}>
                   <div className="pl-3">
@@ -104,7 +104,7 @@ export default function LearnPage() {
 
             {/* Quick Facts */}
             <div className="card">
-              <h3 className="text-xl font-semibold font-title text-primary mb-4">Quick Facts</h3>
+              <h3 className="text-xl font-semibold font-title text-primary mb-3 sm:mb-4">Quick Facts</h3>
               <div className="space-y-3">
                 <p
                   key={QUICK_FACTS[currentFactIndex]}
@@ -123,7 +123,7 @@ export default function LearnPage() {
         {/* Main Content */}
         <div className="flex-1 lg:max-w-4xl order-1 lg:order-2">
       <div className="mb-5 sm:mb-6 card">
-        <h1 className="text-2xl sm:text-3xl lg:text-4xl font-bold font-title text-primary mb-4">IBD</h1>
+        <h1 className="text-2xl sm:text-3xl lg:text-4xl font-bold font-title text-primary mb-3 sm:mb-4">IBD</h1>
         <p className="text-sm sm:text-base text-secondary break-words leading-relaxed">
           Learn about Crohn's disease and Ulcerative Colitis, and how FlareCare can help you manage your condition
         </p>
@@ -131,7 +131,7 @@ export default function LearnPage() {
 
       {/* What is IBD Section */}
       <div className="card mb-5 sm:mb-6">
-        <h2 className="text-xl font-semibold font-title text-primary mb-4 sm:mb-6 break-words">What is Inflammatory Bowel Disease (IBD)?</h2>
+        <h2 className="text-xl font-semibold font-title text-primary mb-3 sm:mb-6 break-words">What is Inflammatory Bowel Disease (IBD)?</h2>
         <div className="prose prose-gray max-w-none">
           <p className="text-sm sm:text-base text-secondary mb-6 font-sans break-words leading-relaxed">
             Inflammatory Bowel Disease (IBD) is a term used to describe disorders that involve chronic inflammation of your digestive tract. The two main types are:
@@ -163,7 +163,7 @@ export default function LearnPage() {
 
       {/* Common Symptoms Section */}
       <div className="card backdrop-blur-sm mb-5 sm:mb-6">
-        <h2 className="text-xl font-semibold font-title text-primary mb-4 sm:mb-6 break-words">Common Symptoms</h2>
+        <h2 className="text-xl font-semibold font-title text-primary mb-3 sm:mb-6 break-words">Common Symptoms</h2>
         <div className="grid gap-2 md:gap-6 md:grid-cols-2">
           <ul className="space-y-2 text-sm sm:text-base text-secondary font-sans break-words">
             <li className="flex items-start leading-relaxed">
@@ -215,7 +215,7 @@ export default function LearnPage() {
 
       {/* Triggers Section */}
       <div className="card mb-5 sm:mb-6">
-        <h2 className="text-xl font-semibold font-title text-primary mb-4 sm:mb-6 break-words">Common Triggers</h2>
+        <h2 className="text-xl font-semibold font-title text-primary mb-3 sm:mb-6 break-words">Common Triggers</h2>
         <div className="grid gap-4 sm:gap-6 md:grid-cols-3">
           <div className="card-inner p-4 sm:p-6 text-center">
             <div className="w-16 h-16 rounded-full flex items-center justify-center mx-auto mb-4 bg-yellow-100 dark:bg-[var(--bg-card)]">
@@ -248,9 +248,9 @@ export default function LearnPage() {
 
       {/* When to Seek Help Section */}
       <div className="card mb-5 sm:mb-6">
-        <h2 className="text-xl font-semibold font-title text-primary mb-4 sm:mb-6">When to Seek Medical Help</h2>
+        <h2 className="text-xl font-semibold font-title text-primary mb-3 sm:mb-6">When to Seek Medical Help</h2>
         <div>
-          <h3 className="text-lg font-semibold font-title text-primary mb-4 leading-normal">Seek immediate medical attention if you experience:</h3>
+          <h3 className="text-lg font-semibold font-title text-primary mb-3 sm:mb-4 leading-normal">Seek immediate medical attention if you experience:</h3>
           <ul className="space-y-2 text-sm text-secondary font-sans">
             <li className="flex items-start leading-relaxed">
               <span className="text-red-500 mr-2 font-bold">•</span>
@@ -278,7 +278,7 @@ export default function LearnPage() {
 
       {/* How FlareCare Helps Section */}
       <div className="card backdrop-blur-sm mb-5 sm:mb-6">
-        <h2 className="text-xl font-semibold font-title text-primary mb-4 sm:mb-6">How FlareCare Can Help</h2>
+        <h2 className="text-xl font-semibold font-title text-primary mb-3 sm:mb-6">How FlareCare Can Help</h2>
         <div className="card-inner p-4 sm:p-6">
         <div className="grid gap-3 md:gap-6 md:grid-cols-2">
           <div>
@@ -332,7 +332,7 @@ export default function LearnPage() {
 
       {/* Resources Section */}
       <div className="card backdrop-blur-sm mb-5 sm:mb-6">
-        <h2 className="text-xl font-semibold font-title text-primary mb-4 sm:mb-6">Helpful Resources</h2>
+        <h2 className="text-xl font-semibold font-title text-primary mb-3 sm:mb-6">Helpful Resources</h2>
         <div className="grid gap-3 md:gap-6 md:grid-cols-2">
           <ul className="space-y-3 font-sans">
             <li>
@@ -394,8 +394,8 @@ export default function LearnPage() {
         <div className="mt-5 sm:mt-6 lg:mt-0">
           <div className="max-w-[76rem] mx-auto">
             <div className="card p-8 backdrop-blur-sm text-center">
-          <h2 className="text-xl font-semibold font-title text-primary mb-4">Track Your Medications</h2>
-          <p className="text-sm sm:text-base text-secondary font-sans mb-6 leading-relaxed">
+          <h2 className="text-xl font-semibold font-title text-primary mb-3 sm:mb-4">Track Your Medications</h2>
+          <p className="text-sm sm:text-base text-secondary font-sans mb-4 sm:mb-6 leading-relaxed">
             Log missed medications and NSAIDs to keep your healthcare team informed
           </p>
           <div className="flex flex-col sm:flex-row justify-center items-center sm:items-stretch space-y-3 sm:space-y-0 sm:space-x-4">

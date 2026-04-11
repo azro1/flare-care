@@ -10,7 +10,7 @@ export default function About() {
       <div className="max-w-5xl mx-auto">
       <div className="text-center mb-5 sm:mb-6 card">
         <div>
-        <h1 className="text-2xl sm:text-3xl lg:text-4xl font-bold font-title text-primary mb-4">
+        <h1 className="text-2xl sm:text-3xl lg:text-4xl font-bold font-title text-primary mb-3 sm:mb-4">
           FlareCare
         </h1>
         <p className="text-sm sm:text-base lg:text-lg font-sans text-secondary leading-relaxed">
@@ -21,7 +21,7 @@ export default function About() {
 
       <div className="grid md:grid-cols-2 gap-5 mb-5 sm:gap-6 sm:mb-6">
         <div className="card backdrop-blur-sm">
-          <h2 className="text-xl sm:text-2xl font-semibold font-title text-primary mb-4">My Story</h2>
+          <h2 className="text-xl sm:text-2xl font-semibold font-title text-primary mb-3 sm:mb-4">My Story</h2>
           <div className="space-y-4 text-sm sm:text-base text-secondary font-sans">
             <p className="leading-relaxed">
               Hi, I'm Simon, and I was diagnosed with Crohn's disease in 2005. Like many others, 
@@ -43,7 +43,7 @@ export default function About() {
         </div>
 
         <div className="card backdrop-blur-sm">
-          <h2 className="text-xl sm:text-2xl font-semibold font-title text-primary mb-4">Why FlareCare?</h2>
+          <h2 className="text-xl sm:text-2xl font-semibold font-title text-primary mb-3 sm:mb-4">Why FlareCare?</h2>
           <div className="space-y-4 text-sm sm:text-base text-secondary font-sans">
             <p className="leading-relaxed">
               FlareCare was born from my personal need for a simple, effective way to 
@@ -80,7 +80,7 @@ export default function About() {
       </div>
 
       <div className="card backdrop-blur-sm mb-5 sm:mb-6">
-        <h2 className="text-xl sm:text-2xl font-semibold font-title text-primary mb-4">The Vision</h2>
+        <h2 className="text-xl sm:text-2xl font-semibold font-title text-primary mb-3 sm:mb-4">The Vision</h2>
         <div className="space-y-4 text-sm sm:text-base text-secondary font-sans">
           <p className="leading-relaxed">
             Living with Crohn's or Colitis can feel isolating, but you're not alone. 
@@ -101,8 +101,8 @@ export default function About() {
       </div>
 
       <div className="card">
-        <h2 className="text-xl sm:text-2xl font-semibold font-title text-primary mb-4">Stay Connected</h2>
-        <p className="text-sm sm:text-base text-secondary mb-6 font-sans leading-relaxed">
+        <h2 className="text-xl sm:text-2xl font-semibold font-title text-primary mb-3 sm:mb-4">Stay Connected</h2>
+        <p className="text-sm sm:text-base text-secondary mb-4 sm:mb-6 font-sans leading-relaxed">
           Have questions, suggestions, or want to share your own story? 
           I'd love to hear from you and learn how FlareCare can better serve 
           the Crohn's and Colitis community.
@@ -136,7 +136,7 @@ export default function About() {
           </div>
         </div>
         
-        <p className="text-sm sm:text-base text-secondary mt-6 text-center font-sans leading-relaxed">
+        <p className="text-sm sm:text-base text-secondary mt-4 sm:mt-6 text-center font-sans leading-relaxed">
           Together, we're building a better way to manage IBD
         </p>
       </div>

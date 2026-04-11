@@ -548,7 +548,7 @@ function MedicationsPageContent() {
         <div className="card">
           <div className="flex flex-col sm:flex-row sm:justify-between sm:items-start">
             <div className="min-w-0 flex-1">
-              <h1 className="text-2xl sm:text-3xl lg:text-4xl font-bold font-title text-primary mb-4 sm:mb-6">
+              <h1 className="text-2xl sm:text-3xl lg:text-4xl font-bold font-title text-primary mb-3 sm:mb-6">
                 My Medications
               </h1>
               <p className="text-sm sm:text-base text-secondary font-sans leading-relaxed">

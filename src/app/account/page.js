@@ -126,7 +126,7 @@ function AccountPageContent() {
         {/* Header */}
         <div className="mb-5 sm:mb-6 card">
           <div className="text-center">
-            <h1 className="text-2xl sm:text-3xl lg:text-4xl font-bold font-title text-primary mb-4">My Account</h1>
+            <h1 className="text-2xl sm:text-3xl lg:text-4xl font-bold font-title text-primary mb-3 sm:mb-4">My Account</h1>
             <p className="text-sm sm:text-base text-secondary font-sans break-words leading-relaxed">Manage your account settings and profile information</p>
           </div>
         </div>
@@ -184,7 +184,7 @@ function AccountPageContent() {
 
               {/* Profile Info */}
               <div className="border-t border-[var(--separator-card)] pt-4 sm:pt-6">
-                <h3 className="text-lg sm:text-xl font-semibold font-title text-primary mb-2">
+                <h3 className="text-lg sm:text-xl font-semibold font-title text-primary">
                   Profile Info
                 </h3>
                 <div className="space-y-0">
@@ -204,7 +204,7 @@ function AccountPageContent() {
                   </div>
                   <div className="pt-4 sm:pt-5">
                     <p className="text-sm font-medium text-secondary mb-1">User ID</p>
-                    <p className="text-sm sm:text-base text-primary font-sans font-mono break-all">{user?.id || 'Not available'}</p>
+                    <p className="text-sm sm:text-base text-primary font-mono break-all">{user?.id || 'Not available'}</p>
                   </div>
                 </div>
               </div>

@@ -44,21 +44,21 @@ function formatBowelYesNo(value) {
 function getSeverityLabel(severity) {
   const n = Number(severity)
   if (!Number.isFinite(n)) return ''
-  if (n <= 2) return 'Very Mild'
-  if (n <= 4) return 'Mild'
+  if (n <= 2) return 'Mild'
+  if (n <= 4) return 'Slight'
   if (n <= 6) return 'Moderate'
   if (n <= 8) return 'Severe'
-  return 'Very Severe'
+  return 'Extreme'
 }
 
 function getStressLabel(stress) {
   const n = Number(stress)
   if (!Number.isFinite(n)) return ''
-  if (n <= 2) return 'Very Low'
-  if (n <= 4) return 'Low'
+  if (n <= 2) return 'Calm'
+  if (n <= 4) return 'A little'
   if (n <= 6) return 'Moderate'
-  if (n <= 8) return 'High'
-  return 'Very High'
+  if (n <= 8) return 'Stressed'
+  return 'Very stressed'
 }
 
 function formatMeals(symptom) {

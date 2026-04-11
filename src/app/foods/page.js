@@ -86,7 +86,7 @@ export default function Foods() {
           <div className="flex-1 lg:max-w-4xl order-1 lg:order-2">
         {/* Header */}
         <div className="mb-5 sm:mb-6 card ">
-          <h1 className="text-2xl sm:text-3xl lg:text-4xl font-bold font-title text-primary mb-4">
+          <h1 className="text-2xl sm:text-3xl lg:text-4xl font-bold font-title text-primary mb-3 sm:mb-4">
             Foods
           </h1>
           <p className="text-sm sm:text-base text-secondary break-words leading-relaxed">
@@ -98,7 +98,7 @@ export default function Foods() {
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-5 mb-5 sm:gap-6 sm:mb-6">
           {categories.map((category, index) => (
             <div key={index} className="card">
-              <div className="flex items-center gap-2 sm:gap-4 mb-4">
+              <div className="flex items-center gap-2 sm:gap-4 mb-3 sm:mb-4">
                 <span className="text-4xl">{category.emoji}</span>
                 <h2 className="text-xl font-semibold font-title text-primary">{category.title}</h2>
               </div>
@@ -122,7 +122,7 @@ export default function Foods() {
 
         {/* Tips Card */}
         <div className="card backdrop-blur-sm mb-5 sm:mb-6">
-          <h2 className="text-xl font-semibold font-title text-primary mb-4 sm:mb-6 flex items-center gap-2">
+          <h2 className="text-xl font-semibold font-title text-primary mb-3 sm:mb-6 flex items-center gap-2">
             <Lightbulb className="w-5 h-5 flex-shrink-0 text-amber-500" />
             Helpful Tips
           </h2>
@@ -149,7 +149,7 @@ export default function Foods() {
 
               {/* IBD-Friendly Foods */}
               <div className="card">
-                <h3 className="text-xl font-semibold font-title text-primary mb-4 sm:mb-6">IBD Foods</h3>
+                <h3 className="text-xl font-semibold font-title text-primary mb-3 sm:mb-6">IBD Foods</h3>
                 <div className="space-y-4">
                   <div className="card-inner p-4">
                     <h4 className="text-base font-semibold font-title text-primary mb-2 flex items-center gap-2">
@@ -183,7 +183,7 @@ export default function Foods() {
 
               {/* Quick Food Tips */}
               <div className="card p-4 sm:p-6">
-                <h3 className="text-xl font-semibold font-title text-primary mb-4 sm:mb-6">Quick Food Tips</h3>
+                <h3 className="text-xl font-semibold font-title text-primary mb-3 sm:mb-6">Quick Food Tips</h3>
                 <div className="space-y-3">
                   <div className="flex items-center gap-3">
                     <div className="w-8 h-8 min-w-[2rem] rounded-lg flex items-center justify-center card-inner">
@@ -228,8 +228,8 @@ export default function Foods() {
       <div>
         <div className="mt-5 sm:mt-6 max-w-[76rem] mx-auto px-0 sm:px-4 md:px-6 lg:px-0 lg:mt-0">
           <div className="card p-8 backdrop-blur-sm text-center">
-          <h2 className="text-xl font-semibold font-title text-primary mb-4 sm:mb-6">Track Your Meals</h2>
-          <p className="text-sm sm:text-base text-secondary  mb-6 leading-relaxed">
+          <h2 className="text-xl font-semibold font-title text-primary mb-3 sm:mb-6">Track Your Meals</h2>
+          <p className="text-sm sm:text-base text-secondary mb-4 sm:mb-6 leading-relaxed">
             Use the symptom tracker to log what you eat each day and monitor how different foods affect you.
           </p>
           <Link 

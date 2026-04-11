@@ -783,7 +783,7 @@ function ReportsPageContent() {
     if (hasTrackingData) {
       doc.setFontSize(16)
       doc.setFont('helvetica', 'bold')
-      doc.text('Medication logs', margin, yPosition)
+      doc.text('Medication Logs', margin, yPosition)
       yPosition += 10
 
       doc.setFontSize(12)
@@ -953,7 +953,7 @@ function ReportsPageContent() {
       }
       doc.setFontSize(16)
       doc.setFont('helvetica', 'bold')
-      doc.text('Bowel movements', margin, yPosition)
+      doc.text('Bowel Movements', margin, yPosition)
       yPosition += 10
 
       doc.setFontSize(12)
@@ -1420,19 +1420,23 @@ function ReportsPageContent() {
   }
 
   const getSeverityLabel = (severity) => {
-    if (severity <= 2) return 'Very Mild'
-    if (severity <= 4) return 'Mild'
-    if (severity <= 6) return 'Moderate'
-    if (severity <= 8) return 'Severe'
-    return 'Very Severe'
+    const n = Number(severity)
+    if (!Number.isFinite(n)) return ''
+    if (n <= 2) return 'Mild'
+    if (n <= 4) return 'Slight'
+    if (n <= 6) return 'Moderate'
+    if (n <= 8) return 'Severe'
+    return 'Extreme'
   }
 
   const getStressLabel = (stress) => {
-    if (stress <= 2) return 'Very Low'
-    if (stress <= 4) return 'Low'
-    if (stress <= 6) return 'Moderate'
-    if (stress <= 8) return 'High'
-    return 'Very High'
+    const n = Number(stress)
+    if (!Number.isFinite(n)) return ''
+    if (n <= 2) return 'Calm'
+    if (n <= 4) return 'A little'
+    if (n <= 6) return 'Moderate'
+    if (n <= 8) return 'Stressed'
+    return 'Very stressed'
   }
 
   const formatUKDate = (dateString) => {
@@ -1490,7 +1494,7 @@ function ReportsPageContent() {
       <div className="w-full sm:px-4 md:px-6 lg:px-8 min-w-0 min-h-screen">
         <div className="max-w-4xl mx-auto">
           <div className="mb-8 card">
-            <h1 className="text-2xl sm:text-3xl lg:text-4xl font-bold font-title text-primary mb-4">Reports</h1>
+            <h1 className="text-2xl sm:text-3xl lg:text-4xl font-bold font-title text-primary mb-3 sm:mb-6">Reports</h1>
             <p className="text-sm sm:text-base text-secondary font-sans">
               Generate reports from your records to support informed decisions about your care.
             </p>
@@ -1510,7 +1514,7 @@ function ReportsPageContent() {
       {emailToastPortal}
       <div className="max-w-4xl mx-auto">
       <div className="mb-5 sm:mb-6 card">
-        <h1 className="text-2xl sm:text-3xl lg:text-4xl font-bold font-title text-primary mb-4">Reports</h1>
+        <h1 className="text-2xl sm:text-3xl lg:text-4xl font-bold font-title text-primary mb-3 sm:mb-6">Reports</h1>
         <p className="text-sm sm:text-base text-secondary font-sans leading-relaxed">
           Generate reports from your records to support informed decisions about your care.
         </p>
@@ -1518,7 +1522,7 @@ function ReportsPageContent() {
 
       {/* Date Range Selector */}
       <div className="card mb-5 sm:mb-6">
-        <div className="flex items-center mb-6">
+        <div className="flex items-center mb-4 sm:mb-6">
           <div className="flex w-10 h-10 bg-orange-100 dashboard-icon-panel rounded-lg items-center justify-center mr-3 sm:mr-4 flex-shrink-0">
             <Calendar className="w-5 h-5 text-orange-600 dark:[color:var(--text-icon-more-reports)]" />
           </div>
@@ -1529,7 +1533,7 @@ function ReportsPageContent() {
         </p>
         
         {/* Quick Presets */}
-        <div className="flex flex-wrap gap-3 sm:gap-2 mb-6">
+        <div className="flex flex-wrap gap-3 mb-6">
           <button 
             onClick={() => {
               const endDate = new Date()
@@ -1540,7 +1544,7 @@ function ReportsPageContent() {
                 endDate: endDate.toISOString().split('T')[0]
               })
             }}
-            className="px-4 py-2 sm:px-3 sm:py-1 text-sm card-inner hover:bg-card-hover transition-colors font-sans"
+            className="px-4 py-2 text-sm sm:text-base sm:px-5 sm:py-2.5 card-inner hover:bg-card-hover transition-colors font-sans"
           >
             Last 7 days
           </button>
@@ -1554,7 +1558,7 @@ function ReportsPageContent() {
                 endDate: endDate.toISOString().split('T')[0]
               })
             }}
-            className="px-4 py-2 sm:px-3 sm:py-1 text-sm card-inner hover:bg-card-hover transition-colors font-sans"
+            className="px-4 py-2 text-sm sm:text-base sm:px-5 sm:py-2.5 card-inner hover:bg-card-hover transition-colors font-sans"
           >
             Last 30 days
           </button>
@@ -1568,7 +1572,7 @@ function ReportsPageContent() {
                 endDate: endDate.toISOString().split('T')[0]
               })
             }}
-            className="px-4 py-2 sm:px-3 sm:py-1 text-sm card-inner hover:bg-card-hover transition-colors font-sans"
+            className="px-4 py-2 text-sm sm:text-base sm:px-5 sm:py-2.5 card-inner hover:bg-card-hover transition-colors font-sans"
           >
             Last 3 months
           </button>
@@ -1581,7 +1585,7 @@ function ReportsPageContent() {
                 endDate: endDate.toISOString().split('T')[0]
               })
             }}
-            className="px-4 py-2 sm:px-3 sm:py-1 text-sm card-inner hover:bg-card-hover transition-colors font-sans"
+            className="px-4 py-2 text-sm sm:text-base sm:px-5 sm:py-2.5 card-inner hover:bg-card-hover transition-colors font-sans"
           >
             All time
           </button>
@@ -1665,7 +1669,7 @@ function ReportsPageContent() {
               Showing symptoms from {formatUKDate(dateRange.startDate)} to {formatUKDate(dateRange.endDate)}
             </div>
           )}
-          <div className="flex flex-wrap gap-3">
+          <div className="flex flex-wrap gap-3 my-2 sm:my-0 sm:mt-2">
             <button onClick={() => handleExportClick(exportToPDF)} className="inline-flex items-center justify-center px-4 py-2.5 sm:px-6 sm:py-3 button-cadet rounded-lg whitespace-nowrap text-sm sm:text-base">
               <FileText className="w-4 h-4 sm:w-5 sm:h-5 mr-2 shrink-0" />
               Export PDF
@@ -1759,10 +1763,10 @@ function ReportsPageContent() {
               <h2 className="text-lg sm:text-xl font-semibold font-title text-primary">
                 {expandedSections.medicationLogs ? (
                   <span className="inline-block pb-0.5 border-b" style={{ borderColor: 'var(--separator-card)' }}>
-                    Medication logs ({medicationLogsTotal})
+                    Medication Logs ({medicationLogsTotal})
                   </span>
                 ) : (
-                  `Medication logs (${medicationLogsTotal})`
+                  `Medication Logs (${medicationLogsTotal})`
                 )}
               </h2>
               <ChevronDown className={`w-5 h-5 text-secondary shrink-0 transition-transform ${expandedSections.medicationLogs ? 'rotate-180' : ''}`} />
@@ -2031,7 +2035,7 @@ function ReportsPageContent() {
               className={`flex items-center justify-between w-full text-left group ${expandedSections.bowelMovements ? 'mb-3 sm:mb-4' : ''}`}
             >
               <h2 className="min-w-0 pr-2 text-lg sm:text-xl font-semibold font-title text-primary">
-                Bowel movements ({reportData.bowelMovementEntries.length})
+                Bowel Movements ({reportData.bowelMovementEntries.length})
               </h2>
               <ChevronDown className={`w-5 h-5 text-secondary shrink-0 transition-transform ${expandedSections.bowelMovements ? 'rotate-180' : ''}`} />
             </button>
