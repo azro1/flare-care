@@ -537,9 +537,9 @@ function MedicationTrackingWizard() {
       return (
         <div className="mb-5">
           <div className="space-y-6">
-            <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center mb-3">
-              <div>
-                <h3 className="text-2xl sm:text-2xl md:text-3xl font-title font-bold text-primary mb-5">Which medications did you miss?</h3>
+            <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center mb-3 sm:mb-0">
+              <div className="min-w-0 self-start sm:self-center">
+                <h3 className="text-2xl sm:text-2xl md:text-3xl font-title font-bold text-primary mb-5 sm:mb-0">Which medications did you miss?</h3>
               </div>
               <button
                 onClick={addMissedMedication}
@@ -680,9 +680,9 @@ function MedicationTrackingWizard() {
       return (
         <div className="mb-5">
           <div className="space-y-6">
-            <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center mb-3">
-              <div>
-                <h3 className="text-2xl sm:text-2xl md:text-3xl font-title font-bold text-primary mb-5">Which NSAIDs did you take?</h3>
+            <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center mb-3 sm:mb-0">
+              <div className="min-w-0 self-start sm:self-center">
+                <h3 className="text-2xl sm:text-2xl md:text-3xl font-title font-bold text-primary mb-5 sm:mb-0">Which NSAIDs did you take?</h3>
               </div>
               <button
                 onClick={addNsaid}
@@ -833,9 +833,9 @@ function MedicationTrackingWizard() {
       return (
         <div className="mb-5">
           <div className="space-y-6">
-            <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center mb-3">
-              <div>
-                <h3 className="text-2xl sm:text-2xl md:text-3xl font-title font-bold text-primary mb-5">Which antibiotics did you take?</h3>
+            <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center mb-3 sm:mb-0">
+              <div className="min-w-0 self-start sm:self-center">
+                <h3 className="text-2xl sm:text-2xl md:text-3xl font-title font-bold text-primary mb-5 sm:mb-0">Which antibiotics did you take?</h3>
               </div>
               <button
                 onClick={addAntibiotic}

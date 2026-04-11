@@ -1006,7 +1006,7 @@ className="px-4 py-2 text-base sm:text-lg font-medium font-sans rounded-lg trans
               <span className="text-base sm:text-sm font-semibold text-primary font-title">Important:</span>
             </div>
             <p className="text-xs text-secondary font-sans leading-relaxed">
-              Enable Push notifications in Account settings to get reminders when the app is closed.
+              You need to enable push notifications in account settings to get reminders when the app is closed.
             </p>
           </div>
         </div>

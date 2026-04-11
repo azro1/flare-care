@@ -1169,7 +1169,7 @@ function SymptomsPageContent() {
         {/* Step 1: When did symptoms begin? */}
         {currentStep === 1 && (
           <div className="mb-5">
-            <h3 className="text-2xl sm:text-2xl md:text-3xl font-title font-bold text-primary mb-5">When did your symptoms begin?</h3>
+            <h3 className="text-2xl sm:text-2xl md:text-3xl font-title font-bold text-primary mb-2 sm:mb-5">When did your symptoms begin?</h3>
             <p className="text-sm text-muted mb-5">Select the date your symptoms started</p>
             <div>
               <label className="block text-base font-medium text-secondary mb-2">Date</label>
@@ -1266,7 +1266,7 @@ function SymptomsPageContent() {
         {/* Step 3: When did symptoms end? (only if not ongoing) */}
         {currentStep === 3 && (
           <div className="mb-5">
-            <h3 className="text-2xl sm:text-2xl md:text-3xl font-title font-bold text-primary mb-5">When did symptoms end?</h3>
+            <h3 className="text-2xl sm:text-2xl md:text-3xl font-title font-bold text-primary mb-2 sm:mb-5">When did symptoms end?</h3>
             <p className="text-sm text-muted mb-5">Select the date your symptoms ended</p>
             <div>
               <label className="block text-base font-medium text-secondary mb-2">Date</label>
@@ -1302,7 +1302,7 @@ function SymptomsPageContent() {
         {/* Step 4: Symptom Severity */}
         {currentStep === 4 && (
           <div className="mb-5">
-            <h3 className="text-2xl sm:text-2xl md:text-3xl font-title font-bold text-primary mb-5">
+            <h3 className="text-2xl sm:text-2xl md:text-3xl font-title font-bold text-primary mb-4 sm:mb-5">
               {formData.isOngoing ? 'How severe are your symptoms?' : 'How severe were your symptoms?'}
             </h3>
             <p className="text-sm text-muted mb-5">Choose the closest match.</p>
@@ -1346,7 +1346,7 @@ function SymptomsPageContent() {
         {/* Step 5: Stress Level */}
         {currentStep === 5 && (
           <div className="mb-5">
-            <h3 className="text-2xl sm:text-2xl md:text-3xl font-title font-bold text-primary mb-5">
+            <h3 className="text-2xl sm:text-2xl md:text-3xl font-title font-bold text-primary mb-4 sm:mb-5">
               {formData.isOngoing ? 'How stressed are you feeling?' : 'How stressed were you feeling during that time?'}
             </h3>
             <p className="text-sm text-muted mb-5">Choose the closest match.</p>
@@ -1390,7 +1390,7 @@ function SymptomsPageContent() {
         {/* Step 6: Bathroom Frequency */}
         {currentStep === 6 && (
           <div className="mb-5">
-            <h3 className="text-2xl sm:text-2xl md:text-3xl font-title font-bold text-primary mb-5">How many times a day do you usually empty your bowels?</h3>
+            <h3 className="text-2xl sm:text-2xl md:text-3xl font-title font-bold text-primary mb-2 sm:mb-5">How many times a day do you usually empty your bowels?</h3>
             <p className="text-sm text-muted mb-5">For example, '3' or '5'</p>
 
             <div className="w-14">
@@ -1485,7 +1485,7 @@ function SymptomsPageContent() {
         {/* Step 8: Bathroom Frequency Change Details */}
         {currentStep === 8 && (
           <div className="mb-5">
-            <h3 className="text-2xl sm:text-2xl md:text-3xl font-title font-bold text-primary mb-5">Describe your change</h3>
+            <h3 className="text-2xl sm:text-2xl md:text-3xl font-title font-bold text-primary mb-2 sm:mb-5">Describe your change</h3>
             <p className="text-sm text-muted mb-5">For example, 'increased to 8-10 times per day, blood present, mucus, loose stools'</p>
             <textarea
               id="bathroom_frequency_change_details"
@@ -1573,7 +1573,7 @@ function SymptomsPageContent() {
         {/* Step 10: Smoking details (only if they smoke) */}
         {currentStep === 10 && (
           <div className="mb-5">
-            <h3 className="text-2xl sm:text-2xl md:text-3xl font-title font-bold text-primary mb-5">
+            <h3 className="text-2xl sm:text-2xl md:text-3xl font-title font-bold text-primary mb-2 sm:mb-5">
               {isFirstTimeUser ? 'Please describe your smoking habits' : `How much did you smoke on ${new Date(formData.symptomStartDate).toLocaleDateString('en-GB', { day: 'numeric', month: 'short' })}?`}
             </h3>
             <p className="text-sm text-muted mb-5">
@@ -1669,9 +1669,9 @@ function SymptomsPageContent() {
         {/* Step 12: Alcohol details (only if they drink) */}
         {currentStep === 12 && (
           <div className="mb-5">
-            <h3 className="text-2xl sm:text-2xl md:text-3xl font-title font-bold text-primary mb-5">
-              {!isFirstTimeUser && userPreferences?.isDrinker 
-                ? `How many units of alcohol did you drink on ${new Date(formData.symptomStartDate).toLocaleDateString('en-GB', { day: 'numeric', month: 'short' })}?` 
+            <h3 className="text-2xl sm:text-2xl md:text-3xl font-title font-bold text-primary mb-2 sm:mb-5">
+              {!isFirstTimeUser && userPreferences?.isDrinker
+                ? `How many units of alcohol did you drink on ${new Date(formData.symptomStartDate).toLocaleDateString('en-GB', { day: 'numeric', month: 'short' })}?`
                 : 'How many units of alcohol do you drink per day?'}
             </h3>
             <p className="text-sm text-muted mb-5">For example, 0.5, 2 or 5</p>
@@ -1707,9 +1707,9 @@ function SymptomsPageContent() {
           <div className="mb-5">
             <div className="space-y-6">
             {/* Breakfast */}
-              <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center mb-3">
-                <div>
-                  <h3 className="text-2xl sm:text-2xl md:text-3xl font-title font-bold text-primary mb-5">
+              <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center mb-3 sm:mb-0">
+                <div className="min-w-0 self-start sm:self-center">
+                  <h3 className="text-2xl sm:text-2xl md:text-3xl font-title font-bold text-primary mb-5 sm:mb-0">
                     {getMealLabel('breakfast')}
                   </h3>
                 </div>
@@ -1797,9 +1797,9 @@ function SymptomsPageContent() {
           <div className="mb-5">
             <div className="space-y-6">
             {/* Lunch */}
-              <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center mb-3">
-                <div>
-                  <h3 className="text-2xl sm:text-2xl md:text-3xl font-title font-bold text-primary mb-5">
+              <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center mb-3 sm:mb-0">
+                <div className="min-w-0 self-start sm:self-center">
+                  <h3 className="text-2xl sm:text-2xl md:text-3xl font-title font-bold text-primary mb-5 sm:mb-0">
                     {getMealLabel('lunch')}
                   </h3>
                 </div>
@@ -1887,9 +1887,9 @@ function SymptomsPageContent() {
           <div className="mb-5">
             <div className="space-y-6">
 {/* Dinner */}
-              <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center mb-3">
-                <div>
-                  <h3 className="text-2xl sm:text-2xl md:text-3xl font-title font-bold text-primary mb-5">
+              <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center mb-3 sm:mb-0">
+                <div className="min-w-0 self-start sm:self-center">
+                  <h3 className="text-2xl sm:text-2xl md:text-3xl font-title font-bold text-primary mb-5 sm:mb-0">
                     {getMealLabel('dinner')}
                   </h3>
                 </div>
@@ -1975,7 +1975,7 @@ function SymptomsPageContent() {
         {/* Step 16: Additional Notes */}
         {currentStep === 16 && (
           <div className="mb-5">
-            <h3 className="text-2xl sm:text-2xl md:text-3xl font-title font-bold text-primary mb-5">Additional notes</h3>
+            <h3 className="text-2xl sm:text-2xl md:text-3xl font-title font-bold text-primary mb-4 sm:mb-5">Additional notes</h3>
             <p className="text-sm text-muted mb-5">Share any other details about your symptoms, how you're feeling, or triggers you noticed</p>            
             <div>
               <textarea
