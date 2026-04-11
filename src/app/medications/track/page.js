@@ -7,7 +7,7 @@ import ConfirmationModal from '@/components/ConfirmationModal'
 import ProtectedRoute from '@/components/ProtectedRoute'
 import DatePicker from 'react-datepicker'
 import 'react-datepicker/dist/react-datepicker.css'
-import { ChartLine, Calendar } from 'lucide-react'
+import { ChartLine, Calendar, Loader2 } from 'lucide-react'
 import { supabase, TABLES } from '@/lib/supabase'
 
 const MedicationDateInput = forwardRef(({ value, onClick, onChange, placeholder, id, className, onIconClick, ...rest }, ref) => (
@@ -473,7 +473,7 @@ function MedicationTrackingWizard() {
     if (currentStep === 1) {
       return (
         <div className="mb-5">
-          <h3 className="text-2xl sm:text-2xl md:text-3xl font-title font-bold text-primary mb-6">Did you miss any prescribed medications recently?</h3>
+          <h3 className="text-2xl sm:text-2xl md:text-3xl font-title font-bold text-primary mb-5">Did you miss any prescribed medications recently?</h3>
           <div className="flex space-x-8">
             <label className="flex items-center cursor-pointer">
               <div className="relative">
@@ -537,9 +537,9 @@ function MedicationTrackingWizard() {
       return (
         <div className="mb-5">
           <div className="space-y-6">
-            <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-3 mb-3">
+            <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center mb-3">
               <div>
-                <h3 className="text-2xl sm:text-2xl md:text-3xl font-title font-bold text-primary mb-2">Which medications did you miss?</h3>
+                <h3 className="text-2xl sm:text-2xl md:text-3xl font-title font-bold text-primary mb-5">Which medications did you miss?</h3>
               </div>
               <button
                 onClick={addMissedMedication}
@@ -616,7 +616,7 @@ function MedicationTrackingWizard() {
     if (currentStep === 3) {
       return (
         <div className="mb-5">
-          <h3 className="text-2xl sm:text-2xl md:text-3xl font-title font-bold text-primary mb-6">Did you take any NSAIDs (ibuprofen, naproxen, aspirin) recently?</h3>
+          <h3 className="text-2xl sm:text-2xl md:text-3xl font-title font-bold text-primary mb-5">Did you take any NSAIDs (ibuprofen, naproxen, aspirin) recently?</h3>
           <div className="flex space-x-8">
             <label className="flex items-center cursor-pointer">
               <div className="relative">
@@ -680,9 +680,9 @@ function MedicationTrackingWizard() {
       return (
         <div className="mb-5">
           <div className="space-y-6">
-            <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-3 mb-3">
+            <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center mb-3">
               <div>
-                <h3 className="text-2xl sm:text-2xl md:text-3xl font-title font-bold text-primary mb-2">Which NSAIDs did you take?</h3>
+                <h3 className="text-2xl sm:text-2xl md:text-3xl font-title font-bold text-primary mb-5">Which NSAIDs did you take?</h3>
               </div>
               <button
                 onClick={addNsaid}
@@ -769,7 +769,7 @@ function MedicationTrackingWizard() {
     if (currentStep === 5) {
       return (
         <div className="mb-5">
-          <h3 className="text-2xl sm:text-2xl md:text-3xl font-title font-bold text-primary mb-6">Did you take any antibiotics recently?</h3>
+          <h3 className="text-2xl sm:text-2xl md:text-3xl font-title font-bold text-primary mb-5">Did you take any antibiotics recently?</h3>
           <div className="flex space-x-8">
             <label className="flex items-center cursor-pointer">
               <div className="relative">
@@ -833,9 +833,9 @@ function MedicationTrackingWizard() {
       return (
         <div className="mb-5">
           <div className="space-y-6">
-            <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-3 mb-3">
+            <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center mb-3">
               <div>
-                <h3 className="text-2xl sm:text-2xl md:text-3xl font-title font-bold text-primary mb-2">Which antibiotics did you take?</h3>
+                <h3 className="text-2xl sm:text-2xl md:text-3xl font-title font-bold text-primary mb-5">Which antibiotics did you take?</h3>
               </div>
               <button
                 onClick={addAntibiotic}
@@ -927,7 +927,7 @@ function MedicationTrackingWizard() {
 
       return (
         <div className="space-y-6 sm:space-y-8">
-          <h2 className="text-2xl sm:text-2xl md:text-3xl font-bold font-title text-primary mb-6 sm:mb-8">
+          <h2 className="text-2xl sm:text-2xl md:text-3xl font-bold font-title text-primary">
             Review your entry
           </h2>
 
@@ -1093,9 +1093,16 @@ function MedicationTrackingWizard() {
               <button
                 onClick={handleSubmit}
                 disabled={isSubmitting}
-                className="button-cadet px-4 py-2 text-base sm:text-lg font-semibold rounded-lg transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+                className="button-cadet inline-flex min-w-[7.25rem] items-center justify-center px-4 py-2 text-base sm:text-lg font-semibold rounded-lg transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
               >
-                {isSubmitting ? 'Submitting...' : 'Submit'}
+                {isSubmitting ? (
+                  <>
+                    <Loader2 className="h-6 w-6 shrink-0 animate-spin" aria-hidden />
+                    <span className="sr-only">Submitting</span>
+                  </>
+                ) : (
+                  'Submit'
+                )}
               </button>
             )}
           </div>

@@ -10,7 +10,7 @@ import { supabase, TABLES, deleteFromSupabase } from '@/lib/supabase'
 import { useRouter, usePathname } from 'next/navigation'
 import { useAuth } from '@/lib/AuthContext'
 import { getUserPreferences, saveUserPreferences, updatePreference, checkHabitPattern } from '@/lib/userPreferences'
-import { Thermometer, Calendar } from 'lucide-react'
+import { Thermometer, Calendar, Loader2 } from 'lucide-react'
 
 const SymptomDateInput = forwardRef(({ value, onClick, onChange, placeholder, id, className, onIconClick, ...rest }, ref) => (
   <div className={`symptom-date-input-wrapper flex items-center input-field-wizard ${className ?? ''}`.trim()}>
@@ -1169,8 +1169,8 @@ function SymptomsPageContent() {
         {/* Step 1: When did symptoms begin? */}
         {currentStep === 1 && (
           <div className="mb-5">
-            <h3 className="text-2xl sm:text-2xl md:text-3xl font-title font-bold text-primary mb-2">When did your symptoms begin?</h3>
-            <p className="text-sm text-muted mb-6">Select the date your symptoms started</p>
+            <h3 className="text-2xl sm:text-2xl md:text-3xl font-title font-bold text-primary mb-5">When did your symptoms begin?</h3>
+            <p className="text-sm text-muted mb-5">Select the date your symptoms started</p>
             <div>
               <label className="block text-base font-medium text-secondary mb-2">Date</label>
               <div className="relative w-full sm:max-w-[150px]">
@@ -1205,7 +1205,7 @@ function SymptomsPageContent() {
         {/* Step 2: Are symptoms still ongoing? */}
         {currentStep === 2 && (
           <div className="mb-5">
-            <h3 className="text-2xl sm:text-2xl md:text-3xl font-title font-bold text-primary mb-6">Are symptoms still ongoing?</h3>
+            <h3 className="text-2xl sm:text-2xl md:text-3xl font-title font-bold text-primary mb-5">Are symptoms still ongoing?</h3>
             <div className="flex space-x-8">
               <label className="flex items-center cursor-pointer">
                   <div className="relative">
@@ -1266,8 +1266,8 @@ function SymptomsPageContent() {
         {/* Step 3: When did symptoms end? (only if not ongoing) */}
         {currentStep === 3 && (
           <div className="mb-5">
-            <h3 className="text-2xl sm:text-2xl md:text-3xl font-title font-bold text-primary mb-2">When did symptoms end?</h3>
-            <p className="text-sm text-muted mb-6">Select the date your symptoms ended</p>
+            <h3 className="text-2xl sm:text-2xl md:text-3xl font-title font-bold text-primary mb-5">When did symptoms end?</h3>
+            <p className="text-sm text-muted mb-5">Select the date your symptoms ended</p>
             <div>
               <label className="block text-base font-medium text-secondary mb-2">Date</label>
               <div className="relative w-full sm:max-w-[150px]">
@@ -1302,10 +1302,10 @@ function SymptomsPageContent() {
         {/* Step 4: Symptom Severity */}
         {currentStep === 4 && (
           <div className="mb-5">
-            <h3 className="text-2xl sm:text-2xl md:text-3xl font-title font-bold text-primary mb-2">
+            <h3 className="text-2xl sm:text-2xl md:text-3xl font-title font-bold text-primary mb-5">
               {formData.isOngoing ? 'How severe are your symptoms?' : 'How severe were your symptoms?'}
             </h3>
-            <p className="text-sm text-muted mb-4">Choose the closest match.</p>
+            <p className="text-sm text-muted mb-5">Choose the closest match.</p>
             <div className="w-full">
               <div
                 role="group"
@@ -1346,10 +1346,10 @@ function SymptomsPageContent() {
         {/* Step 5: Stress Level */}
         {currentStep === 5 && (
           <div className="mb-5">
-            <h3 className="text-2xl sm:text-2xl md:text-3xl font-title font-bold text-primary mb-2">
+            <h3 className="text-2xl sm:text-2xl md:text-3xl font-title font-bold text-primary mb-5">
               {formData.isOngoing ? 'How stressed are you feeling?' : 'How stressed were you feeling during that time?'}
             </h3>
-            <p className="text-sm text-muted mb-4">Choose the closest match.</p>
+            <p className="text-sm text-muted mb-5">Choose the closest match.</p>
             <div className="w-full">
               <div
                 role="group"
@@ -1390,8 +1390,8 @@ function SymptomsPageContent() {
         {/* Step 6: Bathroom Frequency */}
         {currentStep === 6 && (
           <div className="mb-5">
-            <h3 className="text-2xl sm:text-2xl md:text-3xl font-title font-bold text-primary mb-2">How many times a day do you usually empty your bowels?</h3>
-            <p className="text-sm text-muted mb-6">For example, '3' or '5'</p>
+            <h3 className="text-2xl sm:text-2xl md:text-3xl font-title font-bold text-primary mb-5">How many times a day do you usually empty your bowels?</h3>
+            <p className="text-sm text-muted mb-5">For example, '3' or '5'</p>
 
             <div className="w-14">
               <input
@@ -1422,7 +1422,7 @@ function SymptomsPageContent() {
         {/* Step 7: Bathroom Frequency Change Question */}
         {currentStep === 7 && (
           <div className="mb-5">
-            <h3 className="text-2xl sm:text-2xl md:text-3xl font-title font-bold text-primary mb-6">
+            <h3 className="text-2xl sm:text-2xl md:text-3xl font-title font-bold text-primary mb-5">
               {formData.isOngoing ? 'Have you noticed a change in bathroom frequency since symptoms started?' : 'Did you notice a change in bathroom frequency during that time?'}
             </h3>
             <div className="flex space-x-8">
@@ -1485,8 +1485,8 @@ function SymptomsPageContent() {
         {/* Step 8: Bathroom Frequency Change Details */}
         {currentStep === 8 && (
           <div className="mb-5">
-            <h3 className="text-2xl sm:text-2xl md:text-3xl font-title font-bold text-primary mb-2">Describe your change</h3>
-            <p className="text-sm text-muted mb-6">For example, 'increased to 8-10 times per day, blood present, mucus, loose stools'</p>
+            <h3 className="text-2xl sm:text-2xl md:text-3xl font-title font-bold text-primary mb-5">Describe your change</h3>
+            <p className="text-sm text-muted mb-5">For example, 'increased to 8-10 times per day, blood present, mucus, loose stools'</p>
             <textarea
               id="bathroom_frequency_change_details"
               name="bathroom_frequency_change_details"
@@ -1507,11 +1507,11 @@ function SymptomsPageContent() {
         {currentStep === 9 && (
           <div className="mb-5">
             {isFirstTimeUser ? (
-              <h3 className="text-2xl sm:text-2xl md:text-3xl font-title font-bold text-primary mb-6">Do you smoke?</h3>
+              <h3 className="text-2xl sm:text-2xl md:text-3xl font-title font-bold text-primary mb-5">Do you smoke?</h3>
             ) : userPreferences?.isSmoker ? (
-              <h3 className="text-2xl sm:text-2xl md:text-3xl font-title font-bold text-primary mb-6">Did you smoke on {new Date(formData.symptomStartDate).toLocaleDateString('en-GB', { day: 'numeric', month: 'short' })}?</h3>
+              <h3 className="text-2xl sm:text-2xl md:text-3xl font-title font-bold text-primary mb-5">Did you smoke on {new Date(formData.symptomStartDate).toLocaleDateString('en-GB', { day: 'numeric', month: 'short' })}?</h3>
             ) : (
-              <h3 className="text-2xl sm:text-2xl md:text-3xl font-title font-bold text-primary mb-6">Do you smoke?</h3>
+              <h3 className="text-2xl sm:text-2xl md:text-3xl font-title font-bold text-primary mb-5">Do you smoke?</h3>
             )}
             <div className="flex space-x-8">
               <label className="flex items-center cursor-pointer">
@@ -1573,10 +1573,10 @@ function SymptomsPageContent() {
         {/* Step 10: Smoking details (only if they smoke) */}
         {currentStep === 10 && (
           <div className="mb-5">
-            <h3 className="text-2xl sm:text-2xl md:text-3xl font-title font-bold text-primary mb-2">
+            <h3 className="text-2xl sm:text-2xl md:text-3xl font-title font-bold text-primary mb-5">
               {isFirstTimeUser ? 'Please describe your smoking habits' : `How much did you smoke on ${new Date(formData.symptomStartDate).toLocaleDateString('en-GB', { day: 'numeric', month: 'short' })}?`}
             </h3>
-            <p className="text-sm text-muted mb-6">
+            <p className="text-sm text-muted mb-5">
               {isFirstTimeUser 
                 ? "For example, '1 pack of cigarettes per day, occasional cigars'" 
                 : "For example, '5 cigarettes' or '1 cigar'"
@@ -1603,11 +1603,11 @@ function SymptomsPageContent() {
         {currentStep === 11 && (
           <div className="mb-5">
             {isFirstTimeUser ? (
-              <h3 className="text-2xl sm:text-2xl md:text-3xl font-title font-bold text-primary mb-6">Do you drink alcohol?</h3>
+              <h3 className="text-2xl sm:text-2xl md:text-3xl font-title font-bold text-primary mb-5">Do you drink alcohol?</h3>
             ) : userPreferences?.isDrinker ? (
-              <h3 className="text-2xl sm:text-2xl md:text-3xl font-title font-bold text-primary mb-6">Did you drink alcohol on {new Date(formData.symptomStartDate).toLocaleDateString('en-GB', { day: 'numeric', month: 'short' })}?</h3>
+              <h3 className="text-2xl sm:text-2xl md:text-3xl font-title font-bold text-primary mb-5">Did you drink alcohol on {new Date(formData.symptomStartDate).toLocaleDateString('en-GB', { day: 'numeric', month: 'short' })}?</h3>
             ) : (
-              <h3 className="text-2xl sm:text-2xl md:text-3xl font-title font-bold text-primary mb-6">Do you drink alcohol?</h3>
+              <h3 className="text-2xl sm:text-2xl md:text-3xl font-title font-bold text-primary mb-5">Do you drink alcohol?</h3>
             )}
             <div className="flex space-x-8">
               <label className="flex items-center cursor-pointer">
@@ -1669,12 +1669,12 @@ function SymptomsPageContent() {
         {/* Step 12: Alcohol details (only if they drink) */}
         {currentStep === 12 && (
           <div className="mb-5">
-            <h3 className="text-2xl sm:text-2xl md:text-3xl font-title font-bold text-primary mb-2">
+            <h3 className="text-2xl sm:text-2xl md:text-3xl font-title font-bold text-primary mb-5">
               {!isFirstTimeUser && userPreferences?.isDrinker 
                 ? `How many units of alcohol did you drink on ${new Date(formData.symptomStartDate).toLocaleDateString('en-GB', { day: 'numeric', month: 'short' })}?` 
                 : 'How many units of alcohol do you drink per day?'}
             </h3>
-            <p className="text-sm text-muted mb-6">For example, 0.5, 2 or 5</p>
+            <p className="text-sm text-muted mb-5">For example, 0.5, 2 or 5</p>
             <div className="w-20">
                 <input
                 type="number"
@@ -1707,9 +1707,9 @@ function SymptomsPageContent() {
           <div className="mb-5">
             <div className="space-y-6">
             {/* Breakfast */}
-              <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-3 mb-3">
+              <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center mb-3">
                 <div>
-                  <h3 className="text-2xl sm:text-2xl md:text-3xl font-title font-bold text-primary mb-2">
+                  <h3 className="text-2xl sm:text-2xl md:text-3xl font-title font-bold text-primary mb-5">
                     {getMealLabel('breakfast')}
                   </h3>
                 </div>
@@ -1797,9 +1797,9 @@ function SymptomsPageContent() {
           <div className="mb-5">
             <div className="space-y-6">
             {/* Lunch */}
-              <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-3 mb-3">
+              <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center mb-3">
                 <div>
-                  <h3 className="text-2xl sm:text-2xl md:text-3xl font-title font-bold text-primary mb-2">
+                  <h3 className="text-2xl sm:text-2xl md:text-3xl font-title font-bold text-primary mb-5">
                     {getMealLabel('lunch')}
                   </h3>
                 </div>
@@ -1887,9 +1887,9 @@ function SymptomsPageContent() {
           <div className="mb-5">
             <div className="space-y-6">
 {/* Dinner */}
-              <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-3 mb-3">
+              <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center mb-3">
                 <div>
-                  <h3 className="text-2xl sm:text-2xl md:text-3xl font-title font-bold text-primary mb-2">
+                  <h3 className="text-2xl sm:text-2xl md:text-3xl font-title font-bold text-primary mb-5">
                     {getMealLabel('dinner')}
                   </h3>
                 </div>
@@ -1975,8 +1975,8 @@ function SymptomsPageContent() {
         {/* Step 16: Additional Notes */}
         {currentStep === 16 && (
           <div className="mb-5">
-            <h3 className="text-2xl sm:text-2xl md:text-3xl font-title font-bold text-primary mb-6">Additional notes</h3>
-            <p className="text-sm text-muted mb-4">Share any other details about your symptoms, how you're feeling, or triggers you noticed</p>            
+            <h3 className="text-2xl sm:text-2xl md:text-3xl font-title font-bold text-primary mb-5">Additional notes</h3>
+            <p className="text-sm text-muted mb-5">Share any other details about your symptoms, how you're feeling, or triggers you noticed</p>            
             <div>
               <textarea
                 id="notes"
@@ -1993,7 +1993,7 @@ function SymptomsPageContent() {
         {/* Step 17: Review */}
         {currentStep === 17 && (
           <div className="space-y-6 sm:space-y-8">
-            <h2 className="text-2xl sm:text-2xl md:text-3xl font-bold font-title text-primary mb-6 sm:mb-8">
+            <h2 className="text-2xl sm:text-2xl md:text-3xl font-bold font-title text-primary">
               Review your entry
             </h2>
 
@@ -2152,9 +2152,16 @@ function SymptomsPageContent() {
               <button
                 onClick={handleSubmit}
                 disabled={isSubmitting}
-                className="px-4 py-2 bg-[#5F9EA0] text-white text-base sm:text-lg font-semibold rounded-lg hover:bg-button-cadet-hover transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+                className="inline-flex min-w-[7.25rem] items-center justify-center px-4 py-2 bg-[#5F9EA0] text-white text-base sm:text-lg font-semibold rounded-lg hover:bg-button-cadet-hover transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
               >
-                {isSubmitting ? 'Submitting...' : 'Submit'}
+                {isSubmitting ? (
+                  <>
+                    <Loader2 className="h-6 w-6 shrink-0 animate-spin" aria-hidden />
+                    <span className="sr-only">Submitting</span>
+                  </>
+                ) : (
+                  'Submit'
+                )}
               </button>
             )}
           </div>

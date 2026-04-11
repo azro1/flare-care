@@ -895,7 +895,7 @@ export default function Home() {
         {showAccountDeletedToast && (
           <div className="fixed top-24 right-4 z-50 rounded-xl shadow-lg flex items-center gap-3 px-4 py-3 max-w-sm" style={{ backgroundColor: 'var(--bg-dropdown)' }}>
             <div className="flex-shrink-0 flex items-center justify-center w-5 h-5 rounded-full bg-emerald-100 dark:bg-white" aria-hidden>
-              <svg className="w-3.5 h-3.5 text-black" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <svg className="w-3.5 h-3.5 text-emerald-600 dark:text-black" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.4} d="M5 13l4 4L19 7" />
               </svg>
             </div>
@@ -1105,7 +1105,7 @@ export default function Home() {
       {showToast && (
         <div className="fixed top-24 right-4 z-50 rounded-xl shadow-lg border border-white/10 dark:border-white/15 flex items-center gap-3 px-4 py-3 max-w-sm" style={{ backgroundColor: 'var(--bg-dropdown)' }}>
           <div className="flex-shrink-0 flex items-center justify-center w-5 h-5 rounded-full bg-emerald-100 dark:bg-white">
-            <svg className="w-3.5 h-3.5 text-black" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <svg className="w-3.5 h-3.5 text-emerald-600 dark:text-black" fill="none" stroke="currentColor" viewBox="0 0 24 24">
               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.4} d="M5 13l4 4L19 7" />
             </svg>
           </div>
@@ -1126,7 +1126,7 @@ export default function Home() {
       {showDeleteToast && (
         <div className="fixed top-24 right-4 z-50 rounded-xl shadow-lg border border-white/10 dark:border-white/15 flex items-center gap-3 px-4 py-3 max-w-sm" style={{ backgroundColor: 'var(--bg-dropdown)' }}>
           <div className="flex-shrink-0 flex items-center justify-center w-5 h-5 rounded-full bg-emerald-100 dark:bg-white">
-            <svg className="w-3.5 h-3.5 text-black" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <svg className="w-3.5 h-3.5 text-emerald-600 dark:text-black" fill="none" stroke="currentColor" viewBox="0 0 24 24">
               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.4} d="M5 13l4 4L19 7" />
             </svg>
           </div>
@@ -1146,7 +1146,7 @@ export default function Home() {
       {showMedicationToast && (
         <div className="fixed top-24 right-4 z-50 rounded-xl shadow-lg border border-white/10 dark:border-white/15 flex items-center gap-3 px-4 py-3 max-w-sm" style={{ backgroundColor: 'var(--bg-dropdown)' }}>
           <div className="flex-shrink-0 flex items-center justify-center w-5 h-5 rounded-full bg-emerald-100 dark:bg-white">
-            <svg className="w-3.5 h-3.5 text-black" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <svg className="w-3.5 h-3.5 text-emerald-600 dark:text-black" fill="none" stroke="currentColor" viewBox="0 0 24 24">
               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.4} d="M5 13l4 4L19 7" />
             </svg>
           </div>
@@ -1166,7 +1166,7 @@ export default function Home() {
       {showMedicationDeleteToast && (
         <div className="fixed top-24 right-4 z-50 rounded-xl shadow-lg border border-white/10 dark:border-white/15 flex items-center gap-3 px-4 py-3 max-w-sm" style={{ backgroundColor: 'var(--bg-dropdown)' }}>
           <div className="flex-shrink-0 flex items-center justify-center w-5 h-5 rounded-full bg-emerald-100 dark:bg-white">
-            <svg className="w-3.5 h-3.5 text-black" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <svg className="w-3.5 h-3.5 text-emerald-600 dark:text-black" fill="none" stroke="currentColor" viewBox="0 0 24 24">
               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.4} d="M5 13l4 4L19 7" />
             </svg>
           </div>
