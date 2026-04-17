@@ -241,8 +241,8 @@ function MedicationTrackingWizard() {
     container.scrollTop = container.scrollHeight
   }, [chatMessages, isChatLoading, entryMode])
 
-  // Freeze page scroll while FlareBot chat is active (not review). Extra rules vs AuthForm: lock html overflow,
-  // overscroll, and iOS scroll offset so the centered card does not rubber-band / drift on touch.
+  // Freeze page scroll while FlareBot chat is active (not review). Do not set overscroll-behavior:none or
+  // overflow:hidden on documentElement — that blocks mobile pull-to-refresh and natural reload gestures.
   useEffect(() => {
     if (!flareBotChatActive) return
 
@@ -258,11 +258,8 @@ function MedicationTrackingWizard() {
     body.style.width = '100%'
     body.style.height = '100%'
     body.style.overflow = 'hidden'
-    body.style.overscrollBehavior = 'none'
     body.style.backgroundColor = 'transparent'
 
-    html.style.overflow = 'hidden'
-    html.style.overscrollBehavior = 'none'
     html.style.background = 'var(--bg-main-gradient)'
     html.style.height = '100%'
 
@@ -277,11 +274,8 @@ function MedicationTrackingWizard() {
       body.style.width = ''
       body.style.height = ''
       body.style.overflow = ''
-      body.style.overscrollBehavior = ''
       body.style.backgroundColor = ''
 
-      html.style.overflow = ''
-      html.style.overscrollBehavior = ''
       html.style.background = ''
       html.style.height = ''
 
