@@ -1,6 +1,8 @@
 'use client'
 
 import { useState, useEffect, useRef, forwardRef } from 'react'
+import { useForm } from 'react-hook-form'
+import { validateMedicationChatName } from '@/lib/validation/medicationChat'
 import { useRouter } from 'next/navigation'
 import { useAuth } from '@/lib/AuthContext'
 import ConfirmationModal from '@/components/ConfirmationModal'
@@ -99,7 +101,6 @@ function MedicationTrackingWizard() {
   const [isMobile, setIsMobile] = useState(false)
   const [entryMode, setEntryMode] = useState('wizard')
   const [chatMessages, setChatMessages] = useState([])
-  const [chatInput, setChatInput] = useState('')
   const [chatDraft, setChatDraft] = useState(INITIAL_CHAT_DRAFT)
   const [chatStatus, setChatStatus] = useState('needs_more_info')
   const [chatMissingFields, setChatMissingFields] = useState([])
@@ -110,15 +111,22 @@ function MedicationTrackingWizard() {
   const chatScrollRef = useRef(null)
   const chatHydratedRef = useRef(false)
   const enableMedicationChat = process.env.NEXT_PUBLIC_ENABLE_MEDICATION_CHATBOT === 'true'
-  const flareBotChatActive =
-    enableMedicationChat &&
-    currentStep === 0 &&
-    entryMode === 'chat' &&
-    chatStatus !== 'ready_for_review'
+  const chatOnStep0 = currentStep === 0 && entryMode === 'chat'
   const sleep = (ms) => new Promise((resolve) => setTimeout(resolve, ms))
   const missedMedDatePickerRefs = useRef({})
   const nsaidDatePickerRefs = useRef({})
   const antibioticDatePickerRefs = useRef({})
+
+  const {
+    register: registerChatMessage,
+    reset: resetChatForm,
+    watch: watchChatMessage,
+    getValues,
+  } = useForm({
+    defaultValues: { message: '' },
+  })
+
+  const chatMessageValue = watchChatMessage('message')
 
   // Detect mobile for DatePicker
   useEffect(() => {
@@ -288,12 +296,10 @@ function MedicationTrackingWizard() {
     }
   }, [])
 
-  // Prevent body scrolling: wizard landing (step 0) OR FlareBot chat — same pattern as AuthForm.js (sign-in).
-  // Must be one effect: previously step-0 logic set body to static whenever entryMode === 'chat', undoing the chat lock.
+  // Prevent body scrolling on manual wizard landing only (AuthForm-style). FlareBot chat does not lock the page
+  // so shorter viewports can scroll to the full chat card.
   useEffect(() => {
-    const lockBody =
-      currentStep === 0 &&
-      (entryMode === 'wizard' || flareBotChatActive)
+    const lockBody = currentStep === 0 && entryMode === 'wizard'
 
     if (lockBody) {
       document.body.style.position = 'fixed'
@@ -319,7 +325,7 @@ function MedicationTrackingWizard() {
       document.documentElement.style.background = ''
       document.documentElement.style.height = ''
     }
-  }, [currentStep, entryMode, flareBotChatActive])
+  }, [currentStep, entryMode])
 
   // Smart navigation - calculate which steps should be shown
   const getVisibleSteps = () => {
@@ -616,7 +622,7 @@ function MedicationTrackingWizard() {
     if (!keepMode) {
       setEntryMode('wizard')
     }
-    setChatInput('')
+    resetChatForm({ message: '' })
     setChatDraft(INITIAL_CHAT_DRAFT)
     setChatStatus('needs_more_info')
     setChatReadyMessage('')
@@ -695,10 +701,18 @@ function MedicationTrackingWizard() {
   }
 
   const submitChatMessage = async () => {
-    const trimmed = chatInput.trim()
+    const trimmed = getValues('message').trim()
     if (!trimmed || isChatLoading) return
+    const nameErr = validateMedicationChatName(trimmed, chatDraft?.meta?.stage)
+    if (nameErr) {
+      addChatMessage('user', trimmed)
+      resetChatForm({ message: '' })
+      await sleep(400)
+      addChatMessage('assistant', nameErr)
+      return
+    }
     addChatMessage('user', trimmed)
-    setChatInput('')
+    resetChatForm({ message: '' })
     await sendChatTurn(trimmed)
   }
 
@@ -1301,7 +1315,7 @@ function MedicationTrackingWizard() {
 
   return (
     <div
-      className={`medications-wizard max-w-4xl w-full mx-auto sm:px-4 md:px-6 lg:px-8 min-w-0 flex flex-col sm:flex-grow ${flareBotChatActive ? 'min-h-0 flex-1 justify-start sm:justify-center' : 'justify-center'} ${currentStep > 0 ? 'pb-28 lg:pb-0' : ''}`}
+      className={`medications-wizard max-w-4xl w-full mx-auto sm:px-4 md:px-6 lg:px-8 min-w-0 flex flex-col justify-center sm:flex-grow ${currentStep > 0 ? 'pb-28 lg:pb-0' : ''}`}
     >
       {/* Header: Back when needed, then title - hide on landing */}
       {currentStep > 0 && (
@@ -1363,7 +1377,7 @@ function MedicationTrackingWizard() {
         )}
 
         {currentStep === 0 && entryMode === 'chat' && chatStatus !== 'ready_for_review' && (
-          <div className="card border" style={{ borderColor: 'var(--border-card)' }}>
+          <div className="card border mb-24 sm:mb-0" style={{ borderColor: 'var(--border-card)' }}>
               <div className="flex items-center justify-between mb-4">
                 <h3 className="text-xl sm:text-2xl font-title font-bold text-primary inline-flex items-start sm:items-center gap-2">
                   <MessageCircle className="w-6 h-6 text-cadet-blue" />
@@ -1435,37 +1449,37 @@ function MedicationTrackingWizard() {
               </div>
 
               <div className="flex gap-2 mb-4">
-                <input
-                  type="text"
-                  value={chatInput}
-                  onChange={(e) => setChatInput(e.target.value)}
-                  onKeyDown={(e) => {
-                    if (e.key === 'Enter') {
-                      e.preventDefault()
-                      submitChatMessage()
-                    }
-                  }}
-                  placeholder="Type your answer..."
-                  className="input-field-wizard flex-1"
-                  disabled={isChatLoading}
-                />
-                <button
-                  type="button"
-                  onClick={submitChatMessage}
-                  disabled={isChatLoading || !chatInput.trim()}
-                  className={`px-4 py-2 rounded-lg font-semibold border ${isChatLoading || !chatInput.trim() ? 'button-disabled' : 'button-cadet'}`}
-                  style={isChatLoading || !chatInput.trim()
-                    ? {
-                        backgroundColor: 'var(--bg-button-disabled)',
-                        color: 'var(--text-button-disabled)',
-                        border: '1px solid var(--border-input-dark)',
+                  <input
+                    type="text"
+                    {...registerChatMessage('message')}
+                    onKeyDown={(e) => {
+                      if (e.key === 'Enter') {
+                        e.preventDefault()
+                        submitChatMessage()
                       }
-                    : {
-                        border: '1px solid var(--bg-button-cadet)',
-                      }}
-                >
-                  Send
-                </button>
+                    }}
+                    placeholder="Type your answer..."
+                    className="input-field-wizard flex-1"
+                    disabled={isChatLoading}
+                    autoComplete="off"
+                  />
+                  <button
+                    type="button"
+                    onClick={submitChatMessage}
+                    disabled={isChatLoading || !String(chatMessageValue || '').trim()}
+                    className={`px-4 py-2 rounded-lg font-semibold border ${isChatLoading || !String(chatMessageValue || '').trim() ? 'button-disabled' : 'button-cadet'}`}
+                    style={isChatLoading || !String(chatMessageValue || '').trim()
+                      ? {
+                          backgroundColor: 'var(--bg-button-disabled)',
+                          color: 'var(--text-button-disabled)',
+                          border: '1px solid var(--border-input-dark)',
+                        }
+                      : {
+                          border: '1px solid var(--bg-button-cadet)',
+                        }}
+                  >
+                    Send
+                  </button>
               </div>
 
               {chatError && (
@@ -1485,7 +1499,7 @@ function MedicationTrackingWizard() {
         )}
 
         {currentStep === 0 && entryMode === 'chat' && chatStatus === 'ready_for_review' && (
-          <div className="card border" style={{ borderColor: 'var(--border-card)' }}>
+          <div className="card border mb-24 sm:mb-0" style={{ borderColor: 'var(--border-card)' }}>
               <div className="flex items-center justify-between mb-4">
                 <h3 className="text-xl sm:text-2xl font-title font-bold text-primary inline-flex items-start sm:items-center gap-2">
                   <MessageCircle className="w-6 h-6 text-cadet-blue" />
