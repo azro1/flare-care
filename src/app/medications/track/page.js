@@ -110,6 +110,11 @@ function MedicationTrackingWizard() {
   const chatScrollRef = useRef(null)
   const chatHydratedRef = useRef(false)
   const enableMedicationChat = process.env.NEXT_PUBLIC_ENABLE_MEDICATION_CHATBOT === 'true'
+  const flareBotChatActive =
+    enableMedicationChat &&
+    currentStep === 0 &&
+    entryMode === 'chat' &&
+    chatStatus !== 'ready_for_review'
   const sleep = (ms) => new Promise((resolve) => setTimeout(resolve, ms))
   const missedMedDatePickerRefs = useRef({})
   const nsaidDatePickerRefs = useRef({})
@@ -236,29 +241,54 @@ function MedicationTrackingWizard() {
     container.scrollTop = container.scrollHeight
   }, [chatMessages, isChatLoading, entryMode])
 
-  // Same as AuthForm: freeze page scroll while the chat UI is active (not review — long lists need normal scroll).
+  // Freeze page scroll while FlareBot chat is active (not review). Extra rules vs AuthForm: lock html overflow,
+  // overscroll, and iOS scroll offset so the centered card does not rubber-band / drift on touch.
   useEffect(() => {
-    if (!enableMedicationChat) return
-    const lockBody =
-      currentStep === 0 && entryMode === 'chat' && chatStatus !== 'ready_for_review'
-    if (!lockBody) return
+    if (!flareBotChatActive) return
 
-    document.body.style.position = 'fixed'
-    document.body.style.width = '100%'
-    document.body.style.height = '100%'
-    document.body.style.backgroundColor = 'transparent'
-    document.documentElement.style.background = 'var(--bg-main-gradient)'
-    document.documentElement.style.height = '100%'
+    const html = document.documentElement
+    const body = document.body
+    const scrollY = window.scrollY
+
+    body.dataset.flarecarePrevScroll = String(scrollY)
+    body.style.position = 'fixed'
+    body.style.top = `-${scrollY}px`
+    body.style.left = '0'
+    body.style.right = '0'
+    body.style.width = '100%'
+    body.style.height = '100%'
+    body.style.overflow = 'hidden'
+    body.style.overscrollBehavior = 'none'
+    body.style.backgroundColor = 'transparent'
+
+    html.style.overflow = 'hidden'
+    html.style.overscrollBehavior = 'none'
+    html.style.background = 'var(--bg-main-gradient)'
+    html.style.height = '100%'
 
     return () => {
-      document.body.style.position = 'static'
-      document.body.style.width = 'auto'
-      document.body.style.height = 'auto'
-      document.body.style.backgroundColor = ''
-      document.documentElement.style.background = ''
-      document.documentElement.style.height = ''
+      const prev = body.dataset.flarecarePrevScroll
+      delete body.dataset.flarecarePrevScroll
+
+      body.style.position = ''
+      body.style.top = ''
+      body.style.left = ''
+      body.style.right = ''
+      body.style.width = ''
+      body.style.height = ''
+      body.style.overflow = ''
+      body.style.overscrollBehavior = ''
+      body.style.backgroundColor = ''
+
+      html.style.overflow = ''
+      html.style.overscrollBehavior = ''
+      html.style.background = ''
+      html.style.height = ''
+
+      const y = prev != null ? Number(prev) : 0
+      window.scrollTo(0, Number.isFinite(y) ? y : 0)
     }
-  }, [enableMedicationChat, currentStep, entryMode, chatStatus])
+  }, [flareBotChatActive])
 
   // Default date to today when reaching relevant step for any items with null/empty date
   useEffect(() => {
@@ -1322,7 +1352,9 @@ function MedicationTrackingWizard() {
   }
 
   return (
-    <div className={`medications-wizard max-w-4xl w-full mx-auto sm:px-4 md:px-6 lg:px-8 min-w-0 flex flex-col justify-center sm:flex-grow ${currentStep > 0 ? 'pb-28 lg:pb-0' : ''}`}>
+    <div
+      className={`medications-wizard max-w-4xl w-full mx-auto sm:px-4 md:px-6 lg:px-8 min-w-0 flex flex-col sm:flex-grow ${flareBotChatActive ? 'min-h-0 flex-1 justify-start sm:justify-center' : 'justify-center'} ${currentStep > 0 ? 'pb-28 lg:pb-0' : ''}`}
+    >
       {/* Header: Back when needed, then title - hide on landing */}
       {currentStep > 0 && (
         <div className="pt-6 md:pt-0 mb-8">
@@ -1404,7 +1436,7 @@ function MedicationTrackingWizard() {
 
               <div
                 ref={chatScrollRef}
-                className="rounded-lg border p-3 h-80 overflow-y-auto space-y-3 mb-4"
+                className="rounded-lg border p-3 h-80 overflow-y-auto overscroll-y-contain space-y-3 mb-4 touch-pan-y"
                 style={{ borderColor: 'var(--border-card)' }}
               >
                 {chatMessages.map((msg) => (
