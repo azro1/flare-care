@@ -241,49 +241,6 @@ function MedicationTrackingWizard() {
     container.scrollTop = container.scrollHeight
   }, [chatMessages, isChatLoading, entryMode])
 
-  // Freeze page scroll while FlareBot chat is active (not review). Do not set overscroll-behavior:none or
-  // overflow:hidden on documentElement — that blocks mobile pull-to-refresh and natural reload gestures.
-  useEffect(() => {
-    if (!flareBotChatActive) return
-
-    const html = document.documentElement
-    const body = document.body
-    const scrollY = window.scrollY
-
-    body.dataset.flarecarePrevScroll = String(scrollY)
-    body.style.position = 'fixed'
-    body.style.top = `-${scrollY}px`
-    body.style.left = '0'
-    body.style.right = '0'
-    body.style.width = '100%'
-    body.style.height = '100%'
-    body.style.overflow = 'hidden'
-    body.style.backgroundColor = 'transparent'
-
-    html.style.background = 'var(--bg-main-gradient)'
-    html.style.height = '100%'
-
-    return () => {
-      const prev = body.dataset.flarecarePrevScroll
-      delete body.dataset.flarecarePrevScroll
-
-      body.style.position = ''
-      body.style.top = ''
-      body.style.left = ''
-      body.style.right = ''
-      body.style.width = ''
-      body.style.height = ''
-      body.style.overflow = ''
-      body.style.backgroundColor = ''
-
-      html.style.background = ''
-      html.style.height = ''
-
-      const y = prev != null ? Number(prev) : 0
-      window.scrollTo(0, Number.isFinite(y) ? y : 0)
-    }
-  }, [flareBotChatActive])
-
   // Default date to today when reaching relevant step for any items with null/empty date
   useEffect(() => {
     if (currentStep === 2) {
@@ -331,23 +288,21 @@ function MedicationTrackingWizard() {
     }
   }, [])
 
-  // ✅ Prevent body scrolling only on wizard landing page
+  // Prevent body scrolling: wizard landing (step 0) OR FlareBot chat — same pattern as AuthForm.js (sign-in).
+  // Must be one effect: previously step-0 logic set body to static whenever entryMode === 'chat', undoing the chat lock.
   useEffect(() => {
-    // Apply fixed positioning only on manual wizard landing page (step 0)
-    if (currentStep === 0 && entryMode === 'wizard') {
-      // Freeze scroll
+    const lockBody =
+      currentStep === 0 &&
+      (entryMode === 'wizard' || flareBotChatActive)
+
+    if (lockBody) {
       document.body.style.position = 'fixed'
       document.body.style.width = '100%'
       document.body.style.height = '100%'
-    
-      // Apply gradient to html element since body is fixed
-      // Use CSS variable to respect light/dark mode
-      const bgMain = getComputedStyle(document.documentElement).getPropertyValue('--bg-main').trim()
       document.body.style.backgroundColor = 'transparent'
-      document.documentElement.style.background = bgMain || '#f8fafc' // Fallback to light mode default
+      document.documentElement.style.background = 'var(--bg-main-gradient)'
       document.documentElement.style.height = '100%'
     } else {
-      // Reset styles when on question pages
       document.body.style.position = 'static'
       document.body.style.width = 'auto'
       document.body.style.height = 'auto'
@@ -355,8 +310,7 @@ function MedicationTrackingWizard() {
       document.documentElement.style.background = ''
       document.documentElement.style.height = ''
     }
-  
-    // 🧹 Cleanup on unmount
+
     return () => {
       document.body.style.position = 'static'
       document.body.style.width = 'auto'
@@ -365,7 +319,7 @@ function MedicationTrackingWizard() {
       document.documentElement.style.background = ''
       document.documentElement.style.height = ''
     }
-  }, [currentStep, entryMode])
+  }, [currentStep, entryMode, flareBotChatActive])
 
   // Smart navigation - calculate which steps should be shown
   const getVisibleSteps = () => {
