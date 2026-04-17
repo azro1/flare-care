@@ -154,7 +154,7 @@ export default function WeatherHero({
             {children}
           </div>
         )}
-        <div className="flex items-center gap-4 -mb-2">
+        <div className="flex items-center gap-4 -mb-3">
           <div className="w-20 h-20 sm:w-22 sm:h-22 flex items-center justify-center">
             {iconSrc ? (
               <Image

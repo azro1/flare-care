@@ -236,6 +236,30 @@ function MedicationTrackingWizard() {
     container.scrollTop = container.scrollHeight
   }, [chatMessages, isChatLoading, entryMode])
 
+  // Same as AuthForm: freeze page scroll while the chat UI is active (not review — long lists need normal scroll).
+  useEffect(() => {
+    if (!enableMedicationChat) return
+    const lockBody =
+      currentStep === 0 && entryMode === 'chat' && chatStatus !== 'ready_for_review'
+    if (!lockBody) return
+
+    document.body.style.position = 'fixed'
+    document.body.style.width = '100%'
+    document.body.style.height = '100%'
+    document.body.style.backgroundColor = 'transparent'
+    document.documentElement.style.background = 'var(--bg-main-gradient)'
+    document.documentElement.style.height = '100%'
+
+    return () => {
+      document.body.style.position = 'static'
+      document.body.style.width = 'auto'
+      document.body.style.height = 'auto'
+      document.body.style.backgroundColor = ''
+      document.documentElement.style.background = ''
+      document.documentElement.style.height = ''
+    }
+  }, [enableMedicationChat, currentStep, entryMode, chatStatus])
+
   // Default date to today when reaching relevant step for any items with null/empty date
   useEffect(() => {
     if (currentStep === 2) {
