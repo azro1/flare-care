@@ -7,7 +7,7 @@ import ConfirmationModal from '@/components/ConfirmationModal'
 import ProtectedRoute from '@/components/ProtectedRoute'
 import DatePicker from 'react-datepicker'
 import 'react-datepicker/dist/react-datepicker.css'
-import { ChartLine, Calendar, Loader2, MessageCircle } from 'lucide-react'
+import { ChartLine, Calendar, Loader2, MessageCircle, Bot } from 'lucide-react'
 import { supabase, TABLES } from '@/lib/supabase'
 
 const MedicationDateInput = forwardRef(({ value, onClick, onChange, placeholder, id, className, onIconClick, ...rest }, ref) => (
@@ -36,6 +36,15 @@ const MedicationDateInput = forwardRef(({ value, onClick, onChange, placeholder,
   </div>
 ))
 MedicationDateInput.displayName = 'MedicationDateInput'
+
+const INITIAL_CHAT_DRAFT = {
+  missedMedications: [],
+  nsaids: [],
+  antibiotics: [],
+  meta: { stage: 'missed_yes_no', skipped: { missed: false, nsaid: false, antibiotic: false }, currentEntry: {} },
+}
+
+const CHAT_FIRST_QUESTION = 'Did you miss any prescribed medications recently? Reply yes or no.'
 
 function MedicationTrackingWizard() {
   const router = useRouter()
@@ -91,12 +100,7 @@ function MedicationTrackingWizard() {
   const [entryMode, setEntryMode] = useState('wizard')
   const [chatMessages, setChatMessages] = useState([])
   const [chatInput, setChatInput] = useState('')
-  const [chatDraft, setChatDraft] = useState({
-    missedMedications: [],
-    nsaids: [],
-    antibiotics: [],
-    meta: { stage: 'missed_yes_no', skipped: { missed: false, nsaid: false, antibiotic: false }, currentEntry: {} },
-  })
+  const [chatDraft, setChatDraft] = useState(INITIAL_CHAT_DRAFT)
   const [chatStatus, setChatStatus] = useState('needs_more_info')
   const [chatMissingFields, setChatMissingFields] = useState([])
   const [chatWarnings, setChatWarnings] = useState([])
@@ -606,6 +610,24 @@ function MedicationTrackingWizard() {
     setChatMessages(prev => [...prev, { id: `${Date.now()}-${Math.random()}`, role, content }])
   }
 
+  const resetChatState = ({ keepMode = true, seedFirstQuestion = false } = {}) => {
+    if (!keepMode) {
+      setEntryMode('wizard')
+    }
+    setChatInput('')
+    setChatDraft(INITIAL_CHAT_DRAFT)
+    setChatStatus('needs_more_info')
+    setChatReadyMessage('')
+    setChatMissingFields([])
+    setChatWarnings([])
+    setChatError('')
+    setChatMessages(
+      seedFirstQuestion
+        ? [{ id: `bot-reset-${Date.now()}`, role: 'assistant', content: CHAT_FIRST_QUESTION }]
+        : []
+    )
+  }
+
   const sendChatTurn = async (message, options = {}) => {
     const { immediate = false } = options
     if (!immediate) {
@@ -633,11 +655,21 @@ function MedicationTrackingWizard() {
       setChatMissingFields(Array.isArray(data?.missingFields) ? data.missingFields : [])
       setChatWarnings(Array.isArray(data?.warnings) ? data.warnings : [])
       const nextStatus = data?.status || 'needs_more_info'
+      const nextDraft = data?.draft || chatDraft
+      const hasAnyChatEntries =
+        (nextDraft?.missedMedications?.length || 0) > 0 ||
+        (nextDraft?.nsaids?.length || 0) > 0 ||
+        (nextDraft?.antibiotics?.length || 0) > 0
       // Small delay so assistant replies feel conversational (except initial prompt).
       if (!immediate) {
         await sleep(500)
       }
       if (nextStatus === 'ready_for_review') {
+        if (!hasAnyChatEntries) {
+          setShowNoDataModal(true)
+          resetChatState({ seedFirstQuestion: true })
+          return
+        }
         setChatReadyMessage(data?.assistantMessage || 'Thanks — review what we captured below, then confirm to save.')
         setChatStatus('ready_for_review')
       } else {
@@ -656,18 +688,7 @@ function MedicationTrackingWizard() {
 
   const startChatMode = async () => {
     setEntryMode('chat')
-    setChatMessages([])
-    setChatInput('')
-    setChatDraft({
-      missedMedications: [],
-      nsaids: [],
-      antibiotics: [],
-      meta: { stage: 'missed_yes_no', skipped: { missed: false, nsaid: false, antibiotic: false }, currentEntry: {} },
-    })
-    setChatStatus('needs_more_info')
-    setChatReadyMessage('')
-    setChatMissingFields([])
-    setChatWarnings([])
+    resetChatState()
     await sendChatTurn('', { immediate: true })
   }
 
@@ -1277,7 +1298,7 @@ function MedicationTrackingWizard() {
   }
 
   return (
-    <div className={`medications-wizard max-w-4xl w-full mx-auto sm:px-4 md:px-6 lg:px-8 min-w-0 flex flex-col justify-center sm:flex-grow ${(currentStep > 0 || entryMode === 'chat') ? 'pb-28 lg:pb-0' : ''}`}>
+    <div className={`medications-wizard max-w-4xl w-full mx-auto sm:px-4 md:px-6 lg:px-8 min-w-0 flex flex-col justify-center sm:flex-grow ${currentStep > 0 ? 'pb-28 lg:pb-0' : ''}`}>
       {/* Header: Back when needed, then title - hide on landing */}
       {currentStep > 0 && (
         <div className="pt-6 md:pt-0 mb-8">
@@ -1328,7 +1349,7 @@ function MedicationTrackingWizard() {
             {enableMedicationChat && (
               <button
                 onClick={startChatMode}
-                className="mt-3 px-4 py-2 text-base sm:text-lg font-semibold rounded-lg border border-cadet-blue text-cadet-blue hover:opacity-90 transition-opacity inline-flex items-center gap-2"
+                className="mt-3 px-4 py-2 text-base sm:text-lg font-semibold rounded-lg text-cadet-blue hover:opacity-90 transition-opacity inline-flex items-center gap-2"
               >
                 <MessageCircle className="w-5 h-5" />
                 FlareBot (Beta)
@@ -1359,7 +1380,7 @@ function MedicationTrackingWizard() {
 
               <div
                 ref={chatScrollRef}
-                className="rounded-lg border p-3 h-72 overflow-y-auto space-y-3 mb-4"
+                className="rounded-lg border p-3 h-80 overflow-y-auto space-y-3 mb-4"
                 style={{ borderColor: 'var(--border-card)' }}
               >
                 {chatMessages.map((msg) => (
@@ -1367,24 +1388,22 @@ function MedicationTrackingWizard() {
                     <div className={`flex items-start gap-2 max-w-[92%] ${msg.role === 'user' ? 'flex-row-reverse' : ''}`}>
                       {msg.role !== 'user' && (
                         <div
-                          className="w-7 h-7 rounded-full flex items-center justify-center text-sm shrink-0 mt-0.5 card-inner"
-                          style={{
-                            color: 'var(--text-icon)',
-                          }}
+                          className="w-7 h-7 rounded-full flex items-center justify-center shrink-0 mt-0.5 card-inner"
+                          style={{ color: 'var(--text-cadet-blue)' }}
                           aria-hidden
                         >
-                          🤖
+                          <Bot className="w-4 h-4" />
                         </div>
                       )}
                       <div
-                        className={`max-w-full px-3 py-2 rounded-lg text-sm ${
+                      className={`max-w-full px-3 py-2 rounded-lg text-sm ${
                           msg.role === 'user'
-                            ? 'text-white'
-                            : 'text-primary card-inner'
+                          ? 'text-white'
+                          : 'text-primary card-inner'
                         }`}
-                        style={msg.role === 'user'
-                          ? { backgroundColor: 'var(--text-cadet-blue)' }
-                          : undefined}
+                      style={msg.role === 'user'
+                        ? { backgroundColor: 'var(--text-cadet-blue)' }
+                        : undefined}
                       >
                         {msg.content}
                       </div>
@@ -1395,16 +1414,16 @@ function MedicationTrackingWizard() {
                   <div className="flex justify-start">
                     <div className="flex items-start gap-2 max-w-[92%]">
                       <div
-                        className="w-7 h-7 rounded-full flex items-center justify-center text-sm shrink-0 mt-0.5 card-inner"
-                        style={{ color: 'var(--text-icon)' }}
+                        className="w-7 h-7 rounded-full flex items-center justify-center shrink-0 mt-0.5 card-inner"
+                        style={{ color: 'var(--text-cadet-blue)' }}
                         aria-hidden
                       >
-                        🤖
+                        <Bot className="w-4 h-4" />
                       </div>
                       <div className="card-inner px-3 py-2 rounded-lg inline-flex items-center gap-1" aria-label="Bot is typing">
-                        <span className="w-1.5 h-1.5 rounded-full animate-bounce" style={{ backgroundColor: 'var(--text-cadet-blue)', animationDelay: '0ms' }} />
-                        <span className="w-1.5 h-1.5 rounded-full animate-bounce" style={{ backgroundColor: 'var(--text-cadet-blue)', animationDelay: '120ms' }} />
-                        <span className="w-1.5 h-1.5 rounded-full animate-bounce" style={{ backgroundColor: 'var(--text-cadet-blue)', animationDelay: '240ms' }} />
+                        <span className="w-1.5 h-1.5 rounded-full animate-bounce" style={{ backgroundColor: 'var(--text-primary)', animationDelay: '0ms' }} />
+                        <span className="w-1.5 h-1.5 rounded-full animate-bounce" style={{ backgroundColor: 'var(--text-primary)', animationDelay: '120ms' }} />
+                        <span className="w-1.5 h-1.5 rounded-full animate-bounce" style={{ backgroundColor: 'var(--text-primary)', animationDelay: '240ms' }} />
                       </div>
                     </div>
                   </div>

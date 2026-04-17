@@ -85,6 +85,28 @@ function parseDosage(text) {
   return digits || null
 }
 
+function isLikelyMedicationName(text) {
+  const value = String(text || '').trim()
+  if (!value) return false
+  const lower = value.toLowerCase()
+  const uncertainPhrases = [
+    'not sure',
+    'dont know',
+    "don't know",
+    'something',
+    'whatever',
+    'maybe',
+    'i think',
+    'last night',
+    'well',
+  ]
+  if (uncertainPhrases.some((phrase) => lower.includes(phrase))) return false
+  const words = value.split(/\s+/).filter(Boolean)
+  // Medication names are usually short labels, not sentence-like inputs.
+  if (words.length > 4) return false
+  return true
+}
+
 function reply({ assistantMessage, draft, status = 'needs_more_info', nextQuestion = null, missingFields = [], warnings = [] }) {
   return NextResponse.json({
     assistantMessage,
@@ -164,6 +186,13 @@ export async function POST(request) {
       if (!userMessage) {
         return reply({ draft, status: 'clarification_needed', assistantMessage: 'Please enter the medication name you missed.' })
       }
+      if (!isLikelyMedicationName(userMessage)) {
+        return reply({
+          draft,
+          status: 'clarification_needed',
+          assistantMessage: 'Please enter just the medication name (for example: Prednisolone).',
+        })
+      }
       draft.meta.currentEntry = { medicationName: userMessage }
       draft.meta.stage = STAGES.MISSED_DATE
       return reply({
@@ -242,6 +271,13 @@ export async function POST(request) {
 
     if (stage === STAGES.NSAID_NAME) {
       if (!userMessage) return reply({ draft, status: 'clarification_needed', assistantMessage: 'Please enter the NSAID name.' })
+      if (!isLikelyMedicationName(userMessage)) {
+        return reply({
+          draft,
+          status: 'clarification_needed',
+          assistantMessage: 'Please enter just the NSAID name (for example: Ibuprofen).',
+        })
+      }
       draft.meta.currentEntry = { name: userMessage }
       draft.meta.stage = STAGES.NSAID_DATE
       return reply({ draft, assistantMessage: 'What date was it taken? (e.g. today, yesterday, or DD/MM/YYYY)' })
@@ -308,6 +344,13 @@ export async function POST(request) {
 
     if (stage === STAGES.ANTIBIOTIC_NAME) {
       if (!userMessage) return reply({ draft, status: 'clarification_needed', assistantMessage: 'Please enter the antibiotic name.' })
+      if (!isLikelyMedicationName(userMessage)) {
+        return reply({
+          draft,
+          status: 'clarification_needed',
+          assistantMessage: 'Please enter just the antibiotic name (for example: Amoxicillin).',
+        })
+      }
       draft.meta.currentEntry = { name: userMessage }
       draft.meta.stage = STAGES.ANTIBIOTIC_DATE
       return reply({ draft, assistantMessage: 'What date was it taken? (e.g. today, yesterday, or DD/MM/YYYY)' })

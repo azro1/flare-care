@@ -150,11 +150,11 @@ export default function WeatherHero({
         className=""
       >
         {children && (
-          <div className="mb-2 sm:mb-4">
+          <div className="mb-0 sm:mb-4">
             {children}
           </div>
         )}
-        <div className="flex items-center gap-4">
+        <div className="flex items-center gap-4 -mb-2">
           <div className="w-20 h-20 sm:w-22 sm:h-22 flex items-center justify-center">
             {iconSrc ? (
               <Image
