@@ -7,7 +7,7 @@ import ConfirmationModal from '@/components/ConfirmationModal'
 import ProtectedRoute from '@/components/ProtectedRoute'
 import DatePicker from 'react-datepicker'
 import 'react-datepicker/dist/react-datepicker.css'
-import { ChartLine, Calendar, Loader2 } from 'lucide-react'
+import { ChartLine, Calendar, Loader2, MessageCircle } from 'lucide-react'
 import { supabase, TABLES } from '@/lib/supabase'
 
 const MedicationDateInput = forwardRef(({ value, onClick, onChange, placeholder, id, className, onIconClick, ...rest }, ref) => (
@@ -40,6 +40,16 @@ MedicationDateInput.displayName = 'MedicationDateInput'
 function MedicationTrackingWizard() {
   const router = useRouter()
   const { user } = useAuth()
+  const CHAT_STORAGE_KEYS = {
+    mode: 'medication-chat-mode',
+    messages: 'medication-chat-messages',
+    draft: 'medication-chat-draft',
+    status: 'medication-chat-status',
+    missingFields: 'medication-chat-missing-fields',
+    warnings: 'medication-chat-warnings',
+    readyMessage: 'medication-chat-ready-message',
+    restoreOnce: 'medication-chat-restore-once',
+  }
 
   // Wizard state - initialize from localStorage if available
   const [currentStep, setCurrentStep] = useState(() => {
@@ -78,6 +88,25 @@ function MedicationTrackingWizard() {
   const [fieldErrors, setFieldErrors] = useState({})
   const [isSubmitting, setIsSubmitting] = useState(false)
   const [isMobile, setIsMobile] = useState(false)
+  const [entryMode, setEntryMode] = useState('wizard')
+  const [chatMessages, setChatMessages] = useState([])
+  const [chatInput, setChatInput] = useState('')
+  const [chatDraft, setChatDraft] = useState({
+    missedMedications: [],
+    nsaids: [],
+    antibiotics: [],
+    meta: { stage: 'missed_yes_no', skipped: { missed: false, nsaid: false, antibiotic: false }, currentEntry: {} },
+  })
+  const [chatStatus, setChatStatus] = useState('needs_more_info')
+  const [chatMissingFields, setChatMissingFields] = useState([])
+  const [chatWarnings, setChatWarnings] = useState([])
+  const [isChatLoading, setIsChatLoading] = useState(false)
+  const [chatError, setChatError] = useState('')
+  const [chatReadyMessage, setChatReadyMessage] = useState('')
+  const chatScrollRef = useRef(null)
+  const chatHydratedRef = useRef(false)
+  const enableMedicationChat = process.env.NEXT_PUBLIC_ENABLE_MEDICATION_CHATBOT === 'true'
+  const sleep = (ms) => new Promise((resolve) => setTimeout(resolve, ms))
   const missedMedDatePickerRefs = useRef({})
   const nsaidDatePickerRefs = useRef({})
   const antibioticDatePickerRefs = useRef({})
@@ -104,6 +133,104 @@ function MedicationTrackingWizard() {
       localStorage.setItem('medication-wizard-form', JSON.stringify(formData))
     }
   }, [formData])
+
+  // Hydrate chat state from localStorage on mount, but only when explicitly marked for restore (refresh).
+  useEffect(() => {
+    if (typeof window === 'undefined') return
+    try {
+      const shouldRestore = localStorage.getItem(CHAT_STORAGE_KEYS.restoreOnce) === 'true'
+      if (!shouldRestore) {
+        localStorage.removeItem(CHAT_STORAGE_KEYS.mode)
+        localStorage.removeItem(CHAT_STORAGE_KEYS.messages)
+        localStorage.removeItem(CHAT_STORAGE_KEYS.draft)
+        localStorage.removeItem(CHAT_STORAGE_KEYS.status)
+        localStorage.removeItem(CHAT_STORAGE_KEYS.missingFields)
+        localStorage.removeItem(CHAT_STORAGE_KEYS.warnings)
+        localStorage.removeItem(CHAT_STORAGE_KEYS.readyMessage)
+        chatHydratedRef.current = true
+        return
+      }
+
+      const savedMode = localStorage.getItem(CHAT_STORAGE_KEYS.mode)
+      if (savedMode === 'chat' || savedMode === 'wizard') {
+        setEntryMode(savedMode)
+      }
+
+      const savedMessages = localStorage.getItem(CHAT_STORAGE_KEYS.messages)
+      if (savedMessages) {
+        const parsed = JSON.parse(savedMessages)
+        if (Array.isArray(parsed)) setChatMessages(parsed)
+      }
+
+      const savedDraft = localStorage.getItem(CHAT_STORAGE_KEYS.draft)
+      if (savedDraft) {
+        const parsed = JSON.parse(savedDraft)
+        if (parsed && typeof parsed === 'object') setChatDraft(parsed)
+      }
+
+      const savedStatus = localStorage.getItem(CHAT_STORAGE_KEYS.status)
+      if (savedStatus) setChatStatus(savedStatus)
+
+      const savedMissing = localStorage.getItem(CHAT_STORAGE_KEYS.missingFields)
+      if (savedMissing) {
+        const parsed = JSON.parse(savedMissing)
+        if (Array.isArray(parsed)) setChatMissingFields(parsed)
+      }
+
+      const savedWarnings = localStorage.getItem(CHAT_STORAGE_KEYS.warnings)
+      if (savedWarnings) {
+        const parsed = JSON.parse(savedWarnings)
+        if (Array.isArray(parsed)) setChatWarnings(parsed)
+      }
+
+      const savedReadyMessage = localStorage.getItem(CHAT_STORAGE_KEYS.readyMessage)
+      if (savedReadyMessage) setChatReadyMessage(savedReadyMessage)
+
+      // One-time restore only (refresh). Do not keep restoring across normal navigation.
+      localStorage.removeItem(CHAT_STORAGE_KEYS.restoreOnce)
+    } catch (error) {
+      console.warn('Failed to restore medication chat state:', error)
+    }
+    // Unlock persistence after hydration has applied to state.
+    setTimeout(() => {
+      chatHydratedRef.current = true
+    }, 0)
+  }, [])
+
+  // Mark current chat state for one-time restore on page refresh/unload.
+  useEffect(() => {
+    if (typeof window === 'undefined') return
+    const persistForRefresh = () => {
+      try {
+        localStorage.setItem(CHAT_STORAGE_KEYS.restoreOnce, 'true')
+        localStorage.setItem(CHAT_STORAGE_KEYS.mode, entryMode)
+        localStorage.setItem(CHAT_STORAGE_KEYS.messages, JSON.stringify(chatMessages))
+        localStorage.setItem(CHAT_STORAGE_KEYS.draft, JSON.stringify(chatDraft))
+        localStorage.setItem(CHAT_STORAGE_KEYS.status, chatStatus)
+        localStorage.setItem(CHAT_STORAGE_KEYS.missingFields, JSON.stringify(chatMissingFields))
+        localStorage.setItem(CHAT_STORAGE_KEYS.warnings, JSON.stringify(chatWarnings))
+        localStorage.setItem(CHAT_STORAGE_KEYS.readyMessage, chatReadyMessage || '')
+      } catch (error) {
+        console.warn('Failed to persist medication chat state:', error)
+      }
+    }
+
+    window.addEventListener('beforeunload', persistForRefresh)
+    window.addEventListener('pagehide', persistForRefresh)
+
+    return () => {
+      window.removeEventListener('beforeunload', persistForRefresh)
+      window.removeEventListener('pagehide', persistForRefresh)
+    }
+  }, [entryMode, chatMessages, chatDraft, chatStatus, chatMissingFields, chatWarnings, chatReadyMessage])
+
+  // Keep chat pinned to latest message
+  useEffect(() => {
+    if (entryMode !== 'chat') return
+    const container = chatScrollRef.current
+    if (!container) return
+    container.scrollTop = container.scrollHeight
+  }, [chatMessages, isChatLoading, entryMode])
 
   // Default date to today when reaching relevant step for any items with null/empty date
   useEffect(() => {
@@ -152,10 +279,10 @@ function MedicationTrackingWizard() {
     }
   }, [])
 
-  // ✅ Prevent body scrolling only on landing page
+  // ✅ Prevent body scrolling only on wizard landing page
   useEffect(() => {
-    // Apply fixed positioning only on landing page (step 0)
-    if (currentStep === 0) {
+    // Apply fixed positioning only on manual wizard landing page (step 0)
+    if (currentStep === 0 && entryMode === 'wizard') {
       // Freeze scroll
       document.body.style.position = 'fixed'
       document.body.style.width = '100%'
@@ -186,7 +313,7 @@ function MedicationTrackingWizard() {
       document.documentElement.style.background = ''
       document.documentElement.style.height = ''
     }
-  }, [currentStep])
+  }, [currentStep, entryMode])
 
   // Smart navigation - calculate which steps should be shown
   const getVisibleSteps = () => {
@@ -274,6 +401,83 @@ function MedicationTrackingWizard() {
 
   // Dosage: digits only; we add "mg" when saving and displaying
   const normalizeDosage = (raw) => (raw || '').replace(/\D/g, '').slice(0, 5)
+  const formatDateUk = (value) => {
+    if (!value) return 'N/A'
+    const d = new Date(value)
+    if (Number.isNaN(d.getTime())) return value
+    return d.toLocaleDateString('en-GB', { day: '2-digit', month: '2-digit', year: 'numeric' })
+  }
+  const toDateOrToday = (value) => {
+    const d = value ? new Date(value) : new Date()
+    return Number.isNaN(d.getTime()) ? new Date() : d
+  }
+
+  const mapChatDraftToCleanedData = (draft) => ({
+    missedMedicationsList: (draft?.missedMedications || [])
+      .map((item) => ({
+        medication: item.medicationName || '',
+        date: toDateOrToday(item.date),
+        timeOfDay: item.time || '',
+      }))
+      .filter((item) => item.medication.trim()),
+    nsaidList: (draft?.nsaids || [])
+      .map((item) => ({
+        medication: item.name || '',
+        date: toDateOrToday(item.date),
+        timeOfDay: item.time || '',
+        dosage: normalizeDosage(item.dose),
+      }))
+      .filter((item) => item.medication.trim()),
+    antibioticList: (draft?.antibiotics || [])
+      .map((item) => ({
+        medication: item.name || '',
+        date: toDateOrToday(item.date),
+        timeOfDay: item.time || '',
+        dosage: normalizeDosage(item.dose),
+      }))
+      .filter((item) => item.medication.trim()),
+  })
+
+  const saveMedicationTracking = async (cleanedData) => {
+    const hasNoData =
+      cleanedData.missedMedicationsList.length === 0 &&
+      cleanedData.nsaidList.length === 0 &&
+      cleanedData.antibioticList.length === 0
+
+    if (hasNoData) {
+      setShowNoDataModal(true)
+      return false
+    }
+
+    const newMedicationTracking = {
+      id: `medication-tracking-${Date.now()}`,
+      user_id: user?.id,
+      name: 'Medication Tracking',
+      missed_medications_list: cleanedData.missedMedicationsList,
+      nsaid_list: cleanedData.nsaidList.map(item => ({ ...item, dosage: item.dosage ? `${item.dosage}mg` : '' })),
+      antibiotic_list: cleanedData.antibioticList.map(item => ({ ...item, dosage: item.dosage ? `${item.dosage}mg` : '' })),
+      created_at: new Date().toISOString()
+    }
+
+    const { error } = await supabase
+      .from(TABLES.LOG_MEDICATIONS)
+      .insert([newMedicationTracking])
+
+    if (error) throw error
+
+    localStorage.removeItem('medication-wizard-step')
+    localStorage.removeItem('medication-wizard-form')
+    localStorage.removeItem(CHAT_STORAGE_KEYS.mode)
+    localStorage.removeItem(CHAT_STORAGE_KEYS.messages)
+    localStorage.removeItem(CHAT_STORAGE_KEYS.draft)
+    localStorage.removeItem(CHAT_STORAGE_KEYS.status)
+    localStorage.removeItem(CHAT_STORAGE_KEYS.missingFields)
+    localStorage.removeItem(CHAT_STORAGE_KEYS.warnings)
+    localStorage.removeItem(CHAT_STORAGE_KEYS.readyMessage)
+    localStorage.setItem('showMedicationToast', 'true')
+    router.push('/')
+    return true
+  }
 
   // Missed medications list handlers
   const addMissedMedication = () => {
@@ -397,6 +601,96 @@ function MedicationTrackingWizard() {
     }, 0)
   }
 
+  const addChatMessage = (role, content) => {
+    if (!content) return
+    setChatMessages(prev => [...prev, { id: `${Date.now()}-${Math.random()}`, role, content }])
+  }
+
+  const sendChatTurn = async (message, options = {}) => {
+    const { immediate = false } = options
+    if (!immediate) {
+      setIsChatLoading(true)
+    }
+    setChatError('')
+    try {
+      const response = await fetch('/api/ai/medication-chat', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          conversationId: `medication-chat-${user?.id || 'anon'}`,
+          userMessage: message,
+          draft: chatDraft,
+          timezone: Intl.DateTimeFormat().resolvedOptions().timeZone || 'Europe/London',
+        }),
+      })
+
+      const data = await response.json()
+      if (!response.ok) {
+        throw new Error(data?.error || 'Medication chat failed.')
+      }
+
+      setChatDraft(data?.draft || chatDraft)
+      setChatMissingFields(Array.isArray(data?.missingFields) ? data.missingFields : [])
+      setChatWarnings(Array.isArray(data?.warnings) ? data.warnings : [])
+      const nextStatus = data?.status || 'needs_more_info'
+      // Small delay so assistant replies feel conversational (except initial prompt).
+      if (!immediate) {
+        await sleep(500)
+      }
+      if (nextStatus === 'ready_for_review') {
+        setChatReadyMessage(data?.assistantMessage || 'Thanks — review what we captured below, then confirm to save.')
+        setChatStatus('ready_for_review')
+      } else {
+        addChatMessage('assistant', data?.assistantMessage || 'I updated your draft. Continue when ready.')
+        setChatStatus(nextStatus)
+      }
+    } catch (error) {
+      console.error('Medication chat request failed:', error)
+      setChatError('Medication chatbot is unavailable right now. You can continue using the manual form.')
+    } finally {
+      if (!immediate) {
+        setIsChatLoading(false)
+      }
+    }
+  }
+
+  const startChatMode = async () => {
+    setEntryMode('chat')
+    setChatMessages([])
+    setChatInput('')
+    setChatDraft({
+      missedMedications: [],
+      nsaids: [],
+      antibiotics: [],
+      meta: { stage: 'missed_yes_no', skipped: { missed: false, nsaid: false, antibiotic: false }, currentEntry: {} },
+    })
+    setChatStatus('needs_more_info')
+    setChatReadyMessage('')
+    setChatMissingFields([])
+    setChatWarnings([])
+    await sendChatTurn('', { immediate: true })
+  }
+
+  const submitChatMessage = async () => {
+    const trimmed = chatInput.trim()
+    if (!trimmed || isChatLoading) return
+    addChatMessage('user', trimmed)
+    setChatInput('')
+    await sendChatTurn(trimmed)
+  }
+
+  const handleChatSubmit = async () => {
+    if (isSubmitting || chatStatus !== 'ready_for_review') return
+    setIsSubmitting(true)
+    try {
+      const cleanedData = mapChatDraftToCleanedData(chatDraft)
+      await saveMedicationTracking(cleanedData)
+    } catch (error) {
+      console.error('Error saving medication tracking from chat:', error)
+      setIsSubmitting(false)
+    }
+  }
+
   // Handle cancel
   const handlePatternModalCancel = () => {
     localStorage.removeItem('medication-wizard-step')
@@ -418,49 +712,11 @@ function MedicationTrackingWizard() {
       antibioticList: formData.antibioticUsage ? formData.antibioticList.filter(item => item.medication.trim()) : []
     }
 
-    // Check if all questions are "No" and all lists are empty
-    const hasNoData = 
-      !formData.missedMedications && 
-      !formData.nsaidUsage && 
-      !formData.antibioticUsage &&
-      cleanedData.missedMedicationsList.length === 0 &&
-      cleanedData.nsaidList.length === 0 &&
-      cleanedData.antibioticList.length === 0
-
-    if (hasNoData) {
-      setIsSubmitting(false)
-      setShowNoDataModal(true)
-      return
-    }
-
-    // Create medication tracking entry (append "mg" to dosage for storage)
-    const newMedicationTracking = {
-      id: `medication-tracking-${Date.now()}`,
-      user_id: user?.id,
-      name: 'Medication Tracking',
-      missed_medications_list: cleanedData.missedMedicationsList,
-      nsaid_list: cleanedData.nsaidList.map(item => ({ ...item, dosage: item.dosage ? `${item.dosage}mg` : '' })),
-      antibiotic_list: cleanedData.antibioticList.map(item => ({ ...item, dosage: item.dosage ? `${item.dosage}mg` : '' })),
-      created_at: new Date().toISOString()
-    }
-
     try {
-      // Save to Supabase - following the exact same pattern as symptoms
-      const { error } = await supabase
-        .from(TABLES.LOG_MEDICATIONS)
-        .insert([newMedicationTracking])
-
-      if (error) throw error
-
-      // Clear wizard state
-      localStorage.removeItem('medication-wizard-step')
-      localStorage.removeItem('medication-wizard-form')
-
-      // Set toast flag
-      localStorage.setItem('showMedicationToast', 'true')
-
-      // Redirect to dashboard
-      router.push('/')
+      const saved = await saveMedicationTracking(cleanedData)
+      if (!saved) {
+        setIsSubmitting(false)
+      }
     } catch (error) {
       console.error('Error saving medication tracking:', error)
       setIsSubmitting(false)
@@ -1021,7 +1277,7 @@ function MedicationTrackingWizard() {
   }
 
   return (
-    <div className={`medications-wizard max-w-4xl w-full mx-auto sm:px-4 md:px-6 lg:px-8 min-w-0 flex flex-col justify-center sm:flex-grow ${currentStep > 0 ? 'pb-20 lg:pb-0' : ''}`}>
+    <div className={`medications-wizard max-w-4xl w-full mx-auto sm:px-4 md:px-6 lg:px-8 min-w-0 flex flex-col justify-center sm:flex-grow ${(currentStep > 0 || entryMode === 'chat') ? 'pb-28 lg:pb-0' : ''}`}>
       {/* Header: Back when needed, then title - hide on landing */}
       {currentStep > 0 && (
         <div className="pt-6 md:pt-0 mb-8">
@@ -1049,7 +1305,7 @@ function MedicationTrackingWizard() {
       {/* Wizard Container */}
       <div className="mb-4">
         {/* Step 0: Landing Page */}
-        {currentStep === 0 && (
+        {currentStep === 0 && entryMode === 'wizard' && (
           <div className="flex flex-col items-center justify-center text-center pt-20 sm:pt-0">
             {/* Icon - same as home page medications card */}
             <div className="w-14 h-14 bg-white dark:bg-[var(--bg-icon-container)] rounded-2xl flex items-center justify-center mx-auto mb-6 shadow-sm">
@@ -1069,6 +1325,240 @@ function MedicationTrackingWizard() {
             >
               Start now
             </button>
+            {enableMedicationChat && (
+              <button
+                onClick={startChatMode}
+                className="mt-3 px-4 py-2 text-base sm:text-lg font-semibold rounded-lg border border-cadet-blue text-cadet-blue hover:opacity-90 transition-opacity inline-flex items-center gap-2"
+              >
+                <MessageCircle className="w-5 h-5" />
+                FlareBot (Beta)
+              </button>
+            )}
+          </div>
+        )}
+
+        {currentStep === 0 && entryMode === 'chat' && chatStatus !== 'ready_for_review' && (
+          <div className="card border" style={{ borderColor: 'var(--border-card)' }}>
+              <div className="flex items-center justify-between mb-4">
+                <h3 className="text-xl sm:text-2xl font-title font-bold text-primary inline-flex items-start sm:items-center gap-2">
+                  <MessageCircle className="w-6 h-6 text-cadet-blue" />
+                  FlareBot (Beta)
+                </h3>
+                <button
+                  type="button"
+                  className="text-sm text-cadet-blue underline hover:opacity-80"
+                  onClick={() => setEntryMode('wizard')}
+                >
+                  Log Medications
+                </button>
+              </div>
+
+              <p className="text-sm text-muted mb-4">
+                This test bot helps you log missed medications, NSAIDs, and antibiotics. You will review before saving.
+              </p>
+
+              <div
+                ref={chatScrollRef}
+                className="rounded-lg border p-3 h-72 overflow-y-auto space-y-3 mb-4"
+                style={{ borderColor: 'var(--border-card)' }}
+              >
+                {chatMessages.map((msg) => (
+                  <div key={msg.id} className={`flex ${msg.role === 'user' ? 'justify-end' : 'justify-start'}`}>
+                    <div className={`flex items-start gap-2 max-w-[92%] ${msg.role === 'user' ? 'flex-row-reverse' : ''}`}>
+                      {msg.role !== 'user' && (
+                        <div
+                          className="w-7 h-7 rounded-full flex items-center justify-center text-sm shrink-0 mt-0.5 card-inner"
+                          style={{
+                            color: 'var(--text-icon)',
+                          }}
+                          aria-hidden
+                        >
+                          🤖
+                        </div>
+                      )}
+                      <div
+                        className={`max-w-full px-3 py-2 rounded-lg text-sm ${
+                          msg.role === 'user'
+                            ? 'text-white'
+                            : 'text-primary card-inner'
+                        }`}
+                        style={msg.role === 'user'
+                          ? { backgroundColor: 'var(--text-cadet-blue)' }
+                          : undefined}
+                      >
+                        {msg.content}
+                      </div>
+                    </div>
+                  </div>
+                ))}
+                {isChatLoading && (
+                  <div className="flex justify-start">
+                    <div className="flex items-start gap-2 max-w-[92%]">
+                      <div
+                        className="w-7 h-7 rounded-full flex items-center justify-center text-sm shrink-0 mt-0.5 card-inner"
+                        style={{ color: 'var(--text-icon)' }}
+                        aria-hidden
+                      >
+                        🤖
+                      </div>
+                      <div className="card-inner px-3 py-2 rounded-lg inline-flex items-center gap-1" aria-label="Bot is typing">
+                        <span className="w-1.5 h-1.5 rounded-full animate-bounce" style={{ backgroundColor: 'var(--text-cadet-blue)', animationDelay: '0ms' }} />
+                        <span className="w-1.5 h-1.5 rounded-full animate-bounce" style={{ backgroundColor: 'var(--text-cadet-blue)', animationDelay: '120ms' }} />
+                        <span className="w-1.5 h-1.5 rounded-full animate-bounce" style={{ backgroundColor: 'var(--text-cadet-blue)', animationDelay: '240ms' }} />
+                      </div>
+                    </div>
+                  </div>
+                )}
+              </div>
+
+              <div className="flex gap-2 mb-4">
+                <input
+                  type="text"
+                  value={chatInput}
+                  onChange={(e) => setChatInput(e.target.value)}
+                  onKeyDown={(e) => {
+                    if (e.key === 'Enter') {
+                      e.preventDefault()
+                      submitChatMessage()
+                    }
+                  }}
+                  placeholder="Type your answer..."
+                  className="input-field-wizard flex-1"
+                  disabled={isChatLoading}
+                />
+                <button
+                  type="button"
+                  onClick={submitChatMessage}
+                  disabled={isChatLoading || !chatInput.trim()}
+                  className={`px-4 py-2 rounded-lg font-semibold border ${isChatLoading || !chatInput.trim() ? 'button-disabled' : 'button-cadet'}`}
+                  style={isChatLoading || !chatInput.trim()
+                    ? {
+                        backgroundColor: 'var(--bg-button-disabled)',
+                        color: 'var(--text-button-disabled)',
+                        border: '1px solid var(--border-input-dark)',
+                      }
+                    : {
+                        border: '1px solid var(--bg-button-cadet)',
+                      }}
+                >
+                  Send
+                </button>
+              </div>
+
+              {chatError && (
+                <div className="mb-4 p-3 rounded-lg border" style={{ backgroundColor: 'var(--bg-error)', borderColor: 'var(--border-error)' }}>
+                  <p className="text-sm" style={{ color: 'var(--text-error)' }}>{chatError}</p>
+                </div>
+              )}
+
+              {chatWarnings.length > 0 && (
+                <div className="mb-0 p-3 rounded-lg border" style={{ borderColor: 'var(--border-card)' }}>
+                  {chatWarnings.map((warning, index) => (
+                    <p key={`${warning}-${index}`} className="text-sm text-muted">{warning}</p>
+                  ))}
+                </div>
+              )}
+          </div>
+        )}
+
+        {currentStep === 0 && entryMode === 'chat' && chatStatus === 'ready_for_review' && (
+          <div className="card border" style={{ borderColor: 'var(--border-card)' }}>
+              <div className="flex items-center justify-between mb-4">
+                <h3 className="text-xl sm:text-2xl font-title font-bold text-primary inline-flex items-start sm:items-center gap-2">
+                  <MessageCircle className="w-6 h-6 text-cadet-blue" />
+                  Review captured entries
+                </h3>
+                <button
+                  type="button"
+                  className="text-sm text-cadet-blue underline hover:opacity-80"
+                  onClick={() => setEntryMode('wizard')}
+                >
+                  Log Medications
+                </button>
+              </div>
+
+              {chatReadyMessage && (
+                <p className="text-sm text-muted mb-4">{chatReadyMessage}</p>
+              )}
+
+              <div className="space-y-4 mb-4">
+                <div className="text-sm text-secondary">
+                  {chatDraft.missedMedications.length === 0 && chatDraft.nsaids.length === 0 && chatDraft.antibiotics.length === 0
+                    ? 'No entries captured yet.'
+                    : 'Draft data captured from chat:'}
+                </div>
+
+                {chatDraft.missedMedications.length > 0 && (
+                  <div>
+                    <h5 className="font-semibold text-cadet-blue mb-1">Missed medications</h5>
+                    <ul className="space-y-1 text-sm text-primary">
+                      {chatDraft.missedMedications.map((item, index) => (
+                        <li key={`missed-${index}`}>- {item.medicationName} on {formatDateUk(item.date)} ({item.time})</li>
+                      ))}
+                    </ul>
+                  </div>
+                )}
+
+                {chatDraft.nsaids.length > 0 && (
+                  <div>
+                    <h5 className="font-semibold text-cadet-blue mb-1">NSAIDs</h5>
+                    <ul className="space-y-1 text-sm text-primary">
+                      {chatDraft.nsaids.map((item, index) => (
+                        <li key={`nsaid-${index}`}>- {item.name} {item.dose ? `${item.dose}mg` : ''} on {formatDateUk(item.date)} ({item.time})</li>
+                      ))}
+                    </ul>
+                  </div>
+                )}
+
+                {chatDraft.antibiotics.length > 0 && (
+                  <div>
+                    <h5 className="font-semibold text-cadet-blue mb-1">Antibiotics</h5>
+                    <ul className="space-y-1 text-sm text-primary">
+                      {chatDraft.antibiotics.map((item, index) => (
+                        <li key={`antibiotic-${index}`}>- {item.name} {item.dose ? `${item.dose}mg` : ''} on {formatDateUk(item.date)} ({item.time})</li>
+                      ))}
+                    </ul>
+                  </div>
+                )}
+              </div>
+
+              {chatMissingFields.length > 0 && (
+                <div className="mb-4 p-3 rounded-lg border" style={{ backgroundColor: 'var(--bg-error)', borderColor: 'var(--border-error)' }}>
+                  <p className="text-sm font-medium mb-1" style={{ color: 'var(--text-error)' }}>
+                    Missing required fields before review:
+                  </p>
+                  <ul className="text-sm list-disc ml-5" style={{ color: 'var(--text-error)' }}>
+                    {chatMissingFields.map((field) => (
+                      <li key={field.path}>{field.path}</li>
+                    ))}
+                  </ul>
+                </div>
+              )}
+
+              <button
+                type="button"
+                onClick={handleChatSubmit}
+                disabled={isSubmitting}
+                className={`inline-flex min-w-[8rem] items-center justify-center px-4 py-2 rounded-lg font-semibold border ${isSubmitting ? 'button-disabled' : 'button-cadet'}`}
+                style={isSubmitting
+                  ? {
+                      backgroundColor: 'var(--bg-button-disabled)',
+                      color: 'var(--text-button-disabled)',
+                      border: '1px solid var(--border-input-dark)',
+                    }
+                  : {
+                      border: '1px solid var(--bg-button-cadet)',
+                    }}
+              >
+                {isSubmitting ? (
+                  <>
+                    <Loader2 className="h-5 w-5 shrink-0 animate-spin" aria-hidden />
+                    <span className="sr-only">Submitting</span>
+                  </>
+                ) : (
+                  'Confirm save'
+                )}
+              </button>
           </div>
         )}
 

@@ -150,7 +150,7 @@ export default function WeatherHero({
         className=""
       >
         {children && (
-          <div className="mb-3 sm:mb-4">
+          <div className="mb-2 sm:mb-4">
             {children}
           </div>
         )}
