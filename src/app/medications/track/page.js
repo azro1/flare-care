@@ -327,6 +327,12 @@ function MedicationTrackingWizard() {
     }
   }, [currentStep, entryMode])
 
+  // Review step: reset window scroll and avoid vertical centering clipping the heading under the nav.
+  useEffect(() => {
+    if (currentStep !== 7) return
+    window.scrollTo({ top: 0, left: 0, behavior: 'instant' })
+  }, [currentStep])
+
   // Smart navigation - calculate which steps should be shown
   const getVisibleSteps = () => {
     const steps = [0, 1] // Landing page and first question always shown
@@ -1576,25 +1582,21 @@ function MedicationTrackingWizard() {
                 type="button"
                 onClick={handleChatSubmit}
                 disabled={isSubmitting}
-                className={`inline-flex min-w-[8rem] items-center justify-center px-4 py-2 rounded-lg font-semibold border ${isSubmitting ? 'button-disabled' : 'button-cadet'}`}
-                style={isSubmitting
-                  ? {
-                      backgroundColor: 'var(--bg-button-disabled)',
-                      color: 'var(--text-button-disabled)',
-                      border: '1px solid var(--border-input-dark)',
-                    }
-                  : {
-                      border: '1px solid var(--bg-button-cadet)',
-                    }}
+                className="button-cadet inline-flex items-center justify-center px-4 py-2 text-base sm:text-lg font-semibold rounded-lg transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
               >
-                {isSubmitting ? (
-                  <>
-                    <Loader2 className="h-5 w-5 shrink-0 animate-spin" aria-hidden />
-                    <span className="sr-only">Submitting</span>
-                  </>
-                ) : (
-                  'Confirm save'
-                )}
+                <span className="inline-grid grid-cols-1 grid-rows-1 place-items-center font-semibold text-base sm:text-lg">
+                  <span aria-hidden className="invisible col-start-1 row-start-1 whitespace-nowrap">Confirm save</span>
+                  <span className="col-start-1 row-start-1 flex items-center justify-center">
+                    {isSubmitting ? (
+                      <>
+                        <Loader2 className="h-6 w-6 shrink-0 animate-spin" aria-hidden />
+                        <span className="sr-only">Submitting</span>
+                      </>
+                    ) : (
+                      'Confirm save'
+                    )}
+                  </span>
+                </span>
               </button>
           </div>
         )}
