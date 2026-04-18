@@ -109,6 +109,7 @@ function MedicationTrackingWizard() {
   const [chatError, setChatError] = useState('')
   const [chatReadyMessage, setChatReadyMessage] = useState('')
   const chatScrollRef = useRef(null)
+  const chatReviewRef = useRef(null)
   const chatHydratedRef = useRef(false)
   const enableMedicationChat = process.env.NEXT_PUBLIC_ENABLE_MEDICATION_CHATBOT === 'true'
   const chatOnStep0 = currentStep === 0 && entryMode === 'chat'
@@ -327,11 +328,20 @@ function MedicationTrackingWizard() {
     }
   }, [currentStep, entryMode])
 
-  // Review step: reset window scroll and avoid vertical centering clipping the heading under the nav.
+  // Manual wizard step 7 review: scroll to top.
   useEffect(() => {
     if (currentStep !== 7) return
     window.scrollTo({ top: 0, left: 0, behavior: 'instant' })
   }, [currentStep])
+
+  // FlareBot review card: scroll into view so “Review captured entries” clears the sticky nav (mobile).
+  useEffect(() => {
+    if (currentStep !== 0 || entryMode !== 'chat' || chatStatus !== 'ready_for_review') return
+    const t = window.setTimeout(() => {
+      chatReviewRef.current?.scrollIntoView({ block: 'start', behavior: 'instant' })
+    }, 0)
+    return () => clearTimeout(t)
+  }, [currentStep, entryMode, chatStatus])
 
   // Smart navigation - calculate which steps should be shown
   const getVisibleSteps = () => {
@@ -1321,7 +1331,7 @@ function MedicationTrackingWizard() {
 
   return (
     <div
-      className={`medications-wizard max-w-4xl w-full mx-auto sm:px-4 md:px-6 lg:px-8 min-w-0 flex flex-col justify-center sm:flex-grow ${currentStep > 0 ? 'pb-28 lg:pb-0' : ''}`}
+      className={`medications-wizard max-w-4xl w-full mx-auto sm:px-4 md:px-6 lg:px-8 min-w-0 flex flex-col ${currentStep === 0 && entryMode === 'chat' && chatStatus === 'ready_for_review' ? 'justify-start' : 'justify-center'} sm:flex-grow ${currentStep > 0 ? 'pb-28 lg:pb-0' : ''}`}
     >
       {/* Header: Back when needed, then title - hide on landing */}
       {currentStep > 0 && (
@@ -1505,7 +1515,11 @@ function MedicationTrackingWizard() {
         )}
 
         {currentStep === 0 && entryMode === 'chat' && chatStatus === 'ready_for_review' && (
-          <div className="card border mb-24 sm:mb-0" style={{ borderColor: 'var(--border-card)' }}>
+          <div
+            ref={chatReviewRef}
+            className="card border mb-24 sm:mb-0 scroll-mt-24 sm:scroll-mt-8"
+            style={{ borderColor: 'var(--border-card)' }}
+          >
               <div className="flex items-center justify-between mb-4">
                 <h3 className="text-xl sm:text-2xl font-title font-bold text-primary inline-flex items-start sm:items-center gap-2">
                   <MessageCircle className="w-6 h-6 text-cadet-blue" />
