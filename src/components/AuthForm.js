@@ -9,20 +9,35 @@ export default function AuthForm() {
   const [error, setError] = useState('')
   const router = useRouter()
 
-  // Prevent body scrolling on auth page
+  // Mobile only: freeze body scroll (matches Tailwind `sm` 640px). Desktop: normal scroll.
   useEffect(() => {
-    // Freeze scroll
-    document.body.style.position = 'fixed'
-    document.body.style.width = '100%'
-    document.body.style.height = '100%'
-  
-    // Apply gradient to html element since body is fixed
-    document.body.style.backgroundColor = 'transparent'
-    document.documentElement.style.background = 'var(--bg-main-gradient)'
-    document.documentElement.style.height = '100%'
-  
-    // Cleanup on unmount
+    const SM_PX = 640
+
+    const syncBodyScrollLock = () => {
+      const isDesktop = window.matchMedia(`(min-width: ${SM_PX}px)`).matches
+      document.documentElement.style.background = 'var(--bg-main-gradient)'
+
+      if (isDesktop) {
+        document.body.style.position = 'static'
+        document.body.style.width = 'auto'
+        document.body.style.height = 'auto'
+        document.body.style.backgroundColor = ''
+        document.documentElement.style.height = ''
+      } else {
+        document.body.style.position = 'fixed'
+        document.body.style.width = '100%'
+        document.body.style.height = '100%'
+        document.body.style.backgroundColor = 'transparent'
+        document.documentElement.style.height = '100%'
+      }
+    }
+
+    syncBodyScrollLock()
+    const mql = window.matchMedia(`(min-width: ${SM_PX}px)`)
+    mql.addEventListener('change', syncBodyScrollLock)
+
     return () => {
+      mql.removeEventListener('change', syncBodyScrollLock)
       document.body.style.position = 'static'
       document.body.style.width = 'auto'
       document.body.style.height = 'auto'
@@ -54,7 +69,7 @@ export default function AuthForm() {
 
 
   return (
-    <div className="pt-12 sm:pt-0 sm:flex-grow flex items-center justify-center px-4 sm:px-6 lg:px-8 pb-20 lg:pb-0">
+    <div className="pt-12 sm:pt-0 sm:min-h-[500px] flex justify-center items-center">
       <div className="max-w-sm w-full space-y-4">
         <div className="text-center">
             <Image
@@ -67,7 +82,7 @@ export default function AuthForm() {
             <h2 className="text-3xl font-bold font-title text-primary mb-6">
               FlareCare
             </h2>
-          <p className="text-sm font-sans text-secondary mb-6 leading-relaxed">
+          <p className="text-sm font-sans text-secondary mb-4 leading-relaxed">
            Your comprehensive health management app for Crohn's & Colitis
           </p>
         </div>

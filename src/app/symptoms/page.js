@@ -1,6 +1,6 @@
 'use client'
 
-import { useState, useEffect, useRef, forwardRef } from 'react'
+import { useState, useEffect, useLayoutEffect, useMemo, useRef, forwardRef, Fragment } from 'react'
 import ConfirmationModal from '@/components/ConfirmationModal'
 import DatePicker from 'react-datepicker'
 import 'react-datepicker/dist/react-datepicker.css'
@@ -10,7 +10,7 @@ import { supabase, TABLES, deleteFromSupabase } from '@/lib/supabase'
 import { useRouter, usePathname } from 'next/navigation'
 import { useAuth } from '@/lib/AuthContext'
 import { getUserPreferences, saveUserPreferences, updatePreference, checkHabitPattern } from '@/lib/userPreferences'
-import { Thermometer, Calendar, Loader2 } from 'lucide-react'
+import { Thermometer, Calendar, ChevronRight, Loader2 } from 'lucide-react'
 
 const SymptomDateInput = forwardRef(({ value, onClick, onChange, placeholder, id, className, onIconClick, ...rest }, ref) => (
   <div className={`symptom-date-input-wrapper flex items-center input-field-wizard ${className ?? ''}`.trim()}>
@@ -38,6 +38,56 @@ const SymptomDateInput = forwardRef(({ value, onClick, onChange, placeholder, id
   </div>
 ))
 SymptomDateInput.displayName = 'SymptomDateInput'
+
+/** Logical sections for Log Symptoms (`firstStep` = breadcrumb jump target). */
+const SYMPTOM_WIZARD_PHASES = [
+  { id: 'timing', label: 'Duration', firstStep: 1, lastStep: 3 },
+  { id: 'severity', label: 'Severity & stress', firstStep: 4, lastStep: 5 },
+  { id: 'bathroom', label: 'Bathroom', firstStep: 6, lastStep: 8 },
+  { id: 'lifestyle', label: 'Lifestyle', firstStep: 9, lastStep: 12 },
+  { id: 'meals', label: 'Meals', firstStep: 13, lastStep: 15 },
+  { id: 'notes', label: 'Notes', firstStep: 16, lastStep: 16 },
+  { id: 'review', label: 'Review', firstStep: 17, lastStep: 17 },
+]
+
+/** Returning non-smoker/non-drinker: wizard skips lifestyle (prefs already captured). */
+function getSymptomWizardPhasesFiltered(isFirstTimeUser, userPreferences) {
+  const phases = [...SYMPTOM_WIZARD_PHASES]
+  if (!isFirstTimeUser && userPreferences && !userPreferences.isSmoker && !userPreferences.isDrinker) {
+    return phases.filter((p) => p.id !== 'lifestyle')
+  }
+  return phases
+}
+
+function getSymptomWizardPhaseProgress(currentStep, isFirstTimeUser, userPreferences) {
+  const phases = getSymptomWizardPhasesFiltered(isFirstTimeUser, userPreferences)
+  if (currentStep <= 0 || phases.length === 0) {
+    return {
+      phaseNames: [],
+      phaseEntrySteps: [],
+      currentPhaseLabel: '',
+      sectionStep: 0,
+      sectionTotal: 0,
+    }
+  }
+  const idx = phases.findIndex((p) => currentStep >= p.firstStep && currentStep <= p.lastStep)
+  if (idx < 0) {
+    return {
+      phaseNames: [],
+      phaseEntrySteps: [],
+      currentPhaseLabel: '',
+      sectionStep: 0,
+      sectionTotal: 0,
+    }
+  }
+  return {
+    phaseNames: phases.map((p) => p.label),
+    phaseEntrySteps: phases.map((p) => p.firstStep),
+    currentPhaseLabel: phases[idx].label,
+    sectionStep: idx + 1,
+    sectionTotal: phases.length,
+  }
+}
 
 /** Band anchors for the five word options (still stored as 1–10 strings in formData). */
 const WIZARD_RATING_BAND_VALUES = [2, 4, 6, 8, 10]
@@ -144,33 +194,47 @@ function SymptomsPageContent() {
     endYear: ''
   })
 
-  // ✅ Prevent body scrolling only on landing page
+  // Mobile only + landing (step 0): freeze body scroll (matches Tailwind `sm` 640px). Desktop or step > 0: normal scroll.
   useEffect(() => {
-    // Apply fixed positioning only on landing page (step 0)
-    if (currentStep === 0) {
-      // Freeze scroll
-      document.body.style.position = 'fixed'
-      document.body.style.width = '100%'
-      document.body.style.height = '100%'
-    
-      // Apply gradient to html element since body is fixed
-      // Use CSS variable to respect light/dark mode
-      const bgMain = getComputedStyle(document.documentElement).getPropertyValue('--bg-main').trim()
-      document.body.style.backgroundColor = 'transparent'
-      document.documentElement.style.background = bgMain || '#f8fafc' // Fallback to light mode default
-      document.documentElement.style.height = '100%'
-    } else {
-      // Reset styles when on question pages
-      document.body.style.position = 'static'
-      document.body.style.width = 'auto'
-      document.body.style.height = 'auto'
-      document.body.style.backgroundColor = ''
-      document.documentElement.style.background = ''
-      document.documentElement.style.height = ''
+    const SM_PX = 640
+
+    const syncBodyScrollLock = () => {
+      const isDesktop = window.matchMedia(`(min-width: ${SM_PX}px)`).matches
+
+      if (currentStep !== 0) {
+        document.body.style.position = 'static'
+        document.body.style.width = 'auto'
+        document.body.style.height = 'auto'
+        document.body.style.backgroundColor = ''
+        document.documentElement.style.background = ''
+        document.documentElement.style.height = ''
+        return
+      }
+
+      if (isDesktop) {
+        document.body.style.position = 'static'
+        document.body.style.width = 'auto'
+        document.body.style.height = 'auto'
+        document.body.style.backgroundColor = ''
+        document.documentElement.style.background = ''
+        document.documentElement.style.height = ''
+      } else {
+        document.body.style.position = 'fixed'
+        document.body.style.width = '100%'
+        document.body.style.height = '100%'
+        const bgMain = getComputedStyle(document.documentElement).getPropertyValue('--bg-main').trim()
+        document.body.style.backgroundColor = 'transparent'
+        document.documentElement.style.background = bgMain || '#f8fafc'
+        document.documentElement.style.height = '100%'
+      }
     }
-  
-    // 🧹 Cleanup on unmount
+
+    syncBodyScrollLock()
+    const mql = window.matchMedia(`(min-width: ${SM_PX}px)`)
+    mql.addEventListener('change', syncBodyScrollLock)
+
     return () => {
+      mql.removeEventListener('change', syncBodyScrollLock)
       document.body.style.position = 'static'
       document.body.style.width = 'auto'
       document.body.style.height = 'auto'
@@ -325,6 +389,7 @@ function SymptomsPageContent() {
 
   const datePickerRef = useRef(null)
   const datePickerEndRef = useRef(null)
+  const phaseBreadcrumbNavRef = useRef(null)
 
   const [dateErrors, setDateErrors] = useState({
     day: '',
@@ -349,113 +414,22 @@ function SymptomsPageContent() {
 
   const totalSteps = 18
 
-  const prevStep = () => {
-    
-    // Smart back navigation for ALL skip scenarios
-    
-    // 1. If on severity (step 4) and symptoms are ongoing, go back to ongoing question (step 2)
-    if (currentStep === 4 && formData.isOngoing === true) {
-      setCurrentStep(2) // Go back to ongoing question
-      return
+  const symptomWizardPhaseProgress = useMemo(
+    () => getSymptomWizardPhaseProgress(currentStep, isFirstTimeUser, userPreferences),
+    [currentStep, isFirstTimeUser, userPreferences]
+  )
+
+  // Below md: horizontal scroll row — keep the active section chip in view.
+  useLayoutEffect(() => {
+    if (currentStep <= 0) return
+    if (typeof window === 'undefined' || !window.matchMedia('(max-width: 767px)').matches) return
+    const nav = phaseBreadcrumbNavRef.current
+    if (!nav) return
+    const current = nav.querySelector('button[aria-current="step"]')
+    if (current instanceof HTMLElement) {
+      current.scrollIntoView({ inline: 'nearest', block: 'nearest', behavior: 'instant' })
     }
-    
-    // 2. If on smoking (step 9) and bathroom frequency is 0, go back to bathroom frequency (step 6)
-    if (currentStep === 9 && parseInt(formData.normal_bathroom_frequency) === 0) {
-      setCurrentStep(6) // Go back to bathroom frequency
-      return
-    }
-    
-    // 3. Smart navigation based on user preferences
-    if (!isFirstTimeUser && userPreferences) {
-      // If on meals (step 13) and user is non-smoker/non-drinker, go back to bathroom details (step 8) or bathroom change (step 7)
-      if (currentStep === 13 && !userPreferences.isSmoker && !userPreferences.isDrinker) {
-        // Go back to bathroom details if they filled it out, otherwise bathroom change question
-        if (formData.bathroom_frequency_changed === 'yes' && formData.bathroom_frequency_change_details) {
-          setCurrentStep(8) // Go back to bathroom details
-        } else {
-          setCurrentStep(7) // Go back to bathroom change question
-        }
-        return
-      }
-      // If on alcohol questions (step 11) and user is non-smoker, go back to bathroom details/change
-      else if (currentStep === 11 && !userPreferences.isSmoker) {
-        if (formData.bathroom_frequency_changed === 'yes' && formData.bathroom_frequency_change_details) {
-          setCurrentStep(8) // Go back to bathroom details
-        } else {
-          setCurrentStep(7) // Go back to bathroom change question
-        }
-        return
-      }
-      // If on smoking details (step 10) and user is non-drinker, go back to smoking question (step 9)
-      else if (currentStep === 10 && !userPreferences.isDrinker) {
-        setCurrentStep(9) // Go back to smoking question
-        return
-      }
-    }
-    
-    // 4. If on bathroom change question (step 7) and bathroom frequency is 0, go back to bathroom frequency (step 6)
-    if (currentStep === 7 && parseInt(formData.normal_bathroom_frequency) === 0) {
-      setCurrentStep(6) // Go back to bathroom frequency
-      return
-    }
-    
-    // 5. If on meals (step 13) and user answered "Yes" to alcohol, go back to alcohol details (step 12)
-    if (currentStep === 13 && formData.alcohol === true && formData.alcohol_units) {
-      setCurrentStep(12) // Go back to alcohol details
-      return
-    }
-    
-    // 6. If on meals (step 13) and user answered "No" to alcohol, go back to alcohol question (step 11)
-    if (currentStep === 13 && formData.alcohol === false) {
-      setCurrentStep(11) // Go back to alcohol question, skip alcohol details
-      return
-    }
-    
-    // 6. If on meals (step 13) and user answered "No" to smoking, go back to smoking question (step 9)
-    if (currentStep === 13 && formData.smoking === false) {
-      setCurrentStep(9) // Go back to smoking question, skip smoking details
-      return
-    }
-    
-    // 6. If on meals (step 13) and user is a smoker but not a drinker, go back to smoking details (step 10)
-    if (currentStep === 13 && !isFirstTimeUser && userPreferences && userPreferences.isSmoker && !userPreferences.isDrinker) {
-      setCurrentStep(10) // Go back to smoking details, skip alcohol question
-      return
-    }
-    
-    // 6. If on meals (step 13) and user answered "No" to alcohol, go back to alcohol question (step 11)
-    if (currentStep === 13 && formData.alcohol === false) {
-      setCurrentStep(11) // Go back to alcohol question
-      return
-    }
-    
-    // 7. If on bathroom change question (step 7) and user has baseline frequency, go back to stress level (step 5)
-    if (currentStep === 7 && !isFirstTimeUser && userPreferences && userPreferences.normalBathroomFrequency) {
-      setCurrentStep(5) // Go back to stress level, skip baseline question
-      return
-    }
-    
-    // 8. If on smoking (step 9) and user answered "No" to bathroom frequency change, go back to bathroom change question (step 7)
-    if (currentStep === 9 && formData.bathroom_frequency_changed === 'no') {
-      setCurrentStep(7) // Go back to bathroom change question
-      return
-    }
-    
-    // 7. If on alcohol (step 11) and user answered "No" to smoking, go back to smoking question (step 9)
-    if (currentStep === 11 && formData.smoking === false) {
-      setCurrentStep(9) // Go back to smoking question
-      return
-    }
-    
-    // 8. If on smoking (step 9) and bathroom frequency is 0, go back to bathroom frequency (step 6)
-    if (currentStep === 9 && parseInt(formData.normal_bathroom_frequency) === 0) {
-      setCurrentStep(6) // Go back to bathroom frequency
-      return
-    }
-    
-    // Default back navigation
-    setCurrentStep(currentStep - 1)
-  }
+  }, [currentStep, symptomWizardPhaseProgress.currentPhaseLabel])
 
   const nextStep = () => {
     // Validate current step before proceeding
@@ -1114,22 +1088,13 @@ function SymptomsPageContent() {
     })
   }
 
+  const wizardPhaseNames = symptomWizardPhaseProgress.phaseNames
+
   return (
-    <div className={`symptoms-wizard max-w-4xl w-full mx-auto sm:px-4 md:px-6 lg:px-8 min-w-0 flex flex-col justify-center sm:flex-grow ${currentStep > 0 ? 'pb-20 lg:pb-0' : ''}`}>
-      {/* Header: Back when needed, then title - hide on landing */}
+    <div className={`symptoms-wizard max-w-4xl w-full mx-auto min-w-0 flex flex-col justify-center sm:min-h-[500px] ${currentStep > 0 ? 'pb-20 lg:pb-0' : ''}`}>
+      {/* Header: exit + section breadcrumb — hide on landing */}
       {currentStep > 0 && (
-        <div className="pt-6 md:pt-0 mb-8">
-          {currentStep > 1 && (
-            <button
-              onClick={prevStep}
-              className="text-cadet-blue hover:text-cadet-blue/80 hover:underline text-base font-medium flex items-center mb-3"
-            >
-              <svg className="w-4 h-4 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 19l-7-7 7-7" />
-              </svg>
-              Back
-            </button>
-          )}
+        <div className="min-w-0 w-full max-w-full pt-6 md:pt-0 mb-6 md:mb-8">
           <button
             type="button"
             onClick={() => setCurrentStep(0)}
@@ -1137,11 +1102,68 @@ function SymptomsPageContent() {
           >
             Log Symptoms
           </button>
+
+          {symptomWizardPhaseProgress.sectionTotal > 0 && (
+            <div className="mt-6 w-full min-w-0 max-w-full">
+              <span id="symptom-wizard-step-status" className="sr-only">
+                Section {symptomWizardPhaseProgress.sectionStep} of {symptomWizardPhaseProgress.sectionTotal}. Current
+                section: {symptomWizardPhaseProgress.currentPhaseLabel}.
+              </span>
+              <nav
+                ref={phaseBreadcrumbNavRef}
+                aria-describedby="symptom-wizard-step-status"
+                className={[
+                  'flex w-full min-w-0 max-w-full items-center gap-x-1 gap-y-1 text-sm sm:text-base leading-snug',
+                  'max-md:flex-nowrap max-md:overflow-x-auto max-md:overflow-y-hidden max-md:overscroll-x-contain max-md:scrollbar-hide max-md:touch-pan-x max-md:scroll-smooth max-md:pb-0.5 max-md:-mx-1 max-md:px-1',
+                  'md:flex-wrap md:overflow-x-visible md:overflow-y-visible md:mx-0 md:px-0 md:touch-auto',
+                ].join(' ')}
+                style={{ WebkitOverflowScrolling: 'touch' }}
+                aria-label="Wizard sections"
+              >
+                {wizardPhaseNames.map((label, i) => {
+                  const entryStep = symptomWizardPhaseProgress.phaseEntrySteps[i]
+                  const isCurrent = label === symptomWizardPhaseProgress.currentPhaseLabel
+                  const canGo = typeof entryStep === 'number' && entryStep <= currentStep
+                  return (
+                    <Fragment key={`${label}-${i}`}>
+                      {i > 0 && (
+                        <ChevronRight
+                          className="w-4 h-4 shrink-0 text-muted/50 self-center"
+                          strokeWidth={2.25}
+                          aria-hidden
+                        />
+                      )}
+                      <button
+                        type="button"
+                        disabled={!canGo}
+                        aria-current={isCurrent ? 'step' : undefined}
+                        onClick={() => {
+                          if (canGo) setCurrentStep(entryStep)
+                        }}
+                        className={[
+                          'shrink-0 min-h-11 inline-flex items-center rounded-md px-2 -mx-0.5 text-left whitespace-nowrap touch-manipulation transition-colors [-webkit-tap-highlight-color:transparent]',
+                          isCurrent
+                            ? 'font-semibold text-cadet-blue'
+                            : 'font-medium text-muted',
+                          canGo && !isCurrent
+                            ? 'hover:text-cadet-blue hover:underline cursor-pointer'
+                            : '',
+                          !canGo ? 'opacity-45 cursor-not-allowed' : '',
+                        ].join(' ')}
+                      >
+                        {label}
+                      </button>
+                    </Fragment>
+                  )
+                })}
+              </nav>
+            </div>
+          )}
         </div>
       )}
 
       {/* Wizard Container */}
-      <div className="mb-4">
+      <div className="mb-4 min-w-0 w-full max-w-full">
         {/* Step 0: Landing Page */}
         {currentStep === 0 && (
           <div className="flex flex-col items-center justify-center text-center pt-20 sm:pt-0">

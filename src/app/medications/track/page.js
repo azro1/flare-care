@@ -1,15 +1,13 @@
 'use client'
 
-import { useState, useEffect, useRef, forwardRef } from 'react'
-import { useForm } from 'react-hook-form'
-import { validateMedicationChatName } from '@/lib/validation/medicationChat'
+import { useState, useEffect, useLayoutEffect, useRef, forwardRef, useMemo, Fragment } from 'react'
 import { useRouter } from 'next/navigation'
 import { useAuth } from '@/lib/AuthContext'
 import ConfirmationModal from '@/components/ConfirmationModal'
 import ProtectedRoute from '@/components/ProtectedRoute'
 import DatePicker from 'react-datepicker'
 import 'react-datepicker/dist/react-datepicker.css'
-import { ChartLine, Calendar, Loader2, MessageCircle, Bot } from 'lucide-react'
+import { ChartLine, Calendar, ChevronRight, Loader2 } from 'lucide-react'
 import { supabase, TABLES } from '@/lib/supabase'
 
 const MedicationDateInput = forwardRef(({ value, onClick, onChange, placeholder, id, className, onIconClick, ...rest }, ref) => (
@@ -39,28 +37,32 @@ const MedicationDateInput = forwardRef(({ value, onClick, onChange, placeholder,
 ))
 MedicationDateInput.displayName = 'MedicationDateInput'
 
-const INITIAL_CHAT_DRAFT = {
-  missedMedications: [],
-  nsaids: [],
-  antibiotics: [],
-  meta: { stage: 'missed_yes_no', skipped: { missed: false, nsaid: false, antibiotic: false }, currentEntry: {} },
+/** Wizard step id → section name (steps 1–2 missed, 3–4 NSAIDs, 5–6 antibiotics, 7 review). */
+function medicationStepPhaseLabel(step) {
+  if (step <= 0) return ''
+  if (step <= 2) return 'Missed medications'
+  if (step <= 4) return 'NSAIDs'
+  if (step <= 6) return 'Antibiotics'
+  return 'Review'
 }
 
-const CHAT_FIRST_QUESTION = 'Did you miss any prescribed medications recently? Reply yes or no.'
+/** Deduped phase names and the first wizard step id for each segment (e.g. [1,3,5,7] → four pairs). */
+function medicationPhaseBreadcrumbsForWizardSteps(stepIds) {
+  const names = []
+  const entrySteps = []
+  for (const s of stepIds) {
+    const label = medicationStepPhaseLabel(s)
+    if (names[names.length - 1] !== label) {
+      names.push(label)
+      entrySteps.push(s)
+    }
+  }
+  return { names, entrySteps }
+}
 
 function MedicationTrackingWizard() {
   const router = useRouter()
   const { user } = useAuth()
-  const CHAT_STORAGE_KEYS = {
-    mode: 'medication-chat-mode',
-    messages: 'medication-chat-messages',
-    draft: 'medication-chat-draft',
-    status: 'medication-chat-status',
-    missingFields: 'medication-chat-missing-fields',
-    warnings: 'medication-chat-warnings',
-    readyMessage: 'medication-chat-ready-message',
-    restoreOnce: 'medication-chat-restore-once',
-  }
 
   // Wizard state - initialize from localStorage if available
   const [currentStep, setCurrentStep] = useState(() => {
@@ -99,35 +101,10 @@ function MedicationTrackingWizard() {
   const [fieldErrors, setFieldErrors] = useState({})
   const [isSubmitting, setIsSubmitting] = useState(false)
   const [isMobile, setIsMobile] = useState(false)
-  const [entryMode, setEntryMode] = useState('wizard')
-  const [chatMessages, setChatMessages] = useState([])
-  const [chatDraft, setChatDraft] = useState(INITIAL_CHAT_DRAFT)
-  const [chatStatus, setChatStatus] = useState('needs_more_info')
-  const [chatMissingFields, setChatMissingFields] = useState([])
-  const [chatWarnings, setChatWarnings] = useState([])
-  const [isChatLoading, setIsChatLoading] = useState(false)
-  const [chatError, setChatError] = useState('')
-  const [chatReadyMessage, setChatReadyMessage] = useState('')
-  const chatScrollRef = useRef(null)
-  const chatReviewRef = useRef(null)
-  const chatHydratedRef = useRef(false)
-  const enableMedicationChat = process.env.NEXT_PUBLIC_ENABLE_MEDICATION_CHATBOT === 'true'
-  const chatOnStep0 = currentStep === 0 && entryMode === 'chat'
-  const sleep = (ms) => new Promise((resolve) => setTimeout(resolve, ms))
   const missedMedDatePickerRefs = useRef({})
   const nsaidDatePickerRefs = useRef({})
   const antibioticDatePickerRefs = useRef({})
-
-  const {
-    register: registerChatMessage,
-    reset: resetChatForm,
-    watch: watchChatMessage,
-    getValues,
-  } = useForm({
-    defaultValues: { message: '' },
-  })
-
-  const chatMessageValue = watchChatMessage('message')
+  const phaseBreadcrumbNavRef = useRef(null)
 
   // Detect mobile for DatePicker
   useEffect(() => {
@@ -152,103 +129,25 @@ function MedicationTrackingWizard() {
     }
   }, [formData])
 
-  // Hydrate chat state from localStorage on mount, but only when explicitly marked for restore (refresh).
+  // Remove legacy FlareBot localStorage keys (feature removed).
   useEffect(() => {
     if (typeof window === 'undefined') return
+    const legacyKeys = [
+      'medication-chat-mode',
+      'medication-chat-messages',
+      'medication-chat-draft',
+      'medication-chat-status',
+      'medication-chat-missing-fields',
+      'medication-chat-warnings',
+      'medication-chat-ready-message',
+      'medication-chat-restore-once',
+    ]
     try {
-      const shouldRestore = localStorage.getItem(CHAT_STORAGE_KEYS.restoreOnce) === 'true'
-      if (!shouldRestore) {
-        localStorage.removeItem(CHAT_STORAGE_KEYS.mode)
-        localStorage.removeItem(CHAT_STORAGE_KEYS.messages)
-        localStorage.removeItem(CHAT_STORAGE_KEYS.draft)
-        localStorage.removeItem(CHAT_STORAGE_KEYS.status)
-        localStorage.removeItem(CHAT_STORAGE_KEYS.missingFields)
-        localStorage.removeItem(CHAT_STORAGE_KEYS.warnings)
-        localStorage.removeItem(CHAT_STORAGE_KEYS.readyMessage)
-        chatHydratedRef.current = true
-        return
-      }
-
-      const savedMode = localStorage.getItem(CHAT_STORAGE_KEYS.mode)
-      if (savedMode === 'chat' || savedMode === 'wizard') {
-        setEntryMode(savedMode)
-      }
-
-      const savedMessages = localStorage.getItem(CHAT_STORAGE_KEYS.messages)
-      if (savedMessages) {
-        const parsed = JSON.parse(savedMessages)
-        if (Array.isArray(parsed)) setChatMessages(parsed)
-      }
-
-      const savedDraft = localStorage.getItem(CHAT_STORAGE_KEYS.draft)
-      if (savedDraft) {
-        const parsed = JSON.parse(savedDraft)
-        if (parsed && typeof parsed === 'object') setChatDraft(parsed)
-      }
-
-      const savedStatus = localStorage.getItem(CHAT_STORAGE_KEYS.status)
-      if (savedStatus) setChatStatus(savedStatus)
-
-      const savedMissing = localStorage.getItem(CHAT_STORAGE_KEYS.missingFields)
-      if (savedMissing) {
-        const parsed = JSON.parse(savedMissing)
-        if (Array.isArray(parsed)) setChatMissingFields(parsed)
-      }
-
-      const savedWarnings = localStorage.getItem(CHAT_STORAGE_KEYS.warnings)
-      if (savedWarnings) {
-        const parsed = JSON.parse(savedWarnings)
-        if (Array.isArray(parsed)) setChatWarnings(parsed)
-      }
-
-      const savedReadyMessage = localStorage.getItem(CHAT_STORAGE_KEYS.readyMessage)
-      if (savedReadyMessage) setChatReadyMessage(savedReadyMessage)
-
-      // One-time restore only (refresh). Do not keep restoring across normal navigation.
-      localStorage.removeItem(CHAT_STORAGE_KEYS.restoreOnce)
-    } catch (error) {
-      console.warn('Failed to restore medication chat state:', error)
+      legacyKeys.forEach((k) => localStorage.removeItem(k))
+    } catch {
+      /* ignore */
     }
-    // Unlock persistence after hydration has applied to state.
-    setTimeout(() => {
-      chatHydratedRef.current = true
-    }, 0)
   }, [])
-
-  // Mark current chat state for one-time restore on page refresh/unload.
-  useEffect(() => {
-    if (typeof window === 'undefined') return
-    const persistForRefresh = () => {
-      try {
-        localStorage.setItem(CHAT_STORAGE_KEYS.restoreOnce, 'true')
-        localStorage.setItem(CHAT_STORAGE_KEYS.mode, entryMode)
-        localStorage.setItem(CHAT_STORAGE_KEYS.messages, JSON.stringify(chatMessages))
-        localStorage.setItem(CHAT_STORAGE_KEYS.draft, JSON.stringify(chatDraft))
-        localStorage.setItem(CHAT_STORAGE_KEYS.status, chatStatus)
-        localStorage.setItem(CHAT_STORAGE_KEYS.missingFields, JSON.stringify(chatMissingFields))
-        localStorage.setItem(CHAT_STORAGE_KEYS.warnings, JSON.stringify(chatWarnings))
-        localStorage.setItem(CHAT_STORAGE_KEYS.readyMessage, chatReadyMessage || '')
-      } catch (error) {
-        console.warn('Failed to persist medication chat state:', error)
-      }
-    }
-
-    window.addEventListener('beforeunload', persistForRefresh)
-    window.addEventListener('pagehide', persistForRefresh)
-
-    return () => {
-      window.removeEventListener('beforeunload', persistForRefresh)
-      window.removeEventListener('pagehide', persistForRefresh)
-    }
-  }, [entryMode, chatMessages, chatDraft, chatStatus, chatMissingFields, chatWarnings, chatReadyMessage])
-
-  // Keep chat pinned to latest message
-  useEffect(() => {
-    if (entryMode !== 'chat') return
-    const container = chatScrollRef.current
-    if (!container) return
-    container.scrollTop = container.scrollHeight
-  }, [chatMessages, isChatLoading, entryMode])
 
   // Default date to today when reaching relevant step for any items with null/empty date
   useEffect(() => {
@@ -297,28 +196,46 @@ function MedicationTrackingWizard() {
     }
   }, [])
 
-  // Prevent body scrolling on manual wizard landing only (AuthForm-style). FlareBot chat does not lock the page
-  // so shorter viewports can scroll to the full chat card.
+  // Mobile only + landing (step 0): freeze body scroll (matches Tailwind `sm` 640px). Desktop or step > 0: normal scroll.
   useEffect(() => {
-    const lockBody = currentStep === 0 && entryMode === 'wizard'
+    const SM_PX = 640
 
-    if (lockBody) {
-      document.body.style.position = 'fixed'
-      document.body.style.width = '100%'
-      document.body.style.height = '100%'
-      document.body.style.backgroundColor = 'transparent'
-      document.documentElement.style.background = 'var(--bg-main-gradient)'
-      document.documentElement.style.height = '100%'
-    } else {
-      document.body.style.position = 'static'
-      document.body.style.width = 'auto'
-      document.body.style.height = 'auto'
-      document.body.style.backgroundColor = ''
-      document.documentElement.style.background = ''
-      document.documentElement.style.height = ''
+    const syncBodyScrollLock = () => {
+      const isDesktop = window.matchMedia(`(min-width: ${SM_PX}px)`).matches
+
+      if (currentStep !== 0) {
+        document.body.style.position = 'static'
+        document.body.style.width = 'auto'
+        document.body.style.height = 'auto'
+        document.body.style.backgroundColor = ''
+        document.documentElement.style.background = ''
+        document.documentElement.style.height = ''
+        return
+      }
+
+      if (isDesktop) {
+        document.body.style.position = 'static'
+        document.body.style.width = 'auto'
+        document.body.style.height = 'auto'
+        document.body.style.backgroundColor = ''
+        document.documentElement.style.background = ''
+        document.documentElement.style.height = ''
+      } else {
+        document.body.style.position = 'fixed'
+        document.body.style.width = '100%'
+        document.body.style.height = '100%'
+        document.body.style.backgroundColor = 'transparent'
+        document.documentElement.style.background = 'var(--bg-main-gradient)'
+        document.documentElement.style.height = '100%'
+      }
     }
+
+    syncBodyScrollLock()
+    const mql = window.matchMedia(`(min-width: ${SM_PX}px)`)
+    mql.addEventListener('change', syncBodyScrollLock)
 
     return () => {
+      mql.removeEventListener('change', syncBodyScrollLock)
       document.body.style.position = 'static'
       document.body.style.width = 'auto'
       document.body.style.height = 'auto'
@@ -326,22 +243,13 @@ function MedicationTrackingWizard() {
       document.documentElement.style.background = ''
       document.documentElement.style.height = ''
     }
-  }, [currentStep, entryMode])
+  }, [currentStep])
 
   // Manual wizard step 7 review: scroll to top.
   useEffect(() => {
     if (currentStep !== 7) return
     window.scrollTo({ top: 0, left: 0, behavior: 'instant' })
   }, [currentStep])
-
-  // FlareBot review card: scroll into view so “Review captured entries” clears the sticky nav (mobile).
-  useEffect(() => {
-    if (currentStep !== 0 || entryMode !== 'chat' || chatStatus !== 'ready_for_review') return
-    const t = window.setTimeout(() => {
-      chatReviewRef.current?.scrollIntoView({ block: 'start', behavior: 'instant' })
-    }, 0)
-    return () => clearTimeout(t)
-  }, [currentStep, entryMode, chatStatus])
 
   // Smart navigation - calculate which steps should be shown
   const getVisibleSteps = () => {
@@ -359,6 +267,44 @@ function MedicationTrackingWizard() {
     
     return steps
   }
+
+  // Phase breadcrumb path only advances when `currentStep` changes — not when Yes/No toggles change how many steps exist (avoids 3/6 ↔ 3/7 flicker).
+  const medicationWizardProgress = useMemo(() => {
+    const visible = getVisibleSteps()
+    const wizardOnly = visible.filter((s) => s > 0)
+    const idx = wizardOnly.indexOf(currentStep)
+    if (idx < 0 || wizardOnly.length === 0) {
+      return {
+        step: 0,
+        total: 0,
+        phaseNames: [],
+        phaseEntrySteps: [],
+        currentPhaseLabel: '',
+      }
+    }
+    const { names: phaseNames, entrySteps: phaseEntrySteps } =
+      medicationPhaseBreadcrumbsForWizardSteps(wizardOnly)
+    const currentPhaseLabel = medicationStepPhaseLabel(currentStep)
+    return {
+      step: idx + 1,
+      total: wizardOnly.length,
+      phaseNames,
+      phaseEntrySteps,
+      currentPhaseLabel,
+    }
+  }, [currentStep]) // eslint-disable-line react-hooks/exhaustive-deps -- label/path snapshot when entering step only (not on Yes/No toggles)
+
+  // Below md: single-line scroll chips — keep the active step in view.
+  useLayoutEffect(() => {
+    if (currentStep <= 0) return
+    if (typeof window === 'undefined' || !window.matchMedia('(max-width: 767px)').matches) return
+    const nav = phaseBreadcrumbNavRef.current
+    if (!nav) return
+    const current = nav.querySelector('button[aria-current="step"]')
+    if (current instanceof HTMLElement) {
+      current.scrollIntoView({ inline: 'nearest', block: 'nearest', behavior: 'instant' })
+    }
+  }, [currentStep, medicationWizardProgress.currentPhaseLabel])
 
   const nextStep = () => {
     // Validate step 2 (missed medications list) - must have at least one complete entry if they answered yes
@@ -406,15 +352,28 @@ function MedicationTrackingWizard() {
     const visibleSteps = getVisibleSteps()
     const currentIndex = visibleSteps.indexOf(currentStep)
     if (currentIndex < visibleSteps.length - 1) {
-      setCurrentStep(visibleSteps[currentIndex + 1])
-    }
-  }
-
-  const prevStep = () => {
-    const visibleSteps = getVisibleSteps()
-    const currentIndex = visibleSteps.indexOf(currentStep)
-    if (currentIndex > 0) {
-      setCurrentStep(visibleSteps[currentIndex - 1])
+      const nextStepValue = visibleSteps[currentIndex + 1]
+      // Skip empty review: same filters as handleSubmit / saveMedicationTracking
+      if (nextStepValue === 7) {
+        const cleanedData = {
+          missedMedicationsList: formData.missedMedications
+            ? formData.missedMedicationsList.filter((item) => item.medication.trim())
+            : [],
+          nsaidList: formData.nsaidUsage ? formData.nsaidList.filter((item) => item.medication.trim()) : [],
+          antibioticList: formData.antibioticUsage
+            ? formData.antibioticList.filter((item) => item.medication.trim())
+            : [],
+        }
+        const hasNoData =
+          cleanedData.missedMedicationsList.length === 0 &&
+          cleanedData.nsaidList.length === 0 &&
+          cleanedData.antibioticList.length === 0
+        if (hasNoData) {
+          setShowNoDataModal(true)
+          return
+        }
+      }
+      setCurrentStep(nextStepValue)
     }
   }
 
@@ -429,42 +388,6 @@ function MedicationTrackingWizard() {
 
   // Dosage: digits only; we add "mg" when saving and displaying
   const normalizeDosage = (raw) => (raw || '').replace(/\D/g, '').slice(0, 5)
-  const formatDateUk = (value) => {
-    if (!value) return 'N/A'
-    const d = new Date(value)
-    if (Number.isNaN(d.getTime())) return value
-    return d.toLocaleDateString('en-GB', { day: '2-digit', month: '2-digit', year: 'numeric' })
-  }
-  const toDateOrToday = (value) => {
-    const d = value ? new Date(value) : new Date()
-    return Number.isNaN(d.getTime()) ? new Date() : d
-  }
-
-  const mapChatDraftToCleanedData = (draft) => ({
-    missedMedicationsList: (draft?.missedMedications || [])
-      .map((item) => ({
-        medication: item.medicationName || '',
-        date: toDateOrToday(item.date),
-        timeOfDay: item.time || '',
-      }))
-      .filter((item) => item.medication.trim()),
-    nsaidList: (draft?.nsaids || [])
-      .map((item) => ({
-        medication: item.name || '',
-        date: toDateOrToday(item.date),
-        timeOfDay: item.time || '',
-        dosage: normalizeDosage(item.dose),
-      }))
-      .filter((item) => item.medication.trim()),
-    antibioticList: (draft?.antibiotics || [])
-      .map((item) => ({
-        medication: item.name || '',
-        date: toDateOrToday(item.date),
-        timeOfDay: item.time || '',
-        dosage: normalizeDosage(item.dose),
-      }))
-      .filter((item) => item.medication.trim()),
-  })
 
   const saveMedicationTracking = async (cleanedData) => {
     const hasNoData =
@@ -495,13 +418,6 @@ function MedicationTrackingWizard() {
 
     localStorage.removeItem('medication-wizard-step')
     localStorage.removeItem('medication-wizard-form')
-    localStorage.removeItem(CHAT_STORAGE_KEYS.mode)
-    localStorage.removeItem(CHAT_STORAGE_KEYS.messages)
-    localStorage.removeItem(CHAT_STORAGE_KEYS.draft)
-    localStorage.removeItem(CHAT_STORAGE_KEYS.status)
-    localStorage.removeItem(CHAT_STORAGE_KEYS.missingFields)
-    localStorage.removeItem(CHAT_STORAGE_KEYS.warnings)
-    localStorage.removeItem(CHAT_STORAGE_KEYS.readyMessage)
     localStorage.setItem('showMedicationToast', 'true')
     router.push('/')
     return true
@@ -627,121 +543,6 @@ function MedicationTrackingWizard() {
         setFieldErrors(prev => ({ ...prev, antibioticList: '' }))
       }
     }, 0)
-  }
-
-  const addChatMessage = (role, content) => {
-    if (!content) return
-    setChatMessages(prev => [...prev, { id: `${Date.now()}-${Math.random()}`, role, content }])
-  }
-
-  const resetChatState = ({ keepMode = true, seedFirstQuestion = false } = {}) => {
-    if (!keepMode) {
-      setEntryMode('wizard')
-    }
-    resetChatForm({ message: '' })
-    setChatDraft(INITIAL_CHAT_DRAFT)
-    setChatStatus('needs_more_info')
-    setChatReadyMessage('')
-    setChatMissingFields([])
-    setChatWarnings([])
-    setChatError('')
-    setChatMessages(
-      seedFirstQuestion
-        ? [{ id: `bot-reset-${Date.now()}`, role: 'assistant', content: CHAT_FIRST_QUESTION }]
-        : []
-    )
-  }
-
-  const sendChatTurn = async (message, options = {}) => {
-    const { immediate = false } = options
-    if (!immediate) {
-      setIsChatLoading(true)
-    }
-    setChatError('')
-    try {
-      const response = await fetch('/api/ai/medication-chat', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          conversationId: `medication-chat-${user?.id || 'anon'}`,
-          userMessage: message,
-          draft: chatDraft,
-          timezone: Intl.DateTimeFormat().resolvedOptions().timeZone || 'Europe/London',
-        }),
-      })
-
-      const data = await response.json()
-      if (!response.ok) {
-        throw new Error(data?.error || 'Medication chat failed.')
-      }
-
-      setChatDraft(data?.draft || chatDraft)
-      setChatMissingFields(Array.isArray(data?.missingFields) ? data.missingFields : [])
-      setChatWarnings(Array.isArray(data?.warnings) ? data.warnings : [])
-      const nextStatus = data?.status || 'needs_more_info'
-      const nextDraft = data?.draft || chatDraft
-      const hasAnyChatEntries =
-        (nextDraft?.missedMedications?.length || 0) > 0 ||
-        (nextDraft?.nsaids?.length || 0) > 0 ||
-        (nextDraft?.antibiotics?.length || 0) > 0
-      // Small delay so assistant replies feel conversational (except initial prompt).
-      if (!immediate) {
-        await sleep(500)
-      }
-      if (nextStatus === 'ready_for_review') {
-        if (!hasAnyChatEntries) {
-          setShowNoDataModal(true)
-          resetChatState({ seedFirstQuestion: true })
-          return
-        }
-        setChatReadyMessage(data?.assistantMessage || 'Thanks — review what we captured below, then confirm to save.')
-        setChatStatus('ready_for_review')
-      } else {
-        addChatMessage('assistant', data?.assistantMessage || 'I updated your draft. Continue when ready.')
-        setChatStatus(nextStatus)
-      }
-    } catch (error) {
-      console.error('Medication chat request failed:', error)
-      setChatError('Medication chatbot is unavailable right now. You can continue using the manual form.')
-    } finally {
-      if (!immediate) {
-        setIsChatLoading(false)
-      }
-    }
-  }
-
-  const startChatMode = async () => {
-    setEntryMode('chat')
-    resetChatState()
-    await sendChatTurn('', { immediate: true })
-  }
-
-  const submitChatMessage = async () => {
-    const trimmed = getValues('message').trim()
-    if (!trimmed || isChatLoading) return
-    const nameErr = validateMedicationChatName(trimmed, chatDraft?.meta?.stage)
-    if (nameErr) {
-      addChatMessage('user', trimmed)
-      resetChatForm({ message: '' })
-      await sleep(400)
-      addChatMessage('assistant', nameErr)
-      return
-    }
-    addChatMessage('user', trimmed)
-    resetChatForm({ message: '' })
-    await sendChatTurn(trimmed)
-  }
-
-  const handleChatSubmit = async () => {
-    if (isSubmitting || chatStatus !== 'ready_for_review') return
-    setIsSubmitting(true)
-    try {
-      const cleanedData = mapChatDraftToCleanedData(chatDraft)
-      await saveMedicationTracking(cleanedData)
-    } catch (error) {
-      console.error('Error saving medication tracking from chat:', error)
-      setIsSubmitting(false)
-    }
   }
 
   // Handle cancel
@@ -1329,24 +1130,15 @@ function MedicationTrackingWizard() {
     return null
   }
 
+  const wizardPhaseNames = medicationWizardProgress.phaseNames
+
   return (
     <div
-      className={`medications-wizard max-w-4xl w-full mx-auto sm:px-4 md:px-6 lg:px-8 min-w-0 flex flex-col ${currentStep === 0 && entryMode === 'chat' && chatStatus === 'ready_for_review' ? 'justify-start' : 'justify-center'} sm:flex-grow ${currentStep > 0 ? 'pb-28 lg:pb-0' : ''}`}
+      className={`medications-wizard max-w-4xl w-full mx-auto min-w-0 flex flex-col justify-center sm:min-h-[500px] ${currentStep > 0 ? 'pb-28 lg:pb-0' : ''}`}
     >
-      {/* Header: Back when needed, then title - hide on landing */}
+      {/* Header: exit to medications + section breadcrumb — hide on landing */}
       {currentStep > 0 && (
-        <div className="pt-6 md:pt-0 mb-8">
-          {currentStep > 1 && (
-            <button
-              onClick={prevStep}
-              className="text-cadet-blue hover:text-cadet-blue/80 hover:underline text-base font-medium flex items-center mb-3"
-            >
-              <svg className="w-4 h-4 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 19l-7-7 7-7" />
-              </svg>
-              Back
-            </button>
-          )}
+        <div className="min-w-0 w-full max-w-full pt-6 md:pt-0 mb-6 md:mb-8">
           <button
             type="button"
             onClick={() => setCurrentStep(0)}
@@ -1354,13 +1146,72 @@ function MedicationTrackingWizard() {
           >
             Log Medications
           </button>
+
+          {medicationWizardProgress.total > 0 && (
+            <div className="mt-6 w-full min-w-0 max-w-full">
+              <span id="medication-wizard-step-status" className="sr-only">
+                Step {medicationWizardProgress.step} of {medicationWizardProgress.total}. Current section:{' '}
+                {medicationWizardProgress.currentPhaseLabel}.
+              </span>
+              <nav
+                ref={phaseBreadcrumbNavRef}
+                aria-describedby="medication-wizard-step-status"
+                className={[
+                  'flex w-full min-w-0 max-w-full items-center gap-x-1 gap-y-1 text-sm sm:text-base leading-snug',
+                  // Narrow viewports: one row, horizontal scroll — full labels, same type scale as sm+.
+                  'max-md:flex-nowrap max-md:overflow-x-auto max-md:overflow-y-hidden max-md:overscroll-x-contain max-md:scrollbar-hide max-md:touch-pan-x max-md:scroll-smooth max-md:pb-0.5 max-md:-mx-1 max-md:px-1',
+                  // md and up: wrap inside the content width (no scroll strip).
+                  'md:flex-wrap md:overflow-x-visible md:overflow-y-visible md:mx-0 md:px-0 md:touch-auto',
+                ].join(' ')}
+                style={{ WebkitOverflowScrolling: 'touch' }}
+                aria-label="Wizard sections"
+              >
+                {wizardPhaseNames.map((label, i) => {
+                  const entryStep = medicationWizardProgress.phaseEntrySteps[i]
+                  const isCurrent = label === medicationWizardProgress.currentPhaseLabel
+                  const canGo = typeof entryStep === 'number' && entryStep <= currentStep
+                  return (
+                    <Fragment key={`${label}-${i}`}>
+                      {i > 0 && (
+                        <ChevronRight
+                          className="w-4 h-4 shrink-0 text-muted/50 self-center"
+                          strokeWidth={2.25}
+                          aria-hidden
+                        />
+                      )}
+                      <button
+                        type="button"
+                        disabled={!canGo}
+                        aria-current={isCurrent ? 'step' : undefined}
+                        onClick={() => {
+                          if (canGo) setCurrentStep(entryStep)
+                        }}
+                        className={[
+                          'shrink-0 min-h-11 inline-flex items-center rounded-md px-2 -mx-0.5 text-left whitespace-nowrap touch-manipulation transition-colors [-webkit-tap-highlight-color:transparent]',
+                          isCurrent
+                            ? 'font-semibold text-cadet-blue'
+                            : 'font-medium text-muted',
+                          canGo && !isCurrent
+                            ? 'hover:text-cadet-blue hover:underline cursor-pointer'
+                            : '',
+                          !canGo ? 'opacity-45 cursor-not-allowed' : '',
+                        ].join(' ')}
+                      >
+                        {label}
+                      </button>
+                    </Fragment>
+                  )
+                })}
+              </nav>
+            </div>
+          )}
         </div>
       )}
 
       {/* Wizard Container */}
-      <div className="mb-4">
+      <div className="mb-4 min-w-0 w-full max-w-full">
         {/* Step 0: Landing Page */}
-        {currentStep === 0 && entryMode === 'wizard' && (
+        {currentStep === 0 && (
           <div className="flex flex-col items-center justify-center text-center pt-20 sm:pt-0">
             {/* Icon - same as home page medications card */}
             <div className="w-14 h-14 bg-white dark:bg-[var(--bg-icon-container)] rounded-2xl flex items-center justify-center mx-auto mb-6 shadow-sm">
@@ -1380,238 +1231,6 @@ function MedicationTrackingWizard() {
             >
               Start now
             </button>
-            {enableMedicationChat && (
-              <button
-                onClick={startChatMode}
-                className="mt-3 px-4 py-2 text-base sm:text-lg font-semibold rounded-lg text-cadet-blue hover:opacity-90 transition-opacity inline-flex items-center gap-2"
-              >
-                <MessageCircle className="w-5 h-5" />
-                FlareBot (Beta)
-              </button>
-            )}
-          </div>
-        )}
-
-        {currentStep === 0 && entryMode === 'chat' && chatStatus !== 'ready_for_review' && (
-          <div className="card border mb-24 sm:mb-0" style={{ borderColor: 'var(--border-card)' }}>
-              <div className="flex items-center justify-between mb-4">
-                <h3 className="text-xl sm:text-2xl font-title font-bold text-primary inline-flex items-start sm:items-center gap-2">
-                  <MessageCircle className="w-6 h-6 text-cadet-blue" />
-                  FlareBot (Beta)
-                </h3>
-                <button
-                  type="button"
-                  className="text-sm text-cadet-blue underline hover:opacity-80"
-                  onClick={() => setEntryMode('wizard')}
-                >
-                  Log Medications
-                </button>
-              </div>
-
-              <p className="text-sm text-muted mb-4">
-                This test bot helps you log missed medications, NSAIDs, and antibiotics. You will review before saving.
-              </p>
-
-              <div
-                ref={chatScrollRef}
-                className="rounded-lg border p-3 h-80 overflow-y-auto overscroll-y-contain space-y-3 mb-4 touch-pan-y"
-                style={{ borderColor: 'var(--border-card)' }}
-              >
-                {chatMessages.map((msg) => (
-                  <div key={msg.id} className={`flex ${msg.role === 'user' ? 'justify-end' : 'justify-start'}`}>
-                    <div className={`flex items-start gap-2 max-w-[92%] ${msg.role === 'user' ? 'flex-row-reverse' : ''}`}>
-                      {msg.role !== 'user' && (
-                        <div
-                          className="w-7 h-7 rounded-full flex items-center justify-center shrink-0 mt-0.5 card-inner"
-                          style={{ color: 'var(--text-cadet-blue)' }}
-                          aria-hidden
-                        >
-                          <Bot className="w-4 h-4" />
-                        </div>
-                      )}
-                      <div
-                      className={`max-w-full px-3 py-2 rounded-lg text-sm ${
-                          msg.role === 'user'
-                          ? 'text-white'
-                          : 'text-primary card-inner'
-                        }`}
-                      style={msg.role === 'user'
-                        ? { backgroundColor: 'var(--text-cadet-blue)' }
-                        : undefined}
-                      >
-                        {msg.content}
-                      </div>
-                    </div>
-                  </div>
-                ))}
-                {isChatLoading && (
-                  <div className="flex justify-start">
-                    <div className="flex items-start gap-2 max-w-[92%]">
-                      <div
-                        className="w-7 h-7 rounded-full flex items-center justify-center shrink-0 mt-0.5 card-inner"
-                        style={{ color: 'var(--text-cadet-blue)' }}
-                        aria-hidden
-                      >
-                        <Bot className="w-4 h-4" />
-                      </div>
-                      <div className="card-inner px-3 py-2 rounded-lg inline-flex items-center gap-1" aria-label="Bot is typing">
-                        <span className="w-1.5 h-1.5 rounded-full animate-bounce" style={{ backgroundColor: 'var(--text-primary)', animationDelay: '0ms' }} />
-                        <span className="w-1.5 h-1.5 rounded-full animate-bounce" style={{ backgroundColor: 'var(--text-primary)', animationDelay: '120ms' }} />
-                        <span className="w-1.5 h-1.5 rounded-full animate-bounce" style={{ backgroundColor: 'var(--text-primary)', animationDelay: '240ms' }} />
-                      </div>
-                    </div>
-                  </div>
-                )}
-              </div>
-
-              <div className="flex gap-2 mb-4">
-                  <input
-                    type="text"
-                    {...registerChatMessage('message')}
-                    onKeyDown={(e) => {
-                      if (e.key === 'Enter') {
-                        e.preventDefault()
-                        submitChatMessage()
-                      }
-                    }}
-                    placeholder="Type your answer..."
-                    className="input-field-wizard flex-1"
-                    disabled={isChatLoading}
-                    autoComplete="off"
-                  />
-                  <button
-                    type="button"
-                    onClick={submitChatMessage}
-                    disabled={isChatLoading || !String(chatMessageValue || '').trim()}
-                    className={`px-4 py-2 rounded-lg font-semibold border ${isChatLoading || !String(chatMessageValue || '').trim() ? 'button-disabled' : 'button-cadet'}`}
-                    style={isChatLoading || !String(chatMessageValue || '').trim()
-                      ? {
-                          backgroundColor: 'var(--bg-button-disabled)',
-                          color: 'var(--text-button-disabled)',
-                          border: '1px solid var(--border-input-dark)',
-                        }
-                      : {
-                          border: '1px solid var(--bg-button-cadet)',
-                        }}
-                  >
-                    Send
-                  </button>
-              </div>
-
-              {chatError && (
-                <div className="mb-4 p-3 rounded-lg border" style={{ backgroundColor: 'var(--bg-error)', borderColor: 'var(--border-error)' }}>
-                  <p className="text-sm" style={{ color: 'var(--text-error)' }}>{chatError}</p>
-                </div>
-              )}
-
-              {chatWarnings.length > 0 && (
-                <div className="mb-0 p-3 rounded-lg border" style={{ borderColor: 'var(--border-card)' }}>
-                  {chatWarnings.map((warning, index) => (
-                    <p key={`${warning}-${index}`} className="text-sm text-muted">{warning}</p>
-                  ))}
-                </div>
-              )}
-          </div>
-        )}
-
-        {currentStep === 0 && entryMode === 'chat' && chatStatus === 'ready_for_review' && (
-          <div
-            ref={chatReviewRef}
-            className="card border mb-24 sm:mb-0 scroll-mt-24 sm:scroll-mt-8"
-            style={{ borderColor: 'var(--border-card)' }}
-          >
-              <div className="flex items-center justify-between mb-4">
-                <h3 className="text-xl sm:text-2xl font-title font-bold text-primary inline-flex items-start sm:items-center gap-2">
-                  <MessageCircle className="w-6 h-6 text-cadet-blue" />
-                  Review captured entries
-                </h3>
-                <button
-                  type="button"
-                  className="text-sm text-cadet-blue underline hover:opacity-80"
-                  onClick={() => setEntryMode('wizard')}
-                >
-                  Log Medications
-                </button>
-              </div>
-
-              {chatReadyMessage && (
-                <p className="text-sm text-muted mb-4">{chatReadyMessage}</p>
-              )}
-
-              <div className="space-y-4 mb-4">
-                <div className="text-sm text-secondary">
-                  {chatDraft.missedMedications.length === 0 && chatDraft.nsaids.length === 0 && chatDraft.antibiotics.length === 0
-                    ? 'No entries captured yet.'
-                    : 'Draft data captured from chat:'}
-                </div>
-
-                {chatDraft.missedMedications.length > 0 && (
-                  <div>
-                    <h5 className="font-semibold text-cadet-blue mb-1">Missed medications</h5>
-                    <ul className="space-y-1 text-sm text-primary">
-                      {chatDraft.missedMedications.map((item, index) => (
-                        <li key={`missed-${index}`}>- {item.medicationName} on {formatDateUk(item.date)} ({item.time})</li>
-                      ))}
-                    </ul>
-                  </div>
-                )}
-
-                {chatDraft.nsaids.length > 0 && (
-                  <div>
-                    <h5 className="font-semibold text-cadet-blue mb-1">NSAIDs</h5>
-                    <ul className="space-y-1 text-sm text-primary">
-                      {chatDraft.nsaids.map((item, index) => (
-                        <li key={`nsaid-${index}`}>- {item.name} {item.dose ? `${item.dose}mg` : ''} on {formatDateUk(item.date)} ({item.time})</li>
-                      ))}
-                    </ul>
-                  </div>
-                )}
-
-                {chatDraft.antibiotics.length > 0 && (
-                  <div>
-                    <h5 className="font-semibold text-cadet-blue mb-1">Antibiotics</h5>
-                    <ul className="space-y-1 text-sm text-primary">
-                      {chatDraft.antibiotics.map((item, index) => (
-                        <li key={`antibiotic-${index}`}>- {item.name} {item.dose ? `${item.dose}mg` : ''} on {formatDateUk(item.date)} ({item.time})</li>
-                      ))}
-                    </ul>
-                  </div>
-                )}
-              </div>
-
-              {chatMissingFields.length > 0 && (
-                <div className="mb-4 p-3 rounded-lg border" style={{ backgroundColor: 'var(--bg-error)', borderColor: 'var(--border-error)' }}>
-                  <p className="text-sm font-medium mb-1" style={{ color: 'var(--text-error)' }}>
-                    Missing required fields before review:
-                  </p>
-                  <ul className="text-sm list-disc ml-5" style={{ color: 'var(--text-error)' }}>
-                    {chatMissingFields.map((field) => (
-                      <li key={field.path}>{field.path}</li>
-                    ))}
-                  </ul>
-                </div>
-              )}
-
-              <button
-                type="button"
-                onClick={handleChatSubmit}
-                disabled={isSubmitting}
-                className="button-cadet inline-flex items-center justify-center px-4 py-2 text-base sm:text-lg font-semibold rounded-lg transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
-              >
-                <span className="inline-grid grid-cols-1 grid-rows-1 place-items-center font-semibold text-base sm:text-lg">
-                  <span aria-hidden className="invisible col-start-1 row-start-1 whitespace-nowrap">Confirm save</span>
-                  <span className="col-start-1 row-start-1 flex items-center justify-center">
-                    {isSubmitting ? (
-                      <>
-                        <Loader2 className="h-6 w-6 shrink-0 animate-spin" aria-hidden />
-                        <span className="sr-only">Submitting</span>
-                      </>
-                    ) : (
-                      'Confirm save'
-                    )}
-                  </span>
-                </span>
-              </button>
           </div>
         )}
 
