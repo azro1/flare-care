@@ -1447,12 +1447,12 @@ function ReportsPageContent() {
   const emailSentToastEl =
     showEmailSentToast && emailToastPortalReady ? (
       <div
-        className="fixed z-[9999] top-24 right-4 max-w-[min(24rem,calc(100vw-2rem))] rounded-xl shadow-lg border border-white/10 dark:border-white/15 flex items-center gap-3 px-4 py-3"
+        className="fixed z-[9999] top-24 right-4 max-w-[min(24rem,calc(100vw-2rem))] rounded-lg shadow-lg border border-black/[0.08] dark:border-white/15 flex items-center gap-3 px-4 py-3"
         style={{ backgroundColor: 'var(--bg-dropdown)' }}
         role="status"
       >
-        <div className="flex-shrink-0 flex items-center justify-center w-5 h-5 rounded-full bg-emerald-100 dark:bg-white">
-          <svg className="w-3.5 h-3.5 text-black" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+        <div className="flex-shrink-0 flex items-center justify-center w-[1.125rem] h-[1.125rem] rounded-full bg-emerald-100 dark:bg-white" aria-hidden>
+          <svg className="w-3.5 h-3.5 text-emerald-600 dark:text-black" fill="none" stroke="currentColor" viewBox="0 0 24 24">
             <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.4} d="M5 13l4 4L19 7" />
           </svg>
         </div>

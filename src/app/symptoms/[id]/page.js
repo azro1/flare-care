@@ -171,6 +171,20 @@ function SymptomDetailContent() {
     )
   }
 
+  // Only separate "Smoked" from content below when another Details row follows (avoids orphan line when e.g. smoked but did not drink on symptom day).
+  const hasLifestyleRowsAfterSmoked =
+    typeof symptom.drank_on_symptom_day !== 'boolean' ||
+    !!(symptom.alcohol === true && (symptom.average_alcohol_units_pw || symptom.alcohol_habits)) ||
+    (typeof symptom.drank_on_symptom_day === 'boolean' &&
+      symptom.drank_on_symptom_day === true &&
+      !!symptom.alcohol_units_on_symptom_day)
+
+  // Only separate "Alcohol units consumed" precursor rows when day-units row exists; symmetric fix for "drank but did not smoke" leaving no row below.
+  const hasRowAfterAverageAlcohol =
+    typeof symptom.drank_on_symptom_day === 'boolean' &&
+    symptom.drank_on_symptom_day === true &&
+    !!symptom.alcohol_units_on_symptom_day
+
   return (
     <div className="w-full sm:px-4 md:px-6 min-w-0 overflow-hidden">
       <div className="max-w-4xl w-full mx-auto min-w-0">
@@ -275,7 +289,10 @@ function SymptomDetailContent() {
                   </div>
                 )}
                 {typeof symptom.smoked_on_symptom_day === 'boolean' && symptom.smoked_on_symptom_day === true && symptom.smoked_amount_on_symptom_day && (
-                  <div className="flex justify-between items-center gap-4 py-4 border-b min-w-0 overflow-hidden" style={{ borderColor: 'var(--separator-card)' }}>
+                  <div
+                    className={`flex justify-between items-center gap-4 py-4 min-w-0 overflow-hidden ${hasLifestyleRowsAfterSmoked ? 'border-b' : ''}`}
+                    style={{ borderColor: 'var(--separator-card)' }}
+                  >
                     <span className="text-sm sm:text-base text-secondary font-sans shrink-0">Smoked</span>
                     <span className="text-sm sm:text-base font-medium text-primary font-sans min-w-0 break-words text-right">{symptom.smoked_amount_on_symptom_day}</span>
                   </div>
@@ -293,7 +310,10 @@ function SymptomDetailContent() {
                   </div>
                 )}
                 {symptom.alcohol === true && (symptom.average_alcohol_units_pw || symptom.alcohol_habits) && (
-                  <div className={`flex justify-between items-center gap-4 py-4 min-w-0 overflow-hidden ${typeof symptom.drank_on_symptom_day === 'boolean' && symptom.drank_on_symptom_day === true && symptom.alcohol_units_on_symptom_day ? 'border-b' : ''}`} style={{ borderColor: 'var(--separator-card)' }}>
+                  <div
+                    className={`flex justify-between items-center gap-4 py-4 min-w-0 overflow-hidden ${hasRowAfterAverageAlcohol ? 'border-b' : ''}`}
+                    style={{ borderColor: 'var(--separator-card)' }}
+                  >
                     <span className="text-sm sm:text-base text-secondary font-sans shrink-0">Average Alcohol Units</span>
                     <span className="text-sm sm:text-base font-medium text-primary font-sans min-w-0 break-words text-right">{symptom.average_alcohol_units_pw || symptom.alcohol_habits} units/week</span>
                   </div>

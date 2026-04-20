@@ -1322,7 +1322,7 @@ function SymptomsPageContent() {
     }`}>
       {/* Header: exit + section breadcrumb — hide on landing */}
       {currentStep > 0 && (
-        <div className="min-w-0 w-full max-w-full pt-6 md:pt-0 mb-6 md:mb-8">
+        <div className="min-w-0 w-full max-w-full pt-0 mb-6 md:mb-8">
           <button
             type="button"
             onClick={() => setCurrentStep(0)}
