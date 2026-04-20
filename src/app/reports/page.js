@@ -13,6 +13,11 @@ import { supabase, TABLES } from '@/lib/supabase'
 import { useAuth } from '@/lib/AuthContext'
 import { getUserPreferences } from '@/lib/userPreferences'
 import { formatBristolLine } from '@/lib/bristolStoolChart'
+import {
+  normalizeSymptomLogRow,
+  formatLifestyleLinesForExport,
+  lifestyleCsvCells
+} from '@/lib/symptomExportLifestyle'
 import { Calendar, FileText, Download, FileDown, BarChart3, Pill, Activity, TrendingUp, Thermometer, Brain, Pizza, ChartLine, Scale, CupSoda, Mail, ChevronDown } from 'lucide-react'
 import { motion } from 'framer-motion'
 
@@ -171,10 +176,14 @@ function ReportsPageContent() {
           severity: symptom.severity,
           stress_level: symptom.stress_level,
           notes: symptom.notes,
-          smoking: symptom.smoking,
-          smoking_details: symptom.smoking_details,
+          smoker: symptom.smoker ?? symptom.smoking,
+          smoking_habits: symptom.smoking_habits ?? symptom.smoking_details,
           alcohol: symptom.alcohol,
-          alcohol_units: symptom.alcohol_units,
+          average_alcohol_units_pw: symptom.average_alcohol_units_pw ?? symptom.alcohol_habits,
+          smoked_on_symptom_day: symptom.smoked_on_symptom_day,
+          smoked_amount_on_symptom_day: symptom.smoked_amount_on_symptom_day,
+          drank_on_symptom_day: symptom.drank_on_symptom_day,
+          alcohol_units_on_symptom_day: symptom.alcohol_units_on_symptom_day,
           normal_bathroom_frequency: symptom.normal_bathroom_frequency,
           bathroom_frequency_changed: symptom.bathroom_frequency_changed,
           bathroom_frequency_change_details: symptom.bathroom_frequency_change_details,
@@ -260,7 +269,7 @@ function ReportsPageContent() {
         if (error) throw error
 
         if (data) {
-          // Transform snake_case to camelCase
+          // Transform snake_case to camelCase; merge legacy lifestyle column names
           const transformedSymptoms = data.map(item => {
             const {
               symptom_start_date,
@@ -271,7 +280,7 @@ function ReportsPageContent() {
               ...rest
             } = item
             return {
-              ...rest,
+              ...normalizeSymptomLogRow(rest),
               symptomStartDate: symptom_start_date,
               isOngoing: is_ongoing,
               symptomEndDate: symptom_end_date,
@@ -1044,32 +1053,13 @@ function ReportsPageContent() {
           yPosition += 5
         }
         
-        // Display smoking: "Non-smoker" if habit is no, "No" if didn't smoke that day
-        if (symptom.smoking === true) {
-          const smokingText = symptom.smoking_details 
-            ? `   Smoking: ${symptom.smoking_details}`
-            : `   Smoking: Yes`
-          doc.text(smokingText, margin, yPosition)
-          yPosition += 5
-        } else if (symptom.smoking === false) {
-          const smokingLabel = userPreferences?.isSmoker === false ? 'Non-smoker' : 'No'
-          doc.text(`   Smoking: ${smokingLabel}`, margin, yPosition)
-          yPosition += 5
-        }
-        
-        // Display alcohol: "Non-drinker" if habit is no, "No" if didn't drink that day
-        if (symptom.alcohol === true) {
-          const alcoholText = symptom.alcohol_units 
-            ? `   Alcohol: ${symptom.alcohol_units} ${symptom.alcohol_units === '1' ? 'unit' : 'units'} per day`
-            : `   Alcohol: Yes`
-          doc.text(alcoholText, margin, yPosition)
-          yPosition += 5
-        } else if (symptom.alcohol === false) {
-          const alcoholLabel = userPreferences?.isDrinker === false ? 'Non-drinker' : 'No'
-          doc.text(`   Alcohol: ${alcoholLabel}`, margin, yPosition)
-          yPosition += 5
-        }
-        
+        const lifestyleLines = formatLifestyleLinesForExport(symptom, userPreferences)
+        lifestyleLines.forEach((line) => {
+          const split = doc.splitTextToSize(`   ${line}`, pageWidth - 2 * margin)
+          doc.text(split, margin, yPosition)
+          yPosition += split.length * 5
+        })
+
         // Display bathroom frequency information
         if (symptom.normal_bathroom_frequency || symptom.bathroom_frequency_changed) {
           if (symptom.normal_bathroom_frequency) {
@@ -1174,7 +1164,26 @@ function ReportsPageContent() {
     const csvData = []
     
     // Add header
-    csvData.push(['Symptom Start Date', 'Symptom End Date', 'Ongoing', 'Severity', 'Stress Level', 'Normal Bathroom Frequency', 'Bathroom Frequency Changed', 'Bathroom Change Details', 'Smoking', 'Alcohol', 'Foods', 'Notes'])
+    csvData.push([
+      'Symptom Start Date',
+      'Symptom End Date',
+      'Ongoing',
+      'Severity',
+      'Stress Level',
+      'Normal Bathroom Frequency',
+      'Bathroom Frequency Changed',
+      'Bathroom Change Details',
+      'Smoker (baseline)',
+      'Smoking habits',
+      'Smoked on symptom day',
+      'Smoked amount',
+      'Alcohol (baseline)',
+      'Average alcohol units/week',
+      'Alcohol on symptom day',
+      'Alcohol units consumed',
+      'Foods',
+      'Notes'
+    ])
     
     // Filter symptoms by selected date range (same logic as generateReport)
     const startDate = new Date(dateRange.startDate)
@@ -1219,20 +1228,8 @@ function ReportsPageContent() {
           foodsData = symptom.foods || ''
         }
         
-        // Format smoking: "Non-smoker" if habit is no, "No" if didn't smoke that day, details if yes
-        const smokingData = symptom.smoking === true
-          ? (symptom.smoking_details || 'Yes')
-          : symptom.smoking === false
-            ? (userPreferences?.isSmoker === false ? 'Non-smoker' : 'No')
-            : ''
-        
-        // Format alcohol: "Non-drinker" if habit is no, "No" if didn't drink that day, details if yes
-        const alcoholData = symptom.alcohol === true
-          ? (symptom.alcohol_units ? `${symptom.alcohol_units} ${symptom.alcohol_units === '1' ? 'unit' : 'units'} per day` : 'Yes')
-          : symptom.alcohol === false
-            ? (userPreferences?.isDrinker === false ? 'Non-drinker' : 'No')
-            : ''
-        
+        const lifestyleRow = lifestyleCsvCells(symptom, userPreferences)
+
         // Format bathroom frequency data
         const normalBathroomData = symptom.normal_bathroom_frequency || ''
         const bathroomChangedData = symptom.bathroom_frequency_changed || ''
@@ -1247,8 +1244,7 @@ function ReportsPageContent() {
           normalBathroomData,
           bathroomChangedData,
           bathroomChangeDetailsData,
-          smokingData,
-          alcoholData,
+          ...lifestyleRow,
           foodsData,
           symptom.notes || '',
         ])

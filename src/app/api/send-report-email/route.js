@@ -1,5 +1,6 @@
 import { NextResponse } from 'next/server'
 import { formatBristolLine } from '@/lib/bristolStoolChart'
+import { formatLifestyleLinesForExport } from '@/lib/symptomExportLifestyle'
 
 export const runtime = 'nodejs'
 
@@ -277,24 +278,9 @@ export async function POST(request) {
         }
         textLines.push(`   Status: ${symptom.isOngoing ? 'Ongoing' : 'Resolved'}`)
 
-        // Smoking
-        if (symptom.smoking === true) {
-          textLines.push(`   Smoking: ${symptom.smoking_details ? symptom.smoking_details : 'Yes'}`)
-        } else if (symptom.smoking === false) {
-          const smokingLabel = prefs?.isSmoker === false ? 'Non-smoker' : 'No'
-          textLines.push(`   Smoking: ${smokingLabel}`)
-        }
-
-        // Alcohol
-        if (symptom.alcohol === true) {
-          const units = symptom.alcohol_units
-          textLines.push(
-            `   Alcohol: ${units ? `${units} ${String(units) === '1' ? 'unit' : 'units'} per day` : 'Yes'}`
-          )
-        } else if (symptom.alcohol === false) {
-          const alcoholLabel = prefs?.isDrinker === false ? 'Non-drinker' : 'No'
-          textLines.push(`   Alcohol: ${alcoholLabel}`)
-        }
+        formatLifestyleLinesForExport(symptom, prefs).forEach((line) => {
+          textLines.push(`   ${line}`)
+        })
 
         if (symptom.normal_bathroom_frequency) {
           textLines.push(`   Bathroom Frequency: ${symptom.normal_bathroom_frequency} times per day`)
@@ -510,21 +496,9 @@ export async function POST(request) {
         }
         htmlParts.push(`<p style="margin: 0 0 3px 0;">Status: ${symptom.isOngoing ? 'Ongoing' : 'Resolved'}</p>`)
 
-        if (symptom.smoking === true) {
-          htmlParts.push(`<p style="margin: 0 0 3px 0;">Smoking: ${safe(symptom.smoking_details || 'Yes')}</p>`)
-        } else if (symptom.smoking === false) {
-          const smokingLabel = prefs?.isSmoker === false ? 'Non-smoker' : 'No'
-          htmlParts.push(`<p style="margin: 0 0 3px 0;">Smoking: ${safe(smokingLabel)}</p>`)
-        }
-
-        if (symptom.alcohol === true) {
-          const units = symptom.alcohol_units
-          const alcoholText = units ? `${units} ${String(units) === '1' ? 'unit' : 'units'} per day` : 'Yes'
-          htmlParts.push(`<p style="margin: 0 0 3px 0;">Alcohol: ${safe(alcoholText)}</p>`)
-        } else if (symptom.alcohol === false) {
-          const alcoholLabel = prefs?.isDrinker === false ? 'Non-drinker' : 'No'
-          htmlParts.push(`<p style="margin: 0 0 3px 0;">Alcohol: ${safe(alcoholLabel)}</p>`)
-        }
+        formatLifestyleLinesForExport(symptom, prefs).forEach((line) => {
+          htmlParts.push(`<p style="margin: 0 0 3px 0;">${safe(line)}</p>`)
+        })
 
         if (symptom.normal_bathroom_frequency) {
           htmlParts.push(`<p style="margin: 0 0 3px 0;">Bathroom Frequency: ${safe(symptom.normal_bathroom_frequency)} times per day</p>`)

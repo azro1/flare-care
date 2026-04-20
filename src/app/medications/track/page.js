@@ -1134,7 +1134,13 @@ function MedicationTrackingWizard() {
 
   return (
     <div
-      className={`medications-wizard max-w-4xl w-full mx-auto min-w-0 flex flex-col justify-center sm:min-h-[500px] ${currentStep > 0 ? 'pb-28 lg:pb-0' : ''}`}
+      className={`medications-wizard max-w-4xl w-full mx-auto min-w-0 flex flex-col justify-center sm:min-h-[500px] ${
+        currentStep > 0
+          ? currentStep === 7
+            ? 'pb-28 lg:pb-10'
+            : 'pb-28 lg:pb-0'
+          : ''
+      }`}
     >
       {/* Header: exit to medications + section breadcrumb — hide on landing */}
       {currentStep > 0 && (
@@ -1209,7 +1215,7 @@ function MedicationTrackingWizard() {
       )}
 
       {/* Wizard Container */}
-      <div className="mb-4 min-w-0 w-full max-w-full">
+      <div className="min-w-0 w-full max-w-full">
         {/* Step 0: Landing Page */}
         {currentStep === 0 && (
           <div className="flex flex-col items-center justify-center text-center pt-20 sm:pt-0">
@@ -1243,7 +1249,7 @@ function MedicationTrackingWizard() {
 
         {/* Navigation Buttons - Hide on landing page (step 0) */}
         {currentStep > 0 && (
-          <div className={`flex justify-start items-center ${currentStep === 7 ? 'mt-6 mb-6 sm:mb-0' : 'mt-6'}`}>
+          <div className="flex justify-start items-center mt-6">
             {currentStep < 7 ? (
               <button
                 onClick={nextStep}

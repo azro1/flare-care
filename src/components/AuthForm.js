@@ -79,10 +79,10 @@ export default function AuthForm() {
               height={56}
               className="mx-auto mb-4"
             />
-            <h2 className="text-3xl font-bold font-title text-primary mb-6">
+            <h2 className="text-3xl font-bold font-title text-primary mb-4">
               FlareCare
             </h2>
-          <p className="text-sm font-sans text-secondary mb-4 leading-relaxed">
+          <p className="text-sm font-sans text-secondary mb-6 leading-relaxed">
            Your comprehensive health management app for Crohn's & Colitis
           </p>
         </div>

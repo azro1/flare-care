@@ -7,6 +7,35 @@ import { supabase, deleteFromSupabase, TABLES } from '@/lib/supabase'
 import { getUserPreferences } from '@/lib/userPreferences'
 import ProtectedRoute from '@/components/ProtectedRoute'
 
+function getMealFields(meal) {
+  if (typeof meal === 'string') {
+    return { food: meal, quantity: '' }
+  }
+  return {
+    food: typeof meal?.food === 'string' ? meal.food : '',
+    quantity: typeof meal?.quantity === 'string' ? meal.quantity.trim() : ''
+  }
+}
+
+/** Same row pattern as Details (label left, value right); food can wrap; quantity aligns right. */
+function MealDetailRow({ food, quantity }) {
+  return (
+    <div className="flex justify-between items-start gap-4 min-w-0 overflow-hidden py-1 sm:py-2">
+      <span className="text-sm sm:text-base text-secondary font-sans min-w-0 flex-1 break-words" title={food}>
+        {food}
+      </span>
+      {quantity ? (
+        <span
+          className="text-sm sm:text-base font-medium text-primary font-sans min-w-0 text-right [overflow-wrap:anywhere] shrink-0 max-w-[45%] sm:max-w-[50%]"
+          title={quantity}
+        >
+          {quantity}
+        </span>
+      ) : null}
+    </div>
+  )
+}
+
 function SymptomDetailContent() {
   const params = useParams()
   const router = useRouter()
@@ -203,35 +232,12 @@ function SymptomDetailContent() {
               </div>
           </div>
 
-          {/* Timeline */}
-          <div className="card min-w-0 overflow-hidden">
-            <h2 className="text-xl font-semibold font-title text-primary mb-3 sm:mb-4">Timeline</h2>
-            <div>
-                <div className={`flex items-center justify-between gap-4 min-w-0 overflow-hidden ${!symptom.isOngoing && symptom.symptomEndDate ? 'pb-4 border-b' : ''}`} style={{ borderColor: 'var(--separator-card)' }}>
-                  <div className="flex items-center gap-3">
-                    <div className="w-2.5 h-2.5 bg-emerald-500 rounded-full flex-shrink-0"></div>
-                    <span className="text-sm sm:text-base font-medium text-primary font-sans">Started</span>
-                  </div>
-                  <span className="text-sm sm:text-base text-secondary font-sans">
-                    {symptom.symptomStartDate ? new Date(symptom.symptomStartDate).toLocaleDateString() : (symptom.created_at || symptom.createdAt ? new Date(symptom.created_at || symptom.createdAt).toLocaleDateString() : 'Not set')}
-                  </span>
-                </div>
-                {!symptom.isOngoing && symptom.symptomEndDate && (
-                  <div className="flex items-center justify-between gap-4 pt-4 min-w-0 overflow-hidden">
-                    <div className="flex items-center gap-3">
-                      <div className="w-2.5 h-2.5 bg-red-500 rounded-full flex-shrink-0"></div>
-                      <span className="text-sm sm:text-base font-medium text-primary font-sans">Ended</span>
-                    </div>
-                    <span className="text-sm sm:text-base text-secondary font-sans">{new Date(symptom.symptomEndDate).toLocaleDateString()}</span>
-                  </div>
-                )}
-            </div>
-          </div>
-
-          {/* Bathroom & Lifestyle */}
-          <div className="card min-w-0 overflow-hidden">
-            <h2 className="text-xl font-semibold font-title text-primary mb-3 sm:mb-4">Details</h2>
-            <div className="space-y-0 [&>*:last-child]:pb-0">
+          <div className="grid grid-cols-1 lg:grid-cols-12 gap-4 sm:gap-6 items-start">
+            <div className="lg:col-span-8 space-y-4 sm:space-y-6 min-w-0">
+              {/* Bathroom & Lifestyle */}
+              <div className="card min-w-0 overflow-hidden">
+                <h2 className="text-xl font-semibold font-title text-primary mb-3 sm:mb-4">Details</h2>
+                <div className="space-y-0 [&>*:last-child]:pb-0">
                 <div className="flex justify-between items-center gap-4 pt-0 pb-4 border-b min-w-0 overflow-hidden" style={{ borderColor: 'var(--separator-card)' }}>
                   <span className="text-sm sm:text-base text-secondary font-sans shrink-0">Bathroom frequency</span>
                   <span className="text-sm sm:text-base font-medium text-primary font-sans min-w-0 break-words text-right">{symptom.normal_bathroom_frequency || 'Not set'} times/day</span>
@@ -250,50 +256,72 @@ function SymptomDetailContent() {
                     )}
                   </>
                 )}
-                <div className="flex justify-between items-center gap-4 py-4 border-b min-w-0 overflow-hidden" style={{ borderColor: 'var(--separator-card)' }}>
-                  <span className="text-sm sm:text-base text-secondary font-sans shrink-0">Smoking</span>
-                  <span className="text-sm sm:text-base font-medium text-primary font-sans min-w-0 break-words text-right">
-                    {symptom.smoking ? 'Yes' : symptom.smoking === false ? (userPreferences?.isSmoker === false ? 'Non-smoker' : 'No') : 'Not recorded'}
-                  </span>
-                </div>
-                {symptom.smoking && symptom.smoking_details && (
-                  <div className="py-4 border-b min-w-0 overflow-hidden" style={{ borderColor: 'var(--separator-card)' }}>
-                    <span className="text-sm sm:text-base font-medium text-primary block mb-2 font-sans">Smoking details</span>
-                    <p className="text-sm sm:text-base text-secondary leading-relaxed font-sans break-words" title={symptom.smoking_details}>{symptom.smoking_details}</p>
+                {typeof symptom.smoked_on_symptom_day !== 'boolean' && (
+                  <div className="flex justify-between items-center gap-4 py-4 border-b min-w-0 overflow-hidden" style={{ borderColor: 'var(--separator-card)' }}>
+                    <span className="text-sm sm:text-base text-secondary font-sans shrink-0">Smoker</span>
+                    <span className="text-sm sm:text-base font-medium text-primary font-sans min-w-0 break-words text-right">
+                      {symptom.smoker === true
+                        ? 'Yes'
+                        : symptom.smoker === false
+                          ? 'No'
+                          : 'Not recorded'}
+                    </span>
                   </div>
                 )}
-                <div className={`flex justify-between items-center gap-4 py-4 ${symptom.alcohol && symptom.alcohol_units ? 'border-b' : ''} min-w-0 overflow-hidden`} style={{ borderColor: 'var(--separator-card)' }}>
-                  <span className="text-sm sm:text-base text-secondary font-sans shrink-0">Alcohol</span>
-                  <span className="text-sm sm:text-base font-medium text-primary font-sans min-w-0 break-words text-right">
-                    {symptom.alcohol ? 'Yes' : symptom.alcohol === false ? (userPreferences?.isDrinker === false ? 'Non-drinker' : 'No') : 'Not recorded'}
-                  </span>
-                </div>
-                {symptom.alcohol && symptom.alcohol_units && (
+                {symptom.smoker === true && (symptom.smoking_habits || symptom.smoking_details) && (
+                  <div className="py-4 border-b min-w-0 overflow-hidden" style={{ borderColor: 'var(--separator-card)' }}>
+                    <span className="text-sm sm:text-base text-secondary block mb-2 font-sans">Smoking habits</span>
+                    <p className="text-sm sm:text-base font-medium text-primary leading-relaxed font-sans break-words" title={symptom.smoking_habits || symptom.smoking_details}>{symptom.smoking_habits || symptom.smoking_details}</p>
+                  </div>
+                )}
+                {typeof symptom.smoked_on_symptom_day === 'boolean' && symptom.smoked_on_symptom_day === true && symptom.smoked_amount_on_symptom_day && (
+                  <div className="flex justify-between items-center gap-4 py-4 border-b min-w-0 overflow-hidden" style={{ borderColor: 'var(--separator-card)' }}>
+                    <span className="text-sm sm:text-base text-secondary font-sans shrink-0">Smoked</span>
+                    <span className="text-sm sm:text-base font-medium text-primary font-sans min-w-0 break-words text-right">{symptom.smoked_amount_on_symptom_day}</span>
+                  </div>
+                )}
+                {typeof symptom.drank_on_symptom_day !== 'boolean' && (
+                  <div className={`flex justify-between items-center gap-4 py-4 ${(symptom.alcohol === true && (symptom.average_alcohol_units_pw || symptom.alcohol_habits)) ? 'border-b' : ''} min-w-0 overflow-hidden`} style={{ borderColor: 'var(--separator-card)' }}>
+                    <span className="text-sm sm:text-base text-secondary font-sans shrink-0">Alcohol</span>
+                    <span className="text-sm sm:text-base font-medium text-primary font-sans min-w-0 break-words text-right">
+                      {symptom.alcohol === true
+                        ? 'Yes'
+                        : symptom.alcohol === false
+                          ? 'No'
+                          : 'Not recorded'}
+                    </span>
+                  </div>
+                )}
+                {symptom.alcohol === true && (symptom.average_alcohol_units_pw || symptom.alcohol_habits) && (
+                  <div className={`flex justify-between items-center gap-4 py-4 min-w-0 overflow-hidden ${typeof symptom.drank_on_symptom_day === 'boolean' && symptom.drank_on_symptom_day === true && symptom.alcohol_units_on_symptom_day ? 'border-b' : ''}`} style={{ borderColor: 'var(--separator-card)' }}>
+                    <span className="text-sm sm:text-base text-secondary font-sans shrink-0">Average Alcohol Units</span>
+                    <span className="text-sm sm:text-base font-medium text-primary font-sans min-w-0 break-words text-right">{symptom.average_alcohol_units_pw || symptom.alcohol_habits} units/week</span>
+                  </div>
+                )}
+                {typeof symptom.drank_on_symptom_day === 'boolean' && symptom.drank_on_symptom_day === true && symptom.alcohol_units_on_symptom_day && (
                   <div className="flex justify-between items-center gap-4 py-4 min-w-0 overflow-hidden">
-                    <span className="text-sm sm:text-base text-secondary font-sans shrink-0">Alcohol units</span>
-                    <span className="text-sm sm:text-base font-medium text-primary font-sans min-w-0 break-words text-right">{symptom.alcohol_units} units/day</span>
+                    <span className="text-sm sm:text-base text-secondary font-sans shrink-0">Alcohol Units Consumed</span>
+                    <span className="text-sm sm:text-base font-medium text-primary font-sans min-w-0 break-words text-right">{symptom.alcohol_units_on_symptom_day} units</span>
                   </div>
                 )}
               </div>
-          </div>
+              </div>
 
-          {/* Meals */}
-          {(symptom.breakfast?.length > 0 || symptom.lunch?.length > 0 || symptom.dinner?.length > 0) && (
-            <div className="card min-w-0 overflow-hidden">
-              <h2 className="text-xl font-semibold font-title text-primary mb-3 sm:mb-4">Meals</h2>
-              <div className="space-y-3 sm:space-y-4">
+              {/* Meals */}
+              {(symptom.breakfast?.length > 0 || symptom.lunch?.length > 0 || symptom.dinner?.length > 0) && (
+                <div className="card min-w-0 overflow-hidden">
+                  <h2 className="text-xl font-semibold font-title text-primary mb-3 sm:mb-4">Meals</h2>
+                  <div className="space-y-3 sm:space-y-4">
                   {symptom.breakfast?.length > 0 && (
                     <div
                       className={`min-w-0 ${symptom.lunch?.length > 0 ? 'pb-3 sm:pb-4 border-b' : ''}`}
                       style={{ borderColor: 'var(--separator-card)' }}
                     >
                       <h3 className="text-sm sm:text-base font-medium text-primary mb-1 sm:mb-2 font-sans">Breakfast</h3>
-                      {symptom.breakfast.map((meal, index) => (
-                        <div key={index} className="min-w-0 py-1 sm:py-2 flex items-center justify-between gap-3">
-                          <span className="text-sm sm:text-base text-secondary font-sans break-words min-w-0" title={meal.food}>{meal.food}</span>
-                          {meal.quantity && <span className="text-sm sm:text-base text-primary font-medium font-sans flex-shrink-0">{meal.quantity}</span>}
-                        </div>
-                      ))}
+                      {symptom.breakfast.map((meal, index) => {
+                        const { food, quantity } = getMealFields(meal)
+                        return <MealDetailRow key={index} food={food} quantity={quantity} />
+                      })}
                     </div>
                   )}
                   {symptom.lunch?.length > 0 && (
@@ -302,36 +330,67 @@ function SymptomDetailContent() {
                       style={{ borderColor: 'var(--separator-card)' }}
                     >
                       <h3 className="text-sm sm:text-base font-medium text-primary mb-1 sm:mb-2 font-sans">Lunch</h3>
-                      {symptom.lunch.map((meal, index) => (
-                        <div key={index} className="min-w-0 py-1 sm:py-2 flex items-center justify-between gap-3">
-                          <span className="text-sm sm:text-base text-secondary font-sans break-words min-w-0" title={meal.food}>{meal.food}</span>
-                          {meal.quantity && <span className="text-sm sm:text-base text-primary font-medium font-sans flex-shrink-0">{meal.quantity}</span>}
-                        </div>
-                      ))}
+                      {symptom.lunch.map((meal, index) => {
+                        const { food, quantity } = getMealFields(meal)
+                        return <MealDetailRow key={index} food={food} quantity={quantity} />
+                      })}
                     </div>
                   )}
                   {symptom.dinner?.length > 0 && (
                     <div className="min-w-0">
                       <h3 className="text-sm sm:text-base font-medium text-primary mb-1 sm:mb-2 font-sans">Dinner</h3>
-                      {symptom.dinner.map((meal, index) => (
-                        <div key={index} className="min-w-0 py-1 sm:py-2 flex items-center justify-between gap-3">
-                          <span className="text-sm sm:text-base text-secondary font-sans break-words min-w-0" title={meal.food}>{meal.food}</span>
-                          {meal.quantity && <span className="text-sm sm:text-base text-primary font-medium font-sans flex-shrink-0">{meal.quantity}</span>}
-                        </div>
-                      ))}
+                      {symptom.dinner.map((meal, index) => {
+                        const { food, quantity } = getMealFields(meal)
+                        return <MealDetailRow key={index} food={food} quantity={quantity} />
+                      })}
                     </div>
                   )}
-              </div>
-            </div>
-          )}
+                  </div>
+                </div>
+              )}
 
-          {/* Notes */}
-          {symptom.notes && (
-            <div className="card min-w-0 overflow-hidden">
-              <h2 className="text-xl font-semibold font-title text-primary mb-3 sm:mb-4">Notes</h2>
-              <p className="text-sm sm:text-base text-secondary leading-relaxed font-sans break-words" title={symptom.notes}>{symptom.notes}</p>
+              {/* Notes */}
+              {symptom.notes && (
+                <div className="card min-w-0 overflow-hidden">
+                  <h2 className="text-xl font-semibold font-title text-primary mb-3 sm:mb-4">Notes</h2>
+                  <p className="text-sm sm:text-base text-secondary leading-relaxed font-sans break-words" title={symptom.notes}>{symptom.notes}</p>
+                </div>
+              )}
             </div>
-          )}
+
+            <aside className="lg:col-span-4 space-y-4 sm:space-y-6 lg:sticky lg:top-4">
+              {/* Timeline */}
+              <div className="card min-w-0 overflow-hidden">
+                <h2 className="text-xl font-semibold font-title text-primary mb-3 sm:mb-4">Timeline</h2>
+                <div>
+                  <div className={`flex items-center justify-between gap-4 min-w-0 overflow-hidden ${!symptom.isOngoing && symptom.symptomEndDate ? 'pb-4 border-b' : ''}`} style={{ borderColor: 'var(--separator-card)' }}>
+                    <div className="flex items-center gap-3">
+                      <div className="w-2.5 h-2.5 bg-emerald-500 rounded-full flex-shrink-0"></div>
+                      <span className="text-sm sm:text-base text-secondary font-sans">Started</span>
+                    </div>
+                    <span className="text-sm sm:text-base font-medium text-primary font-sans">
+                      {symptom.symptomStartDate ? new Date(symptom.symptomStartDate).toLocaleDateString() : (symptom.created_at || symptom.createdAt ? new Date(symptom.created_at || symptom.createdAt).toLocaleDateString() : 'Not set')}
+                    </span>
+                  </div>
+                  {!symptom.isOngoing && symptom.symptomEndDate && (
+                    <div className="flex items-center justify-between gap-4 pt-4 min-w-0 overflow-hidden">
+                      <div className="flex items-center gap-3">
+                        <div className="w-2.5 h-2.5 bg-red-500 rounded-full flex-shrink-0"></div>
+                        <span className="text-sm sm:text-base text-secondary font-sans">Ended</span>
+                      </div>
+                      <span className="text-sm sm:text-base font-medium text-primary font-sans">{new Date(symptom.symptomEndDate).toLocaleDateString()}</span>
+                    </div>
+                  )}
+                </div>
+              </div>
+
+              <div className="card">
+                <p className="text-sm text-secondary leading-relaxed">
+                  <span className="font-semibold text-primary font-title">Note:</span> This log shows what you reported on the day your symptoms started, not for every day of the symptom duration.
+                </p>
+              </div>
+            </aside>
+          </div>
         </div>
 
       </div>

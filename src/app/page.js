@@ -1785,7 +1785,7 @@ export default function Home() {
                 <div className="space-y-3">
                   {recentActivities.map((activity, index) => {
                     return (
-                      <div key={`${activity.type}-${activity.timestamp.getTime()}-${index}`} className="flex items-start gap-3 pt-2 min-w-0 overflow-hidden">
+                      <div key={`${activity.type}-${activity.timestamp.getTime()}-${index}`} className={`flex items-start gap-3 min-w-0 overflow-hidden ${recentActivities.length === 2 ? 'pt-2' : ''}`}>
                         <Activity className="w-5 h-5 flex-shrink-0" style={{ color: 'var(--text-cadet-blue)' }} />
                         <div className="flex-1 min-w-0 overflow-hidden">
                           <p

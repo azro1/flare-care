@@ -43,7 +43,7 @@ SymptomDateInput.displayName = 'SymptomDateInput'
 const SYMPTOM_WIZARD_PHASES = [
   { id: 'timing', label: 'Duration', firstStep: 1, lastStep: 3 },
   { id: 'severity', label: 'Severity & stress', firstStep: 4, lastStep: 5 },
-  { id: 'bathroom', label: 'Bathroom', firstStep: 6, lastStep: 8 },
+  { id: 'bathroom', label: 'Bathroom frequency', firstStep: 6, lastStep: 8 },
   { id: 'lifestyle', label: 'Lifestyle', firstStep: 9, lastStep: 12 },
   { id: 'meals', label: 'Meals', firstStep: 13, lastStep: 15 },
   { id: 'notes', label: 'Notes', firstStep: 16, lastStep: 16 },
@@ -57,6 +57,20 @@ function getSymptomWizardPhasesFiltered(isFirstTimeUser, userPreferences) {
     return phases.filter((p) => p.id !== 'lifestyle')
   }
   return phases
+}
+
+function getSymptomWizardPhaseEntryStep(phase, isFirstTimeUser, userPreferences) {
+  // Mirror skip behavior so breadcrumb back-jumps land on the same "section entry"
+  // users would naturally hit in this flow.
+  if (phase.id === 'bathroom' && !isFirstTimeUser && userPreferences?.normalBathroomFrequency) {
+    return 7
+  }
+  if (phase.id === 'lifestyle' && !isFirstTimeUser && userPreferences) {
+    if (!userPreferences.isSmoker && !userPreferences.isDrinker) return null
+    if (!userPreferences.isSmoker) return 11
+    return 9
+  }
+  return phase.firstStep
 }
 
 function getSymptomWizardPhaseProgress(currentStep, isFirstTimeUser, userPreferences) {
@@ -82,7 +96,7 @@ function getSymptomWizardPhaseProgress(currentStep, isFirstTimeUser, userPrefere
   }
   return {
     phaseNames: phases.map((p) => p.label),
-    phaseEntrySteps: phases.map((p) => p.firstStep),
+    phaseEntrySteps: phases.map((p) => getSymptomWizardPhaseEntryStep(p, isFirstTimeUser, userPreferences)),
     currentPhaseLabel: phases[idx].label,
     sectionStep: idx + 1,
     sectionTotal: phases.length,
@@ -141,14 +155,23 @@ function SymptomsPageContent() {
   const [formData, setFormData] = useState(() => {
     if (typeof window !== 'undefined') {
       const savedFormData = localStorage.getItem('symptoms-wizard-form')
-      return savedFormData ? JSON.parse(savedFormData) : {
+      if (savedFormData) {
+        const parsed = JSON.parse(savedFormData)
+        return {
+          ...parsed,
+          smoker: typeof parsed.smoker === 'boolean' ? parsed.smoker : (typeof parsed.smoking === 'boolean' ? parsed.smoking : null),
+          smoking_habits: parsed.smoking_habits ?? parsed.smoking_details ?? '',
+          average_alcohol_units_pw: parsed.average_alcohol_units_pw ?? parsed.alcohol_habits ?? '',
+        }
+      }
+      return {
         symptomStartDate: new Date().toISOString().split('T')[0],
-        isOngoing: true,
+        isOngoing: null,
         symptomEndDate: '',
         severity: '',
         stress_level: '',
         normal_bathroom_frequency: '',
-        bathroom_frequency_changed: 'no',
+        bathroom_frequency_changed: '',
         bathroom_frequency_change_details: '',
         notes: '',
         breakfast: [{ food: '', quantity: '' }],
@@ -157,20 +180,26 @@ function SymptomsPageContent() {
         breakfast_skipped: false,
         lunch_skipped: false,
         dinner_skipped: false,
-        smoking: false,
-        smoking_details: '',
-        alcohol: false,
-        alcohol_units: ''
+        smoker: null,
+        smoking_habits: '',
+        smoking_step10_phase: 'details',
+        smoked_on_symptom_day: null,
+        smoked_amount_on_symptom_day: '',
+        alcohol: null,
+        average_alcohol_units_pw: '',
+        alcohol_step12_phase: 'baseline',
+        drank_on_symptom_day: null,
+        alcohol_units_on_symptom_day: ''
       }
     }
     return {
       symptomStartDate: '',
-      isOngoing: true,
+      isOngoing: null,
       symptomEndDate: '',
       severity: '',
       stress_level: '',
       normal_bathroom_frequency: '',
-      bathroom_frequency_changed: 'no',
+      bathroom_frequency_changed: '',
       bathroom_frequency_change_details: '',
       notes: '',
       breakfast: [{ food: '', quantity: '' }],
@@ -179,10 +208,16 @@ function SymptomsPageContent() {
       breakfast_skipped: false,
       lunch_skipped: false,
       dinner_skipped: false,
-      smoking: false,
-      smoking_details: '',
-      alcohol: false,
-      alcohol_units: ''
+      smoker: null,
+      smoking_habits: '',
+      smoking_step10_phase: 'details',
+      smoked_on_symptom_day: null,
+      smoked_amount_on_symptom_day: '',
+      alcohol: null,
+      average_alcohol_units_pw: '',
+      alcohol_step12_phase: 'baseline',
+      drank_on_symptom_day: null,
+      alcohol_units_on_symptom_day: ''
     }
   })
   const [dateInputs, setDateInputs] = useState({
@@ -268,12 +303,14 @@ function SymptomsPageContent() {
               symptom_start_date,
               is_ongoing,
               symptom_end_date,
+              smoker,
               created_at,
               updated_at,
               ...rest
             } = item
             return {
               ...rest,
+              smoker: typeof smoker === 'boolean' ? smoker : false,
               symptomStartDate: symptom_start_date,
               isOngoing: is_ongoing,
               symptomEndDate: symptom_end_date,
@@ -338,20 +375,6 @@ function SymptomsPageContent() {
     }
   }, [currentStep])
 
-  // Default severity to 1 when reaching step 4 and empty
-  useEffect(() => {
-    if (currentStep === 4 && (formData.severity === '' || formData.severity === undefined)) {
-      setFormData(prev => ({ ...prev, severity: '2' }))
-    }
-  }, [currentStep])
-
-  // Default stress_level to 1 when reaching step 5 and empty
-  useEffect(() => {
-    if (currentStep === 5 && (formData.stress_level === '' || formData.stress_level === undefined)) {
-      setFormData(prev => ({ ...prev, stress_level: '2' }))
-    }
-  }, [currentStep])
-
   // Persist form data to localStorage
   useEffect(() => {
     if (typeof window !== 'undefined') {
@@ -401,12 +424,20 @@ function SymptomsPageContent() {
   })
 
   const [fieldErrors, setFieldErrors] = useState({
+    isOngoing: '',
+    bathroom_frequency_changed: '',
+    smoker: '',
+    alcohol: '',
     bathroom_frequency_change_details: '',
-    smoking_details: '',
+    smoking_habits: '',
+    smoked_on_symptom_day: '',
+    smoked_amount_on_symptom_day: '',
     severity: '',
     stress_level: '',
     normal_bathroom_frequency: '',
-    alcohol_units: ''
+    average_alcohol_units_pw: '',
+    drank_on_symptom_day: '',
+    alcohol_units_on_symptom_day: ''
   })
   const [deleteModal, setDeleteModal] = useState({ isOpen: false, id: null })
   const [alertModal, setAlertModal] = useState({ isOpen: false, title: '', message: '' })
@@ -418,6 +449,37 @@ function SymptomsPageContent() {
     () => getSymptomWizardPhaseProgress(currentStep, isFirstTimeUser, userPreferences),
     [currentStep, isFirstTimeUser, userPreferences]
   )
+
+  const symptomDayDate = formData.symptomStartDate ? new Date(`${formData.symptomStartDate}T12:00:00`) : null
+  const hasValidSymptomDay = Boolean(symptomDayDate && !Number.isNaN(symptomDayDate.getTime()))
+  const isSymptomDayToday =
+    hasValidSymptomDay && symptomDayDate.toDateString() === new Date().toDateString()
+  const isSymptomDayThisYear =
+    hasValidSymptomDay && symptomDayDate.getFullYear() === new Date().getFullYear()
+  const symptomDayLabel = hasValidSymptomDay
+    ? symptomDayDate.toLocaleDateString('en-GB', {
+        day: 'numeric',
+        month: 'short',
+        ...(isSymptomDayThisYear ? {} : { year: 'numeric' }),
+      })
+    : 'this day'
+  // Resolve sub-step phase from persisted answers to avoid brief reload flicker.
+  const smokingStep10Phase = formData.smoking_step10_phase ||
+    (formData.smoked_on_symptom_day === true && formData.smoked_amount_on_symptom_day?.trim()
+      ? 'dayAmount'
+      : typeof formData.smoked_on_symptom_day === 'boolean'
+        ? 'dayYesNo'
+        : formData.smoking_habits?.trim()
+          ? 'dayYesNo'
+          : 'details')
+  const alcoholStep12Phase = formData.alcohol_step12_phase ||
+    (formData.drank_on_symptom_day === true && String(formData.alcohol_units_on_symptom_day || '').trim()
+      ? 'dayAmount'
+      : typeof formData.drank_on_symptom_day === 'boolean'
+        ? 'dayYesNo'
+        : String(formData.average_alcohol_units_pw || '').trim()
+          ? 'dayYesNo'
+          : 'baseline')
 
   // Below md: horizontal scroll row — keep the active section chip in view.
   useLayoutEffect(() => {
@@ -448,6 +510,14 @@ function SymptomsPageContent() {
     }
     
     // Validate step 3 (end date) if symptoms are not ongoing
+    if (currentStep === 2 && typeof formData.isOngoing !== 'boolean') {
+      setFieldErrors(prev => ({ ...prev, isOngoing: 'Please tell us if your symptoms are ongoing' }))
+      return
+    }
+    if (currentStep === 2) {
+      setFieldErrors(prev => ({ ...prev, isOngoing: '' }))
+    }
+
     if (currentStep === 3) {
       if (!formData.symptomEndDate) {
         setDateErrors(prev => ({
@@ -527,14 +597,22 @@ function SymptomsPageContent() {
     }
     
     // Skip step 8 (bathroom frequency change details) if no change
+    if (currentStep === 7 && formData.bathroom_frequency_changed !== 'yes' && formData.bathroom_frequency_changed !== 'no') {
+      setFieldErrors(prev => ({ ...prev, bathroom_frequency_changed: 'Please tell us if your bathroom frequency changed' }))
+      return
+    }
+    if (currentStep === 7) {
+      setFieldErrors(prev => ({ ...prev, bathroom_frequency_changed: '' }))
+    }
+
     if (currentStep === 7 && formData.bathroom_frequency_changed === 'no') {
       // Use smart navigation to determine next step
       if (!isFirstTimeUser && userPreferences && !userPreferences.isSmoker && !userPreferences.isDrinker) {
         setCurrentStep(13) // Skip both smoking and alcohol questions if neither
-        setFormData(prev => ({ ...prev, smoking: false, smoking_details: '', alcohol: false, alcohol_units: '' }))
+        setFormData(prev => ({ ...prev, smoker: false, smoking_habits: '', alcohol: false, average_alcohol_units_pw: '' }))
       } else if (!isFirstTimeUser && userPreferences && !userPreferences.isSmoker) {
         setCurrentStep(11) // Skip to alcohol questions if not a smoker
-        setFormData(prev => ({ ...prev, smoking: false, smoking_details: '' }))
+        setFormData(prev => ({ ...prev, smoker: false, smoking_habits: '' }))
       } else {
         setCurrentStep(9) // Go to smoking questions
       }
@@ -553,54 +631,160 @@ function SymptomsPageContent() {
       // Use smart navigation to determine next step after bathroom details
       if (!isFirstTimeUser && userPreferences && !userPreferences.isSmoker && !userPreferences.isDrinker) {
         setCurrentStep(13) // Skip both smoking and alcohol questions if neither
-        setFormData(prev => ({ ...prev, smoking: false, smoking_details: '', alcohol: false, alcohol_units: '' }))
+        setFormData(prev => ({ ...prev, smoker: false, smoking_habits: '', alcohol: false, average_alcohol_units_pw: '' }))
         return
       } else if (!isFirstTimeUser && userPreferences && !userPreferences.isSmoker) {
         setCurrentStep(11) // Skip to alcohol questions if not a smoker
-        setFormData(prev => ({ ...prev, smoking: false, smoking_details: '' }))
+        setFormData(prev => ({ ...prev, smoker: false, smoking_habits: '' }))
         return
       } else if (!isFirstTimeUser && userPreferences && userPreferences.isSmoker && !userPreferences.isDrinker) {
         setCurrentStep(9) // Go to smoking questions if smoker but not drinker
         return
       }
     }
+
+    // Returning users with smoker preference must answer symptom-day smoking yes/no.
+    if (currentStep === 9 && !isFirstTimeUser && userPreferences?.isSmoker) {
+      if (typeof formData.smoked_on_symptom_day !== 'boolean') {
+        setFieldErrors(prev => ({ ...prev, smoked_on_symptom_day: 'Please tell us if you smoked on this symptom day' }))
+        return
+      }
+      setFieldErrors(prev => ({ ...prev, smoked_on_symptom_day: '' }))
+    }
+
+    if (currentStep === 9 && isFirstTimeUser && typeof formData.smoker !== 'boolean') {
+      setFieldErrors(prev => ({ ...prev, smoker: 'Please tell us if you smoke' }))
+      return
+    }
+    if (currentStep === 9 && isFirstTimeUser) {
+      setFieldErrors(prev => ({ ...prev, smoker: '' }))
+    }
     
-    // Skip step 10 (smoking details) if they don't smoke
-    if (currentStep === 9 && formData.smoking === false) {
+    // Skip step 10 if they did not smoke on symptom day (returning smoker),
+    // or if they are not a smoker (first-time flow).
+    if (
+      currentStep === 9 &&
+      (
+        (!isFirstTimeUser && userPreferences?.isSmoker && formData.smoked_on_symptom_day === false) ||
+        ((isFirstTimeUser || !userPreferences?.isSmoker) && formData.smoker === false)
+      )
+    ) {
       // Use smart navigation to determine next step
       if (!isFirstTimeUser && userPreferences && !userPreferences.isDrinker) {
         setCurrentStep(13) // Skip to meals if not a drinker
-        setFormData(prev => ({ ...prev, alcohol: false, alcohol_units: '' }))
+        setFormData(prev => ({ ...prev, alcohol: false, average_alcohol_units_pw: '' }))
       } else {
         setCurrentStep(11) // Go to alcohol question
       }
       return
     }
     
-    // Validate step 10 (smoking details) - must be filled if they smoke
+    // Validate step 10 (smoking habits/day amount) - must be filled if they smoke
     if (currentStep === 10) {
-      if (!formData.smoking_details || formData.smoking_details.trim() === '') {
-        setFieldErrors(prev => ({ ...prev, smoking_details: 'Please describe your smoking habits' }))
+      if (isFirstTimeUser && formData.smoker === true) {
+        if (!formData.smoking_habits || formData.smoking_habits.trim() === '') {
+          setFieldErrors(prev => ({ ...prev, smoking_habits: 'Please describe your smoking habits' }))
+          return
+        }
+        // Clear smoking habits error once baseline habits are valid.
+        setFieldErrors(prev => ({ ...prev, smoking_habits: '' }))
+
+        if (smokingStep10Phase === 'details') {
+          setFormData(prev => ({ ...prev, smoking_step10_phase: 'dayYesNo' }))
+          return
+        }
+        if (smokingStep10Phase === 'dayYesNo') {
+          if (typeof formData.smoked_on_symptom_day !== 'boolean') {
+            setFieldErrors(prev => ({ ...prev, smoked_on_symptom_day: 'Please tell us if you smoked on this symptom day' }))
+            return
+          }
+          setFieldErrors(prev => ({ ...prev, smoked_on_symptom_day: '' }))
+          if (formData.smoked_on_symptom_day) {
+            setFormData(prev => ({ ...prev, smoking_step10_phase: 'dayAmount' }))
+            return
+          }
+        }
+        if (smokingStep10Phase === 'dayAmount' && (!formData.smoked_amount_on_symptom_day || formData.smoked_amount_on_symptom_day.trim() === '')) {
+          setFieldErrors(prev => ({ ...prev, smoked_amount_on_symptom_day: 'Please describe how much you smoked on this symptom day' }))
+          return
+        }
+        setFieldErrors(prev => ({ ...prev, smoked_amount_on_symptom_day: '' }))
+      } else if (!isFirstTimeUser) {
+        if (!formData.smoked_amount_on_symptom_day || formData.smoked_amount_on_symptom_day.trim() === '') {
+          setFieldErrors(prev => ({ ...prev, smoked_amount_on_symptom_day: 'Please describe how much you smoked on this symptom day' }))
+          return
+        }
+        setFieldErrors(prev => ({ ...prev, smoked_amount_on_symptom_day: '' }))
+      }
+    }
+
+    // Returning users with drinker preference must answer symptom-day alcohol yes/no.
+    if (currentStep === 11 && !isFirstTimeUser && userPreferences?.isDrinker) {
+      if (typeof formData.drank_on_symptom_day !== 'boolean') {
+        setFieldErrors(prev => ({ ...prev, drank_on_symptom_day: 'Please tell us if you drank alcohol on this symptom day' }))
         return
       }
-      // Clear error if validation passes
-      setFieldErrors(prev => ({ ...prev, smoking_details: '' }))
+      setFieldErrors(prev => ({ ...prev, drank_on_symptom_day: '' }))
+    }
+
+    if (currentStep === 11 && isFirstTimeUser && typeof formData.alcohol !== 'boolean') {
+      setFieldErrors(prev => ({ ...prev, alcohol: 'Please tell us if you drink alcohol' }))
+      return
+    }
+    if (currentStep === 11 && isFirstTimeUser) {
+      setFieldErrors(prev => ({ ...prev, alcohol: '' }))
     }
     
-    // Skip step 12 (alcohol details) if they don't drink
-    if (currentStep === 11 && formData.alcohol === false) {
+    // Skip step 12 if they did not drink on symptom day (returning drinker),
+    // or if they are not a drinker (first-time flow).
+    if (
+      currentStep === 11 &&
+      (
+        (!isFirstTimeUser && userPreferences?.isDrinker && formData.drank_on_symptom_day === false) ||
+        ((isFirstTimeUser || !userPreferences?.isDrinker) && formData.alcohol === false)
+      )
+    ) {
       setCurrentStep(13) // Skip to step 13 (breakfast)
       return
     }
     
-    // Validate step 12 (alcohol units) - must be filled if they drink
+    // Validate step 12 (alcohol units/day units) - must be filled if they drink
     if (currentStep === 12) {
-      if (!formData.alcohol_units || formData.alcohol_units === '') {
-        setFieldErrors(prev => ({ ...prev, alcohol_units: 'Please enter how many units of alcohol you drink per day' }))
-        return
+      if (isFirstTimeUser && formData.alcohol === true) {
+        if (!formData.average_alcohol_units_pw || formData.average_alcohol_units_pw === '') {
+          setFieldErrors(prev => ({ ...prev, average_alcohol_units_pw: 'Please enter how many units of alcohol you drink per day' }))
+          return
+        }
+        // Clear error if validation passes
+        setFieldErrors(prev => ({ ...prev, average_alcohol_units_pw: '' }))
+
+        if (alcoholStep12Phase === 'baseline') {
+          setFormData(prev => ({ ...prev, alcohol_step12_phase: 'dayYesNo' }))
+          return
+        }
+        if (alcoholStep12Phase === 'dayYesNo') {
+          if (typeof formData.drank_on_symptom_day !== 'boolean') {
+            setFieldErrors(prev => ({ ...prev, drank_on_symptom_day: 'Please tell us if you drank alcohol on this symptom day' }))
+            return
+          }
+          setFieldErrors(prev => ({ ...prev, drank_on_symptom_day: '' }))
+          if (formData.drank_on_symptom_day) {
+            setFormData(prev => ({ ...prev, alcohol_step12_phase: 'dayAmount' }))
+            return
+          }
+        }
+        if (alcoholStep12Phase === 'dayAmount' && (!formData.alcohol_units_on_symptom_day || formData.alcohol_units_on_symptom_day === '')) {
+          setFieldErrors(prev => ({ ...prev, alcohol_units_on_symptom_day: 'Please enter how many units you drank on this symptom day' }))
+          return
+        }
+        setFieldErrors(prev => ({ ...prev, alcohol_units_on_symptom_day: '' }))
+      } else if (!isFirstTimeUser) {
+        if (!formData.alcohol_units_on_symptom_day || formData.alcohol_units_on_symptom_day === '') {
+          setFieldErrors(prev => ({ ...prev, alcohol_units_on_symptom_day: 'Please enter how many units you drank on this symptom day' }))
+          return
+        }
+        setFieldErrors(prev => ({ ...prev, alcohol_units_on_symptom_day: '' }))
       }
-      // Clear error if validation passes
-      setFieldErrors(prev => ({ ...prev, alcohol_units: '' }))
     }
     
     // Validate step 13 (breakfast) - must have food or mark as skipped
@@ -655,19 +839,19 @@ function SymptomsPageContent() {
         else if (currentStep === 9 && !userPreferences.isSmoker) {
           nextStepNumber = 11 // Skip to alcohol questions
           // Set smoking data to false
-          setFormData(prev => ({ ...prev, smoking: false, smoking_details: '' }))
+          setFormData(prev => ({ ...prev, smoker: false, smoking_habits: '' }))
         }
         // Skip alcohol questions if user is not a drinker
         else if (currentStep === 11 && !userPreferences.isDrinker) {
           nextStepNumber = 13 // Skip to meal questions
           // Set alcohol data to false
-          setFormData(prev => ({ ...prev, alcohol: false, alcohol_units: '' }))
+          setFormData(prev => ({ ...prev, alcohol: false, average_alcohol_units_pw: '' }))
         }
-        // Skip alcohol questions if user is not a drinker (from smoking details)
+        // Skip alcohol questions if user is not a drinker (from smoking habits)
         else if (currentStep === 10 && !userPreferences.isDrinker) {
           nextStepNumber = 13 // Skip to meal questions
           // Set alcohol data to false
-          setFormData(prev => ({ ...prev, alcohol: false, alcohol_units: '' }))
+          setFormData(prev => ({ ...prev, alcohol: false, average_alcohol_units_pw: '' }))
         }
       }
       
@@ -698,7 +882,7 @@ function SymptomsPageContent() {
       }
       
       // Alcohol units: 0-30, allow decimals (e.g. 0.2, 0.5)
-      if (name === 'alcohol_units') {
+      if (name === 'average_alcohol_units_pw' || name === 'alcohol_units_on_symptom_day') {
         if (value && value.length > 5) {
           return // e.g. "99.99" max length
         }
@@ -721,9 +905,37 @@ function SymptomsPageContent() {
         newData.bathroom_frequency_change_details = ''
         setFieldErrors(prev => ({ ...prev, bathroom_frequency_change_details: '' }))
       }
+
+      if (name === 'smoker' && newData.smoker === false) {
+        newData.smoking_habits = ''
+        newData.smoking_step10_phase = 'details'
+        newData.smoked_on_symptom_day = null
+        newData.smoked_amount_on_symptom_day = ''
+        setFieldErrors(prev => ({ ...prev, smoking_habits: '', smoked_on_symptom_day: '', smoked_amount_on_symptom_day: '' }))
+      }
+
+      if (name === 'smoked_on_symptom_day' && newData.smoked_on_symptom_day === false) {
+        newData.smoking_step10_phase = 'dayYesNo'
+        newData.smoked_amount_on_symptom_day = ''
+        setFieldErrors(prev => ({ ...prev, smoked_amount_on_symptom_day: '' }))
+      }
+
+      if (name === 'alcohol' && newData.alcohol === false) {
+        newData.average_alcohol_units_pw = ''
+        newData.alcohol_step12_phase = 'baseline'
+        newData.drank_on_symptom_day = null
+        newData.alcohol_units_on_symptom_day = ''
+        setFieldErrors(prev => ({ ...prev, average_alcohol_units_pw: '', drank_on_symptom_day: '', alcohol_units_on_symptom_day: '' }))
+      }
+
+      if (name === 'drank_on_symptom_day' && newData.drank_on_symptom_day === false) {
+        newData.alcohol_step12_phase = 'dayYesNo'
+        newData.alcohol_units_on_symptom_day = ''
+        setFieldErrors(prev => ({ ...prev, alcohol_units_on_symptom_day: '' }))
+      }
       
       // Clear field errors when user starts typing
-      if (name === 'bathroom_frequency_change_details' || name === 'smoking_details' || name === 'severity' || name === 'stress_level' || name === 'normal_bathroom_frequency' || name === 'alcohol_units') {
+      if (name === 'isOngoing' || name === 'bathroom_frequency_changed' || name === 'smoker' || name === 'alcohol' || name === 'bathroom_frequency_change_details' || name === 'smoking_habits' || name === 'smoked_on_symptom_day' || name === 'smoked_amount_on_symptom_day' || name === 'severity' || name === 'stress_level' || name === 'normal_bathroom_frequency' || name === 'average_alcohol_units_pw' || name === 'drank_on_symptom_day' || name === 'alcohol_units_on_symptom_day') {
         setFieldErrors(prev => ({ ...prev, [name]: '' }))
       }
       
@@ -852,10 +1064,14 @@ function SymptomsPageContent() {
       normal_bathroom_frequency: formData.normal_bathroom_frequency,
       bathroom_frequency_changed: formData.bathroom_frequency_changed,
       bathroom_frequency_change_details: formData.bathroom_frequency_change_details,
-      smoking: formData.smoking,
-      smoking_details: formData.smoking_details,
-      alcohol: formData.alcohol,
-      alcohol_units: formData.alcohol_units,
+      smoker: isFirstTimeUser ? formData.smoker : null,
+      smoking_habits: isFirstTimeUser ? formData.smoking_habits : null,
+      smoked_on_symptom_day: typeof formData.smoked_on_symptom_day === 'boolean' ? formData.smoked_on_symptom_day : false,
+      smoked_amount_on_symptom_day: formData.smoked_amount_on_symptom_day || null,
+      alcohol: isFirstTimeUser ? formData.alcohol : null,
+      average_alcohol_units_pw: isFirstTimeUser ? formData.average_alcohol_units_pw : null,
+      drank_on_symptom_day: typeof formData.drank_on_symptom_day === 'boolean' ? formData.drank_on_symptom_day : false,
+      alcohol_units_on_symptom_day: formData.alcohol_units_on_symptom_day || null,
       notes: sanitizeNotes(formData.notes),
       ...sanitizedMeals,
       created_at: new Date().toISOString()
@@ -885,15 +1101,15 @@ function SymptomsPageContent() {
       if (isFirstTimeUser) {
         const userId = user?.id
         await saveUserPreferences(userId, {
-          isSmoker: formData.smoking,
+          isSmoker: formData.smoker,
           isDrinker: formData.alcohol,
           normalBathroomFrequency: formData.normal_bathroom_frequency
         })
       } else {
         // Check for habit patterns for returning users
         const userId = user?.id
-        const smokingPattern = await checkHabitPattern(userId, 'smoking', formData.smoking)
-        const alcoholPattern = await checkHabitPattern(userId, 'alcohol', formData.alcohol)
+        const smokingPattern = await checkHabitPattern(userId, 'smoking', formData.smoked_on_symptom_day)
+        const alcoholPattern = await checkHabitPattern(userId, 'alcohol', formData.drank_on_symptom_day)
         
         // Show pattern modal if detected
         if (smokingPattern.showModal) {
@@ -1048,6 +1264,9 @@ function SymptomsPageContent() {
     if (!formData.symptomStartDate) {
       return `What did you have for ${mealType}?`
     }
+    if (isSymptomDayToday) {
+      return `What did you have for ${mealType} today?`
+    }
     const symptomDate = new Date(`${formData.symptomStartDate}T12:00:00`)
     const dateStr = symptomDate.toLocaleDateString('en-GB', {
       day: 'numeric',
@@ -1091,7 +1310,13 @@ function SymptomsPageContent() {
   const wizardPhaseNames = symptomWizardPhaseProgress.phaseNames
 
   return (
-    <div className={`symptoms-wizard max-w-4xl w-full mx-auto min-w-0 flex flex-col justify-center sm:min-h-[500px] ${currentStep > 0 ? 'pb-20 lg:pb-0' : ''}`}>
+    <div className={`symptoms-wizard max-w-4xl w-full mx-auto min-w-0 flex flex-col justify-center sm:min-h-[500px] ${
+      currentStep > 0
+        ? currentStep === 17
+          ? 'pb-28 lg:pb-10'
+          : 'pb-28 lg:pb-0'
+        : ''
+    }`}>
       {/* Header: exit + section breadcrumb — hide on landing */}
       {currentStep > 0 && (
         <div className="min-w-0 w-full max-w-full pt-6 md:pt-0 mb-6 md:mb-8">
@@ -1163,7 +1388,7 @@ function SymptomsPageContent() {
       )}
 
       {/* Wizard Container */}
-      <div className="mb-4 min-w-0 w-full max-w-full">
+      <div className="min-w-0 w-full max-w-full">
         {/* Step 0: Landing Page */}
         {currentStep === 0 && (
           <div className="flex flex-col items-center justify-center text-center pt-20 sm:pt-0">
@@ -1282,6 +1507,11 @@ function SymptomsPageContent() {
                 <span className="ml-3 text-lg text-secondary">No</span>
                 </label>
               </div>
+            {fieldErrors.isOngoing && (
+              <div className="mt-5 p-3 rounded-lg border" style={{backgroundColor: 'var(--bg-error)', borderColor: 'var(--border-error)'}}>
+                <p className="text-sm" style={{color: 'var(--text-error)'}}>{fieldErrors.isOngoing}</p>
+              </div>
+            )}
             </div>
         )}
 
@@ -1335,8 +1565,8 @@ function SymptomsPageContent() {
                 className="grid grid-cols-2 gap-2 sm:grid-cols-5 sm:gap-2"
               >
                 {SEVERITY_WORD_OPTIONS.map((opt) => {
-                  const band = formData.severity ? wizardRatingToBand(formData.severity) : wizardRatingToBand(2)
-                  const selected = band === opt.value
+                  const band = formData.severity ? wizardRatingToBand(formData.severity) : null
+                  const selected = band !== null && band === opt.value
                   return (
                     <button
                       key={opt.value}
@@ -1379,8 +1609,8 @@ function SymptomsPageContent() {
                 className="grid grid-cols-2 gap-2 sm:grid-cols-5 sm:gap-2"
               >
                 {STRESS_WORD_OPTIONS.map((opt) => {
-                  const band = formData.stress_level ? wizardRatingToBand(formData.stress_level) : wizardRatingToBand(2)
-                  const selected = band === opt.value
+                  const band = formData.stress_level ? wizardRatingToBand(formData.stress_level) : null
+                  const selected = band !== null && band === opt.value
                   return (
                     <button
                       key={opt.value}
@@ -1501,6 +1731,11 @@ function SymptomsPageContent() {
                 <span className="ml-3 text-lg text-secondary">No</span>
               </label>
             </div>
+            {fieldErrors.bathroom_frequency_changed && (
+              <div className="mt-5 p-3 rounded-lg border" style={{backgroundColor: 'var(--bg-error)', borderColor: 'var(--border-error)'}}>
+                <p className="text-sm" style={{color: 'var(--text-error)'}}>{fieldErrors.bathroom_frequency_changed}</p>
+              </div>
+            )}
           </div>
         )}
 
@@ -1540,9 +1775,9 @@ function SymptomsPageContent() {
                 <div className="relative">
                   <input
                     type="radio"
-                    name="smoking"
+                    name={!isFirstTimeUser && userPreferences?.isSmoker ? 'smoked_on_symptom_day' : 'smoker'}
                     value="true"
-                    checked={formData.smoking === true}
+                    checked={!isFirstTimeUser && userPreferences?.isSmoker ? formData.smoked_on_symptom_day === true : formData.smoker === true}
                     onChange={handleInputChange}
                     className="w-6 h-6 text-cadet-blue opacity-0 absolute radio-button"
                     style={{
@@ -1551,11 +1786,11 @@ function SymptomsPageContent() {
                     }}
                   />
                   <span className={`w-6 h-6 rounded-full border-2 flex items-center justify-center ${
-                    formData.smoking === true 
+                    (!isFirstTimeUser && userPreferences?.isSmoker ? formData.smoked_on_symptom_day === true : formData.smoker === true)
                       ? 'border-[var(--radio-border)] bg-white' 
                       : 'border-[var(--radio-border)] bg-white'
                   }`}>
-                    {formData.smoking === true && (
+                    {(!isFirstTimeUser && userPreferences?.isSmoker ? formData.smoked_on_symptom_day === true : formData.smoker === true) && (
                       <div className="w-3.5 h-3.5 rounded-full bg-[#5F9EA0]"></div>
                     )}
                   </span>
@@ -1566,9 +1801,9 @@ function SymptomsPageContent() {
                 <div className="relative">
                   <input
                     type="radio"
-                    name="smoking"
+                    name={!isFirstTimeUser && userPreferences?.isSmoker ? 'smoked_on_symptom_day' : 'smoker'}
                     value="false"
-                    checked={formData.smoking === false}
+                    checked={!isFirstTimeUser && userPreferences?.isSmoker ? formData.smoked_on_symptom_day === false : formData.smoker === false}
                     onChange={handleInputChange}
                     className="w-6 h-6 text-cadet-blue opacity-0 absolute radio-button"
                     style={{
@@ -1577,11 +1812,11 @@ function SymptomsPageContent() {
                     }}
                   />
                   <span className={`w-6 h-6 rounded-full border-2 flex items-center justify-center ${
-                    formData.smoking === false 
+                    (!isFirstTimeUser && userPreferences?.isSmoker ? formData.smoked_on_symptom_day === false : formData.smoker === false)
                       ? 'border-[var(--radio-border)] bg-white' 
                       : 'border-[var(--radio-border)] bg-white'
                   }`}>
-                    {formData.smoking === false && (
+                    {(!isFirstTimeUser && userPreferences?.isSmoker ? formData.smoked_on_symptom_day === false : formData.smoker === false) && (
                       <div className="w-3.5 h-3.5 rounded-full bg-[#5F9EA0]"></div>
                     )}
                   </span>
@@ -1589,34 +1824,143 @@ function SymptomsPageContent() {
                 <span className="ml-3 text-lg text-secondary">No</span>
               </label>
             </div>
+            {!isFirstTimeUser && userPreferences?.isSmoker && fieldErrors.smoked_on_symptom_day && (
+              <div className="mt-5 p-3 rounded-lg border" style={{backgroundColor: 'var(--bg-error)', borderColor: 'var(--border-error)'}}>
+                <p className="text-sm" style={{color: 'var(--text-error)'}}>{fieldErrors.smoked_on_symptom_day}</p>
+              </div>
+            )}
+            {isFirstTimeUser && fieldErrors.smoker && (
+              <div className="mt-5 p-3 rounded-lg border" style={{backgroundColor: 'var(--bg-error)', borderColor: 'var(--border-error)'}}>
+                <p className="text-sm" style={{color: 'var(--text-error)'}}>{fieldErrors.smoker}</p>
+              </div>
+            )}
           </div>
         )}
 
-        {/* Step 10: Smoking details (only if they smoke) */}
+        {/* Step 10: Smoking habits + (first-time only) symptom-day follow-ups */}
         {currentStep === 10 && (
           <div className="mb-5">
-            <h3 className="text-2xl sm:text-2xl md:text-3xl font-title font-bold text-primary mb-2 sm:mb-5">
-              {isFirstTimeUser ? 'Please describe your smoking habits' : `How much did you smoke on ${new Date(formData.symptomStartDate).toLocaleDateString('en-GB', { day: 'numeric', month: 'short' })}?`}
-            </h3>
-            <p className="text-sm text-muted mb-5">
-              {isFirstTimeUser 
-                ? "For example, '1 pack of cigarettes per day, occasional cigars'" 
-                : "For example, '5 cigarettes' or '1 cigar'"
-              }
-            </p>
+            {formData.smoker === true && smokingStep10Phase === 'dayAmount' ? (
+              <>
+                <h3 className="text-2xl sm:text-2xl md:text-3xl font-title font-bold text-primary mb-2 sm:mb-5">
+                  {!isFirstTimeUser
+                    ? 'How much did you smoke?'
+                    : (isSymptomDayToday ? 'How much did you smoke today?' : `How much did you smoke on ${symptomDayLabel}?`)}
+                </h3>
+                <p className="text-sm text-muted mb-5">For example, '3 cigarettes' or '1 cigar'</p>
                 <input
                   type="text"
-                  id="smoking_details"
-                  name="smoking_details"
-                  value={formData.smoking_details}
+                  id="smoked_amount_on_symptom_day"
+                  name="smoked_amount_on_symptom_day"
+                  value={formData.smoked_amount_on_symptom_day}
                   onChange={handleInputChange}
                   className="w-full px-4 py-3 input-field-wizard"
                   autoComplete="off"
                 />
-                {fieldErrors.smoking_details && (
+                {fieldErrors.smoked_amount_on_symptom_day && (
                   <div className="mt-6 p-3 rounded-lg border" style={{backgroundColor: 'var(--bg-error)', borderColor: 'var(--border-error)'}}>
-                    <p className="text-sm" style={{color: 'var(--text-error)'}}>{fieldErrors.smoking_details}</p>
-              </div>
+                    <p className="text-sm" style={{color: 'var(--text-error)'}}>{fieldErrors.smoked_amount_on_symptom_day}</p>
+                  </div>
+                )}
+              </>
+            ) : formData.smoker === true && smokingStep10Phase === 'dayYesNo' ? (
+              <>
+                <h3 className="text-2xl sm:text-2xl md:text-3xl font-title font-bold text-primary mb-5">
+                  {isSymptomDayToday ? 'Did you smoke today?' : `Did you smoke on ${symptomDayLabel}?`}
+                </h3>
+                <div className="flex space-x-8">
+                  <label className="flex items-center cursor-pointer">
+                    <div className="relative">
+                      <input
+                        type="radio"
+                        name="smoked_on_symptom_day"
+                        value="true"
+                        checked={formData.smoked_on_symptom_day === true}
+                        onChange={handleInputChange}
+                        className="w-6 h-6 text-cadet-blue opacity-0 absolute radio-button"
+                        style={{
+                          accentColor: 'var(--text-cadet-blue)',
+                          '--tw-accent-color': '#5F9EA0'
+                        }}
+                      />
+                      <span className={`w-6 h-6 rounded-full border-2 flex items-center justify-center ${
+                        formData.smoked_on_symptom_day === true
+                          ? 'border-[var(--radio-border)] bg-white'
+                          : 'border-[var(--radio-border)] bg-white'
+                      }`}>
+                        {formData.smoked_on_symptom_day === true && (
+                          <div className="w-3.5 h-3.5 rounded-full bg-[#5F9EA0]"></div>
+                        )}
+                      </span>
+                    </div>
+                    <span className="ml-3 text-lg text-secondary">Yes</span>
+                  </label>
+                  <label className="flex items-center cursor-pointer">
+                    <div className="relative">
+                      <input
+                        type="radio"
+                        name="smoked_on_symptom_day"
+                        value="false"
+                        checked={formData.smoked_on_symptom_day === false}
+                        onChange={handleInputChange}
+                        className="w-6 h-6 text-cadet-blue opacity-0 absolute radio-button"
+                        style={{
+                          accentColor: 'var(--text-cadet-blue)',
+                          '--tw-accent-color': '#5F9EA0'
+                        }}
+                      />
+                      <span className={`w-6 h-6 rounded-full border-2 flex items-center justify-center ${
+                        formData.smoked_on_symptom_day === false
+                          ? 'border-[var(--radio-border)] bg-white'
+                          : 'border-[var(--radio-border)] bg-white'
+                      }`}>
+                        {formData.smoked_on_symptom_day === false && (
+                          <div className="w-3.5 h-3.5 rounded-full bg-[#5F9EA0]"></div>
+                        )}
+                      </span>
+                    </div>
+                    <span className="ml-3 text-lg text-secondary">No</span>
+                  </label>
+                </div>
+                {fieldErrors.smoked_on_symptom_day && (
+                  <div className="mt-5 p-3 rounded-lg border" style={{backgroundColor: 'var(--bg-error)', borderColor: 'var(--border-error)'}}>
+                    <p className="text-sm" style={{color: 'var(--text-error)'}}>{fieldErrors.smoked_on_symptom_day}</p>
+                  </div>
+                )}
+              </>
+            ) : (
+              <>
+                <h3 className="text-2xl sm:text-2xl md:text-3xl font-title font-bold text-primary mb-2 sm:mb-5">
+                  {!isFirstTimeUser && userPreferences?.isSmoker
+                    ? 'How much did you smoke?'
+                    : 'Please describe your smoking habits'}
+                </h3>
+                <p className="text-sm text-muted mb-5">
+                  {!isFirstTimeUser && userPreferences?.isSmoker
+                    ? "For example, '5 cigarettes' or '1 cigar'"
+                    : "For example, '1 pack of cigarettes per day, occasional cigars'"
+                  }
+                </p>
+                <input
+                  type="text"
+                  id={!isFirstTimeUser && userPreferences?.isSmoker ? 'smoked_amount_on_symptom_day' : 'smoking_habits'}
+                  name={!isFirstTimeUser && userPreferences?.isSmoker ? 'smoked_amount_on_symptom_day' : 'smoking_habits'}
+                  value={!isFirstTimeUser && userPreferences?.isSmoker ? formData.smoked_amount_on_symptom_day : formData.smoking_habits}
+                  onChange={handleInputChange}
+                  className="w-full px-4 py-3 input-field-wizard"
+                  autoComplete="off"
+                />
+                {!isFirstTimeUser && userPreferences?.isSmoker && fieldErrors.smoked_amount_on_symptom_day && (
+                  <div className="mt-6 p-3 rounded-lg border" style={{backgroundColor: 'var(--bg-error)', borderColor: 'var(--border-error)'}}>
+                    <p className="text-sm" style={{color: 'var(--text-error)'}}>{fieldErrors.smoked_amount_on_symptom_day}</p>
+                  </div>
+                )}
+                {(isFirstTimeUser || !userPreferences?.isSmoker) && fieldErrors.smoking_habits && (
+                  <div className="mt-6 p-3 rounded-lg border" style={{backgroundColor: 'var(--bg-error)', borderColor: 'var(--border-error)'}}>
+                    <p className="text-sm" style={{color: 'var(--text-error)'}}>{fieldErrors.smoking_habits}</p>
+                  </div>
+                )}
+              </>
             )}
           </div>
         )}
@@ -1636,9 +1980,9 @@ function SymptomsPageContent() {
                 <div className="relative">
                   <input
                     type="radio"
-                    name="alcohol"
+                    name={!isFirstTimeUser && userPreferences?.isDrinker ? 'drank_on_symptom_day' : 'alcohol'}
                     value="true"
-                    checked={formData.alcohol === true}
+                    checked={!isFirstTimeUser && userPreferences?.isDrinker ? formData.drank_on_symptom_day === true : formData.alcohol === true}
                     onChange={handleInputChange}
                     className="w-6 h-6 text-cadet-blue opacity-0 absolute radio-button"
                     style={{
@@ -1647,11 +1991,11 @@ function SymptomsPageContent() {
                     }}
                   />
                   <span className={`w-6 h-6 rounded-full border-2 flex items-center justify-center ${
-                    formData.alcohol === true 
+                    (!isFirstTimeUser && userPreferences?.isDrinker ? formData.drank_on_symptom_day === true : formData.alcohol === true)
                       ? 'border-[var(--radio-border)] bg-white' 
                       : 'border-[var(--radio-border)] bg-white'
                   }`}>
-                    {formData.alcohol === true && (
+                    {(!isFirstTimeUser && userPreferences?.isDrinker ? formData.drank_on_symptom_day === true : formData.alcohol === true) && (
                       <div className="w-3.5 h-3.5 rounded-full bg-[#5F9EA0]"></div>
                     )}
                   </span>
@@ -1662,9 +2006,9 @@ function SymptomsPageContent() {
                 <div className="relative">
                   <input
                     type="radio"
-                    name="alcohol"
+                    name={!isFirstTimeUser && userPreferences?.isDrinker ? 'drank_on_symptom_day' : 'alcohol'}
                     value="false"
-                    checked={formData.alcohol === false}
+                    checked={!isFirstTimeUser && userPreferences?.isDrinker ? formData.drank_on_symptom_day === false : formData.alcohol === false}
                     onChange={handleInputChange}
                     className="w-6 h-6 text-cadet-blue opacity-0 absolute radio-button"
                     style={{
@@ -1673,11 +2017,11 @@ function SymptomsPageContent() {
                     }}
                   />
                   <span className={`w-6 h-6 rounded-full border-2 flex items-center justify-center ${
-                    formData.alcohol === false 
+                    (!isFirstTimeUser && userPreferences?.isDrinker ? formData.drank_on_symptom_day === false : formData.alcohol === false)
                       ? 'border-[var(--radio-border)] bg-white' 
                       : 'border-[var(--radio-border)] bg-white'
                   }`}>
-                    {formData.alcohol === false && (
+                    {(!isFirstTimeUser && userPreferences?.isDrinker ? formData.drank_on_symptom_day === false : formData.alcohol === false) && (
                       <div className="w-3.5 h-3.5 rounded-full bg-[#5F9EA0]"></div>
                     )}
                   </span>
@@ -1685,41 +2029,156 @@ function SymptomsPageContent() {
                 <span className="ml-3 text-lg text-secondary">No</span>
               </label>
             </div>
+            {!isFirstTimeUser && userPreferences?.isDrinker && fieldErrors.drank_on_symptom_day && (
+              <div className="mt-5 p-3 rounded-lg border" style={{backgroundColor: 'var(--bg-error)', borderColor: 'var(--border-error)'}}>
+                <p className="text-sm" style={{color: 'var(--text-error)'}}>{fieldErrors.drank_on_symptom_day}</p>
+              </div>
+            )}
+            {isFirstTimeUser && fieldErrors.alcohol && (
+              <div className="mt-5 p-3 rounded-lg border" style={{backgroundColor: 'var(--bg-error)', borderColor: 'var(--border-error)'}}>
+                <p className="text-sm" style={{color: 'var(--text-error)'}}>{fieldErrors.alcohol}</p>
+              </div>
+            )}
           </div>
         )}
 
-        {/* Step 12: Alcohol details (only if they drink) */}
+        {/* Step 12: Alcohol details + (first-time only) symptom-day follow-ups */}
         {currentStep === 12 && (
           <div className="mb-5">
-            <h3 className="text-2xl sm:text-2xl md:text-3xl font-title font-bold text-primary mb-2 sm:mb-5">
-              {!isFirstTimeUser && userPreferences?.isDrinker
-                ? `How many units of alcohol did you drink on ${new Date(formData.symptomStartDate).toLocaleDateString('en-GB', { day: 'numeric', month: 'short' })}?`
-                : 'How many units of alcohol do you drink per day?'}
-            </h3>
-            <p className="text-sm text-muted mb-5">For example, 0.5, 2 or 5</p>
-            <div className="w-20">
-                <input
-                type="number"
-                  id="alcohol_units"
-                  name="alcohol_units"
-                min="0"
-                max="30"
-                step="0.1"
-                  value={formData.alcohol_units}
-                  onChange={handleInputChange}
-                  onKeyDown={(e) => {
-                    // Prevent 'e', 'E', '+', '-' (allow '.' for decimals)
-                    if (['e', 'E', '+', '-'].includes(e.key)) {
-                      e.preventDefault();
-                    }
-                  }}
-                  className="input-field-wizard [appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none"
-                />
-              </div>
-              {fieldErrors.alcohol_units && (
-                <div className="mt-6 p-3 rounded-lg border" style={{backgroundColor: 'var(--bg-error)', borderColor: 'var(--border-error)'}}>
-                  <p className="text-sm" style={{color: 'var(--text-error)'}}>{fieldErrors.alcohol_units}</p>
-              </div>
+            {formData.alcohol === true && alcoholStep12Phase === 'dayAmount' ? (
+              <>
+                <h3 className="text-2xl sm:text-2xl md:text-3xl font-title font-bold text-primary mb-2 sm:mb-5">
+                  {isSymptomDayToday
+                    ? 'How many units of alcohol did you drink today?'
+                    : `How many units of alcohol did you drink on ${symptomDayLabel}?`}
+                </h3>
+                <p className="text-sm text-muted mb-5">For example, 0.5, 2 or 5</p>
+                <div className="w-20">
+                  <input
+                    type="number"
+                    id="alcohol_units_on_symptom_day"
+                    name="alcohol_units_on_symptom_day"
+                    min="0"
+                    max="30"
+                    step="0.1"
+                    value={formData.alcohol_units_on_symptom_day}
+                    onChange={handleInputChange}
+                    onKeyDown={(e) => {
+                      if (['e', 'E', '+', '-'].includes(e.key)) {
+                        e.preventDefault();
+                      }
+                    }}
+                    className="input-field-wizard [appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none"
+                  />
+                </div>
+                {fieldErrors.alcohol_units_on_symptom_day && (
+                  <div className="mt-6 p-3 rounded-lg border" style={{backgroundColor: 'var(--bg-error)', borderColor: 'var(--border-error)'}}>
+                    <p className="text-sm" style={{color: 'var(--text-error)'}}>{fieldErrors.alcohol_units_on_symptom_day}</p>
+                  </div>
+                )}
+              </>
+            ) : formData.alcohol === true && alcoholStep12Phase === 'dayYesNo' ? (
+              <>
+                <h3 className="text-2xl sm:text-2xl md:text-3xl font-title font-bold text-primary mb-5">
+                  {isSymptomDayToday ? 'Did you drink alcohol today?' : `Did you drink alcohol on ${symptomDayLabel}?`}
+                </h3>
+                <div className="flex space-x-8">
+                  <label className="flex items-center cursor-pointer">
+                    <div className="relative">
+                      <input
+                        type="radio"
+                        name="drank_on_symptom_day"
+                        value="true"
+                        checked={formData.drank_on_symptom_day === true}
+                        onChange={handleInputChange}
+                        className="w-6 h-6 text-cadet-blue opacity-0 absolute radio-button"
+                        style={{
+                          accentColor: 'var(--text-cadet-blue)',
+                          '--tw-accent-color': '#5F9EA0'
+                        }}
+                      />
+                      <span className={`w-6 h-6 rounded-full border-2 flex items-center justify-center ${
+                        formData.drank_on_symptom_day === true
+                          ? 'border-[var(--radio-border)] bg-white'
+                          : 'border-[var(--radio-border)] bg-white'
+                      }`}>
+                        {formData.drank_on_symptom_day === true && (
+                          <div className="w-3.5 h-3.5 rounded-full bg-[#5F9EA0]"></div>
+                        )}
+                      </span>
+                    </div>
+                    <span className="ml-3 text-lg text-secondary">Yes</span>
+                  </label>
+                  <label className="flex items-center cursor-pointer">
+                    <div className="relative">
+                      <input
+                        type="radio"
+                        name="drank_on_symptom_day"
+                        value="false"
+                        checked={formData.drank_on_symptom_day === false}
+                        onChange={handleInputChange}
+                        className="w-6 h-6 text-cadet-blue opacity-0 absolute radio-button"
+                        style={{
+                          accentColor: 'var(--text-cadet-blue)',
+                          '--tw-accent-color': '#5F9EA0'
+                        }}
+                      />
+                      <span className={`w-6 h-6 rounded-full border-2 flex items-center justify-center ${
+                        formData.drank_on_symptom_day === false
+                          ? 'border-[var(--radio-border)] bg-white'
+                          : 'border-[var(--radio-border)] bg-white'
+                      }`}>
+                        {formData.drank_on_symptom_day === false && (
+                          <div className="w-3.5 h-3.5 rounded-full bg-[#5F9EA0]"></div>
+                        )}
+                      </span>
+                    </div>
+                    <span className="ml-3 text-lg text-secondary">No</span>
+                  </label>
+                </div>
+                {fieldErrors.drank_on_symptom_day && (
+                  <div className="mt-5 p-3 rounded-lg border" style={{backgroundColor: 'var(--bg-error)', borderColor: 'var(--border-error)'}}>
+                    <p className="text-sm" style={{color: 'var(--text-error)'}}>{fieldErrors.drank_on_symptom_day}</p>
+                  </div>
+                )}
+              </>
+            ) : (
+              <>
+                <h3 className="text-2xl sm:text-2xl md:text-3xl font-title font-bold text-primary mb-2 sm:mb-5">
+                  {!isFirstTimeUser && userPreferences?.isDrinker
+                    ? 'How many units of alcohol did you drink?'
+                    : 'On average, how many units of alcohol do you drink per week?'}
+                </h3>
+                <p className="text-sm text-muted mb-5">For example, 0.5, 2 or 5</p>
+                <div className="w-20">
+                  <input
+                    type="number"
+                    id={!isFirstTimeUser && userPreferences?.isDrinker ? 'alcohol_units_on_symptom_day' : 'average_alcohol_units_pw'}
+                    name={!isFirstTimeUser && userPreferences?.isDrinker ? 'alcohol_units_on_symptom_day' : 'average_alcohol_units_pw'}
+                    min="0"
+                    max="30"
+                    step="0.1"
+                    value={!isFirstTimeUser && userPreferences?.isDrinker ? formData.alcohol_units_on_symptom_day : formData.average_alcohol_units_pw}
+                    onChange={handleInputChange}
+                    onKeyDown={(e) => {
+                      if (['e', 'E', '+', '-'].includes(e.key)) {
+                        e.preventDefault();
+                      }
+                    }}
+                    className="input-field-wizard [appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none"
+                  />
+                </div>
+                {!isFirstTimeUser && userPreferences?.isDrinker && fieldErrors.alcohol_units_on_symptom_day && (
+                  <div className="mt-6 p-3 rounded-lg border" style={{backgroundColor: 'var(--bg-error)', borderColor: 'var(--border-error)'}}>
+                    <p className="text-sm" style={{color: 'var(--text-error)'}}>{fieldErrors.alcohol_units_on_symptom_day}</p>
+                  </div>
+                )}
+                {(isFirstTimeUser || !userPreferences?.isDrinker) && fieldErrors.average_alcohol_units_pw && (
+                  <div className="mt-6 p-3 rounded-lg border" style={{backgroundColor: 'var(--bg-error)', borderColor: 'var(--border-error)'}}>
+                    <p className="text-sm" style={{color: 'var(--text-error)'}}>{fieldErrors.average_alcohol_units_pw}</p>
+                  </div>
+                )}
+              </>
             )}
           </div>
         )}
@@ -2073,30 +2532,80 @@ function SymptomsPageContent() {
               </div>
             </div>
 
-            {/* Lifestyle - show when user answered smoking/alcohol (first-time or returning, date-specific) */}
-            {(formData.smoking !== undefined || formData.alcohol !== undefined) && (
+            {/* Lifestyle */}
+            {(isFirstTimeUser ||
+              (typeof formData.smoked_on_symptom_day === 'boolean') ||
+              (typeof formData.drank_on_symptom_day === 'boolean')) && (
               <div className="card border" style={{borderColor: 'var(--border-card)'}}>
                 <h3 className="text-sm sm:text-lg font-semibold text-cadet-blue mb-4 pb-4 border-b" style={{borderColor: 'var(--separator-card)'}}>Lifestyle</h3>
                 <div className="space-y-4">
                   <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
-                    <div>
-                      <span className="text-sm text-cadet-blue block mb-1">Smoking</span>
-                      <span className="text-sm sm:text-base font-medium text-primary">{formData.smoking ? 'Yes' : 'No'}</span>
-                    </div>
-                    {formData.smoking && formData.smoking_details && (
-                      <div className="min-w-0 overflow-hidden">
-                        <span className="text-sm text-cadet-blue block mb-1">Smoking Habits</span>
-                        <span className="text-sm sm:text-base font-medium text-primary truncate block" title={formData.smoking_details}>{formData.smoking_details}</span>
+                    {isFirstTimeUser && (
+                      <div>
+                        <span className="text-sm text-cadet-blue block mb-1">Smoker</span>
+                        <span className="text-sm sm:text-base font-medium text-primary">{formData.smoker ? 'Yes' : 'No'}</span>
                       </div>
                     )}
-                    <div>
-                      <span className="text-sm text-cadet-blue block mb-1">Alcohol</span>
-                      <span className="text-sm sm:text-base font-medium text-primary">{formData.alcohol ? 'Yes' : 'No'}</span>
-                    </div>
-                    {formData.alcohol && formData.alcohol_units && (
+                    {isFirstTimeUser && formData.smoker && formData.smoking_habits && (
+                      <div className="min-w-0 overflow-hidden">
+                        <span className="text-sm text-cadet-blue block mb-1">
+                          Smoking Habits
+                        </span>
+                        <span className="text-sm sm:text-base font-medium text-primary truncate block" title={formData.smoking_habits}>{formData.smoking_habits}</span>
+                      </div>
+                    )}
+                    {!isFirstTimeUser && typeof formData.smoked_on_symptom_day === 'boolean' && (
+                      <div className="min-w-0 overflow-hidden">
+                        <span className="text-sm text-cadet-blue block mb-1">Smoked</span>
+                        <span className="text-sm sm:text-base font-medium text-primary truncate block" title={formData.smoked_amount_on_symptom_day}>
+                          {formData.smoked_on_symptom_day
+                            ? (formData.smoked_amount_on_symptom_day || 'Yes')
+                            : 'No'}
+                        </span>
+                      </div>
+                    )}
+                    {isFirstTimeUser && formData.smoker && formData.smoked_amount_on_symptom_day && (
+                      <div className="min-w-0 overflow-hidden">
+                        <span className="text-sm text-cadet-blue block mb-1">
+                          {isSymptomDayToday ? 'Smoked Today' : `Smoked on ${symptomDayLabel}`}
+                        </span>
+                        <span className="text-sm sm:text-base font-medium text-primary truncate block" title={formData.smoked_amount_on_symptom_day}>
+                          {formData.smoked_amount_on_symptom_day}
+                        </span>
+                      </div>
+                    )}
+                    {isFirstTimeUser && (
                       <div>
-                        <span className="text-sm text-cadet-blue block mb-1">Alcohol Units</span>
-                        <span className="text-sm sm:text-base font-medium text-primary">{formData.alcohol_units} units/day</span>
+                        <span className="text-sm text-cadet-blue block mb-1">Alcohol</span>
+                        <span className="text-sm sm:text-base font-medium text-primary">{formData.alcohol ? 'Yes' : 'No'}</span>
+                      </div>
+                    )}
+                    {isFirstTimeUser && formData.alcohol && formData.average_alcohol_units_pw && (
+                      <div>
+                        <span className="text-sm text-cadet-blue block mb-1">
+                          Alcohol Habits (on average)
+                        </span>
+                        <span className="text-sm sm:text-base font-medium text-primary">
+                          {formData.average_alcohol_units_pw} units/week
+                        </span>
+                      </div>
+                    )}
+                    {!isFirstTimeUser && typeof formData.drank_on_symptom_day === 'boolean' && (
+                      <div>
+                        <span className="text-sm text-cadet-blue block mb-1">Alcohol Units Consumed</span>
+                        <span className="text-sm sm:text-base font-medium text-primary">
+                          {formData.drank_on_symptom_day
+                            ? (formData.alcohol_units_on_symptom_day ? `${formData.alcohol_units_on_symptom_day} units` : 'Yes')
+                            : 'No'}
+                        </span>
+                      </div>
+                    )}
+                    {isFirstTimeUser && formData.alcohol && formData.alcohol_units_on_symptom_day && (
+                      <div>
+                        <span className="text-sm text-cadet-blue block mb-1">
+                          {isSymptomDayToday ? 'Alcohol Units Today' : `Alcohol Units on ${symptomDayLabel}`}
+                        </span>
+                        <span className="text-sm sm:text-base font-medium text-primary">{formData.alcohol_units_on_symptom_day} units</span>
                       </div>
                     )}
                   </div>
@@ -2162,7 +2671,7 @@ function SymptomsPageContent() {
 
         {/* Navigation Buttons - Hide on landing page (step 0) */}
         {currentStep > 0 && (
-          <div className={`flex justify-start items-center ${currentStep === 17 ? 'mt-6 mb-6 sm:mb-0' : 'mt-6'}`}>
+          <div className="flex justify-start items-center mt-6">
             {currentStep < 17 ? (
               <button
                 onClick={nextStep}
