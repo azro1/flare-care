@@ -73,26 +73,41 @@ function MedicationTrackingWizard() {
     return 0
   })
 
+  const defaultMedicationForm = () => ({
+    missedMedications: null,
+    missedMedicationsList: [{ medication: '', date: new Date(), timeOfDay: '' }],
+    nsaidUsage: null,
+    nsaidList: [{ medication: '', date: new Date(), timeOfDay: '', dosage: '' }],
+    antibioticUsage: null,
+    antibioticList: [{ medication: '', date: new Date(), timeOfDay: '', dosage: '' }]
+  })
+
   const [formData, setFormData] = useState(() => {
     if (typeof window !== 'undefined') {
       const savedFormData = localStorage.getItem('medication-wizard-form')
-      return savedFormData ? JSON.parse(savedFormData) : {
-        missedMedications: false,
-        missedMedicationsList: [{ medication: '', date: new Date(), timeOfDay: '' }],
-        nsaidUsage: false,
-        nsaidList: [{ medication: '', date: new Date(), timeOfDay: '', dosage: '' }],
-        antibioticUsage: false,
-        antibioticList: [{ medication: '', date: new Date(), timeOfDay: '', dosage: '' }]
+      if (savedFormData) {
+        try {
+          const parsed = JSON.parse(savedFormData)
+          return {
+            ...defaultMedicationForm(),
+            ...parsed,
+            missedMedications:
+              parsed.missedMedications === true || parsed.missedMedications === false
+                ? parsed.missedMedications
+                : null,
+            nsaidUsage:
+              parsed.nsaidUsage === true || parsed.nsaidUsage === false ? parsed.nsaidUsage : null,
+            antibioticUsage:
+              parsed.antibioticUsage === true || parsed.antibioticUsage === false
+                ? parsed.antibioticUsage
+                : null
+          }
+        } catch {
+          return defaultMedicationForm()
+        }
       }
     }
-    return {
-      missedMedications: false,
-      missedMedicationsList: [{ medication: '', date: new Date(), timeOfDay: '' }],
-      nsaidUsage: false,
-      nsaidList: [{ medication: '', date: new Date(), timeOfDay: '', dosage: '' }],
-      antibioticUsage: false,
-      antibioticList: [{ medication: '', date: new Date(), timeOfDay: '', dosage: '' }]
-    }
+    return defaultMedicationForm()
   })
 
   const [showCancelModal, setShowCancelModal] = useState(false)
@@ -307,6 +322,33 @@ function MedicationTrackingWizard() {
   }, [currentStep, medicationWizardProgress.currentPhaseLabel])
 
   const nextStep = () => {
+    if (currentStep === 1) {
+      if (formData.missedMedications !== true && formData.missedMedications !== false) {
+        setFieldErrors(prev => ({
+          ...prev,
+          missedMedications: 'Please select Yes or No'
+        }))
+        return
+      }
+      setFieldErrors(prev => ({ ...prev, missedMedications: '' }))
+    }
+
+    if (currentStep === 3) {
+      if (formData.nsaidUsage !== true && formData.nsaidUsage !== false) {
+        setFieldErrors(prev => ({ ...prev, nsaidUsage: 'Please select Yes or No' }))
+        return
+      }
+      setFieldErrors(prev => ({ ...prev, nsaidUsage: '' }))
+    }
+
+    if (currentStep === 5) {
+      if (formData.antibioticUsage !== true && formData.antibioticUsage !== false) {
+        setFieldErrors(prev => ({ ...prev, antibioticUsage: 'Please select Yes or No' }))
+        return
+      }
+      setFieldErrors(prev => ({ ...prev, antibioticUsage: '' }))
+    }
+
     // Validate step 2 (missed medications list) - must have at least one complete entry if they answered yes
     if (currentStep === 2) {
       const hasCompleteEntry = formData.missedMedicationsList.some(item => 
@@ -380,10 +422,19 @@ function MedicationTrackingWizard() {
   // Handle form data changes
   const handleInputChange = (e) => {
     const { name, value, type, checked } = e.target
+    const nextVal =
+      type === 'checkbox'
+        ? checked
+        : type === 'radio' && (value === 'true' || value === 'false')
+          ? value === 'true'
+          : value
     setFormData(prev => ({
       ...prev,
-      [name]: type === 'checkbox' ? checked : (type === 'radio' && (value === 'true' || value === 'false') ? value === 'true' : value)
+      [name]: nextVal
     }))
+    if (name === 'missedMedications' || name === 'nsaidUsage' || name === 'antibioticUsage') {
+      setFieldErrors(prev => ({ ...prev, [name]: '' }))
+    }
   }
 
   // Dosage: digits only; we add "mg" when saving and displaying
@@ -591,7 +642,7 @@ function MedicationTrackingWizard() {
                   type="radio"
                   name="missedMedications"
                   value="false"
-                  checked={!formData.missedMedications}
+                  checked={formData.missedMedications === false}
                   onChange={handleInputChange}
                   className="w-6 h-6 text-cadet-blue opacity-0 absolute radio-button"
                   style={{
@@ -617,7 +668,7 @@ function MedicationTrackingWizard() {
                   type="radio"
                   name="missedMedications"
                   value="true"
-                  checked={formData.missedMedications}
+                  checked={formData.missedMedications === true}
                   onChange={handleInputChange}
                   className="w-6 h-6 text-cadet-blue opacity-0 absolute radio-button"
                   style={{
@@ -638,6 +689,11 @@ function MedicationTrackingWizard() {
               <span className="ml-3 text-lg text-secondary">Yes</span>
             </label>
           </div>
+          {fieldErrors.missedMedications && (
+            <div className="mt-5 p-3 rounded-lg border" style={{backgroundColor: 'var(--bg-error)', borderColor: 'var(--border-error)'}}>
+              <p className="text-sm" style={{color: 'var(--text-error)'}}>{fieldErrors.missedMedications}</p>
+            </div>
+          )}
         </div>
       )
     }
@@ -734,7 +790,7 @@ function MedicationTrackingWizard() {
                   type="radio"
                   name="nsaidUsage"
                   value="false"
-                  checked={!formData.nsaidUsage}
+                  checked={formData.nsaidUsage === false}
                   onChange={handleInputChange}
                   className="w-6 h-6 text-cadet-blue opacity-0 absolute radio-button"
                   style={{
@@ -760,7 +816,7 @@ function MedicationTrackingWizard() {
                   type="radio"
                   name="nsaidUsage"
                   value="true"
-                  checked={formData.nsaidUsage}
+                  checked={formData.nsaidUsage === true}
                   onChange={handleInputChange}
                   className="w-6 h-6 text-cadet-blue opacity-0 absolute radio-button"
                   style={{
@@ -781,6 +837,11 @@ function MedicationTrackingWizard() {
               <span className="ml-3 text-lg text-secondary">Yes</span>
             </label>
           </div>
+          {fieldErrors.nsaidUsage && (
+            <div className="mt-5 p-3 rounded-lg border" style={{backgroundColor: 'var(--bg-error)', borderColor: 'var(--border-error)'}}>
+              <p className="text-sm" style={{color: 'var(--text-error)'}}>{fieldErrors.nsaidUsage}</p>
+            </div>
+          )}
         </div>
       )
     }
@@ -887,7 +948,7 @@ function MedicationTrackingWizard() {
                   type="radio"
                   name="antibioticUsage"
                   value="false"
-                  checked={!formData.antibioticUsage}
+                  checked={formData.antibioticUsage === false}
                   onChange={handleInputChange}
                   className="w-6 h-6 text-cadet-blue opacity-0 absolute radio-button"
                   style={{
@@ -913,7 +974,7 @@ function MedicationTrackingWizard() {
                   type="radio"
                   name="antibioticUsage"
                   value="true"
-                  checked={formData.antibioticUsage}
+                  checked={formData.antibioticUsage === true}
                   onChange={handleInputChange}
                   className="w-6 h-6 text-cadet-blue opacity-0 absolute radio-button"
                   style={{
@@ -934,6 +995,11 @@ function MedicationTrackingWizard() {
               <span className="ml-3 text-lg text-secondary">Yes</span>
             </label>
           </div>
+          {fieldErrors.antibioticUsage && (
+            <div className="mt-5 p-3 rounded-lg border" style={{backgroundColor: 'var(--bg-error)', borderColor: 'var(--border-error)'}}>
+              <p className="text-sm" style={{color: 'var(--text-error)'}}>{fieldErrors.antibioticUsage}</p>
+            </div>
+          )}
         </div>
       )
     }
@@ -1180,7 +1246,10 @@ function MedicationTrackingWizard() {
                     <Fragment key={`${label}-${i}`}>
                       {i > 0 && (
                         <ChevronRight
-                          className="w-4 h-4 shrink-0 text-muted/50 self-center"
+                          className={[
+                            'w-4 h-4 shrink-0 self-center',
+                            canGo ? 'text-muted/50' : 'text-muted/50 opacity-45',
+                          ].join(' ')}
                           strokeWidth={2.25}
                           aria-hidden
                         />

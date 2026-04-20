@@ -1280,6 +1280,7 @@ function SymptomsPageContent() {
       ...prev,
       [mealType]: [...prev[mealType], { food: '', quantity: '' }]
     }))
+    setFieldErrors(prev => ({ ...prev, [mealType]: '' }))
   }
 
   const removeMealItem = (mealType, index) => {
@@ -1287,6 +1288,7 @@ function SymptomsPageContent() {
       ...prev,
       [mealType]: prev[mealType].filter((_, i) => i !== index)
     }))
+    setFieldErrors(prev => ({ ...prev, [mealType]: '' }))
   }
 
   const updateMealItem = (mealType, index, field, value) => {
@@ -1305,6 +1307,7 @@ function SymptomsPageContent() {
         ...(shouldUncheckSkipped && { [skipField]: false })
       }
     })
+    setFieldErrors(prev => ({ ...prev, [mealType]: '' }))
   }
 
   const wizardPhaseNames = symptomWizardPhaseProgress.phaseNames
@@ -1353,7 +1356,10 @@ function SymptomsPageContent() {
                     <Fragment key={`${label}-${i}`}>
                       {i > 0 && (
                         <ChevronRight
-                          className="w-4 h-4 shrink-0 text-muted/50 self-center"
+                          className={[
+                            'w-4 h-4 shrink-0 self-center',
+                            canGo ? 'text-muted/50' : 'text-muted/50 opacity-45',
+                          ].join(' ')}
                           strokeWidth={2.25}
                           aria-hidden
                         />
@@ -2258,6 +2264,7 @@ function SymptomsPageContent() {
                       // Clear breakfast items if "didn't eat anything" is checked
                       breakfast: isChecked ? [{ food: '', quantity: '' }] : prev.breakfast
                     }))
+                    setFieldErrors(prev => ({ ...prev, breakfast: '' }))
                   }}
                   className="mr-2 w-4 h-4 text-cadet-blue focus:ring-cadet-blue focus:ring-2"
                   style={{accentColor: 'var(--text-cadet-blue)'}}
@@ -2348,6 +2355,7 @@ function SymptomsPageContent() {
                       // Clear lunch items if "didn't eat anything" is checked
                       lunch: isChecked ? [{ food: '', quantity: '' }] : prev.lunch
                     }))
+                    setFieldErrors(prev => ({ ...prev, lunch: '' }))
                   }}
                   className="mr-2 w-4 h-4 text-cadet-blue focus:ring-cadet-blue focus:ring-2"
                   style={{accentColor: 'var(--text-cadet-blue)'}}
@@ -2438,6 +2446,7 @@ function SymptomsPageContent() {
                       // Clear dinner items if "didn't eat anything" is checked
                       dinner: isChecked ? [{ food: '', quantity: '' }] : prev.dinner
                     }))
+                    setFieldErrors(prev => ({ ...prev, dinner: '' }))
                   }}
                   className="mr-2 w-4 h-4 text-cadet-blue focus:ring-cadet-blue focus:ring-2"
                   style={{accentColor: 'var(--text-cadet-blue)'}}
