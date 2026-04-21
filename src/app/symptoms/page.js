@@ -646,14 +646,14 @@ function SymptomsPageContent() {
     // Returning users with smoker preference must answer symptom-day smoking yes/no.
     if (currentStep === 9 && !isFirstTimeUser && userPreferences?.isSmoker) {
       if (typeof formData.smoked_on_symptom_day !== 'boolean') {
-        setFieldErrors(prev => ({ ...prev, smoked_on_symptom_day: 'Please tell us if you smoked on this symptom day' }))
+        setFieldErrors(prev => ({ ...prev, smoked_on_symptom_day: 'Please answer Yes or No' }))
         return
       }
       setFieldErrors(prev => ({ ...prev, smoked_on_symptom_day: '' }))
     }
 
     if (currentStep === 9 && isFirstTimeUser && typeof formData.smoker !== 'boolean') {
-      setFieldErrors(prev => ({ ...prev, smoker: 'Please tell us if you smoke' }))
+      setFieldErrors(prev => ({ ...prev, smoker: 'Please answer Yes or No' }))
       return
     }
     if (currentStep === 9 && isFirstTimeUser) {
@@ -695,7 +695,7 @@ function SymptomsPageContent() {
         }
         if (smokingStep10Phase === 'dayYesNo') {
           if (typeof formData.smoked_on_symptom_day !== 'boolean') {
-            setFieldErrors(prev => ({ ...prev, smoked_on_symptom_day: 'Please tell us if you smoked on this symptom day' }))
+            setFieldErrors(prev => ({ ...prev, smoked_on_symptom_day: 'Please answer Yes or No' }))
             return
           }
           setFieldErrors(prev => ({ ...prev, smoked_on_symptom_day: '' }))
@@ -721,14 +721,14 @@ function SymptomsPageContent() {
     // Returning users with drinker preference must answer symptom-day alcohol yes/no.
     if (currentStep === 11 && !isFirstTimeUser && userPreferences?.isDrinker) {
       if (typeof formData.drank_on_symptom_day !== 'boolean') {
-        setFieldErrors(prev => ({ ...prev, drank_on_symptom_day: 'Please tell us if you drank alcohol on this symptom day' }))
+        setFieldErrors(prev => ({ ...prev, drank_on_symptom_day: 'Please answer Yes or No' }))
         return
       }
       setFieldErrors(prev => ({ ...prev, drank_on_symptom_day: '' }))
     }
 
     if (currentStep === 11 && isFirstTimeUser && typeof formData.alcohol !== 'boolean') {
-      setFieldErrors(prev => ({ ...prev, alcohol: 'Please tell us if you drink alcohol' }))
+      setFieldErrors(prev => ({ ...prev, alcohol: 'Please answer Yes or No' }))
       return
     }
     if (currentStep === 11 && isFirstTimeUser) {
@@ -752,7 +752,7 @@ function SymptomsPageContent() {
     if (currentStep === 12) {
       if (isFirstTimeUser && formData.alcohol === true) {
         if (!formData.average_alcohol_units_pw || formData.average_alcohol_units_pw === '') {
-          setFieldErrors(prev => ({ ...prev, average_alcohol_units_pw: 'Please enter how many units of alcohol you drink per day' }))
+          setFieldErrors(prev => ({ ...prev, average_alcohol_units_pw: 'Please enter how many units of alcohol you drink per week' }))
           return
         }
         // Clear error if validation passes
@@ -764,7 +764,7 @@ function SymptomsPageContent() {
         }
         if (alcoholStep12Phase === 'dayYesNo') {
           if (typeof formData.drank_on_symptom_day !== 'boolean') {
-            setFieldErrors(prev => ({ ...prev, drank_on_symptom_day: 'Please tell us if you drank alcohol on this symptom day' }))
+            setFieldErrors(prev => ({ ...prev, drank_on_symptom_day: 'Please answer Yes or No' }))
             return
           }
           setFieldErrors(prev => ({ ...prev, drank_on_symptom_day: '' }))
@@ -1772,7 +1772,9 @@ function SymptomsPageContent() {
             {isFirstTimeUser ? (
               <h3 className="text-2xl sm:text-2xl md:text-3xl font-title font-bold text-primary mb-5">Do you smoke?</h3>
             ) : userPreferences?.isSmoker ? (
-              <h3 className="text-2xl sm:text-2xl md:text-3xl font-title font-bold text-primary mb-5">Did you smoke on {new Date(formData.symptomStartDate).toLocaleDateString('en-GB', { day: 'numeric', month: 'short' })}?</h3>
+              <h3 className="text-2xl sm:text-2xl md:text-3xl font-title font-bold text-primary mb-5">
+                {isSymptomDayToday ? 'Did you smoke today?' : `Did you smoke on ${symptomDayLabel}?`}
+              </h3>
             ) : (
               <h3 className="text-2xl sm:text-2xl md:text-3xl font-title font-bold text-primary mb-5">Do you smoke?</h3>
             )}
@@ -1977,7 +1979,9 @@ function SymptomsPageContent() {
             {isFirstTimeUser ? (
               <h3 className="text-2xl sm:text-2xl md:text-3xl font-title font-bold text-primary mb-5">Do you drink alcohol?</h3>
             ) : userPreferences?.isDrinker ? (
-              <h3 className="text-2xl sm:text-2xl md:text-3xl font-title font-bold text-primary mb-5">Did you drink alcohol on {new Date(formData.symptomStartDate).toLocaleDateString('en-GB', { day: 'numeric', month: 'short' })}?</h3>
+              <h3 className="text-2xl sm:text-2xl md:text-3xl font-title font-bold text-primary mb-5">
+                {isSymptomDayToday ? 'Did you drink alcohol today?' : `Did you drink alcohol on ${symptomDayLabel}?`}
+              </h3>
             ) : (
               <h3 className="text-2xl sm:text-2xl md:text-3xl font-title font-bold text-primary mb-5">Do you drink alcohol?</h3>
             )}
