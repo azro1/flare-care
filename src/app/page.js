@@ -56,7 +56,6 @@ export default function Home() {
   const dailyCheckinScrollRef = useRef(null)
   const [dailyCheckinAtStart, setDailyCheckinAtStart] = useState(true)
   const [dailyCheckinAtEnd, setDailyCheckinAtEnd] = useState(false)
-
   // Daily tips array
   const dailyTips = [
     "Log symptoms within 1-2 days for better accuracy - you'll remember more details about what triggered them",
@@ -1281,19 +1280,19 @@ export default function Home() {
           <h2 className="text-xl font-semibold font-title text-primary mb-3">Daily Check-in</h2>
           {/* Mobile: horizontal scroll — card width matches More (2-col grid, gap-4) */}
           <div className="block sm:hidden w-full min-w-0 [container-type:inline-size]">
-            <div className="overflow-x-auto pb-1 overscroll-x-contain scrollbar-hide snap-x snap-mandatory" style={{ WebkitOverflowScrolling: 'touch' }}>
+            <div className="overflow-x-auto overscroll-x-contain scrollbar-hide snap-x snap-mandatory pb-1" style={{ WebkitOverflowScrolling: 'touch' }}>
               <div className="flex gap-4 w-max">
                 <Link
                   href="/symptoms"
-                  className="card card-link flex-shrink-0 min-w-0 w-[calc((100cqi-1rem)/2)] !p-6 flex flex-col justify-center snap-center transition-all"
+                  className="card card-link flex-shrink-0 min-w-0 w-[calc((100cqi-1rem)/2)] !p-4 sm:!p-6 flex flex-col justify-center snap-center transition-all"
                 >
-                  <div className="flex flex-col items-center gap-3 min-w-0 w-full">
-                    <div className="w-10 h-10 dashboard-icon-panel rounded-lg flex items-center justify-center flex-shrink-0" style={{ backgroundColor: 'var(--bg-goal-icon-success)' }}>
-                      <Thermometer className="w-5 h-5 text-emerald-600" />
+                  <div className="flex flex-col items-center gap-2 sm:gap-3 min-w-0 w-full">
+                    <div className="w-8 h-8 sm:w-10 sm:h-10 dashboard-icon-panel rounded-lg flex items-center justify-center flex-shrink-0" style={{ backgroundColor: 'var(--bg-goal-icon-success)' }}>
+                      <Thermometer className="w-4 h-4 sm:w-5 sm:h-5 text-emerald-600" />
                     </div>
                     <div className="w-full min-w-0 text-center">
                       <h3
-                        className="text-base sm:text-lg font-semibold font-title text-primary leading-tight min-w-0 w-full truncate"
+                        className="text-base sm:text-lg font-medium font-title text-primary leading-tight min-w-0 w-full truncate"
                         title="Log Symptoms"
                       >
                         Log Symptoms
@@ -1303,15 +1302,15 @@ export default function Home() {
                 </Link>
                 <Link
                   href="/medications/track"
-                  className="card card-link flex-shrink-0 min-w-0 w-[calc((100cqi-1rem)/2)] !p-6 flex flex-col justify-center snap-center transition-all"
+                  className="card card-link flex-shrink-0 min-w-0 w-[calc((100cqi-1rem)/2)] !p-4 sm:!p-6 flex flex-col justify-center snap-center transition-all"
                 >
-                  <div className="flex flex-col items-center gap-3 min-w-0 w-full">
-                    <div className="w-10 h-10 dashboard-icon-panel rounded-lg flex items-center justify-center flex-shrink-0" style={{ backgroundColor: 'var(--bg-goal-icon-medication)' }}>
-                      <ChartLine className="w-5 h-5 text-pink-500" />
+                  <div className="flex flex-col items-center gap-2 sm:gap-3 min-w-0 w-full">
+                    <div className="w-8 h-8 sm:w-10 sm:h-10 dashboard-icon-panel rounded-lg flex items-center justify-center flex-shrink-0" style={{ backgroundColor: 'var(--bg-goal-icon-medication)' }}>
+                      <ChartLine className="w-4 h-4 sm:w-5 sm:h-5 text-pink-500" />
                     </div>
                     <div className="w-full min-w-0 text-center">
                       <h3
-                        className="text-base sm:text-lg font-semibold font-title text-primary leading-tight min-w-0 w-full truncate"
+                        className="text-base sm:text-lg font-medium font-title text-primary leading-tight min-w-0 w-full truncate"
                         title="Log Medications"
                       >
                         Log Medications
@@ -1321,15 +1320,15 @@ export default function Home() {
                 </Link>
                 <Link
                   href="/hydration"
-                  className="card card-link flex-shrink-0 min-w-0 w-[calc((100cqi-1rem)/2)] !p-6 flex flex-col justify-center snap-center transition-all"
+                  className="card card-link flex-shrink-0 min-w-0 w-[calc((100cqi-1rem)/2)] !p-4 sm:!p-6 flex flex-col justify-center snap-center transition-all"
                 >
-                  <div className="flex flex-col items-center gap-3 min-w-0 w-full">
-                    <div className="w-10 h-10 dashboard-icon-panel rounded-lg flex items-center justify-center flex-shrink-0" style={{ backgroundColor: 'var(--bg-goal-icon-hydration)' }}>
-                      <CupSoda className="w-5 h-5 text-sky-600" />
+                  <div className="flex flex-col items-center gap-2 sm:gap-3 min-w-0 w-full">
+                    <div className="w-8 h-8 sm:w-10 sm:h-10 dashboard-icon-panel rounded-lg flex items-center justify-center flex-shrink-0" style={{ backgroundColor: 'var(--bg-goal-icon-hydration)' }}>
+                      <CupSoda className="w-4 h-4 sm:w-5 sm:h-5 text-sky-600" />
                     </div>
                     <div className="w-full min-w-0 text-center">
                       <h3
-                        className="text-base sm:text-lg font-semibold font-title text-primary leading-tight min-w-0 w-full truncate"
+                        className="text-base sm:text-lg font-medium font-title text-primary leading-tight min-w-0 w-full truncate"
                         title="My Hydration"
                       >
                         My Hydration
@@ -1339,15 +1338,15 @@ export default function Home() {
                 </Link>
                 <Link
                   href="/bowel-movements"
-                  className="card card-link flex-shrink-0 min-w-0 w-[calc((100cqi-1rem)/2)] !p-6 flex flex-col justify-center snap-center transition-all"
+                  className="card card-link flex-shrink-0 min-w-0 w-[calc((100cqi-1rem)/2)] !p-4 sm:!p-6 flex flex-col justify-center snap-center transition-all"
                 >
-                  <div className="flex flex-col items-center gap-3 min-w-0 w-full">
-                    <div className="w-10 h-10 dashboard-icon-panel rounded-lg flex items-center justify-center flex-shrink-0 bg-amber-100 dark:bg-amber-950/40">
-                      <CircleDot className="w-5 h-5 text-amber-800 dark:text-amber-400" />
+                  <div className="flex flex-col items-center gap-2 sm:gap-3 min-w-0 w-full">
+                    <div className="w-8 h-8 sm:w-10 sm:h-10 dashboard-icon-panel rounded-lg flex items-center justify-center flex-shrink-0 bg-amber-100 dark:bg-amber-950/40">
+                      <CircleDot className="w-4 h-4 sm:w-5 sm:h-5 text-amber-800 dark:text-amber-400" />
                     </div>
                     <div className="w-full min-w-0 text-center">
                       <h3
-                        className="text-base sm:text-lg font-semibold font-title text-primary leading-tight min-w-0 w-full truncate"
+                        className="text-base sm:text-lg font-medium font-title text-primary leading-tight min-w-0 w-full truncate"
                         title="Bowel Movements"
                       >
                         Bowel Movements
@@ -1372,10 +1371,10 @@ export default function Home() {
                 >
                   <div className="flex flex-col items-center gap-3 min-w-0 w-full">
                     <div className="w-10 h-10 dashboard-icon-panel rounded-lg flex items-center justify-center flex-shrink-0" style={{ backgroundColor: 'var(--bg-goal-icon-success)' }}>
-                      <Thermometer className="w-5 h-5 text-emerald-600" />
+                      <Thermometer className="w-4 h-4 sm:w-5 sm:h-5 text-emerald-600" />
                     </div>
                     <div className="w-full text-center min-w-0">
-                      <h3 className="text-base sm:text-lg font-semibold font-title text-primary leading-tight sm:leading-relaxed break-words">Log Symptoms</h3>
+                      <h3 className="text-base sm:text-lg font-medium font-title text-primary leading-tight sm:leading-relaxed break-words">Log Symptoms</h3>
                     </div>
                   </div>
                 </Link>
@@ -1385,10 +1384,10 @@ export default function Home() {
                 >
                   <div className="flex flex-col items-center gap-3 min-w-0 w-full">
                     <div className="w-10 h-10 dashboard-icon-panel rounded-lg flex items-center justify-center flex-shrink-0" style={{ backgroundColor: 'var(--bg-goal-icon-medication)' }}>
-                      <ChartLine className="w-5 h-5 text-pink-500" />
+                      <ChartLine className="w-4 h-4 sm:w-5 sm:h-5 text-pink-500" />
                     </div>
                     <div className="w-full text-center min-w-0">
-                      <h3 className="text-base sm:text-lg font-semibold font-title text-primary leading-tight sm:leading-relaxed break-words">Log Medications</h3>
+                      <h3 className="text-base sm:text-lg font-medium font-title text-primary leading-tight sm:leading-relaxed break-words">Log Medications</h3>
                     </div>
                   </div>
                 </Link>
@@ -1398,10 +1397,10 @@ export default function Home() {
                 >
                   <div className="flex flex-col items-center gap-3 min-w-0 w-full">
                     <div className="w-10 h-10 dashboard-icon-panel rounded-lg flex items-center justify-center flex-shrink-0" style={{ backgroundColor: 'var(--bg-goal-icon-hydration)' }}>
-                      <CupSoda className="w-5 h-5 text-sky-600" />
+                      <CupSoda className="w-4 h-4 sm:w-5 sm:h-5 text-sky-600" />
                     </div>
                     <div className="w-full text-center min-w-0">
-                      <h3 className="text-base sm:text-lg font-semibold font-title text-primary leading-tight sm:leading-relaxed break-words">My Hydration</h3>
+                      <h3 className="text-base sm:text-lg font-medium font-title text-primary leading-tight sm:leading-relaxed break-words">My Hydration</h3>
                     </div>
                   </div>
                 </Link>
@@ -1411,10 +1410,10 @@ export default function Home() {
                 >
                   <div className="flex flex-col items-center gap-3 min-w-0 w-full">
                     <div className="w-10 h-10 dashboard-icon-panel rounded-lg flex items-center justify-center flex-shrink-0 bg-amber-100 dark:bg-amber-950/40">
-                      <CircleDot className="w-5 h-5 text-amber-800 dark:text-amber-400" />
+                      <CircleDot className="w-4 h-4 sm:w-5 sm:h-5 text-amber-800 dark:text-amber-400" />
                     </div>
                     <div className="w-full text-center min-w-0">
-                      <h3 className="text-base sm:text-lg font-semibold font-title text-primary leading-tight sm:leading-relaxed break-words">Bowel Movements</h3>
+                      <h3 className="text-base sm:text-lg font-medium font-title text-primary leading-tight sm:leading-relaxed break-words">Bowel Movements</h3>
                     </div>
                   </div>
                 </Link>
@@ -1877,7 +1876,7 @@ export default function Home() {
                                     ) : null}
                                   </div>
                                   <div className="min-w-0 pt-4 px-4 pb-4 sm:px-6 sm:pb-6 bg-[var(--bg-card)] sm:rounded-b-xl">
-                                    <h3 className="font-semibold text-sm text-primary group-hover:text-[#5F9EA0] transition-colors line-clamp-2 leading-normal">
+                                    <h3 className="font-medium text-sm text-primary group-hover:text-[#5F9EA0] transition-colors line-clamp-2 leading-normal">
                                       {item.headline || item.title}
                                     </h3>
                                     <div className="flex items-center gap-2 mt-2 flex-wrap">
@@ -2066,14 +2065,14 @@ export default function Home() {
           <div className="grid grid-cols-2 lg:grid-cols-3 gap-4 md:gap-6 min-w-0">
               <Link
                 href="/medications"
-                className="card card-link !p-6 transition-all focus:outline-none focus-visible:outline-none focus-visible:ring-0 focus-visible:ring-offset-0 focus:ring-0 min-w-0"
+                className="card card-link !p-4 sm:!p-6 transition-all focus:outline-none focus-visible:outline-none focus-visible:ring-0 focus-visible:ring-offset-0 focus:ring-0 min-w-0"
               >
                 <div className="flex flex-col items-center gap-3 min-w-0">
-                  <div className="w-10 h-10 bg-purple-100 dashboard-icon-panel rounded-lg flex items-center justify-center flex-shrink-0">
-                    <Pill className="w-5 h-5 text-purple-600 dark:[color:var(--text-icon-more-meds)]" />
+                  <div className="w-8 h-8 sm:w-10 sm:h-10 bg-purple-100 dashboard-icon-panel rounded-lg flex items-center justify-center flex-shrink-0">
+                    <Pill className="w-4 h-4 sm:w-5 sm:h-5 text-purple-600 dark:[color:var(--text-icon-more-meds)]" />
                 </div>
                   <div className="w-full text-center min-w-0">
-                    <h3 className="text-base sm:text-lg font-semibold font-title text-primary leading-tight sm:leading-relaxed break-words">
+                    <h3 className="text-base sm:text-lg font-medium font-title text-primary leading-tight sm:leading-relaxed break-words">
                       My Meds
                     </h3>
                   </div>
@@ -2082,14 +2081,14 @@ export default function Home() {
 
               <Link
                 href="/reports"
-                className="card card-link !p-6 transition-all focus:outline-none focus-visible:outline-none focus-visible:ring-0 focus-visible:ring-offset-0 focus:ring-0 min-w-0"
+                className="card card-link !p-4 sm:!p-6 transition-all focus:outline-none focus-visible:outline-none focus-visible:ring-0 focus-visible:ring-offset-0 focus:ring-0 min-w-0"
               >
                 <div className="flex flex-col items-center gap-3 min-w-0">
-                  <div className="w-10 h-10 bg-orange-100 dashboard-icon-panel rounded-lg flex items-center justify-center flex-shrink-0">
-                    <FileText className="w-5 h-5 text-orange-600 dark:[color:var(--text-icon-more-reports)]" />
+                  <div className="w-8 h-8 sm:w-10 sm:h-10 bg-orange-100 dashboard-icon-panel rounded-lg flex items-center justify-center flex-shrink-0">
+                    <FileText className="w-4 h-4 sm:w-5 sm:h-5 text-orange-600 dark:[color:var(--text-icon-more-reports)]" />
                   </div>
                   <div className="w-full text-center min-w-0">
-                    <h3 className="text-base sm:text-lg font-semibold font-title text-primary leading-tight sm:leading-relaxed break-words">
+                    <h3 className="text-base sm:text-lg font-medium font-title text-primary leading-tight sm:leading-relaxed break-words">
                       Reports
                     </h3>
                   </div>
@@ -2098,14 +2097,14 @@ export default function Home() {
 
               <Link
                 href="/weight"
-                className="card card-link !p-6 transition-all focus:outline-none focus-visible:outline-none focus-visible:ring-0 focus-visible:ring-offset-0 focus:ring-0 min-w-0"
+                className="card card-link !p-4 sm:!p-6 transition-all focus:outline-none focus-visible:outline-none focus-visible:ring-0 focus-visible:ring-offset-0 focus:ring-0 min-w-0"
               >
                 <div className="flex flex-col items-center gap-3 min-w-0">
-                  <div className="w-10 h-10 bg-indigo-100 dashboard-icon-panel rounded-lg flex items-center justify-center flex-shrink-0">
-                    <Scale className="w-5 h-5 text-indigo-600 dark:[color:var(--text-icon-more-weight)]" />
+                  <div className="w-8 h-8 sm:w-10 sm:h-10 bg-indigo-100 dashboard-icon-panel rounded-lg flex items-center justify-center flex-shrink-0">
+                    <Scale className="w-4 h-4 sm:w-5 sm:h-5 text-indigo-600 dark:[color:var(--text-icon-more-weight)]" />
                   </div>
                   <div className="w-full text-center min-w-0">
-                    <h3 className="text-base sm:text-lg font-semibold font-title text-primary leading-tight sm:leading-relaxed break-words">
+                    <h3 className="text-base sm:text-lg font-medium font-title text-primary leading-tight sm:leading-relaxed break-words">
                       My Weight
                     </h3>
                   </div>
@@ -2114,15 +2113,15 @@ export default function Home() {
 
               <Link
                 href="/appointments"
-                className="card card-link !p-6 transition-all focus:outline-none focus-visible:outline-none focus-visible:ring-0 focus-visible:ring-offset-0 focus:ring-0 min-w-0"
+                className="card card-link !p-4 sm:!p-6 transition-all focus:outline-none focus-visible:outline-none focus-visible:ring-0 focus-visible:ring-offset-0 focus:ring-0 min-w-0"
                 title="Appointments"
               >
                 <div className="flex flex-col items-center gap-3 min-w-0 w-full">
-                  <div className="w-10 h-10 bg-slate-200 dark:bg-slate-600/50 dashboard-icon-panel rounded-lg flex items-center justify-center flex-shrink-0">
-                    <Calendar className="w-5 h-5 text-slate-700 dark:[color:var(--text-icon-more-appointments)]" />
+                  <div className="w-8 h-8 sm:w-10 sm:h-10 bg-slate-200 dark:bg-slate-600/50 dashboard-icon-panel rounded-lg flex items-center justify-center flex-shrink-0">
+                    <Calendar className="w-4 h-4 sm:w-5 sm:h-5 text-slate-700 dark:[color:var(--text-icon-more-appointments)]" />
                   </div>
                   <div className="w-full text-center min-w-0">
-                    <h3 className="text-base sm:text-lg font-semibold font-title text-primary leading-tight sm:leading-relaxed break-words">
+                    <h3 className="text-base sm:text-lg font-medium font-title text-primary leading-tight sm:leading-relaxed break-words">
                       Appointments
                     </h3>
                   </div>
