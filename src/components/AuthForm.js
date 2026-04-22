@@ -73,11 +73,18 @@ export default function AuthForm() {
       <div className="max-w-sm w-full space-y-4">
         <div className="text-center">
             <Image
-              src="/icons/seagull.svg"
+              src="/fclogoaflm.svg"
               alt="FlareCare logo"
-              width={56}
-              height={56}
-              className="mx-auto mb-4"
+              width={88}
+              height={88}
+              className="mx-auto mb-3 w-[5.5rem] h-[5.5rem] dark:hidden"
+            />
+            <Image
+              src="/fclogo.svg"
+              alt="FlareCare logo"
+              width={88}
+              height={88}
+              className="hidden dark:block mx-auto mb-3 w-[5.5rem] h-[5.5rem]"
             />
             <h2 className="text-3xl font-bold font-title text-primary mb-4">
               FlareCare
@@ -118,3 +125,6 @@ export default function AuthForm() {
     </div>
   )
 }
+
+
+

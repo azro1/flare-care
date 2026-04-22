@@ -12,16 +12,16 @@ export const metadata = {
   title: 'FlareCare - Crohn\'s & Colitis Management',
   description: 'Track symptoms, medications, and generate reports for Crohn\'s & Colitis patients',
   icons: {
-    icon: '/icons/seagull.svg',
-    shortcut: '/icons/seagull.svg',
-    apple: '/icons/seagull.svg',
+    icon: '/fclogo.svg',
+    shortcut: '/fclogo.svg',
+    apple: '/fclogo.svg',
   },
   openGraph: {
     title: 'FlareCare - Crohn\'s & Colitis Management',
     description: 'Track symptoms, medications, and generate reports for Crohn\'s & Colitis patients',
     images: [
       {
-        url: '/icons/seagull.svg',
+        url: '/fclogo.svg',
         width: 48,
         height: 48,
         alt: 'FlareCare logo',
@@ -32,7 +32,7 @@ export const metadata = {
     card: 'summary',
     title: 'FlareCare - Crohn\'s & Colitis Management',
     description: 'Track symptoms, medications, and generate reports for Crohn\'s & Colitis patients',
-    images: ['/icons/seagull.svg'],
+    images: ['/fclogo.svg'],
   },
 }
 
@@ -40,9 +40,9 @@ export default function RootLayout({ children }) {
   return (
     <html lang="en" data-scroll-behavior="smooth">
       <head>
-        <link rel="icon" href="/icons/seagull.svg" type="image/svg+xml" />
-        <link rel="shortcut icon" href="/icons/seagull.svg" type="image/svg+xml" />
-        <link rel="apple-touch-icon" href="/icons/seagull.svg" />
+        <link rel="icon" href="/fclogo.svg" type="image/svg+xml" />
+        <link rel="shortcut icon" href="/fclogo.svg" type="image/svg+xml" />
+        <link rel="apple-touch-icon" href="/fclogo.svg" />
         <link rel="preconnect" href="https://fonts.googleapis.com" />
         <link rel="preconnect" href="https://fonts.gstatic.com" crossOrigin="anonymous" />
         <link href="https://fonts.googleapis.com/css2?family=Assistant:wght@200;300;400;500;600;700;800&family=Hind+Siliguri:wght@300;400;500;600;700&family=Inter:wght@400;500;600;700;800;900&family=Karla:wght@200;300;400;500;600;700;800&family=Tajawal:wght@200;300;400;500;700;800;900&family=Ubuntu:wght@300;400;500;700&display=swap" rel="stylesheet" />
@@ -62,3 +62,6 @@ export default function RootLayout({ children }) {
     </html>
   )
 }
+
+
+

@@ -185,17 +185,20 @@ export default function Navigation() {
       <div className="max-w-7xl mx-auto px-6 py-5">
         <div className="flex justify-between items-center">
           {/* Logo */}
-          <Link href="/">
-            <div className=" rounded-full flex items-center justify-center overflow-visible">
+          <Link href="/" className="inline-flex items-center">
+            <div className="relative w-10 h-10 md:w-10 md:h-10 rounded-full flex items-center justify-center overflow-visible">
               <Image
-                src="/icons/seagull.svg"
+                src="/fclogo.svg"
                 alt="FlareCare logo"
                 width={48}
                 height={48}
-                className="w-8 h-8 md:w-9 md:h-9"
+                className="w-full h-full object-contain block lg:scale-[1.28] origin-center"
                 priority={true}
               />
             </div>
+            <span className="hidden lg:inline-block ml-3 text-lg font-semibold font-title text-white">
+              FlareCare
+            </span>
           </Link>
 
           {/* Desktop Navigation */}
@@ -348,3 +351,5 @@ export default function Navigation() {
     </nav>
   )
 }
+
+
