@@ -1320,7 +1320,7 @@ function SymptomsPageContent() {
                 aria-describedby="symptom-wizard-step-status"
                 className={[
                   'flex w-full min-w-0 max-w-full items-center gap-x-1 gap-y-1 text-sm sm:text-base leading-snug',
-                  'max-md:flex-nowrap max-md:overflow-x-auto max-md:overflow-y-hidden max-md:overscroll-x-contain max-md:scrollbar-hide max-md:touch-pan-x max-md:scroll-smooth max-md:pb-0.5 max-md:-mx-1 max-md:px-1',
+                  'scrollbar-hide max-md:flex-nowrap max-md:overflow-x-auto max-md:overflow-y-hidden max-md:overscroll-x-contain max-md:touch-pan-x max-md:scroll-smooth max-md:pb-0.5 max-md:-mx-1 max-md:px-1',
                   'md:flex-wrap md:overflow-x-visible md:overflow-y-visible md:mx-0 md:px-0 md:touch-auto',
                 ].join(' ')}
                 style={{ WebkitOverflowScrolling: 'touch' }}

@@ -77,19 +77,19 @@ export default function AuthForm() {
               alt="FlareCare logo"
               width={88}
               height={88}
-              className="mx-auto mb-2 w-[5.5rem] h-[5.5rem] dark:hidden"
+              className="mx-auto mb-0 sm:mb-2 w-[5.5rem] h-[5.5rem] dark:hidden"
             />
             <Image
               src="/fclogo.svg"
               alt="FlareCare logo"
               width={88}
               height={88}
-              className="hidden dark:block mx-auto mb-2 w-[5.5rem] h-[5.5rem]"
+              className="hidden dark:block mx-auto mb-0 sm:mb-2 w-[5.5rem] h-[5.5rem]"
             />
             <h2 className="text-3xl font-bold font-title text-primary mb-4">
               FlareCare
             </h2>
-          <p className="text-sm font-sans text-secondary mb-6 leading-relaxed">
+          <p className="text-sm font-sans text-secondary mb-4 sm:mb-6 leading-relaxed">
            Your comprehensive health management app for Crohn's & Colitis
           </p>
         </div>

@@ -2,7 +2,7 @@
 
 import Link from 'next/link'
 import { usePathname } from 'next/navigation'
-import { useState, useEffect, useRef } from 'react'
+import { useState, useEffect } from 'react'
 import { motion } from 'framer-motion'
 import { useAuth } from '../lib/AuthContext'
 import { Sandwich, Activity } from "lucide-react"
@@ -12,7 +12,6 @@ export default function Navigation() {
   const pathname = usePathname()
   const [isMenuOpen, setIsMenuOpen] = useState(false)
   const [scrollY, setScrollY] = useState(0)
-  const hamburgerButtonRef = useRef(null)
   const { user, isAuthenticated, signOut } = useAuth()
   const [showAvatarFallback, setShowAvatarFallback] = useState(false)
 
@@ -48,13 +47,6 @@ export default function Navigation() {
     setShowAvatarFallback(false)
   }, [avatarUrl])
 
-  useEffect(() => {
-    if (hamburgerButtonRef.current) {
-      const color = isMenuOpen ? '#5F9EA0' : 'transparent'
-      hamburgerButtonRef.current.style.backgroundColor = color
-    }
-  }, [isMenuOpen])
-
   const handleSignOut = async () => {
     try {
       await signOut()
@@ -86,14 +78,6 @@ export default function Navigation() {
     window.addEventListener('scroll', handleScroll)
     return () => window.removeEventListener('scroll', handleScroll)
   }, [])
-
-  // Keep hamburger button background in sync with menu and dropdown interactions
-  useEffect(() => {
-    if (!hamburgerButtonRef.current) return
-
-    const bg = isMenuOpen ? '#5F9EA0' : 'transparent'
-    hamburgerButtonRef.current.style.setProperty('background-color', bg, 'important')
-  }, [isMenuOpen])
 
   const mainNavItems = [
     { 
@@ -259,14 +243,13 @@ export default function Navigation() {
           {/* Mobile menu button */}
           <button
             id="mobile-hamburger"
-            ref={hamburgerButtonRef}
             onClick={() => setIsMenuOpen(!isMenuOpen)}
             type="button"
             className="lg:hidden p-2 rounded-lg transition-all duration-200 active:scale-95 focus:outline-none text-white bg-transparent"
             aria-label="Toggle mobile menu"
             aria-pressed={isMenuOpen}
           >
-            <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <svg className="w-[1.625rem] h-[1.625rem]" fill="none" stroke="currentColor" viewBox="0 0 24 24">
               {isMenuOpen ? (
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
               ) : (
