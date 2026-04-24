@@ -1,11 +1,10 @@
 'use client'
 
 import { useLayoutEffect } from 'react'
-import { usePathname, useSearchParams } from 'next/navigation'
+import { usePathname } from 'next/navigation'
 
 export default function ScrollManager() {
   const pathname = usePathname()
-  const searchParams = useSearchParams()
 
   useLayoutEffect(() => {
     if (typeof window === 'undefined') return
@@ -21,7 +20,7 @@ export default function ScrollManager() {
     root.style.scrollBehavior = 'auto'
     window.scrollTo({ top: 0, left: 0, behavior: 'auto' })
     root.style.scrollBehavior = previous
-  }, [pathname, searchParams])
+  }, [pathname])
 
   return null
 }
