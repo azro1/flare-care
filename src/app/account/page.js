@@ -127,7 +127,7 @@ function AccountPageContent() {
         <div className="mb-5 sm:mb-6 card">
           <div className="text-center">
             <h1 className="text-2xl sm:text-3xl lg:text-4xl font-bold font-title text-primary mb-3 sm:mb-4">My Account</h1>
-            <p className="text-sm sm:text-base text-secondary font-sans break-words leading-relaxed">Manage your account settings and profile information</p>
+            <p className="text-sm text-secondary font-sans break-words leading-relaxed">Manage your account settings and profile information</p>
           </div>
         </div>
 
@@ -168,14 +168,14 @@ function AccountPageContent() {
                     <h2 className="text-sm font-medium font-sans text-secondary mb-0 sm:mb-1 truncate">
                       {user?.user_metadata?.full_name || 'User'}
                     </h2>
-                    <p className="hidden sm:block text-sm sm:text-base text-primary font-sans truncate">{user?.email}</p>
+                    <p className="hidden sm:block text-sm text-primary font-sans truncate">{user?.email}</p>
                   </div>
                 </div>
                 <button
                   type="button"
                   onClick={() => setShowSignOutModal(true)}
                   disabled={isSigningOut}
-                  className="button-cadet flex-shrink-0 px-4 py-2 text-base sm:text-lg font-semibold rounded-lg transition-colors inline-flex items-center justify-center whitespace-nowrap disabled:opacity-50"
+                  className="button-cadet flex-shrink-0 px-4 py-2 text-sm sm:text-base font-semibold rounded-lg transition-colors inline-flex items-center justify-center whitespace-nowrap disabled:opacity-50"
                 >
                   <LogOut className="w-5 h-5 mr-2 shrink-0" strokeWidth={2} aria-hidden />
                   Sign Out
@@ -190,21 +190,21 @@ function AccountPageContent() {
                 <div className="space-y-0">
                   <div className="py-4 sm:py-5 border-b border-[var(--separator-card)]">
                     <p className="text-sm font-medium text-secondary mb-1">Email</p>
-                    <p className="text-sm sm:text-base text-primary font-sans break-words">{user?.email || 'Not available'}</p>
+                    <p className="text-sm text-primary font-sans break-words">{user?.email || 'Not available'}</p>
                   </div>
                   <div className="py-4 sm:py-5 border-b border-[var(--separator-card)]">
                     <p className="text-sm font-medium text-secondary mb-1">Full Name</p>
-                    <p className="text-sm sm:text-base text-primary font-sans">{user?.user_metadata?.full_name || 'Not set'}</p>
+                    <p className="text-sm text-primary font-sans">{user?.user_metadata?.full_name || 'Not set'}</p>
                   </div>
                   <div className="py-4 sm:py-5 border-b border-[var(--separator-card)]">
                     <p className="text-sm font-medium text-secondary mb-1">Account Created</p>
-                    <p className="text-sm sm:text-base text-primary font-sans">
+                    <p className="text-sm text-primary font-sans">
                       {user?.created_at ? new Date(user.created_at).toLocaleDateString('en-GB') : 'Not available'}
                     </p>
                   </div>
                   <div className="pt-4 sm:pt-5">
                     <p className="text-sm font-medium text-secondary mb-1">User ID</p>
-                    <p className="text-sm sm:text-base text-primary font-mono break-all">{user?.id || 'Not available'}</p>
+                    <p className="text-sm text-primary font-mono break-all">{user?.id || 'Not available'}</p>
                   </div>
                 </div>
               </div>
@@ -218,7 +218,7 @@ function AccountPageContent() {
                   <div className="flex items-center justify-between">
                     <div className="flex-1">
                       <p className="text-sm font-medium text-secondary mb-1">Appearance</p>
-                      <p className="text-sm sm:text-base text-primary font-sans">
+                      <p className="text-sm text-primary font-sans">
                         {theme === 'dark' ? 'Dark mode' : 'Light mode'}
                       </p>
                     </div>
@@ -244,7 +244,7 @@ function AccountPageContent() {
                     <div className="flex items-center justify-between gap-4">
                       <div className="flex-1 min-w-0">
                         <p className="text-sm font-medium text-secondary mb-1">Push notifications</p>
-                      <p className="text-sm sm:text-base text-primary font-sans">
+                      <p className="text-sm text-primary font-sans">
                         {pushStatus === 'enabled' ? 'Enabled – you’ll get reminders when the app is closed' : 'Get medication reminders even when the app is closed'}
                       </p>
                     </div>
@@ -269,7 +269,7 @@ function AccountPageContent() {
             <div className="card">
               <div className="border-l-4 border-red-500 pl-4 mb-4 sm:mb-6">
                 <h3 className="text-lg sm:text-xl font-semibold font-title text-primary mb-2">Delete Account</h3>
-                <p className="text-sm sm:text-base text-secondary font-sans mb-4">
+                <p className="text-sm text-secondary font-sans mb-4">
                   Permanently delete your account and all associated data
                 </p>
               </div>
@@ -277,7 +277,7 @@ function AccountPageContent() {
                 <button
                   type="button"
                   onClick={() => setShowDeleteModal(true)}
-                  className="button-delete flex-shrink-0 inline-flex items-center justify-center text-base sm:text-lg whitespace-nowrap"
+                  className="button-delete flex-shrink-0 inline-flex items-center justify-center text-sm sm:text-base whitespace-nowrap"
                 >
                   <Trash2 className="w-5 h-5 mr-2 shrink-0" strokeWidth={2} aria-hidden />
                   Delete
@@ -295,7 +295,7 @@ function AccountPageContent() {
                   <div className="flex items-center justify-between">
                     <div className="flex-1">
                       <p className="text-sm font-medium text-secondary mb-1">Appearance</p>
-                      <p className="text-sm sm:text-base text-primary font-sans">
+                      <p className="text-sm text-primary font-sans">
                         {theme === 'dark' ? 'Dark mode' : 'Light mode'}
                       </p>
                     </div>
@@ -321,7 +321,7 @@ function AccountPageContent() {
                     <div className="flex items-center justify-between gap-4">
                       <div className="flex-1 min-w-0">
                         <p className="text-sm font-medium text-secondary mb-1">Push notifications</p>
-                      <p className="text-sm sm:text-base text-primary font-sans">
+                      <p className="text-sm text-primary font-sans">
                         {pushStatus === 'enabled' ? 'Enabled – you’ll get reminders when the app is closed' : 'Get medication reminders even when the app is closed'}
                       </p>
                     </div>
@@ -438,3 +438,4 @@ export default function AccountPage() {
     </ProtectedRoute>
   )
 }
+

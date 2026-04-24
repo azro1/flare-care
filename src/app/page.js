@@ -1293,7 +1293,7 @@ export default function Home() {
                     </div>
                     <div className="w-full min-w-0 text-center">
                       <h3
-                        className="text-base sm:text-lg font-medium font-title text-primary leading-tight min-w-0 w-full truncate"
+                        className="text-sm font-medium font-sans text-primary leading-tight min-w-0 w-full truncate"
                         title="Log Symptoms"
                       >
                         Log Symptoms
@@ -1311,7 +1311,7 @@ export default function Home() {
                     </div>
                     <div className="w-full min-w-0 text-center">
                       <h3
-                        className="text-base sm:text-lg font-medium font-title text-primary leading-tight min-w-0 w-full truncate"
+                        className="text-sm font-medium font-sans text-primary leading-tight min-w-0 w-full truncate"
                         title="Log Medications"
                       >
                         Log Medications
@@ -1329,7 +1329,7 @@ export default function Home() {
                     </div>
                     <div className="w-full min-w-0 text-center">
                       <h3
-                        className="text-base sm:text-lg font-medium font-title text-primary leading-tight min-w-0 w-full truncate"
+                        className="text-sm font-medium font-sans text-primary leading-tight min-w-0 w-full truncate"
                         title="My Hydration"
                       >
                         My Hydration
@@ -1347,7 +1347,7 @@ export default function Home() {
                     </div>
                     <div className="w-full min-w-0 text-center">
                       <h3
-                        className="text-base sm:text-lg font-medium font-title text-primary leading-tight min-w-0 w-full truncate"
+                        className="text-sm font-medium font-sans text-primary leading-tight min-w-0 w-full truncate"
                         title="Bowel Movements"
                       >
                         Bowel Movements
@@ -1375,7 +1375,7 @@ export default function Home() {
                       <Thermometer className="w-5 h-5 text-emerald-600" />
                     </div>
                     <div className="w-full text-center min-w-0">
-                      <h3 className="text-base sm:text-lg font-medium font-title text-primary leading-tight sm:leading-relaxed break-words">Log Symptoms</h3>
+                      <h3 className="text-sm font-medium font-sans text-primary leading-tight sm:leading-relaxed break-words">Log Symptoms</h3>
                     </div>
                   </div>
                 </Link>
@@ -1388,7 +1388,7 @@ export default function Home() {
                       <ChartLine className="w-5 h-5 text-pink-500" />
                     </div>
                     <div className="w-full text-center min-w-0">
-                      <h3 className="text-base sm:text-lg font-medium font-title text-primary leading-tight sm:leading-relaxed break-words">Log Medications</h3>
+                      <h3 className="text-sm font-medium font-sans text-primary leading-tight sm:leading-relaxed break-words">Log Medications</h3>
                     </div>
                   </div>
                 </Link>
@@ -1401,7 +1401,7 @@ export default function Home() {
                       <CupSoda className="w-5 h-5 text-sky-600" />
                     </div>
                     <div className="w-full text-center min-w-0">
-                      <h3 className="text-base sm:text-lg font-medium font-title text-primary leading-tight sm:leading-relaxed break-words">My Hydration</h3>
+                      <h3 className="text-sm font-medium font-sans text-primary leading-tight sm:leading-relaxed break-words">My Hydration</h3>
                     </div>
                   </div>
                 </Link>
@@ -1414,7 +1414,7 @@ export default function Home() {
                       <CircleDot className="w-5 h-5 text-amber-800 dark:text-amber-400" />
                     </div>
                     <div className="w-full text-center min-w-0">
-                      <h3 className="text-base sm:text-lg font-medium font-title text-primary leading-tight sm:leading-relaxed break-words">Bowel Movements</h3>
+                      <h3 className="text-sm font-medium font-sans text-primary leading-tight sm:leading-relaxed break-words">Bowel Movements</h3>
                     </div>
                   </div>
                 </Link>
@@ -1462,7 +1462,7 @@ export default function Home() {
             <div className="card lg:flex-1 lg:flex lg:flex-col lg:min-h-0">
             <div className="card-inner p-4 sm:p-6">
               <div className="flex justify-between items-center mb-3">
-                <span className="text-sm text-primary flex items-center gap-3">
+                <span className="text-sm font-sans text-primary flex items-center gap-3">
                   <div className="w-6 h-6 bg-white dark:bg-[var(--bg-icon-container)] flex items-center justify-center rounded-md flex-shrink-0">
                     <Thermometer className="w-3.5 h-3.5 text-primary dark:text-white" />
                   </div>
@@ -1471,7 +1471,7 @@ export default function Home() {
                 <span className="text-sm font-semibold text-primary">{todaySymptoms.length}</span>
               </div>
               <div className="flex justify-between items-center mt-3 mb-3">
-                <span className="text-sm text-primary flex items-center gap-3">
+                <span className="text-sm font-sans text-primary flex items-center gap-3">
                   <div className="w-6 h-6 bg-white dark:bg-[var(--bg-icon-container)] flex items-center justify-center rounded-md flex-shrink-0">
                     <Pill className="w-3 h-3 text-primary dark:text-white" />
                   </div>
@@ -1480,7 +1480,7 @@ export default function Home() {
                 <span className="text-sm font-semibold text-primary">{takenMedications.length}/{medications.length}</span>
               </div>
               <div className="flex justify-between items-center mt-3">
-                <span className="text-sm text-primary flex items-center gap-3">
+                <span className="text-sm font-sans text-primary flex items-center gap-3">
                   <div className="w-6 h-6 bg-white dark:bg-[var(--bg-icon-container)] flex items-center justify-center rounded-md flex-shrink-0">
                     <CupSoda className="w-3.5 h-3.5 text-primary dark:text-white" />
                   </div>
@@ -2062,7 +2062,7 @@ export default function Home() {
 
         {/* More Options */}
         <div className="mb-6 xl:mb-0 order-[7] xl:order-none">
-          <h2 className="text-xl font-semibold font-title text-primary mb-3">More</h2>
+          <h2 className="text-xl font-semibold font-sans text-primary mb-3">More</h2>
           <div className="grid grid-cols-2 lg:grid-cols-3 gap-4 md:gap-6 min-w-0">
               <Link
                 href="/medications"
@@ -2073,7 +2073,7 @@ export default function Home() {
                     <Pill className="w-5 h-5 text-purple-600 dark:[color:var(--text-icon-more-meds)]" />
                 </div>
                   <div className="w-full text-center min-w-0">
-                    <h3 className="text-base sm:text-lg font-medium font-title text-primary leading-tight sm:leading-relaxed break-words">
+                    <h3 className="text-sm font-medium font-sans text-primary leading-tight sm:leading-relaxed break-words">
                       My Meds
                     </h3>
                   </div>
@@ -2089,7 +2089,7 @@ export default function Home() {
                     <FileText className="w-5 h-5 text-orange-600 dark:[color:var(--text-icon-more-reports)]" />
                   </div>
                   <div className="w-full text-center min-w-0">
-                    <h3 className="text-base sm:text-lg font-medium font-title text-primary leading-tight sm:leading-relaxed break-words">
+                    <h3 className="text-sm font-medium font-sans text-primary leading-tight sm:leading-relaxed break-words">
                       Reports
                     </h3>
                   </div>
@@ -2105,7 +2105,7 @@ export default function Home() {
                     <Scale className="w-5 h-5 text-indigo-600 dark:[color:var(--text-icon-more-weight)]" />
                   </div>
                   <div className="w-full text-center min-w-0">
-                    <h3 className="text-base sm:text-lg font-medium font-title text-primary leading-tight sm:leading-relaxed break-words">
+                    <h3 className="text-sm font-medium font-sans text-primary leading-tight sm:leading-relaxed break-words">
                       My Weight
                     </h3>
                   </div>
@@ -2122,7 +2122,7 @@ export default function Home() {
                     <Calendar className="w-5 h-5 text-slate-700 dark:[color:var(--text-icon-more-appointments)]" />
                   </div>
                   <div className="w-full text-center min-w-0">
-                    <h3 className="text-base sm:text-lg font-medium font-title text-primary leading-tight sm:leading-relaxed break-words">
+                    <h3 className="text-sm font-medium font-sans text-primary leading-tight sm:leading-relaxed break-words">
                       Appointments
                     </h3>
                   </div>

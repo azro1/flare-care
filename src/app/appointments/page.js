@@ -9,7 +9,6 @@ import ProtectedRoute from '@/components/ProtectedRoute'
 import DateInputWithCalendar from '@/components/DateInputWithCalendar'
 import { sanitizeNotes, sanitizeInput } from '@/lib/sanitize'
 import { Calendar, ChevronDown, Bell, Lightbulb } from 'lucide-react'
-import Masonry from 'react-masonry-css'
 import { motion, AnimatePresence } from 'framer-motion'
 import { supabase, TABLES } from '@/lib/supabase'
 import { useAuth } from '@/lib/AuthContext'
@@ -71,6 +70,16 @@ const generateTimeOptions = () => {
   return options
 }
 
+const emptyAppointmentForm = () => ({
+  date: '',
+  time: '',
+  type: '',
+  clinicianName: '',
+  location: '',
+  notes: '',
+  reminderMinutesBefore: null
+})
+
 // Treat missing/empty `time` as end-of-day (23:59). Used for upcoming vs past and panel open logic.
 const getAppointmentDateTime = (apt) => {
   if (!apt?.date) return null
@@ -90,23 +99,12 @@ function AppointmentsPageContent() {
   const [deleteModal, setDeleteModal] = useState({ isOpen: false, id: null })
   const [expandedAppointments, setExpandedAppointments] = useState(new Set())
   const [appointmentsTab, setAppointmentsTab] = useState('upcoming') // 'upcoming' | 'past'
-  const [appointmentsPanelOpen, setAppointmentsPanelOpen] = useState(false)
+  const [appointmentsPanelOpen, setAppointmentsPanelOpen] = useState(true)
   const today = new Date().toISOString().split('T')[0]
-  const [formData, setFormData] = useState({
-    date: today,
-    time: '',
-    type: '',
-    clinicianName: '',
-    location: '',
-    notes: '',
-    reminderMinutesBefore: null
-  })
+  const [formData, setFormData] = useState(emptyAppointmentForm)
   const [saveError, setSaveError] = useState(null)
   const [dateError, setDateError] = useState(null)
   const appointmentDatePickerRef = useRef(null)
-  /** Panel follows upcoming count (not total). Ref tracks 0↔non-zero transitions only. */
-  const upcomingCountPrevRef = useRef(null)
-
   const fetchAppointments = async () => {
     if (!user?.id) {
       setAppointments([])
@@ -146,41 +144,6 @@ function AppointmentsPageContent() {
   useEffect(() => {
     fetchAppointments()
   }, [user?.id])
-
-  useEffect(() => {
-    upcomingCountPrevRef.current = null
-  }, [user?.id])
-
-  useEffect(() => {
-    if (isLoading) return
-    const now = Date.now()
-    const n = appointments.reduce((acc, apt) => {
-      const dt = getAppointmentDateTime(apt)
-      if (dt && dt.getTime() >= now) return acc + 1
-      return acc
-    }, 0)
-    const prev = upcomingCountPrevRef.current
-    if (prev === null) {
-      setAppointmentsPanelOpen(n === 0)
-    } else if (prev > 0 && n === 0) {
-      setAppointmentsPanelOpen(true)
-    } else if (prev === 0 && n > 0) {
-      setAppointmentsPanelOpen(false)
-    }
-    upcomingCountPrevRef.current = n
-  }, [isLoading, appointments])
-
-  useEffect(() => {
-    window.scrollTo(0, 0)
-  }, [])
-
-  useEffect(() => {
-    if (isAdding) window.scrollTo(0, 0)
-  }, [isAdding])
-
-  useEffect(() => {
-    if (isAdding) setAppointmentsPanelOpen(true)
-  }, [isAdding])
 
   const formatUKDate = (dateString) => {
     if (!dateString) return ''
@@ -302,7 +265,7 @@ function AppointmentsPageContent() {
         }
       }
 
-      setFormData({ date: today, time: '', type: '', clinicianName: '', location: '', notes: '', reminderMinutesBefore: null })
+      setFormData(emptyAppointmentForm())
       setIsAdding(false)
     } catch (error) {
       console.error('Error saving appointment:', error)
@@ -329,7 +292,7 @@ function AppointmentsPageContent() {
   const startAdding = () => {
     setSaveError(null)
     setDateError(null)
-    setFormData({ date: today, time: '', type: '', clinicianName: '', location: '', notes: '', reminderMinutesBefore: null })
+    setFormData(emptyAppointmentForm())
     setEditingId(null)
     setIsAdding(true)
   }
@@ -337,7 +300,7 @@ function AppointmentsPageContent() {
   const cancelEdit = () => {
     setSaveError(null)
     setDateError(null)
-    setFormData({ date: today, time: '', type: '', clinicianName: '', location: '', notes: '', reminderMinutesBefore: null })
+    setFormData(emptyAppointmentForm())
     setEditingId(null)
     setIsAdding(false)
   }
@@ -381,7 +344,7 @@ function AppointmentsPageContent() {
   }
 
   return (
-    <div className="max-w-4xl w-full mx-auto sm:px-4 md:px-6 min-w-0">
+    <div className="max-w-4xl w-full mx-auto sm:px-4 md:px-6 min-w-0" style={{ overflowAnchor: 'none' }}>
       <div className="mb-5 sm:mb-6">
         <div className="card">
           <div className="flex flex-col sm:flex-row sm:justify-between sm:items-start">
@@ -449,19 +412,13 @@ function AppointmentsPageContent() {
           )}
         </div>
 
-        <AnimatePresence initial={false}>
-          {appointmentsPanelOpen && (
-            <motion.div
-              key="appointments-panel"
-              id="appointments-list-panel"
-              role="region"
-              aria-labelledby="appointments-panel-heading"
-              initial={{ height: 0, opacity: 0 }}
-              animate={{ height: 'auto', opacity: 1 }}
-              exit={{ height: 0, opacity: 0 }}
-              transition={{ duration: 0.2, ease: 'easeOut' }}
-              className="overflow-hidden min-w-0"
-            >
+        {appointmentsPanelOpen && (
+          <div
+            id="appointments-list-panel"
+            role="region"
+            aria-labelledby="appointments-panel-heading"
+            className="overflow-hidden min-w-0"
+          >
               <div className="min-w-0 space-y-4 pt-5 sm:pt-3 sm:space-y-5">
         <AnimatePresence>
         {isAdding && (
@@ -470,7 +427,7 @@ function AppointmentsPageContent() {
             initial={{ height: 0, opacity: 0 }}
             animate={{ height: 'auto', opacity: 1 }}
             exit={{ height: 0, opacity: 0 }}
-            transition={{ duration: 0.2, ease: 'easeOut' }}
+            transition={{ duration: 0.02, ease: 'linear' }}
             className="min-w-0 overflow-hidden"
           >
             <form onSubmit={handleSubmit} className="space-y-4" autoComplete="off">
@@ -667,32 +624,29 @@ function AppointmentsPageContent() {
           </div>
         )}
 
-        {isLoading ? (
-          <p className="text-center py-12 text-secondary font-sans">Loading...</p>
-        ) : visibleAppointments.length === 0 ? (
-          <div className="text-center py-12 text-secondary">
-            <div className="card-inner rounded-full w-14 h-14 sm:w-20 sm:h-20 mx-auto mb-6 flex items-center justify-center">
-              <Calendar className="w-6 h-6 sm:w-10 sm:h-10 text-secondary" />
+        <div className="min-h-[260px]">
+          {isLoading ? (
+            <p className="text-center py-12 text-secondary font-sans">Loading...</p>
+          ) : visibleAppointments.length === 0 ? (
+            <div className="text-center py-12 text-secondary">
+              <div className="card-inner rounded-full w-14 h-14 sm:w-20 sm:h-20 mx-auto mb-6 flex items-center justify-center">
+                <Calendar className="w-6 h-6 sm:w-10 sm:h-10 text-secondary" />
+              </div>
+              <h3 className="text-lg font-semibold font-title text-primary mb-2">
+                {appointmentsTab === 'past' ? 'No past appointments' : 'No upcoming appointments'}
+              </h3>
+              <p className="text-sm font-sans text-secondary max-w-md mx-auto leading-relaxed">
+                {appointmentsTab === 'past'
+                  ? 'Your past appointments will appear here once they have taken place.'
+                  : 'Your appointments will show here once you add them'}
+              </p>
             </div>
-            <h3 className="text-lg font-semibold font-title text-primary mb-2">
-              {appointmentsTab === 'past' ? 'No past appointments' : 'No upcoming appointments'}
-            </h3>
-            <p className="text-sm font-sans text-secondary max-w-md mx-auto leading-relaxed">
-              {appointmentsTab === 'past'
-                ? 'Your past appointments will appear here once they have taken place.'
-                : 'Your appointments will show here once you add them'}
-            </p>
-          </div>
-        ) : (
-          <Masonry
-            breakpointCols={{ default: 2, 1024: 2, 640: 1 }}
-            className="flex -ml-4 w-auto min-w-0"
-            columnClassName="pl-4 bg-clip-padding"
-          >
-            {visibleAppointments.map((apt) => {
+          ) : (
+            <div className="space-y-4">
+              {visibleAppointments.map((apt) => {
               const isExpanded = expandedAppointments.has(apt.id)
               return (
-                <div key={apt.id} className="mb-4 last:mb-0">
+                <div key={apt.id} className="last:mb-0">
                   <div className="card-inner p-4 sm:p-6 min-w-0">
                     <div className="flex flex-col sm:flex-row sm:justify-between sm:items-start gap-3">
                       <div className="flex-1 min-w-0">
@@ -810,12 +764,12 @@ function AppointmentsPageContent() {
                 </div>
               )
             })}
-          </Masonry>
-        )}
-              </div>
-            </motion.div>
+            </div>
           )}
-        </AnimatePresence>
+        </div>
+              </div>
+          </div>
+        )}
       </div>
 
       {/* Appointment Reminders Info */}

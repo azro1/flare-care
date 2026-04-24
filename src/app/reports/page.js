@@ -1705,7 +1705,7 @@ function ReportsPageContent() {
                 height: expandedSections.currentMeds ? 'auto' : 0,
                 opacity: expandedSections.currentMeds ? 1 : 0
               }}
-              transition={{ duration: 0.2, ease: 'easeOut' }}
+              transition={{ duration: 0.02, ease: 'linear' }}
               style={{ overflow: 'hidden' }}
             >
             <div className="space-y-0 [&>*:last-child]:pb-0">
@@ -1773,7 +1773,7 @@ function ReportsPageContent() {
                 height: expandedSections.medicationLogs ? 'auto' : 0,
                 opacity: expandedSections.medicationLogs ? 1 : 0
               }}
-              transition={{ duration: 0.2, ease: 'easeOut' }}
+              transition={{ duration: 0.02, ease: 'linear' }}
               style={{ overflow: 'hidden' }}
             >
             {reportData.medicationTracking.missedMedications.length > 0 && (
@@ -1963,7 +1963,7 @@ function ReportsPageContent() {
                 height: expandedSections.appointments ? 'auto' : 0,
                 opacity: expandedSections.appointments ? 1 : 0
               }}
-              transition={{ duration: 0.2, ease: 'easeOut' }}
+              transition={{ duration: 0.02, ease: 'linear' }}
               style={{ overflow: 'hidden' }}
             >
             <div className="space-y-0 [&>*:last-child]:pb-0">
@@ -2001,7 +2001,7 @@ function ReportsPageContent() {
                 height: expandedSections.weightLogs ? 'auto' : 0,
                 opacity: expandedSections.weightLogs ? 1 : 0
               }}
-              transition={{ duration: 0.2, ease: 'easeOut' }}
+              transition={{ duration: 0.02, ease: 'linear' }}
               style={{ overflow: 'hidden' }}
             >
             <div className="space-y-0 [&>*:last-child]:pb-0">
@@ -2041,7 +2041,7 @@ function ReportsPageContent() {
                 height: expandedSections.bowelMovements ? 'auto' : 0,
                 opacity: expandedSections.bowelMovements ? 1 : 0
               }}
-              transition={{ duration: 0.2, ease: 'easeOut' }}
+              transition={{ duration: 0.02, ease: 'linear' }}
               style={{ overflow: 'hidden' }}
             >
             <div className="space-y-0 [&>*:last-child]:pb-0">
@@ -2093,7 +2093,7 @@ function ReportsPageContent() {
                 height: expandedSections.hydration ? 'auto' : 0,
                 opacity: expandedSections.hydration ? 1 : 0
               }}
-              transition={{ duration: 0.2, ease: 'easeOut' }}
+              transition={{ duration: 0.02, ease: 'linear' }}
               style={{ overflow: 'hidden' }}
             >
             <div className="space-y-0 [&>*:last-child]:pb-0">
@@ -2135,7 +2135,7 @@ function ReportsPageContent() {
                 height: expandedSections.topFoods ? 'auto' : 0,
                 opacity: expandedSections.topFoods ? 1 : 0
               }}
-              transition={{ duration: 0.2, ease: 'easeOut' }}
+              transition={{ duration: 0.02, ease: 'linear' }}
               style={{ overflow: 'hidden' }}
             >
             <div className="space-y-0 [&>*:last-child]:pb-0">

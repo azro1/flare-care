@@ -103,10 +103,11 @@ function sortBowelByCreatedAtDesc(rows) {
 }
 
 function emptyFormState() {
-  const { date, time } = defaultDateTimeParts()
+  const { date } = defaultDateTimeParts()
   return {
     date,
-    time,
+    dateTouched: false,
+    time: '',
     bristolType: null,
     blood: '',
     strain: '',
@@ -123,15 +124,12 @@ function BowelMovementsPageContent() {
   const [entries, setEntries] = useState([])
   const [isLoading, setIsLoading] = useState(true)
   const [isAdding, setIsAdding] = useState(false)
-  const [bowelPanelOpen, setBowelPanelOpen] = useState(false)
+  const [bowelPanelOpen, setBowelPanelOpen] = useState(true)
   const [isSaving, setIsSaving] = useState(false)
   const [saveError, setSaveError] = useState('')
   const [deleteModal, setDeleteModal] = useState({ isOpen: false, id: null })
   const [editingId, setEditingId] = useState(null)
   const [expandedBowelEntries, setExpandedBowelEntries] = useState(() => new Set())
-  /** After fetch: open panel if no logs; closed if any exist. Ref tracks 0↔non-zero transitions only. */
-  const bowelEntriesCountPrevRef = useRef(null)
-
   const fetchEntries = async () => {
     if (!user?.id) {
       setEntries([])
@@ -160,33 +158,11 @@ function BowelMovementsPageContent() {
   }, [user?.id])
 
   useEffect(() => {
-    bowelEntriesCountPrevRef.current = null
-  }, [user?.id])
-
-  useEffect(() => {
-    if (isLoading) return
-    const n = entries.length
-    const prev = bowelEntriesCountPrevRef.current
-    if (prev === null) {
-      setBowelPanelOpen(n === 0)
-    } else if (prev > 0 && n === 0) {
-      setBowelPanelOpen(true)
-    } else if (prev === 0 && n > 0) {
-      setBowelPanelOpen(false)
-    }
-    bowelEntriesCountPrevRef.current = n
-  }, [isLoading, entries.length])
-
-  useEffect(() => {
     window.scrollTo(0, 0)
   }, [])
 
   useEffect(() => {
     if (isAdding) window.scrollTo(0, 0)
-  }, [isAdding])
-
-  useEffect(() => {
-    if (isAdding) setBowelPanelOpen(true)
   }, [isAdding])
 
   const startAdding = () => {
@@ -200,6 +176,7 @@ function BowelMovementsPageContent() {
     const { date, time } = occurredAtToFormParts(row.occurred_at)
     setFormState({
       date,
+      dateTouched: true,
       time,
       bristolType: row.bristol_type,
       blood: boolToTri(row.blood),
@@ -445,7 +422,7 @@ function BowelMovementsPageContent() {
               initial={{ height: 0, opacity: 0 }}
               animate={{ height: 'auto', opacity: 1 }}
               exit={{ height: 0, opacity: 0 }}
-              transition={{ duration: 0.2, ease: 'easeOut' }}
+              transition={{ duration: 0.02, ease: 'linear' }}
               className="overflow-hidden min-w-0"
             >
               <div className="min-w-0 space-y-4 pt-5 sm:pt-3 sm:space-y-5">
@@ -456,7 +433,7 @@ function BowelMovementsPageContent() {
                       initial={{ height: 0, opacity: 0 }}
                       animate={{ height: 'auto', opacity: 1 }}
                       exit={{ height: 0, opacity: 0 }}
-                      transition={{ duration: 0.2, ease: 'easeOut' }}
+                      transition={{ duration: 0.02, ease: 'linear' }}
                       className="min-w-0 overflow-hidden"
                     >
                       <form onSubmit={handleSubmit} className="space-y-4 sm:space-y-6" autoComplete="off">
@@ -477,11 +454,13 @@ function BowelMovementsPageContent() {
                                   setFormState((prev) => ({
                                     ...prev,
                                     date: date ? date.toISOString().split('T')[0] : '',
+                                    dateTouched: true,
                                   }))
                                 }
-                                placeholderText="Select date"
+                                placeholderText="Date"
                                 customInput={
                                   <DateInputWithCalendar
+                                    forcePlaceholder={!formState.dateTouched}
                                     onIconClick={() => bowelDatePickerRef.current?.setOpen?.(true)}
                                   />
                                 }
@@ -714,7 +693,7 @@ function BowelMovementsPageContent() {
                                     height: isExpanded ? 'auto' : 0,
                                     opacity: isExpanded ? 1 : 0,
                                   }}
-                                  transition={{ duration: 0.2, ease: 'easeOut' }}
+                                  transition={{ duration: 0.02, ease: 'linear' }}
                                   style={{ overflow: 'hidden' }}
                                 >
                                   {flags.length > 0 && (

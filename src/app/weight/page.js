@@ -13,6 +13,12 @@ import { useAuth } from '@/lib/AuthContext'
 import DatePicker from 'react-datepicker'
 import 'react-datepicker/dist/react-datepicker.css'
 
+const emptyWeightForm = () => ({
+  date: '',
+  valueKg: '',
+  notes: ''
+})
+
 function WeightPageContent() {
   const { user } = useAuth()
   const [entries, setEntries] = useState([])
@@ -21,15 +27,9 @@ function WeightPageContent() {
   const [editingId, setEditingId] = useState(null)
   const [deleteModal, setDeleteModal] = useState({ isOpen: false, id: null })
   const [expandedWeightEntries, setExpandedWeightEntries] = useState(new Set())
-  const [weightPanelOpen, setWeightPanelOpen] = useState(false)
+  const [weightPanelOpen, setWeightPanelOpen] = useState(true)
   const weightDatePickerRef = useRef(null)
-  /** After fetch: open panel if no logs; closed if any exist. Ref tracks 0↔non-zero transitions only. */
-  const weightEntriesCountPrevRef = useRef(null)
-  const [formData, setFormData] = useState({
-    date: new Date().toISOString().split('T')[0],
-    valueKg: '',
-    notes: ''
-  })
+  const [formData, setFormData] = useState(emptyWeightForm)
 
   const fetchEntries = async () => {
     if (!user?.id) {
@@ -67,33 +67,11 @@ function WeightPageContent() {
   }, [user?.id])
 
   useEffect(() => {
-    weightEntriesCountPrevRef.current = null
-  }, [user?.id])
-
-  useEffect(() => {
-    if (isLoading) return
-    const n = entries.length
-    const prev = weightEntriesCountPrevRef.current
-    if (prev === null) {
-      setWeightPanelOpen(n === 0)
-    } else if (prev > 0 && n === 0) {
-      setWeightPanelOpen(true)
-    } else if (prev === 0 && n > 0) {
-      setWeightPanelOpen(false)
-    }
-    weightEntriesCountPrevRef.current = n
-  }, [isLoading, entries.length])
-
-  useEffect(() => {
     window.scrollTo(0, 0)
   }, [])
 
   useEffect(() => {
     if (isAdding) window.scrollTo(0, 0)
-  }, [isAdding])
-
-  useEffect(() => {
-    if (isAdding) setWeightPanelOpen(true)
   }, [isAdding])
 
   const formatUKDate = (dateString) => {
@@ -170,11 +148,7 @@ function WeightPageContent() {
         window.dispatchEvent(new Event('weight-added'))
       }
 
-      setFormData({
-        date: new Date().toISOString().split('T')[0],
-        valueKg: '',
-        notes: ''
-      })
+      setFormData(emptyWeightForm())
       setIsAdding(false)
     } catch (error) {
       console.error('Error saving weight entry:', error)
@@ -193,21 +167,13 @@ function WeightPageContent() {
   }
 
   const startAdding = () => {
-    setFormData({
-      date: new Date().toISOString().split('T')[0],
-      valueKg: '',
-      notes: ''
-    })
+    setFormData(emptyWeightForm())
     setEditingId(null)
     setIsAdding(true)
   }
 
   const cancelEdit = () => {
-    setFormData({
-      date: new Date().toISOString().split('T')[0],
-      valueKg: '',
-      notes: ''
-    })
+    setFormData(emptyWeightForm())
     setEditingId(null)
     setIsAdding(false)
   }
@@ -327,7 +293,7 @@ function WeightPageContent() {
               initial={{ height: 0, opacity: 0 }}
               animate={{ height: 'auto', opacity: 1 }}
               exit={{ height: 0, opacity: 0 }}
-              transition={{ duration: 0.2, ease: 'easeOut' }}
+              transition={{ duration: 0.02, ease: 'linear' }}
               className="overflow-hidden min-w-0"
             >
               <div className="min-w-0 space-y-4 pt-5 sm:pt-3 sm:space-y-5">
@@ -338,7 +304,7 @@ function WeightPageContent() {
             initial={{ height: 0, opacity: 0 }}
             animate={{ height: 'auto', opacity: 1 }}
             exit={{ height: 0, opacity: 0 }}
-            transition={{ duration: 0.2, ease: 'easeOut' }}
+            transition={{ duration: 0.02, ease: 'linear' }}
             className="min-w-0 overflow-hidden"
           >
             <form onSubmit={handleSubmit} className="space-y-4" autoComplete="off">
@@ -481,7 +447,7 @@ function WeightPageContent() {
                           height: isExpanded ? 'auto' : 0,
                           opacity: isExpanded ? 1 : 0
                         }}
-                        transition={{ duration: 0.2, ease: 'easeOut' }}
+                        transition={{ duration: 0.02, ease: 'linear' }}
                         style={{ overflow: 'hidden' }}
                       >
                           <div className="flex flex-wrap items-center gap-2 mt-2">

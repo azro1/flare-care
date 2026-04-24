@@ -186,7 +186,7 @@ export default function Navigation() {
         <div className="flex justify-between items-center">
           {/* Logo */}
           <Link href="/" className="inline-flex items-center">
-            <div className="relative w-10 h-10 md:w-10 md:h-10 rounded-full flex items-center justify-center overflow-visible">
+            <div className="relative w-[2.625rem] h-[2.625rem] md:w-10 md:h-10 rounded-full flex items-center justify-center overflow-visible">
               <Image
                 src="/fclogo.svg"
                 alt="FlareCare logo"
@@ -285,9 +285,9 @@ export default function Navigation() {
             height: isMenuOpen ? 'auto' : 0,
             opacity: isMenuOpen ? 1 : 0
           }}
-          transition={{ duration: 0.25, ease: 'easeOut' }}
+          transition={{ duration: 0.08, ease: 'linear' }}
         >
-          <div className="container mx-auto px-3 sm:px-6 lg:px-8">
+          <div className="px-3 sm:px-6 lg:px-8">
               {/* All Navigation Links */}
               {[...(isAuthenticated ? mainNavItems : unauthenticatedNavItems)].map((item, idx, arr) => (
                 <Link

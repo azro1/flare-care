@@ -10,12 +10,12 @@ import 'react-datepicker/dist/react-datepicker.css'
 import { ChartLine, Calendar, ChevronRight, Loader2 } from 'lucide-react'
 import { supabase, TABLES } from '@/lib/supabase'
 
-const MedicationDateInput = forwardRef(({ value, onClick, onChange, placeholder, id, className, onIconClick, ...rest }, ref) => (
+const MedicationDateInput = forwardRef(({ value, onClick, onChange, placeholder, id, className, onIconClick, forcePlaceholder = false, ...rest }, ref) => (
   <div className={`symptom-date-input-wrapper flex items-center input-field-wizard ${className ?? ''}`.trim()}>
     <input
       ref={ref}
       readOnly
-      value={value ?? ''}
+      value={forcePlaceholder ? '' : (value ?? '')}
       onChange={onChange}
       placeholder={placeholder}
       id={id}
@@ -31,7 +31,7 @@ const MedicationDateInput = forwardRef(({ value, onClick, onChange, placeholder,
       className="flex-shrink-0 p-0.5 cursor-pointer hover:opacity-80 transition-opacity ml-1"
       aria-label="Open date picker"
     >
-      <Calendar className="w-5 h-5 text-secondary" />
+      <Calendar className="w-5 h-5 text-slate-600 dark:text-gray-500" />
     </button>
   </div>
 ))
@@ -75,11 +75,11 @@ function MedicationTrackingWizard() {
 
   const defaultMedicationForm = () => ({
     missedMedications: null,
-    missedMedicationsList: [{ medication: '', date: new Date(), timeOfDay: '' }],
+    missedMedicationsList: [{ medication: '', date: new Date(), timeOfDay: '', dateTouched: false }],
     nsaidUsage: null,
-    nsaidList: [{ medication: '', date: new Date(), timeOfDay: '', dosage: '' }],
+    nsaidList: [{ medication: '', date: new Date(), timeOfDay: '', dosage: '', dateTouched: false }],
     antibioticUsage: null,
-    antibioticList: [{ medication: '', date: new Date(), timeOfDay: '', dosage: '' }]
+    antibioticList: [{ medication: '', date: new Date(), timeOfDay: '', dosage: '', dateTouched: false }]
   })
 
   const [formData, setFormData] = useState(() => {
@@ -91,6 +91,18 @@ function MedicationTrackingWizard() {
           return {
             ...defaultMedicationForm(),
             ...parsed,
+            missedMedicationsList: (parsed.missedMedicationsList || defaultMedicationForm().missedMedicationsList).map((item) => ({
+              ...item,
+              dateTouched: item.dateTouched === true,
+            })),
+            nsaidList: (parsed.nsaidList || defaultMedicationForm().nsaidList).map((item) => ({
+              ...item,
+              dateTouched: item.dateTouched === true,
+            })),
+            antibioticList: (parsed.antibioticList || defaultMedicationForm().antibioticList).map((item) => ({
+              ...item,
+              dateTouched: item.dateTouched === true,
+            })),
             missedMedications:
               parsed.missedMedications === true || parsed.missedMedications === false
                 ? parsed.missedMedications
@@ -478,7 +490,7 @@ function MedicationTrackingWizard() {
   const addMissedMedication = () => {
     setFormData(prev => ({
       ...prev,
-      missedMedicationsList: [...prev.missedMedicationsList, { medication: '', date: new Date(), timeOfDay: '' }]
+      missedMedicationsList: [...prev.missedMedicationsList, { medication: '', date: new Date(), timeOfDay: '', dateTouched: false }]
     }))
   }
 
@@ -490,10 +502,11 @@ function MedicationTrackingWizard() {
   }
 
   const updateMissedMedication = (index, field, value) => {
+    const nextValue = field === 'date' ? { date: value, dateTouched: true } : { [field]: value }
     setFormData(prev => ({
       ...prev,
       missedMedicationsList: prev.missedMedicationsList.map((item, i) =>
-        i === index ? { ...item, [field]: value } : item
+        i === index ? { ...item, ...nextValue } : item
       )
     }))
     
@@ -502,7 +515,7 @@ function MedicationTrackingWizard() {
       const newFormData = {
         ...formData,
         missedMedicationsList: formData.missedMedicationsList.map((item, i) =>
-          i === index ? { ...item, [field]: value } : item
+          i === index ? { ...item, ...nextValue } : item
         )
       }
       const hasCompleteEntry = newFormData.missedMedicationsList.some(item => 
@@ -518,7 +531,7 @@ function MedicationTrackingWizard() {
   const addNsaid = () => {
     setFormData(prev => ({
       ...prev,
-      nsaidList: [...prev.nsaidList, { medication: '', date: new Date(), timeOfDay: '', dosage: '' }]
+      nsaidList: [...prev.nsaidList, { medication: '', date: new Date(), timeOfDay: '', dosage: '', dateTouched: false }]
     }))
   }
 
@@ -531,10 +544,11 @@ function MedicationTrackingWizard() {
 
   const updateNsaid = (index, field, value) => {
     const safeValue = field === 'dosage' ? normalizeDosage(value) : value
+    const nextValue = field === 'date' ? { date: safeValue, dateTouched: true } : { [field]: safeValue }
     setFormData(prev => ({
       ...prev,
       nsaidList: prev.nsaidList.map((item, i) =>
-        i === index ? { ...item, [field]: safeValue } : item
+        i === index ? { ...item, ...nextValue } : item
       )
     }))
     
@@ -543,7 +557,7 @@ function MedicationTrackingWizard() {
       const newFormData = {
         ...formData,
         nsaidList: formData.nsaidList.map((item, i) =>
-          i === index ? { ...item, [field]: safeValue } : item
+          i === index ? { ...item, ...nextValue } : item
         )
       }
       const hasCompleteEntry = newFormData.nsaidList.some(item => 
@@ -559,7 +573,7 @@ function MedicationTrackingWizard() {
   const addAntibiotic = () => {
     setFormData(prev => ({
       ...prev,
-      antibioticList: [...prev.antibioticList, { medication: '', date: new Date(), timeOfDay: '', dosage: '' }]
+      antibioticList: [...prev.antibioticList, { medication: '', date: new Date(), timeOfDay: '', dosage: '', dateTouched: false }]
     }))
   }
 
@@ -572,10 +586,11 @@ function MedicationTrackingWizard() {
 
   const updateAntibiotic = (index, field, value) => {
     const safeValue = field === 'dosage' ? normalizeDosage(value) : value
+    const nextValue = field === 'date' ? { date: safeValue, dateTouched: true } : { [field]: safeValue }
     setFormData(prev => ({
       ...prev,
       antibioticList: prev.antibioticList.map((item, i) =>
-        i === index ? { ...item, [field]: safeValue } : item
+        i === index ? { ...item, ...nextValue } : item
       )
     }))
     
@@ -584,7 +599,7 @@ function MedicationTrackingWizard() {
       const newFormData = {
         ...formData,
         antibioticList: formData.antibioticList.map((item, i) =>
-          i === index ? { ...item, [field]: safeValue } : item
+          i === index ? { ...item, ...nextValue } : item
         )
       }
       const hasCompleteEntry = newFormData.antibioticList.some(item => 
@@ -744,8 +759,8 @@ function MedicationTrackingWizard() {
                       ref={(el) => { missedMedDatePickerRefs.current[index] = el }}
                       selected={item.date}
                       onChange={(date) => updateMissedMedication(index, 'date', date)}
-                      placeholderText="Select date missed"
-                      customInput={<MedicationDateInput onIconClick={() => missedMedDatePickerRefs.current?.[index]?.setOpen?.(true)} />}
+                      placeholderText="Date"
+                      customInput={<MedicationDateInput forcePlaceholder={!item.dateTouched} onIconClick={() => missedMedDatePickerRefs.current?.[index]?.setOpen?.(true)} />}
                       dateFormat="dd/MM/yyyy"
                       maxDate={new Date()}
                       preventOpenOnFocus
@@ -893,7 +908,7 @@ function MedicationTrackingWizard() {
                       selected={item.date}
                       onChange={(date) => updateNsaid(index, 'date', date)}
                       placeholderText="Select date taken"
-                      customInput={<MedicationDateInput onIconClick={() => nsaidDatePickerRefs.current?.[index]?.setOpen?.(true)} />}
+                      customInput={<MedicationDateInput forcePlaceholder={!item.dateTouched} onIconClick={() => nsaidDatePickerRefs.current?.[index]?.setOpen?.(true)} />}
                       dateFormat="dd/MM/yyyy"
                       maxDate={new Date()}
                       preventOpenOnFocus
@@ -1051,7 +1066,7 @@ function MedicationTrackingWizard() {
                       selected={item.date}
                       onChange={(date) => updateAntibiotic(index, 'date', date)}
                       placeholderText="Select date taken"
-                      customInput={<MedicationDateInput onIconClick={() => antibioticDatePickerRefs.current?.[index]?.setOpen?.(true)} />}
+                      customInput={<MedicationDateInput forcePlaceholder={!item.dateTouched} onIconClick={() => antibioticDatePickerRefs.current?.[index]?.setOpen?.(true)} />}
                       dateFormat="dd/MM/yyyy"
                       maxDate={new Date()}
                       preventOpenOnFocus
@@ -1211,16 +1226,8 @@ function MedicationTrackingWizard() {
       {/* Header: exit to medications + section breadcrumb — hide on landing */}
       {currentStep > 0 && (
         <div className="min-w-0 w-full max-w-full pt-0 mb-6 md:mb-8">
-          <button
-            type="button"
-            onClick={() => setCurrentStep(0)}
-            className="text-sm sm:text-base font-normal text-primary underline hover:opacity-80 transition-opacity text-left"
-          >
-            Log Medications
-          </button>
-
           {medicationWizardProgress.total > 0 && (
-            <div className="mt-6 w-full min-w-0 max-w-full">
+            <div className="w-full min-w-0 max-w-full">
               <span id="medication-wizard-step-status" className="sr-only">
                 Step {medicationWizardProgress.step} of {medicationWizardProgress.total}. Current section:{' '}
                 {medicationWizardProgress.currentPhaseLabel}.
@@ -1248,7 +1255,7 @@ function MedicationTrackingWizard() {
                         <ChevronRight
                           className={[
                             'w-4 h-4 shrink-0 self-center',
-                            canGo ? 'text-muted/50' : 'text-muted/50 opacity-45',
+                            canGo ? 'text-muted' : 'text-muted opacity-35',
                           ].join(' ')}
                           strokeWidth={2.25}
                           aria-hidden
@@ -1263,13 +1270,14 @@ function MedicationTrackingWizard() {
                         }}
                         className={[
                           'shrink-0 min-h-11 inline-flex items-center rounded-md px-2 -mx-0.5 text-left whitespace-nowrap touch-manipulation transition-colors [-webkit-tap-highlight-color:transparent]',
+                          i === 0 ? 'pl-1' : '',
                           isCurrent
                             ? 'font-semibold text-cadet-blue'
-                            : 'font-medium text-muted',
+                            : 'font-normal text-muted',
                           canGo && !isCurrent
                             ? 'hover:text-cadet-blue hover:underline cursor-pointer'
                             : '',
-                          !canGo ? 'opacity-45 cursor-not-allowed' : '',
+                          !canGo ? 'opacity-35 cursor-not-allowed' : '',
                         ].join(' ')}
                       >
                         {label}
@@ -1294,10 +1302,10 @@ function MedicationTrackingWizard() {
             </div>
             
             {/* Title */}
-            <h2 className="text-2xl sm:text-3xl lg:text-4xl font-bold font-title text-primary mb-4 sm:mb-6">Log Medications</h2>
+            <h2 className="text-2xl sm:text-3xl lg:text-4xl font-bold font-title text-primary mb-4 sm:mb-5">Log Medications</h2>
             
             {/* Optional description */}
-            <p className="text-base sm:text-lg font-sans text-muted mb-6 max-w-md">Track your medication adherence to identify patterns and triggers</p>
+            <p className="text-base font-sans text-muted mb-6 max-w-md">Track your medication adherence to identify patterns and triggers</p>
             
             {/* Start button */}
             <button

@@ -82,21 +82,21 @@ export default function LearnPage() {
                   <div className="pl-3">
                     <h4 className="font-medium text-primary">NHS 111</h4>
                     <p className="text-sm text-secondary leading-relaxed">Non-emergency medical advice</p>
-                  <p className="text-sm sm:text-base font-medium leading-relaxed" style={{ color: '#5F9EA0' }}>Call 111</p>
+                  <p className="text-sm font-medium leading-relaxed" style={{ color: '#5F9EA0' }}>Call 111</p>
                   </div>
                 </div>
               <div className="border-l-4" style={{ borderColor: '#5F9EA0', opacity: 0.85 }}>
                   <div className="pl-3">
                     <h4 className="font-medium text-primary">Crohn's & Colitis UK</h4>
                     <p className="text-sm text-secondary leading-relaxed">Support helpline</p>
-                  <p className="text-sm sm:text-base font-medium leading-relaxed" style={{ color: '#5F9EA0' }}>0300 222 9099</p>
+                  <p className="text-sm font-medium leading-relaxed" style={{ color: '#5F9EA0' }}>0300 222 9099</p>
                   </div>
                 </div>
               <div className="border-l-4" style={{ borderColor: '#5F9EA0', opacity: 0.85 }}>
                   <div className="pl-3">
                     <h4 className="font-medium text-primary">Emergency Services</h4>
                     <p className="text-sm text-secondary leading-relaxed">For life-threatening situations</p>
-                  <p className="text-sm sm:text-base font-medium leading-relaxed" style={{ color: '#5F9EA0' }}>Call 999</p>
+                  <p className="text-sm font-medium leading-relaxed" style={{ color: '#5F9EA0' }}>Call 999</p>
                   </div>
                 </div>
               </div>
@@ -124,7 +124,7 @@ export default function LearnPage() {
         <div className="flex-1 lg:max-w-4xl order-1 lg:order-2">
       <div className="mb-5 sm:mb-6 card">
         <h1 className="text-2xl sm:text-3xl lg:text-4xl font-bold font-title text-primary mb-3 sm:mb-4">IBD</h1>
-        <p className="text-sm sm:text-base text-secondary break-words leading-relaxed">
+        <p className="text-sm text-secondary break-words leading-relaxed">
           Learn about Crohn's disease and Ulcerative Colitis, and how FlareCare can help you manage your condition
         </p>
       </div>
@@ -133,14 +133,14 @@ export default function LearnPage() {
       <div className="card mb-5 sm:mb-6">
         <h2 className="text-xl font-semibold font-title text-primary mb-3 sm:mb-6 break-words">What is Inflammatory Bowel Disease (IBD)?</h2>
         <div className="prose prose-gray max-w-none">
-          <p className="text-sm sm:text-base text-secondary mb-6 font-sans break-words leading-relaxed">
+          <p className="text-sm text-secondary mb-6 font-sans break-words leading-relaxed">
             Inflammatory Bowel Disease (IBD) is a term used to describe disorders that involve chronic inflammation of your digestive tract. The two main types are:
           </p>
           
           <div className="grid gap-4 sm:gap-6 md:grid-cols-2">
             <div className="card-inner p-4 sm:p-6">
               <h3 className="text-lg font-semibold font-title text-primary mb-3 break-words">Crohn's Disease</h3>
-              <ul className="text-secondary space-y-2 text-sm sm:text-base font-sans break-words">
+              <ul className="text-secondary space-y-2 text-sm font-sans break-words">
                 <li className="leading-relaxed"><span className="text-[#5F9EA0] mr-2">•</span>Can affect any part of the digestive tract</li>
                 <li className="leading-relaxed"><span className="text-[#5F9EA0] mr-2">•</span>Inflammation can be patchy with healthy areas in between</li>
                 <li className="leading-relaxed"><span className="text-[#5F9EA0] mr-2">•</span>Can affect the full thickness of the bowel wall</li>
@@ -150,7 +150,7 @@ export default function LearnPage() {
             
             <div className="card-inner p-4 sm:p-6">
               <h3 className="text-lg font-semibold font-title text-primary mb-3 break-words">Ulcerative Colitis</h3>
-              <ul className="text-secondary space-y-2 text-sm sm:text-base font-sans break-words">
+              <ul className="text-secondary space-y-2 text-sm font-sans break-words">
                 <li className="leading-relaxed"><span className="text-[#5F9EA0] mr-2">•</span>Affects only the colon and rectum</li>
                 <li className="leading-relaxed"><span className="text-[#5F9EA0] mr-2">•</span>Inflammation is continuous, starting from the rectum</li>
                 <li className="leading-relaxed"><span className="text-[#5F9EA0] mr-2">•</span>Usually affects only the inner lining of the colon</li>
@@ -165,7 +165,7 @@ export default function LearnPage() {
       <div className="card backdrop-blur-sm mb-5 sm:mb-6">
         <h2 className="text-xl font-semibold font-title text-primary mb-3 sm:mb-6 break-words">Common Symptoms</h2>
         <div className="grid gap-2 md:gap-6 md:grid-cols-2">
-          <ul className="space-y-2 text-sm sm:text-base text-secondary font-sans break-words">
+          <ul className="space-y-2 text-sm text-secondary font-sans break-words">
             <li className="flex items-start leading-relaxed">
               <span className="mr-2 mt-0.5 leading-tight">🤕</span>
               <span>Abdominal pain and cramping</span>
@@ -188,7 +188,7 @@ export default function LearnPage() {
             </li>
           </ul>
           
-          <ul className="space-y-2 text-sm sm:text-base text-secondary font-sans break-words">
+          <ul className="space-y-2 text-sm text-secondary font-sans break-words">
             <li className="flex items-start leading-relaxed">
               <span className="mr-2 mt-0.5 leading-tight">😴</span>
               <span>Fatigue and low energy</span>
@@ -221,7 +221,7 @@ export default function LearnPage() {
             <div className="w-16 h-16 rounded-full flex items-center justify-center mx-auto mb-4 bg-yellow-100 dark:bg-[var(--bg-card)]">
               <Pizza className="w-8 h-8 text-amber-500 dark:[color:var(--text-icon-more-foods)]" />
             </div>
-            <p className="text-sm sm:text-base text-secondary font-sans break-words leading-relaxed">
+            <p className="text-sm text-secondary font-sans break-words leading-relaxed">
               Spicy foods, dairy, high-fiber foods, alcohol, and caffeine can trigger symptoms
             </p>
           </div>
@@ -230,7 +230,7 @@ export default function LearnPage() {
             <div className="w-16 h-16 rounded-full flex items-center justify-center mx-auto mb-4 bg-red-100 dark:bg-[var(--bg-card)]">
               <Brain className="w-8 h-8 text-red-600 dark:text-red-400" />
             </div>
-            <p className="text-sm sm:text-base text-secondary font-sans break-words leading-relaxed">
+            <p className="text-sm text-secondary font-sans break-words leading-relaxed">
               Emotional stress and anxiety can worsen symptoms and trigger flare-ups
             </p>
           </div>
@@ -239,7 +239,7 @@ export default function LearnPage() {
             <div className="w-16 h-16 rounded-full flex items-center justify-center mx-auto mb-4 bg-emerald-100 dark:bg-[var(--bg-card)]">
               <Bug className="w-8 h-8 text-emerald-600 dark:text-emerald-400" />
             </div>
-            <p className="text-sm sm:text-base text-secondary font-sans break-words leading-relaxed">
+            <p className="text-sm text-secondary font-sans break-words leading-relaxed">
               Viral or bacterial infections can trigger or worsen IBD symptoms
             </p>
           </div>
@@ -282,7 +282,7 @@ export default function LearnPage() {
         <div className="card-inner p-4 sm:p-6">
         <div className="grid gap-3 md:gap-6 md:grid-cols-2">
           <div>
-            <ul className="space-y-3 text-sm sm:text-base text-secondary font-sans">
+            <ul className="space-y-3 text-sm text-secondary font-sans">
               <li className="flex items-start leading-relaxed">
                 <div className="w-4 h-4 flex items-center justify-center mr-2 mt-0.5 flex-shrink-0" style={{ color: 'var(--text-cadet-blue)' }}>
                   <Check className="w-3.5 h-3.5" strokeWidth={2.5} />
@@ -305,7 +305,7 @@ export default function LearnPage() {
           </div>
           
           <div>
-            <ul className="space-y-3 text-sm sm:text-base text-secondary font-sans">
+            <ul className="space-y-3 text-sm text-secondary font-sans">
               <li className="flex items-start leading-relaxed">
                 <div className="w-4 h-4 flex items-center justify-center mr-2 mt-0.5 flex-shrink-0" style={{ color: 'var(--text-cadet-blue)' }}>
                   <Check className="w-3.5 h-3.5" strokeWidth={2.5} />
@@ -344,7 +344,7 @@ export default function LearnPage() {
               >
                 Crohn's & Colitis UK
               </a>
-              <p className="text-sm sm:text-base text-secondary font-sans leading-relaxed">Leading UK charity providing support and information</p>
+              <p className="text-sm text-secondary font-sans leading-relaxed">Leading UK charity providing support and information</p>
             </li>
             <li>
               <a 
@@ -355,7 +355,7 @@ export default function LearnPage() {
               >
                 Crohn's & Colitis Foundation
               </a>
-              <p className="text-sm sm:text-base text-secondary font-sans leading-relaxed">US-based organization with comprehensive resources</p>
+              <p className="text-sm text-secondary font-sans leading-relaxed">US-based organization with comprehensive resources</p>
             </li>
           </ul>
           
@@ -369,7 +369,7 @@ export default function LearnPage() {
               >
                 NHS Information
               </a>
-              <p className="text-sm sm:text-base text-secondary font-sans leading-relaxed">Official NHS guidance on IBD</p>
+              <p className="text-sm text-secondary font-sans leading-relaxed">Official NHS guidance on IBD</p>
             </li>
             <li>
               <a 
@@ -380,7 +380,7 @@ export default function LearnPage() {
               >
                 Mayo Clinic Guide
               </a>
-              <p className="text-sm sm:text-base text-secondary font-sans leading-relaxed">Comprehensive medical information</p>
+              <p className="text-sm text-secondary font-sans leading-relaxed">Comprehensive medical information</p>
             </li>
           </ul>
         </div>
@@ -395,7 +395,7 @@ export default function LearnPage() {
           <div className="max-w-[76rem] mx-auto">
             <div className="card p-8 backdrop-blur-sm text-center">
           <h2 className="text-xl font-semibold font-title text-primary mb-3 sm:mb-4">Track Your Medications</h2>
-          <p className="text-sm sm:text-base text-secondary font-sans mb-4 sm:mb-6 leading-relaxed">
+          <p className="text-sm text-secondary font-sans mb-4 sm:mb-6 leading-relaxed">
             Log missed medications and NSAIDs to keep your healthcare team informed
           </p>
           <div className="flex flex-col sm:flex-row justify-center items-center sm:items-stretch space-y-3 sm:space-y-0 sm:space-x-4">
@@ -417,3 +417,4 @@ export default function LearnPage() {
     </div>
   )
 }
+

@@ -6,6 +6,7 @@ import PushEnableBanner from '@/components/PushEnableBanner'
 import { AuthProvider } from '@/lib/AuthContext'
 import { ThemeProvider } from '@/lib/ThemeContext'
 import LoadingScreen from '@/components/LoadingScreen'
+import ScrollManager from '@/components/ScrollManager'
 
 export const metadata = {
   metadataBase: new URL(process.env.NEXT_PUBLIC_SITE_URL || 'http://localhost:3000'),
@@ -50,6 +51,7 @@ export default function RootLayout({ children }) {
       <body className="min-h-screen" style={{backgroundColor: 'var(--bg-main)'}} id="body">
         <ThemeProvider>
           <AuthProvider>
+            <ScrollManager />
             <ReminderProvider />
             <NotificationBanner />
             <PushEnableBanner />

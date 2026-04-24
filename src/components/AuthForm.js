@@ -77,14 +77,14 @@ export default function AuthForm() {
               alt="FlareCare logo"
               width={88}
               height={88}
-              className="mx-auto mb-3 w-[5.5rem] h-[5.5rem] dark:hidden"
+              className="mx-auto mb-2 w-[5.5rem] h-[5.5rem] dark:hidden"
             />
             <Image
               src="/fclogo.svg"
               alt="FlareCare logo"
               width={88}
               height={88}
-              className="hidden dark:block mx-auto mb-3 w-[5.5rem] h-[5.5rem]"
+              className="hidden dark:block mx-auto mb-2 w-[5.5rem] h-[5.5rem]"
             />
             <h2 className="text-3xl font-bold font-title text-primary mb-4">
               FlareCare

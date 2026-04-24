@@ -21,7 +21,7 @@ const SymptomDateInput = forwardRef(({ value, onClick, onChange, placeholder, id
       onChange={onChange}
       placeholder={placeholder}
       id={id}
-      className="flex-1 min-w-0 !border-0 !p-0 !bg-transparent outline-none cursor-default text-inherit placeholder-slate-400"
+      className="flex-1 min-w-0 !border-0 !p-0 !pr-2 !bg-transparent outline-none cursor-default text-inherit placeholder-slate-400"
       onMouseDown={(e) => e.preventDefault()}
       onClick={(e) => e.preventDefault()}
       style={{ caretColor: 'transparent' }}
@@ -33,7 +33,7 @@ const SymptomDateInput = forwardRef(({ value, onClick, onChange, placeholder, id
       className="flex-shrink-0 p-0.5 cursor-pointer hover:opacity-80 transition-opacity ml-1"
       aria-label="Open date picker"
     >
-      <Calendar className="w-5 h-5 text-secondary" />
+      <Calendar className="w-5 h-5 text-slate-600 dark:text-gray-500" />
     </button>
   </div>
 ))
@@ -165,7 +165,7 @@ function SymptomsPageContent() {
         }
       }
       return {
-        symptomStartDate: new Date().toISOString().split('T')[0],
+        symptomStartDate: '',
         isOngoing: null,
         symptomEndDate: '',
         severity: '',
@@ -358,20 +358,6 @@ function SymptomsPageContent() {
   useEffect(() => {
     if (typeof window !== 'undefined') {
       localStorage.setItem('symptoms-wizard-step', currentStep.toString())
-    }
-  }, [currentStep])
-
-  // Default symptom start date to today when empty (runs on client mount)
-  useEffect(() => {
-    if (typeof window !== 'undefined' && !formData.symptomStartDate) {
-      setFormData(prev => ({ ...prev, symptomStartDate: new Date().toISOString().split('T')[0] }))
-    }
-  }, [])
-
-  // Default symptom end date to today when reaching step 3 and empty
-  useEffect(() => {
-    if (currentStep === 3 && !formData.symptomEndDate) {
-      setFormData(prev => ({ ...prev, symptomEndDate: new Date().toISOString().split('T')[0] }))
     }
   }, [currentStep])
 
@@ -1323,16 +1309,8 @@ function SymptomsPageContent() {
       {/* Header: exit + section breadcrumb — hide on landing */}
       {currentStep > 0 && (
         <div className="min-w-0 w-full max-w-full pt-0 mb-6 md:mb-8">
-          <button
-            type="button"
-            onClick={() => setCurrentStep(0)}
-            className="text-sm sm:text-base font-normal text-primary underline hover:opacity-80 transition-opacity text-left"
-          >
-            Log Symptoms
-          </button>
-
           {symptomWizardPhaseProgress.sectionTotal > 0 && (
-            <div className="mt-6 w-full min-w-0 max-w-full">
+            <div className="w-full min-w-0 max-w-full">
               <span id="symptom-wizard-step-status" className="sr-only">
                 Section {symptomWizardPhaseProgress.sectionStep} of {symptomWizardPhaseProgress.sectionTotal}. Current
                 section: {symptomWizardPhaseProgress.currentPhaseLabel}.
@@ -1358,7 +1336,7 @@ function SymptomsPageContent() {
                         <ChevronRight
                           className={[
                             'w-4 h-4 shrink-0 self-center',
-                            canGo ? 'text-muted/50' : 'text-muted/50 opacity-45',
+                            canGo ? 'text-muted' : 'text-muted opacity-35',
                           ].join(' ')}
                           strokeWidth={2.25}
                           aria-hidden
@@ -1373,13 +1351,14 @@ function SymptomsPageContent() {
                         }}
                         className={[
                           'shrink-0 min-h-11 inline-flex items-center rounded-md px-2 -mx-0.5 text-left whitespace-nowrap touch-manipulation transition-colors [-webkit-tap-highlight-color:transparent]',
+                          i === 0 ? 'pl-1' : '',
                           isCurrent
                             ? 'font-semibold text-cadet-blue'
-                            : 'font-medium text-muted',
+                            : 'font-normal text-muted',
                           canGo && !isCurrent
                             ? 'hover:text-cadet-blue hover:underline cursor-pointer'
                             : '',
-                          !canGo ? 'opacity-45 cursor-not-allowed' : '',
+                          !canGo ? 'opacity-35 cursor-not-allowed' : '',
                         ].join(' ')}
                       >
                         {label}
@@ -1404,10 +1383,10 @@ function SymptomsPageContent() {
           </div>
             
             {/* Title */}
-            <h2 className="text-2xl sm:text-3xl lg:text-4xl font-bold font-title text-primary mb-4 sm:mb-6">Log Symptoms</h2>
+            <h2 className="text-2xl sm:text-3xl lg:text-4xl font-bold font-title text-primary mb-4 sm:mb-5">Log Symptoms</h2>
             
             {/* Optional description */}
-            <p className="text-base sm:text-lg font-sans text-muted mb-6 max-w-md">Track your daily symptoms to identify patterns and triggers</p>
+            <p className="text-base font-sans text-muted mb-6 max-w-md">Track your daily symptoms to identify patterns and triggers</p>
             
             {/* Start button */}
             <button
@@ -1426,7 +1405,7 @@ function SymptomsPageContent() {
             <p className="text-sm text-muted mb-5">Select the date your symptoms started</p>
             <div>
               <label className="block text-base font-medium text-secondary mb-2">Date</label>
-              <div className="relative w-full sm:max-w-[150px]">
+              <div className="relative w-full sm:max-w-[170px]">
                 <DatePicker
                   ref={datePickerRef}
                   id="symptom-start-date"
@@ -1437,7 +1416,7 @@ function SymptomsPageContent() {
                     setDateErrors(prev => ({ ...prev, day: '', month: '', year: '' }))
                   }}
                   customInput={<SymptomDateInput onIconClick={() => datePickerRef.current?.setOpen?.(true)} />}
-                  placeholderText="e.g. 14/09/2014"
+                  placeholderText="dd/mm/yyyy"
                   dateFormat="dd/MM/yyyy"
                   minDate={new Date(2020, 0, 1)}
                   maxDate={new Date()}
@@ -1528,7 +1507,7 @@ function SymptomsPageContent() {
             <p className="text-sm text-muted mb-5">Select the date your symptoms ended</p>
             <div>
               <label className="block text-base font-medium text-secondary mb-2">Date</label>
-              <div className="relative w-full sm:max-w-[150px]">
+              <div className="relative w-full sm:max-w-[170px]">
                 <DatePicker
                   ref={datePickerEndRef}
                   id="symptom-end-date"
@@ -1539,7 +1518,7 @@ function SymptomsPageContent() {
                     setDateErrors(prev => ({ ...prev, endDay: '', endMonth: '', endYear: '' }))
                   }}
                   customInput={<SymptomDateInput onIconClick={() => datePickerEndRef.current?.setOpen?.(true)} />}
-                  placeholderText="e.g. 14/09/2014"
+                  placeholderText="dd/mm/yyyy"
                   dateFormat="dd/MM/yyyy"
                   minDate={formData.symptomStartDate ? new Date(formData.symptomStartDate + 'T12:00:00') : new Date(2020, 0, 1)}
                   maxDate={new Date()}

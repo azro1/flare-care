@@ -19,14 +19,14 @@ function MedicationsPageContent() {
   const [editingId, setEditingId] = useState(null)
   const [deleteModal, setDeleteModal] = useState({ isOpen: false, id: null })
   const [expandedMedications, setExpandedMedications] = useState(new Set())
-  const [medicationsPanelOpen, setMedicationsPanelOpen] = useState(false)
+  const [medicationsPanelOpen, setMedicationsPanelOpen] = useState(true)
   const [takenMedications, setTakenMedications] = useState([])
   const [formData, setFormData] = useState({
     name: '',
     dosage: '',
     timeOfDay: '',
     // Frequency is stored in the DB as a human label (e.g. "Once a day", "Five times a day")
-    frequency: 'Once a day',
+    frequency: '',
     frequencyMode: 'preset', // 'preset' | 'custom' (controls which UI input is shown)
     remindersEnabled: false,
     notes: ''
@@ -70,42 +70,8 @@ function MedicationsPageContent() {
 
   const timeOptions = generateTimeOptions()
 
-  /** After fetch: open panel if no meds (easier first add); closed if list has items. Ref tracks transitions 0↔non-zero only. */
-  const medicationsCountPrevRef = useRef(null)
-
-  useEffect(() => {
-    medicationsCountPrevRef.current = null
-  }, [user?.id])
-
-  useEffect(() => {
-    if (isLoading) return
-    const n = medications.length
-    const prev = medicationsCountPrevRef.current
-    if (prev === null) {
-      setMedicationsPanelOpen(n === 0)
-    } else if (prev > 0 && n === 0) {
-      setMedicationsPanelOpen(true)
-    } else if (prev === 0 && n > 0) {
-      setMedicationsPanelOpen(false)
-    }
-    medicationsCountPrevRef.current = n
-  }, [isLoading, medications.length])
-
-  useEffect(() => {
-    if (isAdding) setMedicationsPanelOpen(true)
-  }, [isAdding])
-
   const handleSubmit = async (e) => {
     e.preventDefault()
-    if (!formData.name.trim()) {
-      alert('Please enter a medication name.')
-      return
-    }
-
-    if (!formData.frequency || !formData.frequency.trim()) {
-      alert('Please select a frequency.')
-      return
-    }
 
     try {
       if (editingId) {
@@ -222,7 +188,7 @@ function MedicationsPageContent() {
         name: '',
         dosage: '',
         timeOfDay: '7:00',
-        frequency: 'Once a day',
+        frequency: '',
         frequencyMode: 'preset',
         remindersEnabled: true,
         notes: ''
@@ -264,7 +230,7 @@ function MedicationsPageContent() {
       name: medication.name,
       dosage: dosageNumber,
       timeOfDay: medication.timeOfDay ?? '',
-      frequency: medFrequency || 'Once a day',
+      frequency: medFrequency || '',
       frequencyMode,
       remindersEnabled: medication.remindersEnabled !== false,
       notes: medication.notes || ''
@@ -278,7 +244,7 @@ function MedicationsPageContent() {
       name: '',
       dosage: '',
       timeOfDay: '',
-      frequency: 'Once a day',
+      frequency: '',
       frequencyMode: 'preset',
       remindersEnabled: false,
       notes: ''
@@ -292,7 +258,7 @@ function MedicationsPageContent() {
       name: '',
       dosage: '',
       timeOfDay: '',
-      frequency: 'Once a day',
+      frequency: '',
       frequencyMode: 'preset',
       remindersEnabled: false,
       notes: ''
@@ -622,7 +588,7 @@ function MedicationsPageContent() {
               initial={{ height: 0, opacity: 0 }}
               animate={{ height: 'auto', opacity: 1 }}
               exit={{ height: 0, opacity: 0 }}
-              transition={{ duration: 0.2, ease: 'easeOut' }}
+              transition={{ duration: 0.02, ease: 'linear' }}
               className="overflow-hidden min-w-0"
             >
               <div className="min-w-0 space-y-4 pt-5 sm:pt-3 sm:space-y-5">
@@ -634,7 +600,7 @@ function MedicationsPageContent() {
             initial={{ height: 0, opacity: 0 }}
             animate={{ height: 'auto', opacity: 1 }}
             exit={{ height: 0, opacity: 0 }}
-            transition={{ duration: 0.2, ease: 'easeOut' }}
+            transition={{ duration: 0.02, ease: 'linear' }}
             className="min-w-0 overflow-hidden"
           >
             <form onSubmit={handleSubmit} className="space-y-4" autoComplete="off">
@@ -684,7 +650,7 @@ function MedicationsPageContent() {
                   </label>
                   <select
                     id="frequencySelect"
-                    value={formData.frequencyMode === 'custom' ? 'custom' : (formData.frequency || FREQUENCY_PRESETS[0])}
+                    value={formData.frequencyMode === 'custom' ? 'custom' : (formData.frequency || '')}
                     onChange={(e) => {
                       const v = e.target.value
                       if (v === 'custom') {
@@ -693,8 +659,10 @@ function MedicationsPageContent() {
                         setFormData(prev => ({ ...prev, frequencyMode: 'preset', frequency: v }))
                       }
                     }}
-                    className="input-field-wizard"
+                    className={`input-field-wizard ${formData.frequencyMode === 'custom' || formData.frequency ? 'has-value' : 'placeholder'}`}
+                    required
                   >
+                    <option value="">Select frequency</option>
                     {FREQUENCY_PRESETS.map(preset => (
                       <option key={preset} value={preset}>
                         {preset}
@@ -870,7 +838,7 @@ className="px-4 py-2 text-base sm:text-lg font-medium font-sans rounded-lg trans
                           height: isExpanded ? 'auto' : 0,
                           opacity: isExpanded ? 1 : 0
                         }}
-                        transition={{ duration: 0.2, ease: 'easeOut' }}
+                        transition={{ duration: 0.02, ease: 'linear' }}
                         style={{ overflow: 'hidden' }}
                       >
                           <div className={`flex flex-wrap items-center gap-3 ${(medication.timeOfDay || medication.remindersEnabled !== false) ? 'mb-3' : ''}`}>
