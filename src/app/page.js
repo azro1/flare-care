@@ -9,6 +9,10 @@ import { supabase, TABLES } from '@/lib/supabase'
 import { formatBristolTypeOnly } from '@/lib/bristolStoolChart'
 import { CupSoda, Pizza, Coffee, BookOpen, Smile, Thermometer, Pill, FileText, Activity, TrendingUp, PartyPopper, Clipboard, Cookie, ChartLine, Sparkles, ChevronRight, ChevronDown, ChevronLeft, Clock, Scale, Calendar, Lightbulb, Newspaper, Check, CircleDot } from 'lucide-react'
 
+const NEWS_CACHE_KEY = 'flarecare-dashboard-news-cache'
+const NEWS_CACHE_TTL_MS = 10 * 60 * 1000
+const FORCE_RECENT_ACTIVITY_PLACEHOLDER = false
+
 export default function Home() {
   const { isAuthenticated, loading, user } = useAuth()
   const [symptoms, setSymptoms] = useState([])
@@ -380,15 +384,49 @@ export default function Home() {
   // Fetch Crohn's & Colitis news for dashboard
   useEffect(() => {
     if (!isAuthenticated) return
-    setNewsLoading(true)
+
+    let hasWarmCache = false
+    try {
+      const cachedRaw = localStorage.getItem(NEWS_CACHE_KEY)
+      if (cachedRaw) {
+        const cached = JSON.parse(cachedRaw)
+        if (Array.isArray(cached?.items) && cached.items.length > 0) {
+          const isFresh = typeof cached.savedAt === 'number' && (Date.now() - cached.savedAt) <= NEWS_CACHE_TTL_MS
+          setNewsItems(cached.items)
+          setNewsError(cached.error || null)
+          hasWarmCache = true
+          // If cache is still fresh, avoid showing loading state and skip immediate refetch.
+          if (isFresh) {
+            setNewsLoading(false)
+            return
+          }
+        }
+      }
+    } catch {
+      // Ignore cache parse issues and fall back to network.
+    }
+
+    setNewsLoading(!hasWarmCache)
     setNewsError(null)
     fetch('/api/news')
       .then((res) => res.json())
       .then((data) => {
-        setNewsItems(data.items || [])
+        const items = data.items || []
+        setNewsItems(items)
         if (data.error) setNewsError(data.error)
+        try {
+          localStorage.setItem(NEWS_CACHE_KEY, JSON.stringify({
+            items,
+            error: data.error || null,
+            savedAt: Date.now()
+          }))
+        } catch {
+          // Ignore storage errors.
+        }
       })
-      .catch(() => setNewsError('Failed to load news'))
+      .catch(() => {
+        setNewsError('Failed to load news')
+      })
       .finally(() => setNewsLoading(false))
   }, [isAuthenticated])
 
@@ -1496,7 +1534,7 @@ export default function Home() {
           <div className="order-[8] lg:order-2 mb-6 lg:mb-0 lg:flex lg:flex-col lg:min-h-0 lg:h-full">
             <h2 className="text-xl font-semibold font-title text-primary mb-3">Recent Activity</h2>
             <div className="card lg:flex-1 lg:flex lg:flex-col lg:min-h-0">
-            <div className="card-inner p-4 sm:p-6 transition-all duration-300 ease-in-out">
+            <div className="card-inner p-4 sm:p-6 lg:h-[164px] lg:overflow-hidden">
               {(() => {
               // Helper function to format relative time
               const formatRelativeTime = (date) => {
@@ -1769,7 +1807,7 @@ export default function Home() {
                 .sort((a, b) => b.timestamp - a.timestamp)
                 .slice(0, 2) // Limit to 2 most recent
 
-              if (recentActivities.length === 0) {
+              if (FORCE_RECENT_ACTIVITY_PLACEHOLDER || recentActivities.length === 0) {
                 return (
                   <div className="text-center">
                     <div className="flex justify-center mb-3">
@@ -1815,7 +1853,7 @@ export default function Home() {
             <h2 className="text-xl font-semibold font-title text-primary mb-3">
               Latest News
             </h2>
-            {newsLoading && (
+            {newsLoading && newsItems.length === 0 && (
               <div className="flex items-center justify-center py-16">
                 <p className="text-sm sm:text-base text-secondary font-sans">
                   Getting the latest news...
@@ -1849,10 +1887,10 @@ export default function Home() {
                                 href={item.link}
                                 target="_blank"
                                 rel="noopener noreferrer"
-                                className="block overflow-hidden group hover:shadow-lg transition-all duration-200 flex-shrink-0 w-[260px] sm:w-[280px] sm:rounded-xl"
+                                className="block overflow-hidden group hover:shadow-lg transition-all duration-200 flex-shrink-0 w-[230px] sm:w-[250px] sm:rounded-xl"
                               >
                                 <div className="flex flex-col h-full">
-                                  <div className="w-full aspect-[4/3] flex-shrink-0 bg-[var(--bg-card)] overflow-hidden relative">
+                                  <div className="w-full aspect-[16/10] flex-shrink-0 bg-[var(--bg-card)] overflow-hidden relative">
                                     <div
                                       className="w-full h-full flex items-center justify-center absolute inset-0"
                                       style={{
@@ -1866,7 +1904,7 @@ export default function Home() {
                                       <img
                                         src={`/api/image-proxy?url=${encodeURIComponent(item.imageUrl)}`}
                                         alt=""
-                                        className="w-full h-full object-cover absolute inset-0 z-10"
+                                        className="w-full h-full object-cover absolute inset-0 z-10 saturate-50 brightness-90 contrast-90 group-hover:saturate-100 group-hover:brightness-100 group-hover:contrast-100 transition-all duration-300"
                                         loading="lazy"
                                         onError={() => {
                                           setNewsItems((prev) =>
@@ -1899,7 +1937,7 @@ export default function Home() {
                     </div>
                   </div>
                   {!newsAtStart && (
-                    <div className="hidden md:flex absolute left-2 top-1/2 -translate-y-1/2 z-20 w-12 h-12 items-center justify-center">
+                    <div className="hidden md:flex absolute inset-y-0 left-4 z-20 w-12 items-center justify-center">
                       <button
                         type="button"
                         onClick={(e) => {
@@ -1915,7 +1953,7 @@ export default function Home() {
                     </div>
                   )}
                   {!newsAtEnd && (
-                    <div className="hidden md:flex absolute right-2 top-1/2 -translate-y-1/2 z-20 w-12 h-12 items-center justify-center">
+                    <div className="hidden md:flex absolute inset-y-0 right-4 z-20 w-12 items-center justify-center">
                       <button
                         type="button"
                         onClick={(e) => {
@@ -1940,7 +1978,7 @@ export default function Home() {
           <div className="mb-6 order-[9] xl:order-none">
             <h2 className="text-xl font-semibold font-title text-primary mb-3">Recent Logs</h2>
             <div className="card">
-            <div className="flex border-b border-[var(--separator-card-inner)] mb-4">
+            <div className="inline-flex items-center border-b border-[var(--separator-card-inner)] mb-4">
               <button
                 type="button"
                 onClick={() => setRecentTab('symptoms')}

@@ -8,10 +8,12 @@ import ConfirmationModal from '@/components/ConfirmationModal'
 import ProtectedRoute from '@/components/ProtectedRoute'
 import DateInputWithCalendar from '@/components/DateInputWithCalendar'
 import { sanitizeNotes, sanitizeInput } from '@/lib/sanitize'
-import { Calendar, ChevronDown, Bell, Lightbulb } from 'lucide-react'
+import { Calendar, ChevronDown, Bell, Lightbulb, FileText } from 'lucide-react'
 import { motion, AnimatePresence } from 'framer-motion'
 import { supabase, TABLES } from '@/lib/supabase'
 import { useAuth } from '@/lib/AuthContext'
+import { useRouter } from 'next/navigation'
+import Masonry from 'react-masonry-css'
 import { parseUkLocalDateTime, APP_TIMEZONE } from '@/lib/reminderTimezones'
 import DatePicker from 'react-datepicker'
 import 'react-datepicker/dist/react-datepicker.css'
@@ -91,13 +93,13 @@ const getAppointmentDateTime = (apt) => {
 
 function AppointmentsPageContent() {
   const { user } = useAuth()
+  const router = useRouter()
   const timeOptions = generateTimeOptions()
   const [appointments, setAppointments] = useState([])
   const [isLoading, setIsLoading] = useState(true)
   const [isAdding, setIsAdding] = useState(false)
   const [editingId, setEditingId] = useState(null)
   const [deleteModal, setDeleteModal] = useState({ isOpen: false, id: null })
-  const [expandedAppointments, setExpandedAppointments] = useState(new Set())
   const [appointmentsTab, setAppointmentsTab] = useState('upcoming') // 'upcoming' | 'past'
   const [appointmentsPanelOpen, setAppointmentsPanelOpen] = useState(true)
   const today = new Date().toISOString().split('T')[0]
@@ -331,16 +333,9 @@ function AppointmentsPageContent() {
 
   const closeDeleteModal = () => setDeleteModal({ isOpen: false, id: null })
 
-  const toggleAppointmentExpand = (id) => {
-    setExpandedAppointments(prev => {
-      const next = new Set(prev)
-      if (next.has(id)) {
-        next.delete(id)
-      } else {
-        next.add(id)
-      }
-      return next
-    })
+  const openAppointmentDetails = (id) => {
+    if (!id) return
+    router.push(`/appointments/${id}`)
   }
 
   return (
@@ -419,7 +414,7 @@ function AppointmentsPageContent() {
             aria-labelledby="appointments-panel-heading"
             className="overflow-hidden min-w-0"
           >
-              <div className="min-w-0 space-y-4 pt-5 sm:pt-3 sm:space-y-5">
+              <div className="min-w-0 space-y-4 pt-2 sm:pt-3 sm:space-y-5">
         <AnimatePresence>
         {isAdding && (
           <motion.div
@@ -538,7 +533,7 @@ function AppointmentsPageContent() {
                   rows="2"
                   value={formData.notes}
                   onChange={(e) => setFormData(prev => ({ ...prev, notes: e.target.value }))}
-                  placeholder="e.g. Bring medication list"
+                  placeholder="e.g. Bring medications, list any questions you have"
                   className="w-full px-4 py-3 input-field-wizard resize-none"
                 />
               </div>
@@ -595,7 +590,6 @@ function AppointmentsPageContent() {
               type="button"
               onClick={() => {
                 setAppointmentsTab('upcoming')
-                setExpandedAppointments(new Set())
               }}
               className={`px-3 py-1.5 rounded-lg text-sm font-semibold transition-colors border ${
                 appointmentsTab === 'upcoming'
@@ -610,7 +604,6 @@ function AppointmentsPageContent() {
               type="button"
               onClick={() => {
                 setAppointmentsTab('past')
-                setExpandedAppointments(new Set())
               }}
               className={`px-3 py-1.5 rounded-lg text-sm font-semibold transition-colors border ${
                 appointmentsTab === 'past'
@@ -642,129 +635,82 @@ function AppointmentsPageContent() {
               </p>
             </div>
           ) : (
-            <div className="space-y-4">
+            <Masonry
+              breakpointCols={{
+                default: 2,
+                1024: 2,
+                640: 1
+              }}
+              className="flex -ml-4 w-auto min-w-0"
+              columnClassName="pl-4 bg-clip-padding"
+            >
               {visibleAppointments.map((apt) => {
-              const isExpanded = expandedAppointments.has(apt.id)
               return (
-                <div key={apt.id} className="last:mb-0">
-                  <div className="card-inner p-4 sm:p-6 min-w-0">
+                <div key={apt.id} className="mb-4 last:mb-0">
+                  <div
+                    className="card-inner p-4 sm:p-6 min-w-0 cursor-pointer"
+                    role="button"
+                    tabIndex={0}
+                    onClick={() => openAppointmentDetails(apt.id)}
+                    onKeyDown={(e) => {
+                      if (e.key === 'Enter' || e.key === ' ') {
+                        e.preventDefault()
+                        openAppointmentDetails(apt.id)
+                      }
+                    }}
+                    aria-label={`Open details for ${apt.type || 'appointment'} on ${formatUKDate(apt.date)}`}
+                  >
                     <div className="flex flex-col sm:flex-row sm:justify-between sm:items-start gap-3">
                       <div className="flex-1 min-w-0">
-                        <div className="flex items-center gap-2 min-w-0">
-                          <div className="flex flex-wrap items-baseline gap-x-2 gap-y-1 min-w-0 flex-1 text-sm">
-                            <span className="font-semibold text-primary truncate">{formatUKDate(apt.date)}</span>
-                            {apt.time && (
-                              <>
-                                <span className="text-secondary">·</span>
-                                <span className="text-primary font-sans truncate">{apt.time}</span>
-                              </>
-                            )}
-                          </div>
-                          <button
-                            type="button"
-                            onClick={() => toggleAppointmentExpand(apt.id)}
-                            className="flex-shrink-0 p-1 rounded transition-colors hover:bg-opacity-20 sm:self-start"
-                            style={{ color: 'var(--text-icon)' }}
-                            title={isExpanded ? 'Collapse details' : 'Expand details'}
-                          >
-                            <ChevronDown
-                              className={`w-5 h-5 transition-transform duration-200 ${isExpanded ? 'rotate-180' : ''}`}
-                            />
-                          </button>
+                        <div className="flex flex-wrap items-baseline gap-x-2 gap-y-1 min-w-0 flex-1 text-sm">
+                          <span className="font-semibold text-primary truncate">{formatUKDate(apt.date)}</span>
+                          {apt.time && (
+                            <>
+                              <span className="text-secondary">·</span>
+                              <span className="text-primary font-sans truncate">{apt.time}</span>
+                            </>
+                          )}
                         </div>
                         {apt.type && (
                           <p className="text-xs sm:text-sm font-medium text-primary mt-1 truncate" title={apt.type}>{apt.type}</p>
                         )}
-                        <motion.div
-                          initial={false}
-                          animate={{
-                            height: isExpanded ? 'auto' : 0,
-                            opacity: isExpanded ? 1 : 0
-                          }}
-                          transition={{ duration: 0.2, ease: 'easeOut' }}
-                          style={{ overflow: 'hidden' }}
-                        >
-                            {apt.reminderMinutesBefore && (
-                              <div className="flex flex-row flex-nowrap items-center gap-3 mt-3 mb-3">
-                                {apt.time && getReminderTimeLabel(apt.date, apt.time, apt.reminderMinutesBefore) && (
-                                  <span
-                                    className="inline-flex items-center px-3 py-1.5 rounded-full text-xs sm:text-sm font-medium font-sans shrink-0 bg-white text-black"
-                                  >
-                                    <svg className="w-4 h-4 mr-1.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" />
-                                    </svg>
-                                    {getReminderTimeLabel(apt.date, apt.time, apt.reminderMinutesBefore)}
-                                  </span>
-                                )}
-                                <span
-                                  className="inline-flex items-center px-3 py-1.5 rounded-full text-xs sm:text-sm font-medium font-sans shrink-0"
-                                  style={{ backgroundColor: 'var(--bg-card)', color: 'var(--text-cadet-blue)' }}
-                                >
-                                  <svg className="w-4 h-4 mr-1.5" fill="currentColor" viewBox="0 0 20 20">
-                                    <path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clipRule="evenodd" />
-                                  </svg>
-                                  {getReminderLabel(apt.reminderMinutesBefore)}
-                                </span>
-                              </div>
-                            )}
-                            {apt.clinicianName && (
-                              <p className="text-xs sm:text-sm text-secondary font-sans mt-0.5 truncate" title={apt.clinicianName}>{apt.clinicianName}</p>
-                            )}
-                            {apt.location && (
-                              <p className="text-xs sm:text-sm text-secondary font-sans truncate" title={apt.location}>{apt.location}</p>
-                            )}
-                            <div className="flex flex-wrap items-center gap-2 mt-2">
-                              <button
-                                type="button"
-                                onClick={() => startEdit(apt)}
-                                disabled={editingId === apt.id}
-                                className="btn-card-icon-action"
-                                title={editingId === apt.id ? 'Finish or cancel editing first' : 'Edit appointment'}
-                              >
-                                <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z" />
-                                </svg>
-                              </button>
-                              <button
-                                type="button"
-                                onClick={() => setDeleteModal({ isOpen: true, id: apt.id })}
-                                disabled={editingId === apt.id}
-                                className="btn-card-icon-action"
-                                title={editingId === apt.id ? 'Finish or cancel editing first' : 'Delete appointment'}
-                              >
-                                <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
-                                </svg>
-                              </button>
-                            </div>
-                        </motion.div>
+                        <div className="flex flex-wrap items-center gap-2 mt-2">
+                          <button
+                            type="button"
+                            onClick={(e) => {
+                              e.stopPropagation()
+                              startEdit(apt)
+                            }}
+                            disabled={editingId === apt.id}
+                            className="btn-card-icon-action"
+                            title={editingId === apt.id ? 'Finish or cancel editing first' : 'Edit appointment'}
+                          >
+                            <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z" />
+                            </svg>
+                          </button>
+                          <button
+                            type="button"
+                            onClick={(e) => {
+                              e.stopPropagation()
+                              setDeleteModal({ isOpen: true, id: apt.id })
+                            }}
+                            disabled={editingId === apt.id}
+                            className="btn-card-icon-action"
+                            title={editingId === apt.id ? 'Finish or cancel editing first' : 'Delete appointment'}
+                          >
+                            <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
+                            </svg>
+                          </button>
+                        </div>
                       </div>
                     </div>
-
-                    {isExpanded && apt.notes && (
-                      <div className="mt-2 min-w-0">
-                        <div className="card-inner min-w-0">
-                          <p className="text-sm text-secondary font-sans leading-normal line-clamp-2" title={apt.notes}>
-                            <span className="font-semibold text-primary">Notes:</span> {apt.notes}
-                          </p>
-                        </div>
-                      </div>
-                    )}
-                    {isExpanded && (
-                      <div className="mt-2 text-xs text-tertiary font-sans">
-                        <div className="flex items-center">
-                          <svg className="w-3 h-3 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" />
-                          </svg>
-                          Added {apt.createdAt ? formatUKDate(apt.createdAt) : '—'}
-                        </div>
-                      </div>
-                    )}
                   </div>
                 </div>
               )
             })}
-            </div>
+            </Masonry>
           )}
         </div>
               </div>
@@ -791,6 +737,25 @@ function AppointmentsPageContent() {
               You need to enable push notifications in account settings to get appointment reminders.
             </p>
           </div>
+        </div>
+      </div>
+
+      <div className="mt-4 sm:mt-6 card">
+        <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3">
+          <div className="min-w-0">
+            <h3 className="text-lg sm:text-xl font-semibold font-title text-primary">Before your appointment</h3>
+            <p className="text-sm text-secondary font-sans leading-relaxed mt-1">
+              Generate your consultation summary and share it with your care team.
+            </p>
+          </div>
+          <button
+            type="button"
+            onClick={() => router.push('/appointments/brief')}
+            className="button-cadet flex-shrink-0 px-4 py-2 text-base sm:text-lg font-semibold rounded-lg transition-colors inline-flex items-center justify-center whitespace-nowrap"
+          >
+            <FileText className="w-5 h-5 mr-2" />
+            Generate Summary
+          </button>
         </div>
       </div>
 

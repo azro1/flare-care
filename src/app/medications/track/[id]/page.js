@@ -101,8 +101,10 @@ function TrackedMedicationDetails() {
 
   if (!trackedData) {
     return (
-      <div className="min-h-screen flex items-center justify-center">
-        <p>Loading...</p>
+      <div className="w-full sm:px-4 md:px-6 min-w-0 overflow-hidden">
+        <div className="max-w-4xl w-full mx-auto min-w-0 min-h-[70vh] flex items-center justify-center">
+          <div className="w-8 h-8 border-4 border-[#5F9EA0] border-t-transparent rounded-full animate-spin" />
+        </div>
       </div>
     )
   }

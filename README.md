@@ -1,125 +1,27 @@
 # FlareCare
 
-A personal companion app for managing Crohn's & Colitis symptoms, built with Next.js and designed for easy expansion to native mobile apps.
+A personal app for managing Crohn's & Colitis day to day.
 
-## Features
+## Core Features
 
-### 🏠 Home Dashboard
-- Clean, intuitive interface with quick access to all features
-- Mobile-optimized hero section with responsive design
-- Feature cards with hover animations and visual indicators
-- Modern glass-morphism design with smooth transitions
-- **Health News carousel** – Curated health-related articles (Crohn's, colitis, IBD) with horizontal scroll and overlay arrows; NewsAPI for article images (optional), MedlinePlus + Google News fallback
-
-### 📊 Symptom Tracking
-- **Multi-step wizard** with intuitive question flow
-- Log daily symptoms with severity levels (1-10)
-- Track symptom start/end dates and ongoing status
-- **Smart user preferences** - learns from your habits to streamline future entries
-- **Bathroom frequency tracking** with baseline and change detection
-- **Lifestyle tracking** - smoking and alcohol consumption patterns
-- **Meal tracking** - separate breakfast, lunch, and dinner entry screens
-- Add detailed notes and potential food triggers
-- Edit and delete previous entries
-- Visual severity indicators with color coding
-- **Toast notifications** for successful actions
-- Mobile-friendly form design with validation
-- **Pattern detection** - intelligently detects habit changes over time
-- **Enhanced detail pages** - Clean, organized view of individual symptom entries
-- **Improved visual hierarchy** - Better spacing and typography for readability
-
-### 💧 Hydration Tracking
-- Daily glass count with a simple +1 tap interface
-- Goal of 6 glasses per day (customizable)
-- Visual feedback when goal is met
-- Dashboard integration with "Stay hydrated" in Today's Goals
-- Included in Reports (CSV/PDF export) for healthcare team sharing
-
-### 💊 Medication Management
-- Add medications with dosage and timing
-- **Medication reminders** with push notifications (work when app is closed)
-- Set specific times or custom times for each medication
-- Enable/disable reminders per medication
-- Add notes for each medication
-- Edit and delete medication entries
-- Visual time-of-day indicators
-- Clean, organized medication list
-- **NEW: Medication Tracking Wizard** - Track missed medications, NSAIDs, and antibiotics
-- **Multi-step tracking flow** - Simple wizard interface for medication adherence logging
-- **Detailed tracking** - Log specific medications with dates, times, and dosages
-- **Dashboard integration** - View recent medication tracking activity
-- **Supabase integration** - Cloud storage for medication tracking data
-
-### 🔔 Push Notifications (Web & Mobile)
-- **Medication reminders** – Get notified at your chosen time, even when the app is closed
-- **Appointment reminders** – Choose when to be reminded (5, 10, 15, 30, 45, 60 min, 2h, or 24h before)
-- **Web Push** – Works in desktop and mobile browsers (Chrome, Edge, Firefox, Safari)
-- **PWA support** – Add to home screen on mobile for reliable background notifications
-- Enable in **Account → Settings** → Push notifications
-
-### 📈 Reports & Analytics
-- **Comprehensive health reports** - Combines symptoms, medications, and medication tracking data
-- **Flexible date ranges** - Last 7 days, 30 days, 3 months, or custom periods with react-datepicker
-- **Quick preset buttons** for common time periods
-- **Symptom report section** - Average severity, average stress levels, and detailed symptom episodes
-- **Hydration section** - Daily glass counts and trends over the report period
-- **Medication tracking integration** - Includes missed medications, NSAIDs, and antibiotics with dosages
-- **Current medications display** - Shows all prescribed medications for the report period
-- **Top foods analysis** - Displays most frequently logged foods during the period
-- **Comprehensive PDF exports** with detailed symptom information, medication tracking, and food data
-- **CSV exports** for data analysis in Excel/Google Sheets with complete medication tracking details
-- **UK date formatting** (dd/mm/yyyy) for better readability
-- **Visual indicators** - Color-coded severity and stress levels with progress bars
-- **Auto-pagination** for long reports
-- **Data validation** prevents empty report exports
-- **Mobile-optimized** - Responsive design with proper spacing and sizing for all devices
-
-### ☁️ Cloud Sync & Authentication
-- **User Authentication** - Secure Google OAuth login system
-- **Cross-device access** - Sign in on any device to access your data
-- **Local-first data storage** by default
-- **Optional Supabase cloud synchronization**
-- **Secure, encrypted data storage**
-- **Works offline** with automatic sync when online
-- **User isolation** - Each user only sees their own data
-
-### 🎨 Design & UX
-- **Mobile-first responsive design** with optimized layouts
-- **Custom animations** and smooth transitions
-- **Modern typography** with Inter font family
-- **Glass-morphism effects** with backdrop blur
-- **Intuitive navigation** with mobile dropdown menu
-- **Custom modals** replacing browser alerts
-- **Consistent color scheme** with cadet blue accents
-- **Dark theme** with slate backgrounds and white text
-- **Custom form elements** - styled radio buttons and checkboxes
-- **Responsive toast notifications** with proper mobile positioning
-
-### 🧠 Smart User Preferences
-- **First-time user setup** - captures baseline habits (smoking, drinking, bathroom frequency)
-- **Returning user optimization** - asks contextual questions instead of repetitive ones
-- **Pattern detection** - intelligently detects when habits change over time
-- **Respectful prompts** - only asks about habit changes after 5+ consecutive "No" answers
-- **30-day cooldown** - prevents repeated prompts for the same habit
-- **Automatic profile updates** - updates preferences when users confirm habit changes
-- **Local + cloud storage** - preferences synced across devices
-- **Smart navigation** - skips irrelevant questions based on stored preferences
-
-### 🔒 Security & Validation
-- **Input sanitization** to prevent XSS attacks using DOMPurify
-- **Form validation** with built-in HTML5 validation
-- **Secure authentication** with Google OAuth
-- **Data protection** with proper sanitization of user inputs
-- **Secure data operations** via Supabase's built-in client methods
+- Dashboard with recent activity, daily goals, and health news
+- Symptom logging wizard with detail pages
+- Medication management with reminders and medication tracking wizard
+- Hydration tracking
+- Weight and bowel movement tracking with detail pages
+- Appointment management with reminders and detail pages
+- Appointment Brief generator (2/4/6-week presets + custom range)
+- Reports (PDF/CSV)
+- Google sign-in with Supabase-backed data
 
 ## Tech Stack
 
 - **Frontend**: Next.js 14 (App Router), React, JavaScript
 - **Styling**: Tailwind CSS with custom components
-- **Data Storage**: Local Storage + Supabase (optional)
+- **Data Storage**: Supabase + local browser state where needed
 - **PDF Export**: jsPDF with text wrapping and pagination
-- **Icons**: Heroicons (SVG)
-- **Fonts**: Inter, Merriweather, Playfair Display (Google Fonts)
+- **Icons**: Lucide React
+- **Fonts**: Inter (Next.js `next/font` optimized loading)
 
 ## Getting Started
 
@@ -167,17 +69,10 @@ A personal companion app for managing Crohn's & Colitis symptoms, built with Nex
 
 ## Usage
 
-### Basic Usage
-1. **Sign in** - Click "Continue with Google" to sign in securely
-2. **Start by logging symptoms** - Click "Symptoms" and add your first entry
-3. **Add medications** - Go to "Medications" to set up your medication schedule
-4. **Track hydration** - Use "Hydration" to log daily water intake and meet your goal
-5. **Generate reports** - Use the "Reports" page to create summaries for your healthcare team
-
-### Cloud Sync (Optional)
-1. **Enable sync** - Toggle the sync switch on Symptoms or Medications pages
-2. **Automatic sync** - Your data will automatically sync when you make changes
-3. **Manual sync** - Use "Sync to Cloud" and "Fetch from Cloud" buttons for manual control
+1. **Sign in** with Google
+2. **Log symptoms / medications / hydration / bowel / weight**
+3. **Manage appointments** and generate an appointment summary
+4. **Generate reports** for clinician visits
 
 ## Project Structure
 
@@ -189,10 +84,18 @@ src/
 │   ├── about/             # About page
 │   ├── auth/              # Authentication pages
 │   ├── hydration/         # Hydration tracking
+│   ├── appointments/      # Appointment management + brief generator
+│   │   ├── [id]/         # Individual appointment details
+│   │   └── brief/        # Appointment brief summary page
+│   ├── bowel-movements/   # Bowel movement logs
+│   │   └── [id]/         # Individual bowel movement details
 │   ├── medications/       # Medications management
+│   │   └── [id]/         # Individual medication details
 │   ├── reports/           # Reports and analytics
 │   ├── symptoms/          # Symptom tracking
 │   │   └── [id]/         # Individual symptom details
+│   ├── weight/            # Weight tracking
+│   │   └── [id]/         # Individual weight details
 │   ├── globals.css        # Global styles
 │   ├── layout.js          # Root layout
 │   └── page.js            # Home page
@@ -204,13 +107,11 @@ src/
 │   ├── Navigation.js      # Main navigation
 │   ├── ProtectedRoute.js  # Route protection
 │   ├── ReminderProvider.js # Medication reminders
-│   ├── SyncSettings.js    # Cloud sync controls
 │   └── TimePicker.js      # Time selection component
 └── lib/                   # Utilities and hooks
     ├── AuthContext.js     # Authentication context
     ├── sanitize.js        # Input sanitization
     ├── supabase.js        # Supabase client and helpers
-    ├── useDataSync.js     # Data sync hook
     ├── useLocalStorage.js # Local storage hook
     └── userPreferences.js # Smart preferences system
 ```
@@ -218,17 +119,12 @@ src/
 ## Data Privacy
 
 - **Local-first**: All data is stored locally on your device by default
-- **Optional sync**: Cloud sync is completely optional and user-controlled
 - **Encrypted**: Data is encrypted in transit and at rest
 - **Private**: Only you can access your data - no sharing with third parties
 
 ## Contributing
 
-This is a personal project, but suggestions and feedback are welcome! The app is designed to be easily extensible for future features like:
-- Advanced analytics and insights
-- Healthcare provider integration
-- Mobile app development
-- AI-powered symptom pattern recognition
+This is a personal project, but suggestions and feedback are welcome.
 
 ## License
 
@@ -236,8 +132,5 @@ This project is for personal use. Please respect the privacy and personal nature
 
 ## About
 
-Built by someone who understands the daily challenges of living with Crohn's disease. This app was created to fill a gap in the market for simple, effective, and privacy-focused health management tools.
+This app started as an idea to make day-to-day life with Crohn's and Colitis a bit easier. It focuses on quick logging, clear health patterns, and practical summaries you can actually use in appointments.
 
----
-
-**FlareCare** - Built with care for Crohn's & Colitis patients. ❤️

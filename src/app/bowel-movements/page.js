@@ -15,6 +15,7 @@ import {
 import { Lightbulb, ChevronDown, CircleDot } from 'lucide-react'
 import Masonry from 'react-masonry-css'
 import { motion, AnimatePresence } from 'framer-motion'
+import { useRouter } from 'next/navigation'
 import DatePicker from 'react-datepicker'
 import 'react-datepicker/dist/react-datepicker.css'
 
@@ -118,6 +119,7 @@ function emptyFormState() {
 
 function BowelMovementsPageContent() {
   const { user } = useAuth()
+  const router = useRouter()
   const timeOptions = generateTimeOptions()
   const bowelDatePickerRef = useRef(null)
   const [formState, setFormState] = useState(() => emptyFormState())
@@ -129,7 +131,6 @@ function BowelMovementsPageContent() {
   const [saveError, setSaveError] = useState('')
   const [deleteModal, setDeleteModal] = useState({ isOpen: false, id: null })
   const [editingId, setEditingId] = useState(null)
-  const [expandedBowelEntries, setExpandedBowelEntries] = useState(() => new Set())
   const fetchEntries = async () => {
     if (!user?.id) {
       setEntries([])
@@ -187,7 +188,6 @@ function BowelMovementsPageContent() {
     setSaveError('')
     setEditingId(row.id)
     setIsAdding(true)
-    setExpandedBowelEntries((prev) => new Set(prev).add(row.id))
   }
 
   const cancelForm = () => {
@@ -197,13 +197,9 @@ function BowelMovementsPageContent() {
     setIsAdding(false)
   }
 
-  const toggleBowelExpand = (id) => {
-    setExpandedBowelEntries((prev) => {
-      const next = new Set(prev)
-      if (next.has(id)) next.delete(id)
-      else next.add(id)
-      return next
-    })
+  const openBowelDetails = (id) => {
+    if (!id) return
+    router.push(`/bowel-movements/${id}`)
   }
 
   const handleSubmit = async (e) => {
@@ -301,11 +297,6 @@ function BowelMovementsPageContent() {
 
       if (error) throw error
       setEntries((prev) => prev.filter((e) => e.id !== deleteModal.id))
-      setExpandedBowelEntries((prev) => {
-        const next = new Set(prev)
-        next.delete(deleteModal.id)
-        return next
-      })
       setDeleteModal({ isOpen: false, id: null })
 
       const today = new Date().toISOString().split('T')[0]
@@ -647,39 +638,33 @@ function BowelMovementsPageContent() {
                     columnClassName="pl-4 bg-clip-padding"
                   >
                     {entries.map((row) => {
-                      const isExpanded = expandedBowelEntries.has(row.id)
                       const dateLabel = formatUKDateFromOccurred(row.occurred_at)
                       const timeLabel = formatUKTimeFromOccurred(row.occurred_at)
-                      const flags = []
-                      if (row.blood === true) flags.push('Blood')
-                      if (row.strain === true) flags.push('Strain')
-                      if (row.urgency === true) flags.push('Urgency')
                       return (
                         <div key={row.id} className="mb-4 last:mb-0">
-                          <div className="card-inner p-4 sm:p-6 min-w-0">
+                          <div
+                            className="card-inner p-4 sm:p-6 min-w-0 cursor-pointer"
+                            role="button"
+                            tabIndex={0}
+                            onClick={() => openBowelDetails(row.id)}
+                            onKeyDown={(e) => {
+                              if (e.key === 'Enter' || e.key === ' ') {
+                                e.preventDefault()
+                                openBowelDetails(row.id)
+                              }
+                            }}
+                            aria-label={`Open details for bowel log on ${dateLabel}`}
+                          >
                             <div className="flex flex-col sm:flex-row sm:justify-between sm:items-start gap-3">
                               <div className="flex-1 min-w-0">
-                                <div className="flex items-center gap-2 min-w-0">
-                                  <div className="flex flex-wrap items-baseline gap-x-2 gap-y-1 min-w-0 flex-1 text-sm">
-                                    <span className="font-semibold text-primary">{dateLabel}</span>
-                                    {timeLabel ? (
-                                      <>
-                                        <span className="text-secondary">·</span>
-                                        <span className="text-primary font-sans">{timeLabel}</span>
-                                      </>
-                                    ) : null}
-                                  </div>
-                                  <button
-                                    type="button"
-                                    onClick={() => toggleBowelExpand(row.id)}
-                                    className="flex-shrink-0 p-1 rounded transition-colors hover:bg-opacity-20 sm:self-start"
-                                    style={{ color: 'var(--text-icon)' }}
-                                    title={isExpanded ? 'Collapse details' : 'Expand details'}
-                                  >
-                                    <ChevronDown
-                                      className={`w-5 h-5 transition-transform duration-200 ${isExpanded ? 'rotate-180' : ''}`}
-                                    />
-                                  </button>
+                                <div className="flex flex-wrap items-baseline gap-x-2 gap-y-1 min-w-0 flex-1 text-sm">
+                                  <span className="font-semibold text-primary">{dateLabel}</span>
+                                  {timeLabel ? (
+                                    <>
+                                      <span className="text-secondary">·</span>
+                                      <span className="text-primary font-sans">{timeLabel}</span>
+                                    </>
+                                  ) : null}
                                 </div>
                                 <p
                                   className="text-xs sm:text-sm font-medium text-primary mt-1 min-w-0 truncate"
@@ -687,87 +672,48 @@ function BowelMovementsPageContent() {
                                 >
                                   {formatBristolTypeOnly(row.bristol_type)}
                                 </p>
-                                <motion.div
-                                  initial={false}
-                                  animate={{
-                                    height: isExpanded ? 'auto' : 0,
-                                    opacity: isExpanded ? 1 : 0,
-                                  }}
-                                  transition={{ duration: 0.02, ease: 'linear' }}
-                                  style={{ overflow: 'hidden' }}
-                                >
-                                  {flags.length > 0 && (
-                                    <p className="text-sm text-secondary font-sans mt-2">{flags.join(' · ')}</p>
-                                  )}
-                                  <div className="flex flex-wrap items-center gap-2 mt-2">
-                                    <button
-                                      type="button"
-                                      onClick={() => startEdit(row)}
-                                      disabled={editingId === row.id}
-                                      className="btn-card-icon-action"
-                                      title={editingId === row.id ? 'Finish or cancel editing first' : 'Edit entry'}
-                                    >
-                                      <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                        <path
-                                          strokeLinecap="round"
-                                          strokeLinejoin="round"
-                                          strokeWidth={2}
-                                          d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z"
-                                        />
-                                      </svg>
-                                    </button>
-                                    <button
-                                      type="button"
-                                      onClick={() => setDeleteModal({ isOpen: true, id: row.id })}
-                                      disabled={editingId === row.id}
-                                      className="btn-card-icon-action"
-                                      title={editingId === row.id ? 'Finish or cancel editing first' : 'Delete entry'}
-                                    >
-                                      <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                        <path
-                                          strokeLinecap="round"
-                                          strokeLinejoin="round"
-                                          strokeWidth={2}
-                                          d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"
-                                        />
-                                      </svg>
-                                    </button>
-                                  </div>
-                                </motion.div>
+                                <div className="flex flex-wrap items-center gap-2 mt-2">
+                                  <button
+                                    type="button"
+                                    onClick={(e) => {
+                                      e.stopPropagation()
+                                      startEdit(row)
+                                    }}
+                                    disabled={editingId === row.id}
+                                    className="btn-card-icon-action"
+                                    title={editingId === row.id ? 'Finish or cancel editing first' : 'Edit entry'}
+                                  >
+                                    <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                      <path
+                                        strokeLinecap="round"
+                                        strokeLinejoin="round"
+                                        strokeWidth={2}
+                                        d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z"
+                                      />
+                                    </svg>
+                                  </button>
+                                  <button
+                                    type="button"
+                                    onClick={(e) => {
+                                      e.stopPropagation()
+                                      setDeleteModal({ isOpen: true, id: row.id })
+                                    }}
+                                    disabled={editingId === row.id}
+                                    className="btn-card-icon-action"
+                                    title={editingId === row.id ? 'Finish or cancel editing first' : 'Delete entry'}
+                                  >
+                                    <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                      <path
+                                        strokeLinecap="round"
+                                        strokeLinejoin="round"
+                                        strokeWidth={2}
+                                        d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"
+                                      />
+                                    </svg>
+                                  </button>
+                                </div>
                               </div>
                             </div>
-                            {isExpanded && row.notes?.trim() && (
-                              <div className="mt-2 min-w-0">
-                                <div className="card-inner min-w-0">
-                                  <p
-                                    className="text-sm text-secondary font-sans leading-normal line-clamp-2 break-words"
-                                    title={row.notes.trim()}
-                                  >
-                                    <span className="font-semibold text-primary">Notes:</span> {row.notes.trim()}
-                                  </p>
-                                </div>
-                              </div>
-                            )}
-                            {isExpanded && (
-                              <div className="mt-2 text-xs text-tertiary font-sans">
-                                <div className="flex items-center">
-                                  <svg
-                                    className="w-3 h-3 mr-1"
-                                    fill="none"
-                                    stroke="currentColor"
-                                    viewBox="0 0 24 24"
-                                  >
-                                    <path
-                                      strokeLinecap="round"
-                                      strokeLinejoin="round"
-                                      strokeWidth={2}
-                                      d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"
-                                    />
-                                  </svg>
-                                  Added {row.created_at ? formatUKDateFromOccurred(row.created_at) : '—'}
-                                </div>
-                              </div>
-                            )}
                           </div>
                         </div>
                       )

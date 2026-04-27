@@ -381,6 +381,14 @@
     @apply w-full px-3 py-2 border rounded-lg focus:outline-none transition-all duration-200 text-left text-base placeholder-slate-400;
   }
 
+  .input-field-wizard:focus,
+  .input-field-wizard:focus-visible,
+  .input-field:focus,
+  .input-field:focus-visible {
+    outline: none !important;
+    box-shadow: none !important;
+  }
+
   /* Hide browser validation icons */
   .input-field-wizard::-webkit-validation-bubble-message,
   .input-field-wizard::-webkit-validation-bubble-icon,

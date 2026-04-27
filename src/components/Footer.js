@@ -9,11 +9,6 @@ export default function Footer() {
   const pathname = usePathname()
   const { isAuthenticated, loading } = useAuth()
   const [scrollY, setScrollY] = useState(0)
-  
-  // Don't render footer during loading
-  if (loading) {
-    return null
-  }
 
   // Check if we're on a page that needs fixed footer on mobile
   const is404 = typeof window !== 'undefined' && document.documentElement.classList.contains('is-404')
@@ -21,6 +16,8 @@ export default function Footer() {
 
   // Track scroll position
   useEffect(() => {
+    if (loading) return
+
     const handleScroll = () => {
       const scrollY = window.scrollY
       const maxScroll = document.documentElement.scrollHeight - window.innerHeight
@@ -35,8 +32,8 @@ export default function Footer() {
     
     window.addEventListener('scroll', handleScroll)
     return () => window.removeEventListener('scroll', handleScroll)
-  }, [])
-  
+  }, [loading])
+
   return (
     <footer className={`py-8 px-4 sm:px-6 mt-auto ${needsFixedFooter ? 'fixed bottom-0 left-0 right-0 lg:static' : ''}`} style={{backgroundColor: 'var(--bg-nav-footer)'}}>
       <div className="max-w-7xl mx-auto">

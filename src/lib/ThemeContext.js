@@ -6,11 +6,8 @@ const ThemeContext = createContext()
 
 export function ThemeProvider({ children }) {
   const [theme, setTheme] = useState('dark') // Default to dark theme
-  const [mounted, setMounted] = useState(false)
 
   useEffect(() => {
-    setMounted(true)
-    
     // Check for saved theme preference or default to system preference
     const savedTheme = localStorage.getItem('theme')
     const systemPrefersDark = window.matchMedia('(prefers-color-scheme: dark)').matches
@@ -23,10 +20,6 @@ export function ThemeProvider({ children }) {
   }, [])
 
   useEffect(() => {
-    if (!mounted) return
-
-    console.log('Applying theme:', theme)
-
     // Apply theme to document
     if (theme === 'dark') {
       document.documentElement.classList.add('dark')
@@ -36,15 +29,10 @@ export function ThemeProvider({ children }) {
 
     // Save to localStorage
     localStorage.setItem('theme', theme)
-  }, [theme, mounted])
+  }, [theme])
 
   const toggleTheme = () => {
     setTheme(prevTheme => prevTheme === 'dark' ? 'light' : 'dark')
-  }
-
-  // Prevent hydration mismatch
-  if (!mounted) {
-    return <div style={{ visibility: 'hidden' }}>{children}</div>
   }
 
   return (

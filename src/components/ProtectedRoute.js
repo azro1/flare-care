@@ -16,11 +16,8 @@ export default function ProtectedRoute({ children }) {
 
   if (loading) {
     return (
-      <div className="fixed inset-0 flex items-center justify-center z-50" style={{backgroundColor: 'var(--bg-main)'}}>
-        <div className="text-center">
-          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600 mx-auto"></div>
-          <p className="mt-4 text-primary">Loading...</p>
-        </div>
+      <div className="max-w-4xl w-full mx-auto sm:px-4 md:px-6 min-w-0 flex-1 flex items-center justify-center py-8">
+        <div className="w-8 h-8 border-4 border-[#5F9EA0] border-t-transparent rounded-full animate-spin" />
       </div>
     )
   }
