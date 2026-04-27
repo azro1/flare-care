@@ -2100,7 +2100,7 @@ export default function Home() {
 
         {/* More Options */}
         <div className="mb-6 xl:mb-0 order-[7] xl:order-none">
-          <h2 className="text-xl font-semibold font-sans text-primary mb-3">More</h2>
+          <h2 className="text-xl font-semibold font-title text-primary mb-3">More</h2>
           <div className="grid grid-cols-2 lg:grid-cols-3 gap-4 md:gap-6 min-w-0">
               <Link
                 href="/medications"

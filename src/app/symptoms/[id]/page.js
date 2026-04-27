@@ -185,6 +185,18 @@ function SymptomDetailContent() {
     symptom.drank_on_symptom_day === true &&
     !!symptom.alcohol_units_on_symptom_day
 
+  const hasLifestyleRowsAfterBathroomDescription =
+    typeof symptom.smoked_on_symptom_day !== 'boolean' ||
+    !!(symptom.smoker === true && (symptom.smoking_habits || symptom.smoking_details)) ||
+    (typeof symptom.smoked_on_symptom_day === 'boolean' &&
+      symptom.smoked_on_symptom_day === true &&
+      !!symptom.smoked_amount_on_symptom_day) ||
+    typeof symptom.drank_on_symptom_day !== 'boolean' ||
+    !!(symptom.alcohol === true && (symptom.average_alcohol_units_pw || symptom.alcohol_habits)) ||
+    (typeof symptom.drank_on_symptom_day === 'boolean' &&
+      symptom.drank_on_symptom_day === true &&
+      !!symptom.alcohol_units_on_symptom_day)
+
   return (
     <div className="w-full sm:px-4 md:px-6 min-w-0 overflow-hidden">
       <div className="max-w-4xl w-full mx-auto min-w-0">
@@ -263,7 +275,10 @@ function SymptomDetailContent() {
                       <span className="text-sm sm:text-base font-medium text-primary font-sans min-w-0 break-words text-right">{symptom.bathroom_frequency_changed === 'yes' ? 'Yes' : 'No'}</span>
                     </div>
                     {symptom.bathroom_frequency_changed === 'yes' && symptom.bathroom_frequency_change_details && (
-                      <div className="py-4 border-b min-w-0 overflow-hidden" style={{ borderColor: 'var(--separator-card)' }}>
+                      <div
+                        className={`py-4 min-w-0 overflow-hidden ${hasLifestyleRowsAfterBathroomDescription ? 'border-b' : ''}`}
+                        style={{ borderColor: 'var(--separator-card)' }}
+                      >
                         <span className="text-sm sm:text-base font-medium text-primary block mb-2 font-sans">Description</span>
                         <p className="text-sm sm:text-base text-secondary leading-relaxed font-sans break-words" title={symptom.bathroom_frequency_change_details}>{symptom.bathroom_frequency_change_details}</p>
                       </div>

@@ -441,7 +441,7 @@ function AppointmentBriefContent() {
       ) : brief ? (
         <>
           <div className="card mb-5 sm:mb-6">
-            <h2 className="text-xl font-semibold font-title text-primary mb-4">Summary ({formatUkDate(brief.period.start)} - {formatUkDate(brief.period.end)})</h2>
+            <h2 className="text-xl font-semibold font-title text-primary mb-3">Summary ({formatUkDate(brief.period.start)} - {formatUkDate(brief.period.end)})</h2>
             <div className="card-inner p-4 sm:p-6">
               <div className="space-y-3 text-sm sm:text-base text-primary font-sans">
                 <p><span className="font-semibold">Symptoms:</span> {brief.symptoms.currentCount} logs, avg severity {brief.symptoms.currentAverage != null ? `${brief.symptoms.currentAverage.toFixed(1)}/10` : 'N/A'} (prev {brief.symptoms.previousAverage != null ? `${brief.symptoms.previousAverage.toFixed(1)}/10` : 'N/A'})</p>
