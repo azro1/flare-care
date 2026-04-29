@@ -1,6 +1,7 @@
 'use client'
 
 import { useState, useEffect, useRef } from 'react'
+import { useRouter } from 'next/navigation'
 import ConfirmationModal from '@/components/ConfirmationModal'
 import ProtectedRoute from '@/components/ProtectedRoute'
 import reminderService from '@/lib/reminderService'
@@ -12,13 +13,13 @@ import Masonry from 'react-masonry-css'
 import { motion, AnimatePresence } from 'framer-motion'
 
 function MedicationsPageContent() {
+  const router = useRouter()
   const { user } = useAuth()
   const [medications, setMedications] = useState([])
   const [isLoading, setIsLoading] = useState(true)
   const [isAdding, setIsAdding] = useState(false)
   const [editingId, setEditingId] = useState(null)
   const [deleteModal, setDeleteModal] = useState({ isOpen: false, id: null })
-  const [expandedMedications, setExpandedMedications] = useState(new Set())
   const [medicationsPanelOpen, setMedicationsPanelOpen] = useState(true)
   const [takenMedications, setTakenMedications] = useState([])
   const [formData, setFormData] = useState({
@@ -353,18 +354,6 @@ function MedicationsPageContent() {
     setDeleteModal({ isOpen: true, id })
   }
 
-  const toggleMedicationExpand = (id) => {
-    setExpandedMedications(prev => {
-      const newSet = new Set(prev)
-      if (newSet.has(id)) {
-        newSet.delete(id)
-      } else {
-        newSet.add(id)
-      }
-      return newSet
-    })
-  }
-
   const confirmDelete = async () => {
     if (!deleteModal.id || !user?.id) return
 
@@ -517,7 +506,7 @@ function MedicationsPageContent() {
               <h1 className="text-2xl sm:text-3xl lg:text-4xl font-bold font-title text-primary mb-3 sm:mb-6">
                 My Medications
               </h1>
-              <p className="text-sm sm:text-base text-secondary font-sans leading-relaxed">
+              <p className="text-sm sm:text-base text-secondary font-sans leading-normal">
                 Add your medications and set reminders to stay on track.
               </p>
             </div>
@@ -568,7 +557,7 @@ function MedicationsPageContent() {
             <button
               type="button"
               onClick={startAdding}
-              className="button-cadet flex-shrink-0 px-4 py-2 text-base sm:text-lg font-semibold rounded-lg transition-colors inline-flex items-center justify-center"
+              className="button-cadet btn-size-md flex-shrink-0 px-4 py-2 text-base sm:text-lg font-semibold rounded-lg transition-colors inline-flex items-center justify-center"
             >
               <svg className="w-5 h-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 6v6m0 0v6m0-6h6m-6 0H6" />
@@ -746,7 +735,7 @@ function MedicationsPageContent() {
               <div className="flex flex-col sm:flex-row gap-4">
                 <button 
                   type="submit" 
-                  className="button-cadet px-4 py-2 text-base sm:text-lg font-semibold rounded-lg transition-colors"
+                  className="button-cadet btn-size-lg transition-colors"
                 >
                   <svg className="w-5 h-5 mr-2 inline" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
@@ -797,51 +786,31 @@ className="px-4 py-2 text-base sm:text-lg font-medium font-sans rounded-lg trans
             columnClassName="pl-4 bg-clip-padding"
           >
             {medications.map((medication) => {
-              const isExpanded = expandedMedications.has(medication.id)
               const isTaken = takenMedications.some((id) => String(id) === String(medication.id))
               return (
                 <div key={medication.id} className="mb-4 last:mb-0">
-                  <div className="card-inner p-4 sm:p-6 min-w-0">
+                  <div
+                    className="card-inner p-4 sm:p-6 min-w-0 cursor-pointer"
+                    onClick={() => router.push(`/medications/${medication.id}`)}
+                    onKeyDown={(event) => {
+                      if (event.key === 'Enter' || event.key === ' ') {
+                        event.preventDefault()
+                        router.push(`/medications/${medication.id}`)
+                      }
+                    }}
+                    role="button"
+                    tabIndex={0}
+                    aria-label={`Open details for ${medication.name}`}
+                  >
                   <div className="flex flex-col sm:flex-row sm:justify-between sm:items-start">
                     <div className="flex-1 min-w-0 w-full sm:w-auto">
-                      <div className={`flex items-center gap-2 flex-nowrap ${isExpanded ? 'mb-1' : ''} min-w-0`}>
+                      <div className="flex items-center gap-2 flex-nowrap min-w-0">
                         <h3 className="text-sm font-semibold font-sans text-primary truncate min-w-0 flex-1">
                           {medication.name}
                         </h3>
-                        {medication.dosage && (
-                          <span className="text-xs sm:text-sm text-secondary font-sans whitespace-nowrap flex-shrink-0">
-                            {medication.dosage}
-                          </span>
-                        )}
-                        <button
-                          onClick={() => toggleMedicationExpand(medication.id)}
-                          className="flex-shrink-0 p-1 rounded font-sans transition-colors hover:bg-opacity-20 sm:self-start"
-                          style={{ color: 'var(--text-icon)' }}
-                          title={isExpanded ? "Collapse details" : "Expand details"}
-                        >
-                          <ChevronDown 
-                            className={`w-5 h-5 transition-transform duration-200 ${isExpanded ? 'rotate-180' : ''}`}
-                          />
-                        </button>
                       </div>
-                      {isExpanded && medication.frequency && (
-                        <p
-                          className="text-xs sm:text-sm text-secondary font-sans mt-1 min-w-0 truncate mb-3"
-                          title={normalizeFrequencyPreset(medication.frequency)}
-                        >
-                          <span className="font-semibold text-primary">To be taken:</span> {normalizeFrequencyPreset(medication.frequency)}
-                        </p>
-                      )}
-                      <motion.div
-                        initial={false}
-                        animate={{
-                          height: isExpanded ? 'auto' : 0,
-                          opacity: isExpanded ? 1 : 0
-                        }}
-                        transition={{ duration: 0.02, ease: 'linear' }}
-                        style={{ overflow: 'hidden' }}
-                      >
-                          <div className={`flex flex-wrap items-center gap-3 ${(medication.timeOfDay || medication.remindersEnabled !== false) ? 'mb-3' : ''}`}>
+                      <div>
+                          <div className={`flex flex-wrap items-center gap-3 ${(medication.timeOfDay || medication.remindersEnabled !== false) ? 'mt-2 mb-3' : ''}`}>
                             {medication.timeOfDay && (
                               <span className="inline-flex items-center px-3 py-1.5 rounded-full text-xs sm:text-sm font-medium font-sans bg-white text-black">
                                 <svg className="w-4 h-4 mr-1.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -865,40 +834,14 @@ className="px-4 py-2 text-base sm:text-lg font-medium font-sans rounded-lg trans
                               </span>
                             )}
                           </div>
-                          <button
-                            type="button"
-                            onClick={() => handleMarkAsTaken(medication.id)}
-                            className="w-fit shrink-0 inline-flex items-center justify-center px-3 py-1.5 rounded-lg text-sm font-semibold font-sans transition-colors border border-[#5F9EA0]/40 dark:border-white/50"
-                            style={
-                              isTaken
-                                ? {
-                                    backgroundColor: 'var(--bg-button-cadet)',
-                                    color: 'white',
-                                    borderColor: 'var(--bg-button-cadet)',
-                                  }
-                                : {
-                                    color: 'var(--text-primary)',
-                                    backgroundColor: 'transparent',
-                                  }
-                            }
-                            aria-pressed={isTaken}
-                            title={isTaken ? "Mark as not taken" : "Mark as taken"}
-                          >
-                            {isTaken ? (
-                              <>
-                                <svg className="w-4 h-4 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
-                                </svg>
-                                <span>Taken</span>
-                              </>
-                            ) : (
-                              <span>Mark as Taken</span>
-                            )}
-                          </button>
-                          <div className="flex flex-wrap items-center gap-2 mt-3">
+                          <div className="mt-3 flex flex-wrap items-center gap-2">
+                            <div className="flex flex-wrap items-center gap-2">
                             <button
                               type="button"
-                              onClick={() => startEdit(medication)}
+                              onClick={(event) => {
+                                event.stopPropagation()
+                                startEdit(medication)
+                              }}
                               disabled={editingId === medication.id}
                               className="btn-card-icon-action"
                               title={editingId === medication.id ? 'Finish or cancel editing first' : 'Edit medication'}
@@ -909,7 +852,10 @@ className="px-4 py-2 text-base sm:text-lg font-medium font-sans rounded-lg trans
                             </button>
                             <button
                               type="button"
-                              onClick={() => handleDeleteMedication(medication.id)}
+                              onClick={(event) => {
+                                event.stopPropagation()
+                                handleDeleteMedication(medication.id)
+                              }}
                               disabled={editingId === medication.id}
                               className="btn-card-icon-action"
                               title={editingId === medication.id ? 'Finish or cancel editing first' : 'Delete medication'}
@@ -918,33 +864,44 @@ className="px-4 py-2 text-base sm:text-lg font-medium font-sans rounded-lg trans
                                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
                               </svg>
                             </button>
+                            </div>
+                            <button
+                              type="button"
+                              onClick={(event) => {
+                                event.stopPropagation()
+                                handleMarkAsTaken(medication.id)
+                              }}
+                              className="w-fit shrink-0 inline-flex items-center justify-center btn-size-sm font-sans transition-colors border border-[#5F9EA0]/40 dark:border-white/50"
+                              style={
+                                isTaken
+                                  ? {
+                                      backgroundColor: 'var(--bg-button-cadet)',
+                                      color: 'white',
+                                      borderColor: 'var(--bg-button-cadet)',
+                                    }
+                                  : {
+                                      color: 'var(--text-primary)',
+                                      backgroundColor: 'transparent',
+                                    }
+                              }
+                              aria-pressed={isTaken}
+                              title={isTaken ? "Mark as not taken" : "Mark as taken"}
+                            >
+                              {isTaken ? (
+                                <>
+                                  <svg className="w-4 h-4 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
+                                  </svg>
+                                  <span>Taken</span>
+                                </>
+                              ) : (
+                                <span>Mark as Taken</span>
+                              )}
+                            </button>
                           </div>
-                      </motion.div>
+                      </div>
                     </div>
                   </div>
-
-                  {isExpanded && medication.notes && (
-                    <div className="mt-2 min-w-0">
-                      <div className="card-inner min-w-0">
-                        <p
-                          className="text-sm text-secondary font-sans leading-normal break-words line-clamp-2"
-                          title={medication.notes}
-                        >
-                          <span className="font-semibold text-primary">Notes:</span> {medication.notes}
-                        </p>
-                      </div>
-                    </div>
-                  )}
-                  {isExpanded && (
-                    <div className="mt-2 text-xs text-tertiary font-sans">
-                      <div className="flex items-center">
-                        <svg className="w-3 h-3 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" />
-                        </svg>
-                        Added {medication.createdAt ? formatUKDate(medication.createdAt) : '—'}
-                      </div>
-                    </div>
-                  )}
                   </div>
                 </div>
               )
@@ -965,7 +922,7 @@ className="px-4 py-2 text-base sm:text-lg font-medium font-sans rounded-lg trans
             <Bell className="w-5 h-5 sm:w-6 sm:h-6 flex-shrink-0" style={{ color: 'var(--text-cadet-blue)' }} />
             <span>Medication Reminders</span>
           </h3>
-          <p className="text-sm text-secondary font-sans leading-relaxed">
+          <p className="text-sm text-secondary font-sans leading-normal">
             Get notified when it's time to take your medications, in your browser or on your device.
           </p>
           <div className="card-inner p-5 sm:p-6 mt-4">
@@ -973,7 +930,7 @@ className="px-4 py-2 text-base sm:text-lg font-medium font-sans rounded-lg trans
               <Lightbulb className="w-5 h-5 flex-shrink-0 text-amber-500" />
               <span className="text-base sm:text-sm font-semibold text-primary font-title">Important:</span>
             </div>
-            <p className="text-xs text-secondary font-sans leading-relaxed">
+            <p className="text-xs text-secondary font-sans leading-normal">
               You need to enable push notifications in account settings to get reminders when the app is closed.
             </p>
           </div>

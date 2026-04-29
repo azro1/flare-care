@@ -332,7 +332,7 @@ function BowelMovementsPageContent() {
               <h1 className="text-2xl sm:text-3xl lg:text-4xl font-bold font-title text-primary mb-3 sm:mb-6">
                 Bowel Movements
               </h1>
-              <p className="text-sm sm:text-base text-secondary font-sans leading-relaxed">
+              <p className="text-sm sm:text-base text-secondary font-sans leading-normal">
                 Log your bowel movements and record stool type using the Bristol Stool Chart.
               </p>
             </div>
@@ -393,7 +393,7 @@ function BowelMovementsPageContent() {
             <button
               type="button"
               onClick={startAdding}
-              className="button-cadet flex-shrink-0 px-4 py-2 text-base sm:text-lg font-semibold rounded-lg transition-colors inline-flex items-center justify-center"
+              className="button-cadet btn-size-md flex-shrink-0 px-4 py-2 text-base sm:text-lg font-semibold rounded-lg transition-colors inline-flex items-center justify-center"
             >
               <svg className="w-5 h-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden>
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 6v6m0 0v6m0-6h6m-6 0H6" />
@@ -488,7 +488,7 @@ function BowelMovementsPageContent() {
                         </div>
 
                         <div>
-                          <p className="text-sm text-secondary font-sans leading-relaxed mb-4 sm:mb-6">
+                          <p className="text-sm text-secondary font-sans leading-normal mb-4 sm:mb-6">
                             Select the type that best matches this movement.
                           </p>
                           <div className="grid grid-cols-1 sm:grid-cols-2 gap-2 sm:gap-3">
@@ -591,7 +591,7 @@ function BowelMovementsPageContent() {
                           <button
                             type="submit"
                             disabled={isSaving}
-                            className="button-cadet px-4 py-2 text-base sm:text-lg font-semibold rounded-lg transition-colors disabled:opacity-50 inline-flex items-center justify-center"
+                            className="button-cadet btn-size-md px-4 py-2 text-base sm:text-lg font-semibold rounded-lg transition-colors disabled:opacity-50 inline-flex items-center justify-center"
                           >
                             <svg className="w-5 h-5 mr-2 inline" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
@@ -623,7 +623,7 @@ function BowelMovementsPageContent() {
                       <CircleDot className="w-6 h-6 sm:w-10 sm:h-10 text-secondary" />
                     </div>
                     <h3 className="text-lg font-semibold font-title text-primary mb-2">No bowel logs</h3>
-                    <p className="text-sm font-sans text-secondary max-w-md mx-auto leading-relaxed">
+                    <p className="text-sm font-sans text-secondary max-w-md mx-auto leading-normal">
                       Your bowel logs will show here once you add them
                     </p>
                   </div>
@@ -728,7 +728,7 @@ function BowelMovementsPageContent() {
 
       <div className="mt-4 sm:mt-6 card">
         <div>
-          <p className="text-sm text-secondary font-sans leading-relaxed">
+          <p className="text-sm text-secondary font-sans leading-normal">
             Recording bowel movements and stool type helps build a clearer picture of your condition.
           </p>
           <div className="card-inner p-5 sm:p-6 mt-4">
@@ -736,7 +736,7 @@ function BowelMovementsPageContent() {
               <Lightbulb className="w-5 h-5 flex-shrink-0 text-amber-500" />
               <span className="text-base sm:text-sm font-semibold text-primary font-title">Note:</span>
             </div>
-            <p className="text-xs text-secondary font-sans leading-relaxed">
+            <p className="text-xs text-secondary font-sans leading-normal">
               Types 1–2 are harder, 3–4 are often ideal, and 5–7 are looser or diarrhoea-like.
             </p>
           </div>

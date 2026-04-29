@@ -1310,7 +1310,7 @@ function MedicationTrackingWizard() {
             {/* Start button */}
             <button
               onClick={nextStep}
-              className="button-cadet px-4 py-2 text-base sm:text-lg font-semibold tracking-wide rounded-lg transition-colors"
+              className="button-cadet btn-size-md flex-shrink-0 px-4 py-2 text-base sm:text-lg font-semibold rounded-lg transition-colors inline-flex items-center justify-center font-sans"
             >
               Start now
             </button>
@@ -1330,7 +1330,7 @@ function MedicationTrackingWizard() {
             {currentStep < 7 ? (
               <button
                 onClick={nextStep}
-                className="button-cadet px-4 py-2 text-base sm:text-lg font-semibold rounded-lg transition-colors"
+                className="button-cadet btn-size-md px-4 py-2 text-base sm:text-lg font-semibold rounded-lg transition-colors"
               >
                 Next
               </button>
@@ -1338,7 +1338,7 @@ function MedicationTrackingWizard() {
               <button
                 onClick={handleSubmit}
                 disabled={isSubmitting}
-                className="button-cadet inline-flex min-w-[7.25rem] items-center justify-center px-4 py-2 text-base sm:text-lg font-semibold rounded-lg transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+                className="button-cadet btn-size-md inline-flex min-w-[7.25rem] items-center justify-center px-4 py-2 text-base sm:text-lg font-semibold rounded-lg transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
               >
                 {isSubmitting ? (
                   <>

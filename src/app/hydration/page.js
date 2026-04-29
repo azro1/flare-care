@@ -92,7 +92,7 @@ function HydrationPageContent() {
               <h1 className="text-2xl sm:text-3xl lg:text-4xl font-bold font-title text-primary mb-3 sm:mb-6">
                 My Hydration
               </h1>
-              <p className="text-sm sm:text-base text-secondary font-sans leading-relaxed">
+              <p className="text-sm sm:text-base text-secondary font-sans leading-normal">
                 Track your daily water intake to hit your goal each day
               </p>
             </div>
@@ -157,7 +157,7 @@ function HydrationPageContent() {
 
       <div className="mt-4 sm:mt-6 card">
         <div>
-          <p className="text-sm text-secondary font-sans leading-relaxed">
+          <p className="text-sm text-secondary font-sans leading-normal">
             Use − and + to update your daily intake count. Your target is {HYDRATION_TARGET} glasses per day (roughly 250ml each).
           </p>
           <div className="card-inner p-5 sm:p-6 mt-4">
@@ -165,7 +165,7 @@ function HydrationPageContent() {
               <Lightbulb className="w-5 h-5 flex-shrink-0 text-amber-500" />
               <span className="text-base sm:text-sm font-semibold text-primary font-title">Important to know:</span>
             </div>
-            <p className="text-xs text-secondary font-sans leading-relaxed">
+            <p className="text-xs text-secondary font-sans leading-normal">
               Most guidelines recommend around 1.5–2 litres (about 6–8 glasses) of water per day for adults.
             </p>
           </div>

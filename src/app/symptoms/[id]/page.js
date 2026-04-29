@@ -280,7 +280,7 @@ function SymptomDetailContent() {
                         style={{ borderColor: 'var(--separator-card)' }}
                       >
                         <span className="text-sm sm:text-base font-medium text-primary block mb-2 font-sans">Description</span>
-                        <p className="text-sm sm:text-base text-secondary leading-relaxed font-sans break-words" title={symptom.bathroom_frequency_change_details}>{symptom.bathroom_frequency_change_details}</p>
+                        <p className="text-sm sm:text-base text-secondary leading-normal font-sans break-words" title={symptom.bathroom_frequency_change_details}>{symptom.bathroom_frequency_change_details}</p>
                       </div>
                     )}
                   </>
@@ -300,7 +300,7 @@ function SymptomDetailContent() {
                 {symptom.smoker === true && (symptom.smoking_habits || symptom.smoking_details) && (
                   <div className="py-4 border-b min-w-0 overflow-hidden" style={{ borderColor: 'var(--separator-card)' }}>
                     <span className="text-sm sm:text-base text-secondary block mb-2 font-sans">Smoking habits</span>
-                    <p className="text-sm sm:text-base font-medium text-primary leading-relaxed font-sans break-words" title={symptom.smoking_habits || symptom.smoking_details}>{symptom.smoking_habits || symptom.smoking_details}</p>
+                    <p className="text-sm sm:text-base font-medium text-primary leading-normal font-sans break-words" title={symptom.smoking_habits || symptom.smoking_details}>{symptom.smoking_habits || symptom.smoking_details}</p>
                   </div>
                 )}
                 {typeof symptom.smoked_on_symptom_day === 'boolean' && symptom.smoked_on_symptom_day === true && symptom.smoked_amount_on_symptom_day && (
@@ -388,7 +388,7 @@ function SymptomDetailContent() {
               {symptom.notes && (
                 <div className="card min-w-0 overflow-hidden">
                   <h2 className="text-xl font-semibold font-title text-primary mb-3 sm:mb-4">Notes</h2>
-                  <p className="text-sm sm:text-base text-secondary leading-relaxed font-sans break-words" title={symptom.notes}>{symptom.notes}</p>
+                  <p className="text-sm sm:text-base text-secondary leading-normal font-sans break-words" title={symptom.notes}>{symptom.notes}</p>
                 </div>
               )}
             </div>
@@ -420,7 +420,7 @@ function SymptomDetailContent() {
               </div>
 
               <div className="card">
-                <p className="text-sm text-secondary leading-relaxed">
+                <p className="text-sm text-secondary leading-normal">
                   <span className="font-semibold text-primary font-title">Note:</span> This log shows what you reported on the day your symptoms started, not for every day of the symptom duration.
                 </p>
               </div>
@@ -449,14 +449,14 @@ function SymptomDetailContent() {
               <button
                 onClick={() => setShowDeleteModal(false)}
                 disabled={isDeleting}
-                className="flex-1 px-4 py-2 button-cancel disabled:opacity-50"
+                className="flex-1 px-4 py-2 button-cancel btn-size-md disabled:opacity-50"
               >
                 Cancel
               </button>
               <button
                 onClick={handleDelete}
                 disabled={isDeleting}
-                className="flex-1 px-4 py-2 button-delete disabled:opacity-50"
+                className="flex-1 px-4 py-2 button-delete btn-size-md disabled:opacity-50"
               >
                 {isDeleting ? 'Deleting...' : 'Delete'}
               </button>

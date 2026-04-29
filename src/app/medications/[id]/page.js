@@ -155,9 +155,9 @@ function MedicationDetailsContent() {
       </div>
 
       <div className="card mb-5 sm:mb-6">
-        <h2 className="text-xl font-semibold font-title text-primary mb-4">Details</h2>
+        <h2 className="text-xl font-semibold font-title text-primary mb-3 sm:mb-4">Details</h2>
         <div className="space-y-0 [&>*:last-child]:pb-0">
-          <div className="flex justify-between items-center gap-4 py-4 border-b min-w-0" style={{ borderColor: 'var(--separator-card)' }}>
+          <div className="flex justify-between items-center gap-4 pt-0 pb-4 border-b min-w-0" style={{ borderColor: 'var(--separator-card)' }}>
             <span className="text-sm sm:text-base text-secondary font-sans">Medication</span>
             <span className="text-sm sm:text-base font-medium text-primary font-sans text-right break-words">{medication.name}</span>
           </div>
@@ -188,8 +188,8 @@ function MedicationDetailsContent() {
 
       {medication.notes && (
         <div className="card mb-5 sm:mb-6">
-          <h2 className="text-xl font-semibold font-title text-primary mb-4">Notes</h2>
-          <p className="text-sm sm:text-base text-secondary font-sans leading-relaxed break-words">
+          <h2 className="text-xl font-semibold font-title text-primary mb-3 sm:mb-4">Notes</h2>
+          <p className="text-sm sm:text-base text-secondary font-sans leading-normal break-words">
             {medication.notes}
           </p>
         </div>
@@ -199,9 +199,9 @@ function MedicationDetailsContent() {
         <button
           type="button"
           onClick={() => router.push('/medications')}
-          className="button-cadet flex-shrink-0 px-4 py-2 text-base sm:text-lg font-semibold rounded-lg transition-colors inline-flex items-center justify-center whitespace-nowrap"
+          className="button-cadet flex-shrink-0 py-3 px-6 rounded-xl hover:shadow-lg inline-flex items-center justify-center whitespace-nowrap font-sans w-auto"
         >
-          Back to medications
+          Back to My Medications
         </button>
       </div>
 

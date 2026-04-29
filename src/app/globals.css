@@ -532,6 +532,19 @@ select.input-field-wizard option[value=""] {
     background-color: var(--bg-button-cadet-hover);
   }
 
+  /* Shared button sizing tokens to keep UI consistent */
+  .btn-size-lg {
+    @apply py-3 px-6 text-base rounded-xl font-semibold;
+  }
+
+  .btn-size-md {
+    @apply px-4 py-2 text-sm sm:text-base rounded-lg font-semibold;
+  }
+
+  .btn-size-sm {
+    @apply px-3 py-1.5 text-sm rounded-lg font-semibold;
+  }
+
   .text-cadet-blue {
     color: var(--text-cadet-blue);
   }

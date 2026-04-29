@@ -276,14 +276,14 @@ function TrackedMedicationDetails() {
               <button
                 onClick={() => setShowDeleteModal(false)}
                 disabled={isDeleting}
-                className="flex-1 px-4 py-2 button-cancel disabled:opacity-50"
+                className="flex-1 px-4 py-2 button-cancel btn-size-md disabled:opacity-50"
               >
                 Cancel
               </button>
               <button
                 onClick={handleDelete}
                 disabled={isDeleting}
-                className="flex-1 px-4 py-2 button-delete disabled:opacity-50"
+                className="flex-1 px-4 py-2 button-delete btn-size-md disabled:opacity-50"
               >
                 {isDeleting ? 'Deleting...' : 'Delete'}
               </button>

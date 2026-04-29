@@ -12,7 +12,7 @@ export default function Navigation() {
   const pathname = usePathname()
   const [isMenuOpen, setIsMenuOpen] = useState(false)
   const [scrollY, setScrollY] = useState(0)
-  const { user, isAuthenticated, signOut } = useAuth()
+  const { user, isAuthenticated, logout } = useAuth()
   const [showAvatarFallback, setShowAvatarFallback] = useState(false)
 
   // Get user's display name from Google metadata or fallback to email
@@ -47,11 +47,11 @@ export default function Navigation() {
     setShowAvatarFallback(false)
   }, [avatarUrl])
 
-  const handleSignOut = async () => {
+  const handleLogout = async () => {
     try {
-      await signOut()
+      await logout()
     } catch (error) {
-      console.error('Error signing out:', error)
+      console.error('Error logging out:', error)
     }
   }
 

@@ -89,7 +89,7 @@ export default function AuthForm() {
             <h2 className="text-3xl font-bold font-title text-primary mb-4">
               FlareCare
             </h2>
-          <p className="text-sm font-sans text-secondary mb-4 sm:mb-6 leading-relaxed">
+          <p className="text-sm font-sans text-secondary mb-4 sm:mb-6 leading-normal">
            Your comprehensive health management app for Crohn's & Colitis
           </p>
         </div>

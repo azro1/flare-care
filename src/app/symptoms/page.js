@@ -1391,7 +1391,7 @@ function SymptomsPageContent() {
             {/* Start button */}
             <button
               onClick={nextStep}
-              className="button-cadet px-4 py-2 text-base sm:text-lg font-semibold tracking-wide rounded-lg transition-colors"
+              className="button-cadet btn-size-md flex-shrink-0 px-4 py-2 text-base sm:text-lg font-semibold rounded-lg transition-colors inline-flex items-center justify-center font-sans"
             >
               Start now
             </button>

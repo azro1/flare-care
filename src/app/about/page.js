@@ -13,7 +13,7 @@ export default function About() {
         <h1 className="text-2xl sm:text-3xl lg:text-4xl font-bold font-title text-primary mb-3 sm:mb-4">
           FlareCare
         </h1>
-        <p className="text-sm font-sans text-secondary leading-relaxed">
+        <p className="text-sm font-sans text-secondary leading-normal">
           A personal journey turned into a tool for the community
         </p>
         </div>
@@ -23,17 +23,17 @@ export default function About() {
         <div className="card backdrop-blur-sm">
           <h2 className="text-xl sm:text-2xl font-semibold font-title text-primary mb-3 sm:mb-4">My Story</h2>
           <div className="space-y-4 text-sm text-secondary font-sans">
-            <p className="leading-relaxed">
+            <p className="leading-normal">
               Hi, I'm Simon, and I was diagnosed with Crohn's disease in 2005. Like many others, 
               I quickly learned that managing this condition requires constant attention 
               to symptoms, medications, and lifestyle factors.
             </p>
-            <p className="leading-relaxed">
+            <p className="leading-normal">
               As an outpatient at the Royal London Hospital in Whitechapel, I've experienced 
               firsthand the challenges of tracking symptoms, remembering medication schedules, 
               and communicating effectively with my healthcare team.
             </p>
-            <p className="leading-relaxed">
+            <p className="leading-normal">
               Over the years, I've tried various methods to keep track of my health data - 
               from simple notebooks to complex apps that didn't quite fit my needs. 
               That's when I realized there was a gap in the market for a tool designed 
@@ -45,7 +45,7 @@ export default function About() {
         <div className="card backdrop-blur-sm">
           <h2 className="text-xl sm:text-2xl font-semibold font-title text-primary mb-3 sm:mb-4">Why FlareCare?</h2>
           <div className="space-y-4 text-sm text-secondary font-sans">
-            <p className="leading-relaxed">
+            <p className="leading-normal">
               FlareCare was born from my personal need for a simple, effective way to 
               track my health journey. I wanted something that would:
             </p>
@@ -71,7 +71,7 @@ export default function About() {
                 <span>Respect privacy with local-first data storage</span>
               </li>
             </ul>
-            <p className="leading-relaxed">
+            <p className="leading-normal">
               The app is designed to grow with you - whether you're newly diagnosed 
               or have been managing your condition for years.
             </p>
@@ -82,18 +82,18 @@ export default function About() {
       <div className="card backdrop-blur-sm mb-5 sm:mb-6">
         <h2 className="text-xl sm:text-2xl font-semibold font-title text-primary mb-3 sm:mb-4">The Vision</h2>
         <div className="space-y-4 text-sm text-secondary font-sans">
-          <p className="leading-relaxed">
+          <p className="leading-normal">
             Living with Crohn's or Colitis can feel isolating, but you're not alone. 
             FlareCare is built by someone who understands the daily challenges of 
             managing these conditions.
           </p>
-          <p className="leading-relaxed">
+          <p className="leading-normal">
             My hope is that this tool will help you take control of your health data, 
             make more informed decisions, and have more productive conversations with 
             your healthcare team. Every feature is designed with real-world use in mind, 
             based on nearly two decades of personal experience.
           </p>
-          <p className="leading-relaxed">
+          <p className="leading-normal">
             Whether you're tracking your first flare or managing a complex medication 
             regimen, FlareCare is here to support you on your journey to better health.
           </p>
@@ -102,7 +102,7 @@ export default function About() {
 
       <div className="card">
         <h2 className="text-xl sm:text-2xl font-semibold font-title text-primary mb-3 sm:mb-4">Stay Connected</h2>
-        <p className="text-sm text-secondary mb-4 sm:mb-6 font-sans leading-relaxed">
+        <p className="text-sm text-secondary mb-4 sm:mb-6 font-sans leading-normal">
           Have questions, suggestions, or want to share your own story? 
           I'd love to hear from you and learn how FlareCare can better serve 
           the Crohn's and Colitis community.
@@ -111,7 +111,7 @@ export default function About() {
         <div className="grid gap-4 sm:gap-6 md:grid-cols-2">
           <div className="card-inner p-4 sm:p-6">
             <h3 className="text-lg font-semibold font-title text-primary mb-3">Email Support</h3>
-            <p className="text-secondary mb-4 font-sans text-sm leading-relaxed">
+            <p className="text-secondary mb-4 font-sans text-sm leading-normal">
               For technical support, feature requests, or general questions by email.
             </p>
             <a 
@@ -124,7 +124,7 @@ export default function About() {
           
           <div className="card-inner p-4 sm:p-6">
             <h3 className="text-lg font-semibold font-title text-primary mb-3">Community Blog</h3>
-            <p className="text-secondary mb-4 font-sans text-sm leading-relaxed">
+            <p className="text-secondary mb-4 font-sans text-sm leading-normal">
               Share experiences, tips, and connect with others on similar journeys.
             </p>
             <button 
@@ -136,7 +136,7 @@ export default function About() {
           </div>
         </div>
         
-        <p className="text-sm text-secondary mt-4 sm:mt-6 text-center font-sans leading-relaxed">
+        <p className="text-sm text-secondary mt-4 sm:mt-6 text-center font-sans leading-normal">
           Together, we're building a better way to manage IBD
         </p>
       </div>

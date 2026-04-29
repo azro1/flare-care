@@ -11,11 +11,11 @@ import { supabase, TABLES } from '@/lib/supabase'
 import { isPushSupported, subscribeForPush, subscriptionToPayload, savePushSubscriptionToServer } from '@/lib/pushSubscription'
 
 function AccountPageContent() {
-  const { user, signOut, deleteUser } = useAuth()
+  const { user, logout, deleteUser } = useAuth()
   const { theme, toggleTheme } = useTheme()
   const router = useRouter()
-  const [isSigningOut, setIsSigningOut] = useState(false)
-  const [showSignOutModal, setShowSignOutModal] = useState(false)
+  const [isLoggingOut, setIsLoggingOut] = useState(false)
+  const [showLogoutModal, setShowLogoutModal] = useState(false)
   const [showDeleteModal, setShowDeleteModal] = useState(false)
   const [showFallbackAvatar, setShowFallbackAvatar] = useState(false)
   const [isDeleting, setIsDeleting] = useState(false)
@@ -23,20 +23,20 @@ function AccountPageContent() {
   const [pushEnabling, setPushEnabling] = useState(false)
   const [pushStatus, setPushStatus] = useState(null) // 'enabled' | 'unsupported' | null
 
-  const handleSignOut = async () => {
-    setIsSigningOut(true)
-    setShowSignOutModal(false)
+  const handleLogout = async () => {
+    setIsLoggingOut(true)
+    setShowLogoutModal(false)
     
     // Immediately clear localStorage to prevent flash
     localStorage.removeItem('supabase.auth.user')
     
     try {
-      await signOut()
-      setIsSigningOut(false)
+      await logout()
+      setIsLoggingOut(false)
       router.replace('/')
     } catch (error) {
-      console.error('Sign out error:', error)
-      setIsSigningOut(false)
+      console.error('Logout error:', error)
+      setIsLoggingOut(false)
     }
   }
 
@@ -109,12 +109,12 @@ function AccountPageContent() {
     setShowFallbackAvatar(false)
   }, [avatarUrl])
 
-  if (isSigningOut) {
+  if (isLoggingOut) {
     return (
       <div className="flex-grow flex items-center justify-center">
         <div className="text-center">
           <div className="w-8 h-8 border-4 border-[#5F9EA0] border-t-transparent rounded-full animate-spin mx-auto mb-4"></div>
-          <p className="text-secondary font-sans">Signing out...</p>
+          <p className="text-secondary font-sans">Logging out...</p>
         </div>
       </div>
     )
@@ -127,7 +127,7 @@ function AccountPageContent() {
         <div className="mb-5 sm:mb-6 card">
           <div className="text-center">
             <h1 className="text-2xl sm:text-3xl lg:text-4xl font-bold font-title text-primary mb-3 sm:mb-4">My Account</h1>
-            <p className="text-sm text-secondary font-sans break-words leading-relaxed">Manage your account settings and profile information</p>
+            <p className="text-sm text-secondary font-sans break-words leading-normal">Manage your account settings and profile information</p>
           </div>
         </div>
 
@@ -173,12 +173,12 @@ function AccountPageContent() {
                 </div>
                 <button
                   type="button"
-                  onClick={() => setShowSignOutModal(true)}
-                  disabled={isSigningOut}
-                  className="button-cadet flex-shrink-0 px-4 py-2 text-base sm:text-lg font-semibold rounded-lg transition-colors inline-flex items-center justify-center whitespace-nowrap disabled:opacity-50"
+                  onClick={() => setShowLogoutModal(true)}
+                  disabled={isLoggingOut}
+                  className="button-cadet btn-size-md flex-shrink-0 px-4 py-2 text-base sm:text-lg font-semibold rounded-lg transition-colors inline-flex items-center justify-center whitespace-nowrap font-sans disabled:opacity-50"
                 >
                   <LogOut className="w-5 h-5 mr-2 shrink-0" strokeWidth={2} aria-hidden />
-                  Sign Out
+                  Log Out
                 </button>
               </div>
 
@@ -277,7 +277,7 @@ function AccountPageContent() {
                 <button
                   type="button"
                   onClick={() => setShowDeleteModal(true)}
-                  className="button-delete flex-shrink-0 inline-flex items-center justify-center px-4 py-2 text-base sm:text-lg font-semibold rounded-lg transition-colors whitespace-nowrap"
+                  className="button-delete btn-size-md flex-shrink-0 px-4 py-2 text-base sm:text-lg font-semibold rounded-lg transition-colors inline-flex items-center justify-center whitespace-nowrap"
                 >
                   <Trash2 className="w-5 h-5 mr-2 shrink-0" strokeWidth={2} aria-hidden />
                   Delete
@@ -345,8 +345,8 @@ function AccountPageContent() {
         </div>
       </div>
 
-      {/* Sign Out Confirmation Modal */}
-      {showSignOutModal && (
+      {/* Logout Confirmation Modal */}
+      {showLogoutModal && (
         <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
           <div className="rounded-xl p-6 max-w-md mx-4 border" style={{backgroundColor: 'var(--bg-dropdown)', borderColor: 'var(--border-dropdown)'}}>
             <div className="flex items-center gap-3 mb-4">
@@ -355,27 +355,27 @@ function AccountPageContent() {
                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17 16l4-4m0 0l-4-4m4 4H7m6 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h4a3 3 0 013 3v1" />
                 </svg>
               </div>
-              <h3 className="text-lg font-semibold text-primary">Sign Out</h3>
+              <h3 className="text-lg font-semibold text-primary">Log Out</h3>
             </div>
             
             <p className="text-[15px] sm:text-base text-secondary mb-6">
-              Are you sure you want to sign out of your account?
+              Are you sure you want to log out of your account?
             </p>
             
             <div className="flex gap-3">
               <button
-                onClick={() => setShowSignOutModal(false)}
-                disabled={isSigningOut}
-                className="flex-1 button-cancel disabled:opacity-50"
+                onClick={() => setShowLogoutModal(false)}
+                disabled={isLoggingOut}
+                className="flex-1 button-cancel btn-size-md disabled:opacity-50"
               >
                 Cancel
               </button>
               <button
-                onClick={handleSignOut}
-                disabled={isSigningOut}
-                className="flex-1 px-4 py-2 bg-[#5F9EA0] text-white hover:bg-button-cadet-hover rounded-lg transition-colors font-semibold font-sans disabled:opacity-50"
+                onClick={handleLogout}
+                disabled={isLoggingOut}
+                className="flex-1 button-cadet btn-size-md disabled:opacity-50"
               >
-                {isSigningOut ? 'Signing Out...' : 'Sign Out'}
+                {isLoggingOut ? 'Logging Out...' : 'Log Out'}
               </button>
             </div>
           </div>
@@ -412,14 +412,14 @@ function AccountPageContent() {
                   setDeleteError(null)
                 }}
                 disabled={isDeleting}
-                className="flex-1 button-cancel disabled:opacity-50"
+                className="flex-1 button-cancel btn-size-md disabled:opacity-50"
               >
                 Cancel
               </button>
               <button
                 onClick={handleDeleteAccount}
                 disabled={isDeleting}
-                className="button-delete flex-1 disabled:opacity-50"
+                className="button-delete btn-size-md flex-1 disabled:opacity-50"
               >
                 {isDeleting ? 'Deleting...' : 'Delete'}
               </button>

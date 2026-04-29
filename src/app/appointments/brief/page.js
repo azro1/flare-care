@@ -1,8 +1,10 @@
 'use client'
 
-import { useCallback, useEffect, useMemo, useState } from 'react'
+import { useCallback, useEffect, useMemo, useRef, useState } from 'react'
+import { createPortal } from 'react-dom'
 import { useRouter } from 'next/navigation'
 import ProtectedRoute from '@/components/ProtectedRoute'
+import ClinicianEmailModal from '@/components/ClinicianEmailModal'
 import { useAuth } from '@/lib/AuthContext'
 import { supabase, TABLES } from '@/lib/supabase'
 import DatePicker from 'react-datepicker'
@@ -24,6 +26,27 @@ const toDayStart = (date) => {
   const d = new Date(date)
   d.setHours(0, 0, 0, 0)
   return d
+}
+
+const toAppointmentDateTime = (appointment) => {
+  if (!appointment?.date) return null
+  const base = new Date(appointment.date)
+  if (Number.isNaN(base.getTime())) return null
+
+  // If no time is set, treat as end-of-day so same-day entries remain upcoming.
+  let hours = 23
+  let minutes = 59
+  if (typeof appointment.time === 'string' && /^\d{2}:\d{2}$/.test(appointment.time)) {
+    const [h, m] = appointment.time.split(':').map(Number)
+    if (Number.isFinite(h) && Number.isFinite(m)) {
+      hours = h
+      minutes = m
+    }
+  }
+
+  const dt = new Date(base)
+  dt.setHours(hours, minutes, 0, 0)
+  return dt
 }
 
 const safeNumber = (value) => {
@@ -56,6 +79,27 @@ function AppointmentBriefContent() {
   const [shared, setShared] = useState(false)
   const [downloaded, setDownloaded] = useState(false)
   const [brief, setBrief] = useState(null)
+  const [isEmailModalOpen, setIsEmailModalOpen] = useState(false)
+  const [emailForm, setEmailForm] = useState({
+    consultantEmail: '',
+    consultantName: '',
+    note: '',
+  })
+  const [emailError, setEmailError] = useState('')
+  const [isSendingEmail, setIsSendingEmail] = useState(false)
+  const [showEmailSentToast, setShowEmailSentToast] = useState(false)
+  const [emailToastPortalReady, setEmailToastPortalReady] = useState(false)
+  const emailSentToastTimerRef = useRef(null)
+
+  useEffect(() => {
+    setEmailToastPortalReady(true)
+    return () => {
+      if (emailSentToastTimerRef.current) {
+        clearTimeout(emailSentToastTimerRef.current)
+        emailSentToastTimerRef.current = null
+      }
+    }
+  }, [])
 
   const loadBrief = useCallback(async () => {
     if (!user?.id) return
@@ -121,7 +165,7 @@ function AppointmentBriefContent() {
           .eq('user_id', user.id)
           .gte('date', today.toISOString().split('T')[0])
           .order('date', { ascending: true })
-          .limit(1)
+          .order('time', { ascending: true })
       ])
 
       if (symptomsRes.error) throw symptomsRes.error
@@ -183,7 +227,12 @@ function AppointmentBriefContent() {
       const missedCurrent = countMissedItemsInRange(currentStart, currentEnd)
       const missedPrevious = countMissedItemsInRange(previousStart, previousEnd)
 
-      const nextAppointment = appointmentsRes.data?.[0] || null
+      const now = new Date()
+      const upcomingAppointments = (appointmentsRes.data || []).filter((apt) => {
+        const aptDateTime = toAppointmentDateTime(apt)
+        return aptDateTime && aptDateTime.getTime() >= now.getTime()
+      })
+      const nextAppointment = upcomingAppointments[0] || null
       const talkingPoints = []
       if (severityCurrent != null && severityPrevious != null) {
         const diff = severityCurrent - severityPrevious
@@ -312,11 +361,77 @@ function AppointmentBriefContent() {
     }
   }
 
-  const emailBrief = () => {
-    if (!briefText || typeof window === 'undefined') return
-    const subject = encodeURIComponent(`Appointment Brief (${weeks} weeks)`)
-    const body = encodeURIComponent(briefText)
-    window.location.href = `mailto:?subject=${subject}&body=${body}`
+  const openEmailModal = () => {
+    if (!briefText) return
+    setEmailError('')
+    setIsEmailModalOpen(true)
+  }
+
+  const closeEmailModal = () => {
+    if (isSendingEmail) return
+    setIsEmailModalOpen(false)
+  }
+
+  const handleEmailFormChange = (event) => {
+    const { name, value } = event.target
+    setEmailForm((prev) => ({ ...prev, [name]: value }))
+  }
+
+  const handleSendBriefEmail = async (event) => {
+    event.preventDefault()
+    if (!brief) return
+
+    const email = emailForm.consultantEmail.trim()
+    if (!email || !/^[^@\s]+@[^@\s]+\.[^@\s]+$/.test(email)) {
+      setEmailError('Please enter a valid email address.')
+      return
+    }
+
+    setIsSendingEmail(true)
+    setEmailError('')
+
+    try {
+      const response = await fetch('/api/send-appointment-brief-email', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          consultantEmail: email,
+          consultantName: emailForm.consultantName.trim() || null,
+          note: emailForm.note.trim() || null,
+          period: brief.period,
+          briefText,
+          summary: {
+            symptoms: brief.symptoms,
+            bowel: brief.bowel,
+            weight: brief.weight,
+            medications: brief.medications,
+            nextAppointment: brief.nextAppointment,
+            talkingPoints: brief.talkingPoints,
+          },
+        }),
+      })
+
+      const data = await response.json().catch(() => ({}))
+      if (!response.ok) {
+        throw new Error(data?.error || 'Failed to send email. Please try again.')
+      }
+
+      setIsEmailModalOpen(false)
+      setEmailForm({ consultantEmail: '', consultantName: '', note: '' })
+      if (emailSentToastTimerRef.current) {
+        clearTimeout(emailSentToastTimerRef.current)
+      }
+      setShowEmailSentToast(true)
+      emailSentToastTimerRef.current = setTimeout(() => {
+        setShowEmailSentToast(false)
+        emailSentToastTimerRef.current = null
+      }, 4000)
+    } catch (sendError) {
+      console.error('Error sending appointment brief email:', sendError)
+      setEmailError(sendError.message || 'Failed to send email. Please try again.')
+    } finally {
+      setIsSendingEmail(false)
+    }
   }
 
   const downloadBrief = () => {
@@ -339,8 +454,49 @@ function AppointmentBriefContent() {
     }
   }
 
+  const emailSentToastEl =
+    showEmailSentToast && emailToastPortalReady ? (
+      <div
+        className="fixed z-[9999] top-24 right-4 max-w-[min(24rem,calc(100vw-2rem))] rounded-lg shadow-lg border border-black/[0.08] dark:border-white/15 flex items-center gap-3 px-4 py-3"
+        style={{ backgroundColor: 'var(--bg-dropdown)' }}
+        role="status"
+      >
+        <div className="flex-shrink-0 flex items-center justify-center w-[1.125rem] h-[1.125rem] rounded-full bg-emerald-100 dark:bg-white" aria-hidden>
+          <svg className="w-3.5 h-3.5 text-emerald-600 dark:text-black" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.4} d="M5 13l4 4L19 7" />
+          </svg>
+        </div>
+        <span className="flex-1 text-sm font-medium font-sans" style={{ color: 'var(--text-primary)' }}>
+          Summary sent successfully!
+        </span>
+        <button
+          type="button"
+          onClick={() => {
+            if (emailSentToastTimerRef.current) {
+              clearTimeout(emailSentToastTimerRef.current)
+              emailSentToastTimerRef.current = null
+            }
+            setShowEmailSentToast(false)
+          }}
+          className="flex-shrink-0 p-1 rounded-md hover:bg-black/5 dark:hover:bg-white/10 transition-colors"
+          style={{ color: 'var(--text-secondary)' }}
+          aria-label="Dismiss"
+        >
+          <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+          </svg>
+        </button>
+      </div>
+    ) : null
+
+  const emailToastPortal =
+    emailToastPortalReady && typeof document !== 'undefined' && emailSentToastEl
+      ? createPortal(emailSentToastEl, document.body)
+      : null
+
   return (
     <div className="max-w-4xl w-full mx-auto sm:px-4 md:px-6 min-w-0">
+      {emailToastPortal}
       <div className="mb-5 sm:mb-6 card">
         <div className="min-w-0">
           <h1 className="text-2xl sm:text-3xl lg:text-4xl font-bold font-title text-primary mb-3 sm:mb-6">Appointment Brief</h1>
@@ -357,8 +513,8 @@ function AppointmentBriefContent() {
             loadBrief()
           }}
         >
-          <div className="flex flex-wrap items-center gap-2 sm:gap-3">
-            <div className="flex flex-wrap items-center gap-2">
+          <div className="flex flex-wrap items-center gap-3">
+            <div className="flex flex-wrap items-center gap-3">
               {WEEK_OPTIONS.map((option) => (
                 <button
                   key={option}
@@ -441,7 +597,7 @@ function AppointmentBriefContent() {
       ) : brief ? (
         <>
           <div className="card mb-5 sm:mb-6">
-            <h2 className="text-xl font-semibold font-title text-primary mb-3">Summary ({formatUkDate(brief.period.start)} - {formatUkDate(brief.period.end)})</h2>
+            <h2 className="text-xl font-semibold font-title text-primary mb-2 sm:mb-3">Summary ({formatUkDate(brief.period.start)} - {formatUkDate(brief.period.end)})</h2>
             <div className="card-inner p-4 sm:p-6">
               <div className="space-y-3 text-sm sm:text-base text-primary font-sans">
                 <p><span className="font-semibold">Symptoms:</span> {brief.symptoms.currentCount} logs, avg severity {brief.symptoms.currentAverage != null ? `${brief.symptoms.currentAverage.toFixed(1)}/10` : 'N/A'} (prev {brief.symptoms.previousAverage != null ? `${brief.symptoms.previousAverage.toFixed(1)}/10` : 'N/A'})</p>
@@ -455,34 +611,34 @@ function AppointmentBriefContent() {
                 </p>
               </div>
             </div>
-            <div className="mt-5 flex flex-wrap gap-2 sm:gap-3">
+            <div className="mt-5 flex flex-wrap gap-3">
               {typeof navigator !== 'undefined' && navigator.share ? (
                 <button
                   type="button"
                   onClick={shareBrief}
-                  className="button-cadet px-4 py-2 text-sm sm:text-base font-semibold rounded-lg transition-colors inline-flex items-center justify-center whitespace-nowrap"
+                  className="button-cadet btn-size-md transition-colors inline-flex items-center justify-center whitespace-nowrap"
                 >
                   {shared ? 'Shared' : 'Share'}
                 </button>
               ) : null}
               <button
                 type="button"
-                onClick={emailBrief}
-                className="button-cadet px-4 py-2 text-sm sm:text-base font-semibold rounded-lg transition-colors inline-flex items-center justify-center whitespace-nowrap"
+                onClick={openEmailModal}
+                className="button-cadet btn-size-md transition-colors inline-flex items-center justify-center whitespace-nowrap"
               >
                 Email
               </button>
               <button
                 type="button"
                 onClick={copyBrief}
-                className="button-cadet px-4 py-2 text-sm sm:text-base font-semibold rounded-lg transition-colors inline-flex items-center justify-center whitespace-nowrap"
+                className="button-cadet btn-size-md transition-colors inline-flex items-center justify-center whitespace-nowrap"
               >
                 {copied ? 'Copied' : 'Copy'}
               </button>
               <button
                 type="button"
                 onClick={downloadBrief}
-                className="button-cadet px-4 py-2 text-sm sm:text-base font-semibold rounded-lg transition-colors inline-flex items-center justify-center whitespace-nowrap"
+                className="button-cadet btn-size-md transition-colors inline-flex items-center justify-center whitespace-nowrap"
               >
                 {downloaded ? 'Downloaded' : 'Download .txt'}
               </button>
@@ -490,40 +646,66 @@ function AppointmentBriefContent() {
           </div>
 
           <div className="card mb-5 sm:mb-6">
-            <h2 className="text-xl font-semibold font-title text-primary mb-3">Next appointment</h2>
-            {brief.nextAppointment ? (
-              <div className="space-y-2 text-sm sm:text-base text-primary font-sans">
-                <p><span className="font-semibold">Date:</span> {formatUkDate(brief.nextAppointment.date)}{brief.nextAppointment.time ? ` at ${brief.nextAppointment.time}` : ''}</p>
-                <p><span className="font-semibold">Type:</span> {brief.nextAppointment.type || 'Not set'}</p>
-                {brief.nextAppointment.clinician_name ? <p><span className="font-semibold">Clinician:</span> {brief.nextAppointment.clinician_name}</p> : null}
-                {brief.nextAppointment.location ? <p><span className="font-semibold">Location:</span> {brief.nextAppointment.location}</p> : null}
-                {brief.nextAppointment.notes?.trim() ? <p><span className="font-semibold">Notes:</span> {brief.nextAppointment.notes.trim()}</p> : null}
-              </div>
-            ) : (
-              <p className="text-sm sm:text-base text-secondary font-sans">No upcoming appointment found.</p>
-            )}
+            <h2 className="text-xl font-semibold font-title text-primary mb-2">Next appointment</h2>
+            <div className="card-inner p-4 sm:p-6">
+              {brief.nextAppointment ? (
+                <div className="space-y-2 text-sm sm:text-base text-primary font-sans">
+                  <p><span className="font-semibold">Date:</span> {formatUkDate(brief.nextAppointment.date)}{brief.nextAppointment.time ? ` at ${brief.nextAppointment.time}` : ''}</p>
+                  <p><span className="font-semibold">Type:</span> {brief.nextAppointment.type || 'Not set'}</p>
+                  {brief.nextAppointment.clinician_name ? <p><span className="font-semibold">Clinician:</span> {brief.nextAppointment.clinician_name}</p> : null}
+                  {brief.nextAppointment.location ? <p><span className="font-semibold">Location:</span> {brief.nextAppointment.location}</p> : null}
+                  {brief.nextAppointment.notes?.trim() ? <p><span className="font-semibold">Notes:</span> {brief.nextAppointment.notes.trim()}</p> : null}
+                </div>
+              ) : (
+                <p className="text-sm sm:text-base text-secondary font-sans">No upcoming appointment found.</p>
+              )}
+            </div>
           </div>
 
           <div className="card mb-5 sm:mb-6">
-            <h2 className="text-xl font-semibold font-title text-primary mb-3">What changed</h2>
-            <ul className="space-y-2 text-sm sm:text-base text-primary font-sans">
-              {brief.talkingPoints.map((point) => (
-                <li key={point}>- {point}</li>
-              ))}
-            </ul>
+            <h2 className="text-xl font-semibold font-title text-primary mb-2">What changed</h2>
+            <div className="card-inner p-4 sm:p-6">
+              <ul className="space-y-2 text-sm sm:text-base text-primary font-sans">
+                {brief.talkingPoints.map((point) => (
+                  <li key={point}>- {point}</li>
+                ))}
+              </ul>
+            </div>
           </div>
 
           <div className="flex items-center gap-3">
             <button
               type="button"
               onClick={() => router.push('/appointments')}
-              className="button-cadet px-4 py-2 text-base sm:text-lg font-semibold rounded-lg transition-colors inline-flex items-center justify-center whitespace-nowrap"
+              className="button-cadet btn-size-lg hover:shadow-lg inline-flex items-center justify-center whitespace-nowrap font-sans w-auto"
             >
-              Back to appointments
+              Back to My Appointments
             </button>
           </div>
         </>
       ) : null}
+
+      <ClinicianEmailModal
+        isOpen={isEmailModalOpen}
+        onClose={closeEmailModal}
+        onSubmit={handleSendBriefEmail}
+        title="Email this summary"
+        description="Please fill in the fields below to send this appointment summary to your clinician."
+        periodText={
+          brief?.period
+            ? `This summary will cover the period from ${formatUkDate(brief.period.start)} to ${formatUkDate(brief.period.end)}.`
+            : ''
+        }
+        emailLabel="Clinician email *"
+        nameLabel="Clinician name (optional)"
+        noteLabel="Note to include (optional)"
+        submitLabel="Send summary"
+        isSubmitting={isSendingEmail}
+        error={emailError}
+        form={emailForm}
+        onFormChange={handleEmailFormChange}
+        idPrefix="brief-email"
+      />
     </div>
   )
 }

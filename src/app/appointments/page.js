@@ -347,7 +347,7 @@ function AppointmentsPageContent() {
               <h1 className="text-2xl sm:text-3xl lg:text-4xl font-bold font-title text-primary mb-3 sm:mb-6">
                 My Appointments
               </h1>
-              <p className="text-sm sm:text-base text-secondary font-sans leading-relaxed">
+              <p className="text-sm sm:text-base text-secondary font-sans leading-normal">
                 Manage your appointments to keep track of past and upcoming visits.
               </p>
             </div>
@@ -397,7 +397,7 @@ function AppointmentsPageContent() {
             <button
               type="button"
               onClick={startAdding}
-              className="button-cadet flex-shrink-0 px-4 py-2 text-base sm:text-lg font-semibold rounded-lg transition-colors inline-flex items-center justify-center"
+              className="button-cadet btn-size-md flex-shrink-0 px-4 py-2 text-base sm:text-lg font-semibold rounded-lg transition-colors inline-flex items-center justify-center"
             >
               <svg className="w-5 h-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 6v6m0 0v6m0-6h6m-6 0H6" />
@@ -561,7 +561,7 @@ function AppointmentsPageContent() {
                 <p className="text-sm font-sans" role="alert" style={{ color: 'var(--text-cadet-blue)' }}>{saveError}</p>
               )}
               <div className="flex flex-col sm:flex-row gap-4">
-                <button type="submit" className="button-cadet px-4 py-2 text-base sm:text-lg font-semibold rounded-lg transition-colors">
+                <button type="submit" className="button-cadet btn-size-lg transition-colors">
                   <svg className="w-5 h-5 mr-2 inline" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
                   </svg>
@@ -628,7 +628,7 @@ function AppointmentsPageContent() {
               <h3 className="text-lg font-semibold font-title text-primary mb-2">
                 {appointmentsTab === 'past' ? 'No past appointments' : 'No upcoming appointments'}
               </h3>
-              <p className="text-sm font-sans text-secondary max-w-md mx-auto leading-relaxed">
+              <p className="text-sm font-sans text-secondary max-w-md mx-auto leading-normal">
                 {appointmentsTab === 'past'
                   ? 'Your past appointments will appear here once they have taken place.'
                   : 'Your appointments will show here once you add them'}
@@ -725,7 +725,7 @@ function AppointmentsPageContent() {
             <Bell className="w-5 h-5 sm:w-6 sm:h-6 flex-shrink-0" style={{ color: 'var(--text-cadet-blue)' }} />
             <span>Appointment Reminders</span>
           </h3>
-          <p className="text-sm text-secondary font-sans leading-relaxed">
+          <p className="text-sm text-secondary font-sans leading-normal">
             Get notified so you do not miss an appointment, in your browser or on your device.
           </p>
           <div className="card-inner p-5 sm:p-6 mt-4">
@@ -733,25 +733,25 @@ function AppointmentsPageContent() {
               <Lightbulb className="w-5 h-5 flex-shrink-0 text-amber-500" />
               <span className="text-base sm:text-sm font-semibold text-primary font-title">Important:</span>
             </div>
-            <p className="text-xs text-secondary font-sans leading-relaxed">
+            <p className="text-xs text-secondary font-sans leading-normal">
               You need to enable push notifications in account settings to get appointment reminders.
             </p>
           </div>
         </div>
       </div>
 
-      <div className="mt-4 sm:mt-6 card">
-        <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3">
+      <div className="mt-5 sm:mt-6 card">
+        <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
           <div className="min-w-0">
-            <h3 className="text-lg sm:text-xl font-semibold font-title text-primary">Before your appointment</h3>
-            <p className="text-sm text-secondary font-sans leading-relaxed mt-1">
+            <h3 className="text-xl sm:text-lg font-semibold font-title text-primary mb-2">Before your appointment</h3>
+            <p className="text-sm text-secondary font-sans leading-normal">
               Generate your consultation summary and share it with your care team.
             </p>
           </div>
           <button
             type="button"
             onClick={() => router.push('/appointments/brief')}
-            className="button-cadet flex-shrink-0 px-4 py-2 text-base sm:text-lg font-semibold rounded-lg transition-colors inline-flex items-center justify-center whitespace-nowrap"
+            className="button-cadet btn-size-lg flex-shrink-0 hover:shadow-lg inline-flex items-center justify-center whitespace-nowrap font-sans w-full sm:w-auto"
           >
             <FileText className="w-5 h-5 mr-2" />
             Generate Summary

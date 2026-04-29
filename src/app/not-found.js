@@ -28,12 +28,12 @@ export default function NotFound() {
     <div className="pt-24 sm:pt-0 sm:flex-grow flex flex-col items-center justify-center px-6">
       <div className="text-center max-w-md mx-auto">
         <h1 className="text-2xl sm:text-3xl lg:text-4xl font-bold font-title text-primary mb-4">Page Not Found!</h1>
-        <p className="text-tertiary mb-8 leading-relaxed">
+        <p className="text-tertiary mb-8 leading-normal">
           Sorry, we couldn't find the page you're looking for. It might have been moved or doesn't exist.
         </p>
         <Link 
           href="/"
-          className="button-cadet font-bold py-2.5 px-8 rounded-lg hover:shadow-lg inline-block text-lg"
+          className="button-cadet btn-size-md font-bold py-2.5 px-8 rounded-lg hover:shadow-lg inline-block text-lg"
         >
           Go back home
         </Link>

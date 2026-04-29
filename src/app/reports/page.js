@@ -5,6 +5,7 @@ import { createPortal } from 'react-dom'
 import { usePathname } from 'next/navigation'
 import jsPDF from 'jspdf'
 import ConfirmationModal from '@/components/ConfirmationModal'
+import ClinicianEmailModal from '@/components/ClinicianEmailModal'
 import DatePicker from 'react-datepicker'
 import 'react-datepicker/dist/react-datepicker.css'
 import DateInputWithCalendar from '@/components/DateInputWithCalendar'
@@ -1511,7 +1512,7 @@ function ReportsPageContent() {
       <div className="max-w-4xl mx-auto">
       <div className="mb-5 sm:mb-6 card">
         <h1 className="text-2xl sm:text-3xl lg:text-4xl font-bold font-title text-primary mb-3 sm:mb-6">Reports</h1>
-        <p className="text-sm sm:text-base text-secondary font-sans leading-relaxed">
+        <p className="text-sm sm:text-base text-secondary font-sans leading-normal">
           Generate reports from your records to support informed decisions about your care.
         </p>
       </div>
@@ -1524,7 +1525,7 @@ function ReportsPageContent() {
           </div>
           <h2 className="text-xl sm:text-2xl font-semibold font-title text-primary flex-1 capitalize">Select report period</h2>
         </div>
-        <p className="text-sm text-secondary font-sans leading-relaxed mb-6">
+        <p className="text-sm text-secondary font-sans leading-normal mb-6">
           Choose a date range to include symptom episodes in the report.
         </p>
         
@@ -1637,7 +1638,7 @@ function ReportsPageContent() {
           </div>
         </div>
         <div className="flex flex-col gap-4">
-          <p className="text-sm text-secondary font-sans leading-relaxed">
+          <p className="text-sm text-secondary font-sans leading-normal">
             Found {reportData.totalEntries} {reportData.totalEntries === 1 ? 'episode' : 'episodes'} in the selected period
           </p>
           {reportData.totalEntries > 0 && (
@@ -1661,23 +1662,23 @@ function ReportsPageContent() {
             </div>
           )}
           {reportData.totalEntries > 0 && (
-            <div className="text-sm text-secondary font-sans leading-relaxed">
+            <div className="text-sm text-secondary font-sans leading-normal">
               Showing symptoms from {formatUKDate(dateRange.startDate)} to {formatUKDate(dateRange.endDate)}
             </div>
           )}
           <div className="flex flex-wrap gap-3 my-2 sm:my-0 sm:mt-2">
-            <button onClick={() => handleExportClick(exportToPDF)} className="inline-flex items-center justify-center px-4 py-2.5 sm:px-6 sm:py-3 button-cadet rounded-lg whitespace-nowrap text-sm sm:text-base">
+            <button onClick={() => handleExportClick(exportToPDF)} className="inline-flex items-center justify-center px-4 py-2.5 sm:px-6 sm:py-3 button-cadet btn-size-md rounded-lg whitespace-nowrap text-sm sm:text-base">
               <FileText className="w-4 h-4 sm:w-5 sm:h-5 mr-2 shrink-0" />
               Export PDF
             </button>
-            <button onClick={() => handleExportClick(exportToCSV)} className="inline-flex items-center justify-center px-4 py-2.5 sm:px-6 sm:py-3 button-cadet rounded-lg whitespace-nowrap text-sm sm:text-base">
+            <button onClick={() => handleExportClick(exportToCSV)} className="inline-flex items-center justify-center px-4 py-2.5 sm:px-6 sm:py-3 button-cadet btn-size-md rounded-lg whitespace-nowrap text-sm sm:text-base">
               <FileDown className="w-4 h-4 sm:w-5 sm:h-5 mr-2 shrink-0" />
               Export CSV
             </button>
             <button
               type="button"
               onClick={openEmailModal}
-              className="inline-flex items-center justify-center px-4 py-2.5 sm:px-6 sm:py-3 button-cadet rounded-lg whitespace-nowrap text-sm sm:text-base"
+              className="inline-flex items-center justify-center px-4 py-2.5 sm:px-6 sm:py-3 button-cadet btn-size-md rounded-lg whitespace-nowrap text-sm sm:text-base"
             >
               <Mail className="w-4 h-4 sm:w-5 sm:h-5 mr-2 shrink-0" />
               Email Report
@@ -1827,8 +1828,8 @@ function ReportsPageContent() {
                       {listPages.missedMeds * REPORT_PAGE_SIZE + 1}–{Math.min((listPages.missedMeds + 1) * REPORT_PAGE_SIZE, reportData.medicationTracking.missedMedications.length)} of {reportData.medicationTracking.missedMedications.length}
                     </span>
                     <div className="flex gap-2">
-                      <button type="button" onClick={() => setListPage('missedMeds', listPages.missedMeds - 1)} disabled={listPages.missedMeds === 0} className="px-3 py-1.5 text-sm button-cancel rounded-lg disabled:opacity-50">Previous</button>
-                      <button type="button" onClick={() => setListPage('missedMeds', listPages.missedMeds + 1)} disabled={(listPages.missedMeds + 1) * REPORT_PAGE_SIZE >= reportData.medicationTracking.missedMedications.length} className="px-3 py-1.5 text-sm button-cadet rounded-lg disabled:opacity-50">Next</button>
+                      <button type="button" onClick={() => setListPage('missedMeds', listPages.missedMeds - 1)} disabled={listPages.missedMeds === 0} className="px-3 py-1.5 text-sm button-cancel btn-size-md rounded-lg disabled:opacity-50">Previous</button>
+                      <button type="button" onClick={() => setListPage('missedMeds', listPages.missedMeds + 1)} disabled={(listPages.missedMeds + 1) * REPORT_PAGE_SIZE >= reportData.medicationTracking.missedMedications.length} className="px-3 py-1.5 text-sm button-cadet btn-size-md rounded-lg disabled:opacity-50">Next</button>
                     </div>
                   </div>
                 )}
@@ -1889,8 +1890,8 @@ function ReportsPageContent() {
                       {listPages.nsaids * REPORT_PAGE_SIZE + 1}–{Math.min((listPages.nsaids + 1) * REPORT_PAGE_SIZE, reportData.medicationTracking.nsaids.length)} of {reportData.medicationTracking.nsaids.length}
                     </span>
                     <div className="flex gap-2">
-                      <button type="button" onClick={() => setListPage('nsaids', listPages.nsaids - 1)} disabled={listPages.nsaids === 0} className="px-3 py-1.5 text-sm button-cancel rounded-lg disabled:opacity-50">Previous</button>
-                      <button type="button" onClick={() => setListPage('nsaids', listPages.nsaids + 1)} disabled={(listPages.nsaids + 1) * REPORT_PAGE_SIZE >= reportData.medicationTracking.nsaids.length} className="px-3 py-1.5 text-sm button-cadet rounded-lg disabled:opacity-50">Next</button>
+                      <button type="button" onClick={() => setListPage('nsaids', listPages.nsaids - 1)} disabled={listPages.nsaids === 0} className="px-3 py-1.5 text-sm button-cancel btn-size-md rounded-lg disabled:opacity-50">Previous</button>
+                      <button type="button" onClick={() => setListPage('nsaids', listPages.nsaids + 1)} disabled={(listPages.nsaids + 1) * REPORT_PAGE_SIZE >= reportData.medicationTracking.nsaids.length} className="px-3 py-1.5 text-sm button-cadet btn-size-md rounded-lg disabled:opacity-50">Next</button>
                     </div>
                   </div>
                 )}
@@ -1935,8 +1936,8 @@ function ReportsPageContent() {
                       {listPages.antibiotics * REPORT_PAGE_SIZE + 1}–{Math.min((listPages.antibiotics + 1) * REPORT_PAGE_SIZE, reportData.medicationTracking.antibiotics.length)} of {reportData.medicationTracking.antibiotics.length}
                     </span>
                     <div className="flex gap-2">
-                      <button type="button" onClick={() => setListPage('antibiotics', listPages.antibiotics - 1)} disabled={listPages.antibiotics === 0} className="px-3 py-1.5 text-sm button-cancel rounded-lg disabled:opacity-50">Previous</button>
-                      <button type="button" onClick={() => setListPage('antibiotics', listPages.antibiotics + 1)} disabled={(listPages.antibiotics + 1) * REPORT_PAGE_SIZE >= reportData.medicationTracking.antibiotics.length} className="px-3 py-1.5 text-sm button-cadet rounded-lg disabled:opacity-50">Next</button>
+                      <button type="button" onClick={() => setListPage('antibiotics', listPages.antibiotics - 1)} disabled={listPages.antibiotics === 0} className="px-3 py-1.5 text-sm button-cancel btn-size-md rounded-lg disabled:opacity-50">Previous</button>
+                      <button type="button" onClick={() => setListPage('antibiotics', listPages.antibiotics + 1)} disabled={(listPages.antibiotics + 1) * REPORT_PAGE_SIZE >= reportData.medicationTracking.antibiotics.length} className="px-3 py-1.5 text-sm button-cadet btn-size-md rounded-lg disabled:opacity-50">Next</button>
                     </div>
                   </div>
                 )}
@@ -2160,100 +2161,36 @@ function ReportsPageContent() {
             <FileText className="w-10 h-10 text-secondary opacity-40" />
           </div>
           <h3 className="text-lg font-semibold font-title text-primary mb-2">No Data Available</h3>
-          <p className="text-sm font-sans text-secondary max-w-md mx-auto leading-relaxed mb-4">
+          <p className="text-sm font-sans text-secondary max-w-md mx-auto leading-normal mb-4">
             Start logging symptoms and adding medications to generate meaningful reports
           </p>
           <div className="flex flex-col sm:flex-row justify-center space-y-3 sm:space-y-0 sm:space-x-3 mt-6">
-            <a href="/symptoms" className="inline-flex items-center justify-center px-6 py-3 button-cadet rounded-xl shadow-lg hover:shadow-xl transition-all duration-300 whitespace-nowrap">Log Symptoms</a>
+            <a href="/symptoms" className="inline-flex items-center justify-center px-6 py-3 button-cadet btn-size-md rounded-xl shadow-lg hover:shadow-xl transition-all duration-300 whitespace-nowrap">Log Symptoms</a>
             <a href="/medications" className="btn-secondary whitespace-nowrap hover:shadow-none">Add Medications</a>
           </div>
         </div>
       )}
-      {isEmailModalOpen && (
-        <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 px-4">
-          <div className="bg-card rounded-xl shadow-xl max-w-md w-full" style={{ backgroundColor: 'var(--bg-dropdown)', borderColor: 'var(--border-dropdown)', borderWidth: '1px', borderStyle: 'solid' }}>
-            <form onSubmit={handleSendReportEmail} className="p-6 space-y-4">
-              <h3 className="text-xl sm:text-2xl font-semibold font-title text-primary mb-1">Email this report</h3>
-              <p className="text-sm text-secondary font-sans">
-                Please fill in the fields below to send this report summary to your clinician.
-              </p>
-              <div className="space-y-3 mt-2">
-                <div>
-                  <label htmlFor="consultantEmail" className="block text-sm font-semibold font-sans text-primary mb-2">
-                    Consultant email *
-                  </label>
-                  <input
-                    id="consultantEmail"
-                    name="consultantEmail"
-                    type="email"
-                    className="input-field-wizard w-full"
-                    value={emailForm.consultantEmail}
-                    onChange={handleEmailFormChange}
-                    placeholder="dr.smith@example.com"
-                    required
-                  />
-                  {emailError && (
-                    <p className="mt-1 text-xs text-[var(--text-error)] font-sans">
-                      {emailError}
-                    </p>
-                  )}
-                </div>
-                <div>
-                  <label htmlFor="consultantName" className="block text-sm font-semibold font-sans text-primary mb-2">
-                    Consultant name (optional)
-                  </label>
-                  <input
-                    id="consultantName"
-                    name="consultantName"
-                    type="text"
-                    className="input-field-wizard w-full"
-                    value={emailForm.consultantName}
-                    onChange={handleEmailFormChange}
-                    placeholder="e.g. Dr Smith, IBD Nurse"
-                  />
-                </div>
-                <div>
-                  <label htmlFor="note" className="block text-sm font-semibold font-sans text-primary mb-2">
-                    Note to include (optional)
-                  </label>
-                  <textarea
-                    id="note"
-                    name="note"
-                    rows={3}
-                    className="input-field-wizard w-full resize-none"
-                    value={emailForm.note}
-                    onChange={handleEmailFormChange}
-                    placeholder="Any context you want to share with your clinician."
-                  />
-                </div>
-                {reportData?.period && (
-                  <div className="text-xs leading-normal text-secondary font-sans bg-[var(--bg-card)]/60 rounded-lg pb-2">
-                    This report will cover the period from{' '}
-                    {formatUKDate(reportData.period.start)} to {formatUKDate(reportData.period.end)}.
-                  </div>
-                )}
-              </div>
-              <div className="flex justify-end gap-3 mt-4">
-                <button
-                  type="button"
-                  onClick={closeEmailModal}
-                  className="px-4 py-2 text-base font-medium button-cancel"
-                  disabled={isSendingEmail}
-                >
-                  Cancel
-                </button>
-                <button
-                  type="submit"
-                  className="px-4 py-2 text-base font-semibold button-cadet rounded-lg inline-flex items-center justify-center disabled:opacity-50 disabled:cursor-not-allowed"
-                  disabled={isSendingEmail}
-                >
-                  {isSendingEmail ? 'Sending…' : 'Send report'}
-                </button>
-              </div>
-            </form>
-          </div>
-        </div>
-      )}
+      <ClinicianEmailModal
+        isOpen={isEmailModalOpen}
+        onClose={closeEmailModal}
+        onSubmit={handleSendReportEmail}
+        title="Email this report"
+        description="Please fill in the fields below to send this report summary to your clinician."
+        periodText={
+          reportData?.period
+            ? `This report will cover the period from ${formatUKDate(reportData.period.start)} to ${formatUKDate(reportData.period.end)}.`
+            : ''
+        }
+        emailLabel="Consultant email *"
+        nameLabel="Consultant name (optional)"
+        noteLabel="Note to include (optional)"
+        submitLabel="Send report"
+        isSubmitting={isSendingEmail}
+        error={emailError}
+        form={emailForm}
+        onFormChange={handleEmailFormChange}
+        idPrefix="report-email"
+      />
       </div>
 
       {/* No Data Modal */}

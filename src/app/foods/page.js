@@ -89,7 +89,7 @@ export default function Foods() {
           <h1 className="text-2xl sm:text-3xl lg:text-4xl font-bold font-title text-primary mb-3 sm:mb-4">
             Foods
           </h1>
-          <p className="text-sm text-secondary break-words leading-relaxed">
+          <p className="text-sm text-secondary break-words leading-normal">
             Learn about different food categories and their nutritional properties to help you make informed choices about your diet
           </p>
         </div>
@@ -102,7 +102,7 @@ export default function Foods() {
                 <span className="text-4xl">{category.emoji}</span>
                 <h2 className="text-xl font-semibold font-title text-primary">{category.title}</h2>
               </div>
-              <p className="text-sm text-secondary  mb-4 leading-relaxed">{category.description}</p>
+              <p className="text-sm text-secondary  mb-4 leading-normal">{category.description}</p>
               <div>
                 <h3 className="text-sm font-semibold font-title text-primary mb-3 sm:mb-4">Examples:</h3>
                 <div className="flex flex-wrap gap-2">
@@ -128,7 +128,7 @@ export default function Foods() {
           </h2>
           <ul className="space-y-3">
             {tips.map((tip, index) => (
-              <li key={index} className="text-sm text-secondary  leading-relaxed flex items-start">
+              <li key={index} className="text-sm text-secondary  leading-normal flex items-start">
                 <span className="w-1.5 h-1.5 bg-[#5F9EA0] rounded-full mr-3 mt-2 flex-shrink-0"></span>
                 {tip}
               </li>
@@ -214,7 +214,7 @@ export default function Foods() {
               
               {/* Note */}
               <div className="card">
-                <p className="text-sm text-secondary leading-relaxed">
+                <p className="text-sm text-secondary leading-normal">
                   <span className="font-semibold text-primary font-title">Note:</span> This is a general food reference guide. Always follow the specific dietary advice provided by your doctor or registered dietitian.
                 </p>
               </div>
@@ -229,7 +229,7 @@ export default function Foods() {
         <div className="mt-5 sm:mt-6 max-w-[76rem] mx-auto px-0 sm:px-4 md:px-6 lg:px-0 lg:mt-0">
           <div className="card p-8 backdrop-blur-sm text-center">
           <h2 className="text-xl font-semibold font-title text-primary mb-3 sm:mb-5">Track Your Meals</h2>
-          <p className="text-sm text-secondary mb-4 sm:mb-6 leading-relaxed">
+          <p className="text-sm text-secondary mb-4 sm:mb-6 leading-normal">
             Use the symptom tracker to log what you eat each day and monitor how different foods affect you.
           </p>
           <Link 

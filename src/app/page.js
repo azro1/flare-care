@@ -965,7 +965,7 @@ export default function Home() {
               </div>
 
 
-              <p className="text-lg sm:text-xl text-secondary leading-relaxed max-w-2xl mx-auto">
+              <p className="text-lg sm:text-xl text-secondary leading-normal max-w-2xl mx-auto">
               Because living with Crohn’s is more than managing symptoms — it’s understanding your story
               </p>
 
@@ -1031,7 +1031,7 @@ export default function Home() {
                   <Clipboard className="w-6 h-6 text-pink-500" />
                 </div>
                 <h3 className="text-xl sm:text-2xl font-semibold text-primary">Daily check-ins</h3>
-                <p className="text-secondary leading-relaxed">
+                <p className="text-secondary leading-normal">
                   Quick notes about how you're feeling. Track pain, energy, bathroom trips, whatever matters to you.
                 </p>
               </div>
@@ -1041,7 +1041,7 @@ export default function Home() {
                   <Cookie className="w-6 h-6 text-amber-500" />
                 </div>
                 <h3 className="text-xl sm:text-2xl font-semibold text-primary">Food diary</h3>
-                <p className="text-secondary leading-relaxed">
+                <p className="text-secondary leading-normal">
                   See what works for your body. Log meals and notice patterns over time.
                 </p>
               </div>
@@ -1051,7 +1051,7 @@ export default function Home() {
                   <Pill className="w-6 h-6 text-purple-500" />
                 </div>
                 <h3 className="text-xl sm:text-2xl font-semibold text-primary">Medication reminders</h3>
-                <p className="text-secondary leading-relaxed">
+                <p className="text-secondary leading-normal">
                   Never forget a dose. Simple reminders that actually work.
                 </p>
               </div>
@@ -1061,7 +1061,7 @@ export default function Home() {
                   <TrendingUp className="w-6 h-6 text-blue-500" />
                 </div>
                 <h3 className="text-xl sm:text-2xl font-semibold text-primary">Spot your triggers</h3>
-                <p className="text-secondary leading-relaxed">
+                <p className="text-secondary leading-normal">
                   See patterns in your symptoms. Share reports with your doctor.
                 </p>
               </div>
@@ -1075,7 +1075,7 @@ export default function Home() {
               <h2 className="text-2xl sm:text-3xl font-bold text-primary mb-6">
                 Why I built this
               </h2>
-              <div className="space-y-4 text-secondary leading-relaxed">
+              <div className="space-y-4 text-secondary leading-normal">
                 <p>
                   After my diagnosis, I tried a bunch of health tracking apps. They were either too
                   complicated, too medical, or just felt like homework.
@@ -1286,7 +1286,7 @@ export default function Home() {
                     <Lightbulb className="w-5 h-5 flex-shrink-0 text-amber-500" />
                     Hint
                   </h3>
-                  <p className={`text-sm text-primary leading-relaxed transition-opacity duration-500 ${isFading ? 'opacity-0' : 'opacity-100'}`}>
+                  <p className={`text-sm text-primary leading-normal transition-opacity duration-500 ${isFading ? 'opacity-0' : 'opacity-100'}`}>
                     {dailyTips[currentTipIndex]}
                   </p>
                 </div>
@@ -1413,7 +1413,7 @@ export default function Home() {
                       <Thermometer className="w-5 h-5 text-emerald-600" />
                     </div>
                     <div className="w-full text-center min-w-0">
-                      <h3 className="text-sm font-medium font-sans text-primary leading-tight sm:leading-relaxed break-words">Log Symptoms</h3>
+                      <h3 className="text-sm font-medium font-sans text-primary leading-tight sm:leading-normal break-words">Log Symptoms</h3>
                     </div>
                   </div>
                 </Link>
@@ -1426,7 +1426,7 @@ export default function Home() {
                       <ChartLine className="w-5 h-5 text-pink-500" />
                     </div>
                     <div className="w-full text-center min-w-0">
-                      <h3 className="text-sm font-medium font-sans text-primary leading-tight sm:leading-relaxed break-words">Log Medications</h3>
+                      <h3 className="text-sm font-medium font-sans text-primary leading-tight sm:leading-normal break-words">Log Medications</h3>
                     </div>
                   </div>
                 </Link>
@@ -1439,7 +1439,7 @@ export default function Home() {
                       <CupSoda className="w-5 h-5 text-sky-600" />
                     </div>
                     <div className="w-full text-center min-w-0">
-                      <h3 className="text-sm font-medium font-sans text-primary leading-tight sm:leading-relaxed break-words">My Hydration</h3>
+                      <h3 className="text-sm font-medium font-sans text-primary leading-tight sm:leading-normal break-words">My Hydration</h3>
                     </div>
                   </div>
                 </Link>
@@ -1452,7 +1452,7 @@ export default function Home() {
                       <CircleDot className="w-5 h-5 text-amber-800 dark:text-amber-400" />
                     </div>
                     <div className="w-full text-center min-w-0">
-                      <h3 className="text-sm font-medium font-sans text-primary leading-tight sm:leading-relaxed break-words">Bowel Movements</h3>
+                      <h3 className="text-sm font-medium font-sans text-primary leading-tight sm:leading-normal break-words">Bowel Movements</h3>
                     </div>
                   </div>
                 </Link>
@@ -1813,8 +1813,8 @@ export default function Home() {
                     <div className="flex justify-center mb-3">
                       <Clock className="w-10 h-10 text-primary opacity-40" />
                     </div>
-                    <p className="text-primary text-sm leading-relaxed">No recent activity</p>
-                    <p className="text-xs text-primary mt-1 leading-relaxed opacity-80">Start tracking symptoms, medications, and bowel movements to see activity here</p>
+                    <p className="text-primary text-sm leading-normal">No recent activity</p>
+                    <p className="text-xs text-primary mt-1 leading-normal opacity-80">Start tracking symptoms, medications, and bowel movements to see activity here</p>
                     </div>
                 )
               }
@@ -2111,7 +2111,7 @@ export default function Home() {
                     <Pill className="w-5 h-5 text-purple-600 dark:[color:var(--text-icon-more-meds)]" />
                 </div>
                   <div className="w-full text-center min-w-0">
-                    <h3 className="text-sm font-medium font-sans text-primary leading-tight sm:leading-relaxed break-words">
+                    <h3 className="text-sm font-medium font-sans text-primary leading-tight sm:leading-normal break-words">
                       My Meds
                     </h3>
                   </div>
@@ -2127,7 +2127,7 @@ export default function Home() {
                     <FileText className="w-5 h-5 text-orange-600 dark:[color:var(--text-icon-more-reports)]" />
                   </div>
                   <div className="w-full text-center min-w-0">
-                    <h3 className="text-sm font-medium font-sans text-primary leading-tight sm:leading-relaxed break-words">
+                    <h3 className="text-sm font-medium font-sans text-primary leading-tight sm:leading-normal break-words">
                       Reports
                     </h3>
                   </div>
@@ -2143,7 +2143,7 @@ export default function Home() {
                     <Scale className="w-5 h-5 text-indigo-600 dark:[color:var(--text-icon-more-weight)]" />
                   </div>
                   <div className="w-full text-center min-w-0">
-                    <h3 className="text-sm font-medium font-sans text-primary leading-tight sm:leading-relaxed break-words">
+                    <h3 className="text-sm font-medium font-sans text-primary leading-tight sm:leading-normal break-words">
                       My Weight
                     </h3>
                   </div>
@@ -2160,7 +2160,7 @@ export default function Home() {
                     <Calendar className="w-5 h-5 text-slate-700 dark:[color:var(--text-icon-more-appointments)]" />
                   </div>
                   <div className="w-full text-center min-w-0">
-                    <h3 className="text-sm font-medium font-sans text-primary leading-tight sm:leading-relaxed break-words">
+                    <h3 className="text-sm font-medium font-sans text-primary leading-tight sm:leading-normal break-words">
                       Appointments
                     </h3>
                   </div>

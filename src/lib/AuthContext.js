@@ -130,14 +130,14 @@ export const AuthProvider = ({ children }) => {
     }
   }
 
-  // Sign out
-  const signOut = async () => {
+  // Logout
+  const logout = async () => {
     try {
       const { error } = await supabase.auth.signOut()
       if (error) throw error
       return { success: true }
     } catch (error) {
-      console.error('Sign out error:', error)
+      console.error('Logout error:', error)
       return { success: false, error: error.message }
     }
   }
@@ -166,8 +166,8 @@ export const AuthProvider = ({ children }) => {
       // Re-set toast flag after clearUserData (in case it was cleared)
       localStorage.setItem('showAccountDeletedToast', 'true')
 
-      // Sign out (this will also clear the session)
-      await signOut()
+      // Logout (this will also clear the session)
+      await logout()
 
       return { success: true }
     } catch (error) {
@@ -181,7 +181,7 @@ export const AuthProvider = ({ children }) => {
     isAuthenticated,
     loading,
     signInWithOtp,
-    signOut,
+    logout,
     deleteUser
   }
 
