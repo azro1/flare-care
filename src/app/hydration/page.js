@@ -1,6 +1,7 @@
 'use client'
 
 import { useState, useEffect } from 'react'
+import { useRouter } from 'next/navigation'
 import { useAuth } from '@/lib/AuthContext'
 import ProtectedRoute from '@/components/ProtectedRoute'
 import ConfirmationModal from '@/components/ConfirmationModal'
@@ -11,6 +12,7 @@ const HYDRATION_TARGET = 6
 
 function HydrationPageContent() {
   const { user } = useAuth()
+  const router = useRouter()
   const [glasses, setGlasses] = useState(0)
   const [isLoading, setIsLoading] = useState(true)
   const [showResetModal, setShowResetModal] = useState(false)
@@ -170,6 +172,16 @@ function HydrationPageContent() {
             </p>
           </div>
         </div>
+      </div>
+
+      <div className="flex items-center gap-3 mt-5 sm:mt-6">
+        <button
+          type="button"
+          onClick={() => router.push('/')}
+          className="button-cadet btn-size-md flex-shrink-0 px-4 py-2 text-base sm:text-lg font-semibold rounded-lg transition-colors hover:shadow-lg inline-flex items-center justify-center whitespace-nowrap font-sans w-auto"
+        >
+          Back
+        </button>
       </div>
 
       <ConfirmationModal

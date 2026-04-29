@@ -937,6 +937,16 @@ className="px-4 py-2 text-base sm:text-lg font-medium font-sans rounded-lg trans
         </div>
       </div>
 
+      <div className="flex items-center gap-3 mt-5 sm:mt-6">
+        <button
+          type="button"
+          onClick={() => router.push('/')}
+          className="button-cadet btn-size-md flex-shrink-0 px-4 py-2 text-base sm:text-lg font-semibold rounded-lg transition-colors hover:shadow-lg inline-flex items-center justify-center whitespace-nowrap font-sans w-auto"
+        >
+          Back
+        </button>
+      </div>
+
       <ConfirmationModal
         isOpen={deleteModal.isOpen}
         onClose={closeDeleteModal}

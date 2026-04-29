@@ -263,7 +263,7 @@ function SymptomDetailContent() {
               {/* Bathroom & Lifestyle */}
               <div className="card min-w-0 overflow-hidden">
                 <h2 className="text-xl font-semibold font-title text-primary mb-3 sm:mb-4">Details</h2>
-                <div className="space-y-0 [&>*:last-child]:pb-0">
+                <div className="space-y-0 [&>*:last-child]:pb-0 [&>*:last-child]:border-b-0">
                 <div className="flex justify-between items-center gap-4 pt-0 pb-4 border-b min-w-0 overflow-hidden" style={{ borderColor: 'var(--separator-card)' }}>
                   <span className="text-sm sm:text-base text-secondary font-sans shrink-0">Bathroom frequency</span>
                   <span className="text-sm sm:text-base font-medium text-primary font-sans min-w-0 break-words text-right">{symptom.normal_bathroom_frequency || 'Not set'} times/day</span>
@@ -449,14 +449,14 @@ function SymptomDetailContent() {
               <button
                 onClick={() => setShowDeleteModal(false)}
                 disabled={isDeleting}
-                className="flex-1 px-4 py-2 button-cancel btn-size-md disabled:opacity-50"
+                className="flex-1 px-4 py-2 button-cancel disabled:opacity-50"
               >
                 Cancel
               </button>
               <button
                 onClick={handleDelete}
                 disabled={isDeleting}
-                className="flex-1 px-4 py-2 button-delete btn-size-md disabled:opacity-50"
+                className="flex-1 px-4 py-2 button-delete disabled:opacity-50"
               >
                 {isDeleting ? 'Deleting...' : 'Delete'}
               </button>

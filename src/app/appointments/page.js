@@ -718,6 +718,25 @@ function AppointmentsPageContent() {
         )}
       </div>
 
+      <div className="mt-5 sm:mt-6 card">
+        <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
+          <div className="min-w-0">
+            <h3 className="text-xl sm:text-lg font-semibold font-title text-primary mb-2">Before your appointment</h3>
+            <p className="text-sm text-secondary font-sans leading-normal">
+              Generate your consultation summary and share it with your care team.
+            </p>
+          </div>
+          <button
+            type="button"
+            onClick={() => router.push('/appointments/brief')}
+            className="button-cadet btn-size-lg flex-shrink-0 hover:shadow-lg inline-flex items-center justify-center whitespace-nowrap font-sans w-full sm:w-auto"
+          >
+            <FileText className="w-5 h-5 mr-2" />
+            Generate Summary
+          </button>
+        </div>
+      </div>
+
       {/* Appointment Reminders Info */}
       <div className="mt-4 sm:mt-6 card">
         <div>
@@ -740,23 +759,14 @@ function AppointmentsPageContent() {
         </div>
       </div>
 
-      <div className="mt-5 sm:mt-6 card">
-        <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
-          <div className="min-w-0">
-            <h3 className="text-xl sm:text-lg font-semibold font-title text-primary mb-2">Before your appointment</h3>
-            <p className="text-sm text-secondary font-sans leading-normal">
-              Generate your consultation summary and share it with your care team.
-            </p>
-          </div>
-          <button
-            type="button"
-            onClick={() => router.push('/appointments/brief')}
-            className="button-cadet btn-size-lg flex-shrink-0 hover:shadow-lg inline-flex items-center justify-center whitespace-nowrap font-sans w-full sm:w-auto"
-          >
-            <FileText className="w-5 h-5 mr-2" />
-            Generate Summary
-          </button>
-        </div>
+      <div className="flex items-center gap-3 mt-5 sm:mt-6">
+        <button
+          type="button"
+          onClick={() => router.push('/')}
+          className="button-cadet btn-size-md flex-shrink-0 px-4 py-2 text-base sm:text-lg font-semibold rounded-lg transition-colors hover:shadow-lg inline-flex items-center justify-center whitespace-nowrap font-sans w-auto"
+        >
+          Back
+        </button>
       </div>
 
       <ConfirmationModal

@@ -87,14 +87,14 @@ export default function ClinicianEmailModal({
             <button
               type="button"
               onClick={onClose}
-              className="px-4 py-2 text-base font-medium button-cancel btn-size-md"
+              className="px-4 py-2 text-base font-medium button-cancel"
               disabled={isSubmitting}
             >
               Cancel
             </button>
             <button
               type="submit"
-              className="px-4 py-2 text-base font-semibold button-cadet btn-size-md rounded-lg inline-flex items-center justify-center disabled:opacity-50 disabled:cursor-not-allowed"
+              className="px-4 py-2 text-base font-semibold button-cadet rounded-lg inline-flex items-center justify-center disabled:opacity-50 disabled:cursor-not-allowed"
               disabled={isSubmitting}
             >
               {isSubmitting ? 'Sending…' : submitLabel}

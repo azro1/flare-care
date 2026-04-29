@@ -172,7 +172,7 @@ function TrackedMedicationDetails() {
           {trackedData.missed_medications_list && trackedData.missed_medications_list.length > 0 && (
             <div className="card min-w-0 overflow-hidden">
               <h2 className="text-xl font-semibold font-title text-primary mb-3 sm:mb-4">Missed Medications</h2>
-              <div className="space-y-0 [&>*:last-child>*:last-child]:pb-0">
+              <div className="space-y-0 [&>*:last-child>*:last-child]:pb-0 [&>*:last-child>*:last-child]:border-b-0">
                 {trackedData.missed_medications_list.map((item, index) => (
                   <div key={index} className={index > 0 ? 'pt-4 border-t min-w-0' : 'min-w-0'} style={index > 0 ? { borderColor: 'var(--separator-card)' } : undefined}>
                     <div className="flex items-center justify-between gap-4 pt-0 pb-4 border-b min-w-0 overflow-hidden" style={{ borderColor: 'var(--separator-card)' }}>
@@ -199,7 +199,7 @@ function TrackedMedicationDetails() {
           {trackedData.nsaid_list && trackedData.nsaid_list.length > 0 && (
             <div className="card min-w-0 overflow-hidden">
               <h2 className="text-xl font-semibold font-title text-primary mb-3 sm:mb-4">NSAIDs</h2>
-              <div className="space-y-0 [&>*:last-child>*:last-child]:pb-0">
+              <div className="space-y-0 [&>*:last-child>*:last-child]:pb-0 [&>*:last-child>*:last-child]:border-b-0">
                 {trackedData.nsaid_list.map((item, index) => (
                   <div key={index} className={index > 0 ? 'pt-4 border-t min-w-0' : 'min-w-0'} style={index > 0 ? { borderColor: 'var(--separator-card)' } : undefined}>
                     <div className="flex items-center justify-between gap-4 pt-0 pb-4 border-b min-w-0 overflow-hidden" style={{ borderColor: 'var(--separator-card)' }}>
@@ -228,7 +228,7 @@ function TrackedMedicationDetails() {
           {trackedData.antibiotic_list && trackedData.antibiotic_list.length > 0 && (
             <div className="card min-w-0 overflow-hidden">
               <h2 className="text-xl font-semibold font-title text-primary mb-3 sm:mb-4">Antibiotics</h2>
-              <div className="space-y-0 [&>*:last-child>*:last-child]:pb-0">
+              <div className="space-y-0 [&>*:last-child>*:last-child]:pb-0 [&>*:last-child>*:last-child]:border-b-0">
                 {trackedData.antibiotic_list.map((item, index) => (
                   <div key={index} className={index > 0 ? 'pt-4 border-t min-w-0' : 'min-w-0'} style={index > 0 ? { borderColor: 'var(--separator-card)' } : undefined}>
                     <div className="flex items-center justify-between gap-4 pt-0 pb-4 border-b min-w-0 overflow-hidden" style={{ borderColor: 'var(--separator-card)' }}>
@@ -276,14 +276,14 @@ function TrackedMedicationDetails() {
               <button
                 onClick={() => setShowDeleteModal(false)}
                 disabled={isDeleting}
-                className="flex-1 px-4 py-2 button-cancel btn-size-md disabled:opacity-50"
+                className="flex-1 px-4 py-2 button-cancel disabled:opacity-50"
               >
                 Cancel
               </button>
               <button
                 onClick={handleDelete}
                 disabled={isDeleting}
-                className="flex-1 px-4 py-2 button-delete btn-size-md disabled:opacity-50"
+                className="flex-1 px-4 py-2 button-delete disabled:opacity-50"
               >
                 {isDeleting ? 'Deleting...' : 'Delete'}
               </button>

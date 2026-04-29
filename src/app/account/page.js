@@ -366,14 +366,14 @@ function AccountPageContent() {
               <button
                 onClick={() => setShowLogoutModal(false)}
                 disabled={isLoggingOut}
-                className="flex-1 button-cancel btn-size-md disabled:opacity-50"
+                className="flex-1 button-cancel disabled:opacity-50"
               >
                 Cancel
               </button>
               <button
                 onClick={handleLogout}
                 disabled={isLoggingOut}
-                className="flex-1 button-cadet btn-size-md disabled:opacity-50"
+                className="flex-1 px-4 py-2 bg-[#5F9EA0] text-white hover:bg-button-cadet-hover rounded-lg transition-colors font-semibold font-sans disabled:opacity-50"
               >
                 {isLoggingOut ? 'Logging Out...' : 'Log Out'}
               </button>
@@ -412,14 +412,14 @@ function AccountPageContent() {
                   setDeleteError(null)
                 }}
                 disabled={isDeleting}
-                className="flex-1 button-cancel btn-size-md disabled:opacity-50"
+                className="flex-1 button-cancel disabled:opacity-50"
               >
                 Cancel
               </button>
               <button
                 onClick={handleDeleteAccount}
                 disabled={isDeleting}
-                className="button-delete btn-size-md flex-1 disabled:opacity-50"
+                className="button-delete flex-1 disabled:opacity-50"
               >
                 {isDeleting ? 'Deleting...' : 'Delete'}
               </button>

@@ -84,7 +84,7 @@ export default function ConfirmationModal({
             {cancelText && (
               <button
                 onClick={onClose}
-                className="px-4 py-2 text-base font-medium button-cancel btn-size-md"
+                className="px-4 py-2 text-base font-medium button-cancel"
               >
                 {cancelText}
               </button>
