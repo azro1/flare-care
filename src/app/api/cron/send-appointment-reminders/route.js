@@ -96,6 +96,10 @@ async function runAppointmentReminders(request) {
     }
 
     for (const sub of userSubs) {
+      if (typeof sub.endpoint === 'string' && sub.endpoint.startsWith('expo:')) {
+        // Native mobile reminders are handled client-side with expo-notifications scheduling.
+        continue
+      }
       try {
         await webPush.sendNotification(
           {

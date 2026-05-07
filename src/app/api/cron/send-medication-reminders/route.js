@@ -61,6 +61,10 @@ async function runMedicationReminders(request) {
 
   let sent = 0
   for (const sub of subs) {
+    if (typeof sub.endpoint === 'string' && sub.endpoint.startsWith('expo:')) {
+      // Native mobile reminders are handled client-side with expo-notifications scheduling.
+      continue
+    }
     try {
       await webPush.sendNotification(
         {

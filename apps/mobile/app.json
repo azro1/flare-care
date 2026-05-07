@@ -1,0 +1,48 @@
+{
+  "expo": {
+    "name": "Flare Care Mobile",
+    "slug": "flare-care-mobile",
+    "version": "1.0.0",
+    "scheme": "flarecare",
+    "orientation": "portrait",
+    "icon": "./assets/flarecare-logo.png",
+    "userInterfaceStyle": "automatic",
+    "newArchEnabled": true,
+    "splash": {
+      "image": "./assets/flarecare-logo.png",
+      "resizeMode": "contain",
+      "backgroundColor": "#ffffff"
+    },
+    "ios": {
+      "supportsTablet": true,
+      "bundleIdentifier": "com.flarecare.mobile"
+    },
+    "android": {
+      "userInterfaceStyle": "automatic",
+      "googleServicesFile": "./google-services.json",
+      "adaptiveIcon": {
+        "foregroundImage": "./assets/flarecare-logo.png",
+        "backgroundColor": "#ffffff"
+      },
+      "edgeToEdgeEnabled": true,
+      "predictiveBackGestureEnabled": false,
+      "package": "com.flarecare.mobile"
+    },
+    "web": {
+      "favicon": "./assets/favicon.png"
+    },
+    "plugins": [
+      "expo-notifications",
+      "@react-native-community/datetimepicker",
+      "expo-secure-store",
+      "expo-web-browser",
+      "expo-font"
+    ],
+    "extra": {
+      "eas": {
+        "projectId": "7e6de812-95e0-461d-b8cf-944128d0efea"
+      }
+    },
+    "owner": "azro"
+  }
+}

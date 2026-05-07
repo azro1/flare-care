@@ -24,9 +24,12 @@ export async function POST(request) {
   } catch {
     return Response.json({ error: 'Invalid JSON body' }, { status: 400 })
   }
-  const { endpoint, p256dh_key, auth_key, user_agent } = body
-  if (!endpoint || !p256dh_key || !auth_key) {
-    return Response.json({ error: 'Missing endpoint, p256dh_key, or auth_key' }, { status: 400 })
+  const { endpoint, p256dh_key, auth_key, user_agent, expo_push_token } = body
+  const normalizedEndpoint = expo_push_token ? `expo:${expo_push_token}` : endpoint
+  const normalizedP256dh = p256dh_key || (expo_push_token ? 'expo' : null)
+  const normalizedAuth = auth_key || (expo_push_token ? 'expo' : null)
+  if (!normalizedEndpoint || !normalizedP256dh || !normalizedAuth) {
+    return Response.json({ error: 'Missing endpoint credentials or expo_push_token' }, { status: 400 })
   }
 
   const supabaseAnon = createClient(supabaseUrl, supabaseAnonKey)
@@ -41,12 +44,12 @@ export async function POST(request) {
     .upsert(
       {
         user_id: user.id,
-        endpoint,
-        p256dh_key,
-        auth_key,
+        endpoint: normalizedEndpoint,
+        p256dh_key: normalizedP256dh,
+        auth_key: normalizedAuth,
         user_agent: user_agent || null
       },
-      { onConflict: 'endpoint' }
+      { onConflict: 'endpoint,user_id' }
     )
 
   if (upsertError) {

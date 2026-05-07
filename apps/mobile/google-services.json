@@ -1,0 +1,29 @@
+{
+  "project_info": {
+    "project_number": "535973521486",
+    "project_id": "flare-care-mobile",
+    "storage_bucket": "flare-care-mobile.firebasestorage.app"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:535973521486:android:072a584cd60fec2e84bb1f",
+        "android_client_info": {
+          "package_name": "com.flarecare.mobile"
+        }
+      },
+      "oauth_client": [],
+      "api_key": [
+        {
+          "current_key": "AIzaSyDIzBAmC3zrfKitGaxUlRvwGmSDXUToJPo"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": []
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}

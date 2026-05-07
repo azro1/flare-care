@@ -4,6 +4,9 @@ npm-debug.log*
 yarn-debug.log*
 yarn-error.log*
 
+# Expo (may appear at repo root depending on tooling cwd)
+.expo/
+
 # Next.js
 .next/
 out/
