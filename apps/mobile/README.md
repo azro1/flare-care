@@ -24,7 +24,7 @@ Or from repo root:
 
 ## Firebase Android (`google-services.json`)
 
-Mobile push uses Firebase Cloud Messaging (FCM). Typical flow: create a **new Firebase project**, add the Android app (`com.flarecare.mobile`), download **`google-services.json`**, place it at **`apps/mobile/google-services.json`**. Details: [`MOBILE_MIGRATION_RUNBOOK.md`](../../MOBILE_MIGRATION_RUNBOOK.md) (Push notifications → Android).
+Mobile push uses Firebase Cloud Messaging (FCM). Summary: **`FIREBASE_SETUP.md`** in this folder. Longer notes: [`MOBILE_MIGRATION_RUNBOOK.md`](../../MOBILE_MIGRATION_RUNBOOK.md).
 
 ## Implemented feature areas
 
