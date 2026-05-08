@@ -25,6 +25,7 @@ import {
   Alert,
   Image,
   Linking,
+  Modal,
   Platform,
   Pressable,
   ScrollView,
@@ -37,7 +38,7 @@ import {
   View,
   ViewStyle,
 } from "react-native";
-import { SafeAreaProvider, SafeAreaView, useSafeAreaInsets } from "react-native-safe-area-context";
+import { SafeAreaProvider, initialWindowMetrics, useSafeAreaInsets } from "react-native-safe-area-context";
 import { FlareThemeProvider, useFlareColors, useFlareTheme } from "./theme";
 
 WebBrowser.maybeCompleteAuthSession();
@@ -89,6 +90,9 @@ const TABLES = {
   APPOINTMENTS: "appointments",
   MEDICATION_TAKEN: "medication_taken",
 } as const;
+
+/** App mark: `fclogo_trans_splash.png` only (readable on dark UI and on primary blue “wells” in light). */
+const SPLASH_MARK_IMAGE = require("./assets/fclogo_trans_splash.png");
 
 type SessionUser = { id: string; email?: string | null; displayName?: string | null };
 type Appointment = { id: number; date: string; type: string | null; notes: string | null; time: string | null };
@@ -183,32 +187,112 @@ function Card({
   return (
     <View style={[styles.card, style, plain ? { backgroundColor: "transparent", marginBottom: 0 } : { backgroundColor: c.card }]}>
       {title ? <Text style={[styles.cardTitle, { color: c.text }]}>{title}</Text> : null}
-      {children}
+      {
+        /** Auth `plain` card uses `flex:1` panels; skipping `cardBody` keeps flex layout valid (nested non-flex wrappers collapse children). */
+        plain ? children : (
+          <View style={styles.cardBody}>{children}</View>
+        )}
     </View>
+  );
+}
+
+/** Reusable confirm sheet — use for logout, destructive actions, and future prompts. */
+function ConfirmModal({
+  visible,
+  title,
+  message,
+  confirmLabel,
+  cancelLabel = "Cancel",
+  confirmDestructive,
+  onConfirm,
+  onCancel,
+}: {
+  visible: boolean;
+  title: string;
+  message?: string;
+  confirmLabel: string;
+  cancelLabel?: string;
+  confirmDestructive?: boolean;
+  onConfirm: () => void;
+  onCancel: () => void;
+}) {
+  const c = useFlareColors();
+  return (
+    <Modal visible={visible} transparent animationType="fade" onRequestClose={onCancel} statusBarTranslucent>
+      <View style={styles.confirmModalRoot}>
+        <Pressable
+          accessibilityRole="button"
+          accessibilityLabel="Dismiss"
+          onPress={onCancel}
+          style={[StyleSheet.absoluteFillObject, { backgroundColor: c.modalBackdrop }]}
+        />
+        <View style={[styles.confirmModalCard, { backgroundColor: c.card, borderColor: c.cardBorder }]}>
+          <Text style={[styles.confirmModalTitle, { color: c.text }]}>{title}</Text>
+          {message ? (
+            <Text style={[styles.confirmModalMessage, { color: c.textMuted }]}>{message}</Text>
+          ) : null}
+          <View style={styles.confirmModalActions}>
+            <View style={styles.confirmModalActionSlot}>
+              <SecondaryButton title={cancelLabel} onPress={onCancel} />
+            </View>
+            <View style={styles.confirmModalActionSlot}>
+              <Pressable
+                accessibilityRole="button"
+                accessibilityLabel={confirmLabel}
+                onPress={onConfirm}
+                style={[
+                  styles.button,
+                  { backgroundColor: confirmDestructive ? c.danger : c.primary },
+                ]}
+              >
+                <Text style={[styles.buttonText, { color: c.white }]}>{confirmLabel}</Text>
+              </Pressable>
+            </View>
+          </View>
+        </View>
+      </View>
+    </Modal>
   );
 }
 
 function SplashScreen() {
   const c = useFlareColors();
   return (
-    <SafeAreaView style={[styles.splashScreen, { backgroundColor: c.screen }]}>
-      <View style={styles.splashCenter}>
-        <Text style={[styles.splashBrand, { color: c.text }]}>FlareCare</Text>
-        <Text style={[styles.splashTagline, { color: c.textMuted }]}>Track. Learn. Feel better.</Text>
+    <View style={[styles.splashScreen, { backgroundColor: c.screen }]}>
+      <View style={styles.splashLogoStage}>
+        {c.isDark ? (
+          <Image source={SPLASH_MARK_IMAGE} style={styles.splashLogo} resizeMode="contain" />
+        ) : (
+          <View style={[styles.splashLogoMarkWell, { backgroundColor: c.primary }]}>
+            <Image source={SPLASH_MARK_IMAGE} style={styles.splashLogo} resizeMode="contain" />
+          </View>
+        )}
       </View>
-      <ActivityIndicator color={c.primary} />
-    </SafeAreaView>
+    </View>
   );
 }
 
-function LabeledInput({ label, error, style, ...props }: { label: string; error?: string } & TextInputProps) {
+function LabeledInput({
+  label,
+  error,
+  style,
+  onPrimary,
+  ...props
+}: { label: string; error?: string; onPrimary?: boolean } & TextInputProps) {
   const c = useFlareColors();
+  const onBlue = Boolean(onPrimary);
   return (
     <View style={styles.fieldBlock}>
-      <Text style={[styles.label, { color: c.textSecondary }]}>{label}</Text>
+      <Text style={[styles.label, { color: onBlue ? "rgba(255,255,255,0.92)" : c.textSecondary }]}>{label}</Text>
       <TextInput
-        style={[styles.input, { backgroundColor: c.inputBg, borderColor: c.inputBorder, color: c.text }, style]}
-        placeholderTextColor={c.textMuted}
+        style={[
+          styles.input,
+          onBlue
+            ? { backgroundColor: c.white, borderColor: "rgba(255,255,255,0.45)", color: c.text }
+            : { backgroundColor: c.inputBg, borderColor: c.inputBorder, color: c.text },
+          style,
+        ]}
+        placeholderTextColor={onBlue ? "rgba(15,23,42,0.45)" : c.textMuted}
         {...props}
       />
       {error ? <Text style={[styles.fieldError, { color: c.danger }]}>{error}</Text> : null}
@@ -221,14 +305,17 @@ function PrimaryButton({
   onPress,
   disabled,
   fitContent,
+  variant,
 }: {
   title: string;
   onPress: () => void;
   disabled?: boolean;
   /** Width follows label + padding instead of stretching full row. */
   fitContent?: boolean;
+  variant?: "default" | "onPrimary";
 }) {
   const c = useFlareColors();
+  const onPrimary = variant === "onPrimary";
   return (
     <Pressable
       onPress={onPress}
@@ -236,10 +323,21 @@ function PrimaryButton({
       style={[
         styles.button,
         fitContent ? { alignSelf: "flex-start" } : null,
-        { backgroundColor: disabled ? c.primaryDisabledBg : c.primary },
+        onPrimary
+          ? { backgroundColor: disabled ? "rgba(255,255,255,0.45)" : c.white }
+          : { backgroundColor: disabled ? c.primaryDisabledBg : c.primary },
       ]}
     >
-      <Text style={[styles.buttonText, { color: c.white }]}>{title}</Text>
+      <Text
+        style={[
+          styles.buttonText,
+          onPrimary
+            ? { color: c.primary, ...(disabled ? { opacity: 0.55 } : null) }
+            : { color: c.white },
+        ]}
+      >
+        {title}
+      </Text>
     </Pressable>
   );
 }
@@ -248,23 +346,33 @@ function SecondaryButton({
   title,
   onPress,
   disabled,
+  leftIcon,
+  variant,
 }: {
   title: string;
   onPress: () => void;
   disabled?: boolean;
+  leftIcon?: React.ReactNode;
+  variant?: "default" | "onPrimary";
 }) {
   const c = useFlareColors();
+  const onPrimary = variant === "onPrimary";
   return (
     <Pressable
       onPress={onPress}
       disabled={disabled}
       style={[
         styles.buttonSecondary,
-        { backgroundColor: c.secondaryBtnBg, borderWidth: 1, borderColor: c.secondaryBtnBorder },
+        onPrimary
+          ? { backgroundColor: "rgba(255,255,255,0.12)", borderWidth: 1, borderColor: "rgba(255,255,255,0.55)" }
+          : { backgroundColor: c.secondaryBtnBg, borderWidth: 1, borderColor: c.secondaryBtnBorder },
         disabled ? { opacity: 0.55 } : null,
       ]}
     >
-      <Text style={[styles.buttonSecondaryText, { color: c.secondaryBtnText }]}>{title}</Text>
+      <View style={styles.buttonSecondaryContent}>
+        {leftIcon ? leftIcon : null}
+        <Text style={[styles.buttonSecondaryText, { color: onPrimary ? c.white : c.secondaryBtnText }]}>{title}</Text>
+      </View>
     </Pressable>
   );
 }
@@ -328,8 +436,9 @@ function AuthScreen({
   onAuthBusy?: (busy: boolean) => void;
 }) {
   const cAuth = useFlareColors();
+  const insets = useSafeAreaInsets();
   const [activeAuthAction, setActiveAuthAction] = useState<"email" | "code" | "google" | null>(null);
-  const [step, setStep] = useState<"email" | "code">("email");
+  const [step, setStep] = useState<"method" | "email" | "code">("method");
   const emailSchema = useMemo(
     () =>
       yup.object({
@@ -471,74 +580,137 @@ function AuthScreen({
     setActiveAuthAction(null);
   };
 
+  /** Same layout as gray auth; fill page with blue in light appearance only. */
+  const authBlue = !cAuth.isDark;
+  const onPrimaryChrome = authBlue;
+
   return (
-    <SafeAreaView style={[styles.screen, styles.authScreenRoot, { backgroundColor: cAuth.screen }]}>
-      <View style={styles.authBrandBlock}>
-        <Text style={[styles.splashBrand, { color: cAuth.text }]}>FlareCare</Text>
-        <Text style={[styles.splashTagline, { color: cAuth.textMuted }]}>Track. Learn. Feel better.</Text>
+    <View
+      style={[
+        styles.authScreenFill,
+        {
+          backgroundColor: authBlue ? cAuth.primary : cAuth.screen,
+          paddingTop: insets.top + 20,
+          paddingBottom: Math.max(insets.bottom, 12),
+          paddingHorizontal: SCREEN_EDGE_PADDING,
+        },
+      ]}
+    >
+      <View style={styles.authShell}>
+        <View style={styles.authBrandBlock}>
+          <Image source={SPLASH_MARK_IMAGE} style={styles.authLogo} resizeMode="contain" />
+          <Text style={[styles.splashBrand, { color: authBlue ? cAuth.white : cAuth.text }]}>FlareCare</Text>
+        </View>
+        <Card title="" plain style={styles.authCardPlain}>
+          {step === "method" ? (
+            <View style={styles.authMethodPanel}>
+              <Text style={[styles.authPromptTitle, { color: onPrimaryChrome ? cAuth.white : cAuth.text }]}>Sign in to continue</Text>
+              <Text style={[styles.authPromptSub, { color: onPrimaryChrome ? "rgba(255,255,255,0.88)" : cAuth.textMuted }]}>
+                Choose your preferred login method
+              </Text>
+              <View style={styles.authMethodActions}>
+                <PrimaryButton
+                  title="Continue with email"
+                  onPress={() => setStep("email")}
+                  disabled={activeAuthAction !== null}
+                  variant={onPrimaryChrome ? "onPrimary" : "default"}
+                />
+                <SecondaryButton
+                  title={activeAuthAction === "google" ? "Loading..." : "Continue with Google"}
+                  onPress={signInGoogle}
+                  disabled={activeAuthAction !== null}
+                  variant={onPrimaryChrome ? "onPrimary" : "default"}
+                  leftIcon={<Ionicons name="logo-google" size={16} color={onPrimaryChrome ? "#ffffff" : cAuth.secondaryBtnText} />}
+                />
+              </View>
+            </View>
+          ) : step === "email" ? (
+            <View style={styles.authFlowPanel}>
+              <View style={styles.authFormCenter}>
+                <Text style={[styles.authPromptTitle, { color: onPrimaryChrome ? cAuth.white : cAuth.text }]}>Sign in with email</Text>
+                <Text
+                  style={[
+                    styles.authPromptSub,
+                    styles.authEmailHelperSub,
+                    { color: onPrimaryChrome ? "rgba(255,255,255,0.88)" : cAuth.textMuted },
+                  ]}
+                >
+                  We&apos;ll send a 6-digit code to this email.
+                </Text>
+                <Controller
+                  control={emailControl}
+                  name="email"
+                  render={({ field: { onChange, value } }) => (
+                    <LabeledInput
+                      label="Email"
+                      value={value}
+                      onChangeText={onChange}
+                      placeholder="you@example.com"
+                      autoCapitalize="none"
+                      keyboardType="email-address"
+                      error={emailErrors.email?.message}
+                      onPrimary={onPrimaryChrome}
+                    />
+                  )}
+                />
+              </View>
+              <View style={styles.authBottomActions}>
+                <PrimaryButton
+                  title={activeAuthAction === "email" ? "Loading..." : "Continue"}
+                  onPress={handleEmailSubmit(sendMagicLink)}
+                  disabled={activeAuthAction !== null}
+                  variant={onPrimaryChrome ? "onPrimary" : "default"}
+                />
+                <SecondaryButton
+                  title="Back"
+                  onPress={() => setStep("method")}
+                  disabled={activeAuthAction !== null}
+                  variant={onPrimaryChrome ? "onPrimary" : "default"}
+                />
+              </View>
+            </View>
+          ) : (
+            <View style={styles.authFlowPanel}>
+              <View style={styles.authFormCenter}>
+                <Controller
+                  control={codeControl}
+                  name="otpCode"
+                  render={({ field: { onChange, value } }) => (
+                    <LabeledInput
+                      label="Verification code"
+                      value={value}
+                      onChangeText={onChange}
+                      placeholder="6-digit code"
+                      keyboardType="number-pad"
+                      maxLength={6}
+                      error={codeErrors.otpCode?.message}
+                      onPrimary={onPrimaryChrome}
+                    />
+                  )}
+                />
+              </View>
+              <View style={styles.authBottomActions}>
+                <PrimaryButton
+                  title={activeAuthAction === "code" ? "Loading..." : "Verify code"}
+                  onPress={handleCodeSubmit(verifyOtpCode)}
+                  disabled={activeAuthAction !== null}
+                  variant={onPrimaryChrome ? "onPrimary" : "default"}
+                />
+                <SecondaryButton
+                  title="Use different email"
+                  onPress={() => {
+                    resetCode({ otpCode: "" });
+                    setStep("email");
+                  }}
+                  disabled={activeAuthAction !== null}
+                  variant={onPrimaryChrome ? "onPrimary" : "default"}
+                />
+              </View>
+            </View>
+          )}
+        </Card>
       </View>
-      <Card title="" plain>
-        {step === "email" ? (
-          <>
-            <Controller
-              control={emailControl}
-              name="email"
-              render={({ field: { onChange, value } }) => (
-                <LabeledInput
-                  label="Email"
-                  value={value}
-                  onChangeText={onChange}
-                  placeholder="you@example.com"
-                  autoCapitalize="none"
-                  keyboardType="email-address"
-                  error={emailErrors.email?.message}
-                />
-              )}
-            />
-            <PrimaryButton
-              title={activeAuthAction === "email" ? "Loading..." : "Continue"}
-              onPress={handleEmailSubmit(sendMagicLink)}
-              disabled={activeAuthAction !== null}
-            />
-            <SecondaryButton
-              title={activeAuthAction === "google" ? "Loading..." : "Continue with Google"}
-              onPress={signInGoogle}
-              disabled={activeAuthAction !== null}
-            />
-          </>
-        ) : (
-          <>
-            <Controller
-              control={codeControl}
-              name="otpCode"
-              render={({ field: { onChange, value } }) => (
-                <LabeledInput
-                  label="Verification code"
-                  value={value}
-                  onChangeText={onChange}
-                  placeholder="6-digit code"
-                  keyboardType="number-pad"
-                  maxLength={6}
-                  error={codeErrors.otpCode?.message}
-                />
-              )}
-            />
-            <PrimaryButton
-              title={activeAuthAction === "code" ? "Loading..." : "Verify code"}
-              onPress={handleCodeSubmit(verifyOtpCode)}
-              disabled={activeAuthAction !== null}
-            />
-            <SecondaryButton
-              title="Use different email"
-              onPress={() => {
-                resetCode({ otpCode: "" });
-                setStep("email");
-              }}
-            />
-          </>
-        )}
-      </Card>
-    </SafeAreaView>
+    </View>
   );
 }
 
@@ -572,6 +744,35 @@ type DashboardSnapshot = {
 };
 
 const dashboardSnapshotByUserId: Record<string, DashboardSnapshot> = {};
+/** Avoid greeting flicker (“there”) when session metadata/email arrives shortly after navigation. */
+const dashboardGreetingFirstNameByUserId: Record<string, string> = {};
+
+/** OWM `/img/wn/{icon}@2x.png` id → Ionicons ( themed `color`; no remote bitmaps ). */
+function owmIconIdToIoniconsName(iconId: string | null | undefined): keyof typeof Ionicons.glyphMap {
+  if (!iconId || iconId.length < 2) return "partly-sunny";
+  const code = iconId.slice(0, 2);
+  const night = iconId.endsWith("n");
+  switch (code) {
+    case "01":
+      return (night ? "moon" : "sunny") as keyof typeof Ionicons.glyphMap;
+    case "02":
+      return ((night ? "cloudy-night" : "partly-sunny") as keyof typeof Ionicons.glyphMap);
+    case "03":
+    case "04":
+      return ((night ? "cloudy-night" : "cloud") as keyof typeof Ionicons.glyphMap);
+    case "09":
+    case "10":
+      return "rainy";
+    case "11":
+      return "thunderstorm";
+    case "13":
+      return "snow";
+    case "50":
+      return "cloud";
+    default:
+      return "partly-sunny";
+  }
+}
 
 function DashboardGridTile({
   width,
@@ -659,7 +860,14 @@ function DashboardScreen({ user }: { user: SessionUser }) {
     { key: "weight", label: "My Weight", screen: "Weight" as const, icon: "scale-bathroom", family: "mci" as const },
     { key: "appointments", label: "Appointments", screen: "Appointments" as const, icon: "calendar-outline", family: "ion" as const },
   ];
-  const firstName = (user.displayName || user.email?.split("@")[0] || "there").split(" ")[0];
+  const computedGreetingFirst = (user.displayName || user.email?.split("@")[0] || "there").split(" ")[0];
+  useEffect(() => {
+    if (computedGreetingFirst !== "there") dashboardGreetingFirstNameByUserId[user.id] = computedGreetingFirst;
+  }, [computedGreetingFirst, user.id]);
+  const greetingFirstName =
+    computedGreetingFirst !== "there"
+      ? computedGreetingFirst
+      : dashboardGreetingFirstNameByUserId[user.id] ?? computedGreetingFirst;
   const todayLabel = new Date().toLocaleDateString(undefined, {
     weekday: "long",
     month: "short",
@@ -917,37 +1125,41 @@ function DashboardScreen({ user }: { user: SessionUser }) {
       style={[styles.screen, { backgroundColor: c.screen }]}
       contentContainerStyle={{ paddingBottom: bottomScrollInset }}
     >
-      <Card title="" style={!weatherMeta ? styles.dashboardWeatherPlaceholder : undefined}>
+      <Card title="">
+        <View style={styles.weatherIntroWrap}>
+          <Text style={[styles.weatherGreeting, { color: c.text }]}>Hi, {greetingFirstName}</Text>
+          <Text style={[styles.weatherDate, { color: c.textMuted }]}>{todayLabel}</Text>
+        </View>
         {weatherMeta ? (
-          <>
-            <View style={styles.weatherIntroWrap}>
-              <Text style={[styles.weatherGreeting, { color: c.text }]}>Hi, {firstName}</Text>
-              <Text style={[styles.weatherDate, { color: c.textMuted }]}>{todayLabel}</Text>
+          <View style={styles.weatherHero}>
+            <View style={styles.weatherIconWrap}>
+              <Ionicons name={weatherMeta.icon ? owmIconIdToIoniconsName(weatherMeta.icon) : "partly-sunny"} size={28} color={c.primary} />
             </View>
-            <View style={styles.weatherHero}>
-              <View style={styles.weatherIconWrap}>
-                {weatherMeta.icon ? (
-                  <Image
-                    source={{ uri: `https://openweathermap.org/img/wn/${weatherMeta.icon}@2x.png` }}
-                    style={styles.weatherApiIcon}
-                    resizeMode="contain"
-                  />
-                ) : (
-                  <Ionicons name="partly-sunny" size={24} color={c.primary} />
-                )}
-              </View>
-              <View style={styles.weatherLeft}>
-                <Text style={[styles.weatherCity, { color: c.textSecondary }]}>{weatherMeta.city}</Text>
-                <Text style={[styles.weatherDesc, { color: c.textMuted }]}>{weatherMeta.desc}</Text>
-              </View>
-              <View style={styles.weatherTempWrap}>
-                <Text style={[styles.weatherTemp, { color: c.primary }]}>{weatherMeta.temp ?? "--"}°</Text>
-                <Text style={[styles.weatherUnit, { color: c.primary }]}>C</Text>
-              </View>
+            <View style={styles.weatherLeft}>
+              <Text style={[styles.weatherCity, { color: c.textSecondary }]}>{weatherMeta.city}</Text>
+              <Text style={[styles.weatherDesc, { color: c.textMuted }]}>{weatherMeta.desc}</Text>
             </View>
-          </>
+            <View style={styles.weatherTempWrap}>
+              <Text style={[styles.weatherTemp, { color: c.primary }]}>{weatherMeta.temp ?? "--"}°</Text>
+              <Text style={[styles.weatherUnit, { color: c.primary }]}>C</Text>
+            </View>
+          </View>
         ) : (
-          <Text style={[styles.text, { color: c.text }]}>{weather}</Text>
+          <View style={styles.weatherHero}>
+            <View style={styles.weatherIconWrap}>
+              <ActivityIndicator size="small" color={c.primary} />
+            </View>
+            <View style={styles.weatherLeft}>
+              <Text style={[styles.weatherCity, { color: c.textMuted }]} numberOfLines={1}>
+                {weather}
+              </Text>
+              <Text style={[styles.weatherDesc, { color: c.textMuted }]}>{"\u00a0"}</Text>
+            </View>
+            <View style={styles.weatherTempWrap}>
+              <Text style={[styles.weatherTemp, { color: c.textMuted, opacity: 0.4 }]}>--°</Text>
+              <Text style={[styles.weatherUnit, { color: c.textMuted, opacity: 0.4 }]}>C</Text>
+            </View>
+          </View>
         )}
       </Card>
       <View style={styles.checkinSection}>
@@ -1578,9 +1790,12 @@ function NotificationsScreen({ user }: { user: SessionUser }) {
 function AboutScreen() {
   const c = useFlareColors();
   const bottomScrollInset = useBottomTabScrollInset();
-  const displayName = Constants.expoConfig?.name ?? "Flare Care Mobile";
   const version = Constants.expoConfig?.version ?? Constants.nativeApplicationVersion ?? "—";
   const nativeBuild = Constants.nativeBuildVersion;
+
+  const aboutSupportEmail = () => {
+    Linking.openURL("mailto:support@flarecare.app").catch(() => {});
+  };
 
   return (
     <ScrollView
@@ -1588,20 +1803,48 @@ function AboutScreen() {
       contentContainerStyle={{ paddingBottom: 28 + bottomScrollInset }}
     >
       <View style={styles.aboutHero}>
-        <Image source={require("./assets/flarecare-logo.png")} style={styles.aboutLogo} resizeMode="contain" />
-        <Text style={[styles.aboutAppName, { color: c.text }]}>{displayName}</Text>
-        <Text style={[styles.muted, { color: c.textMuted }]}>Version {version}</Text>
-        {nativeBuild && nativeBuild !== version ? (
-          <Text style={[styles.muted, { color: c.textMuted, marginTop: 4 }]}>Build {nativeBuild}</Text>
-        ) : null}
+        <Text style={[styles.aboutTagline, { color: c.textMuted }]}>
+          Day-to-day support for Crohn&apos;s disease and ulcerative colitis (IBD)
+        </Text>
       </View>
-      <Card title="What FlareCare does">
-        <Text style={[styles.text, { color: c.text }]}>
-          FlareCare helps you log symptoms, medications, hydration, bowel movements, weight, and appointments—and keep tabs
-          on reminders—so day-to-day patterns are easier to see. This app does not diagnose or replace care from your
-          clinician.
+
+      <Card title="What is FlareCare?">
+        <Text style={[styles.text, styles.aboutBody, { color: c.text }]}>
+          FlareCare is a mobile companion for IBD self-management. You can record symptoms, medications, hydration, bowel
+          movements, weight, and appointments; receive medication reminders; review summaries on your dashboard; prepare
+          appointment briefs; and export reports to share with your clinician—all in one place on your phone.
+        </Text>
+        <Text style={[styles.text, styles.aboutBody, { color: c.text }]}>
+          It is aimed at people living with Crohn&apos;s disease or ulcerative colitis. The product was developed by Simon
+          Sutherland, drawing on many years of personal experience managing Crohn&apos;s, to make consistent tracking simple
+          enough to sustain between clinic visits.
+        </Text>
+        <Text style={[styles.text, styles.aboutBodyLast, { color: c.text }]}>
+          FlareCare does not provide medical advice, diagnosis, or treatment, and it is not a substitute for professional
+          medical care. Always follow the advice of your qualified healthcare providers.
         </Text>
       </Card>
+
+      <Card title="Contact">
+        <Text style={[styles.text, styles.aboutBody, styles.aboutContactIntro, { color: c.textMuted }]}>
+          For support, feedback, or feature requests, please email us using the address below.
+        </Text>
+        <Pressable
+          accessibilityRole="button"
+          accessibilityLabel="Email FlareCare support"
+          onPress={aboutSupportEmail}
+          style={({ pressed }) => [styles.aboutSupportButton, pressed && styles.aboutSupportButtonPressed]}
+        >
+          <Text style={[styles.aboutSupportButtonText, { color: c.primary }]}>support@flarecare.app</Text>
+        </Pressable>
+      </Card>
+
+      <View style={styles.aboutFooter}>
+        <Text style={[styles.muted, { color: c.textMuted, textAlign: "center" }]}>Version {version}</Text>
+        {nativeBuild && nativeBuild !== version ? (
+          <Text style={[styles.muted, { color: c.textMuted, textAlign: "center", marginTop: 4 }]}>Build {nativeBuild}</Text>
+        ) : null}
+      </View>
     </ScrollView>
   );
 }
@@ -1611,6 +1854,7 @@ function AccountScreen({ user, onLogout }: { user: SessionUser; onLogout: () => 
   const c = useFlareColors();
   const bottomScrollInset = useBottomTabScrollInset();
   const { appearancePreference, setAppearancePreference } = useFlareTheme();
+  const [logoutConfirmOpen, setLogoutConfirmOpen] = useState(false);
 
   const appearanceOptions = [
     { key: "light" as const, label: "Light" },
@@ -1626,8 +1870,21 @@ function AccountScreen({ user, onLogout }: { user: SessionUser; onLogout: () => 
       <Card title="">
         <Text style={[styles.text, { color: c.text }]}>Signed in as</Text>
         <Text style={[styles.accountEmail, { color: c.text }]}>{user.email || "Unknown user"}</Text>
-        <PrimaryButton title="Logout" onPress={onLogout} fitContent />
+        <PrimaryButton title="Logout" onPress={() => setLogoutConfirmOpen(true)} />
       </Card>
+      <ConfirmModal
+        visible={logoutConfirmOpen}
+        title="Log out?"
+        message="Are you sure you want to log out?"
+        confirmLabel="Log out"
+        cancelLabel="Stay signed in"
+        confirmDestructive
+        onCancel={() => setLogoutConfirmOpen(false)}
+        onConfirm={() => {
+          setLogoutConfirmOpen(false);
+          onLogout();
+        }}
+      />
       <Text style={[styles.dashboardSectionTitleLeft, { color: c.text }]}>Reminders</Text>
       <Card title="">
         <Pressable
@@ -1644,7 +1901,7 @@ function AccountScreen({ user, onLogout }: { user: SessionUser; onLogout: () => 
       </Card>
       <Text style={[styles.dashboardSectionTitleLeft, { color: c.text }]}>Appearance</Text>
       <Card title="">
-        <Text style={[styles.muted, { color: c.textMuted }]}>Choose light or dark for the app.</Text>
+        <Text style={[styles.muted, { color: c.textMuted, marginBottom: 2 }]}>Choose light or dark for the app.</Text>
         <View style={styles.appearanceRow}>
           {appearanceOptions.map(({ key, label }) => {
             const selected = appearancePreference === key;
@@ -1654,9 +1911,10 @@ function AccountScreen({ user, onLogout }: { user: SessionUser; onLogout: () => 
                 accessibilityRole="button"
                 accessibilityState={{ selected }}
                 onPress={() => setAppearancePreference(key)}
-                style={[
+                style={({ pressed }) => [
                   styles.appearanceChip,
                   { backgroundColor: selected ? c.primary : c.appearanceChipInactiveBg },
+                  pressed && !selected ? { opacity: 0.92 } : null,
                 ]}
               >
                 <Text style={[styles.appearanceChipText, { color: selected ? c.white : c.appearanceChipInactiveText }]}>
@@ -1776,14 +2034,19 @@ function AppTabs({ user, onLogout }: { user: SessionUser; onLogout: () => void }
       headerTintColor: colors.primary,
       headerShadowVisible: false,
       headerBackVisible: false,
+      /** Avoid stacking default header padding with our own — keeps chevron near the leading edge. */
+      headerLeftContainerStyle: { paddingLeft: 0, marginLeft: 0 },
       headerLeft:
         !isDashboard
           ? () => (
               <Pressable
+                accessibilityRole="button"
+                accessibilityLabel="Back"
+                hitSlop={{ top: 10, bottom: 10, left: 8, right: 20 }}
                 onPress={() => navigation.navigate("Dashboard")}
                 style={styles.headerBackButton}
               >
-                <Text style={[styles.headerBackText, { color: colors.primary }]}>Back</Text>
+                <Ionicons name="chevron-back" size={24} color={colors.primary} />
               </Pressable>
             )
           : undefined,
@@ -1823,6 +2086,17 @@ function AppTabs({ user, onLogout }: { user: SessionUser; onLogout: () => void }
 }
 
 export default function App() {
+  return (
+    <SafeAreaProvider initialMetrics={initialWindowMetrics}>
+      <FlareThemeProvider>
+        <AppRoot />
+      </FlareThemeProvider>
+    </SafeAreaProvider>
+  );
+}
+
+function AppRoot() {
+  const { appearanceHydrated } = useFlareTheme();
   const [user, setUser] = useState<SessionUser | null>(null);
   const [loading, setLoading] = useState(true);
   const [authBusy, setAuthBusy] = useState(false);
@@ -1881,7 +2155,7 @@ export default function App() {
   };
 
   const content = useMemo(() => {
-    if (!fontsLoaded || loading || showSplash) {
+    if (!fontsLoaded || loading || showSplash || !appearanceHydrated) {
       return <SplashScreen />;
     }
     if (user) {
@@ -1891,40 +2165,94 @@ export default function App() {
       return <SplashScreen />;
     }
     return <AuthScreen onSignedIn={setUser} onAuthBusy={setAuthBusy} />;
-  }, [fontsLoaded, loading, showSplash, user, authBusy]);
+  }, [fontsLoaded, loading, showSplash, appearanceHydrated, user, authBusy]);
+
+  const authScreenActive =
+    fontsLoaded && !loading && !showSplash && appearanceHydrated && !user && !authBusy;
 
   return (
-    <SafeAreaProvider>
-      <FlareThemeProvider>
-        {content}
-        <ThemedStatusBar />
-      </FlareThemeProvider>
-    </SafeAreaProvider>
+    <>
+      {content}
+      <ThemedStatusBar authScreenActive={authScreenActive} />
+    </>
   );
 }
 
-function ThemedStatusBar() {
+function ThemedStatusBar({ authScreenActive }: { authScreenActive: boolean }) {
   const { colors } = useFlareTheme();
+  if (authScreenActive && !colors.isDark) {
+    return <StatusBar style="light" />;
+  }
   return <StatusBar style={colors.isDark ? "light" : "dark"} />;
 }
 
 const styles = StyleSheet.create({
   screen: { flex: 1, backgroundColor: "#f4f7fb", padding: SCREEN_EDGE_PADDING },
-  authScreenRoot: { paddingTop: 56 },
-  authBrandBlock: { alignItems: "center", gap: 8, marginBottom: 28 },
+  authScreenFill: { flex: 1 },
+  authShell: { flex: 1, transform: [{ translateY: 40 }] },
+  authBrandBlock: {
+    width: "100%",
+    alignItems: "center",
+    justifyContent: "center",
+    gap: 8,
+    marginBottom: 12,
+    paddingTop: 12,
+    transform: [{ translateY: 44 }],
+  },
+  authLogo: { width: 112, height: 112 },
+  authCardPlain: { flex: 1 },
+  authMethodPanel: { flex: 1, justifyContent: "center" },
+  authMethodActions: { marginTop: 18, gap: 8 },
+  authPromptTitle: { textAlign: "center", fontSize: 19, fontFamily: "Inter_700Bold" },
+  authPromptSub: { textAlign: "center", fontSize: 13, fontFamily: "Inter_400Regular", marginTop: 4 },
+  /** Extra gap before email field only — keep method screen subtitle unchanged */
+  authEmailHelperSub: { marginBottom: 18 },
+  authFlowPanel: { flex: 1, justifyContent: "center" },
+  authFormCenter: { justifyContent: "center" },
+  authBottomActions: { paddingBottom: 6, marginTop: 10, gap: 8 },
   splashScreen: {
     flex: 1,
     backgroundColor: "#f4f7fb",
     alignItems: "center",
     justifyContent: "center",
-    paddingBottom: 40,
-    gap: 20,
   },
-  splashCenter: { alignItems: "center", gap: 8 },
+  /** Fixed box so light/dark logo layouts do not reflow vertically when theme hydrates from storage. */
+  splashLogoStage: {
+    width: 200,
+    height: 200,
+    alignItems: "center",
+    justifyContent: "center",
+  },
+  /** Light splash: circular primary well behind mark. */
+  splashLogoMarkWell: { padding: 22, borderRadius: 9999, overflow: "hidden" },
+  splashLogo: { width: 132, height: 132 },
   splashBrand: { fontSize: 34, fontFamily: "Inter_800ExtraBold", color: "#1f2a44" },
   splashTagline: { fontSize: 14, fontFamily: "Inter_400Regular", color: "#6a7690" },
   centered: { flex: 1, justifyContent: "center", alignItems: "center", gap: 10 },
-  card: { backgroundColor: "white", borderRadius: 14, padding: 14, marginBottom: 12, gap: 8 },
+  confirmModalRoot: { flex: 1, justifyContent: "center", paddingHorizontal: 20 },
+  confirmModalCard: {
+    borderRadius: 14,
+    padding: 20,
+    borderWidth: StyleSheet.hairlineWidth,
+    width: "100%",
+    maxWidth: 400,
+    alignSelf: "center",
+  },
+  confirmModalTitle: { fontSize: 18, fontFamily: "Inter_700Bold" },
+  confirmModalMessage: { fontSize: 14, fontFamily: "Inter_400Regular", marginTop: 10, lineHeight: 20 },
+  confirmModalActions: { flexDirection: "row", gap: 8, marginTop: 22 },
+  confirmModalActionSlot: { flex: 1, minWidth: 0 },
+  card: { backgroundColor: "white", borderRadius: 14, padding: 14, marginBottom: 12 },
+  /** Stacks card content below the title; `gap` matches spacing between sibling blocks inside the card. */
+  cardBody: { gap: 8 },
+  cardTitle: {
+    fontSize: 18,
+    fontFamily: "Inter_700Bold",
+    color: "#1f2a44",
+    textAlign: "left",
+    alignSelf: "stretch",
+    marginBottom: 12,
+  },
   todaySummaryCard: { paddingHorizontal: 20 },
   dashboardSectionTitle: {
     fontSize: 18,
@@ -1942,7 +2270,6 @@ const styles = StyleSheet.create({
     marginTop: 10,
     textAlign: "left",
   },
-  cardTitle: { fontSize: 18, fontFamily: "Inter_700Bold", color: "#1f2a44", textAlign: "center" },
   fieldBlock: { gap: 6, marginBottom: 2 },
   label: { color: "#23314f", fontSize: 13, fontFamily: "Inter_500Medium", marginTop: 2 },
   text: { color: "#23314f", fontSize: 14, fontFamily: "Inter_400Regular" },
@@ -1969,6 +2296,7 @@ const styles = StyleSheet.create({
     paddingHorizontal: 12,
     marginTop: 6,
   },
+  buttonSecondaryContent: { flexDirection: "row", alignItems: "center", justifyContent: "center", gap: 8 },
   buttonSecondaryText: { fontFamily: "Inter_700Bold", fontSize: 14 },
   headerIconButton: {
     width: 34,
@@ -1979,13 +2307,12 @@ const styles = StyleSheet.create({
     marginRight: 8,
   },
   headerBackButton: {
-    paddingHorizontal: 8,
-    paddingVertical: 6,
-    marginLeft: 8,
-  },
-  headerBackText: {
-    fontSize: 14,
-    fontFamily: "Inter_700Bold",
+    justifyContent: "center",
+    alignItems: "flex-start",
+    paddingVertical: 8,
+    paddingLeft: Platform.OS === "ios" ? 6 : 4,
+    paddingRight: 10,
+    minHeight: 44,
   },
   bottomTabBarWrap: {
     flexDirection: "row",
@@ -1997,14 +2324,16 @@ const styles = StyleSheet.create({
   bottomTabItem: { flex: 1, alignItems: "center", justifyContent: "center", gap: 3, paddingVertical: 4 },
   bottomTabLabel: { fontSize: 11, fontFamily: "Inter_500Medium" },
   accountEmail: { color: "#23314f", fontSize: 14, fontFamily: "Inter_700Bold", marginBottom: 8 },
-  appearanceRow: { flexDirection: "row", gap: 8, marginTop: 4 },
+  /** Same height and radius as `styles.button` (PrimaryButton); two equal slots like paired actions. */
+  appearanceRow: { flexDirection: "row", gap: 8, marginTop: 6 },
   appearanceChip: {
+    flex: 1,
     minHeight: 42,
     paddingHorizontal: 12,
     borderRadius: 10,
     alignItems: "center",
     justifyContent: "center",
-    alignSelf: "flex-start",
+    alignSelf: "stretch",
   },
   appearanceChipText: { fontSize: 14, fontFamily: "Inter_700Bold" },
   row: { flexDirection: "row", alignItems: "center", justifyContent: "space-between", gap: 8, marginBottom: 8 },
@@ -2017,7 +2346,6 @@ const styles = StyleSheet.create({
     backgroundColor: "#fbfdff",
     color: "#203052",
   },
-  dashboardWeatherPlaceholder: { minHeight: 148 },
   weatherIntroWrap: { paddingLeft: 3 },
   weatherHero: {
     flexDirection: "row",
@@ -2036,7 +2364,6 @@ const styles = StyleSheet.create({
     backgroundColor: "transparent",
     marginRight: 8,
   },
-  weatherApiIcon: { width: 40, height: 40 },
   weatherIcon: { fontSize: 24 },
   weatherLeft: { flex: 1, paddingRight: 8 },
   weatherCity: { fontSize: 15, fontFamily: "Inter_500Medium", color: "#23314f" },
@@ -2110,9 +2437,30 @@ const styles = StyleSheet.create({
   },
   activityNoteRow: { padding: 10 },
   activityNoteRowDivider: { borderBottomWidth: 1, borderBottomColor: "#e3e9f7" },
-  aboutHero: { alignItems: "center", paddingVertical: 20, paddingHorizontal: 16 },
-  aboutLogo: { width: 80, height: 80, marginBottom: 12 },
+  aboutHero: { alignItems: "center", paddingHorizontal: 16 },
+  aboutLogoSlot: { marginBottom: 12 },
+  /** Light About: circular primary well behind mark. */
+  aboutLogoMarkWell: { padding: 6, borderRadius: 9999, overflow: "hidden", alignSelf: "center" },
+  aboutLogo: { width: 80, height: 80 },
   aboutAppName: { fontFamily: "Inter_700Bold", fontSize: 18, marginBottom: 6, textAlign: "center" },
+  aboutTagline: {
+    fontFamily: "Inter_400Regular",
+    fontSize: 14,
+    textAlign: "center",
+    lineHeight: 20,
+    paddingHorizontal: 12,
+    paddingBottom: 20,
+  },
+  aboutBody: { lineHeight: 22, marginBottom: 12 },
+  aboutBodyLast: { lineHeight: 22, marginBottom: 0 },
+  /** Contact card: paragraph only; spacing to email row is handled by button `marginTop`. */
+  aboutContactIntro: { marginBottom: 0 },
+  /** Sits directly under Contact intro copy. */
+  aboutSupportButton: { alignSelf: "flex-start", marginTop: 10, paddingVertical: 10, paddingHorizontal: 4 },
+  aboutSupportButtonPressed: { opacity: 0.75 },
+  aboutSupportButtonText: { fontFamily: "Inter_700Bold", fontSize: 15 },
+  /** Version / build separated from branding hero — typical for production About screens. */
+  aboutFooter: { paddingTop: 8, paddingBottom: 16, paddingHorizontal: 16 },
   moreNavRow: {
     flexDirection: "row",
     alignItems: "center",

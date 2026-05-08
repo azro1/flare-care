@@ -11,9 +11,9 @@ const APPEARANCE_STORAGE_KEY = "flarecare.appearance.preference";
  * weather accent, secondary labels (light), etc. Everything flows through `mapTokens` → `useFlareColors()`.
  */
 const MOBILE_BRAND_ACCENT = {
-  primary: "#2563eb",
-  hover: "#1d4ed8",
-  disabled: "#93c5fd",
+  primary: "#0D9488",
+  hover: "#0F766E",
+  disabled: "#5EEAD4",
 } as const;
 
 /** In-app theme: fixed light or dark (no OS follow mode). */
@@ -67,6 +67,8 @@ export type FlareColors = {
   /** Account Light/Dark toggles when unselected — readable on dark UI (was same-tone as screen). */
   appearanceChipInactiveBg: string;
   appearanceChipInactiveText: string;
+  /** Dim layer behind `ConfirmModal` and similar dialogs. */
+  modalBackdrop: string;
 };
 
 function mapTokens(t: StyleguideTheme, isDark: boolean): FlareColors {
@@ -97,6 +99,7 @@ function mapTokens(t: StyleguideTheme, isDark: boolean): FlareColors {
     white: "#ffffff",
     appearanceChipInactiveBg: isDark ? "#ffffff" : t.background.subtle,
     appearanceChipInactiveText: isDark ? "#121212" : t.text.default,
+    modalBackdrop: isDark ? "rgba(0,0,0,0.78)" : "rgba(15,23,42,0.48)",
   };
 }
 
@@ -121,6 +124,8 @@ type FlareThemeContextValue = {
   tokens: StyleguideTheme;
   nav: NavTheme;
   appearancePreference: AppearancePreference;
+  /** False until first persisted appearance read finishes — avoids auth/splash layout flash on cold start. */
+  appearanceHydrated: boolean;
   setAppearancePreference: (pref: AppearancePreference) => Promise<void>;
 };
 
@@ -128,6 +133,7 @@ const FlareThemeCtx = createContext<FlareThemeContextValue | null>(null);
 
 export function FlareThemeProvider({ children }: { children: React.ReactNode }) {
   const [appearancePreference, setAppearancePreferenceState] = useState<AppearancePreference>("light");
+  const [appearanceHydrated, setAppearanceHydrated] = useState(false);
 
   useEffect(() => {
     let cancelled = false;
@@ -137,15 +143,14 @@ export function FlareThemeProvider({ children }: { children: React.ReactNode }) 
         if (cancelled) return;
         if (raw === "light" || raw === "dark") {
           setAppearancePreferenceState(raw);
-          return;
-        }
-        // Legacy OS-follow value; coerce to explicit light/dark once.
-        if (raw === "system") {
+        } else if (raw === "system") {
           setAppearancePreferenceState("dark");
           await AsyncStorage.setItem(APPEARANCE_STORAGE_KEY, "dark");
         }
       } catch {
         // ignore read errors
+      } finally {
+        if (!cancelled) setAppearanceHydrated(true);
       }
     })();
     return () => {
@@ -168,8 +173,8 @@ export function FlareThemeProvider({ children }: { children: React.ReactNode }) 
   const value = useMemo(() => {
     const colors = mapTokens(tokens, isDark);
     const nav = navigationTheme(colors, tokens);
-    return { colors, tokens, nav, appearancePreference, setAppearancePreference };
-  }, [appearancePreference, isDark, setAppearancePreference, tokens]);
+    return { colors, tokens, nav, appearancePreference, appearanceHydrated, setAppearancePreference };
+  }, [appearancePreference, appearanceHydrated, isDark, setAppearancePreference, tokens]);
 
   return <FlareThemeCtx.Provider value={value}>{children}</FlareThemeCtx.Provider>;
 }
@@ -186,6 +191,7 @@ export function useFlareTheme(): FlareThemeContextValue {
     tokens,
     nav: navigationTheme(colors, tokens),
     appearancePreference: "light",
+    appearanceHydrated: true,
     setAppearancePreference: noop,
   };
 }
