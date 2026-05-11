@@ -691,13 +691,13 @@ function SymptomsPageContent() {
           }
         }
         if (smokingStep10Phase === 'dayAmount' && (!formData.smoked_amount_on_symptom_day || formData.smoked_amount_on_symptom_day.trim() === '')) {
-          setFieldErrors(prev => ({ ...prev, smoked_amount_on_symptom_day: 'Please describe how much you smoked on this symptom day' }))
+          setFieldErrors(prev => ({ ...prev, smoked_amount_on_symptom_day: 'Please describe how much you smoked on this day' }))
           return
         }
         setFieldErrors(prev => ({ ...prev, smoked_amount_on_symptom_day: '' }))
       } else if (!isFirstTimeUser) {
         if (!formData.smoked_amount_on_symptom_day || formData.smoked_amount_on_symptom_day.trim() === '') {
-          setFieldErrors(prev => ({ ...prev, smoked_amount_on_symptom_day: 'Please describe how much you smoked on this symptom day' }))
+          setFieldErrors(prev => ({ ...prev, smoked_amount_on_symptom_day: 'Please describe how much you smoked on this day' }))
           return
         }
         setFieldErrors(prev => ({ ...prev, smoked_amount_on_symptom_day: '' }))
@@ -1925,7 +1925,7 @@ function SymptomsPageContent() {
                 <p className="text-sm text-muted mb-5">
                   {!isFirstTimeUser && userPreferences?.isSmoker
                     ? "For example, '5 cigarettes' or '1 cigar'"
-                    : "For example, '1 pack of cigarettes per day, occasional cigars'"
+                    : "For example, '1 pack of cigarettes per day'"
                   }
                 </p>
                 <input

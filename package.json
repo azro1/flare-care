@@ -6,12 +6,7 @@
     "dev": "next dev",
     "build": "next build",
     "start": "next start",
-    "lint": "next lint",
-    "mobile:start": "npm --prefix apps/mobile run start",
-    "mobile:dev-client:tunnel": "npm --prefix apps/mobile run start:dev-client:tunnel",
-    "mobile:dev-client:lan": "npm --prefix apps/mobile run start:dev-client:lan",
-    "mobile:android": "npm --prefix apps/mobile run android",
-    "mobile:ios": "npm --prefix apps/mobile run ios"
+    "lint": "next lint"
   },
   "keywords": [],
   "author": "",

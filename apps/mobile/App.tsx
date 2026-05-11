@@ -4,7 +4,6 @@ import * as WebBrowser from "expo-web-browser";
 import Constants from "expo-constants";
 import { makeRedirectUri } from "expo-auth-session";
 import AsyncStorage from "@react-native-async-storage/async-storage";
-import { createClient } from "@supabase/supabase-js";
 import React, { useCallback, useEffect, useMemo, useState } from "react";
 import { Controller, useForm } from "react-hook-form";
 import { yupResolver } from "@hookform/resolvers/yup";
@@ -39,7 +38,13 @@ import {
   ViewStyle,
 } from "react-native";
 import { SafeAreaProvider, initialWindowMetrics, useSafeAreaInsets } from "react-native-safe-area-context";
+import { StackedDetailField, StackedMealLine } from "./components/StackedDetailField";
 import { FlareThemeProvider, useFlareColors, useFlareTheme } from "./theme";
+import { formatUkDate } from "./lib/formatUkDate";
+import { supabase, TABLES } from "./lib/supabase";
+import { SYMPTOM_WIZARD_PHASES } from "./lib/symptomWizardShared";
+import { dashboardSnapshotByUserId, type DashboardActivityRow, type DashboardSnapshot } from "./lib/dashboardSnapshotCache";
+import { SymptomLogWizardScreen } from "./screens/SymptomLogWizardScreen";
 
 WebBrowser.maybeCompleteAuthSession();
 let Notifications: any = null;
@@ -62,34 +67,6 @@ try {
 } catch {
   // Expo Go on Android SDK53+ does not support remote push API.
 }
-
-const cleanEnv = (value?: string) => (value || "").trim().replace(/^['"]|['"]$/g, "");
-const supabaseUrl = cleanEnv(process.env.EXPO_PUBLIC_SUPABASE_URL || process.env.NEXT_PUBLIC_SUPABASE_URL);
-const supabaseAnonKey = cleanEnv(process.env.EXPO_PUBLIC_SUPABASE_ANON_KEY || process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY);
-
-if (!supabaseUrl || !supabaseAnonKey) {
-  throw new Error("Missing EXPO_PUBLIC_SUPABASE_URL or EXPO_PUBLIC_SUPABASE_ANON_KEY");
-}
-
-const supabase = createClient(supabaseUrl, supabaseAnonKey, {
-  auth: {
-    storage: AsyncStorage,
-    persistSession: true,
-    autoRefreshToken: true,
-    detectSessionInUrl: false,
-  },
-});
-
-const TABLES = {
-  LOG_SYMPTOMS: "log_symptoms",
-  MEDICATIONS: "medications",
-  LOG_MEDICATIONS: "log_medications",
-  TRACK_WEIGHT: "track_weight",
-  DAILY_HYDRATION: "daily_hydration",
-  BOWEL_MOVEMENTS: "bowel_movements",
-  APPOINTMENTS: "appointments",
-  MEDICATION_TAKEN: "medication_taken",
-} as const;
 
 /** App mark: `fclogo_trans_splash.png` only (readable on dark UI and on primary blue “wells” in light). */
 const SPLASH_MARK_IMAGE = require("./assets/fclogo_trans_splash.png");
@@ -242,7 +219,7 @@ function ConfirmModal({
                 onPress={onConfirm}
                 style={[
                   styles.button,
-                  { backgroundColor: confirmDestructive ? c.danger : c.primary },
+                  { backgroundColor: confirmDestructive ? c.destructiveFill : c.primary },
                 ]}
               >
                 <Text style={[styles.buttonText, { color: c.white }]}>{confirmLabel}</Text>
@@ -312,10 +289,11 @@ function PrimaryButton({
   disabled?: boolean;
   /** Width follows label + padding instead of stretching full row. */
   fitContent?: boolean;
-  variant?: "default" | "onPrimary";
+  variant?: "default" | "onPrimary" | "destructive";
 }) {
   const c = useFlareColors();
   const onPrimary = variant === "onPrimary";
+  const destructive = variant === "destructive";
   return (
     <Pressable
       onPress={onPress}
@@ -325,7 +303,9 @@ function PrimaryButton({
         fitContent ? { alignSelf: "flex-start" } : null,
         onPrimary
           ? { backgroundColor: disabled ? "rgba(255,255,255,0.45)" : c.white }
-          : { backgroundColor: disabled ? c.primaryDisabledBg : c.primary },
+          : destructive
+            ? { backgroundColor: c.destructiveFill, opacity: disabled ? 0.5 : 1 }
+            : { backgroundColor: disabled ? c.primaryDisabledBg : c.primary },
       ]}
     >
       <Text
@@ -348,30 +328,41 @@ function SecondaryButton({
   disabled,
   leftIcon,
   variant,
+  titleColor,
+  softOutline,
 }: {
   title: string;
   onPress: () => void;
   disabled?: boolean;
   leftIcon?: React.ReactNode;
   variant?: "default" | "onPrimary";
+  titleColor?: "default" | "primary";
+  /** Lighter edge (e.g. dashboard Recent logs) — still bordered, not as heavy as default. */
+  softOutline?: boolean;
 }) {
   const c = useFlareColors();
   const onPrimary = variant === "onPrimary";
+  const labelColor = onPrimary ? c.white : titleColor === "primary" ? c.primary : c.secondaryBtnText;
+  const outline = onPrimary
+    ? softOutline
+      ? { borderWidth: StyleSheet.hairlineWidth, borderColor: "rgba(255,255,255,0.28)" }
+      : { borderWidth: 1, borderColor: "rgba(255,255,255,0.55)" }
+    : softOutline
+      ? { borderWidth: StyleSheet.hairlineWidth, borderColor: c.cardBorder }
+      : { borderWidth: 1, borderColor: c.secondaryBtnBorder };
   return (
     <Pressable
       onPress={onPress}
       disabled={disabled}
       style={[
         styles.buttonSecondary,
-        onPrimary
-          ? { backgroundColor: "rgba(255,255,255,0.12)", borderWidth: 1, borderColor: "rgba(255,255,255,0.55)" }
-          : { backgroundColor: c.secondaryBtnBg, borderWidth: 1, borderColor: c.secondaryBtnBorder },
+        onPrimary ? { backgroundColor: "rgba(255,255,255,0.12)", ...outline } : { backgroundColor: c.secondaryBtnBg, ...outline },
         disabled ? { opacity: 0.55 } : null,
       ]}
     >
       <View style={styles.buttonSecondaryContent}>
         {leftIcon ? leftIcon : null}
-        <Text style={[styles.buttonSecondaryText, { color: onPrimary ? c.white : c.secondaryBtnText }]}>{title}</Text>
+        <Text style={[styles.buttonSecondaryText, { color: labelColor }]}>{title}</Text>
       </View>
     </Pressable>
   );
@@ -717,7 +708,7 @@ function AuthScreen({
 /** Icons inside dashboard home tiles (Daily Check-in + More). */
 const HOME_TILE_ICON_SIZE = 34;
 
-/** Show bottom shortcuts on dashboard + primary tab destinations; hide on Symptoms, Hydration, etc. */
+/** Show bottom shortcuts on dashboard + primary tab destinations; hide on wizard/detail flows, Hydration, etc. */
 const BOTTOM_BAR_VISIBLE_ROUTES = new Set(["Dashboard", "Meds", "Reminders", "Account", "About"]);
 
 /** Padding uses this screen’s route—not the globally focused route—so the exiting page doesn’t jump during transitions. */
@@ -729,21 +720,35 @@ function useBottomTabScrollInset() {
 
 /** Matches `styles.screen` edge padding (used to size Daily Check-in row). */
 const SCREEN_EDGE_PADDING = 12;
+/**
+ * Inset inside symptom-detail grey section trays — matches `styles.recentLogsRow` (symptom history list).
+ * Row `style` overrides `StackedDetailField` / `StackedMealLine` default vertical padding so horizontal and vertical match.
+ */
+const SYMPTOM_DETAIL_SECTION_INSET = 12;
+const SYMPTOM_DETAIL_SECTION_TRAY_ROW_STYLE = {
+  paddingTop: SYMPTOM_DETAIL_SECTION_INSET,
+  paddingBottom: SYMPTOM_DETAIL_SECTION_INSET,
+} as const;
+const SYMPTOM_DETAIL_SECTION_NOTES_WELL_STYLE = {
+  paddingTop: SYMPTOM_DETAIL_SECTION_INSET,
+  paddingBottom: SYMPTOM_DETAIL_SECTION_INSET,
+  paddingHorizontal: SYMPTOM_DETAIL_SECTION_INSET,
+} as const;
 /** Space between sibling home tiles: Daily Check-in `marginRight` + More grid `gap`. */
 const HOME_TILE_GAP = 16;
 
-type ActivityRow = { key: string; title: string; ts: number; icon: "symptom" | "medication" | "bowel" | "weight" };
-type DashboardSnapshot = {
-  todaySummary: { symptoms: number; medsTaken: number; medsTotal: number; hydration: number };
-  checkInBadges: { symptoms: number; missedMeds: number; hydration: number; bowel: number };
-  recentActivity: ActivityRow[];
-  weatherMeta: { city: string; temp: number | null; desc: string; icon?: string | null } | null;
-  weather: string;
-  newsItems: Array<{ title: string; source: string; publishedAt?: string; link?: string; imageUrl?: string | null }>;
-  newsError: string | null;
-};
+/** Dashboard / history lists — symptom log id + time. */
+type RecentLogListRow = { id: string; created_at: string };
+type MedicationLogListRow = RecentLogListRow & { name?: string | null };
 
-const dashboardSnapshotByUserId: Record<string, DashboardSnapshot> = {};
+function formatRecentLogTime(iso: string) {
+  try {
+    return new Date(iso).toLocaleTimeString(undefined, { hour: "2-digit", minute: "2-digit" });
+  } catch {
+    return "";
+  }
+}
+
 /** Avoid greeting flicker (“there”) when session metadata/email arrives shortly after navigation. */
 const dashboardGreetingFirstNameByUserId: Record<string, string> = {};
 
@@ -779,7 +784,6 @@ function DashboardGridTile({
   label,
   icon,
   onPress,
-  badgeValue,
   variant,
   isLastInScrollRow,
 }: {
@@ -787,8 +791,6 @@ function DashboardGridTile({
   label: string;
   icon: React.ReactNode;
   onPress: () => void;
-  /** Optional count badge (Daily Check-in only). */
-  badgeValue?: number;
   variant: "scroll" | "grid";
   /** When `variant` is `scroll`, omit right margin on the last tile. */
   isLastInScrollRow?: boolean;
@@ -805,7 +807,6 @@ function DashboardGridTile({
         variant === "scroll" && (isLastInScrollRow ? styles.homeDashboardTileScrollLast : styles.homeDashboardTileScroll),
       ]}
     >
-      {badgeValue !== undefined ? <Text style={[styles.homeDashboardTileBadge, { color: c.text }]}>{badgeValue}</Text> : null}
       <View style={styles.homeDashboardTileBody}>
         <View style={styles.homeDashboardTileIconWrap}>{icon}</View>
         <Text style={[styles.moreGridLabel, { color: c.text }]} numberOfLines={2}>
@@ -842,17 +843,13 @@ function DashboardScreen({ user }: { user: SessionUser }) {
   const [todaySummary, setTodaySummary] = useState<{ symptoms: number; medsTaken: number; medsTotal: number; hydration: number }>(
     () => snapshotSeed?.todaySummary ?? { symptoms: 0, medsTaken: 0, medsTotal: 0, hydration: 0 },
   );
-  const [recentActivity, setRecentActivity] = useState<ActivityRow[]>(() => snapshotSeed?.recentActivity ?? []);
-  /** Counts shown on Daily Check-in tiles (top-left). */
-  const [checkInBadges, setCheckInBadges] = useState<{ symptoms: number; missedMeds: number; hydration: number; bowel: number }>(
-    () => snapshotSeed?.checkInBadges ?? { symptoms: 0, missedMeds: 0, hydration: 0, bowel: 0 },
-  );
+  const [recentActivity, setRecentActivity] = useState<DashboardActivityRow[]>(() => snapshotSeed?.recentActivity ?? []);
   const hydrationTarget = 6;
   const dailyCheckinCards = [
-    { key: "symptoms" as const, label: "Symptoms", icon: "pulse", family: "ion", goTo: "Symptoms", value: checkInBadges.symptoms },
-    { key: "missed-meds" as const, label: "Missed Medications", icon: "pill", family: "mci", goTo: "Meds", value: checkInBadges.missedMeds },
-    { key: "hydration" as const, label: "Hydration", icon: "water", family: "mci", goTo: "Hydration", value: checkInBadges.hydration },
-    { key: "bowel" as const, label: "Bowel Movements", icon: "stomach", family: "mci", goTo: "Bowel", value: checkInBadges.bowel },
+    { key: "symptoms" as const, label: "Log Symptoms", icon: "thermometer", family: "mci", goTo: "SymptomLogWizard" },
+    { key: "track-meds" as const, label: "Track Medications", icon: "pill", family: "mci", goTo: "Meds" },
+    { key: "hydration" as const, label: "Hydration", icon: "water", family: "mci", goTo: "Hydration" },
+    { key: "bowel" as const, label: "Bowel Movements", icon: "stomach", family: "mci", goTo: "Bowel" },
   ];
   const moreLinkCards = [
     { key: "meds", label: "My Meds", screen: "Meds" as const, icon: "pill", family: "mci" as const },
@@ -868,11 +865,7 @@ function DashboardScreen({ user }: { user: SessionUser }) {
     computedGreetingFirst !== "there"
       ? computedGreetingFirst
       : dashboardGreetingFirstNameByUserId[user.id] ?? computedGreetingFirst;
-  const todayLabel = new Date().toLocaleDateString(undefined, {
-    weekday: "long",
-    month: "short",
-    day: "numeric",
-  });
+  const todayLabel = `${new Date().toLocaleDateString("en-GB", { weekday: "long" })}, ${formatUkDate(new Date())}`;
   const formatRelativeTime = (timestamp: number) => {
     const diffMinutes = Math.floor((Date.now() - timestamp) / (1000 * 60));
     if (diffMinutes < 1) return "Just now";
@@ -881,7 +874,7 @@ function DashboardScreen({ user }: { user: SessionUser }) {
     if (diffHours < 24) return `${diffHours}h ago`;
     const diffDays = Math.floor(diffHours / 24);
     if (diffDays < 7) return `${diffDays}d ago`;
-    return new Date(timestamp).toLocaleDateString();
+    return formatUkDate(new Date(timestamp));
   };
   useFocusEffect(
     useCallback(() => {
@@ -889,7 +882,6 @@ function DashboardScreen({ user }: { user: SessionUser }) {
       const seedSnap = dashboardSnapshotByUserId[user.id];
       const snap: DashboardSnapshot = {
         todaySummary: seedSnap?.todaySummary ?? { symptoms: 0, medsTaken: 0, medsTotal: 0, hydration: 0 },
-        checkInBadges: seedSnap?.checkInBadges ?? { symptoms: 0, missedMeds: 0, hydration: 0, bowel: 0 },
         recentActivity: seedSnap?.recentActivity ?? [],
         weatherMeta: seedSnap?.weatherMeta ?? null,
         weather: seedSnap?.weather ?? "Loading weather...",
@@ -909,8 +901,6 @@ function DashboardScreen({ user }: { user: SessionUser }) {
             recentMedsRes,
             recentBowelRes,
             recentWeightRes,
-            missedMedsCountRes,
-            bowelTodayCountRes,
           ] = await Promise.all([
             supabase.from(TABLES.LOG_SYMPTOMS).select("id,created_at").eq("user_id", user.id).gte("created_at", `${today}T00:00:00`),
             supabase
@@ -928,12 +918,6 @@ function DashboardScreen({ user }: { user: SessionUser }) {
             supabase.from(TABLES.LOG_MEDICATIONS).select("id,name,created_at").eq("user_id", user.id).order("created_at", { ascending: false }).limit(1),
             supabase.from(TABLES.BOWEL_MOVEMENTS).select("id,occurred_at").eq("user_id", user.id).order("occurred_at", { ascending: false }).limit(1),
             supabase.from(TABLES.TRACK_WEIGHT).select("id,date,value_kg").eq("user_id", user.id).order("date", { ascending: false }).limit(1),
-            supabase.from(TABLES.LOG_MEDICATIONS).select("*", { count: "exact", head: true }).eq("user_id", user.id),
-            supabase
-              .from(TABLES.BOWEL_MOVEMENTS)
-              .select("*", { count: "exact", head: true })
-              .eq("user_id", user.id)
-              .gte("occurred_at", `${today}T00:00:00`),
           ]);
 
           snap.todaySummary = {
@@ -943,14 +927,7 @@ function DashboardScreen({ user }: { user: SessionUser }) {
             hydration: todayHydrationRes.data?.glasses ?? 0,
           };
 
-          snap.checkInBadges = {
-            symptoms: todaySymptomsRes.data?.length ?? 0,
-            missedMeds: missedMedsCountRes.count ?? 0,
-            hydration: todayHydrationRes.data?.glasses ?? 0,
-            bowel: bowelTodayCountRes.count ?? 0,
-          };
-
-          const activityRows: ActivityRow[] = [];
+          const activityRows: DashboardActivityRow[] = [];
 
           const recentSymptom = recentSymptomsRes.data?.[0];
           if (recentSymptom?.created_at) {
@@ -998,15 +975,12 @@ function DashboardScreen({ user }: { user: SessionUser }) {
 
           if (cancelled) return;
           setTodaySummary(snap.todaySummary);
-          setCheckInBadges(snap.checkInBadges);
           setRecentActivity(snap.recentActivity);
         } catch {
           snap.todaySummary = { symptoms: 0, medsTaken: 0, medsTotal: 0, hydration: 0 };
-          snap.checkInBadges = { symptoms: 0, missedMeds: 0, hydration: 0, bowel: 0 };
           snap.recentActivity = [];
           if (cancelled) return;
           setTodaySummary(snap.todaySummary);
-          setCheckInBadges(snap.checkInBadges);
           setRecentActivity(snap.recentActivity);
         }
 
@@ -1179,7 +1153,6 @@ function DashboardScreen({ user }: { user: SessionUser }) {
               label={item.label}
               variant="scroll"
               isLastInScrollRow={index === dailyCheckinCards.length - 1}
-              badgeValue={item.value}
               onPress={() => navigation.navigate(item.goTo)}
               icon={
                 item.family === "ion" ? (
@@ -1217,7 +1190,22 @@ function DashboardScreen({ user }: { user: SessionUser }) {
           </Text>
         </View>
       </Card>
-      <Text style={[styles.dashboardSectionTitle, { color: c.text }]}>Recent Activity</Text>
+      <Text style={[styles.dashboardSectionTitle, { color: c.text }]}>Recent logs</Text>
+      <Card title="">
+        <SecondaryButton
+          title="Symptom History"
+          titleColor="primary"
+          softOutline
+          onPress={() => navigation.navigate("SymptomHistory")}
+        />
+        <SecondaryButton
+          title="Medication Tracking History"
+          titleColor="primary"
+          softOutline
+          onPress={() => navigation.navigate("MedicationTrackingHistory")}
+        />
+      </Card>
+      <Text style={[styles.dashboardSectionTitleLeft, { color: c.text }]}>Recent Activity</Text>
       <Card title="">
         {recentActivity.length ? (
           <View style={[styles.activityListWrap, { backgroundColor: c.surfaceSubtle }]}>
@@ -1240,7 +1228,7 @@ function DashboardScreen({ user }: { user: SessionUser }) {
           <Text style={[styles.muted, { color: c.textMuted }]}>No recent activity yet.</Text>
         )}
       </Card>
-      <Text style={[styles.dashboardSectionTitleLeft, { color: c.text }]}>Latest News</Text>
+      <Text style={[styles.dashboardSectionTitle, { color: c.text }]}>Latest News</Text>
       <Card title="">
         {newsLoading ? (
           <Text style={[styles.muted, { color: c.textMuted }]}>Getting latest news...</Text>
@@ -1269,7 +1257,7 @@ function DashboardScreen({ user }: { user: SessionUser }) {
                   </Text>
                   <Text style={[styles.newsMeta, { color: c.textMuted }]} numberOfLines={1}>
                     {item.source}
-                    {item.publishedAt ? ` • ${new Date(item.publishedAt).toLocaleDateString(undefined, { day: "numeric", month: "short" })}` : ""}
+                    {item.publishedAt ? ` • ${formatUkDate(item.publishedAt)}` : ""}
                   </Text>
                 </View>
               </Pressable>
@@ -1302,60 +1290,634 @@ function DashboardScreen({ user }: { user: SessionUser }) {
   );
 }
 
-function SymptomsScreen({ user }: { user: SessionUser }) {
+function SymptomHistoryScreen({ user }: { user: SessionUser }) {
+  const navigation = useNavigation<any>();
   const c = useFlareColors();
   const bottomScrollInset = useBottomTabScrollInset();
-  const [severity, setSeverity] = useState("5");
-  const [notes, setNotes] = useState("");
-  const [items, setItems] = useState<any[]>([]);
+  const [rows, setRows] = useState<RecentLogListRow[]>([]);
+  const load = useCallback(async () => {
+    const { data } = await supabase
+      .from(TABLES.LOG_SYMPTOMS)
+      .select("id,created_at")
+      .eq("user_id", user.id)
+      .order("created_at", { ascending: false })
+      .limit(100);
+    setRows((data ?? []) as RecentLogListRow[]);
+  }, [user.id]);
+  useFocusEffect(
+    useCallback(() => {
+      load();
+    }, [load]),
+  );
+  return (
+    <ScrollView style={[styles.screen, { backgroundColor: c.screen }]} contentContainerStyle={{ paddingBottom: bottomScrollInset }}>
+      <Card title="Symptom logs">
+        <View style={styles.detailFieldsStack}>
+          {rows.length === 0 ? (
+            <Text style={[styles.muted, { color: c.textMuted }]}>No symptoms logged yet.</Text>
+          ) : (
+            <View style={[styles.activityListWrap, { backgroundColor: c.surfaceSubtle }]}>
+              {rows.map((row, index) => (
+                <Pressable
+                  key={String(row.id)}
+                  accessibilityRole="button"
+                  onPress={() => navigation.navigate("SymptomDetail", { id: String(row.id) })}
+                  style={[
+                    styles.recentLogsRow,
+                    index !== rows.length - 1 ? [styles.activityNoteRowDivider, { borderBottomColor: c.cardBorder }] : null,
+                  ]}
+                >
+                  <View style={{ flex: 1, paddingRight: 8 }}>
+                    <Text style={[styles.recentLogsRowDate, { color: c.text }]}>{formatUkDate(row.created_at)}</Text>
+                  </View>
+                  <Text style={[styles.recentLogsRowTime, { color: c.textMuted }]}>{formatRecentLogTime(row.created_at)}</Text>
+                </Pressable>
+              ))}
+            </View>
+          )}
+          <Text
+            style={{
+              marginTop: rows.length === 0 ? 12 : 14,
+              fontSize: 14,
+              fontFamily: "Inter_400Regular",
+              lineHeight: 22,
+              color: c.textMuted,
+            }}
+          >
+            Logs show what you reported on the day your symptoms started, not for every day of the symptom duration.
+          </Text>
+        </View>
+      </Card>
+      <PrimaryButton title="Log a symptom" onPress={() => navigation.navigate("SymptomLogWizard")} />
+    </ScrollView>
+  );
+}
 
-  const load = async () => {
-    const { data } = await supabase.from(TABLES.LOG_SYMPTOMS).select("*").eq("user_id", user.id).order("created_at", { ascending: false }).limit(30);
-    setItems(data ?? []);
+/** Symptom detail — align with web `src/app/symptoms/[id]/page.js` field logic. */
+function parseSymptomMealArray(raw: unknown): unknown[] {
+  if (Array.isArray(raw)) return raw;
+  if (typeof raw === "string") {
+    try {
+      const p = JSON.parse(raw);
+      return Array.isArray(p) ? p : [];
+    } catch {
+      return [];
+    }
+  }
+  return [];
+}
+
+function getMealFieldsForDetail(meal: unknown): { food: string; quantity: string } {
+  if (typeof meal === "string") return { food: meal, quantity: "" };
+  if (meal && typeof meal === "object") {
+    const m = meal as Record<string, unknown>;
+    const qty = typeof m.quantity === "string" ? m.quantity.trim() : "";
+    return { food: typeof m.food === "string" ? m.food : "", quantity: qty };
+  }
+  return { food: "", quantity: "" };
+}
+
+function pickSymptomField(row: Record<string, unknown>, snake: string, camel?: string): unknown {
+  if (row[snake] !== undefined && row[snake] !== null) return row[snake];
+  if (camel !== undefined && row[camel] !== undefined && row[camel] !== null) return row[camel];
+  return undefined;
+}
+
+function SymptomDetailScreen({ user }: { user: SessionUser }) {
+  const route = useRoute();
+  const c = useFlareColors();
+  const bottomScrollInset = useBottomTabScrollInset();
+  const id = String((route.params as { id?: string })?.id ?? "");
+  const [loading, setLoading] = useState(true);
+  const [row, setRow] = useState<Record<string, unknown> | null>(null);
+  const load = useCallback(async () => {
+    if (!id) {
+      setRow(null);
+      setLoading(false);
+      return;
+    }
+    setLoading(true);
+    const { data, error } = await supabase.from(TABLES.LOG_SYMPTOMS).select("*").eq("user_id", user.id).eq("id", id).maybeSingle();
+    if (error) {
+      setRow(null);
+    } else {
+      setRow((data as Record<string, unknown>) ?? null);
+    }
+    setLoading(false);
+  }, [user.id, id]);
+  useEffect(() => {
+    load();
+  }, [load]);
+
+  const createdRaw = pickSymptomField(row ?? {}, "created_at", "createdAt");
+  const createdIso = createdRaw != null ? String(createdRaw) : "";
+  const createdDate = createdIso ? new Date(createdIso) : null;
+  const createdSubtitle =
+    createdDate && !Number.isNaN(createdDate.getTime())
+      ? `${createdDate.toLocaleDateString("en-GB", { weekday: "long", day: "numeric", month: "short", year: "numeric" })} at ${createdDate.toLocaleTimeString(undefined, { hour: "2-digit", minute: "2-digit" })}`
+      : "";
+
+  const symptomStart = pickSymptomField(row ?? {}, "symptom_start_date", "symptomStartDate");
+  const symptomEnd = pickSymptomField(row ?? {}, "symptom_end_date", "symptomEndDate");
+  const isOngoing = Boolean(pickSymptomField(row ?? {}, "is_ongoing", "isOngoing")) || !String(symptomEnd ?? "").trim();
+
+  const severityRaw = row ? pickSymptomField(row, "severity") : undefined;
+  const severityLabel = severityRaw !== undefined && severityRaw !== null ? String(severityRaw) : "Not logged";
+  const stressRaw = row ? pickSymptomField(row, "stress_level") : undefined;
+  const stressLabel = stressRaw !== undefined && stressRaw !== null ? String(stressRaw) : "Not logged";
+
+  const bathroomChanged = row ? pickSymptomField(row, "bathroom_frequency_changed") : undefined;
+  const bathroomChangeDetails = String(pickSymptomField(row ?? {}, "bathroom_frequency_change_details") ?? "").trim();
+  const normalBathroom = String(pickSymptomField(row ?? {}, "normal_bathroom_frequency") ?? "").trim();
+
+  const smoker = row ? pickSymptomField(row, "smoker") : undefined;
+  const smokingHabits = String(pickSymptomField(row ?? {}, "smoking_habits") ?? pickSymptomField(row ?? {}, "smoking_details") ?? "").trim();
+  const smokedOnDay = row ? pickSymptomField(row, "smoked_on_symptom_day") : undefined;
+  const smokedAmount = String(pickSymptomField(row ?? {}, "smoked_amount_on_symptom_day") ?? "").trim();
+
+  const alcohol = row ? pickSymptomField(row, "alcohol") : undefined;
+  const averageAlcohol = String(pickSymptomField(row ?? {}, "average_alcohol_units_pw") ?? pickSymptomField(row ?? {}, "alcohol_habits") ?? "").trim();
+  const drankOnDay = row ? pickSymptomField(row, "drank_on_symptom_day") : undefined;
+  const alcoholUnits = String(pickSymptomField(row ?? {}, "alcohol_units_on_symptom_day") ?? "").trim();
+
+  const hasLifestyleRowsAfterSmoked =
+    typeof drankOnDay !== "boolean" ||
+    (alcohol === true && !!averageAlcohol) ||
+    (typeof drankOnDay === "boolean" && drankOnDay === true && !!alcoholUnits);
+
+  const hasRowAfterAverageAlcohol = typeof drankOnDay === "boolean" && drankOnDay === true && !!alcoholUnits;
+
+  const hasLifestyleRowsAfterBathroomDescription =
+    typeof smokedOnDay !== "boolean" ||
+    (smoker === true && !!smokingHabits) ||
+    (typeof smokedOnDay === "boolean" && smokedOnDay === true && !!smokedAmount) ||
+    typeof drankOnDay !== "boolean" ||
+    (alcohol === true && !!averageAlcohol) ||
+    (typeof drankOnDay === "boolean" && drankOnDay === true && !!alcoholUnits);
+
+  const breakfast = parseSymptomMealArray(row ? pickSymptomField(row, "breakfast") : undefined);
+  const lunch = parseSymptomMealArray(row ? pickSymptomField(row, "lunch") : undefined);
+  const dinner = parseSymptomMealArray(row ? pickSymptomField(row, "dinner") : undefined);
+  const hasMeals = breakfast.length > 0 || lunch.length > 0 || dinner.length > 0;
+
+  const notesText = String(pickSymptomField(row ?? {}, "notes") ?? "").trim();
+
+  /** Hairline under Smoked when meals/notes follow so it is not visually grouped with Breakfast. */
+  const showDividerAfterSmoked = hasLifestyleRowsAfterSmoked || hasMeals || !!notesText;
+
+  const startStr = String(symptomStart ?? "").trim();
+  const timelineStart =
+    (startStr ? formatUkDate(startStr) : "") || (createdIso ? formatUkDate(createdIso) : "") || "Not set";
+  const timelineEnd = String(symptomEnd ?? "").trim();
+
+  const detailRow = (label: string, value: string, showDivider = true, insetRow = false, sectionTray = false) => (
+    <StackedDetailField
+      label={label}
+      value={value}
+      showDivider={showDivider}
+      numberOfLines={8}
+      insetRow={insetRow}
+      valueColor={c.textSecondary}
+      style={sectionTray ? SYMPTOM_DETAIL_SECTION_TRAY_ROW_STYLE : undefined}
+    />
+  );
+
+  /** Same shell as grouped lifestyle / meal sections on symptom detail. */
+  const mealDetailGroup = {
+    alignSelf: "stretch" as const,
+    backgroundColor: c.surfaceSubtle,
+    borderRadius: 10,
+    overflow: "hidden" as const,
+    paddingHorizontal: SYMPTOM_DETAIL_SECTION_INSET,
   };
-  useEffect(() => { load(); }, [user.id]);
 
-  const save = async () => {
-    const now = new Date();
-    const date = now.toISOString().split("T")[0];
-    const payload = {
-      id: Date.now().toString(),
-      user_id: user.id,
-      symptom_start_date: date,
-      is_ongoing: true,
-      symptom_end_date: null,
-      severity: Number(severity),
-      stress_level: null,
-      normal_bathroom_frequency: null,
-      bathroom_frequency_changed: null,
-      bathroom_frequency_change_details: null,
-      smoked_on_symptom_day: false,
-      drank_on_symptom_day: false,
-      notes: notes || null,
-      created_at: now.toISOString(),
+  const mealSectionInTray = (title: string, items: unknown[]) => {
+    if (items.length === 0) return null;
+    return (
+      <View style={mealDetailGroup}>
+        <StackedDetailField label={title} insetRow={false} style={SYMPTOM_DETAIL_SECTION_TRAY_ROW_STYLE} />
+        {items.map((meal, index) => {
+          const { food, quantity } = getMealFieldsForDetail(meal);
+          return (
+            <StackedMealLine
+              key={`${title}-${index}`}
+              food={food}
+              quantity={quantity}
+              insetRow={false}
+              valueColor={c.textSecondary}
+              style={SYMPTOM_DETAIL_SECTION_TRAY_ROW_STYLE}
+            />
+          );
+        })}
+      </View>
+    );
+  };
+
+  if (loading) {
+    return (
+      <View style={[styles.screen, styles.centered, { backgroundColor: c.screen, paddingBottom: bottomScrollInset }]}>
+        <ActivityIndicator color={c.primary} />
+        <Text style={[styles.muted, { color: c.textMuted, marginTop: 12 }]}>Loading…</Text>
+      </View>
+    );
+  }
+
+  if (!row) {
+    return (
+      <ScrollView style={[styles.screen, { backgroundColor: c.screen }]} contentContainerStyle={{ paddingBottom: bottomScrollInset + 24 }}>
+        <Card title="" style={styles.symptomDetailOuterCard}>
+          <Text style={[styles.muted, { color: c.textMuted }]}>Could not load this entry.</Text>
+        </Card>
+      </ScrollView>
+    );
+  }
+
+  const durationPhaseLabel = SYMPTOM_WIZARD_PHASES.find((p) => p.id === "timing")?.label ?? "Duration";
+  const severityStressPhaseLabel = SYMPTOM_WIZARD_PHASES.find((p) => p.id === "severity")?.label ?? "Severity & stress";
+  const bathroomPhaseLabel = SYMPTOM_WIZARD_PHASES.find((p) => p.id === "bathroom")?.label ?? "Bathroom frequency";
+  const lifestylePhaseLabel = SYMPTOM_WIZARD_PHASES.find((p) => p.id === "lifestyle")?.label ?? "Lifestyle";
+  const mealsPhaseLabel = SYMPTOM_WIZARD_PHASES.find((p) => p.id === "meals")?.label ?? "Meals";
+  const notesPhaseLabel = SYMPTOM_WIZARD_PHASES.find((p) => p.id === "notes")?.label ?? "Notes";
+
+  const renderSymptomDetailGroupedTray = (body: React.ReactNode) => (
+    <View
+      style={{
+        alignSelf: "stretch",
+        backgroundColor: c.surfaceSubtle,
+        borderRadius: 10,
+        overflow: "hidden",
+        paddingHorizontal: SYMPTOM_DETAIL_SECTION_INSET,
+      }}
+    >
+      {body}
+    </View>
+  );
+
+  const symptomDetailDurationFields = () =>
+    renderSymptomDetailGroupedTray(
+      <>
+        <StackedDetailField
+          label="Status"
+          value={isOngoing ? "Ongoing" : "Resolved"}
+          valueColor={isOngoing ? "#d97706" : "#059669"}
+          showDivider={false}
+          insetRow={false}
+          style={SYMPTOM_DETAIL_SECTION_TRAY_ROW_STYLE}
+        />
+        <StackedDetailField
+          label="Started"
+          value={timelineStart}
+          valueColor={c.textSecondary}
+          showDivider={false}
+          insetRow={false}
+          style={SYMPTOM_DETAIL_SECTION_TRAY_ROW_STYLE}
+        />
+        {!isOngoing && timelineEnd ? (
+          <StackedDetailField
+            label="Ended"
+            value={formatUkDate(timelineEnd)}
+            valueColor={c.textSecondary}
+            showDivider={false}
+            insetRow={false}
+            style={SYMPTOM_DETAIL_SECTION_TRAY_ROW_STYLE}
+          />
+        ) : null}
+      </>,
+    );
+
+  const symptomDetailSeverityStressFields = () =>
+    renderSymptomDetailGroupedTray(
+      <>
+        <StackedDetailField
+          label="Severity"
+          value={severityLabel}
+          valueColor={c.textSecondary}
+          showDivider={false}
+          insetRow={false}
+          style={SYMPTOM_DETAIL_SECTION_TRAY_ROW_STYLE}
+        />
+        <StackedDetailField
+          label="Stress level"
+          value={stressLabel}
+          valueColor={c.textSecondary}
+          insetRow={false}
+          style={SYMPTOM_DETAIL_SECTION_TRAY_ROW_STYLE}
+        />
+      </>,
+    );
+
+  const symptomLifestyleFields = (rowDividerLines: boolean, grouped = false) => {
+    const fieldInset = !grouped;
+    const detailGroup = {
+      alignSelf: "stretch" as const,
+      backgroundColor: c.surfaceSubtle,
+      borderRadius: 10,
+      overflow: "hidden" as const,
+      paddingHorizontal: SYMPTOM_DETAIL_SECTION_INSET,
     };
-    const { error } = await supabase.from(TABLES.LOG_SYMPTOMS).insert([payload]);
-    if (error) return Alert.alert("Could not save symptom", error.message);
-    setNotes("");
-    await load();
+
+    if (!grouped) {
+      return (
+        <>
+          {detailRow("Bathroom frequency", normalBathroom ? `${normalBathroom} times/day` : "Not set times/day", rowDividerLines, fieldInset)}
+          {bathroomChanged ? (
+            <>
+              {detailRow(
+                "Frequency changed",
+                bathroomChanged === "yes" ? "Yes" : "No",
+                rowDividerLines && !(bathroomChanged === "yes" && bathroomChangeDetails),
+                fieldInset,
+              )}
+              {bathroomChanged === "yes" && bathroomChangeDetails ? (
+                <StackedDetailField
+                  label="Description"
+                  value={bathroomChangeDetails}
+                  valueColor={c.textSecondary}
+                  showDivider={rowDividerLines && hasLifestyleRowsAfterBathroomDescription}
+                  insetRow={fieldInset}
+                />
+              ) : null}
+            </>
+          ) : null}
+          {typeof smokedOnDay !== "boolean"
+            ? detailRow("Smoker", smoker === true ? "Yes" : smoker === false ? "No" : "Not recorded", rowDividerLines, fieldInset)
+            : null}
+          {smoker === true && smokingHabits ? (
+            <StackedDetailField
+              label="Smoking habits"
+              value={smokingHabits}
+              valueColor={c.textSecondary}
+              showDivider={rowDividerLines}
+              insetRow={fieldInset}
+            />
+          ) : null}
+          {typeof smokedOnDay === "boolean" && smokedOnDay === true && smokedAmount
+            ? detailRow("Smoked", smokedAmount, rowDividerLines && showDividerAfterSmoked, fieldInset)
+            : null}
+          {typeof drankOnDay !== "boolean"
+            ? detailRow("Alcohol", alcohol === true ? "Yes" : alcohol === false ? "No" : "Not recorded", rowDividerLines && !!(alcohol === true && averageAlcohol), fieldInset)
+            : null}
+          {alcohol === true && averageAlcohol
+            ? detailRow(
+                "Average Alcohol Units",
+                `${averageAlcohol} units/week`,
+                rowDividerLines && (hasRowAfterAverageAlcohol || hasMeals || !!notesText),
+                fieldInset,
+              )
+            : null}
+          {typeof drankOnDay === "boolean" && drankOnDay === true && alcoholUnits
+            ? detailRow("Alcohol Units Consumed", `${alcoholUnits} units`, rowDividerLines && (hasMeals || !!notesText), fieldInset)
+            : null}
+        </>
+      );
+    }
+
+    const showSmokingBlock =
+      typeof smokedOnDay !== "boolean" ||
+      (smoker === true && smokingHabits) ||
+      (typeof smokedOnDay === "boolean" && smokedOnDay === true && !!smokedAmount);
+
+    const showAlcoholBlock =
+      typeof drankOnDay !== "boolean" ||
+      (alcohol === true && !!averageAlcohol) ||
+      (typeof drankOnDay === "boolean" && drankOnDay === true && !!alcoholUnits);
+
+    return (
+      <>
+        <View style={styles.symptomDetailPhaseBlock}>
+          <Text style={[styles.symptomDetailPhaseTitle, { color: c.text }]}>{bathroomPhaseLabel}</Text>
+          <View style={detailGroup}>
+            {detailRow(
+              "Bathroom frequency",
+              normalBathroom ? `${normalBathroom} times/day` : "Not set times/day",
+              rowDividerLines && !!bathroomChanged,
+              false,
+              true,
+            )}
+            {bathroomChanged ? (
+              <>
+                {detailRow(
+                  "Frequency changed",
+                  bathroomChanged === "yes" ? "Yes" : "No",
+                  rowDividerLines && bathroomChanged === "yes" && !!bathroomChangeDetails,
+                  false,
+                  true,
+                )}
+                {bathroomChanged === "yes" && bathroomChangeDetails ? (
+                  <StackedDetailField
+                    label="Description"
+                    value={bathroomChangeDetails}
+                    valueColor={c.textSecondary}
+                    showDivider={false}
+                    insetRow={false}
+                    style={SYMPTOM_DETAIL_SECTION_TRAY_ROW_STYLE}
+                  />
+                ) : null}
+              </>
+            ) : null}
+          </View>
+        </View>
+
+        {showSmokingBlock || showAlcoholBlock ? (
+          <View style={styles.symptomDetailPhaseBlock}>
+            <Text style={[styles.symptomDetailPhaseTitle, { color: c.text }]}>{lifestylePhaseLabel}</Text>
+            <View style={styles.symptomDetailSubStack}>
+              {showSmokingBlock ? (
+                <View style={detailGroup}>
+                  {typeof smokedOnDay !== "boolean" ? (
+                    detailRow(
+                      "Smoker",
+                      smoker === true ? "Yes" : smoker === false ? "No" : "Not recorded",
+                      rowDividerLines &&
+                        ((smoker === true && !!smokingHabits) ||
+                          (typeof smokedOnDay === "boolean" && smokedOnDay === true && !!smokedAmount)),
+                      false,
+                      true,
+                    )
+                  ) : null}
+                  {smoker === true && smokingHabits ? (
+                    <StackedDetailField
+                      label="Smoking habits"
+                      value={smokingHabits}
+                      valueColor={c.textSecondary}
+                      showDivider={rowDividerLines && typeof smokedOnDay === "boolean" && smokedOnDay === true && !!smokedAmount}
+                      insetRow={false}
+                      style={SYMPTOM_DETAIL_SECTION_TRAY_ROW_STYLE}
+                    />
+                  ) : null}
+                  {typeof smokedOnDay === "boolean" && smokedOnDay === true && smokedAmount ? (
+                    detailRow("Smoked", smokedAmount, false, false, true)
+                  ) : null}
+                </View>
+              ) : null}
+              {showAlcoholBlock ? (
+                <View style={detailGroup}>
+                  {typeof drankOnDay !== "boolean" ? (
+                    detailRow(
+                      "Alcohol",
+                      alcohol === true ? "Yes" : alcohol === false ? "No" : "Not recorded",
+                      rowDividerLines &&
+                        (!!(alcohol === true && averageAlcohol) ||
+                          (typeof drankOnDay === "boolean" && drankOnDay === true && !!alcoholUnits)),
+                      false,
+                      true,
+                    )
+                  ) : null}
+                  {alcohol === true && averageAlcohol ? (
+                    detailRow(
+                      "Average Alcohol Units",
+                      `${averageAlcohol} units/week`,
+                      rowDividerLines && typeof drankOnDay === "boolean" && drankOnDay === true && !!alcoholUnits,
+                      false,
+                      true,
+                    )
+                  ) : null}
+                  {typeof drankOnDay === "boolean" && drankOnDay === true && alcoholUnits ? (
+                    detailRow("Alcohol Units Consumed", `${alcoholUnits} units`, false, false, true)
+                  ) : null}
+                </View>
+              ) : null}
+            </View>
+          </View>
+        ) : null}
+      </>
+    );
   };
 
   return (
-    <ScrollView
-      style={[styles.screen, { backgroundColor: c.screen }]}
-      contentContainerStyle={{ paddingBottom: bottomScrollInset }}
-    >
-      <Card title="Log Symptom">
-        <LabeledInput label="Severity (1-10)" value={severity} onChangeText={setSeverity} keyboardType="number-pad" placeholder="Severity 1-10" />
-        <LabeledInput label="Notes" value={notes} onChangeText={setNotes} placeholder="Notes" multiline />
-        <PrimaryButton title="Save symptom" onPress={save} />
+    <ScrollView style={[styles.screen, { backgroundColor: c.screen }]} contentContainerStyle={{ paddingBottom: bottomScrollInset + 24 }}>
+      <Card title="" style={styles.symptomDetailOuterCard}>
+        <View style={[styles.detailFieldsStack, styles.symptomDetailSectionStack]}>
+          {createdSubtitle ? (
+            <Text style={[styles.symptomDetailSubtitle, { color: c.textMuted }]}>{createdSubtitle}</Text>
+          ) : null}
+          <View style={styles.symptomDetailPhaseBlock}>
+            <Text style={[styles.symptomDetailPhaseTitle, { color: c.text }]}>{durationPhaseLabel}</Text>
+            {symptomDetailDurationFields()}
+          </View>
+          <View style={styles.symptomDetailPhaseBlock}>
+            <Text style={[styles.symptomDetailPhaseTitle, { color: c.text }]}>{severityStressPhaseLabel}</Text>
+            {symptomDetailSeverityStressFields()}
+          </View>
+          {symptomLifestyleFields(false, true)}
+          {hasMeals ? (
+            <View style={styles.symptomDetailPhaseBlock}>
+              <Text style={[styles.symptomDetailPhaseTitle, { color: c.text }]}>{mealsPhaseLabel}</Text>
+              <View style={styles.symptomDetailMealSubStack}>
+                {mealSectionInTray("Breakfast", breakfast)}
+                {mealSectionInTray("Lunch", lunch)}
+                {mealSectionInTray("Dinner", dinner)}
+              </View>
+            </View>
+          ) : null}
+          {notesText ? (
+            <View style={styles.symptomDetailPhaseBlock}>
+              <Text style={[styles.symptomDetailPhaseTitle, { color: c.text }]}>{notesPhaseLabel}</Text>
+              <StackedDetailField
+                hideLabel
+                label="Notes"
+                value={notesText}
+                valueColor={c.textSecondary}
+                insetRow
+                style={SYMPTOM_DETAIL_SECTION_NOTES_WELL_STYLE}
+              />
+            </View>
+          ) : null}
+        </View>
       </Card>
-      <Card title="Recent Symptoms">
-        {items.map((entry) => (
-          <Text key={entry.id} style={[styles.text, { color: c.text }]}>
-            {entry.created_at?.slice(0, 10)} - severity {entry.severity}
-          </Text>
-        ))}
+    </ScrollView>
+  );
+}
+
+function MedicationTrackingHistoryScreen({ user }: { user: SessionUser }) {
+  const navigation = useNavigation<any>();
+  const c = useFlareColors();
+  const bottomScrollInset = useBottomTabScrollInset();
+  const [rows, setRows] = useState<MedicationLogListRow[]>([]);
+  const load = useCallback(async () => {
+    const { data } = await supabase
+      .from(TABLES.LOG_MEDICATIONS)
+      .select("id,created_at,name")
+      .eq("user_id", user.id)
+      .order("created_at", { ascending: false })
+      .limit(100);
+    setRows((data ?? []) as MedicationLogListRow[]);
+  }, [user.id]);
+  useFocusEffect(
+    useCallback(() => {
+      load();
+    }, [load]),
+  );
+  return (
+    <ScrollView style={[styles.screen, { backgroundColor: c.screen }]} contentContainerStyle={{ paddingBottom: bottomScrollInset }}>
+      <Card title="Medication logs">
+        {rows.length === 0 ? (
+          <Text style={[styles.muted, { color: c.textMuted }]}>No medication tracking logs yet.</Text>
+        ) : (
+          <View style={[styles.activityListWrap, { backgroundColor: c.surfaceSubtle }]}>
+            {rows.map((row, index) => (
+              <Pressable
+                key={String(row.id)}
+                accessibilityRole="button"
+                onPress={() => navigation.navigate("MedicationLogDetail", { id: String(row.id) })}
+                style={[
+                  styles.recentLogsRow,
+                  index !== rows.length - 1 ? [styles.activityNoteRowDivider, { borderBottomColor: c.cardBorder }] : null,
+                ]}
+              >
+                <View style={{ flex: 1, paddingRight: 8 }}>
+                  <Text style={[styles.recentLogsRowDate, { color: c.text }]}>{formatUkDate(row.created_at)}</Text>
+                  {row.name ? (
+                    <Text style={[styles.text, { color: c.textMuted, marginTop: 2 }]} numberOfLines={1}>
+                      {row.name}
+                    </Text>
+                  ) : null}
+                </View>
+                <Text style={[styles.recentLogsRowTime, { color: c.textMuted }]}>{formatRecentLogTime(row.created_at)}</Text>
+              </Pressable>
+            ))}
+          </View>
+        )}
+      </Card>
+      <PrimaryButton title="Medications" onPress={() => navigation.navigate("Meds")} />
+    </ScrollView>
+  );
+}
+
+function MedicationLogDetailScreen({ user }: { user: SessionUser }) {
+  const route = useRoute();
+  const c = useFlareColors();
+  const bottomScrollInset = useBottomTabScrollInset();
+  const id = String((route.params as { id?: string })?.id ?? "");
+  const [row, setRow] = useState<Record<string, unknown> | null>(null);
+  const load = useCallback(async () => {
+    if (!id) return;
+    const { data, error } = await supabase.from(TABLES.LOG_MEDICATIONS).select("*").eq("user_id", user.id).eq("id", id).maybeSingle();
+    if (error) {
+      setRow(null);
+      return;
+    }
+    setRow((data as Record<string, unknown>) ?? null);
+  }, [user.id, id]);
+  useEffect(() => {
+    load();
+  }, [load]);
+  const countArr = (v: unknown) => (Array.isArray(v) ? v.length : 0);
+  const line = (label: string, value: string) => <StackedDetailField label={label} value={value} numberOfLines={6} />;
+  return (
+    <ScrollView style={[styles.screen, { backgroundColor: c.screen }]} contentContainerStyle={{ paddingBottom: bottomScrollInset }}>
+      <Card title="Details">
+        {!row ? (
+          <Text style={[styles.muted, { color: c.textMuted }]}>Could not load this entry.</Text>
+        ) : (
+          <View style={styles.detailFieldsStack}>
+            {line("Logged", formatUkDate(String(row.created_at ?? "")) + " " + formatRecentLogTime(String(row.created_at ?? "")))}
+            {line("Label", String(row.name ?? "—"))}
+            {line("Missed doses logged", String(countArr(row.missed_medications_list)))}
+            {line("NSAID entries", String(countArr(row.nsaid_list)))}
+            {line("Antibiotic entries", String(countArr(row.antibiotic_list)))}
+          </View>
+        )}
       </Card>
     </ScrollView>
   );
@@ -1512,7 +2074,7 @@ function WeightScreen({ user }: { user: SessionUser }) {
       <Card title="Recent Weight">
         {rows.map((r) => (
           <Text key={r.id} style={[styles.text, { color: c.text }]}>
-            {r.date} - {r.value_kg}kg
+            {formatUkDate(r.date)} - {r.value_kg}kg
           </Text>
         ))}
       </Card>
@@ -1554,7 +2116,7 @@ function BowelScreen({ user }: { user: SessionUser }) {
       <Card title="Recent Entries">
         {rows.map((row) => (
           <Text key={row.id} style={[styles.text, { color: c.text }]}>
-            {row.occurred_at?.slice(0, 10)} - type {row.bristol_type}
+            {formatUkDate(row.occurred_at)} - type {row.bristol_type}
           </Text>
         ))}
       </Card>
@@ -1632,7 +2194,7 @@ function AppointmentsScreen({ user }: { user: SessionUser }) {
       <Card title="Upcoming & Past">
         {rows.map((row) => (
           <Text key={row.id} style={[styles.text, { color: c.text }]}>
-            {row.date} {row.time ?? ""} - {row.type ?? "Appointment"}
+            {formatUkDate(row.date)} {row.time ?? ""} - {row.type ?? "Appointment"}
           </Text>
         ))}
       </Card>
@@ -1987,7 +2549,7 @@ function MainBottomTabBar({
       {item(
         "Dashboard",
         ({ active }) => <Ionicons name={active ? "home" : "home-outline"} size={23} color={active ? colors.primary : colors.textMuted} />,
-        "Home",
+        "Flare Care",
       )}
       {item(
         "Reminders",
@@ -2019,9 +2581,19 @@ function AppTabs({ user, onLogout }: { user: SessionUser; onLogout: () => void }
   const headerOptions = ({ navigation, route }: { navigation: any; route: { name: string } }) => {
     const isDashboard = route.name === "Dashboard";
     const isAbout = route.name === "About";
+    const titleForRoute: Record<string, string> = {
+      SymptomHistory: "Symptom History",
+      SymptomDetail: "Symptom Details",
+      MedicationTrackingHistory: "Medication Tracking History",
+      MedicationLogDetail: "Tracking log",
+      SymptomLogWizard: "Log Symptoms",
+    };
+    const isDetailRoute = route.name === "SymptomDetail" || route.name === "MedicationLogDetail";
+
+    const isSymptomLogWizard = route.name === "SymptomLogWizard";
 
     return {
-      headerTitle: isDashboard ? "FlareCare" : isAbout ? "About" : "",
+      headerTitle: isDashboard ? "Flare Care" : isAbout ? "About" : titleForRoute[route.name] ?? "",
       headerTitleAlign: "center" as const,
       headerLargeTitleShown: false,
       headerLargeTitleShadowVisible: false,
@@ -2037,13 +2609,16 @@ function AppTabs({ user, onLogout }: { user: SessionUser; onLogout: () => void }
       /** Avoid stacking default header padding with our own — keeps chevron near the leading edge. */
       headerLeftContainerStyle: { paddingLeft: 0, marginLeft: 0 },
       headerLeft:
-        !isDashboard
+        !isDashboard && !isSymptomLogWizard
           ? () => (
               <Pressable
                 accessibilityRole="button"
                 accessibilityLabel="Back"
                 hitSlop={{ top: 10, bottom: 10, left: 8, right: 20 }}
-                onPress={() => navigation.navigate("Dashboard")}
+                onPress={() => {
+                  if (isDetailRoute && navigation.canGoBack()) navigation.goBack();
+                  else navigation.navigate("Dashboard");
+                }}
                 style={styles.headerBackButton}
               >
                 <Ionicons name="chevron-back" size={24} color={colors.primary} />
@@ -2067,7 +2642,11 @@ function AppTabs({ user, onLogout }: { user: SessionUser; onLogout: () => void }
         <View style={{ flex: 1 }}>
           <AppStack.Navigator initialRouteName="Dashboard" screenOptions={headerOptions as any}>
             <AppStack.Screen name="Dashboard">{() => <DashboardScreen key={user.id} user={user} />}</AppStack.Screen>
-            <AppStack.Screen name="Symptoms">{() => <SymptomsScreen user={user} />}</AppStack.Screen>
+            <AppStack.Screen name="SymptomHistory">{() => <SymptomHistoryScreen user={user} />}</AppStack.Screen>
+            <AppStack.Screen name="SymptomDetail">{() => <SymptomDetailScreen user={user} />}</AppStack.Screen>
+            <AppStack.Screen name="MedicationTrackingHistory">{() => <MedicationTrackingHistoryScreen user={user} />}</AppStack.Screen>
+            <AppStack.Screen name="MedicationLogDetail">{() => <MedicationLogDetailScreen user={user} />}</AppStack.Screen>
+            <AppStack.Screen name="SymptomLogWizard">{() => <SymptomLogWizardScreen user={user} />}</AppStack.Screen>
             <AppStack.Screen name="Hydration">{() => <HydrationScreen user={user} />}</AppStack.Screen>
             <AppStack.Screen name="Weight">{() => <WeightScreen user={user} />}</AppStack.Screen>
             <AppStack.Screen name="Bowel">{() => <BowelScreen user={user} />}</AppStack.Screen>
@@ -2389,15 +2968,6 @@ const styles = StyleSheet.create({
   },
   homeDashboardTileScroll: { marginRight: HOME_TILE_GAP },
   homeDashboardTileScrollLast: { marginRight: 0 },
-  homeDashboardTileBadge: {
-    position: "absolute",
-    top: 15,
-    left: 14,
-    fontSize: 14,
-    fontFamily: "Inter_800ExtraBold",
-    lineHeight: 17,
-    zIndex: 1,
-  },
   homeDashboardTileBody: {
     flex: 1,
     flexDirection: "column",
@@ -2471,6 +3041,19 @@ const styles = StyleSheet.create({
   moreNavRowLabel: { fontSize: 14, fontFamily: "Inter_400Regular", flex: 1, paddingRight: 10 },
   activityNoteTitle: { fontSize: 13, fontFamily: "Inter_400Regular", color: "#23314f", lineHeight: 18 },
   activityNoteWhen: { fontSize: 11, fontFamily: "Inter_400Regular", color: "#6a7690", marginTop: 6 },
+  recentLogsViewAllRow: { alignItems: "flex-end", marginBottom: 8 },
+  recentLogsViewAllText: { fontSize: 13, fontFamily: "Inter_700Bold" },
+  recentLogsRow: {
+    flexDirection: "row",
+    alignItems: "center",
+    justifyContent: "space-between",
+    paddingVertical: 12,
+    paddingHorizontal: 12,
+  },
+  recentLogsRowDate: { fontSize: 14, fontFamily: "Inter_500Medium" },
+  recentLogsRowTime: { fontSize: 12, fontFamily: "Inter_400Regular" },
+  recentLogsEmpty: { alignItems: "center", paddingVertical: 16, paddingHorizontal: 8 },
+  recentLogsEmptyCta: { marginTop: 8 },
   newsRail: { paddingVertical: 2 },
   newsCard: {
     width: 236,
@@ -2494,4 +3077,26 @@ const styles = StyleSheet.create({
   newsCardBody: { paddingHorizontal: 12, paddingVertical: 10 },
   newsTitle: { fontSize: 13, fontFamily: "Inter_700Bold", color: "#23314f", lineHeight: 18 },
   newsMeta: { fontSize: 11, fontFamily: "Inter_400Regular", color: "#6a7690", marginTop: 6 },
+  /** Symptom detail `Card`: less padding above date vs default `card` padding. */
+  symptomDetailOuterCard: { paddingTop: 8 },
+  symptomDetailSubtitle: { marginTop: 14, marginBottom: 0 },
+  /** Title + its tray(s): section `gap` applies between these blocks, not between title and tray. */
+  symptomDetailPhaseBlock: { alignSelf: "stretch", gap: 0 },
+  /** Tighter stack when one phase has multiple trays (e.g. smoking + alcohol). */
+  symptomDetailSubStack: { alignSelf: "stretch", gap: 12 },
+  /** Breakfast / Lunch / Dinner trays. */
+  symptomDetailMealSubStack: { alignSelf: "stretch", gap: 14 },
+  /** Wizard-aligned section heading on the symptom detail card (same scale as `cardTitle`). */
+  symptomDetailPhaseTitle: {
+    fontSize: 18,
+    fontFamily: "Inter_700Bold",
+    lineHeight: 24,
+    alignSelf: "stretch",
+    marginBottom: 12,
+  },
+  symptomDetailOverview: {},
+  /** Keeps stacked detail rows out of `cardBody` gap (which would add space between every field). */
+  detailFieldsStack: { alignSelf: "stretch" },
+  /** Symptom log detail: space between phase blocks (Duration, Severity, …). */
+  symptomDetailSectionStack: { gap: 20 },
 });

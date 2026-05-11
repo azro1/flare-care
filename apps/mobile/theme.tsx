@@ -16,6 +16,9 @@ const MOBILE_BRAND_ACCENT = {
   disabled: "#5EEAD4",
 } as const;
 
+/** Filled destructive controls (logout, meal remove, destructive modal confirm). Change only here. */
+export const MOBILE_DESTRUCTIVE_FILL = "#dc2626" as const;
+
 /** In-app theme: fixed light or dark (no OS follow mode). */
 export type AppearancePreference = "light" | "dark";
 
@@ -54,6 +57,8 @@ export type FlareColors = {
   textMuted: string;
   link: string;
   danger: string;
+  /** Filled destructive buttons / chips (logout, meal remove, modal confirm). Use `danger` for error text. */
+  destructiveFill: string;
   inputBg: string;
   inputBorder: string;
   secondaryBtnBg: string;
@@ -87,6 +92,7 @@ function mapTokens(t: StyleguideTheme, isDark: boolean): FlareColors {
     textMuted: t.text.tertiary,
     link: MOBILE_BRAND_ACCENT.primary,
     danger: t.text.danger,
+    destructiveFill: MOBILE_DESTRUCTIVE_FILL,
     inputBg: isDark ? t.background.subtle : t.background.overlay,
     inputBorder: t.border.default,
     secondaryBtnBg: t.button.secondary.background,

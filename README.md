@@ -76,6 +76,8 @@ A personal app for managing Crohn's & Colitis day to day.
 
 ## Project Structure
 
+The **web app** lives at the repo root (`src/`, Next.js). The **native mobile app** is in **`apps/mobile`** (Expo / React Native — see `apps/mobile/README.md`).
+
 ```
 src/
 ├── app/                    # Next.js App Router pages

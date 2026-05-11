@@ -8,7 +8,7 @@
     "ios": "expo start --ios",
     "web": "expo start --web",
     "start:dev-client": "expo start --dev-client",
-    "start:dev-client:lan": "expo start --dev-client --lan",
+    "start:dev-client:lan": "node scripts/start-dev-client-lan.cjs",
     "start:dev-client:tunnel": "expo start --dev-client --tunnel",
     "start:clear": "expo start --clear"
   },
