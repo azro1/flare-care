@@ -4,7 +4,7 @@ import * as WebBrowser from "expo-web-browser";
 import Constants from "expo-constants";
 import { makeRedirectUri } from "expo-auth-session";
 import AsyncStorage from "@react-native-async-storage/async-storage";
-import React, { useCallback, useEffect, useMemo, useState } from "react";
+import React, { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { Controller, useForm } from "react-hook-form";
 import { yupResolver } from "@hookform/resolvers/yup";
 import * as yup from "yup";
@@ -71,7 +71,21 @@ try {
 /** App mark: `fclogo_trans_splash.png` only (readable on dark UI and on primary blue “wells” in light). */
 const SPLASH_MARK_IMAGE = require("./assets/fclogo_trans_splash.png");
 
-type SessionUser = { id: string; email?: string | null; displayName?: string | null };
+type SessionUser = { id: string; email?: string | null; displayName?: string | null; accountCreatedAt?: string | null };
+
+function sessionUserFromSupabaseAuthUser(u: {
+  id: string;
+  email?: string | null;
+  user_metadata?: Record<string, unknown> | null;
+  created_at?: string;
+}): SessionUser {
+  return {
+    id: u.id,
+    email: u.email ?? null,
+    displayName: (u.user_metadata?.full_name as string | undefined) || (u.user_metadata?.name as string | undefined) || null,
+    accountCreatedAt: u.created_at ?? null,
+  };
+}
 type Appointment = { id: number; date: string; type: string | null; notes: string | null; time: string | null };
 type Medication = { id: number; name: string; dosage: string | null; time_of_day: string | null };
 
@@ -504,11 +518,7 @@ function AuthScreen({
     }
     const user = data.user;
     if (user) {
-      onSignedIn({
-        id: user.id,
-        email: user.email,
-        displayName: (user.user_metadata?.full_name as string | undefined) || (user.user_metadata?.name as string | undefined) || null,
-      });
+      onSignedIn(sessionUserFromSupabaseAuthUser(user));
     }
   };
 
@@ -553,14 +563,7 @@ function AuthScreen({
         const { data: sessionData } = await supabase.auth.getSession();
         const sessionUser = sessionData.session?.user;
         if (sessionUser) {
-          onSignedIn({
-            id: sessionUser.id,
-            email: sessionUser.email,
-            displayName:
-              (sessionUser.user_metadata?.full_name as string | undefined) ||
-              (sessionUser.user_metadata?.name as string | undefined) ||
-              null,
-          });
+          onSignedIn(sessionUserFromSupabaseAuthUser(sessionUser));
         } else {
           Alert.alert("Google sign in incomplete", "No session returned. Please try again.");
         }
@@ -1169,13 +1172,13 @@ function DashboardScreen({ user }: { user: SessionUser }) {
       <Card title="" style={styles.todaySummaryCard}>
         <View style={styles.summaryWebRow}>
           <View style={styles.summaryWebLeft}>
-            <Text style={[styles.summaryWebLabel, { color: c.text }]}>Symptoms Logged</Text>
+            <Text style={[styles.summaryWebLabel, { color: c.textMuted }]}>Symptoms Logged</Text>
           </View>
           <Text style={[styles.summaryWebValue, { color: c.text }]}>{todaySummary.symptoms}</Text>
         </View>
         <View style={styles.summaryWebRow}>
           <View style={styles.summaryWebLeft}>
-            <Text style={[styles.summaryWebLabel, { color: c.text }]}>Medications Taken</Text>
+            <Text style={[styles.summaryWebLabel, { color: c.textMuted }]}>Medications Taken</Text>
           </View>
           <Text style={[styles.summaryWebValue, { color: c.text }]}>
             {todaySummary.medsTaken}/{todaySummary.medsTotal}
@@ -1183,7 +1186,7 @@ function DashboardScreen({ user }: { user: SessionUser }) {
         </View>
         <View style={styles.summaryWebRow}>
           <View style={styles.summaryWebLeft}>
-            <Text style={[styles.summaryWebLabel, { color: c.text }]}>Hydration</Text>
+            <Text style={[styles.summaryWebLabel, { color: c.textMuted }]}>Hydration</Text>
           </View>
           <Text style={[styles.summaryWebValue, { color: c.text }]}>
             {todaySummary.hydration}/{hydrationTarget}
@@ -1866,7 +1869,7 @@ function MedicationTrackingHistoryScreen({ user }: { user: SessionUser }) {
                 ]}
               >
                 <View style={{ flex: 1, paddingRight: 8 }}>
-                  <Text style={[styles.recentLogsRowDate, { color: c.text }]}>{formatUkDate(row.created_at)}</Text>
+                  <Text style={[styles.recentLogsRowDate, { color: c.textMuted }]}>{formatUkDate(row.created_at)}</Text>
                   {row.name ? (
                     <Text style={[styles.text, { color: c.textMuted, marginTop: 2 }]} numberOfLines={1}>
                       {row.name}
@@ -1992,7 +1995,7 @@ function MedicationsScreen({ user }: { user: SessionUser }) {
       <Card title="Current Medications">
         {meds.map((m) => (
           <View key={m.id} style={styles.row}>
-            <Text style={[styles.text, { color: c.text }]}>
+            <Text style={[styles.text, { color: c.textMuted }]}>
               {m.name} {m.dosage ?? ""}
             </Text>
             <SecondaryButton title="Mark taken" onPress={() => logTaken(m)} />
@@ -2073,7 +2076,7 @@ function WeightScreen({ user }: { user: SessionUser }) {
       </Card>
       <Card title="Recent Weight">
         {rows.map((r) => (
-          <Text key={r.id} style={[styles.text, { color: c.text }]}>
+          <Text key={r.id} style={[styles.text, { color: c.textMuted }]}>
             {formatUkDate(r.date)} - {r.value_kg}kg
           </Text>
         ))}
@@ -2115,7 +2118,7 @@ function BowelScreen({ user }: { user: SessionUser }) {
       </Card>
       <Card title="Recent Entries">
         {rows.map((row) => (
-          <Text key={row.id} style={[styles.text, { color: c.text }]}>
+          <Text key={row.id} style={[styles.text, { color: c.textMuted }]}>
             {formatUkDate(row.occurred_at)} - type {row.bristol_type}
           </Text>
         ))}
@@ -2193,7 +2196,7 @@ function AppointmentsScreen({ user }: { user: SessionUser }) {
       </Card>
       <Card title="Upcoming & Past">
         {rows.map((row) => (
-          <Text key={row.id} style={[styles.text, { color: c.text }]}>
+          <Text key={row.id} style={[styles.text, { color: c.textMuted }]}>
             {formatUkDate(row.date)} {row.time ?? ""} - {row.type ?? "Appointment"}
           </Text>
         ))}
@@ -2338,10 +2341,10 @@ function NotificationsScreen({ user }: { user: SessionUser }) {
       contentContainerStyle={{ flexGrow: 1, paddingBottom: bottomScrollInset }}
     >
       <Card title="Push Reminders">
-        <Text style={[styles.text, { color: c.text }]}>Register push permissions and schedule medication reminders.</Text>
+        <Text style={[styles.text, { color: c.textMuted }]}>Register push permissions and schedule medication reminders.</Text>
         <PrimaryButton title="Enable notifications" onPress={register} />
-        <Text style={[styles.text, { color: c.text }]}>Token: {token ? `${token.slice(0, 24)}...` : "not registered"}</Text>
-        <Text style={[styles.text, { color: c.text }]}>Scheduled reminders: {scheduled}</Text>
+        <Text style={[styles.text, { color: c.textMuted }]}>Token: {token ? `${token.slice(0, 24)}...` : "not registered"}</Text>
+        <Text style={[styles.text, { color: c.textMuted }]}>Scheduled reminders: {scheduled}</Text>
         {lastError ? <Text style={[styles.errorText, { color: c.danger }]}>Error: {lastError}</Text> : null}
         {Platform.OS === "ios" ? <Text style={[styles.muted, { color: c.textMuted }]}>iOS requires real device + APNs entitlements.</Text> : null}
       </Card>
@@ -2371,17 +2374,17 @@ function AboutScreen() {
       </View>
 
       <Card title="What is FlareCare?">
-        <Text style={[styles.text, styles.aboutBody, { color: c.text }]}>
+        <Text style={[styles.text, styles.aboutBody, { color: c.textMuted }]}>
           FlareCare is a mobile companion for IBD self-management. You can record symptoms, medications, hydration, bowel
           movements, weight, and appointments; receive medication reminders; review summaries on your dashboard; prepare
           appointment briefs; and export reports to share with your clinician—all in one place on your phone.
         </Text>
-        <Text style={[styles.text, styles.aboutBody, { color: c.text }]}>
+        <Text style={[styles.text, styles.aboutBody, { color: c.textMuted }]}>
           It is aimed at people living with Crohn&apos;s disease or ulcerative colitis. The product was developed by Simon
           Sutherland, drawing on many years of personal experience managing Crohn&apos;s, to make consistent tracking simple
           enough to sustain between clinic visits.
         </Text>
-        <Text style={[styles.text, styles.aboutBodyLast, { color: c.text }]}>
+        <Text style={[styles.text, styles.aboutBodyLast, { color: c.textMuted }]}>
           FlareCare does not provide medical advice, diagnosis, or treatment, and it is not a substitute for professional
           medical care. Always follow the advice of your qualified healthcare providers.
         </Text>
@@ -2417,6 +2420,35 @@ function AccountScreen({ user, onLogout }: { user: SessionUser; onLogout: () => 
   const bottomScrollInset = useBottomTabScrollInset();
   const { appearancePreference, setAppearancePreference } = useFlareTheme();
   const [logoutConfirmOpen, setLogoutConfirmOpen] = useState(false);
+  const [deleteAccountConfirmOpen, setDeleteAccountConfirmOpen] = useState(false);
+  const deleteAccountInFlight = useRef(false);
+
+  const accountFirstName = useMemo(() => {
+    const fromName = user.displayName?.trim().split(/\s+/).filter(Boolean)[0];
+    if (fromName) return fromName;
+    const local = user.email?.split("@")[0]?.trim();
+    if (local) return local;
+    return "You";
+  }, [user.displayName, user.email]);
+
+  const handleDeleteAccountConfirm = useCallback(async () => {
+    if (deleteAccountInFlight.current) return;
+    deleteAccountInFlight.current = true;
+    setDeleteAccountConfirmOpen(false);
+    try {
+      const { error } = await supabase.rpc("delete_user_account");
+      if (error) {
+        Alert.alert("Could not delete account", error.message);
+        return;
+      }
+      await onLogout();
+    } catch (e: unknown) {
+      const msg = e instanceof Error ? e.message : "Something went wrong.";
+      Alert.alert("Could not delete account", msg);
+    } finally {
+      deleteAccountInFlight.current = false;
+    }
+  }, [onLogout]);
 
   const appearanceOptions = [
     { key: "light" as const, label: "Light" },
@@ -2430,8 +2462,20 @@ function AccountScreen({ user, onLogout }: { user: SessionUser; onLogout: () => 
     >
       <Text style={[styles.dashboardSectionTitleLeft, { color: c.text }]}>Account</Text>
       <Card title="">
-        <Text style={[styles.text, { color: c.text }]}>Signed in as</Text>
-        <Text style={[styles.accountEmail, { color: c.text }]}>{user.email || "Unknown user"}</Text>
+        <View style={styles.accountIdentityRow}>
+          <View style={[styles.accountAvatarWell, { backgroundColor: c.surfaceSubtle }]}>
+            <Ionicons name="person" size={26} color={c.primary} accessibilityIgnoresInvertColors />
+          </View>
+          <View style={styles.accountIdentityTextCol}>
+            <Text style={[styles.accountFirstName, { color: c.text }]}>{accountFirstName}</Text>
+            <Text style={[styles.accountEmailLine, { color: c.textMuted }]}>{user.email || "Unknown user"}</Text>
+            {user.accountCreatedAt ? (
+              <Text style={[styles.accountMemberSince, { color: c.textMuted }]}>
+                Account created {formatUkDate(user.accountCreatedAt)}
+              </Text>
+            ) : null}
+          </View>
+        </View>
         <PrimaryButton title="Logout" onPress={() => setLogoutConfirmOpen(true)} />
       </Card>
       <ConfirmModal
@@ -2446,6 +2490,34 @@ function AccountScreen({ user, onLogout }: { user: SessionUser; onLogout: () => 
           setLogoutConfirmOpen(false);
           onLogout();
         }}
+      />
+      <Text style={[styles.dashboardSectionTitleLeft, { color: c.text }]}>Delete account</Text>
+      <Card title="">
+        <Text style={[styles.muted, { color: c.textMuted, marginBottom: 10 }]}>
+          Permanently delete your account and all associated data. This cannot be undone.
+        </Text>
+        <Pressable
+          accessibilityRole="button"
+          accessibilityLabel="Delete account"
+          onPress={() => setDeleteAccountConfirmOpen(true)}
+          style={({ pressed }) => [
+            styles.accountDeleteButton,
+            { borderColor: c.danger, opacity: pressed ? 0.88 : 1 },
+          ]}
+        >
+          <Ionicons name="trash-outline" size={18} color={c.danger} style={{ marginRight: 8 }} />
+          <Text style={[styles.accountDeleteButtonText, { color: c.danger }]}>Delete account</Text>
+        </Pressable>
+      </Card>
+      <ConfirmModal
+        visible={deleteAccountConfirmOpen}
+        title="Delete account"
+        message="Are you sure you want to permanently delete your account? This action cannot be undone and all your data will be lost."
+        confirmLabel="Delete"
+        cancelLabel="Cancel"
+        confirmDestructive
+        onCancel={() => setDeleteAccountConfirmOpen(false)}
+        onConfirm={handleDeleteAccountConfirm}
       />
       <Text style={[styles.dashboardSectionTitleLeft, { color: c.text }]}>Reminders</Text>
       <Card title="">
@@ -2695,14 +2767,7 @@ function AppRoot() {
       const sessionUser = data.session?.user;
       setUser(
         sessionUser
-          ? {
-              id: sessionUser.id,
-              email: sessionUser.email,
-              displayName:
-                (sessionUser.user_metadata?.full_name as string | undefined) ||
-                (sessionUser.user_metadata?.name as string | undefined) ||
-                null,
-            }
+          ? sessionUserFromSupabaseAuthUser(sessionUser)
           : null,
       );
       setLoading(false);
@@ -2713,11 +2778,7 @@ function AppRoot() {
       const next = session?.user;
       setUser(
         next
-          ? {
-              id: next.id,
-              email: next.email,
-              displayName: (next.user_metadata?.full_name as string | undefined) || (next.user_metadata?.name as string | undefined) || null,
-            }
+          ? sessionUserFromSupabaseAuthUser(next)
           : null,
       );
       setLoading(false);
@@ -2851,7 +2912,7 @@ const styles = StyleSheet.create({
   },
   fieldBlock: { gap: 6, marginBottom: 2 },
   label: { color: "#23314f", fontSize: 13, fontFamily: "Inter_500Medium", marginTop: 2 },
-  text: { color: "#23314f", fontSize: 14, fontFamily: "Inter_400Regular" },
+  text: { fontSize: 14, fontFamily: "Inter_400Regular" },
   muted: { color: "#6a7690", fontSize: 13, fontFamily: "Inter_400Regular" },
   errorText: { color: "#b3261e", fontSize: 13, fontFamily: "Inter_400Regular" },
   fieldError: { color: "#b3261e", fontSize: 12, fontFamily: "Inter_400Regular", marginTop: 2 },
@@ -2902,7 +2963,30 @@ const styles = StyleSheet.create({
   },
   bottomTabItem: { flex: 1, alignItems: "center", justifyContent: "center", gap: 3, paddingVertical: 4 },
   bottomTabLabel: { fontSize: 11, fontFamily: "Inter_500Medium" },
-  accountEmail: { color: "#23314f", fontSize: 14, fontFamily: "Inter_700Bold", marginBottom: 8 },
+  accountIdentityRow: { flexDirection: "row", alignItems: "center", marginBottom: 14 },
+  accountAvatarWell: {
+    width: 56,
+    height: 56,
+    borderRadius: 28,
+    alignItems: "center",
+    justifyContent: "center",
+    marginRight: 14,
+  },
+  accountIdentityTextCol: { flex: 1, minWidth: 0 },
+  accountFirstName: { fontSize: 18, fontFamily: "Inter_700Bold" },
+  accountEmailLine: { fontSize: 14, fontFamily: "Inter_400Regular", marginTop: 2 },
+  accountMemberSince: { fontSize: 13, fontFamily: "Inter_400Regular", marginTop: 6 },
+  accountDeleteButton: {
+    flexDirection: "row",
+    alignItems: "center",
+    justifyContent: "center",
+    alignSelf: "stretch",
+    paddingVertical: 12,
+    paddingHorizontal: 14,
+    borderRadius: 10,
+    borderWidth: 1,
+  },
+  accountDeleteButtonText: { fontSize: 14, fontFamily: "Inter_700Bold" },
   /** Same height and radius as `styles.button` (PrimaryButton); two equal slots like paired actions. */
   appearanceRow: { flexDirection: "row", gap: 8, marginTop: 6 },
   appearanceChip: {
@@ -2998,8 +3082,8 @@ const styles = StyleSheet.create({
     paddingVertical: 8,
   },
   summaryWebLeft: { flexDirection: "row", alignItems: "center", flex: 1, paddingRight: 8 },
-  summaryWebLabel: { fontSize: 14, fontFamily: "Inter_400Regular", color: "#23314f", flex: 1 },
-  summaryWebValue: { fontSize: 14, fontFamily: "Inter_700Bold", color: "#1f2a44" },
+  summaryWebLabel: { fontSize: 14, fontFamily: "Inter_400Regular", flex: 1 },
+  summaryWebValue: { fontSize: 14, fontFamily: "Inter_700Bold" },
   activityListWrap: {
     backgroundColor: "#f8fbff",
     borderRadius: 10,
