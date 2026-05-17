@@ -71,19 +71,50 @@ try {
 /** App mark: `fclogo_trans_splash.png` only (readable on dark UI and on primary blue “wells” in light). */
 const SPLASH_MARK_IMAGE = require("./assets/fclogo_trans_splash.png");
 
-type SessionUser = { id: string; email?: string | null; displayName?: string | null; accountCreatedAt?: string | null };
+type SessionUser = {
+  id: string;
+  email?: string | null;
+  displayName?: string | null;
+  accountCreatedAt?: string | null;
+  signInMethodLabel?: string | null;
+};
+
+const AUTH_PROVIDER_LABELS: Record<string, string> = {
+  google: "Google",
+  apple: "Apple",
+  email: "Email code",
+};
+
+function signInMethodLabelFromAuthUser(u: {
+  identities?: { provider: string }[] | null;
+  app_metadata?: Record<string, unknown> | null;
+}): string | null {
+  const providers = new Set((u.identities ?? []).map((i) => i.provider).filter(Boolean));
+  const legacy = typeof u.app_metadata?.provider === "string" ? u.app_metadata.provider : null;
+  if (legacy) providers.add(legacy);
+
+  const ordered = ["google", "apple", "email"] as const;
+  const labels = ordered.filter((p) => providers.has(p)).map((p) => AUTH_PROVIDER_LABELS[p]);
+  if (labels.length) return labels.join(", ");
+
+  const fallback = [...providers][0];
+  return fallback ? fallback.charAt(0).toUpperCase() + fallback.slice(1) : null;
+}
 
 function sessionUserFromSupabaseAuthUser(u: {
   id: string;
   email?: string | null;
   user_metadata?: Record<string, unknown> | null;
   created_at?: string;
+  identities?: { provider: string }[] | null;
+  app_metadata?: Record<string, unknown> | null;
 }): SessionUser {
   return {
     id: u.id,
     email: u.email ?? null,
     displayName: (u.user_metadata?.full_name as string | undefined) || (u.user_metadata?.name as string | undefined) || null,
     accountCreatedAt: u.created_at ?? null,
+    signInMethodLabel: signInMethodLabelFromAuthUser(u),
   };
 }
 type Appointment = { id: number; date: string; type: string | null; notes: string | null; time: string | null };
@@ -167,12 +198,15 @@ function Card({
   children,
   style,
   plain,
+  compactBody,
 }: {
   title: string;
   children: React.ReactNode;
   style?: StyleProp<ViewStyle>;
   /** No filled panel — sits on screen background (e.g. login). */
   plain?: boolean;
+  /** Stack rows flush (e.g. account option list) — no `cardBody` gap between children. */
+  compactBody?: boolean;
 }) {
   const c = useFlareColors();
   return (
@@ -181,7 +215,7 @@ function Card({
       {
         /** Auth `plain` card uses `flex:1` panels; skipping `cardBody` keeps flex layout valid (nested non-flex wrappers collapse children). */
         plain ? children : (
-          <View style={styles.cardBody}>{children}</View>
+          <View style={[styles.cardBody, compactBody && styles.cardBodyCompact]}>{children}</View>
         )}
     </View>
   );
@@ -712,7 +746,7 @@ function AuthScreen({
 const HOME_TILE_ICON_SIZE = 34;
 
 /** Show bottom shortcuts on dashboard + primary tab destinations; hide on wizard/detail flows, Hydration, etc. */
-const BOTTOM_BAR_VISIBLE_ROUTES = new Set(["Dashboard", "Meds", "Reminders", "Account", "About"]);
+const BOTTOM_BAR_VISIBLE_ROUTES = new Set(["Dashboard", "Meds", "Ibd", "Account", "About"]);
 
 /** Padding uses this screen’s route—not the globally focused route—so the exiting page doesn’t jump during transitions. */
 function useBottomTabScrollInset() {
@@ -812,7 +846,7 @@ function DashboardGridTile({
     >
       <View style={styles.homeDashboardTileBody}>
         <View style={styles.homeDashboardTileIconWrap}>{icon}</View>
-        <Text style={[styles.moreGridLabel, { color: c.text }]} numberOfLines={2}>
+        <Text style={[styles.moreGridLabel, { color: c.textSecondary }]} numberOfLines={2}>
           {label}
         </Text>
       </View>
@@ -1169,61 +1203,61 @@ function DashboardScreen({ user }: { user: SessionUser }) {
         </ScrollView>
       </View>
       <Text style={[styles.dashboardSectionTitleLeft, { color: c.text }]}>Today's Summary</Text>
-      <Card title="" style={styles.todaySummaryCard}>
-        <View style={styles.summaryWebRow}>
-          <View style={styles.summaryWebLeft}>
-            <Text style={[styles.summaryWebLabel, { color: c.textMuted }]}>Symptoms Logged</Text>
+      <Card title="" style={styles.todaySummaryCard} compactBody>
+        <View style={styles.todaySummaryRows}>
+          <View style={styles.summaryWebRow}>
+            <View style={styles.summaryWebLeft}>
+              <Text style={[styles.summaryWebLabel, { color: c.textMuted }]}>Symptoms Logged</Text>
+            </View>
+            <Text style={[styles.summaryWebValue, { color: c.textSecondary }]}>{todaySummary.symptoms}</Text>
           </View>
-          <Text style={[styles.summaryWebValue, { color: c.text }]}>{todaySummary.symptoms}</Text>
-        </View>
-        <View style={styles.summaryWebRow}>
-          <View style={styles.summaryWebLeft}>
-            <Text style={[styles.summaryWebLabel, { color: c.textMuted }]}>Medications Taken</Text>
+          <View style={styles.summaryWebRow}>
+            <View style={styles.summaryWebLeft}>
+              <Text style={[styles.summaryWebLabel, { color: c.textMuted }]}>Medications Taken</Text>
+            </View>
+            <Text style={[styles.summaryWebValue, { color: c.textSecondary }]}>
+              {todaySummary.medsTaken}/{todaySummary.medsTotal}
+            </Text>
           </View>
-          <Text style={[styles.summaryWebValue, { color: c.text }]}>
-            {todaySummary.medsTaken}/{todaySummary.medsTotal}
-          </Text>
-        </View>
-        <View style={styles.summaryWebRow}>
-          <View style={styles.summaryWebLeft}>
-            <Text style={[styles.summaryWebLabel, { color: c.textMuted }]}>Hydration</Text>
+          <View style={styles.summaryWebRow}>
+            <View style={styles.summaryWebLeft}>
+              <Text style={[styles.summaryWebLabel, { color: c.textMuted }]}>Hydration</Text>
+            </View>
+            <Text style={[styles.summaryWebValue, { color: c.textSecondary }]}>
+              {todaySummary.hydration}/{hydrationTarget}
+            </Text>
           </View>
-          <Text style={[styles.summaryWebValue, { color: c.text }]}>
-            {todaySummary.hydration}/{hydrationTarget}
-          </Text>
         </View>
       </Card>
       <Text style={[styles.dashboardSectionTitle, { color: c.text }]}>Recent logs</Text>
-      <Card title="">
-        <SecondaryButton
-          title="Symptom History"
-          titleColor="primary"
-          softOutline
-          onPress={() => navigation.navigate("SymptomHistory")}
-        />
-        <SecondaryButton
-          title="Medication Tracking History"
-          titleColor="primary"
-          softOutline
+      <Card title="" style={styles.accountOptionsListCard} compactBody>
+        <AccountOptionRow label="Symptom History" labelMedium labelColor="secondary" onPress={() => navigation.navigate("SymptomHistory")} />
+        <AccountOptionRow
+          label="Medication Tracking History"
+          labelMedium
+          labelColor="secondary"
           onPress={() => navigation.navigate("MedicationTrackingHistory")}
         />
       </Card>
       <Text style={[styles.dashboardSectionTitleLeft, { color: c.text }]}>Recent Activity</Text>
-      <Card title="">
+      <Card title="" style={styles.accountPaddedCard} compactBody>
         {recentActivity.length ? (
-          <View style={[styles.activityListWrap, { backgroundColor: c.surfaceSubtle }]}>
-            {recentActivity.map((item, index) => (
-              <View
-                key={item.key}
-                style={[
-                  styles.activityNoteRow,
-                  index !== recentActivity.length - 1 ? [styles.activityNoteRowDivider, { borderBottomColor: c.cardBorder }] : null,
-                ]}
-              >
-                <Text style={[styles.activityNoteTitle, { color: c.text }]} numberOfLines={3}>
-                  {item.title}
-                </Text>
-                <Text style={[styles.activityNoteWhen, { color: c.textMuted }]}>{formatRelativeTime(item.ts)}</Text>
+          <View style={styles.recentActivityFeed}>
+            {recentActivity.map((item) => (
+              <View key={item.key} style={styles.recentActivityFeedItem}>
+                <Ionicons
+                  name="pulse"
+                  size={20}
+                  color={c.primary}
+                  style={styles.recentActivityFeedIcon}
+                  accessibilityIgnoresInvertColors
+                />
+                <View style={styles.recentActivityFeedText}>
+                  <Text style={[styles.recentActivityFeedTitle, { color: c.textMuted }]} numberOfLines={2}>
+                    {item.title}
+                  </Text>
+                  <Text style={[styles.recentActivityFeedWhen, { color: c.textMuted }]}>{formatRelativeTime(item.ts)}</Text>
+                </View>
               </View>
             ))}
           </View>
@@ -1255,7 +1289,7 @@ function DashboardScreen({ user }: { user: SessionUser }) {
                   <NewsThumbnail imageUrl={item.imageUrl} />
                 </View>
                 <View style={styles.newsCardBody}>
-                  <Text style={[styles.newsTitle, { color: c.text }]} numberOfLines={2}>
+                  <Text style={[styles.newsTitle, { color: c.textSecondary }]} numberOfLines={2}>
                     {item.title}
                   </Text>
                   <Text style={[styles.newsMeta, { color: c.textMuted }]} numberOfLines={1}>
@@ -1964,7 +1998,7 @@ function MedicationsScreen({ user }: { user: SessionUser }) {
       Alert.alert("Medication saved", `Could not auto-update reminders: ${e?.message || "Unknown error"}`);
       return;
     }
-    Alert.alert("Medication saved", "Enable notifications in Reminders to schedule alerts.");
+    Alert.alert("Medication saved", "Enable notifications in Settings to schedule alerts.");
   };
 
   const logTaken = async (med: Medication) => {
@@ -2172,7 +2206,7 @@ function AppointmentsScreen({ user }: { user: SessionUser }) {
       Alert.alert("Appointment saved", `Could not auto-update reminders: ${e?.message || "Unknown error"}`);
       return;
     }
-    Alert.alert("Appointment saved", "Enable notifications in Reminders to schedule alerts.");
+    Alert.alert("Appointment saved", "Enable notifications in Settings to schedule alerts.");
   };
 
   return (
@@ -2352,6 +2386,131 @@ function NotificationsScreen({ user }: { user: SessionUser }) {
   );
 }
 
+const IBD_SYMPTOMS = [
+  "Abdominal pain and cramping",
+  "Diarrhea (sometimes bloody)",
+  "Urgent need to have a bowel movement",
+  "Feeling of incomplete bowel movement",
+  "Nausea and vomiting",
+  "Fatigue and low energy",
+  "Unintended weight loss",
+  "Loss of appetite",
+  "Fever during flare-ups",
+  "Joint pain and swelling",
+];
+
+const IBD_SEEK_HELP_ITEMS = [
+  "Severe abdominal pain",
+  "High fever (over 101°F/38°C)",
+  "Significant blood in stool",
+  "Signs of dehydration (dizziness, dry mouth, no urination)",
+  "Rapid weight loss",
+];
+
+const IBD_FLARECARE_HELPS = [
+  "Log daily symptoms with severity ratings",
+  "Record foods that may trigger symptoms",
+  "Track patterns and trends over time",
+  "Set medication reminders",
+  "Track dosage and timing",
+  "Generate reports for your doctor",
+];
+
+const IBD_TRIGGERS = [
+  "Spicy foods, dairy, high-fiber foods, alcohol, and caffeine can trigger symptoms",
+  "Emotional stress and anxiety can worsen symptoms and trigger flare-ups",
+  "Viral or bacterial infections can trigger or worsen IBD symptoms",
+];
+
+function IbdBulletList({ items, isLastInSection }: { items: string[]; isLastInSection?: boolean }) {
+  const c = useFlareColors();
+  return (
+    <View style={[styles.ibdBulletList, isLastInSection && styles.infoSectionContentEnd]}>
+      {items.map((item) => (
+        <View key={item} style={styles.ibdBulletRow}>
+          <Text style={[styles.ibdBulletDot, { color: c.primary }]}>•</Text>
+          <Text style={[styles.text, styles.ibdBulletText, { color: c.textMuted }]}>{item}</Text>
+        </View>
+      ))}
+    </View>
+  );
+}
+
+function IbdCheckList({ items, isLastInSection }: { items: string[]; isLastInSection?: boolean }) {
+  const c = useFlareColors();
+  return (
+    <View style={[styles.ibdCheckList, isLastInSection && styles.infoSectionContentEnd]}>
+      {items.map((item) => (
+        <View key={item} style={styles.ibdCheckRow}>
+          <Ionicons name="checkmark" size={16} color={c.primary} style={styles.ibdCheckIcon} accessibilityIgnoresInvertColors />
+          <Text style={[styles.text, styles.ibdCheckText, { color: c.textMuted }]}>{item}</Text>
+        </View>
+      ))}
+    </View>
+  );
+}
+
+function IbdScreen() {
+  const c = useFlareColors();
+  const bottomScrollInset = useBottomTabScrollInset();
+
+  return (
+    <ScrollView
+      style={[styles.screen, { backgroundColor: c.screen }]}
+      contentContainerStyle={{ paddingBottom: 28 + bottomScrollInset }}
+    >
+      <View style={styles.aboutHero}>
+        <Text style={[styles.aboutTagline, { color: c.textMuted }]}>
+          Learn about Crohn&apos;s disease and ulcerative colitis, and how FlareCare can help you manage your condition
+        </Text>
+      </View>
+
+      <Text style={[styles.dashboardSectionTitleLeft, { color: c.text }]}>What is Inflammatory Bowel Disease (IBD)?</Text>
+      <Text style={[styles.text, styles.aboutBodyLast, { color: c.textMuted }]}>
+        Inflammatory Bowel Disease (IBD) is a term used to describe disorders that involve chronic inflammation of your
+        digestive tract. The two main types are:
+      </Text>
+
+      <Text style={[styles.dashboardSectionTitleLeft, styles.aboutContactSectionTitle, { color: c.text }]}>Crohn&apos;s Disease</Text>
+      <IbdBulletList
+        items={[
+          "Can affect any part of the digestive tract",
+          "Inflammation can be patchy with healthy areas in between",
+          "Can affect the full thickness of the bowel wall",
+          "May cause complications like fistulas and strictures",
+        ]}
+        isLastInSection
+      />
+
+      <Text style={[styles.dashboardSectionTitleLeft, styles.aboutContactSectionTitle, { color: c.text }]}>Ulcerative Colitis</Text>
+      <IbdBulletList
+        items={[
+          "Affects only the colon and rectum",
+          "Inflammation is continuous, starting from the rectum",
+          "Usually affects only the inner lining of the colon",
+          "May increase risk of colon cancer over time",
+        ]}
+        isLastInSection
+      />
+
+      <Text style={[styles.dashboardSectionTitleLeft, styles.aboutContactSectionTitle, { color: c.text }]}>Common symptoms</Text>
+      <IbdBulletList items={IBD_SYMPTOMS} isLastInSection />
+
+      <Text style={[styles.dashboardSectionTitleLeft, styles.aboutContactSectionTitle, { color: c.text }]}>Common triggers</Text>
+      <IbdBulletList items={IBD_TRIGGERS} isLastInSection />
+
+      <Text style={[styles.dashboardSectionTitleLeft, styles.aboutContactSectionTitle, { color: c.text }]}>When to seek medical help</Text>
+      <Text style={[styles.text, styles.aboutBody, { color: c.textMuted }]}>
+        Seek immediate medical attention if you experience:
+      </Text>
+      <IbdBulletList items={IBD_SEEK_HELP_ITEMS} isLastInSection />
+
+      <Text style={[styles.dashboardSectionTitleLeft, styles.aboutContactSectionTitle, { color: c.text }]}>How FlareCare can help</Text>
+      <IbdCheckList items={IBD_FLARECARE_HELPS} isLastInSection />
+    </ScrollView>
+  );
+}
+
 function AboutScreen() {
   const c = useFlareColors();
   const bottomScrollInset = useBottomTabScrollInset();
@@ -2373,36 +2532,34 @@ function AboutScreen() {
         </Text>
       </View>
 
-      <Card title="What is FlareCare?">
-        <Text style={[styles.text, styles.aboutBody, { color: c.textMuted }]}>
-          FlareCare is a mobile companion for IBD self-management. You can record symptoms, medications, hydration, bowel
-          movements, weight, and appointments; receive medication reminders; review summaries on your dashboard; prepare
-          appointment briefs; and export reports to share with your clinician—all in one place on your phone.
-        </Text>
-        <Text style={[styles.text, styles.aboutBody, { color: c.textMuted }]}>
-          It is aimed at people living with Crohn&apos;s disease or ulcerative colitis. The product was developed by Simon
-          Sutherland, drawing on many years of personal experience managing Crohn&apos;s, to make consistent tracking simple
-          enough to sustain between clinic visits.
-        </Text>
-        <Text style={[styles.text, styles.aboutBodyLast, { color: c.textMuted }]}>
-          FlareCare does not provide medical advice, diagnosis, or treatment, and it is not a substitute for professional
-          medical care. Always follow the advice of your qualified healthcare providers.
-        </Text>
-      </Card>
+      <Text style={[styles.dashboardSectionTitleLeft, { color: c.text }]}>What is FlareCare?</Text>
+      <Text style={[styles.text, styles.aboutBody, { color: c.textMuted }]}>
+        FlareCare is a mobile companion for IBD self-management. You can record symptoms, medications, hydration, bowel
+        movements, weight, and appointments; receive medication reminders; review summaries on your dashboard; prepare
+        appointment briefs; and export reports to share with your clinician—all in one place on your phone.
+      </Text>
+      <Text style={[styles.text, styles.aboutBody, { color: c.textMuted }]}>
+        It is aimed at people living with Crohn&apos;s disease or ulcerative colitis. The product was developed by Simon
+        Sutherland, drawing on many years of personal experience managing Crohn&apos;s, to make consistent tracking simple
+        enough to sustain between clinic visits.
+      </Text>
+      <Text style={[styles.text, styles.aboutBodyLast, { color: c.textMuted }]}>
+        FlareCare does not provide medical advice, diagnosis, or treatment, and it is not a substitute for professional
+        medical care. Always follow the advice of your qualified healthcare providers.
+      </Text>
 
-      <Card title="Contact">
-        <Text style={[styles.text, styles.aboutBody, styles.aboutContactIntro, { color: c.textMuted }]}>
-          For support, feedback, or feature requests, please email us using the address below.
-        </Text>
-        <Pressable
-          accessibilityRole="button"
-          accessibilityLabel="Email FlareCare support"
-          onPress={aboutSupportEmail}
-          style={({ pressed }) => [styles.aboutSupportButton, pressed && styles.aboutSupportButtonPressed]}
-        >
-          <Text style={[styles.aboutSupportButtonText, { color: c.primary }]}>support@flarecare.app</Text>
-        </Pressable>
-      </Card>
+      <Text style={[styles.dashboardSectionTitleLeft, styles.aboutContactSectionTitle, { color: c.text }]}>Contact</Text>
+      <Text style={[styles.text, styles.aboutBody, styles.aboutContactIntro, { color: c.textMuted }]}>
+        For support, feedback, or feature requests, please email us using the address below.
+      </Text>
+      <Pressable
+        accessibilityRole="button"
+        accessibilityLabel="Email FlareCare support"
+        onPress={aboutSupportEmail}
+        style={({ pressed }) => [styles.aboutSupportButton, pressed && styles.aboutSupportButtonPressed]}
+      >
+        <Text style={[styles.aboutSupportButtonText, { color: c.primary }]}>support@flarecare.app</Text>
+      </Pressable>
 
       <View style={styles.aboutFooter}>
         <Text style={[styles.muted, { color: c.textMuted, textAlign: "center" }]}>Version {version}</Text>
@@ -2414,22 +2571,128 @@ function AboutScreen() {
   );
 }
 
-function AccountScreen({ user, onLogout }: { user: SessionUser; onLogout: () => void }) {
+const ACCOUNT_OPTION_ROUTES = [
+  { label: "Account info", route: "AccountInfo" as const },
+  { label: "Account security", route: "AccountSecurity" as const },
+  { label: "Help", route: "AccountHelp" as const },
+];
+
+function AccountOptionRow({
+  label,
+  onPress,
+  labelColor = "default",
+  labelMedium,
+}: {
+  label: string;
+  onPress: () => void;
+  labelColor?: "default" | "primary" | "secondary";
+  labelMedium?: boolean;
+}) {
+  const c = useFlareColors();
+  return (
+    <Pressable
+      accessibilityRole="button"
+      accessibilityLabel={label}
+      onPress={onPress}
+      hitSlop={10}
+      style={styles.accountOptionNavRow}
+    >
+      <Text
+        style={[
+          styles.accountSettingsNavLabel,
+          labelMedium ? styles.accountSettingsNavLabelMedium : null,
+          {
+            color:
+              labelColor === "primary" ? c.primary : labelColor === "secondary" ? c.textSecondary : c.text,
+          },
+        ]}
+      >
+        {label}
+      </Text>
+      <Ionicons name="chevron-forward" size={18} color={c.textMuted} />
+    </Pressable>
+  );
+}
+
+function AccountInfoScreen({ user }: { user: SessionUser }) {
+  const c = useFlareColors();
+  const bottomScrollInset = useBottomTabScrollInset();
+  const displayName = user.displayName?.trim() || "Not set";
+
+  return (
+    <ScrollView
+      style={[styles.screen, { backgroundColor: c.screen }]}
+      contentContainerStyle={{ paddingBottom: bottomScrollInset + 24 }}
+    >
+      <Card title="" style={styles.accountPaddedCard} compactBody>
+        <View style={styles.accountIdentityRow}>
+          <View style={[styles.accountAvatarWell, { backgroundColor: c.surfaceSubtle }]}>
+            <Ionicons name="person" size={26} color={c.primary} accessibilityIgnoresInvertColors />
+          </View>
+          <View style={styles.accountIdentityTextCol}>
+            <Text style={[styles.accountFirstName, { color: c.text }]}>{displayName}</Text>
+            <Text style={[styles.accountEmailLine, { color: c.textMuted }]}>{user.email || "Unknown user"}</Text>
+          </View>
+        </View>
+      </Card>
+      <Card title="" style={styles.accountPaddedCard} compactBody>
+        <View style={styles.accountInfoFields}>
+          <View>
+            <Text style={[styles.accountInfoFieldLabel, { color: c.textMuted }]}>Email</Text>
+            <Text style={[styles.accountInfoFieldValue, { color: c.text }]}>{user.email || "Not available"}</Text>
+          </View>
+          <View>
+            <Text style={[styles.accountInfoFieldLabel, { color: c.textMuted }]}>Full name</Text>
+            <Text style={[styles.accountInfoFieldValue, { color: c.text }]}>{displayName}</Text>
+          </View>
+          <View>
+            <Text style={[styles.accountInfoFieldLabel, { color: c.textMuted }]}>Account created</Text>
+            <Text style={[styles.accountInfoFieldValue, { color: c.text }]}>
+              {user.accountCreatedAt ? formatUkDate(user.accountCreatedAt) : "Not available"}
+            </Text>
+          </View>
+          <View>
+            <Text style={[styles.accountInfoFieldLabel, { color: c.textMuted }]}>Sign-in method</Text>
+            <Text style={[styles.accountInfoFieldValue, { color: c.text }]}>
+              {user.signInMethodLabel ?? "Not available"}
+            </Text>
+          </View>
+          <View>
+            <Text style={[styles.accountInfoFieldLabel, { color: c.textMuted }]}>Account ID</Text>
+            <Text style={[styles.accountInfoFieldValue, { color: c.text }]} selectable>
+              {user.id}
+            </Text>
+          </View>
+        </View>
+      </Card>
+    </ScrollView>
+  );
+}
+
+function AccountSecurityScreen() {
+  const c = useFlareColors();
+  const bottomScrollInset = useBottomTabScrollInset();
+
+  return (
+    <ScrollView
+      style={[styles.screen, { backgroundColor: c.screen }]}
+      contentContainerStyle={{ paddingBottom: bottomScrollInset + 24 }}
+    >
+      <Card title="">
+        <Text style={[styles.muted, { color: c.textMuted, lineHeight: 20 }]}>
+          Sign-in and security options for your account will appear here.
+        </Text>
+      </Card>
+    </ScrollView>
+  );
+}
+
+function AccountHelpScreen({ onLogout }: { user: SessionUser; onLogout: () => void }) {
   const navigation = useNavigation<any>();
   const c = useFlareColors();
   const bottomScrollInset = useBottomTabScrollInset();
-  const { appearancePreference, setAppearancePreference } = useFlareTheme();
-  const [logoutConfirmOpen, setLogoutConfirmOpen] = useState(false);
   const [deleteAccountConfirmOpen, setDeleteAccountConfirmOpen] = useState(false);
   const deleteAccountInFlight = useRef(false);
-
-  const accountFirstName = useMemo(() => {
-    const fromName = user.displayName?.trim().split(/\s+/).filter(Boolean)[0];
-    if (fromName) return fromName;
-    const local = user.email?.split("@")[0]?.trim();
-    if (local) return local;
-    return "You";
-  }, [user.displayName, user.email]);
 
   const handleDeleteAccountConfirm = useCallback(async () => {
     if (deleteAccountInFlight.current) return;
@@ -2450,64 +2713,25 @@ function AccountScreen({ user, onLogout }: { user: SessionUser; onLogout: () => 
     }
   }, [onLogout]);
 
-  const appearanceOptions = [
-    { key: "light" as const, label: "Light" },
-    { key: "dark" as const, label: "Dark" },
-  ];
+  const openSupportEmail = () => {
+    Linking.openURL("mailto:support@flarecare.app").catch(() => {});
+  };
 
   return (
     <ScrollView
       style={[styles.screen, { backgroundColor: c.screen }]}
-      contentContainerStyle={{ paddingBottom: bottomScrollInset }}
+      contentContainerStyle={{ paddingBottom: bottomScrollInset + 24 }}
     >
-      <Text style={[styles.dashboardSectionTitleLeft, { color: c.text }]}>Account</Text>
-      <Card title="">
-        <View style={styles.accountIdentityRow}>
-          <View style={[styles.accountAvatarWell, { backgroundColor: c.surfaceSubtle }]}>
-            <Ionicons name="person" size={26} color={c.primary} accessibilityIgnoresInvertColors />
-          </View>
-          <View style={styles.accountIdentityTextCol}>
-            <Text style={[styles.accountFirstName, { color: c.text }]}>{accountFirstName}</Text>
-            <Text style={[styles.accountEmailLine, { color: c.textMuted }]}>{user.email || "Unknown user"}</Text>
-            {user.accountCreatedAt ? (
-              <Text style={[styles.accountMemberSince, { color: c.textMuted }]}>
-                Account created {formatUkDate(user.accountCreatedAt)}
-              </Text>
-            ) : null}
-          </View>
-        </View>
-        <PrimaryButton title="Logout" onPress={() => setLogoutConfirmOpen(true)} />
+      <Card title="" style={styles.accountOptionsListCard} compactBody>
+        <AccountOptionRow label="About FlareCare" onPress={() => navigation.navigate("About")} />
+        <AccountOptionRow label="Contact support" onPress={openSupportEmail} />
       </Card>
-      <ConfirmModal
-        visible={logoutConfirmOpen}
-        title="Log out?"
-        message="Are you sure you want to log out?"
-        confirmLabel="Log out"
-        cancelLabel="Stay signed in"
-        confirmDestructive
-        onCancel={() => setLogoutConfirmOpen(false)}
-        onConfirm={() => {
-          setLogoutConfirmOpen(false);
-          onLogout();
-        }}
-      />
       <Text style={[styles.dashboardSectionTitleLeft, { color: c.text }]}>Delete account</Text>
-      <Card title="">
-        <Text style={[styles.muted, { color: c.textMuted, marginBottom: 10 }]}>
+      <Card title="" style={styles.accountPaddedCard} compactBody>
+        <Text style={[styles.muted, { color: c.textMuted, marginBottom: 14 }]}>
           Permanently delete your account and all associated data. This cannot be undone.
         </Text>
-        <Pressable
-          accessibilityRole="button"
-          accessibilityLabel="Delete account"
-          onPress={() => setDeleteAccountConfirmOpen(true)}
-          style={({ pressed }) => [
-            styles.accountDeleteButton,
-            { borderColor: c.danger, opacity: pressed ? 0.88 : 1 },
-          ]}
-        >
-          <Ionicons name="trash-outline" size={18} color={c.danger} style={{ marginRight: 8 }} />
-          <Text style={[styles.accountDeleteButtonText, { color: c.danger }]}>Delete account</Text>
-        </Pressable>
+        <SecondaryButton title="Delete account" onPress={() => setDeleteAccountConfirmOpen(true)} />
       </Card>
       <ConfirmModal
         visible={deleteAccountConfirmOpen}
@@ -2519,23 +2743,38 @@ function AccountScreen({ user, onLogout }: { user: SessionUser; onLogout: () => 
         onCancel={() => setDeleteAccountConfirmOpen(false)}
         onConfirm={handleDeleteAccountConfirm}
       />
-      <Text style={[styles.dashboardSectionTitleLeft, { color: c.text }]}>Reminders</Text>
-      <Card title="">
-        <Pressable
-          accessibilityRole="button"
-          accessibilityLabel="Push reminders"
+    </ScrollView>
+  );
+}
+
+function SettingsScreen() {
+  const navigation = useNavigation<any>();
+  const c = useFlareColors();
+  const bottomScrollInset = useBottomTabScrollInset();
+  const { appearancePreference, setAppearancePreference } = useFlareTheme();
+
+  const appearanceOptions = [
+    { key: "light" as const, label: "Light" },
+    { key: "dark" as const, label: "Dark" },
+  ];
+
+  return (
+    <ScrollView
+      style={[styles.screen, { backgroundColor: c.screen }]}
+      contentContainerStyle={[styles.accountScrollContent, { paddingBottom: bottomScrollInset + 16 }]}
+    >
+      <Text style={[styles.dashboardSectionTitleLeft, { color: c.text }]}>Notifications</Text>
+      <Card title="" style={styles.accountOptionsListCard} compactBody>
+        <AccountOptionRow
+          label="Push notifications and reminders"
+          labelMedium
+          labelColor="secondary"
           onPress={() => navigation.navigate("Reminders")}
-          style={styles.moreNavRow}
-        >
-          <Text style={[styles.moreNavRowLabel, { color: c.text }]}>
-            Push notifications and medication reminders
-          </Text>
-          <Ionicons name="chevron-forward" size={18} color={c.textMuted} />
-        </Pressable>
+        />
       </Card>
       <Text style={[styles.dashboardSectionTitleLeft, { color: c.text }]}>Appearance</Text>
-      <Card title="">
-        <Text style={[styles.muted, { color: c.textMuted, marginBottom: 2 }]}>Choose light or dark for the app.</Text>
+      <Card title="" style={styles.accountPaddedCard} compactBody>
+        <Text style={[styles.muted, { color: c.textMuted }]}>Choose light or dark for the app.</Text>
         <View style={styles.appearanceRow}>
           {appearanceOptions.map(({ key, label }) => {
             const selected = appearancePreference === key;
@@ -2559,18 +2798,72 @@ function AccountScreen({ user, onLogout }: { user: SessionUser; onLogout: () => 
           })}
         </View>
       </Card>
-      <Text style={[styles.dashboardSectionTitleLeft, { color: c.text }]}>About</Text>
-      <Card title="">
-        <Pressable
-          accessibilityRole="button"
-          accessibilityLabel="About FlareCare"
-          onPress={() => navigation.navigate("About")}
-          style={styles.moreNavRow}
-        >
-          <Text style={[styles.moreNavRowLabel, { color: c.text }]}>About FlareCare</Text>
-          <Ionicons name="chevron-forward" size={18} color={c.textMuted} />
-        </Pressable>
+    </ScrollView>
+  );
+}
+
+function AccountScreen({ user, onLogout }: { user: SessionUser; onLogout: () => void }) {
+  const navigation = useNavigation<any>();
+  const c = useFlareColors();
+  const bottomScrollInset = useBottomTabScrollInset();
+  const [logoutConfirmOpen, setLogoutConfirmOpen] = useState(false);
+
+  const accountFirstName = useMemo(() => {
+    const fromName = user.displayName?.trim().split(/\s+/).filter(Boolean)[0];
+    if (fromName) return fromName;
+    const local = user.email?.split("@")[0]?.trim();
+    if (local) return local;
+    return "You";
+  }, [user.displayName, user.email]);
+
+  return (
+    <ScrollView
+      style={[styles.screen, { backgroundColor: c.screen }]}
+      contentContainerStyle={{ paddingBottom: bottomScrollInset + 16 }}
+    >
+      <Card title="" style={styles.accountPaddedCard} compactBody>
+        <View style={styles.accountIdentityRow}>
+          <View style={[styles.accountAvatarWell, { backgroundColor: c.surfaceSubtle }]}>
+            <Ionicons name="person" size={26} color={c.primary} accessibilityIgnoresInvertColors />
+          </View>
+          <View style={styles.accountIdentityTextCol}>
+            <Text style={[styles.accountFirstName, { color: c.text }]}>{accountFirstName}</Text>
+            <Text style={[styles.accountEmailLine, { color: c.textMuted }]}>{user.email || "Unknown user"}</Text>
+          </View>
+        </View>
       </Card>
+      <Text style={[styles.dashboardSectionTitleLeft, { color: c.text }]}>My account</Text>
+      <Card title="" style={[styles.accountOptionsListCard, styles.accountOptionsListCardLast]} compactBody>
+        {ACCOUNT_OPTION_ROUTES.map((item) => (
+          <AccountOptionRow
+            key={item.route}
+            label={item.label}
+            labelMedium
+            labelColor="secondary"
+            onPress={() => navigation.navigate(item.route)}
+          />
+        ))}
+      </Card>
+      <Pressable
+        accessibilityRole="button"
+        accessibilityLabel="Log out"
+        onPress={() => setLogoutConfirmOpen(true)}
+        style={({ pressed }) => [styles.accountSignOutFooter, pressed && { opacity: 0.7 }]}
+      >
+        <Text style={[styles.accountSignOutFooterText, { color: c.primary }]}>Logout</Text>
+      </Pressable>
+      <ConfirmModal
+        visible={logoutConfirmOpen}
+        title="Log out?"
+        message="Are you sure you want to log out?"
+        confirmLabel="Log out"
+        cancelLabel="Stay signed in"
+        onCancel={() => setLogoutConfirmOpen(false)}
+        onConfirm={() => {
+          setLogoutConfirmOpen(false);
+          onLogout();
+        }}
+      />
     </ScrollView>
   );
 }
@@ -2592,12 +2885,12 @@ function MainBottomTabBar({
     return null;
   }
 
-  const go = (target: "Dashboard" | "Reminders" | "Account" | "About") => {
+  const go = (target: "Dashboard" | "Ibd" | "Account" | "About") => {
     navigationRef?.navigate(target as never);
   };
 
   const item = (
-    target: "Dashboard" | "Reminders" | "Account" | "About",
+    target: "Dashboard" | "Ibd" | "Account" | "About",
     icon: ({ active }: { active: boolean }) => React.ReactNode,
     label: string,
   ) => {
@@ -2621,14 +2914,8 @@ function MainBottomTabBar({
       {item(
         "Dashboard",
         ({ active }) => <Ionicons name={active ? "home" : "home-outline"} size={23} color={active ? colors.primary : colors.textMuted} />,
-        "Flare Care",
+        "FlareCare",
       )}
-      {item(
-        "Reminders",
-        ({ active }) => <Ionicons name={active ? "notifications" : "notifications-outline"} size={23} color={active ? colors.primary : colors.textMuted} />,
-        "Reminders",
-      )}
-      {item("Account", ({ active }) => <Ionicons name={active ? "person-circle" : "person-circle-outline"} size={23} color={active ? colors.primary : colors.textMuted} />, "Account")}
       {item(
         "About",
         ({ active }) => (
@@ -2636,6 +2923,12 @@ function MainBottomTabBar({
         ),
         "About",
       )}
+      {item(
+        "Ibd",
+        ({ active }) => <Ionicons name={active ? "book" : "book-outline"} size={23} color={active ? colors.primary : colors.textMuted} />,
+        "IBD",
+      )}
+      {item("Account", ({ active }) => <Ionicons name={active ? "person-circle" : "person-circle-outline"} size={23} color={active ? colors.primary : colors.textMuted} />, "Account")}
     </View>
   );
 }
@@ -2653,19 +2946,35 @@ function AppTabs({ user, onLogout }: { user: SessionUser; onLogout: () => void }
   const headerOptions = ({ navigation, route }: { navigation: any; route: { name: string } }) => {
     const isDashboard = route.name === "Dashboard";
     const isAbout = route.name === "About";
+    const isIbd = route.name === "Ibd";
+    const isAccount = route.name === "Account";
     const titleForRoute: Record<string, string> = {
       SymptomHistory: "Symptom History",
       SymptomDetail: "Symptom Details",
       MedicationTrackingHistory: "Medication Tracking History",
       MedicationLogDetail: "Tracking log",
       SymptomLogWizard: "Log Symptoms",
+      AccountInfo: "Account info",
+      AccountSecurity: "Account security",
+      AccountHelp: "Help",
+      Settings: "Settings",
     };
-    const isDetailRoute = route.name === "SymptomDetail" || route.name === "MedicationLogDetail";
-
     const isSymptomLogWizard = route.name === "SymptomLogWizard";
 
+    const headerRightContent =
+      route.name === "Settings" || route.name === "SymptomLogWizard" || route.name === "Meds" ? null : (
+        <Pressable
+          accessibilityRole="button"
+          accessibilityLabel="Settings"
+          onPress={() => navigation.navigate("Settings")}
+          style={styles.headerSettingsButton}
+        >
+          <Ionicons name="settings-outline" size={22} color={colors.text} />
+        </Pressable>
+      );
+
     return {
-      headerTitle: isDashboard ? "Flare Care" : isAbout ? "About" : titleForRoute[route.name] ?? "",
+      headerTitle: isDashboard ? "FlareCare" : isAbout ? "About" : isIbd ? "IBD" : isAccount ? "Account" : titleForRoute[route.name] ?? "",
       headerTitleAlign: "center" as const,
       headerLargeTitleShown: false,
       headerLargeTitleShadowVisible: false,
@@ -2681,14 +2990,14 @@ function AppTabs({ user, onLogout }: { user: SessionUser; onLogout: () => void }
       /** Avoid stacking default header padding with our own — keeps chevron near the leading edge. */
       headerLeftContainerStyle: { paddingLeft: 0, marginLeft: 0 },
       headerLeft:
-        !isDashboard && !isSymptomLogWizard
+        !isDashboard && !isSymptomLogWizard && !isAbout && !isIbd && !isAccount
           ? () => (
               <Pressable
                 accessibilityRole="button"
                 accessibilityLabel="Back"
                 hitSlop={{ top: 10, bottom: 10, left: 8, right: 20 }}
                 onPress={() => {
-                  if (isDetailRoute && navigation.canGoBack()) navigation.goBack();
+                  if (navigation.canGoBack()) navigation.goBack();
                   else navigation.navigate("Dashboard");
                 }}
                 style={styles.headerBackButton}
@@ -2697,14 +3006,7 @@ function AppTabs({ user, onLogout }: { user: SessionUser; onLogout: () => void }
               </Pressable>
             )
           : undefined,
-      headerRight: () => (
-        <Pressable
-          onPress={() => navigation.navigate("Account")}
-          style={[styles.headerIconButton, { backgroundColor: colors.card }]}
-        >
-          <Ionicons name="person" size={18} color={colors.primary} />
-        </Pressable>
-      ),
+      headerRight: headerRightContent ? () => headerRightContent : undefined,
     } as const;
   };
 
@@ -2726,7 +3028,12 @@ function AppTabs({ user, onLogout }: { user: SessionUser; onLogout: () => void }
             <AppStack.Screen name="Reports">{() => <ReportsScreen user={user} />}</AppStack.Screen>
             <AppStack.Screen name="Meds">{() => <MedicationsScreen user={user} />}</AppStack.Screen>
             <AppStack.Screen name="Reminders">{() => <NotificationsScreen user={user} />}</AppStack.Screen>
+            <AppStack.Screen name="Ibd">{() => <IbdScreen />}</AppStack.Screen>
             <AppStack.Screen name="Account">{() => <AccountScreen user={user} onLogout={onLogout} />}</AppStack.Screen>
+            <AppStack.Screen name="Settings">{() => <SettingsScreen />}</AppStack.Screen>
+            <AppStack.Screen name="AccountInfo">{() => <AccountInfoScreen user={user} />}</AppStack.Screen>
+            <AppStack.Screen name="AccountSecurity">{() => <AccountSecurityScreen />}</AppStack.Screen>
+            <AppStack.Screen name="AccountHelp">{() => <AccountHelpScreen user={user} onLogout={onLogout} />}</AppStack.Screen>
             <AppStack.Screen name="About">{() => <AboutScreen />}</AppStack.Screen>
           </AppStack.Navigator>
         </View>
@@ -2885,6 +3192,7 @@ const styles = StyleSheet.create({
   card: { backgroundColor: "white", borderRadius: 14, padding: 14, marginBottom: 12 },
   /** Stacks card content below the title; `gap` matches spacing between sibling blocks inside the card. */
   cardBody: { gap: 8 },
+  cardBodyCompact: { gap: 0 },
   cardTitle: {
     fontSize: 18,
     fontFamily: "Inter_700Bold",
@@ -2893,7 +3201,8 @@ const styles = StyleSheet.create({
     alignSelf: "stretch",
     marginBottom: 12,
   },
-  todaySummaryCard: { paddingHorizontal: 20 },
+  todaySummaryCard: { paddingHorizontal: 20, paddingVertical: 16 },
+  todaySummaryRows: { gap: 4 },
   dashboardSectionTitle: {
     fontSize: 18,
     fontFamily: "Inter_700Bold",
@@ -2946,6 +3255,13 @@ const styles = StyleSheet.create({
     justifyContent: "center",
     marginRight: 8,
   },
+  headerSettingsButton: {
+    width: 40,
+    height: 40,
+    alignItems: "center",
+    justifyContent: "center",
+    marginRight: 4,
+  },
   headerBackButton: {
     justifyContent: "center",
     alignItems: "flex-start",
@@ -2963,7 +3279,16 @@ const styles = StyleSheet.create({
   },
   bottomTabItem: { flex: 1, alignItems: "center", justifyContent: "center", gap: 3, paddingVertical: 4 },
   bottomTabLabel: { fontSize: 11, fontFamily: "Inter_500Medium" },
-  accountIdentityRow: { flexDirection: "row", alignItems: "center", marginBottom: 14 },
+  accountIdentityRow: { flexDirection: "row", alignItems: "center" },
+  accountPaddedCard: { padding: 18 },
+  /** My account / Help link lists. */
+  accountOptionsListCard: { paddingHorizontal: 20, paddingVertical: 12 },
+  accountOptionNavRow: {
+    flexDirection: "row",
+    alignItems: "center",
+    justifyContent: "space-between",
+    paddingVertical: 10,
+  },
   accountAvatarWell: {
     width: 56,
     height: 56,
@@ -2976,19 +3301,23 @@ const styles = StyleSheet.create({
   accountFirstName: { fontSize: 18, fontFamily: "Inter_700Bold" },
   accountEmailLine: { fontSize: 14, fontFamily: "Inter_400Regular", marginTop: 2 },
   accountMemberSince: { fontSize: 13, fontFamily: "Inter_400Regular", marginTop: 6 },
-  accountDeleteButton: {
+  accountNavRow: {
     flexDirection: "row",
     alignItems: "center",
-    justifyContent: "center",
-    alignSelf: "stretch",
-    paddingVertical: 12,
-    paddingHorizontal: 14,
-    borderRadius: 10,
-    borderWidth: 1,
+    justifyContent: "space-between",
   },
-  accountDeleteButtonText: { fontSize: 14, fontFamily: "Inter_700Bold" },
+  accountSettingsNavLabel: { flex: 1, fontSize: 14, fontFamily: "Inter_400Regular", paddingRight: 10 },
+  accountSettingsNavLabelMedium: { fontFamily: "Inter_500Medium" },
+  accountInfoFields: { gap: 14 },
+  accountInfoFieldLabel: { fontSize: 14, fontFamily: "Inter_400Regular", marginBottom: 4 },
+  accountInfoFieldValue: { fontSize: 14, fontFamily: "Inter_400Regular" },
+  accountScrollContent: { flexGrow: 1 },
+  /** My account list on Account tab — no extra card gap before logout. */
+  accountOptionsListCardLast: { marginBottom: 0 },
+  accountSignOutFooter: { alignSelf: "stretch", alignItems: "center", marginTop: 20, paddingVertical: 16 },
+  accountSignOutFooterText: { fontSize: 16, fontFamily: "Inter_700Bold", textAlign: "center" },
   /** Same height and radius as `styles.button` (PrimaryButton); two equal slots like paired actions. */
-  appearanceRow: { flexDirection: "row", gap: 8, marginTop: 6 },
+  appearanceRow: { flexDirection: "row", gap: 8, marginTop: 14 },
   appearanceChip: {
     flex: 1,
     minHeight: 42,
@@ -3033,7 +3362,7 @@ const styles = StyleSheet.create({
   weatherGreeting: { fontSize: 24, fontFamily: "Inter_800ExtraBold", color: "#1f2a44", marginBottom: 2 },
   weatherDate: { fontSize: 13, fontFamily: "Inter_400Regular", color: "#6a7690", marginBottom: 6 },
   weatherDesc: { fontSize: 13, fontFamily: "Inter_400Regular", color: "#6a7690", textTransform: "capitalize" },
-  weatherTempWrap: { flexDirection: "row", alignItems: "flex-start" },
+  weatherTempWrap: { flexDirection: "row", alignItems: "flex-start", marginRight: 8 },
   weatherTemp: { fontSize: 30, fontFamily: "Inter_800ExtraBold" },
   weatherUnit: { fontSize: 12, fontFamily: "Inter_700Bold", marginTop: 6, marginLeft: 2 },
   checkinSection: { marginBottom: 12 },
@@ -3079,17 +3408,22 @@ const styles = StyleSheet.create({
     flexDirection: "row",
     alignItems: "center",
     justifyContent: "space-between",
-    paddingVertical: 8,
+    paddingVertical: 5,
   },
   summaryWebLeft: { flexDirection: "row", alignItems: "center", flex: 1, paddingRight: 8 },
   summaryWebLabel: { fontSize: 14, fontFamily: "Inter_400Regular", flex: 1 },
-  summaryWebValue: { fontSize: 14, fontFamily: "Inter_700Bold" },
+  summaryWebValue: { fontSize: 14, fontFamily: "Inter_500Medium" },
   activityListWrap: {
     backgroundColor: "#f8fbff",
     borderRadius: 10,
     overflow: "hidden",
   },
-  activityNoteRow: { padding: 10 },
+  recentActivityFeed: { gap: 14 },
+  recentActivityFeedItem: { flexDirection: "row", alignItems: "flex-start", gap: 12 },
+  recentActivityFeedIcon: { flexShrink: 0, alignSelf: "flex-start" },
+  recentActivityFeedText: { flex: 1, minWidth: 0, gap: 4 },
+  recentActivityFeedTitle: { fontSize: 14, fontFamily: "Inter_400Regular", lineHeight: 20 },
+  recentActivityFeedWhen: { fontSize: 12, fontFamily: "Inter_400Regular" },
   activityNoteRowDivider: { borderBottomWidth: 1, borderBottomColor: "#e3e9f7" },
   aboutHero: { alignItems: "center", paddingHorizontal: 16 },
   aboutLogoSlot: { marginBottom: 12 },
@@ -3107,6 +3441,16 @@ const styles = StyleSheet.create({
   },
   aboutBody: { lineHeight: 22, marginBottom: 12 },
   aboutBodyLast: { lineHeight: 22, marginBottom: 0 },
+  infoSectionContentEnd: { marginBottom: 0 },
+  ibdBulletList: { gap: 8 },
+  ibdBulletRow: { flexDirection: "row", alignItems: "flex-start" },
+  ibdBulletDot: { fontSize: 14, lineHeight: 20, marginRight: 8, fontFamily: "Inter_700Bold" },
+  ibdBulletText: { flex: 1, lineHeight: 20 },
+  ibdCheckList: { gap: 8 },
+  ibdCheckRow: { flexDirection: "row", alignItems: "flex-start" },
+  ibdCheckIcon: { marginRight: 8, marginTop: 2 },
+  ibdCheckText: { flex: 1, lineHeight: 20 },
+  aboutContactSectionTitle: { marginTop: 28 },
   /** Contact card: paragraph only; spacing to email row is handled by button `marginTop`. */
   aboutContactIntro: { marginBottom: 0 },
   /** Sits directly under Contact intro copy. */
@@ -3114,7 +3458,7 @@ const styles = StyleSheet.create({
   aboutSupportButtonPressed: { opacity: 0.75 },
   aboutSupportButtonText: { fontFamily: "Inter_700Bold", fontSize: 15 },
   /** Version / build separated from branding hero — typical for production About screens. */
-  aboutFooter: { paddingTop: 8, paddingBottom: 16, paddingHorizontal: 16 },
+  aboutFooter: { paddingTop: 28, paddingBottom: 16, paddingHorizontal: 16 },
   moreNavRow: {
     flexDirection: "row",
     alignItems: "center",
@@ -3123,8 +3467,6 @@ const styles = StyleSheet.create({
     paddingHorizontal: 12,
   },
   moreNavRowLabel: { fontSize: 14, fontFamily: "Inter_400Regular", flex: 1, paddingRight: 10 },
-  activityNoteTitle: { fontSize: 13, fontFamily: "Inter_400Regular", color: "#23314f", lineHeight: 18 },
-  activityNoteWhen: { fontSize: 11, fontFamily: "Inter_400Regular", color: "#6a7690", marginTop: 6 },
   recentLogsViewAllRow: { alignItems: "flex-end", marginBottom: 8 },
   recentLogsViewAllText: { fontSize: 13, fontFamily: "Inter_700Bold" },
   recentLogsRow: {
@@ -3144,7 +3486,7 @@ const styles = StyleSheet.create({
     backgroundColor: "#ffffff",
     borderRadius: 12,
     overflow: "hidden",
-    marginRight: 12,
+    marginRight: 16,
   },
   newsCardLast: { marginRight: 0 },
   newsCardImage: {
@@ -3158,7 +3500,7 @@ const styles = StyleSheet.create({
     width: "100%",
     height: "100%",
   },
-  newsCardBody: { paddingHorizontal: 12, paddingVertical: 10 },
+  newsCardBody: { paddingTop: 10, paddingBottom: 10 },
   newsTitle: { fontSize: 13, fontFamily: "Inter_700Bold", color: "#23314f", lineHeight: 18 },
   newsMeta: { fontSize: 11, fontFamily: "Inter_400Regular", color: "#6a7690", marginTop: 6 },
   /** Symptom detail `Card`: less padding above date vs default `card` padding. */
