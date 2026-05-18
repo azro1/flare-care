@@ -1,5 +1,6 @@
 import React from "react";
 import { Platform, StyleSheet, Text, View, type StyleProp, type TextStyle, type ViewStyle } from "react-native";
+import { FLARE_INPUT_BORDER_RADIUS } from "./FlareInput";
 import { useFlareColors } from "../theme";
 
 /** Space between label and value (or between stacked value lines). */
@@ -50,7 +51,7 @@ export function StackedDetailField({ label, value, showDivider, valueColor, numb
         bottomBorder,
         insetRow && {
           backgroundColor: c.surfaceSubtle,
-          borderRadius: 10,
+          borderRadius: FLARE_INPUT_BORDER_RADIUS,
           overflow: "hidden",
         },
       ]}
@@ -103,7 +104,7 @@ export function StackedMealLine({
         styles.shell,
         insetRow && {
           backgroundColor: c.surfaceSubtle,
-          borderRadius: 10,
+          borderRadius: FLARE_INPUT_BORDER_RADIUS,
           overflow: "hidden",
         },
       ]}

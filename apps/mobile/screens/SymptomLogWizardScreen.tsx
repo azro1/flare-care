@@ -14,11 +14,19 @@ import {
   StyleSheet,
   Switch,
   Text,
-  TextInput,
   useWindowDimensions,
   View,
 } from "react-native";
-import { WizardPrimaryButton, WizardSecondaryButton } from "../components/symptomWizardButtons";
+import {
+  SymptomReviewCard,
+  SymptomReviewField,
+  SymptomReviewGrid,
+  SymptomReviewMealBlock,
+  SymptomReviewNotesBody,
+  SymptomReviewSubsection,
+} from "../components/symptomReviewLayout";
+import { PrimaryButton, SecondaryButton } from "../components/FlareButton";
+import { FlareInputTrigger, FlareTextInput } from "../components/FlareInput";
 import { invalidateDashboardSnapshot } from "../lib/dashboardSnapshotCache";
 import { formatUkDate } from "../lib/formatUkDate";
 import { supabase, TABLES } from "../lib/supabase";
@@ -42,8 +50,14 @@ import { useFlareColors, useFlareTheme } from "../theme";
 
 type SessionUser = { id: string };
 
-const WIZARD_STORAGE_STEP_PREFIX = "symptom-wizard-mobile-step";
-const WIZARD_STORAGE_FORM_PREFIX = "symptom-wizard-mobile-form";
+/** Cleared on leave/submit — no draft resume (matches web symptoms wizard unmount). */
+function symptomWizardStorageKeys(userId: string) {
+  return [`symptom-wizard-mobile-step:${userId}`, `symptom-wizard-mobile-form:${userId}`];
+}
+
+async function clearSymptomWizardStorage(userId: string) {
+  await AsyncStorage.multiRemove(symptomWizardStorageKeys(userId));
+}
 
 /** Example wording aligned with web `src/app/symptoms/page.js` helper `<p>` copy — mobile uses as input placeholders only */
 const PLACEHOLDER_BATHROOM_CHANGE_EXAMPLE =
@@ -53,12 +67,6 @@ const PLACEHOLDER_SMOKE_AMOUNT_RETURNING_EXAMPLE = "For example, '5 cigarettes' 
 const PLACEHOLDER_SMOKING_HABITS_EXAMPLE = "For example, '1 pack of cigarettes per day'";
 const PLACEHOLDER_ALCOHOL_UNITS_EXAMPLE = "For example, 0.5, 2 or 5";
 
-function wizardStepKey(userId: string) {
-  return `${WIZARD_STORAGE_STEP_PREFIX}:${userId}`;
-}
-function wizardFormKey(userId: string) {
-  return `${WIZARD_STORAGE_FORM_PREFIX}:${userId}`;
-}
 function cloneForm(f: SymptomFormData): SymptomFormData {
   return JSON.parse(JSON.stringify(f)) as SymptomFormData;
 }
@@ -104,16 +112,15 @@ export function SymptomLogWizardScreen({ user }: { user: SessionUser }) {
   const [picker, setPicker] = useState<null | "start" | "end">(null);
 
   useEffect(() => {
+    return () => {
+      void clearSymptomWizardStorage(user.id);
+    };
+  }, [user.id]);
+
+  useEffect(() => {
     (async () => {
       setLoadingPrefs(true);
       try {
-        const rawS = await AsyncStorage.getItem(wizardStepKey(user.id));
-        const rawF = await AsyncStorage.getItem(wizardFormKey(user.id));
-        if (rawS) setCurrentStep(parseInt(rawS, 10) || 0);
-        if (rawF) {
-          const parsed = JSON.parse(rawF);
-          setForm({ ...createEmptySymptomForm(), ...parsed });
-        }
         const prefs = await fetchUserPreferencesRow(user.id);
         setUserPreferences(prefs);
         setIsFirstTimeUser(!prefs);
@@ -122,13 +129,6 @@ export function SymptomLogWizardScreen({ user }: { user: SessionUser }) {
       }
     })();
   }, [user.id]);
-
-  useEffect(() => {
-    AsyncStorage.setItem(wizardStepKey(user.id), String(currentStep));
-  }, [currentStep, user.id]);
-  useEffect(() => {
-    AsyncStorage.setItem(wizardFormKey(user.id), JSON.stringify(form));
-  }, [form, user.id]);
 
   const phase = useMemo(
     () => getSymptomWizardPhaseProgress(currentStep, isFirstTimeUser, userPreferences),
@@ -254,7 +254,7 @@ export function SymptomLogWizardScreen({ user }: { user: SessionUser }) {
           normalBathroomFrequency: form.normal_bathroom_frequency,
         });
       }
-      await AsyncStorage.multiRemove([wizardStepKey(user.id), wizardFormKey(user.id)]);
+      await clearSymptomWizardStorage(user.id);
       invalidateDashboardSnapshot(user.id);
       navigation.dispatch(CommonActions.reset({ index: 0, routes: [{ name: "Dashboard" }] }));
       Alert.alert("Saved", "Your symptom log was saved.");
@@ -292,9 +292,8 @@ export function SymptomLogWizardScreen({ user }: { user: SessionUser }) {
       {form[meal].map((item, i) => (
         <View key={i} style={[styles.mealEntryWrap, i === 0 ? styles.mealEntryWrapFirst : null]}>
           <View style={styles.mealFoodRow}>
-            <TextInput
+            <FlareTextInput
               placeholder="Food"
-              placeholderTextColor={c.textMuted}
               value={item.food}
               onChangeText={(t) =>
                 setForm((p) => ({
@@ -303,30 +302,25 @@ export function SymptomLogWizardScreen({ user }: { user: SessionUser }) {
                   [skipKey]: false,
                 }))
               }
-              style={[
-                styles.input,
-                {
-                  borderColor: c.cardBorder,
-                  color: c.text,
-                  backgroundColor: c.card,
-                  marginTop: 0,
-                  paddingRight: 30,
-                },
-              ]}
+              style={{
+                marginTop: 0,
+                ...(form[meal].length > 1 ? { paddingRight: 30 } : null),
+              }}
             />
-            <Pressable
-              accessibilityRole="button"
-              accessibilityLabel="Remove meal item"
-              hitSlop={{ top: 6, bottom: 6, left: 6, right: 6 }}
-              onPress={() => removeMealRow(meal, i)}
-              style={[styles.mealRemoveBtn, { backgroundColor: c.destructiveFill }]}
-            >
-              <Ionicons name="close" size={14} color={c.white} />
-            </Pressable>
+            {form[meal].length > 1 ? (
+              <Pressable
+                accessibilityRole="button"
+                accessibilityLabel="Remove meal item"
+                hitSlop={{ top: 6, bottom: 6, left: 6, right: 6 }}
+                onPress={() => removeMealRow(meal, i)}
+                style={[styles.mealRemoveBtn, { backgroundColor: c.destructiveFill }]}
+              >
+                <Ionicons name="close" size={14} color={c.white} />
+              </Pressable>
+            ) : null}
           </View>
-          <TextInput
+          <FlareTextInput
             placeholder="Quantity"
-            placeholderTextColor={c.textMuted}
             value={item.quantity}
             onChangeText={(t) =>
               setForm((p) => ({
@@ -334,7 +328,6 @@ export function SymptomLogWizardScreen({ user }: { user: SessionUser }) {
                 [meal]: p[meal].map((row, j) => (j === i ? { ...row, quantity: t } : row)),
               }))
             }
-            style={[styles.input, { borderColor: c.cardBorder, color: c.text, backgroundColor: c.card, marginTop: 12 }]}
           />
         </View>
       ))}
@@ -430,7 +423,7 @@ export function SymptomLogWizardScreen({ user }: { user: SessionUser }) {
               Track your daily symptoms to identify patterns and triggers
             </Text>
             <View style={styles.landingCta}>
-              <WizardPrimaryButton title="Start now" onPress={startWizard} />
+              <PrimaryButton title="Start now" onPress={startWizard} />
             </View>
           </View>
         ) : null}
@@ -438,11 +431,11 @@ export function SymptomLogWizardScreen({ user }: { user: SessionUser }) {
         {currentStep === 1 ? (
           <View>
             <Text style={[styles.h3, { color: c.text }]}>When did your symptoms begin?</Text>
-            <Pressable onPress={() => setPicker("start")} style={[styles.dateBtn, { borderColor: c.cardBorder, backgroundColor: c.card }]}>
+            <FlareInputTrigger onPress={() => setPicker("start")}>
               <Text style={{ color: form.symptomStartDate ? c.text : c.textMuted }}>
                 {form.symptomStartDate ? formatUkDate(form.symptomStartDate) : "dd/mm/yyyy"}
               </Text>
-            </Pressable>
+            </FlareInputTrigger>
             {dateErrors.day ? <Text style={styles.err}>{dateErrors.day}</Text> : null}
             {picker === "start" ? (
               <DateTimePicker
@@ -458,7 +451,7 @@ export function SymptomLogWizardScreen({ user }: { user: SessionUser }) {
                 }}
               />
             ) : null}
-            {Platform.OS === "ios" && picker === "start" ? <WizardPrimaryButton title="Done" onPress={() => setPicker(null)} /> : null}
+            {Platform.OS === "ios" && picker === "start" ? <PrimaryButton title="Done" onPress={() => setPicker(null)} /> : null}
           </View>
         ) : null}
 
@@ -482,11 +475,11 @@ export function SymptomLogWizardScreen({ user }: { user: SessionUser }) {
         {currentStep === 3 ? (
           <View>
             <Text style={[styles.h3, { color: c.text }]}>When did symptoms end?</Text>
-            <Pressable onPress={() => setPicker("end")} style={[styles.dateBtn, { borderColor: c.cardBorder, backgroundColor: c.card }]}>
+            <FlareInputTrigger onPress={() => setPicker("end")}>
               <Text style={{ color: form.symptomEndDate ? c.text : c.textMuted }}>
                 {form.symptomEndDate ? formatUkDate(form.symptomEndDate) : "dd/mm/yyyy"}
               </Text>
-            </Pressable>
+            </FlareInputTrigger>
             {dateErrors.endDay ? <Text style={styles.err}>{dateErrors.endDay}</Text> : null}
             {picker === "end" ? (
               <DateTimePicker
@@ -502,7 +495,7 @@ export function SymptomLogWizardScreen({ user }: { user: SessionUser }) {
                 }}
               />
             ) : null}
-            {Platform.OS === "ios" && picker === "end" ? <WizardPrimaryButton title="Done" onPress={() => setPicker(null)} /> : null}
+            {Platform.OS === "ios" && picker === "end" ? <PrimaryButton title="Done" onPress={() => setPicker(null)} /> : null}
           </View>
         ) : null}
 
@@ -555,7 +548,7 @@ export function SymptomLogWizardScreen({ user }: { user: SessionUser }) {
         {currentStep === 6 ? (
           <View>
             <Text style={[styles.h3, { color: c.text }]}>How many times a day do you usually empty your bowels?</Text>
-            <TextInput
+            <FlareTextInput
               keyboardType="number-pad"
               value={form.normal_bathroom_frequency}
               onChangeText={(t) => {
@@ -565,8 +558,6 @@ export function SymptomLogWizardScreen({ user }: { user: SessionUser }) {
                 setForm((p) => ({ ...p, normal_bathroom_frequency: t }));
               }}
               placeholder="0–99"
-              placeholderTextColor={c.textMuted}
-              style={[styles.input, { borderColor: c.cardBorder, color: c.text, backgroundColor: c.card }]}
             />
             {fieldErrors.normal_bathroom_frequency ? <Text style={styles.err}>{fieldErrors.normal_bathroom_frequency}</Text> : null}
           </View>
@@ -596,13 +587,11 @@ export function SymptomLogWizardScreen({ user }: { user: SessionUser }) {
         {currentStep === 8 ? (
           <View>
             <Text style={[styles.h3, { color: c.text }]}>Describe your change</Text>
-            <TextInput
+            <FlareTextInput
               multiline
               placeholder={PLACEHOLDER_BATHROOM_CHANGE_EXAMPLE}
-              placeholderTextColor={c.textMuted}
               value={form.bathroom_frequency_change_details}
               onChangeText={(t) => setForm((p) => ({ ...p, bathroom_frequency_change_details: t }))}
-              style={[styles.textarea, { borderColor: c.cardBorder, color: c.text, backgroundColor: c.card }]}
             />
             {fieldErrors.bathroom_frequency_change_details ? <Text style={styles.err}>{fieldErrors.bathroom_frequency_change_details}</Text> : null}
           </View>
@@ -667,12 +656,10 @@ export function SymptomLogWizardScreen({ user }: { user: SessionUser }) {
                       ? "How much did you smoke today?"
                       : `How much did you smoke on ${symptomDayLabel}?`}
                 </Text>
-                <TextInput
+                <FlareTextInput
                   placeholder={PLACEHOLDER_SMOKE_DAY_AMOUNT_EXAMPLE}
-                  placeholderTextColor={c.textMuted}
                   value={form.smoked_amount_on_symptom_day}
                   onChangeText={(t) => setForm((p) => ({ ...p, smoked_amount_on_symptom_day: t }))}
-                  style={[styles.input, { borderColor: c.cardBorder, color: c.text, backgroundColor: c.card }]}
                 />
                 {fieldErrors.smoked_amount_on_symptom_day ? <Text style={styles.err}>{fieldErrors.smoked_amount_on_symptom_day}</Text> : null}
               </>
@@ -702,20 +689,18 @@ export function SymptomLogWizardScreen({ user }: { user: SessionUser }) {
                 <Text style={[styles.h3, { color: c.text }]}>
                   {!isFirstTimeUser && userPreferences?.isSmoker ? "How much did you smoke?" : "Please describe your smoking habits"}
                 </Text>
-                <TextInput
+                <FlareTextInput
                   placeholder={
                     !isFirstTimeUser && userPreferences?.isSmoker
                       ? PLACEHOLDER_SMOKE_AMOUNT_RETURNING_EXAMPLE
                       : PLACEHOLDER_SMOKING_HABITS_EXAMPLE
                   }
-                  placeholderTextColor={c.textMuted}
                   value={!isFirstTimeUser && userPreferences?.isSmoker ? form.smoked_amount_on_symptom_day : form.smoking_habits}
                   onChangeText={(t) =>
                     setForm((p) =>
                       !isFirstTimeUser && userPreferences?.isSmoker ? { ...p, smoked_amount_on_symptom_day: t } : { ...p, smoking_habits: t },
                     )
                   }
-                  style={[styles.input, { borderColor: c.cardBorder, color: c.text, backgroundColor: c.card }]}
                 />
                 {fieldErrors.smoked_amount_on_symptom_day ? <Text style={styles.err}>{fieldErrors.smoked_amount_on_symptom_day}</Text> : null}
                 {fieldErrors.smoking_habits ? <Text style={styles.err}>{fieldErrors.smoking_habits}</Text> : null}
@@ -777,13 +762,11 @@ export function SymptomLogWizardScreen({ user }: { user: SessionUser }) {
                     ? "How many units of alcohol did you drink today?"
                     : `How many units of alcohol did you drink on ${symptomDayLabel}?`}
                 </Text>
-                <TextInput
+                <FlareTextInput
                   keyboardType="decimal-pad"
                   placeholder={PLACEHOLDER_ALCOHOL_UNITS_EXAMPLE}
-                  placeholderTextColor={c.textMuted}
                   value={form.alcohol_units_on_symptom_day}
                   onChangeText={(t) => setForm((p) => ({ ...p, alcohol_units_on_symptom_day: t }))}
-                  style={[styles.input, { borderColor: c.cardBorder, color: c.text, backgroundColor: c.card }]}
                 />
                 {fieldErrors.alcohol_units_on_symptom_day ? <Text style={styles.err}>{fieldErrors.alcohol_units_on_symptom_day}</Text> : null}
               </>
@@ -815,17 +798,15 @@ export function SymptomLogWizardScreen({ user }: { user: SessionUser }) {
                     ? "How many units of alcohol did you drink?"
                     : "On average, how many units of alcohol do you drink per week?"}
                 </Text>
-                <TextInput
+                <FlareTextInput
                   keyboardType="decimal-pad"
                   placeholder={PLACEHOLDER_ALCOHOL_UNITS_EXAMPLE}
-                  placeholderTextColor={c.textMuted}
                   value={!isFirstTimeUser && userPreferences?.isDrinker ? form.alcohol_units_on_symptom_day : form.average_alcohol_units_pw}
                   onChangeText={(t) =>
                     setForm((p) =>
                       !isFirstTimeUser && userPreferences?.isDrinker ? { ...p, alcohol_units_on_symptom_day: t } : { ...p, average_alcohol_units_pw: t },
                     )
                   }
-                  style={[styles.input, { borderColor: c.cardBorder, color: c.text, backgroundColor: c.card }]}
                 />
                 {fieldErrors.alcohol_units_on_symptom_day ? <Text style={styles.err}>{fieldErrors.alcohol_units_on_symptom_day}</Text> : null}
                 {fieldErrors.average_alcohol_units_pw ? <Text style={styles.err}>{fieldErrors.average_alcohol_units_pw}</Text> : null}
@@ -841,13 +822,7 @@ export function SymptomLogWizardScreen({ user }: { user: SessionUser }) {
         {currentStep === 16 ? (
           <View>
             <Text style={[styles.h3, { color: c.text }]}>Additional notes</Text>
-            <TextInput
-              multiline
-              placeholderTextColor={c.textMuted}
-              value={form.notes}
-              onChangeText={(t) => setForm((p) => ({ ...p, notes: t }))}
-              style={[styles.textarea, { borderColor: c.cardBorder, color: c.text, backgroundColor: c.card }]}
-            />
+            <FlareTextInput multiline value={form.notes} onChangeText={(t) => setForm((p) => ({ ...p, notes: t }))} />
           </View>
         ) : null}
 
@@ -855,164 +830,99 @@ export function SymptomLogWizardScreen({ user }: { user: SessionUser }) {
           <View>
             <Text style={[styles.h3, { color: c.text, marginBottom: 16 }]}>Review your entry</Text>
 
-            <View style={[styles.reviewCard, { backgroundColor: c.card, borderColor: c.cardBorder }]}>
-              <Text style={[styles.reviewSectionTitle, { color: c.primary, borderBottomColor: c.cardBorder }]}>Basic Information</Text>
-              <View style={styles.reviewGrid}>
-                <View style={styles.reviewField}>
-                  <Text style={[styles.reviewLabel, { color: c.textMuted }]}>Start Date</Text>
-                  <Text style={[styles.reviewValue, { color: c.text }]}>{form.symptomStartDate ? formatUkDate(form.symptomStartDate) : "Not set"}</Text>
-                </View>
-                <View style={styles.reviewField}>
-                  <Text style={[styles.reviewLabel, { color: c.textMuted }]}>Status</Text>
-                  <Text style={[styles.reviewValue, { color: c.text }]}>{form.isOngoing ? "Ongoing" : "Ended"}</Text>
-                </View>
+            <SymptomReviewCard title="Basic Information">
+              <SymptomReviewGrid>
+                <SymptomReviewField label="Start Date" value={form.symptomStartDate ? formatUkDate(form.symptomStartDate) : "Not set"} />
+                <SymptomReviewField label="Status" value={form.isOngoing ? "Ongoing" : "Ended"} />
                 {!form.isOngoing && form.symptomEndDate ? (
-                  <View style={styles.reviewField}>
-                    <Text style={[styles.reviewLabel, { color: c.textMuted }]}>End Date</Text>
-                    <Text style={[styles.reviewValue, { color: c.text }]}>{formatUkDate(form.symptomEndDate)}</Text>
-                  </View>
+                  <SymptomReviewField label="End Date" value={formatUkDate(form.symptomEndDate)} />
                 ) : null}
-                <View style={styles.reviewField}>
-                  <Text style={[styles.reviewLabel, { color: c.textMuted }]}>Severity</Text>
-                  <Text style={[styles.reviewValue, { color: c.text }]}>{form.severity ? `${form.severity}/10` : "Not set"}</Text>
-                </View>
-                <View style={styles.reviewField}>
-                  <Text style={[styles.reviewLabel, { color: c.textMuted }]}>Stress Level</Text>
-                  <Text style={[styles.reviewValue, { color: c.text }]}>{form.stress_level ? `${form.stress_level}/10` : "Not set"}</Text>
-                </View>
-              </View>
-            </View>
+                <SymptomReviewField label="Severity" value={form.severity ? `${form.severity}/10` : "Not set"} />
+                <SymptomReviewField label="Stress Level" value={form.stress_level ? `${form.stress_level}/10` : "Not set"} />
+              </SymptomReviewGrid>
+            </SymptomReviewCard>
 
-            <View style={[styles.reviewCard, { backgroundColor: c.card, borderColor: c.cardBorder }]}>
-              <Text style={[styles.reviewSectionTitle, { color: c.primary, borderBottomColor: c.cardBorder }]}>Bathroom Frequency</Text>
-              <View style={styles.reviewGrid}>
-                <View style={styles.reviewField}>
-                  <Text style={[styles.reviewLabel, { color: c.textMuted }]}>Frequency</Text>
-                  <Text style={[styles.reviewValue, { color: c.text }]}>
-                    {form.normal_bathroom_frequency ? `${form.normal_bathroom_frequency} times/day` : "Not set"}
-                  </Text>
-                </View>
+            <SymptomReviewCard title="Bathroom Frequency">
+              <SymptomReviewGrid>
+                <SymptomReviewField
+                  label="Frequency"
+                  value={form.normal_bathroom_frequency ? `${form.normal_bathroom_frequency} times/day` : "Not set"}
+                />
                 {form.bathroom_frequency_changed ? (
-                  <View style={styles.reviewField}>
-                    <Text style={[styles.reviewLabel, { color: c.textMuted }]}>Frequency Changed</Text>
-                    <Text style={[styles.reviewValue, { color: c.text }]}>
-                      {form.bathroom_frequency_changed === "yes" ? "Yes" : "No"}
-                    </Text>
-                  </View>
+                  <SymptomReviewField
+                    label="Frequency Changed"
+                    value={form.bathroom_frequency_changed === "yes" ? "Yes" : "No"}
+                  />
                 ) : null}
-              </View>
+              </SymptomReviewGrid>
               {form.bathroom_frequency_changed === "yes" && form.bathroom_frequency_change_details?.trim() ? (
-                <View style={[styles.reviewSubsection, { borderTopColor: c.cardBorder }]}>
-                  <Text style={[styles.reviewLabel, { color: c.textMuted }]}>Change Description</Text>
-                  <Text style={[styles.reviewValue, { color: c.text }]}>{form.bathroom_frequency_change_details}</Text>
-                </View>
+                <SymptomReviewSubsection label="Change Description" value={form.bathroom_frequency_change_details} />
               ) : null}
-            </View>
+            </SymptomReviewCard>
 
             {showLifestyleReview ? (
-              <View style={[styles.reviewCard, { backgroundColor: c.card, borderColor: c.cardBorder }]}>
-                <Text style={[styles.reviewSectionTitle, { color: c.primary, borderBottomColor: c.cardBorder }]}>Lifestyle</Text>
-                <View style={styles.reviewGrid}>
-                  {isFirstTimeUser ? (
-                    <View style={styles.reviewField}>
-                      <Text style={[styles.reviewLabel, { color: c.textMuted }]}>Smoker</Text>
-                      <Text style={[styles.reviewValue, { color: c.text }]}>{form.smoker ? "Yes" : "No"}</Text>
-                    </View>
-                  ) : null}
+              <SymptomReviewCard title="Lifestyle">
+                <SymptomReviewGrid>
+                  {isFirstTimeUser ? <SymptomReviewField label="Smoker" value={form.smoker ? "Yes" : "No"} /> : null}
                   {isFirstTimeUser && form.smoker === true && form.smoking_habits?.trim() ? (
-                    <View style={styles.reviewField}>
-                      <Text style={[styles.reviewLabel, { color: c.textMuted }]}>Smoking Habits</Text>
-                      <Text style={[styles.reviewValue, { color: c.text }]}>{form.smoking_habits}</Text>
-                    </View>
+                    <SymptomReviewField label="Smoking Habits" value={form.smoking_habits} />
                   ) : null}
                   {!isFirstTimeUser && typeof form.smoked_on_symptom_day === "boolean" ? (
-                    <View style={styles.reviewField}>
-                      <Text style={[styles.reviewLabel, { color: c.textMuted }]}>Smoked</Text>
-                      <Text style={[styles.reviewValue, { color: c.text }]}>
-                        {form.smoked_on_symptom_day ? form.smoked_amount_on_symptom_day?.trim() || "Yes" : "No"}
-                      </Text>
-                    </View>
+                    <SymptomReviewField
+                      label="Smoked"
+                      value={form.smoked_on_symptom_day ? form.smoked_amount_on_symptom_day?.trim() || "Yes" : "No"}
+                    />
                   ) : null}
                   {isFirstTimeUser && form.smoker === true && form.smoked_amount_on_symptom_day?.trim() ? (
-                    <View style={styles.reviewField}>
-                      <Text style={[styles.reviewLabel, { color: c.textMuted }]}>
-                        {isSymptomDayToday ? "Smoked Today" : `Smoked on ${symptomDayLabel}`}
-                      </Text>
-                      <Text style={[styles.reviewValue, { color: c.text }]}>{form.smoked_amount_on_symptom_day}</Text>
-                    </View>
+                    <SymptomReviewField
+                      label={isSymptomDayToday ? "Smoked Today" : `Smoked on ${symptomDayLabel}`}
+                      value={form.smoked_amount_on_symptom_day}
+                    />
                   ) : null}
-                  {isFirstTimeUser ? (
-                    <View style={styles.reviewField}>
-                      <Text style={[styles.reviewLabel, { color: c.textMuted }]}>Alcohol</Text>
-                      <Text style={[styles.reviewValue, { color: c.text }]}>{form.alcohol ? "Yes" : "No"}</Text>
-                    </View>
-                  ) : null}
+                  {isFirstTimeUser ? <SymptomReviewField label="Alcohol" value={form.alcohol ? "Yes" : "No"} /> : null}
                   {isFirstTimeUser && form.alcohol === true && form.average_alcohol_units_pw?.trim() ? (
-                    <View style={styles.reviewField}>
-                      <Text style={[styles.reviewLabel, { color: c.textMuted }]}>Alcohol Habits (on average)</Text>
-                      <Text style={[styles.reviewValue, { color: c.text }]}>{form.average_alcohol_units_pw} units/week</Text>
-                    </View>
+                    <SymptomReviewField label="Alcohol Habits (on average)" value={`${form.average_alcohol_units_pw} units/week`} />
                   ) : null}
                   {!isFirstTimeUser && typeof form.drank_on_symptom_day === "boolean" ? (
-                    <View style={styles.reviewField}>
-                      <Text style={[styles.reviewLabel, { color: c.textMuted }]}>Alcohol Units Consumed</Text>
-                      <Text style={[styles.reviewValue, { color: c.text }]}>
-                        {form.drank_on_symptom_day
+                    <SymptomReviewField
+                      label="Alcohol Units Consumed"
+                      value={
+                        form.drank_on_symptom_day
                           ? form.alcohol_units_on_symptom_day?.trim()
                             ? `${form.alcohol_units_on_symptom_day} units`
                             : "Yes"
-                          : "No"}
-                      </Text>
-                    </View>
+                          : "No"
+                      }
+                    />
                   ) : null}
                   {isFirstTimeUser && form.alcohol === true && form.alcohol_units_on_symptom_day?.trim() ? (
-                    <View style={styles.reviewField}>
-                      <Text style={[styles.reviewLabel, { color: c.textMuted }]}>
-                        {isSymptomDayToday ? "Alcohol Units Today" : `Alcohol Units on ${symptomDayLabel}`}
-                      </Text>
-                      <Text style={[styles.reviewValue, { color: c.text }]}>{form.alcohol_units_on_symptom_day} units</Text>
-                    </View>
+                    <SymptomReviewField
+                      label={isSymptomDayToday ? "Alcohol Units Today" : `Alcohol Units on ${symptomDayLabel}`}
+                      value={`${form.alcohol_units_on_symptom_day} units`}
+                    />
                   ) : null}
-                </View>
-              </View>
+                </SymptomReviewGrid>
+              </SymptomReviewCard>
             ) : null}
 
             {mealReviewEntries.length > 0 ? (
-              <View style={[styles.reviewCard, { backgroundColor: c.card, borderColor: c.cardBorder }]}>
-                <Text style={[styles.reviewSectionTitle, { color: c.primary, borderBottomColor: c.cardBorder }]}>Meals</Text>
+              <SymptomReviewCard title="Meals">
                 {mealReviewEntries.map((entry, index) => (
-                  <View
+                  <SymptomReviewMealBlock
                     key={entry.label}
-                    style={[
-                      styles.reviewMealBlock,
-                      index < mealReviewEntries.length - 1
-                        ? { borderBottomWidth: StyleSheet.hairlineWidth, borderBottomColor: c.cardBorder, paddingBottom: 12, marginBottom: 12 }
-                        : null,
-                    ]}
-                  >
-                    <Text style={[styles.reviewLabel, { color: c.textMuted, marginBottom: 8 }]}>{entry.label}</Text>
-                    {entry.skipped ? (
-                      <Text style={[styles.reviewValue, { color: c.text, fontStyle: "italic" }]}>Didn&apos;t eat anything</Text>
-                    ) : (
-                      <View style={{ gap: 6 }}>
-                        {entry.items!.map((item, j) => (
-                          <Text key={`${item.food}-${j}`} style={[styles.reviewValue, { color: c.text }]} numberOfLines={4}>
-                            {item.food}
-                            {item.quantity ? ` (${item.quantity})` : ""}
-                          </Text>
-                        ))}
-                      </View>
-                    )}
-                  </View>
+                    label={entry.label}
+                    skipped={entry.skipped}
+                    items={entry.items}
+                    showDivider={index < mealReviewEntries.length - 1}
+                  />
                 ))}
-              </View>
+              </SymptomReviewCard>
             ) : null}
 
             {form.notes?.trim() ? (
-              <View style={[styles.reviewCard, { backgroundColor: c.card, borderColor: c.cardBorder }]}>
-                <Text style={[styles.reviewSectionTitle, { color: c.primary, borderBottomColor: c.cardBorder }]}>Notes</Text>
-                <Text style={[styles.reviewValue, { color: c.text }]}>{form.notes}</Text>
-              </View>
+              <SymptomReviewCard title="Notes">
+                <SymptomReviewNotesBody>{form.notes}</SymptomReviewNotesBody>
+              </SymptomReviewCard>
             ) : null}
           </View>
         ) : null}
@@ -1020,11 +930,11 @@ export function SymptomLogWizardScreen({ user }: { user: SessionUser }) {
         {currentStep > 0 ? (
           <View style={styles.footerBtns}>
             {currentStep < 17 ? (
-              <WizardPrimaryButton title="Next" onPress={applyAdvance} />
+              <PrimaryButton title="Next" onPress={applyAdvance} />
             ) : (
-              <WizardPrimaryButton title={submitting ? "Saving…" : "Submit"} onPress={submit} disabled={submitting} />
+              <PrimaryButton title={submitting ? "Saving…" : "Submit"} onPress={submit} disabled={submitting} />
             )}
-            {currentStep > 1 ? <WizardSecondaryButton title="Previous step" onPress={goBackInternal} /> : null}
+            {currentStep > 1 ? <SecondaryButton title="Previous step" onPress={goBackInternal} /> : null}
           </View>
         ) : null}
       </ScrollView>
@@ -1074,13 +984,10 @@ const styles = StyleSheet.create({
   landingCta: { width: "100%", maxWidth: 360, marginTop: 20 },
   phaseLine: { fontSize: 13, marginBottom: 12, fontFamily: "Inter_500Medium" },
   h3: { fontFamily: "Inter_700Bold", fontSize: 20, marginBottom: 12 },
-  dateBtn: { borderWidth: 1, borderRadius: 10, padding: 14, marginTop: 4 },
   rowGap: { gap: 14, marginTop: 8 },
   radioRow: { flexDirection: "row", alignItems: "center", gap: 10 },
   radioOuter: { width: 22, height: 22, borderRadius: 11, borderWidth: 2, alignItems: "center", justifyContent: "center" },
   radioInner: { width: 12, height: 12, borderRadius: 6 },
-  input: { borderWidth: 1, borderRadius: 10, padding: 12, marginTop: 6 },
-  textarea: { borderWidth: 1, borderRadius: 10, padding: 12, minHeight: 100, textAlignVertical: "top" },
   err: { color: "#b3261e", marginTop: 8, fontSize: 13 },
   mealEntryWrap: { marginBottom: 12 },
   mealEntryWrapFirst: { paddingTop: 6 },
@@ -1098,24 +1005,5 @@ const styles = StyleSheet.create({
     ...Platform.select({ android: { elevation: 4 }, ios: {} }),
   },
   footerBtns: { marginTop: 24, gap: 10 },
-  reviewCard: {
-    borderRadius: 12,
-    borderWidth: 1,
-    padding: 14,
-    marginBottom: 16,
-  },
-  reviewSectionTitle: {
-    fontSize: 16,
-    fontFamily: "Inter_700Bold",
-    paddingBottom: 10,
-    marginBottom: 12,
-    borderBottomWidth: StyleSheet.hairlineWidth,
-  },
-  reviewGrid: { gap: 14 },
-  reviewField: { minWidth: 0 },
-  reviewLabel: { fontSize: 13, marginBottom: 4, fontFamily: "Inter_400Regular" },
-  reviewValue: { fontSize: 15, fontFamily: "Inter_500Medium" },
-  reviewSubsection: { marginTop: 12, paddingTop: 12, borderTopWidth: StyleSheet.hairlineWidth },
-  reviewMealBlock: { minWidth: 0 },
   switchRow: { flexDirection: "row", alignItems: "center", marginTop: 12 },
 });

@@ -31,19 +31,34 @@ import {
   StyleProp,
   StyleSheet,
   Text,
-  TextInput,
-  TextInputProps,
   useWindowDimensions,
   View,
   ViewStyle,
 } from "react-native";
 import { SafeAreaProvider, initialWindowMetrics, useSafeAreaInsets } from "react-native-safe-area-context";
-import { StackedDetailField, StackedMealLine } from "./components/StackedDetailField";
+import {
+  FLARE_BUTTON_BORDER_RADIUS,
+  FLARE_BUTTON_MIN_HEIGHT,
+  FLARE_BUTTON_PADDING_H,
+  PrimaryButton,
+  SecondaryButton,
+} from "./components/FlareButton";
+import { LabeledInput } from "./components/FlareInput";
+import { HeaderOverflowMenu } from "./components/HeaderOverflowMenu";
+import { StackedDetailField } from "./components/StackedDetailField";
+import {
+  SymptomReviewCard,
+  SymptomReviewField,
+  SymptomReviewGrid,
+  SymptomReviewMealBlock,
+  SymptomReviewNotesBody,
+  SymptomReviewSubsection,
+} from "./components/symptomReviewLayout";
 import { FlareThemeProvider, useFlareColors, useFlareTheme } from "./theme";
 import { formatUkDate } from "./lib/formatUkDate";
 import { supabase, TABLES } from "./lib/supabase";
-import { SYMPTOM_WIZARD_PHASES } from "./lib/symptomWizardShared";
 import { dashboardSnapshotByUserId, type DashboardActivityRow, type DashboardSnapshot } from "./lib/dashboardSnapshotCache";
+import { MedicationTrackingWizardScreen } from "./screens/MedicationTrackingWizardScreen";
 import { SymptomLogWizardScreen } from "./screens/SymptomLogWizardScreen";
 
 WebBrowser.maybeCompleteAuthSession();
@@ -82,7 +97,7 @@ type SessionUser = {
 const AUTH_PROVIDER_LABELS: Record<string, string> = {
   google: "Google",
   apple: "Apple",
-  email: "Email code",
+  email: "OTP",
 };
 
 function signInMethodLabelFromAuthUser(u: {
@@ -116,6 +131,21 @@ function sessionUserFromSupabaseAuthUser(u: {
     accountCreatedAt: u.created_at ?? null,
     signInMethodLabel: signInMethodLabelFromAuthUser(u),
   };
+}
+
+function profileDisplayName(user: SessionUser | null | undefined): string | null {
+  const name = user?.displayName?.trim();
+  return name || null;
+}
+
+function profileNeedsSetup(user: SessionUser): boolean {
+  return !profileDisplayName(user);
+}
+
+function firstNameFromSessionUser(user: SessionUser): string {
+  const name = profileDisplayName(user);
+  if (!name) return "there";
+  return name.split(/\s+/).filter(Boolean)[0] ?? "there";
 }
 type Appointment = { id: number; date: string; type: string | null; notes: string | null; time: string | null };
 type Medication = { id: number; name: string; dosage: string | null; time_of_day: string | null };
@@ -199,6 +229,7 @@ function Card({
   style,
   plain,
   compactBody,
+  bordered,
 }: {
   title: string;
   children: React.ReactNode;
@@ -207,10 +238,23 @@ function Card({
   plain?: boolean;
   /** Stack rows flush (e.g. account option list) — no `cardBody` gap between children. */
   compactBody?: boolean;
+  /** 1px Expo `border.default` — omit on panels that wrap horizontal scroll rows. */
+  bordered?: boolean;
 }) {
   const c = useFlareColors();
   return (
-    <View style={[styles.card, style, plain ? { backgroundColor: "transparent", marginBottom: 0 } : { backgroundColor: c.card }]}>
+    <View
+      style={[
+        styles.card,
+        style,
+        plain
+          ? { backgroundColor: "transparent", marginBottom: 0 }
+          : {
+              backgroundColor: c.card,
+              ...(bordered ? { borderWidth: 1, borderColor: c.cardBorder } : null),
+            },
+      ]}
+    >
       {title ? <Text style={[styles.cardTitle, { color: c.text }]}>{title}</Text> : null}
       {
         /** Auth `plain` card uses `flex:1` panels; skipping `cardBody` keeps flex layout valid (nested non-flex wrappers collapse children). */
@@ -261,17 +305,11 @@ function ConfirmModal({
               <SecondaryButton title={cancelLabel} onPress={onCancel} />
             </View>
             <View style={styles.confirmModalActionSlot}>
-              <Pressable
-                accessibilityRole="button"
-                accessibilityLabel={confirmLabel}
+              <PrimaryButton
+                title={confirmLabel}
                 onPress={onConfirm}
-                style={[
-                  styles.button,
-                  { backgroundColor: confirmDestructive ? c.destructiveFill : c.primary },
-                ]}
-              >
-                <Text style={[styles.buttonText, { color: c.white }]}>{confirmLabel}</Text>
-              </Pressable>
+                variant={confirmDestructive ? "destructive" : "default"}
+              />
             </View>
           </View>
         </View>
@@ -297,122 +335,46 @@ function SplashScreen() {
   );
 }
 
-function LabeledInput({
-  label,
-  error,
-  style,
-  onPrimary,
-  ...props
-}: { label: string; error?: string; onPrimary?: boolean } & TextInputProps) {
-  const c = useFlareColors();
-  const onBlue = Boolean(onPrimary);
-  return (
-    <View style={styles.fieldBlock}>
-      <Text style={[styles.label, { color: onBlue ? "rgba(255,255,255,0.92)" : c.textSecondary }]}>{label}</Text>
-      <TextInput
-        style={[
-          styles.input,
-          onBlue
-            ? { backgroundColor: c.white, borderColor: "rgba(255,255,255,0.45)", color: c.text }
-            : { backgroundColor: c.inputBg, borderColor: c.inputBorder, color: c.text },
-          style,
-        ]}
-        placeholderTextColor={onBlue ? "rgba(15,23,42,0.45)" : c.textMuted}
-        {...props}
-      />
-      {error ? <Text style={[styles.fieldError, { color: c.danger }]}>{error}</Text> : null}
-    </View>
-  );
-}
+type SignOutReason = "logout" | "account_deleted";
 
-function PrimaryButton({
-  title,
-  onPress,
-  disabled,
-  fitContent,
-  variant,
-}: {
-  title: string;
-  onPress: () => void;
-  disabled?: boolean;
-  /** Width follows label + padding instead of stretching full row. */
-  fitContent?: boolean;
-  variant?: "default" | "onPrimary" | "destructive";
-}) {
+const SIGN_OUT_COPY: Record<SignOutReason, { title: string; message: string }> = {
+  logout: {
+    title: "You've been logged out",
+    message: "Your session has ended.",
+  },
+  account_deleted: {
+    title: "Account deleted",
+    message: "Your account and associated data have been permanently deleted.",
+  },
+};
+
+/** Shown after an explicit sign-out before returning to the login screen. */
+function SignedOutScreen({ reason, onContinue }: { reason: SignOutReason; onContinue: () => void }) {
   const c = useFlareColors();
-  const onPrimary = variant === "onPrimary";
-  const destructive = variant === "destructive";
+  const insets = useSafeAreaInsets();
+  const copy = SIGN_OUT_COPY[reason];
+
   return (
-    <Pressable
-      onPress={onPress}
-      disabled={disabled}
+    <View
       style={[
-        styles.button,
-        fitContent ? { alignSelf: "flex-start" } : null,
-        onPrimary
-          ? { backgroundColor: disabled ? "rgba(255,255,255,0.45)" : c.white }
-          : destructive
-            ? { backgroundColor: c.destructiveFill, opacity: disabled ? 0.5 : 1 }
-            : { backgroundColor: disabled ? c.primaryDisabledBg : c.primary },
+        styles.signedOutScreen,
+        {
+          backgroundColor: c.screen,
+          paddingTop: insets.top + 16,
+          paddingBottom: insets.bottom + 24,
+          paddingHorizontal: SCREEN_EDGE_PADDING,
+        },
       ]}
     >
-      <Text
-        style={[
-          styles.buttonText,
-          onPrimary
-            ? { color: c.primary, ...(disabled ? { opacity: 0.55 } : null) }
-            : { color: c.white },
-        ]}
-      >
-        {title}
-      </Text>
-    </Pressable>
-  );
-}
-
-function SecondaryButton({
-  title,
-  onPress,
-  disabled,
-  leftIcon,
-  variant,
-  titleColor,
-  softOutline,
-}: {
-  title: string;
-  onPress: () => void;
-  disabled?: boolean;
-  leftIcon?: React.ReactNode;
-  variant?: "default" | "onPrimary";
-  titleColor?: "default" | "primary";
-  /** Lighter edge (e.g. dashboard Recent logs) — still bordered, not as heavy as default. */
-  softOutline?: boolean;
-}) {
-  const c = useFlareColors();
-  const onPrimary = variant === "onPrimary";
-  const labelColor = onPrimary ? c.white : titleColor === "primary" ? c.primary : c.secondaryBtnText;
-  const outline = onPrimary
-    ? softOutline
-      ? { borderWidth: StyleSheet.hairlineWidth, borderColor: "rgba(255,255,255,0.28)" }
-      : { borderWidth: 1, borderColor: "rgba(255,255,255,0.55)" }
-    : softOutline
-      ? { borderWidth: StyleSheet.hairlineWidth, borderColor: c.cardBorder }
-      : { borderWidth: 1, borderColor: c.secondaryBtnBorder };
-  return (
-    <Pressable
-      onPress={onPress}
-      disabled={disabled}
-      style={[
-        styles.buttonSecondary,
-        onPrimary ? { backgroundColor: "rgba(255,255,255,0.12)", ...outline } : { backgroundColor: c.secondaryBtnBg, ...outline },
-        disabled ? { opacity: 0.55 } : null,
-      ]}
-    >
-      <View style={styles.buttonSecondaryContent}>
-        {leftIcon ? leftIcon : null}
-        <Text style={[styles.buttonSecondaryText, { color: labelColor }]}>{title}</Text>
+      <View style={styles.signedOutCard}>
+        <Ionicons name="checkmark-circle" size={72} color={c.primary} accessibilityIgnoresInvertColors />
+        <Text style={[styles.signedOutTitle, { color: c.text }]}>{copy.title}</Text>
+        <Text style={[styles.signedOutMessage, { color: c.textMuted }]}>{copy.message}</Text>
+        <View style={styles.signedOutActions}>
+          <PrimaryButton title="Sign in" onPress={onContinue} />
+        </View>
       </View>
-    </Pressable>
+    </View>
   );
 }
 
@@ -529,7 +491,10 @@ function AuthScreen({
       return;
     }
     setStep("code");
-    Alert.alert("Check your email", "Enter the 6-digit code we sent.");
+    Alert.alert(
+      "Check your email",
+      "We've sent a 6-digit code to the email you entered. It may take a minute to arrive.",
+    );
   };
 
   const verifyOtpCode = async ({ otpCode }: { otpCode: string }) => {
@@ -627,7 +592,7 @@ function AuthScreen({
       <View style={styles.authShell}>
         <View style={styles.authBrandBlock}>
           <Image source={SPLASH_MARK_IMAGE} style={styles.authLogo} resizeMode="contain" />
-          <Text style={[styles.splashBrand, { color: authBlue ? cAuth.white : cAuth.text }]}>FlareCare</Text>
+          <Text style={[styles.authBrandName, { color: authBlue ? cAuth.white : cAuth.text }]}>FlareCare</Text>
         </View>
         <Card title="" plain style={styles.authCardPlain}>
           {step === "method" ? (
@@ -650,6 +615,22 @@ function AuthScreen({
                   variant={onPrimaryChrome ? "onPrimary" : "default"}
                   leftIcon={<Ionicons name="logo-google" size={16} color={onPrimaryChrome ? "#ffffff" : cAuth.secondaryBtnText} />}
                 />
+              </View>
+              <View style={styles.authSecureNote}>
+                <Ionicons
+                  name="lock-closed-outline"
+                  size={13}
+                  color={onPrimaryChrome ? "rgba(255,255,255,0.75)" : cAuth.textMuted}
+                  accessibilityIgnoresInvertColors
+                />
+                <Text
+                  style={[
+                    styles.authSecureNoteText,
+                    { color: onPrimaryChrome ? "rgba(255,255,255,0.75)" : cAuth.textMuted },
+                  ]}
+                >
+                  Secure sign-in
+                </Text>
               </View>
             </View>
           ) : step === "email" ? (
@@ -700,6 +681,15 @@ function AuthScreen({
           ) : (
             <View style={styles.authFlowPanel}>
               <View style={styles.authFormCenter}>
+                <Text
+                  style={[
+                    styles.authPromptSub,
+                    styles.authEmailHelperSub,
+                    { color: onPrimaryChrome ? "rgba(255,255,255,0.88)" : cAuth.textMuted },
+                  ]}
+                >
+                  Enter the 6-digit code from your inbox.
+                </Text>
                 <Controller
                   control={codeControl}
                   name="otpCode"
@@ -742,11 +732,122 @@ function AuthScreen({
   );
 }
 
+/** One-time after email (or other) sign-in when `user_metadata.full_name` is missing. */
+function ProfileSetupScreen({ user, onComplete }: { user: SessionUser; onComplete: (u: SessionUser) => void }) {
+  const cAuth = useFlareColors();
+  const insets = useSafeAreaInsets();
+  const authBlue = !cAuth.isDark;
+  const onPrimaryChrome = authBlue;
+  const [saving, setSaving] = useState(false);
+
+  const profileSchema = useMemo(
+    () =>
+      yup.object({
+        fullName: yup.string().trim().required("Full name is required").min(2, "Enter at least 2 characters"),
+      }),
+    [],
+  );
+
+  const {
+    control,
+    handleSubmit,
+    formState: { errors: profileErrors },
+  } = useForm<{ fullName: string }>({
+    defaultValues: { fullName: "" },
+    resolver: yupResolver(profileSchema),
+    mode: "onSubmit",
+  });
+
+  const saveProfile = async ({ fullName }: { fullName: string }) => {
+    const trimmed = fullName.trim();
+    setSaving(true);
+    const { error } = await supabase.auth.updateUser({ data: { full_name: trimmed } });
+    if (error) {
+      setSaving(false);
+      Alert.alert("Could not save profile", error.message);
+      return;
+    }
+    const { data: sessionData } = await supabase.auth.getSession();
+    setSaving(false);
+    const refreshed = sessionData.session?.user;
+    if (refreshed) {
+      onComplete(sessionUserFromSupabaseAuthUser(refreshed));
+      return;
+    }
+    onComplete({ ...user, displayName: trimmed });
+  };
+
+  return (
+    <View
+      style={[
+        styles.authScreenFill,
+        {
+          backgroundColor: authBlue ? cAuth.primary : cAuth.screen,
+          paddingTop: insets.top + 20,
+          paddingBottom: Math.max(insets.bottom, 12),
+          paddingHorizontal: SCREEN_EDGE_PADDING,
+        },
+      ]}
+    >
+      <View style={styles.authShell}>
+        <View style={styles.authBrandBlock}>
+          <Image source={SPLASH_MARK_IMAGE} style={styles.authLogo} resizeMode="contain" />
+          <Text style={[styles.authBrandName, { color: authBlue ? cAuth.white : cAuth.text }]}>FlareCare</Text>
+        </View>
+        <Card title="" plain style={styles.authCardPlain}>
+          <View style={styles.authFlowPanel}>
+            <View style={styles.authFormCenter}>
+              <Text style={[styles.authPromptTitle, { color: onPrimaryChrome ? cAuth.white : cAuth.text }]}>
+                Almost there!
+              </Text>
+              <Text
+                style={[
+                  styles.authPromptSub,
+                  styles.authEmailHelperSub,
+                  { color: onPrimaryChrome ? "rgba(255,255,255,0.88)" : cAuth.textMuted },
+                ]}
+              >
+                Add your name so we can personalise your dashboard and account.
+              </Text>
+              <Controller
+                control={control}
+                name="fullName"
+                render={({ field: { onChange, value } }) => (
+                  <LabeledInput
+                    label="Full name"
+                    value={value}
+                    onChangeText={onChange}
+                    placeholder="Your full name"
+                    autoCapitalize="words"
+                    autoComplete="name"
+                    error={profileErrors.fullName?.message}
+                    onPrimary={onPrimaryChrome}
+                  />
+                )}
+              />
+            </View>
+            <View style={styles.authBottomActions}>
+              <PrimaryButton
+                title={saving ? "Saving…" : "Continue"}
+                onPress={handleSubmit(saveProfile)}
+                disabled={saving}
+                variant={onPrimaryChrome ? "onPrimary" : "default"}
+              />
+              <View style={styles.authBottomActionSpacer} accessibilityElementsHidden importantForAccessibility="no-hide-descendants" />
+            </View>
+          </View>
+        </Card>
+      </View>
+    </View>
+  );
+}
+
 /** Icons inside dashboard home tiles (Daily Check-in + More). */
 const HOME_TILE_ICON_SIZE = 34;
 
 /** Show bottom shortcuts on dashboard + primary tab destinations; hide on wizard/detail flows, Hydration, etc. */
-const BOTTOM_BAR_VISIBLE_ROUTES = new Set(["Dashboard", "Meds", "Ibd", "Account", "About"]);
+/** Only bottom-bar tab roots — not individual “More” / check-in screens (go Home to switch tab). */
+const BOTTOM_BAR_VISIBLE_ROUTES = new Set(["Dashboard", "Account", "Reminders"]);
 
 /** Padding uses this screen’s route—not the globally focused route—so the exiting page doesn’t jump during transitions. */
 function useBottomTabScrollInset() {
@@ -757,26 +858,51 @@ function useBottomTabScrollInset() {
 
 /** Matches `styles.screen` edge padding (used to size Daily Check-in row). */
 const SCREEN_EDGE_PADDING = 12;
-/**
- * Inset inside symptom-detail grey section trays — matches `styles.recentLogsRow` (symptom history list).
- * Row `style` overrides `StackedDetailField` / `StackedMealLine` default vertical padding so horizontal and vertical match.
- */
-const SYMPTOM_DETAIL_SECTION_INSET = 12;
-const SYMPTOM_DETAIL_SECTION_TRAY_ROW_STYLE = {
-  paddingTop: SYMPTOM_DETAIL_SECTION_INSET,
-  paddingBottom: SYMPTOM_DETAIL_SECTION_INSET,
-} as const;
-const SYMPTOM_DETAIL_SECTION_NOTES_WELL_STYLE = {
-  paddingTop: SYMPTOM_DETAIL_SECTION_INSET,
-  paddingBottom: SYMPTOM_DETAIL_SECTION_INSET,
-  paddingHorizontal: SYMPTOM_DETAIL_SECTION_INSET,
-} as const;
 /** Space between sibling home tiles: Daily Check-in `marginRight` + More grid `gap`. */
 const HOME_TILE_GAP = 16;
 
 /** Dashboard / history lists — symptom log id + time. */
 type RecentLogListRow = { id: string; created_at: string };
-type MedicationLogListRow = RecentLogListRow & { name?: string | null };
+
+type MedicationLogDetailItem = {
+  medication: string;
+  date: string;
+  timeOfDay: string;
+  dosage?: string;
+};
+
+function parseMedicationLogList(raw: unknown, withDosage: boolean): MedicationLogDetailItem[] {
+  if (!Array.isArray(raw)) return [];
+  return raw
+    .map((entry) => {
+      if (!entry || typeof entry !== "object") return null;
+      const r = entry as Record<string, unknown>;
+      const medication = String(r.medication ?? "").trim();
+      if (!medication) return null;
+      let date = "";
+      const rawDate = r.date;
+      if (typeof rawDate === "string" && rawDate.trim()) {
+        const iso = rawDate.match(/^(\d{4}-\d{2}-\d{2})/);
+        date = iso ? iso[1] : rawDate;
+      } else if (rawDate != null) {
+        const parsed = new Date(String(rawDate));
+        if (!Number.isNaN(parsed.getTime())) {
+          date = `${parsed.getFullYear()}-${String(parsed.getMonth() + 1).padStart(2, "0")}-${String(parsed.getDate()).padStart(2, "0")}`;
+        }
+      }
+      const dosageRaw = String(r.dosage ?? "").trim();
+      const item: MedicationLogDetailItem = {
+        medication,
+        date,
+        timeOfDay: String(r.timeOfDay ?? r.time_of_day ?? "").trim(),
+      };
+      if (withDosage) {
+        item.dosage = dosageRaw || "N/A";
+      }
+      return item;
+    })
+    .filter((item): item is MedicationLogDetailItem => item != null);
+}
 
 function formatRecentLogTime(iso: string) {
   try {
@@ -884,7 +1010,7 @@ function DashboardScreen({ user }: { user: SessionUser }) {
   const hydrationTarget = 6;
   const dailyCheckinCards = [
     { key: "symptoms" as const, label: "Log Symptoms", icon: "thermometer", family: "mci", goTo: "SymptomLogWizard" },
-    { key: "track-meds" as const, label: "Track Medications", icon: "pill", family: "mci", goTo: "Meds" },
+    { key: "track-meds" as const, label: "Track Medications", icon: "pill", family: "mci", goTo: "MedicationTrackingWizard" },
     { key: "hydration" as const, label: "Hydration", icon: "water", family: "mci", goTo: "Hydration" },
     { key: "bowel" as const, label: "Bowel Movements", icon: "stomach", family: "mci", goTo: "Bowel" },
   ];
@@ -894,14 +1020,14 @@ function DashboardScreen({ user }: { user: SessionUser }) {
     { key: "weight", label: "My Weight", screen: "Weight" as const, icon: "scale-bathroom", family: "mci" as const },
     { key: "appointments", label: "Appointments", screen: "Appointments" as const, icon: "calendar-outline", family: "ion" as const },
   ];
-  const computedGreetingFirst = (user.displayName || user.email?.split("@")[0] || "there").split(" ")[0];
+  const computedGreetingFirst = firstNameFromSessionUser(user);
   useEffect(() => {
     if (computedGreetingFirst !== "there") dashboardGreetingFirstNameByUserId[user.id] = computedGreetingFirst;
   }, [computedGreetingFirst, user.id]);
   const greetingFirstName =
     computedGreetingFirst !== "there"
       ? computedGreetingFirst
-      : dashboardGreetingFirstNameByUserId[user.id] ?? computedGreetingFirst;
+      : dashboardGreetingFirstNameByUserId[user.id] ?? "there";
   const todayLabel = `${new Date().toLocaleDateString("en-GB", { weekday: "long" })}, ${formatUkDate(new Date())}`;
   const formatRelativeTime = (timestamp: number) => {
     const diffMinutes = Math.floor((Date.now() - timestamp) / (1000 * 60));
@@ -1349,6 +1475,17 @@ function SymptomHistoryScreen({ user }: { user: SessionUser }) {
   return (
     <ScrollView style={[styles.screen, { backgroundColor: c.screen }]} contentContainerStyle={{ paddingBottom: bottomScrollInset }}>
       <Card title="Symptom logs">
+        <Text
+          style={{
+            marginBottom: 12,
+            fontSize: 14,
+            fontFamily: "Inter_400Regular",
+            lineHeight: 22,
+            color: c.textMuted,
+          }}
+        >
+          Logs show what you reported on the day your symptoms started, not for every day of the symptom duration.
+        </Text>
         <View style={styles.detailFieldsStack}>
           {rows.length === 0 ? (
             <Text style={[styles.muted, { color: c.textMuted }]}>No symptoms logged yet.</Text>
@@ -1365,24 +1502,13 @@ function SymptomHistoryScreen({ user }: { user: SessionUser }) {
                   ]}
                 >
                   <View style={{ flex: 1, paddingRight: 8 }}>
-                    <Text style={[styles.recentLogsRowDate, { color: c.text }]}>{formatUkDate(row.created_at)}</Text>
+                    <Text style={[styles.recentLogsRowDate, { color: c.textSecondary }]}>{formatUkDate(row.created_at)}</Text>
                   </View>
                   <Text style={[styles.recentLogsRowTime, { color: c.textMuted }]}>{formatRecentLogTime(row.created_at)}</Text>
                 </Pressable>
               ))}
             </View>
           )}
-          <Text
-            style={{
-              marginTop: rows.length === 0 ? 12 : 14,
-              fontSize: 14,
-              fontFamily: "Inter_400Regular",
-              lineHeight: 22,
-              color: c.textMuted,
-            }}
-          >
-            Logs show what you reported on the day your symptoms started, not for every day of the symptom duration.
-          </Text>
         </View>
       </Card>
       <PrimaryButton title="Log a symptom" onPress={() => navigation.navigate("SymptomLogWizard")} />
@@ -1418,6 +1544,14 @@ function pickSymptomField(row: Record<string, unknown>, snake: string, camel?: s
   if (row[snake] !== undefined && row[snake] !== null) return row[snake];
   if (camel !== undefined && row[camel] !== undefined && row[camel] !== null) return row[camel];
   return undefined;
+}
+
+function formatSymptomScoreDisplay(raw: unknown): string {
+  if (raw === undefined || raw === null) return "Not set";
+  const s = String(raw).trim();
+  if (!s) return "Not set";
+  if (/^\d+$/.test(s)) return `${s}/10`;
+  return s;
 }
 
 function SymptomDetailScreen({ user }: { user: SessionUser }) {
@@ -1459,9 +1593,7 @@ function SymptomDetailScreen({ user }: { user: SessionUser }) {
   const isOngoing = Boolean(pickSymptomField(row ?? {}, "is_ongoing", "isOngoing")) || !String(symptomEnd ?? "").trim();
 
   const severityRaw = row ? pickSymptomField(row, "severity") : undefined;
-  const severityLabel = severityRaw !== undefined && severityRaw !== null ? String(severityRaw) : "Not logged";
   const stressRaw = row ? pickSymptomField(row, "stress_level") : undefined;
-  const stressLabel = stressRaw !== undefined && stressRaw !== null ? String(stressRaw) : "Not logged";
 
   const bathroomChanged = row ? pickSymptomField(row, "bathroom_frequency_changed") : undefined;
   const bathroomChangeDetails = String(pickSymptomField(row ?? {}, "bathroom_frequency_change_details") ?? "").trim();
@@ -1477,76 +1609,292 @@ function SymptomDetailScreen({ user }: { user: SessionUser }) {
   const drankOnDay = row ? pickSymptomField(row, "drank_on_symptom_day") : undefined;
   const alcoholUnits = String(pickSymptomField(row ?? {}, "alcohol_units_on_symptom_day") ?? "").trim();
 
-  const hasLifestyleRowsAfterSmoked =
-    typeof drankOnDay !== "boolean" ||
-    (alcohol === true && !!averageAlcohol) ||
-    (typeof drankOnDay === "boolean" && drankOnDay === true && !!alcoholUnits);
-
-  const hasRowAfterAverageAlcohol = typeof drankOnDay === "boolean" && drankOnDay === true && !!alcoholUnits;
-
-  const hasLifestyleRowsAfterBathroomDescription =
-    typeof smokedOnDay !== "boolean" ||
-    (smoker === true && !!smokingHabits) ||
-    (typeof smokedOnDay === "boolean" && smokedOnDay === true && !!smokedAmount) ||
-    typeof drankOnDay !== "boolean" ||
-    (alcohol === true && !!averageAlcohol) ||
-    (typeof drankOnDay === "boolean" && drankOnDay === true && !!alcoholUnits);
-
   const breakfast = parseSymptomMealArray(row ? pickSymptomField(row, "breakfast") : undefined);
   const lunch = parseSymptomMealArray(row ? pickSymptomField(row, "lunch") : undefined);
   const dinner = parseSymptomMealArray(row ? pickSymptomField(row, "dinner") : undefined);
-  const hasMeals = breakfast.length > 0 || lunch.length > 0 || dinner.length > 0;
 
   const notesText = String(pickSymptomField(row ?? {}, "notes") ?? "").trim();
-
-  /** Hairline under Smoked when meals/notes follow so it is not visually grouped with Breakfast. */
-  const showDividerAfterSmoked = hasLifestyleRowsAfterSmoked || hasMeals || !!notesText;
 
   const startStr = String(symptomStart ?? "").trim();
   const timelineStart =
     (startStr ? formatUkDate(startStr) : "") || (createdIso ? formatUkDate(createdIso) : "") || "Not set";
   const timelineEnd = String(symptomEnd ?? "").trim();
 
-  const detailRow = (label: string, value: string, showDivider = true, insetRow = false, sectionTray = false) => (
-    <StackedDetailField
-      label={label}
-      value={value}
-      showDivider={showDivider}
-      numberOfLines={8}
-      insetRow={insetRow}
-      valueColor={c.textSecondary}
-      style={sectionTray ? SYMPTOM_DETAIL_SECTION_TRAY_ROW_STYLE : undefined}
-    />
-  );
+  const isFirstTimeLifestyle = typeof smokedOnDay !== "boolean" && typeof drankOnDay !== "boolean";
 
-  /** Same shell as grouped lifestyle / meal sections on symptom detail. */
-  const mealDetailGroup = {
-    alignSelf: "stretch" as const,
-    backgroundColor: c.surfaceSubtle,
-    borderRadius: 10,
-    overflow: "hidden" as const,
-    paddingHorizontal: SYMPTOM_DETAIL_SECTION_INSET,
-  };
+  const showLifestyleCard =
+    isFirstTimeLifestyle ||
+    typeof smokedOnDay === "boolean" ||
+    typeof drankOnDay === "boolean";
 
-  const mealSectionInTray = (title: string, items: unknown[]) => {
-    if (items.length === 0) return null;
+  const mealDetailEntries = (() => {
+    const entries: { label: string; items: { food: string; quantity: string }[] }[] = [];
+    const add = (label: string, items: unknown[]) => {
+      const parsed = items.map(getMealFieldsForDetail).filter((i) => i.food.trim());
+      if (parsed.length) entries.push({ label, items: parsed });
+    };
+    add("Breakfast", breakfast);
+    add("Lunch", lunch);
+    add("Dinner", dinner);
+    return entries;
+  })();
+
+  if (loading) {
     return (
-      <View style={mealDetailGroup}>
-        <StackedDetailField label={title} insetRow={false} style={SYMPTOM_DETAIL_SECTION_TRAY_ROW_STYLE} />
-        {items.map((meal, index) => {
-          const { food, quantity } = getMealFieldsForDetail(meal);
-          return (
-            <StackedMealLine
-              key={`${title}-${index}`}
-              food={food}
-              quantity={quantity}
-              insetRow={false}
-              valueColor={c.textSecondary}
-              style={SYMPTOM_DETAIL_SECTION_TRAY_ROW_STYLE}
-            />
-          );
-        })}
+      <View style={[styles.screen, styles.centered, { backgroundColor: c.screen, paddingBottom: bottomScrollInset }]}>
+        <ActivityIndicator color={c.primary} />
+        <Text style={[styles.muted, { color: c.textMuted, marginTop: 12 }]}>Loading…</Text>
       </View>
+    );
+  }
+
+  if (!row) {
+    return (
+      <ScrollView style={[styles.screen, { backgroundColor: c.screen }]} contentContainerStyle={{ paddingBottom: bottomScrollInset + 24 }}>
+        <Text style={[styles.muted, { color: c.textMuted }]}>Could not load this entry.</Text>
+      </ScrollView>
+    );
+  }
+
+  const smokedReviewValue =
+    typeof smokedOnDay === "boolean"
+      ? smokedOnDay
+        ? smokedAmount || "Yes"
+        : "No"
+      : smoker === true
+        ? "Yes"
+        : smoker === false
+          ? "No"
+          : "Not recorded";
+
+  const alcoholUnitsReviewValue =
+    typeof drankOnDay === "boolean"
+      ? drankOnDay
+        ? alcoholUnits
+          ? `${alcoholUnits} units`
+          : "Yes"
+        : "No"
+      : alcohol === true
+        ? "Yes"
+        : alcohol === false
+          ? "No"
+          : "Not recorded";
+
+  return (
+    <ScrollView style={[styles.screen, { backgroundColor: c.screen }]} contentContainerStyle={{ paddingBottom: bottomScrollInset + 24 }}>
+      {createdSubtitle ? (
+        <Text style={[styles.symptomDetailLoggedAt, { color: c.textMuted }]}>{createdSubtitle}</Text>
+      ) : null}
+
+      <SymptomReviewCard title="Basic Information">
+        <SymptomReviewGrid>
+          <SymptomReviewField label="Start Date" value={timelineStart} />
+          <SymptomReviewField label="Status" value={isOngoing ? "Ongoing" : "Ended"} />
+          {!isOngoing && timelineEnd ? <SymptomReviewField label="End Date" value={formatUkDate(timelineEnd)} /> : null}
+          <SymptomReviewField label="Severity" value={formatSymptomScoreDisplay(severityRaw)} />
+          <SymptomReviewField label="Stress Level" value={formatSymptomScoreDisplay(stressRaw)} />
+        </SymptomReviewGrid>
+      </SymptomReviewCard>
+
+      <SymptomReviewCard title="Bathroom Frequency">
+        <SymptomReviewGrid>
+          <SymptomReviewField
+            label="Frequency"
+            value={normalBathroom ? `${normalBathroom} times/day` : "Not set"}
+          />
+          {bathroomChanged ? (
+            <SymptomReviewField label="Frequency Changed" value={bathroomChanged === "yes" ? "Yes" : "No"} />
+          ) : null}
+        </SymptomReviewGrid>
+        {bathroomChanged === "yes" && bathroomChangeDetails ? (
+          <SymptomReviewSubsection label="Change Description" value={bathroomChangeDetails} />
+        ) : null}
+      </SymptomReviewCard>
+
+      {showLifestyleCard ? (
+        <SymptomReviewCard title="Lifestyle">
+          <SymptomReviewGrid>
+            {isFirstTimeLifestyle && (smoker === true || smoker === false) ? (
+              <SymptomReviewField label="Smoker" value={smoker === true ? "Yes" : "No"} />
+            ) : null}
+            {isFirstTimeLifestyle && smoker === true && smokingHabits ? (
+              <SymptomReviewField label="Smoking Habits" value={smokingHabits} />
+            ) : null}
+            {!isFirstTimeLifestyle && typeof smokedOnDay === "boolean" ? (
+              <SymptomReviewField label="Smoked" value={smokedReviewValue} />
+            ) : null}
+            {isFirstTimeLifestyle && smoker === true && smokedAmount ? (
+              <SymptomReviewField label="Smoked" value={smokedAmount} />
+            ) : null}
+            {isFirstTimeLifestyle && (alcohol === true || alcohol === false) ? (
+              <SymptomReviewField label="Alcohol" value={alcohol === true ? "Yes" : "No"} />
+            ) : null}
+            {isFirstTimeLifestyle && alcohol === true && averageAlcohol ? (
+              <SymptomReviewField label="Alcohol Habits (on average)" value={`${averageAlcohol} units/week`} />
+            ) : null}
+            {!isFirstTimeLifestyle && typeof drankOnDay === "boolean" ? (
+              <SymptomReviewField label="Alcohol Units Consumed" value={alcoholUnitsReviewValue} />
+            ) : null}
+            {isFirstTimeLifestyle && alcohol === true && alcoholUnits ? (
+              <SymptomReviewField label="Alcohol Units Consumed" value={`${alcoholUnits} units`} />
+            ) : null}
+          </SymptomReviewGrid>
+        </SymptomReviewCard>
+      ) : null}
+
+      {mealDetailEntries.length > 0 ? (
+        <SymptomReviewCard title="Meals">
+          {mealDetailEntries.map((entry, index) => (
+            <SymptomReviewMealBlock
+              key={entry.label}
+              label={entry.label}
+              items={entry.items}
+              showDivider={index < mealDetailEntries.length - 1}
+            />
+          ))}
+        </SymptomReviewCard>
+      ) : null}
+
+      {notesText ? (
+        <SymptomReviewCard title="Notes">
+          <SymptomReviewNotesBody>{notesText}</SymptomReviewNotesBody>
+        </SymptomReviewCard>
+      ) : null}
+    </ScrollView>
+  );
+}
+
+function MedicationTrackingHistoryScreen({ user }: { user: SessionUser }) {
+  const navigation = useNavigation<any>();
+  const c = useFlareColors();
+  const bottomScrollInset = useBottomTabScrollInset();
+  const [rows, setRows] = useState<RecentLogListRow[]>([]);
+  const load = useCallback(async () => {
+    const { data } = await supabase
+      .from(TABLES.LOG_MEDICATIONS)
+      .select("id,created_at")
+      .eq("user_id", user.id)
+      .order("created_at", { ascending: false })
+      .limit(100);
+    setRows((data ?? []) as RecentLogListRow[]);
+  }, [user.id]);
+  useFocusEffect(
+    useCallback(() => {
+      load();
+    }, [load]),
+  );
+  return (
+    <ScrollView style={[styles.screen, { backgroundColor: c.screen }]} contentContainerStyle={{ paddingBottom: bottomScrollInset }}>
+      <Card title="Medication logs">
+        <Text
+          style={{
+            marginBottom: 12,
+            fontSize: 14,
+            fontFamily: "Inter_400Regular",
+            lineHeight: 22,
+            color: c.textMuted,
+          }}
+        >
+          These logs include prescribed medications you missed, and any NSAIDs and antibiotics you took during a specific period.
+        </Text>
+        <View style={styles.detailFieldsStack}>
+          {rows.length === 0 ? (
+            <Text style={[styles.muted, { color: c.textMuted }]}>No medication tracking logs yet.</Text>
+          ) : (
+            <View style={[styles.activityListWrap, { backgroundColor: c.surfaceSubtle }]}>
+              {rows.map((row, index) => (
+                <Pressable
+                  key={String(row.id)}
+                  accessibilityRole="button"
+                  onPress={() => navigation.navigate("MedicationLogDetail", { id: String(row.id) })}
+                  style={[
+                    styles.recentLogsRow,
+                    index !== rows.length - 1 ? [styles.activityNoteRowDivider, { borderBottomColor: c.cardBorder }] : null,
+                  ]}
+                >
+                  <View style={{ flex: 1, paddingRight: 8 }}>
+                    <Text style={[styles.recentLogsRowDate, { color: c.textSecondary }]}>{formatUkDate(row.created_at)}</Text>
+                  </View>
+                  <Text style={[styles.recentLogsRowTime, { color: c.textMuted }]}>{formatRecentLogTime(row.created_at)}</Text>
+                </Pressable>
+              ))}
+            </View>
+          )}
+        </View>
+      </Card>
+      <PrimaryButton title="Track medications" onPress={() => navigation.navigate("MedicationTrackingWizard")} />
+    </ScrollView>
+  );
+}
+
+function MedicationLogDetailScreen({ user }: { user: SessionUser }) {
+  const route = useRoute();
+  const c = useFlareColors();
+  const bottomScrollInset = useBottomTabScrollInset();
+  const id = String((route.params as { id?: string })?.id ?? "");
+  const [loading, setLoading] = useState(true);
+  const [row, setRow] = useState<Record<string, unknown> | null>(null);
+  const load = useCallback(async () => {
+    if (!id) {
+      setRow(null);
+      setLoading(false);
+      return;
+    }
+    setLoading(true);
+    const { data, error } = await supabase.from(TABLES.LOG_MEDICATIONS).select("*").eq("user_id", user.id).eq("id", id).maybeSingle();
+    if (error) {
+      setRow(null);
+    } else {
+      setRow((data as Record<string, unknown>) ?? null);
+    }
+    setLoading(false);
+  }, [user.id, id]);
+  useEffect(() => {
+    load();
+  }, [load]);
+
+  const createdIso = row?.created_at != null ? String(row.created_at) : "";
+  const createdDate = createdIso ? new Date(createdIso) : null;
+  const createdSubtitle =
+    createdDate && !Number.isNaN(createdDate.getTime())
+      ? `${createdDate.toLocaleDateString("en-GB", { weekday: "long", day: "numeric", month: "short", year: "numeric" })} at ${createdDate.toLocaleTimeString(undefined, { hour: "2-digit", minute: "2-digit" })}`
+      : "";
+
+  const missedItems = parseMedicationLogList(row?.missed_medications_list, false);
+  const nsaidItems = parseMedicationLogList(row?.nsaid_list, true);
+  const antibioticItems = parseMedicationLogList(row?.antibiotic_list, true);
+
+  const renderListSection = (
+    title: string,
+    items: MedicationLogDetailItem[],
+    showDosage: boolean,
+  ) => {
+    if (!items.length) return null;
+    return (
+      <SymptomReviewCard title={title}>
+        {items.map((item, index) => (
+          <View
+            key={`${item.medication}-${index}`}
+            style={
+              index < items.length - 1
+                ? {
+                    borderBottomWidth: StyleSheet.hairlineWidth,
+                    borderBottomColor: c.cardBorder,
+                    paddingBottom: 14,
+                    marginBottom: 14,
+                  }
+                : undefined
+            }
+          >
+            <SymptomReviewGrid>
+              <SymptomReviewField label="Medication" value={item.medication} />
+              {showDosage ? <SymptomReviewField label="Dosage" value={item.dosage || "N/A"} /> : null}
+              <SymptomReviewField label="Date" value={item.date ? formatUkDate(item.date) : "N/A"} />
+              <SymptomReviewField label="Time of Day" value={item.timeOfDay || "N/A"} />
+            </SymptomReviewGrid>
+          </View>
+        ))}
+      </SymptomReviewCard>
     );
   };
 
@@ -1562,400 +1910,28 @@ function SymptomDetailScreen({ user }: { user: SessionUser }) {
   if (!row) {
     return (
       <ScrollView style={[styles.screen, { backgroundColor: c.screen }]} contentContainerStyle={{ paddingBottom: bottomScrollInset + 24 }}>
-        <Card title="" style={styles.symptomDetailOuterCard}>
-          <Text style={[styles.muted, { color: c.textMuted }]}>Could not load this entry.</Text>
-        </Card>
+        <Text style={[styles.muted, { color: c.textMuted }]}>Could not load this entry.</Text>
       </ScrollView>
     );
   }
 
-  const durationPhaseLabel = SYMPTOM_WIZARD_PHASES.find((p) => p.id === "timing")?.label ?? "Duration";
-  const severityStressPhaseLabel = SYMPTOM_WIZARD_PHASES.find((p) => p.id === "severity")?.label ?? "Severity & stress";
-  const bathroomPhaseLabel = SYMPTOM_WIZARD_PHASES.find((p) => p.id === "bathroom")?.label ?? "Bathroom frequency";
-  const lifestylePhaseLabel = SYMPTOM_WIZARD_PHASES.find((p) => p.id === "lifestyle")?.label ?? "Lifestyle";
-  const mealsPhaseLabel = SYMPTOM_WIZARD_PHASES.find((p) => p.id === "meals")?.label ?? "Meals";
-  const notesPhaseLabel = SYMPTOM_WIZARD_PHASES.find((p) => p.id === "notes")?.label ?? "Notes";
-
-  const renderSymptomDetailGroupedTray = (body: React.ReactNode) => (
-    <View
-      style={{
-        alignSelf: "stretch",
-        backgroundColor: c.surfaceSubtle,
-        borderRadius: 10,
-        overflow: "hidden",
-        paddingHorizontal: SYMPTOM_DETAIL_SECTION_INSET,
-      }}
-    >
-      {body}
-    </View>
-  );
-
-  const symptomDetailDurationFields = () =>
-    renderSymptomDetailGroupedTray(
-      <>
-        <StackedDetailField
-          label="Status"
-          value={isOngoing ? "Ongoing" : "Resolved"}
-          valueColor={isOngoing ? "#d97706" : "#059669"}
-          showDivider={false}
-          insetRow={false}
-          style={SYMPTOM_DETAIL_SECTION_TRAY_ROW_STYLE}
-        />
-        <StackedDetailField
-          label="Started"
-          value={timelineStart}
-          valueColor={c.textSecondary}
-          showDivider={false}
-          insetRow={false}
-          style={SYMPTOM_DETAIL_SECTION_TRAY_ROW_STYLE}
-        />
-        {!isOngoing && timelineEnd ? (
-          <StackedDetailField
-            label="Ended"
-            value={formatUkDate(timelineEnd)}
-            valueColor={c.textSecondary}
-            showDivider={false}
-            insetRow={false}
-            style={SYMPTOM_DETAIL_SECTION_TRAY_ROW_STYLE}
-          />
-        ) : null}
-      </>,
-    );
-
-  const symptomDetailSeverityStressFields = () =>
-    renderSymptomDetailGroupedTray(
-      <>
-        <StackedDetailField
-          label="Severity"
-          value={severityLabel}
-          valueColor={c.textSecondary}
-          showDivider={false}
-          insetRow={false}
-          style={SYMPTOM_DETAIL_SECTION_TRAY_ROW_STYLE}
-        />
-        <StackedDetailField
-          label="Stress level"
-          value={stressLabel}
-          valueColor={c.textSecondary}
-          insetRow={false}
-          style={SYMPTOM_DETAIL_SECTION_TRAY_ROW_STYLE}
-        />
-      </>,
-    );
-
-  const symptomLifestyleFields = (rowDividerLines: boolean, grouped = false) => {
-    const fieldInset = !grouped;
-    const detailGroup = {
-      alignSelf: "stretch" as const,
-      backgroundColor: c.surfaceSubtle,
-      borderRadius: 10,
-      overflow: "hidden" as const,
-      paddingHorizontal: SYMPTOM_DETAIL_SECTION_INSET,
-    };
-
-    if (!grouped) {
-      return (
-        <>
-          {detailRow("Bathroom frequency", normalBathroom ? `${normalBathroom} times/day` : "Not set times/day", rowDividerLines, fieldInset)}
-          {bathroomChanged ? (
-            <>
-              {detailRow(
-                "Frequency changed",
-                bathroomChanged === "yes" ? "Yes" : "No",
-                rowDividerLines && !(bathroomChanged === "yes" && bathroomChangeDetails),
-                fieldInset,
-              )}
-              {bathroomChanged === "yes" && bathroomChangeDetails ? (
-                <StackedDetailField
-                  label="Description"
-                  value={bathroomChangeDetails}
-                  valueColor={c.textSecondary}
-                  showDivider={rowDividerLines && hasLifestyleRowsAfterBathroomDescription}
-                  insetRow={fieldInset}
-                />
-              ) : null}
-            </>
-          ) : null}
-          {typeof smokedOnDay !== "boolean"
-            ? detailRow("Smoker", smoker === true ? "Yes" : smoker === false ? "No" : "Not recorded", rowDividerLines, fieldInset)
-            : null}
-          {smoker === true && smokingHabits ? (
-            <StackedDetailField
-              label="Smoking habits"
-              value={smokingHabits}
-              valueColor={c.textSecondary}
-              showDivider={rowDividerLines}
-              insetRow={fieldInset}
-            />
-          ) : null}
-          {typeof smokedOnDay === "boolean" && smokedOnDay === true && smokedAmount
-            ? detailRow("Smoked", smokedAmount, rowDividerLines && showDividerAfterSmoked, fieldInset)
-            : null}
-          {typeof drankOnDay !== "boolean"
-            ? detailRow("Alcohol", alcohol === true ? "Yes" : alcohol === false ? "No" : "Not recorded", rowDividerLines && !!(alcohol === true && averageAlcohol), fieldInset)
-            : null}
-          {alcohol === true && averageAlcohol
-            ? detailRow(
-                "Average Alcohol Units",
-                `${averageAlcohol} units/week`,
-                rowDividerLines && (hasRowAfterAverageAlcohol || hasMeals || !!notesText),
-                fieldInset,
-              )
-            : null}
-          {typeof drankOnDay === "boolean" && drankOnDay === true && alcoholUnits
-            ? detailRow("Alcohol Units Consumed", `${alcoholUnits} units`, rowDividerLines && (hasMeals || !!notesText), fieldInset)
-            : null}
-        </>
-      );
-    }
-
-    const showSmokingBlock =
-      typeof smokedOnDay !== "boolean" ||
-      (smoker === true && smokingHabits) ||
-      (typeof smokedOnDay === "boolean" && smokedOnDay === true && !!smokedAmount);
-
-    const showAlcoholBlock =
-      typeof drankOnDay !== "boolean" ||
-      (alcohol === true && !!averageAlcohol) ||
-      (typeof drankOnDay === "boolean" && drankOnDay === true && !!alcoholUnits);
-
-    return (
-      <>
-        <View style={styles.symptomDetailPhaseBlock}>
-          <Text style={[styles.symptomDetailPhaseTitle, { color: c.text }]}>{bathroomPhaseLabel}</Text>
-          <View style={detailGroup}>
-            {detailRow(
-              "Bathroom frequency",
-              normalBathroom ? `${normalBathroom} times/day` : "Not set times/day",
-              rowDividerLines && !!bathroomChanged,
-              false,
-              true,
-            )}
-            {bathroomChanged ? (
-              <>
-                {detailRow(
-                  "Frequency changed",
-                  bathroomChanged === "yes" ? "Yes" : "No",
-                  rowDividerLines && bathroomChanged === "yes" && !!bathroomChangeDetails,
-                  false,
-                  true,
-                )}
-                {bathroomChanged === "yes" && bathroomChangeDetails ? (
-                  <StackedDetailField
-                    label="Description"
-                    value={bathroomChangeDetails}
-                    valueColor={c.textSecondary}
-                    showDivider={false}
-                    insetRow={false}
-                    style={SYMPTOM_DETAIL_SECTION_TRAY_ROW_STYLE}
-                  />
-                ) : null}
-              </>
-            ) : null}
-          </View>
-        </View>
-
-        {showSmokingBlock || showAlcoholBlock ? (
-          <View style={styles.symptomDetailPhaseBlock}>
-            <Text style={[styles.symptomDetailPhaseTitle, { color: c.text }]}>{lifestylePhaseLabel}</Text>
-            <View style={styles.symptomDetailSubStack}>
-              {showSmokingBlock ? (
-                <View style={detailGroup}>
-                  {typeof smokedOnDay !== "boolean" ? (
-                    detailRow(
-                      "Smoker",
-                      smoker === true ? "Yes" : smoker === false ? "No" : "Not recorded",
-                      rowDividerLines &&
-                        ((smoker === true && !!smokingHabits) ||
-                          (typeof smokedOnDay === "boolean" && smokedOnDay === true && !!smokedAmount)),
-                      false,
-                      true,
-                    )
-                  ) : null}
-                  {smoker === true && smokingHabits ? (
-                    <StackedDetailField
-                      label="Smoking habits"
-                      value={smokingHabits}
-                      valueColor={c.textSecondary}
-                      showDivider={rowDividerLines && typeof smokedOnDay === "boolean" && smokedOnDay === true && !!smokedAmount}
-                      insetRow={false}
-                      style={SYMPTOM_DETAIL_SECTION_TRAY_ROW_STYLE}
-                    />
-                  ) : null}
-                  {typeof smokedOnDay === "boolean" && smokedOnDay === true && smokedAmount ? (
-                    detailRow("Smoked", smokedAmount, false, false, true)
-                  ) : null}
-                </View>
-              ) : null}
-              {showAlcoholBlock ? (
-                <View style={detailGroup}>
-                  {typeof drankOnDay !== "boolean" ? (
-                    detailRow(
-                      "Alcohol",
-                      alcohol === true ? "Yes" : alcohol === false ? "No" : "Not recorded",
-                      rowDividerLines &&
-                        (!!(alcohol === true && averageAlcohol) ||
-                          (typeof drankOnDay === "boolean" && drankOnDay === true && !!alcoholUnits)),
-                      false,
-                      true,
-                    )
-                  ) : null}
-                  {alcohol === true && averageAlcohol ? (
-                    detailRow(
-                      "Average Alcohol Units",
-                      `${averageAlcohol} units/week`,
-                      rowDividerLines && typeof drankOnDay === "boolean" && drankOnDay === true && !!alcoholUnits,
-                      false,
-                      true,
-                    )
-                  ) : null}
-                  {typeof drankOnDay === "boolean" && drankOnDay === true && alcoholUnits ? (
-                    detailRow("Alcohol Units Consumed", `${alcoholUnits} units`, false, false, true)
-                  ) : null}
-                </View>
-              ) : null}
-            </View>
-          </View>
-        ) : null}
-      </>
-    );
-  };
-
   return (
     <ScrollView style={[styles.screen, { backgroundColor: c.screen }]} contentContainerStyle={{ paddingBottom: bottomScrollInset + 24 }}>
-      <Card title="" style={styles.symptomDetailOuterCard}>
-        <View style={[styles.detailFieldsStack, styles.symptomDetailSectionStack]}>
-          {createdSubtitle ? (
-            <Text style={[styles.symptomDetailSubtitle, { color: c.textMuted }]}>{createdSubtitle}</Text>
-          ) : null}
-          <View style={styles.symptomDetailPhaseBlock}>
-            <Text style={[styles.symptomDetailPhaseTitle, { color: c.text }]}>{durationPhaseLabel}</Text>
-            {symptomDetailDurationFields()}
-          </View>
-          <View style={styles.symptomDetailPhaseBlock}>
-            <Text style={[styles.symptomDetailPhaseTitle, { color: c.text }]}>{severityStressPhaseLabel}</Text>
-            {symptomDetailSeverityStressFields()}
-          </View>
-          {symptomLifestyleFields(false, true)}
-          {hasMeals ? (
-            <View style={styles.symptomDetailPhaseBlock}>
-              <Text style={[styles.symptomDetailPhaseTitle, { color: c.text }]}>{mealsPhaseLabel}</Text>
-              <View style={styles.symptomDetailMealSubStack}>
-                {mealSectionInTray("Breakfast", breakfast)}
-                {mealSectionInTray("Lunch", lunch)}
-                {mealSectionInTray("Dinner", dinner)}
-              </View>
-            </View>
-          ) : null}
-          {notesText ? (
-            <View style={styles.symptomDetailPhaseBlock}>
-              <Text style={[styles.symptomDetailPhaseTitle, { color: c.text }]}>{notesPhaseLabel}</Text>
-              <StackedDetailField
-                hideLabel
-                label="Notes"
-                value={notesText}
-                valueColor={c.textSecondary}
-                insetRow
-                style={SYMPTOM_DETAIL_SECTION_NOTES_WELL_STYLE}
-              />
-            </View>
-          ) : null}
-        </View>
-      </Card>
-    </ScrollView>
-  );
-}
+      {createdSubtitle ? (
+        <Text style={[styles.symptomDetailLoggedAt, { color: c.textMuted }]}>{createdSubtitle}</Text>
+      ) : null}
 
-function MedicationTrackingHistoryScreen({ user }: { user: SessionUser }) {
-  const navigation = useNavigation<any>();
-  const c = useFlareColors();
-  const bottomScrollInset = useBottomTabScrollInset();
-  const [rows, setRows] = useState<MedicationLogListRow[]>([]);
-  const load = useCallback(async () => {
-    const { data } = await supabase
-      .from(TABLES.LOG_MEDICATIONS)
-      .select("id,created_at,name")
-      .eq("user_id", user.id)
-      .order("created_at", { ascending: false })
-      .limit(100);
-    setRows((data ?? []) as MedicationLogListRow[]);
-  }, [user.id]);
-  useFocusEffect(
-    useCallback(() => {
-      load();
-    }, [load]),
-  );
-  return (
-    <ScrollView style={[styles.screen, { backgroundColor: c.screen }]} contentContainerStyle={{ paddingBottom: bottomScrollInset }}>
-      <Card title="Medication logs">
-        {rows.length === 0 ? (
-          <Text style={[styles.muted, { color: c.textMuted }]}>No medication tracking logs yet.</Text>
-        ) : (
-          <View style={[styles.activityListWrap, { backgroundColor: c.surfaceSubtle }]}>
-            {rows.map((row, index) => (
-              <Pressable
-                key={String(row.id)}
-                accessibilityRole="button"
-                onPress={() => navigation.navigate("MedicationLogDetail", { id: String(row.id) })}
-                style={[
-                  styles.recentLogsRow,
-                  index !== rows.length - 1 ? [styles.activityNoteRowDivider, { borderBottomColor: c.cardBorder }] : null,
-                ]}
-              >
-                <View style={{ flex: 1, paddingRight: 8 }}>
-                  <Text style={[styles.recentLogsRowDate, { color: c.textMuted }]}>{formatUkDate(row.created_at)}</Text>
-                  {row.name ? (
-                    <Text style={[styles.text, { color: c.textMuted, marginTop: 2 }]} numberOfLines={1}>
-                      {row.name}
-                    </Text>
-                  ) : null}
-                </View>
-                <Text style={[styles.recentLogsRowTime, { color: c.textMuted }]}>{formatRecentLogTime(row.created_at)}</Text>
-              </Pressable>
-            ))}
-          </View>
-        )}
-      </Card>
-      <PrimaryButton title="Medications" onPress={() => navigation.navigate("Meds")} />
-    </ScrollView>
-  );
-}
+      <SymptomReviewCard title="Overview">
+        <SymptomReviewGrid>
+          <SymptomReviewField label="Missed doses" value={String(missedItems.length)} />
+          <SymptomReviewField label="NSAIDs" value={String(nsaidItems.length)} />
+          <SymptomReviewField label="Antibiotics" value={String(antibioticItems.length)} />
+        </SymptomReviewGrid>
+      </SymptomReviewCard>
 
-function MedicationLogDetailScreen({ user }: { user: SessionUser }) {
-  const route = useRoute();
-  const c = useFlareColors();
-  const bottomScrollInset = useBottomTabScrollInset();
-  const id = String((route.params as { id?: string })?.id ?? "");
-  const [row, setRow] = useState<Record<string, unknown> | null>(null);
-  const load = useCallback(async () => {
-    if (!id) return;
-    const { data, error } = await supabase.from(TABLES.LOG_MEDICATIONS).select("*").eq("user_id", user.id).eq("id", id).maybeSingle();
-    if (error) {
-      setRow(null);
-      return;
-    }
-    setRow((data as Record<string, unknown>) ?? null);
-  }, [user.id, id]);
-  useEffect(() => {
-    load();
-  }, [load]);
-  const countArr = (v: unknown) => (Array.isArray(v) ? v.length : 0);
-  const line = (label: string, value: string) => <StackedDetailField label={label} value={value} numberOfLines={6} />;
-  return (
-    <ScrollView style={[styles.screen, { backgroundColor: c.screen }]} contentContainerStyle={{ paddingBottom: bottomScrollInset }}>
-      <Card title="Details">
-        {!row ? (
-          <Text style={[styles.muted, { color: c.textMuted }]}>Could not load this entry.</Text>
-        ) : (
-          <View style={styles.detailFieldsStack}>
-            {line("Logged", formatUkDate(String(row.created_at ?? "")) + " " + formatRecentLogTime(String(row.created_at ?? "")))}
-            {line("Label", String(row.name ?? "—"))}
-            {line("Missed doses logged", String(countArr(row.missed_medications_list)))}
-            {line("NSAID entries", String(countArr(row.nsaid_list)))}
-            {line("Antibiotic entries", String(countArr(row.antibiotic_list)))}
-          </View>
-        )}
-      </Card>
+      {renderListSection("Missed Medications", missedItems, false)}
+      {renderListSection("NSAIDs Taken", nsaidItems, true)}
+      {renderListSection("Antibiotics Taken", antibioticItems, true)}
     </ScrollView>
   );
 }
@@ -2399,19 +2375,11 @@ const IBD_SYMPTOMS = [
   "Joint pain and swelling",
 ];
 
-const IBD_SEEK_HELP_ITEMS = [
-  "Severe abdominal pain",
-  "High fever (over 101°F/38°C)",
-  "Significant blood in stool",
-  "Signs of dehydration (dizziness, dry mouth, no urination)",
-  "Rapid weight loss",
-];
-
 const IBD_FLARECARE_HELPS = [
   "Log daily symptoms with severity ratings",
   "Record foods that may trigger symptoms",
   "Track patterns and trends over time",
-  "Set medication reminders",
+  "Set medication and appointment reminders",
   "Track dosage and timing",
   "Generate reports for your doctor",
 ];
@@ -2452,26 +2420,21 @@ function IbdCheckList({ items, isLastInSection }: { items: string[]; isLastInSec
 
 function IbdScreen() {
   const c = useFlareColors();
+  const insets = useSafeAreaInsets();
   const bottomScrollInset = useBottomTabScrollInset();
 
   return (
     <ScrollView
       style={[styles.screen, { backgroundColor: c.screen }]}
-      contentContainerStyle={{ paddingBottom: 28 + bottomScrollInset }}
+      contentContainerStyle={{ paddingBottom: Math.max(insets.bottom, 16) + 48 + bottomScrollInset }}
     >
-      <View style={styles.aboutHero}>
-        <Text style={[styles.aboutTagline, { color: c.textMuted }]}>
-          Learn about Crohn&apos;s disease and ulcerative colitis, and how FlareCare can help you manage your condition
-        </Text>
-      </View>
-
-      <Text style={[styles.dashboardSectionTitleLeft, { color: c.text }]}>What is Inflammatory Bowel Disease (IBD)?</Text>
-      <Text style={[styles.text, styles.aboutBodyLast, { color: c.textMuted }]}>
+      <Text style={[styles.text, styles.ibdIntro, { color: c.textMuted }]}>
         Inflammatory Bowel Disease (IBD) is a term used to describe disorders that involve chronic inflammation of your
-        digestive tract. The two main types are:
+        digestive tract.
       </Text>
 
-      <Text style={[styles.dashboardSectionTitleLeft, styles.aboutContactSectionTitle, { color: c.text }]}>Crohn&apos;s Disease</Text>
+      <Text style={[styles.dashboardSectionTitleLeft, { color: c.text }]}>The two main types are:</Text>
+      <Text style={[styles.ibdSubsectionTitle, { color: c.text }]}>Crohn&apos;s disease</Text>
       <IbdBulletList
         items={[
           "Can affect any part of the digestive tract",
@@ -2482,7 +2445,7 @@ function IbdScreen() {
         isLastInSection
       />
 
-      <Text style={[styles.dashboardSectionTitleLeft, styles.aboutContactSectionTitle, { color: c.text }]}>Ulcerative Colitis</Text>
+      <Text style={[styles.ibdSubsectionTitle, { color: c.text }]}>Ulcerative colitis</Text>
       <IbdBulletList
         items={[
           "Affects only the colon and rectum",
@@ -2493,17 +2456,13 @@ function IbdScreen() {
         isLastInSection
       />
 
-      <Text style={[styles.dashboardSectionTitleLeft, styles.aboutContactSectionTitle, { color: c.text }]}>Common symptoms</Text>
+      <Text style={[styles.dashboardSectionTitleLeft, styles.aboutContactSectionTitle, { color: c.text }]}>
+        Common symptoms include
+      </Text>
       <IbdBulletList items={IBD_SYMPTOMS} isLastInSection />
 
       <Text style={[styles.dashboardSectionTitleLeft, styles.aboutContactSectionTitle, { color: c.text }]}>Common triggers</Text>
       <IbdBulletList items={IBD_TRIGGERS} isLastInSection />
-
-      <Text style={[styles.dashboardSectionTitleLeft, styles.aboutContactSectionTitle, { color: c.text }]}>When to seek medical help</Text>
-      <Text style={[styles.text, styles.aboutBody, { color: c.textMuted }]}>
-        Seek immediate medical attention if you experience:
-      </Text>
-      <IbdBulletList items={IBD_SEEK_HELP_ITEMS} isLastInSection />
 
       <Text style={[styles.dashboardSectionTitleLeft, styles.aboutContactSectionTitle, { color: c.text }]}>How FlareCare can help</Text>
       <IbdCheckList items={IBD_FLARECARE_HELPS} isLastInSection />
@@ -2572,8 +2531,8 @@ function AboutScreen() {
 }
 
 const ACCOUNT_OPTION_ROUTES = [
-  { label: "Account info", route: "AccountInfo" as const },
-  { label: "Account security", route: "AccountSecurity" as const },
+  { label: "Information", route: "AccountInfo" as const },
+  { label: "Security", route: "AccountSecurity" as const },
   { label: "Help", route: "AccountHelp" as const },
 ];
 
@@ -2589,6 +2548,8 @@ function AccountOptionRow({
   labelMedium?: boolean;
 }) {
   const c = useFlareColors();
+  const labelTint =
+    labelColor === "primary" ? c.primary : labelColor === "secondary" ? c.textSecondary : c.text;
   return (
     <Pressable
       accessibilityRole="button"
@@ -2601,10 +2562,7 @@ function AccountOptionRow({
         style={[
           styles.accountSettingsNavLabel,
           labelMedium ? styles.accountSettingsNavLabelMedium : null,
-          {
-            color:
-              labelColor === "primary" ? c.primary : labelColor === "secondary" ? c.textSecondary : c.text,
-          },
+          { color: labelTint },
         ]}
       >
         {label}
@@ -2687,7 +2645,7 @@ function AccountSecurityScreen() {
   );
 }
 
-function AccountHelpScreen({ onLogout }: { user: SessionUser; onLogout: () => void }) {
+function AccountHelpScreen({ onLogout }: { user: SessionUser; onLogout: (reason?: SignOutReason) => void | Promise<void> }) {
   const navigation = useNavigation<any>();
   const c = useFlareColors();
   const bottomScrollInset = useBottomTabScrollInset();
@@ -2704,7 +2662,7 @@ function AccountHelpScreen({ onLogout }: { user: SessionUser; onLogout: () => vo
         Alert.alert("Could not delete account", error.message);
         return;
       }
-      await onLogout();
+      await onLogout("account_deleted");
     } catch (e: unknown) {
       const msg = e instanceof Error ? e.message : "Something went wrong.";
       Alert.alert("Could not delete account", msg);
@@ -2723,16 +2681,21 @@ function AccountHelpScreen({ onLogout }: { user: SessionUser; onLogout: () => vo
       contentContainerStyle={{ paddingBottom: bottomScrollInset + 24 }}
     >
       <Card title="" style={styles.accountOptionsListCard} compactBody>
-        <AccountOptionRow label="About FlareCare" onPress={() => navigation.navigate("About")} />
-        <AccountOptionRow label="Contact support" onPress={openSupportEmail} />
+        <AccountOptionRow label="About FlareCare" labelColor="secondary" onPress={() => navigation.navigate("About")} />
+        <AccountOptionRow label="Contact support" labelColor="secondary" onPress={openSupportEmail} />
       </Card>
       <Text style={[styles.dashboardSectionTitleLeft, { color: c.text }]}>Delete account</Text>
-      <Card title="" style={styles.accountPaddedCard} compactBody>
-        <Text style={[styles.muted, { color: c.textMuted, marginBottom: 14 }]}>
-          Permanently delete your account and all associated data. This cannot be undone.
-        </Text>
-        <SecondaryButton title="Delete account" onPress={() => setDeleteAccountConfirmOpen(true)} />
-      </Card>
+      <Text style={[styles.muted, { color: c.textMuted, lineHeight: 20, marginBottom: 4 }]}>
+        Permanently delete your account and all associated data. This cannot be undone.
+      </Text>
+      <Pressable
+        accessibilityRole="button"
+        accessibilityLabel="Delete account"
+        onPress={() => setDeleteAccountConfirmOpen(true)}
+        style={({ pressed }) => [styles.accountSignOutFooter, pressed && { opacity: 0.7 }]}
+      >
+        <Text style={[styles.accountSignOutFooterText, { color: c.destructiveFill }]}>Delete account</Text>
+      </Pressable>
       <ConfirmModal
         visible={deleteAccountConfirmOpen}
         title="Delete account"
@@ -2767,7 +2730,6 @@ function SettingsScreen() {
       <Card title="" style={styles.accountOptionsListCard} compactBody>
         <AccountOptionRow
           label="Push notifications and reminders"
-          labelMedium
           labelColor="secondary"
           onPress={() => navigation.navigate("Reminders")}
         />
@@ -2802,19 +2764,16 @@ function SettingsScreen() {
   );
 }
 
-function AccountScreen({ user, onLogout }: { user: SessionUser; onLogout: () => void }) {
+function AccountScreen({ user, onLogout }: { user: SessionUser; onLogout: (reason?: SignOutReason) => void | Promise<void> }) {
   const navigation = useNavigation<any>();
   const c = useFlareColors();
   const bottomScrollInset = useBottomTabScrollInset();
   const [logoutConfirmOpen, setLogoutConfirmOpen] = useState(false);
 
   const accountFirstName = useMemo(() => {
-    const fromName = user.displayName?.trim().split(/\s+/).filter(Boolean)[0];
-    if (fromName) return fromName;
-    const local = user.email?.split("@")[0]?.trim();
-    if (local) return local;
-    return "You";
-  }, [user.displayName, user.email]);
+    const first = firstNameFromSessionUser(user);
+    return first === "there" ? "You" : first;
+  }, [user]);
 
   return (
     <ScrollView
@@ -2838,7 +2797,6 @@ function AccountScreen({ user, onLogout }: { user: SessionUser; onLogout: () => 
           <AccountOptionRow
             key={item.route}
             label={item.label}
-            labelMedium
             labelColor="secondary"
             onPress={() => navigation.navigate(item.route)}
           />
@@ -2885,12 +2843,12 @@ function MainBottomTabBar({
     return null;
   }
 
-  const go = (target: "Dashboard" | "Ibd" | "Account" | "About") => {
+  const go = (target: "Dashboard" | "Reminders" | "Account") => {
     navigationRef?.navigate(target as never);
   };
 
   const item = (
-    target: "Dashboard" | "Ibd" | "Account" | "About",
+    target: "Dashboard" | "Reminders" | "Account",
     icon: ({ active }: { active: boolean }) => React.ReactNode,
     label: string,
   ) => {
@@ -2917,23 +2875,18 @@ function MainBottomTabBar({
         "FlareCare",
       )}
       {item(
-        "About",
+        "Reminders",
         ({ active }) => (
-          <Ionicons name={active ? "information-circle" : "information-circle-outline"} size={23} color={active ? colors.primary : colors.textMuted} />
+          <Ionicons name={active ? "notifications" : "notifications-outline"} size={23} color={active ? colors.primary : colors.textMuted} />
         ),
-        "About",
-      )}
-      {item(
-        "Ibd",
-        ({ active }) => <Ionicons name={active ? "book" : "book-outline"} size={23} color={active ? colors.primary : colors.textMuted} />,
-        "IBD",
+        "Reminders",
       )}
       {item("Account", ({ active }) => <Ionicons name={active ? "person-circle" : "person-circle-outline"} size={23} color={active ? colors.primary : colors.textMuted} />, "Account")}
     </View>
   );
 }
 
-function AppTabs({ user, onLogout }: { user: SessionUser; onLogout: () => void }) {
+function AppTabs({ user, onLogout }: { user: SessionUser; onLogout: (reason?: SignOutReason) => void | Promise<void> }) {
   const { nav, colors } = useFlareTheme();
   const navigationRef = useNavigationContainerRef<Record<string, object | undefined>>();
   const [focusRouteName, setFocusRouteName] = useState("Dashboard");
@@ -2948,33 +2901,54 @@ function AppTabs({ user, onLogout }: { user: SessionUser; onLogout: () => void }
     const isAbout = route.name === "About";
     const isIbd = route.name === "Ibd";
     const isAccount = route.name === "Account";
+    const isReminders = route.name === "Reminders";
     const titleForRoute: Record<string, string> = {
       SymptomHistory: "Symptom History",
       SymptomDetail: "Symptom Details",
-      MedicationTrackingHistory: "Medication Tracking History",
+      MedicationTrackingHistory: "Tracking History",
       MedicationLogDetail: "Tracking log",
       SymptomLogWizard: "Log Symptoms",
-      AccountInfo: "Account info",
-      AccountSecurity: "Account security",
+      MedicationTrackingWizard: "Track Medications",
+      AccountInfo: "Information",
+      AccountSecurity: "Security",
       AccountHelp: "Help",
       Settings: "Settings",
+      Reminders: "Reminders",
     };
     const isSymptomLogWizard = route.name === "SymptomLogWizard";
+    const isMedicationTrackingWizard = route.name === "MedicationTrackingWizard";
 
-    const headerRightContent =
-      route.name === "Settings" || route.name === "SymptomLogWizard" || route.name === "Meds" ? null : (
-        <Pressable
-          accessibilityRole="button"
-          accessibilityLabel="Settings"
-          onPress={() => navigation.navigate("Settings")}
-          style={styles.headerSettingsButton}
-        >
-          <Ionicons name="settings-outline" size={22} color={colors.text} />
-        </Pressable>
-      );
+    const headerHidesOverflowMenu =
+      route.name === "Settings" ||
+      route.name === "SymptomLogWizard" ||
+      route.name === "MedicationTrackingWizard" ||
+      route.name === "Meds" ||
+      route.name === "Reports" ||
+      route.name === "Weight" ||
+      route.name === "Appointments" ||
+      route.name === "Hydration" ||
+      route.name === "Bowel" ||
+      route.name === "SymptomHistory" ||
+      route.name === "SymptomDetail" ||
+      route.name === "MedicationTrackingHistory" ||
+      route.name === "MedicationLogDetail";
+
+    const headerRightContent = headerHidesOverflowMenu ? null : (
+      <HeaderOverflowMenu navigation={navigation} routeName={route.name} edgePadding={SCREEN_EDGE_PADDING} />
+    );
 
     return {
-      headerTitle: isDashboard ? "FlareCare" : isAbout ? "About" : isIbd ? "IBD" : isAccount ? "Account" : titleForRoute[route.name] ?? "",
+      headerTitle: isDashboard
+        ? "FlareCare"
+        : isAbout
+          ? "About"
+          : isIbd
+            ? "What is IBD?"
+            : isAccount
+              ? "Account"
+              : isReminders
+                ? "Reminders"
+                : titleForRoute[route.name] ?? "",
       headerTitleAlign: "center" as const,
       headerLargeTitleShown: false,
       headerLargeTitleShadowVisible: false,
@@ -2987,10 +2961,18 @@ function AppTabs({ user, onLogout }: { user: SessionUser; onLogout: () => void }
       headerTintColor: colors.primary,
       headerShadowVisible: false,
       headerBackVisible: false,
+      /** Match `styles.screen` horizontal inset so header controls line up with cards. */
+      headerRightContainerStyle: { paddingRight: SCREEN_EDGE_PADDING, paddingLeft: 0 },
       /** Avoid stacking default header padding with our own — keeps chevron near the leading edge. */
       headerLeftContainerStyle: { paddingLeft: 0, marginLeft: 0 },
       headerLeft:
-        !isDashboard && !isSymptomLogWizard && !isAbout && !isIbd && !isAccount
+        !isDashboard &&
+        !isSymptomLogWizard &&
+        !isMedicationTrackingWizard &&
+        !isAbout &&
+        !isIbd &&
+        !isAccount &&
+        !isReminders
           ? () => (
               <Pressable
                 accessibilityRole="button"
@@ -3021,6 +3003,7 @@ function AppTabs({ user, onLogout }: { user: SessionUser; onLogout: () => void }
             <AppStack.Screen name="MedicationTrackingHistory">{() => <MedicationTrackingHistoryScreen user={user} />}</AppStack.Screen>
             <AppStack.Screen name="MedicationLogDetail">{() => <MedicationLogDetailScreen user={user} />}</AppStack.Screen>
             <AppStack.Screen name="SymptomLogWizard">{() => <SymptomLogWizardScreen user={user} />}</AppStack.Screen>
+            <AppStack.Screen name="MedicationTrackingWizard">{() => <MedicationTrackingWizardScreen user={user} />}</AppStack.Screen>
             <AppStack.Screen name="Hydration">{() => <HydrationScreen user={user} />}</AppStack.Screen>
             <AppStack.Screen name="Weight">{() => <WeightScreen user={user} />}</AppStack.Screen>
             <AppStack.Screen name="Bowel">{() => <BowelScreen user={user} />}</AppStack.Screen>
@@ -3056,6 +3039,7 @@ export default function App() {
 function AppRoot() {
   const { appearanceHydrated } = useFlareTheme();
   const [user, setUser] = useState<SessionUser | null>(null);
+  const [signOutNotice, setSignOutNotice] = useState<SignOutReason | null>(null);
   const [loading, setLoading] = useState(true);
   const [authBusy, setAuthBusy] = useState(false);
   const [showSplash, setShowSplash] = useState(true);
@@ -3083,11 +3067,12 @@ function AppRoot() {
 
     const { data } = supabase.auth.onAuthStateChange((_event, session) => {
       const next = session?.user;
-      setUser(
-        next
-          ? sessionUserFromSupabaseAuthUser(next)
-          : null,
-      );
+      if (next) {
+        setSignOutNotice(null);
+        setUser(sessionUserFromSupabaseAuthUser(next));
+      } else {
+        setUser(null);
+      }
       setLoading(false);
     });
     return () => {
@@ -3096,26 +3081,48 @@ function AppRoot() {
     };
   }, []);
 
-  const logout = async () => {
+  const completeSignOut = useCallback(async (reason: SignOutReason = "logout") => {
     await supabase.auth.signOut();
     setUser(null);
-  };
+    setSignOutNotice(reason);
+  }, []);
 
   const content = useMemo(() => {
     if (!fontsLoaded || loading || showSplash || !appearanceHydrated) {
       return <SplashScreen />;
     }
+    if (user && profileNeedsSetup(user)) {
+      return <ProfileSetupScreen user={user} onComplete={(next) => setUser(next)} />;
+    }
     if (user) {
-      return <AppTabs user={user} onLogout={logout} />;
+      return <AppTabs user={user} onLogout={completeSignOut} />;
+    }
+    if (signOutNotice) {
+      return <SignedOutScreen reason={signOutNotice} onContinue={() => setSignOutNotice(null)} />;
     }
     if (authBusy) {
       return <SplashScreen />;
     }
-    return <AuthScreen onSignedIn={setUser} onAuthBusy={setAuthBusy} />;
-  }, [fontsLoaded, loading, showSplash, appearanceHydrated, user, authBusy]);
+    return (
+      <AuthScreen
+        onSignedIn={(next) => {
+          setSignOutNotice(null);
+          setUser(next);
+        }}
+        onAuthBusy={setAuthBusy}
+      />
+    );
+  }, [fontsLoaded, loading, showSplash, appearanceHydrated, user, signOutNotice, authBusy, completeSignOut]);
 
+  const profileSetupActive = Boolean(user && profileNeedsSetup(user));
   const authScreenActive =
-    fontsLoaded && !loading && !showSplash && appearanceHydrated && !user && !authBusy;
+    fontsLoaded &&
+    !loading &&
+    !showSplash &&
+    appearanceHydrated &&
+    !authBusy &&
+    !signOutNotice &&
+    (!user || profileSetupActive);
 
   return (
     <>
@@ -3134,7 +3141,7 @@ function ThemedStatusBar({ authScreenActive }: { authScreenActive: boolean }) {
 }
 
 const styles = StyleSheet.create({
-  screen: { flex: 1, backgroundColor: "#f4f7fb", padding: SCREEN_EDGE_PADDING },
+  screen: { flex: 1, padding: SCREEN_EDGE_PADDING },
   authScreenFill: { flex: 1 },
   authShell: { flex: 1, transform: [{ translateY: 40 }] },
   authBrandBlock: {
@@ -3146,20 +3153,24 @@ const styles = StyleSheet.create({
     paddingTop: 12,
     transform: [{ translateY: 44 }],
   },
-  authLogo: { width: 112, height: 112 },
+  authLogo: { width: 92, height: 92 },
+  authBrandName: { fontSize: 28, fontFamily: "Inter_700Bold" },
   authCardPlain: { flex: 1 },
   authMethodPanel: { flex: 1, justifyContent: "center" },
   authMethodActions: { marginTop: 18, gap: 8 },
-  authPromptTitle: { textAlign: "center", fontSize: 19, fontFamily: "Inter_700Bold" },
+  authSecureNote: { flexDirection: "row", alignItems: "center", justifyContent: "center", gap: 5, marginTop: 10 },
+  authSecureNoteText: { fontSize: 12, fontFamily: "Inter_400Regular" },
+  authPromptTitle: { textAlign: "center", fontSize: 19, fontFamily: "Inter_500Medium" },
   authPromptSub: { textAlign: "center", fontSize: 13, fontFamily: "Inter_400Regular", marginTop: 4 },
   /** Extra gap before email field only — keep method screen subtitle unchanged */
   authEmailHelperSub: { marginBottom: 18 },
   authFlowPanel: { flex: 1, justifyContent: "center" },
   authFormCenter: { justifyContent: "center" },
   authBottomActions: { paddingBottom: 6, marginTop: 10, gap: 8 },
+  /** Matches one secondary button row on email/code steps so single-CTA screens center the same. */
+  authBottomActionSpacer: { height: 50 },
   splashScreen: {
     flex: 1,
-    backgroundColor: "#f4f7fb",
     alignItems: "center",
     justifyContent: "center",
   },
@@ -3173,8 +3184,17 @@ const styles = StyleSheet.create({
   /** Light splash: circular primary well behind mark. */
   splashLogoMarkWell: { padding: 22, borderRadius: 9999, overflow: "hidden" },
   splashLogo: { width: 132, height: 132 },
-  splashBrand: { fontSize: 34, fontFamily: "Inter_800ExtraBold", color: "#1f2a44" },
-  splashTagline: { fontSize: 14, fontFamily: "Inter_400Regular", color: "#6a7690" },
+  signedOutScreen: { flex: 1, justifyContent: "center", alignItems: "center" },
+  signedOutCard: { width: "100%", maxWidth: 360, alignItems: "center", gap: 12 },
+  signedOutTitle: { fontSize: 22, fontFamily: "Inter_700Bold", textAlign: "center", marginTop: 8 },
+  signedOutMessage: {
+    fontSize: 15,
+    fontFamily: "Inter_400Regular",
+    textAlign: "center",
+    lineHeight: 22,
+    maxWidth: 320,
+  },
+  signedOutActions: { width: "100%", marginTop: 28 },
   centered: { flex: 1, justifyContent: "center", alignItems: "center", gap: 10 },
   confirmModalRoot: { flex: 1, justifyContent: "center", paddingHorizontal: 20 },
   confirmModalCard: {
@@ -3189,14 +3209,13 @@ const styles = StyleSheet.create({
   confirmModalMessage: { fontSize: 14, fontFamily: "Inter_400Regular", marginTop: 10, lineHeight: 20 },
   confirmModalActions: { flexDirection: "row", gap: 8, marginTop: 22 },
   confirmModalActionSlot: { flex: 1, minWidth: 0 },
-  card: { backgroundColor: "white", borderRadius: 14, padding: 14, marginBottom: 12 },
+  card: { borderRadius: 14, padding: 14, marginBottom: 12 },
   /** Stacks card content below the title; `gap` matches spacing between sibling blocks inside the card. */
   cardBody: { gap: 8 },
   cardBodyCompact: { gap: 0 },
   cardTitle: {
     fontSize: 18,
     fontFamily: "Inter_700Bold",
-    color: "#1f2a44",
     textAlign: "left",
     alignSelf: "stretch",
     marginBottom: 12,
@@ -3206,7 +3225,6 @@ const styles = StyleSheet.create({
   dashboardSectionTitle: {
     fontSize: 18,
     fontFamily: "Inter_700Bold",
-    color: "#1f2a44",
     marginBottom: 12,
     marginTop: 10,
     textAlign: "center",
@@ -3214,39 +3232,14 @@ const styles = StyleSheet.create({
   dashboardSectionTitleLeft: {
     fontSize: 18,
     fontFamily: "Inter_700Bold",
-    color: "#1f2a44",
     marginBottom: 12,
     marginTop: 10,
     textAlign: "left",
   },
-  fieldBlock: { gap: 6, marginBottom: 2 },
-  label: { color: "#23314f", fontSize: 13, fontFamily: "Inter_500Medium", marginTop: 2 },
   text: { fontSize: 14, fontFamily: "Inter_400Regular" },
-  muted: { color: "#6a7690", fontSize: 13, fontFamily: "Inter_400Regular" },
-  errorText: { color: "#b3261e", fontSize: 13, fontFamily: "Inter_400Regular" },
-  fieldError: { color: "#b3261e", fontSize: 12, fontFamily: "Inter_400Regular", marginTop: 2 },
-  bigText: { fontSize: 30, fontFamily: "Inter_700Bold", color: "#112240", marginBottom: 8 },
-  input: { borderWidth: 1, borderColor: "#d2d8e4", borderRadius: 10, paddingHorizontal: 10, paddingVertical: 9, backgroundColor: "#fff" },
-  button: {
-    borderRadius: 10,
-    minHeight: 42,
-    alignItems: "center",
-    justifyContent: "center",
-    paddingHorizontal: 12,
-    marginTop: 6,
-  },
-  buttonText: { color: "#fff", fontFamily: "Inter_700Bold", fontSize: 14 },
-  buttonSecondary: {
-    backgroundColor: "#e9efff",
-    borderRadius: 10,
-    minHeight: 42,
-    alignItems: "center",
-    justifyContent: "center",
-    paddingHorizontal: 12,
-    marginTop: 6,
-  },
-  buttonSecondaryContent: { flexDirection: "row", alignItems: "center", justifyContent: "center", gap: 8 },
-  buttonSecondaryText: { fontFamily: "Inter_700Bold", fontSize: 14 },
+  muted: { fontSize: 13, fontFamily: "Inter_400Regular" },
+  errorText: { fontSize: 13, fontFamily: "Inter_400Regular" },
+  bigText: { fontSize: 30, fontFamily: "Inter_700Bold", marginBottom: 8 },
   headerIconButton: {
     width: 34,
     height: 34,
@@ -3316,13 +3309,13 @@ const styles = StyleSheet.create({
   accountOptionsListCardLast: { marginBottom: 0 },
   accountSignOutFooter: { alignSelf: "stretch", alignItems: "center", marginTop: 20, paddingVertical: 16 },
   accountSignOutFooterText: { fontSize: 16, fontFamily: "Inter_700Bold", textAlign: "center" },
-  /** Same height and radius as `styles.button` (PrimaryButton); two equal slots like paired actions. */
+  /** Same height and radius as `PrimaryButton`; two equal slots like paired actions. */
   appearanceRow: { flexDirection: "row", gap: 8, marginTop: 14 },
   appearanceChip: {
     flex: 1,
-    minHeight: 42,
-    paddingHorizontal: 12,
-    borderRadius: 10,
+    minHeight: FLARE_BUTTON_MIN_HEIGHT,
+    paddingHorizontal: FLARE_BUTTON_PADDING_H,
+    borderRadius: FLARE_BUTTON_BORDER_RADIUS,
     alignItems: "center",
     justifyContent: "center",
     alignSelf: "stretch",
@@ -3332,11 +3325,8 @@ const styles = StyleSheet.create({
   reportBox: {
     minHeight: 130,
     borderWidth: 1,
-    borderColor: "#d2d8e4",
     borderRadius: 10,
     padding: 10,
-    backgroundColor: "#fbfdff",
-    color: "#203052",
   },
   weatherIntroWrap: { paddingLeft: 3 },
   weatherHero: {
@@ -3358,10 +3348,10 @@ const styles = StyleSheet.create({
   },
   weatherIcon: { fontSize: 24 },
   weatherLeft: { flex: 1, paddingRight: 8 },
-  weatherCity: { fontSize: 15, fontFamily: "Inter_500Medium", color: "#23314f" },
-  weatherGreeting: { fontSize: 24, fontFamily: "Inter_800ExtraBold", color: "#1f2a44", marginBottom: 2 },
-  weatherDate: { fontSize: 13, fontFamily: "Inter_400Regular", color: "#6a7690", marginBottom: 6 },
-  weatherDesc: { fontSize: 13, fontFamily: "Inter_400Regular", color: "#6a7690", textTransform: "capitalize" },
+  weatherCity: { fontSize: 15, fontFamily: "Inter_500Medium" },
+  weatherGreeting: { fontSize: 24, fontFamily: "Inter_800ExtraBold", marginBottom: 2 },
+  weatherDate: { fontSize: 13, fontFamily: "Inter_400Regular", marginBottom: 6 },
+  weatherDesc: { fontSize: 13, fontFamily: "Inter_400Regular", textTransform: "capitalize" },
   weatherTempWrap: { flexDirection: "row", alignItems: "flex-start", marginRight: 8 },
   weatherTemp: { fontSize: 30, fontFamily: "Inter_800ExtraBold" },
   weatherUnit: { fontSize: 12, fontFamily: "Inter_700Bold", marginTop: 6, marginLeft: 2 },
@@ -3414,7 +3404,6 @@ const styles = StyleSheet.create({
   summaryWebLabel: { fontSize: 14, fontFamily: "Inter_400Regular", flex: 1 },
   summaryWebValue: { fontSize: 14, fontFamily: "Inter_500Medium" },
   activityListWrap: {
-    backgroundColor: "#f8fbff",
     borderRadius: 10,
     overflow: "hidden",
   },
@@ -3424,7 +3413,7 @@ const styles = StyleSheet.create({
   recentActivityFeedText: { flex: 1, minWidth: 0, gap: 4 },
   recentActivityFeedTitle: { fontSize: 14, fontFamily: "Inter_400Regular", lineHeight: 20 },
   recentActivityFeedWhen: { fontSize: 12, fontFamily: "Inter_400Regular" },
-  activityNoteRowDivider: { borderBottomWidth: 1, borderBottomColor: "#e3e9f7" },
+  activityNoteRowDivider: { borderBottomWidth: 1 },
   aboutHero: { alignItems: "center", paddingHorizontal: 16 },
   aboutLogoSlot: { marginBottom: 12 },
   /** Light About: circular primary well behind mark. */
@@ -3438,6 +3427,14 @@ const styles = StyleSheet.create({
     lineHeight: 20,
     paddingHorizontal: 12,
     paddingBottom: 20,
+  },
+  ibdIntro: { lineHeight: 22, marginBottom: 8 },
+  ibdSubsectionTitle: {
+    fontSize: 17,
+    fontFamily: "Inter_700Bold",
+    textAlign: "left",
+    marginTop: 16,
+    marginBottom: 10,
   },
   aboutBody: { lineHeight: 22, marginBottom: 12 },
   aboutBodyLast: { lineHeight: 22, marginBottom: 0 },
@@ -3483,7 +3480,6 @@ const styles = StyleSheet.create({
   newsRail: { paddingVertical: 2 },
   newsCard: {
     width: 236,
-    backgroundColor: "#ffffff",
     borderRadius: 12,
     overflow: "hidden",
     marginRight: 16,
@@ -3492,7 +3488,6 @@ const styles = StyleSheet.create({
   newsCardImage: {
     width: "100%",
     aspectRatio: 16 / 10,
-    backgroundColor: "#f3f7ff",
     alignItems: "center",
     justifyContent: "center",
   },
@@ -3501,28 +3496,10 @@ const styles = StyleSheet.create({
     height: "100%",
   },
   newsCardBody: { paddingTop: 10, paddingBottom: 10 },
-  newsTitle: { fontSize: 13, fontFamily: "Inter_700Bold", color: "#23314f", lineHeight: 18 },
-  newsMeta: { fontSize: 11, fontFamily: "Inter_400Regular", color: "#6a7690", marginTop: 6 },
-  /** Symptom detail `Card`: less padding above date vs default `card` padding. */
-  symptomDetailOuterCard: { paddingTop: 8 },
-  symptomDetailSubtitle: { marginTop: 14, marginBottom: 0 },
-  /** Title + its tray(s): section `gap` applies between these blocks, not between title and tray. */
-  symptomDetailPhaseBlock: { alignSelf: "stretch", gap: 0 },
-  /** Tighter stack when one phase has multiple trays (e.g. smoking + alcohol). */
-  symptomDetailSubStack: { alignSelf: "stretch", gap: 12 },
-  /** Breakfast / Lunch / Dinner trays. */
-  symptomDetailMealSubStack: { alignSelf: "stretch", gap: 14 },
-  /** Wizard-aligned section heading on the symptom detail card (same scale as `cardTitle`). */
-  symptomDetailPhaseTitle: {
-    fontSize: 18,
-    fontFamily: "Inter_700Bold",
-    lineHeight: 24,
-    alignSelf: "stretch",
-    marginBottom: 12,
-  },
-  symptomDetailOverview: {},
+  newsTitle: { fontSize: 13, fontFamily: "Inter_700Bold", lineHeight: 18 },
+  newsMeta: { fontSize: 11, fontFamily: "Inter_400Regular", marginTop: 6 },
+  /** Logged-at line above symptom detail review cards. */
+  symptomDetailLoggedAt: { fontSize: 13, fontFamily: "Inter_400Regular", marginBottom: 16, textAlign: "center" },
   /** Keeps stacked detail rows out of `cardBody` gap (which would add space between every field). */
   detailFieldsStack: { alignSelf: "stretch" },
-  /** Symptom log detail: space between phase blocks (Duration, Severity, …). */
-  symptomDetailSectionStack: { gap: 20 },
 });

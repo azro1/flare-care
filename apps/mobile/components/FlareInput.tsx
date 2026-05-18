@@ -1,0 +1,132 @@
+import React from "react";
+import {
+  Pressable,
+  StyleSheet,
+  Text,
+  TextInput,
+  View,
+  type PressableProps,
+  type StyleProp,
+  type TextInputProps,
+  type TextStyle,
+  type ViewStyle,
+} from "react-native";
+import { FLARE_BUTTON_BORDER_RADIUS } from "./FlareButton";
+import type { FlareColors } from "../theme";
+import { useFlareColors } from "../theme";
+
+/** All text fields, text areas, and picker triggers — same radius as buttons. */
+export const FLARE_INPUT_BORDER_RADIUS = FLARE_BUTTON_BORDER_RADIUS;
+
+export const flareInputStyles = StyleSheet.create({
+  input: {
+    borderWidth: 1,
+    borderRadius: FLARE_INPUT_BORDER_RADIUS,
+    paddingHorizontal: 12,
+    paddingVertical: 10,
+    marginTop: 6,
+    fontSize: 14,
+    fontFamily: "Inter_400Regular",
+  },
+  textarea: {
+    borderWidth: 1,
+    borderRadius: FLARE_INPUT_BORDER_RADIUS,
+    paddingHorizontal: 12,
+    paddingVertical: 10,
+    marginTop: 6,
+    minHeight: 100,
+    textAlignVertical: "top",
+    fontSize: 14,
+    fontFamily: "Inter_400Regular",
+  },
+  trigger: {
+    borderWidth: 1,
+    borderRadius: FLARE_INPUT_BORDER_RADIUS,
+    paddingHorizontal: 12,
+    paddingVertical: 10,
+    marginTop: 6,
+    minHeight: 42,
+    justifyContent: "center",
+  },
+  fieldBlock: { gap: 6, marginBottom: 2 },
+  label: { fontSize: 13, fontFamily: "Inter_500Medium", marginTop: 2 },
+  fieldError: { fontSize: 12, fontFamily: "Inter_400Regular", marginTop: 2 },
+});
+
+export function flareInputThemeColors(c: FlareColors, onPrimary?: boolean) {
+  if (onPrimary) {
+    return {
+      backgroundColor: c.white,
+      borderColor: "rgba(255,255,255,0.45)",
+      color: c.text,
+      placeholderColor: "rgba(15,23,42,0.45)",
+    };
+  }
+  return {
+    backgroundColor: c.inputBg,
+    borderColor: c.inputBorder,
+    color: c.text,
+    placeholderColor: c.textMuted,
+  };
+}
+
+export function flareInputStyle(
+  c: FlareColors,
+  opts?: { onPrimary?: boolean; multiline?: boolean },
+): StyleProp<TextStyle> {
+  const theme = flareInputThemeColors(c, opts?.onPrimary);
+  return [opts?.multiline ? flareInputStyles.textarea : flareInputStyles.input, theme];
+}
+
+export function FlareTextInput({
+  style,
+  onPrimary,
+  multiline,
+  ...props
+}: TextInputProps & { onPrimary?: boolean }) {
+  const c = useFlareColors();
+  const theme = flareInputThemeColors(c, onPrimary);
+  return (
+    <TextInput
+      style={[multiline ? flareInputStyles.textarea : flareInputStyles.input, theme, style]}
+      placeholderTextColor={theme.placeholderColor}
+      multiline={multiline}
+      {...props}
+    />
+  );
+}
+
+/** Date/time (and similar) controls that should look like a text field. */
+export function FlareInputTrigger({
+  children,
+  style,
+  onPrimary,
+  ...props
+}: PressableProps & { children: React.ReactNode; onPrimary?: boolean }) {
+  const c = useFlareColors();
+  const theme = flareInputThemeColors(c, onPrimary);
+  return (
+    <Pressable style={[flareInputStyles.trigger, theme, style]} {...props}>
+      {children}
+    </Pressable>
+  );
+}
+
+export function LabeledInput({
+  label,
+  error,
+  style,
+  onPrimary,
+  multiline,
+  ...props
+}: { label: string; error?: string; onPrimary?: boolean } & TextInputProps) {
+  const c = useFlareColors();
+  const onBlue = Boolean(onPrimary);
+  return (
+    <View style={flareInputStyles.fieldBlock}>
+      <Text style={[flareInputStyles.label, { color: onBlue ? "rgba(255,255,255,0.92)" : c.textSecondary }]}>{label}</Text>
+      <FlareTextInput style={style} onPrimary={onPrimary} multiline={multiline} {...props} />
+      {error ? <Text style={[flareInputStyles.fieldError, { color: c.danger }]}>{error}</Text> : null}
+    </View>
+  );
+}
