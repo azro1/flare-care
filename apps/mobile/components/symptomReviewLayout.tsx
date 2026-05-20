@@ -26,7 +26,7 @@ export function SymptomReviewField({ label, value }: { label: string; value: str
   return (
     <View style={reviewStyles.field}>
       <Text style={[reviewStyles.label, { color: c.textMuted }]}>{label}</Text>
-      <Text style={[reviewStyles.value, { color: c.textSecondary }]}>{value}</Text>
+      <Text style={[reviewStyles.value, { color: c.text }]}>{value}</Text>
     </View>
   );
 }
@@ -40,7 +40,7 @@ export function SymptomReviewSubsection({ label, value }: { label: string; value
   return (
     <View style={[reviewStyles.subsection, { borderTopColor: c.cardBorder }]}>
       <Text style={[reviewStyles.label, { color: c.textMuted }]}>{label}</Text>
-      <Text style={[reviewStyles.value, { color: c.textSecondary }]}>{value}</Text>
+      <Text style={[reviewStyles.value, { color: c.text }]}>{value}</Text>
     </View>
   );
 }
@@ -68,11 +68,11 @@ export function SymptomReviewMealBlock({
     >
       <Text style={[reviewStyles.label, { color: c.textMuted, marginBottom: 8 }]}>{label}</Text>
       {skipped ? (
-        <Text style={[reviewStyles.value, { color: c.textSecondary, fontStyle: "italic" }]}>Didn&apos;t eat anything</Text>
+        <Text style={[reviewStyles.value, { color: c.text, fontStyle: "italic" }]}>Didn&apos;t eat anything</Text>
       ) : (
         <View style={{ gap: 6 }}>
           {(items ?? []).map((item, j) => (
-            <Text key={`${item.food}-${j}`} style={[reviewStyles.value, { color: c.textSecondary }]} numberOfLines={4}>
+            <Text key={`${item.food}-${j}`} style={[reviewStyles.value, { color: c.text }]} numberOfLines={4}>
               {item.food}
               {item.quantity ? ` (${item.quantity})` : ""}
             </Text>
@@ -100,12 +100,12 @@ export const reviewStyles = StyleSheet.create({
   grid: { gap: 14 },
   field: { minWidth: 0 },
   label: { fontSize: 13, marginBottom: 4, fontFamily: "Inter_400Regular" },
-  value: { fontSize: 15, fontFamily: "Inter_500Medium" },
+  value: { fontSize: 14, fontFamily: "Inter_400Regular" },
   subsection: { marginTop: 12, paddingTop: 12, borderTopWidth: StyleSheet.hairlineWidth },
   mealBlock: { minWidth: 0 },
 });
 
 export function SymptomReviewNotesBody({ children }: { children: string }) {
   const c = useFlareColors();
-  return <Text style={[reviewStyles.value, { color: c.textSecondary }]}>{children}</Text>;
+  return <Text style={[reviewStyles.value, { color: c.text }]}>{children}</Text>;
 }

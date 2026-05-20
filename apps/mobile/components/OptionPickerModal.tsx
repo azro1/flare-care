@@ -7,8 +7,14 @@ import {
   StyleSheet,
   Text,
   type ColorValue,
+  useColorScheme,
   View,
 } from "react-native";
+import { MOBILE_BRAND_PRIMARY } from "../theme";
+
+const LIGHT_OPTIONS_PANEL = "#F2F2F7";
+const BRAND_CANCEL_BG = MOBILE_BRAND_PRIMARY;
+const BRAND_CANCEL_TEXT = "#FFFFFF";
 
 type AlertDialogColors = {
   optionsPanel: ColorValue;
@@ -34,7 +40,7 @@ const ALERT_DIALOG_COLORS: AlertDialogColors = Platform.select({
     backdrop: "rgba(0, 0, 0, 0.5)",
   },
   default: {
-    optionsPanel: "#F2F2F7",
+    optionsPanel: LIGHT_OPTIONS_PANEL,
     cancelPanel: "#FFFFFF",
     action: "#007AFF",
     separator: "rgba(0, 0, 0, 0.12)",
@@ -57,7 +63,10 @@ export function OptionPickerModal({
   onCancel: () => void;
   cancelLabel?: string;
 }) {
-  const colors = ALERT_DIALOG_COLORS;
+  const systemScheme = useColorScheme();
+  /** Phone/OS light mode — teal cancel to match date picker; dark uses native 2-tone panels. */
+  const lightBrandChrome = systemScheme !== "dark";
+  const system = ALERT_DIALOG_COLORS;
 
   return (
     <Modal visible={visible} transparent animationType="fade" onRequestClose={onCancel} statusBarTranslucent>
@@ -66,29 +75,72 @@ export function OptionPickerModal({
           accessibilityRole="button"
           accessibilityLabel="Dismiss"
           onPress={onCancel}
-          style={[StyleSheet.absoluteFillObject, { backgroundColor: colors.backdrop }]}
+          style={[
+            StyleSheet.absoluteFillObject,
+            { backgroundColor: lightBrandChrome ? "rgba(0, 0, 0, 0.4)" : system.backdrop },
+          ]}
         />
-        <View style={[styles.shell, { backgroundColor: colors.optionsPanel }]}>
-          <View style={[styles.optionsBlock, { backgroundColor: colors.optionsPanel }]}>
+        <View style={[styles.shell, lightBrandChrome ? null : { backgroundColor: system.optionsPanel }]}>
+          <View
+            style={[
+              styles.optionsBlock,
+              {
+                backgroundColor: lightBrandChrome ? LIGHT_OPTIONS_PANEL : system.optionsPanel,
+              },
+            ]}
+          >
             {options.map((opt, index) => (
               <View key={opt}>
-                {index > 0 ? <View style={[styles.separator, { backgroundColor: colors.separator }]} /> : null}
+                {index > 0 && !lightBrandChrome ? (
+                  <View style={[styles.separator, { backgroundColor: system.separator }]} />
+                ) : null}
                 <Pressable
                   accessibilityRole="button"
                   onPress={() => onSelect(opt)}
                   style={styles.actionRow}
                 >
-                  <Text style={[styles.actionLabel, { color: colors.action }]}>{opt}</Text>
+                  <Text
+                    style={[
+                      styles.actionLabel,
+                      { color: lightBrandChrome ? BRAND_CANCEL_BG : system.action },
+                    ]}
+                  >
+                    {opt}
+                  </Text>
                 </Pressable>
               </View>
             ))}
           </View>
-          <View style={{ height: CANCEL_SECTION_SPACING, backgroundColor: colors.optionsPanel }} />
-          <View style={[styles.cancelBlock, { backgroundColor: colors.cancelPanel }]}>
-            <Pressable accessibilityRole="button" onPress={onCancel} style={styles.actionRow}>
-              <Text style={[styles.cancelLabel, { color: colors.action }]}>{cancelLabel}</Text>
-            </Pressable>
-          </View>
+          {!lightBrandChrome ? (
+            <View
+              style={{
+                height: CANCEL_SECTION_SPACING,
+                backgroundColor: system.optionsPanel,
+              }}
+            />
+          ) : null}
+          {lightBrandChrome ? (
+            <View
+              collapsable={false}
+              needsOffscreenAlphaCompositing={Platform.OS === "ios"}
+              style={{ width: "100%", backgroundColor: BRAND_CANCEL_BG }}
+            >
+              <Pressable
+                accessibilityRole="button"
+                onPress={onCancel}
+                style={styles.actionRow}
+                android_ripple={null}
+              >
+                <Text style={styles.lightBrandCancelLabel}>{cancelLabel}</Text>
+              </Pressable>
+            </View>
+          ) : (
+            <View style={[styles.cancelBlock, { backgroundColor: system.cancelPanel }]}>
+              <Pressable accessibilityRole="button" onPress={onCancel} style={styles.actionRow}>
+                <Text style={[styles.cancelLabel, { color: BRAND_CANCEL_TEXT }]}>{cancelLabel}</Text>
+              </Pressable>
+            </View>
+          )}
         </View>
       </View>
     </Modal>
@@ -123,5 +175,11 @@ const styles = StyleSheet.create({
     fontSize: 17,
     fontFamily: "Inter_400Regular",
     textAlign: "center",
+  },
+  lightBrandCancelLabel: {
+    fontSize: 17,
+    fontFamily: "Inter_400Regular",
+    textAlign: "center",
+    color: BRAND_CANCEL_TEXT,
   },
 });

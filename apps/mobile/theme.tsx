@@ -16,6 +16,9 @@ const MOBILE_BRAND_ACCENT = {
   disabled: "#5EEAD4",
 } as const;
 
+/** Brand teal for custom UI (e.g. action-sheet cancel) — same as `useFlareColors().primary` in light mode. */
+export const MOBILE_BRAND_PRIMARY = MOBILE_BRAND_ACCENT.primary;
+
 /** Filled destructive controls (logout, meal remove, destructive modal confirm). Change only here. */
 export const MOBILE_DESTRUCTIVE_FILL = "#dc2626" as const;
 

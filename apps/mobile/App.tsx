@@ -1486,42 +1486,6 @@ function DashboardScreen({ user }: { user: SessionUser }) {
           </View>
         </View>
       </Card>
-      <Text style={[styles.dashboardSectionTitle, { color: c.text }]}>Recent logs</Text>
-      <Card title="" style={styles.accountOptionsListCard} compactBody>
-        <AccountOptionRow label="Symptom History" labelMedium labelColor="secondary" onPress={() => navigation.navigate("SymptomHistory")} />
-        <AccountOptionRow
-          label="Medication Tracking History"
-          labelMedium
-          labelColor="secondary"
-          onPress={() => navigation.navigate("MedicationTrackingHistory")}
-        />
-      </Card>
-      <Text style={[styles.dashboardSectionTitleLeft, { color: c.text }]}>Recent Activity</Text>
-      <Card title="" style={styles.accountPaddedCard} compactBody>
-        {recentActivity.length ? (
-          <View style={styles.recentActivityFeed}>
-            {recentActivity.map((item) => (
-              <View key={item.key} style={styles.recentActivityFeedItem}>
-                <Ionicons
-                  name="pulse"
-                  size={20}
-                  color={c.primary}
-                  style={styles.recentActivityFeedIcon}
-                  accessibilityIgnoresInvertColors
-                />
-                <View style={styles.recentActivityFeedText}>
-                  <Text style={[styles.recentActivityFeedTitle, { color: c.textMuted }]} numberOfLines={2}>
-                    {item.title}
-                  </Text>
-                  <Text style={[styles.recentActivityFeedWhen, { color: c.textMuted }]}>{formatRelativeTime(item.ts)}</Text>
-                </View>
-              </View>
-            ))}
-          </View>
-        ) : (
-          <Text style={[styles.muted, { color: c.textMuted }]}>No recent activity yet.</Text>
-        )}
-      </Card>
       <Text style={[styles.dashboardSectionTitle, { color: c.text }]}>Latest News</Text>
       <Card title="">
         {newsLoading ? (
@@ -1558,6 +1522,42 @@ function DashboardScreen({ user }: { user: SessionUser }) {
             ))}
           </ScrollView>
         )}
+      </Card>
+      <Text style={[styles.dashboardSectionTitleLeft, { color: c.text }]}>Recent Activity</Text>
+      <Card title="" style={styles.accountPaddedCard} compactBody>
+        {recentActivity.length ? (
+          <View style={styles.recentActivityFeed}>
+            {recentActivity.map((item) => (
+              <View key={item.key} style={styles.recentActivityFeedItem}>
+                <Ionicons
+                  name="pulse"
+                  size={20}
+                  color={c.primary}
+                  style={styles.recentActivityFeedIcon}
+                  accessibilityIgnoresInvertColors
+                />
+                <View style={styles.recentActivityFeedText}>
+                  <Text style={[styles.recentActivityFeedTitle, { color: c.textMuted }]} numberOfLines={2}>
+                    {item.title}
+                  </Text>
+                  <Text style={[styles.recentActivityFeedWhen, { color: c.textMuted }]}>{formatRelativeTime(item.ts)}</Text>
+                </View>
+              </View>
+            ))}
+          </View>
+        ) : (
+          <Text style={[styles.muted, { color: c.textMuted }]}>No recent activity yet.</Text>
+        )}
+      </Card>
+      <Text style={[styles.dashboardSectionTitle, { color: c.text }]}>Recent logs</Text>
+      <Card title="" style={styles.accountOptionsListCard} compactBody>
+        <AccountOptionRow label="Symptom History" labelMedium labelColor="textMuted" onPress={() => navigation.navigate("SymptomHistory")} />
+        <AccountOptionRow
+          label="Medication Tracking History"
+          labelMedium
+          labelColor="textMuted"
+          onPress={() => navigation.navigate("MedicationTrackingHistory")}
+        />
       </Card>
       <View style={styles.moreSection}>
         <Text style={[styles.dashboardSectionTitleLeft, { color: c.text }]}>More</Text>
@@ -1858,7 +1858,9 @@ function SymptomDetailScreen({ user }: { user: SessionUser }) {
         <SymptomReviewGrid>
           <SymptomReviewField label="Start Date" value={timelineStart} />
           <SymptomReviewField label="Status" value={isOngoing ? "Ongoing" : "Ended"} />
-          {!isOngoing && timelineEnd ? <SymptomReviewField label="End Date" value={formatUkDate(timelineEnd)} /> : null}
+          {!isOngoing && timelineEnd ? (
+            <SymptomReviewField label="End Date" value={formatUkDate(timelineEnd)} />
+          ) : null}
           <SymptomReviewField label="Severity" value={formatSymptomScoreDisplay(severityRaw)} />
           <SymptomReviewField label="Stress Level" value={formatSymptomScoreDisplay(stressRaw)} />
         </SymptomReviewGrid>
@@ -1871,7 +1873,10 @@ function SymptomDetailScreen({ user }: { user: SessionUser }) {
             value={normalBathroom ? `${normalBathroom} times/day` : "Not set"}
           />
           {bathroomChanged ? (
-            <SymptomReviewField label="Frequency Changed" value={bathroomChanged === "yes" ? "Yes" : "No"} />
+            <SymptomReviewField
+              label="Frequency Changed"
+              value={bathroomChanged === "yes" ? "Yes" : "No"}
+            />
           ) : null}
         </SymptomReviewGrid>
         {bathroomChanged === "yes" && bathroomChangeDetails ? (
@@ -1898,7 +1903,10 @@ function SymptomDetailScreen({ user }: { user: SessionUser }) {
               <SymptomReviewField label="Alcohol" value={alcohol === true ? "Yes" : "No"} />
             ) : null}
             {isFirstTimeLifestyle && alcohol === true && averageAlcohol ? (
-              <SymptomReviewField label="Alcohol Habits (on average)" value={`${averageAlcohol} units/week`} />
+              <SymptomReviewField
+                label="Alcohol Habits (on average)"
+                value={`${averageAlcohol} units/week`}
+              />
             ) : null}
             {!isFirstTimeLifestyle && typeof drankOnDay === "boolean" ? (
               <SymptomReviewField label="Alcohol Units Consumed" value={alcoholUnitsReviewValue} />
@@ -2102,8 +2110,13 @@ function MedicationLogDetailScreen({ user }: { user: SessionUser }) {
           >
             <SymptomReviewGrid>
               <SymptomReviewField label="Medication" value={item.medication} />
-              {showDosage ? <SymptomReviewField label="Dosage" value={item.dosage || "N/A"} /> : null}
-              <SymptomReviewField label="Date" value={item.date ? formatUkDate(item.date) : "N/A"} />
+              {showDosage ? (
+                <SymptomReviewField label="Dosage" value={item.dosage || "N/A"} />
+              ) : null}
+              <SymptomReviewField
+                label="Date"
+                value={item.date ? formatUkDate(item.date) : "N/A"}
+              />
               <SymptomReviewField label="Time of Day" value={item.timeOfDay || "N/A"} />
             </SymptomReviewGrid>
           </View>
@@ -2138,7 +2151,7 @@ function MedicationLogDetailScreen({ user }: { user: SessionUser }) {
 
         <SymptomReviewCard title="Overview">
           <SymptomReviewGrid>
-            <SymptomReviewField label="Missed doses" value={String(missedItems.length)} />
+            <SymptomReviewField label="Missed medications" value={String(missedItems.length)} />
             <SymptomReviewField label="NSAIDs" value={String(nsaidItems.length)} />
             <SymptomReviewField label="Antibiotics" value={String(antibioticItems.length)} />
           </SymptomReviewGrid>
@@ -2764,17 +2777,23 @@ const ACCOUNT_OPTION_ROUTES = [
 function AccountOptionRow({
   label,
   onPress,
-  labelColor = "default",
+  labelColor = "text",
   labelMedium,
 }: {
   label: string;
   onPress: () => void;
-  labelColor?: "default" | "primary" | "secondary";
+  labelColor?: "text" | "textMuted" | "textSecondary" | "primary";
   labelMedium?: boolean;
 }) {
   const c = useFlareColors();
   const labelTint =
-    labelColor === "primary" ? c.primary : labelColor === "secondary" ? c.textSecondary : c.text;
+    labelColor === "primary"
+      ? c.primary
+      : labelColor === "textMuted"
+        ? c.textMuted
+        : labelColor === "textSecondary"
+          ? c.textSecondary
+          : c.text;
   return (
     <Pressable
       accessibilityRole="button"
@@ -2960,21 +2979,26 @@ function AccountHelpScreen({
       contentContainerStyle={{ paddingBottom: bottomScrollInset + 24 }}
     >
       <Card title="" style={styles.accountOptionsListCard} compactBody>
-        <AccountOptionRow label="About FlareCare" labelColor="secondary" onPress={() => navigation.navigate("About")} />
-        <AccountOptionRow label="Contact support" labelColor="secondary" onPress={openSupportEmail} />
+        <AccountOptionRow label="About FlareCare" labelColor="textMuted" onPress={() => navigation.navigate("About")} />
+        <AccountOptionRow label="Contact support" labelColor="textMuted" onPress={openSupportEmail} />
       </Card>
-      <Text style={[styles.dashboardSectionTitleLeft, { color: c.text }]}>Delete account</Text>
-      <Text style={[styles.muted, { color: c.textMuted, lineHeight: 20, marginBottom: 4 }]}>
-        Permanently delete your account and all associated data. This cannot be undone.
-      </Text>
-      <Pressable
-        accessibilityRole="button"
-        accessibilityLabel="Delete account"
-        onPress={() => setDeleteAccountConfirmOpen(true)}
-        style={({ pressed }) => [styles.accountSignOutFooter, pressed && { opacity: 0.7 }]}
-      >
-        <Text style={[styles.accountSignOutFooterText, { color: c.destructiveFill }]}>Delete account</Text>
-      </Pressable>
+      <Card title="Delete account" style={styles.accountPaddedCard} compactBody>
+        <Text style={[styles.muted, { color: c.textMuted, lineHeight: 20 }]}>
+          Permanently delete your account and all associated data. This cannot be undone.
+        </Text>
+        <Pressable
+          accessibilityRole="button"
+          accessibilityLabel="Delete account"
+          onPress={() => setDeleteAccountConfirmOpen(true)}
+          style={({ pressed }) => [
+            styles.accountDeleteInCard,
+            { backgroundColor: c.surfaceSubtle },
+            pressed && { opacity: 0.7 },
+          ]}
+        >
+          <Text style={[styles.accountSignOutFooterText, { color: c.destructiveFill }]}>Delete account</Text>
+        </Pressable>
+      </Card>
       <ConfirmModal
         visible={deleteAccountConfirmOpen}
         title="Delete account"
@@ -3009,7 +3033,7 @@ function SettingsScreen() {
       <Card title="" style={styles.accountOptionsListCard} compactBody>
         <AccountOptionRow
           label="Push notifications and reminders"
-          labelColor="secondary"
+          labelColor="textSecondary"
           onPress={() => navigation.navigate("Reminders")}
         />
       </Card>
@@ -3073,7 +3097,7 @@ function AccountScreen({ user, onLogout }: { user: SessionUser; onLogout: (reaso
           <AccountOptionRow
             key={item.route}
             label={item.label}
-            labelColor="secondary"
+            labelColor="textMuted"
             onPress={() => navigation.navigate(item.route)}
           />
         ))}
@@ -3258,8 +3282,6 @@ function AppTabs({
         !isDashboard &&
         !isSymptomLogWizard &&
         !isMedicationTrackingWizard &&
-        !isAbout &&
-        !isIbd &&
         !isAccount &&
         !isReminders
           ? () => (
@@ -3675,6 +3697,14 @@ const styles = StyleSheet.create({
   /** My account list on Account tab — no extra card gap before logout. */
   accountOptionsListCardLast: { marginBottom: 0 },
   accountSignOutFooter: { alignSelf: "stretch", alignItems: "center", marginTop: 20, paddingVertical: 16 },
+  accountDeleteInCard: {
+    alignSelf: "stretch",
+    alignItems: "center",
+    justifyContent: "center",
+    marginTop: 14,
+    paddingVertical: 12,
+    borderRadius: 10,
+  },
   accountSignOutFooterText: { fontSize: 16, fontFamily: "Inter_700Bold", textAlign: "center" },
   /** Same height and radius as `PrimaryButton`; two equal slots like paired actions. */
   appearanceRow: { flexDirection: "row", gap: 8, marginTop: 14 },
