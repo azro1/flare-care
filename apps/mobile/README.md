@@ -44,6 +44,7 @@ Set these before running (e.g. `.env` or your shell, depending on how you load E
 - `EXPO_PUBLIC_SUPABASE_URL`
 - `EXPO_PUBLIC_SUPABASE_ANON_KEY`
 - `EXPO_PUBLIC_WEB_API_BASE_URL` (example: `https://your-web-app.vercel.app`)
+- `EXPO_PUBLIC_OTP_EXPIRY_SECONDS` (optional, default `900` — must match Supabase Auth → Email → OTP expiry)
 
 The web base URL is used for things like **weather** and **image proxying** where the mobile app calls your deployed web API.
 

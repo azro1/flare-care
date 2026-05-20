@@ -4,7 +4,7 @@ import * as WebBrowser from "expo-web-browser";
 import Constants from "expo-constants";
 import { makeRedirectUri } from "expo-auth-session";
 import AsyncStorage from "@react-native-async-storage/async-storage";
-import React, { useCallback, useEffect, useMemo, useRef, useState } from "react";
+import React, { useCallback, useEffect, useLayoutEffect, useMemo, useRef, useState } from "react";
 import { Controller, useForm } from "react-hook-form";
 import { yupResolver } from "@hookform/resolvers/yup";
 import * as yup from "yup";
@@ -43,7 +43,7 @@ import {
   PrimaryButton,
   SecondaryButton,
 } from "./components/FlareButton";
-import { LabeledInput } from "./components/FlareInput";
+import { flareFieldErrorStyle, LabeledInput } from "./components/FlareInput";
 import { HeaderOverflowMenu } from "./components/HeaderOverflowMenu";
 import { StackedDetailField } from "./components/StackedDetailField";
 import {
@@ -56,8 +56,20 @@ import {
 } from "./components/symptomReviewLayout";
 import { FlareThemeProvider, useFlareColors, useFlareTheme } from "./theme";
 import { formatUkDate } from "./lib/formatUkDate";
+import {
+  formatOtpCountdown,
+  OTP_MAX_RESENDS,
+  otpRemainingSeconds,
+  otpResendErrorMessage,
+  otpVerifyErrorMessage,
+} from "./lib/otpAuth";
 import { supabase, TABLES } from "./lib/supabase";
-import { dashboardSnapshotByUserId, type DashboardActivityRow, type DashboardSnapshot } from "./lib/dashboardSnapshotCache";
+import {
+  dashboardSnapshotByUserId,
+  invalidateDashboardSnapshot,
+  type DashboardActivityRow,
+  type DashboardSnapshot,
+} from "./lib/dashboardSnapshotCache";
 import { MedicationTrackingWizardScreen } from "./screens/MedicationTrackingWizardScreen";
 import { SymptomLogWizardScreen } from "./screens/SymptomLogWizardScreen";
 
@@ -97,7 +109,7 @@ type SessionUser = {
 const AUTH_PROVIDER_LABELS: Record<string, string> = {
   google: "Google",
   apple: "Apple",
-  email: "OTP",
+  email: "Email OTP",
 };
 
 function signInMethodLabelFromAuthUser(u: {
@@ -146,6 +158,11 @@ function firstNameFromSessionUser(user: SessionUser): string {
   const name = profileDisplayName(user);
   if (!name) return "there";
   return name.split(/\s+/).filter(Boolean)[0] ?? "there";
+}
+
+function accountIdentityFirstLine(user: SessionUser): string {
+  const first = firstNameFromSessionUser(user);
+  return first === "there" ? "You" : first;
 }
 type Appointment = { id: number; date: string; type: string | null; notes: string | null; time: string | null };
 type Medication = { id: number; name: string; dosage: string | null; time_of_day: string | null };
@@ -318,6 +335,33 @@ function ConfirmModal({
   );
 }
 
+async function deleteUserLogRow(
+  table: string,
+  id: string,
+  userId: string,
+): Promise<{ ok: true } | { ok: false; message: string }> {
+  if (!id) return { ok: false, message: "Missing entry id." };
+  const { error } = await supabase.from(table).delete().eq("id", id).eq("user_id", userId);
+  if (error) return { ok: false, message: error.message };
+  return { ok: true };
+}
+
+function DetailDeleteHeaderButton({ onPress, disabled }: { onPress: () => void; disabled?: boolean }) {
+  const c = useFlareColors();
+  return (
+    <Pressable
+      accessibilityRole="button"
+      accessibilityLabel="Delete entry"
+      onPress={onPress}
+      disabled={disabled}
+      hitSlop={10}
+      style={styles.headerDeleteButton}
+    >
+      <MaterialCommunityIcons name="trash-can-outline" size={22} color={c.textMuted} accessibilityIgnoresInvertColors />
+    </Pressable>
+  );
+}
+
 function SplashScreen() {
   const c = useFlareColors();
   return (
@@ -438,8 +482,11 @@ function AuthScreen({
 }) {
   const cAuth = useFlareColors();
   const insets = useSafeAreaInsets();
-  const [activeAuthAction, setActiveAuthAction] = useState<"email" | "code" | "google" | null>(null);
+  const [activeAuthAction, setActiveAuthAction] = useState<"email" | "code" | "google" | "resend" | null>(null);
   const [step, setStep] = useState<"method" | "email" | "code">("method");
+  const [otpSentAt, setOtpSentAt] = useState<number | null>(null);
+  const [otpResendCount, setOtpResendCount] = useState(0);
+  const [otpTick, setOtpTick] = useState(0);
   const emailSchema = useMemo(
     () =>
       yup.object({
@@ -481,15 +528,41 @@ function AuthScreen({
     mode: "onSubmit",
   });
 
+  const clearOtpSession = useCallback(() => {
+    setOtpSentAt(null);
+    setOtpResendCount(0);
+  }, []);
+
+  const sendOtpToEmail = useCallback(async (email: string) => {
+    const redirectTo = makeRedirectUri({ path: "auth/callback" });
+    return supabase.auth.signInWithOtp({ email, options: { emailRedirectTo: redirectTo } });
+  }, []);
+
+  useEffect(() => {
+    if (step !== "code" || otpSentAt == null) return;
+    const id = setInterval(() => setOtpTick((t) => t + 1), 1000);
+    return () => clearInterval(id);
+  }, [otpSentAt, step]);
+
+  const otpRemaining = useMemo(
+    () => otpRemainingSeconds(otpSentAt, Date.now()),
+    // otpTick drives once-per-second refresh while on code step
+    [otpSentAt, otpTick],
+  );
+  const otpExpired = otpSentAt != null && otpRemaining <= 0;
+  const canResendOtp = otpExpired && otpResendCount < OTP_MAX_RESENDS && activeAuthAction === null;
+  const resendLimitReached = otpExpired && otpResendCount >= OTP_MAX_RESENDS;
+
   const sendMagicLink = async ({ email }: { email: string }) => {
     setActiveAuthAction("email");
-    const redirectTo = makeRedirectUri({ path: "auth/callback" });
-    const { error } = await supabase.auth.signInWithOtp({ email, options: { emailRedirectTo: redirectTo } });
+    const { error } = await sendOtpToEmail(email);
     setActiveAuthAction(null);
     if (error) {
-      Alert.alert("Sign in failed", error.message);
+      Alert.alert("Sign in failed", otpResendErrorMessage(error.message));
       return;
     }
+    setOtpResendCount(0);
+    setOtpSentAt(Date.now());
     setStep("code");
     Alert.alert(
       "Check your email",
@@ -497,11 +570,34 @@ function AuthScreen({
     );
   };
 
+  const resendOtpCode = async () => {
+    if (!canResendOtp) return;
+    const email = getEmailValues("email");
+    if (!email) {
+      Alert.alert("Missing email", "Please enter your email first.");
+      setStep("email");
+      clearOtpSession();
+      return;
+    }
+    setActiveAuthAction("resend");
+    const { error } = await sendOtpToEmail(email);
+    setActiveAuthAction(null);
+    if (error) {
+      Alert.alert("Could not resend code", otpResendErrorMessage(error.message));
+      return;
+    }
+    setOtpResendCount((n) => n + 1);
+    setOtpSentAt(Date.now());
+    resetCode({ otpCode: "" });
+    Alert.alert("New code sent", "We've sent a new 6-digit code to your email.");
+  };
+
   const verifyOtpCode = async ({ otpCode }: { otpCode: string }) => {
     const email = getEmailValues("email");
     if (!email) {
       Alert.alert("Missing email", "Please enter your email first.");
       setStep("email");
+      clearOtpSession();
       return;
     }
     setActiveAuthAction("code");
@@ -512,9 +608,10 @@ function AuthScreen({
     });
     setActiveAuthAction(null);
     if (error) {
-      Alert.alert("Code verification failed", error.message);
+      Alert.alert("Code verification failed", otpVerifyErrorMessage(error.message));
       return;
     }
+    clearOtpSession();
     const user = data.user;
     if (user) {
       onSignedIn(sessionUserFromSupabaseAuthUser(user));
@@ -706,6 +803,39 @@ function AuthScreen({
                     />
                   )}
                 />
+                {otpSentAt != null && otpRemaining > 0 ? (
+                  <Text
+                    style={[
+                      styles.authOtpCountdown,
+                      { color: onPrimaryChrome ? "rgba(255,255,255,0.88)" : cAuth.textMuted },
+                    ]}
+                  >
+                    Code expires in {formatOtpCountdown(otpRemaining)}
+                  </Text>
+                ) : null}
+                {canResendOtp ? (
+                  <Pressable
+                    accessibilityRole="button"
+                    accessibilityLabel="Resend code"
+                    onPress={resendOtpCode}
+                    hitSlop={8}
+                    style={styles.authOtpResendPressable}
+                  >
+                    <Text style={[styles.authOtpResendLabel, { color: onPrimaryChrome ? cAuth.white : cAuth.primary }]}>
+                      Resend code
+                    </Text>
+                  </Pressable>
+                ) : null}
+                {resendLimitReached ? (
+                  <Text
+                    style={[
+                      styles.authOtpLimitMessage,
+                      { color: onPrimaryChrome ? "rgba(255,255,255,0.88)" : cAuth.textMuted },
+                    ]}
+                  >
+                    Too many code requests. Wait a few minutes or try a different email.
+                  </Text>
+                ) : null}
               </View>
               <View style={styles.authBottomActions}>
                 <PrimaryButton
@@ -718,6 +848,7 @@ function AuthScreen({
                   title="Use different email"
                   onPress={() => {
                     resetCode({ otpCode: "" });
+                    clearOtpSession();
                     setStep("email");
                   }}
                   disabled={activeAuthAction !== null}
@@ -807,7 +938,7 @@ function ProfileSetupScreen({ user, onComplete }: { user: SessionUser; onComplet
                   { color: onPrimaryChrome ? "rgba(255,255,255,0.88)" : cAuth.textMuted },
                 ]}
               >
-                Add your name so we can personalise your dashboard and account.
+                Help us personalise your experience — what should we call you?
               </Text>
               <Controller
                 control={control}
@@ -1555,12 +1686,16 @@ function formatSymptomScoreDisplay(raw: unknown): string {
 }
 
 function SymptomDetailScreen({ user }: { user: SessionUser }) {
+  const navigation = useNavigation<any>();
   const route = useRoute();
   const c = useFlareColors();
   const bottomScrollInset = useBottomTabScrollInset();
   const id = String((route.params as { id?: string })?.id ?? "");
   const [loading, setLoading] = useState(true);
   const [row, setRow] = useState<Record<string, unknown> | null>(null);
+  const [deleteConfirmOpen, setDeleteConfirmOpen] = useState(false);
+  const [deleting, setDeleting] = useState(false);
+  const deleteInFlight = useRef(false);
   const load = useCallback(async () => {
     if (!id) {
       setRow(null);
@@ -1579,6 +1714,38 @@ function SymptomDetailScreen({ user }: { user: SessionUser }) {
   useEffect(() => {
     load();
   }, [load]);
+
+  const handleDeleteConfirm = useCallback(async () => {
+    if (deleteInFlight.current || !id) return;
+    deleteInFlight.current = true;
+    setDeleting(true);
+    setDeleteConfirmOpen(false);
+    const result = await deleteUserLogRow(TABLES.LOG_SYMPTOMS, id, user.id);
+    setDeleting(false);
+    deleteInFlight.current = false;
+    if (!result.ok) {
+      Alert.alert("Could not delete", result.message);
+      return;
+    }
+    invalidateDashboardSnapshot(user.id);
+    if (navigation.canGoBack()) navigation.goBack();
+    else navigation.navigate("SymptomHistory");
+  }, [id, navigation, user.id]);
+
+  useLayoutEffect(() => {
+    if (loading || !row) {
+      navigation.setOptions({ headerRight: undefined });
+      return;
+    }
+    navigation.setOptions({
+      headerRight: () => (
+        <DetailDeleteHeaderButton onPress={() => setDeleteConfirmOpen(true)} disabled={deleting} />
+      ),
+    });
+    return () => {
+      navigation.setOptions({ headerRight: undefined });
+    };
+  }, [deleting, loading, navigation, row]);
 
   const createdRaw = pickSymptomField(row ?? {}, "created_at", "createdAt");
   const createdIso = createdRaw != null ? String(createdRaw) : "";
@@ -1681,12 +1848,13 @@ function SymptomDetailScreen({ user }: { user: SessionUser }) {
           : "Not recorded";
 
   return (
-    <ScrollView style={[styles.screen, { backgroundColor: c.screen }]} contentContainerStyle={{ paddingBottom: bottomScrollInset + 24 }}>
-      {createdSubtitle ? (
-        <Text style={[styles.symptomDetailLoggedAt, { color: c.textMuted }]}>{createdSubtitle}</Text>
-      ) : null}
+    <>
+      <ScrollView style={[styles.screen, { backgroundColor: c.screen }]} contentContainerStyle={{ paddingBottom: bottomScrollInset + 24 }}>
+        {createdSubtitle ? (
+          <Text style={[styles.symptomDetailLoggedAt, { color: c.textMuted }]}>{createdSubtitle}</Text>
+        ) : null}
 
-      <SymptomReviewCard title="Basic Information">
+        <SymptomReviewCard title="Basic Information">
         <SymptomReviewGrid>
           <SymptomReviewField label="Start Date" value={timelineStart} />
           <SymptomReviewField label="Status" value={isOngoing ? "Ongoing" : "Ended"} />
@@ -1755,12 +1923,22 @@ function SymptomDetailScreen({ user }: { user: SessionUser }) {
         </SymptomReviewCard>
       ) : null}
 
-      {notesText ? (
-        <SymptomReviewCard title="Notes">
-          <SymptomReviewNotesBody>{notesText}</SymptomReviewNotesBody>
-        </SymptomReviewCard>
-      ) : null}
-    </ScrollView>
+        {notesText ? (
+          <SymptomReviewCard title="Notes">
+            <SymptomReviewNotesBody>{notesText}</SymptomReviewNotesBody>
+          </SymptomReviewCard>
+        ) : null}
+      </ScrollView>
+      <ConfirmModal
+        visible={deleteConfirmOpen}
+        title="Delete symptom log"
+        message="Are you sure you want to delete this symptom log? This action cannot be undone."
+        confirmLabel={deleting ? "Deleting…" : "Delete"}
+        confirmDestructive
+        onCancel={() => setDeleteConfirmOpen(false)}
+        onConfirm={handleDeleteConfirm}
+      />
+    </>
   );
 }
 
@@ -1828,12 +2006,16 @@ function MedicationTrackingHistoryScreen({ user }: { user: SessionUser }) {
 }
 
 function MedicationLogDetailScreen({ user }: { user: SessionUser }) {
+  const navigation = useNavigation<any>();
   const route = useRoute();
   const c = useFlareColors();
   const bottomScrollInset = useBottomTabScrollInset();
   const id = String((route.params as { id?: string })?.id ?? "");
   const [loading, setLoading] = useState(true);
   const [row, setRow] = useState<Record<string, unknown> | null>(null);
+  const [deleteConfirmOpen, setDeleteConfirmOpen] = useState(false);
+  const [deleting, setDeleting] = useState(false);
+  const deleteInFlight = useRef(false);
   const load = useCallback(async () => {
     if (!id) {
       setRow(null);
@@ -1852,6 +2034,38 @@ function MedicationLogDetailScreen({ user }: { user: SessionUser }) {
   useEffect(() => {
     load();
   }, [load]);
+
+  const handleDeleteConfirm = useCallback(async () => {
+    if (deleteInFlight.current || !id) return;
+    deleteInFlight.current = true;
+    setDeleting(true);
+    setDeleteConfirmOpen(false);
+    const result = await deleteUserLogRow(TABLES.LOG_MEDICATIONS, id, user.id);
+    setDeleting(false);
+    deleteInFlight.current = false;
+    if (!result.ok) {
+      Alert.alert("Could not delete", result.message);
+      return;
+    }
+    invalidateDashboardSnapshot(user.id);
+    if (navigation.canGoBack()) navigation.goBack();
+    else navigation.navigate("MedicationTrackingHistory");
+  }, [id, navigation, user.id]);
+
+  useLayoutEffect(() => {
+    if (loading || !row) {
+      navigation.setOptions({ headerRight: undefined });
+      return;
+    }
+    navigation.setOptions({
+      headerRight: () => (
+        <DetailDeleteHeaderButton onPress={() => setDeleteConfirmOpen(true)} disabled={deleting} />
+      ),
+    });
+    return () => {
+      navigation.setOptions({ headerRight: undefined });
+    };
+  }, [deleting, loading, navigation, row]);
 
   const createdIso = row?.created_at != null ? String(row.created_at) : "";
   const createdDate = createdIso ? new Date(createdIso) : null;
@@ -1916,23 +2130,34 @@ function MedicationLogDetailScreen({ user }: { user: SessionUser }) {
   }
 
   return (
-    <ScrollView style={[styles.screen, { backgroundColor: c.screen }]} contentContainerStyle={{ paddingBottom: bottomScrollInset + 24 }}>
-      {createdSubtitle ? (
-        <Text style={[styles.symptomDetailLoggedAt, { color: c.textMuted }]}>{createdSubtitle}</Text>
-      ) : null}
+    <>
+      <ScrollView style={[styles.screen, { backgroundColor: c.screen }]} contentContainerStyle={{ paddingBottom: bottomScrollInset + 24 }}>
+        {createdSubtitle ? (
+          <Text style={[styles.symptomDetailLoggedAt, { color: c.textMuted }]}>{createdSubtitle}</Text>
+        ) : null}
 
-      <SymptomReviewCard title="Overview">
-        <SymptomReviewGrid>
-          <SymptomReviewField label="Missed doses" value={String(missedItems.length)} />
-          <SymptomReviewField label="NSAIDs" value={String(nsaidItems.length)} />
-          <SymptomReviewField label="Antibiotics" value={String(antibioticItems.length)} />
-        </SymptomReviewGrid>
-      </SymptomReviewCard>
+        <SymptomReviewCard title="Overview">
+          <SymptomReviewGrid>
+            <SymptomReviewField label="Missed doses" value={String(missedItems.length)} />
+            <SymptomReviewField label="NSAIDs" value={String(nsaidItems.length)} />
+            <SymptomReviewField label="Antibiotics" value={String(antibioticItems.length)} />
+          </SymptomReviewGrid>
+        </SymptomReviewCard>
 
-      {renderListSection("Missed Medications", missedItems, false)}
-      {renderListSection("NSAIDs Taken", nsaidItems, true)}
-      {renderListSection("Antibiotics Taken", antibioticItems, true)}
-    </ScrollView>
+        {renderListSection("Missed Medications", missedItems, false)}
+        {renderListSection("NSAIDs Taken", nsaidItems, true)}
+        {renderListSection("Antibiotics Taken", antibioticItems, true)}
+      </ScrollView>
+      <ConfirmModal
+        visible={deleteConfirmOpen}
+        title="Delete medication log"
+        message="Are you sure you want to delete this medication log? This action cannot be undone."
+        confirmLabel={deleting ? "Deleting…" : "Delete"}
+        confirmDestructive
+        onCancel={() => setDeleteConfirmOpen(false)}
+        onConfirm={handleDeleteConfirm}
+      />
+    </>
   );
 }
 
@@ -2355,7 +2580,7 @@ function NotificationsScreen({ user }: { user: SessionUser }) {
         <PrimaryButton title="Enable notifications" onPress={register} />
         <Text style={[styles.text, { color: c.textMuted }]}>Token: {token ? `${token.slice(0, 24)}...` : "not registered"}</Text>
         <Text style={[styles.text, { color: c.textMuted }]}>Scheduled reminders: {scheduled}</Text>
-        {lastError ? <Text style={[styles.errorText, { color: c.danger }]}>Error: {lastError}</Text> : null}
+        {lastError ? <Text style={flareFieldErrorStyle(c, "wizard")}>Error: {lastError}</Text> : null}
         {Platform.OS === "ios" ? <Text style={[styles.muted, { color: c.textMuted }]}>iOS requires real device + APNs entitlements.</Text> : null}
       </Card>
     </ScrollView>
@@ -2573,9 +2798,11 @@ function AccountOptionRow({
 }
 
 function AccountInfoScreen({ user }: { user: SessionUser }) {
+  const navigation = useNavigation<any>();
   const c = useFlareColors();
   const bottomScrollInset = useBottomTabScrollInset();
-  const displayName = user.displayName?.trim() || "Not set";
+  const firstLine = accountIdentityFirstLine(user);
+  const emailLine = user.email || "Unknown user";
 
   return (
     <ScrollView
@@ -2583,26 +2810,27 @@ function AccountInfoScreen({ user }: { user: SessionUser }) {
       contentContainerStyle={{ paddingBottom: bottomScrollInset + 24 }}
     >
       <Card title="" style={styles.accountPaddedCard} compactBody>
-        <View style={styles.accountIdentityRow}>
-          <View style={[styles.accountAvatarWell, { backgroundColor: c.surfaceSubtle }]}>
-            <Ionicons name="person" size={26} color={c.primary} accessibilityIgnoresInvertColors />
+        <Pressable
+          accessibilityRole="button"
+          accessibilityLabel={`Personal details, ${firstLine}, ${emailLine}`}
+          onPress={() => navigation.navigate("AccountPersonalDetails")}
+          hitSlop={4}
+          style={styles.accountIdentityNavRow}
+        >
+          <View style={styles.accountIdentityRow}>
+            <View style={[styles.accountAvatarWell, { backgroundColor: c.surfaceSubtle }]}>
+              <Ionicons name="person" size={26} color={c.primary} accessibilityIgnoresInvertColors />
+            </View>
+            <View style={styles.accountIdentityTextCol}>
+              <Text style={[styles.accountFirstName, { color: c.text }]}>{firstLine}</Text>
+              <Text style={[styles.accountEmailLine, { color: c.textMuted }]}>{emailLine}</Text>
+            </View>
           </View>
-          <View style={styles.accountIdentityTextCol}>
-            <Text style={[styles.accountFirstName, { color: c.text }]}>{displayName}</Text>
-            <Text style={[styles.accountEmailLine, { color: c.textMuted }]}>{user.email || "Unknown user"}</Text>
-          </View>
-        </View>
+          <Ionicons name="chevron-forward" size={18} color={c.textMuted} accessibilityIgnoresInvertColors />
+        </Pressable>
       </Card>
       <Card title="" style={styles.accountPaddedCard} compactBody>
         <View style={styles.accountInfoFields}>
-          <View>
-            <Text style={[styles.accountInfoFieldLabel, { color: c.textMuted }]}>Email</Text>
-            <Text style={[styles.accountInfoFieldValue, { color: c.text }]}>{user.email || "Not available"}</Text>
-          </View>
-          <View>
-            <Text style={[styles.accountInfoFieldLabel, { color: c.textMuted }]}>Full name</Text>
-            <Text style={[styles.accountInfoFieldValue, { color: c.text }]}>{displayName}</Text>
-          </View>
           <View>
             <Text style={[styles.accountInfoFieldLabel, { color: c.textMuted }]}>Account created</Text>
             <Text style={[styles.accountInfoFieldValue, { color: c.text }]}>
@@ -2620,6 +2848,43 @@ function AccountInfoScreen({ user }: { user: SessionUser }) {
             <Text style={[styles.accountInfoFieldValue, { color: c.text }]} selectable>
               {user.id}
             </Text>
+          </View>
+        </View>
+      </Card>
+    </ScrollView>
+  );
+}
+
+function AccountPersonalDetailsScreen({ user }: { user: SessionUser }) {
+  const c = useFlareColors();
+  const bottomScrollInset = useBottomTabScrollInset();
+  const displayName = user.displayName?.trim() || "Not set";
+
+  return (
+    <ScrollView
+      style={[styles.screen, { backgroundColor: c.screen }]}
+      contentContainerStyle={{ paddingBottom: bottomScrollInset + 24 }}
+    >
+      <Card title="" style={styles.accountPaddedCard} compactBody>
+        <View style={styles.accountIdentityRow}>
+          <View style={[styles.accountAvatarWell, { backgroundColor: c.surfaceSubtle }]}>
+            <Ionicons name="person" size={26} color={c.primary} accessibilityIgnoresInvertColors />
+          </View>
+          <View style={styles.accountIdentityTextCol}>
+            <Text style={[styles.accountFirstName, { color: c.text }]}>{accountIdentityFirstLine(user)}</Text>
+            <Text style={[styles.accountEmailLine, { color: c.textMuted }]}>{user.email || "Unknown user"}</Text>
+          </View>
+        </View>
+      </Card>
+      <Card title="" style={styles.accountPaddedCard} compactBody>
+        <View style={styles.accountInfoFields}>
+          <View>
+            <Text style={[styles.accountInfoFieldLabel, { color: c.textMuted }]}>Full name</Text>
+            <Text style={[styles.accountInfoFieldValue, { color: c.text }]}>{displayName}</Text>
+          </View>
+          <View>
+            <Text style={[styles.accountInfoFieldLabel, { color: c.textMuted }]}>Email</Text>
+            <Text style={[styles.accountInfoFieldValue, { color: c.text }]}>{user.email || "Not available"}</Text>
           </View>
         </View>
       </Card>
@@ -2645,7 +2910,18 @@ function AccountSecurityScreen() {
   );
 }
 
-function AccountHelpScreen({ onLogout }: { user: SessionUser; onLogout: (reason?: SignOutReason) => void | Promise<void> }) {
+function AccountHelpScreen({
+  onLogout,
+  prepareSignOut,
+  finishSignOut,
+  restoreAfterAbortedSignOut,
+}: {
+  user: SessionUser;
+  onLogout: (reason?: SignOutReason) => void | Promise<void>;
+  prepareSignOut: (reason: SignOutReason) => void;
+  finishSignOut: () => Promise<void>;
+  restoreAfterAbortedSignOut: () => Promise<void>;
+}) {
   const navigation = useNavigation<any>();
   const c = useFlareColors();
   const bottomScrollInset = useBottomTabScrollInset();
@@ -2656,20 +2932,23 @@ function AccountHelpScreen({ onLogout }: { user: SessionUser; onLogout: (reason?
     if (deleteAccountInFlight.current) return;
     deleteAccountInFlight.current = true;
     setDeleteAccountConfirmOpen(false);
+    prepareSignOut("account_deleted");
     try {
       const { error } = await supabase.rpc("delete_user_account");
       if (error) {
+        await restoreAfterAbortedSignOut();
         Alert.alert("Could not delete account", error.message);
         return;
       }
-      await onLogout("account_deleted");
+      await finishSignOut();
     } catch (e: unknown) {
+      await restoreAfterAbortedSignOut();
       const msg = e instanceof Error ? e.message : "Something went wrong.";
       Alert.alert("Could not delete account", msg);
     } finally {
       deleteAccountInFlight.current = false;
     }
-  }, [onLogout]);
+  }, [finishSignOut, prepareSignOut, restoreAfterAbortedSignOut]);
 
   const openSupportEmail = () => {
     Linking.openURL("mailto:support@flarecare.app").catch(() => {});
@@ -2770,10 +3049,7 @@ function AccountScreen({ user, onLogout }: { user: SessionUser; onLogout: (reaso
   const bottomScrollInset = useBottomTabScrollInset();
   const [logoutConfirmOpen, setLogoutConfirmOpen] = useState(false);
 
-  const accountFirstName = useMemo(() => {
-    const first = firstNameFromSessionUser(user);
-    return first === "there" ? "You" : first;
-  }, [user]);
+  const accountFirstName = useMemo(() => accountIdentityFirstLine(user), [user]);
 
   return (
     <ScrollView
@@ -2886,7 +3162,19 @@ function MainBottomTabBar({
   );
 }
 
-function AppTabs({ user, onLogout }: { user: SessionUser; onLogout: (reason?: SignOutReason) => void | Promise<void> }) {
+function AppTabs({
+  user,
+  onLogout,
+  prepareSignOut,
+  finishSignOut,
+  restoreAfterAbortedSignOut,
+}: {
+  user: SessionUser;
+  onLogout: (reason?: SignOutReason) => void | Promise<void>;
+  prepareSignOut: (reason: SignOutReason) => void;
+  finishSignOut: () => Promise<void>;
+  restoreAfterAbortedSignOut: () => Promise<void>;
+}) {
   const { nav, colors } = useFlareTheme();
   const navigationRef = useNavigationContainerRef<Record<string, object | undefined>>();
   const [focusRouteName, setFocusRouteName] = useState("Dashboard");
@@ -2910,6 +3198,7 @@ function AppTabs({ user, onLogout }: { user: SessionUser; onLogout: (reason?: Si
       SymptomLogWizard: "Log Symptoms",
       MedicationTrackingWizard: "Track Medications",
       AccountInfo: "Information",
+      AccountPersonalDetails: "Personal details",
       AccountSecurity: "Security",
       AccountHelp: "Help",
       Settings: "Settings",
@@ -3015,8 +3304,21 @@ function AppTabs({ user, onLogout }: { user: SessionUser; onLogout: (reason?: Si
             <AppStack.Screen name="Account">{() => <AccountScreen user={user} onLogout={onLogout} />}</AppStack.Screen>
             <AppStack.Screen name="Settings">{() => <SettingsScreen />}</AppStack.Screen>
             <AppStack.Screen name="AccountInfo">{() => <AccountInfoScreen user={user} />}</AppStack.Screen>
+            <AppStack.Screen name="AccountPersonalDetails">
+              {() => <AccountPersonalDetailsScreen user={user} />}
+            </AppStack.Screen>
             <AppStack.Screen name="AccountSecurity">{() => <AccountSecurityScreen />}</AppStack.Screen>
-            <AppStack.Screen name="AccountHelp">{() => <AccountHelpScreen user={user} onLogout={onLogout} />}</AppStack.Screen>
+            <AppStack.Screen name="AccountHelp">
+              {() => (
+                <AccountHelpScreen
+                  user={user}
+                  onLogout={onLogout}
+                  prepareSignOut={prepareSignOut}
+                  finishSignOut={finishSignOut}
+                  restoreAfterAbortedSignOut={restoreAfterAbortedSignOut}
+                />
+              )}
+            </AppStack.Screen>
             <AppStack.Screen name="About">{() => <AboutScreen />}</AppStack.Screen>
           </AppStack.Navigator>
         </View>
@@ -3081,24 +3383,50 @@ function AppRoot() {
     };
   }, []);
 
-  const completeSignOut = useCallback(async (reason: SignOutReason = "logout") => {
-    await supabase.auth.signOut();
-    setUser(null);
+  const prepareSignOut = useCallback((reason: SignOutReason) => {
     setSignOutNotice(reason);
   }, []);
+
+  const finishSignOut = useCallback(async () => {
+    setUser(null);
+    await supabase.auth.signOut();
+  }, []);
+
+  const restoreAfterAbortedSignOut = useCallback(async () => {
+    setSignOutNotice(null);
+    const { data } = await supabase.auth.getSession();
+    const sessionUser = data.session?.user;
+    setUser(sessionUser ? sessionUserFromSupabaseAuthUser(sessionUser) : null);
+  }, []);
+
+  const completeSignOut = useCallback(
+    async (reason: SignOutReason = "logout") => {
+      prepareSignOut(reason);
+      await finishSignOut();
+    },
+    [finishSignOut, prepareSignOut],
+  );
 
   const content = useMemo(() => {
     if (!fontsLoaded || loading || showSplash || !appearanceHydrated) {
       return <SplashScreen />;
     }
+    if (signOutNotice) {
+      return <SignedOutScreen reason={signOutNotice} onContinue={() => setSignOutNotice(null)} />;
+    }
     if (user && profileNeedsSetup(user)) {
       return <ProfileSetupScreen user={user} onComplete={(next) => setUser(next)} />;
     }
     if (user) {
-      return <AppTabs user={user} onLogout={completeSignOut} />;
-    }
-    if (signOutNotice) {
-      return <SignedOutScreen reason={signOutNotice} onContinue={() => setSignOutNotice(null)} />;
+      return (
+        <AppTabs
+          user={user}
+          onLogout={completeSignOut}
+          prepareSignOut={prepareSignOut}
+          finishSignOut={finishSignOut}
+          restoreAfterAbortedSignOut={restoreAfterAbortedSignOut}
+        />
+      );
     }
     if (authBusy) {
       return <SplashScreen />;
@@ -3112,7 +3440,19 @@ function AppRoot() {
         onAuthBusy={setAuthBusy}
       />
     );
-  }, [fontsLoaded, loading, showSplash, appearanceHydrated, user, signOutNotice, authBusy, completeSignOut]);
+  }, [
+    fontsLoaded,
+    loading,
+    showSplash,
+    appearanceHydrated,
+    user,
+    signOutNotice,
+    authBusy,
+    completeSignOut,
+    prepareSignOut,
+    finishSignOut,
+    restoreAfterAbortedSignOut,
+  ]);
 
   const profileSetupActive = Boolean(user && profileNeedsSetup(user));
   const authScreenActive =
@@ -3164,6 +3504,21 @@ const styles = StyleSheet.create({
   authPromptSub: { textAlign: "center", fontSize: 13, fontFamily: "Inter_400Regular", marginTop: 4 },
   /** Extra gap before email field only — keep method screen subtitle unchanged */
   authEmailHelperSub: { marginBottom: 18 },
+  authOtpCountdown: {
+    textAlign: "center",
+    fontSize: 13,
+    fontFamily: "Inter_400Regular",
+    marginTop: 4,
+  },
+  authOtpResendPressable: { alignSelf: "center", marginTop: 10, paddingVertical: 4 },
+  authOtpResendLabel: { fontSize: 14, fontFamily: "Inter_500Medium", textAlign: "center" },
+  authOtpLimitMessage: {
+    textAlign: "center",
+    fontSize: 13,
+    fontFamily: "Inter_400Regular",
+    marginTop: 10,
+    lineHeight: 18,
+  },
   authFlowPanel: { flex: 1, justifyContent: "center" },
   authFormCenter: { justifyContent: "center" },
   authBottomActions: { paddingBottom: 6, marginTop: 10, gap: 8 },
@@ -3238,7 +3593,6 @@ const styles = StyleSheet.create({
   },
   text: { fontSize: 14, fontFamily: "Inter_400Regular" },
   muted: { fontSize: 13, fontFamily: "Inter_400Regular" },
-  errorText: { fontSize: 13, fontFamily: "Inter_400Regular" },
   bigText: { fontSize: 30, fontFamily: "Inter_700Bold", marginBottom: 8 },
   headerIconButton: {
     width: 34,
@@ -3263,6 +3617,14 @@ const styles = StyleSheet.create({
     paddingRight: 10,
     minHeight: 44,
   },
+  headerDeleteButton: {
+    justifyContent: "center",
+    alignItems: "flex-end",
+    paddingVertical: 8,
+    paddingLeft: 10,
+    paddingRight: Platform.OS === "ios" ? 6 : 4,
+    minHeight: 44,
+  },
   bottomTabBarWrap: {
     flexDirection: "row",
     alignItems: "center",
@@ -3272,7 +3634,12 @@ const styles = StyleSheet.create({
   },
   bottomTabItem: { flex: 1, alignItems: "center", justifyContent: "center", gap: 3, paddingVertical: 4 },
   bottomTabLabel: { fontSize: 11, fontFamily: "Inter_500Medium" },
-  accountIdentityRow: { flexDirection: "row", alignItems: "center" },
+  accountIdentityRow: { flexDirection: "row", alignItems: "center", flex: 1, minWidth: 0 },
+  accountIdentityNavRow: {
+    flexDirection: "row",
+    alignItems: "center",
+    justifyContent: "space-between",
+  },
   accountPaddedCard: { padding: 18 },
   /** My account / Help link lists. */
   accountOptionsListCard: { paddingHorizontal: 20, paddingVertical: 12 },

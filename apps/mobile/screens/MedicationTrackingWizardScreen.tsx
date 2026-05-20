@@ -18,7 +18,7 @@ import {
 import { OptionPickerModal } from "../components/OptionPickerModal";
 import { SymptomReviewCard, SymptomReviewField, SymptomReviewGrid } from "../components/symptomReviewLayout";
 import { PrimaryButton, SecondaryButton } from "../components/FlareButton";
-import { FlareInputTrigger, FlareTextInput } from "../components/FlareInput";
+import { flareFieldErrorStyle, FlareInputTrigger, FlareTextInput } from "../components/FlareInput";
 import { invalidateDashboardSnapshot } from "../lib/dashboardSnapshotCache";
 import { formatUkDate } from "../lib/formatUkDate";
 import { medicationWizardTryAdvance } from "../lib/medicationWizardNextStep";
@@ -89,6 +89,7 @@ function listKey(kind: ListKind): "missedMedicationsList" | "nsaidList" | "antib
 export function MedicationTrackingWizardScreen({ user }: { user: SessionUser }) {
   const navigation = useNavigation<any>();
   const c = useFlareColors();
+  const errTextStyle = flareFieldErrorStyle(c, "wizard");
   const { colors } = useFlareTheme();
   const { height: windowHeight } = useWindowDimensions();
   const [currentStep, setCurrentStep] = useState(0);
@@ -303,7 +304,7 @@ export function MedicationTrackingWizardScreen({ user }: { user: SessionUser }) 
           <Text style={{ color: c.text }}>No</Text>
         </Pressable>
       </View>
-      {fieldErrors[field] ? <Text style={styles.err}>{fieldErrors[field]}</Text> : null}
+      {fieldErrors[field] ? <Text style={errTextStyle}>{fieldErrors[field]}</Text> : null}
     </View>
   );
 
@@ -371,7 +372,7 @@ export function MedicationTrackingWizardScreen({ user }: { user: SessionUser }) 
         >
           <Text style={{ color: c.primary, fontFamily: "Inter_700Bold" }}>Add medication</Text>
         </Pressable>
-        {fieldErrors[errKey] ? <Text style={styles.err}>{fieldErrors[errKey]}</Text> : null}
+        {fieldErrors[errKey] ? <Text style={errTextStyle}>{fieldErrors[errKey]}</Text> : null}
         {datePicker?.list === kind && datePicker.index >= 0 && pickerDraftDate ? (
           <>
             <DateTimePicker
@@ -566,7 +567,6 @@ const styles = StyleSheet.create({
   radioRow: { flexDirection: "row", alignItems: "center", gap: 10 },
   radioOuter: { width: 22, height: 22, borderRadius: 11, borderWidth: 2, alignItems: "center", justifyContent: "center" },
   radioInner: { width: 12, height: 12, borderRadius: 6 },
-  err: { color: "#b3261e", marginTop: 8, fontSize: 13 },
   listEntryWrap: { marginBottom: 12 },
   listEntryWrapFirst: { paddingTop: 4 },
   listMedRow: { position: "relative", overflow: "visible" },

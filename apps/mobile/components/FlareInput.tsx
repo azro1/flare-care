@@ -50,8 +50,17 @@ export const flareInputStyles = StyleSheet.create({
   },
   fieldBlock: { gap: 6, marginBottom: 2 },
   label: { fontSize: 13, fontFamily: "Inter_500Medium", marginTop: 2 },
-  fieldError: { fontSize: 12, fontFamily: "Inter_400Regular", marginTop: 2 },
 });
+
+/** Shared validation/error copy — always use `c.danger` for color. */
+export const flareFieldErrorStyles = StyleSheet.create({
+  input: { fontSize: 12, fontFamily: "Inter_400Regular", marginTop: 2 },
+  wizard: { fontSize: 13, fontFamily: "Inter_400Regular", marginTop: 8 },
+});
+
+export function flareFieldErrorStyle(c: FlareColors, variant: "input" | "wizard" = "input") {
+  return [flareFieldErrorStyles[variant], { color: c.danger }];
+}
 
 export function flareInputThemeColors(c: FlareColors, onPrimary?: boolean) {
   if (onPrimary) {
@@ -126,7 +135,7 @@ export function LabeledInput({
     <View style={flareInputStyles.fieldBlock}>
       <Text style={[flareInputStyles.label, { color: onBlue ? "rgba(255,255,255,0.92)" : c.textSecondary }]}>{label}</Text>
       <FlareTextInput style={style} onPrimary={onPrimary} multiline={multiline} {...props} />
-      {error ? <Text style={[flareInputStyles.fieldError, { color: c.danger }]}>{error}</Text> : null}
+      {error ? <Text style={flareFieldErrorStyle(c, "input")}>{error}</Text> : null}
     </View>
   );
 }

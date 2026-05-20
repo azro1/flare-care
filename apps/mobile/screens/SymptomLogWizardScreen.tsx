@@ -26,7 +26,7 @@ import {
   SymptomReviewSubsection,
 } from "../components/symptomReviewLayout";
 import { PrimaryButton, SecondaryButton } from "../components/FlareButton";
-import { FlareInputTrigger, FlareTextInput } from "../components/FlareInput";
+import { flareFieldErrorStyle, FlareInputTrigger, FlareTextInput } from "../components/FlareInput";
 import { invalidateDashboardSnapshot } from "../lib/dashboardSnapshotCache";
 import { formatUkDate } from "../lib/formatUkDate";
 import { supabase, TABLES } from "../lib/supabase";
@@ -91,6 +91,7 @@ function isAndroidDatePickerDismissed(event: { type?: string }): boolean {
 export function SymptomLogWizardScreen({ user }: { user: SessionUser }) {
   const navigation = useNavigation<any>();
   const c = useFlareColors();
+  const errTextStyle = flareFieldErrorStyle(c, "wizard");
   const { colors } = useFlareTheme();
   const { height: windowHeight } = useWindowDimensions();
   const [loadingPrefs, setLoadingPrefs] = useState(true);
@@ -365,7 +366,7 @@ export function SymptomLogWizardScreen({ user }: { user: SessionUser }) {
           }
         />
       </View>
-      {fieldErrors[meal] ? <Text style={styles.err}>{fieldErrors[meal]}</Text> : null}
+      {fieldErrors[meal] ? <Text style={errTextStyle}>{fieldErrors[meal]}</Text> : null}
     </View>
   );
 
@@ -436,7 +437,7 @@ export function SymptomLogWizardScreen({ user }: { user: SessionUser }) {
                 {form.symptomStartDate ? formatUkDate(form.symptomStartDate) : "dd/mm/yyyy"}
               </Text>
             </FlareInputTrigger>
-            {dateErrors.day ? <Text style={styles.err}>{dateErrors.day}</Text> : null}
+            {dateErrors.day ? <Text style={errTextStyle}>{dateErrors.day}</Text> : null}
             {picker === "start" ? (
               <DateTimePicker
                 value={form.symptomStartDate ? parseYmd(form.symptomStartDate) : new Date()}
@@ -468,7 +469,7 @@ export function SymptomLogWizardScreen({ user }: { user: SessionUser }) {
                 <Text style={{ color: c.text }}>No</Text>
               </Pressable>
             </View>
-            {fieldErrors.isOngoing ? <Text style={styles.err}>{fieldErrors.isOngoing}</Text> : null}
+            {fieldErrors.isOngoing ? <Text style={errTextStyle}>{fieldErrors.isOngoing}</Text> : null}
           </View>
         ) : null}
 
@@ -480,7 +481,7 @@ export function SymptomLogWizardScreen({ user }: { user: SessionUser }) {
                 {form.symptomEndDate ? formatUkDate(form.symptomEndDate) : "dd/mm/yyyy"}
               </Text>
             </FlareInputTrigger>
-            {dateErrors.endDay ? <Text style={styles.err}>{dateErrors.endDay}</Text> : null}
+            {dateErrors.endDay ? <Text style={errTextStyle}>{dateErrors.endDay}</Text> : null}
             {picker === "end" ? (
               <DateTimePicker
                 value={form.symptomEndDate ? parseYmd(form.symptomEndDate) : new Date()}
@@ -518,7 +519,7 @@ export function SymptomLogWizardScreen({ user }: { user: SessionUser }) {
                 );
               })}
             </View>
-            {fieldErrors.severity ? <Text style={styles.err}>{fieldErrors.severity}</Text> : null}
+            {fieldErrors.severity ? <Text style={errTextStyle}>{fieldErrors.severity}</Text> : null}
           </View>
         ) : null}
 
@@ -541,7 +542,7 @@ export function SymptomLogWizardScreen({ user }: { user: SessionUser }) {
                 );
               })}
             </View>
-            {fieldErrors.stress_level ? <Text style={styles.err}>{fieldErrors.stress_level}</Text> : null}
+            {fieldErrors.stress_level ? <Text style={errTextStyle}>{fieldErrors.stress_level}</Text> : null}
           </View>
         ) : null}
 
@@ -559,7 +560,7 @@ export function SymptomLogWizardScreen({ user }: { user: SessionUser }) {
               }}
               placeholder="0–99"
             />
-            {fieldErrors.normal_bathroom_frequency ? <Text style={styles.err}>{fieldErrors.normal_bathroom_frequency}</Text> : null}
+            {fieldErrors.normal_bathroom_frequency ? <Text style={errTextStyle}>{fieldErrors.normal_bathroom_frequency}</Text> : null}
           </View>
         ) : null}
 
@@ -580,7 +581,7 @@ export function SymptomLogWizardScreen({ user }: { user: SessionUser }) {
                 </Pressable>
               ))}
             </View>
-            {fieldErrors.bathroom_frequency_changed ? <Text style={styles.err}>{fieldErrors.bathroom_frequency_changed}</Text> : null}
+            {fieldErrors.bathroom_frequency_changed ? <Text style={errTextStyle}>{fieldErrors.bathroom_frequency_changed}</Text> : null}
           </View>
         ) : null}
 
@@ -593,7 +594,7 @@ export function SymptomLogWizardScreen({ user }: { user: SessionUser }) {
               value={form.bathroom_frequency_change_details}
               onChangeText={(t) => setForm((p) => ({ ...p, bathroom_frequency_change_details: t }))}
             />
-            {fieldErrors.bathroom_frequency_change_details ? <Text style={styles.err}>{fieldErrors.bathroom_frequency_change_details}</Text> : null}
+            {fieldErrors.bathroom_frequency_change_details ? <Text style={errTextStyle}>{fieldErrors.bathroom_frequency_change_details}</Text> : null}
           </View>
         ) : null}
 
@@ -640,8 +641,8 @@ export function SymptomLogWizardScreen({ user }: { user: SessionUser }) {
                 <Text style={{ color: c.text }}>No</Text>
               </Pressable>
             </View>
-            {fieldErrors.smoked_on_symptom_day ? <Text style={styles.err}>{fieldErrors.smoked_on_symptom_day}</Text> : null}
-            {fieldErrors.smoker ? <Text style={styles.err}>{fieldErrors.smoker}</Text> : null}
+            {fieldErrors.smoked_on_symptom_day ? <Text style={errTextStyle}>{fieldErrors.smoked_on_symptom_day}</Text> : null}
+            {fieldErrors.smoker ? <Text style={errTextStyle}>{fieldErrors.smoker}</Text> : null}
           </View>
         ) : null}
 
@@ -661,7 +662,7 @@ export function SymptomLogWizardScreen({ user }: { user: SessionUser }) {
                   value={form.smoked_amount_on_symptom_day}
                   onChangeText={(t) => setForm((p) => ({ ...p, smoked_amount_on_symptom_day: t }))}
                 />
-                {fieldErrors.smoked_amount_on_symptom_day ? <Text style={styles.err}>{fieldErrors.smoked_amount_on_symptom_day}</Text> : null}
+                {fieldErrors.smoked_amount_on_symptom_day ? <Text style={errTextStyle}>{fieldErrors.smoked_amount_on_symptom_day}</Text> : null}
               </>
             ) : form.smoker === true && smokingStep10Phase === "dayYesNo" ? (
               <>
@@ -682,7 +683,7 @@ export function SymptomLogWizardScreen({ user }: { user: SessionUser }) {
                     <Text style={{ color: c.text }}>No</Text>
                   </Pressable>
                 </View>
-                {fieldErrors.smoked_on_symptom_day ? <Text style={styles.err}>{fieldErrors.smoked_on_symptom_day}</Text> : null}
+                {fieldErrors.smoked_on_symptom_day ? <Text style={errTextStyle}>{fieldErrors.smoked_on_symptom_day}</Text> : null}
               </>
             ) : (
               <>
@@ -702,8 +703,8 @@ export function SymptomLogWizardScreen({ user }: { user: SessionUser }) {
                     )
                   }
                 />
-                {fieldErrors.smoked_amount_on_symptom_day ? <Text style={styles.err}>{fieldErrors.smoked_amount_on_symptom_day}</Text> : null}
-                {fieldErrors.smoking_habits ? <Text style={styles.err}>{fieldErrors.smoking_habits}</Text> : null}
+                {fieldErrors.smoked_amount_on_symptom_day ? <Text style={errTextStyle}>{fieldErrors.smoked_amount_on_symptom_day}</Text> : null}
+                {fieldErrors.smoking_habits ? <Text style={errTextStyle}>{fieldErrors.smoking_habits}</Text> : null}
               </>
             )}
           </View>
@@ -748,8 +749,8 @@ export function SymptomLogWizardScreen({ user }: { user: SessionUser }) {
                 <Text style={{ color: c.text }}>No</Text>
               </Pressable>
             </View>
-            {fieldErrors.drank_on_symptom_day ? <Text style={styles.err}>{fieldErrors.drank_on_symptom_day}</Text> : null}
-            {fieldErrors.alcohol ? <Text style={styles.err}>{fieldErrors.alcohol}</Text> : null}
+            {fieldErrors.drank_on_symptom_day ? <Text style={errTextStyle}>{fieldErrors.drank_on_symptom_day}</Text> : null}
+            {fieldErrors.alcohol ? <Text style={errTextStyle}>{fieldErrors.alcohol}</Text> : null}
           </View>
         ) : null}
 
@@ -768,7 +769,7 @@ export function SymptomLogWizardScreen({ user }: { user: SessionUser }) {
                   value={form.alcohol_units_on_symptom_day}
                   onChangeText={(t) => setForm((p) => ({ ...p, alcohol_units_on_symptom_day: t }))}
                 />
-                {fieldErrors.alcohol_units_on_symptom_day ? <Text style={styles.err}>{fieldErrors.alcohol_units_on_symptom_day}</Text> : null}
+                {fieldErrors.alcohol_units_on_symptom_day ? <Text style={errTextStyle}>{fieldErrors.alcohol_units_on_symptom_day}</Text> : null}
               </>
             ) : form.alcohol === true && alcoholStep12Phase === "dayYesNo" ? (
               <>
@@ -789,7 +790,7 @@ export function SymptomLogWizardScreen({ user }: { user: SessionUser }) {
                     <Text style={{ color: c.text }}>No</Text>
                   </Pressable>
                 </View>
-                {fieldErrors.drank_on_symptom_day ? <Text style={styles.err}>{fieldErrors.drank_on_symptom_day}</Text> : null}
+                {fieldErrors.drank_on_symptom_day ? <Text style={errTextStyle}>{fieldErrors.drank_on_symptom_day}</Text> : null}
               </>
             ) : (
               <>
@@ -808,8 +809,8 @@ export function SymptomLogWizardScreen({ user }: { user: SessionUser }) {
                     )
                   }
                 />
-                {fieldErrors.alcohol_units_on_symptom_day ? <Text style={styles.err}>{fieldErrors.alcohol_units_on_symptom_day}</Text> : null}
-                {fieldErrors.average_alcohol_units_pw ? <Text style={styles.err}>{fieldErrors.average_alcohol_units_pw}</Text> : null}
+                {fieldErrors.alcohol_units_on_symptom_day ? <Text style={errTextStyle}>{fieldErrors.alcohol_units_on_symptom_day}</Text> : null}
+                {fieldErrors.average_alcohol_units_pw ? <Text style={errTextStyle}>{fieldErrors.average_alcohol_units_pw}</Text> : null}
               </>
             )}
           </View>
@@ -988,7 +989,6 @@ const styles = StyleSheet.create({
   radioRow: { flexDirection: "row", alignItems: "center", gap: 10 },
   radioOuter: { width: 22, height: 22, borderRadius: 11, borderWidth: 2, alignItems: "center", justifyContent: "center" },
   radioInner: { width: 12, height: 12, borderRadius: 6 },
-  err: { color: "#b3261e", marginTop: 8, fontSize: 13 },
   mealEntryWrap: { marginBottom: 12 },
   mealEntryWrapFirst: { paddingTop: 6 },
   mealFoodRow: { position: "relative", overflow: "visible" },

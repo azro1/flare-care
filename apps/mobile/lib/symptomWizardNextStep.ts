@@ -239,14 +239,14 @@ export function symptomWizardTryAdvance(input: {
         }
       }
       if (alcoholStep12Phase === "dayAmount" && (!form.alcohol_units_on_symptom_day || form.alcohol_units_on_symptom_day === "")) {
-        return fail({ alcohol_units_on_symptom_day: "Please enter how many units you drank on this symptom day" });
+        return fail({ alcohol_units_on_symptom_day: "Please enter how many units you drank on this day" });
       }
       if (alcoholStep12Phase === "dayAmount" && !isValidAlcoholUnits0To30(form.alcohol_units_on_symptom_day)) {
         return fail({ alcohol_units_on_symptom_day: ALCOHOL_UNITS_RANGE_ERR });
       }
     } else if (!isFirstTimeUser) {
       if (!form.alcohol_units_on_symptom_day || form.alcohol_units_on_symptom_day === "") {
-        return fail({ alcohol_units_on_symptom_day: "Please enter how many units you drank on this symptom day" });
+        return fail({ alcohol_units_on_symptom_day: "Please enter how many units you drank on this day" });
       }
       if (!isValidAlcoholUnits0To30(form.alcohol_units_on_symptom_day)) {
         return fail({ alcohol_units_on_symptom_day: ALCOHOL_UNITS_RANGE_ERR });
