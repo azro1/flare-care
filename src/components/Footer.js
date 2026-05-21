@@ -39,7 +39,11 @@ export default function Footer() {
       <div className="max-w-7xl mx-auto">
         {/* Mobile minimal footer */}
         <div className="lg:hidden">
-          <div className="flex items-center justify-center">
+          <div className="flex flex-col items-center gap-2">
+            <div className="flex gap-4 text-xs" style={{color: 'var(--text-footer)'}}>
+              <a href="/privacy" className="transition-colors hover:text-[#5F9EA0]">Privacy</a>
+              <a href="/terms" className="transition-colors hover:text-[#5F9EA0]">Terms</a>
+            </div>
             <span style={{color: 'var(--text-footer)'}}>© 2025 FlareCare</span>
           </div>
         </div>
@@ -49,8 +53,8 @@ export default function Footer() {
           <div className="flex flex-col md:flex-row justify-between items-center gap-6">
             <p className="text-sm" style={{color: 'var(--text-footer)'}}>© FlareCare 2025. All rights reserved</p>
             <div className="flex gap-8 text-sm" style={{color: 'var(--text-footer)'}}>
-              <a href="#" className="transition-colors hover:text-[#5F9EA0]">Privacy Policy</a>
-              <a href="#" className="transition-colors hover:text-[#5F9EA0]">Terms of Service</a>
+              <a href="/privacy" className="transition-colors hover:text-[#5F9EA0]">Privacy Policy</a>
+              <a href="/terms" className="transition-colors hover:text-[#5F9EA0]">Terms of Use</a>
             </div>
           </div>
         </div>

@@ -120,9 +120,9 @@ src/
 
 ## Data Privacy
 
-- **Local-first**: All data is stored locally on your device by default
-- **Encrypted**: Data is encrypted in transit and at rest
-- **Private**: Only you can access your data - no sharing with third parties
+- **Your account and logs** are stored in Supabase when you sign in (encrypted in transit)
+- **Private**: We do not sell your data or use third-party analytics in the app
+- **Policies**: See [Privacy Policy](/privacy) and [Terms of Use](/terms) on the web app (or `docs/legal-truth-sheet.md` for internal reference)
 
 ## Contributing
 

@@ -68,7 +68,7 @@ export default function About() {
               </li>
               <li className="flex items-start">
                 <span className="w-1.5 h-1.5 bg-[#5F9EA0] rounded-full mt-2 mr-3 flex-shrink-0"></span>
-                <span>Respect privacy with local-first data storage</span>
+                <span>Keep your data private — stored securely and only used to run the app</span>
               </li>
             </ul>
             <p className="leading-normal">

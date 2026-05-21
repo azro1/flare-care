@@ -63,6 +63,7 @@ import {
   otpResendErrorMessage,
   otpVerifyErrorMessage,
 } from "./lib/otpAuth";
+import { LegalDocumentView, type LegalDocumentKind } from "./components/LegalDocumentView";
 import { supabase, TABLES } from "./lib/supabase";
 import {
   dashboardSnapshotByUserId,
@@ -487,6 +488,8 @@ function AuthScreen({
   const [otpSentAt, setOtpSentAt] = useState<number | null>(null);
   const [otpResendCount, setOtpResendCount] = useState(0);
   const [otpTick, setOtpTick] = useState(0);
+  const [legalAccepted, setLegalAccepted] = useState(false);
+  const [authLegalModal, setAuthLegalModal] = useState<LegalDocumentKind | null>(null);
   const emailSchema = useMemo(
     () =>
       yup.object({
@@ -698,17 +701,60 @@ function AuthScreen({
               <Text style={[styles.authPromptSub, { color: onPrimaryChrome ? "rgba(255,255,255,0.88)" : cAuth.textMuted }]}>
                 Choose your preferred login method
               </Text>
+              <Pressable
+                accessibilityRole="checkbox"
+                accessibilityState={{ checked: legalAccepted }}
+                accessibilityLabel="Agree to Terms of Use and Privacy Policy"
+                onPress={() => setLegalAccepted((v) => !v)}
+                style={styles.authLegalRow}
+              >
+                <View
+                  style={[
+                    styles.authLegalCheckbox,
+                    {
+                      borderColor: onPrimaryChrome ? "rgba(255,255,255,0.6)" : cAuth.cardBorder,
+                      backgroundColor: legalAccepted ? (onPrimaryChrome ? cAuth.white : cAuth.primary) : "transparent",
+                    },
+                  ]}
+                >
+                  {legalAccepted ? (
+                    <Ionicons
+                      name="checkmark"
+                      size={14}
+                      color={onPrimaryChrome ? cAuth.primary : cAuth.white}
+                      accessibilityIgnoresInvertColors
+                    />
+                  ) : null}
+                </View>
+                <Text style={[styles.authLegalText, { color: onPrimaryChrome ? "rgba(255,255,255,0.9)" : cAuth.textMuted }]}>
+                  I agree to the{" "}
+                  <Text
+                    style={[styles.authLegalLink, { color: onPrimaryChrome ? cAuth.white : cAuth.primary }]}
+                    onPress={() => setAuthLegalModal("terms")}
+                  >
+                    Terms of Use
+                  </Text>{" "}
+                  and{" "}
+                  <Text
+                    style={[styles.authLegalLink, { color: onPrimaryChrome ? cAuth.white : cAuth.primary }]}
+                    onPress={() => setAuthLegalModal("privacy")}
+                  >
+                    Privacy Policy
+                  </Text>
+                  , including health-related data needed to run FlareCare.
+                </Text>
+              </Pressable>
               <View style={styles.authMethodActions}>
                 <PrimaryButton
                   title="Continue with email"
                   onPress={() => setStep("email")}
-                  disabled={activeAuthAction !== null}
+                  disabled={activeAuthAction !== null || !legalAccepted}
                   variant={onPrimaryChrome ? "onPrimary" : "default"}
                 />
                 <SecondaryButton
                   title={activeAuthAction === "google" ? "Loading..." : "Continue with Google"}
                   onPress={signInGoogle}
-                  disabled={activeAuthAction !== null}
+                  disabled={activeAuthAction !== null || !legalAccepted}
                   variant={onPrimaryChrome ? "onPrimary" : "default"}
                   leftIcon={<Ionicons name="logo-google" size={16} color={onPrimaryChrome ? "#ffffff" : cAuth.secondaryBtnText} />}
                 />
@@ -859,6 +905,34 @@ function AuthScreen({
           )}
         </Card>
       </View>
+      <Modal
+        visible={authLegalModal !== null}
+        animationType="slide"
+        presentationStyle="pageSheet"
+        onRequestClose={() => setAuthLegalModal(null)}
+      >
+        <View style={[styles.legalModalRoot, { backgroundColor: cAuth.screen, paddingTop: insets.top }]}>
+          <View style={[styles.legalModalHeader, { borderBottomColor: cAuth.cardBorder }]}>
+            <Text style={[styles.legalModalTitle, { color: cAuth.text }]}>
+              {authLegalModal === "terms" ? "Terms of Use" : "Privacy Policy"}
+            </Text>
+            <Pressable
+              accessibilityRole="button"
+              accessibilityLabel="Close"
+              onPress={() => setAuthLegalModal(null)}
+              hitSlop={12}
+            >
+              <Text style={[styles.legalModalClose, { color: cAuth.primary }]}>Done</Text>
+            </Pressable>
+          </View>
+          <ScrollView
+            style={styles.legalModalScroll}
+            contentContainerStyle={[styles.legalModalScrollContent, { paddingBottom: Math.max(insets.bottom, 24) }]}
+          >
+            {authLegalModal ? <LegalDocumentView kind={authLegalModal} /> : null}
+          </ScrollView>
+        </View>
+      </Modal>
     </View>
   );
 }
@@ -2771,6 +2845,7 @@ function AboutScreen() {
 const ACCOUNT_OPTION_ROUTES = [
   { label: "Information", route: "AccountInfo" as const },
   { label: "Security", route: "AccountSecurity" as const },
+  { label: "Legal", route: "AccountLegal" as const },
   { label: "Help", route: "AccountHelp" as const },
 ];
 
@@ -2925,6 +3000,52 @@ function AccountSecurityScreen() {
           Sign-in and security options for your account will appear here.
         </Text>
       </Card>
+    </ScrollView>
+  );
+}
+
+function AccountLegalScreen() {
+  const navigation = useNavigation<any>();
+  const c = useFlareColors();
+  const bottomScrollInset = useBottomTabScrollInset();
+
+  return (
+    <ScrollView
+      style={[styles.screen, { backgroundColor: c.screen }]}
+      contentContainerStyle={{ paddingBottom: bottomScrollInset + 24 }}
+    >
+      <Card title="" style={styles.accountOptionsListCard} compactBody>
+        <AccountOptionRow
+          label="Privacy Policy"
+          labelColor="textMuted"
+          onPress={() => navigation.navigate("LegalDocument", { document: "privacy" })}
+        />
+        <AccountOptionRow
+          label="Terms of Use"
+          labelColor="textMuted"
+          onPress={() => navigation.navigate("LegalDocument", { document: "terms" })}
+        />
+      </Card>
+    </ScrollView>
+  );
+}
+
+function LegalDocumentScreen() {
+  const route = useRoute<any>();
+  const c = useFlareColors();
+  const insets = useSafeAreaInsets();
+  const bottomScrollInset = useBottomTabScrollInset();
+  const kind: LegalDocumentKind = route.params?.document === "terms" ? "terms" : "privacy";
+
+  return (
+    <ScrollView
+      style={[styles.screen, { backgroundColor: c.screen }]}
+      contentContainerStyle={{
+        paddingHorizontal: SCREEN_EDGE_PADDING,
+        paddingBottom: Math.max(insets.bottom, 16) + bottomScrollInset + 24,
+      }}
+    >
+      <LegalDocumentView kind={kind} />
     </ScrollView>
   );
 }
@@ -3208,7 +3329,7 @@ function AppTabs({
     if (name) setFocusRouteName(name);
   }, [navigationRef]);
 
-  const headerOptions = ({ navigation, route }: { navigation: any; route: { name: string } }) => {
+  const headerOptions = ({ navigation, route }: { navigation: any; route: { name: string; params?: { document?: string } } }) => {
     const isDashboard = route.name === "Dashboard";
     const isAbout = route.name === "About";
     const isIbd = route.name === "Ibd";
@@ -3224,10 +3345,17 @@ function AppTabs({
       AccountInfo: "Information",
       AccountPersonalDetails: "Personal details",
       AccountSecurity: "Security",
+      AccountLegal: "Legal",
       AccountHelp: "Help",
       Settings: "Settings",
       Reminders: "Reminders",
     };
+    const legalDocumentTitle =
+      route.name === "LegalDocument"
+        ? route.params?.document === "terms"
+          ? "Terms of Use"
+          : "Privacy Policy"
+        : null;
     const isSymptomLogWizard = route.name === "SymptomLogWizard";
     const isMedicationTrackingWizard = route.name === "MedicationTrackingWizard";
 
@@ -3261,7 +3389,7 @@ function AppTabs({
               ? "Account"
               : isReminders
                 ? "Reminders"
-                : titleForRoute[route.name] ?? "",
+                : legalDocumentTitle ?? titleForRoute[route.name] ?? "",
       headerTitleAlign: "center" as const,
       headerLargeTitleShown: false,
       headerLargeTitleShadowVisible: false,
@@ -3330,6 +3458,8 @@ function AppTabs({
               {() => <AccountPersonalDetailsScreen user={user} />}
             </AppStack.Screen>
             <AppStack.Screen name="AccountSecurity">{() => <AccountSecurityScreen />}</AppStack.Screen>
+            <AppStack.Screen name="AccountLegal">{() => <AccountLegalScreen />}</AppStack.Screen>
+            <AppStack.Screen name="LegalDocument" component={LegalDocumentScreen} />
             <AppStack.Screen name="AccountHelp">
               {() => (
                 <AccountHelpScreen
@@ -3520,6 +3650,31 @@ const styles = StyleSheet.create({
   authCardPlain: { flex: 1 },
   authMethodPanel: { flex: 1, justifyContent: "center" },
   authMethodActions: { marginTop: 18, gap: 8 },
+  authLegalRow: { flexDirection: "row", alignItems: "flex-start", gap: 10, marginTop: 14, marginBottom: 4 },
+  authLegalCheckbox: {
+    width: 20,
+    height: 20,
+    borderRadius: 4,
+    borderWidth: 1.5,
+    alignItems: "center",
+    justifyContent: "center",
+    marginTop: 1,
+  },
+  authLegalText: { flex: 1, fontSize: 12, lineHeight: 17, fontFamily: "Inter_400Regular" },
+  authLegalLink: { fontFamily: "Inter_600SemiBold", textDecorationLine: "underline" },
+  legalModalRoot: { flex: 1 },
+  legalModalHeader: {
+    flexDirection: "row",
+    alignItems: "center",
+    justifyContent: "space-between",
+    paddingHorizontal: 16,
+    paddingVertical: 12,
+    borderBottomWidth: StyleSheet.hairlineWidth,
+  },
+  legalModalTitle: { fontSize: 17, fontFamily: "Inter_700Bold" },
+  legalModalClose: { fontSize: 16, fontFamily: "Inter_600SemiBold" },
+  legalModalScroll: { flex: 1 },
+  legalModalScrollContent: { paddingHorizontal: 16, paddingTop: 16 },
   authSecureNote: { flexDirection: "row", alignItems: "center", justifyContent: "center", gap: 5, marginTop: 10 },
   authSecureNoteText: { fontSize: 12, fontFamily: "Inter_400Regular" },
   authPromptTitle: { textAlign: "center", fontSize: 19, fontFamily: "Inter_500Medium" },

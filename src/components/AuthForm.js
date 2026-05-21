@@ -1,12 +1,14 @@
 'use client'
 
 import { useState, useEffect } from 'react'
+import Link from 'next/link'
 import { supabase } from '../lib/supabase'
 import { useRouter } from 'next/navigation'
 import Image from 'next/image'
 
 export default function AuthForm() {
   const [error, setError] = useState('')
+  const [legalAccepted, setLegalAccepted] = useState(false)
   const router = useRouter()
 
   // Mobile only: freeze body scroll (matches Tailwind `sm` 640px). Desktop: normal scroll.
@@ -101,10 +103,31 @@ export default function AuthForm() {
             </div>
           )}
 
+          <label className="flex items-start gap-2 text-left cursor-pointer">
+            <input
+              type="checkbox"
+              checked={legalAccepted}
+              onChange={(e) => setLegalAccepted(e.target.checked)}
+              className="mt-0.5 h-4 w-4 rounded border-gray-300 text-[#5F9EA0] focus:ring-[#5F9EA0]"
+            />
+            <span className="text-xs font-sans text-secondary leading-snug">
+              I agree to the{' '}
+              <Link href="/terms" className="text-[#5F9EA0] hover:underline">
+                Terms of Use
+              </Link>{' '}
+              and{' '}
+              <Link href="/privacy" className="text-[#5F9EA0] hover:underline">
+                Privacy Policy
+              </Link>
+              , including processing of my health-related data to provide FlareCare.
+            </span>
+          </label>
+
            <button
              type="button"
              onClick={handleGoogleSignIn}
-             className="w-full flex justify-center items-center py-2.5 bg-white border border-gray-200 shadow-sm hover:shadow-md text-base font-semibold font-sans text-gray-700 hover:bg-gray-50 focus:outline-none focus:ring-0 focus:ring-offset-0 transition-all duration-200"
+             disabled={!legalAccepted}
+             className="w-full flex justify-center items-center py-2.5 bg-white border border-gray-200 shadow-sm hover:shadow-md text-base font-semibold font-sans text-gray-700 hover:bg-gray-50 focus:outline-none focus:ring-0 focus:ring-offset-0 transition-all duration-200 disabled:opacity-50 disabled:cursor-not-allowed disabled:hover:bg-white disabled:hover:shadow-sm"
            >
             <svg className="w-5 h-5 mr-2" viewBox="0 0 24 24">
               <path fill="#4285F4" d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z"/>
