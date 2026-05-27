@@ -56,6 +56,7 @@ import {
 } from "./components/symptomReviewLayout";
 import { FlareThemeProvider, useFlareColors, useFlareTheme } from "./theme";
 import { formatUkDate } from "./lib/formatUkDate";
+import { HYDRATION_TARGET, loadHydrationResetTimestamp, saveHydrationReset, HYDRATION_GOAL_ACTIVITY_TITLE, HYDRATION_RESET_ACTIVITY_TITLE } from "./lib/hydrationShared";
 import {
   formatOtpCountdown,
   OTP_MAX_RESENDS,
@@ -67,8 +68,10 @@ import { LegalDocumentView, type LegalDocumentKind } from "./components/LegalDoc
 import { supabase, TABLES } from "./lib/supabase";
 import {
   dashboardSnapshotByUserId,
+  dedupeNewsItems,
   invalidateDashboardSnapshot,
   type DashboardActivityRow,
+  type DashboardNewsItem,
   type DashboardSnapshot,
 } from "./lib/dashboardSnapshotCache";
 import { MedicationTrackingWizardScreen } from "./screens/MedicationTrackingWizardScreen";
@@ -704,7 +707,7 @@ function AuthScreen({
               <Pressable
                 accessibilityRole="checkbox"
                 accessibilityState={{ checked: legalAccepted }}
-                accessibilityLabel="Agree to Terms of Use and Privacy Policy"
+                accessibilityLabel="Agree to Terms of Service and Privacy Policy, including how FlareCare processes health information you choose to provide"
                 onPress={() => setLegalAccepted((v) => !v)}
                 style={styles.authLegalRow}
               >
@@ -732,7 +735,7 @@ function AuthScreen({
                     style={[styles.authLegalLink, { color: onPrimaryChrome ? cAuth.white : cAuth.primary }]}
                     onPress={() => setAuthLegalModal("terms")}
                   >
-                    Terms of Use
+                    Terms of Service
                   </Text>{" "}
                   and{" "}
                   <Text
@@ -741,7 +744,7 @@ function AuthScreen({
                   >
                     Privacy Policy
                   </Text>
-                  , including health-related data needed to run FlareCare.
+                  , including how FlareCare processes health information I choose to provide.
                 </Text>
               </Pressable>
               <View style={styles.authMethodActions}>
@@ -1063,8 +1066,8 @@ function useBottomTabScrollInset() {
 
 /** Matches `styles.screen` edge padding (used to size Daily Check-in row). */
 const SCREEN_EDGE_PADDING = 12;
-/** Space between sibling home tiles: Daily Check-in `marginRight` + More grid `gap`. */
-const HOME_TILE_GAP = 16;
+/** Space between sibling home tiles: Daily Check-in scroll + More grid. */
+const HOME_TILE_GAP = 12;
 
 /** Dashboard / history lists — symptom log id + time. */
 type RecentLogListRow = { id: string; created_at: string };
@@ -1119,6 +1122,10 @@ function formatRecentLogTime(iso: string) {
 
 /** Avoid greeting flicker (“there”) when session metadata/email arrives shortly after navigation. */
 const dashboardGreetingFirstNameByUserId: Record<string, string> = {};
+
+type HomeDashTab = "today" | "news" | "logs" | null;
+/** When leaving Dashboard via a pill section, restore that pill on the next Dashboard focus (e.g. back from history). */
+let dashboardHomeDashTabRestore: HomeDashTab | null = null;
 
 /** OWM `/img/wn/{icon}@2x.png` id → Ionicons ( themed `color`; no remote bitmaps ). */
 function owmIconIdToIoniconsName(iconId: string | null | undefined): keyof typeof Ionicons.glyphMap {
@@ -1185,7 +1192,15 @@ function DashboardGridTile({
   );
 }
 
-function DashboardScreen({ user }: { user: SessionUser }) {
+function DashboardScreen({
+  user,
+  onTodayModeChange,
+  onRegisterResetHome,
+}: {
+  user: SessionUser;
+  onTodayModeChange?: (active: boolean) => void;
+  onRegisterResetHome?: (reset: (() => void) | null) => void;
+}) {
   const navigation = useNavigation<any>();
   const { width: windowWidth } = useWindowDimensions();
   const c = useFlareColors();
@@ -1199,9 +1214,7 @@ function DashboardScreen({ user }: { user: SessionUser }) {
   const [weatherMeta, setWeatherMeta] = useState<{ city: string; temp: number | null; desc: string; icon?: string | null } | null>(
     () => snapshotSeed?.weatherMeta ?? null,
   );
-  const [newsItems, setNewsItems] = useState<
-    Array<{ title: string; source: string; publishedAt?: string; link?: string; imageUrl?: string | null }>
-  >(() => snapshotSeed?.newsItems ?? []);
+  const [newsItems, setNewsItems] = useState<DashboardNewsItem[]>(() => dedupeNewsItems(snapshotSeed?.newsItems ?? []));
   const [newsLoading, setNewsLoading] = useState(() => {
     const s = dashboardSnapshotByUserId[user.id];
     if (!s) return true;
@@ -1212,11 +1225,23 @@ function DashboardScreen({ user }: { user: SessionUser }) {
     () => snapshotSeed?.todaySummary ?? { symptoms: 0, medsTaken: 0, medsTotal: 0, hydration: 0 },
   );
   const [recentActivity, setRecentActivity] = useState<DashboardActivityRow[]>(() => snapshotSeed?.recentActivity ?? []);
-  const hydrationTarget = 6;
+  /** Dashboard pills — Today / Logs / News only; default (null) shows the main home dashboard. */
+  const [homeDashTab, setHomeDashTab] = useState<HomeDashTab>(null);
+  const hydrationTarget = HYDRATION_TARGET;
+  useEffect(() => {
+    onTodayModeChange?.(homeDashTab !== null);
+  }, [homeDashTab, onTodayModeChange]);
+  useEffect(() => {
+    onRegisterResetHome?.(() => {
+      dashboardHomeDashTabRestore = null;
+      setHomeDashTab(null);
+    });
+    return () => onRegisterResetHome?.(null);
+  }, [onRegisterResetHome]);
   const dailyCheckinCards = [
     { key: "symptoms" as const, label: "Log Symptoms", icon: "thermometer", family: "mci", goTo: "SymptomLogWizard" },
     { key: "track-meds" as const, label: "Track Medications", icon: "pill", family: "mci", goTo: "MedicationTrackingWizard" },
-    { key: "hydration" as const, label: "Hydration", icon: "water", family: "mci", goTo: "Hydration" },
+    { key: "hydration" as const, label: "My Hydration", icon: "water", family: "mci", goTo: "Hydration" },
     { key: "bowel" as const, label: "Bowel Movements", icon: "stomach", family: "mci", goTo: "Bowel" },
   ];
   const moreLinkCards = [
@@ -1246,6 +1271,12 @@ function DashboardScreen({ user }: { user: SessionUser }) {
   };
   useFocusEffect(
     useCallback(() => {
+      const restoreTab = dashboardHomeDashTabRestore;
+      if (restoreTab !== null) {
+        dashboardHomeDashTabRestore = null;
+        setHomeDashTab(restoreTab);
+      }
+
       let cancelled = false;
       const seedSnap = dashboardSnapshotByUserId[user.id];
       const snap: DashboardSnapshot = {
@@ -1332,6 +1363,27 @@ function DashboardScreen({ user }: { user: SessionUser }) {
               title: `Logged weight (${Number(recentWeight.value_kg)} kg)`,
               ts: new Date(whenIso).getTime(),
               icon: "weight",
+            });
+          }
+
+          const hydrationRow = todayHydrationRes.data;
+          const hydrationGlasses = hydrationRow?.glasses ?? 0;
+          if (hydrationGlasses >= HYDRATION_TARGET && hydrationRow?.updated_at) {
+            activityRows.push({
+              key: `hydration-goal-${today}`,
+              title: HYDRATION_GOAL_ACTIVITY_TITLE,
+              ts: new Date(hydrationRow.updated_at).getTime(),
+              icon: "hydration",
+            });
+          }
+
+          const hydrationResetTs = await loadHydrationResetTimestamp(user.id, today);
+          if (hydrationResetTs != null) {
+            activityRows.push({
+              key: `hydration-reset-${today}`,
+              title: HYDRATION_RESET_ACTIVITY_TITLE,
+              ts: hydrationResetTs,
+              icon: "hydration",
             });
           }
 
@@ -1427,15 +1479,16 @@ function DashboardScreen({ user }: { user: SessionUser }) {
             clearTimeout(timeout);
             if (!response.ok) throw new Error("news request failed");
             const json = await response.json();
-            snap.newsItems = (Array.isArray(json?.items) ? json.items : [])
-              .map((item: any) => ({
+            snap.newsItems = dedupeNewsItems(
+              (Array.isArray(json?.items) ? json.items : []).map((item: any) => ({
                 title: String(item?.headline || item?.title || "Untitled"),
                 source: String(item?.source || item?.sourceName || "Source"),
                 publishedAt: item?.pubDate || item?.publishedAt || item?.date || undefined,
                 link: item?.link || item?.url || undefined,
                 imageUrl: item?.imageUrl || item?.image || item?.thumbnail || null,
-              }))
-              .slice(0, 6);
+              })),
+            );
+
             snap.newsError = null;
             if (cancelled) return;
             setNewsItems(snap.newsItems);
@@ -1461,6 +1514,188 @@ function DashboardScreen({ user }: { user: SessionUser }) {
       };
     }, [user.id]),
   );
+
+  const homeNavPills = (
+    <View style={styles.homeNavPillsSection}>
+      <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={styles.homeNavPillsRow}>
+        <Pressable
+          onPress={() => setHomeDashTab((prev) => (prev === "today" ? null : "today"))}
+          style={[
+            styles.homeNavPill,
+            homeDashTab === "today"
+              ? { backgroundColor: c.primary, borderColor: c.primary }
+              : { backgroundColor: c.card, borderColor: c.cardBorder },
+          ]}
+        >
+          <Text style={[styles.homeNavPillLabel, { color: homeDashTab === "today" ? c.white : c.text }]}>Today</Text>
+        </Pressable>
+        <Pressable
+          onPress={() => setHomeDashTab((prev) => (prev === "logs" ? null : "logs"))}
+          style={[
+            styles.homeNavPill,
+            homeDashTab === "logs"
+              ? { backgroundColor: c.primary, borderColor: c.primary }
+              : { backgroundColor: c.card, borderColor: c.cardBorder },
+          ]}
+        >
+          <Text style={[styles.homeNavPillLabel, { color: homeDashTab === "logs" ? c.white : c.text }]}>Logs</Text>
+        </Pressable>
+        <Pressable
+          onPress={() => setHomeDashTab((prev) => (prev === "news" ? null : "news"))}
+          style={[
+            styles.homeNavPill,
+            homeDashTab === "news"
+              ? { backgroundColor: c.primary, borderColor: c.primary }
+              : { backgroundColor: c.card, borderColor: c.cardBorder },
+          ]}
+        >
+          <Text style={[styles.homeNavPillLabel, { color: homeDashTab === "news" ? c.white : c.text }]}>News</Text>
+        </Pressable>
+      </ScrollView>
+    </View>
+  );
+
+  const homePillBody =
+    homeDashTab === "today" ? (
+      <View style={styles.todayPillSection}>
+        <Text
+          style={[styles.dashboardSectionTitleLeft, styles.dashboardSectionTitleAfterPills, { color: c.text }]}
+        >
+          My Goals
+        </Text>
+        <Card title="" style={styles.homePillCard} compactBody>
+          <View style={styles.todaySummaryRows}>
+            <View style={styles.summaryWebRow}>
+              <View style={styles.summaryWebLeft}>
+                <Text style={[styles.summaryWebLabel, { color: c.textMuted }]}>Take Medications</Text>
+              </View>
+              {todaySummary.medsTotal > 0 && todaySummary.medsTaken >= todaySummary.medsTotal ? (
+                <Ionicons name="checkmark-circle" size={22} color={c.primary} accessibilityIgnoresInvertColors />
+              ) : null}
+            </View>
+            <View style={styles.summaryWebRow}>
+              <View style={styles.summaryWebLeft}>
+                <Text style={[styles.summaryWebLabel, { color: c.textMuted }]}>Stay Hydrated</Text>
+              </View>
+              {todaySummary.hydration >= hydrationTarget ? (
+                <Ionicons name="checkmark-circle" size={22} color={c.primary} accessibilityIgnoresInvertColors />
+              ) : null}
+            </View>
+          </View>
+        </Card>
+        <Text style={[styles.dashboardSectionTitleLeft, { color: c.text }]}>Summary</Text>
+        <Card title="" style={styles.homePillCard} compactBody>
+          <View style={styles.todaySummaryRows}>
+            <View style={styles.summaryWebRow}>
+              <View style={styles.summaryWebLeft}>
+                <Text style={[styles.summaryWebLabel, { color: c.textMuted }]}>Symptoms logged</Text>
+              </View>
+              <Text style={[styles.summaryWebValue, { color: c.text }]}>{todaySummary.symptoms}</Text>
+            </View>
+            <View style={styles.summaryWebRow}>
+              <View style={styles.summaryWebLeft}>
+                <Text style={[styles.summaryWebLabel, { color: c.textMuted }]}>Medications taken</Text>
+              </View>
+              <Text style={[styles.summaryWebValue, { color: c.text }]}>
+                {todaySummary.medsTaken}/{todaySummary.medsTotal}
+              </Text>
+            </View>
+            <View style={styles.summaryWebRow}>
+              <View style={styles.summaryWebLeft}>
+                <Text style={[styles.summaryWebLabel, { color: c.textMuted }]}>Hydration</Text>
+              </View>
+              <Text style={[styles.summaryWebValue, { color: c.text }]}>
+                {todaySummary.hydration}/{hydrationTarget}
+              </Text>
+            </View>
+          </View>
+        </Card>
+      </View>
+    ) : homeDashTab === "news" ? (
+      newsLoading ? (
+        <Text style={[styles.muted, { color: c.textMuted }]}>Getting latest news...</Text>
+      ) : newsError ? (
+        <Text style={[styles.muted, { color: c.textMuted }]}>{newsError}</Text>
+      ) : newsItems.length === 0 ? (
+        <Text style={[styles.muted, { color: c.textMuted }]}>No news available right now.</Text>
+      ) : (
+        <View style={styles.newsFeed}>
+          {newsItems.map((item) => (
+            <Pressable
+              key={item.link ?? item.title}
+              style={[styles.newsFeedCard, { backgroundColor: c.newsCardBg }]}
+              onPress={() => {
+                if (item.link) {
+                  Linking.openURL(item.link);
+                }
+              }}
+            >
+              <View style={[styles.newsCardImage, { backgroundColor: c.newsImageBg }]}>
+                <NewsThumbnail imageUrl={item.imageUrl} />
+              </View>
+              <View style={styles.newsCardBody}>
+                <Text style={[styles.newsTitle, { color: c.text }]} numberOfLines={3}>
+                  {item.title}
+                </Text>
+                <Text style={[styles.newsMeta, { color: c.textMuted }]} numberOfLines={1}>
+                  {item.source}
+                  {item.publishedAt ? ` • ${formatUkDate(item.publishedAt)}` : ""}
+                </Text>
+              </View>
+            </Pressable>
+          ))}
+        </View>
+      )
+    ) : homeDashTab === "logs" ? (
+      <Card title="" style={styles.homePillCard} compactBody>
+        <AccountOptionRow
+          label="Symptom History"
+          labelColor="text"
+          labelSize={14}
+          chevronSize={16}
+          rowStyle={styles.homePillOptionRow}
+          onPress={() => {
+            dashboardHomeDashTabRestore = "logs";
+            navigation.navigate("SymptomHistory");
+          }}
+        />
+        <AccountOptionRow
+          label="Medication Tracking History"
+          labelColor="text"
+          labelSize={14}
+          chevronSize={16}
+          rowStyle={styles.homePillOptionRow}
+          onPress={() => {
+            dashboardHomeDashTabRestore = "logs";
+            navigation.navigate("MedicationTrackingHistory");
+          }}
+        />
+      </Card>
+    ) : (
+      <View style={styles.moreSection}>
+        <Text style={[styles.dashboardSectionTitleLeft, styles.dashboardSectionTitleAfterPills, { color: c.text }]}>
+          More
+        </Text>
+        <View style={styles.moreGrid}>
+          {moreLinkCards.map((item) => (
+            <DashboardGridTile
+              key={item.key}
+              width={tileWidth}
+              label={item.label}
+              variant="grid"
+              onPress={() => navigation.navigate(item.screen)}
+              icon={
+                item.family === "ion" ? (
+                  <Ionicons name={item.icon as any} size={HOME_TILE_ICON_SIZE} color={c.primary} />
+                ) : (
+                  <MaterialCommunityIcons name={item.icon as any} size={HOME_TILE_ICON_SIZE} color={c.primary} />
+                )
+              }
+            />
+          ))}
+        </View>
+      </View>
+    );
 
   return (
     <ScrollView
@@ -1533,70 +1768,6 @@ function DashboardScreen({ user }: { user: SessionUser }) {
           ))}
         </ScrollView>
       </View>
-      <Text style={[styles.dashboardSectionTitleLeft, { color: c.text }]}>Today's Summary</Text>
-      <Card title="" style={styles.todaySummaryCard} compactBody>
-        <View style={styles.todaySummaryRows}>
-          <View style={styles.summaryWebRow}>
-            <View style={styles.summaryWebLeft}>
-              <Text style={[styles.summaryWebLabel, { color: c.textMuted }]}>Symptoms Logged</Text>
-            </View>
-            <Text style={[styles.summaryWebValue, { color: c.textSecondary }]}>{todaySummary.symptoms}</Text>
-          </View>
-          <View style={styles.summaryWebRow}>
-            <View style={styles.summaryWebLeft}>
-              <Text style={[styles.summaryWebLabel, { color: c.textMuted }]}>Medications Taken</Text>
-            </View>
-            <Text style={[styles.summaryWebValue, { color: c.textSecondary }]}>
-              {todaySummary.medsTaken}/{todaySummary.medsTotal}
-            </Text>
-          </View>
-          <View style={styles.summaryWebRow}>
-            <View style={styles.summaryWebLeft}>
-              <Text style={[styles.summaryWebLabel, { color: c.textMuted }]}>Hydration</Text>
-            </View>
-            <Text style={[styles.summaryWebValue, { color: c.textSecondary }]}>
-              {todaySummary.hydration}/{hydrationTarget}
-            </Text>
-          </View>
-        </View>
-      </Card>
-      <Text style={[styles.dashboardSectionTitle, { color: c.text }]}>Latest News</Text>
-      <Card title="">
-        {newsLoading ? (
-          <Text style={[styles.muted, { color: c.textMuted }]}>Getting latest news...</Text>
-        ) : newsError ? (
-          <Text style={[styles.muted, { color: c.textMuted }]}>{newsError}</Text>
-        ) : newsItems.length === 0 ? (
-          <Text style={[styles.muted, { color: c.textMuted }]}>No news available right now.</Text>
-        ) : (
-          <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={styles.newsRail}>
-            {newsItems.slice(0, 6).map((item, index) => (
-              <Pressable
-                key={`${item.title}-${index}`}
-                style={[styles.newsCard, { backgroundColor: c.newsCardBg }, index === newsItems.slice(0, 6).length - 1 ? styles.newsCardLast : null]}
-                onPress={() => {
-                  if (item.link) {
-                    Linking.openURL(item.link);
-                  }
-                }}
-              >
-                <View style={[styles.newsCardImage, { backgroundColor: c.newsImageBg }]}>
-                  <NewsThumbnail imageUrl={item.imageUrl} />
-                </View>
-                <View style={styles.newsCardBody}>
-                  <Text style={[styles.newsTitle, { color: c.textSecondary }]} numberOfLines={2}>
-                    {item.title}
-                  </Text>
-                  <Text style={[styles.newsMeta, { color: c.textMuted }]} numberOfLines={1}>
-                    {item.source}
-                    {item.publishedAt ? ` • ${formatUkDate(item.publishedAt)}` : ""}
-                  </Text>
-                </View>
-              </Pressable>
-            ))}
-          </ScrollView>
-        )}
-      </Card>
       <Text style={[styles.dashboardSectionTitleLeft, { color: c.text }]}>Recent Activity</Text>
       <Card title="" style={styles.accountPaddedCard} compactBody>
         {recentActivity.length ? (
@@ -1623,37 +1794,8 @@ function DashboardScreen({ user }: { user: SessionUser }) {
           <Text style={[styles.muted, { color: c.textMuted }]}>No recent activity yet.</Text>
         )}
       </Card>
-      <Text style={[styles.dashboardSectionTitle, { color: c.text }]}>Recent logs</Text>
-      <Card title="" style={styles.accountOptionsListCard} compactBody>
-        <AccountOptionRow label="Symptom History" labelMedium labelColor="textMuted" onPress={() => navigation.navigate("SymptomHistory")} />
-        <AccountOptionRow
-          label="Medication Tracking History"
-          labelMedium
-          labelColor="textMuted"
-          onPress={() => navigation.navigate("MedicationTrackingHistory")}
-        />
-      </Card>
-      <View style={styles.moreSection}>
-        <Text style={[styles.dashboardSectionTitleLeft, { color: c.text }]}>More</Text>
-        <View style={styles.moreGrid}>
-          {moreLinkCards.map((item) => (
-            <DashboardGridTile
-              key={item.key}
-              width={tileWidth}
-              label={item.label}
-              variant="grid"
-              onPress={() => navigation.navigate(item.screen)}
-              icon={
-                item.family === "ion" ? (
-                  <Ionicons name={item.icon as any} size={HOME_TILE_ICON_SIZE} color={c.primary} />
-                ) : (
-                  <MaterialCommunityIcons name={item.icon as any} size={HOME_TILE_ICON_SIZE} color={c.primary} />
-                )
-              }
-            />
-          ))}
-        </View>
-      </View>
+      {homeNavPills}
+      <View style={styles.homePillBodySection}>{homePillBody}</View>
     </ScrollView>
   );
 }
@@ -2328,39 +2470,194 @@ function MedicationsScreen({ user }: { user: SessionUser }) {
   );
 }
 
+function HydrationStepperButton({
+  icon,
+  onPress,
+  disabled,
+  variant,
+}: {
+  icon: "minus" | "plus";
+  onPress: () => void;
+  disabled?: boolean;
+  variant: "secondary" | "primary";
+}) {
+  const c = useFlareColors();
+  const isPrimary = variant === "primary";
+  return (
+    <Pressable
+      accessibilityRole="button"
+      accessibilityLabel={icon === "minus" ? "Remove one glass" : "Add one glass"}
+      accessibilityState={{ disabled: !!disabled }}
+      onPress={onPress}
+      disabled={disabled}
+      style={({ pressed }) => [
+        styles.hydrationStepperBtn,
+        isPrimary
+          ? { backgroundColor: disabled ? c.primaryDisabledBg : c.primary }
+          : { backgroundColor: c.secondaryBtnBg, borderWidth: 1, borderColor: c.secondaryBtnBorder },
+        disabled ? { opacity: 0.45 } : pressed ? { opacity: 0.88 } : null,
+      ]}
+    >
+      <Ionicons
+        name={icon === "minus" ? "remove" : "add"}
+        size={20}
+        color={isPrimary ? c.white : c.textSecondary}
+        accessibilityIgnoresInvertColors
+      />
+    </Pressable>
+  );
+}
+
 function HydrationScreen({ user }: { user: SessionUser }) {
   const c = useFlareColors();
   const bottomScrollInset = useBottomTabScrollInset();
-  const [glasses, setGlasses] = useState(0);
+  const [glasses, setGlasses] = useState(() => dashboardSnapshotByUserId[user.id]?.todaySummary.hydration ?? 0);
+  const [resetConfirmOpen, setResetConfirmOpen] = useState(false);
   const today = new Date().toISOString().split("T")[0];
 
-  const load = async () => {
-    const { data } = await supabase.from(TABLES.DAILY_HYDRATION).select("glasses").eq("user_id", user.id).eq("date", today).maybeSingle();
-    setGlasses(data?.glasses ?? 0);
-  };
-  useEffect(() => { load(); }, [user.id]);
+  const load = useCallback(async () => {
+    const { data, error } = await supabase
+      .from(TABLES.DAILY_HYDRATION)
+      .select("glasses")
+      .eq("user_id", user.id)
+      .eq("date", today)
+      .maybeSingle();
+    if (error) {
+      setGlasses(0);
+    } else {
+      setGlasses(data?.glasses ?? 0);
+    }
+  }, [today, user.id]);
 
-  const setValue = async (next: number) => {
-    const clamped = Math.max(0, Math.min(6, next));
-    const { error } = await supabase.from(TABLES.DAILY_HYDRATION).upsert({ user_id: user.id, date: today, glasses: clamped, updated_at: new Date().toISOString() }, { onConflict: "user_id,date" });
-    if (error) return Alert.alert("Could not update hydration", error.message);
-    setGlasses(clamped);
-  };
+  useEffect(() => {
+    load();
+  }, [load]);
+
+  const persistGlasses = useCallback(
+    async (next: number) => {
+      const clamped = Math.max(0, Math.min(HYDRATION_TARGET, next));
+      const { error } = await supabase.from(TABLES.DAILY_HYDRATION).upsert(
+        { user_id: user.id, date: today, glasses: clamped, updated_at: new Date().toISOString() },
+        { onConflict: "user_id,date" },
+      );
+      if (error) return Alert.alert("Could not update hydration", error.message);
+      setGlasses(clamped);
+      invalidateDashboardSnapshot(user.id);
+    },
+    [today, user.id],
+  );
+
+  const handleResetConfirm = useCallback(async () => {
+    setResetConfirmOpen(false);
+    await saveHydrationReset(user.id, today);
+    await persistGlasses(0);
+  }, [persistGlasses, today, user.id]);
 
   return (
-    <ScrollView
-      style={[styles.screen, { backgroundColor: c.screen }]}
-      contentContainerStyle={{ flexGrow: 1, paddingBottom: bottomScrollInset }}
-    >
-      <Card title="Hydration Goal (6)">
-        <Text style={[styles.bigText, { color: c.primary }]}>{glasses} / 6</Text>
-        <View style={styles.row}>
-          <SecondaryButton title="-1" onPress={() => setValue(glasses - 1)} />
-          <SecondaryButton title="+1" onPress={() => setValue(glasses + 1)} />
-          <SecondaryButton title="Reset" onPress={() => setValue(0)} />
-        </View>
-      </Card>
-    </ScrollView>
+    <>
+      <ScrollView
+        style={[styles.screen, { backgroundColor: c.screen }]}
+        contentContainerStyle={{ paddingBottom: bottomScrollInset + 24 }}
+      >
+        <Card title="" compactBody>
+          <View style={styles.hydrationCardHeader}>
+            <View style={styles.weatherIconWrap}>
+              <MaterialCommunityIcons name="cup-water" size={28} color={c.primary} accessibilityIgnoresInvertColors />
+            </View>
+            <Text
+              style={[styles.cardTitle, styles.hydrationCardHeaderTitle, { color: c.text }]}
+              {...(Platform.OS === "android" ? ({ includeFontPadding: false } as const) : null)}
+            >
+              Daily intake
+            </Text>
+          </View>
+          <View style={styles.hydrationCountRow}>
+            <View style={styles.hydrationCountBlock}>
+              <View style={styles.hydrationCountLine}>
+                <Text style={[styles.hydrationCountValue, { color: c.text }]}>{glasses}</Text>
+                <Text style={[styles.hydrationCountSuffix, { color: c.textSecondary }]}>
+                  / {HYDRATION_TARGET} glasses
+                </Text>
+              </View>
+              {glasses > 0 ? (
+                <Pressable
+                  accessibilityRole="button"
+                  accessibilityLabel="Reset today's hydration count"
+                  onPress={() => setResetConfirmOpen(true)}
+                  hitSlop={8}
+                  style={({ pressed }) => [styles.hydrationResetLink, pressed && { opacity: 0.7 }]}
+                >
+                  <Text style={[styles.hydrationResetText, { color: c.textSecondary }]}>Reset</Text>
+                </Pressable>
+              ) : (
+                <View style={styles.hydrationResetPlaceholder} />
+              )}
+            </View>
+            <View style={styles.hydrationStepperRow}>
+              <HydrationStepperButton
+                icon="minus"
+                variant="secondary"
+                disabled={glasses === 0}
+                onPress={() => persistGlasses(glasses - 1)}
+              />
+              <HydrationStepperButton
+                icon="plus"
+                variant="primary"
+                disabled={glasses >= HYDRATION_TARGET}
+                onPress={() => persistGlasses(glasses + 1)}
+              />
+            </View>
+          </View>
+
+          <View style={styles.hydrationProgressRow}>
+            {Array.from({ length: HYDRATION_TARGET }, (_, index) => {
+              const filled = index < glasses;
+              return (
+                <View
+                  key={index}
+                  style={[
+                    styles.hydrationProgressDot,
+                    filled
+                      ? { backgroundColor: c.primary, borderColor: c.primary }
+                      : { backgroundColor: c.surfaceSubtle, borderColor: c.cardBorder },
+                  ]}
+                />
+              );
+            })}
+          </View>
+
+          {glasses >= HYDRATION_TARGET ? (
+            <Text style={[styles.hydrationGoalReached, { color: c.primary }]}>Daily goal reached</Text>
+          ) : null}
+        </Card>
+
+        <Card title="" style={styles.hydrationInfoCard} compactBody>
+          <Text style={[styles.text, styles.hydrationInfoBody, { color: c.textMuted }]}>
+            Track your daily water intake to hit your goal each day. Use − and + to update your count. Your target is{" "}
+            {HYDRATION_TARGET} glasses per day (roughly 250ml each).
+          </Text>
+          <View style={[styles.hydrationTipBox, { backgroundColor: c.surfaceSubtle }]}>
+            <View style={styles.hydrationTipHeader}>
+              <Ionicons name="bulb-outline" size={18} color="#F59E0B" accessibilityIgnoresInvertColors />
+              <Text style={[styles.hydrationTipTitle, { color: c.text }]}>Important to know:</Text>
+            </View>
+            <Text style={[styles.hydrationTipBody, { color: c.textMuted }]}>
+              Most guidelines recommend around 1.5–2 litres (about 6–8 glasses) of water per day for adults.
+            </Text>
+          </View>
+        </Card>
+      </ScrollView>
+
+      <ConfirmModal
+        visible={resetConfirmOpen}
+        title="Reset today's count?"
+        message="Your hydration progress will be reset to 0. If you did not mean to do this, tap Cancel."
+        confirmLabel="Reset"
+        cancelLabel="Cancel"
+        onCancel={() => setResetConfirmOpen(false)}
+        onConfirm={handleResetConfirm}
+      />
+    </>
   );
 }
 
@@ -2544,10 +2841,18 @@ function ReportsScreen({ user }: { user: SessionUser }) {
       supabase.from(TABLES.TRACK_WEIGHT).select("*").eq("user_id", user.id),
       supabase.from(TABLES.APPOINTMENTS).select("*").eq("user_id", user.id),
     ]);
+    const hydrationLines = (hydration.data ?? [])
+      .slice()
+      .sort((a, b) => String(a.date).localeCompare(String(b.date)))
+      .map((entry) => {
+        const count = entry.glasses ?? 0;
+        const met = count >= HYDRATION_TARGET ? " (goal met)" : "";
+        return `${entry.date}: ${count}/${HYDRATION_TARGET} glasses${met}`;
+      });
     const text = [
       `Symptoms: ${symptoms.data?.length ?? 0}`,
       `Medication tracking logs: ${meds.data?.length ?? 0}`,
-      `Hydration days: ${hydration.data?.length ?? 0}`,
+      hydrationLines.length ? `Hydration logs:\n${hydrationLines.join("\n")}` : "Hydration logs: none",
       `Bowel logs: ${bowel.data?.length ?? 0}`,
       `Weight logs: ${weight.data?.length ?? 0}`,
       `Appointments: ${appts.data?.length ?? 0}`,
@@ -2854,11 +3159,17 @@ function AccountOptionRow({
   onPress,
   labelColor = "text",
   labelMedium,
+  labelSize = 15,
+  chevronSize = 18,
+  rowStyle,
 }: {
   label: string;
   onPress: () => void;
   labelColor?: "text" | "textMuted" | "textSecondary" | "primary";
   labelMedium?: boolean;
+  labelSize?: number;
+  chevronSize?: number;
+  rowStyle?: StyleProp<ViewStyle>;
 }) {
   const c = useFlareColors();
   const labelTint =
@@ -2875,18 +3186,18 @@ function AccountOptionRow({
       accessibilityLabel={label}
       onPress={onPress}
       hitSlop={10}
-      style={styles.accountOptionNavRow}
+      style={[styles.accountOptionNavRow, rowStyle]}
     >
       <Text
         style={[
           styles.accountSettingsNavLabel,
           labelMedium ? styles.accountSettingsNavLabelMedium : null,
-          { color: labelTint },
+          { color: labelTint, fontSize: labelSize },
         ]}
       >
         {label}
       </Text>
-      <Ionicons name="chevron-forward" size={18} color={c.textMuted} />
+      <Ionicons name="chevron-forward" size={chevronSize} color={c.textMuted} />
     </Pressable>
   );
 }
@@ -3017,12 +3328,14 @@ function AccountLegalScreen() {
       <Card title="" style={styles.accountOptionsListCard} compactBody>
         <AccountOptionRow
           label="Privacy Policy"
-          labelColor="textMuted"
+          labelColor="text"
+          labelSize={15}
           onPress={() => navigation.navigate("LegalDocument", { document: "privacy" })}
         />
         <AccountOptionRow
           label="Terms of Use"
-          labelColor="textMuted"
+          labelColor="text"
+          labelSize={15}
           onPress={() => navigation.navigate("LegalDocument", { document: "terms" })}
         />
       </Card>
@@ -3100,10 +3413,11 @@ function AccountHelpScreen({
       contentContainerStyle={{ paddingBottom: bottomScrollInset + 24 }}
     >
       <Card title="" style={styles.accountOptionsListCard} compactBody>
-        <AccountOptionRow label="About FlareCare" labelColor="textMuted" onPress={() => navigation.navigate("About")} />
-        <AccountOptionRow label="Contact support" labelColor="textMuted" onPress={openSupportEmail} />
+        <AccountOptionRow label="About FlareCare" labelColor="text" labelSize={15} onPress={() => navigation.navigate("About")} />
+        <AccountOptionRow label="Contact support" labelColor="text" labelSize={15} onPress={openSupportEmail} />
       </Card>
-      <Card title="Delete account" style={styles.accountPaddedCard} compactBody>
+      <Text style={[styles.accountMenuSectionTitle, { color: c.textMuted }]}>Delete account</Text>
+      <Card title="" style={styles.accountPaddedCard} compactBody>
         <Text style={[styles.muted, { color: c.textMuted, lineHeight: 20 }]}>
           Permanently delete your account and all associated data. This cannot be undone.
         </Text>
@@ -3212,13 +3526,14 @@ function AccountScreen({ user, onLogout }: { user: SessionUser; onLogout: (reaso
           </View>
         </View>
       </Card>
-      <Text style={[styles.dashboardSectionTitleLeft, { color: c.text }]}>My account</Text>
+      <Text style={[styles.accountMenuSectionTitle, { color: c.textMuted }]}>My account</Text>
       <Card title="" style={[styles.accountOptionsListCard, styles.accountOptionsListCardLast]} compactBody>
         {ACCOUNT_OPTION_ROUTES.map((item) => (
           <AccountOptionRow
             key={item.route}
             label={item.label}
-            labelColor="textMuted"
+            labelColor="text"
+            labelSize={15}
             onPress={() => navigation.navigate(item.route)}
           />
         ))}
@@ -3252,9 +3567,13 @@ const AppStack = createNativeStackNavigator();
 function MainBottomTabBar({
   routeName,
   navigationRef,
+  suppressDashboardActive = false,
+  onResetDashboardHome,
 }: {
   routeName: string;
   navigationRef: NavigationContainerRef<Record<string, object | undefined>> | null;
+  suppressDashboardActive?: boolean;
+  onResetDashboardHome?: () => void;
 }) {
   const { colors } = useFlareTheme();
   const c = useFlareColors();
@@ -3265,6 +3584,13 @@ function MainBottomTabBar({
   }
 
   const go = (target: "Dashboard" | "Reminders" | "Account") => {
+    if (target === "Dashboard" && routeName === "Dashboard" && suppressDashboardActive) {
+      onResetDashboardHome?.();
+      return;
+    }
+    if (target === "Dashboard") {
+      dashboardHomeDashTabRestore = null;
+    }
     navigationRef?.navigate(target as never);
   };
 
@@ -3273,7 +3599,7 @@ function MainBottomTabBar({
     icon: ({ active }: { active: boolean }) => React.ReactNode,
     label: string,
   ) => {
-    const active = routeName === target;
+    const active = routeName === target && !(target === "Dashboard" && suppressDashboardActive);
     return (
       <Pressable
         key={target}
@@ -3293,7 +3619,7 @@ function MainBottomTabBar({
       {item(
         "Dashboard",
         ({ active }) => <Ionicons name={active ? "home" : "home-outline"} size={23} color={active ? colors.primary : colors.textMuted} />,
-        "FlareCare",
+        "Home",
       )}
       {item(
         "Reminders",
@@ -3323,6 +3649,11 @@ function AppTabs({
   const { nav, colors } = useFlareTheme();
   const navigationRef = useNavigationContainerRef<Record<string, object | undefined>>();
   const [focusRouteName, setFocusRouteName] = useState("Dashboard");
+  const [dashboardHomePillActive, setDashboardHomePillActive] = useState(false);
+  const resetDashboardHomeRef = useRef<(() => void) | null>(null);
+  const resetDashboardHome = useCallback(() => {
+    resetDashboardHomeRef.current?.();
+  }, []);
 
   const syncFocusRoute = useCallback(() => {
     const name = navigationRef.getCurrentRoute()?.name;
@@ -3349,6 +3680,7 @@ function AppTabs({
       AccountHelp: "Help",
       Settings: "Settings",
       Reminders: "Reminders",
+      Hydration: "My Hydration",
     };
     const legalDocumentTitle =
       route.name === "LegalDocument"
@@ -3380,7 +3712,7 @@ function AppTabs({
 
     return {
       headerTitle: isDashboard
-        ? "FlareCare"
+        ? ""
         : isAbout
           ? "About"
           : isIbd
@@ -3389,7 +3721,9 @@ function AppTabs({
               ? "Account"
               : isReminders
                 ? "Reminders"
-                : legalDocumentTitle ?? titleForRoute[route.name] ?? "",
+                : isSymptomLogWizard || isMedicationTrackingWizard
+                  ? ""
+                  : legalDocumentTitle ?? titleForRoute[route.name] ?? "",
       headerTitleAlign: "center" as const,
       headerLargeTitleShown: false,
       headerLargeTitleShadowVisible: false,
@@ -3436,7 +3770,18 @@ function AppTabs({
       <View style={{ flex: 1, backgroundColor: colors.screen }}>
         <View style={{ flex: 1 }}>
           <AppStack.Navigator initialRouteName="Dashboard" screenOptions={headerOptions as any}>
-            <AppStack.Screen name="Dashboard">{() => <DashboardScreen key={user.id} user={user} />}</AppStack.Screen>
+            <AppStack.Screen name="Dashboard">
+              {() => (
+                <DashboardScreen
+                  key={user.id}
+                  user={user}
+                  onTodayModeChange={setDashboardHomePillActive}
+                  onRegisterResetHome={(reset) => {
+                    resetDashboardHomeRef.current = reset;
+                  }}
+                />
+              )}
+            </AppStack.Screen>
             <AppStack.Screen name="SymptomHistory">{() => <SymptomHistoryScreen user={user} />}</AppStack.Screen>
             <AppStack.Screen name="SymptomDetail">{() => <SymptomDetailScreen user={user} />}</AppStack.Screen>
             <AppStack.Screen name="MedicationTrackingHistory">{() => <MedicationTrackingHistoryScreen user={user} />}</AppStack.Screen>
@@ -3474,7 +3819,12 @@ function AppTabs({
             <AppStack.Screen name="About">{() => <AboutScreen />}</AppStack.Screen>
           </AppStack.Navigator>
         </View>
-        <MainBottomTabBar routeName={focusRouteName} navigationRef={navigationRef} />
+        <MainBottomTabBar
+          routeName={focusRouteName}
+          navigationRef={navigationRef}
+          suppressDashboardActive={focusRouteName === "Dashboard" && dashboardHomePillActive}
+          onResetDashboardHome={resetDashboardHome}
+        />
       </View>
     </NavigationContainer>
   );
@@ -3675,7 +4025,7 @@ const styles = StyleSheet.create({
   legalModalClose: { fontSize: 16, fontFamily: "Inter_600SemiBold" },
   legalModalScroll: { flex: 1 },
   legalModalScrollContent: { paddingHorizontal: 16, paddingTop: 16 },
-  authSecureNote: { flexDirection: "row", alignItems: "center", justifyContent: "center", gap: 5, marginTop: 10 },
+  authSecureNote: { flexDirection: "row", alignItems: "center", justifyContent: "center", gap: 5, marginTop: 18 },
   authSecureNoteText: { fontSize: 12, fontFamily: "Inter_400Regular" },
   authPromptTitle: { textAlign: "center", fontSize: 19, fontFamily: "Inter_500Medium" },
   authPromptSub: { textAlign: "center", fontSize: 13, fontFamily: "Inter_400Regular", marginTop: 4 },
@@ -3752,8 +4102,21 @@ const styles = StyleSheet.create({
     alignSelf: "stretch",
     marginBottom: 12,
   },
-  todaySummaryCard: { paddingHorizontal: 20, paddingVertical: 16 },
-  todaySummaryRows: { gap: 4 },
+  todayPillSection: { width: "100%" },
+  homePillCard: { paddingHorizontal: 18, paddingVertical: 14 },
+  homePillOptionRow: { paddingVertical: 8 },
+  todaySummaryRows: { gap: 8 },
+  homeNavPillsSection: { marginTop: 10 },
+  homePillBodySection: { marginTop: 16 },
+  dashboardSectionTitleAfterPills: { marginTop: 0 },
+  homeNavPillsRow: { flexDirection: "row", gap: 8, paddingVertical: 2 },
+  homeNavPill: {
+    borderRadius: 18,
+    borderWidth: StyleSheet.hairlineWidth,
+    paddingHorizontal: 14,
+    paddingVertical: 8,
+  },
+  homeNavPillLabel: { fontSize: 13, fontFamily: "Inter_600SemiBold" },
   dashboardSectionTitle: {
     fontSize: 18,
     fontFamily: "Inter_700Bold",
@@ -3818,6 +4181,13 @@ const styles = StyleSheet.create({
     justifyContent: "space-between",
   },
   accountPaddedCard: { padding: 18 },
+  accountMenuSectionTitle: {
+    fontSize: 14,
+    fontFamily: "Inter_700Bold",
+    marginBottom: 12,
+    marginTop: 10,
+    textAlign: "left",
+  },
   /** My account / Help link lists. */
   accountOptionsListCard: { paddingHorizontal: 20, paddingVertical: 12 },
   accountOptionNavRow: {
@@ -3843,7 +4213,7 @@ const styles = StyleSheet.create({
     alignItems: "center",
     justifyContent: "space-between",
   },
-  accountSettingsNavLabel: { flex: 1, fontSize: 14, fontFamily: "Inter_400Regular", paddingRight: 10 },
+  accountSettingsNavLabel: { flex: 1, fontSize: 15, fontFamily: "Inter_400Regular", paddingRight: 10 },
   accountSettingsNavLabelMedium: { fontFamily: "Inter_500Medium" },
   accountInfoFields: { gap: 14 },
   accountInfoFieldLabel: { fontSize: 14, fontFamily: "Inter_400Regular", marginBottom: 4 },
@@ -3950,7 +4320,6 @@ const styles = StyleSheet.create({
     flexDirection: "row",
     alignItems: "center",
     justifyContent: "space-between",
-    paddingVertical: 5,
   },
   summaryWebLeft: { flexDirection: "row", alignItems: "center", flex: 1, paddingRight: 8 },
   summaryWebLabel: { fontSize: 14, fontFamily: "Inter_400Regular", flex: 1 },
@@ -4029,14 +4398,12 @@ const styles = StyleSheet.create({
   recentLogsRowTime: { fontSize: 12, fontFamily: "Inter_400Regular" },
   recentLogsEmpty: { alignItems: "center", paddingVertical: 16, paddingHorizontal: 8 },
   recentLogsEmptyCta: { marginTop: 8 },
-  newsRail: { paddingVertical: 2 },
-  newsCard: {
-    width: 236,
+  newsFeed: { gap: 16 },
+  newsFeedCard: {
+    width: "100%",
     borderRadius: 12,
     overflow: "hidden",
-    marginRight: 16,
   },
-  newsCardLast: { marginRight: 0 },
   newsCardImage: {
     width: "100%",
     aspectRatio: 16 / 10,
@@ -4047,11 +4414,59 @@ const styles = StyleSheet.create({
     width: "100%",
     height: "100%",
   },
-  newsCardBody: { paddingTop: 10, paddingBottom: 10 },
+  newsCardBody: { paddingHorizontal: 10, paddingTop: 10, paddingBottom: 10 },
   newsTitle: { fontSize: 13, fontFamily: "Inter_700Bold", lineHeight: 18 },
   newsMeta: { fontSize: 11, fontFamily: "Inter_400Regular", marginTop: 6 },
   /** Logged-at line above symptom detail review cards. */
   symptomDetailLoggedAt: { fontSize: 13, fontFamily: "Inter_400Regular", marginBottom: 16, textAlign: "center" },
+  hydrationCardHeader: { flexDirection: "row", alignItems: "center", marginBottom: 12 },
+  hydrationCardHeaderTitle: { flex: 1, marginBottom: 0, alignSelf: "center", lineHeight: 42 },
+  hydrationCountRow: {
+    flexDirection: "row",
+    alignItems: "flex-start",
+    justifyContent: "space-between",
+    gap: 16,
+  },
+  hydrationCountBlock: { flex: 1, minWidth: 0 },
+  hydrationCountLine: { flexDirection: "row", alignItems: "baseline", flexWrap: "wrap" },
+  hydrationCountValue: { fontSize: 36, fontFamily: "Inter_800ExtraBold" },
+  hydrationCountSuffix: { fontSize: 18, fontFamily: "Inter_400Regular", marginLeft: 4 },
+  hydrationResetLink: { alignSelf: "flex-start", marginTop: 8 },
+  hydrationResetText: { fontSize: 14, fontFamily: "Inter_400Regular", textDecorationLine: "underline" },
+  hydrationResetPlaceholder: { height: 22, marginTop: 8 },
+  hydrationStepperRow: { flexDirection: "row", alignItems: "center", gap: 8 },
+  hydrationStepperBtn: {
+    width: 40,
+    height: 40,
+    borderRadius: 10,
+    alignItems: "center",
+    justifyContent: "center",
+  },
+  hydrationProgressRow: {
+    flexDirection: "row",
+    alignItems: "center",
+    justifyContent: "space-between",
+    gap: 6,
+    marginTop: 20,
+  },
+  hydrationProgressDot: {
+    flex: 1,
+    height: 8,
+    borderRadius: 999,
+    borderWidth: StyleSheet.hairlineWidth,
+  },
+  hydrationGoalReached: {
+    fontSize: 14,
+    fontFamily: "Inter_700Bold",
+    marginTop: 12,
+    textAlign: "center",
+  },
+  hydrationInfoCard: { marginTop: 4 },
+  hydrationInfoBody: { lineHeight: 21, marginBottom: 14 },
+  hydrationTipBox: { borderRadius: 10, padding: 14 },
+  hydrationTipHeader: { flexDirection: "row", alignItems: "center", gap: 8, marginBottom: 6 },
+  hydrationTipTitle: { fontSize: 15, fontFamily: "Inter_700Bold" },
+  hydrationTipBody: { fontSize: 13, fontFamily: "Inter_400Regular", lineHeight: 19 },
   /** Keeps stacked detail rows out of `cardBody` gap (which would add space between every field). */
   detailFieldsStack: { alignSelf: "stretch" },
 });

@@ -17,3 +17,6 @@
 ## Account editing
 - [ ] Allow users to edit **full name** and **email** from Account / Information (currently read-only). Name: `supabase.auth.updateUser({ data: { full_name } })`. Email: Supabase email change flow (verification required). UX: edit screens or inline edit, validation, success/error feedback.
 - [x] Legal baseline: `/privacy`, `/terms` on web; Account → Legal opens **in-app** docs (not external browser); sign-up consent; `docs/legal-truth-sheet.md`, `docs/legal-checklist.md`. **Before store launch:** deploy web for store Privacy URL; lawyer review.
+
+## Navigation / headers (later)
+- [ ] **Collapsing large title** (iOS-style: big title in content, shrinks into nav bar on scroll) — see `plans/collapsing-large-title-headers.md`. Not in app today (`headerLargeTitleShown: false` everywhere). Candidate screens: Account tab, maybe Home. Dashboard currently has **no** header title (intentional).

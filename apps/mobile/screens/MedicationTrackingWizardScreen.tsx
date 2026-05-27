@@ -150,7 +150,7 @@ export function MedicationTrackingWizardScreen({ user }: { user: SessionUser }) 
 
   useLayoutEffect(() => {
     navigation.setOptions({
-      title: "Track Medications",
+      headerTitle: "",
       headerLeft: () => (
         <Pressable
           accessibilityRole="button"
@@ -535,7 +535,7 @@ const styles = StyleSheet.create({
   },
   scrollPad: { paddingHorizontal: 16, paddingTop: 16, paddingBottom: 48 },
   scrollPadLanding: { flexGrow: 1 },
-  scrollPadWizardSteps: { paddingTop: 32 },
+  scrollPadWizardSteps: { paddingTop: 12 },
   landing: {
     alignItems: "center",
     justifyContent: "center",

@@ -185,7 +185,7 @@ export function SymptomLogWizardScreen({ user }: { user: SessionUser }) {
 
   useLayoutEffect(() => {
     navigation.setOptions({
-      title: "Log Symptoms",
+      headerTitle: "",
       headerLeft: () => (
         <Pressable
           accessibilityRole="button"
@@ -953,10 +953,10 @@ const styles = StyleSheet.create({
     minHeight: 44,
   },
   centered: { flex: 1, justifyContent: "center", alignItems: "center" },
-  /** Extra top space on wizard steps so titles / phase line sit below the nav header comfortably */
   scrollPad: { paddingHorizontal: 16, paddingTop: 16, paddingBottom: 48 },
   scrollPadLanding: { flexGrow: 1 },
-  scrollPadWizardSteps: { paddingTop: 32 },
+  /** Step 1+ — room for back button only (no header title). */
+  scrollPadWizardSteps: { paddingTop: 12 },
   landing: {
     alignItems: "center",
     justifyContent: "center",

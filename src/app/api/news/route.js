@@ -55,6 +55,14 @@ function mentionsIBD(text) {
   return t.includes('crohn') || t.includes('colitis') || t.includes('inflammatory bowel') || t.includes('ibd') || t.includes('digestive')
 }
 
+function normalizeHeadline(title) {
+  return String(title || '')
+    .replace(/\s*-\s*(?:MedlinePlus|ScienceDaily|Medical Xpress).*$/i, '')
+    .trim()
+    .toLowerCase()
+    .replace(/\s+/g, ' ')
+}
+
 async function fetchRssFeed(parser, feedConfig, seenUrls) {
   const items = []
   try {
@@ -99,9 +107,12 @@ export async function GET() {
       IBD_RSS_FEEDS.map((feed) => fetchRssFeed(parser, feed, seen))
     )
     const byLink = new Map()
+    const seenTitles = new Set()
     for (const item of feedResults.flat()) {
       const link = item.link
-      if (!link || byLink.has(link)) continue
+      const titleKey = normalizeHeadline(item.headline)
+      if (!link || byLink.has(link) || seenTitles.has(titleKey)) continue
+      seenTitles.add(titleKey)
       byLink.set(link, item)
     }
     const all = Array.from(byLink.values())
