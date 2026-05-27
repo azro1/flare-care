@@ -1,6 +1,6 @@
 import { Ionicons } from "@expo/vector-icons";
 import React, { useMemo, useState } from "react";
-import { Modal, Pressable, StyleSheet, Text, View } from "react-native";
+import { Alert, Modal, Pressable, StyleSheet, Text, View } from "react-native";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { useFlareColors } from "../theme";
 
@@ -12,8 +12,6 @@ type OverflowItem = {
 
 const OVERFLOW_ITEMS: OverflowItem[] = [
   { id: "settings", label: "Settings", route: "Settings" },
-  { id: "symptom-history", label: "Symptom history", route: "SymptomHistory" },
-  { id: "tracking-history", label: "Tracking history", route: "MedicationTrackingHistory" },
   { id: "about", label: "About FlareCare", route: "About" },
   { id: "ibd", label: "What is IBD?", route: "Ibd" },
   { id: "help", label: "Help", route: "AccountHelp" },
@@ -22,8 +20,6 @@ const OVERFLOW_ITEMS: OverflowItem[] = [
 /** Routes where that menu entry is redundant (already on that screen). */
 const HIDE_ITEM_ON_ROUTE: Partial<Record<string, string[]>> = {
   Settings: ["settings"],
-  SymptomHistory: ["symptom-history"],
-  MedicationTrackingHistory: ["tracking-history"],
   AccountHelp: ["help"],
   About: ["about"],
   Ibd: ["ibd"],
@@ -33,11 +29,13 @@ export function HeaderOverflowMenu({
   navigation,
   routeName,
   edgePadding = 12,
+  onLogout,
 }: {
   navigation: { navigate: (name: string) => void };
   routeName: string;
   /** Same as `styles.screen` horizontal padding — aligns ⋮ with card/content edge. */
   edgePadding?: number;
+  onLogout?: () => void | Promise<void>;
 }) {
   const [open, setOpen] = useState(false);
   const c = useFlareColors();
@@ -53,6 +51,15 @@ export function HeaderOverflowMenu({
   const onSelect = (route: string) => {
     close();
     navigation.navigate(route);
+  };
+
+  const onLogoutPress = () => {
+    close();
+    if (!onLogout) return;
+    Alert.alert("Log out?", "Are you sure you want to log out?", [
+      { text: "Stay signed in", style: "cancel" },
+      { text: "Log out", style: "destructive", onPress: () => void onLogout() },
+    ]);
   };
 
   return (
@@ -98,6 +105,18 @@ export function HeaderOverflowMenu({
                 </Pressable>
               </View>
             ))}
+            {onLogout ? (
+              <View>
+                {items.length > 0 ? <View style={[styles.separator, { backgroundColor: c.cardBorder }]} /> : null}
+                <Pressable
+                  accessibilityRole="menuitem"
+                  onPress={onLogoutPress}
+                  style={({ pressed }) => [styles.row, pressed ? { opacity: 0.75 } : null]}
+                >
+                  <Text style={[styles.label, { color: c.text }]}>Log out</Text>
+                </Pressable>
+              </View>
+            ) : null}
           </View>
         </View>
       </Modal>

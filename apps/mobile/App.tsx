@@ -1555,32 +1555,37 @@ function DashboardScreen({
     </View>
   );
 
+  const showMedsGoal = !(todaySummary.medsTotal > 0 && todaySummary.medsTaken >= todaySummary.medsTotal);
+  const showHydrationGoal = todaySummary.hydration < hydrationTarget;
+  const noGoalsToday = !showMedsGoal && !showHydrationGoal;
+
   const homePillBody =
     homeDashTab === "today" ? (
       <View style={styles.todayPillSection}>
         <Text
-          style={[styles.dashboardSectionTitleLeft, styles.dashboardSectionTitleAfterPills, { color: c.text }]}
+          style={[styles.dashboardSectionTitleLeft, styles.dashboardSectionTitleAfterPills, { color: c.textSecondary }]}
         >
-          My Goals
+          Goals
         </Text>
         <Card title="" style={styles.homePillCard} compactBody>
           <View style={styles.todaySummaryRows}>
-            <View style={styles.summaryWebRow}>
-              <View style={styles.summaryWebLeft}>
-                <Text style={[styles.summaryWebLabel, { color: c.textMuted }]}>Take Medications</Text>
+            {showMedsGoal ? (
+              <View style={styles.summaryWebRow}>
+                <View style={styles.summaryWebLeft}>
+                  <Text style={[styles.summaryWebLabel, { color: c.textSecondary }]}>Take Medications</Text>
+                </View>
               </View>
-              {todaySummary.medsTotal > 0 && todaySummary.medsTaken >= todaySummary.medsTotal ? (
-                <Ionicons name="checkmark-circle" size={22} color={c.primary} accessibilityIgnoresInvertColors />
-              ) : null}
-            </View>
-            <View style={styles.summaryWebRow}>
-              <View style={styles.summaryWebLeft}>
-                <Text style={[styles.summaryWebLabel, { color: c.textMuted }]}>Stay Hydrated</Text>
+            ) : null}
+            {showHydrationGoal ? (
+              <View style={styles.summaryWebRow}>
+                <View style={styles.summaryWebLeft}>
+                  <Text style={[styles.summaryWebLabel, { color: c.textSecondary }]}>Stay Hydrated</Text>
+                </View>
               </View>
-              {todaySummary.hydration >= hydrationTarget ? (
-                <Ionicons name="checkmark-circle" size={22} color={c.primary} accessibilityIgnoresInvertColors />
-              ) : null}
-            </View>
+            ) : null}
+            {noGoalsToday ? (
+              <Text style={[styles.summaryWebLabel, { color: c.textMuted }]}>No goals today.</Text>
+            ) : null}
           </View>
         </Card>
         <Text style={[styles.dashboardSectionTitleLeft, { color: c.text }]}>Summary</Text>
@@ -1630,17 +1635,19 @@ function DashboardScreen({
                 }
               }}
             >
-              <View style={[styles.newsCardImage, { backgroundColor: c.newsImageBg }]}>
-                <NewsThumbnail imageUrl={item.imageUrl} />
-              </View>
-              <View style={styles.newsCardBody}>
-                <Text style={[styles.newsTitle, { color: c.text }]} numberOfLines={3}>
-                  {item.title}
-                </Text>
-                <Text style={[styles.newsMeta, { color: c.textMuted }]} numberOfLines={1}>
-                  {item.source}
-                  {item.publishedAt ? ` • ${formatUkDate(item.publishedAt)}` : ""}
-                </Text>
+              <View style={styles.newsCardInner}>
+                <View style={[styles.newsCardImage, { backgroundColor: c.newsImageBg }]}>
+                  <NewsThumbnail imageUrl={item.imageUrl} />
+                </View>
+                <View style={styles.newsCardBody}>
+                  <Text style={[styles.newsTitle, { color: c.text }]} numberOfLines={3}>
+                    {item.title}
+                  </Text>
+                  <Text style={[styles.newsMeta, { color: c.textMuted }]} numberOfLines={1}>
+                    {item.source}
+                    {item.publishedAt ? ` • ${formatUkDate(item.publishedAt)}` : ""}
+                  </Text>
+                </View>
               </View>
             </Pressable>
           ))}
@@ -2633,13 +2640,13 @@ function HydrationScreen({ user }: { user: SessionUser }) {
 
         <Card title="" style={styles.hydrationInfoCard} compactBody>
           <Text style={[styles.text, styles.hydrationInfoBody, { color: c.textMuted }]}>
-            Track your daily water intake to hit your goal each day. Use − and + to update your count. Your target is{" "}
-            {HYDRATION_TARGET} glasses per day (roughly 250ml each).
+            Track your daily water intake to hit your goal each day. Your target is {HYDRATION_TARGET} glasses per day
+            (roughly 250ml each).
           </Text>
           <View style={[styles.hydrationTipBox, { backgroundColor: c.surfaceSubtle }]}>
             <View style={styles.hydrationTipHeader}>
-              <Ionicons name="bulb-outline" size={18} color="#F59E0B" accessibilityIgnoresInvertColors />
-              <Text style={[styles.hydrationTipTitle, { color: c.text }]}>Important to know:</Text>
+              <Ionicons name="bulb-outline" size={18} color={c.primary} accessibilityIgnoresInvertColors />
+              <Text style={[styles.hydrationTipTitle, { color: c.text }]}>Important</Text>
             </View>
             <Text style={[styles.hydrationTipBody, { color: c.textMuted }]}>
               Most guidelines recommend around 1.5–2 litres (about 6–8 glasses) of water per day for adults.
@@ -3363,45 +3370,10 @@ function LegalDocumentScreen() {
   );
 }
 
-function AccountHelpScreen({
-  onLogout,
-  prepareSignOut,
-  finishSignOut,
-  restoreAfterAbortedSignOut,
-}: {
-  user: SessionUser;
-  onLogout: (reason?: SignOutReason) => void | Promise<void>;
-  prepareSignOut: (reason: SignOutReason) => void;
-  finishSignOut: () => Promise<void>;
-  restoreAfterAbortedSignOut: () => Promise<void>;
-}) {
+function AccountHelpScreen() {
   const navigation = useNavigation<any>();
   const c = useFlareColors();
   const bottomScrollInset = useBottomTabScrollInset();
-  const [deleteAccountConfirmOpen, setDeleteAccountConfirmOpen] = useState(false);
-  const deleteAccountInFlight = useRef(false);
-
-  const handleDeleteAccountConfirm = useCallback(async () => {
-    if (deleteAccountInFlight.current) return;
-    deleteAccountInFlight.current = true;
-    setDeleteAccountConfirmOpen(false);
-    prepareSignOut("account_deleted");
-    try {
-      const { error } = await supabase.rpc("delete_user_account");
-      if (error) {
-        await restoreAfterAbortedSignOut();
-        Alert.alert("Could not delete account", error.message);
-        return;
-      }
-      await finishSignOut();
-    } catch (e: unknown) {
-      await restoreAfterAbortedSignOut();
-      const msg = e instanceof Error ? e.message : "Something went wrong.";
-      Alert.alert("Could not delete account", msg);
-    } finally {
-      deleteAccountInFlight.current = false;
-    }
-  }, [finishSignOut, prepareSignOut, restoreAfterAbortedSignOut]);
 
   const openSupportEmail = () => {
     Linking.openURL("mailto:support@flarecare.app").catch(() => {});
@@ -3416,34 +3388,6 @@ function AccountHelpScreen({
         <AccountOptionRow label="About FlareCare" labelColor="text" labelSize={15} onPress={() => navigation.navigate("About")} />
         <AccountOptionRow label="Contact support" labelColor="text" labelSize={15} onPress={openSupportEmail} />
       </Card>
-      <Text style={[styles.accountMenuSectionTitle, { color: c.textMuted }]}>Delete account</Text>
-      <Card title="" style={styles.accountPaddedCard} compactBody>
-        <Text style={[styles.muted, { color: c.textMuted, lineHeight: 20 }]}>
-          Permanently delete your account and all associated data. This cannot be undone.
-        </Text>
-        <Pressable
-          accessibilityRole="button"
-          accessibilityLabel="Delete account"
-          onPress={() => setDeleteAccountConfirmOpen(true)}
-          style={({ pressed }) => [
-            styles.accountDeleteInCard,
-            { backgroundColor: c.surfaceSubtle },
-            pressed && { opacity: 0.7 },
-          ]}
-        >
-          <Text style={[styles.accountSignOutFooterText, { color: c.destructiveFill }]}>Delete account</Text>
-        </Pressable>
-      </Card>
-      <ConfirmModal
-        visible={deleteAccountConfirmOpen}
-        title="Delete account"
-        message="Are you sure you want to permanently delete your account? This action cannot be undone and all your data will be lost."
-        confirmLabel="Delete"
-        cancelLabel="Cancel"
-        confirmDestructive
-        onCancel={() => setDeleteAccountConfirmOpen(false)}
-        onConfirm={handleDeleteAccountConfirm}
-      />
     </ScrollView>
   );
 }
@@ -3502,13 +3446,46 @@ function SettingsScreen() {
   );
 }
 
-function AccountScreen({ user, onLogout }: { user: SessionUser; onLogout: (reason?: SignOutReason) => void | Promise<void> }) {
+function AccountScreen({
+  user,
+  prepareSignOut,
+  finishSignOut,
+  restoreAfterAbortedSignOut,
+}: {
+  user: SessionUser;
+  prepareSignOut: (reason: SignOutReason) => void;
+  finishSignOut: () => Promise<void>;
+  restoreAfterAbortedSignOut: () => Promise<void>;
+}) {
   const navigation = useNavigation<any>();
   const c = useFlareColors();
   const bottomScrollInset = useBottomTabScrollInset();
-  const [logoutConfirmOpen, setLogoutConfirmOpen] = useState(false);
+  const [deleteAccountConfirmOpen, setDeleteAccountConfirmOpen] = useState(false);
+  const deleteAccountInFlight = useRef(false);
 
   const accountFirstName = useMemo(() => accountIdentityFirstLine(user), [user]);
+
+  const handleDeleteAccountConfirm = useCallback(async () => {
+    if (deleteAccountInFlight.current) return;
+    deleteAccountInFlight.current = true;
+    setDeleteAccountConfirmOpen(false);
+    prepareSignOut("account_deleted");
+    try {
+      const { error } = await supabase.rpc("delete_user_account");
+      if (error) {
+        await restoreAfterAbortedSignOut();
+        Alert.alert("Could not delete account", error.message);
+        return;
+      }
+      await finishSignOut();
+    } catch (e: unknown) {
+      await restoreAfterAbortedSignOut();
+      const msg = e instanceof Error ? e.message : "Something went wrong.";
+      Alert.alert("Could not delete account", msg);
+    } finally {
+      deleteAccountInFlight.current = false;
+    }
+  }, [finishSignOut, prepareSignOut, restoreAfterAbortedSignOut]);
 
   return (
     <ScrollView
@@ -3527,7 +3504,7 @@ function AccountScreen({ user, onLogout }: { user: SessionUser; onLogout: (reaso
         </View>
       </Card>
       <Text style={[styles.accountMenuSectionTitle, { color: c.textMuted }]}>My account</Text>
-      <Card title="" style={[styles.accountOptionsListCard, styles.accountOptionsListCardLast]} compactBody>
+      <Card title="" style={styles.accountOptionsListCard} compactBody>
         {ACCOUNT_OPTION_ROUTES.map((item) => (
           <AccountOptionRow
             key={item.route}
@@ -3538,25 +3515,33 @@ function AccountScreen({ user, onLogout }: { user: SessionUser; onLogout: (reaso
           />
         ))}
       </Card>
-      <Pressable
-        accessibilityRole="button"
-        accessibilityLabel="Log out"
-        onPress={() => setLogoutConfirmOpen(true)}
-        style={({ pressed }) => [styles.accountSignOutFooter, pressed && { opacity: 0.7 }]}
-      >
-        <Text style={[styles.accountSignOutFooterText, { color: c.primary }]}>Logout</Text>
-      </Pressable>
+      <Text style={[styles.accountMenuSectionTitle, { color: c.textMuted }]}>Delete account</Text>
+      <Card title="" style={styles.accountPaddedCard} compactBody>
+        <Text style={[styles.muted, { color: c.textMuted, lineHeight: 20 }]}>
+          Permanently delete your account and all associated data. This cannot be undone.
+        </Text>
+        <Pressable
+          accessibilityRole="button"
+          accessibilityLabel="Delete account"
+          onPress={() => setDeleteAccountConfirmOpen(true)}
+          style={({ pressed }) => [
+            styles.accountDeleteInCard,
+            { backgroundColor: c.surfaceSubtle },
+            pressed && { opacity: 0.7 },
+          ]}
+        >
+          <Text style={[styles.accountSignOutFooterText, { color: c.destructiveFill }]}>Delete account</Text>
+        </Pressable>
+      </Card>
       <ConfirmModal
-        visible={logoutConfirmOpen}
-        title="Log out?"
-        message="Are you sure you want to log out?"
-        confirmLabel="Log out"
-        cancelLabel="Stay signed in"
-        onCancel={() => setLogoutConfirmOpen(false)}
-        onConfirm={() => {
-          setLogoutConfirmOpen(false);
-          onLogout();
-        }}
+        visible={deleteAccountConfirmOpen}
+        title="Delete account"
+        message="Are you sure you want to permanently delete your account? This action cannot be undone and all your data will be lost."
+        confirmLabel="Delete"
+        cancelLabel="Cancel"
+        confirmDestructive
+        onCancel={() => setDeleteAccountConfirmOpen(false)}
+        onConfirm={handleDeleteAccountConfirm}
       />
     </ScrollView>
   );
@@ -3707,7 +3692,12 @@ function AppTabs({
       route.name === "MedicationLogDetail";
 
     const headerRightContent = headerHidesOverflowMenu ? null : (
-      <HeaderOverflowMenu navigation={navigation} routeName={route.name} edgePadding={SCREEN_EDGE_PADDING} />
+      <HeaderOverflowMenu
+        navigation={navigation}
+        routeName={route.name}
+        edgePadding={SCREEN_EDGE_PADDING}
+        onLogout={onLogout}
+      />
     );
 
     return {
@@ -3796,7 +3786,16 @@ function AppTabs({
             <AppStack.Screen name="Meds">{() => <MedicationsScreen user={user} />}</AppStack.Screen>
             <AppStack.Screen name="Reminders">{() => <NotificationsScreen user={user} />}</AppStack.Screen>
             <AppStack.Screen name="Ibd">{() => <IbdScreen />}</AppStack.Screen>
-            <AppStack.Screen name="Account">{() => <AccountScreen user={user} onLogout={onLogout} />}</AppStack.Screen>
+            <AppStack.Screen name="Account">
+              {() => (
+                <AccountScreen
+                  user={user}
+                  prepareSignOut={prepareSignOut}
+                  finishSignOut={finishSignOut}
+                  restoreAfterAbortedSignOut={restoreAfterAbortedSignOut}
+                />
+              )}
+            </AppStack.Screen>
             <AppStack.Screen name="Settings">{() => <SettingsScreen />}</AppStack.Screen>
             <AppStack.Screen name="AccountInfo">{() => <AccountInfoScreen user={user} />}</AppStack.Screen>
             <AppStack.Screen name="AccountPersonalDetails">
@@ -3805,17 +3804,7 @@ function AppTabs({
             <AppStack.Screen name="AccountSecurity">{() => <AccountSecurityScreen />}</AppStack.Screen>
             <AppStack.Screen name="AccountLegal">{() => <AccountLegalScreen />}</AppStack.Screen>
             <AppStack.Screen name="LegalDocument" component={LegalDocumentScreen} />
-            <AppStack.Screen name="AccountHelp">
-              {() => (
-                <AccountHelpScreen
-                  user={user}
-                  onLogout={onLogout}
-                  prepareSignOut={prepareSignOut}
-                  finishSignOut={finishSignOut}
-                  restoreAfterAbortedSignOut={restoreAfterAbortedSignOut}
-                />
-              )}
-            </AppStack.Screen>
+            <AppStack.Screen name="AccountHelp">{() => <AccountHelpScreen />}</AppStack.Screen>
             <AppStack.Screen name="About">{() => <AboutScreen />}</AppStack.Screen>
           </AppStack.Navigator>
         </View>
@@ -4404,18 +4393,22 @@ const styles = StyleSheet.create({
     borderRadius: 12,
     overflow: "hidden",
   },
+  /** Inset for image + text; marginTop on body spaces image from title (gap on Pressable is unreliable). */
+  newsCardInner: { padding: 14 },
   newsCardImage: {
     width: "100%",
     aspectRatio: 16 / 10,
     alignItems: "center",
     justifyContent: "center",
+    borderRadius: 8,
+    overflow: "hidden",
   },
   newsCardImageAsset: {
     width: "100%",
     height: "100%",
   },
-  newsCardBody: { paddingHorizontal: 10, paddingTop: 10, paddingBottom: 10 },
-  newsTitle: { fontSize: 13, fontFamily: "Inter_700Bold", lineHeight: 18 },
+  newsCardBody: { marginTop: 14 },
+  newsTitle: { fontSize: 14, fontFamily: "Inter_700Bold", lineHeight: 20 },
   newsMeta: { fontSize: 11, fontFamily: "Inter_400Regular", marginTop: 6 },
   /** Logged-at line above symptom detail review cards. */
   symptomDetailLoggedAt: { fontSize: 13, fontFamily: "Inter_400Regular", marginBottom: 16, textAlign: "center" },
@@ -4465,7 +4458,7 @@ const styles = StyleSheet.create({
   hydrationInfoBody: { lineHeight: 21, marginBottom: 14 },
   hydrationTipBox: { borderRadius: 10, padding: 14 },
   hydrationTipHeader: { flexDirection: "row", alignItems: "center", gap: 8, marginBottom: 6 },
-  hydrationTipTitle: { fontSize: 15, fontFamily: "Inter_700Bold" },
+  hydrationTipTitle: { fontSize: 14, fontFamily: "Inter_700Bold" },
   hydrationTipBody: { fontSize: 13, fontFamily: "Inter_400Regular", lineHeight: 19 },
   /** Keeps stacked detail rows out of `cardBody` gap (which would add space between every field). */
   detailFieldsStack: { alignSelf: "stretch" },

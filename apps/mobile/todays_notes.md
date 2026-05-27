@@ -20,3 +20,6 @@
 
 ## Navigation / headers (later)
 - [ ] **Collapsing large title** (iOS-style: big title in content, shrinks into nav bar on scroll) — see `plans/collapsing-large-title-headers.md`. Not in app today (`headerLargeTitleShown: false` everywhere). Candidate screens: Account tab, maybe Home. Dashboard currently has **no** header title (intentional).
+
+## mobile-native polish (dashboard pills + navigation)
+- [ ] **Screen transitions feel rough** — especially around today’s home work: pill swaps (Today / Logs / News / More), stack pushes (e.g. Logs → Symptom History), and returning to Dashboard. Improve so moves feel smooth (less flash, consistent animation, pill state vs stack nav). Review after `mobile-native` merge.
