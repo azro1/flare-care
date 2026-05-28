@@ -1563,7 +1563,7 @@ function DashboardScreen({
     homeDashTab === "today" ? (
       <View style={styles.todayPillSection}>
         <Text
-          style={[styles.dashboardSectionTitleLeft, styles.dashboardSectionTitleAfterPills, { color: c.textSecondary }]}
+          style={[styles.dashboardSectionTitleLeft, styles.dashboardSectionTitleAfterPills, { color: c.text }]}
         >
           Goals
         </Text>
@@ -1572,14 +1572,14 @@ function DashboardScreen({
             {showMedsGoal ? (
               <View style={styles.summaryWebRow}>
                 <View style={styles.summaryWebLeft}>
-                  <Text style={[styles.summaryWebLabel, { color: c.textSecondary }]}>Take Medications</Text>
+                  <Text style={[styles.summaryWebLabel, { color: c.textMuted }]}>Take Medications</Text>
                 </View>
               </View>
             ) : null}
             {showHydrationGoal ? (
               <View style={styles.summaryWebRow}>
                 <View style={styles.summaryWebLeft}>
-                  <Text style={[styles.summaryWebLabel, { color: c.textSecondary }]}>Stay Hydrated</Text>
+                  <Text style={[styles.summaryWebLabel, { color: c.textMuted }]}>Stay Hydrated</Text>
                 </View>
               </View>
             ) : null}
@@ -1654,30 +1654,39 @@ function DashboardScreen({
         </View>
       )
     ) : homeDashTab === "logs" ? (
-      <Card title="" style={styles.homePillCard} compactBody>
-        <AccountOptionRow
-          label="Symptom History"
-          labelColor="text"
-          labelSize={14}
-          chevronSize={16}
-          rowStyle={styles.homePillOptionRow}
-          onPress={() => {
-            dashboardHomeDashTabRestore = "logs";
-            navigation.navigate("SymptomHistory");
-          }}
-        />
-        <AccountOptionRow
-          label="Medication Tracking History"
-          labelColor="text"
-          labelSize={14}
-          chevronSize={16}
-          rowStyle={styles.homePillOptionRow}
-          onPress={() => {
-            dashboardHomeDashTabRestore = "logs";
-            navigation.navigate("MedicationTrackingHistory");
-          }}
-        />
-      </Card>
+      <View style={styles.todayPillSection}>
+        <Text
+          style={[styles.dashboardSectionTitleLeft, styles.dashboardSectionTitleAfterPills, { color: c.text }]}
+        >
+          History
+        </Text>
+        <Card title="" style={styles.homePillCard} compactBody>
+          <View style={styles.todaySummaryRows}>
+            <AccountOptionRow
+              label="Symptoms"
+              labelColor="textMuted"
+              labelSize={14}
+              chevronSize={16}
+              rowStyle={styles.homePillNavRow}
+              onPress={() => {
+                dashboardHomeDashTabRestore = "logs";
+                navigation.navigate("SymptomHistory");
+              }}
+            />
+            <AccountOptionRow
+              label="Track Medications"
+              labelColor="textMuted"
+              labelSize={14}
+              chevronSize={16}
+              rowStyle={styles.homePillNavRow}
+              onPress={() => {
+                dashboardHomeDashTabRestore = "logs";
+                navigation.navigate("MedicationTrackingHistory");
+              }}
+            />
+          </View>
+        </Card>
+      </View>
     ) : (
       <View style={styles.moreSection}>
         <Text style={[styles.dashboardSectionTitleLeft, styles.dashboardSectionTitleAfterPills, { color: c.text }]}>
@@ -1865,7 +1874,7 @@ function SymptomHistoryScreen({ user }: { user: SessionUser }) {
           )}
         </View>
       </Card>
-      <PrimaryButton title="Log a symptom" onPress={() => navigation.navigate("SymptomLogWizard")} />
+      <PrimaryButton title="Log Symptoms" onPress={() => navigation.navigate("SymptomLogWizard")} />
     </ScrollView>
   );
 }
@@ -2231,7 +2240,7 @@ function MedicationTrackingHistoryScreen({ user }: { user: SessionUser }) {
           )}
         </View>
       </Card>
-      <PrimaryButton title="Track medications" onPress={() => navigation.navigate("MedicationTrackingWizard")} />
+      <PrimaryButton title="Track Medications" onPress={() => navigation.navigate("MedicationTrackingWizard")} />
     </ScrollView>
   );
 }
@@ -3652,10 +3661,10 @@ function AppTabs({
     const isAccount = route.name === "Account";
     const isReminders = route.name === "Reminders";
     const titleForRoute: Record<string, string> = {
-      SymptomHistory: "Symptom History",
+      SymptomHistory: "History",
       SymptomDetail: "Symptom Details",
-      MedicationTrackingHistory: "Tracking History",
-      MedicationLogDetail: "Tracking log",
+      MedicationTrackingHistory: "History",
+      MedicationLogDetail: "Medication Log",
       SymptomLogWizard: "Log Symptoms",
       MedicationTrackingWizard: "Track Medications",
       AccountInfo: "Information",
@@ -3989,7 +3998,7 @@ const styles = StyleSheet.create({
   authCardPlain: { flex: 1 },
   authMethodPanel: { flex: 1, justifyContent: "center" },
   authMethodActions: { marginTop: 18, gap: 8 },
-  authLegalRow: { flexDirection: "row", alignItems: "flex-start", gap: 10, marginTop: 14, marginBottom: 4 },
+  authLegalRow: { flexDirection: "row", alignItems: "flex-start", gap: 10, marginTop: 22, marginBottom: 4 },
   authLegalCheckbox: {
     width: 20,
     height: 20,
@@ -3999,7 +4008,7 @@ const styles = StyleSheet.create({
     justifyContent: "center",
     marginTop: 1,
   },
-  authLegalText: { flex: 1, fontSize: 12, lineHeight: 17, fontFamily: "Inter_400Regular" },
+  authLegalText: { flex: 1, fontSize: 13, lineHeight: 18, fontFamily: "Inter_400Regular" },
   authLegalLink: { fontFamily: "Inter_600SemiBold", textDecorationLine: "underline" },
   legalModalRoot: { flex: 1 },
   legalModalHeader: {
@@ -4015,9 +4024,9 @@ const styles = StyleSheet.create({
   legalModalScroll: { flex: 1 },
   legalModalScrollContent: { paddingHorizontal: 16, paddingTop: 16 },
   authSecureNote: { flexDirection: "row", alignItems: "center", justifyContent: "center", gap: 5, marginTop: 18 },
-  authSecureNoteText: { fontSize: 12, fontFamily: "Inter_400Regular" },
+  authSecureNoteText: { fontSize: 13, lineHeight: 18, fontFamily: "Inter_400Regular" },
   authPromptTitle: { textAlign: "center", fontSize: 19, fontFamily: "Inter_500Medium" },
-  authPromptSub: { textAlign: "center", fontSize: 13, fontFamily: "Inter_400Regular", marginTop: 4 },
+  authPromptSub: { textAlign: "center", fontSize: 14, lineHeight: 20, fontFamily: "Inter_400Regular", marginTop: 4 },
   /** Extra gap before email field only — keep method screen subtitle unchanged */
   authEmailHelperSub: { marginBottom: 18 },
   authOtpCountdown: {
@@ -4093,7 +4102,7 @@ const styles = StyleSheet.create({
   },
   todayPillSection: { width: "100%" },
   homePillCard: { paddingHorizontal: 18, paddingVertical: 14 },
-  homePillOptionRow: { paddingVertical: 8 },
+  homePillNavRow: { paddingVertical: 0 },
   todaySummaryRows: { gap: 8 },
   homeNavPillsSection: { marginTop: 10 },
   homePillBodySection: { marginTop: 16 },
