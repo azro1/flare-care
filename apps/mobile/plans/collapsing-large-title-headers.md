@@ -1,6 +1,25 @@
 # Plan: Collapsing large title headers (native app)
 
-**Status:** Deferred — implement another day.
+**Status:** ✅ Shipped — documented in **`apps/mobile/README.md`** § Collapsing page titles.
+
+## What we shipped (2026)
+
+**Not** native `headerLargeTitle` (iOS-only). Custom **`CollapsingTitleScrollScreen`** — one title morphs into the nav bar on scroll; iOS + Android.
+
+| Screen | Route | Preset |
+|--------|-------|--------|
+| What is IBD? | `Ibd` | `titlePreset="informational"` |
+| About | `About` | `titlePreset="informational"` |
+
+**Files:**
+- `components/CollapsingTitleScrollScreen.tsx`
+- `lib/layoutConstants.ts` — `INFORMATIONAL_PAGE_TITLE`, `pageTitle` (22px), `navTitle` (16px), `COLLAPSING_TITLE_CONTENT_GAP` (24px)
+
+**Header:** `headerTitle: ""` for those routes in `App.tsx` `headerOptions`.
+
+---
+
+## Original plan (below) — superseded
 
 ## What we mean
 
@@ -38,13 +57,13 @@ Already on `@react-navigation/native-stack`.
 
 ## Checklist
 
-- [ ] Pick pilot screen (likely Account tab).
-- [ ] Enable `headerLargeTitle` in `headerOptions` for that route (Platform.OS === 'ios' if needed).
-- [ ] Remove duplicate on-page section title if it clashes with large title.
-- [ ] Test scroll + bottom tab bar + overflow menu.
-- [ ] Document Android behaviour (accept difference or skip).
+- [x] Pick pilot screen — `Ibd`, then `About`.
+- [x] Custom cross-platform collapse (not iOS-only native API).
+- [x] Typography tokens in `layoutConstants.ts`.
+- [ ] Account tab — deferred unless product asks.
+- [ ] Document Android behaviour — custom header handles both.
 
 ## References
 
 - React Navigation native stack: [Native Stack Navigator](https://reactnavigation.org/docs/native-stack-navigator/#headerlargetitle-ios)
-- Code: `apps/mobile/App.tsx` → `headerOptions`, `headerLargeTitleShown: false` today
+- Code: `apps/mobile/App.tsx` → `headerOptions`, `CollapsingTitleScrollScreen`

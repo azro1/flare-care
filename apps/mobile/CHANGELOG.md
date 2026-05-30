@@ -4,6 +4,24 @@ Recent UI and behavior updates on the Expo app (`apps/mobile`).
 
 ## Unreleased
 
+### Reminders & notifications
+
+- Local medication/appointment reminders on native (no web push subscribe); permission + reschedule on save.
+- Push notifications working again on dev client.
+
+### My Meds
+
+- **Mark as taken** fixed: toggles `is_medication_taken` (same as web), not `log_medications` / Track Medications flow. Updates dashboard goals/summary via snapshot invalidation.
+
+### Informational pages
+
+- **Collapsing page title** on **What is IBD?** and **About** (`CollapsingTitleScrollScreen`, `titlePreset="informational"`). Documented in `README.md`.
+- About copy: web tagline, “on your device”, IBD audience wording; no “companion”.
+
+### Dashboard
+
+- News pill section title **Latest** (consistent with Goals / History on other pills).
+
 ### Branding & assets
 
 - Added app mark assets (`fclogo*.png`) and wired splash/auth branding to use the translucent splash variant where appropriate.

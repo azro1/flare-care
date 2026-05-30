@@ -45,6 +45,7 @@ import {
 } from "./components/FlareButton";
 import { flareFieldErrorStyle, LabeledInput } from "./components/FlareInput";
 import { HeaderOverflowMenu } from "./components/HeaderOverflowMenu";
+import { CollapsingTitleScrollScreen } from "./components/CollapsingTitleScrollScreen";
 import { StackedDetailField } from "./components/StackedDetailField";
 import {
   SymptomReviewCard,
@@ -57,6 +58,15 @@ import {
 import { FlareThemeProvider, useFlareColors, useFlareTheme } from "./theme";
 import { formatUkDate } from "./lib/formatUkDate";
 import { HYDRATION_TARGET, loadHydrationResetTimestamp, saveHydrationReset, HYDRATION_GOAL_ACTIVITY_TITLE, HYDRATION_RESET_ACTIVITY_TITLE } from "./lib/hydrationShared";
+import {
+  FLARE_FONT_FAMILY,
+  FLARE_FONT_SIZE,
+  FLARE_LINE_HEIGHT,
+  HOME_TILE_GAP,
+  SCREEN_EDGE_PADDING,
+  SECTION_TITLE_MARGIN_BOTTOM,
+  SECTION_TITLE_MARGIN_TOP,
+} from "./lib/layoutConstants";
 import {
   formatOtpCountdown,
   OTP_MAX_RESENDS,
@@ -1065,10 +1075,6 @@ function useBottomTabScrollInset() {
 }
 
 /** Matches `styles.screen` edge padding (used to size Daily Check-in row). */
-const SCREEN_EDGE_PADDING = 12;
-/** Space between sibling home tiles: Daily Check-in scroll + More grid. */
-const HOME_TILE_GAP = 12;
-
 /** Dashboard / history lists — symptom log id + time. */
 type RecentLogListRow = { id: string; created_at: string };
 
@@ -1617,42 +1623,49 @@ function DashboardScreen({
         </Card>
       </View>
     ) : homeDashTab === "news" ? (
-      newsLoading ? (
-        <Text style={[styles.muted, { color: c.textMuted }]}>Getting latest news...</Text>
-      ) : newsError ? (
-        <Text style={[styles.muted, { color: c.textMuted }]}>{newsError}</Text>
-      ) : newsItems.length === 0 ? (
-        <Text style={[styles.muted, { color: c.textMuted }]}>No news available right now.</Text>
-      ) : (
-        <View style={styles.newsFeed}>
-          {newsItems.map((item) => (
-            <Pressable
-              key={item.link ?? item.title}
-              style={[styles.newsFeedCard, { backgroundColor: c.newsCardBg }]}
-              onPress={() => {
-                if (item.link) {
-                  Linking.openURL(item.link);
-                }
-              }}
-            >
-              <View style={styles.newsCardInner}>
-                <View style={[styles.newsCardImage, { backgroundColor: c.newsImageBg }]}>
-                  <NewsThumbnail imageUrl={item.imageUrl} />
+      <View style={styles.todayPillSection}>
+        <Text
+          style={[styles.dashboardSectionTitleLeft, styles.dashboardSectionTitleAfterPills, { color: c.text }]}
+        >
+          Latest
+        </Text>
+        {newsLoading ? (
+          <Text style={[styles.muted, { color: c.textMuted }]}>Getting latest news...</Text>
+        ) : newsError ? (
+          <Text style={[styles.muted, { color: c.textMuted }]}>{newsError}</Text>
+        ) : newsItems.length === 0 ? (
+          <Text style={[styles.muted, { color: c.textMuted }]}>No news available right now.</Text>
+        ) : (
+          <View style={styles.newsFeed}>
+            {newsItems.map((item) => (
+              <Pressable
+                key={item.link ?? item.title}
+                style={[styles.newsFeedCard, { backgroundColor: c.newsCardBg }]}
+                onPress={() => {
+                  if (item.link) {
+                    Linking.openURL(item.link);
+                  }
+                }}
+              >
+                <View style={styles.newsCardInner}>
+                  <View style={[styles.newsCardImage, { backgroundColor: c.newsImageBg }]}>
+                    <NewsThumbnail imageUrl={item.imageUrl} />
+                  </View>
+                  <View style={styles.newsCardBody}>
+                    <Text style={[styles.newsTitle, { color: c.text }]} numberOfLines={3}>
+                      {item.title}
+                    </Text>
+                    <Text style={[styles.newsMeta, { color: c.textMuted }]} numberOfLines={1}>
+                      {item.source}
+                      {item.publishedAt ? ` • ${formatUkDate(item.publishedAt)}` : ""}
+                    </Text>
+                  </View>
                 </View>
-                <View style={styles.newsCardBody}>
-                  <Text style={[styles.newsTitle, { color: c.text }]} numberOfLines={3}>
-                    {item.title}
-                  </Text>
-                  <Text style={[styles.newsMeta, { color: c.textMuted }]} numberOfLines={1}>
-                    {item.source}
-                    {item.publishedAt ? ` • ${formatUkDate(item.publishedAt)}` : ""}
-                  </Text>
-                </View>
-              </View>
-            </Pressable>
-          ))}
-        </View>
-      )
+              </Pressable>
+            ))}
+          </View>
+        )}
+      </View>
     ) : homeDashTab === "logs" ? (
       <View style={styles.todayPillSection}>
         <Text
@@ -2413,12 +2426,28 @@ function MedicationsScreen({ user }: { user: SessionUser }) {
   const [dosage, setDosage] = useState("");
   const [timeOfDay, setTimeOfDay] = useState("07:00");
   const [meds, setMeds] = useState<Medication[]>([]);
+  const [takenMedIds, setTakenMedIds] = useState<string[]>([]);
 
   const load = async () => {
-    const { data } = await supabase.from(TABLES.MEDICATIONS).select("*").eq("user_id", user.id).order("created_at", { ascending: false });
-    setMeds((data ?? []) as Medication[]);
+    const today = new Date().toISOString().split("T")[0];
+    const [medsRes, takenRes] = await Promise.all([
+      supabase
+        .from(TABLES.MEDICATIONS)
+        .select("*")
+        .eq("user_id", user.id)
+        .neq("name", "Medication Tracking")
+        .order("created_at", { ascending: false }),
+      supabase.from(TABLES.MEDICATION_TAKEN).select("medication_id").eq("user_id", user.id).eq("taken_date", today),
+    ]);
+    setMeds((medsRes.data ?? []) as Medication[]);
+    setTakenMedIds((takenRes.data ?? []).map((row) => String(row.medication_id)));
   };
   useEffect(() => { load(); }, [user.id]);
+  useFocusEffect(
+    useCallback(() => {
+      void load();
+    }, [user.id]),
+  );
 
   const addMedication = async () => {
     if (!name.trim()) {
@@ -2444,21 +2473,44 @@ function MedicationsScreen({ user }: { user: SessionUser }) {
       Alert.alert("Medication saved", `Could not auto-update reminders: ${e?.message || "Unknown error"}`);
       return;
     }
-    Alert.alert("Medication saved", "Enable notifications in Settings to schedule alerts.");
+    Alert.alert(
+      "Medication saved",
+      "Open the Reminders tab and tap Enable notifications once. New medications will update reminders automatically after that.",
+    );
   };
 
-  const logTaken = async (med: Medication) => {
-    const { error } = await supabase.from(TABLES.LOG_MEDICATIONS).insert([{
-      id: `medication-tracking-${Date.now()}`,
-      user_id: user.id,
-      name: med.name,
-      missed_medications_list: [],
-      nsaid_list: [],
-      antibiotic_list: [],
-      created_at: new Date().toISOString(),
-    }]);
-    if (error) return Alert.alert("Could not mark taken", error.message);
-    Alert.alert("Saved", `${med.name} marked in medication tracking.`);
+  const toggleTaken = async (med: Medication) => {
+    const today = new Date().toISOString().split("T")[0];
+    const medIdStr = String(med.id);
+    const isTaken = takenMedIds.some((id) => id === medIdStr);
+    try {
+      if (isTaken) {
+        const { error } = await supabase
+          .from(TABLES.MEDICATION_TAKEN)
+          .delete()
+          .eq("user_id", user.id)
+          .eq("medication_id", medIdStr)
+          .eq("taken_date", today);
+        if (error) throw error;
+        setTakenMedIds((prev) => prev.filter((id) => id !== medIdStr));
+      } else {
+        const { error } = await supabase.from(TABLES.MEDICATION_TAKEN).upsert(
+          { user_id: user.id, medication_id: medIdStr, taken_date: today },
+          { onConflict: "user_id,medication_id,taken_date" },
+        );
+        if (error) throw error;
+        setTakenMedIds((prev) => [...prev, medIdStr]);
+      }
+      invalidateDashboardSnapshot(user.id);
+      Alert.alert(
+        isTaken ? "Updated" : "Marked as taken",
+        isTaken
+          ? `${med.name} is no longer counted as taken today.`
+          : `${med.name} is counted toward today's Summary and Goals on Home.`,
+      );
+    } catch (e: any) {
+      Alert.alert("Could not update", e?.message || "Unknown error");
+    }
   };
 
   return (
@@ -2473,14 +2525,25 @@ function MedicationsScreen({ user }: { user: SessionUser }) {
         <PrimaryButton title="Save medication" onPress={addMedication} />
       </Card>
       <Card title="Current Medications">
-        {meds.map((m) => (
-          <View key={m.id} style={styles.row}>
-            <Text style={[styles.text, { color: c.textMuted }]}>
-              {m.name} {m.dosage ?? ""}
-            </Text>
-            <SecondaryButton title="Mark taken" onPress={() => logTaken(m)} />
-          </View>
-        ))}
+        {meds.length === 0 ? (
+          <Text style={[styles.muted, { color: c.textMuted }]}>No medications yet.</Text>
+        ) : (
+          meds.map((m) => {
+            const isTaken = takenMedIds.some((id) => id === String(m.id));
+            return (
+              <View key={m.id} style={styles.row}>
+                <Text style={[styles.text, { color: c.textMuted }]}>
+                  {m.name} {m.dosage ?? ""}
+                  {isTaken ? " · Taken today" : ""}
+                </Text>
+                <SecondaryButton
+                  title={isTaken ? "Mark as not taken" : "Mark as taken"}
+                  onPress={() => toggleTaken(m)}
+                />
+              </View>
+            );
+          })
+        )}
       </Card>
     </ScrollView>
   );
@@ -2807,7 +2870,10 @@ function AppointmentsScreen({ user }: { user: SessionUser }) {
       Alert.alert("Appointment saved", `Could not auto-update reminders: ${e?.message || "Unknown error"}`);
       return;
     }
-    Alert.alert("Appointment saved", "Enable notifications in Settings to schedule alerts.");
+    Alert.alert(
+      "Appointment saved",
+      "Open the Reminders tab and tap Enable notifications once. New appointments will update reminders automatically after that.",
+    );
   };
 
   return (
@@ -2914,18 +2980,18 @@ function ReportsScreen({ user }: { user: SessionUser }) {
 function NotificationsScreen({ user }: { user: SessionUser }) {
   const c = useFlareColors();
   const bottomScrollInset = useBottomTabScrollInset();
-  const [token, setToken] = useState<string>("");
+  const [permissionGranted, setPermissionGranted] = useState(false);
   const [scheduled, setScheduled] = useState(0);
   const [lastError, setLastError] = useState("");
 
   const register = async () => {
     setLastError("");
     if (!Notifications || !Device) {
-      Alert.alert("Not supported in Expo Go", "Use a development build to test push notifications.");
+      Alert.alert("Not supported in Expo Go", "Use a development build to test local reminders.");
       return;
     }
     if (!Device.isDevice) {
-      Alert.alert("Device required", "Use a physical device for push notifications.");
+      Alert.alert("Device required", "Use a physical device for reminders.");
       return;
     }
     const { status: existingStatus } = await Notifications.getPermissionsAsync();
@@ -2938,41 +3004,25 @@ function NotificationsScreen({ user }: { user: SessionUser }) {
       Alert.alert("Permission denied", "Notification permission is required.");
       return;
     }
+    setPermissionGranted(true);
     try {
-      const projectId = Constants.expoConfig?.extra?.eas?.projectId ?? Constants.easConfig?.projectId;
-      const tokenResult = projectId
-        ? await Notifications.getExpoPushTokenAsync({ projectId })
-        : await Notifications.getExpoPushTokenAsync();
-      const pushToken = tokenResult.data;
-      setToken(pushToken);
-      const { data: sessionData } = await supabase.auth.getSession();
-      const accessToken = sessionData.session?.access_token;
-      const base = process.env.EXPO_PUBLIC_WEB_API_BASE_URL;
-      if (accessToken && base) {
-        await fetch(`${base}/api/push/subscribe`, {
-          method: "POST",
-          headers: {
-            "Content-Type": "application/json",
-            Authorization: `Bearer ${accessToken}`,
-          },
-          body: JSON.stringify({
-            expo_push_token: pushToken,
-            user_agent: `expo-${Platform.OS}`,
-          }),
-        });
-      }
-
       const meds = await rescheduleMedicationNotificationsForUser(user.id);
       const appts = await rescheduleAppointmentNotificationsForUser(user.id);
-      setScheduled(meds.scheduledCount + appts.scheduledCount);
-      await AsyncStorage.setItem("flarecare.pushToken", pushToken);
+      const totalScheduled = meds.scheduledCount + appts.scheduledCount;
+      setScheduled(totalScheduled);
+      setLastError("");
+      Alert.alert(
+        "Reminders enabled",
+        totalScheduled > 0
+          ? `Scheduled ${totalScheduled} reminder(s) on this device.`
+          : "Notifications are on. Add medications or appointments with reminder times to schedule alerts.",
+      );
     } catch (error: any) {
       const message =
         error?.message ||
         error?.toString?.() ||
         (typeof error === "string" ? error : "Unknown error");
-      console.error("PUSH_SETUP_ERROR", error);
-      console.error("PUSH_SETUP_ERROR_MESSAGE", message);
+      console.error("LOCAL_REMINDER_SETUP_ERROR", error);
       setLastError(message);
       Alert.alert("Notification setup failed", message);
     }
@@ -2983,13 +3033,20 @@ function NotificationsScreen({ user }: { user: SessionUser }) {
       style={[styles.screen, { backgroundColor: c.screen }]}
       contentContainerStyle={{ flexGrow: 1, paddingBottom: bottomScrollInset }}
     >
-      <Card title="Push Reminders">
-        <Text style={[styles.text, { color: c.textMuted }]}>Register push permissions and schedule medication reminders.</Text>
-        <PrimaryButton title="Enable notifications" onPress={register} />
-        <Text style={[styles.text, { color: c.textMuted }]}>Token: {token ? `${token.slice(0, 24)}...` : "not registered"}</Text>
-        <Text style={[styles.text, { color: c.textMuted }]}>Scheduled reminders: {scheduled}</Text>
-        {lastError ? <Text style={flareFieldErrorStyle(c, "wizard")}>Error: {lastError}</Text> : null}
-        {Platform.OS === "ios" ? <Text style={[styles.muted, { color: c.textMuted }]}>iOS requires real device + APNs entitlements.</Text> : null}
+      <Card title="" style={styles.accountPaddedCard} compactBody>
+        <View style={styles.remindersSetupBlock}>
+          <Text style={[styles.muted, { color: c.textMuted, lineHeight: 18 }]}>
+            Tap once to allow notifications. After that, saving medications or appointments will schedule reminders automatically.
+          </Text>
+          <PrimaryButton title="Enable notifications" onPress={register} />
+        </View>
+        <View style={styles.remindersDebugBlock}>
+          <Text style={[styles.muted, { color: c.textMuted }]}>
+            Permission: {permissionGranted ? "granted" : "not enabled yet"}
+          </Text>
+          <Text style={[styles.muted, { color: c.textMuted }]}>Scheduled reminders: {scheduled}</Text>
+          {lastError ? <Text style={flareFieldErrorStyle(c, "wizard")}>Error: {lastError}</Text> : null}
+        </View>
       </Card>
     </ScrollView>
   );
@@ -3057,9 +3114,10 @@ function IbdScreen() {
   const bottomScrollInset = useBottomTabScrollInset();
 
   return (
-    <ScrollView
-      style={[styles.screen, { backgroundColor: c.screen }]}
-      contentContainerStyle={{ paddingBottom: Math.max(insets.bottom, 16) + 48 + bottomScrollInset }}
+    <CollapsingTitleScrollScreen
+      title="What is IBD?"
+      titlePreset="informational"
+      bottomInset={Math.max(insets.bottom, 16) + 48 + bottomScrollInset}
     >
       <Text style={[styles.text, styles.ibdIntro, { color: c.textMuted }]}>
         Inflammatory Bowel Disease (IBD) is a term used to describe disorders that involve chronic inflammation of your
@@ -3099,12 +3157,13 @@ function IbdScreen() {
 
       <Text style={[styles.dashboardSectionTitleLeft, styles.aboutContactSectionTitle, { color: c.text }]}>How FlareCare can help</Text>
       <IbdCheckList items={IBD_FLARECARE_HELPS} isLastInSection />
-    </ScrollView>
+    </CollapsingTitleScrollScreen>
   );
 }
 
 function AboutScreen() {
   const c = useFlareColors();
+  const insets = useSafeAreaInsets();
   const bottomScrollInset = useBottomTabScrollInset();
   const version = Constants.expoConfig?.version ?? Constants.nativeApplicationVersion ?? "—";
   const nativeBuild = Constants.nativeBuildVersion;
@@ -3114,24 +3173,23 @@ function AboutScreen() {
   };
 
   return (
-    <ScrollView
-      style={[styles.screen, { backgroundColor: c.screen }]}
-      contentContainerStyle={{ paddingBottom: 28 + bottomScrollInset }}
+    <CollapsingTitleScrollScreen
+      title="About"
+      titlePreset="informational"
+      bottomInset={Math.max(insets.bottom, 16) + 48 + bottomScrollInset}
     >
-      <View style={styles.aboutHero}>
-        <Text style={[styles.aboutTagline, { color: c.textMuted }]}>
-          Day-to-day support for Crohn&apos;s disease and ulcerative colitis (IBD)
-        </Text>
-      </View>
+      <Text style={[styles.text, styles.aboutTagline, { color: c.textMuted }]}>
+        A personal journey turned into a tool for the community
+      </Text>
 
       <Text style={[styles.dashboardSectionTitleLeft, { color: c.text }]}>What is FlareCare?</Text>
       <Text style={[styles.text, styles.aboutBody, { color: c.textMuted }]}>
-        FlareCare is a mobile companion for IBD self-management. You can record symptoms, medications, hydration, bowel
+        FlareCare is a mobile app for IBD self-management. You can record symptoms, medications, hydration, bowel
         movements, weight, and appointments; receive medication reminders; review summaries on your dashboard; prepare
-        appointment briefs; and export reports to share with your clinician—all in one place on your phone.
+        appointment briefs; and export reports to share with your clinician—all in one place on your device.
       </Text>
       <Text style={[styles.text, styles.aboutBody, { color: c.textMuted }]}>
-        It is aimed at people living with Crohn&apos;s disease or ulcerative colitis. The product was developed by Simon
+        It is aimed at people living with IBD. The product was developed by Simon
         Sutherland, drawing on many years of personal experience managing Crohn&apos;s, to make consistent tracking simple
         enough to sustain between clinic visits.
       </Text>
@@ -3159,7 +3217,7 @@ function AboutScreen() {
           <Text style={[styles.muted, { color: c.textMuted, textAlign: "center", marginTop: 4 }]}>Build {nativeBuild}</Text>
         ) : null}
       </View>
-    </ScrollView>
+    </CollapsingTitleScrollScreen>
   );
 }
 
@@ -3713,9 +3771,9 @@ function AppTabs({
       headerTitle: isDashboard
         ? ""
         : isAbout
-          ? "About"
-          : isIbd
-            ? "What is IBD?"
+            ? ""
+            : isIbd
+            ? ""
             : isAccount
               ? "Account"
               : isReminders
@@ -3724,12 +3782,12 @@ function AppTabs({
                   ? ""
                   : legalDocumentTitle ?? titleForRoute[route.name] ?? "",
       headerTitleAlign: "center" as const,
-      headerLargeTitleShown: false,
+      headerLargeTitleEnabled: false,
       headerLargeTitleShadowVisible: false,
       headerStyle: { backgroundColor: colors.screen },
       headerTitleStyle: {
-        fontFamily: "Inter_700Bold",
-        fontSize: 16,
+        fontFamily: FLARE_FONT_FAMILY.bold,
+        fontSize: FLARE_FONT_SIZE.navTitle,
         color: colors.text,
       },
       headerTintColor: colors.primary,
@@ -4116,21 +4174,23 @@ const styles = StyleSheet.create({
   },
   homeNavPillLabel: { fontSize: 13, fontFamily: "Inter_600SemiBold" },
   dashboardSectionTitle: {
-    fontSize: 18,
-    fontFamily: "Inter_700Bold",
-    marginBottom: 12,
-    marginTop: 10,
+    fontSize: FLARE_FONT_SIZE.sectionTitle,
+    fontFamily: FLARE_FONT_FAMILY.bold,
+    marginBottom: SECTION_TITLE_MARGIN_BOTTOM,
+    marginTop: SECTION_TITLE_MARGIN_TOP,
     textAlign: "center",
   },
   dashboardSectionTitleLeft: {
-    fontSize: 18,
-    fontFamily: "Inter_700Bold",
-    marginBottom: 12,
-    marginTop: 10,
+    fontSize: FLARE_FONT_SIZE.sectionTitle,
+    fontFamily: FLARE_FONT_FAMILY.bold,
+    marginBottom: SECTION_TITLE_MARGIN_BOTTOM,
+    marginTop: SECTION_TITLE_MARGIN_TOP,
     textAlign: "left",
   },
   text: { fontSize: 14, fontFamily: "Inter_400Regular" },
   muted: { fontSize: 13, fontFamily: "Inter_400Regular" },
+  remindersSetupBlock: { gap: 12 },
+  remindersDebugBlock: { gap: 6, marginTop: 16 },
   bigText: { fontSize: 30, fontFamily: "Inter_700Bold", marginBottom: 8 },
   headerIconButton: {
     width: 34,
@@ -4333,19 +4393,12 @@ const styles = StyleSheet.create({
   recentActivityFeedTitle: { fontSize: 14, fontFamily: "Inter_400Regular", lineHeight: 20 },
   recentActivityFeedWhen: { fontSize: 12, fontFamily: "Inter_400Regular" },
   activityNoteRowDivider: { borderBottomWidth: 1 },
-  aboutHero: { alignItems: "center", paddingHorizontal: 16 },
-  aboutLogoSlot: { marginBottom: 12 },
-  /** Light About: circular primary well behind mark. */
-  aboutLogoMarkWell: { padding: 6, borderRadius: 9999, overflow: "hidden", alignSelf: "center" },
-  aboutLogo: { width: 80, height: 80 },
-  aboutAppName: { fontFamily: "Inter_700Bold", fontSize: 18, marginBottom: 6, textAlign: "center" },
   aboutTagline: {
     fontFamily: "Inter_400Regular",
     fontSize: 14,
-    textAlign: "center",
+    textAlign: "left",
     lineHeight: 20,
-    paddingHorizontal: 12,
-    paddingBottom: 20,
+    marginBottom: 20,
   },
   ibdIntro: { lineHeight: 22, marginBottom: 8 },
   ibdSubsectionTitle: {
