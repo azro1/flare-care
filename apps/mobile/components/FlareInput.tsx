@@ -1,3 +1,4 @@
+import { Ionicons } from "@expo/vector-icons";
 import React from "react";
 import {
   Pressable,
@@ -48,6 +49,7 @@ export const flareInputStyles = StyleSheet.create({
     minHeight: 42,
     justifyContent: "center",
   },
+  triggerRow: { flexDirection: "row", alignItems: "center", gap: 8 },
   fieldBlock: { gap: 6, marginBottom: 2 },
   label: { fontSize: 13, fontFamily: "Inter_500Medium", marginTop: 2 },
 });
@@ -110,13 +112,27 @@ export function FlareInputTrigger({
   children,
   style,
   onPrimary,
+  pickerIcon,
   ...props
-}: PressableProps & { children: React.ReactNode; onPrimary?: boolean }) {
+}: PressableProps & {
+  children: React.ReactNode;
+  onPrimary?: boolean;
+  /** Leading Ionicons glyph for date/time pickers (wizards, forms). */
+  pickerIcon?: "date" | "time";
+}) {
   const c = useFlareColors();
   const theme = flareInputThemeColors(c, onPrimary);
+  const iconName = pickerIcon === "date" ? "calendar-outline" : pickerIcon === "time" ? "time-outline" : null;
   return (
     <Pressable style={[flareInputStyles.trigger, theme, style]} {...props}>
-      {children}
+      {iconName ? (
+        <View style={flareInputStyles.triggerRow}>
+          <Ionicons name={iconName} size={18} color={c.textSecondary} accessibilityIgnoresInvertColors />
+          {children}
+        </View>
+      ) : (
+        children
+      )}
     </Pressable>
   );
 }

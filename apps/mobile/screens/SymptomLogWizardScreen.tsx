@@ -432,9 +432,9 @@ export function SymptomLogWizardScreen({ user }: { user: SessionUser }) {
         {currentStep === 1 ? (
           <View>
             <Text style={[styles.h3, { color: c.text }]}>When did your symptoms begin?</Text>
-            <FlareInputTrigger onPress={() => setPicker("start")}>
+            <FlareInputTrigger pickerIcon="date" onPress={() => setPicker("start")}>
               <Text style={{ color: form.symptomStartDate ? c.text : c.textMuted }}>
-                {form.symptomStartDate ? formatUkDate(form.symptomStartDate) : "dd/mm/yyyy"}
+                {form.symptomStartDate ? formatUkDate(form.symptomStartDate) : ""}
               </Text>
             </FlareInputTrigger>
             {dateErrors.day ? <Text style={errTextStyle}>{dateErrors.day}</Text> : null}
@@ -476,9 +476,9 @@ export function SymptomLogWizardScreen({ user }: { user: SessionUser }) {
         {currentStep === 3 ? (
           <View>
             <Text style={[styles.h3, { color: c.text }]}>When did symptoms end?</Text>
-            <FlareInputTrigger onPress={() => setPicker("end")}>
+            <FlareInputTrigger pickerIcon="date" onPress={() => setPicker("end")}>
               <Text style={{ color: form.symptomEndDate ? c.text : c.textMuted }}>
-                {form.symptomEndDate ? formatUkDate(form.symptomEndDate) : "dd/mm/yyyy"}
+                {form.symptomEndDate ? formatUkDate(form.symptomEndDate) : ""}
               </Text>
             </FlareInputTrigger>
             {dateErrors.endDay ? <Text style={errTextStyle}>{dateErrors.endDay}</Text> : null}

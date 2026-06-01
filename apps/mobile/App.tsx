@@ -57,6 +57,7 @@ import {
 } from "./components/symptomReviewLayout";
 import { FlareThemeProvider, useFlareColors, useFlareTheme } from "./theme";
 import { formatUkDate } from "./lib/formatUkDate";
+import { BOWEL_FEATURE_MCI_ICON } from "./lib/bowelMovementShared";
 import { HYDRATION_TARGET, loadHydrationResetTimestamp, saveHydrationReset, HYDRATION_GOAL_ACTIVITY_TITLE, HYDRATION_RESET_ACTIVITY_TITLE } from "./lib/hydrationShared";
 import {
   FLARE_FONT_FAMILY,
@@ -84,6 +85,9 @@ import {
   type DashboardNewsItem,
   type DashboardSnapshot,
 } from "./lib/dashboardSnapshotCache";
+/** Bowel UI lives in `screens/BowelScreen.tsx` — do not re-declare `BowelScreen` in this file. */
+import { BristolGuideScreen } from "./screens/BristolGuideScreen";
+import { BowelScreen } from "./screens/BowelScreen";
 import { MedicationTrackingWizardScreen } from "./screens/MedicationTrackingWizardScreen";
 import { SymptomLogWizardScreen } from "./screens/SymptomLogWizardScreen";
 
@@ -689,6 +693,7 @@ function AuthScreen({
   /** Same layout as gray auth; fill page with blue in light appearance only. */
   const authBlue = !cAuth.isDark;
   const onPrimaryChrome = authBlue;
+  const authContentTopOffset = 40;
 
   return (
     <View
@@ -696,24 +701,29 @@ function AuthScreen({
         styles.authScreenFill,
         {
           backgroundColor: authBlue ? cAuth.primary : cAuth.screen,
-          paddingTop: insets.top + 20,
+          paddingTop: insets.top + 20 + authContentTopOffset,
           paddingBottom: Math.max(insets.bottom, 12),
           paddingHorizontal: SCREEN_EDGE_PADDING,
         },
       ]}
     >
-      <View style={styles.authShell}>
+      <View style={[styles.authShell, { transform: [{ translateY: 40 + authContentTopOffset }] }]}>
         <View style={styles.authBrandBlock}>
           <Image source={SPLASH_MARK_IMAGE} style={styles.authLogo} resizeMode="contain" />
           <Text style={[styles.authBrandName, { color: authBlue ? cAuth.white : cAuth.text }]}>FlareCare</Text>
+          <Text
+            style={[
+              styles.authBrandTagline,
+              { color: authBlue ? "rgba(255,255,255,0.88)" : cAuth.textMuted },
+            ]}
+          >
+            Your health. Your IBD. Your control.
+          </Text>
         </View>
         <Card title="" plain style={styles.authCardPlain}>
           {step === "method" ? (
             <View style={styles.authMethodPanel}>
               <Text style={[styles.authPromptTitle, { color: onPrimaryChrome ? cAuth.white : cAuth.text }]}>Sign in to continue</Text>
-              <Text style={[styles.authPromptSub, { color: onPrimaryChrome ? "rgba(255,255,255,0.88)" : cAuth.textMuted }]}>
-                Choose your preferred login method
-              </Text>
               <Pressable
                 accessibilityRole="checkbox"
                 accessibilityState={{ checked: legalAccepted }}
@@ -1248,7 +1258,7 @@ function DashboardScreen({
     { key: "symptoms" as const, label: "Log Symptoms", icon: "thermometer", family: "mci", goTo: "SymptomLogWizard" },
     { key: "track-meds" as const, label: "Track Medications", icon: "pill", family: "mci", goTo: "MedicationTrackingWizard" },
     { key: "hydration" as const, label: "My Hydration", icon: "water", family: "mci", goTo: "Hydration" },
-    { key: "bowel" as const, label: "Bowel Movements", icon: "stomach", family: "mci", goTo: "Bowel" },
+    { key: "bowel" as const, label: "Bowel Movements", icon: BOWEL_FEATURE_MCI_ICON, family: "mci", goTo: "Bowel" },
   ];
   const moreLinkCards = [
     { key: "meds", label: "My Meds", screen: "Meds" as const, icon: "pill", family: "mci" as const },
@@ -2649,28 +2659,28 @@ function HydrationScreen({ user }: { user: SessionUser }) {
             >
               Daily intake
             </Text>
+            {glasses > 0 ? (
+              <Pressable
+                accessibilityRole="button"
+                accessibilityLabel="Reset today's hydration count"
+                onPress={() => setResetConfirmOpen(true)}
+                hitSlop={8}
+                style={({ pressed }) => [styles.hydrationResetLink, pressed && { opacity: 0.7 }]}
+              >
+                <Text style={[styles.hydrationResetText, { color: c.textSecondary }]}>Reset</Text>
+              </Pressable>
+            ) : null}
           </View>
+          <Text style={[styles.text, styles.hydrationInfoBody, { color: c.textMuted }]}>
+            Track your daily water intake to hit your goal each day. Your target is {HYDRATION_TARGET} glasses per day
+            (roughly 250ml each).
+          </Text>
           <View style={styles.hydrationCountRow}>
-            <View style={styles.hydrationCountBlock}>
-              <View style={styles.hydrationCountLine}>
-                <Text style={[styles.hydrationCountValue, { color: c.text }]}>{glasses}</Text>
-                <Text style={[styles.hydrationCountSuffix, { color: c.textSecondary }]}>
-                  / {HYDRATION_TARGET} glasses
-                </Text>
-              </View>
-              {glasses > 0 ? (
-                <Pressable
-                  accessibilityRole="button"
-                  accessibilityLabel="Reset today's hydration count"
-                  onPress={() => setResetConfirmOpen(true)}
-                  hitSlop={8}
-                  style={({ pressed }) => [styles.hydrationResetLink, pressed && { opacity: 0.7 }]}
-                >
-                  <Text style={[styles.hydrationResetText, { color: c.textSecondary }]}>Reset</Text>
-                </Pressable>
-              ) : (
-                <View style={styles.hydrationResetPlaceholder} />
-              )}
+            <View style={styles.hydrationCountLine}>
+              <Text style={[styles.hydrationCountValue, { color: c.text }]}>{glasses}</Text>
+              <Text style={[styles.hydrationCountSuffix, { color: c.textSecondary }]}>
+                / {HYDRATION_TARGET} glasses
+              </Text>
             </View>
             <View style={styles.hydrationStepperRow}>
               <HydrationStepperButton
@@ -2711,16 +2721,9 @@ function HydrationScreen({ user }: { user: SessionUser }) {
         </Card>
 
         <Card title="" style={styles.hydrationInfoCard} compactBody>
-          <Text style={[styles.text, styles.hydrationInfoBody, { color: c.textMuted }]}>
-            Track your daily water intake to hit your goal each day. Your target is {HYDRATION_TARGET} glasses per day
-            (roughly 250ml each).
-          </Text>
-          <View style={[styles.hydrationTipBox, { backgroundColor: c.surfaceSubtle }]}>
-            <View style={styles.hydrationTipHeader}>
-              <Ionicons name="bulb-outline" size={18} color={c.primary} accessibilityIgnoresInvertColors />
-              <Text style={[styles.hydrationTipTitle, { color: c.text }]}>Important</Text>
-            </View>
-            <Text style={[styles.hydrationTipBody, { color: c.textMuted }]}>
+          <View style={styles.hydrationTipRow}>
+            <Ionicons name="bulb-outline" size={18} color="#EAB308" accessibilityIgnoresInvertColors />
+            <Text style={[styles.hydrationTipBody, { color: c.textMuted, flex: 1 }]}>
               Most guidelines recommend around 1.5–2 litres (about 6–8 glasses) of water per day for adults.
             </Text>
           </View>
@@ -2776,48 +2779,6 @@ function WeightScreen({ user }: { user: SessionUser }) {
         {rows.map((r) => (
           <Text key={r.id} style={[styles.text, { color: c.textMuted }]}>
             {formatUkDate(r.date)} - {r.value_kg}kg
-          </Text>
-        ))}
-      </Card>
-    </ScrollView>
-  );
-}
-
-function BowelScreen({ user }: { user: SessionUser }) {
-  const c = useFlareColors();
-  const bottomScrollInset = useBottomTabScrollInset();
-  const [bristol, setBristol] = useState("4");
-  const [notes, setNotes] = useState("");
-  const [rows, setRows] = useState<any[]>([]);
-
-  const load = async () => {
-    const { data } = await supabase.from(TABLES.BOWEL_MOVEMENTS).select("*").eq("user_id", user.id).order("occurred_at", { ascending: false }).limit(30);
-    setRows(data ?? []);
-  };
-  useEffect(() => { load(); }, [user.id]);
-
-  const add = async () => {
-    const payload = { user_id: user.id, occurred_at: new Date().toISOString(), bristol_type: Number(bristol), blood: null, strain: null, urgency: null, notes: notes || null, updated_at: new Date().toISOString() };
-    const { error } = await supabase.from(TABLES.BOWEL_MOVEMENTS).insert([payload]);
-    if (error) return Alert.alert("Could not save bowel movement", error.message);
-    setNotes("");
-    await load();
-  };
-
-  return (
-    <ScrollView
-      style={[styles.screen, { backgroundColor: c.screen }]}
-      contentContainerStyle={{ paddingBottom: bottomScrollInset }}
-    >
-      <Card title="Log Bowel Movement">
-        <LabeledInput label="Bristol type (1-7)" value={bristol} onChangeText={setBristol} placeholder="Bristol type (1-7)" keyboardType="number-pad" />
-        <LabeledInput label="Notes" value={notes} onChangeText={setNotes} placeholder="Notes" />
-        <PrimaryButton title="Save bowel log" onPress={add} />
-      </Card>
-      <Card title="Recent Entries">
-        {rows.map((row) => (
-          <Text key={row.id} style={[styles.text, { color: c.textMuted }]}>
-            {formatUkDate(row.occurred_at)} - type {row.bristol_type}
           </Text>
         ))}
       </Card>
@@ -3419,21 +3380,19 @@ function AccountLegalScreen() {
 
 function LegalDocumentScreen() {
   const route = useRoute<any>();
-  const c = useFlareColors();
   const insets = useSafeAreaInsets();
   const bottomScrollInset = useBottomTabScrollInset();
   const kind: LegalDocumentKind = route.params?.document === "terms" ? "terms" : "privacy";
+  const title = kind === "terms" ? "Terms of Use" : "Privacy Policy";
 
   return (
-    <ScrollView
-      style={[styles.screen, { backgroundColor: c.screen }]}
-      contentContainerStyle={{
-        paddingHorizontal: SCREEN_EDGE_PADDING,
-        paddingBottom: Math.max(insets.bottom, 16) + bottomScrollInset + 24,
-      }}
+    <CollapsingTitleScrollScreen
+      title={title}
+      titlePreset="informational"
+      bottomInset={Math.max(insets.bottom, 16) + 48 + bottomScrollInset}
     >
       <LegalDocumentView kind={kind} />
-    </ScrollView>
+    </CollapsingTitleScrollScreen>
   );
 }
 
@@ -3716,6 +3675,7 @@ function AppTabs({
     const isDashboard = route.name === "Dashboard";
     const isAbout = route.name === "About";
     const isIbd = route.name === "Ibd";
+    const isLegalDocument = route.name === "LegalDocument";
     const isAccount = route.name === "Account";
     const isReminders = route.name === "Reminders";
     const titleForRoute: Record<string, string> = {
@@ -3733,13 +3693,9 @@ function AppTabs({
       Settings: "Settings",
       Reminders: "Reminders",
       Hydration: "My Hydration",
+      Bowel: "Bowel Movements",
+      BristolGuide: "Bristol chart",
     };
-    const legalDocumentTitle =
-      route.name === "LegalDocument"
-        ? route.params?.document === "terms"
-          ? "Terms of Use"
-          : "Privacy Policy"
-        : null;
     const isSymptomLogWizard = route.name === "SymptomLogWizard";
     const isMedicationTrackingWizard = route.name === "MedicationTrackingWizard";
 
@@ -3753,6 +3709,7 @@ function AppTabs({
       route.name === "Appointments" ||
       route.name === "Hydration" ||
       route.name === "Bowel" ||
+      route.name === "BristolGuide" ||
       route.name === "SymptomHistory" ||
       route.name === "SymptomDetail" ||
       route.name === "MedicationTrackingHistory" ||
@@ -3774,13 +3731,15 @@ function AppTabs({
             ? ""
             : isIbd
             ? ""
+            : isLegalDocument
+              ? ""
             : isAccount
               ? "Account"
               : isReminders
                 ? "Reminders"
                 : isSymptomLogWizard || isMedicationTrackingWizard
                   ? ""
-                  : legalDocumentTitle ?? titleForRoute[route.name] ?? "",
+                  : titleForRoute[route.name] ?? "",
       headerTitleAlign: "center" as const,
       headerLargeTitleEnabled: false,
       headerLargeTitleShadowVisible: false,
@@ -3848,6 +3807,7 @@ function AppTabs({
             <AppStack.Screen name="Hydration">{() => <HydrationScreen user={user} />}</AppStack.Screen>
             <AppStack.Screen name="Weight">{() => <WeightScreen user={user} />}</AppStack.Screen>
             <AppStack.Screen name="Bowel">{() => <BowelScreen user={user} />}</AppStack.Screen>
+            <AppStack.Screen name="BristolGuide" component={BristolGuideScreen} />
             <AppStack.Screen name="Appointments">{() => <AppointmentsScreen user={user} />}</AppStack.Screen>
             <AppStack.Screen name="Reports">{() => <ReportsScreen user={user} />}</AppStack.Screen>
             <AppStack.Screen name="Meds">{() => <MedicationsScreen user={user} />}</AppStack.Screen>
@@ -4053,6 +4013,13 @@ const styles = StyleSheet.create({
   },
   authLogo: { width: 92, height: 92 },
   authBrandName: { fontSize: 28, fontFamily: "Inter_700Bold" },
+  authBrandTagline: {
+    textAlign: "center",
+    fontSize: 14,
+    lineHeight: 20,
+    fontFamily: "Inter_400Regular",
+    paddingHorizontal: 8,
+  },
   authCardPlain: { flex: 1 },
   authMethodPanel: { flex: 1, justifyContent: "center" },
   authMethodActions: { marginTop: 18, gap: 8 },
@@ -4474,21 +4441,19 @@ const styles = StyleSheet.create({
   newsMeta: { fontSize: 11, fontFamily: "Inter_400Regular", marginTop: 6 },
   /** Logged-at line above symptom detail review cards. */
   symptomDetailLoggedAt: { fontSize: 13, fontFamily: "Inter_400Regular", marginBottom: 16, textAlign: "center" },
-  hydrationCardHeader: { flexDirection: "row", alignItems: "center", marginBottom: 12 },
+  hydrationCardHeader: { flexDirection: "row", alignItems: "center", marginBottom: 12, gap: 8 },
   hydrationCardHeaderTitle: { flex: 1, marginBottom: 0, alignSelf: "center", lineHeight: 42 },
   hydrationCountRow: {
     flexDirection: "row",
-    alignItems: "flex-start",
+    alignItems: "center",
     justifyContent: "space-between",
     gap: 16,
   },
-  hydrationCountBlock: { flex: 1, minWidth: 0 },
-  hydrationCountLine: { flexDirection: "row", alignItems: "baseline", flexWrap: "wrap" },
+  hydrationCountLine: { flex: 1, flexDirection: "row", alignItems: "baseline", flexWrap: "wrap", minWidth: 0 },
   hydrationCountValue: { fontSize: 36, fontFamily: "Inter_800ExtraBold" },
   hydrationCountSuffix: { fontSize: 18, fontFamily: "Inter_400Regular", marginLeft: 4 },
-  hydrationResetLink: { alignSelf: "flex-start", marginTop: 8 },
+  hydrationResetLink: { flexShrink: 0 },
   hydrationResetText: { fontSize: 14, fontFamily: "Inter_400Regular", textDecorationLine: "underline" },
-  hydrationResetPlaceholder: { height: 22, marginTop: 8 },
   hydrationStepperRow: { flexDirection: "row", alignItems: "center", gap: 8 },
   hydrationStepperBtn: {
     width: 40,
@@ -4518,9 +4483,7 @@ const styles = StyleSheet.create({
   },
   hydrationInfoCard: { marginTop: 4 },
   hydrationInfoBody: { lineHeight: 21, marginBottom: 14 },
-  hydrationTipBox: { borderRadius: 10, padding: 14 },
-  hydrationTipHeader: { flexDirection: "row", alignItems: "center", gap: 8, marginBottom: 6 },
-  hydrationTipTitle: { fontSize: 14, fontFamily: "Inter_700Bold" },
+  hydrationTipRow: { flexDirection: "row", alignItems: "flex-start", gap: 10 },
   hydrationTipBody: { fontSize: 13, fontFamily: "Inter_400Regular", lineHeight: 19 },
   /** Keeps stacked detail rows out of `cardBody` gap (which would add space between every field). */
   detailFieldsStack: { alignSelf: "stretch" },

@@ -14,6 +14,12 @@ Reference: web screens in repo root `src/`; mobile screens in `App.tsx` (`Bowel`
 
 ---
 
+## Navigation transitions
+
+- [ ] **Smooth screen transitions** — on some screens the push/pop between routes feels jarring (not smooth). Review stack navigator options, animations, and flows where it’s worst (e.g. Bristol chart ↔ bowel, modals vs stack); aim for consistent, native-feeling transitions.
+
+---
+
 ## Account editing
 
 - [ ] Allow users to edit **full name** and **email** from Account / Information (currently read-only). Name: `supabase.auth.updateUser({ data: { full_name } })`. Email: Supabase email change flow (verification required). UX: edit screens or inline edit, validation, success/error feedback.

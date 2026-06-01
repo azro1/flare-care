@@ -28,6 +28,28 @@ For **recent UI / polish / changelog-style notes**, see **`CHANGELOG.md`** in th
 
 ---
 
+## UI conventions (check before new screens)
+
+Use existing screens as reference — do **not** default to web-style teal hyperlinks.
+
+| Pattern | Reference | Colour / style |
+|---------|-----------|----------------|
+| **Navigate to another screen** (Account lists, chart link, “View all types”) | `AccountOptionRow` in `App.tsx` | Label **`c.text`**, chevron **`c.textMuted`**, 15px `Inter_400Regular` (medium optional via `labelMedium`) |
+| **Inline link in body copy** (e.g. tip “Open chart”) | Hydration **Reset** | **`c.text`** or **`c.textSecondary`** + `textDecorationLine: "underline"` — not `c.primary` |
+| **Primary action** (Save, Log now) | `PrimaryButton` | Teal fill — **`c.primary`** |
+| **Selected state / type badge / hero feature icon** | Bowel bubbles, dashboard tiles | **`c.primary`** |
+| **Form field icons** (calendar, time) | Bowel log sheet | **`c.textSecondary`** — utility, not a CTA |
+| **Destructive** | Logout, delete confirm | **`c.destructiveFill`** / `danger` for text |
+| **Tips** | Hydration / bowel tip row | Bulb **`#EAB308`** only on the icon; copy **`c.textMuted`** |
+
+**Do not use `c.primary` / `c.link` for tappable text navigation** unless you deliberately want a CTA (e.g. wizard **“Add medication”** in a form — that’s adding data, not leaving the screen).
+
+**New tracker / settings screens:** card layout + `SCREEN_EDGE_PADDING` + `useFlareColors()`; stack routes with `headerOptions` titles; link rows like Account, not a second colour system.
+
+**Live examples:** Account tab (`AccountOptionRow`), **Bowel** (`screens/BowelScreen.tsx`), **Bristol chart** (`screens/BristolGuideScreen.tsx`), **Hydration** (Reset link).
+
+---
+
 ## Stack (high level)
 
 - **Expo** (SDK aligned with `package.json`), **React Native**, **TypeScript**.
@@ -42,8 +64,8 @@ For **recent UI / polish / changelog-style notes**, see **`CHANGELOG.md`** in th
 
 Use this section when adding pages like **What is IBD?** or **About** — long scroll content **without cards**, with a title that **shrinks into the nav bar** on scroll up and **expands back** on scroll down.
 
-**Live examples:** `IbdScreen`, `AboutScreen` in `App.tsx`.  
-**Route names:** `Ibd`, `About`.
+**Live examples:** `IbdScreen`, `AboutScreen`, `LegalDocumentScreen` (Privacy Policy / Terms of Use) in `App.tsx`.  
+**Route names:** `Ibd`, `About`, `LegalDocument` (`document`: `privacy` | `terms`).
 
 ---
 

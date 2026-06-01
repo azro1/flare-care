@@ -343,12 +343,12 @@ export function MedicationTrackingWizardScreen({ user }: { user: SessionUser }) 
                 </Pressable>
               ) : null}
             </View>
-            <FlareInputTrigger onPress={() => openDatePicker(kind, i)}>
+            <FlareInputTrigger pickerIcon="date" onPress={() => openDatePicker(kind, i)}>
               <Text style={{ color: item.date ? c.text : c.textMuted }}>
                 {item.date ? formatUkDate(item.date) : "dd/mm/yyyy"}
               </Text>
             </FlareInputTrigger>
-            <FlareInputTrigger onPress={() => openTimePicker(kind, i)}>
+            <FlareInputTrigger pickerIcon="time" onPress={() => openTimePicker(kind, i)}>
               <Text style={{ color: item.timeOfDay ? c.text : c.textMuted }}>
                 {item.timeOfDay || "Select time of day"}
               </Text>
