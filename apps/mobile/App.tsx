@@ -693,21 +693,19 @@ function AuthScreen({
   /** Same layout as gray auth; fill page with blue in light appearance only. */
   const authBlue = !cAuth.isDark;
   const onPrimaryChrome = authBlue;
-  const authContentTopOffset = 40;
-
   return (
     <View
       style={[
         styles.authScreenFill,
         {
           backgroundColor: authBlue ? cAuth.primary : cAuth.screen,
-          paddingTop: insets.top + 20 + authContentTopOffset,
+          paddingTop: insets.top + 20,
           paddingBottom: Math.max(insets.bottom, 12),
           paddingHorizontal: SCREEN_EDGE_PADDING,
         },
       ]}
     >
-      <View style={[styles.authShell, { transform: [{ translateY: 40 + authContentTopOffset }] }]}>
+      <View style={[styles.authShell, { transform: [{ translateY: 28 }] }]}>
         <View style={styles.authBrandBlock}>
           <Image source={SPLASH_MARK_IMAGE} style={styles.authLogo} resizeMode="contain" />
           <Text style={[styles.authBrandName, { color: authBlue ? cAuth.white : cAuth.text }]}>FlareCare</Text>
@@ -1331,7 +1329,12 @@ function DashboardScreen({
             supabase.from(TABLES.DAILY_HYDRATION).select("glasses,updated_at").eq("user_id", user.id).eq("date", today).maybeSingle(),
             supabase.from(TABLES.LOG_SYMPTOMS).select("id,created_at").eq("user_id", user.id).order("created_at", { ascending: false }).limit(1),
             supabase.from(TABLES.LOG_MEDICATIONS).select("id,name,created_at").eq("user_id", user.id).order("created_at", { ascending: false }).limit(1),
-            supabase.from(TABLES.BOWEL_MOVEMENTS).select("id,occurred_at").eq("user_id", user.id).order("occurred_at", { ascending: false }).limit(1),
+            supabase
+              .from(TABLES.BOWEL_MOVEMENTS)
+              .select("id,occurred_at,updated_at,created_at")
+              .eq("user_id", user.id)
+              .order("updated_at", { ascending: false })
+              .limit(1),
             supabase.from(TABLES.TRACK_WEIGHT).select("id,date,value_kg").eq("user_id", user.id).order("date", { ascending: false }).limit(1),
           ]);
 
@@ -1363,11 +1366,12 @@ function DashboardScreen({
             });
           }
           const recentBowel = recentBowelRes.data?.[0];
-          if (recentBowel?.occurred_at) {
+          const recentBowelSavedAt = recentBowel?.updated_at ?? recentBowel?.created_at;
+          if (recentBowel && recentBowelSavedAt) {
             activityRows.push({
               key: `bowel-${recentBowel.id}`,
               title: "Logged bowel movement",
-              ts: new Date(recentBowel.occurred_at).getTime(),
+              ts: new Date(recentBowelSavedAt).getTime(),
               icon: "bowel",
             });
           }
