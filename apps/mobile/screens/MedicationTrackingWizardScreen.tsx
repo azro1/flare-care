@@ -16,7 +16,7 @@ import {
   View,
 } from "react-native";
 import { OptionPickerModal } from "../components/OptionPickerModal";
-import { SymptomReviewCard, SymptomReviewField, SymptomReviewGrid } from "../components/symptomReviewLayout";
+import { WizardReviewMedicationSection } from "../components/symptomReviewLayout";
 import { PrimaryButton, SecondaryButton } from "../components/FlareButton";
 import { flareFieldErrorStyle, FlareInputTrigger, FlareTextInput } from "../components/FlareInput";
 import { invalidateDashboardSnapshot } from "../lib/dashboardSnapshotCache";
@@ -400,42 +400,6 @@ export function MedicationTrackingWizardScreen({ user }: { user: SessionUser }) 
     );
   };
 
-  const renderReviewListSection = (
-    title: string,
-    items: { medication: string; date: string; timeOfDay: string; dosage?: string }[],
-    showDosage: boolean,
-  ) => {
-    if (!items.length) return null;
-    return (
-      <SymptomReviewCard title={title}>
-        {items.map((item, index) => (
-          <View
-            key={`${item.medication}-${index}`}
-            style={
-              index < items.length - 1
-                ? {
-                    borderBottomWidth: StyleSheet.hairlineWidth,
-                    borderBottomColor: c.cardBorder,
-                    paddingBottom: 14,
-                    marginBottom: 14,
-                  }
-                : undefined
-            }
-          >
-            <SymptomReviewGrid>
-              <SymptomReviewField label="Medication" value={item.medication} />
-              {showDosage ? (
-                <SymptomReviewField label="Dosage" value={item.dosage || "N/A"} />
-              ) : null}
-              <SymptomReviewField label="Date" value={item.date ? formatUkDate(item.date) : "N/A"} />
-              <SymptomReviewField label="Time of Day" value={item.timeOfDay || "N/A"} />
-            </SymptomReviewGrid>
-          </View>
-        ))}
-      </SymptomReviewCard>
-    );
-  };
-
   return (
     <KeyboardAvoidingView style={{ flex: 1, backgroundColor: c.screen }} behavior={Platform.OS === "ios" ? "padding" : undefined}>
       <ScrollView
@@ -496,9 +460,17 @@ export function MedicationTrackingWizardScreen({ user }: { user: SessionUser }) 
         {currentStep === 7 ? (
           <View>
             <Text style={[styles.h3, { color: c.text, marginBottom: 16 }]}>Review your entry</Text>
-            {renderReviewListSection("Missed Medications", cleanedForReview.missedMedicationsList, false)}
-            {renderReviewListSection("NSAIDs Taken", cleanedForReview.nsaidList, true)}
-            {renderReviewListSection("Antibiotics Taken", cleanedForReview.antibioticList, true)}
+            <WizardReviewMedicationSection
+              title="Missed Medications"
+              items={cleanedForReview.missedMedicationsList}
+              showDosage={false}
+            />
+            <WizardReviewMedicationSection title="NSAIDs Taken" items={cleanedForReview.nsaidList} showDosage />
+            <WizardReviewMedicationSection
+              title="Antibiotics Taken"
+              items={cleanedForReview.antibioticList}
+              showDosage
+            />
           </View>
         ) : null}
 

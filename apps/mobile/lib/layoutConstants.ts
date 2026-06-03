@@ -36,6 +36,13 @@ export const FLARE_FONT_FAMILY = {
   extrabold: "Inter_800ExtraBold",
 } as const;
 
+/** Stacked field labels on log detail / review screens (`StackedDetailField`). */
+export const DETAIL_FIELD_LABEL = {
+  fontSize: FLARE_FONT_SIZE.muted,
+  lineHeight: FLARE_LINE_HEIGHT.muted,
+  fontFamily: FLARE_FONT_FAMILY.regular,
+} as const;
+
 /** `styles.dashboardSectionTitle` / `dashboardSectionTitleLeft` spacing. */
 export const SECTION_TITLE_MARGIN_TOP = 10;
 export const SECTION_TITLE_MARGIN_BOTTOM = 12;

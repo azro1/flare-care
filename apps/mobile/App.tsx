@@ -46,15 +46,6 @@ import {
 import { flareFieldErrorStyle, LabeledInput } from "./components/FlareInput";
 import { HeaderOverflowMenu } from "./components/HeaderOverflowMenu";
 import { CollapsingTitleScrollScreen } from "./components/CollapsingTitleScrollScreen";
-import { StackedDetailField } from "./components/StackedDetailField";
-import {
-  SymptomReviewCard,
-  SymptomReviewField,
-  SymptomReviewGrid,
-  SymptomReviewMealBlock,
-  SymptomReviewNotesBody,
-  SymptomReviewSubsection,
-} from "./components/symptomReviewLayout";
 import { FlareThemeProvider, useFlareColors, useFlareTheme } from "./theme";
 import { formatUkDate } from "./lib/formatUkDate";
 import { BOWEL_FEATURE_MCI_ICON } from "./lib/bowelMovementShared";
@@ -76,6 +67,16 @@ import {
   otpVerifyErrorMessage,
 } from "./lib/otpAuth";
 import { LegalDocumentView, type LegalDocumentKind } from "./components/LegalDocumentView";
+import { LogHistoryList, logHistoryCardStyles } from "./components/LogHistoryList";
+import {
+  LogDetailAddedHeader,
+  LogDetailCard,
+  LogDetailFieldGroup,
+  LogDetailFieldGroups,
+  LogDetailNotesCard,
+  logDetailStyles,
+} from "./components/LogDetailLayout";
+import { formatAddedAtHeader } from "./lib/logDisplay";
 import { supabase, TABLES } from "./lib/supabase";
 import {
   dashboardSnapshotByUserId,
@@ -87,6 +88,7 @@ import {
 } from "./lib/dashboardSnapshotCache";
 /** Bowel UI lives in `screens/BowelScreen.tsx` — do not re-declare `BowelScreen` in this file. */
 import { BristolGuideScreen } from "./screens/BristolGuideScreen";
+import { BowelLogDetailScreen } from "./screens/BowelLogDetailScreen";
 import { BowelScreen } from "./screens/BowelScreen";
 import { MedicationTrackingWizardScreen } from "./screens/MedicationTrackingWizardScreen";
 import { SymptomLogWizardScreen } from "./screens/SymptomLogWizardScreen";
@@ -1086,6 +1088,12 @@ function useBottomTabScrollInset() {
 /** Dashboard / history lists — symptom log id + time. */
 type RecentLogListRow = { id: string; created_at: string };
 
+function formatHistoryBrowseSubtitle(count: number): string {
+  if (count === 0) return "No entries yet";
+  if (count === 1) return "1 entry";
+  return `${count} entries`;
+}
+
 type MedicationLogDetailItem = {
   medication: string;
   date: string;
@@ -1124,14 +1132,6 @@ function parseMedicationLogList(raw: unknown, withDosage: boolean): MedicationLo
       return item;
     })
     .filter((item): item is MedicationLogDetailItem => item != null);
-}
-
-function formatRecentLogTime(iso: string) {
-  try {
-    return new Date(iso).toLocaleTimeString(undefined, { hour: "2-digit", minute: "2-digit" });
-  } catch {
-    return "";
-  }
 }
 
 /** Avoid greeting flicker (“there”) when session metadata/email arrives shortly after navigation. */
@@ -1239,6 +1239,7 @@ function DashboardScreen({
     () => snapshotSeed?.todaySummary ?? { symptoms: 0, medsTaken: 0, medsTotal: 0, hydration: 0 },
   );
   const [recentActivity, setRecentActivity] = useState<DashboardActivityRow[]>(() => snapshotSeed?.recentActivity ?? []);
+  const [historyPreview, setHistoryPreview] = useState({ symptomCount: 0, medicationCount: 0 });
   /** Dashboard pills — Today / Logs / News only; default (null) shows the main home dashboard. */
   const [homeDashTab, setHomeDashTab] = useState<HomeDashTab>(null);
   const hydrationTarget = HYDRATION_TARGET;
@@ -1312,6 +1313,8 @@ function DashboardScreen({
             todayHydrationRes,
             recentSymptomsRes,
             recentMedsRes,
+            symptomHistoryCountRes,
+            medicationHistoryCountRes,
             recentBowelRes,
             recentWeightRes,
           ] = await Promise.all([
@@ -1329,6 +1332,8 @@ function DashboardScreen({
             supabase.from(TABLES.DAILY_HYDRATION).select("glasses,updated_at").eq("user_id", user.id).eq("date", today).maybeSingle(),
             supabase.from(TABLES.LOG_SYMPTOMS).select("id,created_at").eq("user_id", user.id).order("created_at", { ascending: false }).limit(1),
             supabase.from(TABLES.LOG_MEDICATIONS).select("id,name,created_at").eq("user_id", user.id).order("created_at", { ascending: false }).limit(1),
+            supabase.from(TABLES.LOG_SYMPTOMS).select("id", { count: "exact", head: true }).eq("user_id", user.id),
+            supabase.from(TABLES.LOG_MEDICATIONS).select("id", { count: "exact", head: true }).eq("user_id", user.id),
             supabase
               .from(TABLES.BOWEL_MOVEMENTS)
               .select("id,occurred_at,updated_at,created_at")
@@ -1347,7 +1352,15 @@ function DashboardScreen({
 
           const activityRows: DashboardActivityRow[] = [];
 
-          const recentSymptom = recentSymptomsRes.data?.[0];
+          const recentSymptom = recentSymptomsRes.data?.[0] as { id: string; created_at: string } | undefined;
+          const recentMedLog = recentMedsRes.data?.[0] as
+            | { id: string; created_at: string; name?: string }
+            | undefined;
+          setHistoryPreview({
+            symptomCount: symptomHistoryCountRes.count ?? 0,
+            medicationCount: medicationHistoryCountRes.count ?? 0,
+          });
+
           if (recentSymptom?.created_at) {
             activityRows.push({
               key: `symptom-${recentSymptom.id}`,
@@ -1356,12 +1369,11 @@ function DashboardScreen({
               icon: "symptom",
             });
           }
-          const recentMed = recentMedsRes.data?.[0];
-          if (recentMed?.created_at) {
+          if (recentMedLog?.created_at) {
             activityRows.push({
-              key: `med-${recentMed.id}`,
-              title: recentMed.name ? `Logged medication (${recentMed.name})` : "Logged medication",
-              ts: new Date(recentMed.created_at).getTime(),
+              key: `med-${recentMedLog.id}`,
+              title: recentMedLog.name ? `Logged medication (${recentMedLog.name})` : "Logged medication",
+              ts: new Date(recentMedLog.created_at).getTime(),
               icon: "medication",
             });
           }
@@ -1575,9 +1587,40 @@ function DashboardScreen({
     </View>
   );
 
-  const showMedsGoal = !(todaySummary.medsTotal > 0 && todaySummary.medsTaken >= todaySummary.medsTotal);
-  const showHydrationGoal = todaySummary.hydration < hydrationTarget;
-  const noGoalsToday = !showMedsGoal && !showHydrationGoal;
+  const medsGoalComplete =
+    todaySummary.medsTotal > 0 && todaySummary.medsTaken >= todaySummary.medsTotal;
+  const hydrationGoalComplete = todaySummary.hydration >= hydrationTarget;
+
+  const todayGoalItems = useMemo(
+    () => [
+      {
+        id: "meds-goal",
+        title: "Take Medications",
+        subtitle: medsGoalComplete ? "Complete" : "Active",
+        completed: medsGoalComplete,
+      },
+      {
+        id: "hydration-goal",
+        title: "Stay Hydrated",
+        subtitle: hydrationGoalComplete ? "Complete" : "Active",
+        completed: hydrationGoalComplete,
+      },
+    ],
+    [hydrationGoalComplete, medsGoalComplete],
+  );
+
+  const todaySummaryItems = useMemo(
+    () => [
+      { id: "symptoms-summary", title: "Symptoms logged", trailingText: String(todaySummary.symptoms) },
+      {
+        id: "meds-summary",
+        title: "Medications taken",
+        trailingText: `${todaySummary.medsTaken}/${todaySummary.medsTotal}`,
+      },
+      { id: "hydration-summary", title: "Hydration", trailingText: `${todaySummary.hydration}/${hydrationTarget}` },
+    ],
+    [hydrationTarget, todaySummary],
+  );
 
   const homePillBody =
     homeDashTab === "today" ? (
@@ -1587,54 +1630,13 @@ function DashboardScreen({
         >
           Goals
         </Text>
-        <Card title="" style={styles.homePillCard} compactBody>
-          <View style={styles.todaySummaryRows}>
-            {showMedsGoal ? (
-              <View style={styles.summaryWebRow}>
-                <View style={styles.summaryWebLeft}>
-                  <Text style={[styles.summaryWebLabel, { color: c.textMuted }]}>Take Medications</Text>
-                </View>
-              </View>
-            ) : null}
-            {showHydrationGoal ? (
-              <View style={styles.summaryWebRow}>
-                <View style={styles.summaryWebLeft}>
-                  <Text style={[styles.summaryWebLabel, { color: c.textMuted }]}>Stay Hydrated</Text>
-                </View>
-              </View>
-            ) : null}
-            {noGoalsToday ? (
-              <Text style={[styles.summaryWebLabel, { color: c.textMuted }]}>No goals today.</Text>
-            ) : null}
-          </View>
-        </Card>
+        <View style={[logHistoryCardStyles.trackerCard, { backgroundColor: c.card }]}>
+          <LogHistoryList items={todayGoalItems} />
+        </View>
         <Text style={[styles.dashboardSectionTitleLeft, { color: c.text }]}>Summary</Text>
-        <Card title="" style={styles.homePillCard} compactBody>
-          <View style={styles.todaySummaryRows}>
-            <View style={styles.summaryWebRow}>
-              <View style={styles.summaryWebLeft}>
-                <Text style={[styles.summaryWebLabel, { color: c.textMuted }]}>Symptoms logged</Text>
-              </View>
-              <Text style={[styles.summaryWebValue, { color: c.text }]}>{todaySummary.symptoms}</Text>
-            </View>
-            <View style={styles.summaryWebRow}>
-              <View style={styles.summaryWebLeft}>
-                <Text style={[styles.summaryWebLabel, { color: c.textMuted }]}>Medications taken</Text>
-              </View>
-              <Text style={[styles.summaryWebValue, { color: c.text }]}>
-                {todaySummary.medsTaken}/{todaySummary.medsTotal}
-              </Text>
-            </View>
-            <View style={styles.summaryWebRow}>
-              <View style={styles.summaryWebLeft}>
-                <Text style={[styles.summaryWebLabel, { color: c.textMuted }]}>Hydration</Text>
-              </View>
-              <Text style={[styles.summaryWebValue, { color: c.text }]}>
-                {todaySummary.hydration}/{hydrationTarget}
-              </Text>
-            </View>
-          </View>
-        </Card>
+        <View style={[logHistoryCardStyles.trackerCard, { backgroundColor: c.card }]}>
+          <LogHistoryList items={todaySummaryItems} />
+        </View>
       </View>
     ) : homeDashTab === "news" ? (
       <View style={styles.todayPillSection}>
@@ -1687,32 +1689,31 @@ function DashboardScreen({
         >
           History
         </Text>
-        <Card title="" style={styles.homePillCard} compactBody>
-          <View style={styles.todaySummaryRows}>
-            <AccountOptionRow
-              label="Symptoms"
-              labelColor="textMuted"
-              labelSize={14}
-              chevronSize={16}
-              rowStyle={styles.homePillNavRow}
-              onPress={() => {
-                dashboardHomeDashTabRestore = "logs";
-                navigation.navigate("SymptomHistory");
-              }}
-            />
-            <AccountOptionRow
-              label="Track Medications"
-              labelColor="textMuted"
-              labelSize={14}
-              chevronSize={16}
-              rowStyle={styles.homePillNavRow}
-              onPress={() => {
-                dashboardHomeDashTabRestore = "logs";
-                navigation.navigate("MedicationTrackingHistory");
-              }}
-            />
-          </View>
-        </Card>
+        <View style={[logHistoryCardStyles.trackerCard, { backgroundColor: c.card }]}>
+          <LogHistoryList
+            items={[
+              {
+                id: "symptom",
+                title: "Symptom logs",
+                subtitle: formatHistoryBrowseSubtitle(historyPreview.symptomCount),
+                accessibilityLabel: "Browse symptom history",
+              },
+              {
+                id: "medication",
+                title: "Medication logs",
+                subtitle: formatHistoryBrowseSubtitle(historyPreview.medicationCount),
+                accessibilityLabel: "Browse medication tracking history",
+              },
+            ]}
+            onPressItem={(rowId) => {
+              dashboardHomeDashTabRestore = "logs";
+              navigation.navigate(rowId === "symptom" ? "SymptomHistory" : "MedicationTrackingHistory");
+            }}
+            renderTrailing={() => (
+              <Ionicons name="chevron-forward" size={18} color={c.textMuted} accessibilityIgnoresInvertColors />
+            )}
+          />
+        </View>
       </View>
     ) : (
       <View style={styles.moreSection}>
@@ -1863,44 +1864,29 @@ function SymptomHistoryScreen({ user }: { user: SessionUser }) {
     }, [load]),
   );
   return (
-    <ScrollView style={[styles.screen, { backgroundColor: c.screen }]} contentContainerStyle={{ paddingBottom: bottomScrollInset }}>
-      <Card title="Symptom logs">
-        <Text
-          style={{
-            marginBottom: 12,
-            fontSize: 14,
-            fontFamily: "Inter_400Regular",
-            lineHeight: 22,
-            color: c.textMuted,
-          }}
-        >
+    <ScrollView
+      style={[styles.screen, { backgroundColor: c.screen }]}
+      contentContainerStyle={{ paddingBottom: bottomScrollInset + 24 }}
+    >
+      <View style={[logHistoryCardStyles.trackerCard, { backgroundColor: c.card }]}>
+        <Text style={[logHistoryCardStyles.trackerIntro, { color: c.textMuted }]}>
           Logs show what you reported on the day your symptoms started, not for every day of the symptom duration.
         </Text>
-        <View style={styles.detailFieldsStack}>
+        <View style={logHistoryCardStyles.trackerCardBody}>
           {rows.length === 0 ? (
             <Text style={[styles.muted, { color: c.textMuted }]}>No symptoms logged yet.</Text>
           ) : (
-            <View style={[styles.activityListWrap, { backgroundColor: c.surfaceSubtle }]}>
-              {rows.map((row, index) => (
-                <Pressable
-                  key={String(row.id)}
-                  accessibilityRole="button"
-                  onPress={() => navigation.navigate("SymptomDetail", { id: String(row.id) })}
-                  style={[
-                    styles.recentLogsRow,
-                    index !== rows.length - 1 ? [styles.activityNoteRowDivider, { borderBottomColor: c.cardBorder }] : null,
-                  ]}
-                >
-                  <View style={{ flex: 1, paddingRight: 8 }}>
-                    <Text style={[styles.recentLogsRowDate, { color: c.textSecondary }]}>{formatUkDate(row.created_at)}</Text>
-                  </View>
-                  <Text style={[styles.recentLogsRowTime, { color: c.textMuted }]}>{formatRecentLogTime(row.created_at)}</Text>
-                </Pressable>
-              ))}
-            </View>
+            <LogHistoryList
+              items={rows.map((row) => ({
+                id: String(row.id),
+                title: "Symptom log",
+                whenIso: row.created_at,
+              }))}
+              onPressItem={(logId) => navigation.navigate("SymptomDetail", { id: logId })}
+            />
           )}
         </View>
-      </Card>
+      </View>
       <PrimaryButton title="Log Symptoms" onPress={() => navigation.navigate("SymptomLogWizard")} />
     </ScrollView>
   );
@@ -2008,12 +1994,6 @@ function SymptomDetailScreen({ user }: { user: SessionUser }) {
 
   const createdRaw = pickSymptomField(row ?? {}, "created_at", "createdAt");
   const createdIso = createdRaw != null ? String(createdRaw) : "";
-  const createdDate = createdIso ? new Date(createdIso) : null;
-  const createdSubtitle =
-    createdDate && !Number.isNaN(createdDate.getTime())
-      ? `${createdDate.toLocaleDateString("en-GB", { weekday: "long", day: "numeric", month: "short", year: "numeric" })} at ${createdDate.toLocaleTimeString(undefined, { hour: "2-digit", minute: "2-digit" })}`
-      : "";
-
   const symptomStart = pickSymptomField(row ?? {}, "symptom_start_date", "symptomStartDate");
   const symptomEnd = pickSymptomField(row ?? {}, "symptom_end_date", "symptomEndDate");
   const isOngoing = Boolean(pickSymptomField(row ?? {}, "is_ongoing", "isOngoing")) || !String(symptomEnd ?? "").trim();
@@ -2106,95 +2086,90 @@ function SymptomDetailScreen({ user }: { user: SessionUser }) {
           ? "No"
           : "Not recorded";
 
+  const basicFields = [
+    { label: "Start Date", value: timelineStart },
+    { label: "Status", value: isOngoing ? "Ongoing" : "Ended" },
+    ...(!isOngoing && timelineEnd ? [{ label: "End Date", value: formatUkDate(timelineEnd) }] : []),
+    { label: "Severity", value: formatSymptomScoreDisplay(severityRaw) },
+    { label: "Stress Level", value: formatSymptomScoreDisplay(stressRaw) },
+  ];
+
+  const bathroomFields = [
+    { label: "Frequency", value: normalBathroom ? `${normalBathroom} times/day` : "Not set" },
+    ...(bathroomChanged
+      ? [{ label: "Frequency Changed", value: bathroomChanged === "yes" ? "Yes" : "No" }]
+      : []),
+    ...(bathroomChanged === "yes" && bathroomChangeDetails
+      ? [{ label: "Change Description", value: bathroomChangeDetails }]
+      : []),
+  ];
+
+  const lifestyleFields: { label: string; value: string }[] = [];
+  if (showLifestyleCard) {
+    if (isFirstTimeLifestyle && (smoker === true || smoker === false)) {
+      lifestyleFields.push({ label: "Smoker", value: smoker === true ? "Yes" : "No" });
+    }
+    if (isFirstTimeLifestyle && smoker === true && smokingHabits) {
+      lifestyleFields.push({ label: "Smoking Habits", value: smokingHabits });
+    }
+    if (!isFirstTimeLifestyle && typeof smokedOnDay === "boolean") {
+      lifestyleFields.push({ label: "Smoked", value: smokedReviewValue });
+    }
+    if (isFirstTimeLifestyle && smoker === true && smokedAmount) {
+      lifestyleFields.push({ label: "Smoked", value: smokedAmount });
+    }
+    if (isFirstTimeLifestyle && (alcohol === true || alcohol === false)) {
+      lifestyleFields.push({ label: "Alcohol", value: alcohol === true ? "Yes" : "No" });
+    }
+    if (isFirstTimeLifestyle && alcohol === true && averageAlcohol) {
+      lifestyleFields.push({ label: "Alcohol Habits (on average)", value: `${averageAlcohol} units/week` });
+    }
+    if (!isFirstTimeLifestyle && typeof drankOnDay === "boolean") {
+      lifestyleFields.push({ label: "Alcohol Units Consumed", value: alcoholUnitsReviewValue });
+    }
+    if (isFirstTimeLifestyle && alcohol === true && alcoholUnits) {
+      lifestyleFields.push({ label: "Alcohol Units Consumed", value: `${alcoholUnits} units` });
+    }
+  }
+
   return (
     <>
-      <ScrollView style={[styles.screen, { backgroundColor: c.screen }]} contentContainerStyle={{ paddingBottom: bottomScrollInset + 24 }}>
-        {createdSubtitle ? (
-          <Text style={[styles.symptomDetailLoggedAt, { color: c.textMuted }]}>{createdSubtitle}</Text>
+      <ScrollView
+        style={[styles.screen, { backgroundColor: c.screen }]}
+        contentContainerStyle={{ paddingBottom: bottomScrollInset + 24 }}
+      >
+        <LogDetailAddedHeader text={formatAddedAtHeader(createdIso)} />
+
+        <LogDetailCard>
+          <LogDetailFieldGroup fields={basicFields} />
+        </LogDetailCard>
+
+        <LogDetailCard>
+          <LogDetailFieldGroup fields={bathroomFields} />
+        </LogDetailCard>
+
+        {lifestyleFields.length > 0 ? (
+          <LogDetailCard>
+            <LogDetailFieldGroup fields={lifestyleFields} />
+          </LogDetailCard>
         ) : null}
 
-        <SymptomReviewCard title="Basic Information">
-        <SymptomReviewGrid>
-          <SymptomReviewField label="Start Date" value={timelineStart} />
-          <SymptomReviewField label="Status" value={isOngoing ? "Ongoing" : "Ended"} />
-          {!isOngoing && timelineEnd ? (
-            <SymptomReviewField label="End Date" value={formatUkDate(timelineEnd)} />
-          ) : null}
-          <SymptomReviewField label="Severity" value={formatSymptomScoreDisplay(severityRaw)} />
-          <SymptomReviewField label="Stress Level" value={formatSymptomScoreDisplay(stressRaw)} />
-        </SymptomReviewGrid>
-      </SymptomReviewCard>
-
-      <SymptomReviewCard title="Bathroom Frequency">
-        <SymptomReviewGrid>
-          <SymptomReviewField
-            label="Frequency"
-            value={normalBathroom ? `${normalBathroom} times/day` : "Not set"}
-          />
-          {bathroomChanged ? (
-            <SymptomReviewField
-              label="Frequency Changed"
-              value={bathroomChanged === "yes" ? "Yes" : "No"}
+        {mealDetailEntries.length > 0 ? (
+          <LogDetailCard>
+            <LogDetailFieldGroups
+              groups={mealDetailEntries.map((entry) => [
+                {
+                  label: entry.label,
+                  value: entry.items
+                    .map((item) => `${item.food}${item.quantity ? ` (${item.quantity})` : ""}`)
+                    .join("\n"),
+                },
+              ])}
             />
-          ) : null}
-        </SymptomReviewGrid>
-        {bathroomChanged === "yes" && bathroomChangeDetails ? (
-          <SymptomReviewSubsection label="Change Description" value={bathroomChangeDetails} />
+          </LogDetailCard>
         ) : null}
-      </SymptomReviewCard>
 
-      {showLifestyleCard ? (
-        <SymptomReviewCard title="Lifestyle">
-          <SymptomReviewGrid>
-            {isFirstTimeLifestyle && (smoker === true || smoker === false) ? (
-              <SymptomReviewField label="Smoker" value={smoker === true ? "Yes" : "No"} />
-            ) : null}
-            {isFirstTimeLifestyle && smoker === true && smokingHabits ? (
-              <SymptomReviewField label="Smoking Habits" value={smokingHabits} />
-            ) : null}
-            {!isFirstTimeLifestyle && typeof smokedOnDay === "boolean" ? (
-              <SymptomReviewField label="Smoked" value={smokedReviewValue} />
-            ) : null}
-            {isFirstTimeLifestyle && smoker === true && smokedAmount ? (
-              <SymptomReviewField label="Smoked" value={smokedAmount} />
-            ) : null}
-            {isFirstTimeLifestyle && (alcohol === true || alcohol === false) ? (
-              <SymptomReviewField label="Alcohol" value={alcohol === true ? "Yes" : "No"} />
-            ) : null}
-            {isFirstTimeLifestyle && alcohol === true && averageAlcohol ? (
-              <SymptomReviewField
-                label="Alcohol Habits (on average)"
-                value={`${averageAlcohol} units/week`}
-              />
-            ) : null}
-            {!isFirstTimeLifestyle && typeof drankOnDay === "boolean" ? (
-              <SymptomReviewField label="Alcohol Units Consumed" value={alcoholUnitsReviewValue} />
-            ) : null}
-            {isFirstTimeLifestyle && alcohol === true && alcoholUnits ? (
-              <SymptomReviewField label="Alcohol Units Consumed" value={`${alcoholUnits} units`} />
-            ) : null}
-          </SymptomReviewGrid>
-        </SymptomReviewCard>
-      ) : null}
-
-      {mealDetailEntries.length > 0 ? (
-        <SymptomReviewCard title="Meals">
-          {mealDetailEntries.map((entry, index) => (
-            <SymptomReviewMealBlock
-              key={entry.label}
-              label={entry.label}
-              items={entry.items}
-              showDivider={index < mealDetailEntries.length - 1}
-            />
-          ))}
-        </SymptomReviewCard>
-      ) : null}
-
-        {notesText ? (
-          <SymptomReviewCard title="Notes">
-            <SymptomReviewNotesBody>{notesText}</SymptomReviewNotesBody>
-          </SymptomReviewCard>
-        ) : null}
+        {notesText ? <LogDetailNotesCard notes={notesText} /> : null}
       </ScrollView>
       <ConfirmModal
         visible={deleteConfirmOpen}
@@ -2229,44 +2204,29 @@ function MedicationTrackingHistoryScreen({ user }: { user: SessionUser }) {
     }, [load]),
   );
   return (
-    <ScrollView style={[styles.screen, { backgroundColor: c.screen }]} contentContainerStyle={{ paddingBottom: bottomScrollInset }}>
-      <Card title="Medication logs">
-        <Text
-          style={{
-            marginBottom: 12,
-            fontSize: 14,
-            fontFamily: "Inter_400Regular",
-            lineHeight: 22,
-            color: c.textMuted,
-          }}
-        >
+    <ScrollView
+      style={[styles.screen, { backgroundColor: c.screen }]}
+      contentContainerStyle={{ paddingBottom: bottomScrollInset + 24 }}
+    >
+      <View style={[logHistoryCardStyles.trackerCard, { backgroundColor: c.card }]}>
+        <Text style={[logHistoryCardStyles.trackerIntro, { color: c.textMuted }]}>
           These logs include prescribed medications you missed, and any NSAIDs and antibiotics you took during a specific period.
         </Text>
-        <View style={styles.detailFieldsStack}>
+        <View style={logHistoryCardStyles.trackerCardBody}>
           {rows.length === 0 ? (
             <Text style={[styles.muted, { color: c.textMuted }]}>No medication tracking logs yet.</Text>
           ) : (
-            <View style={[styles.activityListWrap, { backgroundColor: c.surfaceSubtle }]}>
-              {rows.map((row, index) => (
-                <Pressable
-                  key={String(row.id)}
-                  accessibilityRole="button"
-                  onPress={() => navigation.navigate("MedicationLogDetail", { id: String(row.id) })}
-                  style={[
-                    styles.recentLogsRow,
-                    index !== rows.length - 1 ? [styles.activityNoteRowDivider, { borderBottomColor: c.cardBorder }] : null,
-                  ]}
-                >
-                  <View style={{ flex: 1, paddingRight: 8 }}>
-                    <Text style={[styles.recentLogsRowDate, { color: c.textSecondary }]}>{formatUkDate(row.created_at)}</Text>
-                  </View>
-                  <Text style={[styles.recentLogsRowTime, { color: c.textMuted }]}>{formatRecentLogTime(row.created_at)}</Text>
-                </Pressable>
-              ))}
-            </View>
+            <LogHistoryList
+              items={rows.map((row) => ({
+                id: String(row.id),
+                title: "Medication log",
+                whenIso: row.created_at,
+              }))}
+              onPressItem={(logId) => navigation.navigate("MedicationLogDetail", { id: logId })}
+            />
           )}
         </View>
-      </Card>
+      </View>
       <PrimaryButton title="Track Medications" onPress={() => navigation.navigate("MedicationTrackingWizard")} />
     </ScrollView>
   );
@@ -2335,11 +2295,6 @@ function MedicationLogDetailScreen({ user }: { user: SessionUser }) {
   }, [deleting, loading, navigation, row]);
 
   const createdIso = row?.created_at != null ? String(row.created_at) : "";
-  const createdDate = createdIso ? new Date(createdIso) : null;
-  const createdSubtitle =
-    createdDate && !Number.isNaN(createdDate.getTime())
-      ? `${createdDate.toLocaleDateString("en-GB", { weekday: "long", day: "numeric", month: "short", year: "numeric" })} at ${createdDate.toLocaleTimeString(undefined, { hour: "2-digit", minute: "2-digit" })}`
-      : "";
 
   const missedItems = parseMedicationLogList(row?.missed_medications_list, false);
   const nsaidItems = parseMedicationLogList(row?.nsaid_list, true);
@@ -2351,36 +2306,17 @@ function MedicationLogDetailScreen({ user }: { user: SessionUser }) {
     showDosage: boolean,
   ) => {
     if (!items.length) return null;
+    const groups = items.map((item) => [
+      { label: "Medication", value: item.medication },
+      ...(showDosage ? [{ label: "Dosage", value: item.dosage || "N/A" }] : []),
+      { label: "Date", value: item.date ? formatUkDate(item.date) : "N/A" },
+      { label: "Time of Day", value: item.timeOfDay || "N/A" },
+    ]);
     return (
-      <SymptomReviewCard title={title}>
-        {items.map((item, index) => (
-          <View
-            key={`${item.medication}-${index}`}
-            style={
-              index < items.length - 1
-                ? {
-                    borderBottomWidth: StyleSheet.hairlineWidth,
-                    borderBottomColor: c.cardBorder,
-                    paddingBottom: 14,
-                    marginBottom: 14,
-                  }
-                : undefined
-            }
-          >
-            <SymptomReviewGrid>
-              <SymptomReviewField label="Medication" value={item.medication} />
-              {showDosage ? (
-                <SymptomReviewField label="Dosage" value={item.dosage || "N/A"} />
-              ) : null}
-              <SymptomReviewField
-                label="Date"
-                value={item.date ? formatUkDate(item.date) : "N/A"}
-              />
-              <SymptomReviewField label="Time of Day" value={item.timeOfDay || "N/A"} />
-            </SymptomReviewGrid>
-          </View>
-        ))}
-      </SymptomReviewCard>
+      <LogDetailCard>
+        <Text style={[logDetailStyles.notesTitle, { color: c.text }]}>{title}</Text>
+        <LogDetailFieldGroups groups={groups} />
+      </LogDetailCard>
     );
   };
 
@@ -2403,18 +2339,21 @@ function MedicationLogDetailScreen({ user }: { user: SessionUser }) {
 
   return (
     <>
-      <ScrollView style={[styles.screen, { backgroundColor: c.screen }]} contentContainerStyle={{ paddingBottom: bottomScrollInset + 24 }}>
-        {createdSubtitle ? (
-          <Text style={[styles.symptomDetailLoggedAt, { color: c.textMuted }]}>{createdSubtitle}</Text>
-        ) : null}
+      <ScrollView
+        style={[styles.screen, { backgroundColor: c.screen }]}
+        contentContainerStyle={{ paddingBottom: bottomScrollInset + 24 }}
+      >
+        <LogDetailAddedHeader text={formatAddedAtHeader(createdIso)} />
 
-        <SymptomReviewCard title="Overview">
-          <SymptomReviewGrid>
-            <SymptomReviewField label="Missed medications" value={String(missedItems.length)} />
-            <SymptomReviewField label="NSAIDs" value={String(nsaidItems.length)} />
-            <SymptomReviewField label="Antibiotics" value={String(antibioticItems.length)} />
-          </SymptomReviewGrid>
-        </SymptomReviewCard>
+        <LogDetailCard>
+          <LogDetailFieldGroup
+            fields={[
+              { label: "Missed medications", value: String(missedItems.length) },
+              { label: "NSAIDs", value: String(nsaidItems.length) },
+              { label: "Antibiotics", value: String(antibioticItems.length) },
+            ]}
+          />
+        </LogDetailCard>
 
         {renderListSection("Missed Medications", missedItems, false)}
         {renderListSection("NSAIDs Taken", nsaidItems, true)}
@@ -2654,8 +2593,8 @@ function HydrationScreen({ user }: { user: SessionUser }) {
       >
         <Card title="" compactBody>
           <View style={styles.hydrationCardHeader}>
-            <View style={styles.weatherIconWrap}>
-              <MaterialCommunityIcons name="cup-water" size={28} color={c.primary} accessibilityIgnoresInvertColors />
+            <View style={styles.hydrationHeaderIcon}>
+              <MaterialCommunityIcons name="water" size={28} color={c.primary} accessibilityIgnoresInvertColors />
             </View>
             <Text
               style={[styles.cardTitle, styles.hydrationCardHeaderTitle, { color: c.text }]}
@@ -2720,7 +2659,7 @@ function HydrationScreen({ user }: { user: SessionUser }) {
           </View>
 
           {glasses >= HYDRATION_TARGET ? (
-            <Text style={[styles.hydrationGoalReached, { color: c.primary }]}>Daily goal reached</Text>
+            <Text style={[styles.hydrationGoalReached, { color: c.text }]}>Daily goal reached!</Text>
           ) : null}
         </Card>
 
@@ -3698,6 +3637,8 @@ function AppTabs({
       Reminders: "Reminders",
       Hydration: "My Hydration",
       Bowel: "Bowel Movements",
+      BowelLogs: "Your logs",
+      BowelLogDetail: "Bowel log",
       BristolGuide: "Bristol chart",
     };
     const isSymptomLogWizard = route.name === "SymptomLogWizard";
@@ -3713,6 +3654,8 @@ function AppTabs({
       route.name === "Appointments" ||
       route.name === "Hydration" ||
       route.name === "Bowel" ||
+      route.name === "BowelLogs" ||
+      route.name === "BowelLogDetail" ||
       route.name === "BristolGuide" ||
       route.name === "SymptomHistory" ||
       route.name === "SymptomDetail" ||
@@ -3811,6 +3754,8 @@ function AppTabs({
             <AppStack.Screen name="Hydration">{() => <HydrationScreen user={user} />}</AppStack.Screen>
             <AppStack.Screen name="Weight">{() => <WeightScreen user={user} />}</AppStack.Screen>
             <AppStack.Screen name="Bowel">{() => <BowelScreen user={user} />}</AppStack.Screen>
+            <AppStack.Screen name="BowelLogs">{() => <BowelScreen user={user} />}</AppStack.Screen>
+            <AppStack.Screen name="BowelLogDetail">{() => <BowelLogDetailScreen user={user} />}</AppStack.Screen>
             <AppStack.Screen name="BristolGuide" component={BristolGuideScreen} />
             <AppStack.Screen name="Appointments">{() => <AppointmentsScreen user={user} />}</AppStack.Screen>
             <AppStack.Screen name="Reports">{() => <ReportsScreen user={user} />}</AppStack.Screen>
@@ -4445,7 +4390,14 @@ const styles = StyleSheet.create({
   newsMeta: { fontSize: 11, fontFamily: "Inter_400Regular", marginTop: 6 },
   /** Logged-at line above symptom detail review cards. */
   symptomDetailLoggedAt: { fontSize: 13, fontFamily: "Inter_400Regular", marginBottom: 16, textAlign: "center" },
-  hydrationCardHeader: { flexDirection: "row", alignItems: "center", marginBottom: 12, gap: 8 },
+  hydrationCardHeader: { flexDirection: "row", alignItems: "center", marginBottom: 8, gap: 4 },
+  hydrationHeaderIcon: {
+    width: 42,
+    height: 42,
+    borderRadius: 21,
+    alignItems: "center",
+    justifyContent: "center",
+  },
   hydrationCardHeaderTitle: { flex: 1, marginBottom: 0, alignSelf: "center", lineHeight: 42 },
   hydrationCountRow: {
     flexDirection: "row",

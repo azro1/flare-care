@@ -19,8 +19,20 @@ import {
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { ConfirmModal } from "../components/ConfirmModal";
 import type { BowelReturnParams, BristolGuideParams } from "./BristolGuideScreen";
-import { PrimaryButton, SecondaryButton } from "../components/FlareButton";
-import { flareFieldErrorStyle, flareInputStyles, FlareTextInput } from "../components/FlareInput";
+import {
+  FLARE_BUTTON_BORDER_RADIUS,
+  FLARE_BUTTON_MIN_HEIGHT,
+  FLARE_BUTTON_PADDING_H,
+  PrimaryButton,
+  SecondaryButton,
+} from "../components/FlareButton";
+import {
+  FLARE_INPUT_BORDER_RADIUS,
+  flareFieldErrorStyle,
+  FlareTextInput,
+} from "../components/FlareInput";
+import { LogHistoryList, logHistoryCardStyles, logHistoryListStyles } from "../components/LogHistoryList";
+import { STACKED_DETAIL_ROW_EDGE } from "../components/StackedDetailField";
 import { FlareScreenSectionTitle } from "../components/FlareScreenSectionTitle";
 import {
   BRISTOL_TYPES,
@@ -43,12 +55,21 @@ import {
 } from "../lib/bowelMovementShared";
 import { bowelLogFormSchema } from "../lib/bowelLogFormSchema";
 import { invalidateDashboardSnapshot } from "../lib/dashboardSnapshotCache";
-import { FLARE_FONT_SIZE, FLARE_LINE_HEIGHT } from "../lib/layoutConstants";
+import {
+  FLARE_FONT_FAMILY,
+  FLARE_FONT_SIZE,
+  FLARE_LINE_HEIGHT,
+  SCREEN_EDGE_PADDING,
+  SECTION_TITLE_MARGIN_BOTTOM,
+} from "../lib/layoutConstants";
 import { formatUkDate } from "../lib/formatUkDate";
 import { supabase, TABLES } from "../lib/supabase";
 import { useFlareColors } from "../theme";
 
 type SessionUser = { id: string };
+
+/** Hub screen preview — full list lives on `BowelLogs`. */
+const BOWEL_RECENT_PREVIEW_COUNT = 3;
 
 const BOTTOM_BAR_VISIBLE_ROUTES = new Set(["Dashboard", "Account", "Reminders"]);
 
@@ -103,7 +124,7 @@ function TriChipRow({
   const c = useFlareColors();
   return (
     <View style={styles.triRow}>
-      <Text style={[styles.triLabel, { color: c.textSecondary }]}>{label}</Text>
+      <Text style={[styles.triLabel, { color: c.textMuted }]}>{label}</Text>
       <View style={styles.triChips}>
         {TRI_OPTIONS.map((opt) => {
           const selected = value === opt.value;
@@ -288,16 +309,17 @@ function BowelLogSheet({
           ) : null}
           </View>
 
+          <Pressable
+            accessibilityRole="button"
+            onPress={() => onOpenGuide(form.bristolType)}
+            hitSlop={8}
+            style={({ pressed }) => [styles.guideLinkAboveRow, pressed && { opacity: 0.7 }]}
+          >
+            <Ionicons name="book-outline" size={16} color={c.textSecondary} accessibilityIgnoresInvertColors />
+            <Text style={[styles.guideLink, { color: c.text }]}>Bristol stool chart</Text>
+          </Pressable>
           <View style={styles.sectionHeadRow}>
             <FlareScreenSectionTitle inline>Stool type</FlareScreenSectionTitle>
-            <Pressable
-              accessibilityRole="button"
-              onPress={() => onOpenGuide(form.bristolType)}
-              hitSlop={8}
-              style={({ pressed }) => pressed && { opacity: 0.7 }}
-            >
-              <Text style={[styles.guideLink, { color: c.text }]}>Bristol stool chart</Text>
-            </Pressable>
           </View>
           <ScrollView
             horizontal
@@ -374,7 +396,7 @@ function BowelLogSheet({
                 value={form.urgency}
                 onChange={(urgency) => setValue("urgency", urgency)}
               />
-              <Text style={[flareInputStyles.label, { color: c.textSecondary, marginTop: 4 }]}>Notes</Text>
+              <Text style={[styles.triLabel, { color: c.textMuted }]}>Notes</Text>
               <FlareTextInput
                 multiline
                 value={form.notes}
@@ -387,12 +409,14 @@ function BowelLogSheet({
 
           {saveError ? <Text style={[errTextStyle, styles.saveError]}>{saveError}</Text> : null}
 
-          <PrimaryButton
-            title={saving ? "Saving…" : editingId ? "Save changes" : "Save log"}
-            onPress={handleSubmit(onSave)}
-            disabled={saving}
-          />
-          <SecondaryButton title="Cancel" onPress={onClose} />
+          <View style={styles.sheetActions}>
+            <PrimaryButton
+              title={saving ? "Saving…" : editingId ? "Save changes" : "Save log"}
+              onPress={handleSubmit(onSave)}
+              disabled={saving}
+            />
+            <SecondaryButton title="Cancel" onPress={onClose} />
+          </View>
         </ScrollView>
 
         {datePickerOpen && pickerDraftDate ? (
@@ -424,6 +448,7 @@ export function BowelScreen({ user }: { user: SessionUser }) {
   const c = useFlareColors();
   const navigation = useNavigation<any>();
   const route = useRoute();
+  const isLogHistory = route.name === "BowelLogs";
   const bottomScrollInset = useBottomTabScrollInset();
 
   const [form, setForm] = useState<BowelFormState>(() => quickBowelFormState());
@@ -571,6 +596,91 @@ export function BowelScreen({ user }: { user: SessionUser }) {
     }
   };
 
+  const previewEntries = entries.slice(0, BOWEL_RECENT_PREVIEW_COUNT);
+  const listRows = isLogHistory ? entries : previewEntries;
+  const showViewAll = !isLogHistory && entries.length > BOWEL_RECENT_PREVIEW_COUNT;
+
+  const logsSection = (
+    <View style={[logHistoryCardStyles.trackerCard, { backgroundColor: c.card }]}>
+      {!isLogHistory ? (
+        <Text style={[logHistoryCardStyles.sectionTitle, { color: c.text }]}>
+          {entries.length ? "Recent" : "Your logs"}
+        </Text>
+      ) : null}
+      <View style={logHistoryCardStyles.trackerCardBody}>
+        {loading ? (
+          <ActivityIndicator color={c.primary} style={{ marginVertical: 20 }} />
+        ) : entries.length === 0 ? (
+          <View style={styles.emptyWrap}>
+            <View style={[styles.emptyIcon, { backgroundColor: c.surfaceSubtle }]}>
+              <Ionicons name="document-text-outline" size={28} color={c.primary} accessibilityIgnoresInvertColors />
+            </View>
+            <Text style={[styles.emptyTitle, { color: c.text }]}>Nothing here yet</Text>
+            <Text style={[styles.emptySub, { color: c.textMuted }]}>
+              {isLogHistory
+                ? "Logs you save from Bowel Movements will show up here."
+                : "Tap Log now when you are ready — it only takes a few taps."}
+            </Text>
+          </View>
+        ) : (
+          <>
+            <LogHistoryList
+              items={listRows.map((row) => {
+                const meta = getBristolTypeMeta(row.bristol_type);
+                return {
+                  id: row.id,
+                  title: meta?.shortLabel ?? formatBristolTypeOnly(row.bristol_type),
+                  whenIso: row.occurred_at,
+                  accessibilityLabel: `${formatBristolDetailLabel(row.bristol_type)}. View details`,
+                };
+              })}
+              onPressItem={(logId) => navigation.navigate("BowelLogDetail", { id: logId })}
+              renderTrailing={(item) => {
+                const row = listRows.find((e) => e.id === item.id);
+                if (!row) return null;
+                return (
+                  <>
+                    <Pressable
+                      accessibilityRole="button"
+                      accessibilityLabel="Edit"
+                      onPress={() => startEdit(row)}
+                      hitSlop={8}
+                      style={({ pressed }) => [logHistoryListStyles.logIconBtn, pressed && { opacity: 0.6 }]}
+                    >
+                      <Ionicons name="create-outline" size={20} color={c.text} />
+                    </Pressable>
+                    <Pressable
+                      accessibilityRole="button"
+                      accessibilityLabel="Delete"
+                      onPress={() => setDeleteModal({ open: true, id: row.id })}
+                      hitSlop={8}
+                      style={({ pressed }) => [logHistoryListStyles.logIconBtn, pressed && { opacity: 0.6 }]}
+                    >
+                      <Ionicons name="trash-outline" size={20} color={c.text} />
+                    </Pressable>
+                  </>
+                );
+              }}
+            />
+            {showViewAll ? (
+              <Pressable
+                accessibilityRole="button"
+                accessibilityLabel={`View all logs, ${entries.length} total`}
+                onPress={() => navigation.navigate("BowelLogs")}
+                style={({ pressed }) => [styles.viewAllRow, pressed && { opacity: 0.7 }]}
+              >
+                <Text style={[styles.viewAllLabel, { color: c.text }]}>
+                  View all logs ({entries.length})
+                </Text>
+                <Ionicons name="chevron-forward" size={18} color={c.textMuted} accessibilityIgnoresInvertColors />
+              </Pressable>
+            ) : null}
+          </>
+        )}
+      </View>
+    </View>
+  );
+
   return (
     <View style={[styles.screenRoot, { backgroundColor: c.screen }]}>
       <ScrollView
@@ -578,96 +688,55 @@ export function BowelScreen({ user }: { user: SessionUser }) {
         contentContainerStyle={{ paddingBottom: bottomScrollInset + 24 }}
         showsVerticalScrollIndicator={false}
       >
-        <View style={[styles.heroCard, { backgroundColor: c.card }]}>
-          <View style={styles.heroTop}>
-            <View style={[styles.heroIcon, { backgroundColor: c.surfaceRaised }]}>
-              <MaterialCommunityIcons name={BOWEL_FEATURE_MCI_ICON} size={28} color={c.primary} accessibilityIgnoresInvertColors />
-            </View>
-            <View style={styles.heroCopy}>
-              <Text style={[styles.heroTitle, { color: c.text }]}>Log bowel movement</Text>
-            </View>
-          </View>
-          <Text style={[styles.heroSub, { color: c.textMuted }]}>
-            A quick Bristol type is enough — add details only if you want to.
-          </Text>
-          <PrimaryButton title="Log now" onPress={openNewLog} />
-        </View>
-
-        <View style={[styles.logsCard, { backgroundColor: c.card }]}>
-          <Text style={[styles.logsTitle, { color: c.text }]}>Your logs</Text>
-          {loading ? (
-            <ActivityIndicator color={c.primary} style={{ marginVertical: 20 }} />
-          ) : entries.length === 0 ? (
-            <View style={styles.emptyWrap}>
-              <View style={[styles.emptyIcon, { backgroundColor: c.surfaceSubtle }]}>
-                <Ionicons name="leaf-outline" size={28} color={c.primary} />
-              </View>
-              <Text style={[styles.emptyTitle, { color: c.text }]}>Nothing logged yet</Text>
-              <Text style={[styles.emptySub, { color: c.textMuted }]}>
-                Tap Log now when you are ready — it only takes a few taps.
-              </Text>
-            </View>
-          ) : (
-            <View style={[styles.logList, { backgroundColor: c.surfaceSubtle }]}>
-              {entries.map((row, index) => {
-                const dateLabel = formatUkDate(row.occurred_at);
-                const timeLabel = formatUkTimeFromOccurred(row.occurred_at);
-                const meta = getBristolTypeMeta(row.bristol_type);
-                return (
-                  <View
-                    key={row.id}
-                    style={[
-                      styles.logRow,
-                      index !== entries.length - 1
-                        ? { borderBottomWidth: StyleSheet.hairlineWidth, borderBottomColor: c.cardBorder }
-                        : null,
-                    ]}
+        {isLogHistory ? (
+          logsSection
+        ) : (
+          <>
+            <View style={[styles.heroCard, { backgroundColor: c.card }]}>
+              <View style={styles.heroTop}>
+                <View style={styles.heroIcon}>
+                  <MaterialCommunityIcons
+                    name={BOWEL_FEATURE_MCI_ICON}
+                    size={28}
+                    color={c.primary}
+                    accessibilityIgnoresInvertColors
+                  />
+                </View>
+                <View style={styles.heroCopy}>
+                  <Text
+                    style={[styles.heroTitle, { color: c.text }]}
+                    {...(Platform.OS === "android" ? ({ includeFontPadding: false } as const) : null)}
                   >
-                    <View style={[styles.typeBadge, { backgroundColor: c.primary }]}>
-                      <Text style={[styles.typeBadgeText, { color: c.white }]}>{row.bristol_type}</Text>
-                    </View>
-                    <View style={styles.logMain}>
-                      <Text style={[styles.logPrimary, { color: c.text }]} numberOfLines={1}>
-                        {meta?.shortLabel ?? formatBristolTypeOnly(row.bristol_type)}
-                      </Text>
-                      <Text style={[styles.logSecondary, { color: c.textMuted }]}>
-                        {dateLabel}
-                        {timeLabel ? ` · ${timeLabel}` : ""}
-                      </Text>
-                    </View>
-                    <View style={styles.logActions}>
-                      <Pressable
-                        accessibilityRole="button"
-                        accessibilityLabel="Edit"
-                        onPress={() => startEdit(row)}
-                        hitSlop={8}
-                        style={({ pressed }) => [styles.logIconBtn, pressed && { opacity: 0.6 }]}
-                      >
-                        <Ionicons name="create-outline" size={20} color={c.textMuted} />
-                      </Pressable>
-                      <Pressable
-                        accessibilityRole="button"
-                        accessibilityLabel="Delete"
-                        onPress={() => setDeleteModal({ open: true, id: row.id })}
-                        hitSlop={8}
-                        style={({ pressed }) => [styles.logIconBtn, pressed && { opacity: 0.6 }]}
-                      >
-                        <Ionicons name="trash-outline" size={20} color={c.textMuted} />
-                      </Pressable>
-                    </View>
-                  </View>
-                );
-              })}
+                    Bowel log
+                  </Text>
+                </View>
+              </View>
+              <Text style={[styles.heroSub, { color: c.textMuted }]}>
+                A quick Bristol type is enough — add details only if you want to.
+              </Text>
+              <PrimaryButton title="Log now" onPress={openNewLog} />
+              <Pressable
+                accessibilityRole="button"
+                onPress={() => openGuide(false)}
+                style={({ pressed }) => [styles.chartLinkPress, pressed && { opacity: 0.7 }]}
+              >
+                <Ionicons name="book-outline" size={16} color={c.textSecondary} accessibilityIgnoresInvertColors />
+                <Text style={[styles.guideLink, { color: c.text }]}>Bristol stool chart</Text>
+              </Pressable>
             </View>
-          )}
-        </View>
+            {logsSection}
+          </>
+        )}
 
-        <View style={[styles.tipRow, { backgroundColor: c.card }]}>
-          <Ionicons name="bulb-outline" size={18} color="#EAB308" accessibilityIgnoresInvertColors />
-          <Text style={[styles.tipText, { color: c.textMuted }]}>
-            Stool types help build a clearer picture of your condition. Types 3–4 are often ideal; 1–2 harder, 5–7 looser.
-          </Text>
-        </View>
+        {isLogHistory ? (
+          <View style={[styles.tipRow, { backgroundColor: c.card }]}>
+            <Ionicons name="bulb-outline" size={18} color="#EAB308" accessibilityIgnoresInvertColors />
+            <Text style={[styles.tipText, { color: c.textMuted }]}>
+              Stool types help build a clearer picture of your condition. Types 3–4 are often ideal; 1–2 harder, 5–7
+              looser.
+            </Text>
+          </View>
+        ) : null}
       </ScrollView>
 
       <BowelLogSheet
@@ -699,71 +768,95 @@ export function BowelScreen({ user }: { user: SessionUser }) {
 
 const styles = StyleSheet.create({
   screenRoot: { flex: 1 },
-  screenScroll: { flex: 1, padding: 14 },
-  heroCard: { borderRadius: 14, padding: 16, marginBottom: 12 },
-  heroTop: { flexDirection: "row", alignItems: "center", gap: 12, marginBottom: 8 },
+  screenScroll: { flex: 1, padding: SCREEN_EDGE_PADDING },
+  heroCard: { borderRadius: 14, padding: 14, marginBottom: 12 },
+  heroTop: { flexDirection: "row", alignItems: "center", gap: 4, marginBottom: 14 },
   heroIcon: {
-    width: 52,
-    height: 52,
-    borderRadius: 26,
+    width: 42,
+    height: 42,
+    borderRadius: 21,
     alignItems: "center",
     justifyContent: "center",
   },
-  heroCopy: { flex: 1, minWidth: 0 },
-  heroTitle: { fontSize: 18, fontFamily: "Inter_700Bold" },
-  heroSub: { fontSize: 14, fontFamily: "Inter_400Regular", lineHeight: 21, marginBottom: 16 },
-  logsCard: { borderRadius: 14, padding: 16, marginBottom: 12 },
-  logsTitle: { fontSize: 16, fontFamily: "Inter_700Bold", marginBottom: 12 },
-  emptyWrap: { alignItems: "center", paddingVertical: 20, paddingHorizontal: 12 },
+  heroCopy: { flex: 1, minWidth: 0, justifyContent: "center" },
+  heroTitle: {
+    fontSize: FLARE_FONT_SIZE.sectionTitle,
+    fontFamily: FLARE_FONT_FAMILY.bold,
+    lineHeight: 42,
+  },
+  heroSub: {
+    fontSize: FLARE_FONT_SIZE.body,
+    fontFamily: FLARE_FONT_FAMILY.regular,
+    lineHeight: FLARE_LINE_HEIGHT.body,
+    marginBottom: 14,
+  },
+  emptyWrap: {
+    alignItems: "center",
+    paddingVertical: 14,
+  },
   emptyIcon: {
     width: 56,
     height: 56,
     borderRadius: 28,
     alignItems: "center",
     justifyContent: "center",
-    marginBottom: 12,
+    marginBottom: SECTION_TITLE_MARGIN_BOTTOM,
   },
-  emptyTitle: { fontSize: 16, fontFamily: "Inter_700Bold", marginBottom: 6 },
-  emptySub: { fontSize: 14, fontFamily: "Inter_400Regular", textAlign: "center", lineHeight: 21 },
-  logList: { borderRadius: 12, overflow: "hidden" },
-  logRow: { flexDirection: "row", alignItems: "center", paddingHorizontal: 12, paddingVertical: 12, gap: 10 },
-  typeBadge: {
-    width: 32,
-    height: 32,
-    borderRadius: 16,
+  emptyTitle: {
+    fontSize: FLARE_FONT_SIZE.navTitle,
+    fontFamily: FLARE_FONT_FAMILY.bold,
+    marginBottom: 6,
+  },
+  emptySub: {
+    fontSize: FLARE_FONT_SIZE.body,
+    fontFamily: FLARE_FONT_FAMILY.regular,
+    textAlign: "center",
+    lineHeight: FLARE_LINE_HEIGHT.body,
+  },
+  viewAllRow: {
+    flexDirection: "row",
     alignItems: "center",
-    justifyContent: "center",
+    justifyContent: "space-between",
   },
-  typeBadgeText: { fontSize: 15, fontFamily: "Inter_700Bold" },
-  logMain: { flex: 1, minWidth: 0 },
-  logPrimary: { fontSize: 15, fontFamily: "Inter_500Medium" },
-  logSecondary: { fontSize: 13, fontFamily: "Inter_400Regular", marginTop: 2 },
-  logActions: { flexDirection: "row", alignItems: "center" },
-  logIconBtn: { padding: 6 },
+  viewAllLabel: { fontSize: FLARE_FONT_SIZE.body, fontFamily: FLARE_FONT_FAMILY.regular },
+  chartLinkPress: {
+    flexDirection: "row",
+    alignItems: "center",
+    alignSelf: "center",
+    gap: 6,
+    marginTop: 20,
+    marginBottom: 4,
+    paddingVertical: 4,
+  },
   tipRow: {
     flexDirection: "row",
     alignItems: "flex-start",
-    gap: 10,
-    borderRadius: 12,
+    gap: STACKED_DETAIL_ROW_EDGE,
+    borderRadius: 14,
     paddingHorizontal: 14,
-    paddingVertical: 12,
+    paddingVertical: SCREEN_EDGE_PADDING,
   },
-  tipText: { flex: 1, fontSize: 13, fontFamily: "Inter_400Regular", lineHeight: 19 },
+  tipText: {
+    flex: 1,
+    fontSize: FLARE_FONT_SIZE.muted,
+    fontFamily: FLARE_FONT_FAMILY.regular,
+    lineHeight: FLARE_LINE_HEIGHT.muted,
+  },
   sheetRoot: { flex: 1 },
   sheetHeader: {
     flexDirection: "row",
     alignItems: "center",
     justifyContent: "space-between",
     paddingHorizontal: 8,
-    paddingBottom: 12,
+    paddingBottom: SCREEN_EDGE_PADDING,
     borderBottomWidth: StyleSheet.hairlineWidth,
   },
   sheetClose: { width: 44, height: 44, alignItems: "center", justifyContent: "center" },
-  sheetTitle: { fontSize: FLARE_FONT_SIZE.navTitle, fontFamily: "Inter_700Bold" },
-  sheetScroll: { paddingHorizontal: 20, paddingTop: 16 },
+  sheetTitle: { fontSize: FLARE_FONT_SIZE.navTitle, fontFamily: FLARE_FONT_FAMILY.bold },
+  sheetScroll: { paddingHorizontal: 20, paddingTop: 14 },
   sheetLead: {
     fontSize: FLARE_FONT_SIZE.body,
-    fontFamily: "Inter_400Regular",
+    fontFamily: FLARE_FONT_FAMILY.regular,
     lineHeight: FLARE_LINE_HEIGHT.body,
     marginBottom: 20,
   },
@@ -773,13 +866,20 @@ const styles = StyleSheet.create({
     justifyContent: "space-between",
     marginBottom: 8,
   },
+  guideLinkAboveRow: {
+    flexDirection: "row",
+    alignItems: "center",
+    alignSelf: "flex-end",
+    gap: 6,
+    marginBottom: 8,
+  },
   guideLink: {
     fontSize: FLARE_FONT_SIZE.body,
-    fontFamily: "Inter_400Regular",
+    fontFamily: FLARE_FONT_FAMILY.regular,
     textDecorationLine: "underline",
   },
   whenBlock: { marginBottom: 22 },
-  whenRow: { flexDirection: "row", gap: 10 },
+  whenRow: { flexDirection: "row", gap: STACKED_DETAIL_ROW_EDGE },
   whenRowError: { marginTop: 6 },
   whenCol: { flex: 1, gap: 6 },
   whenPill: {
@@ -788,14 +888,18 @@ const styles = StyleSheet.create({
     alignItems: "center",
     justifyContent: "flex-start",
     gap: 8,
-    paddingVertical: 12,
+    minHeight: 42,
     paddingHorizontal: 12,
-    minHeight: 48,
-    borderRadius: 12,
+    borderRadius: FLARE_INPUT_BORDER_RADIUS,
     borderWidth: 1,
   },
-  whenPillText: { flex: 1, fontSize: FLARE_FONT_SIZE.body, fontFamily: "Inter_400Regular" },
-  bristolStrip: { gap: 10, paddingVertical: 4, paddingRight: 8, marginBottom: 10 },
+  whenPillText: { flex: 1, fontSize: FLARE_FONT_SIZE.body, fontFamily: FLARE_FONT_FAMILY.regular },
+  bristolStrip: {
+    gap: STACKED_DETAIL_ROW_EDGE,
+    paddingVertical: 4,
+    paddingRight: 8,
+    marginBottom: STACKED_DETAIL_ROW_EDGE,
+  },
   bristolBubble: {
     width: 48,
     height: 48,
@@ -804,15 +908,15 @@ const styles = StyleSheet.create({
     alignItems: "center",
     justifyContent: "center",
   },
-  bristolBubbleNum: { fontSize: FLARE_FONT_SIZE.navTitle, fontFamily: "Inter_700Bold" },
+  bristolBubbleNum: { fontSize: FLARE_FONT_SIZE.navTitle, fontFamily: FLARE_FONT_FAMILY.bold },
   bristolChosen: {
     flexDirection: "row",
     alignItems: "center",
-    gap: 12,
-    borderRadius: 12,
+    gap: SCREEN_EDGE_PADDING,
+    borderRadius: 14,
     borderWidth: 1,
-    padding: 12,
-    marginBottom: 16,
+    padding: SCREEN_EDGE_PADDING,
+    marginBottom: 14,
   },
   bristolChosenBadge: {
     width: 40,
@@ -821,39 +925,42 @@ const styles = StyleSheet.create({
     alignItems: "center",
     justifyContent: "center",
   },
-  bristolChosenBadgeText: { fontSize: FLARE_FONT_SIZE.body, fontFamily: "Inter_700Bold" },
+  bristolChosenBadgeText: { fontSize: FLARE_FONT_SIZE.body, fontFamily: FLARE_FONT_FAMILY.bold },
   bristolChosenCopy: { flex: 1, minWidth: 0 },
-  bristolChosenTitle: { fontSize: FLARE_FONT_SIZE.body, fontFamily: "Inter_500Medium" },
+  bristolChosenTitle: { fontSize: FLARE_FONT_SIZE.body, fontFamily: FLARE_FONT_FAMILY.medium },
   bristolHint: {
     fontSize: FLARE_FONT_SIZE.body,
-    fontFamily: "Inter_400Regular",
+    fontFamily: FLARE_FONT_FAMILY.regular,
     textAlign: "center",
-    marginBottom: 16,
+    marginBottom: 14,
   },
   optionalToggle: {
     flexDirection: "row",
     alignItems: "center",
     justifyContent: "center",
     gap: 6,
-    paddingVertical: 12,
-    marginBottom: 8,
+    paddingVertical: SCREEN_EDGE_PADDING,
+    marginBottom: 14,
     borderTopWidth: StyleSheet.hairlineWidth,
     borderBottomWidth: StyleSheet.hairlineWidth,
   },
-  optionalToggleText: { fontSize: FLARE_FONT_SIZE.body, fontFamily: "Inter_400Regular" },
-  optionalBlock: { gap: 14, marginBottom: 16 },
+  optionalToggleText: { fontSize: FLARE_FONT_SIZE.body, fontFamily: FLARE_FONT_FAMILY.regular },
+  optionalBlock: { gap: 14, marginBottom: 14 },
   triRow: { gap: 8 },
-  triLabel: { fontSize: FLARE_FONT_SIZE.body, fontFamily: "Inter_400Regular" },
+  triLabel: { fontSize: FLARE_FONT_SIZE.body, fontFamily: FLARE_FONT_FAMILY.regular },
   triChips: { flexDirection: "row", gap: 8 },
   triChip: {
     flex: 1,
-    paddingVertical: 10,
-    borderRadius: 10,
+    minHeight: FLARE_BUTTON_MIN_HEIGHT,
+    borderRadius: FLARE_BUTTON_BORDER_RADIUS,
+    paddingHorizontal: FLARE_BUTTON_PADDING_H,
     borderWidth: 1,
     alignItems: "center",
+    justifyContent: "center",
   },
-  triChipText: { fontSize: FLARE_FONT_SIZE.body, fontFamily: "Inter_500Medium" },
-  notesInput: { minHeight: 72, marginTop: 0 },
+  triChipText: { fontSize: FLARE_FONT_SIZE.body, fontFamily: FLARE_FONT_FAMILY.medium },
+  notesInput: { marginTop: 0 },
   saveError: { marginBottom: 8 },
-  fieldErrorBelowSection: { marginTop: 4, marginBottom: 8 },
+  sheetActions: { marginTop: STACKED_DETAIL_ROW_EDGE, gap: 8 },
+  fieldErrorBelowSection: { marginTop: 6, marginBottom: 8 },
 });

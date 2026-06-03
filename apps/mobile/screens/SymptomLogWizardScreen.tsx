@@ -18,12 +18,10 @@ import {
   View,
 } from "react-native";
 import {
-  SymptomReviewCard,
-  SymptomReviewField,
-  SymptomReviewGrid,
-  SymptomReviewMealBlock,
-  SymptomReviewNotesBody,
-  SymptomReviewSubsection,
+  WizardReviewMealsSection,
+  WizardReviewNotesSection,
+  WizardReviewSection,
+  type WizardReviewField,
 } from "../components/symptomReviewLayout";
 import { PrimaryButton, SecondaryButton } from "../components/FlareButton";
 import { flareFieldErrorStyle, FlareInputTrigger, FlareTextInput } from "../components/FlareInput";
@@ -163,6 +161,84 @@ export function SymptomLogWizardScreen({ user }: { user: SessionUser }) {
 
   const showLifestyleReview =
     isFirstTimeUser || typeof form.smoked_on_symptom_day === "boolean" || typeof form.drank_on_symptom_day === "boolean";
+
+  const reviewBasicFields = useMemo((): WizardReviewField[] => {
+    const fields: WizardReviewField[] = [
+      { label: "Start Date", value: form.symptomStartDate ? formatUkDate(form.symptomStartDate) : "Not set" },
+      { label: "Status", value: form.isOngoing ? "Ongoing" : "Ended" },
+      { label: "Severity", value: form.severity ? `${form.severity}/10` : "Not set" },
+      { label: "Stress Level", value: form.stress_level ? `${form.stress_level}/10` : "Not set" },
+    ];
+    if (!form.isOngoing && form.symptomEndDate) {
+      fields.splice(2, 0, { label: "End Date", value: formatUkDate(form.symptomEndDate) });
+    }
+    return fields;
+  }, [form]);
+
+  const reviewBathroomFields = useMemo((): WizardReviewField[] => {
+    const fields: WizardReviewField[] = [
+      {
+        label: "Frequency",
+        value: form.normal_bathroom_frequency ? `${form.normal_bathroom_frequency} times/day` : "Not set",
+      },
+    ];
+    if (form.bathroom_frequency_changed) {
+      fields.push({
+        label: "Frequency Changed",
+        value: form.bathroom_frequency_changed === "yes" ? "Yes" : "No",
+      });
+    }
+    if (form.bathroom_frequency_changed === "yes" && form.bathroom_frequency_change_details?.trim()) {
+      fields.push({ label: "Change Description", value: form.bathroom_frequency_change_details.trim() });
+    }
+    return fields;
+  }, [form]);
+
+  const reviewLifestyleFields = useMemo((): WizardReviewField[] => {
+    if (!showLifestyleReview) return [];
+    const fields: WizardReviewField[] = [];
+    if (isFirstTimeUser) {
+      fields.push({ label: "Smoker", value: form.smoker ? "Yes" : "No" });
+    }
+    if (isFirstTimeUser && form.smoker === true && form.smoking_habits?.trim()) {
+      fields.push({ label: "Smoking Habits", value: form.smoking_habits.trim() });
+    }
+    if (!isFirstTimeUser && typeof form.smoked_on_symptom_day === "boolean") {
+      fields.push({
+        label: "Smoked",
+        value: form.smoked_on_symptom_day ? form.smoked_amount_on_symptom_day?.trim() || "Yes" : "No",
+      });
+    }
+    if (isFirstTimeUser && form.smoker === true && form.smoked_amount_on_symptom_day?.trim()) {
+      fields.push({
+        label: isSymptomDayToday ? "Smoked Today" : `Smoked on ${symptomDayLabel}`,
+        value: form.smoked_amount_on_symptom_day.trim(),
+      });
+    }
+    if (isFirstTimeUser) {
+      fields.push({ label: "Alcohol", value: form.alcohol ? "Yes" : "No" });
+    }
+    if (isFirstTimeUser && form.alcohol === true && form.average_alcohol_units_pw?.trim()) {
+      fields.push({ label: "Alcohol Habits (on average)", value: `${form.average_alcohol_units_pw.trim()} units/week` });
+    }
+    if (!isFirstTimeUser && typeof form.drank_on_symptom_day === "boolean") {
+      fields.push({
+        label: "Alcohol Units Consumed",
+        value: form.drank_on_symptom_day
+          ? form.alcohol_units_on_symptom_day?.trim()
+            ? `${form.alcohol_units_on_symptom_day.trim()} units`
+            : "Yes"
+          : "No",
+      });
+    }
+    if (isFirstTimeUser && form.alcohol === true && form.alcohol_units_on_symptom_day?.trim()) {
+      fields.push({
+        label: isSymptomDayToday ? "Alcohol Units Today" : `Alcohol Units on ${symptomDayLabel}`,
+        value: `${form.alcohol_units_on_symptom_day.trim()} units`,
+      });
+    }
+    return fields;
+  }, [form, isFirstTimeUser, isSymptomDayToday, showLifestyleReview, symptomDayLabel]);
 
   const goBackInternal = useCallback(() => {
     const prev = history[history.length - 1];
@@ -831,100 +907,13 @@ export function SymptomLogWizardScreen({ user }: { user: SessionUser }) {
           <View>
             <Text style={[styles.h3, { color: c.text, marginBottom: 16 }]}>Review your entry</Text>
 
-            <SymptomReviewCard title="Basic Information">
-              <SymptomReviewGrid>
-                <SymptomReviewField label="Start Date" value={form.symptomStartDate ? formatUkDate(form.symptomStartDate) : "Not set"} />
-                <SymptomReviewField label="Status" value={form.isOngoing ? "Ongoing" : "Ended"} />
-                {!form.isOngoing && form.symptomEndDate ? (
-                  <SymptomReviewField label="End Date" value={formatUkDate(form.symptomEndDate)} />
-                ) : null}
-                <SymptomReviewField label="Severity" value={form.severity ? `${form.severity}/10` : "Not set"} />
-                <SymptomReviewField label="Stress Level" value={form.stress_level ? `${form.stress_level}/10` : "Not set"} />
-              </SymptomReviewGrid>
-            </SymptomReviewCard>
-
-            <SymptomReviewCard title="Bathroom Frequency">
-              <SymptomReviewGrid>
-                <SymptomReviewField
-                  label="Frequency"
-                  value={form.normal_bathroom_frequency ? `${form.normal_bathroom_frequency} times/day` : "Not set"}
-                />
-                {form.bathroom_frequency_changed ? (
-                  <SymptomReviewField
-                    label="Frequency Changed"
-                    value={form.bathroom_frequency_changed === "yes" ? "Yes" : "No"}
-                  />
-                ) : null}
-              </SymptomReviewGrid>
-              {form.bathroom_frequency_changed === "yes" && form.bathroom_frequency_change_details?.trim() ? (
-                <SymptomReviewSubsection label="Change Description" value={form.bathroom_frequency_change_details} />
-              ) : null}
-            </SymptomReviewCard>
-
-            {showLifestyleReview ? (
-              <SymptomReviewCard title="Lifestyle">
-                <SymptomReviewGrid>
-                  {isFirstTimeUser ? <SymptomReviewField label="Smoker" value={form.smoker ? "Yes" : "No"} /> : null}
-                  {isFirstTimeUser && form.smoker === true && form.smoking_habits?.trim() ? (
-                    <SymptomReviewField label="Smoking Habits" value={form.smoking_habits} />
-                  ) : null}
-                  {!isFirstTimeUser && typeof form.smoked_on_symptom_day === "boolean" ? (
-                    <SymptomReviewField
-                      label="Smoked"
-                      value={form.smoked_on_symptom_day ? form.smoked_amount_on_symptom_day?.trim() || "Yes" : "No"}
-                    />
-                  ) : null}
-                  {isFirstTimeUser && form.smoker === true && form.smoked_amount_on_symptom_day?.trim() ? (
-                    <SymptomReviewField
-                      label={isSymptomDayToday ? "Smoked Today" : `Smoked on ${symptomDayLabel}`}
-                      value={form.smoked_amount_on_symptom_day}
-                    />
-                  ) : null}
-                  {isFirstTimeUser ? <SymptomReviewField label="Alcohol" value={form.alcohol ? "Yes" : "No"} /> : null}
-                  {isFirstTimeUser && form.alcohol === true && form.average_alcohol_units_pw?.trim() ? (
-                    <SymptomReviewField label="Alcohol Habits (on average)" value={`${form.average_alcohol_units_pw} units/week`} />
-                  ) : null}
-                  {!isFirstTimeUser && typeof form.drank_on_symptom_day === "boolean" ? (
-                    <SymptomReviewField
-                      label="Alcohol Units Consumed"
-                      value={
-                        form.drank_on_symptom_day
-                          ? form.alcohol_units_on_symptom_day?.trim()
-                            ? `${form.alcohol_units_on_symptom_day} units`
-                            : "Yes"
-                          : "No"
-                      }
-                    />
-                  ) : null}
-                  {isFirstTimeUser && form.alcohol === true && form.alcohol_units_on_symptom_day?.trim() ? (
-                    <SymptomReviewField
-                      label={isSymptomDayToday ? "Alcohol Units Today" : `Alcohol Units on ${symptomDayLabel}`}
-                      value={`${form.alcohol_units_on_symptom_day} units`}
-                    />
-                  ) : null}
-                </SymptomReviewGrid>
-              </SymptomReviewCard>
+            <WizardReviewSection title="Basic Information" fields={reviewBasicFields} />
+            <WizardReviewSection title="Bathroom Frequency" fields={reviewBathroomFields} />
+            {reviewLifestyleFields.length > 0 ? (
+              <WizardReviewSection title="Lifestyle" fields={reviewLifestyleFields} />
             ) : null}
-
-            {mealReviewEntries.length > 0 ? (
-              <SymptomReviewCard title="Meals">
-                {mealReviewEntries.map((entry, index) => (
-                  <SymptomReviewMealBlock
-                    key={entry.label}
-                    label={entry.label}
-                    skipped={entry.skipped}
-                    items={entry.items}
-                    showDivider={index < mealReviewEntries.length - 1}
-                  />
-                ))}
-              </SymptomReviewCard>
-            ) : null}
-
-            {form.notes?.trim() ? (
-              <SymptomReviewCard title="Notes">
-                <SymptomReviewNotesBody>{form.notes}</SymptomReviewNotesBody>
-              </SymptomReviewCard>
-            ) : null}
+            <WizardReviewMealsSection entries={mealReviewEntries} />
+            <WizardReviewNotesSection notes={form.notes} />
           </View>
         ) : null}
 

@@ -1,111 +1,78 @@
 import React from "react";
-import { StyleSheet, Text, View, type StyleProp, type ViewStyle } from "react-native";
+import { Text } from "react-native";
+import { LogDetailCard, LogDetailFieldGroup, LogDetailFieldGroups, LogDetailNotesCard, logDetailStyles } from "./LogDetailLayout";
+import { formatUkDate } from "../lib/formatUkDate";
 import { useFlareColors } from "../theme";
 
-/** Shared review-card layout — matches `SymptomLogWizardScreen` step 17. */
-export function SymptomReviewCard({
+export type WizardReviewField = { label: string; value: string };
+
+/** Review / detail section — card title + stacked `surfaceSubtle` fields (matches log detail screens). */
+export function WizardReviewSection({ title, fields }: { title: string; fields: WizardReviewField[] }) {
+  const c = useFlareColors();
+  const visible = fields.filter((f) => f.value !== "");
+  if (!visible.length) return null;
+  return (
+    <LogDetailCard>
+      <Text style={[logDetailStyles.notesTitle, { color: c.text }]}>{title}</Text>
+      <LogDetailFieldGroup fields={visible} />
+    </LogDetailCard>
+  );
+}
+
+export function WizardReviewMealsSection({
+  entries,
+}: {
+  entries: { label: string; skipped?: boolean; items?: { food: string; quantity: string }[] }[];
+}) {
+  const c = useFlareColors();
+  if (!entries.length) return null;
+  return (
+    <LogDetailCard>
+      <Text style={[logDetailStyles.notesTitle, { color: c.text }]}>Meals</Text>
+      <LogDetailFieldGroups
+        groups={entries.map((entry) => [
+          {
+            label: entry.label,
+            value: entry.skipped
+              ? "Didn't eat anything"
+              : (entry.items ?? [])
+                  .map((item) => `${item.food}${item.quantity ? ` (${item.quantity})` : ""}`)
+                  .join("\n"),
+          },
+        ])}
+      />
+    </LogDetailCard>
+  );
+}
+
+export function WizardReviewNotesSection({ notes }: { notes: string }) {
+  const trimmed = notes.trim();
+  if (!trimmed) return null;
+  return <LogDetailNotesCard notes={trimmed} />;
+}
+
+/** Medication wizard: one card per list section, fields for each entry in sequence. */
+export function WizardReviewMedicationSection({
   title,
-  children,
-  style,
+  items,
+  showDosage,
 }: {
   title: string;
-  children: React.ReactNode;
-  style?: StyleProp<ViewStyle>;
+  items: { medication: string; date: string; timeOfDay: string; dosage?: string }[];
+  showDosage: boolean;
 }) {
+  if (!items.length) return null;
   const c = useFlareColors();
+  const groups = items.map((item) => [
+    { label: "Medication", value: item.medication },
+    ...(showDosage ? [{ label: "Dosage", value: item.dosage || "N/A" }] : []),
+    { label: "Date", value: item.date ? formatUkDate(item.date) : "N/A" },
+    { label: "Time of Day", value: item.timeOfDay || "N/A" },
+  ]);
   return (
-    <View style={[reviewStyles.card, { backgroundColor: c.card, borderColor: c.cardBorder }, style]}>
-      <Text style={[reviewStyles.sectionTitle, { color: c.primary, borderBottomColor: c.cardBorder }]}>{title}</Text>
-      {children}
-    </View>
+    <LogDetailCard>
+      <Text style={[logDetailStyles.notesTitle, { color: c.text }]}>{title}</Text>
+      <LogDetailFieldGroups groups={groups} />
+    </LogDetailCard>
   );
-}
-
-export function SymptomReviewField({ label, value }: { label: string; value: string }) {
-  const c = useFlareColors();
-  return (
-    <View style={reviewStyles.field}>
-      <Text style={[reviewStyles.label, { color: c.textMuted }]}>{label}</Text>
-      <Text style={[reviewStyles.value, { color: c.text }]}>{value}</Text>
-    </View>
-  );
-}
-
-export function SymptomReviewGrid({ children }: { children: React.ReactNode }) {
-  return <View style={reviewStyles.grid}>{children}</View>;
-}
-
-export function SymptomReviewSubsection({ label, value }: { label: string; value: string }) {
-  const c = useFlareColors();
-  return (
-    <View style={[reviewStyles.subsection, { borderTopColor: c.cardBorder }]}>
-      <Text style={[reviewStyles.label, { color: c.textMuted }]}>{label}</Text>
-      <Text style={[reviewStyles.value, { color: c.text }]}>{value}</Text>
-    </View>
-  );
-}
-
-export function SymptomReviewMealBlock({
-  label,
-  skipped,
-  items,
-  showDivider,
-}: {
-  label: string;
-  skipped?: boolean;
-  items?: { food: string; quantity: string }[];
-  showDivider?: boolean;
-}) {
-  const c = useFlareColors();
-  return (
-    <View
-      style={[
-        reviewStyles.mealBlock,
-        showDivider
-          ? { borderBottomWidth: StyleSheet.hairlineWidth, borderBottomColor: c.cardBorder, paddingBottom: 12, marginBottom: 12 }
-          : null,
-      ]}
-    >
-      <Text style={[reviewStyles.label, { color: c.textMuted, marginBottom: 8 }]}>{label}</Text>
-      {skipped ? (
-        <Text style={[reviewStyles.value, { color: c.text, fontStyle: "italic" }]}>Didn&apos;t eat anything</Text>
-      ) : (
-        <View style={{ gap: 6 }}>
-          {(items ?? []).map((item, j) => (
-            <Text key={`${item.food}-${j}`} style={[reviewStyles.value, { color: c.text }]} numberOfLines={4}>
-              {item.food}
-              {item.quantity ? ` (${item.quantity})` : ""}
-            </Text>
-          ))}
-        </View>
-      )}
-    </View>
-  );
-}
-
-export const reviewStyles = StyleSheet.create({
-  card: {
-    borderRadius: 12,
-    borderWidth: 1,
-    padding: 14,
-    marginBottom: 16,
-  },
-  sectionTitle: {
-    fontSize: 16,
-    fontFamily: "Inter_700Bold",
-    paddingBottom: 10,
-    marginBottom: 12,
-    borderBottomWidth: StyleSheet.hairlineWidth,
-  },
-  grid: { gap: 14 },
-  field: { minWidth: 0 },
-  label: { fontSize: 13, marginBottom: 4, fontFamily: "Inter_400Regular" },
-  value: { fontSize: 14, fontFamily: "Inter_400Regular" },
-  subsection: { marginTop: 12, paddingTop: 12, borderTopWidth: StyleSheet.hairlineWidth },
-  mealBlock: { minWidth: 0 },
-});
-
-export function SymptomReviewNotesBody({ children }: { children: string }) {
-  const c = useFlareColors();
-  return <Text style={[reviewStyles.value, { color: c.text }]}>{children}</Text>;
 }

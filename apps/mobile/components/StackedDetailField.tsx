@@ -1,6 +1,7 @@
 import React from "react";
 import { Platform, StyleSheet, Text, View, type StyleProp, type TextStyle, type ViewStyle } from "react-native";
 import { FLARE_INPUT_BORDER_RADIUS } from "./FlareInput";
+import { DETAIL_FIELD_LABEL, FLARE_FONT_FAMILY, FLARE_FONT_SIZE, FLARE_LINE_HEIGHT } from "../lib/layoutConstants";
 import { useFlareColors } from "../theme";
 
 /** Space between label and value (or between stacked value lines). */
@@ -138,15 +139,11 @@ const styles = StyleSheet.create({
     flexDirection: "column",
     alignSelf: "stretch",
   },
-  label: {
-    fontSize: 14,
-    fontFamily: "Inter_400Regular",
-    lineHeight: 18,
-  },
+  label: DETAIL_FIELD_LABEL,
   valueText: {
-    fontSize: 14,
-    fontFamily: "Inter_400Regular",
-    lineHeight: 18,
+    fontSize: FLARE_FONT_SIZE.body,
+    fontFamily: FLARE_FONT_FAMILY.regular,
+    lineHeight: FLARE_LINE_HEIGHT.body,
   },
   valueAfterLabel: {
     marginTop: LABEL_TO_VALUE,
