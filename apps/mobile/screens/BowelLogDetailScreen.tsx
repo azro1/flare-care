@@ -1,4 +1,4 @@
-import { MaterialCommunityIcons } from "@expo/vector-icons";
+import { Ionicons, MaterialCommunityIcons } from "@expo/vector-icons";
 import { useFocusEffect, useNavigation, useRoute } from "@react-navigation/native";
 import React, { useCallback, useLayoutEffect, useRef, useState } from "react";
 import {
@@ -26,13 +26,43 @@ import { formatUkDate } from "../lib/formatUkDate";
 import { FLARE_FONT_FAMILY, FLARE_FONT_SIZE } from "../lib/layoutConstants";
 import { supabase, TABLES } from "../lib/supabase";
 import { useFlareColors } from "../theme";
+import type { BowelReturnParams, BristolGuideParams } from "./BristolGuideScreen";
+import { BowelLogSheet } from "./BowelScreen";
+import {
+  bowelFormFromRow,
+  bowelFormHasOptionalDetails,
+  bowelPayloadFromForm,
+  quickBowelFormState,
+  type BowelFormState,
+} from "../lib/bowelMovementShared";
 
 type SessionUser = { id: string };
 
-export type BowelLogDetailParams = { id: string };
+export type BowelLogDetailParams = {
+  id: string;
+  listRoute?: "Bowel" | "BowelLogs";
+  pickedBristolType?: number;
+  openLogSheet?: boolean;
+};
 
 function triStateFromBool(value: boolean | null): string {
   return triStateDisplayLabel(boolToTri(value));
+}
+
+function DetailEditHeaderButton({ onPress, disabled }: { onPress: () => void; disabled?: boolean }) {
+  const c = useFlareColors();
+  return (
+    <Pressable
+      accessibilityRole="button"
+      accessibilityLabel="Edit entry"
+      onPress={onPress}
+      disabled={disabled}
+      hitSlop={10}
+      style={styles.headerEditButton}
+    >
+      <Ionicons name="create-outline" size={22} color={c.textMuted} accessibilityIgnoresInvertColors />
+    </Pressable>
+  );
 }
 
 function DetailDeleteHeaderButton({ onPress, disabled }: { onPress: () => void; disabled?: boolean }) {
@@ -51,17 +81,41 @@ function DetailDeleteHeaderButton({ onPress, disabled }: { onPress: () => void; 
   );
 }
 
+function DetailEditDeleteHeaderButtons({
+  onEdit,
+  onDelete,
+  disabled,
+}: {
+  onEdit: () => void;
+  onDelete: () => void;
+  disabled?: boolean;
+}) {
+  return (
+    <View style={styles.headerEditDeleteRow}>
+      <DetailEditHeaderButton onPress={onEdit} disabled={disabled} />
+      <DetailDeleteHeaderButton onPress={onDelete} disabled={disabled} />
+    </View>
+  );
+}
+
 export function BowelLogDetailScreen({ user }: { user: SessionUser }) {
   const navigation = useNavigation<any>();
   const route = useRoute();
   const c = useFlareColors();
   const insets = useSafeAreaInsets();
-  const id = String((route.params as BowelLogDetailParams | undefined)?.id ?? "");
+  const routeParams = (route.params as BowelLogDetailParams | undefined) ?? {};
+  const id = String(routeParams.id ?? "");
+  const listRoute = routeParams.listRoute ?? "BowelLogs";
 
   const [loading, setLoading] = useState(true);
   const [row, setRow] = useState<BowelMovementRow | null>(null);
   const [deleteOpen, setDeleteOpen] = useState(false);
   const [deleting, setDeleting] = useState(false);
+  const [sheetOpen, setSheetOpen] = useState(false);
+  const [form, setForm] = useState<BowelFormState>(() => quickBowelFormState());
+  const [saving, setSaving] = useState(false);
+  const [saveError, setSaveError] = useState("");
+  const [showOptional, setShowOptional] = useState(false);
   const deleteInFlight = useRef(false);
 
   const load = useCallback(async () => {
@@ -87,6 +141,69 @@ export function BowelLogDetailScreen({ user }: { user: SessionUser }) {
     }, [load]),
   );
 
+  useFocusEffect(
+    useCallback(() => {
+      const params = route.params as BowelLogDetailParams | undefined;
+      const picked = params?.pickedBristolType;
+      if (picked == null || picked < 1 || picked > 7) return;
+      setForm((prev) => ({ ...prev, bristolType: picked }));
+      if (params?.openLogSheet) {
+        setSheetOpen(true);
+        setSaveError("");
+      }
+      navigation.setParams({ pickedBristolType: undefined, openLogSheet: undefined });
+    }, [navigation, route.params]),
+  );
+
+  const closeSheet = useCallback(() => {
+    setSheetOpen(false);
+    setSaveError("");
+    setShowOptional(false);
+    setForm(quickBowelFormState());
+  }, []);
+
+  const openGuide = useCallback(
+    (highlightedType: number | null) => {
+      const reopenSheet = sheetOpen;
+      if (reopenSheet) setSheetOpen(false);
+      const guideParams: BristolGuideParams = {
+        pickMode: true,
+        highlightedType: (highlightedType ?? form.bristolType) ?? undefined,
+        returnOpenLogSheet: reopenSheet,
+        returnRoute: "BowelLogDetail",
+        returnRouteParams: { id, listRoute },
+      };
+      navigation.navigate("BristolGuide", guideParams);
+    },
+    [form.bristolType, id, listRoute, navigation, sheetOpen],
+  );
+
+  const handleSave = useCallback(
+    async (values: BowelFormState) => {
+      if (!id) return;
+      setSaveError("");
+      setSaving(true);
+      try {
+        const payload = bowelPayloadFromForm(values);
+        const { error } = await supabase
+          .from(TABLES.BOWEL_MOVEMENTS)
+          .update(payload)
+          .eq("id", id)
+          .eq("user_id", user.id);
+        if (error) throw error;
+        closeSheet();
+        invalidateDashboardSnapshot(user.id);
+        await load();
+      } catch (err: unknown) {
+        const message = err instanceof Error ? err.message : "Could not save this log.";
+        setSaveError(message);
+      } finally {
+        setSaving(false);
+      }
+    },
+    [closeSheet, id, load, user.id],
+  );
+
   const handleDelete = useCallback(async () => {
     if (deleteInFlight.current || !id) return;
     deleteInFlight.current = true;
@@ -107,18 +224,33 @@ export function BowelLogDetailScreen({ user }: { user: SessionUser }) {
     }
   }, [id, navigation, user.id]);
 
+  const handleEdit = useCallback(() => {
+    if (!row) return;
+    const next = bowelFormFromRow(row);
+    setForm(next);
+    setSaveError("");
+    setShowOptional(bowelFormHasOptionalDetails(next));
+    setSheetOpen(true);
+  }, [row]);
+
   useLayoutEffect(() => {
     if (loading || !row) {
       navigation.setOptions({ headerRight: undefined });
       return;
     }
     navigation.setOptions({
-      headerRight: () => <DetailDeleteHeaderButton onPress={() => setDeleteOpen(true)} disabled={deleting} />,
+      headerRight: () => (
+        <DetailEditDeleteHeaderButtons
+          onEdit={handleEdit}
+          onDelete={() => setDeleteOpen(true)}
+          disabled={deleting}
+        />
+      ),
     });
     return () => {
       navigation.setOptions({ headerRight: undefined });
     };
-  }, [deleting, loading, navigation, row]);
+  }, [deleting, handleEdit, loading, navigation, row]);
 
   const bottomPad = Math.max(insets.bottom, 16) + 24;
   const notes = row?.notes?.trim() ?? "";
@@ -177,6 +309,19 @@ export function BowelLogDetailScreen({ user }: { user: SessionUser }) {
         onConfirm={handleDelete}
         onCancel={() => setDeleteOpen(false)}
       />
+
+      <BowelLogSheet
+        visible={sheetOpen}
+        editingId={id}
+        initialValues={form}
+        saving={saving}
+        saveError={saveError}
+        showOptional={showOptional}
+        setShowOptional={setShowOptional}
+        onClose={closeSheet}
+        onSave={handleSave}
+        onOpenGuide={(highlightedType) => openGuide(highlightedType)}
+      />
     </>
   );
 }
@@ -185,6 +330,16 @@ const styles = StyleSheet.create({
   screen: { flex: 1 },
   centered: { flex: 1, alignItems: "center", justifyContent: "center", gap: 12 },
   muted: { fontSize: FLARE_FONT_SIZE.body, fontFamily: FLARE_FONT_FAMILY.regular },
+  headerEditDeleteRow: {
+    flexDirection: "row",
+    alignItems: "center",
+  },
+  headerEditButton: {
+    width: 44,
+    height: 44,
+    alignItems: "center",
+    justifyContent: "center",
+  },
   headerDeleteButton: {
     width: 44,
     height: 44,

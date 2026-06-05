@@ -189,6 +189,77 @@ export async function insertMedicationTrackingLog(userId: string, cleaned: Clean
   if (error) throw error;
 }
 
+function reviveMedicationListFromRow(raw: unknown, withDosage: boolean): MedicationListRow[] {
+  if (!Array.isArray(raw) || raw.length === 0) return [createEmptyMedicationRow(withDosage)];
+  const rows = raw
+    .map((entry) => {
+      if (!entry || typeof entry !== "object") return null;
+      const r = entry as Record<string, unknown>;
+      const medication = String(r.medication ?? "").trim();
+      if (!medication) return null;
+      let date = "";
+      const rawDate = r.date;
+      if (typeof rawDate === "string" && rawDate.trim()) {
+        const iso = rawDate.match(/^(\d{4}-\d{2}-\d{2})/);
+        date = iso ? iso[1] : rawDate;
+      } else if (rawDate != null) {
+        const parsed = new Date(String(rawDate));
+        if (!Number.isNaN(parsed.getTime())) {
+          date = `${parsed.getFullYear()}-${String(parsed.getMonth() + 1).padStart(2, "0")}-${String(parsed.getDate()).padStart(2, "0")}`;
+        }
+      }
+      const dosageRaw = String(r.dosage ?? "").trim();
+      const dosageDigits = withDosage ? dosageRaw.replace(/\D/g, "").replace(/mg$/i, "") : "";
+      const row: MedicationListRow = {
+        medication,
+        date,
+        timeOfDay: String(r.timeOfDay ?? r.time_of_day ?? "").trim(),
+        dateTouched: Boolean(date),
+      };
+      if (withDosage) row.dosage = dosageDigits;
+      return row;
+    })
+    .filter((row): row is MedicationListRow => row !== null);
+  return rows.length ? rows : [createEmptyMedicationRow(withDosage)];
+}
+
+/** Hydrate wizard form from an existing `log_medications` row. */
+export function medicationLogRowToForm(row: Record<string, unknown>): MedicationTrackingFormData {
+  const missedMedicationsList = reviveMedicationListFromRow(row.missed_medications_list, false);
+  const nsaidList = reviveMedicationListFromRow(row.nsaid_list, true);
+  const antibioticList = reviveMedicationListFromRow(row.antibiotic_list, true);
+  const hasMissed = missedMedicationsList.some((item) => item.medication.trim());
+  const hasNsaid = nsaidList.some((item) => item.medication.trim());
+  const hasAntibiotic = antibioticList.some((item) => item.medication.trim());
+
+  return {
+    missedMedications: hasMissed ? true : hasNsaid || hasAntibiotic ? false : null,
+    missedMedicationsList,
+    nsaidUsage: hasNsaid ? true : hasMissed || hasAntibiotic ? false : null,
+    nsaidList,
+    antibioticUsage: hasAntibiotic ? true : hasMissed || hasNsaid ? false : null,
+    antibioticList,
+  };
+}
+
+export function buildMedicationTrackingUpdatePayload(cleaned: CleanedMedicationData) {
+  return {
+    missed_medications_list: cleaned.missedMedicationsList,
+    nsaid_list: cleaned.nsaidList,
+    antibiotic_list: cleaned.antibioticList,
+  };
+}
+
+export async function updateMedicationTrackingLog(
+  userId: string,
+  id: string,
+  cleaned: CleanedMedicationData,
+): Promise<void> {
+  const payload = buildMedicationTrackingUpdatePayload(cleaned);
+  const { error } = await supabase.from(TABLES.LOG_MEDICATIONS).update(payload).eq("id", id).eq("user_id", userId);
+  if (error) throw error;
+}
+
 /** Restore form from AsyncStorage JSON (dates as YMD strings). */
 export function parseStoredMedicationForm(raw: unknown): MedicationTrackingFormData {
   const base = createEmptyMedicationForm();

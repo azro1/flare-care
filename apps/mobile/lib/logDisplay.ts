@@ -14,11 +14,11 @@ export function formatAddedAtHeader(iso: string | null | undefined): string {
   const date = new Date(iso);
   if (Number.isNaN(date.getTime())) return "";
   const datePart = date.toLocaleDateString("en-GB", {
-    weekday: "long",
+    weekday: "short",
     day: "numeric",
     month: "short",
     year: "numeric",
   });
-  const timePart = date.toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" });
-  return `Added ${datePart} at ${timePart}`;
+  const timePart = formatUkTimeFromOccurred(iso);
+  return `Added: ${datePart} at ${timePart}`;
 }

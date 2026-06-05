@@ -3,6 +3,9 @@ import { Platform } from "react-native";
 /** Horizontal inset for screens, cards, and header controls. */
 export const SCREEN_EDGE_PADDING = 12;
 
+/** Inset for muted placeholder copy inside a `surfaceSubtle` empty tray. */
+export const EMPTY_TRAY_PADDING = 14;
+
 /** Space between sibling home tiles: Daily Check-in scroll + More grid. */
 export const HOME_TILE_GAP = 12;
 

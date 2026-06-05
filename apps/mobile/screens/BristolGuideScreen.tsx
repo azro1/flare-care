@@ -11,6 +11,9 @@ export type BristolGuideParams = {
   pickMode?: boolean;
   highlightedType?: number;
   returnOpenLogSheet?: boolean;
+  /** When picking from detail edit, return to this route instead of Bowel. */
+  returnRoute?: string;
+  returnRouteParams?: Record<string, unknown>;
 };
 
 export type BowelReturnParams = {
@@ -30,9 +33,11 @@ export function BristolGuideScreen() {
 
   const selectType = (type: number) => {
     if (!pickMode) return;
+    const returnRoute = params.returnRoute ?? "Bowel";
     navigation.navigate({
-      name: "Bowel",
+      name: returnRoute,
       params: {
+        ...(params.returnRouteParams ?? {}),
         pickedBristolType: type,
         openLogSheet: returnOpenLogSheet || pickMode,
       } satisfies BowelReturnParams,

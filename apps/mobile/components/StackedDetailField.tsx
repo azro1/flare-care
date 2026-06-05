@@ -26,12 +26,23 @@ type Props = {
   insetRow?: boolean;
   /** Section title lives above the row — show value only. */
   hideLabel?: boolean;
+  selectable?: boolean;
 };
 
 /**
  * Stacked label → value for detail screens. Divider sits on the outer shell; padding lives only on the inner block so top/bottom insets match.
  */
-export function StackedDetailField({ label, value, showDivider, valueColor, numberOfLines, style, insetRow, hideLabel }: Props) {
+export function StackedDetailField({
+  label,
+  value,
+  showDivider,
+  valueColor,
+  numberOfLines,
+  style,
+  insetRow,
+  hideLabel,
+  selectable,
+}: Props) {
   const c = useFlareColors();
   const hasValue = value !== undefined && value !== "";
   const bottomBorder = showDivider
@@ -71,7 +82,7 @@ export function StackedDetailField({ label, value, showDivider, valueColor, numb
           </Text>
         ) : null}
         {hasValue ? (
-          <Text style={valueStyles} numberOfLines={numberOfLines} {...textProps}>
+          <Text style={valueStyles} numberOfLines={numberOfLines} selectable={selectable} {...textProps}>
             {value}
           </Text>
         ) : null}

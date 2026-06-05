@@ -2,11 +2,10 @@ import DateTimePicker from "@react-native-community/datetimepicker";
 import { Ionicons, MaterialCommunityIcons } from "@expo/vector-icons";
 import { useFocusEffect, useNavigation, useRoute } from "@react-navigation/native";
 import { yupResolver } from "@hookform/resolvers/yup";
-import React, { useCallback, useEffect, useRef, useState } from "react";
+import React, { useCallback, useEffect, useState } from "react";
 import { useForm } from "react-hook-form";
 import {
   ActivityIndicator,
-  Alert,
   KeyboardAvoidingView,
   Modal,
   Platform,
@@ -17,7 +16,6 @@ import {
   View,
 } from "react-native";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
-import { ConfirmModal } from "../components/ConfirmModal";
 import type { BowelReturnParams, BristolGuideParams } from "./BristolGuideScreen";
 import {
   FLARE_BUTTON_BORDER_RADIUS,
@@ -31,7 +29,11 @@ import {
   flareFieldErrorStyle,
   FlareTextInput,
 } from "../components/FlareInput";
-import { LogHistoryList, logHistoryCardStyles, logHistoryListStyles } from "../components/LogHistoryList";
+import {
+  LogHistoryList,
+  buildTimestampLogRowItem,
+  logHistoryCardStyles,
+} from "../components/LogHistoryList";
 import { STACKED_DETAIL_ROW_EDGE } from "../components/StackedDetailField";
 import { FlareScreenSectionTitle } from "../components/FlareScreenSectionTitle";
 import {
@@ -42,9 +44,7 @@ import {
 } from "../lib/bristolStoolChart";
 import {
   BOWEL_FEATURE_MCI_ICON,
-  bowelFormFromRow,
   snapTimeHmFromDate,
-  bowelFormHasOptionalDetails,
   bowelPayloadFromForm,
   formatUkTimeFromOccurred,
   quickBowelFormState,
@@ -151,7 +151,7 @@ function TriChipRow({
   );
 }
 
-function BowelLogSheet({
+export function BowelLogSheet({
   visible,
   editingId,
   initialValues,
@@ -459,8 +459,6 @@ export function BowelScreen({ user }: { user: SessionUser }) {
   const [editingId, setEditingId] = useState<string | null>(null);
   const [sheetOpen, setSheetOpen] = useState(false);
   const [showOptional, setShowOptional] = useState(false);
-  const [deleteModal, setDeleteModal] = useState<{ open: boolean; id: string | null }>({ open: false, id: null });
-  const deleteInFlight = useRef(false);
 
   const openGuide = useCallback(
     (pickMode: boolean, highlightedType?: number | null) => {
@@ -528,15 +526,6 @@ export function BowelScreen({ user }: { user: SessionUser }) {
     setSheetOpen(true);
   }, []);
 
-  const startEdit = useCallback((row: BowelMovementRow) => {
-    const next = bowelFormFromRow(row);
-    setForm(next);
-    setEditingId(row.id);
-    setSaveError("");
-    setShowOptional(bowelFormHasOptionalDetails(next));
-    setSheetOpen(true);
-  }, []);
-
   const handleSave = async (values: BowelFormState) => {
     setSaveError("");
     setSaving(true);
@@ -577,25 +566,6 @@ export function BowelScreen({ user }: { user: SessionUser }) {
     }
   };
 
-  const confirmDelete = async () => {
-    const id = deleteModal.id;
-    if (!id || deleteInFlight.current) return;
-    deleteInFlight.current = true;
-    setDeleteModal({ open: false, id: null });
-    try {
-      const { error } = await supabase.from(TABLES.BOWEL_MOVEMENTS).delete().eq("id", id).eq("user_id", user.id);
-      if (error) throw error;
-      setEntries((prev) => prev.filter((e) => e.id !== id));
-      if (editingId === id) closeSheet();
-      invalidateDashboardSnapshot(user.id);
-    } catch (err: unknown) {
-      const message = err instanceof Error ? err.message : "Could not delete this log.";
-      Alert.alert("Could not delete", message);
-    } finally {
-      deleteInFlight.current = false;
-    }
-  };
-
   const previewEntries = entries.slice(0, BOWEL_RECENT_PREVIEW_COUNT);
   const listRows = isLogHistory ? entries : previewEntries;
   const showViewAll = !isLogHistory && entries.length > BOWEL_RECENT_PREVIEW_COUNT;
@@ -627,40 +597,19 @@ export function BowelScreen({ user }: { user: SessionUser }) {
             <LogHistoryList
               items={listRows.map((row) => {
                 const meta = getBristolTypeMeta(row.bristol_type);
-                return {
+                return buildTimestampLogRowItem({
                   id: row.id,
                   title: meta?.shortLabel ?? formatBristolTypeOnly(row.bristol_type),
-                  whenIso: row.occurred_at,
+                  whenIso: isLogHistory ? row.occurred_at : row.created_at,
                   accessibilityLabel: `${formatBristolDetailLabel(row.bristol_type)}. View details`,
-                };
+                });
               })}
-              onPressItem={(logId) => navigation.navigate("BowelLogDetail", { id: logId })}
-              renderTrailing={(item) => {
-                const row = listRows.find((e) => e.id === item.id);
-                if (!row) return null;
-                return (
-                  <>
-                    <Pressable
-                      accessibilityRole="button"
-                      accessibilityLabel="Edit"
-                      onPress={() => startEdit(row)}
-                      hitSlop={8}
-                      style={({ pressed }) => [logHistoryListStyles.logIconBtn, pressed && { opacity: 0.6 }]}
-                    >
-                      <Ionicons name="create-outline" size={20} color={c.text} />
-                    </Pressable>
-                    <Pressable
-                      accessibilityRole="button"
-                      accessibilityLabel="Delete"
-                      onPress={() => setDeleteModal({ open: true, id: row.id })}
-                      hitSlop={8}
-                      style={({ pressed }) => [logHistoryListStyles.logIconBtn, pressed && { opacity: 0.6 }]}
-                    >
-                      <Ionicons name="trash-outline" size={20} color={c.text} />
-                    </Pressable>
-                  </>
-                );
-              }}
+              onPressItem={(logId) =>
+                navigation.navigate("BowelLogDetail", {
+                  id: logId,
+                  listRoute: isLogHistory ? "BowelLogs" : "Bowel",
+                })
+              }
             />
             {showViewAll ? (
               <Pressable
@@ -750,16 +699,6 @@ export function BowelScreen({ user }: { user: SessionUser }) {
         onClose={closeSheet}
         onSave={handleSave}
         onOpenGuide={(highlightedType) => openGuide(true, highlightedType)}
-      />
-
-      <ConfirmModal
-        visible={deleteModal.open}
-        title="Delete bowel log"
-        message="Are you sure you want to delete this log? This action cannot be undone."
-        confirmLabel="Delete"
-        confirmDestructive
-        onConfirm={confirmDelete}
-        onCancel={() => setDeleteModal({ open: false, id: null })}
       />
 
     </View>

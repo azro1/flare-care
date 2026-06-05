@@ -1,5 +1,15 @@
+import { Ionicons } from "@expo/vector-icons";
 import React from "react";
-import { Pressable, StyleSheet, Text, View, type ReactNode } from "react-native";
+import {
+  Pressable,
+  StyleSheet,
+  Text,
+  View,
+  type ReactNode,
+  type StyleProp,
+  type ViewStyle,
+} from "react-native";
+import { EmptyTrayMessage } from "./EmptyTrayMessage";
 import { STACKED_DETAIL_ROW_EDGE } from "./StackedDetailField";
 import { formatLogWhenLine } from "../lib/logDisplay";
 import {
@@ -25,15 +35,104 @@ export type LogHistoryListItem = {
   accessibilityLabel?: string;
 };
 
+/** Timestamp log row — title + `formatLogWhenLine` subtitle (history lists, bowel). */
+export function buildTimestampLogRowItem({
+  id,
+  title,
+  whenIso,
+  accessibilityLabel,
+}: {
+  id: string;
+  title: string;
+  whenIso: string | null | undefined;
+  accessibilityLabel?: string;
+}): LogHistoryListItem {
+  return {
+    id,
+    title,
+    subtitle: formatLogWhenLine(whenIso),
+    accessibilityLabel,
+  };
+}
+
+/** Browse row — title + custom subtitle (e.g. dashboard Logs pill entry counts). */
+export function buildBrowseLogRowItem({
+  id,
+  title,
+  subtitle,
+  accessibilityLabel,
+}: {
+  id: string;
+  title: string;
+  subtitle: string;
+  accessibilityLabel: string;
+}): LogHistoryListItem {
+  return { id, title, subtitle, accessibilityLabel };
+}
+
+export function LogHistoryCard({
+  children,
+  style,
+}: {
+  children: ReactNode;
+  style?: StyleProp<ViewStyle>;
+}) {
+  const c = useFlareColors();
+  return (
+    <View style={[logHistoryCardStyles.trackerCard, { backgroundColor: c.card }, style]}>
+      {children}
+    </View>
+  );
+}
+
+/** White card with intro copy and grey list tray — symptom/medication history pattern. */
+export function LogHistoryIntroSection({
+  intro,
+  children,
+}: {
+  intro: string;
+  children: ReactNode;
+}) {
+  const c = useFlareColors();
+  return (
+    <LogHistoryCard>
+      <Text style={[logHistoryCardStyles.trackerIntro, { color: c.textMuted }]}>{intro}</Text>
+      <View style={logHistoryCardStyles.trackerCardBody}>{children}</View>
+    </LogHistoryCard>
+  );
+}
+
+/** Title → subtitle spacing used by Dashboard → Logs pill browse rows (`Symptom logs` / `3 entries`). */
+const logsPillRowTextStyles = {
+  primary: {
+    fontSize: FLARE_FONT_SIZE.body,
+    fontFamily: FLARE_FONT_FAMILY.medium,
+  },
+  secondary: {
+    fontSize: FLARE_FONT_SIZE.muted,
+    fontFamily: FLARE_FONT_FAMILY.regular,
+    marginTop: 2,
+    lineHeight: FLARE_LINE_HEIGHT.muted,
+  },
+} as const;
+
 export function LogHistoryList({
   items,
+  emptyMessage,
   onPressItem,
   renderTrailing,
+  rowTextLayout = "logsPill",
 }: {
   items: LogHistoryListItem[];
+  emptyMessage?: string;
   onPressItem?: (id: string) => void;
   renderTrailing?: (item: LogHistoryListItem) => ReactNode;
+  /** Title/subtitle typography. Default matches dashboard Logs pill + history rows. */
+  rowTextLayout?: "default" | "logsPill";
 }) {
+  if (items.length === 0 && emptyMessage) {
+    return <EmptyTrayMessage message={emptyMessage} />;
+  }
   const c = useFlareColors();
   return (
     <View style={[logHistoryListStyles.logList, { backgroundColor: c.surfaceSubtle }]}>
@@ -43,13 +142,20 @@ export function LogHistoryList({
           : item.subtitle ?? (item.whenIso ? formatLogWhenLine(item.whenIso) : (item.whenFallback ?? ""));
         const titleColor =
           item.completed || item.trailingText !== undefined ? c.textMuted : c.text;
+        const useLogsPillText = rowTextLayout === "logsPill" && item.trailingText === undefined;
+        const primaryStyle = useLogsPillText
+          ? logsPillRowTextStyles.primary
+          : item.trailingText !== undefined
+            ? logHistoryListStyles.logPrimaryRegular
+            : logHistoryListStyles.logPrimary;
+        const secondaryStyle = useLogsPillText
+          ? logsPillRowTextStyles.secondary
+          : logHistoryListStyles.logSecondary;
         const rowBody = (
           <>
             <Text
               style={[
-                item.trailingText !== undefined
-                  ? logHistoryListStyles.logPrimaryRegular
-                  : logHistoryListStyles.logPrimary,
+                primaryStyle,
                 { color: titleColor },
                 item.completed ? logHistoryListStyles.logPrimaryCompleted : null,
               ]}
@@ -58,7 +164,7 @@ export function LogHistoryList({
               {item.title}
             </Text>
             {whenLine ? (
-              <Text style={[logHistoryListStyles.logSecondary, { color: c.textMuted }]} numberOfLines={1}>
+              <Text style={[secondaryStyle, { color: c.textMuted }]} numberOfLines={1}>
                 {whenLine}
               </Text>
             ) : null}
@@ -68,8 +174,37 @@ export function LogHistoryList({
           <Text style={[logHistoryListStyles.trailingValue, { color: c.text }]}>{item.trailingText}</Text>
         ) : renderTrailing ? (
           renderTrailing(item)
+        ) : onPressItem ? (
+          <Ionicons
+            name="chevron-forward"
+            size={18}
+            color={c.text}
+            accessibilityIgnoresInvertColors
+          />
         ) : null;
-        return (
+        const rowContent = (
+          <>
+            <View style={logHistoryListStyles.logMain}>{rowBody}</View>
+            {trailingNode ? <View style={logHistoryListStyles.logActions}>{trailingNode}</View> : null}
+          </>
+        );
+        return onPressItem ? (
+          <Pressable
+            key={item.id}
+            accessibilityRole="button"
+            accessibilityLabel={item.accessibilityLabel ?? `${item.title}. ${whenLine}. View details`}
+            onPress={() => onPressItem(item.id)}
+            style={({ pressed }) => [
+              logHistoryListStyles.logRow,
+              index !== items.length - 1
+                ? { borderBottomWidth: StyleSheet.hairlineWidth, borderBottomColor: c.cardBorder }
+                : null,
+              pressed && { opacity: 0.7 },
+            ]}
+          >
+            {rowContent}
+          </Pressable>
+        ) : (
           <View
             key={item.id}
             style={[
@@ -78,22 +213,9 @@ export function LogHistoryList({
                 ? { borderBottomWidth: StyleSheet.hairlineWidth, borderBottomColor: c.cardBorder }
                 : null,
             ]}
+            accessibilityLabel={item.accessibilityLabel}
           >
-            {onPressItem ? (
-              <Pressable
-                accessibilityRole="button"
-                accessibilityLabel={item.accessibilityLabel ?? `${item.title}. ${whenLine}. View details`}
-                onPress={() => onPressItem(item.id)}
-                style={({ pressed }) => [logHistoryListStyles.logMain, pressed && { opacity: 0.7 }]}
-              >
-                {rowBody}
-              </Pressable>
-            ) : (
-              <View style={logHistoryListStyles.logMain} accessibilityLabel={item.accessibilityLabel}>
-                {rowBody}
-              </View>
-            )}
-            {trailingNode ? <View style={logHistoryListStyles.logActions}>{trailingNode}</View> : null}
+            {rowContent}
           </View>
         );
       })}

@@ -193,23 +193,95 @@ export function resolveAlcoholStep12Phase(form: SymptomFormData): "baseline" | "
   return "baseline";
 }
 
-export function buildSymptomInsertPayload(userId: string, form: SymptomFormData, isFirstTimeUser: boolean) {
-  const breakfast = form.breakfast.map((item) => ({
-    food: sanitizeFoodTriggersMobile(item.food),
-    quantity: sanitizeFoodTriggersMobile(item.quantity),
-  })).filter((item) => item.food.trim());
-  const lunch = form.lunch.map((item) => ({
-    food: sanitizeFoodTriggersMobile(item.food),
-    quantity: sanitizeFoodTriggersMobile(item.quantity),
-  })).filter((item) => item.food.trim());
-  const dinner = form.dinner.map((item) => ({
-    food: sanitizeFoodTriggersMobile(item.food),
-    quantity: sanitizeFoodTriggersMobile(item.quantity),
-  })).filter((item) => item.food.trim());
+function parseSymptomMealRows(raw: unknown): MealRow[] {
+  let arr: unknown[] = [];
+  if (Array.isArray(raw)) arr = raw;
+  else if (typeof raw === "string") {
+    try {
+      const parsed = JSON.parse(raw);
+      if (Array.isArray(parsed)) arr = parsed;
+    } catch {
+      arr = [];
+    }
+  }
+  const items = arr
+    .map((meal): MealRow => {
+      if (typeof meal === "string") return { food: meal, quantity: "" };
+      if (meal && typeof meal === "object") {
+        const m = meal as Record<string, unknown>;
+        return {
+          food: typeof m.food === "string" ? m.food : "",
+          quantity: typeof m.quantity === "string" ? m.quantity.trim() : "",
+        };
+      }
+      return { food: "", quantity: "" };
+    })
+    .filter((item) => item.food.trim() || item.quantity.trim());
+  return items.length ? items : [{ food: "", quantity: "" }];
+}
+
+function symptomRowString(row: Record<string, unknown>, snake: string, camel?: string): string {
+  const raw = row[snake] ?? (camel ? row[camel] : undefined);
+  return raw != null ? String(raw) : "";
+}
+
+function symptomRowBoolOrNull(value: unknown): boolean | null {
+  return value === true || value === false ? value : null;
+}
+
+/** Hydrate wizard form from an existing `log_symptoms` row. */
+export function symptomLogRowToForm(row: Record<string, unknown>): SymptomFormData {
+  const form: SymptomFormData = {
+    ...createEmptySymptomForm(),
+    symptomStartDate: symptomRowString(row, "symptom_start_date", "symptomStartDate"),
+    isOngoing: symptomRowBoolOrNull(row.is_ongoing ?? row.isOngoing),
+    symptomEndDate: symptomRowString(row, "symptom_end_date", "symptomEndDate"),
+    severity: symptomRowString(row, "severity"),
+    stress_level: symptomRowString(row, "stress_level"),
+    normal_bathroom_frequency: symptomRowString(row, "normal_bathroom_frequency"),
+    bathroom_frequency_changed: symptomRowString(row, "bathroom_frequency_changed"),
+    bathroom_frequency_change_details: symptomRowString(row, "bathroom_frequency_change_details"),
+    notes: symptomRowString(row, "notes"),
+    breakfast: parseSymptomMealRows(row.breakfast),
+    lunch: parseSymptomMealRows(row.lunch),
+    dinner: parseSymptomMealRows(row.dinner),
+    smoker: symptomRowBoolOrNull(row.smoker),
+    smoking_habits: symptomRowString(row, "smoking_habits") || symptomRowString(row, "smoking_details"),
+    smoked_on_symptom_day: symptomRowBoolOrNull(row.smoked_on_symptom_day),
+    smoked_amount_on_symptom_day: symptomRowString(row, "smoked_amount_on_symptom_day"),
+    alcohol: symptomRowBoolOrNull(row.alcohol),
+    average_alcohol_units_pw:
+      symptomRowString(row, "average_alcohol_units_pw") || symptomRowString(row, "alcohol_habits"),
+    drank_on_symptom_day: symptomRowBoolOrNull(row.drank_on_symptom_day),
+    alcohol_units_on_symptom_day: symptomRowString(row, "alcohol_units_on_symptom_day"),
+  };
+  form.smoking_step10_phase = resolveSmokingStep10Phase(form);
+  form.alcohol_step12_phase = resolveAlcoholStep12Phase(form);
+  return form;
+}
+
+function buildSymptomLogFields(form: SymptomFormData, isFirstTimeUser: boolean, isEdit = false) {
+  const includeLifestyleBaseline = isFirstTimeUser || isEdit;
+  const breakfast = form.breakfast
+    .map((item) => ({
+      food: sanitizeFoodTriggersMobile(item.food),
+      quantity: sanitizeFoodTriggersMobile(item.quantity),
+    }))
+    .filter((item) => item.food.trim());
+  const lunch = form.lunch
+    .map((item) => ({
+      food: sanitizeFoodTriggersMobile(item.food),
+      quantity: sanitizeFoodTriggersMobile(item.quantity),
+    }))
+    .filter((item) => item.food.trim());
+  const dinner = form.dinner
+    .map((item) => ({
+      food: sanitizeFoodTriggersMobile(item.food),
+      quantity: sanitizeFoodTriggersMobile(item.quantity),
+    }))
+    .filter((item) => item.food.trim());
 
   return {
-    id: String(Date.now()),
-    user_id: userId,
     symptom_start_date: form.symptomStartDate || null,
     is_ongoing: form.isOngoing,
     symptom_end_date: form.symptomEndDate || null,
@@ -218,20 +290,46 @@ export function buildSymptomInsertPayload(userId: string, form: SymptomFormData,
     normal_bathroom_frequency: form.normal_bathroom_frequency,
     bathroom_frequency_changed: form.bathroom_frequency_changed,
     bathroom_frequency_change_details: form.bathroom_frequency_change_details,
-    smoker: isFirstTimeUser ? form.smoker : null,
-    smoking_habits: isFirstTimeUser ? form.smoking_habits : null,
+    smoker: includeLifestyleBaseline ? form.smoker : null,
+    smoking_habits: includeLifestyleBaseline ? form.smoking_habits : null,
     smoked_on_symptom_day: typeof form.smoked_on_symptom_day === "boolean" ? form.smoked_on_symptom_day : false,
     smoked_amount_on_symptom_day: form.smoked_amount_on_symptom_day || null,
-    alcohol: isFirstTimeUser ? form.alcohol : null,
-    average_alcohol_units_pw: isFirstTimeUser ? form.average_alcohol_units_pw : null,
+    alcohol: includeLifestyleBaseline ? form.alcohol : null,
+    average_alcohol_units_pw: includeLifestyleBaseline ? form.average_alcohol_units_pw : null,
     drank_on_symptom_day: typeof form.drank_on_symptom_day === "boolean" ? form.drank_on_symptom_day : false,
     alcohol_units_on_symptom_day: form.alcohol_units_on_symptom_day || null,
     notes: sanitizeNotesMobile(form.notes),
     breakfast,
     lunch,
     dinner,
+  };
+}
+
+export function buildSymptomInsertPayload(userId: string, form: SymptomFormData, isFirstTimeUser: boolean) {
+  return {
+    id: String(Date.now()),
+    user_id: userId,
+    ...buildSymptomLogFields(form, isFirstTimeUser),
     created_at: new Date().toISOString(),
   };
+}
+
+export function buildSymptomUpdatePayload(form: SymptomFormData, isFirstTimeUser: boolean) {
+  return {
+    ...buildSymptomLogFields(form, isFirstTimeUser, true),
+    updated_at: new Date().toISOString(),
+  };
+}
+
+export async function updateSymptomLog(
+  userId: string,
+  id: string,
+  form: SymptomFormData,
+  isFirstTimeUser: boolean,
+): Promise<void> {
+  const payload = buildSymptomUpdatePayload(form, isFirstTimeUser);
+  const { error } = await supabase.from(TABLES.LOG_SYMPTOMS).update(payload).eq("id", id).eq("user_id", userId);
+  if (error) throw error;
 }
 
 export async function fetchUserPreferencesRow(userId: string): Promise<UserPreferencesShape | null> {

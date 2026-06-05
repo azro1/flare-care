@@ -1,7 +1,7 @@
 import DateTimePicker from "@react-native-community/datetimepicker";
 import { Ionicons, MaterialCommunityIcons } from "@expo/vector-icons";
 import AsyncStorage from "@react-native-async-storage/async-storage";
-import { CommonActions, useNavigation } from "@react-navigation/native";
+import { CommonActions, useNavigation, useRoute } from "@react-navigation/native";
 import React, { useCallback, useEffect, useLayoutEffect, useMemo, useState } from "react";
 import {
   ActivityIndicator,
@@ -36,11 +36,13 @@ import {
   getSymptomWizardPhaseProgress,
   resolveAlcoholStep12Phase,
   resolveSmokingStep10Phase,
+  symptomLogRowToForm,
   SEVERITY_WORD_OPTIONS,
   STRESS_WORD_OPTIONS,
   type MealRow,
   type SymptomFormData,
   type UserPreferencesShape,
+  updateSymptomLog,
   upsertUserPreferencesMobile,
   wizardRatingToBand,
 } from "../lib/symptomWizardShared";
@@ -86,8 +88,12 @@ function isAndroidDatePickerDismissed(event: { type?: string }): boolean {
   return Platform.OS === "android" && event.type === "dismissed";
 }
 
+const SYMPTOM_REVIEW_STEP = 17;
+
 export function SymptomLogWizardScreen({ user }: { user: SessionUser }) {
   const navigation = useNavigation<any>();
+  const route = useRoute();
+  const editId = String((route.params as { editId?: string } | undefined)?.editId ?? "");
   const c = useFlareColors();
   const errTextStyle = flareFieldErrorStyle(c, "wizard");
   const { colors } = useFlareTheme();
@@ -108,6 +114,7 @@ export function SymptomLogWizardScreen({ user }: { user: SessionUser }) {
   });
   const [history, setHistory] = useState<{ step: number; form: SymptomFormData }[]>([]);
   const [submitting, setSubmitting] = useState(false);
+  const [loadingEdit, setLoadingEdit] = useState(Boolean(editId));
   const [picker, setPicker] = useState<null | "start" | "end">(null);
 
   useEffect(() => {
@@ -122,12 +129,40 @@ export function SymptomLogWizardScreen({ user }: { user: SessionUser }) {
       try {
         const prefs = await fetchUserPreferencesRow(user.id);
         setUserPreferences(prefs);
-        setIsFirstTimeUser(!prefs);
+        setIsFirstTimeUser(editId ? false : !prefs);
       } finally {
         setLoadingPrefs(false);
       }
     })();
-  }, [user.id]);
+  }, [editId, user.id]);
+
+  useEffect(() => {
+    if (!editId) return;
+    let cancelled = false;
+    (async () => {
+      setLoadingEdit(true);
+      const { data, error } = await supabase
+        .from(TABLES.LOG_SYMPTOMS)
+        .select("*")
+        .eq("user_id", user.id)
+        .eq("id", editId)
+        .maybeSingle();
+      if (cancelled) return;
+      if (error || !data) {
+        Alert.alert("Could not load entry", "This symptom log could not be opened for editing.");
+        navigation.goBack();
+        return;
+      }
+      const loadedForm = symptomLogRowToForm(data as Record<string, unknown>);
+      setForm(loadedForm);
+      setCurrentStep(SYMPTOM_REVIEW_STEP);
+      setHistory([]);
+      setLoadingEdit(false);
+    })();
+    return () => {
+      cancelled = true;
+    };
+  }, [editId, navigation, user.id]);
 
   const phase = useMemo(
     () => getSymptomWizardPhaseProgress(currentStep, isFirstTimeUser, userPreferences),
@@ -242,17 +277,23 @@ export function SymptomLogWizardScreen({ user }: { user: SessionUser }) {
 
   const goBackInternal = useCallback(() => {
     const prev = history[history.length - 1];
-    if (!prev) {
-      navigation.goBack();
+    if (prev) {
+      setHistory((h) => h.slice(0, -1));
+      setCurrentStep(prev.step);
+      setForm(prev.form);
+      setFieldErrors({});
+      setDateErrors({ day: "", month: "", year: "", endDay: "", endMonth: "", endYear: "" });
       return true;
     }
-    setHistory((h) => h.slice(0, -1));
-    setCurrentStep(prev.step);
-    setForm(prev.form);
-    setFieldErrors({});
-    setDateErrors({ day: "", month: "", year: "", endDay: "", endMonth: "", endYear: "" });
+    if (editId && currentStep > 1) {
+      setCurrentStep((step) => step - 1);
+      setFieldErrors({});
+      setDateErrors({ day: "", month: "", year: "", endDay: "", endMonth: "", endYear: "" });
+      return true;
+    }
+    navigation.goBack();
     return true;
-  }, [history, navigation]);
+  }, [currentStep, editId, history, navigation]);
 
   useEffect(() => {
     const sub = BackHandler.addEventListener("hardwareBackPress", goBackInternal);
@@ -321,20 +362,29 @@ export function SymptomLogWizardScreen({ user }: { user: SessionUser }) {
     }
     setSubmitting(true);
     try {
-      const payload = buildSymptomInsertPayload(user.id, form, isFirstTimeUser);
-      const { error } = await supabase.from(TABLES.LOG_SYMPTOMS).insert([payload as any]);
-      if (error) throw error;
-      if (isFirstTimeUser) {
-        await upsertUserPreferencesMobile(user.id, {
-          isSmoker: Boolean(form.smoker),
-          isDrinker: Boolean(form.alcohol),
-          normalBathroomFrequency: form.normal_bathroom_frequency,
-        });
+      if (editId) {
+        await updateSymptomLog(user.id, editId, form, isFirstTimeUser);
+      } else {
+        const payload = buildSymptomInsertPayload(user.id, form, isFirstTimeUser);
+        const { error } = await supabase.from(TABLES.LOG_SYMPTOMS).insert([payload as any]);
+        if (error) throw error;
+        if (isFirstTimeUser) {
+          await upsertUserPreferencesMobile(user.id, {
+            isSmoker: Boolean(form.smoker),
+            isDrinker: Boolean(form.alcohol),
+            normalBathroomFrequency: form.normal_bathroom_frequency,
+          });
+        }
       }
       await clearSymptomWizardStorage(user.id);
       invalidateDashboardSnapshot(user.id);
-      navigation.dispatch(CommonActions.reset({ index: 0, routes: [{ name: "Dashboard" }] }));
-      Alert.alert("Saved", "Your symptom log was saved.");
+      if (editId) {
+        navigation.goBack();
+        Alert.alert("Saved", "Your symptom log was updated.");
+      } else {
+        navigation.dispatch(CommonActions.reset({ index: 0, routes: [{ name: "Dashboard" }] }));
+        Alert.alert("Saved", "Your symptom log was saved.");
+      }
     } catch (e: any) {
       Alert.alert("Could not save", e?.message || "Unknown error");
     } finally {
@@ -446,7 +496,7 @@ export function SymptomLogWizardScreen({ user }: { user: SessionUser }) {
     </View>
   );
 
-  if (loadingPrefs) {
+  if (loadingPrefs || loadingEdit) {
     return (
       <View style={[styles.centered, { backgroundColor: c.screen }]}>
         <ActivityIndicator color={c.primary} />
@@ -922,7 +972,11 @@ export function SymptomLogWizardScreen({ user }: { user: SessionUser }) {
             {currentStep < 17 ? (
               <PrimaryButton title="Next" onPress={applyAdvance} />
             ) : (
-              <PrimaryButton title={submitting ? "Saving…" : "Submit"} onPress={submit} disabled={submitting} />
+              <PrimaryButton
+                title={submitting ? "Saving…" : editId ? "Save changes" : "Submit"}
+                onPress={submit}
+                disabled={submitting}
+              />
             )}
             {currentStep > 1 ? <SecondaryButton title="Previous step" onPress={goBackInternal} /> : null}
           </View>

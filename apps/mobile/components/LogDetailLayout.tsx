@@ -58,7 +58,11 @@ export function LogDetailFields({ fields }: { fields: { label: string; value: st
 }
 
 /** One `surfaceSubtle` tray per entry — fields inside share dividers (medication lists). */
-export function LogDetailFieldGroup({ fields }: { fields: { label: string; value: string }[] }) {
+export function LogDetailFieldGroup({
+  fields,
+}: {
+  fields: { label: string; value: string; selectable?: boolean }[];
+}) {
   const c = useFlareColors();
   const visible = fields.filter((f) => f.value !== "");
   if (!visible.length) return null;
@@ -69,6 +73,7 @@ export function LogDetailFieldGroup({ fields }: { fields: { label: string; value
           key={`${index}-${field.label}`}
           label={field.label}
           value={field.value}
+          selectable={field.selectable}
           showDivider={index < visible.length - 1}
           style={{ paddingHorizontal: SCREEN_EDGE_PADDING }}
         />

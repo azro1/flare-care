@@ -1,9 +1,10 @@
 import DateTimePicker from "@react-native-community/datetimepicker";
 import { Ionicons, MaterialCommunityIcons } from "@expo/vector-icons";
 import AsyncStorage from "@react-native-async-storage/async-storage";
-import { CommonActions, useNavigation } from "@react-navigation/native";
+import { CommonActions, useNavigation, useRoute } from "@react-navigation/native";
 import React, { useCallback, useEffect, useLayoutEffect, useMemo, useState } from "react";
 import {
+  ActivityIndicator,
   Alert,
   BackHandler,
   KeyboardAvoidingView,
@@ -21,6 +22,7 @@ import { PrimaryButton, SecondaryButton } from "../components/FlareButton";
 import { flareFieldErrorStyle, FlareInputTrigger, FlareTextInput } from "../components/FlareInput";
 import { invalidateDashboardSnapshot } from "../lib/dashboardSnapshotCache";
 import { formatUkDate } from "../lib/formatUkDate";
+import { supabase, TABLES } from "../lib/supabase";
 import { medicationWizardTryAdvance } from "../lib/medicationWizardNextStep";
 import {
   cleanMedicationForm,
@@ -29,6 +31,8 @@ import {
   getMedicationWizardPhaseProgress,
   getPreviousMedicationStep,
   insertMedicationTrackingLog,
+  medicationLogRowToForm,
+  updateMedicationTrackingLog,
   isDosageRowComplete,
   isMissedRowComplete,
   normalizeDosage,
@@ -86,8 +90,12 @@ function listKey(kind: ListKind): "missedMedicationsList" | "nsaidList" | "antib
   return "antibioticList";
 }
 
+const MEDICATION_REVIEW_STEP = 7;
+
 export function MedicationTrackingWizardScreen({ user }: { user: SessionUser }) {
   const navigation = useNavigation<any>();
+  const route = useRoute();
+  const editId = String((route.params as { editId?: string } | undefined)?.editId ?? "");
   const c = useFlareColors();
   const errTextStyle = flareFieldErrorStyle(c, "wizard");
   const { colors } = useFlareTheme();
@@ -97,6 +105,7 @@ export function MedicationTrackingWizardScreen({ user }: { user: SessionUser }) 
   const [fieldErrors, setFieldErrors] = useState<Record<string, string>>({});
   const [history, setHistory] = useState<MedicationWizardHistoryEntry[]>([]);
   const [submitting, setSubmitting] = useState(false);
+  const [loadingEdit, setLoadingEdit] = useState(Boolean(editId));
   const [datePicker, setDatePicker] = useState<DatePickerTarget>(null);
   const [timePicker, setTimePicker] = useState<TimePickerTarget>(null);
   /** Spinner/dialog value only — do not write to form until user confirms (avoids defaulting to today). */
@@ -108,7 +117,34 @@ export function MedicationTrackingWizardScreen({ user }: { user: SessionUser }) 
     };
   }, [user.id]);
 
-  const phase = useMemo(() => getMedicationWizardPhaseProgress(currentStep, form), [currentStep]);
+  useEffect(() => {
+    if (!editId) return;
+    let cancelled = false;
+    (async () => {
+      setLoadingEdit(true);
+      const { data, error } = await supabase
+        .from(TABLES.LOG_MEDICATIONS)
+        .select("*")
+        .eq("user_id", user.id)
+        .eq("id", editId)
+        .maybeSingle();
+      if (cancelled) return;
+      if (error || !data) {
+        Alert.alert("Could not load entry", "This medication log could not be opened for editing.");
+        navigation.goBack();
+        return;
+      }
+      setForm(medicationLogRowToForm(data as Record<string, unknown>));
+      setCurrentStep(MEDICATION_REVIEW_STEP);
+      setHistory([]);
+      setLoadingEdit(false);
+    })();
+    return () => {
+      cancelled = true;
+    };
+  }, [editId, navigation, user.id]);
+
+  const phase = useMemo(() => getMedicationWizardPhaseProgress(currentStep, form), [currentStep, form]);
 
   const canGoToPreviousStep = useMemo(() => {
     if (currentStep <= 0) return false;
@@ -212,11 +248,20 @@ export function MedicationTrackingWizardScreen({ user }: { user: SessionUser }) 
     const cleaned = cleanMedicationForm(form);
     setSubmitting(true);
     try {
-      await insertMedicationTrackingLog(user.id, cleaned);
+      if (editId) {
+        await updateMedicationTrackingLog(user.id, editId, cleaned);
+      } else {
+        await insertMedicationTrackingLog(user.id, cleaned);
+      }
       await clearMedicationWizardStorage(user.id);
       invalidateDashboardSnapshot(user.id);
-      navigation.dispatch(CommonActions.reset({ index: 0, routes: [{ name: "Dashboard" }] }));
-      Alert.alert("Saved", "Your medication tracking entry was saved.");
+      if (editId) {
+        navigation.goBack();
+        Alert.alert("Saved", "Your medication log was updated.");
+      } else {
+        navigation.dispatch(CommonActions.reset({ index: 0, routes: [{ name: "Dashboard" }] }));
+        Alert.alert("Saved", "Your medication tracking entry was saved.");
+      }
     } catch (e: unknown) {
       const message = e instanceof Error ? e.message : "Unknown error";
       Alert.alert("Could not save", message);
@@ -400,6 +445,14 @@ export function MedicationTrackingWizardScreen({ user }: { user: SessionUser }) 
     );
   };
 
+  if (loadingEdit) {
+    return (
+      <View style={[styles.centered, { backgroundColor: c.screen }]}>
+        <ActivityIndicator color={c.primary} />
+      </View>
+    );
+  }
+
   return (
     <KeyboardAvoidingView style={{ flex: 1, backgroundColor: c.screen }} behavior={Platform.OS === "ios" ? "padding" : undefined}>
       <ScrollView
@@ -479,7 +532,11 @@ export function MedicationTrackingWizardScreen({ user }: { user: SessionUser }) 
             {currentStep < 7 ? (
               <PrimaryButton title="Next" onPress={applyAdvance} />
             ) : (
-              <PrimaryButton title={submitting ? "Saving…" : "Submit"} onPress={submit} disabled={submitting} />
+              <PrimaryButton
+                title={submitting ? "Saving…" : editId ? "Save changes" : "Submit"}
+                onPress={submit}
+                disabled={submitting}
+              />
             )}
             {canGoToPreviousStep ? <SecondaryButton title="Previous step" onPress={goBackInternal} /> : null}
           </View>
@@ -497,6 +554,7 @@ export function MedicationTrackingWizardScreen({ user }: { user: SessionUser }) 
 }
 
 const styles = StyleSheet.create({
+  centered: { flex: 1, justifyContent: "center", alignItems: "center" },
   headerBackButton: {
     justifyContent: "center",
     alignItems: "flex-start",

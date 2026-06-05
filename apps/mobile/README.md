@@ -50,6 +50,32 @@ Use existing screens as reference — do **not** default to web-style teal hyper
 
 ---
 
+## Log history lists (do not duplicate)
+
+**Before adding any grey-tray log list, browse row, or “intro + history” card — use the shared pieces in `components/LogHistoryList.tsx`.** Do **not** create a second list component, row builder, or card wrapper for the same purpose.
+
+| Piece | Use for |
+|-------|---------|
+| **`LogHistoryList`** | Grey tray rows inside a white card — title + subtitle, optional chevron (`onPressItem`), optional `emptyMessage`, default **`logsPill`** row spacing (matches Dashboard → Logs pill) |
+| **`buildTimestampLogRowItem`** | One saved log row — title + `formatLogWhenLine` subtitle from `whenIso` (symptom/medication history, bowel lists) |
+| **`buildBrowseLogRowItem`** | Browse row with a custom subtitle (e.g. Dashboard Logs pill: “Symptom logs” / “3 entries”) |
+| **`LogHistoryCard`** | White card shell only (`trackerCard` + theme `card` background) |
+| **`LogHistoryIntroSection`** | Intro copy + list tray in **one** card (symptom/medication history screens) |
+| **`logHistoryCardStyles`** | Shared card/intro/body tokens — import instead of redefining padding/radius/gap |
+| **`lib/logDisplay.ts`** | `formatLogWhenLine` (list subtitles), `formatAddedAtHeader` (detail screen headers) — do not reformat timestamps inline |
+
+**Live examples**
+
+- Dashboard → **Logs** tab → History card: `LogHistoryCard` + `buildBrowseLogRowItem` (`App.tsx` → `DashboardScreen`)
+- **Symptom history** / **Medication tracking history**: `LogHistoryIntroSection` + `buildTimestampLogRowItem` + `LogHistoryList`
+- **Bowel** recent + full log history: `logHistoryCardStyles` + `buildTimestampLogRowItem` (`screens/BowelScreen.tsx`) — list subtitle uses **`created_at`** on the hub **Recent** tray (when the log was saved); **BowelLogs** full history uses **`occurred_at`**; detail screen still shows movement date/time in fields + **Added** header from `created_at`
+
+**Detail screens:** symptom/medication detail = **delete only** in header (no edit). Bowel detail = edit + delete in header.
+
+**When extending:** pass custom `title` / `accessibilityLabel` into the builders; only add props to `LogHistoryList` if the pattern is genuinely new (e.g. a new trailing affordance). Update this section if the shared API changes.
+
+---
+
 ## Stack (high level)
 
 - **Expo** (SDK aligned with `package.json`), **React Native**, **TypeScript**.
@@ -307,3 +333,5 @@ When you add a **user-visible feature** or change **product positioning**, updat
 When you add an **informational page** with a collapsing title, follow **§ Informational pages & collapsing titles** and add the screen to the live examples list there.
 
 When you change **auth / OTP** behaviour or Supabase expiry, update **§ Email OTP verification** and keep `EXPO_PUBLIC_OTP_EXPIRY_SECONDS` in sync with the dashboard.
+
+When you add or change **log list / history browse UI**, use **§ Log history lists (do not duplicate)** — extend `LogHistoryList.tsx`, do not fork a parallel list pattern.

@@ -67,7 +67,14 @@ import {
   otpVerifyErrorMessage,
 } from "./lib/otpAuth";
 import { LegalDocumentView, type LegalDocumentKind } from "./components/LegalDocumentView";
-import { LogHistoryList, logHistoryCardStyles } from "./components/LogHistoryList";
+import {
+  LogHistoryList,
+  LogHistoryCard,
+  LogHistoryIntroSection,
+  buildBrowseLogRowItem,
+  buildTimestampLogRowItem,
+  logHistoryCardStyles,
+} from "./components/LogHistoryList";
 import {
   LogDetailAddedHeader,
   LogDetailCard,
@@ -1089,7 +1096,7 @@ function useBottomTabScrollInset() {
 type RecentLogListRow = { id: string; created_at: string };
 
 function formatHistoryBrowseSubtitle(count: number): string {
-  if (count === 0) return "No entries yet";
+  if (count === 0) return "No entries";
   if (count === 1) return "1 entry";
   return `${count} entries`;
 }
@@ -1689,31 +1696,28 @@ function DashboardScreen({
         >
           History
         </Text>
-        <View style={[logHistoryCardStyles.trackerCard, { backgroundColor: c.card }]}>
+        <LogHistoryCard>
           <LogHistoryList
             items={[
-              {
+              buildBrowseLogRowItem({
                 id: "symptom",
                 title: "Symptom logs",
                 subtitle: formatHistoryBrowseSubtitle(historyPreview.symptomCount),
                 accessibilityLabel: "Browse symptom history",
-              },
-              {
+              }),
+              buildBrowseLogRowItem({
                 id: "medication",
                 title: "Medication logs",
                 subtitle: formatHistoryBrowseSubtitle(historyPreview.medicationCount),
                 accessibilityLabel: "Browse medication tracking history",
-              },
+              }),
             ]}
             onPressItem={(rowId) => {
               dashboardHomeDashTabRestore = "logs";
               navigation.navigate(rowId === "symptom" ? "SymptomHistory" : "MedicationTrackingHistory");
             }}
-            renderTrailing={() => (
-              <Ionicons name="chevron-forward" size={18} color={c.textMuted} accessibilityIgnoresInvertColors />
-            )}
           />
-        </View>
+        </LogHistoryCard>
       </View>
     ) : (
       <View style={styles.moreSection}>
@@ -1835,7 +1839,7 @@ function DashboardScreen({
             ))}
           </View>
         ) : (
-          <Text style={[styles.muted, { color: c.textMuted }]}>No recent activity yet.</Text>
+          <Text style={[styles.muted, { color: c.textMuted }]}>No recent activity</Text>
         )}
       </Card>
       {homeNavPills}
@@ -1868,25 +1872,19 @@ function SymptomHistoryScreen({ user }: { user: SessionUser }) {
       style={[styles.screen, { backgroundColor: c.screen }]}
       contentContainerStyle={{ paddingBottom: bottomScrollInset + 24 }}
     >
-      <View style={[logHistoryCardStyles.trackerCard, { backgroundColor: c.card }]}>
-        <Text style={[logHistoryCardStyles.trackerIntro, { color: c.textMuted }]}>
-          Logs show what you reported on the day your symptoms started, not for every day of the symptom duration.
-        </Text>
-        <View style={logHistoryCardStyles.trackerCardBody}>
-          {rows.length === 0 ? (
-            <Text style={[styles.muted, { color: c.textMuted }]}>No symptoms logged yet.</Text>
-          ) : (
-            <LogHistoryList
-              items={rows.map((row) => ({
-                id: String(row.id),
-                title: "Symptom log",
-                whenIso: row.created_at,
-              }))}
-              onPressItem={(logId) => navigation.navigate("SymptomDetail", { id: logId })}
-            />
+      <LogHistoryIntroSection intro="Logs show what you reported on the day your symptoms started, not for every day of the symptom duration.">
+        <LogHistoryList
+          emptyMessage="No symptom logs yet."
+          items={rows.map((row) =>
+            buildTimestampLogRowItem({
+              id: String(row.id),
+              title: "Symptom log",
+              whenIso: row.created_at,
+            }),
           )}
-        </View>
-      </View>
+          onPressItem={(logId) => navigation.navigate("SymptomDetail", { id: logId })}
+        />
+      </LogHistoryIntroSection>
       <PrimaryButton title="Log Symptoms" onPress={() => navigation.navigate("SymptomLogWizard")} />
     </ScrollView>
   );
@@ -1956,9 +1954,11 @@ function SymptomDetailScreen({ user }: { user: SessionUser }) {
     }
     setLoading(false);
   }, [user.id, id]);
-  useEffect(() => {
-    load();
-  }, [load]);
+  useFocusEffect(
+    useCallback(() => {
+      void load();
+    }, [load]),
+  );
 
   const handleDeleteConfirm = useCallback(async () => {
     if (deleteInFlight.current || !id) return;
@@ -2208,25 +2208,19 @@ function MedicationTrackingHistoryScreen({ user }: { user: SessionUser }) {
       style={[styles.screen, { backgroundColor: c.screen }]}
       contentContainerStyle={{ paddingBottom: bottomScrollInset + 24 }}
     >
-      <View style={[logHistoryCardStyles.trackerCard, { backgroundColor: c.card }]}>
-        <Text style={[logHistoryCardStyles.trackerIntro, { color: c.textMuted }]}>
-          These logs include prescribed medications you missed, and any NSAIDs and antibiotics you took during a specific period.
-        </Text>
-        <View style={logHistoryCardStyles.trackerCardBody}>
-          {rows.length === 0 ? (
-            <Text style={[styles.muted, { color: c.textMuted }]}>No medication tracking logs yet.</Text>
-          ) : (
-            <LogHistoryList
-              items={rows.map((row) => ({
-                id: String(row.id),
-                title: "Medication log",
-                whenIso: row.created_at,
-              }))}
-              onPressItem={(logId) => navigation.navigate("MedicationLogDetail", { id: logId })}
-            />
+      <LogHistoryIntroSection intro="These logs include prescribed medications you missed, and any NSAIDs and antibiotics you took during a specific period.">
+        <LogHistoryList
+          emptyMessage="No medication logs yet."
+          items={rows.map((row) =>
+            buildTimestampLogRowItem({
+              id: String(row.id),
+              title: "Medication log",
+              whenIso: row.created_at,
+            }),
           )}
-        </View>
-      </View>
+          onPressItem={(logId) => navigation.navigate("MedicationLogDetail", { id: logId })}
+        />
+      </LogHistoryIntroSection>
       <PrimaryButton title="Track Medications" onPress={() => navigation.navigate("MedicationTrackingWizard")} />
     </ScrollView>
   );
@@ -2258,9 +2252,11 @@ function MedicationLogDetailScreen({ user }: { user: SessionUser }) {
     }
     setLoading(false);
   }, [user.id, id]);
-  useEffect(() => {
-    load();
-  }, [load]);
+  useFocusEffect(
+    useCallback(() => {
+      void load();
+    }, [load]),
+  );
 
   const handleDeleteConfirm = useCallback(async () => {
     if (deleteInFlight.current || !id) return;
@@ -2939,16 +2935,18 @@ function NotificationsScreen({ user }: { user: SessionUser }) {
     >
       <Card title="" style={styles.accountPaddedCard} compactBody>
         <View style={styles.remindersSetupBlock}>
-          <Text style={[styles.muted, { color: c.textMuted, lineHeight: 18 }]}>
+          <Text style={[logHistoryCardStyles.trackerIntro, { color: c.textMuted }]}>
             Tap once to allow notifications. After that, saving medications or appointments will schedule reminders automatically.
           </Text>
           <PrimaryButton title="Enable notifications" onPress={register} />
         </View>
         <View style={styles.remindersDebugBlock}>
-          <Text style={[styles.muted, { color: c.textMuted }]}>
+          <Text style={[logHistoryCardStyles.trackerIntro, { color: c.textMuted }]}>
             Permission: {permissionGranted ? "granted" : "not enabled yet"}
           </Text>
-          <Text style={[styles.muted, { color: c.textMuted }]}>Scheduled reminders: {scheduled}</Text>
+          <Text style={[logHistoryCardStyles.trackerIntro, { color: c.textMuted }]}>
+            Scheduled reminders: {scheduled}
+          </Text>
           {lastError ? <Text style={flareFieldErrorStyle(c, "wizard")}>Error: {lastError}</Text> : null}
         </View>
       </Card>
@@ -3137,7 +3135,7 @@ function AccountOptionRow({
   onPress,
   labelColor = "text",
   labelMedium,
-  labelSize = 15,
+  labelSize = 14,
   chevronSize = 18,
   rowStyle,
 }: {
@@ -3175,7 +3173,7 @@ function AccountOptionRow({
       >
         {label}
       </Text>
-      <Ionicons name="chevron-forward" size={chevronSize} color={c.textMuted} />
+      <Ionicons name="chevron-forward" size={chevronSize} color={labelTint} />
     </Pressable>
   );
 }
@@ -3209,31 +3207,21 @@ function AccountInfoScreen({ user }: { user: SessionUser }) {
               <Text style={[styles.accountEmailLine, { color: c.textMuted }]}>{emailLine}</Text>
             </View>
           </View>
-          <Ionicons name="chevron-forward" size={18} color={c.textMuted} accessibilityIgnoresInvertColors />
+          <Ionicons name="chevron-forward" size={18} color={c.text} accessibilityIgnoresInvertColors />
         </Pressable>
       </Card>
-      <Card title="" style={styles.accountPaddedCard} compactBody>
-        <View style={styles.accountInfoFields}>
-          <View>
-            <Text style={[styles.accountInfoFieldLabel, { color: c.textMuted }]}>Account created</Text>
-            <Text style={[styles.accountInfoFieldValue, { color: c.text }]}>
-              {user.accountCreatedAt ? formatUkDate(user.accountCreatedAt) : "Not available"}
-            </Text>
-          </View>
-          <View>
-            <Text style={[styles.accountInfoFieldLabel, { color: c.textMuted }]}>Sign-in method</Text>
-            <Text style={[styles.accountInfoFieldValue, { color: c.text }]}>
-              {user.signInMethodLabel ?? "Not available"}
-            </Text>
-          </View>
-          <View>
-            <Text style={[styles.accountInfoFieldLabel, { color: c.textMuted }]}>Account ID</Text>
-            <Text style={[styles.accountInfoFieldValue, { color: c.text }]} selectable>
-              {user.id}
-            </Text>
-          </View>
-        </View>
-      </Card>
+      <View style={[logHistoryCardStyles.trackerCard, { backgroundColor: c.card }]}>
+        <LogDetailFieldGroup
+          fields={[
+            {
+              label: "Account created",
+              value: user.accountCreatedAt ? formatUkDate(user.accountCreatedAt) : "Not available",
+            },
+            { label: "Sign-in method", value: user.signInMethodLabel ?? "Not available" },
+            { label: "Account ID", value: user.id, selectable: true },
+          ]}
+        />
+      </View>
     </ScrollView>
   );
 }
@@ -3246,7 +3234,7 @@ function AccountPersonalDetailsScreen({ user }: { user: SessionUser }) {
   return (
     <ScrollView
       style={[styles.screen, { backgroundColor: c.screen }]}
-      contentContainerStyle={{ paddingBottom: bottomScrollInset + 24 }}
+      contentContainerStyle={{ flexGrow: 1, paddingBottom: bottomScrollInset + 24, backgroundColor: c.screen }}
     >
       <Card title="" style={styles.accountPaddedCard} compactBody>
         <View style={styles.accountIdentityRow}>
@@ -3259,18 +3247,14 @@ function AccountPersonalDetailsScreen({ user }: { user: SessionUser }) {
           </View>
         </View>
       </Card>
-      <Card title="" style={styles.accountPaddedCard} compactBody>
-        <View style={styles.accountInfoFields}>
-          <View>
-            <Text style={[styles.accountInfoFieldLabel, { color: c.textMuted }]}>Full name</Text>
-            <Text style={[styles.accountInfoFieldValue, { color: c.text }]}>{displayName}</Text>
-          </View>
-          <View>
-            <Text style={[styles.accountInfoFieldLabel, { color: c.textMuted }]}>Email</Text>
-            <Text style={[styles.accountInfoFieldValue, { color: c.text }]}>{user.email || "Not available"}</Text>
-          </View>
-        </View>
-      </Card>
+      <View style={[logHistoryCardStyles.trackerCard, { backgroundColor: c.card }]}>
+        <LogDetailFieldGroup
+          fields={[
+            { label: "Full name", value: displayName },
+            { label: "Email", value: user.email || "Not available" },
+          ]}
+        />
+      </View>
     </ScrollView>
   );
 }
@@ -3303,20 +3287,15 @@ function AccountLegalScreen() {
       style={[styles.screen, { backgroundColor: c.screen }]}
       contentContainerStyle={{ paddingBottom: bottomScrollInset + 24 }}
     >
-      <Card title="" style={styles.accountOptionsListCard} compactBody>
-        <AccountOptionRow
-          label="Privacy Policy"
-          labelColor="text"
-          labelSize={15}
-          onPress={() => navigation.navigate("LegalDocument", { document: "privacy" })}
+      <View style={[logHistoryCardStyles.trackerCard, { backgroundColor: c.card }]}>
+        <LogHistoryList
+          items={[
+            { id: "privacy", title: "Privacy Policy", accessibilityLabel: "Privacy Policy" },
+            { id: "terms", title: "Terms of Use", accessibilityLabel: "Terms of Use" },
+          ]}
+          onPressItem={(document) => navigation.navigate("LegalDocument", { document })}
         />
-        <AccountOptionRow
-          label="Terms of Use"
-          labelColor="text"
-          labelSize={15}
-          onPress={() => navigation.navigate("LegalDocument", { document: "terms" })}
-        />
-      </Card>
+      </View>
     </ScrollView>
   );
 }
@@ -3353,10 +3332,18 @@ function AccountHelpScreen() {
       style={[styles.screen, { backgroundColor: c.screen }]}
       contentContainerStyle={{ paddingBottom: bottomScrollInset + 24 }}
     >
-      <Card title="" style={styles.accountOptionsListCard} compactBody>
-        <AccountOptionRow label="About FlareCare" labelColor="text" labelSize={15} onPress={() => navigation.navigate("About")} />
-        <AccountOptionRow label="Contact support" labelColor="text" labelSize={15} onPress={openSupportEmail} />
-      </Card>
+      <View style={[logHistoryCardStyles.trackerCard, { backgroundColor: c.card }]}>
+        <LogHistoryList
+          items={[
+            { id: "about", title: "About FlareCare", accessibilityLabel: "About FlareCare" },
+            { id: "support", title: "Contact support", accessibilityLabel: "Contact support" },
+          ]}
+          onPressItem={(id) => {
+            if (id === "about") navigation.navigate("About");
+            else openSupportEmail();
+          }}
+        />
+      </View>
     </ScrollView>
   );
 }
@@ -3473,19 +3460,18 @@ function AccountScreen({
         </View>
       </Card>
       <Text style={[styles.accountMenuSectionTitle, { color: c.textMuted }]}>My account</Text>
-      <Card title="" style={styles.accountOptionsListCard} compactBody>
-        {ACCOUNT_OPTION_ROUTES.map((item) => (
-          <AccountOptionRow
-            key={item.route}
-            label={item.label}
-            labelColor="text"
-            labelSize={15}
-            onPress={() => navigation.navigate(item.route)}
-          />
-        ))}
-      </Card>
+      <View style={[logHistoryCardStyles.trackerCard, { backgroundColor: c.card }]}>
+        <LogHistoryList
+          items={ACCOUNT_OPTION_ROUTES.map((item) => ({
+            id: item.route,
+            title: item.label,
+            accessibilityLabel: item.label,
+          }))}
+          onPressItem={(route) => navigation.navigate(route)}
+        />
+      </View>
       <Text style={[styles.accountMenuSectionTitle, { color: c.textMuted }]}>Delete account</Text>
-      <Card title="" style={styles.accountPaddedCard} compactBody>
+      <View style={[logHistoryCardStyles.trackerCard, { backgroundColor: c.card }]}>
         <Text style={[styles.muted, { color: c.textMuted, lineHeight: 20 }]}>
           Permanently delete your account and all associated data. This cannot be undone.
         </Text>
@@ -3494,14 +3480,14 @@ function AccountScreen({
           accessibilityLabel="Delete account"
           onPress={() => setDeleteAccountConfirmOpen(true)}
           style={({ pressed }) => [
-            styles.accountDeleteInCard,
+            styles.accountDeleteTray,
             { backgroundColor: c.surfaceSubtle },
             pressed && { opacity: 0.7 },
           ]}
         >
           <Text style={[styles.accountSignOutFooterText, { color: c.destructiveFill }]}>Delete account</Text>
         </Pressable>
-      </Card>
+      </View>
       <ConfirmModal
         visible={deleteAccountConfirmOpen}
         title="Delete account"
@@ -4187,22 +4173,19 @@ const styles = StyleSheet.create({
     alignItems: "center",
     justifyContent: "space-between",
   },
-  accountSettingsNavLabel: { flex: 1, fontSize: 15, fontFamily: "Inter_400Regular", paddingRight: 10 },
+  accountSettingsNavLabel: { flex: 1, fontSize: 14, fontFamily: "Inter_400Regular", paddingRight: 10 },
   accountSettingsNavLabelMedium: { fontFamily: "Inter_500Medium" },
-  accountInfoFields: { gap: 14 },
-  accountInfoFieldLabel: { fontSize: 14, fontFamily: "Inter_400Regular", marginBottom: 4 },
-  accountInfoFieldValue: { fontSize: 14, fontFamily: "Inter_400Regular" },
   accountScrollContent: { flexGrow: 1 },
   /** My account list on Account tab — no extra card gap before logout. */
   accountOptionsListCardLast: { marginBottom: 0 },
   accountSignOutFooter: { alignSelf: "stretch", alignItems: "center", marginTop: 20, paddingVertical: 16 },
-  accountDeleteInCard: {
+  accountDeleteTray: {
     alignSelf: "stretch",
     alignItems: "center",
     justifyContent: "center",
-    marginTop: 14,
     paddingVertical: 12,
-    borderRadius: 10,
+    borderRadius: 14,
+    overflow: "hidden",
   },
   accountSignOutFooterText: { fontSize: 16, fontFamily: "Inter_700Bold", textAlign: "center" },
   /** Same height and radius as `PrimaryButton`; two equal slots like paired actions. */
