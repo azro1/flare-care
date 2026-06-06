@@ -123,8 +123,19 @@ export function formatMedicationReminderTime(timeOfDay: string | null | undefine
   return timeOfDay;
 }
 
+export function medicationHasReminder(row: MedicationRow): boolean {
+  const time = row.time_of_day?.trim();
+  return Boolean(row.reminders_enabled && time && time !== "as-needed");
+}
+
 export function medicationListSubtitle(row: MedicationRow): string {
-  return row.dosage?.trim() ?? "";
+  const parts: string[] = [];
+  const dosage = row.dosage?.trim();
+  if (dosage) parts.push(dosage);
+  if (medicationHasReminder(row)) {
+    parts.push(formatMedicationReminderTime(row.time_of_day));
+  }
+  return parts.join(" · ");
 }
 
 export function buildMedicationTimeOptions(): { value: string; label: string }[] {

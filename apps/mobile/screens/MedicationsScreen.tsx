@@ -3,6 +3,7 @@ import { Ionicons, MaterialCommunityIcons } from "@expo/vector-icons";
 import { useFocusEffect, useNavigation, useRoute } from "@react-navigation/native";
 import React, { useCallback, useEffect, useRef, useState } from "react";
 import {
+  Animated,
   InteractionManager,
   KeyboardAvoidingView,
   Modal,
@@ -21,8 +22,8 @@ import {
   LogHistoryCard,
   LogHistoryList,
   LogHistoryListLoading,
-  LogHistoryTipRow,
   logHistoryCardStyles,
+  logHistoryTipRowStyles,
 } from "../components/LogHistoryList";
 import { OptionPickerModal } from "../components/OptionPickerModal";
 import { invalidateDashboardSnapshot } from "../lib/dashboardSnapshotCache";
@@ -35,6 +36,7 @@ import {
   medicationsListCacheKey,
   MEDICATION_FREQUENCY_PRESETS,
   medicationListSubtitle,
+  medicationHasReminder,
   medicationPayloadFromForm,
   medicationUpdatePayloadFromForm,
   formatMedicationReminderTime,
@@ -277,6 +279,41 @@ export function MedicationSheet({
   );
 }
 
+function WriggleReminderBell({ color }: { color: string }) {
+  const rotate = useRef(new Animated.Value(0)).current;
+
+  useEffect(() => {
+    const wriggle = Animated.sequence([
+      Animated.timing(rotate, { toValue: 1, duration: 90, useNativeDriver: true }),
+      Animated.timing(rotate, { toValue: -1, duration: 90, useNativeDriver: true }),
+      Animated.timing(rotate, { toValue: 0.65, duration: 75, useNativeDriver: true }),
+      Animated.timing(rotate, { toValue: -0.65, duration: 75, useNativeDriver: true }),
+      Animated.timing(rotate, { toValue: 0, duration: 70, useNativeDriver: true }),
+    ]);
+    const loop = Animated.loop(Animated.sequence([wriggle, Animated.delay(2600)]));
+    loop.start();
+    return () => loop.stop();
+  }, [rotate]);
+
+  const wiggle = rotate.interpolate({
+    inputRange: [-1, 1],
+    outputRange: ["-16deg", "16deg"],
+  });
+
+  return (
+    <Animated.View style={{ transform: [{ rotate: wiggle }] }}>
+      <Ionicons
+        name="notifications"
+        size={16}
+        color={color}
+        accessibilityElementsHidden
+        importantForAccessibility="no"
+        accessibilityIgnoresInvertColors
+      />
+    </Animated.View>
+  );
+}
+
 async function maybeRescheduleReminders(userId: string) {
   try {
     await rescheduleMedicationNotificationsForUser(userId);
@@ -379,6 +416,8 @@ export function MedicationsScreen({ user }: { user: SessionUser }) {
 
   medsRef.current = meds;
 
+  const medById = useCallback((id: string) => meds.find((row) => String(row.id) === id), [meds]);
+
   const logsSection = (
     <LogHistoryCard>
       <Text style={[logHistoryCardStyles.sectionTitle, { color: c.text }]}>{listSectionTitle}</Text>
@@ -399,16 +438,55 @@ export function MedicationsScreen({ user }: { user: SessionUser }) {
           <LogHistoryList
             items={meds.map((row) => {
               const subtitle = medicationListSubtitle(row);
+              const reminderLabel = medicationHasReminder(row)
+                ? formatMedicationReminderTime(row.time_of_day)
+                : null;
               return {
                 id: String(row.id),
                 title: row.name,
                 subtitle: subtitle || undefined,
-                accessibilityLabel: subtitle ? `${row.name}. ${subtitle}. View details` : `${row.name}. View details`,
+                accessibilityLabel: reminderLabel
+                  ? `${row.name}. ${subtitle}. Reminder at ${reminderLabel}. View details`
+                  : subtitle
+                    ? `${row.name}. ${subtitle}. View details`
+                    : `${row.name}. View details`,
               };
             })}
+            renderTitleAccessory={(item) => {
+              const row = medById(item.id);
+              if (!row || !medicationHasReminder(row)) return null;
+              return <WriggleReminderBell color={c.primary} />;
+            }}
             onPressItem={(medId) => navigation.navigate("MedicationDetail", { id: medId })}
           />
         )}
+      </View>
+    </LogHistoryCard>
+  );
+
+  const remindersSection = (
+    <LogHistoryCard style={{ marginBottom: 0 }}>
+      <View style={styles.remindersIntroRow}>
+        <Ionicons name="notifications-outline" size={20} color={c.primary} accessibilityIgnoresInvertColors />
+        <Text style={[logHistoryCardStyles.sectionTitle, { color: c.text }]}>Medication Reminders</Text>
+      </View>
+      <Text style={[logHistoryCardStyles.trackerIntro, { color: c.textMuted }]}>
+        Get notified when it&apos;s time to take your meds on this device.
+      </Text>
+      <View style={[logHistoryTipRowStyles.tipRow, { backgroundColor: c.surfaceSubtle, borderRadius: 12 }]}>
+        <Ionicons name="bulb-outline" size={18} color="#EAB308" accessibilityIgnoresInvertColors />
+        <Text style={[logHistoryTipRowStyles.tipText, { color: c.textMuted }]}>
+          Before alerts can work, open{" "}
+          <Text
+            accessibilityRole="link"
+            onPress={() => navigation.navigate("Reminders")}
+            style={{ color: c.primary, fontFamily: FLARE_FONT_FAMILY.medium }}
+          >
+            Reminders
+          </Text>
+          {" "}
+          and tap Enable notifications once.
+        </Text>
       </View>
     </LogHistoryCard>
   );
@@ -435,19 +513,7 @@ export function MedicationsScreen({ user }: { user: SessionUser }) {
           <PrimaryButton title="Add medication" onPress={openAdd} />
         </View>
         {logsSection}
-        <LogHistoryCard style={{ marginBottom: 0 }}>
-          <View style={styles.remindersHeader}>
-            <Ionicons name="notifications-outline" size={20} color={c.primary} accessibilityIgnoresInvertColors />
-            <Text style={[logHistoryCardStyles.sectionTitle, { color: c.text }]}>Medication Reminders</Text>
-          </View>
-          <Text style={[logHistoryCardStyles.trackerIntro, { color: c.textMuted }]}>
-            Get notified when it&apos;s time to take your meds on this device.
-          </Text>
-          <LogHistoryTipRow
-            embedded
-            text="Before alerts can work, open Reminders and tap Enable notifications once."
-          />
-        </LogHistoryCard>
+        {remindersSection}
       </ScrollView>
 
       <MedicationSheet
@@ -497,7 +563,7 @@ const styles = StyleSheet.create({
     textAlign: "center",
     lineHeight: FLARE_LINE_HEIGHT.body,
   },
-  remindersHeader: {
+  remindersIntroRow: {
     flexDirection: "row",
     alignItems: "center",
     gap: 8,

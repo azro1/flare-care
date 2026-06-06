@@ -121,12 +121,15 @@ export function LogHistoryList({
   items,
   emptyMessage,
   onPressItem,
+  renderTitleAccessory,
   renderTrailing,
   rowTextLayout = "logsPill",
 }: {
   items: LogHistoryListItem[];
   emptyMessage?: string;
   onPressItem?: (id: string) => void;
+  /** Inline icon/badge immediately after the title (same row). */
+  renderTitleAccessory?: (item: LogHistoryListItem) => ReactNode;
   renderTrailing?: (item: LogHistoryListItem) => ReactNode;
   /** Title/subtitle typography. Default matches dashboard Logs pill + history rows. */
   rowTextLayout?: "default" | "logsPill";
@@ -152,18 +155,23 @@ export function LogHistoryList({
         const secondaryStyle = useLogsPillText
           ? logsPillRowTextStyles.secondary
           : logHistoryListStyles.logSecondary;
+        const titleAccessory = renderTitleAccessory?.(item) ?? null;
         const rowBody = (
           <>
-            <Text
-              style={[
-                primaryStyle,
-                { color: titleColor },
-                item.completed ? logHistoryListStyles.logPrimaryCompleted : null,
-              ]}
-              numberOfLines={1}
-            >
-              {item.title}
-            </Text>
+            <View style={logHistoryListStyles.logTitleRow}>
+              <Text
+                style={[
+                  primaryStyle,
+                  logHistoryListStyles.logTitleText,
+                  { color: titleColor },
+                  item.completed ? logHistoryListStyles.logPrimaryCompleted : null,
+                ]}
+                numberOfLines={1}
+              >
+                {item.title}
+              </Text>
+              {titleAccessory}
+            </View>
             {whenLine ? (
               <Text style={[secondaryStyle, { color: c.textMuted }]} numberOfLines={1}>
                 {whenLine}
@@ -305,6 +313,13 @@ export const logHistoryListStyles = StyleSheet.create({
     gap: STACKED_DETAIL_ROW_EDGE,
   },
   logMain: { flex: 1, minWidth: 0 },
+  logTitleRow: {
+    flexDirection: "row",
+    alignItems: "center",
+    gap: 6,
+    minWidth: 0,
+  },
+  logTitleText: { flexShrink: 1 },
   logPrimary: { fontSize: FLARE_FONT_SIZE.body, fontFamily: FLARE_FONT_FAMILY.medium },
   logPrimaryRegular: { fontSize: FLARE_FONT_SIZE.body, fontFamily: FLARE_FONT_FAMILY.regular },
   logPrimaryCompleted: { textDecorationLine: "line-through" },

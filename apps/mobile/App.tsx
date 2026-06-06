@@ -107,10 +107,18 @@ import { MedicationDetailScreen } from "./screens/MedicationDetailScreen";
 import { MedicationsScreen } from "./screens/MedicationsScreen";
 import {
   clearMedicationNotificationsForUser,
+  ensureLocalReminderNotificationsReady,
   getLocalReminderScheduledCount,
+  rescheduleAllLocalRemindersForUser,
   rescheduleAppointmentNotificationsForUser,
   rescheduleMedicationNotificationsForUser,
 } from "./lib/medicationNotifications";
+import {
+  consumeReminderNotificationResponse,
+  markReminderNotificationResponseHandled,
+  navigateFromReminderNotification,
+  wasReminderNotificationResponseHandled,
+} from "./lib/reminderNotificationNavigation";
 import { MedicationTrackingWizardScreen } from "./screens/MedicationTrackingWizardScreen";
 import { SymptomLogWizardScreen } from "./screens/SymptomLogWizardScreen";
 
@@ -130,6 +138,7 @@ try {
         shouldShowList: true,
       }),
     });
+    void ensureLocalReminderNotificationsReady();
   }
 } catch {
   // Expo Go on Android SDK53+ does not support remote push API.
@@ -2850,6 +2859,8 @@ function AccountHelpScreen() {
       if (route.params?.expandSection === "notifications") {
         setNotificationsOpen(true);
         navigation.setParams({ expandSection: undefined });
+      } else {
+        setNotificationsOpen(false);
       }
     }, [navigation, route.params?.expandSection]),
   );
@@ -2879,7 +2890,7 @@ function NotificationsScreen({ user }: { user: SessionUser }) {
   const [lastError, setLastError] = useState("");
   const [registering, setRegistering] = useState(false);
 
-  const refreshDebugStatus = useCallback(async () => {
+  const refreshReminderStatus = useCallback(async () => {
     if (!Notifications) return;
     try {
       const { status } = await Notifications.getPermissionsAsync();
@@ -2887,15 +2898,15 @@ function NotificationsScreen({ user }: { user: SessionUser }) {
       setPermissionGranted(granted);
       setScheduled(granted ? await getLocalReminderScheduledCount() : 0);
     } catch {
-      // non-fatal debug read
+      // non-fatal status read
     }
   }, []);
 
   useFocusEffect(
     useCallback(() => {
       setRegistering(false);
-      void refreshDebugStatus();
-    }, [refreshDebugStatus]),
+      void refreshReminderStatus();
+    }, [refreshReminderStatus]),
   );
 
   const register = async () => {
@@ -2911,6 +2922,7 @@ function NotificationsScreen({ user }: { user: SessionUser }) {
       Alert.alert("Device required", "Use a physical device for reminders.");
       return;
     }
+    await ensureLocalReminderNotificationsReady();
     const { status: existingStatus } = await Notifications.getPermissionsAsync();
     let finalStatus = existingStatus;
     if (existingStatus !== "granted") {
@@ -2924,9 +2936,13 @@ function NotificationsScreen({ user }: { user: SessionUser }) {
     }
     setPermissionGranted(true);
     try {
-      const meds = await rescheduleMedicationNotificationsForUser(user.id);
-      const appts = await rescheduleAppointmentNotificationsForUser(user.id);
-      const scheduledCount = meds.scheduledCount + appts.scheduledCount;
+      const { scheduledCount, permissionGranted } = await rescheduleAllLocalRemindersForUser(user.id);
+      if (!permissionGranted) {
+        setPermissionGranted(false);
+        setRegistering(false);
+        Alert.alert("Permission denied", "Notification permission is required.");
+        return;
+      }
       setScheduled(scheduledCount);
       setLastError("");
 
@@ -2948,11 +2964,11 @@ function NotificationsScreen({ user }: { user: SessionUser }) {
     }
   };
 
-  const reminderStatusSubtitle = permissionGranted
-    ? scheduled > 0
+  const reminderStatusSubtitle = !permissionGranted
+    ? "Turn on to receive medication and appointment reminders"
+    : scheduled > 0
       ? `${scheduled} reminder${scheduled === 1 ? "" : "s"} scheduled`
-      : "Add medications or appointments with reminders to schedule alerts"
-    : "Turn on to receive medication and appointment reminders";
+      : "No reminders scheduled yet";
 
   return (
     <ScrollView
@@ -2977,12 +2993,15 @@ function NotificationsScreen({ user }: { user: SessionUser }) {
             <Text style={[styles.accountFirstName, { color: c.text }]}>
               {permissionGranted ? "Notifications on" : "Notifications off"}
             </Text>
-            <Text style={[styles.accountEmailLine, { color: c.textMuted }]}>{reminderStatusSubtitle}</Text>
+            <Text style={[styles.remindersStatusSubtitle, { color: c.textMuted }]}>{reminderStatusSubtitle}</Text>
           </View>
         </View>
-        <Text style={[styles.muted, { color: c.textMuted, marginTop: 16, lineHeight: 20 }]}>
-          Tap once to allow notifications. After that, saving medications or appointments will schedule reminders automatically.
-        </Text>
+        {!permissionGranted ? (
+          <Text style={[styles.muted, { color: c.textMuted, marginTop: 16, lineHeight: 20 }]}>
+            Tap once to allow notifications. After that, saving medications or appointments will schedule reminders
+            automatically.
+          </Text>
+        ) : null}
         <View style={styles.remindersSetupBlock}>
           <PrimaryButton
             title={permissionGranted ? "Refresh reminders" : "Enable notifications"}
@@ -3616,6 +3635,93 @@ function AppTabs({
   const resetDashboardHome = useCallback(() => {
     resetDashboardHomeRef.current?.();
   }, []);
+  const pendingReminderNavRef = useRef<Awaited<ReturnType<typeof consumeReminderNotificationResponse>>>(null);
+  const lastReminderNavKeyRef = useRef<string | null>(null);
+
+  const clearStoredReminderNotificationResponse = useCallback(() => {
+    Notifications?.clearLastNotificationResponse?.();
+    void Notifications?.clearLastNotificationResponseAsync?.();
+  }, []);
+
+  const openReminderNotificationTarget = useCallback(
+    (target: NonNullable<Awaited<ReturnType<typeof consumeReminderNotificationResponse>>>) => {
+      const navKey =
+        target.kind === "medication"
+          ? `medication:${target.medicationId}`
+          : `appointment:${target.appointmentId}`;
+      if (lastReminderNavKeyRef.current === navKey) return;
+      lastReminderNavKeyRef.current = navKey;
+      setTimeout(() => {
+        if (lastReminderNavKeyRef.current === navKey) lastReminderNavKeyRef.current = null;
+      }, 1500);
+      if (navigationRef.isReady()) {
+        navigateFromReminderNotification(navigationRef, target);
+      } else {
+        pendingReminderNavRef.current = target;
+      }
+    },
+    [navigationRef],
+  );
+
+  const processReminderNotificationResponse = useCallback(
+    (response: unknown) => {
+      void (async () => {
+        if (await wasReminderNotificationResponseHandled(response)) {
+          clearStoredReminderNotificationResponse();
+          return;
+        }
+        const target = await consumeReminderNotificationResponse(response);
+        clearStoredReminderNotificationResponse();
+        if (!target) return;
+        openReminderNotificationTarget(target);
+      })();
+    },
+    [clearStoredReminderNotificationResponse, openReminderNotificationTarget],
+  );
+
+  useEffect(() => {
+    if (!Notifications?.addNotificationResponseReceivedListener) return;
+    let subscription: { remove: () => void } | undefined;
+
+    void (async () => {
+      let ignoreNextListener = false;
+
+      if (Notifications.getLastNotificationResponseAsync) {
+        const response = await Notifications.getLastNotificationResponseAsync();
+        if (response) {
+          if (await wasReminderNotificationResponseHandled(response)) {
+            clearStoredReminderNotificationResponse();
+            ignoreNextListener = true;
+          } else {
+            const target = await consumeReminderNotificationResponse(response);
+            clearStoredReminderNotificationResponse();
+            if (target) {
+              openReminderNotificationTarget(target);
+              ignoreNextListener = true;
+            }
+          }
+        } else {
+          clearStoredReminderNotificationResponse();
+        }
+      }
+
+      subscription = Notifications.addNotificationResponseReceivedListener((response: unknown) => {
+        if (ignoreNextListener) {
+          ignoreNextListener = false;
+          void markReminderNotificationResponseHandled(response);
+          clearStoredReminderNotificationResponse();
+          return;
+        }
+        processReminderNotificationResponse(response);
+      });
+    })();
+
+    return () => subscription?.remove();
+  }, [
+    clearStoredReminderNotificationResponse,
+    openReminderNotificationTarget,
+    processReminderNotificationResponse,
+  ]);
 
   const MedsScreenRoute = useMemo(
     () =>
@@ -3629,6 +3735,15 @@ function AppTabs({
     const name = navigationRef.getCurrentRoute()?.name;
     if (name) setFocusRouteName(name);
   }, [navigationRef]);
+
+  const onNavigationReady = useCallback(() => {
+    syncFocusRoute();
+    const pending = pendingReminderNavRef.current;
+    if (!pending) return;
+    pendingReminderNavRef.current = null;
+    navigateFromReminderNotification(navigationRef, pending);
+    clearStoredReminderNotificationResponse();
+  }, [clearStoredReminderNotificationResponse, navigationRef, syncFocusRoute]);
 
   const headerOptions = ({ navigation, route }: { navigation: any; route: { name: string; params?: { document?: string } } }) => {
     const isDashboard = route.name === "Dashboard";
@@ -3749,7 +3864,7 @@ function AppTabs({
   };
 
   return (
-    <NavigationContainer ref={navigationRef} theme={nav} onReady={syncFocusRoute} onStateChange={syncFocusRoute}>
+    <NavigationContainer ref={navigationRef} theme={nav} onReady={onNavigationReady} onStateChange={syncFocusRoute}>
       <View style={{ flex: 1, backgroundColor: colors.screen }}>
         <View style={{ flex: 1 }}>
           <AppStack.Navigator initialRouteName="Dashboard" screenOptions={headerOptions as any}>
@@ -4132,7 +4247,13 @@ const styles = StyleSheet.create({
   text: { fontSize: 14, fontFamily: "Inter_400Regular" },
   muted: { fontSize: 13, fontFamily: "Inter_400Regular" },
   remindersSetupBlock: { gap: 12, marginTop: 16 },
-  remindersStatusRow: { flexDirection: "row", alignItems: "center" },
+  remindersStatusRow: { flexDirection: "row", alignItems: "flex-start" },
+  remindersStatusSubtitle: {
+    fontSize: 14,
+    fontFamily: "Inter_400Regular",
+    lineHeight: 20,
+    marginTop: 4,
+  },
   remindersScrollContent: { paddingTop: SECTION_TITLE_MARGIN_TOP },
   remindersHelpBlock: { gap: 12 },
   remindersHelpPathItem: { gap: 8 },
