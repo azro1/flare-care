@@ -2,10 +2,9 @@ import DateTimePicker from "@react-native-community/datetimepicker";
 import { Ionicons, MaterialCommunityIcons } from "@expo/vector-icons";
 import { useFocusEffect, useNavigation, useRoute } from "@react-navigation/native";
 import { yupResolver } from "@hookform/resolvers/yup";
-import React, { useCallback, useEffect, useState } from "react";
+import React, { useCallback, useEffect, useRef, useState } from "react";
 import { useForm } from "react-hook-form";
 import {
-  ActivityIndicator,
   KeyboardAvoidingView,
   Modal,
   Platform,
@@ -31,6 +30,8 @@ import {
 } from "../components/FlareInput";
 import {
   LogHistoryList,
+  LogHistoryListLoading,
+  LogHistoryTipRow,
   buildTimestampLogRowItem,
   logHistoryCardStyles,
 } from "../components/LogHistoryList";
@@ -61,6 +62,7 @@ import {
   FLARE_LINE_HEIGHT,
   SCREEN_EDGE_PADDING,
   SECTION_TITLE_MARGIN_BOTTOM,
+  TIME_PICKER_MINUTE_INTERVAL,
 } from "../lib/layoutConstants";
 import { formatUkDate } from "../lib/formatUkDate";
 import { supabase, TABLES } from "../lib/supabase";
@@ -434,7 +436,7 @@ export function BowelLogSheet({
             value={pickerDraftTime}
             mode="time"
             display="default"
-            minuteInterval={15}
+            minuteInterval={TIME_PICKER_MINUTE_INTERVAL}
             onChange={handleTimePickerChange}
           />
         ) : null}
@@ -453,6 +455,7 @@ export function BowelScreen({ user }: { user: SessionUser }) {
 
   const [form, setForm] = useState<BowelFormState>(() => quickBowelFormState());
   const [entries, setEntries] = useState<BowelMovementRow[]>([]);
+  const entriesRef = useRef<BowelMovementRow[]>([]);
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
   const [saveError, setSaveError] = useState("");
@@ -489,7 +492,8 @@ export function BowelScreen({ user }: { user: SessionUser }) {
   );
 
   const fetchEntries = useCallback(async () => {
-    setLoading(true);
+    const isInitialLoad = entriesRef.current.length === 0;
+    if (isInitialLoad) setLoading(true);
     const { data, error } = await supabase
       .from(TABLES.BOWEL_MOVEMENTS)
       .select("*")
@@ -569,17 +573,19 @@ export function BowelScreen({ user }: { user: SessionUser }) {
   const previewEntries = entries.slice(0, BOWEL_RECENT_PREVIEW_COUNT);
   const listRows = isLogHistory ? entries : previewEntries;
   const showViewAll = !isLogHistory && entries.length > BOWEL_RECENT_PREVIEW_COUNT;
+  const listInitialLoad = loading && entries.length === 0;
+  const recentSectionTitle = entries.length > 0 || listInitialLoad ? "Recent" : "Your logs";
+
+  entriesRef.current = entries;
 
   const logsSection = (
     <View style={[logHistoryCardStyles.trackerCard, { backgroundColor: c.card }]}>
       {!isLogHistory ? (
-        <Text style={[logHistoryCardStyles.sectionTitle, { color: c.text }]}>
-          {entries.length ? "Recent" : "Your logs"}
-        </Text>
+        <Text style={[logHistoryCardStyles.sectionTitle, { color: c.text }]}>{recentSectionTitle}</Text>
       ) : null}
       <View style={logHistoryCardStyles.trackerCardBody}>
-        {loading ? (
-          <ActivityIndicator color={c.primary} style={{ marginVertical: 20 }} />
+        {listInitialLoad ? (
+          <LogHistoryListLoading />
         ) : entries.length === 0 ? (
           <View style={styles.emptyWrap}>
             <View style={[styles.emptyIcon, { backgroundColor: c.surfaceSubtle }]}>
@@ -678,13 +684,7 @@ export function BowelScreen({ user }: { user: SessionUser }) {
         )}
 
         {isLogHistory ? (
-          <View style={[styles.tipRow, { backgroundColor: c.card }]}>
-            <Ionicons name="bulb-outline" size={18} color="#EAB308" accessibilityIgnoresInvertColors />
-            <Text style={[styles.tipText, { color: c.textMuted }]}>
-              Stool types help build a clearer picture of your condition. Types 3–4 are often ideal; 1–2 harder, 5–7
-              looser.
-            </Text>
-          </View>
+          <LogHistoryTipRow text="Stool types help build a clearer picture of your condition. Types 3–4 are often ideal; 1–2 harder, 5–7 looser." />
         ) : null}
       </ScrollView>
 
@@ -766,20 +766,6 @@ const styles = StyleSheet.create({
     marginTop: 20,
     marginBottom: 4,
     paddingVertical: 4,
-  },
-  tipRow: {
-    flexDirection: "row",
-    alignItems: "flex-start",
-    gap: STACKED_DETAIL_ROW_EDGE,
-    borderRadius: 14,
-    paddingHorizontal: 14,
-    paddingVertical: SCREEN_EDGE_PADDING,
-  },
-  tipText: {
-    flex: 1,
-    fontSize: FLARE_FONT_SIZE.muted,
-    fontFamily: FLARE_FONT_FAMILY.regular,
-    lineHeight: FLARE_LINE_HEIGHT.muted,
   },
   sheetRoot: { flex: 1 },
   sheetHeader: {

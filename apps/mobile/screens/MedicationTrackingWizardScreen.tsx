@@ -41,6 +41,7 @@ import {
   type MedicationTrackingFormData,
   type MedicationWizardHistoryEntry,
 } from "../lib/medicationWizardShared";
+import { TRACK_MEDICATIONS_MCI_ICON } from "../lib/medicationFeatureIcons";
 import { useFlareColors, useFlareTheme } from "../theme";
 
 type SessionUser = { id: string };
@@ -487,7 +488,7 @@ export function MedicationTrackingWizardScreen({ user }: { user: SessionUser }) 
                 },
               ]}
             >
-              <MaterialCommunityIcons name="pill" size={28} color={c.primary} />
+              <MaterialCommunityIcons name={TRACK_MEDICATIONS_MCI_ICON} size={28} color={c.primary} />
             </View>
             <Text style={[styles.landingTitle, { color: c.text }]}>Track Medications</Text>
             <Text style={[styles.landingSub, { color: c.textMuted }]}>

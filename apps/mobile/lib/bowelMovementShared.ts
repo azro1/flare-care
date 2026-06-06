@@ -1,3 +1,5 @@
+import { TIME_PICKER_MINUTE_INTERVAL } from "./layoutConstants";
+
 /** MaterialCommunityIcons — no bowel/intestine glyph; `toilet` is the closest match in the set. */
 export const BOWEL_FEATURE_MCI_ICON = "toilet" as const;
 
@@ -33,7 +35,7 @@ export function triStateFromPickerLabel(label: string): TriStateValue {
 export function generateTimeOptions(): string[] {
   const options: string[] = [];
   for (let hour = 0; hour < 24; hour++) {
-    for (let minute = 0; minute < 60; minute += 15) {
+    for (let minute = 0; minute < 60; minute += TIME_PICKER_MINUTE_INTERVAL) {
       options.push(`${String(hour).padStart(2, "0")}:${String(minute).padStart(2, "0")}`);
     }
   }
@@ -59,27 +61,27 @@ export function defaultDateTimeParts(): { date: string; time: string } {
   return { date, time: "" };
 }
 
-function snapTimeTo15Min(d: Date): string {
+function snapTimeToPickerInterval(d: Date): string {
   let totalMins = d.getHours() * 60 + d.getMinutes();
-  totalMins = Math.round(totalMins / 15) * 15;
-  if (totalMins >= 24 * 60) totalMins = 23 * 60 + 45;
+  totalMins = Math.round(totalMins / TIME_PICKER_MINUTE_INTERVAL) * TIME_PICKER_MINUTE_INTERVAL;
+  if (totalMins >= 24 * 60) totalMins = 24 * 60 - TIME_PICKER_MINUTE_INTERVAL;
   const h = Math.floor(totalMins / 60);
   const m = totalMins % 60;
   return `${pad2(h)}:${pad2(m)}`;
 }
 
-/** HH:mm snapped to 15-minute steps — for form state and native time picker commits. */
+/** HH:mm snapped to native picker steps — for form state and time picker commits. */
 export function snapTimeHmFromDate(d: Date): string {
-  return snapTimeTo15Min(d);
+  return snapTimeToPickerInterval(d);
 }
 
-/** Local YYYY-MM-DD + HH:mm (15-min snap) from stored instant. */
+/** Local YYYY-MM-DD + HH:mm (picker snap) from stored instant. */
 export function occurredAtToFormParts(iso: string | null | undefined): { date: string; time: string } {
   if (!iso) return defaultDateTimeParts();
   const d = new Date(iso);
   if (Number.isNaN(d.getTime())) return defaultDateTimeParts();
   const date = `${d.getFullYear()}-${pad2(d.getMonth() + 1)}-${pad2(d.getDate())}`;
-  return { date, time: snapTimeTo15Min(d) };
+  return { date, time: snapTimeToPickerInterval(d) };
 }
 
 export function formatUkTimeFromOccurred(iso: string | null | undefined): string {

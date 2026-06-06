@@ -1,5 +1,5 @@
 import React from "react";
-import { Pressable, StyleSheet, Text, View } from "react-native";
+import { ActivityIndicator, Pressable, StyleSheet, Text, View } from "react-native";
 import { useFlareColors } from "../theme";
 
 /** Shared by primary/secondary buttons and appearance toggles on Settings. */
@@ -33,43 +33,56 @@ export function PrimaryButton({
   title,
   onPress,
   disabled,
+  loading,
   fitContent,
   variant,
+  leftIcon,
 }: {
   title: string;
   onPress: () => void;
   disabled?: boolean;
+  loading?: boolean;
   /** Width follows label + padding instead of stretching full row. */
   fitContent?: boolean;
   variant?: "default" | "onPrimary" | "destructive";
+  leftIcon?: React.ReactNode;
 }) {
   const c = useFlareColors();
   const onPrimary = variant === "onPrimary";
   const destructive = variant === "destructive";
+  const inactive = disabled || loading;
+  const spinnerColor = onPrimary ? c.primary : c.white;
   return (
     <Pressable
       onPress={onPress}
-      disabled={disabled}
+      disabled={inactive}
       style={[
         flareButtonStyles.button,
         fitContent ? { alignSelf: "flex-start" } : null,
         onPrimary
-          ? { backgroundColor: disabled ? "rgba(255,255,255,0.45)" : c.white }
+          ? { backgroundColor: inactive ? "rgba(255,255,255,0.45)" : c.white }
           : destructive
-            ? { backgroundColor: c.destructiveFill, opacity: disabled ? 0.5 : 1 }
-            : { backgroundColor: disabled ? c.primaryDisabledBg : c.primary },
+            ? { backgroundColor: c.destructiveFill, opacity: inactive ? 0.5 : 1 }
+            : { backgroundColor: inactive ? c.primaryDisabledBg : c.primary },
       ]}
     >
-      <Text
-        style={[
-          flareButtonStyles.buttonText,
-          onPrimary
-            ? { color: c.primary, ...(disabled ? { opacity: 0.55 } : null) }
-            : { color: c.white },
-        ]}
-      >
-        {title}
-      </Text>
+      {loading ? (
+        <ActivityIndicator color={spinnerColor} />
+      ) : (
+        <View style={flareButtonStyles.buttonSecondaryContent}>
+          {leftIcon ? leftIcon : null}
+          <Text
+            style={[
+              flareButtonStyles.buttonText,
+              onPrimary
+                ? { color: c.primary, ...(inactive ? { opacity: 0.55 } : null) }
+                : { color: c.white },
+            ]}
+          >
+            {title}
+          </Text>
+        </View>
+      )}
     </Pressable>
   );
 }
@@ -82,6 +95,7 @@ export function SecondaryButton({
   variant,
   titleColor,
   softOutline,
+  borderless,
 }: {
   title: string;
   onPress: () => void;
@@ -91,17 +105,21 @@ export function SecondaryButton({
   titleColor?: "default" | "primary";
   /** Lighter edge (e.g. dashboard Recent logs) — still bordered, not as heavy as default. */
   softOutline?: boolean;
+  /** No border — e.g. Mark as taken vs filled Taken state. */
+  borderless?: boolean;
 }) {
   const c = useFlareColors();
   const onPrimary = variant === "onPrimary";
   const labelColor = onPrimary ? c.white : titleColor === "primary" ? c.primary : c.secondaryBtnText;
-  const outline = onPrimary
-    ? softOutline
-      ? { borderWidth: StyleSheet.hairlineWidth, borderColor: "rgba(255,255,255,0.28)" }
-      : { borderWidth: 1, borderColor: "rgba(255,255,255,0.55)" }
-    : softOutline
-      ? { borderWidth: StyleSheet.hairlineWidth, borderColor: c.cardBorder }
-      : { borderWidth: 1, borderColor: c.secondaryBtnBorder };
+  const outline = borderless
+    ? null
+    : onPrimary
+      ? softOutline
+        ? { borderWidth: StyleSheet.hairlineWidth, borderColor: "rgba(255,255,255,0.28)" }
+        : { borderWidth: 1, borderColor: "rgba(255,255,255,0.55)" }
+      : softOutline
+        ? { borderWidth: StyleSheet.hairlineWidth, borderColor: c.cardBorder }
+        : { borderWidth: 1, borderColor: c.secondaryBtnBorder };
   return (
     <Pressable
       onPress={onPress}
@@ -109,8 +127,11 @@ export function SecondaryButton({
       style={[
         flareButtonStyles.buttonSecondary,
         onPrimary
-          ? { backgroundColor: "rgba(255,255,255,0.12)", ...outline }
-          : { backgroundColor: c.secondaryBtnBg, ...outline },
+          ? { backgroundColor: "rgba(255,255,255,0.12)", ...(outline ?? null) }
+          : {
+              backgroundColor: borderless ? c.surfaceSubtle : c.secondaryBtnBg,
+              ...(outline ?? null),
+            },
         disabled ? { opacity: 0.55 } : null,
       ]}
     >

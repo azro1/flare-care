@@ -45,12 +45,16 @@ import {
 } from "./components/FlareButton";
 import { flareFieldErrorStyle, LabeledInput } from "./components/FlareInput";
 import { HeaderOverflowMenu } from "./components/HeaderOverflowMenu";
+import { SuccessNoticeScreen } from "./components/SuccessNoticeScreen";
 import { CollapsingTitleScrollScreen } from "./components/CollapsingTitleScrollScreen";
 import { FlareThemeProvider, useFlareColors, useFlareTheme } from "./theme";
 import { formatUkDate } from "./lib/formatUkDate";
 import { BOWEL_FEATURE_MCI_ICON } from "./lib/bowelMovementShared";
-import { HYDRATION_TARGET, loadHydrationResetTimestamp, saveHydrationReset, HYDRATION_GOAL_ACTIVITY_TITLE, HYDRATION_RESET_ACTIVITY_TITLE } from "./lib/hydrationShared";
+import { MY_MEDS_MCI_ICON, TRACK_MEDICATIONS_MCI_ICON } from "./lib/medicationFeatureIcons";
+import { fetchMedicationsForUser, MEDICATIONS_GOAL_ACTIVITY_TITLE, MEDICATION_ADDED_ACTIVITY_TITLE } from "./lib/medicationShared";
+import { HYDRATION_TARGET, HYDRATION_MCI_ICON, loadHydrationResetTimestamp, saveHydrationReset, HYDRATION_GOAL_ACTIVITY_TITLE, HYDRATION_RESET_ACTIVITY_TITLE } from "./lib/hydrationShared";
 import {
+  bottomTabBarScrollInset,
   FLARE_FONT_FAMILY,
   FLARE_FONT_SIZE,
   FLARE_LINE_HEIGHT,
@@ -74,6 +78,7 @@ import {
   buildBrowseLogRowItem,
   buildTimestampLogRowItem,
   logHistoryCardStyles,
+  logHistoryListStyles,
 } from "./components/LogHistoryList";
 import {
   LogDetailAddedHeader,
@@ -84,6 +89,7 @@ import {
   logDetailStyles,
 } from "./components/LogDetailLayout";
 import { formatAddedAtHeader } from "./lib/logDisplay";
+import { openAppNotificationSettings } from "./lib/openAppNotificationSettings";
 import { supabase, TABLES } from "./lib/supabase";
 import {
   dashboardSnapshotByUserId,
@@ -97,6 +103,14 @@ import {
 import { BristolGuideScreen } from "./screens/BristolGuideScreen";
 import { BowelLogDetailScreen } from "./screens/BowelLogDetailScreen";
 import { BowelScreen } from "./screens/BowelScreen";
+import { MedicationDetailScreen } from "./screens/MedicationDetailScreen";
+import { MedicationsScreen } from "./screens/MedicationsScreen";
+import {
+  clearMedicationNotificationsForUser,
+  getLocalReminderScheduledCount,
+  rescheduleAppointmentNotificationsForUser,
+  rescheduleMedicationNotificationsForUser,
+} from "./lib/medicationNotifications";
 import { MedicationTrackingWizardScreen } from "./screens/MedicationTrackingWizardScreen";
 import { SymptomLogWizardScreen } from "./screens/SymptomLogWizardScreen";
 
@@ -110,7 +124,6 @@ try {
     Device = require("expo-device");
     Notifications.setNotificationHandler({
       handleNotification: async () => ({
-        shouldShowAlert: true,
         shouldPlaySound: true,
         shouldSetBadge: false,
         shouldShowBanner: true,
@@ -192,80 +205,6 @@ function accountIdentityFirstLine(user: SessionUser): string {
   return first === "there" ? "You" : first;
 }
 type Appointment = { id: number; date: string; type: string | null; notes: string | null; time: string | null };
-type Medication = { id: number; name: string; dosage: string | null; time_of_day: string | null };
-
-async function rescheduleMedicationNotificationsForUser(userId: string) {
-  if (!Notifications) return { scheduledCount: 0 };
-  const existingRaw = await AsyncStorage.getItem("flarecare.notificationIds");
-  const existingIds: string[] = existingRaw ? JSON.parse(existingRaw) : [];
-  for (const id of existingIds) {
-    try {
-      await Notifications.cancelScheduledNotificationAsync(id);
-    } catch {
-      // ignore stale ids
-    }
-  }
-
-  const { data: meds } = await supabase
-    .from(TABLES.MEDICATIONS)
-    .select("name,time_of_day")
-    .eq("user_id", userId)
-    .eq("reminders_enabled", true);
-
-  const ids: string[] = [];
-  for (const med of meds ?? []) {
-    const [hour, minute] = String(med.time_of_day || "08:00").split(":").map((v) => Number(v));
-    const id = await Notifications.scheduleNotificationAsync({
-      content: { title: "Medication Reminder", body: `Time to take ${med.name}` },
-      trigger: { type: Notifications.SchedulableTriggerInputTypes.DAILY, hour: hour || 8, minute: minute || 0 },
-    });
-    ids.push(id);
-  }
-
-  await AsyncStorage.setItem("flarecare.notificationIds", JSON.stringify(ids));
-  return { scheduledCount: ids.length };
-}
-
-async function rescheduleAppointmentNotificationsForUser(userId: string) {
-  if (!Notifications) return { scheduledCount: 0 };
-  const existingRaw = await AsyncStorage.getItem("flarecare.appointmentNotificationIds");
-  const existingIds: string[] = existingRaw ? JSON.parse(existingRaw) : [];
-  for (const id of existingIds) {
-    try {
-      await Notifications.cancelScheduledNotificationAsync(id);
-    } catch {
-      // ignore stale ids
-    }
-  }
-
-  const { data: appointments } = await supabase
-    .from(TABLES.APPOINTMENTS)
-    .select("id,date,time,type,reminder_minutes_before")
-    .eq("user_id", userId);
-
-  const ids: string[] = [];
-  const now = Date.now();
-  for (const apt of appointments ?? []) {
-    const time = String(apt.time || "09:00");
-    const dateTime = new Date(`${apt.date}T${time}:00`);
-    if (Number.isNaN(dateTime.getTime())) continue;
-    const leadMinutes = Number(apt.reminder_minutes_before ?? 60);
-    const triggerDate = new Date(dateTime.getTime() - leadMinutes * 60 * 1000);
-    if (triggerDate.getTime() <= now) continue;
-
-    const id = await Notifications.scheduleNotificationAsync({
-      content: {
-        title: "Appointment Reminder",
-        body: `${apt.type || "Appointment"} at ${apt.time || "09:00"}`,
-      },
-      trigger: { type: Notifications.SchedulableTriggerInputTypes.DATE, date: triggerDate },
-    });
-    ids.push(id);
-  }
-
-  await AsyncStorage.setItem("flarecare.appointmentNotificationIds", JSON.stringify(ids));
-  return { scheduledCount: ids.length };
-}
 
 function Card({
   title,
@@ -419,34 +358,56 @@ const SIGN_OUT_COPY: Record<SignOutReason, { title: string; message: string }> =
   },
 };
 
-/** Shown after an explicit sign-out before returning to the login screen. */
-function SignedOutScreen({ reason, onContinue }: { reason: SignOutReason; onContinue: () => void }) {
-  const c = useFlareColors();
-  const insets = useSafeAreaInsets();
-  const copy = SIGN_OUT_COPY[reason];
+async function withTimeout<T>(promise: Promise<T>, ms: number, label: string): Promise<T> {
+  let timeoutId: ReturnType<typeof setTimeout> | undefined;
+  try {
+    return await Promise.race([
+      promise,
+      new Promise<T>((_, reject) => {
+        timeoutId = setTimeout(() => reject(new Error(`${label} timed out`)), ms);
+      }),
+    ]);
+  } finally {
+    if (timeoutId) clearTimeout(timeoutId);
+  }
+}
 
-  return (
-    <View
-      style={[
-        styles.signedOutScreen,
-        {
-          backgroundColor: c.screen,
-          paddingTop: insets.top + 16,
-          paddingBottom: insets.bottom + 24,
-          paddingHorizontal: SCREEN_EDGE_PADDING,
-        },
-      ]}
-    >
-      <View style={styles.signedOutCard}>
-        <Ionicons name="checkmark-circle" size={72} color={c.primary} accessibilityIgnoresInvertColors />
-        <Text style={[styles.signedOutTitle, { color: c.text }]}>{copy.title}</Text>
-        <Text style={[styles.signedOutMessage, { color: c.textMuted }]}>{copy.message}</Text>
-        <View style={styles.signedOutActions}>
-          <PrimaryButton title="Sign in" onPress={onContinue} />
-        </View>
-      </View>
-    </View>
+/** Best-effort Expo push token + server subscribe — local reminders do not depend on this. */
+async function registerExpoPushTokenBestEffort(): Promise<void> {
+  if (!Notifications) return;
+  const projectId = Constants.expoConfig?.extra?.eas?.projectId ?? Constants.easConfig?.projectId;
+  const tokenResult = await withTimeout<{ data: string }>(
+    projectId
+      ? Notifications.getExpoPushTokenAsync({ projectId })
+      : Notifications.getExpoPushTokenAsync(),
+    15000,
+    "Push token",
   );
+  const pushToken = tokenResult.data;
+  const { data: sessionData } = await supabase.auth.getSession();
+  const accessToken = sessionData.session?.access_token;
+  const base = process.env.EXPO_PUBLIC_WEB_API_BASE_URL;
+  if (accessToken && base) {
+    const response = await withTimeout(
+      fetch(`${base}/api/push/subscribe`, {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          Authorization: `Bearer ${accessToken}`,
+        },
+        body: JSON.stringify({
+          expo_push_token: pushToken,
+          user_agent: `expo-${Platform.OS}`,
+        }),
+      }),
+      10000,
+      "Push subscribe",
+    );
+    if (!response.ok) {
+      throw new Error(`Push subscribe failed (${response.status})`);
+    }
+  }
+  await AsyncStorage.setItem("flarecare.pushToken", pushToken);
 }
 
 /** Match web /api/image-proxy for production https; on LAN (http web) load https images directly — Android blocks cleartext to the dev server. */
@@ -708,13 +669,13 @@ function AuthScreen({
         styles.authScreenFill,
         {
           backgroundColor: authBlue ? cAuth.primary : cAuth.screen,
-          paddingTop: insets.top + 20,
+          paddingTop: insets.top + 32,
           paddingBottom: Math.max(insets.bottom, 12),
           paddingHorizontal: SCREEN_EDGE_PADDING,
         },
       ]}
     >
-      <View style={[styles.authShell, { transform: [{ translateY: 28 }] }]}>
+      <View style={styles.authShell}>
         <View style={styles.authBrandBlock}>
           <Image source={SPLASH_MARK_IMAGE} style={styles.authLogo} resizeMode="contain" />
           <Text style={[styles.authBrandName, { color: authBlue ? cAuth.white : cAuth.text }]}>FlareCare</Text>
@@ -1018,7 +979,7 @@ function ProfileSetupScreen({ user, onComplete }: { user: SessionUser; onComplet
         styles.authScreenFill,
         {
           backgroundColor: authBlue ? cAuth.primary : cAuth.screen,
-          paddingTop: insets.top + 20,
+          paddingTop: insets.top + 32,
           paddingBottom: Math.max(insets.bottom, 12),
           paddingHorizontal: SCREEN_EDGE_PADDING,
         },
@@ -1088,7 +1049,7 @@ const BOTTOM_BAR_VISIBLE_ROUTES = new Set(["Dashboard", "Account", "Reminders"])
 function useBottomTabScrollInset() {
   const route = useRoute();
   const insets = useSafeAreaInsets();
-  return BOTTOM_BAR_VISIBLE_ROUTES.has(route.name) ? Math.max(insets.bottom, 8) + 36 : 0;
+  return BOTTOM_BAR_VISIBLE_ROUTES.has(route.name) ? bottomTabBarScrollInset(insets.bottom) : 0;
 }
 
 /** Matches `styles.screen` edge padding (used to size Daily Check-in row). */
@@ -1247,7 +1208,7 @@ function DashboardScreen({
   );
   const [recentActivity, setRecentActivity] = useState<DashboardActivityRow[]>(() => snapshotSeed?.recentActivity ?? []);
   const [historyPreview, setHistoryPreview] = useState({ symptomCount: 0, medicationCount: 0 });
-  /** Dashboard pills — Today / Logs / News only; default (null) shows the main home dashboard. */
+  /** Dashboard pills — Today's / Logs / Latest only; default (null) shows the main home dashboard. */
   const [homeDashTab, setHomeDashTab] = useState<HomeDashTab>(null);
   const hydrationTarget = HYDRATION_TARGET;
   useEffect(() => {
@@ -1262,12 +1223,12 @@ function DashboardScreen({
   }, [onRegisterResetHome]);
   const dailyCheckinCards = [
     { key: "symptoms" as const, label: "Log Symptoms", icon: "thermometer", family: "mci", goTo: "SymptomLogWizard" },
-    { key: "track-meds" as const, label: "Track Medications", icon: "pill", family: "mci", goTo: "MedicationTrackingWizard" },
-    { key: "hydration" as const, label: "My Hydration", icon: "water", family: "mci", goTo: "Hydration" },
+    { key: "track-meds" as const, label: "Track Medications", icon: TRACK_MEDICATIONS_MCI_ICON, family: "mci", goTo: "MedicationTrackingWizard" },
+    { key: "hydration" as const, label: "My Hydration", icon: HYDRATION_MCI_ICON, family: "mci", goTo: "Hydration" },
     { key: "bowel" as const, label: "Bowel Movements", icon: BOWEL_FEATURE_MCI_ICON, family: "mci", goTo: "Bowel" },
   ];
   const moreLinkCards = [
-    { key: "meds", label: "My Meds", screen: "Meds" as const, icon: "pill", family: "mci" as const },
+    { key: "meds", label: "My Meds", screen: "Meds" as const, icon: MY_MEDS_MCI_ICON, family: "mci" as const },
     { key: "reports", label: "Reports", screen: "Reports" as const, icon: "document-text-outline", family: "ion" as const },
     { key: "weight", label: "My Weight", screen: "Weight" as const, icon: "scale-bathroom", family: "mci" as const },
     { key: "appointments", label: "Appointments", screen: "Appointments" as const, icon: "calendar-outline", family: "ion" as const },
@@ -1315,7 +1276,7 @@ function DashboardScreen({
           const today = new Date().toISOString().split("T")[0];
           const [
             todaySymptomsRes,
-            medicationsRes,
+            medicationsList,
             takenMedsRes,
             todayHydrationRes,
             recentSymptomsRes,
@@ -1326,14 +1287,10 @@ function DashboardScreen({
             recentWeightRes,
           ] = await Promise.all([
             supabase.from(TABLES.LOG_SYMPTOMS).select("id,created_at").eq("user_id", user.id).gte("created_at", `${today}T00:00:00`),
-            supabase
-              .from(TABLES.MEDICATIONS)
-              .select("id,name")
-              .eq("user_id", user.id)
-              .neq("name", "Medication Tracking"),
+            fetchMedicationsForUser(user.id),
             supabase
               .from(TABLES.MEDICATION_TAKEN)
-              .select("medication_id")
+              .select("medication_id,created_at")
               .eq("user_id", user.id)
               .eq("taken_date", today),
             supabase.from(TABLES.DAILY_HYDRATION).select("glasses,updated_at").eq("user_id", user.id).eq("date", today).maybeSingle(),
@@ -1350,14 +1307,19 @@ function DashboardScreen({
             supabase.from(TABLES.TRACK_WEIGHT).select("id,date,value_kg").eq("user_id", user.id).order("date", { ascending: false }).limit(1),
           ]);
 
+          const prescribedMeds = medicationsList.filter((med) => med.name !== "Medication Tracking");
+
           snap.todaySummary = {
             symptoms: todaySymptomsRes.data?.length ?? 0,
             medsTaken: takenMedsRes.data?.length ?? 0,
-            medsTotal: medicationsRes.data?.length ?? 0,
+            medsTotal: prescribedMeds.length,
             hydration: todayHydrationRes.data?.glasses ?? 0,
           };
 
           const activityRows: DashboardActivityRow[] = [];
+          const fourHoursAgo = Date.now() - 4 * 60 * 60 * 1000;
+
+          const takenMedRows = (takenMedsRes.data ?? []) as { medication_id: string | number; created_at?: string }[];
 
           const recentSymptom = recentSymptomsRes.data?.[0] as { id: string; created_at: string } | undefined;
           const recentMedLog = recentMedsRes.data?.[0] as
@@ -1384,6 +1346,39 @@ function DashboardScreen({
               icon: "medication",
             });
           }
+
+          for (const med of prescribedMeds) {
+            if (!med.created_at) continue;
+            const ts = new Date(med.created_at).getTime();
+            if (Number.isNaN(ts) || ts < fourHoursAgo) continue;
+            activityRows.push({
+              key: `med-added-${med.id}`,
+              title: MEDICATION_ADDED_ACTIVITY_TITLE,
+              ts,
+              icon: "medication",
+            });
+          }
+
+          const allMedsTaken =
+            prescribedMeds.length > 0 &&
+            prescribedMeds.every((med) =>
+              takenMedRows.some((row) => String(row.medication_id) === String(med.id)),
+            );
+          if (allMedsTaken && takenMedRows.length > 0) {
+            const completedTs = takenMedRows.reduce((max, row) => {
+              const ts = row.created_at ? new Date(row.created_at).getTime() : 0;
+              return ts > max ? ts : max;
+            }, 0);
+            if (completedTs >= fourHoursAgo) {
+              activityRows.push({
+                key: `meds-goal-${today}`,
+                title: MEDICATIONS_GOAL_ACTIVITY_TITLE,
+                ts: completedTs,
+                icon: "medication",
+              });
+            }
+          }
+
           const recentBowel = recentBowelRes.data?.[0];
           const recentBowelSavedAt = recentBowel?.updated_at ?? recentBowel?.created_at;
           if (recentBowel && recentBowelSavedAt) {
@@ -1426,11 +1421,10 @@ function DashboardScreen({
             });
           }
 
-          const fourHoursAgo = Date.now() - 4 * 60 * 60 * 1000;
           snap.recentActivity = activityRows
             .filter((row) => row.ts >= fourHoursAgo)
             .sort((a, b) => b.ts - a.ts)
-            .slice(0, 4);
+            .slice(0, 2);
 
           if (cancelled) return;
           setTodaySummary(snap.todaySummary);
@@ -1566,7 +1560,7 @@ function DashboardScreen({
               : { backgroundColor: c.card, borderColor: c.cardBorder },
           ]}
         >
-          <Text style={[styles.homeNavPillLabel, { color: homeDashTab === "today" ? c.white : c.text }]}>Today</Text>
+          <Text style={[styles.homeNavPillLabel, { color: homeDashTab === "today" ? c.white : c.text }]}>Today's</Text>
         </Pressable>
         <Pressable
           onPress={() => setHomeDashTab((prev) => (prev === "logs" ? null : "logs"))}
@@ -1588,7 +1582,7 @@ function DashboardScreen({
               : { backgroundColor: c.card, borderColor: c.cardBorder },
           ]}
         >
-          <Text style={[styles.homeNavPillLabel, { color: homeDashTab === "news" ? c.white : c.text }]}>News</Text>
+          <Text style={[styles.homeNavPillLabel, { color: homeDashTab === "news" ? c.white : c.text }]}>Latest</Text>
         </Pressable>
       </ScrollView>
     </View>
@@ -1650,7 +1644,7 @@ function DashboardScreen({
         <Text
           style={[styles.dashboardSectionTitleLeft, styles.dashboardSectionTitleAfterPills, { color: c.text }]}
         >
-          Latest
+          News
         </Text>
         {newsLoading ? (
           <Text style={[styles.muted, { color: c.textMuted }]}>Getting latest news...</Text>
@@ -2368,136 +2362,6 @@ function MedicationLogDetailScreen({ user }: { user: SessionUser }) {
   );
 }
 
-function MedicationsScreen({ user }: { user: SessionUser }) {
-  const c = useFlareColors();
-  const bottomScrollInset = useBottomTabScrollInset();
-  const [name, setName] = useState("");
-  const [dosage, setDosage] = useState("");
-  const [timeOfDay, setTimeOfDay] = useState("07:00");
-  const [meds, setMeds] = useState<Medication[]>([]);
-  const [takenMedIds, setTakenMedIds] = useState<string[]>([]);
-
-  const load = async () => {
-    const today = new Date().toISOString().split("T")[0];
-    const [medsRes, takenRes] = await Promise.all([
-      supabase
-        .from(TABLES.MEDICATIONS)
-        .select("*")
-        .eq("user_id", user.id)
-        .neq("name", "Medication Tracking")
-        .order("created_at", { ascending: false }),
-      supabase.from(TABLES.MEDICATION_TAKEN).select("medication_id").eq("user_id", user.id).eq("taken_date", today),
-    ]);
-    setMeds((medsRes.data ?? []) as Medication[]);
-    setTakenMedIds((takenRes.data ?? []).map((row) => String(row.medication_id)));
-  };
-  useEffect(() => { load(); }, [user.id]);
-  useFocusEffect(
-    useCallback(() => {
-      void load();
-    }, [user.id]),
-  );
-
-  const addMedication = async () => {
-    if (!name.trim()) {
-      Alert.alert("Medication name required", "Enter a medication name first.");
-      return;
-    }
-    const payload = { user_id: user.id, name, dosage: dosage ? `${dosage}mg` : "", time_of_day: timeOfDay, reminders_enabled: true };
-    const { error } = await supabase.from(TABLES.MEDICATIONS).insert([payload]);
-    if (error) return Alert.alert("Could not save medication", error.message);
-    setName("");
-    setDosage("");
-    await load();
-    try {
-      if (Notifications) {
-        const permission = await Notifications.getPermissionsAsync();
-        if (permission.status === "granted") {
-          const { scheduledCount } = await rescheduleMedicationNotificationsForUser(user.id);
-          Alert.alert("Medication saved", `Reminders updated. Scheduled reminders: ${scheduledCount}`);
-          return;
-        }
-      }
-    } catch (e: any) {
-      Alert.alert("Medication saved", `Could not auto-update reminders: ${e?.message || "Unknown error"}`);
-      return;
-    }
-    Alert.alert(
-      "Medication saved",
-      "Open the Reminders tab and tap Enable notifications once. New medications will update reminders automatically after that.",
-    );
-  };
-
-  const toggleTaken = async (med: Medication) => {
-    const today = new Date().toISOString().split("T")[0];
-    const medIdStr = String(med.id);
-    const isTaken = takenMedIds.some((id) => id === medIdStr);
-    try {
-      if (isTaken) {
-        const { error } = await supabase
-          .from(TABLES.MEDICATION_TAKEN)
-          .delete()
-          .eq("user_id", user.id)
-          .eq("medication_id", medIdStr)
-          .eq("taken_date", today);
-        if (error) throw error;
-        setTakenMedIds((prev) => prev.filter((id) => id !== medIdStr));
-      } else {
-        const { error } = await supabase.from(TABLES.MEDICATION_TAKEN).upsert(
-          { user_id: user.id, medication_id: medIdStr, taken_date: today },
-          { onConflict: "user_id,medication_id,taken_date" },
-        );
-        if (error) throw error;
-        setTakenMedIds((prev) => [...prev, medIdStr]);
-      }
-      invalidateDashboardSnapshot(user.id);
-      Alert.alert(
-        isTaken ? "Updated" : "Marked as taken",
-        isTaken
-          ? `${med.name} is no longer counted as taken today.`
-          : `${med.name} is counted toward today's Summary and Goals on Home.`,
-      );
-    } catch (e: any) {
-      Alert.alert("Could not update", e?.message || "Unknown error");
-    }
-  };
-
-  return (
-    <ScrollView
-      style={[styles.screen, { backgroundColor: c.screen }]}
-      contentContainerStyle={{ paddingBottom: bottomScrollInset }}
-    >
-      <Card title="Add Medication">
-        <LabeledInput label="Medication name" value={name} onChangeText={setName} placeholder="Medication name" />
-        <LabeledInput label="Dosage (mg)" value={dosage} onChangeText={setDosage} placeholder="Dosage (mg)" keyboardType="number-pad" />
-        <LabeledInput label="Reminder time (24h)" value={timeOfDay} onChangeText={setTimeOfDay} placeholder="HH:mm" />
-        <PrimaryButton title="Save medication" onPress={addMedication} />
-      </Card>
-      <Card title="Current Medications">
-        {meds.length === 0 ? (
-          <Text style={[styles.muted, { color: c.textMuted }]}>No medications yet.</Text>
-        ) : (
-          meds.map((m) => {
-            const isTaken = takenMedIds.some((id) => id === String(m.id));
-            return (
-              <View key={m.id} style={styles.row}>
-                <Text style={[styles.text, { color: c.textMuted }]}>
-                  {m.name} {m.dosage ?? ""}
-                  {isTaken ? " · Taken today" : ""}
-                </Text>
-                <SecondaryButton
-                  title={isTaken ? "Mark as not taken" : "Mark as taken"}
-                  onPress={() => toggleTaken(m)}
-                />
-              </View>
-            );
-          })
-        )}
-      </Card>
-    </ScrollView>
-  );
-}
-
 function HydrationStepperButton({
   icon,
   onPress,
@@ -2590,7 +2454,7 @@ function HydrationScreen({ user }: { user: SessionUser }) {
         <Card title="" compactBody>
           <View style={styles.hydrationCardHeader}>
             <View style={styles.hydrationHeaderIcon}>
-              <MaterialCommunityIcons name="water" size={28} color={c.primary} accessibilityIgnoresInvertColors />
+              <MaterialCommunityIcons name={HYDRATION_MCI_ICON} size={28} color={c.primary} accessibilityIgnoresInvertColors />
             </View>
             <Text
               style={[styles.cardTitle, styles.hydrationCardHeaderTitle, { color: c.text }]}
@@ -2877,20 +2741,173 @@ function ReportsScreen({ user }: { user: SessionUser }) {
   );
 }
 
+const NOTIFICATION_HELP_SECTIONS = [
+  {
+    label: "Device settings",
+    steps: [
+      "Open your device's notification settings for Flare Care Mobile.",
+      "Ensure notifications are allowed.",
+    ],
+  },
+  {
+    label: "Flare Care reminders",
+    steps: [
+      "Open the Reminders screen.",
+      "Tap Enable Notifications if available.",
+      "Verify that reminder alerts are turned on.",
+    ],
+  },
+];
+
+function NotificationHelpContent() {
+  const c = useFlareColors();
+  const [deviceSection, remindersSection] = NOTIFICATION_HELP_SECTIONS;
+
+  return (
+    <>
+      <Text style={[logHistoryCardStyles.trackerIntro, { color: c.textMuted }]}>
+        If you&apos;re not receiving alerts, check that notifications are enabled both in Flare Care and in your
+        device settings.
+      </Text>
+
+      <View style={styles.remindersHelpPathItem}>
+        <Text style={[styles.notificationHelpSectionTitle, { color: c.text }]}>{deviceSection.label}</Text>
+        <View style={styles.notificationHelpStepList}>
+          {deviceSection.steps.map((step) => (
+            <View key={step} style={styles.notificationHelpStepRow}>
+              <Text style={[styles.notificationHelpStepBullet, { color: c.primary }]}>•</Text>
+              <Text style={[styles.text, styles.notificationHelpStepText, { color: c.textMuted }]}>{step}</Text>
+            </View>
+          ))}
+        </View>
+        <View style={styles.notificationHelpAction}>
+          <PrimaryButton title="Open notification settings" onPress={() => void openAppNotificationSettings()} />
+        </View>
+      </View>
+
+      <View style={styles.remindersHelpPathItem}>
+        <Text style={[styles.notificationHelpSectionTitle, { color: c.text }]}>{remindersSection.label}</Text>
+        <View style={styles.notificationHelpStepList}>
+          {remindersSection.steps.map((step) => (
+            <View key={step} style={styles.notificationHelpStepRow}>
+              <Text style={[styles.notificationHelpStepBullet, { color: c.primary }]}>•</Text>
+              <Text style={[styles.text, styles.notificationHelpStepText, { color: c.textMuted }]}>{step}</Text>
+            </View>
+          ))}
+        </View>
+      </View>
+
+      <Text style={[styles.muted, { color: c.textMuted, lineHeight: 20 }]}>
+        Notification settings may vary by device
+        {Platform.OS === "android" ? " and Android version" : ""}.
+      </Text>
+    </>
+  );
+}
+
+function HelpSectionDropdown({
+  title,
+  expanded,
+  onToggle,
+  children,
+}: {
+  title: string;
+  expanded: boolean;
+  onToggle: () => void;
+  children: React.ReactNode;
+}) {
+  const c = useFlareColors();
+  return (
+    <View style={[logHistoryCardStyles.trackerCard, { backgroundColor: c.card, gap: 0 }]}>
+      <Pressable
+        accessibilityRole="button"
+        accessibilityState={{ expanded }}
+        accessibilityLabel={title}
+        onPress={onToggle}
+        style={[styles.helpSectionToggle, expanded && styles.helpSectionToggleExpanded]}
+      >
+        <Text style={[logHistoryListStyles.logPrimary, styles.helpSectionToggleTitle, { color: c.text }]}>
+          {title}
+        </Text>
+        <Text style={[styles.helpSectionToggleMark, { color: c.text }]} accessibilityElementsHidden>
+          {expanded ? "−" : "+"}
+        </Text>
+      </Pressable>
+      {expanded ? <View style={styles.helpSectionBody}>{children}</View> : null}
+    </View>
+  );
+}
+
+function AccountHelpScreen() {
+  const navigation = useNavigation<any>();
+  const route = useRoute<any>();
+  const c = useFlareColors();
+  const bottomScrollInset = useBottomTabScrollInset();
+  const [notificationsOpen, setNotificationsOpen] = useState(false);
+
+  useFocusEffect(
+    useCallback(() => {
+      if (route.params?.expandSection === "notifications") {
+        setNotificationsOpen(true);
+        navigation.setParams({ expandSection: undefined });
+      }
+    }, [navigation, route.params?.expandSection]),
+  );
+
+  return (
+    <ScrollView
+      style={[styles.screen, { backgroundColor: c.screen }]}
+      contentContainerStyle={[styles.accountScrollContent, { paddingBottom: bottomScrollInset + 24 }]}
+    >
+      <HelpSectionDropdown
+        title="Notifications"
+        expanded={notificationsOpen}
+        onToggle={() => setNotificationsOpen((open) => !open)}
+      >
+        <NotificationHelpContent />
+      </HelpSectionDropdown>
+    </ScrollView>
+  );
+}
+
 function NotificationsScreen({ user }: { user: SessionUser }) {
   const c = useFlareColors();
+  const navigation = useNavigation<any>();
   const bottomScrollInset = useBottomTabScrollInset();
   const [permissionGranted, setPermissionGranted] = useState(false);
   const [scheduled, setScheduled] = useState(0);
   const [lastError, setLastError] = useState("");
+  const [registering, setRegistering] = useState(false);
+
+  const refreshDebugStatus = useCallback(async () => {
+    if (!Notifications) return;
+    try {
+      const { status } = await Notifications.getPermissionsAsync();
+      const granted = status === "granted";
+      setPermissionGranted(granted);
+      setScheduled(granted ? await getLocalReminderScheduledCount() : 0);
+    } catch {
+      // non-fatal debug read
+    }
+  }, []);
+
+  useFocusEffect(
+    useCallback(() => {
+      setRegistering(false);
+      void refreshDebugStatus();
+    }, [refreshDebugStatus]),
+  );
 
   const register = async () => {
     setLastError("");
+    setRegistering(true);
     if (!Notifications || !Device) {
+      setRegistering(false);
       Alert.alert("Not supported in Expo Go", "Use a development build to test local reminders.");
       return;
     }
     if (!Device.isDevice) {
+      setRegistering(false);
       Alert.alert("Device required", "Use a physical device for reminders.");
       return;
     }
@@ -2901,6 +2918,7 @@ function NotificationsScreen({ user }: { user: SessionUser }) {
       finalStatus = status;
     }
     if (finalStatus !== "granted") {
+      setRegistering(false);
       Alert.alert("Permission denied", "Notification permission is required.");
       return;
     }
@@ -2908,15 +2926,15 @@ function NotificationsScreen({ user }: { user: SessionUser }) {
     try {
       const meds = await rescheduleMedicationNotificationsForUser(user.id);
       const appts = await rescheduleAppointmentNotificationsForUser(user.id);
-      const totalScheduled = meds.scheduledCount + appts.scheduledCount;
-      setScheduled(totalScheduled);
+      const scheduledCount = meds.scheduledCount + appts.scheduledCount;
+      setScheduled(scheduledCount);
       setLastError("");
-      Alert.alert(
-        "Reminders enabled",
-        totalScheduled > 0
-          ? `Scheduled ${totalScheduled} reminder(s) on this device.`
-          : "Notifications are on. Add medications or appointments with reminder times to schedule alerts.",
-      );
+
+      try {
+        await registerExpoPushTokenBestEffort();
+      } catch (pushError) {
+        console.warn("PUSH_REGISTER_SKIPPED", pushError);
+      }
     } catch (error: any) {
       const message =
         error?.message ||
@@ -2925,30 +2943,64 @@ function NotificationsScreen({ user }: { user: SessionUser }) {
       console.error("LOCAL_REMINDER_SETUP_ERROR", error);
       setLastError(message);
       Alert.alert("Notification setup failed", message);
+    } finally {
+      setRegistering(false);
     }
   };
+
+  const reminderStatusSubtitle = permissionGranted
+    ? scheduled > 0
+      ? `${scheduled} reminder${scheduled === 1 ? "" : "s"} scheduled`
+      : "Add medications or appointments with reminders to schedule alerts"
+    : "Turn on to receive medication and appointment reminders";
 
   return (
     <ScrollView
       style={[styles.screen, { backgroundColor: c.screen }]}
-      contentContainerStyle={{ flexGrow: 1, paddingBottom: bottomScrollInset }}
+      contentContainerStyle={[
+        styles.accountScrollContent,
+        styles.remindersScrollContent,
+        { paddingBottom: bottomScrollInset + 24 },
+      ]}
     >
       <Card title="" style={styles.accountPaddedCard} compactBody>
+        <View style={styles.remindersStatusRow}>
+          <View style={[styles.accountAvatarWell, { backgroundColor: c.surfaceSubtle }]}>
+            <Ionicons
+              name={permissionGranted ? "notifications" : "notifications-off-outline"}
+              size={26}
+              color={c.primary}
+              accessibilityIgnoresInvertColors
+            />
+          </View>
+          <View style={styles.accountIdentityTextCol}>
+            <Text style={[styles.accountFirstName, { color: c.text }]}>
+              {permissionGranted ? "Notifications on" : "Notifications off"}
+            </Text>
+            <Text style={[styles.accountEmailLine, { color: c.textMuted }]}>{reminderStatusSubtitle}</Text>
+          </View>
+        </View>
+        <Text style={[styles.muted, { color: c.textMuted, marginTop: 16, lineHeight: 20 }]}>
+          Tap once to allow notifications. After that, saving medications or appointments will schedule reminders automatically.
+        </Text>
         <View style={styles.remindersSetupBlock}>
-          <Text style={[logHistoryCardStyles.trackerIntro, { color: c.textMuted }]}>
-            Tap once to allow notifications. After that, saving medications or appointments will schedule reminders automatically.
-          </Text>
-          <PrimaryButton title="Enable notifications" onPress={register} />
+          <PrimaryButton
+            title={permissionGranted ? "Refresh reminders" : "Enable notifications"}
+            onPress={register}
+            loading={registering}
+          />
         </View>
-        <View style={styles.remindersDebugBlock}>
-          <Text style={[logHistoryCardStyles.trackerIntro, { color: c.textMuted }]}>
-            Permission: {permissionGranted ? "granted" : "not enabled yet"}
-          </Text>
-          <Text style={[logHistoryCardStyles.trackerIntro, { color: c.textMuted }]}>
-            Scheduled reminders: {scheduled}
-          </Text>
-          {lastError ? <Text style={flareFieldErrorStyle(c, "wizard")}>Error: {lastError}</Text> : null}
-        </View>
+        {lastError ? (
+          <Text style={[flareFieldErrorStyle(c, "wizard"), { marginTop: 12 }]}>{lastError}</Text>
+        ) : null}
+        <Pressable
+          accessibilityRole="button"
+          accessibilityLabel="Troubleshoot notifications"
+          onPress={() => navigation.navigate("AccountHelp", { expandSection: "notifications" })}
+          style={({ pressed }) => [styles.remindersGuideLinkPress, pressed && { opacity: 0.7 }]}
+        >
+          <Text style={[styles.remindersGuideLink, { color: c.text }]}>Troubleshoot notifications</Text>
+        </Pressable>
       </Card>
     </ScrollView>
   );
@@ -3318,36 +3370,6 @@ function LegalDocumentScreen() {
   );
 }
 
-function AccountHelpScreen() {
-  const navigation = useNavigation<any>();
-  const c = useFlareColors();
-  const bottomScrollInset = useBottomTabScrollInset();
-
-  const openSupportEmail = () => {
-    Linking.openURL("mailto:support@flarecare.app").catch(() => {});
-  };
-
-  return (
-    <ScrollView
-      style={[styles.screen, { backgroundColor: c.screen }]}
-      contentContainerStyle={{ paddingBottom: bottomScrollInset + 24 }}
-    >
-      <View style={[logHistoryCardStyles.trackerCard, { backgroundColor: c.card }]}>
-        <LogHistoryList
-          items={[
-            { id: "about", title: "About FlareCare", accessibilityLabel: "About FlareCare" },
-            { id: "support", title: "Contact support", accessibilityLabel: "Contact support" },
-          ]}
-          onPressItem={(id) => {
-            if (id === "about") navigation.navigate("About");
-            else openSupportEmail();
-          }}
-        />
-      </View>
-    </ScrollView>
-  );
-}
-
 function SettingsScreen() {
   const navigation = useNavigation<any>();
   const c = useFlareColors();
@@ -3595,6 +3617,14 @@ function AppTabs({
     resetDashboardHomeRef.current?.();
   }, []);
 
+  const MedsScreenRoute = useMemo(
+    () =>
+      function MedsScreenRoute() {
+        return <MedicationsScreen user={user} />;
+      },
+    [user.id],
+  );
+
   const syncFocusRoute = useCallback(() => {
     const name = navigationRef.getCurrentRoute()?.name;
     if (name) setFocusRouteName(name);
@@ -3622,6 +3652,8 @@ function AppTabs({
       Settings: "Settings",
       Reminders: "Reminders",
       Hydration: "My Hydration",
+      Meds: "My Meds",
+      MedicationDetail: "Medication",
       Bowel: "Bowel Movements",
       BowelLogs: "Your logs",
       BowelLogDetail: "Bowel log",
@@ -3635,6 +3667,7 @@ function AppTabs({
       route.name === "SymptomLogWizard" ||
       route.name === "MedicationTrackingWizard" ||
       route.name === "Meds" ||
+      route.name === "MedicationDetail" ||
       route.name === "Reports" ||
       route.name === "Weight" ||
       route.name === "Appointments" ||
@@ -3711,6 +3744,7 @@ function AppTabs({
             )
           : undefined,
       headerRight: headerRightContent ? () => headerRightContent : undefined,
+      freezeOnBlur: true,
     } as const;
   };
 
@@ -3745,7 +3779,8 @@ function AppTabs({
             <AppStack.Screen name="BristolGuide" component={BristolGuideScreen} />
             <AppStack.Screen name="Appointments">{() => <AppointmentsScreen user={user} />}</AppStack.Screen>
             <AppStack.Screen name="Reports">{() => <ReportsScreen user={user} />}</AppStack.Screen>
-            <AppStack.Screen name="Meds">{() => <MedicationsScreen user={user} />}</AppStack.Screen>
+            <AppStack.Screen name="Meds" component={MedsScreenRoute} />
+            <AppStack.Screen name="MedicationDetail">{() => <MedicationDetailScreen user={user} />}</AppStack.Screen>
             <AppStack.Screen name="Reminders">{() => <NotificationsScreen user={user} />}</AppStack.Screen>
             <AppStack.Screen name="Ibd">{() => <IbdScreen />}</AppStack.Screen>
             <AppStack.Screen name="Account">
@@ -3770,12 +3805,14 @@ function AppTabs({
             <AppStack.Screen name="About">{() => <AboutScreen />}</AppStack.Screen>
           </AppStack.Navigator>
         </View>
-        <MainBottomTabBar
-          routeName={focusRouteName}
-          navigationRef={navigationRef}
-          suppressDashboardActive={focusRouteName === "Dashboard" && dashboardHomePillActive}
-          onResetDashboardHome={resetDashboardHome}
-        />
+        <View style={styles.bottomTabBarOverlay} pointerEvents="box-none">
+          <MainBottomTabBar
+            routeName={focusRouteName}
+            navigationRef={navigationRef}
+            suppressDashboardActive={focusRouteName === "Dashboard" && dashboardHomePillActive}
+            onResetDashboardHome={resetDashboardHome}
+          />
+        </View>
       </View>
     </NavigationContainer>
   );
@@ -3841,6 +3878,11 @@ function AppRoot() {
   }, []);
 
   const finishSignOut = useCallback(async () => {
+    try {
+      await clearMedicationNotificationsForUser();
+    } catch {
+      // non-fatal
+    }
     setUser(null);
     await supabase.auth.signOut();
   }, []);
@@ -3865,7 +3907,16 @@ function AppRoot() {
       return <SplashScreen />;
     }
     if (signOutNotice) {
-      return <SignedOutScreen reason={signOutNotice} onContinue={() => setSignOutNotice(null)} />;
+      const copy = SIGN_OUT_COPY[signOutNotice];
+      return (
+        <SuccessNoticeScreen
+          title={copy.title}
+          message={copy.message}
+          buttonTitle="Sign in"
+          fullScreen
+          onPress={() => setSignOutNotice(null)}
+        />
+      );
     }
     if (user && profileNeedsSetup(user)) {
       return <ProfileSetupScreen user={user} onComplete={(next) => setUser(next)} />;
@@ -4024,17 +4075,6 @@ const styles = StyleSheet.create({
   /** Light splash: circular primary well behind mark. */
   splashLogoMarkWell: { padding: 22, borderRadius: 9999, overflow: "hidden" },
   splashLogo: { width: 132, height: 132 },
-  signedOutScreen: { flex: 1, justifyContent: "center", alignItems: "center" },
-  signedOutCard: { width: "100%", maxWidth: 360, alignItems: "center", gap: 12 },
-  signedOutTitle: { fontSize: 22, fontFamily: "Inter_700Bold", textAlign: "center", marginTop: 8 },
-  signedOutMessage: {
-    fontSize: 15,
-    fontFamily: "Inter_400Regular",
-    textAlign: "center",
-    lineHeight: 22,
-    maxWidth: 320,
-  },
-  signedOutActions: { width: "100%", marginTop: 28 },
   centered: { flex: 1, justifyContent: "center", alignItems: "center", gap: 10 },
   confirmModalRoot: { flex: 1, justifyContent: "center", paddingHorizontal: 20 },
   confirmModalCard: {
@@ -4091,8 +4131,51 @@ const styles = StyleSheet.create({
   },
   text: { fontSize: 14, fontFamily: "Inter_400Regular" },
   muted: { fontSize: 13, fontFamily: "Inter_400Regular" },
-  remindersSetupBlock: { gap: 12 },
-  remindersDebugBlock: { gap: 6, marginTop: 16 },
+  remindersSetupBlock: { gap: 12, marginTop: 16 },
+  remindersStatusRow: { flexDirection: "row", alignItems: "center" },
+  remindersScrollContent: { paddingTop: SECTION_TITLE_MARGIN_TOP },
+  remindersHelpBlock: { gap: 12 },
+  remindersHelpPathItem: { gap: 8 },
+  notificationHelpSectionTitle: {
+    fontSize: FLARE_FONT_SIZE.muted,
+    fontFamily: FLARE_FONT_FAMILY.medium,
+    lineHeight: FLARE_LINE_HEIGHT.muted,
+  },
+  notificationHelpStepList: { gap: 6 },
+  notificationHelpStepRow: { flexDirection: "row", alignItems: "flex-start" },
+  notificationHelpStepBullet: { fontSize: 14, lineHeight: 20, marginRight: 8, fontFamily: "Inter_700Bold" },
+  notificationHelpStepText: { flex: 1, lineHeight: 20 },
+  notificationHelpAction: { marginTop: 6, marginBottom: 8 },
+  helpSectionToggle: {
+    flexDirection: "row",
+    alignItems: "center",
+    justifyContent: "space-between",
+    gap: 12,
+  },
+  helpSectionToggleExpanded: { paddingBottom: 12 },
+  helpSectionToggleTitle: { flex: 1 },
+  helpSectionToggleMark: {
+    fontSize: 20,
+    lineHeight: 20,
+    fontFamily: "Inter_400Regular",
+    minWidth: 20,
+    textAlign: "center",
+  },
+  helpSectionBody: { gap: 12 },
+  remindersGuideLinkPress: {
+    flexDirection: "row",
+    alignItems: "center",
+    alignSelf: "center",
+    gap: 6,
+    marginTop: 20,
+    marginBottom: 4,
+    paddingVertical: 4,
+  },
+  remindersGuideLink: {
+    fontSize: FLARE_FONT_SIZE.body,
+    fontFamily: FLARE_FONT_FAMILY.regular,
+    textDecorationLine: "underline",
+  },
   bigText: { fontSize: 30, fontFamily: "Inter_700Bold", marginBottom: 8 },
   headerIconButton: {
     width: 34,
@@ -4124,6 +4207,13 @@ const styles = StyleSheet.create({
     paddingLeft: 10,
     paddingRight: Platform.OS === "ios" ? 6 : 4,
     minHeight: 44,
+  },
+  bottomTabBarOverlay: {
+    position: "absolute",
+    left: 0,
+    right: 0,
+    bottom: 0,
+    zIndex: 10,
   },
   bottomTabBarWrap: {
     flexDirection: "row",

@@ -3,6 +3,27 @@ import { Platform } from "react-native";
 /** Horizontal inset for screens, cards, and header controls. */
 export const SCREEN_EDGE_PADDING = 12;
 
+/** Native `DateTimePicker` time mode — medication reminders, bowel log, etc. */
+export const TIME_PICKER_MINUTE_INTERVAL = 5;
+
+/** Icon row + labels in the custom bottom tab bar (excludes home-indicator padding). */
+export const BOTTOM_TAB_BAR_BODY_HEIGHT = 48;
+
+/** Full rendered height of `MainBottomTabBar` — keep in sync with `App.tsx` styles. */
+export function bottomTabBarHeight(bottomInset: number): number {
+  const homeIndicatorPad = Math.max(bottomInset, 10);
+  // wrap paddingTop 8 + item (paddingVertical 4 + icon 23 + gap 3 + label ~14) + wrap paddingBottom
+  return 8 + BOTTOM_TAB_BAR_BODY_HEIGHT + homeIndicatorPad;
+}
+
+/** Scroll padding so content clears the overlaid tab bar on Home / Reminders / Account. */
+export function bottomTabBarScrollInset(bottomInset: number): number {
+  const barHeight = bottomTabBarHeight(bottomInset);
+  // Tab bar is absolutely positioned; stacks are full height. Pad by bar height plus the
+  // scroll slack that used to live inside the flex-shortened area above the bar.
+  return barHeight * 2;
+}
+
 /** Inset for muted placeholder copy inside a `surfaceSubtle` empty tray. */
 export const EMPTY_TRAY_PADDING = 14;
 

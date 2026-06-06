@@ -4,7 +4,11 @@
 
 **It is not medical advice.** It does not diagnose or treat. Always follow your qualified clinicians.
 
-This folder is the **native mobile app** (Expo / React Native, **iOS + Android**). It is built to align with the **existing web app’s behaviour and APIs** where parity matters; you do **not** need to re‑explain product intent in every new chat if this file stays current.
+This folder is the **native mobile app** (Expo / React Native, **iOS + Android**). It is built to align with the **existing web app’s behaviour and APIs** where parity matters.
+
+**Implementation conventions** (shared components, UI patterns, “don’t duplicate this”): **`DEV_NOTES.md`** in this folder — for dev + AI agents.
+
+For **recent UI / polish / changelog-style notes**, see **`CHANGELOG.md`**.
 
 ---
 
@@ -17,62 +21,12 @@ This folder is the **native mobile app** (Expo / React Native, **iOS + Android**
 
 ## What the mobile app does (feature areas)
 
-- **Auth:** Email **OTP** sign-in (countdown, resend limits, friendly errors) and **Google** sign-in via Supabase — see **§ Email OTP verification** below.
+- **Auth:** Email **OTP** sign-in (countdown, resend limits, friendly errors) and **Google** sign-in via Supabase.
 - **Dashboard:** Home overview, **weather** (via your web API where configured), **news** rail when available, shortcuts into trackers.
 - **Core tracking:** Symptoms, medications (including “taken” / tracking inserts), **hydration**, **bowel**, **weight**, **appointments**.
 - **Reports & briefs:** Mobile report views and sharing / email using the **existing report email API** from the web backend.
 - **Reminders:** Native notification permission and **medication reminder** scheduling (FCM on Android; see Firebase notes below).
 - **Account:** Profile / email display, **light / dark** theme, **About** (product + contact), **logout** (with confirmation modal).
-
-For **recent UI / polish / changelog-style notes**, see **`CHANGELOG.md`** in this folder.
-
----
-
-## UI conventions (check before new screens)
-
-Use existing screens as reference — do **not** default to web-style teal hyperlinks.
-
-| Pattern | Reference | Colour / style |
-|---------|-----------|----------------|
-| **Navigate to another screen** (Account lists, chart link, “View all types”) | `AccountOptionRow` in `App.tsx` | Label **`c.text`**, chevron **`c.textMuted`**, 15px `Inter_400Regular` (medium optional via `labelMedium`) |
-| **Inline link in body copy** (e.g. tip “Open chart”) | Hydration **Reset** | **`c.text`** or **`c.textSecondary`** + `textDecorationLine: "underline"` — not `c.primary` |
-| **Primary action** (Save, Log now) | `PrimaryButton` | Teal fill — **`c.primary`** |
-| **Selected state / type badge / hero feature icon** | Bowel bubbles, dashboard tiles | **`c.primary`** |
-| **Form field icons** (calendar, time) | Bowel log sheet | **`c.textSecondary`** — utility, not a CTA |
-| **Destructive** | Logout, delete confirm | **`c.destructiveFill`** / `danger` for text |
-| **Tips** | Hydration / bowel tip row | Bulb **`#EAB308`** only on the icon; copy **`c.textMuted`** |
-
-**Do not use `c.primary` / `c.link` for tappable text navigation** unless you deliberately want a CTA (e.g. wizard **“Add medication”** in a form — that’s adding data, not leaving the screen).
-
-**New tracker / settings screens:** card layout + `SCREEN_EDGE_PADDING` + `useFlareColors()`; stack routes with `headerOptions` titles; link rows like Account, not a second colour system.
-
-**Live examples:** Account tab (`AccountOptionRow`), **Bowel** (`screens/BowelScreen.tsx`), **Bristol chart** (`screens/BristolGuideScreen.tsx`), **Hydration** (Reset link).
-
----
-
-## Log history lists (do not duplicate)
-
-**Before adding any grey-tray log list, browse row, or “intro + history” card — use the shared pieces in `components/LogHistoryList.tsx`.** Do **not** create a second list component, row builder, or card wrapper for the same purpose.
-
-| Piece | Use for |
-|-------|---------|
-| **`LogHistoryList`** | Grey tray rows inside a white card — title + subtitle, optional chevron (`onPressItem`), optional `emptyMessage`, default **`logsPill`** row spacing (matches Dashboard → Logs pill) |
-| **`buildTimestampLogRowItem`** | One saved log row — title + `formatLogWhenLine` subtitle from `whenIso` (symptom/medication history, bowel lists) |
-| **`buildBrowseLogRowItem`** | Browse row with a custom subtitle (e.g. Dashboard Logs pill: “Symptom logs” / “3 entries”) |
-| **`LogHistoryCard`** | White card shell only (`trackerCard` + theme `card` background) |
-| **`LogHistoryIntroSection`** | Intro copy + list tray in **one** card (symptom/medication history screens) |
-| **`logHistoryCardStyles`** | Shared card/intro/body tokens — import instead of redefining padding/radius/gap |
-| **`lib/logDisplay.ts`** | `formatLogWhenLine` (list subtitles), `formatAddedAtHeader` (detail screen headers) — do not reformat timestamps inline |
-
-**Live examples**
-
-- Dashboard → **Logs** tab → History card: `LogHistoryCard` + `buildBrowseLogRowItem` (`App.tsx` → `DashboardScreen`)
-- **Symptom history** / **Medication tracking history**: `LogHistoryIntroSection` + `buildTimestampLogRowItem` + `LogHistoryList`
-- **Bowel** recent + full log history: `logHistoryCardStyles` + `buildTimestampLogRowItem` (`screens/BowelScreen.tsx`) — list subtitle uses **`created_at`** on the hub **Recent** tray (when the log was saved); **BowelLogs** full history uses **`occurred_at`**; detail screen still shows movement date/time in fields + **Added** header from `created_at`
-
-**Detail screens:** symptom/medication detail = **delete only** in header (no edit). Bowel detail = edit + delete in header.
-
-**When extending:** pass custom `title` / `accessibilityLabel` into the builders; only add props to `LogHistoryList` if the pattern is genuinely new (e.g. a new trailing affordance). Update this section if the shared API changes.
 
 ---
 
@@ -80,171 +34,14 @@ Use existing screens as reference — do **not** default to web-style teal hyper
 
 - **Expo** (SDK aligned with `package.json`), **React Native**, **TypeScript**.
 - **Supabase** client for auth and data (`EXPO_PUBLIC_*` vars below).
-- **Theming:** `theme.tsx` — brand accent, light/dark tokens, navigation theme; most screens use `useFlareColors()` / `useFlareTheme()`.
-- **Layout & typography tokens:** `lib/layoutConstants.ts` — screen padding, font sizes, collapsing-title spacing (see below).
-- **Main UI code** today lives largely in **`App.tsx`** (screens, navigation, shared components). Splitting into modules is optional future work.
+- **Theming:** `theme.tsx` — brand accent, light/dark tokens, navigation theme.
+- **Main UI code** today lives largely in **`App.tsx`** (screens, navigation, shared components). Smaller screens live under **`screens/`**.
 
 ---
 
-## Informational pages & collapsing titles
-
-Use this section when adding pages like **What is IBD?** or **About** — long scroll content **without cards**, with a title that **shrinks into the nav bar** on scroll up and **expands back** on scroll down.
-
-**Live examples:** `IbdScreen`, `AboutScreen`, `LegalDocumentScreen` (Privacy Policy / Terms of Use) in `App.tsx`.  
-**Route names:** `Ibd`, `About`, `LegalDocument` (`document`: `privacy` | `terms`).
-
----
-
-### What we built (vs normal screens)
-
-| Normal screen (Meds, Settings, …) | Informational page |
-|-----------------------------------|--------------------|
-| Fixed **16px** title in nav bar (`FLARE_FONT_SIZE.navTitle`) | **One animated title** — no duplicate nav title |
-| Often `Card` layout + **18px** section headings (`sectionTitle`) | No cards; body is plain `Text` / lists |
-| Default React Navigation header | **Custom header** (see below) while the screen is mounted |
-| `ScrollView` + `styles.screen` in the screen | **`CollapsingTitleScrollScreen`** wraps children (provides the scroll view) |
-
-**Not** the iOS-only `headerLargeTitle` API — our own component works on **iOS and Android**.
-
-**Component:** `components/CollapsingTitleScrollScreen.tsx`  
-**Tokens:** `lib/layoutConstants.ts`  
-**Nav config:** `App.tsx` → `headerOptions`
-
----
-
-### Custom header (only on these pages)
-
-When a screen mounts `CollapsingTitleScrollScreen`, it calls `navigation.setOptions({ header: … })` and replaces the default header with **`CollapsingHeader`**:
-
-- Renders **back button** and **overflow menu** from existing `headerOptions` (`headerLeft` / `headerRight`)
-- Solid header bar background (theme `screen` colour)
-- **`overflow: visible`** so the single `Animated.Text` title can sit below the bar at rest and move up into it without being clipped
-- On unmount, header options are reset
-
-Other routes keep the normal stack header. You do **not** add a separate custom header per screen — the wrapper does it.
-
----
-
-### Typography — use the right tokens
-
-**Do not** hardcode font sizes on info pages. Use `layoutConstants.ts`:
-
-| Token | Value | When to use |
-|-------|-------|-------------|
-| `INFORMATIONAL_PAGE_TITLE` | 22px / line 27 | Collapsing **page** title at rest — via `titlePreset="informational"` |
-| `FLARE_FONT_SIZE.pageTitle` | 22px | Same (part of `INFORMATIONAL_PAGE_TITLE`) |
-| `FLARE_FONT_SIZE.navTitle` | 16px | Title **collapsed** in header (automatic) |
-| `FLARE_FONT_SIZE.sectionTitle` | 18px | **In-page** section headings (`dashboardSectionTitleLeft`) — *not* the morphing page title |
-| `FLARE_FONT_SIZE.body` | 14px | Body paragraphs (`styles.text`) |
-| `FLARE_FONT_FAMILY.bold` | Inter Bold | Page title & section headings |
-
-**At rest:** page title is **22px**, left-aligned under the header.  
-**Collapsed:** scales to **16px**, centred in the nav bar.  
-**In-page headings** (e.g. “What is FlareCare?”, “Contact”) stay **18px** — same as dashboard section titles.
-
-**Layout tokens** (usually only touch these in `layoutConstants.ts`):
-
-| Token | Value | Purpose |
-|-------|-------|---------|
-| `COLLAPSING_TITLE_GAP_BELOW_HEADER` | 12px | Space between header bar and large title |
-| `COLLAPSING_TITLE_CONTENT_GAP` | 16px | Space below title before body (at rest + scroll clearance) |
-| `COLLAPSING_TITLE_SCROLL_DISTANCE` | 80px | Scroll distance for full collapse on **long** pages |
-| `SCREEN_EDGE_PADDING` | 12px | Horizontal inset (scroll content aligns with title) |
-
-Short pages (e.g. About): collapse finishes over **however far the page can scroll** — handled inside the component; no extra setup.
-
----
-
-### Content layout rules
-
-1. **Left-align** intro and body under the page title (same as **What is IBD?**). Do **not** centre hero text under a left page title.
-2. **Do not** animate body text with the title — only the page title moves; content scrolls normally.
-3. **Do not** wrap content in an outer `ScrollView` — `CollapsingTitleScrollScreen` is the scroll view.
-4. **Do not** add a second page title in JSX — the wrapper renders it.
-5. Section headings inside the page use `styles.dashboardSectionTitleLeft` (18px), not `pageTitle`.
-6. Footer bits (e.g. version on About) may stay centred if they’re clearly a footer.
-
----
-
-### Checklist: add a new informational page
-
-**1. Screen component** (`App.tsx` or extracted file):
-
-```tsx
-function MyInfoScreen() {
-  const insets = useSafeAreaInsets();
-  const bottomScrollInset = useBottomTabScrollInset();
-
-  return (
-    <CollapsingTitleScrollScreen
-      title="My Page Title"
-      titlePreset="informational"
-      bottomInset={Math.max(insets.bottom, 16) + 48 + bottomScrollInset}
-    >
-      <Text style={[styles.text, { color: c.textMuted }]}>Intro paragraph…</Text>
-      <Text style={[styles.dashboardSectionTitleLeft, { color: c.text }]}>Section</Text>
-      {/* more content */}
-    </CollapsingTitleScrollScreen>
-  );
-}
-```
-
-Copy `bottomInset` from `IbdScreen` / `AboutScreen` so content clears the bottom tab bar.
-
-**2. Stack route** — register in `AppStack.Navigator`:
-
-```tsx
-<AppStack.Screen name="MyInfo">{() => <MyInfoScreen />}</AppStack.Screen>
-```
-
-**3. `headerOptions`** in `App.tsx` — **empty nav title** so it doesn’t duplicate the morphing title:
-
-```tsx
-const isMyInfo = route.name === "MyInfo";
-// in headerTitle ternary:
-: isMyInfo
-  ? ""
-  : …
-```
-
-**4. Navigation** — link from menu / overflow / wherever (e.g. `navigation.navigate("MyInfo")`).
-
-**5. Verify**
-
-- [ ] Title **22px** left-aligned at rest; **16px** centred in header when scrolled up
-- [ ] Back + overflow menu visible
-- [ ] Body **left-aligned**, no double scroll, no duplicate title
-- [ ] Short page: title still reaches header centre at bottom of scroll
-- [ ] Spacing under title feels OK (`COLLAPSING_TITLE_CONTENT_GAP` in one place if tuning)
-
-**6. Update this README** — add the screen name to **Live examples** above.
-
----
-
-### When *not* to use this
-
-- Card-based screens (Meds, Reminders, Account sub-screens, wizards, …)
-- Screens that only need a fixed **16px** nav title
-- Anywhere you’d use `styles.screen` + normal `ScrollView` without a morphing title
-
-For those, keep `headerTitle: "…"` in `headerOptions` and **18px** / **16px** tokens as today — no `CollapsingTitleScrollScreen`.
-
----
-
-### References
-
-- Original iOS-native plan (superseded): `plans/collapsing-large-title-headers.md`
-- Implementation: `components/CollapsingTitleScrollScreen.tsx`, `lib/layoutConstants.ts`, `App.tsx` (`IbdScreen`, `AboutScreen`, `headerOptions`)
-
----
-
-## Email OTP verification
+## Email OTP verification (user-facing)
 
 Email sign-in uses a **one-time code** (Supabase OTP). The verification step shows a **live expiry countdown**, controlled **resend**, and user-friendly error copy.
-
-**Implementation:** `lib/otpAuth.ts` (constants + helpers), auth UI in `App.tsx` (`AuthScreen` code step).
-
-### Behaviour
 
 | Phase | What the user sees |
 |-------|-------------------|
@@ -255,24 +52,7 @@ Email sign-in uses a **one-time code** (Supabase OTP). The verification step sho
 | **Bad / expired code** | Friendly message pointing to resend after timer |
 | **Leave flow** | Timer state is **not** persisted — restarting sign-in resets the attempt |
 
-Account → Information shows sign-in method as **Email OTP** when applicable.
-
-### Configuration
-
-| Setting | Where | Default |
-|---------|--------|---------|
-| OTP expiry | Supabase Dashboard → **Auth → Email → OTP expiry** | 15 min (900s) recommended |
-| App mirror | `EXPO_PUBLIC_OTP_EXPIRY_SECONDS` in env | `900` — **must match** Supabase |
-| Max resends | `OTP_MAX_RESENDS` in `lib/otpAuth.ts` | `3` |
-
-### Key exports (`lib/otpAuth.ts`)
-
-- `OTP_EXPIRY_SECONDS` — from env, fallback 900
-- `OTP_MAX_RESENDS` — resend taps after initial send
-- `formatOtpCountdown`, `otpRemainingSeconds`, `isOtpExpired`
-- `otpVerifyErrorMessage`, `otpResendErrorMessage`
-
-**Later (optional):** thin `sendOtp` / `verifyOtp` / `resendOtp` abstraction if auth provider changes off Supabase.
+Account → Information shows sign-in method as **Email OTP** when applicable. Config and code pointers: **`DEV_NOTES.md` § Email OTP**.
 
 ---
 
@@ -328,10 +108,8 @@ Mobile push uses **Firebase Cloud Messaging (FCM)** on Android. Short checklist:
 
 ## Keeping this README useful
 
-When you add a **user-visible feature** or change **product positioning**, update the **“What the mobile app does”** and **“Who it is for”** sections here so the next session (or collaborator) gets context without scrolling old chats.
+When you add a **user-visible feature** or change **product positioning**, update **“What the mobile app does”** and **“Who it is for”** here.
 
-When you add an **informational page** with a collapsing title, follow **§ Informational pages & collapsing titles** and add the screen to the live examples list there.
+When you add **implementation patterns** or **“don’t duplicate”** rules, update **`DEV_NOTES.md`**.
 
-When you change **auth / OTP** behaviour or Supabase expiry, update **§ Email OTP verification** and keep `EXPO_PUBLIC_OTP_EXPIRY_SECONDS` in sync with the dashboard.
-
-When you add or change **log list / history browse UI**, use **§ Log history lists (do not duplicate)** — extend `LogHistoryList.tsx`, do not fork a parallel list pattern.
+When you ship polish / fixes, update **`CHANGELOG.md`**.
