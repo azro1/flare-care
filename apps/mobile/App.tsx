@@ -1050,9 +1050,8 @@ function ProfileSetupScreen({ user, onComplete }: { user: SessionUser; onComplet
 /** Icons inside dashboard home tiles (Daily Check-in + More). */
 const HOME_TILE_ICON_SIZE = 34;
 
-/** Show bottom shortcuts on dashboard + primary tab destinations; hide on wizard/detail flows, Hydration, etc. */
-/** Only bottom-bar tab roots — not individual “More” / check-in screens (go Home to switch tab). */
-const BOTTOM_BAR_VISIBLE_ROUTES = new Set(["Dashboard", "Account", "Reminders"]);
+/** Show bottom shortcuts on tab roots + reminder-adjacent hubs; hide on wizard/detail flows, etc. */
+const BOTTOM_BAR_VISIBLE_ROUTES = new Set(["Dashboard", "Account", "Reminders", "Meds", "Appointments"]);
 
 /** Padding uses this screen’s route—not the globally focused route—so the exiting page doesn’t jump during transitions. */
 function useBottomTabScrollInset() {
@@ -2411,6 +2410,7 @@ function HydrationStepperButton({
 
 function HydrationScreen({ user }: { user: SessionUser }) {
   const c = useFlareColors();
+  const navigation = useNavigation<any>();
   const bottomScrollInset = useBottomTabScrollInset();
   const [glasses, setGlasses] = useState(() => dashboardSnapshotByUserId[user.id]?.todaySummary.hydration ?? 0);
   const [resetConfirmOpen, setResetConfirmOpen] = useState(false);
@@ -2483,9 +2483,18 @@ function HydrationScreen({ user }: { user: SessionUser }) {
               </Pressable>
             ) : null}
           </View>
-          <Text style={[styles.text, styles.hydrationInfoBody, { color: c.textMuted }]}>
-            Track your daily water intake to hit your goal each day. Your target is {HYDRATION_TARGET} glasses per day
-            (roughly 250ml each).
+          <Text
+            style={[
+              styles.text,
+              styles.hydrationInfoBody,
+              glasses >= HYDRATION_TARGET
+                ? [styles.hydrationGoalReached, { color: c.primary, marginBottom: 14 }]
+                : { color: c.textMuted },
+            ]}
+          >
+            {glasses >= HYDRATION_TARGET
+              ? "Daily goal reached!"
+              : "Track your daily water intake to hit your goal each day."}
           </Text>
           <View style={styles.hydrationCountRow}>
             <View style={styles.hydrationCountLine}>
@@ -2527,18 +2536,15 @@ function HydrationScreen({ user }: { user: SessionUser }) {
             })}
           </View>
 
-          {glasses >= HYDRATION_TARGET ? (
-            <Text style={[styles.hydrationGoalReached, { color: c.text }]}>Daily goal reached!</Text>
-          ) : null}
-        </Card>
-
-        <Card title="" style={styles.hydrationInfoCard} compactBody>
-          <View style={styles.hydrationTipRow}>
-            <Ionicons name="bulb-outline" size={18} color="#EAB308" accessibilityIgnoresInvertColors />
-            <Text style={[styles.hydrationTipBody, { color: c.textMuted, flex: 1 }]}>
-              Most guidelines recommend around 1.5–2 litres (about 6–8 glasses) of water per day for adults.
-            </Text>
-          </View>
+          <Pressable
+            accessibilityRole="link"
+            accessibilityLabel="Daily intake guidelines for adults"
+            onPress={() => navigation.navigate("AccountHelp", { expandSection: "hydration" })}
+            style={({ pressed }) => [styles.hydrationHelpLinkPress, pressed && { opacity: 0.7 }]}
+          >
+            <Ionicons name="book-outline" size={16} color={c.textSecondary} accessibilityIgnoresInvertColors />
+            <Text style={[styles.hydrationHelpLink, { color: c.text }]}>Daily intake guidelines?</Text>
+          </Pressable>
         </Card>
       </ScrollView>
 
@@ -2652,7 +2658,7 @@ function AppointmentsScreen({ user }: { user: SessionUser }) {
   return (
     <ScrollView
       style={[styles.screen, { backgroundColor: c.screen }]}
-      contentContainerStyle={{ paddingBottom: bottomScrollInset }}
+      contentContainerStyle={{ paddingBottom: bottomScrollInset + 24 }}
     >
       <Card title="Add Appointment">
         <LabeledInput label="Appointment date" value={date} onChangeText={setDate} placeholder="YYYY-MM-DD" />
@@ -2806,9 +2812,38 @@ function NotificationHelpContent() {
         </View>
       </View>
 
-      <Text style={[styles.muted, { color: c.textMuted, lineHeight: 20 }]}>
+      <Text style={[styles.muted, styles.notificationHelpEmphasis, { color: c.textMuted, lineHeight: 20 }]}>
         Notification settings may vary by device
         {Platform.OS === "android" ? " and Android version" : ""}.
+      </Text>
+    </>
+  );
+}
+
+function HydrationHelpContent() {
+  const c = useFlareColors();
+  const guidelineSteps = [
+    `Aim for ${HYDRATION_TARGET} glasses of fluid per day (around 250ml per glass).`,
+    "Most adults need about 1.5–2 litres of fluid daily (roughly 6–8 glasses).",
+    "Water is usually the best choice, though other drinks also contribute to your fluid intake.",
+    "You may need more fluids during hot weather, exercise, or a flare. Follow advice from your care team if it differs.",
+  ];
+
+  return (
+    <>
+      <Text style={[logHistoryCardStyles.trackerIntro, { color: c.textMuted }]}>
+        The guidelines below outline typical daily fluid intake recommendations for adults.
+      </Text>
+      <View style={styles.notificationHelpStepList}>
+        {guidelineSteps.map((step) => (
+          <View key={step} style={styles.notificationHelpStepRow}>
+            <Text style={[styles.notificationHelpStepBullet, { color: c.primary }]}>•</Text>
+            <Text style={[styles.text, styles.notificationHelpStepText, { color: c.textMuted }]}>{step}</Text>
+          </View>
+        ))}
+      </View>
+      <Text style={[styles.muted, styles.notificationHelpEmphasis, { color: c.textMuted, lineHeight: 20 }]}>
+        This information is general guidance only and is not personal medical advice.
       </Text>
     </>
   );
@@ -2853,14 +2888,22 @@ function AccountHelpScreen() {
   const c = useFlareColors();
   const bottomScrollInset = useBottomTabScrollInset();
   const [notificationsOpen, setNotificationsOpen] = useState(false);
+  const [hydrationOpen, setHydrationOpen] = useState(false);
 
   useFocusEffect(
     useCallback(() => {
-      if (route.params?.expandSection === "notifications") {
+      const section = route.params?.expandSection;
+      if (section === "notifications") {
         setNotificationsOpen(true);
+        setHydrationOpen(false);
+        navigation.setParams({ expandSection: undefined });
+      } else if (section === "hydration") {
+        setHydrationOpen(true);
+        setNotificationsOpen(false);
         navigation.setParams({ expandSection: undefined });
       } else {
         setNotificationsOpen(false);
+        setHydrationOpen(false);
       }
     }, [navigation, route.params?.expandSection]),
   );
@@ -2876,6 +2919,13 @@ function AccountHelpScreen() {
         onToggle={() => setNotificationsOpen((open) => !open)}
       >
         <NotificationHelpContent />
+      </HelpSectionDropdown>
+      <HelpSectionDropdown
+        title="Daily intake guidelines"
+        expanded={hydrationOpen}
+        onToggle={() => setHydrationOpen((open) => !open)}
+      >
+        <HydrationHelpContent />
       </HelpSectionDropdown>
     </ScrollView>
   );
@@ -2973,11 +3023,7 @@ function NotificationsScreen({ user }: { user: SessionUser }) {
   return (
     <ScrollView
       style={[styles.screen, { backgroundColor: c.screen }]}
-      contentContainerStyle={[
-        styles.accountScrollContent,
-        styles.remindersScrollContent,
-        { paddingBottom: bottomScrollInset + 24 },
-      ]}
+      contentContainerStyle={{ paddingBottom: bottomScrollInset + 16 }}
     >
       <Card title="" style={styles.accountPaddedCard} compactBody>
         <View style={styles.remindersStatusRow}>
@@ -4254,7 +4300,6 @@ const styles = StyleSheet.create({
     lineHeight: 20,
     marginTop: 4,
   },
-  remindersScrollContent: { paddingTop: SECTION_TITLE_MARGIN_TOP },
   remindersHelpBlock: { gap: 12 },
   remindersHelpPathItem: { gap: 8 },
   notificationHelpSectionTitle: {
@@ -4266,6 +4311,7 @@ const styles = StyleSheet.create({
   notificationHelpStepRow: { flexDirection: "row", alignItems: "flex-start" },
   notificationHelpStepBullet: { fontSize: 14, lineHeight: 20, marginRight: 8, fontFamily: "Inter_700Bold" },
   notificationHelpStepText: { flex: 1, lineHeight: 20 },
+  notificationHelpEmphasis: { fontStyle: "italic" },
   notificationHelpAction: { marginTop: 6, marginBottom: 8 },
   helpSectionToggle: {
     flexDirection: "row",
@@ -4584,7 +4630,7 @@ const styles = StyleSheet.create({
   newsMeta: { fontSize: 11, fontFamily: "Inter_400Regular", marginTop: 6 },
   /** Logged-at line above symptom detail review cards. */
   symptomDetailLoggedAt: { fontSize: 13, fontFamily: "Inter_400Regular", marginBottom: 16, textAlign: "center" },
-  hydrationCardHeader: { flexDirection: "row", alignItems: "center", marginBottom: 8, gap: 4 },
+  hydrationCardHeader: { flexDirection: "row", alignItems: "center", marginBottom: 14, gap: 4 },
   hydrationHeaderIcon: {
     width: 42,
     height: 42,
@@ -4617,7 +4663,7 @@ const styles = StyleSheet.create({
     alignItems: "center",
     justifyContent: "space-between",
     gap: 6,
-    marginTop: 20,
+    marginTop: 14,
   },
   hydrationProgressDot: {
     flex: 1,
@@ -4628,13 +4674,22 @@ const styles = StyleSheet.create({
   hydrationGoalReached: {
     fontSize: 14,
     fontFamily: "Inter_700Bold",
-    marginTop: 12,
-    textAlign: "center",
   },
-  hydrationInfoCard: { marginTop: 4 },
+  hydrationHelpLinkPress: {
+    flexDirection: "row",
+    alignItems: "center",
+    alignSelf: "center",
+    gap: 6,
+    marginTop: 20,
+    marginBottom: 4,
+    paddingVertical: 4,
+  },
+  hydrationHelpLink: {
+    fontSize: FLARE_FONT_SIZE.body,
+    fontFamily: FLARE_FONT_FAMILY.regular,
+    textDecorationLine: "underline",
+  },
   hydrationInfoBody: { lineHeight: 21, marginBottom: 14 },
-  hydrationTipRow: { flexDirection: "row", alignItems: "flex-start", gap: 10 },
-  hydrationTipBody: { fontSize: 13, fontFamily: "Inter_400Regular", lineHeight: 19 },
   /** Keeps stacked detail rows out of `cardBody` gap (which would add space between every field). */
   detailFieldsStack: { alignSelf: "stretch" },
 });

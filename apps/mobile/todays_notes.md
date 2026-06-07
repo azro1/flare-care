@@ -20,6 +20,20 @@ Reference: web screens in repo root `src/`; mobile screens in `App.tsx` (`Bowel`
 
 ---
 
+## Reminder fired → Recent Activity (future)
+
+When a **medication or appointment** local reminder fires, log it in **Recent Activity** on Home — especially if the user swiped away the banner or missed it.
+
+- [ ] Log **“Reminder fired”** (not “taken” / not “attended”) — e.g. “Reminder: time to take [med name]”
+- [ ] **Dedupe** — one entry per med/reminder per day (avoid spam from repeats)
+- [ ] Tap row → med detail or Appointments as appropriate
+- [ ] **Meds first**; appointments optional v2 if needed
+- [ ] Note: may not catch every dismiss when app was killed — log on delivery/tap where OS allows
+
+**Why:** safety net for accidental swipe-away; fits existing Recent Activity pattern.
+
+---
+
 ## Account editing
 
 - [ ] Allow users to edit **full name** and **email** from Account / Information (currently read-only). Name: `supabase.auth.updateUser({ data: { full_name } })`. Email: Supabase email change flow (verification required). UX: edit screens or inline edit, validation, success/error feedback.

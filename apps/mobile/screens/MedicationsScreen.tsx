@@ -1,6 +1,6 @@
 import DateTimePicker from "@react-native-community/datetimepicker";
 import { Ionicons, MaterialCommunityIcons } from "@expo/vector-icons";
-import { useFocusEffect, useNavigation, useRoute } from "@react-navigation/native";
+import { useFocusEffect, useNavigation } from "@react-navigation/native";
 import React, { useCallback, useEffect, useRef, useState } from "react";
 import {
   Animated,
@@ -23,7 +23,7 @@ import {
   LogHistoryList,
   LogHistoryListLoading,
   logHistoryCardStyles,
-  logHistoryTipRowStyles,
+  logHistoryListStyles,
 } from "../components/LogHistoryList";
 import { OptionPickerModal } from "../components/OptionPickerModal";
 import { invalidateDashboardSnapshot } from "../lib/dashboardSnapshotCache";
@@ -51,22 +51,21 @@ import {
   SCREEN_EDGE_PADDING,
   SECTION_TITLE_MARGIN_BOTTOM,
   TIME_PICKER_MINUTE_INTERVAL,
+  bottomTabBarHeight,
 } from "../lib/layoutConstants";
 import { supabase, TABLES } from "../lib/supabase";
 import { useFlareColors } from "../theme";
 
 type SessionUser = { id: string };
 
-const BOTTOM_BAR_VISIBLE_ROUTES = new Set(["Dashboard", "Account", "Reminders"]);
 const FREQUENCY_PICKER_OPTIONS = [
   ...MEDICATION_FREQUENCY_PRESETS,
   "Custom frequency…",
 ] as const;
 
 function useBottomTabScrollInset() {
-  const route = useRoute();
   const insets = useSafeAreaInsets();
-  return BOTTOM_BAR_VISIBLE_ROUTES.has(route.name) ? Math.max(insets.bottom, 8) + 36 : 0;
+  return bottomTabBarHeight(insets.bottom);
 }
 
 function parseTimeHm(s: string): Date {
@@ -104,6 +103,7 @@ export function MedicationSheet({
   const [form, setForm] = useState<MedicationFormState>(initialValues);
   const [nameError, setNameError] = useState("");
   const [frequencyPickerOpen, setFrequencyPickerOpen] = useState(false);
+  const [customFrequencyEditing, setCustomFrequencyEditing] = useState(false);
   const [timePickerOpen, setTimePickerOpen] = useState(false);
   const [pickerDraftTime, setPickerDraftTime] = useState<Date | null>(null);
 
@@ -111,6 +111,9 @@ export function MedicationSheet({
     if (visible) {
       setForm(initialValues);
       setNameError("");
+      setCustomFrequencyEditing(
+        initialValues.frequencyMode === "custom" && !initialValues.frequency.trim(),
+      );
     }
   }, [visible, initialValues]);
 
@@ -200,11 +203,18 @@ export function MedicationSheet({
               </Text>
               <Ionicons name="chevron-down" size={18} color={c.textMuted} />
             </Pressable>
-            {form.frequencyMode === "custom" ? (
+            {form.frequencyMode === "custom" && customFrequencyEditing ? (
               <FlareTextInput
                 value={form.frequency}
                 onChangeText={(frequency) => setField("frequency", frequency)}
+                onBlur={() => {
+                  setForm((prev) => {
+                    if (prev.frequency.trim()) setCustomFrequencyEditing(false);
+                    return prev;
+                  });
+                }}
                 placeholder="Custom frequency"
+                autoFocus
                 style={{ marginTop: 8 }}
               />
             ) : null}
@@ -265,12 +275,14 @@ export function MedicationSheet({
           setFrequencyPickerOpen(false);
           if (value === "Custom frequency…") {
             setField("frequencyMode", "custom");
+            setCustomFrequencyEditing(true);
             if (MEDICATION_FREQUENCY_PRESETS.includes(form.frequency as (typeof MEDICATION_FREQUENCY_PRESETS)[number])) {
               setField("frequency", "");
             }
             return;
           }
           setField("frequencyMode", "preset");
+          setCustomFrequencyEditing(false);
           setField("frequency", value);
         }}
         onCancel={() => setFrequencyPickerOpen(false)}
@@ -419,7 +431,7 @@ export function MedicationsScreen({ user }: { user: SessionUser }) {
   const medById = useCallback((id: string) => meds.find((row) => String(row.id) === id), [meds]);
 
   const logsSection = (
-    <LogHistoryCard>
+    <LogHistoryCard style={{ marginBottom: 0 }}>
       <Text style={[logHistoryCardStyles.sectionTitle, { color: c.text }]}>{listSectionTitle}</Text>
       <View style={logHistoryCardStyles.trackerCardBody}>
         {listInitialLoad ? (
@@ -452,42 +464,45 @@ export function MedicationsScreen({ user }: { user: SessionUser }) {
                     : `${row.name}. View details`,
               };
             })}
-            renderTitleAccessory={(item) => {
+            renderSubtitle={(item) => {
               const row = medById(item.id);
-              if (!row || !medicationHasReminder(row)) return null;
-              return <WriggleReminderBell color={c.primary} />;
+              if (!row) return null;
+              const dosage = row.dosage?.trim();
+              const hasReminder = medicationHasReminder(row);
+              const timeLabel = hasReminder ? formatMedicationReminderTime(row.time_of_day) : null;
+              if (!dosage && !timeLabel) return null;
+              const subtitleTextStyle = [logHistoryListStyles.logSecondary, { color: c.textMuted }];
+              return (
+                <View style={styles.medSubtitleRow}>
+                  {dosage ? (
+                    <Text style={subtitleTextStyle} numberOfLines={1}>
+                      {dosage}
+                      {timeLabel ? " · " : ""}
+                    </Text>
+                  ) : null}
+                  {timeLabel ? (
+                    <View style={styles.medReminderTimeRow}>
+                      <WriggleReminderBell color={c.primary} />
+                      <Text style={subtitleTextStyle} numberOfLines={1}>
+                        {timeLabel}
+                      </Text>
+                    </View>
+                  ) : null}
+                </View>
+              );
             }}
             onPressItem={(medId) => navigation.navigate("MedicationDetail", { id: medId })}
           />
         )}
       </View>
-    </LogHistoryCard>
-  );
-
-  const remindersSection = (
-    <LogHistoryCard style={{ marginBottom: 0 }}>
-      <View style={styles.remindersIntroRow}>
-        <Ionicons name="notifications-outline" size={20} color={c.primary} accessibilityIgnoresInvertColors />
-        <Text style={[logHistoryCardStyles.sectionTitle, { color: c.text }]}>Medication Reminders</Text>
-      </View>
-      <Text style={[logHistoryCardStyles.trackerIntro, { color: c.textMuted }]}>
-        Get notified when it&apos;s time to take your meds on this device.
-      </Text>
-      <View style={[logHistoryTipRowStyles.tipRow, { backgroundColor: c.surfaceSubtle, borderRadius: 12 }]}>
-        <Ionicons name="bulb-outline" size={18} color="#EAB308" accessibilityIgnoresInvertColors />
-        <Text style={[logHistoryTipRowStyles.tipText, { color: c.textMuted }]}>
-          Before alerts can work, open{" "}
-          <Text
-            accessibilityRole="link"
-            onPress={() => navigation.navigate("Reminders")}
-            style={{ color: c.primary, fontFamily: FLARE_FONT_FAMILY.medium }}
-          >
-            Reminders
-          </Text>
-          {" "}
-          and tap Enable notifications once.
-        </Text>
-      </View>
+      <Pressable
+        accessibilityRole="link"
+        accessibilityLabel="Having trouble with reminders"
+        onPress={() => navigation.navigate("AccountHelp", { expandSection: "notifications" })}
+        style={({ pressed }) => [styles.helpLinkPress, pressed && { opacity: 0.7 }]}
+      >
+        <Text style={[styles.helpLink, { color: c.text }]}>Having trouble?</Text>
+      </Pressable>
     </LogHistoryCard>
   );
 
@@ -495,7 +510,7 @@ export function MedicationsScreen({ user }: { user: SessionUser }) {
     <View style={[styles.screenRoot, { backgroundColor: c.screen }]}>
       <ScrollView
         style={styles.screenScroll}
-        contentContainerStyle={{ paddingBottom: bottomScrollInset + 24 }}
+        contentContainerStyle={{ paddingBottom: bottomScrollInset + 32 }}
         showsVerticalScrollIndicator={false}
       >
         <View style={[styles.heroCard, { backgroundColor: c.card }]}>
@@ -513,7 +528,6 @@ export function MedicationsScreen({ user }: { user: SessionUser }) {
           <PrimaryButton title="Add medication" onPress={openAdd} />
         </View>
         {logsSection}
-        {remindersSection}
       </ScrollView>
 
       <MedicationSheet
@@ -563,10 +577,13 @@ const styles = StyleSheet.create({
     textAlign: "center",
     lineHeight: FLARE_LINE_HEIGHT.body,
   },
-  remindersIntroRow: {
-    flexDirection: "row",
-    alignItems: "center",
-    gap: 8,
+  medSubtitleRow: { flexDirection: "row", alignItems: "center", flexShrink: 1, minWidth: 0 },
+  medReminderTimeRow: { flexDirection: "row", alignItems: "center", gap: 4, flexShrink: 1, minWidth: 0 },
+  helpLinkPress: { alignSelf: "center", marginTop: 2, paddingVertical: 4 },
+  helpLink: {
+    fontSize: FLARE_FONT_SIZE.body,
+    fontFamily: FLARE_FONT_FAMILY.regular,
+    textDecorationLine: "underline",
   },
   sheetRoot: { flex: 1 },
   sheetHeader: {

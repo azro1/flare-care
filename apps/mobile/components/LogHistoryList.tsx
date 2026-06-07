@@ -122,6 +122,7 @@ export function LogHistoryList({
   emptyMessage,
   onPressItem,
   renderTitleAccessory,
+  renderSubtitle,
   renderTrailing,
   rowTextLayout = "logsPill",
 }: {
@@ -130,6 +131,8 @@ export function LogHistoryList({
   onPressItem?: (id: string) => void;
   /** Inline icon/badge immediately after the title (same row). */
   renderTitleAccessory?: (item: LogHistoryListItem) => ReactNode;
+  /** Replaces default subtitle line when provided (return null to fall back). */
+  renderSubtitle?: (item: LogHistoryListItem) => ReactNode;
   renderTrailing?: (item: LogHistoryListItem) => ReactNode;
   /** Title/subtitle typography. Default matches dashboard Logs pill + history rows. */
   rowTextLayout?: "default" | "logsPill";
@@ -156,6 +159,7 @@ export function LogHistoryList({
           ? logsPillRowTextStyles.secondary
           : logHistoryListStyles.logSecondary;
         const titleAccessory = renderTitleAccessory?.(item) ?? null;
+        const customSubtitle = renderSubtitle?.(item);
         const rowBody = (
           <>
             <View style={logHistoryListStyles.logTitleRow}>
@@ -172,11 +176,12 @@ export function LogHistoryList({
               </Text>
               {titleAccessory}
             </View>
-            {whenLine ? (
-              <Text style={[secondaryStyle, { color: c.textMuted }]} numberOfLines={1}>
-                {whenLine}
-              </Text>
-            ) : null}
+            {customSubtitle ??
+              (whenLine ? (
+                <Text style={[secondaryStyle, { color: c.textMuted }]} numberOfLines={1}>
+                  {whenLine}
+                </Text>
+              ) : null)}
           </>
         );
         const trailingNode = item.trailingText ? (
