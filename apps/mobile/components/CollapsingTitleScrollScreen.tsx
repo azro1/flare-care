@@ -147,14 +147,16 @@ function CollapsingHeader({
     canGoBack: navigation.canGoBack(),
     tintColor: options.headerTintColor,
   });
+  const headerLeftContainerStyle = StyleSheet.flatten(options.headerLeftContainerStyle);
+  const headerRightContainerStyle = StyleSheet.flatten(options.headerRightContainerStyle);
 
   return (
     <View style={styles.headerRoot} pointerEvents="box-none">
       <View style={[styles.headerBar, { height: headerHeight, backgroundColor: screenColor }]}>
         <View style={[styles.headerRow, { paddingTop: insets.top, height: headerHeight }]}>
-          {headerLeft}
+          <View style={headerLeftContainerStyle}>{headerLeft}</View>
           <View style={styles.headerSideSpacer} />
-          {headerRight}
+          <View style={headerRightContainerStyle}>{headerRight}</View>
         </View>
       </View>
 
@@ -268,6 +270,7 @@ export function CollapsingTitleScrollScreen({
   return (
     <Animated.ScrollView
       style={{ flex: 1, backgroundColor: c.screen }}
+      showsVerticalScrollIndicator={false}
       onLayout={(e) => setScrollViewportHeight(e.nativeEvent.layout.height)}
       onContentSizeChange={(_, height) => setScrollContentHeight(height)}
       contentContainerStyle={[

@@ -26,11 +26,15 @@ import { supabase, TABLES } from "../lib/supabase";
 import { medicationWizardTryAdvance } from "../lib/medicationWizardNextStep";
 import {
   cleanMedicationForm,
+  cleanedMedicationHasNoData,
   createEmptyMedicationForm,
   createEmptyMedicationRow,
+  getMedicationReviewEditStep,
+  getMedicationReviewSectionLastStep,
   getMedicationWizardPhaseProgress,
   getPreviousMedicationStep,
   insertMedicationTrackingLog,
+  MEDICATION_WIZARD_REVIEW_STEP,
   medicationLogRowToForm,
   updateMedicationTrackingLog,
   isDosageRowComplete,
@@ -39,10 +43,11 @@ import {
   TIME_OF_DAY_OPTIONS,
   type MedicationListRow,
   type MedicationTrackingFormData,
+  type MedicationReviewSectionId,
   type MedicationWizardHistoryEntry,
 } from "../lib/medicationWizardShared";
 import { TRACK_MEDICATIONS_MCI_ICON } from "../lib/medicationFeatureIcons";
-import { useFlareColors, useFlareTheme } from "../theme";
+import { useFlareColors } from "../theme";
 
 type SessionUser = { id: string };
 
@@ -91,7 +96,7 @@ function listKey(kind: ListKind): "missedMedicationsList" | "nsaidList" | "antib
   return "antibioticList";
 }
 
-const MEDICATION_REVIEW_STEP = 7;
+const MEDICATION_REVIEW_STEP = MEDICATION_WIZARD_REVIEW_STEP;
 
 export function MedicationTrackingWizardScreen({ user }: { user: SessionUser }) {
   const navigation = useNavigation<any>();
@@ -99,7 +104,6 @@ export function MedicationTrackingWizardScreen({ user }: { user: SessionUser }) 
   const editId = String((route.params as { editId?: string } | undefined)?.editId ?? "");
   const c = useFlareColors();
   const errTextStyle = flareFieldErrorStyle(c, "wizard");
-  const { colors } = useFlareTheme();
   const { height: windowHeight } = useWindowDimensions();
   const [currentStep, setCurrentStep] = useState(0);
   const [form, setForm] = useState<MedicationTrackingFormData>(() => createEmptyMedicationForm());
@@ -111,6 +115,7 @@ export function MedicationTrackingWizardScreen({ user }: { user: SessionUser }) 
   const [timePicker, setTimePicker] = useState<TimePickerTarget>(null);
   /** Spinner/dialog value only — do not write to form until user confirms (avoids defaulting to today). */
   const [pickerDraftDate, setPickerDraftDate] = useState<Date | null>(null);
+  const [editingReviewSection, setEditingReviewSection] = useState<MedicationReviewSectionId | null>(null);
 
   useEffect(() => {
     return () => {
@@ -154,8 +159,56 @@ export function MedicationTrackingWizardScreen({ user }: { user: SessionUser }) 
   }, [currentStep, form, history.length]);
 
   const cleanedForReview = useMemo(() => cleanMedicationForm(form), [form]);
+  const reviewHasData = !cleanedMedicationHasNoData(cleanedForReview);
+
+  const returnToReview = useCallback(() => {
+    if (cleanedMedicationHasNoData(cleanMedicationForm(form))) {
+      Alert.alert(
+        "No tracking data entered",
+        "You must add at least one medication in order to log this entry.",
+      );
+      return;
+    }
+    setCurrentStep(MEDICATION_REVIEW_STEP);
+    setEditingReviewSection(null);
+    setFieldErrors({});
+    setDatePicker(null);
+    setPickerDraftDate(null);
+    setTimePicker(null);
+  }, [form]);
+
+  const openReviewEdit = useCallback((section: MedicationReviewSectionId) => {
+    setEditingReviewSection(section);
+    setCurrentStep(getMedicationReviewEditStep(section));
+    setFieldErrors({});
+    setDatePicker(null);
+    setPickerDraftDate(null);
+    setTimePicker(null);
+  }, []);
 
   const goBackInternal = useCallback(() => {
+    if (currentStep === MEDICATION_REVIEW_STEP && !editingReviewSection) {
+      navigation.goBack();
+      return true;
+    }
+    if (editingReviewSection) {
+      const entryStep = getMedicationReviewEditStep(editingReviewSection);
+      if (currentStep === entryStep) {
+        returnToReview();
+        return true;
+      }
+      const previousStep = getPreviousMedicationStep(currentStep, form);
+      if (previousStep != null && previousStep >= entryStep) {
+        setCurrentStep(previousStep);
+        setFieldErrors({});
+        setDatePicker(null);
+        setPickerDraftDate(null);
+        setTimePicker(null);
+        return true;
+      }
+      returnToReview();
+      return true;
+    }
     const prev = history[history.length - 1];
     if (prev) {
       setHistory((h) => h.slice(0, -1));
@@ -178,7 +231,7 @@ export function MedicationTrackingWizardScreen({ user }: { user: SessionUser }) 
     }
     navigation.goBack();
     return true;
-  }, [history, navigation, currentStep, form]);
+  }, [currentStep, editingReviewSection, form, history, navigation, returnToReview]);
 
   useEffect(() => {
     const sub = BackHandler.addEventListener("hardwareBackPress", goBackInternal);
@@ -187,23 +240,9 @@ export function MedicationTrackingWizardScreen({ user }: { user: SessionUser }) 
 
   useLayoutEffect(() => {
     navigation.setOptions({
-      headerTitle: "",
-      headerLeft: () => (
-        <Pressable
-          accessibilityRole="button"
-          accessibilityLabel="Back"
-          hitSlop={{ top: 10, bottom: 10, left: 8, right: 20 }}
-          onPress={() => {
-            if (currentStep > 0) goBackInternal();
-            else navigation.goBack();
-          }}
-          style={styles.headerBackButton}
-        >
-          <Ionicons name="chevron-back" size={24} color={colors.primary} />
-        </Pressable>
-      ),
+      headerTitle: currentStep === MEDICATION_REVIEW_STEP && !editingReviewSection ? "Review" : "",
     });
-  }, [navigation, currentStep, goBackInternal, colors.primary]);
+  }, [navigation, currentStep, editingReviewSection]);
 
   const resetToLanding = () => {
     setCurrentStep(0);
@@ -236,9 +275,21 @@ export function MedicationTrackingWizardScreen({ user }: { user: SessionUser }) 
       return;
     }
     setFieldErrors({});
+    if (editingReviewSection) {
+      const sectionLast = getMedicationReviewSectionLastStep(editingReviewSection, form);
+      if (res.nextStep > sectionLast) {
+        returnToReview();
+        return;
+      }
+      setCurrentStep(res.nextStep);
+      return;
+    }
+    if (res.nextStep === MEDICATION_REVIEW_STEP) {
+      setEditingReviewSection(null);
+    }
     setHistory((h) => [...h, { step: currentStep, form: cloneForm(form) }]);
     setCurrentStep(res.nextStep);
-  }, [currentStep, form]);
+  }, [currentStep, editingReviewSection, form, returnToReview]);
 
   const startWizard = () => {
     setHistory([{ step: 0, form: cloneForm(form) }]);
@@ -247,6 +298,13 @@ export function MedicationTrackingWizardScreen({ user }: { user: SessionUser }) 
 
   const submit = async () => {
     const cleaned = cleanMedicationForm(form);
+    if (cleanedMedicationHasNoData(cleaned)) {
+      Alert.alert(
+        "No tracking data entered",
+        "You must add at least one medication in order to log this entry.",
+      );
+      return;
+    }
     setSubmitting(true);
     try {
       if (editId) {
@@ -391,17 +449,17 @@ export function MedicationTrackingWizardScreen({ user }: { user: SessionUser }) 
             </View>
             <FlareInputTrigger pickerIcon="date" onPress={() => openDatePicker(kind, i)}>
               <Text style={{ color: item.date ? c.text : c.textMuted }}>
-                {item.date ? formatUkDate(item.date) : "dd/mm/yyyy"}
+                {item.date ? formatUkDate(item.date) : ""}
               </Text>
             </FlareInputTrigger>
             <FlareInputTrigger pickerIcon="time" onPress={() => openTimePicker(kind, i)}>
               <Text style={{ color: item.timeOfDay ? c.text : c.textMuted }}>
-                {item.timeOfDay || "Select time of day"}
+                {item.timeOfDay || ""}
               </Text>
             </FlareInputTrigger>
             {withDosage ? (
               <FlareTextInput
-                placeholder="50mg"
+                placeholder="dose (mg)"
                 keyboardType="number-pad"
                 value={item.dosage ?? ""}
                 maxLength={5}
@@ -513,33 +571,48 @@ export function MedicationTrackingWizardScreen({ user }: { user: SessionUser }) 
 
         {currentStep === 7 ? (
           <View>
-            <Text style={[styles.h3, { color: c.text, marginBottom: 16 }]}>Review your entry</Text>
             <WizardReviewMedicationSection
               title="Missed Medications"
               items={cleanedForReview.missedMedicationsList}
               showDosage={false}
+              onEdit={() => openReviewEdit("missed")}
             />
-            <WizardReviewMedicationSection title="NSAIDs Taken" items={cleanedForReview.nsaidList} showDosage />
+            <WizardReviewMedicationSection
+              title="NSAIDs Taken"
+              items={cleanedForReview.nsaidList}
+              showDosage
+              onEdit={() => openReviewEdit("nsaid")}
+            />
             <WizardReviewMedicationSection
               title="Antibiotics Taken"
               items={cleanedForReview.antibioticList}
               showDosage
+              onEdit={() => openReviewEdit("antibiotic")}
             />
           </View>
         ) : null}
 
         {currentStep > 0 ? (
           <View style={styles.footerBtns}>
-            {currentStep < 7 ? (
+            {editingReviewSection ? (
+              <>
+                <PrimaryButton title="Back to review" onPress={returnToReview} />
+                {currentStep < getMedicationReviewSectionLastStep(editingReviewSection, form) ? (
+                  <SecondaryButton title="Next" onPress={applyAdvance} />
+                ) : null}
+              </>
+            ) : currentStep < MEDICATION_REVIEW_STEP ? (
               <PrimaryButton title="Next" onPress={applyAdvance} />
             ) : (
               <PrimaryButton
                 title={submitting ? "Saving…" : editId ? "Save changes" : "Submit"}
                 onPress={submit}
-                disabled={submitting}
+                disabled={submitting || !reviewHasData}
               />
             )}
-            {canGoToPreviousStep ? <SecondaryButton title="Previous step" onPress={goBackInternal} /> : null}
+            {canGoToPreviousStep && !editingReviewSection && currentStep !== MEDICATION_REVIEW_STEP ? (
+              <SecondaryButton title="Previous step" onPress={goBackInternal} />
+            ) : null}
           </View>
         ) : null}
       </ScrollView>
@@ -556,14 +629,6 @@ export function MedicationTrackingWizardScreen({ user }: { user: SessionUser }) 
 
 const styles = StyleSheet.create({
   centered: { flex: 1, justifyContent: "center", alignItems: "center" },
-  headerBackButton: {
-    justifyContent: "center",
-    alignItems: "flex-start",
-    paddingVertical: 8,
-    paddingLeft: Platform.OS === "ios" ? 6 : 4,
-    paddingRight: 10,
-    minHeight: 44,
-  },
   scrollPad: { paddingHorizontal: 16, paddingTop: 16, paddingBottom: 48 },
   scrollPadLanding: { flexGrow: 1 },
   scrollPadWizardSteps: { paddingTop: 12 },

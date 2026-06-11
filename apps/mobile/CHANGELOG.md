@@ -4,6 +4,26 @@ Recent UI and behavior updates on the Expo app (`apps/mobile`).
 
 ## Unreleased
 
+### Wizards (Log Symptoms & Track Medications)
+
+- **Review hub:** **Edit** on each review section jumps straight to that section; **Back to review** returns without replaying the whole wizard.
+- **Track Medications:** blocks **Back to review** / submit when all tracking data was cleared (e.g. **No** on a radio) — alert instead of an empty review screen.
+- **Track Medications:** dosage list placeholder **`dose (mg)`** (was example dose in placeholder).
+- Wizards no longer show a stack **header back chevron** (use **Previous step** in the wizard footer).
+
+### Log history (symptom & medication tracking)
+
+- History lists use **load more** (teal underlined link) instead of loading everything at once.
+- Intro copy moved to a **bulb tip below** the list card; symptom history tip shortened (onset/duration note removed for now).
+
+### UI polish
+
+- **Scroll bars hidden** app-wide.
+- **About / What is IBD? / legal docs:** overflow menu (⋮) aligned with other screens; collapsing pages hide scroll indicators.
+- **My Meds:** section title **Your medications**; **Mark as taken** / delete-account buttons use subtle borderless styling on white cards.
+- Header titles use full **`c.text`** colour (not muted).
+- Shared typography tokens for in-card section titles and navigate **Edit** rows (`layoutConstants.ts`).
+
 ### Reminders & notifications
 
 - Local medication/appointment reminders on native (no web push subscribe); permission + reschedule on save.

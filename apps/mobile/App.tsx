@@ -52,7 +52,12 @@ import { FlareThemeProvider, useFlareColors, useFlareTheme } from "./theme";
 import { formatUkDate } from "./lib/formatUkDate";
 import { BOWEL_FEATURE_MCI_ICON } from "./lib/bowelMovementShared";
 import { MY_MEDS_MCI_ICON, TRACK_MEDICATIONS_MCI_ICON } from "./lib/medicationFeatureIcons";
-import { fetchMedicationsForUser, MEDICATIONS_GOAL_ACTIVITY_TITLE, MEDICATION_ADDED_ACTIVITY_TITLE } from "./lib/medicationShared";
+import {
+  fetchMedicationsForUser,
+  MEDICATIONS_GOAL_ACTIVITY_TITLE,
+  MEDICATION_ADDED_ACTIVITY_TITLE,
+  MEDICATION_TRACKING_ACTIVITY_TITLE,
+} from "./lib/medicationShared";
 import { HYDRATION_TARGET, HYDRATION_MCI_ICON, loadHydrationResetTimestamp, saveHydrationReset, HYDRATION_GOAL_ACTIVITY_TITLE, HYDRATION_RESET_ACTIVITY_TITLE } from "./lib/hydrationShared";
 import {
   bottomTabBarScrollInset,
@@ -74,6 +79,8 @@ import {
 import { LegalDocumentView, type LegalDocumentKind } from "./components/LegalDocumentView";
 import {
   LogHistoryList,
+  LogHistoryPreviewList,
+  LogHistoryListLoading,
   LogHistoryCard,
   LogHistoryIntroSection,
   buildBrowseLogRowItem,
@@ -90,6 +97,7 @@ import {
   logDetailStyles,
 } from "./components/LogDetailLayout";
 import { formatAddedAtHeader } from "./lib/logDisplay";
+import { useWizardLogHistory } from "./lib/wizardLogHistory";
 import { openAppNotificationSettings } from "./lib/openAppNotificationSettings";
 import { supabase, TABLES } from "./lib/supabase";
 import {
@@ -1062,9 +1070,6 @@ function useBottomTabScrollInset() {
 }
 
 /** Matches `styles.screen` edge padding (used to size Daily Check-in row). */
-/** Dashboard / history lists — symptom log id + time. */
-type RecentLogListRow = { id: string; created_at: string };
-
 function formatHistoryBrowseSubtitle(count: number): string {
   if (count === 0) return "No entries";
   if (count === 1) return "1 entry";
@@ -1331,9 +1336,7 @@ function DashboardScreen({
           const takenMedRows = (takenMedsRes.data ?? []) as { medication_id: string | number; created_at?: string }[];
 
           const recentSymptom = recentSymptomsRes.data?.[0] as { id: string; created_at: string } | undefined;
-          const recentMedLog = recentMedsRes.data?.[0] as
-            | { id: string; created_at: string; name?: string }
-            | undefined;
+          const recentMedLog = recentMedsRes.data?.[0] as { id: string; created_at: string } | undefined;
           setHistoryPreview({
             symptomCount: symptomHistoryCountRes.count ?? 0,
             medicationCount: medicationHistoryCountRes.count ?? 0,
@@ -1350,7 +1353,7 @@ function DashboardScreen({
           if (recentMedLog?.created_at) {
             activityRows.push({
               key: `med-${recentMedLog.id}`,
-              title: recentMedLog.name ? `Logged medication (${recentMedLog.name})` : "Logged medication",
+              title: MEDICATION_TRACKING_ACTIVITY_TITLE,
               ts: new Date(recentMedLog.created_at).getTime(),
               icon: "medication",
             });
@@ -1564,9 +1567,7 @@ function DashboardScreen({
           onPress={() => setHomeDashTab((prev) => (prev === "today" ? null : "today"))}
           style={[
             styles.homeNavPill,
-            homeDashTab === "today"
-              ? { backgroundColor: c.primary, borderColor: c.primary }
-              : { backgroundColor: c.card, borderColor: c.cardBorder },
+            homeDashTab === "today" ? { backgroundColor: c.primary } : { backgroundColor: c.card },
           ]}
         >
           <Text style={[styles.homeNavPillLabel, { color: homeDashTab === "today" ? c.white : c.text }]}>Today's</Text>
@@ -1575,9 +1576,7 @@ function DashboardScreen({
           onPress={() => setHomeDashTab((prev) => (prev === "logs" ? null : "logs"))}
           style={[
             styles.homeNavPill,
-            homeDashTab === "logs"
-              ? { backgroundColor: c.primary, borderColor: c.primary }
-              : { backgroundColor: c.card, borderColor: c.cardBorder },
+            homeDashTab === "logs" ? { backgroundColor: c.primary } : { backgroundColor: c.card },
           ]}
         >
           <Text style={[styles.homeNavPillLabel, { color: homeDashTab === "logs" ? c.white : c.text }]}>Logs</Text>
@@ -1586,9 +1585,7 @@ function DashboardScreen({
           onPress={() => setHomeDashTab((prev) => (prev === "news" ? null : "news"))}
           style={[
             styles.homeNavPill,
-            homeDashTab === "news"
-              ? { backgroundColor: c.primary, borderColor: c.primary }
-              : { backgroundColor: c.card, borderColor: c.cardBorder },
+            homeDashTab === "news" ? { backgroundColor: c.primary } : { backgroundColor: c.card },
           ]}
         >
           <Text style={[styles.homeNavPillLabel, { color: homeDashTab === "news" ? c.white : c.text }]}>Latest</Text>
@@ -1855,40 +1852,42 @@ function SymptomHistoryScreen({ user }: { user: SessionUser }) {
   const navigation = useNavigation<any>();
   const c = useFlareColors();
   const bottomScrollInset = useBottomTabScrollInset();
-  const [rows, setRows] = useState<RecentLogListRow[]>([]);
-  const load = useCallback(async () => {
-    const { data } = await supabase
-      .from(TABLES.LOG_SYMPTOMS)
-      .select("id,created_at")
-      .eq("user_id", user.id)
-      .order("created_at", { ascending: false })
-      .limit(100);
-    setRows((data ?? []) as RecentLogListRow[]);
-  }, [user.id]);
+  const { rows, visibleCount, hasMore, loading, loadingMore, loadMore, refresh } = useWizardLogHistory(
+    user.id,
+    TABLES.LOG_SYMPTOMS,
+  );
   useFocusEffect(
     useCallback(() => {
-      load();
-    }, [load]),
+      void refresh();
+    }, [refresh]),
+  );
+  const symptomLogItems = rows.map((row) =>
+    buildTimestampLogRowItem({
+      id: String(row.id),
+      title: "Symptom log",
+      whenIso: row.created_at,
+    }),
   );
   return (
     <ScrollView
       style={[styles.screen, { backgroundColor: c.screen }]}
       contentContainerStyle={{ paddingBottom: bottomScrollInset + 24 }}
     >
-      <LogHistoryIntroSection intro="Logs show what you reported on the day your symptoms started, not for every day of the symptom duration.">
-        <LogHistoryList
-          emptyMessage="No symptom logs yet."
-          items={rows.map((row) =>
-            buildTimestampLogRowItem({
-              id: String(row.id),
-              title: "Symptom log",
-              whenIso: row.created_at,
-            }),
-          )}
-          onPressItem={(logId) => navigation.navigate("SymptomDetail", { id: logId })}
-        />
+      <LogHistoryIntroSection tip="A list of your symptom events recorded through Log Symptoms.">
+        {loading && rows.length === 0 ? (
+          <LogHistoryListLoading />
+        ) : (
+          <LogHistoryPreviewList
+            emptyMessage="No symptom logs yet."
+            items={symptomLogItems}
+            visibleCount={visibleCount}
+            hasMore={hasMore}
+            loadingMore={loadingMore}
+            onLoadMore={() => void loadMore()}
+            onPressItem={(logId) => navigation.navigate("SymptomDetail", { id: logId })}
+          />
+        )}
       </LogHistoryIntroSection>
-      <PrimaryButton title="Log Symptoms" onPress={() => navigation.navigate("SymptomLogWizard")} />
     </ScrollView>
   );
 }
@@ -2189,40 +2188,42 @@ function MedicationTrackingHistoryScreen({ user }: { user: SessionUser }) {
   const navigation = useNavigation<any>();
   const c = useFlareColors();
   const bottomScrollInset = useBottomTabScrollInset();
-  const [rows, setRows] = useState<RecentLogListRow[]>([]);
-  const load = useCallback(async () => {
-    const { data } = await supabase
-      .from(TABLES.LOG_MEDICATIONS)
-      .select("id,created_at")
-      .eq("user_id", user.id)
-      .order("created_at", { ascending: false })
-      .limit(100);
-    setRows((data ?? []) as RecentLogListRow[]);
-  }, [user.id]);
+  const { rows, visibleCount, hasMore, loading, loadingMore, loadMore, refresh } = useWizardLogHistory(
+    user.id,
+    TABLES.LOG_MEDICATIONS,
+  );
   useFocusEffect(
     useCallback(() => {
-      load();
-    }, [load]),
+      void refresh();
+    }, [refresh]),
+  );
+  const medicationLogItems = rows.map((row) =>
+    buildTimestampLogRowItem({
+      id: String(row.id),
+      title: "Medication log",
+      whenIso: row.created_at,
+    }),
   );
   return (
     <ScrollView
       style={[styles.screen, { backgroundColor: c.screen }]}
       contentContainerStyle={{ paddingBottom: bottomScrollInset + 24 }}
     >
-      <LogHistoryIntroSection intro="These logs include prescribed medications you missed, and any NSAIDs and antibiotics you took during a specific period.">
-        <LogHistoryList
-          emptyMessage="No medication logs yet."
-          items={rows.map((row) =>
-            buildTimestampLogRowItem({
-              id: String(row.id),
-              title: "Medication log",
-              whenIso: row.created_at,
-            }),
-          )}
-          onPressItem={(logId) => navigation.navigate("MedicationLogDetail", { id: logId })}
-        />
+      <LogHistoryIntroSection tip="A list of your medication events recorded through Track Medications.">
+        {loading && rows.length === 0 ? (
+          <LogHistoryListLoading />
+        ) : (
+          <LogHistoryPreviewList
+            emptyMessage="No medication logs yet."
+            items={medicationLogItems}
+            visibleCount={visibleCount}
+            hasMore={hasMore}
+            loadingMore={loadingMore}
+            onLoadMore={() => void loadMore()}
+            onPressItem={(logId) => navigation.navigate("MedicationLogDetail", { id: logId })}
+          />
+        )}
       </LogHistoryIntroSection>
-      <PrimaryButton title="Track Medications" onPress={() => navigation.navigate("MedicationTrackingWizard")} />
     </ScrollView>
   );
 }
@@ -2541,7 +2542,7 @@ function HydrationScreen({ user }: { user: SessionUser }) {
             style={({ pressed }) => [styles.hydrationHelpLinkPress, pressed && { opacity: 0.7 }]}
           >
             <Ionicons name="book-outline" size={16} color={c.textSecondary} accessibilityIgnoresInvertColors />
-            <Text style={[styles.hydrationHelpLink, { color: c.text }]}>Daily intake guidelines?</Text>
+            <Text style={[styles.hydrationHelpLink, { color: c.text }]}>Daily intake guidelines</Text>
           </Pressable>
         </Card>
       </ScrollView>
@@ -3325,7 +3326,8 @@ function AccountInfoScreen({ user }: { user: SessionUser }) {
           <Ionicons name="chevron-forward" size={18} color={c.text} accessibilityIgnoresInvertColors />
         </Pressable>
       </Card>
-      <View style={[logHistoryCardStyles.trackerCard, { backgroundColor: c.card }]}>
+      <View style={[logHistoryCardStyles.trackerCard, flareCardSectionStyles.container, { backgroundColor: c.card }]}>
+        <FlareScreenSectionTitle inCard>Account info</FlareScreenSectionTitle>
         <LogDetailFieldGroup
           fields={[
             {
@@ -3362,7 +3364,8 @@ function AccountPersonalDetailsScreen({ user }: { user: SessionUser }) {
           </View>
         </View>
       </Card>
-      <View style={[logHistoryCardStyles.trackerCard, { backgroundColor: c.card }]}>
+      <View style={[logHistoryCardStyles.trackerCard, flareCardSectionStyles.container, { backgroundColor: c.card }]}>
+        <FlareScreenSectionTitle inCard>Profile info</FlareScreenSectionTitle>
         <LogDetailFieldGroup
           fields={[
             { label: "Full name", value: displayName },
@@ -3560,18 +3563,12 @@ function AccountScreen({
         <Text style={[styles.muted, { color: c.textMuted, lineHeight: 20 }]}>
           Permanently delete your account and all associated data. This cannot be undone.
         </Text>
-        <Pressable
-          accessibilityRole="button"
-          accessibilityLabel="Delete account"
+        <SecondaryButton
+          title="Delete account"
           onPress={() => setDeleteAccountConfirmOpen(true)}
-          style={({ pressed }) => [
-            styles.accountDeleteTray,
-            { backgroundColor: c.surfaceSubtle },
-            pressed && { opacity: 0.7 },
-          ]}
-        >
-          <Text style={[styles.accountDeleteTrayText, { color: c.destructiveFill }]}>Delete account</Text>
-        </Pressable>
+          borderless
+          borderlessFill="surfaceSubtle"
+        />
       </View>
       <ConfirmModal
         visible={deleteAccountConfirmOpen}
@@ -3874,7 +3871,7 @@ function AppTabs({
         fontSize: FLARE_FONT_SIZE.navTitle,
         color: colors.text,
       },
-      headerTintColor: colors.primary,
+      headerTintColor: colors.textMuted,
       headerShadowVisible: false,
       headerBackVisible: false,
       /** Match `styles.screen` horizontal inset so header controls line up with cards. */
@@ -3898,7 +3895,7 @@ function AppTabs({
                 }}
                 style={styles.headerBackButton}
               >
-                <Ionicons name="chevron-back" size={24} color={colors.primary} />
+                <Ionicons name="chevron-back" size={24} color={colors.textMuted} />
               </Pressable>
             )
           : undefined,
@@ -4269,9 +4266,8 @@ const styles = StyleSheet.create({
   homeNavPillsRow: { flexDirection: "row", gap: 8, paddingVertical: 2 },
   homeNavPill: {
     borderRadius: 18,
-    borderWidth: StyleSheet.hairlineWidth,
-    paddingHorizontal: 14,
-    paddingVertical: 8,
+    paddingHorizontal: 18,
+    paddingVertical: 10,
   },
   homeNavPillLabel: { fontSize: 13, fontFamily: "Inter_600SemiBold" },
   dashboardSectionTitle: {
@@ -4426,15 +4422,6 @@ const styles = StyleSheet.create({
   accountScrollContent: { flexGrow: 1 },
   /** My account list on Account tab — no extra card gap before logout. */
   accountOptionsListCardLast: { marginBottom: 0 },
-  accountDeleteTray: {
-    alignSelf: "stretch",
-    alignItems: "center",
-    justifyContent: "center",
-    paddingVertical: 12,
-    borderRadius: 14,
-    overflow: "hidden",
-  },
-  accountDeleteTrayText: { fontSize: 16, fontFamily: "Inter_700Bold", textAlign: "center" },
   /** Same height and radius as `PrimaryButton`; two equal slots like paired actions. */
   appearanceRow: { flexDirection: "row", gap: 8, marginTop: 14 },
   appearanceChip: {

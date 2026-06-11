@@ -10,11 +10,19 @@ import { formatUkDate } from "../lib/formatUkDate";
 export type WizardReviewField = { label: string; value: string };
 
 /** Review — muted in-card section title + `surfaceSubtle` fields. */
-export function WizardReviewSection({ title, fields }: { title: string; fields: WizardReviewField[] }) {
+export function WizardReviewSection({
+  title,
+  fields,
+  onEdit,
+}: {
+  title: string;
+  fields: WizardReviewField[];
+  onEdit?: () => void;
+}) {
   const visible = fields.filter((f) => f.value !== "");
   if (!visible.length) return null;
   return (
-    <LogDetailSectionCard title={title}>
+    <LogDetailSectionCard title={title} onEdit={onEdit} editAccessibilityLabel={`Edit ${title}`}>
       <LogDetailFieldGroup fields={visible} />
     </LogDetailSectionCard>
   );
@@ -22,8 +30,10 @@ export function WizardReviewSection({ title, fields }: { title: string; fields: 
 
 export function WizardReviewMealsSection({
   entries,
+  onEdit,
 }: {
   entries: { label: string; skipped?: boolean; items?: { food: string; quantity: string }[] }[];
+  onEdit?: () => void;
 }) {
   const fields = entries.map((entry) => ({
     label: entry.label,
@@ -35,17 +45,17 @@ export function WizardReviewMealsSection({
   }));
   if (!fields.length) return null;
   return (
-    <LogDetailSectionCard title="Meals">
+    <LogDetailSectionCard title="Meals" onEdit={onEdit} editAccessibilityLabel="Edit Meals">
       <LogDetailFieldGroup fields={fields} />
     </LogDetailSectionCard>
   );
 }
 
-export function WizardReviewNotesSection({ notes }: { notes: string }) {
+export function WizardReviewNotesSection({ notes, onEdit }: { notes: string; onEdit?: () => void }) {
   const trimmed = notes.trim();
   if (!trimmed) return null;
   return (
-    <LogDetailSectionCard title="Notes" last>
+    <LogDetailSectionCard title="Notes" last onEdit={onEdit} editAccessibilityLabel="Edit Notes">
       <LogDetailNotesTray notes={trimmed} />
     </LogDetailSectionCard>
   );
@@ -56,10 +66,12 @@ export function WizardReviewMedicationSection({
   title,
   items,
   showDosage,
+  onEdit,
 }: {
   title: string;
   items: { medication: string; date: string; timeOfDay: string; dosage?: string }[];
   showDosage: boolean;
+  onEdit?: () => void;
 }) {
   if (!items.length) return null;
   const groups = items.map((item) => [
@@ -69,7 +81,7 @@ export function WizardReviewMedicationSection({
     { label: "Time of Day", value: item.timeOfDay || "N/A" },
   ]);
   return (
-    <LogDetailSectionCard title={title}>
+    <LogDetailSectionCard title={title} onEdit={onEdit} editAccessibilityLabel={`Edit ${title}`}>
       <LogDetailFieldGroups groups={groups} />
     </LogDetailSectionCard>
   );

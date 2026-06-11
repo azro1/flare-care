@@ -42,6 +42,11 @@ export type UserPreferencesShape = {
   alcoholPattern?: { consecutiveNo?: number; lastAsked?: string | null };
 };
 
+export const SYMPTOM_WIZARD_REVIEW_STEP = 17;
+
+/** Review card sections — `basic` spans duration + severity/stress (wizard steps 1–5). */
+export type SymptomReviewSectionId = "basic" | "bathroom" | "lifestyle" | "meals" | "notes";
+
 export const SYMPTOM_WIZARD_PHASES = [
   { id: "timing", label: "Duration", firstStep: 1, lastStep: 3 },
   { id: "severity", label: "Severity & stress", firstStep: 4, lastStep: 5 },
@@ -58,6 +63,38 @@ export function getSymptomWizardPhasesFiltered(isFirstTimeUser: boolean, userPre
     return phases.filter((p) => p.id !== "lifestyle");
   }
   return phases;
+}
+
+export function getSymptomReviewEditStep(
+  section: SymptomReviewSectionId,
+  isFirstTimeUser: boolean,
+  userPreferences: UserPreferencesShape | null,
+): number | null {
+  if (section === "basic") return 1;
+  const phaseId =
+    section === "bathroom"
+      ? "bathroom"
+      : section === "lifestyle"
+        ? "lifestyle"
+        : section === "meals"
+          ? "meals"
+          : "notes";
+  const phase = SYMPTOM_WIZARD_PHASES.find((p) => p.id === phaseId);
+  if (!phase) return null;
+  return getSymptomWizardPhaseEntryStep(phase, isFirstTimeUser, userPreferences);
+}
+
+export function getSymptomReviewSectionLastStep(section: SymptomReviewSectionId): number {
+  if (section === "basic") return 5;
+  const phaseId =
+    section === "bathroom"
+      ? "bathroom"
+      : section === "lifestyle"
+        ? "lifestyle"
+        : section === "meals"
+          ? "meals"
+          : "notes";
+  return SYMPTOM_WIZARD_PHASES.find((p) => p.id === phaseId)?.lastStep ?? SYMPTOM_WIZARD_REVIEW_STEP;
 }
 
 export function getSymptomWizardPhaseEntryStep(

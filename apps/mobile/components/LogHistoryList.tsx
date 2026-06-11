@@ -14,12 +14,20 @@ import { EmptyTrayMessage } from "./EmptyTrayMessage";
 import { STACKED_DETAIL_ROW_EDGE } from "./StackedDetailField";
 import { formatLogWhenLine } from "../lib/logDisplay";
 import {
+  CARD_SECTION_INNER_GAP,
   FLARE_FONT_FAMILY,
   FLARE_FONT_SIZE,
   FLARE_LINE_HEIGHT,
   SCREEN_EDGE_PADDING,
 } from "../lib/layoutConstants";
 import { useFlareColors } from "../theme";
+
+/** Hub / history preview — wizard History screens (symptom + Track Medications). */
+export const LOG_HISTORY_RECENT_PREVIEW_COUNT = 3;
+/** Wizard History — each **Load more logs** tap reveals this many additional rows. */
+export const LOG_HISTORY_WIZARD_LOAD_MORE_BATCH = LOG_HISTORY_RECENT_PREVIEW_COUNT;
+/** My Meds list, bowel full-history hub, etc. — initial chunk and each load-more tap. */
+export const LOG_HISTORY_LOAD_MORE_BATCH = 5;
 
 export type LogHistoryListItem = {
   id: string;
@@ -86,20 +94,21 @@ export function LogHistoryCard({
   );
 }
 
-/** White card with intro copy and grey list tray — symptom/medication history pattern. */
+/** White card list tray + bulb tip below — symptom/medication history pattern. */
 export function LogHistoryIntroSection({
-  intro,
+  tip,
   children,
 }: {
-  intro: string;
+  tip: string;
   children: ReactNode;
 }) {
-  const c = useFlareColors();
   return (
-    <LogHistoryCard>
-      <Text style={[logHistoryCardStyles.trackerIntro, { color: c.textMuted }]}>{intro}</Text>
-      <View style={logHistoryCardStyles.trackerCardBody}>{children}</View>
-    </LogHistoryCard>
+    <>
+      <LogHistoryCard>
+        <View style={logHistoryCardStyles.trackerCardBody}>{children}</View>
+      </LogHistoryCard>
+      <LogHistoryTipRow text={tip} />
+    </>
   );
 }
 
@@ -116,6 +125,69 @@ const logsPillRowTextStyles = {
     lineHeight: FLARE_LINE_HEIGHT.muted,
   },
 } as const;
+
+type LogHistoryPreviewListProps = {
+  items: LogHistoryListItem[];
+  visibleCount: number;
+  hasMore: boolean;
+  onLoadMore: () => void;
+  loadingMore?: boolean;
+  emptyMessage?: string;
+  onPressItem?: (id: string) => void;
+  loadMoreLabel?: string;
+  renderTitleAccessory?: (item: LogHistoryListItem) => ReactNode;
+  renderSubtitle?: (item: LogHistoryListItem) => ReactNode;
+  renderTrailing?: (item: LogHistoryListItem) => ReactNode;
+  rowTextLayout?: "default" | "logsPill";
+};
+
+/** Paginated list — **load more** link reveals the next batch. */
+export function LogHistoryPreviewList({
+  items,
+  visibleCount,
+  hasMore,
+  onLoadMore,
+  loadingMore,
+  emptyMessage,
+  onPressItem,
+  loadMoreLabel = "load more logs",
+  renderTitleAccessory,
+  renderSubtitle,
+  renderTrailing,
+  rowTextLayout,
+}: LogHistoryPreviewListProps) {
+  const c = useFlareColors();
+  const visibleItems = items.slice(0, visibleCount);
+
+  return (
+    <View>
+      <LogHistoryList
+        items={visibleItems}
+        emptyMessage={emptyMessage}
+        onPressItem={onPressItem}
+        renderTitleAccessory={renderTitleAccessory}
+        renderSubtitle={renderSubtitle}
+        renderTrailing={renderTrailing}
+        rowTextLayout={rowTextLayout}
+      />
+      {hasMore ? (
+        <Pressable
+          accessibilityRole="button"
+          accessibilityLabel={loadMoreLabel}
+          onPress={onLoadMore}
+          disabled={loadingMore}
+          style={({ pressed }) => [logHistoryListStyles.loadMoreRow, pressed && !loadingMore && { opacity: 0.7 }]}
+        >
+          {loadingMore ? (
+            <ActivityIndicator color={c.primary} size="small" />
+          ) : (
+            <Text style={[logHistoryListStyles.loadMoreLabel, { color: c.primary }]}>{loadMoreLabel}</Text>
+          )}
+        </Pressable>
+      ) : null}
+    </View>
+  );
+}
 
 export function LogHistoryList({
   items,
@@ -245,10 +317,6 @@ export const logHistoryCardStyles = StyleSheet.create({
     fontFamily: FLARE_FONT_FAMILY.regular,
     lineHeight: FLARE_LINE_HEIGHT.body,
   },
-  sectionTitle: {
-    fontSize: FLARE_FONT_SIZE.navTitle,
-    fontFamily: FLARE_FONT_FAMILY.bold,
-  },
   /** Holds tray height on first load so the card does not jump when rows appear. */
   listTrayLoading: {
     minHeight: 132,
@@ -337,4 +405,15 @@ export const logHistoryListStyles = StyleSheet.create({
   logActions: { flexDirection: "row", alignItems: "center", flexShrink: 0 },
   trailingValue: { fontSize: FLARE_FONT_SIZE.body, fontFamily: FLARE_FONT_FAMILY.medium },
   logIconBtn: { padding: 6 },
+  loadMoreRow: {
+    alignItems: "center",
+    justifyContent: "center",
+    marginTop: CARD_SECTION_INNER_GAP,
+    marginBottom: CARD_SECTION_INNER_GAP,
+  },
+  loadMoreLabel: {
+    fontSize: FLARE_FONT_SIZE.muted,
+    fontFamily: FLARE_FONT_FAMILY.medium,
+    textDecorationLine: "underline",
+  },
 });

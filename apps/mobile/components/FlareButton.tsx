@@ -96,6 +96,7 @@ export function SecondaryButton({
   titleColor,
   softOutline,
   borderless,
+  borderlessFill = "card",
 }: {
   title: string;
   onPress: () => void;
@@ -107,6 +108,8 @@ export function SecondaryButton({
   softOutline?: boolean;
   /** No border — e.g. Mark as taken vs filled Taken state. */
   borderless?: boolean;
+  /** `borderless` fill — `card` on screen bg; `surfaceSubtle` inside a white card. */
+  borderlessFill?: "card" | "surfaceSubtle";
 }) {
   const c = useFlareColors();
   const onPrimary = variant === "onPrimary";
@@ -135,7 +138,11 @@ export function SecondaryButton({
         onPrimary
           ? { backgroundColor: "rgba(255,255,255,0.12)", ...(outline ?? null) }
           : {
-              backgroundColor: borderless ? c.surfaceSubtle : c.secondaryBtnBg,
+              backgroundColor: borderless
+                ? borderlessFill === "surfaceSubtle"
+                  ? c.surfaceSubtle
+                  : c.card
+                : c.secondaryBtnBg,
               ...(outline ?? null),
             },
         disabled ? { opacity: 0.55 } : null,

@@ -2,7 +2,7 @@ import React from "react";
 import { StyleSheet, Text, type StyleProp, type TextStyle } from "react-native";
 import {
   CARD_SECTION_INNER_GAP,
-  FLARE_FONT_FAMILY,
+  CARD_SECTION_TITLE,
   SECTION_TITLE_MARGIN_BOTTOM,
   SECTION_TITLE_MARGIN_TOP,
 } from "../lib/layoutConstants";
@@ -11,8 +11,7 @@ import { useFlareColors } from "../theme";
 /** Small heading on screen background — same as Account (`My account`, `Delete account`). */
 export const flareScreenSectionTitleStyles = StyleSheet.create({
   title: {
-    fontSize: 14,
-    fontFamily: FLARE_FONT_FAMILY.bold,
+    ...CARD_SECTION_TITLE,
     marginBottom: SECTION_TITLE_MARGIN_BOTTOM,
     marginTop: SECTION_TITLE_MARGIN_TOP,
     textAlign: "left",

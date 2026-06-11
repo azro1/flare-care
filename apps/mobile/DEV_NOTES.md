@@ -12,9 +12,10 @@ Use existing screens as reference — do **not** default to web-style teal hyper
 
 | Pattern | Reference | Colour / style |
 |---------|-----------|----------------|
-| **Navigate to another screen** (Account lists, chart link, “View all types”) | `AccountOptionRow` in `App.tsx` | Label **`c.text`**, chevron **`c.textMuted`**, 15px `Inter_400Regular` (medium optional via `labelMedium`) |
+| **Navigate to another screen** (Account lists, chart link, “View all types”) | `AccountOptionRow` in `App.tsx` | Label **`c.text`**, chevron **`c.textMuted`**, `NAV_ROW_LABEL` / `NAV_ROW_CHEVRON_SIZE` from `layoutConstants.ts` (medium optional via `labelMedium`) |
 | **Inline link in body copy** (e.g. tip “Open chart”) | Hydration **Reset** | **`c.text`** or **`c.textSecondary`** + `textDecorationLine: "underline"` — not `c.primary` |
 | **Primary action** (Save, Log now) | `PrimaryButton` | Teal fill — **`c.primary`** |
+| **Secondary on white card** (e.g. Delete account, Mark as taken) | `SecondaryButton` `borderless` + `borderlessFill="surfaceSubtle"` | Subtle fill on **`c.card`** — see `FlareButton.tsx` |
 | **Selected state / type badge / hero feature icon** | Bowel bubbles, dashboard tiles | **`c.primary`** |
 | **Form field icons** (calendar, time) | Bowel log sheet | **`c.textSecondary`** — utility, not a CTA |
 | **Destructive** | Logout, delete confirm | **`c.destructiveFill`** / `danger` for text |
@@ -57,14 +58,23 @@ Use existing screens as reference — do **not** default to web-style teal hyper
 | **`buildTimestampLogRowItem`** | One saved log row — title + `formatLogWhenLine` subtitle from `whenIso` (symptom/medication history, bowel lists) |
 | **`buildBrowseLogRowItem`** | Browse row with a custom subtitle (e.g. Dashboard Logs pill: “Symptom logs” / “3 entries”) |
 | **`LogHistoryCard`** | White card shell only (`trackerCard` + theme `card` background) |
-| **`LogHistoryIntroSection`** | Intro copy + list tray in **one** card (symptom/medication history screens) |
+| **`LogHistoryIntroSection`** | White list card + **bulb tip below** (not intro copy above the list). Pass `tip` string; children = list only |
+| **`LogHistoryTipRow`** | Standalone bulb tip card (`embedded` variant for inside another card, e.g. My Meds) |
+| **`LogHistoryPreviewList`** | Paginated grey-tray list + **load more** link (`LogHistoryList` + batch reveal) |
+| **`LOG_HISTORY_RECENT_PREVIEW_COUNT`** | Wizard History first paint — **3** rows |
+| **`LOG_HISTORY_WIZARD_LOAD_MORE_BATCH`** | Wizard History each **Load more logs** tap — **+3** (same as preview count) |
+| **`LOG_HISTORY_LOAD_MORE_BATCH`** | My Meds list, bowel full-history hub — **5** initial / per tap |
+| **`usePaginatedLogList`** (`lib/paginatedLogList.ts`) | Fetch + paginate log tables; **`useWizardLogHistory`** wraps symptom/medication history |
 | **`logHistoryCardStyles`** | Shared card/intro/body tokens — import instead of redefining padding/radius/gap |
 | **`lib/logDisplay.ts`** | `formatLogWhenLine` (list subtitles), `formatAddedAtHeader` (detail screen headers) — do not reformat timestamps inline |
 
 **Live examples**
 
 - Dashboard → **Logs** tab → History card: `LogHistoryCard` + `buildBrowseLogRowItem` (`App.tsx` → `DashboardScreen`)
-- **Symptom history** / **Medication tracking history**: `LogHistoryIntroSection` + `buildTimestampLogRowItem` + `LogHistoryList`
+- **Symptom history** / **Medication tracking history**: `LogHistoryIntroSection` + `LogHistoryPreviewList` + `buildTimestampLogRowItem` + `useWizardLogHistory`
+- **Focus refresh:** History screens call **`refresh()`** on focus (not **`resetAndLoad`**) so **Load more** expansion survives detail → back; list still refetches after delete. Same for **Bowel → Your logs** (`BowelLogs`) and **My Meds** (local `visibleMedCount` — do not reset on tab focus).
+- **Load more:** teal **`c.primary`**, underlined, **`FLARE_FONT_SIZE.muted`** — via `logHistoryListStyles.loadMoreLabel`; row sits **outside** the grey tray with `CARD_SECTION_INNER_GAP` margin
+- **History tips (current copy):** symptom — *“A list of your symptom events recorded through Log Symptoms.”*; medication — *“A list of your medication events recorded through Track Medications.”* — **Onset vs duration** explainer removed from symptom tip for now; find a better home later (not history bulb)
 - **Bowel** recent + full log history: `logHistoryCardStyles` + `buildTimestampLogRowItem` (`screens/BowelScreen.tsx`) — list subtitle uses **`created_at`** on the hub **Recent** tray (when the log was saved); **BowelLogs** full history uses **`occurred_at`**; detail screen still shows movement date/time in fields + **Added** header from `created_at`
 
 **Detail screens:** symptom/medication detail = **delete only** in header (no edit). Bowel detail = edit + delete in header.
@@ -73,18 +83,66 @@ Use existing screens as reference — do **not** default to web-style teal hyper
 
 ---
 
+## Wizard review — edit from review (do not duplicate)
+
+**Problem this solves:** after reaching **Review**, going back and stepping forward again used to force re-answering every step. **Edit** jumps straight to the section; **Back to review** returns without replaying the full wizard.
+
+**Symptom** (`SymptomLogWizardScreen`) and **Track Medications** (`MedicationTrackingWizardScreen`) use a **review hub**: each review section has **Edit** → jump to that section’s entry step; **Back to review** returns without replaying the whole wizard.
+
+| Piece | Use for |
+|-------|---------|
+| **`WizardReviewEditButton`** | Edit affordance on review cards — `NAV_ROW_LABEL` + `NAV_ROW_CHEVRON_SIZE`, `c.text` + muted chevron |
+| **`LogDetailSectionCard` `onEdit`** | Optional Edit in section title row (`CARD_SECTION_TITLE` + Edit in one row) |
+| **`symptomWizardShared`** | `getSymptomReviewEditStep`, `getSymptomReviewSectionLastStep`, `SYMPTOM_WIZARD_REVIEW_STEP` |
+| **`medicationWizardShared`** | `getMedicationReviewEditStep`, `getMedicationReviewSectionLastStep`, `MEDICATION_WIZARD_REVIEW_STEP`, `cleanedMedicationHasNoData`, `cleanMedicationForm` |
+| **`symptomReviewLayout`** | `WizardReviewSection` / `WizardReviewMedicationSection` — pass `onEdit` from the screen |
+
+**Navigation while editing from review**
+
+- Primary **Back to review**; secondary **Next** only within the same section (multi-step lifestyle / list steps).
+- First pass through the wizard stays linear **Next** + **Previous step**.
+- **No stack header back chevron** on wizards (`headerOptions` excludes `SymptomLogWizard` / `MedicationTrackingWizard` from `headerLeft`) — conflicts with **Previous step**; hardware back still handled in-screen.
+
+**Empty-data guard (Track Medications)**
+
+If the user clears tracking (e.g. selects **No** on a radio and wipes list data), **Back to review** / advance must not land on an empty review:
+
+- **`returnToReview`** and **`submit`** call `cleanedMedicationHasNoData` → **`Alert.alert`** (“No tracking data entered…”).
+- **`medicationWizardTryAdvance`** can return `{ ok: false, noData: true }` → same alert + optional **Back to start** (`resetToLanding`).
+
+Do **not** remove these checks when touching wizard back/next — they block the “empty review” hole.
+
+**Track Medications form copy:** dosage list rows use placeholder **`dose (mg)`** (digits only in field; `normalizeDosage` in shared).
+
+---
+
 ## Layout constants
 
 **File:** `lib/layoutConstants.ts`
 
+**Do not hardcode font sizes, spacing insets, or chevron sizes in components** — add or reuse tokens here (`FLARE_FONT_SIZE`, `CARD_SECTION_*`, `NAV_ROW_*`, etc.). Same rule for colours: **`useFlareColors()`**, not one-off hex (except documented exceptions like tip bulb `#EAB308`).
+
 | Token / helper | Purpose |
 |----------------|---------|
 | `SCREEN_EDGE_PADDING` | Horizontal inset for screens, cards, headers |
+| `CARD_SECTION_INNER_GAP` | Gap below in-card section title before body; load-more row margin |
+| `CARD_SECTION_TITLE` | In-card section headings — **bold** 14px (`FlareScreenSectionTitle inCard`, wizard review section names) |
+| `NAV_ROW_LABEL` | Tappable row label — **regular** 14px (Account rows, wizard **Edit**) |
+| `NAV_ROW_CHEVRON_SIZE` | `chevron-forward` size on navigate / Edit rows (16px) |
+| `DETAIL_FIELD_LABEL` | Stacked field labels on log detail / review trays |
 | `TIME_PICKER_MINUTE_INTERVAL` | Native time picker step (5 min) — bowel, meds reminders |
 | `bottomTabBarHeight()` | Full rendered height of `MainBottomTabBar` |
 | `bottomTabBarScrollInset()` | Scroll padding above tab bar — keep in sync with bar height |
 
 **Bottom bar visible on:** `Dashboard`, `Reminders`, `Account` only (`BOTTOM_BAR_VISIBLE_ROUTES` in `App.tsx`).
+
+---
+
+## Scroll indicators (app-wide)
+
+**File:** `lib/hideScrollIndicators.ts` — imported from `index.ts` **before** `App`.
+
+Sets default `showsVerticalScrollIndicator={false}` and `showsHorizontalScrollIndicator={false}` on **`ScrollView`** and **`Animated.ScrollView`**. Do not re-enable scroll bars on individual screens unless there is a deliberate exception.
 
 ---
 
@@ -115,6 +173,7 @@ Use when adding pages like **What is IBD?** or **About** — long scroll content
 When a screen mounts `CollapsingTitleScrollScreen`, it calls `navigation.setOptions({ header: … })` and replaces the default header with **`CollapsingHeader`**:
 
 - Renders **back button** and **overflow menu** from existing `headerOptions` (`headerLeft` / `headerRight`)
+- **Must apply** `headerLeftContainerStyle` / `headerRightContainerStyle` from options (e.g. `paddingRight: SCREEN_EDGE_PADDING`) so ⋮ aligns with Help / Account — the custom header does not get stack padding automatically
 - Solid header bar background (theme `screen` colour)
 - **`overflow: visible`** so the single `Animated.Text` title can sit below the bar at rest and move up into it without being clipped
 - On unmount, header options are reset

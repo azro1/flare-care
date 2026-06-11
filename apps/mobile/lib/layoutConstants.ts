@@ -67,6 +67,21 @@ export const DETAIL_FIELD_LABEL = {
   fontFamily: FLARE_FONT_FAMILY.regular,
 } as const;
 
+/** Tappable navigate row label — Account lists, wizard Edit, chart links. */
+export const NAV_ROW_LABEL = {
+  fontSize: FLARE_FONT_SIZE.body,
+  fontFamily: FLARE_FONT_FAMILY.regular,
+} as const;
+
+/** Chevron on navigate rows (`chevron-forward`). */
+export const NAV_ROW_CHEVRON_SIZE = FLARE_FONT_SIZE.navTitle;
+
+/** In-card section title — Account, wizard review (`FlareScreenSectionTitle inCard`). */
+export const CARD_SECTION_TITLE = {
+  fontSize: FLARE_FONT_SIZE.body,
+  fontFamily: FLARE_FONT_FAMILY.bold,
+} as const;
+
 /** `styles.dashboardSectionTitle` / `dashboardSectionTitleLeft` spacing. */
 export const SECTION_TITLE_MARGIN_TOP = 10;
 export const SECTION_TITLE_MARGIN_BOTTOM = 12;

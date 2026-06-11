@@ -7,6 +7,7 @@
 - **Title-to-body gap** — `CARD_SECTION_INNER_GAP = 12` in `layoutConstants.ts` (tried 10 → 14 → **12**, locked in).
 - **Dev preview** — `Preview review (dev)` on Log Symptoms landing + `symptomReviewPreviewForm.ts` to open review step with sample data (`__DEV__` only; Submit disabled).
 - **Notes on detail/review** — `LogDetailNotesTray` (`surfaceSubtle` + body text) instead of bold in-card “Notes” heading.
+- **Review hub (native)** — Edit per section on review → jump to section entry; **Back to review** (no full wizard replay). Symptom + Track Medications wizards. See `DEV_NOTES.md` → Wizard review.
 
 ---
 

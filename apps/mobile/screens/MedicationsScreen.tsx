@@ -20,10 +20,12 @@ import { flareFieldErrorStyle, FlareTextInput } from "../components/FlareInput";
 import { flareCardSectionStyles, FlareScreenSectionTitle } from "../components/FlareScreenSectionTitle";
 import {
   LogHistoryCard,
-  LogHistoryList,
   LogHistoryListLoading,
+  LogHistoryPreviewList,
+  LOG_HISTORY_LOAD_MORE_BATCH,
   logHistoryCardStyles,
   logHistoryListStyles,
+  type LogHistoryListItem,
 } from "../components/LogHistoryList";
 import { OptionPickerModal } from "../components/OptionPickerModal";
 import { invalidateDashboardSnapshot } from "../lib/dashboardSnapshotCache";
@@ -302,21 +304,21 @@ function WriggleReminderBell({ color }: { color: string }) {
       Animated.timing(rotate, { toValue: -0.65, duration: 75, useNativeDriver: true }),
       Animated.timing(rotate, { toValue: 0, duration: 70, useNativeDriver: true }),
     ]);
-    const loop = Animated.loop(Animated.sequence([wriggle, Animated.delay(2600)]));
+    const loop = Animated.loop(Animated.sequence([wriggle, Animated.delay(4500)]));
     loop.start();
     return () => loop.stop();
   }, [rotate]);
 
   const wiggle = rotate.interpolate({
     inputRange: [-1, 1],
-    outputRange: ["-16deg", "16deg"],
+    outputRange: ["-10deg", "10deg"],
   });
 
   return (
     <Animated.View style={{ transform: [{ rotate: wiggle }] }}>
       <Ionicons
         name="notifications"
-        size={16}
+        size={14}
         color={color}
         accessibilityElementsHidden
         importantForAccessibility="no"
@@ -347,6 +349,7 @@ export function MedicationsScreen({ user }: { user: SessionUser }) {
   const [form, setForm] = useState<MedicationFormState>(() => emptyMedicationFormState());
   const [saving, setSaving] = useState(false);
   const [saveError, setSaveError] = useState("");
+  const [visibleMedCount, setVisibleMedCount] = useState(LOG_HISTORY_LOAD_MORE_BATCH);
 
   const applyMeds = useCallback((rows: MedicationRow[]) => {
     const nextKey = medicationsListCacheKey(rows);
@@ -361,6 +364,9 @@ export function MedicationsScreen({ user }: { user: SessionUser }) {
     try {
       const rows = await fetchMedicationsForUser(user.id);
       applyMeds(rows);
+      setVisibleMedCount((count) =>
+        rows.length === 0 ? LOG_HISTORY_LOAD_MORE_BATCH : Math.min(count, rows.length),
+      );
     } catch (err) {
       console.error("Error loading medications:", err);
       applyMeds([]);
@@ -430,6 +436,56 @@ export function MedicationsScreen({ user }: { user: SessionUser }) {
 
   const medById = useCallback((id: string) => meds.find((row) => String(row.id) === id), [meds]);
 
+  const medListItems: LogHistoryListItem[] = meds.map((row) => {
+    const subtitle = medicationListSubtitle(row);
+    const reminderLabel = medicationHasReminder(row) ? formatMedicationReminderTime(row.time_of_day) : null;
+    return {
+      id: String(row.id),
+      title: row.name,
+      subtitle: subtitle || undefined,
+      accessibilityLabel: reminderLabel
+        ? `${row.name}. ${subtitle}. Reminder at ${reminderLabel}. View details`
+        : subtitle
+          ? `${row.name}. ${subtitle}. View details`
+          : `${row.name}. View details`,
+    };
+  });
+  const hasMoreMeds = meds.length > visibleMedCount;
+  const loadMoreMeds = useCallback(() => {
+    setVisibleMedCount((count) => Math.min(count + LOG_HISTORY_LOAD_MORE_BATCH, meds.length));
+  }, [meds.length]);
+
+  const renderMedSubtitle = useCallback(
+    (item: LogHistoryListItem) => {
+      const row = medById(item.id);
+      if (!row) return null;
+      const dosage = row.dosage?.trim();
+      const hasReminder = medicationHasReminder(row);
+      const timeLabel = hasReminder ? formatMedicationReminderTime(row.time_of_day) : null;
+      if (!dosage && !timeLabel) return null;
+      const subtitleTextStyle = [logHistoryListStyles.logSecondary, { color: c.textMuted }];
+      return (
+        <View style={styles.medSubtitleRow}>
+          {dosage ? (
+            <Text style={subtitleTextStyle} numberOfLines={1}>
+              {dosage}
+              {timeLabel ? " · " : ""}
+            </Text>
+          ) : null}
+          {timeLabel ? (
+            <View style={styles.medReminderTimeRow}>
+              <WriggleReminderBell color={c.textMuted} />
+              <Text style={subtitleTextStyle} numberOfLines={1}>
+                {timeLabel}
+              </Text>
+            </View>
+          ) : null}
+        </View>
+      );
+    },
+    [c.textMuted, medById],
+  );
+
   const logsSection = (
     <LogHistoryCard style={[{ marginBottom: 0 }, flareCardSectionStyles.container]}>
       <FlareScreenSectionTitle inCard>{listSectionTitle}</FlareScreenSectionTitle>
@@ -447,62 +503,27 @@ export function MedicationsScreen({ user }: { user: SessionUser }) {
             </Text>
           </View>
         ) : (
-          <LogHistoryList
-            items={meds.map((row) => {
-              const subtitle = medicationListSubtitle(row);
-              const reminderLabel = medicationHasReminder(row)
-                ? formatMedicationReminderTime(row.time_of_day)
-                : null;
-              return {
-                id: String(row.id),
-                title: row.name,
-                subtitle: subtitle || undefined,
-                accessibilityLabel: reminderLabel
-                  ? `${row.name}. ${subtitle}. Reminder at ${reminderLabel}. View details`
-                  : subtitle
-                    ? `${row.name}. ${subtitle}. View details`
-                    : `${row.name}. View details`,
-              };
-            })}
-            renderSubtitle={(item) => {
-              const row = medById(item.id);
-              if (!row) return null;
-              const dosage = row.dosage?.trim();
-              const hasReminder = medicationHasReminder(row);
-              const timeLabel = hasReminder ? formatMedicationReminderTime(row.time_of_day) : null;
-              if (!dosage && !timeLabel) return null;
-              const subtitleTextStyle = [logHistoryListStyles.logSecondary, { color: c.textMuted }];
-              return (
-                <View style={styles.medSubtitleRow}>
-                  {dosage ? (
-                    <Text style={subtitleTextStyle} numberOfLines={1}>
-                      {dosage}
-                      {timeLabel ? " · " : ""}
-                    </Text>
-                  ) : null}
-                  {timeLabel ? (
-                    <View style={styles.medReminderTimeRow}>
-                      <WriggleReminderBell color={c.primary} />
-                      <Text style={subtitleTextStyle} numberOfLines={1}>
-                        {timeLabel}
-                      </Text>
-                    </View>
-                  ) : null}
-                </View>
-              );
-            }}
+          <LogHistoryPreviewList
+            items={medListItems}
+            visibleCount={visibleMedCount}
+            hasMore={hasMoreMeds}
+            loadMoreLabel="load more"
+            onLoadMore={loadMoreMeds}
+            renderSubtitle={renderMedSubtitle}
             onPressItem={(medId) => navigation.navigate("MedicationDetail", { id: medId })}
           />
         )}
       </View>
-      <Pressable
-        accessibilityRole="link"
-        accessibilityLabel="Having trouble with reminders"
-        onPress={() => navigation.navigate("AccountHelp", { expandSection: "notifications" })}
-        style={({ pressed }) => [styles.helpLinkPress, pressed && { opacity: 0.7 }]}
-      >
-        <Text style={[styles.helpLink, { color: c.text }]}>Having trouble?</Text>
-      </Pressable>
+      {!hasMoreMeds && meds.length > 0 ? (
+        <Pressable
+          accessibilityRole="link"
+          accessibilityLabel="Having trouble with reminders"
+          onPress={() => navigation.navigate("AccountHelp", { expandSection: "notifications" })}
+          style={({ pressed }) => [styles.helpLinkPress, pressed && { opacity: 0.7 }]}
+        >
+          <Text style={[styles.helpLink, { color: c.text }]}>Having trouble?</Text>
+        </Pressable>
+      ) : null}
     </LogHistoryCard>
   );
 

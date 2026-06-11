@@ -1,6 +1,7 @@
 import React from "react";
 import { StyleSheet, Text, View, type StyleProp, type ViewStyle } from "react-native";
 import { flareCardSectionStyles, FlareScreenSectionTitle } from "./FlareScreenSectionTitle";
+import { WizardReviewEditButton } from "./WizardReviewEditButton";
 import { StackedDetailField } from "./StackedDetailField";
 import { FLARE_FONT_FAMILY, FLARE_FONT_SIZE, SCREEN_EDGE_PADDING } from "../lib/layoutConstants";
 import { useFlareColors } from "../theme";
@@ -26,6 +27,7 @@ export const logDetailStyles = StyleSheet.create({
   },
   fieldGroups: { gap: 10 },
   fieldGroup: { borderRadius: 14, overflow: "hidden" },
+  sectionTitleRow: { flexDirection: "row", alignItems: "center", justifyContent: "space-between" },
 });
 
 export function LogDetailCard({
@@ -44,14 +46,27 @@ export function LogDetailSectionCard({
   title,
   children,
   last,
+  onEdit,
+  editAccessibilityLabel,
 }: {
   title: string;
   children: React.ReactNode;
   last?: boolean;
+  onEdit?: () => void;
+  editAccessibilityLabel?: string;
 }) {
   return (
     <LogDetailCard style={[flareCardSectionStyles.container, last ? { marginBottom: 0 } : null]}>
-      <FlareScreenSectionTitle inCard>{title}</FlareScreenSectionTitle>
+      {onEdit ? (
+        <View style={logDetailStyles.sectionTitleRow}>
+          <View style={{ flex: 1 }}>
+            <FlareScreenSectionTitle inCard>{title}</FlareScreenSectionTitle>
+          </View>
+          <WizardReviewEditButton onPress={onEdit} accessibilityLabel={editAccessibilityLabel ?? `Edit ${title}`} />
+        </View>
+      ) : (
+        <FlareScreenSectionTitle inCard>{title}</FlareScreenSectionTitle>
+      )}
       {children}
     </LogDetailCard>
   );

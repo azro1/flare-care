@@ -31,10 +31,13 @@ import {
 import {
   LogHistoryList,
   LogHistoryListLoading,
+  LogHistoryPreviewList,
   LogHistoryTipRow,
+  LOG_HISTORY_LOAD_MORE_BATCH,
   buildTimestampLogRowItem,
   logHistoryCardStyles,
 } from "../components/LogHistoryList";
+import { usePaginatedLogList } from "../lib/paginatedLogList";
 import { STACKED_DETAIL_ROW_EDGE } from "../components/StackedDetailField";
 import { flareCardSectionStyles, FlareScreenSectionTitle } from "../components/FlareScreenSectionTitle";
 import {
@@ -455,8 +458,24 @@ export function BowelScreen({ user }: { user: SessionUser }) {
 
   const [form, setForm] = useState<BowelFormState>(() => quickBowelFormState());
   const [entries, setEntries] = useState<BowelMovementRow[]>([]);
+  const [totalEntryCount, setTotalEntryCount] = useState(0);
   const entriesRef = useRef<BowelMovementRow[]>([]);
   const [loading, setLoading] = useState(true);
+  const {
+    rows: historyRows,
+    totalCount: historyTotalCount,
+    visibleCount: historyVisibleCount,
+    loading: historyLoading,
+    loadingMore: historyLoadingMore,
+    hasMore: historyHasMore,
+    loadMore: loadMoreHistory,
+    refresh: refreshHistoryLoad,
+  } = usePaginatedLogList<BowelMovementRow>({
+    userId: user.id,
+    table: TABLES.BOWEL_MOVEMENTS,
+    select: "*",
+    initialVisible: LOG_HISTORY_LOAD_MORE_BATCH,
+  });
   const [saving, setSaving] = useState(false);
   const [saveError, setSaveError] = useState("");
   const [editingId, setEditingId] = useState<string | null>(null);
@@ -491,18 +510,24 @@ export function BowelScreen({ user }: { user: SessionUser }) {
     }, [navigation, route.params]),
   );
 
-  const fetchEntries = useCallback(async () => {
+  const fetchHubPreview = useCallback(async () => {
     const isInitialLoad = entriesRef.current.length === 0;
     if (isInitialLoad) setLoading(true);
-    const { data, error } = await supabase
-      .from(TABLES.BOWEL_MOVEMENTS)
-      .select("*")
-      .eq("user_id", user.id)
-      .order("created_at", { ascending: false });
+    const [{ count }, { data, error }] = await Promise.all([
+      supabase.from(TABLES.BOWEL_MOVEMENTS).select("id", { count: "exact", head: true }).eq("user_id", user.id),
+      supabase
+        .from(TABLES.BOWEL_MOVEMENTS)
+        .select("*")
+        .eq("user_id", user.id)
+        .order("created_at", { ascending: false })
+        .limit(BOWEL_RECENT_PREVIEW_COUNT),
+    ]);
     if (error) {
       console.error("Error fetching bowel movements:", error);
       setEntries([]);
+      setTotalEntryCount(0);
     } else {
+      setTotalEntryCount(count ?? 0);
       setEntries(sortBowelByCreatedAtDesc((data ?? []) as BowelMovementRow[]));
     }
     setLoading(false);
@@ -510,8 +535,12 @@ export function BowelScreen({ user }: { user: SessionUser }) {
 
   useFocusEffect(
     useCallback(() => {
-      fetchEntries();
-    }, [fetchEntries]),
+      if (isLogHistory) {
+        void refreshHistoryLoad();
+      } else {
+        fetchHubPreview();
+      }
+    }, [fetchHubPreview, isLogHistory, refreshHistoryLoad]),
   );
 
   const closeSheet = useCallback(() => {
@@ -542,11 +571,15 @@ export function BowelScreen({ user }: { user: SessionUser }) {
           .eq("id", editingId)
           .eq("user_id", user.id);
         if (error) throw error;
-        setEntries((prev) =>
-          sortBowelByCreatedAtDesc(
-            prev.map((entry) => (entry.id === editingId ? { ...entry, ...payload } : entry)),
-          ),
-        );
+        if (isLogHistory) {
+          void refreshHistoryLoad();
+        } else {
+          setEntries((prev) =>
+            sortBowelByCreatedAtDesc(
+              prev.map((entry) => (entry.id === editingId ? { ...entry, ...payload } : entry)),
+            ),
+          );
+        }
       } else {
         const { data, error } = await supabase
           .from(TABLES.BOWEL_MOVEMENTS)
@@ -555,9 +588,13 @@ export function BowelScreen({ user }: { user: SessionUser }) {
         if (error) throw error;
         const inserted = (data?.[0] as BowelMovementRow | undefined) ?? null;
         if (!inserted) {
-          await fetchEntries();
+          if (isLogHistory) void refreshHistoryLoad();
+          else await fetchHubPreview();
+        } else if (isLogHistory) {
+          void refreshHistoryLoad();
         } else {
           setEntries((prev) => sortBowelByCreatedAtDesc([inserted, ...prev.filter((e) => e.id !== inserted.id)]));
+          setTotalEntryCount((n) => n + 1);
         }
       }
       closeSheet();
@@ -571,10 +608,12 @@ export function BowelScreen({ user }: { user: SessionUser }) {
   };
 
   const previewEntries = entries.slice(0, BOWEL_RECENT_PREVIEW_COUNT);
-  const listRows = isLogHistory ? entries : previewEntries;
-  const showViewAll = !isLogHistory && entries.length > BOWEL_RECENT_PREVIEW_COUNT;
-  const listInitialLoad = loading && entries.length === 0;
+  const showViewAll = !isLogHistory && totalEntryCount > BOWEL_RECENT_PREVIEW_COUNT;
+  const listInitialLoad = isLogHistory
+    ? historyLoading && historyRows.length === 0
+    : loading && entries.length === 0;
   const recentSectionTitle = entries.length > 0 || listInitialLoad ? "Recent" : "Your logs";
+  const historyEmpty = !historyLoading && historyTotalCount === 0;
 
   entriesRef.current = entries;
 
@@ -586,7 +625,7 @@ export function BowelScreen({ user }: { user: SessionUser }) {
       <View style={logHistoryCardStyles.trackerCardBody}>
         {listInitialLoad ? (
           <LogHistoryListLoading />
-        ) : entries.length === 0 ? (
+        ) : (isLogHistory ? historyEmpty : entries.length === 0) ? (
           <View style={styles.emptyWrap}>
             <View style={[styles.emptyIcon, { backgroundColor: c.surfaceSubtle }]}>
               <Ionicons name="document-text-outline" size={28} color={c.primary} accessibilityIgnoresInvertColors />
@@ -598,34 +637,56 @@ export function BowelScreen({ user }: { user: SessionUser }) {
                 : "Tap Log now when you are ready — it only takes a few taps."}
             </Text>
           </View>
+        ) : isLogHistory ? (
+          <LogHistoryPreviewList
+            items={historyRows.map((row) => {
+              const meta = getBristolTypeMeta(row.bristol_type);
+              return buildTimestampLogRowItem({
+                id: row.id,
+                title: meta?.shortLabel ?? formatBristolTypeOnly(row.bristol_type),
+                whenIso: row.occurred_at,
+                accessibilityLabel: `${formatBristolDetailLabel(row.bristol_type)}. View details`,
+              });
+            })}
+            visibleCount={historyVisibleCount}
+            hasMore={historyHasMore}
+            loadingMore={historyLoadingMore}
+            onLoadMore={() => void loadMoreHistory()}
+            onPressItem={(logId) =>
+              navigation.navigate("BowelLogDetail", {
+                id: logId,
+                listRoute: "BowelLogs",
+              })
+            }
+          />
         ) : (
           <>
             <LogHistoryList
-              items={listRows.map((row) => {
+              items={previewEntries.map((row) => {
                 const meta = getBristolTypeMeta(row.bristol_type);
                 return buildTimestampLogRowItem({
                   id: row.id,
                   title: meta?.shortLabel ?? formatBristolTypeOnly(row.bristol_type),
-                  whenIso: isLogHistory ? row.occurred_at : row.created_at,
+                  whenIso: row.created_at,
                   accessibilityLabel: `${formatBristolDetailLabel(row.bristol_type)}. View details`,
                 });
               })}
               onPressItem={(logId) =>
                 navigation.navigate("BowelLogDetail", {
                   id: logId,
-                  listRoute: isLogHistory ? "BowelLogs" : "Bowel",
+                  listRoute: "Bowel",
                 })
               }
             />
             {showViewAll ? (
               <Pressable
                 accessibilityRole="button"
-                accessibilityLabel={`View all logs, ${entries.length} total`}
+                accessibilityLabel={`View all logs, ${totalEntryCount} total`}
                 onPress={() => navigation.navigate("BowelLogs")}
                 style={({ pressed }) => [styles.viewAllRow, pressed && { opacity: 0.7 }]}
               >
                 <Text style={[styles.viewAllLabel, { color: c.text }]}>
-                  View all logs ({entries.length})
+                  View all logs ({totalEntryCount})
                 </Text>
                 <Ionicons name="chevron-forward" size={18} color={c.textMuted} accessibilityIgnoresInvertColors />
               </Pressable>

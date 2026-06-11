@@ -54,6 +54,25 @@ export function normalizeDosage(raw: string): string {
   return (raw || "").replace(/\D/g, "").slice(0, 5);
 }
 
+export const MEDICATION_WIZARD_REVIEW_STEP = 7;
+
+export type MedicationReviewSectionId = "missed" | "nsaid" | "antibiotic";
+
+export function getMedicationReviewEditStep(section: MedicationReviewSectionId): number {
+  if (section === "missed") return 1;
+  if (section === "nsaid") return 3;
+  return 5;
+}
+
+export function getMedicationReviewSectionLastStep(
+  section: MedicationReviewSectionId,
+  form: MedicationTrackingFormData,
+): number {
+  if (section === "missed") return form.missedMedications ? 2 : 1;
+  if (section === "nsaid") return form.nsaidUsage ? 4 : 3;
+  return form.antibioticUsage ? 6 : 5;
+}
+
 /** Wizard step id → section name (steps 1–2 missed, 3–4 NSAIDs, 5–6 antibiotics, 7 review). */
 export function medicationStepPhaseLabel(step: number): string {
   if (step <= 0) return "";

@@ -4,6 +4,7 @@ import { supabase, TABLES } from "./supabase";
 
 export const MEDICATIONS_GOAL_ACTIVITY_TITLE = 'Completed Today\'s goal "Take Medications"';
 export const MEDICATION_ADDED_ACTIVITY_TITLE = "Added new medication";
+export const MEDICATION_TRACKING_ACTIVITY_TITLE = "Logged medications";
 
 export type MedicationRow = {
   id: number;

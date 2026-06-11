@@ -26,7 +26,6 @@ import {
 import { PrimaryButton, SecondaryButton } from "../components/FlareButton";
 import { flareFieldErrorStyle, FlareInputTrigger, FlareTextInput } from "../components/FlareInput";
 import { invalidateDashboardSnapshot } from "../lib/dashboardSnapshotCache";
-import { createSymptomReviewPreviewForm } from "../lib/symptomReviewPreviewForm";
 import { formatUkDate } from "../lib/formatUkDate";
 import { supabase, TABLES } from "../lib/supabase";
 import { symptomWizardTryAdvance, type DateErrorsState } from "../lib/symptomWizardNextStep";
@@ -34,10 +33,14 @@ import {
   buildSymptomInsertPayload,
   createEmptySymptomForm,
   fetchUserPreferencesRow,
+  getSymptomReviewEditStep,
+  getSymptomReviewSectionLastStep,
   getSymptomWizardPhaseProgress,
   resolveAlcoholStep12Phase,
   resolveSmokingStep10Phase,
+  SYMPTOM_WIZARD_REVIEW_STEP,
   symptomLogRowToForm,
+  type SymptomReviewSectionId,
   SEVERITY_WORD_OPTIONS,
   STRESS_WORD_OPTIONS,
   type MealRow,
@@ -47,7 +50,7 @@ import {
   upsertUserPreferencesMobile,
   wizardRatingToBand,
 } from "../lib/symptomWizardShared";
-import { useFlareColors, useFlareTheme } from "../theme";
+import { useFlareColors } from "../theme";
 
 type SessionUser = { id: string };
 
@@ -89,37 +92,14 @@ function isAndroidDatePickerDismissed(event: { type?: string }): boolean {
   return Platform.OS === "android" && event.type === "dismissed";
 }
 
-const SYMPTOM_REVIEW_STEP = 17;
-
-const SYMPTOM_REVIEW_PREVIEW_PREFS: UserPreferencesShape = {
-  isSmoker: true,
-  isDrinker: true,
-  normalBathroomFrequency: "5",
-  hasSetPreferences: true,
-};
-
-function applySymptomReviewPreview(
-  setForm: React.Dispatch<React.SetStateAction<SymptomFormData>>,
-  setUserPreferences: React.Dispatch<React.SetStateAction<UserPreferencesShape | null>>,
-  setIsFirstTimeUser: React.Dispatch<React.SetStateAction<boolean>>,
-  setCurrentStep: React.Dispatch<React.SetStateAction<number>>,
-  setHistory: React.Dispatch<React.SetStateAction<{ step: number; form: SymptomFormData }[]>>,
-) {
-  setForm(createSymptomReviewPreviewForm());
-  setUserPreferences(SYMPTOM_REVIEW_PREVIEW_PREFS);
-  setIsFirstTimeUser(false);
-  setCurrentStep(SYMPTOM_REVIEW_STEP);
-  setHistory([]);
-}
+const SYMPTOM_REVIEW_STEP = SYMPTOM_WIZARD_REVIEW_STEP;
 
 export function SymptomLogWizardScreen({ user }: { user: SessionUser }) {
   const navigation = useNavigation<any>();
   const route = useRoute();
   const editId = String((route.params as { editId?: string } | undefined)?.editId ?? "");
-  const previewReview = __DEV__ && Boolean((route.params as { previewReview?: boolean } | undefined)?.previewReview);
   const c = useFlareColors();
   const errTextStyle = flareFieldErrorStyle(c, "wizard");
-  const { colors } = useFlareTheme();
   const { height: windowHeight } = useWindowDimensions();
   const [loadingPrefs, setLoadingPrefs] = useState(true);
   const [userPreferences, setUserPreferences] = useState<UserPreferencesShape | null>(null);
@@ -139,7 +119,7 @@ export function SymptomLogWizardScreen({ user }: { user: SessionUser }) {
   const [submitting, setSubmitting] = useState(false);
   const [loadingEdit, setLoadingEdit] = useState(Boolean(editId));
   const [picker, setPicker] = useState<null | "start" | "end">(null);
-  const [isReviewPreview, setIsReviewPreview] = useState(false);
+  const [editingReviewSection, setEditingReviewSection] = useState<SymptomReviewSectionId | null>(null);
 
   useEffect(() => {
     return () => {
@@ -148,12 +128,6 @@ export function SymptomLogWizardScreen({ user }: { user: SessionUser }) {
   }, [user.id]);
 
   useEffect(() => {
-    if (previewReview && !editId) {
-      applySymptomReviewPreview(setForm, setUserPreferences, setIsFirstTimeUser, setCurrentStep, setHistory);
-      setIsReviewPreview(true);
-      setLoadingPrefs(false);
-      return;
-    }
     (async () => {
       setLoadingPrefs(true);
       try {
@@ -164,13 +138,7 @@ export function SymptomLogWizardScreen({ user }: { user: SessionUser }) {
         setLoadingPrefs(false);
       }
     })();
-  }, [editId, previewReview, user.id]);
-
-  const openReviewPreview = useCallback(() => {
-    if (!__DEV__) return;
-    applySymptomReviewPreview(setForm, setUserPreferences, setIsFirstTimeUser, setCurrentStep, setHistory);
-    setIsReviewPreview(true);
-  }, []);
+  }, [editId, user.id]);
 
   useEffect(() => {
     if (!editId) return;
@@ -311,14 +279,55 @@ export function SymptomLogWizardScreen({ user }: { user: SessionUser }) {
     return fields;
   }, [form, isFirstTimeUser, isSymptomDayToday, showLifestyleReview, symptomDayLabel]);
 
+  const returnToReview = useCallback(() => {
+    setCurrentStep(SYMPTOM_REVIEW_STEP);
+    setEditingReviewSection(null);
+    setFieldErrors({});
+    setDateErrors({ day: "", month: "", year: "", endDay: "", endMonth: "", endYear: "" });
+  }, []);
+
+  const openReviewEdit = useCallback(
+    (section: SymptomReviewSectionId) => {
+      const entryStep = getSymptomReviewEditStep(section, isFirstTimeUser, userPreferences);
+      if (entryStep == null) return;
+      setEditingReviewSection(section);
+      setCurrentStep(entryStep);
+      setFieldErrors({});
+      setDateErrors({ day: "", month: "", year: "", endDay: "", endMonth: "", endYear: "" });
+    },
+    [isFirstTimeUser, userPreferences],
+  );
+
   const goBackInternal = useCallback(() => {
+    if (currentStep === SYMPTOM_REVIEW_STEP && !editingReviewSection) {
+      navigation.goBack();
+      return true;
+    }
+    if (editingReviewSection) {
+      const entryStep = getSymptomReviewEditStep(editingReviewSection, isFirstTimeUser, userPreferences);
+      if (entryStep != null && currentStep === entryStep) {
+        returnToReview();
+        return true;
+      }
+    }
     const prev = history[history.length - 1];
-    if (prev) {
+    if (prev && !editingReviewSection) {
       setHistory((h) => h.slice(0, -1));
       setCurrentStep(prev.step);
       setForm(prev.form);
       setFieldErrors({});
       setDateErrors({ day: "", month: "", year: "", endDay: "", endMonth: "", endYear: "" });
+      return true;
+    }
+    if (editingReviewSection) {
+      const previousStep = currentStep - 1;
+      if (previousStep >= 1) {
+        setCurrentStep(previousStep);
+        setFieldErrors({});
+        setDateErrors({ day: "", month: "", year: "", endDay: "", endMonth: "", endYear: "" });
+        return true;
+      }
+      returnToReview();
       return true;
     }
     if (editId && currentStep > 1) {
@@ -329,7 +338,7 @@ export function SymptomLogWizardScreen({ user }: { user: SessionUser }) {
     }
     navigation.goBack();
     return true;
-  }, [currentStep, editId, history, navigation]);
+  }, [currentStep, editId, editingReviewSection, history, isFirstTimeUser, navigation, returnToReview, userPreferences]);
 
   useEffect(() => {
     const sub = BackHandler.addEventListener("hardwareBackPress", goBackInternal);
@@ -338,23 +347,9 @@ export function SymptomLogWizardScreen({ user }: { user: SessionUser }) {
 
   useLayoutEffect(() => {
     navigation.setOptions({
-      headerTitle: "",
-      headerLeft: () => (
-        <Pressable
-          accessibilityRole="button"
-          accessibilityLabel="Back"
-          hitSlop={{ top: 10, bottom: 10, left: 8, right: 20 }}
-          onPress={() => {
-            if (currentStep > 0) goBackInternal();
-            else navigation.goBack();
-          }}
-          style={styles.headerBackButton}
-        >
-          <Ionicons name="chevron-back" size={24} color={colors.primary} />
-        </Pressable>
-      ),
+      headerTitle: currentStep === SYMPTOM_REVIEW_STEP && !editingReviewSection ? "Review" : "",
     });
-  }, [navigation, currentStep, goBackInternal, colors.primary]);
+  }, [navigation, currentStep, editingReviewSection]);
 
   const applyAdvance = useCallback(() => {
     const res = symptomWizardTryAdvance({
@@ -370,10 +365,22 @@ export function SymptomLogWizardScreen({ user }: { user: SessionUser }) {
     }
     setFieldErrors({});
     if (res.clearDateErrors) setDateErrors({ day: "", month: "", year: "", endDay: "", endMonth: "", endYear: "" });
+    setForm(res.form);
+    if (editingReviewSection) {
+      const sectionLast = getSymptomReviewSectionLastStep(editingReviewSection);
+      if (res.nextStep > sectionLast) {
+        returnToReview();
+        return;
+      }
+      setCurrentStep(res.nextStep);
+      return;
+    }
+    if (res.nextStep === SYMPTOM_REVIEW_STEP) {
+      setEditingReviewSection(null);
+    }
     setHistory((h) => [...h, { step: currentStep, form: cloneForm(form) }]);
     setCurrentStep(res.nextStep);
-    setForm(res.form);
-  }, [currentStep, form, isFirstTimeUser, userPreferences]);
+  }, [currentStep, editingReviewSection, form, isFirstTimeUser, returnToReview, userPreferences]);
 
   const startWizard = () => {
     setHistory([{ step: 0, form: cloneForm(form) }]);
@@ -588,16 +595,6 @@ export function SymptomLogWizardScreen({ user }: { user: SessionUser }) {
             <View style={styles.landingCta}>
               <PrimaryButton title="Start now" onPress={startWizard} />
             </View>
-            {__DEV__ ? (
-              <Pressable
-                accessibilityRole="button"
-                accessibilityLabel="Open review preview for styling"
-                onPress={openReviewPreview}
-                style={({ pressed }) => [styles.devPreviewLinkPress, pressed && { opacity: 0.7 }]}
-              >
-                <Text style={[styles.devPreviewLink, { color: c.textMuted }]}>Preview review (dev)</Text>
-              </Pressable>
-            ) : null}
           </View>
         ) : null}
 
@@ -1001,30 +998,45 @@ export function SymptomLogWizardScreen({ user }: { user: SessionUser }) {
 
         {currentStep === 17 ? (
           <View>
-            <Text style={[styles.h3, { color: c.text, marginBottom: 16 }]}>Review your entry</Text>
-
-            <WizardReviewSection title="Basic Information" fields={reviewBasicFields} />
-            <WizardReviewSection title="Bathroom Frequency" fields={reviewBathroomFields} />
+            <WizardReviewSection title="Basic Information" fields={reviewBasicFields} onEdit={() => openReviewEdit("basic")} />
+            <WizardReviewSection
+              title="Bathroom Frequency"
+              fields={reviewBathroomFields}
+              onEdit={() => openReviewEdit("bathroom")}
+            />
             {reviewLifestyleFields.length > 0 ? (
-              <WizardReviewSection title="Lifestyle" fields={reviewLifestyleFields} />
+              <WizardReviewSection
+                title="Lifestyle"
+                fields={reviewLifestyleFields}
+                onEdit={() => openReviewEdit("lifestyle")}
+              />
             ) : null}
-            <WizardReviewMealsSection entries={mealReviewEntries} />
-            <WizardReviewNotesSection notes={form.notes} />
+            <WizardReviewMealsSection entries={mealReviewEntries} onEdit={() => openReviewEdit("meals")} />
+            <WizardReviewNotesSection notes={form.notes} onEdit={() => openReviewEdit("notes")} />
           </View>
         ) : null}
 
         {currentStep > 0 ? (
           <View style={styles.footerBtns}>
-            {currentStep < 17 ? (
+            {editingReviewSection ? (
+              <>
+                <PrimaryButton title="Back to review" onPress={returnToReview} />
+                {currentStep < getSymptomReviewSectionLastStep(editingReviewSection) ? (
+                  <SecondaryButton title="Next" onPress={applyAdvance} />
+                ) : null}
+              </>
+            ) : currentStep < SYMPTOM_REVIEW_STEP ? (
               <PrimaryButton title="Next" onPress={applyAdvance} />
             ) : (
               <PrimaryButton
                 title={submitting ? "Saving…" : editId ? "Save changes" : "Submit"}
                 onPress={submit}
-                disabled={submitting || isReviewPreview}
+                disabled={submitting}
               />
             )}
-            {currentStep > 1 ? <SecondaryButton title="Previous step" onPress={goBackInternal} /> : null}
+            {currentStep > 1 && !editingReviewSection && currentStep !== SYMPTOM_REVIEW_STEP ? (
+              <SecondaryButton title="Previous step" onPress={goBackInternal} />
+            ) : null}
           </View>
         ) : null}
       </ScrollView>
@@ -1033,18 +1045,9 @@ export function SymptomLogWizardScreen({ user }: { user: SessionUser }) {
 }
 
 const styles = StyleSheet.create({
-  headerBackButton: {
-    justifyContent: "center",
-    alignItems: "flex-start",
-    paddingVertical: 8,
-    paddingLeft: Platform.OS === "ios" ? 6 : 4,
-    paddingRight: 10,
-    minHeight: 44,
-  },
   centered: { flex: 1, justifyContent: "center", alignItems: "center" },
   scrollPad: { paddingHorizontal: 16, paddingTop: 16, paddingBottom: 48 },
   scrollPadLanding: { flexGrow: 1 },
-  /** Step 1+ — room for back button only (no header title). */
   scrollPadWizardSteps: { paddingTop: 12 },
   landing: {
     alignItems: "center",
@@ -1072,8 +1075,6 @@ const styles = StyleSheet.create({
   },
   landingSub: { fontSize: 16, lineHeight: 24, textAlign: "center", marginBottom: 6, maxWidth: 360, paddingHorizontal: 4 },
   landingCta: { width: "100%", maxWidth: 360, marginTop: 20 },
-  devPreviewLinkPress: { marginTop: 16, paddingVertical: 8 },
-  devPreviewLink: { fontSize: 14, fontFamily: "Inter_500Medium", textAlign: "center", textDecorationLine: "underline" },
   phaseLine: { fontSize: 13, marginBottom: 12, fontFamily: "Inter_500Medium" },
   h3: { fontFamily: "Inter_700Bold", fontSize: 20, marginBottom: 12 },
   rowGap: { gap: 14, marginTop: 8 },
