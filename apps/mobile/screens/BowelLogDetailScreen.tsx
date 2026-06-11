@@ -12,7 +12,12 @@ import {
 } from "react-native";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { ConfirmModal } from "../components/ConfirmModal";
-import { LogDetailAddedHeader, LogDetailCard, LogDetailFieldGroup, LogDetailNotesCard } from "../components/LogDetailLayout";
+import {
+  LogDetailAddedHeader,
+  LogDetailFieldGroup,
+  LogDetailNotesCard,
+  LogDetailSectionCard,
+} from "../components/LogDetailLayout";
 import { formatBristolLine } from "../lib/bristolStoolChart";
 import {
   boolToTri,
@@ -284,7 +289,7 @@ export function BowelLogDetailScreen({ user }: { user: SessionUser }) {
       >
         <LogDetailAddedHeader text={formatAddedAtHeader(row.created_at)} />
 
-        <LogDetailCard>
+        <LogDetailSectionCard title="Log details">
           <LogDetailFieldGroup
             fields={[
               { label: "Date", value: formatUkDate(row.occurred_at) || "Not set" },
@@ -295,7 +300,7 @@ export function BowelLogDetailScreen({ user }: { user: SessionUser }) {
               { label: "Urgent need to go?", value: triStateFromBool(row.urgency) },
             ]}
           />
-        </LogDetailCard>
+        </LogDetailSectionCard>
 
         {notes ? <LogDetailNotesCard notes={notes} /> : null}
       </ScrollView>

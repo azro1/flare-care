@@ -36,7 +36,7 @@ import {
   logHistoryCardStyles,
 } from "../components/LogHistoryList";
 import { STACKED_DETAIL_ROW_EDGE } from "../components/StackedDetailField";
-import { FlareScreenSectionTitle } from "../components/FlareScreenSectionTitle";
+import { flareCardSectionStyles, FlareScreenSectionTitle } from "../components/FlareScreenSectionTitle";
 import {
   BRISTOL_TYPES,
   formatBristolDetailLabel,
@@ -579,9 +579,9 @@ export function BowelScreen({ user }: { user: SessionUser }) {
   entriesRef.current = entries;
 
   const logsSection = (
-    <View style={[logHistoryCardStyles.trackerCard, { backgroundColor: c.card }]}>
+    <View style={[logHistoryCardStyles.trackerCard, flareCardSectionStyles.container, { backgroundColor: c.card }]}>
       {!isLogHistory ? (
-        <Text style={[logHistoryCardStyles.sectionTitle, { color: c.text }]}>{recentSectionTitle}</Text>
+        <FlareScreenSectionTitle inCard>{recentSectionTitle}</FlareScreenSectionTitle>
       ) : null}
       <View style={logHistoryCardStyles.trackerCardBody}>
         {listInitialLoad ? (

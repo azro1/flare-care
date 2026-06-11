@@ -26,6 +26,7 @@ import {
 import { PrimaryButton, SecondaryButton } from "../components/FlareButton";
 import { flareFieldErrorStyle, FlareInputTrigger, FlareTextInput } from "../components/FlareInput";
 import { invalidateDashboardSnapshot } from "../lib/dashboardSnapshotCache";
+import { createSymptomReviewPreviewForm } from "../lib/symptomReviewPreviewForm";
 import { formatUkDate } from "../lib/formatUkDate";
 import { supabase, TABLES } from "../lib/supabase";
 import { symptomWizardTryAdvance, type DateErrorsState } from "../lib/symptomWizardNextStep";
@@ -90,10 +91,32 @@ function isAndroidDatePickerDismissed(event: { type?: string }): boolean {
 
 const SYMPTOM_REVIEW_STEP = 17;
 
+const SYMPTOM_REVIEW_PREVIEW_PREFS: UserPreferencesShape = {
+  isSmoker: true,
+  isDrinker: true,
+  normalBathroomFrequency: "5",
+  hasSetPreferences: true,
+};
+
+function applySymptomReviewPreview(
+  setForm: React.Dispatch<React.SetStateAction<SymptomFormData>>,
+  setUserPreferences: React.Dispatch<React.SetStateAction<UserPreferencesShape | null>>,
+  setIsFirstTimeUser: React.Dispatch<React.SetStateAction<boolean>>,
+  setCurrentStep: React.Dispatch<React.SetStateAction<number>>,
+  setHistory: React.Dispatch<React.SetStateAction<{ step: number; form: SymptomFormData }[]>>,
+) {
+  setForm(createSymptomReviewPreviewForm());
+  setUserPreferences(SYMPTOM_REVIEW_PREVIEW_PREFS);
+  setIsFirstTimeUser(false);
+  setCurrentStep(SYMPTOM_REVIEW_STEP);
+  setHistory([]);
+}
+
 export function SymptomLogWizardScreen({ user }: { user: SessionUser }) {
   const navigation = useNavigation<any>();
   const route = useRoute();
   const editId = String((route.params as { editId?: string } | undefined)?.editId ?? "");
+  const previewReview = __DEV__ && Boolean((route.params as { previewReview?: boolean } | undefined)?.previewReview);
   const c = useFlareColors();
   const errTextStyle = flareFieldErrorStyle(c, "wizard");
   const { colors } = useFlareTheme();
@@ -116,6 +139,7 @@ export function SymptomLogWizardScreen({ user }: { user: SessionUser }) {
   const [submitting, setSubmitting] = useState(false);
   const [loadingEdit, setLoadingEdit] = useState(Boolean(editId));
   const [picker, setPicker] = useState<null | "start" | "end">(null);
+  const [isReviewPreview, setIsReviewPreview] = useState(false);
 
   useEffect(() => {
     return () => {
@@ -124,6 +148,12 @@ export function SymptomLogWizardScreen({ user }: { user: SessionUser }) {
   }, [user.id]);
 
   useEffect(() => {
+    if (previewReview && !editId) {
+      applySymptomReviewPreview(setForm, setUserPreferences, setIsFirstTimeUser, setCurrentStep, setHistory);
+      setIsReviewPreview(true);
+      setLoadingPrefs(false);
+      return;
+    }
     (async () => {
       setLoadingPrefs(true);
       try {
@@ -134,7 +164,13 @@ export function SymptomLogWizardScreen({ user }: { user: SessionUser }) {
         setLoadingPrefs(false);
       }
     })();
-  }, [editId, user.id]);
+  }, [editId, previewReview, user.id]);
+
+  const openReviewPreview = useCallback(() => {
+    if (!__DEV__) return;
+    applySymptomReviewPreview(setForm, setUserPreferences, setIsFirstTimeUser, setCurrentStep, setHistory);
+    setIsReviewPreview(true);
+  }, []);
 
   useEffect(() => {
     if (!editId) return;
@@ -552,6 +588,16 @@ export function SymptomLogWizardScreen({ user }: { user: SessionUser }) {
             <View style={styles.landingCta}>
               <PrimaryButton title="Start now" onPress={startWizard} />
             </View>
+            {__DEV__ ? (
+              <Pressable
+                accessibilityRole="button"
+                accessibilityLabel="Open review preview for styling"
+                onPress={openReviewPreview}
+                style={({ pressed }) => [styles.devPreviewLinkPress, pressed && { opacity: 0.7 }]}
+              >
+                <Text style={[styles.devPreviewLink, { color: c.textMuted }]}>Preview review (dev)</Text>
+              </Pressable>
+            ) : null}
           </View>
         ) : null}
 
@@ -975,7 +1021,7 @@ export function SymptomLogWizardScreen({ user }: { user: SessionUser }) {
               <PrimaryButton
                 title={submitting ? "Saving…" : editId ? "Save changes" : "Submit"}
                 onPress={submit}
-                disabled={submitting}
+                disabled={submitting || isReviewPreview}
               />
             )}
             {currentStep > 1 ? <SecondaryButton title="Previous step" onPress={goBackInternal} /> : null}
@@ -1026,6 +1072,8 @@ const styles = StyleSheet.create({
   },
   landingSub: { fontSize: 16, lineHeight: 24, textAlign: "center", marginBottom: 6, maxWidth: 360, paddingHorizontal: 4 },
   landingCta: { width: "100%", maxWidth: 360, marginTop: 20 },
+  devPreviewLinkPress: { marginTop: 16, paddingVertical: 8 },
+  devPreviewLink: { fontSize: 14, fontFamily: "Inter_500Medium", textAlign: "center", textDecorationLine: "underline" },
   phaseLine: { fontSize: 13, marginBottom: 12, fontFamily: "Inter_500Medium" },
   h3: { fontFamily: "Inter_700Bold", fontSize: 20, marginBottom: 12 },
   rowGap: { gap: 14, marginTop: 8 },

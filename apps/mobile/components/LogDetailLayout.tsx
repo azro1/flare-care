@@ -1,5 +1,6 @@
 import React from "react";
 import { StyleSheet, Text, View, type StyleProp, type ViewStyle } from "react-native";
+import { flareCardSectionStyles, FlareScreenSectionTitle } from "./FlareScreenSectionTitle";
 import { StackedDetailField } from "./StackedDetailField";
 import { FLARE_FONT_FAMILY, FLARE_FONT_SIZE, SCREEN_EDGE_PADDING } from "../lib/layoutConstants";
 import { useFlareColors } from "../theme";
@@ -38,18 +39,43 @@ export function LogDetailCard({
   return <View style={[logDetailStyles.detailCard, { backgroundColor: c.card }, style]}>{children}</View>;
 }
 
+/** Muted in-card section title + body — log detail screens. */
+export function LogDetailSectionCard({
+  title,
+  children,
+  last,
+}: {
+  title: string;
+  children: React.ReactNode;
+  last?: boolean;
+}) {
+  return (
+    <LogDetailCard style={[flareCardSectionStyles.container, last ? { marginBottom: 0 } : null]}>
+      <FlareScreenSectionTitle inCard>{title}</FlareScreenSectionTitle>
+      {children}
+    </LogDetailCard>
+  );
+}
+
 export function LogDetailAddedHeader({ text }: { text: string }) {
   const c = useFlareColors();
   return <Text style={[logDetailStyles.loggedAt, { color: c.textMuted }]}>{text}</Text>;
 }
 
-export function LogDetailNotesCard({ notes }: { notes: string }) {
+export function LogDetailNotesTray({ notes }: { notes: string }) {
   const c = useFlareColors();
   return (
-    <LogDetailCard style={{ marginBottom: 0 }}>
-      <Text style={[logDetailStyles.notesTitle, { color: c.text }]}>Notes</Text>
-      <Text style={[logDetailStyles.notesBody, { color: c.textMuted }]}>{notes}</Text>
-    </LogDetailCard>
+    <View style={[logDetailStyles.fieldGroup, { backgroundColor: c.surfaceSubtle }]}>
+      <StackedDetailField label="" hideLabel value={notes} style={{ paddingHorizontal: SCREEN_EDGE_PADDING }} />
+    </View>
+  );
+}
+
+export function LogDetailNotesCard({ notes }: { notes: string }) {
+  return (
+    <LogDetailSectionCard title="Notes" last>
+      <LogDetailNotesTray notes={notes} />
+    </LogDetailSectionCard>
   );
 }
 

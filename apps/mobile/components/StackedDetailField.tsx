@@ -14,7 +14,7 @@ const ROW_EDGE = STACKED_DETAIL_ROW_EDGE;
 const textProps = Platform.OS === "android" ? ({ includeFontPadding: false } as const) : {};
 
 type Props = {
-  label: string;
+  label?: string;
   /** Omit or pass empty string for label-only rows (e.g. meal section title). */
   value?: string;
   showDivider?: boolean;

@@ -13,7 +13,7 @@ import {
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { ConfirmModal } from "../components/ConfirmModal";
 import { PrimaryButton, SecondaryButton } from "../components/FlareButton";
-import { LogDetailAddedHeader, LogDetailCard, LogDetailFieldGroup } from "../components/LogDetailLayout";
+import { LogDetailAddedHeader, LogDetailFieldGroup, LogDetailSectionCard } from "../components/LogDetailLayout";
 import { invalidateDashboardSnapshot } from "../lib/dashboardSnapshotCache";
 import { formatAddedAtHeader } from "../lib/logDisplay";
 import {
@@ -229,7 +229,7 @@ export function MedicationDetailScreen({ user }: { user: SessionUser }) {
       >
         <LogDetailAddedHeader text={formatAddedAtHeader(row.created_at)} />
 
-        <LogDetailCard>
+        <LogDetailSectionCard title="Details">
           <LogDetailFieldGroup
             fields={[
               { label: "Medication", value: row.name },
@@ -239,7 +239,7 @@ export function MedicationDetailScreen({ user }: { user: SessionUser }) {
               { label: "Notes", value: row.notes?.trim() || "Not set" },
             ]}
           />
-        </LogDetailCard>
+        </LogDetailSectionCard>
 
         <View style={styles.takenActions}>
           {takenToday ? (

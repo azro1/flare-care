@@ -17,7 +17,7 @@ import {
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { PrimaryButton, SecondaryButton } from "../components/FlareButton";
 import { flareFieldErrorStyle, FlareTextInput } from "../components/FlareInput";
-import { FlareScreenSectionTitle } from "../components/FlareScreenSectionTitle";
+import { flareCardSectionStyles, FlareScreenSectionTitle } from "../components/FlareScreenSectionTitle";
 import {
   LogHistoryCard,
   LogHistoryList,
@@ -431,8 +431,8 @@ export function MedicationsScreen({ user }: { user: SessionUser }) {
   const medById = useCallback((id: string) => meds.find((row) => String(row.id) === id), [meds]);
 
   const logsSection = (
-    <LogHistoryCard style={{ marginBottom: 0 }}>
-      <Text style={[logHistoryCardStyles.sectionTitle, { color: c.text }]}>{listSectionTitle}</Text>
+    <LogHistoryCard style={[{ marginBottom: 0 }, flareCardSectionStyles.container]}>
+      <FlareScreenSectionTitle inCard>{listSectionTitle}</FlareScreenSectionTitle>
       <View style={logHistoryCardStyles.trackerCardBody}>
         {listInitialLoad ? (
           <LogHistoryListLoading />

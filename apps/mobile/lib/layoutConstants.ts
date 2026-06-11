@@ -70,6 +70,8 @@ export const DETAIL_FIELD_LABEL = {
 /** `styles.dashboardSectionTitle` / `dashboardSectionTitleLeft` spacing. */
 export const SECTION_TITLE_MARGIN_TOP = 10;
 export const SECTION_TITLE_MARGIN_BOTTOM = 12;
+/** Gap below in-card section title before card body (Account, wizard review). */
+export const CARD_SECTION_INNER_GAP = 12;
 
 /** Native stack nav row height (below status bar). */
 export const NAV_HEADER_BAR_HEIGHT = Platform.select({ ios: 44, default: 56 }) ?? 56;

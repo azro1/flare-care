@@ -1,6 +1,7 @@
 import React from "react";
 import { StyleSheet, Text, type StyleProp, type TextStyle } from "react-native";
 import {
+  CARD_SECTION_INNER_GAP,
   FLARE_FONT_FAMILY,
   SECTION_TITLE_MARGIN_BOTTOM,
   SECTION_TITLE_MARGIN_TOP,
@@ -26,11 +27,17 @@ export const flareScreenSectionTitleStyles = StyleSheet.create({
   },
 });
 
+/** Card with muted title at top-left — pair with `FlareScreenSectionTitle inCard`. */
+export const flareCardSectionStyles = StyleSheet.create({
+  container: { gap: CARD_SECTION_INNER_GAP },
+});
+
 export function FlareScreenSectionTitle({
   children,
   style,
   compact,
   inline,
+  inCard,
 }: {
   children: React.ReactNode;
   style?: StyleProp<TextStyle>;
@@ -38,6 +45,8 @@ export function FlareScreenSectionTitle({
   compact?: boolean;
   /** No vertical margins — e.g. label in a row beside a link. */
   inline?: boolean;
+  /** Inside a card; use with `flareCardSectionStyles.container` (no title margins). */
+  inCard?: boolean;
 }) {
   const c = useFlareColors();
   return (
@@ -45,7 +54,7 @@ export function FlareScreenSectionTitle({
       style={[
         flareScreenSectionTitleStyles.title,
         compact && flareScreenSectionTitleStyles.titleCompact,
-        inline && flareScreenSectionTitleStyles.titleInline,
+        (inline || inCard) && flareScreenSectionTitleStyles.titleInline,
         { color: c.textMuted },
         style,
       ]}

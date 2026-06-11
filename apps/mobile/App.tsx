@@ -44,6 +44,7 @@ import {
   SecondaryButton,
 } from "./components/FlareButton";
 import { flareFieldErrorStyle, LabeledInput } from "./components/FlareInput";
+import { flareCardSectionStyles, FlareScreenSectionTitle } from "./components/FlareScreenSectionTitle";
 import { HeaderOverflowMenu } from "./components/HeaderOverflowMenu";
 import { SuccessNoticeScreen } from "./components/SuccessNoticeScreen";
 import { CollapsingTitleScrollScreen } from "./components/CollapsingTitleScrollScreen";
@@ -82,10 +83,10 @@ import {
 } from "./components/LogHistoryList";
 import {
   LogDetailAddedHeader,
-  LogDetailCard,
   LogDetailFieldGroup,
   LogDetailFieldGroups,
   LogDetailNotesCard,
+  LogDetailSectionCard,
   logDetailStyles,
 } from "./components/LogDetailLayout";
 import { formatAddedAtHeader } from "./lib/logDisplay";
@@ -2142,33 +2143,31 @@ function SymptomDetailScreen({ user }: { user: SessionUser }) {
       >
         <LogDetailAddedHeader text={formatAddedAtHeader(createdIso)} />
 
-        <LogDetailCard>
+        <LogDetailSectionCard title="Basic Information">
           <LogDetailFieldGroup fields={basicFields} />
-        </LogDetailCard>
+        </LogDetailSectionCard>
 
-        <LogDetailCard>
+        <LogDetailSectionCard title="Bathroom Frequency">
           <LogDetailFieldGroup fields={bathroomFields} />
-        </LogDetailCard>
+        </LogDetailSectionCard>
 
         {lifestyleFields.length > 0 ? (
-          <LogDetailCard>
+          <LogDetailSectionCard title="Lifestyle">
             <LogDetailFieldGroup fields={lifestyleFields} />
-          </LogDetailCard>
+          </LogDetailSectionCard>
         ) : null}
 
         {mealDetailEntries.length > 0 ? (
-          <LogDetailCard>
-            <LogDetailFieldGroups
-              groups={mealDetailEntries.map((entry) => [
-                {
-                  label: entry.label,
-                  value: entry.items
-                    .map((item) => `${item.food}${item.quantity ? ` (${item.quantity})` : ""}`)
-                    .join("\n"),
-                },
-              ])}
+          <LogDetailSectionCard title="Meals">
+            <LogDetailFieldGroup
+              fields={mealDetailEntries.map((entry) => ({
+                label: entry.label,
+                value: entry.items
+                  .map((item) => `${item.food}${item.quantity ? ` (${item.quantity})` : ""}`)
+                  .join("\n"),
+              }))}
             />
-          </LogDetailCard>
+          </LogDetailSectionCard>
         ) : null}
 
         {notesText ? <LogDetailNotesCard notes={notesText} /> : null}
@@ -2311,10 +2310,9 @@ function MedicationLogDetailScreen({ user }: { user: SessionUser }) {
       { label: "Time of Day", value: item.timeOfDay || "N/A" },
     ]);
     return (
-      <LogDetailCard>
-        <Text style={[logDetailStyles.notesTitle, { color: c.text }]}>{title}</Text>
+      <LogDetailSectionCard title={title}>
         <LogDetailFieldGroups groups={groups} />
-      </LogDetailCard>
+      </LogDetailSectionCard>
     );
   };
 
@@ -2343,7 +2341,7 @@ function MedicationLogDetailScreen({ user }: { user: SessionUser }) {
       >
         <LogDetailAddedHeader text={formatAddedAtHeader(createdIso)} />
 
-        <LogDetailCard>
+        <LogDetailSectionCard title="Summary">
           <LogDetailFieldGroup
             fields={[
               { label: "Missed medications", value: String(missedItems.length) },
@@ -2351,7 +2349,7 @@ function MedicationLogDetailScreen({ user }: { user: SessionUser }) {
               { label: "Antibiotics", value: String(antibioticItems.length) },
             ]}
           />
-        </LogDetailCard>
+        </LogDetailSectionCard>
 
         {renderListSection("Missed Medications", missedItems, false)}
         {renderListSection("NSAIDs Taken", nsaidItems, true)}
@@ -3546,8 +3544,8 @@ function AccountScreen({
           </View>
         </View>
       </Card>
-      <Text style={[styles.accountMenuSectionTitle, { color: c.textMuted }]}>My account</Text>
-      <View style={[logHistoryCardStyles.trackerCard, { backgroundColor: c.card }]}>
+      <View style={[logHistoryCardStyles.trackerCard, flareCardSectionStyles.container, { backgroundColor: c.card }]}>
+        <FlareScreenSectionTitle inCard>My account</FlareScreenSectionTitle>
         <LogHistoryList
           items={ACCOUNT_OPTION_ROUTES.map((item) => ({
             id: item.route,
@@ -3557,8 +3555,8 @@ function AccountScreen({
           onPressItem={(route) => navigation.navigate(route)}
         />
       </View>
-      <Text style={[styles.accountMenuSectionTitle, { color: c.textMuted }]}>Delete account</Text>
-      <View style={[logHistoryCardStyles.trackerCard, { backgroundColor: c.card }]}>
+      <View style={[logHistoryCardStyles.trackerCard, flareCardSectionStyles.container, { backgroundColor: c.card }]}>
+        <FlareScreenSectionTitle inCard>Delete account</FlareScreenSectionTitle>
         <Text style={[styles.muted, { color: c.textMuted, lineHeight: 20 }]}>
           Permanently delete your account and all associated data. This cannot be undone.
         </Text>
@@ -3572,7 +3570,7 @@ function AccountScreen({
             pressed && { opacity: 0.7 },
           ]}
         >
-          <Text style={[styles.accountSignOutFooterText, { color: c.destructiveFill }]}>Delete account</Text>
+          <Text style={[styles.accountDeleteTrayText, { color: c.destructiveFill }]}>Delete account</Text>
         </Pressable>
       </View>
       <ConfirmModal
@@ -4398,13 +4396,6 @@ const styles = StyleSheet.create({
     justifyContent: "space-between",
   },
   accountPaddedCard: { padding: 18 },
-  accountMenuSectionTitle: {
-    fontSize: 14,
-    fontFamily: "Inter_700Bold",
-    marginBottom: 12,
-    marginTop: 10,
-    textAlign: "left",
-  },
   /** My account / Help link lists. */
   accountOptionsListCard: { paddingHorizontal: 20, paddingVertical: 12 },
   accountOptionNavRow: {
@@ -4435,7 +4426,6 @@ const styles = StyleSheet.create({
   accountScrollContent: { flexGrow: 1 },
   /** My account list on Account tab — no extra card gap before logout. */
   accountOptionsListCardLast: { marginBottom: 0 },
-  accountSignOutFooter: { alignSelf: "stretch", alignItems: "center", marginTop: 20, paddingVertical: 16 },
   accountDeleteTray: {
     alignSelf: "stretch",
     alignItems: "center",
@@ -4444,7 +4434,7 @@ const styles = StyleSheet.create({
     borderRadius: 14,
     overflow: "hidden",
   },
-  accountSignOutFooterText: { fontSize: 16, fontFamily: "Inter_700Bold", textAlign: "center" },
+  accountDeleteTrayText: { fontSize: 16, fontFamily: "Inter_700Bold", textAlign: "center" },
   /** Same height and radius as `PrimaryButton`; two equal slots like paired actions. */
   appearanceRow: { flexDirection: "row", gap: 8, marginTop: 14 },
   appearanceChip: {

@@ -1,5 +1,15 @@
 # Mobile — follow-up / known issues
 
+## Done (section titles in cards)
+
+- **In-card section titles** — small muted titles back **inside** white cards (not on page background) on Account (`My account`, `Delete account`), symptom/medication wizard review, and log detail screens (symptom, medication log, bowel log, medication profile).
+- **Shared layout** — `FlareScreenSectionTitle inCard` + `flareCardSectionStyles.container` / `LogDetailSectionCard` in `LogDetailLayout.tsx`; wizard review uses same via `symptomReviewLayout.tsx`.
+- **Title-to-body gap** — `CARD_SECTION_INNER_GAP = 12` in `layoutConstants.ts` (tried 10 → 14 → **12**, locked in).
+- **Dev preview** — `Preview review (dev)` on Log Symptoms landing + `symptomReviewPreviewForm.ts` to open review step with sample data (`__DEV__` only; Submit disabled).
+- **Notes on detail/review** — `LogDetailNotesTray` (`surfaceSubtle` + body text) instead of bold in-card “Notes” heading.
+
+---
+
 ## Next session — screen design + web parity
 
 Design and align flow/functionality with the **web app** for:

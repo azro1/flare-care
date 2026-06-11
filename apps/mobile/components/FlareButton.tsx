@@ -102,7 +102,7 @@ export function SecondaryButton({
   disabled?: boolean;
   leftIcon?: React.ReactNode;
   variant?: "default" | "onPrimary";
-  titleColor?: "default" | "primary";
+  titleColor?: "default" | "primary" | "destructive";
   /** Lighter edge (e.g. dashboard Recent logs) — still bordered, not as heavy as default. */
   softOutline?: boolean;
   /** No border — e.g. Mark as taken vs filled Taken state. */
@@ -110,7 +110,13 @@ export function SecondaryButton({
 }) {
   const c = useFlareColors();
   const onPrimary = variant === "onPrimary";
-  const labelColor = onPrimary ? c.white : titleColor === "primary" ? c.primary : c.secondaryBtnText;
+  const labelColor = onPrimary
+    ? c.white
+    : titleColor === "primary"
+      ? c.primary
+      : titleColor === "destructive"
+        ? c.destructiveFill
+        : c.secondaryBtnText;
   const outline = borderless
     ? null
     : onPrimary
