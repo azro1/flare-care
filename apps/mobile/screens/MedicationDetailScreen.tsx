@@ -5,15 +5,16 @@ import {
   ActivityIndicator,
   Alert,
   Pressable,
-  ScrollView,
   StyleSheet,
   Text,
   View,
 } from "react-native";
+import { ScrollView } from "../lib/scrollViews";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { ConfirmModal } from "../components/ConfirmModal";
 import { PrimaryButton, SecondaryButton } from "../components/FlareButton";
-import { LogDetailAddedHeader, LogDetailFieldGroup, LogDetailSectionCard } from "../components/LogDetailLayout";
+import { LogDetailAddedHeader, LogDetailCard, LogDetailFieldGroup } from "../components/LogDetailLayout";
+import { flareCardSectionStyles } from "../components/FlareScreenSectionTitle";
 import { invalidateDashboardSnapshot } from "../lib/dashboardSnapshotCache";
 import { formatAddedAtHeader } from "../lib/logDisplay";
 import {
@@ -229,7 +230,7 @@ export function MedicationDetailScreen({ user }: { user: SessionUser }) {
       >
         <LogDetailAddedHeader text={formatAddedAtHeader(row.created_at)} />
 
-        <LogDetailSectionCard title="Details">
+        <LogDetailCard style={flareCardSectionStyles.container}>
           <LogDetailFieldGroup
             fields={[
               { label: "Medication", value: row.name },
@@ -239,7 +240,7 @@ export function MedicationDetailScreen({ user }: { user: SessionUser }) {
               { label: "Notes", value: row.notes?.trim() || "Not set" },
             ]}
           />
-        </LogDetailSectionCard>
+        </LogDetailCard>
 
         <View style={styles.takenActions}>
           {takenToday ? (

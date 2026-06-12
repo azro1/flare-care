@@ -10,13 +10,13 @@ import {
   KeyboardAvoidingView,
   Platform,
   Pressable,
-  ScrollView,
   StyleSheet,
   Switch,
   Text,
   useWindowDimensions,
   View,
 } from "react-native";
+import { ScrollView } from "../lib/scrollViews";
 import {
   WizardReviewMealsSection,
   WizardReviewNotesSection,

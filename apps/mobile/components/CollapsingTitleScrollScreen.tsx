@@ -23,6 +23,7 @@ import {
   NAV_HEADER_BAR_HEIGHT,
   SCREEN_EDGE_PADDING,
 } from "../lib/layoutConstants";
+import { AnimatedScrollView } from "../lib/scrollViews";
 import { useFlareColors } from "../theme";
 
 type CollapsingTitlePreset = "section" | "informational";
@@ -268,9 +269,8 @@ export function CollapsingTitleScrollScreen({
   ]);
 
   return (
-    <Animated.ScrollView
+    <AnimatedScrollView
       style={{ flex: 1, backgroundColor: c.screen }}
-      showsVerticalScrollIndicator={false}
       onLayout={(e) => setScrollViewportHeight(e.nativeEvent.layout.height)}
       onContentSizeChange={(_, height) => setScrollContentHeight(height)}
       contentContainerStyle={[
@@ -288,7 +288,7 @@ export function CollapsingTitleScrollScreen({
       })}
     >
       {children}
-    </Animated.ScrollView>
+    </AnimatedScrollView>
   );
 }
 

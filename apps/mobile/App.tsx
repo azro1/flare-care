@@ -23,11 +23,11 @@ import {
   ActivityIndicator,
   Alert,
   Image,
+  InteractionManager,
   Linking,
   Modal,
   Platform,
   Pressable,
-  ScrollView,
   StyleProp,
   StyleSheet,
   Text,
@@ -35,6 +35,7 @@ import {
   View,
   ViewStyle,
 } from "react-native";
+import { ScrollView } from "./lib/scrollViews";
 import { SafeAreaProvider, initialWindowMetrics, useSafeAreaInsets } from "react-native-safe-area-context";
 import {
   FLARE_BUTTON_BORDER_RADIUS,
@@ -50,7 +51,8 @@ import { SuccessNoticeScreen } from "./components/SuccessNoticeScreen";
 import { CollapsingTitleScrollScreen } from "./components/CollapsingTitleScrollScreen";
 import { FlareThemeProvider, useFlareColors, useFlareTheme } from "./theme";
 import { formatUkDate } from "./lib/formatUkDate";
-import { BOWEL_FEATURE_MCI_ICON } from "./lib/bowelMovementShared";
+import { BOWEL_FEATURE_MCI_ICON, todayYmd } from "./lib/bowelMovementShared";
+import { handleListExpansionNavigationRouteChange } from "./lib/listExpansionNavigation";
 import { MY_MEDS_MCI_ICON, TRACK_MEDICATIONS_MCI_ICON } from "./lib/medicationFeatureIcons";
 import {
   fetchMedicationsForUser,
@@ -58,7 +60,7 @@ import {
   MEDICATION_ADDED_ACTIVITY_TITLE,
   MEDICATION_TRACKING_ACTIVITY_TITLE,
 } from "./lib/medicationShared";
-import { HYDRATION_TARGET, HYDRATION_MCI_ICON, loadHydrationResetTimestamp, saveHydrationReset, HYDRATION_GOAL_ACTIVITY_TITLE, HYDRATION_RESET_ACTIVITY_TITLE } from "./lib/hydrationShared";
+import { HYDRATION_TARGET, HYDRATION_MCI_ICON, HYDRATION_MCI_ICON_EMPTY, loadHydrationResetTimestamp, saveHydrationReset, HYDRATION_GOAL_ACTIVITY_TITLE, HYDRATION_RESET_ACTIVITY_TITLE } from "./lib/hydrationShared";
 import {
   bottomTabBarScrollInset,
   FLARE_FONT_FAMILY,
@@ -1287,7 +1289,7 @@ function DashboardScreen({
 
       const load = async () => {
         try {
-          const today = new Date().toISOString().split("T")[0];
+          const today = todayYmd();
           const [
             todaySymptomsRes,
             medicationsList,
@@ -1749,6 +1751,7 @@ function DashboardScreen({
     <ScrollView
       style={[styles.screen, { backgroundColor: c.screen }]}
       contentContainerStyle={{ paddingBottom: bottomScrollInset }}
+      showsVerticalScrollIndicator={false}
     >
       <Card title="">
         <View style={styles.weatherIntroWrap}>
@@ -1852,14 +1855,13 @@ function SymptomHistoryScreen({ user }: { user: SessionUser }) {
   const navigation = useNavigation<any>();
   const c = useFlareColors();
   const bottomScrollInset = useBottomTabScrollInset();
-  const { rows, visibleCount, hasMore, loading, loadingMore, loadMore, refresh } = useWizardLogHistory(
-    user.id,
-    TABLES.LOG_SYMPTOMS,
-  );
+  const { rows, visibleCount, hasMore, loading, loadingMore, loadMore, refresh, syncExpandedFromCache } =
+    useWizardLogHistory(user.id, TABLES.LOG_SYMPTOMS);
   useFocusEffect(
     useCallback(() => {
+      syncExpandedFromCache();
       void refresh();
-    }, [refresh]),
+    }, [refresh, syncExpandedFromCache]),
   );
   const symptomLogItems = rows.map((row) =>
     buildTimestampLogRowItem({
@@ -2188,14 +2190,13 @@ function MedicationTrackingHistoryScreen({ user }: { user: SessionUser }) {
   const navigation = useNavigation<any>();
   const c = useFlareColors();
   const bottomScrollInset = useBottomTabScrollInset();
-  const { rows, visibleCount, hasMore, loading, loadingMore, loadMore, refresh } = useWizardLogHistory(
-    user.id,
-    TABLES.LOG_MEDICATIONS,
-  );
+  const { rows, visibleCount, hasMore, loading, loadingMore, loadMore, refresh, syncExpandedFromCache } =
+    useWizardLogHistory(user.id, TABLES.LOG_MEDICATIONS);
   useFocusEffect(
     useCallback(() => {
+      syncExpandedFromCache();
       void refresh();
-    }, [refresh]),
+    }, [refresh, syncExpandedFromCache]),
   );
   const medicationLogItems = rows.map((row) =>
     buildTimestampLogRowItem({
@@ -2413,7 +2414,8 @@ function HydrationScreen({ user }: { user: SessionUser }) {
   const bottomScrollInset = useBottomTabScrollInset();
   const [glasses, setGlasses] = useState(() => dashboardSnapshotByUserId[user.id]?.todaySummary.hydration ?? 0);
   const [resetConfirmOpen, setResetConfirmOpen] = useState(false);
-  const today = new Date().toISOString().split("T")[0];
+  const today = todayYmd();
+  const atGoal = glasses >= HYDRATION_TARGET;
 
   const load = useCallback(async () => {
     const { data, error } = await supabase
@@ -2429,9 +2431,16 @@ function HydrationScreen({ user }: { user: SessionUser }) {
     }
   }, [today, user.id]);
 
-  useEffect(() => {
-    load();
-  }, [load]);
+  useFocusEffect(
+    useCallback(() => {
+      const cached = dashboardSnapshotByUserId[user.id]?.todaySummary.hydration;
+      if (cached !== undefined) setGlasses(cached);
+      const task = InteractionManager.runAfterInteractions(() => {
+        void load();
+      });
+      return () => task.cancel();
+    }, [load, user.id]),
+  );
 
   const persistGlasses = useCallback(
     async (next: number) => {
@@ -2457,19 +2466,55 @@ function HydrationScreen({ user }: { user: SessionUser }) {
     <>
       <ScrollView
         style={[styles.screen, { backgroundColor: c.screen }]}
-        contentContainerStyle={{ paddingBottom: bottomScrollInset + 24 }}
+        contentContainerStyle={{ paddingBottom: bottomScrollInset + 32 }}
+        showsVerticalScrollIndicator={false}
       >
-        <Card title="" compactBody>
-          <View style={styles.hydrationCardHeader}>
-            <View style={styles.hydrationHeaderIcon}>
-              <MaterialCommunityIcons name={HYDRATION_MCI_ICON} size={28} color={c.primary} accessibilityIgnoresInvertColors />
+        <LogHistoryCard style={styles.hydrationCard}>
+          <View style={styles.hydrationTrackerBody}>
+            <Text style={[styles.hydrationTodayLabel, { color: c.textMuted }]}>{formatUkDate(today)}</Text>
+
+            <View style={styles.hydrationCupsRow}>
+              {Array.from({ length: HYDRATION_TARGET }, (_, index) => {
+                const filled = index < glasses;
+                return (
+                  <View key={index} style={styles.hydrationCupSlot}>
+                    <MaterialCommunityIcons
+                      name={filled ? HYDRATION_MCI_ICON : HYDRATION_MCI_ICON_EMPTY}
+                      size={40}
+                      color={filled ? c.primary : c.cardBorder}
+                      accessibilityElementsHidden
+                      importantForAccessibility="no"
+                      accessibilityIgnoresInvertColors
+                    />
+                  </View>
+                );
+              })}
             </View>
-            <Text
-              style={[styles.cardTitle, styles.hydrationCardHeaderTitle, { color: c.text }]}
-              {...(Platform.OS === "android" ? ({ includeFontPadding: false } as const) : null)}
-            >
-              Daily intake
+
+            <Text style={[styles.hydrationCountLabel, { color: c.text }]}>
+              {glasses} of {HYDRATION_TARGET} glasses
             </Text>
+
+            <View style={[styles.hydrationStepperTrack, { backgroundColor: c.surfaceSubtle, borderColor: c.cardBorder }]}>
+              <HydrationStepperButton
+                icon="minus"
+                variant="secondary"
+                disabled={glasses === 0}
+                onPress={() => persistGlasses(glasses - 1)}
+              />
+              <View style={[styles.hydrationStepperDivider, { backgroundColor: c.cardBorder }]} />
+              <HydrationStepperButton
+                icon="plus"
+                variant="primary"
+                disabled={atGoal}
+                onPress={() => persistGlasses(glasses + 1)}
+              />
+            </View>
+
+            {atGoal ? (
+              <Text style={[styles.hydrationGoalReached, { color: c.primary }]}>Daily goal reached!</Text>
+            ) : null}
+
             {glasses > 0 ? (
               <Pressable
                 accessibilityRole="button"
@@ -2478,73 +2523,21 @@ function HydrationScreen({ user }: { user: SessionUser }) {
                 hitSlop={8}
                 style={({ pressed }) => [styles.hydrationResetLink, pressed && { opacity: 0.7 }]}
               >
-                <Text style={[styles.hydrationResetText, { color: c.textSecondary }]}>Reset</Text>
+                <Text style={[styles.hydrationResetText, { color: c.textSecondary }]}>Reset today</Text>
               </Pressable>
             ) : null}
           </View>
-          <Text
-            style={[
-              styles.text,
-              styles.hydrationInfoBody,
-              glasses >= HYDRATION_TARGET
-                ? [styles.hydrationGoalReached, { color: c.primary, marginBottom: 14 }]
-                : { color: c.textMuted },
-            ]}
-          >
-            {glasses >= HYDRATION_TARGET
-              ? "Daily goal reached!"
-              : "Track your daily water intake to hit your goal each day."}
-          </Text>
-          <View style={styles.hydrationCountRow}>
-            <View style={styles.hydrationCountLine}>
-              <Text style={[styles.hydrationCountValue, { color: c.text }]}>{glasses}</Text>
-              <Text style={[styles.hydrationCountSuffix, { color: c.textSecondary }]}>
-                / {HYDRATION_TARGET} glasses
-              </Text>
-            </View>
-            <View style={styles.hydrationStepperRow}>
-              <HydrationStepperButton
-                icon="minus"
-                variant="secondary"
-                disabled={glasses === 0}
-                onPress={() => persistGlasses(glasses - 1)}
-              />
-              <HydrationStepperButton
-                icon="plus"
-                variant="primary"
-                disabled={glasses >= HYDRATION_TARGET}
-                onPress={() => persistGlasses(glasses + 1)}
-              />
-            </View>
-          </View>
+        </LogHistoryCard>
 
-          <View style={styles.hydrationProgressRow}>
-            {Array.from({ length: HYDRATION_TARGET }, (_, index) => {
-              const filled = index < glasses;
-              return (
-                <View
-                  key={index}
-                  style={[
-                    styles.hydrationProgressDot,
-                    filled
-                      ? { backgroundColor: c.primary, borderColor: c.primary }
-                      : { backgroundColor: c.surfaceSubtle, borderColor: c.cardBorder },
-                  ]}
-                />
-              );
-            })}
-          </View>
-
-          <Pressable
-            accessibilityRole="link"
-            accessibilityLabel="Daily intake guidelines for adults"
-            onPress={() => navigation.navigate("AccountHelp", { expandSection: "hydration" })}
-            style={({ pressed }) => [styles.hydrationHelpLinkPress, pressed && { opacity: 0.7 }]}
-          >
-            <Ionicons name="book-outline" size={16} color={c.textSecondary} accessibilityIgnoresInvertColors />
-            <Text style={[styles.hydrationHelpLink, { color: c.text }]}>Daily intake guidelines</Text>
-          </Pressable>
-        </Card>
+        <Pressable
+          accessibilityRole="link"
+          accessibilityLabel="Daily Intake Guidelines for adults"
+          onPress={() => navigation.navigate("AccountHelp", { expandSection: "hydration" })}
+          style={({ pressed }) => [styles.hydrationHelpLinkPress, pressed && { opacity: 0.7 }]}
+        >
+          <Ionicons name="book-outline" size={16} color={c.textSecondary} accessibilityIgnoresInvertColors />
+          <Text style={[styles.hydrationHelpLink, { color: c.text }]}>Daily Intake Guidelines</Text>
+        </Pressable>
       </ScrollView>
 
       <ConfirmModal
@@ -2920,7 +2913,7 @@ function AccountHelpScreen() {
         <NotificationHelpContent />
       </HelpSectionDropdown>
       <HelpSectionDropdown
-        title="Daily intake guidelines"
+        title="Daily Intake Guidelines"
         expanded={hydrationOpen}
         onToggle={() => setHydrationOpen((open) => !open)}
       >
@@ -3774,8 +3767,10 @@ function AppTabs({
 
   const syncFocusRoute = useCallback(() => {
     const name = navigationRef.getCurrentRoute()?.name;
-    if (name) setFocusRouteName(name);
-  }, [navigationRef]);
+    if (!name) return;
+    handleListExpansionNavigationRouteChange(user.id, name);
+    setFocusRouteName(name);
+  }, [navigationRef, user.id]);
 
   const onNavigationReady = useCallback(() => {
     syncFocusRoute();
@@ -3811,9 +3806,8 @@ function AppTabs({
       Meds: "My Meds",
       MedicationDetail: "Medication",
       Bowel: "Bowel Movements",
-      BowelLogs: "Your logs",
       BowelLogDetail: "Bowel log",
-      BristolGuide: "Bristol chart",
+      BristolGuide: "Bristol Stool Chart",
     };
     const isSymptomLogWizard = route.name === "SymptomLogWizard";
     const isMedicationTrackingWizard = route.name === "MedicationTrackingWizard";
@@ -3829,7 +3823,6 @@ function AppTabs({
       route.name === "Appointments" ||
       route.name === "Hydration" ||
       route.name === "Bowel" ||
-      route.name === "BowelLogs" ||
       route.name === "BowelLogDetail" ||
       route.name === "BristolGuide" ||
       route.name === "SymptomHistory" ||
@@ -3930,7 +3923,6 @@ function AppTabs({
             <AppStack.Screen name="Hydration">{() => <HydrationScreen user={user} />}</AppStack.Screen>
             <AppStack.Screen name="Weight">{() => <WeightScreen user={user} />}</AppStack.Screen>
             <AppStack.Screen name="Bowel">{() => <BowelScreen user={user} />}</AppStack.Screen>
-            <AppStack.Screen name="BowelLogs">{() => <BowelScreen user={user} />}</AppStack.Screen>
             <AppStack.Screen name="BowelLogDetail">{() => <BowelLogDetailScreen user={user} />}</AppStack.Screen>
             <AppStack.Screen name="BristolGuide" component={BristolGuideScreen} />
             <AppStack.Screen name="Appointments">{() => <AppointmentsScreen user={user} />}</AppStack.Screen>
@@ -4607,46 +4599,38 @@ const styles = StyleSheet.create({
   newsMeta: { fontSize: 11, fontFamily: "Inter_400Regular", marginTop: 6 },
   /** Logged-at line above symptom detail review cards. */
   symptomDetailLoggedAt: { fontSize: 13, fontFamily: "Inter_400Regular", marginBottom: 16, textAlign: "center" },
-  hydrationCardHeader: { flexDirection: "row", alignItems: "center", marginBottom: 14, gap: 4 },
-  hydrationHeaderIcon: {
-    width: 42,
-    height: 42,
-    borderRadius: 21,
-    alignItems: "center",
-    justifyContent: "center",
+  hydrationCard: { paddingVertical: 14 },
+  hydrationTrackerBody: { alignSelf: "stretch", alignItems: "center", gap: 16 },
+  hydrationTodayLabel: {
+    fontSize: FLARE_FONT_SIZE.body,
+    fontFamily: FLARE_FONT_FAMILY.regular,
   },
-  hydrationCardHeaderTitle: { flex: 1, marginBottom: 0, alignSelf: "center", lineHeight: 42 },
-  hydrationCountRow: {
+  hydrationCupsRow: {
     flexDirection: "row",
     alignItems: "center",
-    justifyContent: "space-between",
-    gap: 16,
+    alignSelf: "stretch",
   },
-  hydrationCountLine: { flex: 1, flexDirection: "row", alignItems: "baseline", flexWrap: "wrap", minWidth: 0 },
-  hydrationCountValue: { fontSize: 36, fontFamily: "Inter_800ExtraBold" },
-  hydrationCountSuffix: { fontSize: 18, fontFamily: "Inter_400Regular", marginLeft: 4 },
-  hydrationResetLink: { flexShrink: 0 },
+  hydrationCupSlot: { flex: 1, alignItems: "center" },
+  hydrationCountLabel: {
+    fontSize: FLARE_FONT_SIZE.navTitle,
+    fontFamily: FLARE_FONT_FAMILY.bold,
+  },
+  hydrationStepperTrack: {
+    flexDirection: "row",
+    alignItems: "center",
+    alignSelf: "stretch",
+    borderWidth: 1,
+    borderRadius: 12,
+    overflow: "hidden",
+  },
+  hydrationStepperDivider: { width: StyleSheet.hairlineWidth, alignSelf: "stretch" },
+  hydrationResetLink: { paddingVertical: 4 },
   hydrationResetText: { fontSize: 14, fontFamily: "Inter_400Regular", textDecorationLine: "underline" },
-  hydrationStepperRow: { flexDirection: "row", alignItems: "center", gap: 8 },
   hydrationStepperBtn: {
-    width: 40,
-    height: 40,
-    borderRadius: 10,
+    flex: 1,
+    height: 44,
     alignItems: "center",
     justifyContent: "center",
-  },
-  hydrationProgressRow: {
-    flexDirection: "row",
-    alignItems: "center",
-    justifyContent: "space-between",
-    gap: 6,
-    marginTop: 14,
-  },
-  hydrationProgressDot: {
-    flex: 1,
-    height: 8,
-    borderRadius: 999,
-    borderWidth: StyleSheet.hairlineWidth,
   },
   hydrationGoalReached: {
     fontSize: 14,
@@ -4657,8 +4641,7 @@ const styles = StyleSheet.create({
     alignItems: "center",
     alignSelf: "center",
     gap: 6,
-    marginTop: 20,
-    marginBottom: 4,
+    marginTop: 8,
     paddingVertical: 4,
   },
   hydrationHelpLink: {
@@ -4666,7 +4649,6 @@ const styles = StyleSheet.create({
     fontFamily: FLARE_FONT_FAMILY.regular,
     textDecorationLine: "underline",
   },
-  hydrationInfoBody: { lineHeight: 21, marginBottom: 14 },
   /** Keeps stacked detail rows out of `cardBody` gap (which would add space between every field). */
   detailFieldsStack: { alignSelf: "stretch" },
 });

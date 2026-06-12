@@ -1,27 +1,27 @@
 import DateTimePicker from "@react-native-community/datetimepicker";
 import { Ionicons, MaterialCommunityIcons } from "@expo/vector-icons";
 import { useFocusEffect, useNavigation } from "@react-navigation/native";
-import React, { useCallback, useEffect, useRef, useState } from "react";
+import React, { useCallback, useEffect, useLayoutEffect, useMemo, useRef, useState } from "react";
 import {
   Animated,
-  InteractionManager,
   KeyboardAvoidingView,
   Modal,
   Platform,
   Pressable,
-  ScrollView,
   StyleSheet,
   Text,
   View,
 } from "react-native";
+import { ScrollView } from "../lib/scrollViews";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { PrimaryButton, SecondaryButton } from "../components/FlareButton";
 import { flareFieldErrorStyle, FlareTextInput } from "../components/FlareInput";
-import { flareCardSectionStyles, FlareScreenSectionTitle } from "../components/FlareScreenSectionTitle";
+import { FlareScreenSectionTitle } from "../components/FlareScreenSectionTitle";
 import {
   LogHistoryCard,
   LogHistoryListLoading,
   LogHistoryPreviewList,
+  LogHistoryTipRow,
   LOG_HISTORY_LOAD_MORE_BATCH,
   logHistoryCardStyles,
   logHistoryListStyles,
@@ -33,18 +33,17 @@ import { MY_MEDS_MCI_ICON } from "../lib/medicationFeatureIcons";
 import { rescheduleMedicationNotificationsForUser } from "../lib/medicationNotifications";
 import {
   emptyMedicationFormState,
-  fetchMedicationsForUser,
-  getMedicationsListCache,
-  medicationsListCacheKey,
+  formatMedicationReminderTime,
   MEDICATION_FREQUENCY_PRESETS,
-  medicationListSubtitle,
   medicationHasReminder,
+  getMedsListExpandedCount,
+  medicationListSubtitle,
   medicationPayloadFromForm,
   medicationUpdatePayloadFromForm,
-  formatMedicationReminderTime,
+  setMedsListExpandedCount,
   type MedicationFormState,
-  type MedicationRow,
 } from "../lib/medicationShared";
+import { useMedicationsList } from "../lib/useMedicationsList";
 import { snapTimeHmFromDate } from "../lib/bowelMovementShared";
 import {
   FLARE_FONT_FAMILY,
@@ -166,10 +165,6 @@ export function MedicationSheet({
             contentContainerStyle={[styles.sheetScroll, { paddingBottom: insets.bottom + 24 }]}
             showsVerticalScrollIndicator={false}
           >
-            <Text style={[styles.sheetLead, { color: c.textMuted }]}>
-              Add medications prescribed by your GP or hospital team.
-            </Text>
-
             <FlareScreenSectionTitle compact>Medication name *</FlareScreenSectionTitle>
             <FlareTextInput
               value={form.name}
@@ -293,6 +288,14 @@ export function MedicationSheet({
   );
 }
 
+async function maybeRescheduleReminders(userId: string) {
+  try {
+    await rescheduleMedicationNotificationsForUser(userId);
+  } catch {
+    // non-fatal
+  }
+}
+
 function WriggleReminderBell({ color }: { color: string }) {
   const rotate = useRef(new Animated.Value(0)).current;
 
@@ -328,66 +331,30 @@ function WriggleReminderBell({ color }: { color: string }) {
   );
 }
 
-async function maybeRescheduleReminders(userId: string) {
-  try {
-    await rescheduleMedicationNotificationsForUser(userId);
-  } catch {
-    // non-fatal
-  }
-}
-
 export function MedicationsScreen({ user }: { user: SessionUser }) {
   const c = useFlareColors();
   const navigation = useNavigation<any>();
   const bottomScrollInset = useBottomTabScrollInset();
-  const [meds, setMeds] = useState<MedicationRow[]>(() => getMedicationsListCache(user.id) ?? []);
-  const medsRef = useRef<MedicationRow[]>(getMedicationsListCache(user.id) ?? []);
-  const medsListKeyRef = useRef(medicationsListCacheKey(medsRef.current));
-  const [loading, setLoading] = useState(false);
+  const { meds, loading, load } = useMedicationsList(user.id);
   const [sheetOpen, setSheetOpen] = useState(false);
   const [editingId, setEditingId] = useState<number | null>(null);
   const [form, setForm] = useState<MedicationFormState>(() => emptyMedicationFormState());
   const [saving, setSaving] = useState(false);
   const [saveError, setSaveError] = useState("");
-  const [visibleMedCount, setVisibleMedCount] = useState(LOG_HISTORY_LOAD_MORE_BATCH);
-
-  const applyMeds = useCallback((rows: MedicationRow[]) => {
-    const nextKey = medicationsListCacheKey(rows);
-    if (nextKey === medsListKeyRef.current) return;
-    medsListKeyRef.current = nextKey;
-    setMeds(rows);
-  }, []);
-
-  const load = useCallback(async () => {
-    const hasCache = getMedicationsListCache(user.id) !== undefined;
-    if (!hasCache) setLoading(true);
-    try {
-      const rows = await fetchMedicationsForUser(user.id);
-      applyMeds(rows);
-      setVisibleMedCount((count) =>
-        rows.length === 0 ? LOG_HISTORY_LOAD_MORE_BATCH : Math.min(count, rows.length),
-      );
-    } catch (err) {
-      console.error("Error loading medications:", err);
-      applyMeds([]);
-    } finally {
-      setLoading(false);
-    }
-  }, [applyMeds, user.id]);
+  const [expandedMedCount, setExpandedMedCount] = useState(() => getMedsListExpandedCount(user.id));
 
   useFocusEffect(
     useCallback(() => {
-      const cached = getMedicationsListCache(user.id);
-      if (cached !== undefined) {
-        applyMeds(cached);
-        setLoading(false);
-      }
-      const task = InteractionManager.runAfterInteractions(() => {
-        void load();
-      });
-      return () => task.cancel();
-    }, [applyMeds, load, user.id]),
+      setExpandedMedCount(getMedsListExpandedCount(user.id));
+    }, [user.id]),
   );
+
+  /** Derived on every render so "load more" never flashes after add/save (useEffect ran one frame late). */
+  const visibleMedCount = useMemo(() => {
+    if (meds.length === 0) return LOG_HISTORY_LOAD_MORE_BATCH;
+    if (meds.length <= LOG_HISTORY_LOAD_MORE_BATCH) return meds.length;
+    return Math.min(expandedMedCount, meds.length);
+  }, [meds.length, expandedMedCount]);
 
   const closeSheet = useCallback(() => {
     setSheetOpen(false);
@@ -402,6 +369,25 @@ export function MedicationsScreen({ user }: { user: SessionUser }) {
     setSaveError("");
     setSheetOpen(true);
   }, []);
+
+  useLayoutEffect(() => {
+    navigation.setOptions({
+      headerRight: () => (
+        <Pressable
+          accessibilityRole="button"
+          accessibilityLabel="Add medication"
+          onPress={openAdd}
+          hitSlop={10}
+          style={styles.headerIconBtn}
+        >
+          <Ionicons name="add" size={26} color={c.textMuted} accessibilityIgnoresInvertColors />
+        </Pressable>
+      ),
+    });
+    return () => {
+      navigation.setOptions({ headerRight: undefined });
+    };
+  }, [c.textMuted, navigation, openAdd]);
 
   const handleSave = async (values: MedicationFormState) => {
     setSaveError("");
@@ -429,11 +415,6 @@ export function MedicationsScreen({ user }: { user: SessionUser }) {
     }
   };
 
-  const listInitialLoad = loading;
-  const listSectionTitle = "Your medications";
-
-  medsRef.current = meds;
-
   const medById = useCallback((id: string) => meds.find((row) => String(row.id) === id), [meds]);
 
   const medListItems: LogHistoryListItem[] = meds.map((row) => {
@@ -450,10 +431,15 @@ export function MedicationsScreen({ user }: { user: SessionUser }) {
           : `${row.name}. View details`,
     };
   });
+
   const hasMoreMeds = meds.length > visibleMedCount;
   const loadMoreMeds = useCallback(() => {
-    setVisibleMedCount((count) => Math.min(count + LOG_HISTORY_LOAD_MORE_BATCH, meds.length));
-  }, [meds.length]);
+    setExpandedMedCount((count) => {
+      const next = Math.min(count + LOG_HISTORY_LOAD_MORE_BATCH, meds.length);
+      setMedsListExpandedCount(user.id, next);
+      return next;
+    });
+  }, [meds.length, user.id]);
 
   const renderMedSubtitle = useCallback(
     (item: LogHistoryListItem) => {
@@ -486,47 +472,6 @@ export function MedicationsScreen({ user }: { user: SessionUser }) {
     [c.textMuted, medById],
   );
 
-  const logsSection = (
-    <LogHistoryCard style={[{ marginBottom: 0 }, flareCardSectionStyles.container]}>
-      <FlareScreenSectionTitle inCard>{listSectionTitle}</FlareScreenSectionTitle>
-      <View style={logHistoryCardStyles.trackerCardBody}>
-        {listInitialLoad ? (
-          <LogHistoryListLoading />
-        ) : meds.length === 0 ? (
-          <View style={styles.emptyWrap}>
-            <View style={[styles.emptyIcon, { backgroundColor: c.surfaceSubtle }]}>
-              <MaterialCommunityIcons name={MY_MEDS_MCI_ICON} size={28} color={c.primary} accessibilityIgnoresInvertColors />
-            </View>
-            <Text style={[styles.emptyTitle, { color: c.text }]}>Nothing here yet</Text>
-            <Text style={[styles.emptySub, { color: c.textMuted }]}>
-              Your medications will show here once you add them.
-            </Text>
-          </View>
-        ) : (
-          <LogHistoryPreviewList
-            items={medListItems}
-            visibleCount={visibleMedCount}
-            hasMore={hasMoreMeds}
-            loadMoreLabel="load more"
-            onLoadMore={loadMoreMeds}
-            renderSubtitle={renderMedSubtitle}
-            onPressItem={(medId) => navigation.navigate("MedicationDetail", { id: medId })}
-          />
-        )}
-      </View>
-      {!hasMoreMeds && meds.length > 0 ? (
-        <Pressable
-          accessibilityRole="link"
-          accessibilityLabel="Having trouble with reminders"
-          onPress={() => navigation.navigate("AccountHelp", { expandSection: "notifications" })}
-          style={({ pressed }) => [styles.helpLinkPress, pressed && { opacity: 0.7 }]}
-        >
-          <Text style={[styles.helpLink, { color: c.text }]}>Having trouble?</Text>
-        </Pressable>
-      ) : null}
-    </LogHistoryCard>
-  );
-
   return (
     <View style={[styles.screenRoot, { backgroundColor: c.screen }]}>
       <ScrollView
@@ -534,21 +479,31 @@ export function MedicationsScreen({ user }: { user: SessionUser }) {
         contentContainerStyle={{ paddingBottom: bottomScrollInset + 32 }}
         showsVerticalScrollIndicator={false}
       >
-        <View style={[styles.heroCard, { backgroundColor: c.card }]}>
-          <View style={styles.heroTop}>
-            <View style={styles.heroIcon}>
-              <MaterialCommunityIcons name={MY_MEDS_MCI_ICON} size={28} color={c.primary} accessibilityIgnoresInvertColors />
-            </View>
-            <View style={styles.heroCopy}>
-              <Text style={[styles.heroTitle, { color: c.text }]}>My medications</Text>
-            </View>
+        <LogHistoryCard>
+          <View style={logHistoryCardStyles.trackerCardBody}>
+            {loading && meds.length === 0 ? (
+              <LogHistoryListLoading />
+            ) : meds.length === 0 ? (
+              <View style={styles.emptyWrap}>
+                <View style={[styles.emptyIcon, { backgroundColor: c.surfaceSubtle }]}>
+                  <MaterialCommunityIcons name={MY_MEDS_MCI_ICON} size={28} color={c.primary} accessibilityIgnoresInvertColors />
+                </View>
+                <Text style={[styles.emptyTitle, { color: c.textMuted }]}>Nothing here yet</Text>
+              </View>
+            ) : (
+              <LogHistoryPreviewList
+                items={medListItems}
+                visibleCount={visibleMedCount}
+                hasMore={hasMoreMeds}
+                loadMoreLabel="load more"
+                onLoadMore={loadMoreMeds}
+                renderSubtitle={renderMedSubtitle}
+                onPressItem={(medId) => navigation.navigate("MedicationDetail", { id: medId })}
+              />
+            )}
           </View>
-          <Text style={[styles.heroSub, { color: c.textMuted }]}>
-            Add your medications and set reminders to stay on track.
-          </Text>
-          <PrimaryButton title="Add medication" onPress={openAdd} />
-        </View>
-        {logsSection}
+        </LogHistoryCard>
+        <LogHistoryTipRow text="Use the + icon to store medications prescribed by your GP or healthcare team." />
       </ScrollView>
 
       <MedicationSheet
@@ -567,22 +522,8 @@ export function MedicationsScreen({ user }: { user: SessionUser }) {
 const styles = StyleSheet.create({
   screenRoot: { flex: 1 },
   screenScroll: { flex: 1, padding: SCREEN_EDGE_PADDING },
-  heroCard: { borderRadius: 14, padding: 14, marginBottom: 12 },
-  heroTop: { flexDirection: "row", alignItems: "center", gap: 4, marginBottom: 14 },
-  heroIcon: { width: 42, height: 42, borderRadius: 21, alignItems: "center", justifyContent: "center" },
-  heroCopy: { flex: 1, minWidth: 0, justifyContent: "center" },
-  heroTitle: {
-    fontSize: FLARE_FONT_SIZE.sectionTitle,
-    fontFamily: FLARE_FONT_FAMILY.bold,
-    lineHeight: 42,
-  },
-  heroSub: {
-    fontSize: FLARE_FONT_SIZE.body,
-    fontFamily: FLARE_FONT_FAMILY.regular,
-    lineHeight: FLARE_LINE_HEIGHT.body,
-    marginBottom: 14,
-  },
-  emptyWrap: { alignItems: "center", paddingVertical: 14 },
+  headerIconBtn: { width: 44, height: 44, alignItems: "center", justifyContent: "center" },
+  emptyWrap: { alignItems: "center", paddingVertical: 20, paddingHorizontal: 8 },
   emptyIcon: {
     width: 56,
     height: 56,
@@ -591,21 +532,14 @@ const styles = StyleSheet.create({
     justifyContent: "center",
     marginBottom: SECTION_TITLE_MARGIN_BOTTOM,
   },
-  emptyTitle: { fontSize: FLARE_FONT_SIZE.navTitle, fontFamily: FLARE_FONT_FAMILY.bold, marginBottom: 6 },
-  emptySub: {
-    fontSize: FLARE_FONT_SIZE.body,
-    fontFamily: FLARE_FONT_FAMILY.regular,
-    textAlign: "center",
-    lineHeight: FLARE_LINE_HEIGHT.body,
+  emptyTitle: {
+    fontSize: FLARE_FONT_SIZE.sectionTitle,
+    fontFamily: FLARE_FONT_FAMILY.bold,
+    lineHeight: FLARE_LINE_HEIGHT.sectionTitle,
+    marginBottom: 6,
   },
   medSubtitleRow: { flexDirection: "row", alignItems: "center", flexShrink: 1, minWidth: 0 },
   medReminderTimeRow: { flexDirection: "row", alignItems: "center", gap: 4, flexShrink: 1, minWidth: 0 },
-  helpLinkPress: { alignSelf: "center", marginTop: 2, paddingVertical: 4 },
-  helpLink: {
-    fontSize: FLARE_FONT_SIZE.body,
-    fontFamily: FLARE_FONT_FAMILY.regular,
-    textDecorationLine: "underline",
-  },
   sheetRoot: { flex: 1 },
   sheetHeader: {
     flexDirection: "row",
@@ -618,12 +552,6 @@ const styles = StyleSheet.create({
   sheetClose: { width: 44, height: 44, alignItems: "center", justifyContent: "center" },
   sheetTitle: { fontSize: FLARE_FONT_SIZE.navTitle, fontFamily: FLARE_FONT_FAMILY.bold },
   sheetScroll: { paddingHorizontal: 20, paddingTop: 14 },
-  sheetLead: {
-    fontSize: FLARE_FONT_SIZE.body,
-    fontFamily: FLARE_FONT_FAMILY.regular,
-    lineHeight: FLARE_LINE_HEIGHT.body,
-    marginBottom: 20,
-  },
   pickerPill: {
     flexDirection: "row",
     alignItems: "center",

@@ -1,10 +1,11 @@
+import { LOG_HISTORY_LOAD_MORE_BATCH } from "../components/LogHistoryList";
 import { TIME_PICKER_MINUTE_INTERVAL } from "./layoutConstants";
 
 /** MaterialCommunityIcons — no bowel/intestine glyph; `toilet` is the closest match in the set. */
 export const BOWEL_FEATURE_MCI_ICON = "toilet" as const;
 
 /** Tri-state form values — match web `bowel-movements/page.js`. */
-export type TriStateValue = "" | "true" | "false";
+export type TriStateValue = "" | "skip" | "true" | "false";
 
 export const TRI_STATE_PICKER_LABELS = ["Prefer not to say", "No", "Yes"] as const;
 
@@ -17,19 +18,20 @@ export function parseTriState(value: TriStateValue): boolean | null {
 export function boolToTri(value: boolean | null | undefined): TriStateValue {
   if (value === true) return "true";
   if (value === false) return "false";
-  return "";
+  return "skip";
 }
 
 export function triStateDisplayLabel(value: TriStateValue): string {
   if (value === "true") return "Yes";
   if (value === "false") return "No";
-  return "Prefer not to say";
+  if (value === "skip") return "Prefer not to say";
+  return "—";
 }
 
 export function triStateFromPickerLabel(label: string): TriStateValue {
   if (label === "Yes") return "true";
   if (label === "No") return "false";
-  return "";
+  return "skip";
 }
 
 export function generateTimeOptions(): string[] {
@@ -127,7 +129,7 @@ export function emptyBowelFormState(): BowelFormState {
   };
 }
 
-/** New quick log — empty date/time; user picks when it happened. */
+/** New log sheet — empty date/time until the user picks. */
 export function quickBowelFormState(): BowelFormState {
   return {
     date: "",
@@ -199,4 +201,38 @@ export function bowelPayloadFromForm(form: BowelFormState) {
     notes: form.notes.trim() || null,
     updated_at: new Date().toISOString(),
   };
+}
+
+type BowelListCacheSnapshot = {
+  rows: BowelMovementRow[];
+  totalCount: number;
+  visibleCount: number;
+};
+
+const bowelListCacheByUserId: Record<string, BowelListCacheSnapshot> = {};
+
+export function getBowelListCache(userId: string): BowelListCacheSnapshot | undefined {
+  return bowelListCacheByUserId[userId];
+}
+
+export function setBowelListCache(userId: string, snapshot: BowelListCacheSnapshot) {
+  bowelListCacheByUserId[userId] = snapshot;
+}
+
+export function invalidateBowelListCache(userId: string) {
+  delete bowelListCacheByUserId[userId];
+}
+
+/** Stack routes that count as the bowel feature — list expansion survives detail ↔ chart, not leaving here. */
+export const BOWEL_SECTION_ROUTE_NAMES = ["Bowel", "BowelLogDetail", "BristolGuide"] as const;
+
+export function isBowelSectionRoute(routeName: string | undefined): boolean {
+  return (BOWEL_SECTION_ROUTE_NAMES as readonly string[]).includes(routeName ?? "");
+}
+
+export function resetBowelListExpansion(userId: string, initialVisible = LOG_HISTORY_LOAD_MORE_BATCH) {
+  const cached = bowelListCacheByUserId[userId];
+  if (cached) {
+    bowelListCacheByUserId[userId] = { ...cached, visibleCount: initialVisible };
+  }
 }

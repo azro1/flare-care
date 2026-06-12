@@ -64,20 +64,38 @@ Use existing screens as reference — do **not** default to web-style teal hyper
 | **`LOG_HISTORY_RECENT_PREVIEW_COUNT`** | Wizard History first paint — **3** rows |
 | **`LOG_HISTORY_WIZARD_LOAD_MORE_BATCH`** | Wizard History each **Load more logs** tap — **+3** (same as preview count) |
 | **`LOG_HISTORY_LOAD_MORE_BATCH`** | My Meds list, bowel full-history hub — **5** initial / per tap |
-| **`usePaginatedLogList`** (`lib/paginatedLogList.ts`) | Fetch + paginate log tables; **`useWizardLogHistory`** wraps symptom/medication history |
+| **`usePaginatedLogList`** (`lib/paginatedLogList.ts`) | Fetch + paginate log tables; **`resolvePaginatedVisibleCount`**, **`syncExpandedFromCache`**; optional **`cache`** for rows + expansion |
+| **`useWizardLogHistory`** (`lib/wizardLogHistory.ts`) | Symptom / Track Medications history — preview **3**, +**3** per load-more; per-table cache |
+| **`useMedicationsList`** (`lib/useMedicationsList.ts`) | My Meds fetch + focus refresh; list rows cached in **`medicationShared`** |
 | **`logHistoryCardStyles`** | Shared card/intro/body tokens — import instead of redefining padding/radius/gap |
 | **`lib/logDisplay.ts`** | `formatLogWhenLine` (list subtitles), `formatAddedAtHeader` (detail screen headers) — do not reformat timestamps inline |
+| **`lib/listExpansionNavigation.ts`** | Root **`onStateChange`** — collapse load-more when leaving a feature section (see below) |
+
+**Load more — expansion survives detail ↔ back, resets when leaving the section**
+
+| Section | Stack routes | Initial visible | Reset / persist |
+|---------|--------------|-----------------|-----------------|
+| Bowel | `Bowel`, `BowelLogDetail`, `BristolGuide` | **5** | `bowelMovementShared` list cache `visibleCount` |
+| My Meds | `Meds`, `MedicationDetail` | **5** | `getMedsListExpandedCount` / `setMedsListExpandedCount` |
+| Symptom history | `SymptomHistory`, `SymptomDetail` | **3** | `useWizardLogHistory` + `resetWizardLogHistoryExpansion` |
+| Med tracking history | `MedicationTrackingHistory`, `MedicationLogDetail` | **3** | same, table `log_medications` |
+
+- Wire **`handleListExpansionNavigationRouteChange(userId, routeName)`** from **`NavigationContainer` `onStateChange`** (`App.tsx`). **Do not** use screen **`blur`** to detect leave — back/pop reports the wrong active route.
+- On list focus: **`syncExpandedFromCache()`** then **`refresh()`** (paginated lists) or **`getMedsListExpandedCount`** + **`useFocusEffect`** (My Meds).
+- Derive visible row count **during render** (`useMemo` / `resolvePaginatedVisibleCount`) so **load more** does not flash one frame after add/save.
+- Under the preview cap (≤5 bowel/meds, ≤3 wizard history), show **all** rows — no load-more link.
 
 **Live examples**
 
 - Dashboard → **Logs** tab → History card: `LogHistoryCard` + `buildBrowseLogRowItem` (`App.tsx` → `DashboardScreen`)
 - **Symptom history** / **Medication tracking history**: `LogHistoryIntroSection` + `LogHistoryPreviewList` + `buildTimestampLogRowItem` + `useWizardLogHistory`
-- **Focus refresh:** History screens call **`refresh()`** on focus (not **`resetAndLoad`**) so **Load more** expansion survives detail → back; list still refetches after delete. Same for **Bowel → Your logs** (`BowelLogs`) and **My Meds** (local `visibleMedCount` — do not reset on tab focus).
+- **Focus refresh:** **`syncExpandedFromCache()`** + **`refresh()`** on focus (not **`resetAndLoad`**) — refetches data; expansion reset only when navigation leaves the section (table above).
 - **Load more:** teal **`c.primary`**, underlined, **`FLARE_FONT_SIZE.muted`** — via `logHistoryListStyles.loadMoreLabel`; row sits **outside** the grey tray with `CARD_SECTION_INNER_GAP` margin
 - **History tips (current copy):** symptom — *“A list of your symptom events recorded through Log Symptoms.”*; medication — *“A list of your medication events recorded through Track Medications.”* — **Onset vs duration** explainer removed from symptom tip for now; find a better home later (not history bulb)
-- **Bowel** recent + full log history: `logHistoryCardStyles` + `buildTimestampLogRowItem` (`screens/BowelScreen.tsx`) — list subtitle uses **`created_at`** on the hub **Recent** tray (when the log was saved); **BowelLogs** full history uses **`occurred_at`**; detail screen still shows movement date/time in fields + **Added** header from `created_at`
+- **Bowel** / **My Meds** (`screens/BowelScreen.tsx`, `screens/MedicationsScreen.tsx`): list-first — icon + **Nothing here yet** (`FLARE_FONT_SIZE.sectionTitle`, muted) when empty; **lightbulb tip below** the card (`LogHistoryTipRow`); no in-card intro line; **+** in header only (no empty-state CTA). Bowel list subtitle = **`created_at`**; detail fields use **`occurred_at`** + **Added** header from `created_at`.
+- **Bristol chart** (`screens/BristolGuideScreen.tsx`): `LogHistoryCard` + grey tray; tip below card; pick mode footer outside card.
 
-**Detail screens:** symptom/medication detail = **delete only** in header (no edit). Bowel detail = edit + delete in header.
+**Detail screens:** symptom/medication log detail = **delete only** in header (no edit). **Bowel log** / **medication profile** = edit + delete. Bowel + medication profile detail cards use **`LogDetailCard`** + field tray only — **no** in-card **Details** section title (unlike multi-section symptom detail).
 
 **When extending:** pass custom `title` / `accessibilityLabel` into the builders; only add props to `LogHistoryList` if the pattern is genuinely new (e.g. a new trailing affordance). Update this file if the shared API changes.
 
@@ -140,9 +158,9 @@ Do **not** remove these checks when touching wizard back/next — they block the
 
 ## Scroll indicators (app-wide)
 
-**File:** `lib/hideScrollIndicators.ts` — imported from `index.ts` **before** `App`.
+**Files:** `lib/hideScrollIndicators.ts` (startup defaults + shared props) and `lib/scrollViews.tsx` (`ScrollView` / `AnimatedScrollView` wrappers). Import wrappers instead of `react-native` scroll views. `hideScrollIndicators.ts` is imported from `index.ts` **before** `App`.
 
-Sets default `showsVerticalScrollIndicator={false}` and `showsHorizontalScrollIndicator={false}` on **`ScrollView`** and **`Animated.ScrollView`**. Do not re-enable scroll bars on individual screens unless there is a deliberate exception.
+Hides vertical and horizontal scroll indicators app-wide. Do not re-enable scroll bars on individual screens unless there is a deliberate exception.
 
 ---
 

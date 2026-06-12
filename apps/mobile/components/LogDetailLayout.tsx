@@ -55,8 +55,16 @@ export function LogDetailSectionCard({
   onEdit?: () => void;
   editAccessibilityLabel?: string;
 }) {
+  const c = useFlareColors();
   return (
-    <LogDetailCard style={[flareCardSectionStyles.container, last ? { marginBottom: 0 } : null]}>
+    <View
+      style={[
+        logDetailStyles.detailCard,
+        { backgroundColor: c.card },
+        flareCardSectionStyles.container,
+        last ? { marginBottom: 0 } : null,
+      ]}
+    >
       {onEdit ? (
         <View style={logDetailStyles.sectionTitleRow}>
           <View style={{ flex: 1 }}>
@@ -68,7 +76,7 @@ export function LogDetailSectionCard({
         <FlareScreenSectionTitle inCard>{title}</FlareScreenSectionTitle>
       )}
       {children}
-    </LogDetailCard>
+    </View>
   );
 }
 

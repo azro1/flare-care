@@ -1,3 +1,4 @@
+import { LOG_HISTORY_LOAD_MORE_BATCH } from "../components/LogHistoryList";
 import { TIME_PICKER_MINUTE_INTERVAL } from "./layoutConstants";
 import { sanitizeNotesMobile } from "./symptomWizardShared";
 import { supabase, TABLES } from "./supabase";
@@ -162,6 +163,30 @@ export function setMedicationsListCache(userId: string, rows: MedicationRow[]) {
 
 export function invalidateMedicationsListCache(userId: string) {
   delete medicationsListCacheByUserId[userId];
+}
+
+/** Stack routes for My Meds — load-more expansion survives list ↔ detail only. */
+export const MEDS_SECTION_ROUTE_NAMES = ["Meds", "MedicationDetail"] as const;
+
+export function isMedsSectionRoute(routeName: string | undefined): boolean {
+  return (MEDS_SECTION_ROUTE_NAMES as readonly string[]).includes(routeName ?? "");
+}
+
+const medsListExpandedCountByUserId: Record<string, number> = {};
+
+export function getMedsListExpandedCount(
+  userId: string,
+  initialVisible = LOG_HISTORY_LOAD_MORE_BATCH,
+): number {
+  return medsListExpandedCountByUserId[userId] ?? initialVisible;
+}
+
+export function setMedsListExpandedCount(userId: string, count: number) {
+  medsListExpandedCountByUserId[userId] = count;
+}
+
+export function resetMedsListExpansion(userId: string, initialVisible = LOG_HISTORY_LOAD_MORE_BATCH) {
+  medsListExpandedCountByUserId[userId] = initialVisible;
 }
 
 export function medicationsListCacheKey(rows: MedicationRow[]): string {

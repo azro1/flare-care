@@ -2,18 +2,19 @@ import DateTimePicker from "@react-native-community/datetimepicker";
 import { Ionicons, MaterialCommunityIcons } from "@expo/vector-icons";
 import { useFocusEffect, useNavigation, useRoute } from "@react-navigation/native";
 import { yupResolver } from "@hookform/resolvers/yup";
-import React, { useCallback, useEffect, useRef, useState } from "react";
+import React, { useCallback, useEffect, useLayoutEffect, useRef, useState } from "react";
 import { useForm } from "react-hook-form";
 import {
   KeyboardAvoidingView,
   Modal,
   Platform,
   Pressable,
-  ScrollView,
   StyleSheet,
   Text,
   View,
+  InteractionManager,
 } from "react-native";
+import { ScrollView } from "../lib/scrollViews";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 import type { BowelReturnParams, BristolGuideParams } from "./BristolGuideScreen";
 import {
@@ -29,7 +30,7 @@ import {
   FlareTextInput,
 } from "../components/FlareInput";
 import {
-  LogHistoryList,
+  LogHistoryCard,
   LogHistoryListLoading,
   LogHistoryPreviewList,
   LogHistoryTipRow,
@@ -39,7 +40,7 @@ import {
 } from "../components/LogHistoryList";
 import { usePaginatedLogList } from "../lib/paginatedLogList";
 import { STACKED_DETAIL_ROW_EDGE } from "../components/StackedDetailField";
-import { flareCardSectionStyles, FlareScreenSectionTitle } from "../components/FlareScreenSectionTitle";
+import { FlareScreenSectionTitle } from "../components/FlareScreenSectionTitle";
 import {
   BRISTOL_TYPES,
   formatBristolDetailLabel,
@@ -50,9 +51,9 @@ import {
   BOWEL_FEATURE_MCI_ICON,
   snapTimeHmFromDate,
   bowelPayloadFromForm,
-  formatUkTimeFromOccurred,
+  getBowelListCache,
   quickBowelFormState,
-  sortBowelByCreatedAtDesc,
+  setBowelListCache,
   type BowelFormState,
   type BowelMovementRow,
   type TriStateValue,
@@ -72,9 +73,6 @@ import { supabase, TABLES } from "../lib/supabase";
 import { useFlareColors } from "../theme";
 
 type SessionUser = { id: string };
-
-/** Hub screen preview — full list lives on `BowelLogs`. */
-const BOWEL_RECENT_PREVIEW_COUNT = 3;
 
 const BOTTOM_BAR_VISIBLE_ROUTES = new Set(["Dashboard", "Account", "Reminders"]);
 
@@ -112,7 +110,7 @@ function isAndroidDatePickerDismissed(event: { type?: string }): boolean {
 type TriField = "blood" | "strain" | "urgency";
 
 const TRI_OPTIONS: { value: TriStateValue; label: string }[] = [
-  { value: "", label: "Skip" },
+  { value: "skip", label: "Skip" },
   { value: "false", label: "No" },
   { value: "true", label: "Yes" },
 ];
@@ -253,7 +251,7 @@ export function BowelLogSheet({
           <Pressable accessibilityRole="button" accessibilityLabel="Close" onPress={onClose} hitSlop={12} style={styles.sheetClose}>
             <Ionicons name="close" size={26} color={c.textMuted} />
           </Pressable>
-          <Text style={[styles.sheetTitle, { color: c.text }]}>{editingId ? "Edit log" : "Quick log"}</Text>
+          <Text style={[styles.sheetTitle, { color: c.text }]}>{editingId ? "Edit log" : "Add bowel movement"}</Text>
           <View style={styles.sheetClose} />
         </View>
 
@@ -262,10 +260,6 @@ export function BowelLogSheet({
           contentContainerStyle={[styles.sheetScroll, { paddingBottom: insets.bottom + 24 }]}
           showsVerticalScrollIndicator={false}
         >
-          <Text style={[styles.sheetLead, { color: c.textMuted }]}>
-            Pick the Bristol type that best matches your stool — only takes a moment.
-          </Text>
-
           <View style={styles.whenBlock}>
           <View style={styles.whenRow}>
             <View style={styles.whenCol}>
@@ -307,9 +301,9 @@ export function BowelLogSheet({
               </Pressable>
             </View>
           </View>
-          {errors.time?.message || errors.date?.message ? (
+          {errors.date?.message || errors.time?.message ? (
             <Text style={[errTextStyle, styles.whenRowError]}>
-              {errors.time?.message ?? errors.date?.message}
+              {errors.date?.message ?? errors.time?.message}
             </Text>
           ) : null}
           </View>
@@ -354,14 +348,9 @@ export function BowelLogSheet({
             })}
           </ScrollView>
           {selectedMeta ? (
-            <View style={[styles.bristolChosen, { backgroundColor: c.surfaceSubtle, borderColor: c.cardBorder }]}>
-              <View style={[styles.bristolChosenBadge, { backgroundColor: c.primary }]}>
-                <Text style={[styles.bristolChosenBadgeText, { color: c.white }]}>{selectedMeta.type}</Text>
-              </View>
-              <View style={styles.bristolChosenCopy}>
-                <Text style={[styles.bristolChosenTitle, { color: c.text }]}>{selectedMeta.shortLabel}</Text>
-              </View>
-            </View>
+            <Text style={[styles.bristolSelectedCaption, { color: c.textMuted }]}>
+              {selectedMeta.type} {selectedMeta.shortLabel}
+            </Text>
           ) : (
             <Text style={[styles.bristolHint, { color: c.textMuted }]}>Tap a number from 1 to 7</Text>
           )}
@@ -453,14 +442,9 @@ export function BowelScreen({ user }: { user: SessionUser }) {
   const c = useFlareColors();
   const navigation = useNavigation<any>();
   const route = useRoute();
-  const isLogHistory = route.name === "BowelLogs";
   const bottomScrollInset = useBottomTabScrollInset();
 
   const [form, setForm] = useState<BowelFormState>(() => quickBowelFormState());
-  const [entries, setEntries] = useState<BowelMovementRow[]>([]);
-  const [totalEntryCount, setTotalEntryCount] = useState(0);
-  const entriesRef = useRef<BowelMovementRow[]>([]);
-  const [loading, setLoading] = useState(true);
   const {
     rows: historyRows,
     totalCount: historyTotalCount,
@@ -470,11 +454,16 @@ export function BowelScreen({ user }: { user: SessionUser }) {
     hasMore: historyHasMore,
     loadMore: loadMoreHistory,
     refresh: refreshHistoryLoad,
+    syncExpandedFromCache,
   } = usePaginatedLogList<BowelMovementRow>({
     userId: user.id,
     table: TABLES.BOWEL_MOVEMENTS,
     select: "*",
     initialVisible: LOG_HISTORY_LOAD_MORE_BATCH,
+    cache: {
+      get: getBowelListCache,
+      set: setBowelListCache,
+    },
   });
   const [saving, setSaving] = useState(false);
   const [saveError, setSaveError] = useState("");
@@ -510,37 +499,19 @@ export function BowelScreen({ user }: { user: SessionUser }) {
     }, [navigation, route.params]),
   );
 
-  const fetchHubPreview = useCallback(async () => {
-    const isInitialLoad = entriesRef.current.length === 0;
-    if (isInitialLoad) setLoading(true);
-    const [{ count }, { data, error }] = await Promise.all([
-      supabase.from(TABLES.BOWEL_MOVEMENTS).select("id", { count: "exact", head: true }).eq("user_id", user.id),
-      supabase
-        .from(TABLES.BOWEL_MOVEMENTS)
-        .select("*")
-        .eq("user_id", user.id)
-        .order("created_at", { ascending: false })
-        .limit(BOWEL_RECENT_PREVIEW_COUNT),
-    ]);
-    if (error) {
-      console.error("Error fetching bowel movements:", error);
-      setEntries([]);
-      setTotalEntryCount(0);
-    } else {
-      setTotalEntryCount(count ?? 0);
-      setEntries(sortBowelByCreatedAtDesc((data ?? []) as BowelMovementRow[]));
-    }
-    setLoading(false);
-  }, [user.id]);
+  const refreshHistoryLoadRef = useRef(refreshHistoryLoad);
+  refreshHistoryLoadRef.current = refreshHistoryLoad;
+  const syncExpandedFromCacheRef = useRef(syncExpandedFromCache);
+  syncExpandedFromCacheRef.current = syncExpandedFromCache;
 
   useFocusEffect(
     useCallback(() => {
-      if (isLogHistory) {
-        void refreshHistoryLoad();
-      } else {
-        fetchHubPreview();
-      }
-    }, [fetchHubPreview, isLogHistory, refreshHistoryLoad]),
+      syncExpandedFromCacheRef.current();
+      const task = InteractionManager.runAfterInteractions(() => {
+        void refreshHistoryLoadRef.current();
+      });
+      return () => task.cancel();
+    }, []),
   );
 
   const closeSheet = useCallback(() => {
@@ -559,6 +530,25 @@ export function BowelScreen({ user }: { user: SessionUser }) {
     setSheetOpen(true);
   }, []);
 
+  useLayoutEffect(() => {
+    navigation.setOptions({
+      headerRight: () => (
+        <Pressable
+          accessibilityRole="button"
+          accessibilityLabel="Log bowel movement"
+          onPress={openNewLog}
+          hitSlop={10}
+          style={styles.headerIconBtn}
+        >
+          <Ionicons name="add" size={26} color={c.textMuted} accessibilityIgnoresInvertColors />
+        </Pressable>
+      ),
+    });
+    return () => {
+      navigation.setOptions({ headerRight: undefined });
+    };
+  }, [c.textMuted, navigation, openNewLog]);
+
   const handleSave = async (values: BowelFormState) => {
     setSaveError("");
     setSaving(true);
@@ -571,34 +561,15 @@ export function BowelScreen({ user }: { user: SessionUser }) {
           .eq("id", editingId)
           .eq("user_id", user.id);
         if (error) throw error;
-        if (isLogHistory) {
-          void refreshHistoryLoad();
-        } else {
-          setEntries((prev) =>
-            sortBowelByCreatedAtDesc(
-              prev.map((entry) => (entry.id === editingId ? { ...entry, ...payload } : entry)),
-            ),
-          );
-        }
       } else {
-        const { data, error } = await supabase
+        const { error } = await supabase
           .from(TABLES.BOWEL_MOVEMENTS)
-          .insert([{ ...payload, user_id: user.id }])
-          .select();
+          .insert([{ ...payload, user_id: user.id }]);
         if (error) throw error;
-        const inserted = (data?.[0] as BowelMovementRow | undefined) ?? null;
-        if (!inserted) {
-          if (isLogHistory) void refreshHistoryLoad();
-          else await fetchHubPreview();
-        } else if (isLogHistory) {
-          void refreshHistoryLoad();
-        } else {
-          setEntries((prev) => sortBowelByCreatedAtDesc([inserted, ...prev.filter((e) => e.id !== inserted.id)]));
-          setTotalEntryCount((n) => n + 1);
-        }
       }
       closeSheet();
       invalidateDashboardSnapshot(user.id);
+      void refreshHistoryLoad();
     } catch (err: unknown) {
       const message = err instanceof Error ? err.message : "Could not save this log.";
       setSaveError(message);
@@ -607,110 +578,23 @@ export function BowelScreen({ user }: { user: SessionUser }) {
     }
   };
 
-  const previewEntries = entries.slice(0, BOWEL_RECENT_PREVIEW_COUNT);
-  const showViewAll = !isLogHistory && totalEntryCount > BOWEL_RECENT_PREVIEW_COUNT;
-  const listInitialLoad = isLogHistory
-    ? historyLoading && historyRows.length === 0
-    : loading && entries.length === 0;
-  const recentSectionTitle = entries.length > 0 || listInitialLoad ? "Recent" : "Your logs";
+  const listInitialLoad = historyLoading && historyRows.length === 0;
   const historyEmpty = !historyLoading && historyTotalCount === 0;
-
-  entriesRef.current = entries;
-
-  const logsSection = (
-    <View style={[logHistoryCardStyles.trackerCard, flareCardSectionStyles.container, { backgroundColor: c.card }]}>
-      {!isLogHistory ? (
-        <FlareScreenSectionTitle inCard>{recentSectionTitle}</FlareScreenSectionTitle>
-      ) : null}
-      <View style={logHistoryCardStyles.trackerCardBody}>
-        {listInitialLoad ? (
-          <LogHistoryListLoading />
-        ) : (isLogHistory ? historyEmpty : entries.length === 0) ? (
-          <View style={styles.emptyWrap}>
-            <View style={[styles.emptyIcon, { backgroundColor: c.surfaceSubtle }]}>
-              <Ionicons name="document-text-outline" size={28} color={c.primary} accessibilityIgnoresInvertColors />
-            </View>
-            <Text style={[styles.emptyTitle, { color: c.text }]}>Nothing here yet</Text>
-            <Text style={[styles.emptySub, { color: c.textMuted }]}>
-              {isLogHistory
-                ? "Logs you save from Bowel Movements will show up here."
-                : "Tap Log now when you are ready — it only takes a few taps."}
-            </Text>
-          </View>
-        ) : isLogHistory ? (
-          <LogHistoryPreviewList
-            items={historyRows.map((row) => {
-              const meta = getBristolTypeMeta(row.bristol_type);
-              return buildTimestampLogRowItem({
-                id: row.id,
-                title: meta?.shortLabel ?? formatBristolTypeOnly(row.bristol_type),
-                whenIso: row.occurred_at,
-                accessibilityLabel: `${formatBristolDetailLabel(row.bristol_type)}. View details`,
-              });
-            })}
-            visibleCount={historyVisibleCount}
-            hasMore={historyHasMore}
-            loadingMore={historyLoadingMore}
-            onLoadMore={() => void loadMoreHistory()}
-            onPressItem={(logId) =>
-              navigation.navigate("BowelLogDetail", {
-                id: logId,
-                listRoute: "BowelLogs",
-              })
-            }
-          />
-        ) : (
-          <>
-            <LogHistoryList
-              items={previewEntries.map((row) => {
-                const meta = getBristolTypeMeta(row.bristol_type);
-                return buildTimestampLogRowItem({
-                  id: row.id,
-                  title: meta?.shortLabel ?? formatBristolTypeOnly(row.bristol_type),
-                  whenIso: row.created_at,
-                  accessibilityLabel: `${formatBristolDetailLabel(row.bristol_type)}. View details`,
-                });
-              })}
-              onPressItem={(logId) =>
-                navigation.navigate("BowelLogDetail", {
-                  id: logId,
-                  listRoute: "Bowel",
-                })
-              }
-            />
-            {showViewAll ? (
-              <Pressable
-                accessibilityRole="button"
-                accessibilityLabel={`View all logs, ${totalEntryCount} total`}
-                onPress={() => navigation.navigate("BowelLogs")}
-                style={({ pressed }) => [styles.viewAllRow, pressed && { opacity: 0.7 }]}
-              >
-                <Text style={[styles.viewAllLabel, { color: c.text }]}>
-                  View all logs ({totalEntryCount})
-                </Text>
-                <Ionicons name="chevron-forward" size={18} color={c.textMuted} accessibilityIgnoresInvertColors />
-              </Pressable>
-            ) : null}
-          </>
-        )}
-      </View>
-    </View>
-  );
 
   return (
     <View style={[styles.screenRoot, { backgroundColor: c.screen }]}>
       <ScrollView
         style={styles.screenScroll}
-        contentContainerStyle={{ paddingBottom: bottomScrollInset + 24 }}
+        contentContainerStyle={{ paddingBottom: bottomScrollInset + 32 }}
         showsVerticalScrollIndicator={false}
       >
-        {isLogHistory ? (
-          logsSection
-        ) : (
-          <>
-            <View style={[styles.heroCard, { backgroundColor: c.card }]}>
-              <View style={styles.heroTop}>
-                <View style={styles.heroIcon}>
+        <LogHistoryCard>
+          <View style={logHistoryCardStyles.trackerCardBody}>
+            {listInitialLoad ? (
+              <LogHistoryListLoading />
+            ) : historyEmpty ? (
+              <View style={styles.emptyWrap}>
+                <View style={[styles.emptyIcon, { backgroundColor: c.surfaceSubtle }]}>
                   <MaterialCommunityIcons
                     name={BOWEL_FEATURE_MCI_ICON}
                     size={28}
@@ -718,35 +602,30 @@ export function BowelScreen({ user }: { user: SessionUser }) {
                     accessibilityIgnoresInvertColors
                   />
                 </View>
-                <View style={styles.heroCopy}>
-                  <Text
-                    style={[styles.heroTitle, { color: c.text }]}
-                    {...(Platform.OS === "android" ? ({ includeFontPadding: false } as const) : null)}
-                  >
-                    Bowel log
-                  </Text>
-                </View>
+                <Text style={[styles.emptyTitle, { color: c.textMuted }]}>Nothing here yet</Text>
               </View>
-              <Text style={[styles.heroSub, { color: c.textMuted }]}>
-                A quick Bristol type is enough — add details only if you want to.
-              </Text>
-              <PrimaryButton title="Log now" onPress={openNewLog} />
-              <Pressable
-                accessibilityRole="button"
-                onPress={() => openGuide(false)}
-                style={({ pressed }) => [styles.chartLinkPress, pressed && { opacity: 0.7 }]}
-              >
-                <Ionicons name="book-outline" size={16} color={c.textSecondary} accessibilityIgnoresInvertColors />
-                <Text style={[styles.guideLink, { color: c.text }]}>Bristol stool chart</Text>
-              </Pressable>
-            </View>
-            {logsSection}
-          </>
-        )}
-
-        {isLogHistory ? (
-          <LogHistoryTipRow text="Stool types help build a clearer picture of your condition. Types 3–4 are often ideal; 1–2 harder, 5–7 looser." />
-        ) : null}
+            ) : (
+              <LogHistoryPreviewList
+                items={historyRows.map((row) => {
+                  const meta = getBristolTypeMeta(row.bristol_type);
+                  return buildTimestampLogRowItem({
+                    id: row.id,
+                    title: meta?.shortLabel ?? formatBristolTypeOnly(row.bristol_type),
+                    whenIso: row.created_at,
+                    accessibilityLabel: `${formatBristolDetailLabel(row.bristol_type)}. View details`,
+                  });
+                })}
+                visibleCount={historyVisibleCount}
+                hasMore={historyHasMore}
+                loadingMore={historyLoadingMore}
+                loadMoreLabel="load more"
+                onLoadMore={() => void loadMoreHistory()}
+                onPressItem={(logId) => navigation.navigate("BowelLogDetail", { id: logId })}
+              />
+            )}
+          </View>
+        </LogHistoryCard>
+        <LogHistoryTipRow text="Use the + icon to log a bowel movement — a Bristol type is enough." />
       </ScrollView>
 
       <BowelLogSheet
@@ -761,7 +640,6 @@ export function BowelScreen({ user }: { user: SessionUser }) {
         onSave={handleSave}
         onOpenGuide={(highlightedType) => openGuide(true, highlightedType)}
       />
-
     </View>
   );
 }
@@ -769,30 +647,11 @@ export function BowelScreen({ user }: { user: SessionUser }) {
 const styles = StyleSheet.create({
   screenRoot: { flex: 1 },
   screenScroll: { flex: 1, padding: SCREEN_EDGE_PADDING },
-  heroCard: { borderRadius: 14, padding: 14, marginBottom: 12 },
-  heroTop: { flexDirection: "row", alignItems: "center", gap: 4, marginBottom: 14 },
-  heroIcon: {
-    width: 42,
-    height: 42,
-    borderRadius: 21,
-    alignItems: "center",
-    justifyContent: "center",
-  },
-  heroCopy: { flex: 1, minWidth: 0, justifyContent: "center" },
-  heroTitle: {
-    fontSize: FLARE_FONT_SIZE.sectionTitle,
-    fontFamily: FLARE_FONT_FAMILY.bold,
-    lineHeight: 42,
-  },
-  heroSub: {
-    fontSize: FLARE_FONT_SIZE.body,
-    fontFamily: FLARE_FONT_FAMILY.regular,
-    lineHeight: FLARE_LINE_HEIGHT.body,
-    marginBottom: 14,
-  },
+  headerIconBtn: { width: 44, height: 44, alignItems: "center", justifyContent: "center" },
   emptyWrap: {
     alignItems: "center",
-    paddingVertical: 14,
+    paddingVertical: 20,
+    paddingHorizontal: 8,
   },
   emptyIcon: {
     width: 56,
@@ -803,30 +662,10 @@ const styles = StyleSheet.create({
     marginBottom: SECTION_TITLE_MARGIN_BOTTOM,
   },
   emptyTitle: {
-    fontSize: FLARE_FONT_SIZE.navTitle,
+    fontSize: FLARE_FONT_SIZE.sectionTitle,
     fontFamily: FLARE_FONT_FAMILY.bold,
+    lineHeight: FLARE_LINE_HEIGHT.sectionTitle,
     marginBottom: 6,
-  },
-  emptySub: {
-    fontSize: FLARE_FONT_SIZE.body,
-    fontFamily: FLARE_FONT_FAMILY.regular,
-    textAlign: "center",
-    lineHeight: FLARE_LINE_HEIGHT.body,
-  },
-  viewAllRow: {
-    flexDirection: "row",
-    alignItems: "center",
-    justifyContent: "space-between",
-  },
-  viewAllLabel: { fontSize: FLARE_FONT_SIZE.body, fontFamily: FLARE_FONT_FAMILY.regular },
-  chartLinkPress: {
-    flexDirection: "row",
-    alignItems: "center",
-    alignSelf: "center",
-    gap: 6,
-    marginTop: 20,
-    marginBottom: 4,
-    paddingVertical: 4,
   },
   sheetRoot: { flex: 1 },
   sheetHeader: {
@@ -840,17 +679,17 @@ const styles = StyleSheet.create({
   sheetClose: { width: 44, height: 44, alignItems: "center", justifyContent: "center" },
   sheetTitle: { fontSize: FLARE_FONT_SIZE.navTitle, fontFamily: FLARE_FONT_FAMILY.bold },
   sheetScroll: { paddingHorizontal: 20, paddingTop: 14 },
-  sheetLead: {
-    fontSize: FLARE_FONT_SIZE.body,
-    fontFamily: FLARE_FONT_FAMILY.regular,
-    lineHeight: FLARE_LINE_HEIGHT.body,
-    marginBottom: 20,
-  },
   sectionHeadRow: {
     flexDirection: "row",
     alignItems: "center",
     justifyContent: "space-between",
     marginBottom: 8,
+  },
+  bristolSelectedCaption: {
+    fontSize: FLARE_FONT_SIZE.muted,
+    fontFamily: FLARE_FONT_FAMILY.regular,
+    lineHeight: FLARE_LINE_HEIGHT.muted,
+    marginBottom: 14,
   },
   guideLinkAboveRow: {
     flexDirection: "row",
@@ -895,29 +734,10 @@ const styles = StyleSheet.create({
     justifyContent: "center",
   },
   bristolBubbleNum: { fontSize: FLARE_FONT_SIZE.navTitle, fontFamily: FLARE_FONT_FAMILY.bold },
-  bristolChosen: {
-    flexDirection: "row",
-    alignItems: "center",
-    gap: SCREEN_EDGE_PADDING,
-    borderRadius: 14,
-    borderWidth: 1,
-    padding: SCREEN_EDGE_PADDING,
-    marginBottom: 14,
-  },
-  bristolChosenBadge: {
-    width: 40,
-    height: 40,
-    borderRadius: 20,
-    alignItems: "center",
-    justifyContent: "center",
-  },
-  bristolChosenBadgeText: { fontSize: FLARE_FONT_SIZE.body, fontFamily: FLARE_FONT_FAMILY.bold },
-  bristolChosenCopy: { flex: 1, minWidth: 0 },
-  bristolChosenTitle: { fontSize: FLARE_FONT_SIZE.body, fontFamily: FLARE_FONT_FAMILY.medium },
   bristolHint: {
-    fontSize: FLARE_FONT_SIZE.body,
+    fontSize: FLARE_FONT_SIZE.muted,
     fontFamily: FLARE_FONT_FAMILY.regular,
-    textAlign: "center",
+    lineHeight: FLARE_LINE_HEIGHT.muted,
     marginBottom: 14,
   },
   optionalToggle: {
@@ -932,7 +752,7 @@ const styles = StyleSheet.create({
   },
   optionalToggleText: { fontSize: FLARE_FONT_SIZE.body, fontFamily: FLARE_FONT_FAMILY.regular },
   optionalBlock: { gap: 14, marginBottom: 14 },
-  triRow: { gap: 8 },
+  triRow: { gap: 14 },
   triLabel: { fontSize: FLARE_FONT_SIZE.body, fontFamily: FLARE_FONT_FAMILY.regular },
   triChips: { flexDirection: "row", gap: 8 },
   triChip: {

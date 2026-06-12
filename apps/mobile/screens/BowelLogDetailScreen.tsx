@@ -5,22 +5,24 @@ import {
   ActivityIndicator,
   Alert,
   Pressable,
-  ScrollView,
   StyleSheet,
   Text,
   View,
 } from "react-native";
+import { ScrollView } from "../lib/scrollViews";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { ConfirmModal } from "../components/ConfirmModal";
 import {
   LogDetailAddedHeader,
+  LogDetailCard,
   LogDetailFieldGroup,
   LogDetailNotesCard,
-  LogDetailSectionCard,
 } from "../components/LogDetailLayout";
+import { flareCardSectionStyles } from "../components/FlareScreenSectionTitle";
 import { formatBristolLine } from "../lib/bristolStoolChart";
 import {
   boolToTri,
+  invalidateBowelListCache,
   type BowelMovementRow,
   formatUkTimeFromOccurred,
   triStateDisplayLabel,
@@ -28,7 +30,7 @@ import {
 import { invalidateDashboardSnapshot } from "../lib/dashboardSnapshotCache";
 import { formatAddedAtHeader } from "../lib/logDisplay";
 import { formatUkDate } from "../lib/formatUkDate";
-import { FLARE_FONT_FAMILY, FLARE_FONT_SIZE } from "../lib/layoutConstants";
+import { FLARE_FONT_FAMILY, FLARE_FONT_SIZE, SCREEN_EDGE_PADDING } from "../lib/layoutConstants";
 import { supabase, TABLES } from "../lib/supabase";
 import { useFlareColors } from "../theme";
 import type { BowelReturnParams, BristolGuideParams } from "./BristolGuideScreen";
@@ -45,7 +47,6 @@ type SessionUser = { id: string };
 
 export type BowelLogDetailParams = {
   id: string;
-  listRoute?: "Bowel" | "BowelLogs";
   pickedBristolType?: number;
   openLogSheet?: boolean;
 };
@@ -110,7 +111,6 @@ export function BowelLogDetailScreen({ user }: { user: SessionUser }) {
   const insets = useSafeAreaInsets();
   const routeParams = (route.params as BowelLogDetailParams | undefined) ?? {};
   const id = String(routeParams.id ?? "");
-  const listRoute = routeParams.listRoute ?? "BowelLogs";
 
   const [loading, setLoading] = useState(true);
   const [row, setRow] = useState<BowelMovementRow | null>(null);
@@ -176,11 +176,11 @@ export function BowelLogDetailScreen({ user }: { user: SessionUser }) {
         highlightedType: (highlightedType ?? form.bristolType) ?? undefined,
         returnOpenLogSheet: reopenSheet,
         returnRoute: "BowelLogDetail",
-        returnRouteParams: { id, listRoute },
+        returnRouteParams: { id },
       };
       navigation.navigate("BristolGuide", guideParams);
     },
-    [form.bristolType, id, listRoute, navigation, sheetOpen],
+    [form.bristolType, id, navigation, sheetOpen],
   );
 
   const handleSave = useCallback(
@@ -218,8 +218,9 @@ export function BowelLogDetailScreen({ user }: { user: SessionUser }) {
       const { error } = await supabase.from(TABLES.BOWEL_MOVEMENTS).delete().eq("id", id).eq("user_id", user.id);
       if (error) throw error;
       invalidateDashboardSnapshot(user.id);
+      invalidateBowelListCache(user.id);
       if (navigation.canGoBack()) navigation.goBack();
-      else navigation.navigate("BowelLogs");
+      else navigation.navigate("Bowel");
     } catch (err: unknown) {
       const message = err instanceof Error ? err.message : "Could not delete this log.";
       Alert.alert("Could not delete", message);
@@ -289,7 +290,7 @@ export function BowelLogDetailScreen({ user }: { user: SessionUser }) {
       >
         <LogDetailAddedHeader text={formatAddedAtHeader(row.created_at)} />
 
-        <LogDetailSectionCard title="Log details">
+        <LogDetailCard style={flareCardSectionStyles.container}>
           <LogDetailFieldGroup
             fields={[
               { label: "Date", value: formatUkDate(row.occurred_at) || "Not set" },
@@ -300,7 +301,7 @@ export function BowelLogDetailScreen({ user }: { user: SessionUser }) {
               { label: "Urgent need to go?", value: triStateFromBool(row.urgency) },
             ]}
           />
-        </LogDetailSectionCard>
+        </LogDetailCard>
 
         {notes ? <LogDetailNotesCard notes={notes} /> : null}
       </ScrollView>
@@ -332,7 +333,7 @@ export function BowelLogDetailScreen({ user }: { user: SessionUser }) {
 }
 
 const styles = StyleSheet.create({
-  screen: { flex: 1 },
+  screen: { flex: 1, padding: SCREEN_EDGE_PADDING },
   centered: { flex: 1, alignItems: "center", justifyContent: "center", gap: 12 },
   muted: { fontSize: FLARE_FONT_SIZE.body, fontFamily: FLARE_FONT_FAMILY.regular },
   headerEditDeleteRow: {
