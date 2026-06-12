@@ -380,14 +380,14 @@ export function MedicationsScreen({ user }: { user: SessionUser }) {
           hitSlop={10}
           style={styles.headerIconBtn}
         >
-          <Ionicons name="add" size={26} color={c.textMuted} accessibilityIgnoresInvertColors />
+          <Ionicons name="add" size={26} color={c.isDark ? c.textMuted : c.text} accessibilityIgnoresInvertColors />
         </Pressable>
       ),
     });
     return () => {
       navigation.setOptions({ headerRight: undefined });
     };
-  }, [c.textMuted, navigation, openAdd]);
+  }, [c.isDark, c.text, c.textMuted, navigation, openAdd]);
 
   const handleSave = async (values: MedicationFormState) => {
     setSaveError("");

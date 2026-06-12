@@ -1,4 +1,4 @@
-import { LOG_HISTORY_LOAD_MORE_BATCH } from "../components/LogHistoryList";
+import { LOG_HISTORY_LOAD_MORE_BATCH } from "./logHistoryConstants";
 import { TIME_PICKER_MINUTE_INTERVAL } from "./layoutConstants";
 import { sanitizeNotesMobile } from "./symptomWizardShared";
 import { supabase, TABLES } from "./supabase";

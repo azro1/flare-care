@@ -540,14 +540,14 @@ export function BowelScreen({ user }: { user: SessionUser }) {
           hitSlop={10}
           style={styles.headerIconBtn}
         >
-          <Ionicons name="add" size={26} color={c.textMuted} accessibilityIgnoresInvertColors />
+          <Ionicons name="add" size={26} color={c.isDark ? c.textMuted : c.text} accessibilityIgnoresInvertColors />
         </Pressable>
       ),
     });
     return () => {
       navigation.setOptions({ headerRight: undefined });
     };
-  }, [c.textMuted, navigation, openNewLog]);
+  }, [c.isDark, c.text, c.textMuted, navigation, openNewLog]);
 
   const handleSave = async (values: BowelFormState) => {
     setSaveError("");

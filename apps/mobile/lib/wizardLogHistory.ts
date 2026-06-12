@@ -2,7 +2,7 @@ import { useMemo } from "react";
 import {
   LOG_HISTORY_RECENT_PREVIEW_COUNT,
   LOG_HISTORY_WIZARD_LOAD_MORE_BATCH,
-} from "../components/LogHistoryList";
+} from "./logHistoryConstants";
 import type { PaginatedLogListCache, PaginatedLogListCacheSnapshot } from "./paginatedLogList";
 import { usePaginatedLogList } from "./paginatedLogList";
 

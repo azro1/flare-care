@@ -14,6 +14,11 @@ import { EmptyTrayMessage } from "./EmptyTrayMessage";
 import { STACKED_DETAIL_ROW_EDGE } from "./StackedDetailField";
 import { formatLogWhenLine } from "../lib/logDisplay";
 import {
+  LOG_HISTORY_LOAD_MORE_BATCH,
+  LOG_HISTORY_RECENT_PREVIEW_COUNT,
+  LOG_HISTORY_WIZARD_LOAD_MORE_BATCH,
+} from "../lib/logHistoryConstants";
+import {
   CARD_SECTION_INNER_GAP,
   FLARE_FONT_FAMILY,
   FLARE_FONT_SIZE,
@@ -22,12 +27,11 @@ import {
 } from "../lib/layoutConstants";
 import { useFlareColors } from "../theme";
 
-/** Hub / history preview — wizard History screens (symptom + Track Medications). */
-export const LOG_HISTORY_RECENT_PREVIEW_COUNT = 3;
-/** Wizard History — each **Load more logs** tap reveals this many additional rows. */
-export const LOG_HISTORY_WIZARD_LOAD_MORE_BATCH = LOG_HISTORY_RECENT_PREVIEW_COUNT;
-/** My Meds list, bowel full-history hub, etc. — initial chunk and each load-more tap. */
-export const LOG_HISTORY_LOAD_MORE_BATCH = 5;
+export {
+  LOG_HISTORY_LOAD_MORE_BATCH,
+  LOG_HISTORY_RECENT_PREVIEW_COUNT,
+  LOG_HISTORY_WIZARD_LOAD_MORE_BATCH,
+} from "../lib/logHistoryConstants";
 
 export type LogHistoryListItem = {
   id: string;

@@ -3654,12 +3654,15 @@ function AppTabs({
   prepareSignOut,
   finishSignOut,
   restoreAfterAbortedSignOut,
+  onAppShellReady,
 }: {
   user: SessionUser;
   onLogout: (reason?: SignOutReason) => void | Promise<void>;
   prepareSignOut: (reason: SignOutReason) => void;
   finishSignOut: () => Promise<void>;
   restoreAfterAbortedSignOut: () => Promise<void>;
+  /** Fires once the root navigator has laid out — use to hide the post-login entry blocker. */
+  onAppShellReady?: () => void;
 }) {
   const { nav, colors } = useFlareTheme();
   const navigationRef = useNavigationContainerRef<Record<string, object | undefined>>();
@@ -3775,11 +3778,13 @@ function AppTabs({
   const onNavigationReady = useCallback(() => {
     syncFocusRoute();
     const pending = pendingReminderNavRef.current;
-    if (!pending) return;
-    pendingReminderNavRef.current = null;
-    navigateFromReminderNotification(navigationRef, pending);
-    clearStoredReminderNotificationResponse();
-  }, [clearStoredReminderNotificationResponse, navigationRef, syncFocusRoute]);
+    if (pending) {
+      pendingReminderNavRef.current = null;
+      navigateFromReminderNotification(navigationRef, pending);
+      clearStoredReminderNotificationResponse();
+    }
+    requestAnimationFrame(() => onAppShellReady?.());
+  }, [clearStoredReminderNotificationResponse, navigationRef, onAppShellReady, syncFocusRoute]);
 
   const headerOptions = ({ navigation, route }: { navigation: any; route: { name: string; params?: { document?: string } } }) => {
     const isDashboard = route.name === "Dashboard";
@@ -3894,6 +3899,8 @@ function AppTabs({
           : undefined,
       headerRight: headerRightContent ? () => headerRightContent : undefined,
       freezeOnBlur: true,
+      /** First paint after login — avoid stack enter animation sliding content down. */
+      animation: isDashboard ? ("none" as const) : ("default" as const),
     } as const;
   };
 
@@ -3976,10 +3983,29 @@ export default function App() {
   );
 }
 
+function AppEntryShell({
+  ready,
+  backgroundColor,
+  children,
+}: {
+  ready: boolean;
+  backgroundColor: string;
+  children: React.ReactNode;
+}) {
+  return (
+    <View style={[styles.appEntryShell, { backgroundColor }]}>
+      {children}
+      {!ready ? <View style={[styles.appEntryBlocker, { backgroundColor }]} pointerEvents="none" /> : null}
+    </View>
+  );
+}
+
 function AppRoot() {
   const { appearanceHydrated } = useFlareTheme();
+  const c = useFlareColors();
   const [user, setUser] = useState<SessionUser | null>(null);
   const [signOutNotice, setSignOutNotice] = useState<SignOutReason | null>(null);
+  const [appShellReady, setAppShellReady] = useState(false);
   const [loading, setLoading] = useState(true);
   const [authBusy, setAuthBusy] = useState(false);
   const [showSplash, setShowSplash] = useState(true);
@@ -4050,6 +4076,16 @@ function AppRoot() {
     [finishSignOut, prepareSignOut],
   );
 
+  const profileSetupActive = Boolean(user && profileNeedsSetup(user));
+
+  useEffect(() => {
+    setAppShellReady(false);
+  }, [user?.id, profileSetupActive]);
+
+  const markAppShellReady = useCallback(() => {
+    setAppShellReady(true);
+  }, []);
+
   const content = useMemo(() => {
     if (!fontsLoaded || loading || showSplash || !appearanceHydrated) {
       return <SplashScreen />;
@@ -4057,27 +4093,44 @@ function AppRoot() {
     if (signOutNotice) {
       const copy = SIGN_OUT_COPY[signOutNotice];
       return (
-        <SuccessNoticeScreen
-          title={copy.title}
-          message={copy.message}
-          buttonTitle="Sign in"
-          fullScreen
-          onPress={() => setSignOutNotice(null)}
-        />
+        <View style={[styles.signOutShell, { backgroundColor: c.screen }]}>
+          {user ? (
+            <AppTabs
+              user={user}
+              onLogout={completeSignOut}
+              prepareSignOut={prepareSignOut}
+              finishSignOut={finishSignOut}
+              restoreAfterAbortedSignOut={restoreAfterAbortedSignOut}
+              onAppShellReady={markAppShellReady}
+            />
+          ) : null}
+          <View style={styles.signOutOverlay}>
+            <SuccessNoticeScreen
+              title={copy.title}
+              message={copy.message}
+              buttonTitle="Sign in"
+              fullScreen
+              onPress={() => setSignOutNotice(null)}
+            />
+          </View>
+        </View>
       );
     }
-    if (user && profileNeedsSetup(user)) {
-      return <ProfileSetupScreen user={user} onComplete={(next) => setUser(next)} />;
+    if (profileSetupActive) {
+      return <ProfileSetupScreen user={user!} onComplete={(next) => setUser(next)} />;
     }
     if (user) {
       return (
-        <AppTabs
-          user={user}
-          onLogout={completeSignOut}
-          prepareSignOut={prepareSignOut}
-          finishSignOut={finishSignOut}
-          restoreAfterAbortedSignOut={restoreAfterAbortedSignOut}
-        />
+        <AppEntryShell ready={appShellReady} backgroundColor={c.screen}>
+          <AppTabs
+            user={user}
+            onLogout={completeSignOut}
+            prepareSignOut={prepareSignOut}
+            finishSignOut={finishSignOut}
+            restoreAfterAbortedSignOut={restoreAfterAbortedSignOut}
+            onAppShellReady={markAppShellReady}
+          />
+        </AppEntryShell>
       );
     }
     if (authBusy) {
@@ -4098,15 +4151,18 @@ function AppRoot() {
     showSplash,
     appearanceHydrated,
     user,
+    profileSetupActive,
     signOutNotice,
     authBusy,
+    appShellReady,
+    c.screen,
     completeSignOut,
     prepareSignOut,
     finishSignOut,
     restoreAfterAbortedSignOut,
+    markAppShellReady,
   ]);
 
-  const profileSetupActive = Boolean(user && profileNeedsSetup(user));
   const authScreenActive =
     fontsLoaded &&
     !loading &&
@@ -4133,6 +4189,10 @@ function ThemedStatusBar({ authScreenActive }: { authScreenActive: boolean }) {
 }
 
 const styles = StyleSheet.create({
+  appEntryShell: { flex: 1 },
+  appEntryBlocker: { ...StyleSheet.absoluteFillObject },
+  signOutShell: { flex: 1 },
+  signOutOverlay: { ...StyleSheet.absoluteFillObject },
   screen: { flex: 1, padding: SCREEN_EDGE_PADDING },
   authScreenFill: { flex: 1 },
   authShell: { flex: 1, transform: [{ translateY: 40 }] },

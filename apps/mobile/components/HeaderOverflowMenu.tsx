@@ -72,7 +72,12 @@ export function HeaderOverflowMenu({
         style={styles.trigger}
         hitSlop={{ top: 10, bottom: 10, left: 20, right: 6 }}
       >
-        <Ionicons name="ellipsis-vertical" size={20} color={c.textMuted} accessibilityIgnoresInvertColors />
+        <Ionicons
+          name="ellipsis-vertical"
+          size={20}
+          color={c.isDark ? c.textMuted : c.text}
+          accessibilityIgnoresInvertColors
+        />
       </Pressable>
       <Modal visible={open} transparent animationType="fade" onRequestClose={close}>
         <View style={styles.modalRoot}>

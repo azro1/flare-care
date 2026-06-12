@@ -22,6 +22,10 @@ export const MOBILE_BRAND_PRIMARY = MOBILE_BRAND_ACCENT.primary;
 /** Filled destructive controls (logout, meal remove, destructive modal confirm). Change only here. */
 export const MOBILE_DESTRUCTIVE_FILL = "#dc2626" as const;
 
+/** Light mode only — grouped layout: gray page, white panels (dark mode uses styleguide tokens). */
+const LIGHT_GROUPED_SCREEN_BG = "#F4F4F4";
+const LIGHT_GROUPED_CARD_BG = "#FFFFFF";
+
 /** In-app theme: fixed light or dark (no OS follow mode). */
 export type AppearancePreference = "light" | "dark";
 
@@ -31,9 +35,9 @@ type StyleguideTheme = typeof lightTokens;
  * Single palette for FlareCare mobile. Prefer `useFlareColors()` over hard-coded hex wherever
  * screens follow light/dark.
  *
- * - **screen**: page scaffold; ScrollView/SafeArea; nav/tab bar; Today's Summary icon wells (match page).
- * - **card**: main Card panels; header account chip.
- * - **surfaceSubtle**: Daily Check-in tiles; Recent Activity tray.
+ * - **screen**: page scaffold; ScrollView/SafeArea; nav/tab bar (light: grouped gray; dark: styleguide).
+ * - **card**: main Card panels; header account chip (light: white on gray screen; dark: styleguide).
+ * - **surfaceSubtle**: in-card trays / inset lists (light: same as `screen` on white cards; dark: styleguide subtle).
  * - **surfaceRaised**: Daily Check-in icon circles only (contrast vs surfaceSubtle; not card).
  * - **primary**: accent icons/CTAs. **text** / **textSecondary** / **textMuted**: typography.
  */
@@ -80,12 +84,15 @@ export type FlareColors = {
 };
 
 function mapTokens(t: StyleguideTheme, isDark: boolean): FlareColors {
+  const screen = isDark ? t.background.screen : LIGHT_GROUPED_SCREEN_BG;
+  const card = isDark ? t.background.element : LIGHT_GROUPED_CARD_BG;
+
   return {
     isDark,
-    screen: t.background.screen,
-    card: t.background.element,
+    screen,
+    card,
     cardBorder: t.border.default,
-    surfaceSubtle: t.background.subtle,
+    surfaceSubtle: isDark ? t.background.subtle : screen,
     surfaceRaised: t.background.element,
     primary: MOBILE_BRAND_ACCENT.primary,
     primaryHover: MOBILE_BRAND_ACCENT.hover,
@@ -101,12 +108,12 @@ function mapTokens(t: StyleguideTheme, isDark: boolean): FlareColors {
     secondaryBtnBg: t.button.secondary.background,
     secondaryBtnBorder: t.button.secondary.border,
     secondaryBtnText: isDark ? t.button.secondary.text : MOBILE_BRAND_ACCENT.hover,
-    newsCardBg: t.background.element,
-    newsImageBg: t.background.subtle,
-    reportBg: t.background.subtle,
+    newsCardBg: card,
+    newsImageBg: isDark ? t.background.subtle : screen,
+    reportBg: isDark ? t.background.subtle : screen,
     reportBorder: t.border.default,
     white: "#ffffff",
-    appearanceChipInactiveBg: isDark ? "#ffffff" : t.background.subtle,
+    appearanceChipInactiveBg: isDark ? "#ffffff" : screen,
     appearanceChipInactiveText: isDark ? "#121212" : t.text.default,
     modalBackdrop: isDark ? "rgba(0,0,0,0.78)" : "rgba(15,23,42,0.48)",
   };

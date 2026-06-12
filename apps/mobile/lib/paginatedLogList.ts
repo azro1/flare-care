@@ -3,7 +3,7 @@ import { supabase } from "./supabase";
 import {
   LOG_HISTORY_LOAD_MORE_BATCH,
   LOG_HISTORY_RECENT_PREVIEW_COUNT,
-} from "../components/LogHistoryList";
+} from "./logHistoryConstants";
 
 const DEFAULT_FETCH_PAGE_SIZE = 20;
 

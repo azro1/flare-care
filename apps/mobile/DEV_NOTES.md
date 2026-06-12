@@ -25,7 +25,32 @@ Use existing screens as reference — do **not** default to web-style teal hyper
 
 **New tracker / settings screens:** card layout + `SCREEN_EDGE_PADDING` + `useFlareColors()`; stack routes with `headerOptions` titles; link rows like Account, not a second colour system.
 
+**Header chrome (list screens):** **+** (My Meds, Bowel) and **⋮** overflow — **`c.text`** in light, **`c.textMuted`** in dark.
+
 **Live examples:** Account tab (`AccountOptionRow`), **Bowel** (`screens/BowelScreen.tsx`), **Bristol chart** (`screens/BristolGuideScreen.tsx`), **Hydration** (Reset link).
+
+---
+
+## Light / dark theme (`theme.tsx`)
+
+**Light mode — grouped layout** (iOS-style gray canvas + white panels). **Dark mode** still uses Expo styleguide tokens; do not change dark paths when tuning light.
+
+| Token | Light | Role |
+|-------|-------|------|
+| `c.screen` | `#F4F4F4` (`LIGHT_GROUPED_SCREEN_BG` in `theme.tsx`) | Page scaffold, nav bar, tab bar |
+| `c.card` | `#FFFFFF` (`LIGHT_GROUPED_CARD_BG`) | Cards, dashboard tiles, modals |
+| `c.surfaceSubtle` | **same as `screen`** | In-card grey trays / inset lists — reads on white `card` |
+
+**Single source:** edit `LIGHT_GROUPED_SCREEN_BG` / `LIGHT_GROUPED_CARD_BG` in **`theme.tsx` only** — `mapTokens()` wires `surfaceSubtle`, `newsImageBg`, `reportBg`, and `appearanceChipInactiveBg` from `screen` in light mode. **Do not** hardcode the gray in screen files.
+
+**Auth / session transitions (do not regress)**
+
+| Moment | Pattern in `App.tsx` | Why |
+|--------|----------------------|-----|
+| **After login → Dashboard** | **`AppEntryShell`** — solid `c.screen` blocker until `AppTabs` fires `onAppShellReady` (`onNavigationReady` + `requestAnimationFrame`). Dashboard route uses `animation: 'none'`. | Stops the home screen “dropping in” / sliding down when the stack first mounts. |
+| **After logout → signed-out success** | **`signOutShell`** + **`signOutOverlay`** — `SuccessNoticeScreen` overlays the app; `AppTabs` may stay mounted until `finishSignOut` clears `user`. | Avoids tearing down `NavigationContainer` in one frame (flash / slide). |
+
+**Logout success layout:** `SuccessNoticeScreen` `fullScreen` — stable `initialWindowMetrics` safe area + wizard step-0 landing slot (`WIZARD_LANDING_BELOW_SAFE_TOP`, `wizardLandingMinHeight()` in `layoutConstants.ts`). **Do not** use `ScrollView`, `useWindowDimensions`, or animated `SafeAreaView` edges on logout — those caused vertical jump.
 
 ---
 
@@ -44,7 +69,9 @@ Use existing screens as reference — do **not** default to web-style teal hyper
 
 **Done → navigate:** navigate to Dashboard on Done; **do not** clear success in `useFocusEffect` cleanup (blur) — that flashes the setup screen during the transition. Clear success only when Reminders **gains focus** again (user re-opens the tab).
 
-**Current uses of `SuccessNoticeScreen`:** post-logout (“Sign in”, `fullScreen`), Reminders tab after **Enable notifications** (“Done”, `offsetForBottomTabBar`).
+**Current uses of `SuccessNoticeScreen`:** post-logout (“Sign in”, `fullScreen` + overlay shell in `App.tsx`), Reminders tab after **Enable notifications** (“Done”, `offsetForBottomTabBar`).
+
+**Logout:** content vertically aligned with wizard step-0 landing; transition smoothness depends on overlay shell + stable layout above — see **Auth / session transitions** under **Light / dark theme**.
 
 ---
 
@@ -151,6 +178,8 @@ Do **not** remove these checks when touching wizard back/next — they block the
 | `TIME_PICKER_MINUTE_INTERVAL` | Native time picker step (5 min) — bowel, meds reminders |
 | `bottomTabBarHeight()` | Full rendered height of `MainBottomTabBar` |
 | `bottomTabBarScrollInset()` | Scroll padding above tab bar — keep in sync with bar height |
+| `wizardLandingMinHeight()` | Wizard step-0 landing block height — logout `fullScreen` success uses same slot |
+| `WIZARD_LANDING_BELOW_SAFE_TOP` | Simulated stack header + scroll top pad for full-screen success align |
 
 **Bottom bar visible on:** `Dashboard`, `Reminders`, `Account` only (`BOTTOM_BAR_VISIBLE_ROUTES` in `App.tsx`).
 

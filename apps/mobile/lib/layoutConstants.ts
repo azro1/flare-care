@@ -1,4 +1,4 @@
-import { Platform } from "react-native";
+import { Dimensions, Platform } from "react-native";
 
 /** Horizontal inset for screens, cards, and header controls. */
 export const SCREEN_EDGE_PADDING = 12;
@@ -90,6 +90,24 @@ export const CARD_SECTION_INNER_GAP = 12;
 
 /** Native stack nav row height (below status bar). */
 export const NAV_HEADER_BAR_HEIGHT = Platform.select({ ios: 44, default: 56 }) ?? 56;
+
+/** Stable window height for first-frame layout math (wizard landing, logout success align). */
+export const APP_WINDOW_HEIGHT = Dimensions.get("window").height;
+
+/** Wizard step-0 `ScrollView` top inset — keep in sync with wizard screens. */
+export const WIZARD_LANDING_SCROLL_TOP_PADDING = 16;
+
+/** Below safe area on full-screen surfaces: stack header + wizard scroll top pad. */
+export const WIZARD_LANDING_BELOW_SAFE_TOP = NAV_HEADER_BAR_HEIGHT + WIZARD_LANDING_SCROLL_TOP_PADDING;
+
+/** Wizard step-0 `styles.landing` vertical padding — keep in sync with wizard screens. */
+export const WIZARD_LANDING_BLOCK_PADDING_TOP = 8;
+export const WIZARD_LANDING_BLOCK_PADDING_BOTTOM = 32;
+
+/** Wizard step-0 landing block `minHeight` — keep in sync with wizard screens. */
+export function wizardLandingMinHeight(windowHeight = APP_WINDOW_HEIGHT): number {
+  return Math.max(windowHeight * 0.58, 420);
+}
 
 /** Collapsing page title (`CollapsingTitleScrollScreen`). */
 export const COLLAPSING_TITLE_GAP_BELOW_HEADER = 12;
