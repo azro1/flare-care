@@ -1,0 +1,311 @@
+import { Ionicons } from "@expo/vector-icons";
+import { useFocusEffect, useNavigation } from "@react-navigation/native";
+import React, { useCallback, useMemo, useState } from "react";
+import { Alert, Pressable, StyleSheet, Text, View } from "react-native";
+import { ScrollView } from "../lib/scrollViews";
+import { useSafeAreaInsets } from "react-native-safe-area-context";
+import { ConfirmModal } from "../components/ConfirmModal";
+import {
+  LogHistoryCard,
+  LogHistoryListLoading,
+  LogHistoryPreviewList,
+  LogHistoryTipRow,
+  LOG_HISTORY_LOAD_MORE_BATCH,
+  logHistoryCardStyles,
+  logHistoryListStyles,
+  type LogHistoryListItem,
+} from "../components/LogHistoryList";
+import { TrackerThumbFab, useTrackerThumbFabLayout } from "../components/TrackerThumbFab";
+import { WriggleReminderBell } from "../components/WriggleReminderBell";
+import { invalidateDashboardSnapshot } from "../lib/dashboardSnapshotCache";
+import { useLogListSelection } from "../lib/useLogListSelection";
+import { type AppointmentsListState } from "../lib/useAppointmentsList";
+import { formatUkDateShort } from "../lib/formatUkDate";
+import { rescheduleAppointmentNotificationsForUser } from "../lib/medicationNotifications";
+import { invalidateAllAppointmentCaches } from "../lib/appointmentCaches";
+import {
+  APPOINTMENTS_FEATURE_ION_ICON,
+  appointmentHasReminder,
+  deleteAppointmentsForUser,
+  getApptsListExpandedCount,
+  reminderLabelFromMinutes,
+  reminderListLabelFromMinutes,
+  setApptsListExpandedCount,
+  splitAppointmentsByTab,
+  type AppointmentsTab,
+} from "../lib/appointmentShared";
+import {
+  FLARE_FONT_FAMILY,
+  FLARE_FONT_SIZE,
+  FLARE_LINE_HEIGHT,
+  SCREEN_EDGE_PADDING,
+  SECTION_TITLE_MARGIN_BOTTOM,
+  bottomTabBarHeight,
+} from "../lib/layoutConstants";
+import { useFlareColors } from "../theme";
+
+type SessionUser = { id: string };
+
+async function maybeRescheduleAppointmentReminders(userId: string) {
+  try {
+    await rescheduleAppointmentNotificationsForUser(userId);
+  } catch {
+    // non-fatal
+  }
+}
+
+export function AppointmentsListPane({
+  user,
+  tab,
+  showFab,
+  onAddPress,
+  selectionRouteName,
+  headerTitle,
+  tipText,
+  emptyTitle,
+  renderIdleHeaderRight,
+  onSummaryPress,
+  list,
+}: {
+  user: SessionUser;
+  tab: AppointmentsTab;
+  showFab: boolean;
+  onAddPress?: () => void;
+  selectionRouteName: string;
+  headerTitle: string;
+  tipText: string;
+  emptyTitle: string;
+  renderIdleHeaderRight?: () => React.ReactNode;
+  onSummaryPress?: () => void;
+  list: AppointmentsListState;
+}) {
+  const c = useFlareColors();
+  const navigation = useNavigation<any>();
+  const insets = useSafeAreaInsets();
+  const tabBarClearance = bottomTabBarHeight(insets.bottom);
+  const { scrollBottomPad } = useTrackerThumbFabLayout(showFab ? tabBarClearance : 0);
+  const scrollBottomPadTotal = showFab ? scrollBottomPad : Math.max(insets.bottom, 16) + 24;
+
+  const { appointments, loading, load } = list;
+  const [expandedCount, setExpandedCount] = useState(() => getApptsListExpandedCount(user.id, tab));
+
+  const { upcoming, past } = useMemo(() => splitAppointmentsByTab(appointments), [appointments]);
+  const visibleRows = tab === "upcoming" ? upcoming : past;
+
+  useFocusEffect(
+    useCallback(() => {
+      setExpandedCount(getApptsListExpandedCount(user.id, tab));
+    }, [tab, user.id]),
+  );
+
+  const visibleCount = useMemo(() => {
+    if (visibleRows.length === 0) return LOG_HISTORY_LOAD_MORE_BATCH;
+    if (visibleRows.length <= LOG_HISTORY_LOAD_MORE_BATCH) return visibleRows.length;
+    return Math.min(expandedCount, visibleRows.length);
+  }, [expandedCount, visibleRows.length]);
+
+  const hasMore = visibleRows.length > visibleCount;
+
+  const loadMore = useCallback(() => {
+    setExpandedCount((count) => {
+      const next = Math.min(count + LOG_HISTORY_LOAD_MORE_BATCH, visibleRows.length);
+      setApptsListExpandedCount(user.id, tab, next);
+      return next;
+    });
+  }, [tab, user.id, visibleRows.length]);
+
+  const aptListItems: LogHistoryListItem[] = useMemo(
+    () =>
+      visibleRows.map((row) => {
+        const dateLine = [formatUkDateShort(row.date), row.time?.trim()].filter(Boolean).join(" · ");
+        const title = row.type?.trim() || "Appointment";
+        const reminderLabel = appointmentHasReminder(row)
+          ? reminderLabelFromMinutes(row.reminder_minutes_before)
+          : null;
+        return {
+          id: String(row.id),
+          title,
+          subtitle: dateLine,
+          accessibilityLabel: reminderLabel
+            ? `${title}. ${dateLine}. Reminder ${reminderLabel}. View details`
+            : `${title}. ${dateLine}. View details`,
+        };
+      }),
+    [visibleRows],
+  );
+
+  const aptById = useCallback((id: string) => visibleRows.find((row) => String(row.id) === id), [visibleRows]);
+
+  const renderAptSubtitle = useCallback(
+    (item: LogHistoryListItem) => {
+      const row = aptById(item.id);
+      if (!row) return null;
+      const dateLine = [formatUkDateShort(row.date), row.time?.trim()].filter(Boolean).join(" · ");
+      const hasReminder = appointmentHasReminder(row);
+      const reminderLabel = hasReminder ? reminderListLabelFromMinutes(row.reminder_minutes_before) : null;
+      if (!dateLine && !reminderLabel) return null;
+      const subtitleTextStyle = [logHistoryListStyles.logSecondary, { color: c.textMuted }];
+      return (
+        <View style={styles.aptSubtitleRow}>
+          {dateLine ? (
+            <Text style={subtitleTextStyle} numberOfLines={1}>
+              {dateLine}
+              {reminderLabel ? " · " : ""}
+            </Text>
+          ) : null}
+          {reminderLabel ? (
+            <View style={styles.aptReminderRow}>
+              <WriggleReminderBell color={c.textMuted} />
+              <Text style={subtitleTextStyle} numberOfLines={1}>
+                {reminderLabel}
+              </Text>
+            </View>
+          ) : null}
+        </View>
+      );
+    },
+    [aptById, c.textMuted],
+  );
+
+  const aptItemIds = useMemo(() => visibleRows.map((row) => String(row.id)), [visibleRows]);
+  const {
+    selectionMode,
+    selectedIds,
+    bulkDeleteOpen,
+    setBulkDeleteOpen,
+    bulkDeleting,
+    enterSelectionWith,
+    toggleSelect,
+    runBulkDelete,
+  } = useLogListSelection({
+    routeName: selectionRouteName,
+    itemIds: aptItemIds,
+    navigation,
+    headerTitle,
+    renderIdleHeaderRight,
+  });
+
+  const handleBulkDeleteConfirm = useCallback(() => {
+    void runBulkDelete(async (ids) => {
+      try {
+        await deleteAppointmentsForUser(user.id, ids);
+        invalidateDashboardSnapshot(user.id);
+        invalidateAllAppointmentCaches(user.id);
+        await load();
+        await maybeRescheduleAppointmentReminders(user.id);
+      } catch (err: unknown) {
+        Alert.alert("Could not delete", err instanceof Error ? err.message : "Something went wrong.");
+        throw err;
+      }
+    });
+  }, [load, runBulkDelete, user.id]);
+
+  const listInitialLoad = loading && appointments.length === 0;
+  const listEmpty = !loading && visibleRows.length === 0;
+
+  return (
+    <View style={[styles.screenRoot, { backgroundColor: c.screen }]}>
+      <ScrollView
+        style={styles.screenScroll}
+        contentContainerStyle={{ paddingBottom: scrollBottomPadTotal }}
+        showsVerticalScrollIndicator={false}
+      >
+        <LogHistoryCard>
+          <View style={logHistoryCardStyles.trackerCardBody}>
+            {listInitialLoad ? (
+              <LogHistoryListLoading />
+            ) : listEmpty ? (
+              <View style={styles.emptyWrap}>
+                <View style={[styles.emptyIcon, { backgroundColor: c.surfaceSubtle }]}>
+                  <Ionicons
+                    name={APPOINTMENTS_FEATURE_ION_ICON}
+                    size={28}
+                    color={c.primary}
+                    accessibilityIgnoresInvertColors
+                  />
+                </View>
+                <Text style={[styles.emptyTitle, { color: c.textMuted }]}>{emptyTitle}</Text>
+              </View>
+            ) : (
+              <LogHistoryPreviewList
+                items={aptListItems}
+                visibleCount={visibleCount}
+                hasMore={hasMore}
+                loadMoreLabel="load more"
+                onLoadMore={loadMore}
+                renderSubtitle={renderAptSubtitle}
+                onPressItem={(aptId) => navigation.navigate("AppointmentDetail", { id: aptId })}
+                selectionMode={selectionMode}
+                selectedIds={selectedIds}
+                onToggleSelect={toggleSelect}
+                onLongPressItem={enterSelectionWith}
+              />
+            )}
+          </View>
+        </LogHistoryCard>
+
+        <LogHistoryTipRow text={tipText} />
+
+        {onSummaryPress && !selectionMode ? (
+          <Pressable
+            accessibilityRole="button"
+            accessibilityLabel="Appointment summary"
+            onPress={onSummaryPress}
+            style={({ pressed }) => [styles.summaryLink, pressed && { opacity: 0.85 }]}
+          >
+            <Text style={[styles.summaryLinkLabel, { color: c.text }]}>Appointment summary</Text>
+            <Ionicons name="chevron-forward" size={FLARE_FONT_SIZE.navTitle} color={c.textMuted} accessibilityIgnoresInvertColors />
+          </Pressable>
+        ) : null}
+      </ScrollView>
+
+      {showFab && !selectionMode && onAddPress ? (
+        <TrackerThumbFab accessibilityLabel="Add appointment" onPress={onAddPress} tabBarClearance={tabBarClearance} />
+      ) : null}
+
+      <ConfirmModal
+        visible={bulkDeleteOpen}
+        title={selectedIds.size === 1 ? "Delete appointment?" : `Delete ${selectedIds.size} appointments?`}
+        message="This appointment will be removed. This action cannot be undone."
+        confirmLabel={bulkDeleting ? "Deleting…" : "Delete"}
+        confirmDestructive
+        onConfirm={handleBulkDeleteConfirm}
+        onCancel={() => setBulkDeleteOpen(false)}
+      />
+    </View>
+  );
+}
+
+const styles = StyleSheet.create({
+  screenRoot: { flex: 1 },
+  screenScroll: { flex: 1, padding: SCREEN_EDGE_PADDING },
+  emptyWrap: { alignItems: "center", paddingVertical: 20, paddingHorizontal: 8 },
+  emptyIcon: {
+    width: 56,
+    height: 56,
+    borderRadius: 28,
+    alignItems: "center",
+    justifyContent: "center",
+    marginBottom: SECTION_TITLE_MARGIN_BOTTOM,
+  },
+  emptyTitle: {
+    fontSize: FLARE_FONT_SIZE.sectionTitle,
+    fontFamily: FLARE_FONT_FAMILY.bold,
+    lineHeight: FLARE_LINE_HEIGHT.sectionTitle,
+    marginBottom: 6,
+  },
+  aptSubtitleRow: { flexDirection: "row", alignItems: "center", flexShrink: 1, minWidth: 0 },
+  aptReminderRow: { flexDirection: "row", alignItems: "center", gap: 4, flexShrink: 1, minWidth: 0 },
+  summaryLink: {
+    flexDirection: "row",
+    alignItems: "center",
+    alignSelf: "center",
+    gap: 4,
+    marginTop: 12,
+    paddingVertical: 10,
+  },
+  summaryLinkLabel: {
+    fontSize: FLARE_FONT_SIZE.navTitle,
+    fontFamily: FLARE_FONT_FAMILY.regular,
+  },
+});

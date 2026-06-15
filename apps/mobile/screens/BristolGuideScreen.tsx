@@ -1,12 +1,14 @@
 import { useNavigation, useRoute } from "@react-navigation/native";
-import React from "react";
-import { Pressable, StyleSheet, Text, View } from "react-native";
+import React, { useCallback, useMemo } from "react";
+import { StyleSheet, Text, View } from "react-native";
 import { ScrollView } from "../lib/scrollViews";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 import {
   LogHistoryCard,
+  LogHistoryList,
   LogHistoryTipRow,
   logHistoryListStyles,
+  type LogHistoryListItem,
 } from "../components/LogHistoryList";
 import { BRISTOL_TYPES } from "../lib/bristolStoolChart";
 import { FLARE_FONT_FAMILY, FLARE_FONT_SIZE, SCREEN_EDGE_PADDING } from "../lib/layoutConstants";
@@ -36,19 +38,58 @@ export function BristolGuideScreen() {
   const highlightedType = params.highlightedType ?? null;
   const returnOpenLogSheet = Boolean(params.returnOpenLogSheet);
 
-  const selectType = (type: number) => {
-    if (!pickMode) return;
-    const returnRoute = params.returnRoute ?? "Bowel";
-    navigation.navigate({
-      name: returnRoute,
-      params: {
-        ...(params.returnRouteParams ?? {}),
-        pickedBristolType: type,
-        openLogSheet: returnOpenLogSheet || pickMode,
-      } satisfies BowelReturnParams,
-      merge: true,
-    });
-  };
+  const items: LogHistoryListItem[] = useMemo(
+    () =>
+      BRISTOL_TYPES.map((item) => ({
+        id: String(item.type),
+        title: item.shortLabel,
+        subtitle: item.description,
+        accessibilityLabel: `Type ${item.type}, ${item.shortLabel}`,
+      })),
+    [],
+  );
+
+  const selectType = useCallback(
+    (id: string) => {
+      const type = Number(id);
+      if (!pickMode || !Number.isFinite(type)) return;
+      const returnRoute = params.returnRoute ?? "Bowel";
+      navigation.navigate({
+        name: returnRoute,
+        params: {
+          ...(params.returnRouteParams ?? {}),
+          pickedBristolType: type,
+          openLogSheet: returnOpenLogSheet || pickMode,
+        } satisfies BowelReturnParams,
+        merge: true,
+      });
+    },
+    [navigation, params.returnRoute, params.returnRouteParams, pickMode, returnOpenLogSheet],
+  );
+
+  const renderLeading = useCallback(
+    (item: LogHistoryListItem) => (
+      <View style={[styles.typeBadge, { backgroundColor: c.primary }]}>
+        <Text style={[styles.typeBadgeText, { color: c.white }]}>{item.id}</Text>
+      </View>
+    ),
+    [c.primary, c.white],
+  );
+
+  const renderSubtitle = useCallback(
+    (item: LogHistoryListItem) => (
+      <Text style={[logHistoryListStyles.logSecondary, { color: c.textMuted }]} numberOfLines={2}>
+        {item.subtitle}
+      </Text>
+    ),
+    [c.textMuted],
+  );
+
+  const getRowStyle = useCallback(
+    (item: LogHistoryListItem) =>
+      highlightedType === Number(item.id) ? { backgroundColor: c.card } : null,
+    [c.card, highlightedType],
+  );
 
   return (
     <ScrollView
@@ -57,54 +98,15 @@ export function BristolGuideScreen() {
       showsVerticalScrollIndicator={false}
     >
       <LogHistoryCard style={styles.guideCard}>
-        <View style={[logHistoryListStyles.logList, { backgroundColor: c.surfaceSubtle }]}>
-          {BRISTOL_TYPES.map((item, index) => {
-            const highlighted = highlightedType === item.type;
-            const rowStyle = [
-              logHistoryListStyles.logRow,
-              index !== BRISTOL_TYPES.length - 1
-                ? { borderBottomWidth: StyleSheet.hairlineWidth, borderBottomColor: c.cardBorder }
-                : null,
-              highlighted ? { backgroundColor: c.card } : null,
-            ];
-
-            const content = (
-              <>
-                <View style={[styles.typeBadge, { backgroundColor: c.primary }]}>
-                  <Text style={[styles.typeBadgeText, { color: c.white }]}>{item.type}</Text>
-                </View>
-                <View style={logHistoryListStyles.logMain}>
-                  <Text style={[logHistoryListStyles.logPrimary, { color: c.text }]} numberOfLines={2}>
-                    {item.shortLabel}
-                  </Text>
-                  <Text style={[logHistoryListStyles.logSecondary, { color: c.textMuted }]} numberOfLines={2}>
-                    {item.description}
-                  </Text>
-                </View>
-              </>
-            );
-
-            if (pickMode) {
-              return (
-                <Pressable
-                  key={item.type}
-                  accessibilityRole="button"
-                  accessibilityLabel={`Type ${item.type}, ${item.shortLabel}`}
-                  onPress={() => selectType(item.type)}
-                  style={({ pressed }) => [...rowStyle, pressed && { opacity: 0.7 }]}
-                >
-                  {content}
-                </Pressable>
-              );
-            }
-
-            return (
-              <View key={item.type} style={rowStyle} accessibilityLabel={`Type ${item.type}, ${item.shortLabel}`}>
-                {content}
-              </View>
-            );
-          })}
-        </View>
+        <LogHistoryList
+          items={items}
+          rowTextLayout="default"
+          renderLeading={renderLeading}
+          renderSubtitle={renderSubtitle}
+          getRowStyle={getRowStyle}
+          onPressItem={pickMode ? selectType : undefined}
+          renderTrailing={pickMode ? () => null : undefined}
+        />
       </LogHistoryCard>
 
       <LogHistoryTipRow
@@ -127,7 +129,6 @@ const styles = StyleSheet.create({
     borderRadius: 18,
     alignItems: "center",
     justifyContent: "center",
-    flexShrink: 0,
   },
   typeBadgeText: { fontSize: 16, fontFamily: FLARE_FONT_FAMILY.bold },
   pickFooter: {

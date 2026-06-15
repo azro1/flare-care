@@ -1,5 +1,6 @@
 import { LOG_HISTORY_LOAD_MORE_BATCH } from "./logHistoryConstants";
 import { TIME_PICKER_MINUTE_INTERVAL } from "./layoutConstants";
+import { supabase, TABLES } from "./supabase";
 
 /** MaterialCommunityIcons — no bowel/intestine glyph; `toilet` is the closest match in the set. */
 export const BOWEL_FEATURE_MCI_ICON = "toilet" as const;
@@ -221,6 +222,16 @@ export function setBowelListCache(userId: string, snapshot: BowelListCacheSnapsh
 
 export function invalidateBowelListCache(userId: string) {
   delete bowelListCacheByUserId[userId];
+}
+
+export async function deleteBowelMovementsForUser(userId: string, movementIds: string[]): Promise<void> {
+  if (movementIds.length === 0) return;
+  const { error } = await supabase
+    .from(TABLES.BOWEL_MOVEMENTS)
+    .delete()
+    .eq("user_id", userId)
+    .in("id", movementIds);
+  if (error) throw error;
 }
 
 /** Stack routes that count as the bowel feature — list expansion survives detail ↔ chart, not leaving here. */

@@ -20,3 +20,12 @@ export function formatUkDate(input: string | Date | null | undefined): string {
   if (Number.isNaN(d.getTime())) return "";
   return `${pad2(d.getDate())}/${pad2(d.getMonth() + 1)}/${d.getFullYear()}`;
 }
+
+/** List row subtitles — `dd/mm/yy` to save space; use `formatUkDate` on detail screens. */
+export function formatUkDateShort(input: string | Date | null | undefined): string {
+  const full = formatUkDate(input);
+  if (!full) return "";
+  const parts = full.split("/");
+  if (parts.length !== 3 || parts[2].length !== 4) return full;
+  return `${parts[0]}/${parts[1]}/${parts[2].slice(-2)}`;
+}

@@ -3,6 +3,9 @@ import { Dimensions, Platform } from "react-native";
 /** Horizontal inset for screens, cards, and header controls. */
 export const SCREEN_EDGE_PADDING = 12;
 
+/** Extra inset for Account tab link rows inside the grey tray (My account, Legal). */
+export const ACCOUNT_LIST_ROW_PADDING = 20;
+
 /** Native `DateTimePicker` time mode — medication reminders, bowel log, etc. */
 export const TIME_PICKER_MINUTE_INTERVAL = 5;
 
@@ -93,6 +96,34 @@ export const NAV_HEADER_BAR_HEIGHT = Platform.select({ ios: 44, default: 56 }) ?
 
 /** Stable window height for first-frame layout math (wizard landing, logout success align). */
 export const APP_WINDOW_HEIGHT = Dimensions.get("window").height;
+
+/** Floating + on tracker hub screens (Bowel, My Meds, Weight, Appointments). */
+export const TRACKER_THUMB_FAB_SIZE = 56;
+
+const TRACKER_THUMB_FAB_LIFT_RATIO = 0.05;
+
+/** Bottom offset from screen edge — safe-area lip or tab bar + thumb lift. */
+export function trackerThumbFabBottom(
+  bottomInset: number,
+  options?: { windowHeight?: number; tabBarClearance?: number },
+): number {
+  const windowHeight = options?.windowHeight ?? APP_WINDOW_HEIGHT;
+  const lift = Math.round(windowHeight * TRACKER_THUMB_FAB_LIFT_RATIO);
+  const tabBarClearance = options?.tabBarClearance ?? 0;
+  if (tabBarClearance > 0) {
+    return tabBarClearance + lift;
+  }
+  return Math.max(bottomInset, 12) + lift;
+}
+
+export function trackerThumbFabInsetRight(rightInset: number): number {
+  return Math.max(rightInset, SCREEN_EDGE_PADDING) + SCREEN_EDGE_PADDING * 3;
+}
+
+/** Scroll content padding so list/tip clears the thumb FAB. */
+export function trackerThumbFabScrollPadding(fabBottom: number): number {
+  return fabBottom + TRACKER_THUMB_FAB_SIZE + SCREEN_EDGE_PADDING + 4;
+}
 
 /** Wizard step-0 `ScrollView` top inset — keep in sync with wizard screens. */
 export const WIZARD_LANDING_SCROLL_TOP_PADDING = 16;

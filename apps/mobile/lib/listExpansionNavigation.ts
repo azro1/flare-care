@@ -1,5 +1,7 @@
 import { isBowelSectionRoute, resetBowelListExpansion } from "./bowelMovementShared";
 import { isMedsSectionRoute, resetMedsListExpansion } from "./medicationShared";
+import { isAppointmentsSectionRoute, resetApptsListExpansion } from "./appointmentShared";
+import { isWeightSectionRoute, resetWeightListExpansion } from "./weightShared";
 import { TABLES } from "./supabase";
 import {
   isMedicationTrackingHistorySectionRoute,
@@ -24,6 +26,12 @@ export function handleListExpansionNavigationRouteChange(userId: string, nextRou
   }
   if (isMedsSectionRoute(prev) && !isMedsSectionRoute(nextRoute)) {
     resetMedsListExpansion(userId);
+  }
+  if (isWeightSectionRoute(prev) && !isWeightSectionRoute(nextRoute)) {
+    resetWeightListExpansion(userId);
+  }
+  if (isAppointmentsSectionRoute(prev) && !isAppointmentsSectionRoute(nextRoute)) {
+    resetApptsListExpansion(userId);
   }
   if (isSymptomHistorySectionRoute(prev) && !isSymptomHistorySectionRoute(nextRoute)) {
     resetWizardLogHistoryExpansion(userId, TABLES.LOG_SYMPTOMS);

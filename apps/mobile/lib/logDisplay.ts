@@ -1,9 +1,9 @@
 import { formatUkTimeFromOccurred } from "./bowelMovementShared";
-import { formatUkDate } from "./formatUkDate";
+import { formatUkDateShort } from "./formatUkDate";
 
-/** List row subtitle — `dd/mm/yyyy · HH:mm`. */
+/** List row subtitle — `dd/mm/yy · HH:mm` (short year; detail screens use full `formatUkDate`). */
 export function formatLogWhenLine(iso: string | null | undefined): string {
-  const dateLabel = formatUkDate(iso);
+  const dateLabel = formatUkDateShort(iso);
   const timeLabel = formatUkTimeFromOccurred(iso);
   return [dateLabel, timeLabel].filter(Boolean).join(" · ");
 }

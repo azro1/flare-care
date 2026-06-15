@@ -12,10 +12,11 @@ Use existing screens as reference — do **not** default to web-style teal hyper
 
 | Pattern | Reference | Colour / style |
 |---------|-----------|----------------|
-| **Navigate to another screen** (Account lists, chart link, “View all types”) | `AccountOptionRow` in `App.tsx` | Label **`c.text`**, chevron **`c.textMuted`**, `NAV_ROW_LABEL` / `NAV_ROW_CHEVRON_SIZE` from `layoutConstants.ts` (medium optional via `labelMedium`) |
+| **Navigate to another screen** (Account lists, chart link, “View all types”) | `LogHistoryList` + `onPressItem` in `LogHistoryCard` | Label **`c.text`**, chevron on browse rows — Account uses `rowPaddingHorizontal={ACCOUNT_LIST_ROW_PADDING}` |
 | **Inline link in body copy** (e.g. tip “Open chart”) | Hydration **Reset** | **`c.text`** or **`c.textSecondary`** + `textDecorationLine: "underline"` — not `c.primary` |
 | **Primary action** (Save, Log now) | `PrimaryButton` | Teal fill — **`c.primary`** |
-| **Secondary on white card** (e.g. Delete account, Mark as taken) | `SecondaryButton` `borderless` + `borderlessFill="surfaceSubtle"` | Subtle fill on **`c.card`** — see `FlareButton.tsx` |
+| **Secondary on white card** (e.g. Mark as taken) | `SecondaryButton` `borderless` + `borderlessFill="surfaceSubtle"` | Subtle fill, no border — see `FlareButton.tsx` |
+| **Secondary bordered** (e.g. Delete account on Account tab) | `SecondaryButton` (default) | Border **`c.secondaryBtnBorder`**, fill **`c.secondaryBtnBg`** |
 | **Selected state / type badge / hero feature icon** | Bowel bubbles, dashboard tiles | **`c.primary`** |
 | **Form field icons** (calendar, time) | Bowel log sheet | **`c.textSecondary`** — utility, not a CTA |
 | **Destructive** | Logout, delete confirm | **`c.destructiveFill`** / `danger` for text |
@@ -25,9 +26,9 @@ Use existing screens as reference — do **not** default to web-style teal hyper
 
 **New tracker / settings screens:** card layout + `SCREEN_EDGE_PADDING` + `useFlareColors()`; stack routes with `headerOptions` titles; link rows like Account, not a second colour system.
 
-**Header chrome (list screens):** **+** (My Meds, Bowel) and **⋮** overflow — **`c.text`** in light, **`c.textMuted`** in dark.
+**Header chrome (list screens):** **⋮** overflow — **`c.text`** in light, **`c.textMuted`** in dark. Tracker hubs (Bowel, My Meds, Weight, Appointments) use a **thumb-reach + FAB** (`TrackerThumbFab`) instead of header **+**.
 
-**Live examples:** Account tab (`AccountOptionRow`), **Bowel** (`screens/BowelScreen.tsx`), **Bristol chart** (`screens/BristolGuideScreen.tsx`), **Hydration** (Reset link).
+**Live examples:** Account tab (`LogHistoryList` link rows), **Bowel** / **My Meds** (`TrackerThumbFab`), **Bristol chart** (`screens/BristolGuideScreen.tsx`), **Hydration** (Reset link).
 
 ---
 
@@ -77,13 +78,27 @@ Use existing screens as reference — do **not** default to web-style teal hyper
 
 ## Log history lists (do not duplicate)
 
-**Before adding any grey-tray log list, browse row, or “intro + history” card — use the shared pieces in `components/LogHistoryList.tsx`.** Do **not** create a second list component, row builder, or card wrapper for the same purpose.
+All shared list UI lives in **`components/LogHistoryList.tsx`**. Do **not** hand-roll tray rows or duplicate card wrappers.
+
+### Quick pick — what to use
+
+**Visual pattern:** white **`LogHistoryCard`** → **inset tray** (`surfaceSubtle` — the darker/lighter panel behind rows) → **rows**.
+
+| You are building… | Use |
+|-----------------|-----|
+| **Navigate / browse rows** (chevron, 1 or 2 lines) — Account links, appointment presets, summary nav, legal links | **`LogHistoryCard`** + **`LogHistoryList`** + `onPressItem`. Items: plain `{ id, title }` or **`buildBrowseLogRowItem`** when you need a subtitle. |
+| **Saved log history** (title + date, tap → detail) | **`LogHistoryPreviewList`** (or **`LogHistoryList`**) + **`buildTimestampLogRowItem`**. Paginated: **`usePaginatedLogList`** / **`useWizardLogHistory`**. |
+| **Read-only counts** (title on left, number on right) — Today → Summary | **`LogHistoryList`** + `trailingText` on each item. |
+| **History hub** (list card + bulb tip below) | **`LogHistoryIntroSection`** or **`LogHistoryCard`** + list + **`LogHistoryTipRow`** below. |
+| **Read-only label + value fields** (not tappable rows) — Account info, brief detail screens | **`LogDetailFieldGroup`** in **`LogDetailCard`** — **not** `LogHistoryList`. |
+
+**Default rule:** if it’s a **row list on the inset tray**, use **`LogHistoryList`** (1-line and 2-line rows both). Row height and chevron alignment are automatic — **never** copy `minHeight` / spacer logic into a screen. Use `renderLeading` / `getRowStyle` / `multilineTitle` / `renderTrailing={() => null}` when the row shape differs (Bristol chart, talking points).
 
 | Piece | Use for |
 |-------|---------|
-| **`LogHistoryList`** | Grey tray rows inside a white card — title + subtitle, optional chevron (`onPressItem`), optional `emptyMessage`, default **`logsPill`** row spacing (matches Dashboard → Logs pill) |
-| **`buildTimestampLogRowItem`** | One saved log row — title + `formatLogWhenLine` subtitle from `whenIso` (symptom/medication history, bowel lists) |
-| **`buildBrowseLogRowItem`** | Browse row with a custom subtitle (e.g. Dashboard Logs pill: “Symptom logs” / “3 entries”) |
+| **`LogHistoryList`** | Inset-tray row list — see **Quick pick** and **Row shapes** below. |
+| **`buildTimestampLogRowItem`** | One saved log row — title + `formatLogWhenLine` subtitle from `whenIso` |
+| **`buildBrowseLogRowItem`** | Browse row — `title` + optional `subtitle` (instruction line or entry count). Title-only: pass `""` or omit — height is automatic. |
 | **`LogHistoryCard`** | White card shell only (`trackerCard` + theme `card` background) |
 | **`LogHistoryIntroSection`** | White list card + **bulb tip below** (not intro copy above the list). Pass `tip` string; children = list only |
 | **`LogHistoryTipRow`** | Standalone bulb tip card (`embedded` variant for inside another card, e.g. My Meds) |
@@ -95,7 +110,8 @@ Use existing screens as reference — do **not** default to web-style teal hyper
 | **`useWizardLogHistory`** (`lib/wizardLogHistory.ts`) | Symptom / Track Medications history — preview **3**, +**3** per load-more; per-table cache |
 | **`useMedicationsList`** (`lib/useMedicationsList.ts`) | My Meds fetch + focus refresh; list rows cached in **`medicationShared`** |
 | **`logHistoryCardStyles`** | Shared card/intro/body tokens — import instead of redefining padding/radius/gap |
-| **`lib/logDisplay.ts`** | `formatLogWhenLine` (list subtitles), `formatAddedAtHeader` (detail screen headers) — do not reformat timestamps inline |
+| **`lib/logDisplay.ts`** | `formatLogWhenLine` (list subtitles — short year), `formatAddedAtHeader` (detail screen headers) — do not reformat timestamps inline |
+| **`lib/formatUkDate.ts`** | `formatUkDate` (detail/forms), `formatUkDateShort` (list tray subtitles only) |
 | **`lib/listExpansionNavigation.ts`** | Root **`onStateChange`** — collapse load-more when leaving a feature section (see below) |
 
 **Load more — expansion survives detail ↔ back, resets when leaving the section**
@@ -115,12 +131,26 @@ Use existing screens as reference — do **not** default to web-style teal hyper
 **Live examples**
 
 - Dashboard → **Logs** tab → History card: `LogHistoryCard` + `buildBrowseLogRowItem` (`App.tsx` → `DashboardScreen`)
+- **Account** → My account / legal links: `LogHistoryList` + title-only items + `onPressItem` (`App.tsx` → `AccountScreen`, `LegalLinksScreen`)
+- **Appointment summary** period picker + result nav: `LogHistoryCard` + `LogHistoryList` + `buildBrowseLogRowItem` (`AppointmentBriefScreen`, `AppointmentBriefResultScreen`)
 - **Symptom history** / **Medication tracking history**: `LogHistoryIntroSection` + `LogHistoryPreviewList` + `buildTimestampLogRowItem` + `useWizardLogHistory`
 - **Focus refresh:** **`syncExpandedFromCache()`** + **`refresh()`** on focus (not **`resetAndLoad`**) — refetches data; expansion reset only when navigation leaves the section (table above).
 - **Load more:** teal **`c.primary`**, underlined, **`FLARE_FONT_SIZE.muted`** — via `logHistoryListStyles.loadMoreLabel`; row sits **outside** the grey tray with `CARD_SECTION_INNER_GAP` margin
 - **History tips (current copy):** symptom — *“A list of your symptom events recorded through Log Symptoms.”*; medication — *“A list of your medication events recorded through Track Medications.”* — **Onset vs duration** explainer removed from symptom tip for now; find a better home later (not history bulb)
-- **Bowel** / **My Meds** (`screens/BowelScreen.tsx`, `screens/MedicationsScreen.tsx`): list-first — icon + **Nothing here yet** (`FLARE_FONT_SIZE.sectionTitle`, muted) when empty; **lightbulb tip below** the card (`LogHistoryTipRow`); no in-card intro line; **+** in header only (no empty-state CTA). Bowel list subtitle = **`created_at`**; detail fields use **`occurred_at`** + **Added** header from `created_at`.
-- **Bristol chart** (`screens/BristolGuideScreen.tsx`): `LogHistoryCard` + grey tray; tip below card; pick mode footer outside card.
+- **Bowel** / **My Meds** (`screens/BowelScreen.tsx`, `screens/MedicationsScreen.tsx`): list-first — icon + **Nothing here yet** (`FLARE_FONT_SIZE.sectionTitle`, muted) when empty; **lightbulb tip below** the card (`LogHistoryTipRow`); no in-card intro line; **thumb-reach + FAB** (`TrackerThumbFab` + `layoutConstants` helpers — not header **+**). My Meds passes `tabBarClearance={bottomTabBarHeight(...)}` because the tab bar is visible. Bowel list subtitle = **`created_at`**; detail fields use **`occurred_at`** + **Added** header from `created_at`. **Weight** / **Appointments** — same FAB when built.
+- **Bristol chart** (`screens/BristolGuideScreen.tsx`): **exception** — manual tray; see table above.
+
+### Row shapes (`LogHistoryList` handles all of these)
+
+| Shape | Example | What you pass |
+|-------|---------|---------------|
+| **1-line navigate** | Account → Privacy Policy; appointment preset | `{ id, title }` + `onPressItem` — auto min-height + title centred with chevron |
+| **2-line navigate** | Custom date range; summary → Health overview | `buildBrowseLogRowItem({ title, subtitle })` + `onPressItem` |
+| **2-line log history** | Bowel / symptom list row | `buildTimestampLogRowItem` or `whenIso` / `subtitle` |
+| **1-line + trailing value** | Today → Summary counts | `trailingText` — same row height as two-line rows |
+| **2-line status** | Today → Goals “Complete” / “Active” | `subtitle` + optional `completed` |
+
+Do **not** copy `minHeight` or invisible spacers into screens — extend **`LogHistoryList`** if you need a new shape (then update this section).
 
 **Detail screens:** symptom/medication log detail = **delete only** in header (no edit). **Bowel log** / **medication profile** = edit + delete. Bowel + medication profile detail cards use **`LogDetailCard`** + field tray only — **no** in-card **Details** section title (unlike multi-section symptom detail).
 
@@ -178,10 +208,11 @@ Do **not** remove these checks when touching wizard back/next — they block the
 | `TIME_PICKER_MINUTE_INTERVAL` | Native time picker step (5 min) — bowel, meds reminders |
 | `bottomTabBarHeight()` | Full rendered height of `MainBottomTabBar` |
 | `bottomTabBarScrollInset()` | Scroll padding above tab bar — keep in sync with bar height |
+| `TRACKER_THUMB_FAB_SIZE` / `trackerThumbFabBottom()` / `trackerThumbFabInsetRight()` / `trackerThumbFabScrollPadding()` | Thumb-reach + on tracker hubs — `components/TrackerThumbFab.tsx` |
 | `wizardLandingMinHeight()` | Wizard step-0 landing block height — logout `fullScreen` success uses same slot |
 | `WIZARD_LANDING_BELOW_SAFE_TOP` | Simulated stack header + scroll top pad for full-screen success align |
 
-**Bottom bar visible on:** `Dashboard`, `Reminders`, `Account` only (`BOTTOM_BAR_VISIBLE_ROUTES` in `App.tsx`).
+**Bottom bar visible on:** `Dashboard`, `Reminders`, `Account`, `Meds`, `Appointments` (`BOTTOM_BAR_VISIBLE_ROUTES` in `App.tsx`). Pass `tabBarClearance={bottomTabBarHeight(insets.bottom)}` to `TrackerThumbFab` on those routes.
 
 ---
 

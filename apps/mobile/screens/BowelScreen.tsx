@@ -2,9 +2,10 @@ import DateTimePicker from "@react-native-community/datetimepicker";
 import { Ionicons, MaterialCommunityIcons } from "@expo/vector-icons";
 import { useFocusEffect, useNavigation, useRoute } from "@react-navigation/native";
 import { yupResolver } from "@hookform/resolvers/yup";
-import React, { useCallback, useEffect, useLayoutEffect, useRef, useState } from "react";
+import React, { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { useForm } from "react-hook-form";
 import {
+  Alert,
   KeyboardAvoidingView,
   Modal,
   Platform,
@@ -38,6 +39,8 @@ import {
   buildTimestampLogRowItem,
   logHistoryCardStyles,
 } from "../components/LogHistoryList";
+import { TrackerThumbFab, useTrackerThumbFabLayout } from "../components/TrackerThumbFab";
+import { ConfirmModal } from "../components/ConfirmModal";
 import { usePaginatedLogList } from "../lib/paginatedLogList";
 import { STACKED_DETAIL_ROW_EDGE } from "../components/StackedDetailField";
 import { FlareScreenSectionTitle } from "../components/FlareScreenSectionTitle";
@@ -51,7 +54,9 @@ import {
   BOWEL_FEATURE_MCI_ICON,
   snapTimeHmFromDate,
   bowelPayloadFromForm,
+  deleteBowelMovementsForUser,
   getBowelListCache,
+  invalidateBowelListCache,
   quickBowelFormState,
   setBowelListCache,
   type BowelFormState,
@@ -60,6 +65,7 @@ import {
 } from "../lib/bowelMovementShared";
 import { bowelLogFormSchema } from "../lib/bowelLogFormSchema";
 import { invalidateDashboardSnapshot } from "../lib/dashboardSnapshotCache";
+import { useLogListSelection } from "../lib/useLogListSelection";
 import {
   FLARE_FONT_FAMILY,
   FLARE_FONT_SIZE,
@@ -67,6 +73,7 @@ import {
   SCREEN_EDGE_PADDING,
   SECTION_TITLE_MARGIN_BOTTOM,
   TIME_PICKER_MINUTE_INTERVAL,
+  bottomTabBarHeight,
 } from "../lib/layoutConstants";
 import { formatUkDate } from "../lib/formatUkDate";
 import { supabase, TABLES } from "../lib/supabase";
@@ -442,7 +449,10 @@ export function BowelScreen({ user }: { user: SessionUser }) {
   const c = useFlareColors();
   const navigation = useNavigation<any>();
   const route = useRoute();
+  const insets = useSafeAreaInsets();
   const bottomScrollInset = useBottomTabScrollInset();
+  const { scrollBottomPad } = useTrackerThumbFabLayout();
+  const selectionBarClearance = bottomTabBarHeight(insets.bottom);
 
   const [form, setForm] = useState<BowelFormState>(() => quickBowelFormState());
   const {
@@ -470,6 +480,38 @@ export function BowelScreen({ user }: { user: SessionUser }) {
   const [editingId, setEditingId] = useState<string | null>(null);
   const [sheetOpen, setSheetOpen] = useState(false);
   const [showOptional, setShowOptional] = useState(false);
+
+  const bowelItemIds = useMemo(() => historyRows.map((row) => String(row.id)), [historyRows]);
+  const {
+    selectionMode,
+    selectedIds,
+    bulkDeleteOpen,
+    setBulkDeleteOpen,
+    bulkDeleting,
+    enterSelectionWith,
+    toggleSelect,
+    runBulkDelete,
+  } = useLogListSelection({
+    routeName: "Bowel",
+    itemIds: bowelItemIds,
+    navigation,
+    headerTitle: "Bowel Movements",
+  });
+
+  const handleBulkDeleteConfirm = useCallback(() => {
+    void runBulkDelete(async (ids) => {
+      try {
+        await deleteBowelMovementsForUser(user.id, ids);
+        invalidateDashboardSnapshot(user.id);
+        invalidateBowelListCache(user.id);
+        await refreshHistoryLoad();
+      } catch (err: unknown) {
+        const message = err instanceof Error ? err.message : "Could not delete these logs.";
+        Alert.alert("Could not delete", message);
+        throw err;
+      }
+    });
+  }, [refreshHistoryLoad, runBulkDelete, user.id]);
 
   const openGuide = useCallback(
     (pickMode: boolean, highlightedType?: number | null) => {
@@ -530,25 +572,6 @@ export function BowelScreen({ user }: { user: SessionUser }) {
     setSheetOpen(true);
   }, []);
 
-  useLayoutEffect(() => {
-    navigation.setOptions({
-      headerRight: () => (
-        <Pressable
-          accessibilityRole="button"
-          accessibilityLabel="Log bowel movement"
-          onPress={openNewLog}
-          hitSlop={10}
-          style={styles.headerIconBtn}
-        >
-          <Ionicons name="add" size={26} color={c.isDark ? c.textMuted : c.text} accessibilityIgnoresInvertColors />
-        </Pressable>
-      ),
-    });
-    return () => {
-      navigation.setOptions({ headerRight: undefined });
-    };
-  }, [c.isDark, c.text, c.textMuted, navigation, openNewLog]);
-
   const handleSave = async (values: BowelFormState) => {
     setSaveError("");
     setSaving(true);
@@ -580,12 +603,14 @@ export function BowelScreen({ user }: { user: SessionUser }) {
 
   const listInitialLoad = historyLoading && historyRows.length === 0;
   const historyEmpty = !historyLoading && historyTotalCount === 0;
+  const scrollBottomPadTotal =
+    bottomScrollInset + (selectionMode ? selectionBarClearance : scrollBottomPad);
 
   return (
     <View style={[styles.screenRoot, { backgroundColor: c.screen }]}>
       <ScrollView
         style={styles.screenScroll}
-        contentContainerStyle={{ paddingBottom: bottomScrollInset + 32 }}
+        contentContainerStyle={{ paddingBottom: scrollBottomPadTotal }}
         showsVerticalScrollIndicator={false}
       >
         <LogHistoryCard>
@@ -621,12 +646,30 @@ export function BowelScreen({ user }: { user: SessionUser }) {
                 loadMoreLabel="load more"
                 onLoadMore={() => void loadMoreHistory()}
                 onPressItem={(logId) => navigation.navigate("BowelLogDetail", { id: logId })}
+                selectionMode={selectionMode}
+                selectedIds={selectedIds}
+                onToggleSelect={toggleSelect}
+                onLongPressItem={enterSelectionWith}
               />
             )}
           </View>
         </LogHistoryCard>
-        <LogHistoryTipRow text="Use the + icon to log a bowel movement — a Bristol type is enough." />
+        <LogHistoryTipRow text="Tap + to log a bowel movement — a Bristol type is enough." />
       </ScrollView>
+
+      {!selectionMode ? (
+        <TrackerThumbFab accessibilityLabel="Log bowel movement" onPress={openNewLog} />
+      ) : null}
+
+      <ConfirmModal
+        visible={bulkDeleteOpen}
+        title={selectedIds.size === 1 ? "Delete bowel log?" : `Delete ${selectedIds.size} bowel logs?`}
+        message="This action cannot be undone."
+        confirmLabel={bulkDeleting ? "Deleting…" : "Delete"}
+        confirmDestructive
+        onConfirm={handleBulkDeleteConfirm}
+        onCancel={() => setBulkDeleteOpen(false)}
+      />
 
       <BowelLogSheet
         visible={sheetOpen}
@@ -647,7 +690,6 @@ export function BowelScreen({ user }: { user: SessionUser }) {
 const styles = StyleSheet.create({
   screenRoot: { flex: 1 },
   screenScroll: { flex: 1, padding: SCREEN_EDGE_PADDING },
-  headerIconBtn: { width: 44, height: 44, alignItems: "center", justifyContent: "center" },
   emptyWrap: {
     alignItems: "center",
     paddingVertical: 20,

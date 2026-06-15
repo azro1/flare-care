@@ -1,9 +1,9 @@
 import DateTimePicker from "@react-native-community/datetimepicker";
 import { Ionicons, MaterialCommunityIcons } from "@expo/vector-icons";
 import { useFocusEffect, useNavigation } from "@react-navigation/native";
-import React, { useCallback, useEffect, useLayoutEffect, useMemo, useRef, useState } from "react";
+import React, { useCallback, useEffect, useMemo, useState } from "react";
 import {
-  Animated,
+  Alert,
   KeyboardAvoidingView,
   Modal,
   Platform,
@@ -28,7 +28,11 @@ import {
   type LogHistoryListItem,
 } from "../components/LogHistoryList";
 import { OptionPickerModal } from "../components/OptionPickerModal";
+import { ConfirmModal } from "../components/ConfirmModal";
+import { TrackerThumbFab, useTrackerThumbFabLayout } from "../components/TrackerThumbFab";
+import { WriggleReminderBell } from "../components/WriggleReminderBell";
 import { invalidateDashboardSnapshot } from "../lib/dashboardSnapshotCache";
+import { useLogListSelection } from "../lib/useLogListSelection";
 import { MY_MEDS_MCI_ICON } from "../lib/medicationFeatureIcons";
 import { rescheduleMedicationNotificationsForUser } from "../lib/medicationNotifications";
 import {
@@ -40,6 +44,8 @@ import {
   medicationListSubtitle,
   medicationPayloadFromForm,
   medicationUpdatePayloadFromForm,
+  deleteMedicationsForUser,
+  invalidateMedicationsListCache,
   setMedsListExpandedCount,
   type MedicationFormState,
 } from "../lib/medicationShared";
@@ -63,11 +69,6 @@ const FREQUENCY_PICKER_OPTIONS = [
   ...MEDICATION_FREQUENCY_PRESETS,
   "Custom frequency…",
 ] as const;
-
-function useBottomTabScrollInset() {
-  const insets = useSafeAreaInsets();
-  return bottomTabBarHeight(insets.bottom);
-}
 
 function parseTimeHm(s: string): Date {
   if (/^\d{2}:\d{2}$/.test(s)) {
@@ -296,45 +297,12 @@ async function maybeRescheduleReminders(userId: string) {
   }
 }
 
-function WriggleReminderBell({ color }: { color: string }) {
-  const rotate = useRef(new Animated.Value(0)).current;
-
-  useEffect(() => {
-    const wriggle = Animated.sequence([
-      Animated.timing(rotate, { toValue: 1, duration: 90, useNativeDriver: true }),
-      Animated.timing(rotate, { toValue: -1, duration: 90, useNativeDriver: true }),
-      Animated.timing(rotate, { toValue: 0.65, duration: 75, useNativeDriver: true }),
-      Animated.timing(rotate, { toValue: -0.65, duration: 75, useNativeDriver: true }),
-      Animated.timing(rotate, { toValue: 0, duration: 70, useNativeDriver: true }),
-    ]);
-    const loop = Animated.loop(Animated.sequence([wriggle, Animated.delay(4500)]));
-    loop.start();
-    return () => loop.stop();
-  }, [rotate]);
-
-  const wiggle = rotate.interpolate({
-    inputRange: [-1, 1],
-    outputRange: ["-10deg", "10deg"],
-  });
-
-  return (
-    <Animated.View style={{ transform: [{ rotate: wiggle }] }}>
-      <Ionicons
-        name="notifications"
-        size={14}
-        color={color}
-        accessibilityElementsHidden
-        importantForAccessibility="no"
-        accessibilityIgnoresInvertColors
-      />
-    </Animated.View>
-  );
-}
-
 export function MedicationsScreen({ user }: { user: SessionUser }) {
   const c = useFlareColors();
   const navigation = useNavigation<any>();
-  const bottomScrollInset = useBottomTabScrollInset();
+  const insets = useSafeAreaInsets();
+  const tabBarClearance = bottomTabBarHeight(insets.bottom);
+  const { scrollBottomPad } = useTrackerThumbFabLayout(tabBarClearance);
   const { meds, loading, load } = useMedicationsList(user.id);
   const [sheetOpen, setSheetOpen] = useState(false);
   const [editingId, setEditingId] = useState<number | null>(null);
@@ -342,6 +310,39 @@ export function MedicationsScreen({ user }: { user: SessionUser }) {
   const [saving, setSaving] = useState(false);
   const [saveError, setSaveError] = useState("");
   const [expandedMedCount, setExpandedMedCount] = useState(() => getMedsListExpandedCount(user.id));
+
+  const medItemIds = useMemo(() => meds.map((row) => String(row.id)), [meds]);
+  const {
+    selectionMode,
+    selectedIds,
+    bulkDeleteOpen,
+    setBulkDeleteOpen,
+    bulkDeleting,
+    enterSelectionWith,
+    toggleSelect,
+    runBulkDelete,
+  } = useLogListSelection({
+    routeName: "Meds",
+    itemIds: medItemIds,
+    navigation,
+    headerTitle: "My Meds",
+  });
+
+  const handleBulkDeleteConfirm = useCallback(() => {
+    void runBulkDelete(async (ids) => {
+      try {
+        await deleteMedicationsForUser(user.id, ids);
+        invalidateDashboardSnapshot(user.id);
+        invalidateMedicationsListCache(user.id);
+        await load();
+        await maybeRescheduleReminders(user.id);
+      } catch (err: unknown) {
+        const message = err instanceof Error ? err.message : "Could not delete these medications.";
+        Alert.alert("Could not delete", message);
+        throw err;
+      }
+    });
+  }, [load, runBulkDelete, user.id]);
 
   useFocusEffect(
     useCallback(() => {
@@ -369,25 +370,6 @@ export function MedicationsScreen({ user }: { user: SessionUser }) {
     setSaveError("");
     setSheetOpen(true);
   }, []);
-
-  useLayoutEffect(() => {
-    navigation.setOptions({
-      headerRight: () => (
-        <Pressable
-          accessibilityRole="button"
-          accessibilityLabel="Add medication"
-          onPress={openAdd}
-          hitSlop={10}
-          style={styles.headerIconBtn}
-        >
-          <Ionicons name="add" size={26} color={c.isDark ? c.textMuted : c.text} accessibilityIgnoresInvertColors />
-        </Pressable>
-      ),
-    });
-    return () => {
-      navigation.setOptions({ headerRight: undefined });
-    };
-  }, [c.isDark, c.text, c.textMuted, navigation, openAdd]);
 
   const handleSave = async (values: MedicationFormState) => {
     setSaveError("");
@@ -476,7 +458,7 @@ export function MedicationsScreen({ user }: { user: SessionUser }) {
     <View style={[styles.screenRoot, { backgroundColor: c.screen }]}>
       <ScrollView
         style={styles.screenScroll}
-        contentContainerStyle={{ paddingBottom: bottomScrollInset + 32 }}
+        contentContainerStyle={{ paddingBottom: scrollBottomPad }}
         showsVerticalScrollIndicator={false}
       >
         <LogHistoryCard>
@@ -499,12 +481,34 @@ export function MedicationsScreen({ user }: { user: SessionUser }) {
                 onLoadMore={loadMoreMeds}
                 renderSubtitle={renderMedSubtitle}
                 onPressItem={(medId) => navigation.navigate("MedicationDetail", { id: medId })}
+                selectionMode={selectionMode}
+                selectedIds={selectedIds}
+                onToggleSelect={toggleSelect}
+                onLongPressItem={enterSelectionWith}
               />
             )}
           </View>
         </LogHistoryCard>
-        <LogHistoryTipRow text="Use the + icon to store medications prescribed by your GP or healthcare team." />
+        <LogHistoryTipRow text="Tap + to store medications prescribed by your GP or healthcare team." />
       </ScrollView>
+
+      {!selectionMode ? (
+        <TrackerThumbFab
+          accessibilityLabel="Add medication"
+          onPress={openAdd}
+          tabBarClearance={tabBarClearance}
+        />
+      ) : null}
+
+      <ConfirmModal
+        visible={bulkDeleteOpen}
+        title={selectedIds.size === 1 ? "Delete medication?" : `Delete ${selectedIds.size} medications?`}
+        message="This cannot be undone."
+        confirmLabel={bulkDeleting ? "Deleting…" : "Delete"}
+        confirmDestructive
+        onConfirm={handleBulkDeleteConfirm}
+        onCancel={() => setBulkDeleteOpen(false)}
+      />
 
       <MedicationSheet
         visible={sheetOpen}
@@ -522,7 +526,6 @@ export function MedicationsScreen({ user }: { user: SessionUser }) {
 const styles = StyleSheet.create({
   screenRoot: { flex: 1 },
   screenScroll: { flex: 1, padding: SCREEN_EDGE_PADDING },
-  headerIconBtn: { width: 44, height: 44, alignItems: "center", justifyContent: "center" },
   emptyWrap: { alignItems: "center", paddingVertical: 20, paddingHorizontal: 8 },
   emptyIcon: {
     width: 56,

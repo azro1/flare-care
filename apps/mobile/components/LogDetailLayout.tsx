@@ -28,6 +28,8 @@ export const logDetailStyles = StyleSheet.create({
   fieldGroups: { gap: 10 },
   fieldGroup: { borderRadius: 14, overflow: "hidden" },
   sectionTitleRow: { flexDirection: "row", alignItems: "center", justifyContent: "space-between" },
+  /** Log detail scroll — horizontal inset only; no top pad under stack header. */
+  scroll: { flex: 1, paddingHorizontal: SCREEN_EDGE_PADDING },
 });
 
 export function LogDetailCard({

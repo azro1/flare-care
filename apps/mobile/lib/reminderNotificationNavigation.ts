@@ -155,5 +155,5 @@ export function navigateFromReminderNotification(
     return;
   }
 
-  navigationRef.navigate("Appointments" as never);
+  navigationRef.navigate("AppointmentDetail" as never, { id: target.appointmentId } as never);
 }

@@ -143,6 +143,14 @@ type LogHistoryPreviewListProps = {
   renderSubtitle?: (item: LogHistoryListItem) => ReactNode;
   renderTrailing?: (item: LogHistoryListItem) => ReactNode;
   rowTextLayout?: "default" | "logsPill";
+  selectionMode?: boolean;
+  selectedIds?: ReadonlySet<string>;
+  onToggleSelect?: (id: string) => void;
+  onLongPressItem?: (id: string) => void;
+  rowPaddingHorizontal?: number;
+  renderLeading?: (item: LogHistoryListItem) => ReactNode;
+  getRowStyle?: (item: LogHistoryListItem, index: number) => StyleProp<ViewStyle>;
+  multilineTitle?: boolean;
 };
 
 /** Paginated list — **load more** link reveals the next batch. */
@@ -159,6 +167,14 @@ export function LogHistoryPreviewList({
   renderSubtitle,
   renderTrailing,
   rowTextLayout,
+  selectionMode,
+  selectedIds,
+  onToggleSelect,
+  onLongPressItem,
+  rowPaddingHorizontal,
+  renderLeading,
+  getRowStyle,
+  multilineTitle,
 }: LogHistoryPreviewListProps) {
   const c = useFlareColors();
   const visibleItems = items.slice(0, visibleCount);
@@ -173,6 +189,14 @@ export function LogHistoryPreviewList({
         renderSubtitle={renderSubtitle}
         renderTrailing={renderTrailing}
         rowTextLayout={rowTextLayout}
+        selectionMode={selectionMode}
+        selectedIds={selectedIds}
+        onToggleSelect={onToggleSelect}
+        onLongPressItem={onLongPressItem}
+        rowPaddingHorizontal={rowPaddingHorizontal}
+        renderLeading={renderLeading}
+        getRowStyle={getRowStyle}
+        multilineTitle={multilineTitle}
       />
       {hasMore ? (
         <Pressable
@@ -201,6 +225,14 @@ export function LogHistoryList({
   renderSubtitle,
   renderTrailing,
   rowTextLayout = "logsPill",
+  selectionMode = false,
+  selectedIds,
+  onToggleSelect,
+  onLongPressItem,
+  rowPaddingHorizontal,
+  renderLeading,
+  getRowStyle,
+  multilineTitle,
 }: {
   items: LogHistoryListItem[];
   emptyMessage?: string;
@@ -212,6 +244,17 @@ export function LogHistoryList({
   renderTrailing?: (item: LogHistoryListItem) => ReactNode;
   /** Title/subtitle typography. Default matches dashboard Logs pill + history rows. */
   rowTextLayout?: "default" | "logsPill";
+  selectionMode?: boolean;
+  selectedIds?: ReadonlySet<string>;
+  onToggleSelect?: (id: string) => void;
+  onLongPressItem?: (id: string) => void;
+  /** Override `logRow` horizontal padding (e.g. Account link lists). */
+  rowPaddingHorizontal?: number;
+  /** Badge or icon before the title column (e.g. Bristol type number). */
+  renderLeading?: (item: LogHistoryListItem) => ReactNode;
+  getRowStyle?: (item: LogHistoryListItem, index: number) => StyleProp<ViewStyle>;
+  /** Full-width body text per row (e.g. talking points) — no single-line clamp. */
+  multilineTitle?: boolean;
 }) {
   if (items.length === 0 && emptyMessage) {
     return <EmptyTrayMessage message={emptyMessage} />;
@@ -236,31 +279,22 @@ export function LogHistoryList({
           : logHistoryListStyles.logSecondary;
         const titleAccessory = renderTitleAccessory?.(item) ?? null;
         const customSubtitle = renderSubtitle?.(item);
-        const rowBody = (
-          <>
-            <View style={logHistoryListStyles.logTitleRow}>
-              <Text
-                style={[
-                  primaryStyle,
-                  logHistoryListStyles.logTitleText,
-                  { color: titleColor },
-                  item.completed ? logHistoryListStyles.logPrimaryCompleted : null,
-                ]}
-                numberOfLines={1}
-              >
-                {item.title}
-              </Text>
-              {titleAccessory}
-            </View>
-            {customSubtitle ??
-              (whenLine ? (
-                <Text style={[secondaryStyle, { color: c.textMuted }]} numberOfLines={1}>
-                  {whenLine}
-                </Text>
-              ) : null)}
-          </>
-        );
-        const trailingNode = item.trailingText ? (
+        const reserveSubtitleLine = item.trailingText === undefined && !multilineTitle;
+        const showSecondLine = reserveSubtitleLine && (customSubtitle != null || !!whenLine);
+        const centerSingleLineBrowse = !showSecondLine && !multilineTitle;
+        const leadingNode = renderLeading?.(item) ?? null;
+        const extraRowStyle = getRowStyle?.(item, index) ?? null;
+        const isSelected = !!selectedIds?.has(item.id);
+        const trailingNode = selectionMode ? (
+          <View style={logHistoryListStyles.logSelectionCircle}>
+            <Ionicons
+              name={isSelected ? "checkmark-circle" : "ellipse-outline"}
+              size={22}
+              color={isSelected ? c.primary : c.textMuted}
+              accessibilityIgnoresInvertColors
+            />
+          </View>
+        ) : item.trailingText ? (
           <Text style={[logHistoryListStyles.trailingValue, { color: c.text }]}>{item.trailingText}</Text>
         ) : renderTrailing ? (
           renderTrailing(item)
@@ -274,23 +308,82 @@ export function LogHistoryList({
         ) : null;
         const rowContent = (
           <>
-            <View style={logHistoryListStyles.logMain}>{rowBody}</View>
+            {leadingNode ? <View style={logHistoryListStyles.logLeading}>{leadingNode}</View> : null}
+            <View
+              style={[
+                logHistoryListStyles.logMain,
+                centerSingleLineBrowse ? logHistoryListStyles.logMainSingleLineBrowse : null,
+              ]}
+            >
+              <View style={logHistoryListStyles.logTitleRow}>
+                <Text
+                  style={[
+                    multilineTitle ? logHistoryListStyles.logPrimaryRegular : primaryStyle,
+                    logHistoryListStyles.logTitleText,
+                    { color: titleColor },
+                    item.completed ? logHistoryListStyles.logPrimaryCompleted : null,
+                  ]}
+                  numberOfLines={multilineTitle ? undefined : 1}
+                >
+                  {item.title}
+                </Text>
+                {titleAccessory}
+              </View>
+              {showSecondLine
+                ? customSubtitle ??
+                  (whenLine ? (
+                    <Text style={[secondaryStyle, { color: c.textMuted }]} numberOfLines={1}>
+                      {whenLine}
+                    </Text>
+                  ) : null)
+                : null}
+            </View>
             {trailingNode ? <View style={logHistoryListStyles.logActions}>{trailingNode}</View> : null}
           </>
         );
+        const rowBorder =
+          index !== items.length - 1
+            ? { borderBottomWidth: StyleSheet.hairlineWidth, borderBottomColor: c.cardBorder }
+            : null;
+        const rowPadStyle =
+          rowPaddingHorizontal != null ? { paddingHorizontal: rowPaddingHorizontal } : null;
+        const rowPressStyle = ({ pressed }: { pressed: boolean }) => [
+          logHistoryListStyles.logRow,
+          leadingNode ? logHistoryListStyles.logRowWithLeading : null,
+          rowPadStyle,
+          rowBorder,
+          extraRowStyle,
+          pressed && { opacity: 0.7 },
+        ];
+        const selectionLabel = isSelected ? "Selected" : "Not selected";
+        const defaultA11y =
+          item.accessibilityLabel ?? `${item.title}. ${whenLine}. View details`;
+        const selectionA11y = `${item.title}. ${selectionLabel}`;
+
+        if (selectionMode && onToggleSelect) {
+          return (
+            <Pressable
+              key={item.id}
+              accessibilityRole="button"
+              accessibilityLabel={selectionA11y}
+              accessibilityState={{ selected: isSelected }}
+              onPress={() => onToggleSelect(item.id)}
+              style={rowPressStyle}
+            >
+              {rowContent}
+            </Pressable>
+          );
+        }
+
         return onPressItem ? (
           <Pressable
             key={item.id}
             accessibilityRole="button"
-            accessibilityLabel={item.accessibilityLabel ?? `${item.title}. ${whenLine}. View details`}
+            accessibilityLabel={defaultA11y}
             onPress={() => onPressItem(item.id)}
-            style={({ pressed }) => [
-              logHistoryListStyles.logRow,
-              index !== items.length - 1
-                ? { borderBottomWidth: StyleSheet.hairlineWidth, borderBottomColor: c.cardBorder }
-                : null,
-              pressed && { opacity: 0.7 },
-            ]}
+            onLongPress={onLongPressItem ? () => onLongPressItem(item.id) : undefined}
+            delayLongPress={400}
+            style={rowPressStyle}
           >
             {rowContent}
           </Pressable>
@@ -299,11 +392,12 @@ export function LogHistoryList({
             key={item.id}
             style={[
               logHistoryListStyles.logRow,
-              index !== items.length - 1
-                ? { borderBottomWidth: StyleSheet.hairlineWidth, borderBottomColor: c.cardBorder }
-                : null,
+              leadingNode ? logHistoryListStyles.logRowWithLeading : null,
+              rowPadStyle,
+              rowBorder,
+              extraRowStyle,
             ]}
-            accessibilityLabel={item.accessibilityLabel}
+            accessibilityLabel={defaultA11y}
           >
             {rowContent}
           </View>
@@ -389,7 +483,19 @@ export const logHistoryListStyles = StyleSheet.create({
     paddingVertical: 12,
     gap: STACKED_DETAIL_ROW_EDGE,
   },
+  logRowWithLeading: { alignItems: "flex-start" },
+  logLeading: { flexShrink: 0 },
+  logSelectionCircle: {
+    width: 22,
+    alignItems: "center",
+    flexShrink: 0,
+  },
   logMain: { flex: 1, minWidth: 0 },
+  /** Title-only browse rows — same height as title + subtitle; title vertically centred with chevron. */
+  logMainSingleLineBrowse: {
+    minHeight: FLARE_LINE_HEIGHT.body + 2 + FLARE_LINE_HEIGHT.muted,
+    justifyContent: "center",
+  },
   logTitleRow: {
     flexDirection: "row",
     alignItems: "center",

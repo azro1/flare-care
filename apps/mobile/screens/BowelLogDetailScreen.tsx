@@ -17,6 +17,7 @@ import {
   LogDetailCard,
   LogDetailFieldGroup,
   LogDetailNotesCard,
+  logDetailStyles,
 } from "../components/LogDetailLayout";
 import { flareCardSectionStyles } from "../components/FlareScreenSectionTitle";
 import { formatBristolLine } from "../lib/bristolStoolChart";
@@ -30,7 +31,7 @@ import {
 import { invalidateDashboardSnapshot } from "../lib/dashboardSnapshotCache";
 import { formatAddedAtHeader } from "../lib/logDisplay";
 import { formatUkDate } from "../lib/formatUkDate";
-import { FLARE_FONT_FAMILY, FLARE_FONT_SIZE, SCREEN_EDGE_PADDING } from "../lib/layoutConstants";
+import { FLARE_FONT_FAMILY, FLARE_FONT_SIZE } from "../lib/layoutConstants";
 import { supabase, TABLES } from "../lib/supabase";
 import { useFlareColors } from "../theme";
 import type { BowelReturnParams, BristolGuideParams } from "./BristolGuideScreen";
@@ -273,7 +274,7 @@ export function BowelLogDetailScreen({ user }: { user: SessionUser }) {
   if (!row) {
     return (
       <ScrollView
-        style={[styles.screen, { backgroundColor: c.screen }]}
+        style={[logDetailStyles.scroll, { backgroundColor: c.screen }]}
         contentContainerStyle={{ paddingBottom: bottomPad }}
       >
         <Text style={[styles.muted, { color: c.textMuted }]}>Could not load this entry.</Text>
@@ -284,7 +285,7 @@ export function BowelLogDetailScreen({ user }: { user: SessionUser }) {
   return (
     <>
       <ScrollView
-        style={[styles.screen, { backgroundColor: c.screen }]}
+        style={[logDetailStyles.scroll, { backgroundColor: c.screen }]}
         contentContainerStyle={{ paddingBottom: bottomPad }}
         showsVerticalScrollIndicator={false}
       >
@@ -333,7 +334,6 @@ export function BowelLogDetailScreen({ user }: { user: SessionUser }) {
 }
 
 const styles = StyleSheet.create({
-  screen: { flex: 1, padding: SCREEN_EDGE_PADDING },
   centered: { flex: 1, alignItems: "center", justifyContent: "center", gap: 12 },
   muted: { fontSize: FLARE_FONT_SIZE.body, fontFamily: FLARE_FONT_FAMILY.regular },
   headerEditDeleteRow: {

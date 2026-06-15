@@ -246,3 +246,21 @@ export async function deleteMedicationForUser(userId: string, medicationId: numb
   if (error) throw error;
   await supabase.from(TABLES.MEDICATION_TAKEN).delete().eq("user_id", userId).eq("medication_id", String(id));
 }
+
+export async function deleteMedicationsForUser(userId: string, medicationIds: (number | string)[]): Promise<void> {
+  if (medicationIds.length === 0) return;
+  const ids = medicationIds
+    .map((raw) => (typeof raw === "number" ? raw : parseInt(raw, 10)))
+    .filter((id) => !Number.isNaN(id));
+  if (ids.length === 0) return;
+  const { error } = await supabase.from(TABLES.MEDICATIONS).delete().eq("user_id", userId).in("id", ids);
+  if (error) throw error;
+  await supabase
+    .from(TABLES.MEDICATION_TAKEN)
+    .delete()
+    .eq("user_id", userId)
+    .in(
+      "medication_id",
+      ids.map(String),
+    );
+}

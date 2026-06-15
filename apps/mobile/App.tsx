@@ -53,6 +53,8 @@ import { FlareThemeProvider, useFlareColors, useFlareTheme } from "./theme";
 import { formatUkDate } from "./lib/formatUkDate";
 import { BOWEL_FEATURE_MCI_ICON, todayYmd } from "./lib/bowelMovementShared";
 import { handleListExpansionNavigationRouteChange } from "./lib/listExpansionNavigation";
+import { ListSelectionChromeProvider, useListSelectionChrome } from "./lib/listSelectionChrome";
+import { useLogListSelection } from "./lib/useLogListSelection";
 import { MY_MEDS_MCI_ICON, TRACK_MEDICATIONS_MCI_ICON } from "./lib/medicationFeatureIcons";
 import {
   fetchMedicationsForUser,
@@ -62,6 +64,8 @@ import {
 } from "./lib/medicationShared";
 import { HYDRATION_TARGET, HYDRATION_MCI_ICON, HYDRATION_MCI_ICON_EMPTY, loadHydrationResetTimestamp, saveHydrationReset, HYDRATION_GOAL_ACTIVITY_TITLE, HYDRATION_RESET_ACTIVITY_TITLE } from "./lib/hydrationShared";
 import {
+  bottomTabBarHeight,
+  ACCOUNT_LIST_ROW_PADDING,
   bottomTabBarScrollInset,
   FLARE_FONT_FAMILY,
   FLARE_FONT_SIZE,
@@ -116,6 +120,17 @@ import { BowelLogDetailScreen } from "./screens/BowelLogDetailScreen";
 import { BowelScreen } from "./screens/BowelScreen";
 import { MedicationDetailScreen } from "./screens/MedicationDetailScreen";
 import { MedicationsScreen } from "./screens/MedicationsScreen";
+import { WeightLogDetailScreen } from "./screens/WeightLogDetailScreen";
+import { WeightScreen } from "./screens/WeightScreen";
+import { AppointmentBriefChangesScreen } from "./screens/AppointmentBriefChangesScreen";
+import { AppointmentBriefCustomRangeScreen } from "./screens/AppointmentBriefCustomRangeScreen";
+import { AppointmentBriefHealthScreen } from "./screens/AppointmentBriefHealthScreen";
+import { AppointmentBriefNextScreen } from "./screens/AppointmentBriefNextScreen";
+import { AppointmentBriefResultScreen } from "./screens/AppointmentBriefResultScreen";
+import { AppointmentBriefScreen } from "./screens/AppointmentBriefScreen";
+import { AppointmentDetailScreen } from "./screens/AppointmentDetailScreen";
+import { AppointmentsPastScreen } from "./screens/AppointmentsPastScreen";
+import { AppointmentsScreen } from "./screens/AppointmentsScreen";
 import {
   clearMedicationNotificationsForUser,
   ensureLocalReminderNotificationsReady,
@@ -224,7 +239,6 @@ function accountIdentityFirstLine(user: SessionUser): string {
   const first = firstNameFromSessionUser(user);
   return first === "there" ? "You" : first;
 }
-type Appointment = { id: number; date: string; type: string | null; notes: string | null; time: string | null };
 
 function Card({
   title,
@@ -328,6 +342,17 @@ async function deleteUserLogRow(
 ): Promise<{ ok: true } | { ok: false; message: string }> {
   if (!id) return { ok: false, message: "Missing entry id." };
   const { error } = await supabase.from(table).delete().eq("id", id).eq("user_id", userId);
+  if (error) return { ok: false, message: error.message };
+  return { ok: true };
+}
+
+async function deleteUserLogRows(
+  table: string,
+  ids: string[],
+  userId: string,
+): Promise<{ ok: true } | { ok: false; message: string }> {
+  if (ids.length === 0) return { ok: true };
+  const { error } = await supabase.from(table).delete().eq("user_id", userId).in("id", ids);
   if (error) return { ok: false, message: error.message };
   return { ok: true };
 }
@@ -1121,7 +1146,7 @@ function parseMedicationLogList(raw: unknown, withDosage: boolean): MedicationLo
 /** Avoid greeting flicker (“there”) when session metadata/email arrives shortly after navigation. */
 const dashboardGreetingFirstNameByUserId: Record<string, string> = {};
 
-type HomeDashTab = "today" | "news" | "logs" | null;
+type HomeDashTab = "today" | "news" | "logs" | "more";
 /** When leaving Dashboard via a pill section, restore that pill on the next Dashboard focus (e.g. back from history). */
 let dashboardHomeDashTabRestore: HomeDashTab | null = null;
 
@@ -1224,16 +1249,16 @@ function DashboardScreen({
   );
   const [recentActivity, setRecentActivity] = useState<DashboardActivityRow[]>(() => snapshotSeed?.recentActivity ?? []);
   const [historyPreview, setHistoryPreview] = useState({ symptomCount: 0, medicationCount: 0 });
-  /** Dashboard pills — Today's / Logs / Latest only; default (null) shows the main home dashboard. */
-  const [homeDashTab, setHomeDashTab] = useState<HomeDashTab>(null);
+  /** Dashboard pills — exclusive selection; default **More** shows the shortcuts grid. */
+  const [homeDashTab, setHomeDashTab] = useState<HomeDashTab>("more");
   const hydrationTarget = HYDRATION_TARGET;
   useEffect(() => {
-    onTodayModeChange?.(homeDashTab !== null);
+    onTodayModeChange?.(homeDashTab !== "more");
   }, [homeDashTab, onTodayModeChange]);
   useEffect(() => {
     onRegisterResetHome?.(() => {
       dashboardHomeDashTabRestore = null;
-      setHomeDashTab(null);
+      setHomeDashTab("more");
     });
     return () => onRegisterResetHome?.(null);
   }, [onRegisterResetHome]);
@@ -1565,33 +1590,27 @@ function DashboardScreen({
   const homeNavPills = (
     <View style={styles.homeNavPillsSection}>
       <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={styles.homeNavPillsRow}>
-        <Pressable
-          onPress={() => setHomeDashTab((prev) => (prev === "today" ? null : "today"))}
-          style={[
-            styles.homeNavPill,
-            homeDashTab === "today" ? { backgroundColor: c.primary } : { backgroundColor: c.card },
-          ]}
-        >
-          <Text style={[styles.homeNavPillLabel, { color: homeDashTab === "today" ? c.white : c.text }]}>Today's</Text>
-        </Pressable>
-        <Pressable
-          onPress={() => setHomeDashTab((prev) => (prev === "logs" ? null : "logs"))}
-          style={[
-            styles.homeNavPill,
-            homeDashTab === "logs" ? { backgroundColor: c.primary } : { backgroundColor: c.card },
-          ]}
-        >
-          <Text style={[styles.homeNavPillLabel, { color: homeDashTab === "logs" ? c.white : c.text }]}>Logs</Text>
-        </Pressable>
-        <Pressable
-          onPress={() => setHomeDashTab((prev) => (prev === "news" ? null : "news"))}
-          style={[
-            styles.homeNavPill,
-            homeDashTab === "news" ? { backgroundColor: c.primary } : { backgroundColor: c.card },
-          ]}
-        >
-          <Text style={[styles.homeNavPillLabel, { color: homeDashTab === "news" ? c.white : c.text }]}>Latest</Text>
-        </Pressable>
+        {(
+          [
+            ["today", "Today's"],
+            ["logs", "Logs"],
+            ["news", "Latest"],
+            ["more", "More"],
+          ] as const
+        ).map(([tab, label]) => {
+          const active = homeDashTab === tab;
+          return (
+            <Pressable
+              key={tab}
+              accessibilityRole="button"
+              accessibilityState={{ selected: active }}
+              onPress={() => setHomeDashTab(tab)}
+              style={[styles.homeNavPill, { backgroundColor: active ? c.primary : c.card }]}
+            >
+              <Text style={[styles.homeNavPillLabel, { color: active ? c.white : c.text }]}>{label}</Text>
+            </Pressable>
+          );
+        })}
       </ScrollView>
     </View>
   );
@@ -1640,11 +1659,11 @@ function DashboardScreen({
           Goals
         </Text>
         <View style={[logHistoryCardStyles.trackerCard, { backgroundColor: c.card }]}>
-          <LogHistoryList items={todayGoalItems} />
+          <LogHistoryList items={todayGoalItems} rowPaddingHorizontal={ACCOUNT_LIST_ROW_PADDING} />
         </View>
         <Text style={[styles.dashboardSectionTitleLeft, { color: c.text }]}>Summary</Text>
         <View style={[logHistoryCardStyles.trackerCard, { backgroundColor: c.card }]}>
-          <LogHistoryList items={todaySummaryItems} />
+          <LogHistoryList items={todaySummaryItems} rowPaddingHorizontal={ACCOUNT_LIST_ROW_PADDING} />
         </View>
       </View>
     ) : homeDashTab === "news" ? (
@@ -1854,9 +1873,28 @@ function DashboardScreen({
 function SymptomHistoryScreen({ user }: { user: SessionUser }) {
   const navigation = useNavigation<any>();
   const c = useFlareColors();
+  const insets = useSafeAreaInsets();
   const bottomScrollInset = useBottomTabScrollInset();
   const { rows, visibleCount, hasMore, loading, loadingMore, loadMore, refresh, syncExpandedFromCache } =
     useWizardLogHistory(user.id, TABLES.LOG_SYMPTOMS);
+  const symptomLogItemIds = useMemo(() => rows.map((row) => String(row.id)), [rows]);
+  const {
+    selectionMode,
+    selectedIds,
+    bulkDeleteOpen,
+    setBulkDeleteOpen,
+    bulkDeleting,
+    enterSelectionWith,
+    toggleSelect,
+    runBulkDelete,
+  } = useLogListSelection({
+    routeName: "SymptomHistory",
+    itemIds: symptomLogItemIds,
+    navigation,
+    headerTitle: "History",
+  });
+  const selectionBarInset = selectionMode ? bottomTabBarHeight(insets.bottom) : 0;
+
   useFocusEffect(
     useCallback(() => {
       syncExpandedFromCache();
@@ -1870,27 +1908,55 @@ function SymptomHistoryScreen({ user }: { user: SessionUser }) {
       whenIso: row.created_at,
     }),
   );
+
+  const handleBulkDeleteConfirm = useCallback(() => {
+    void runBulkDelete(async (ids) => {
+      const result = await deleteUserLogRows(TABLES.LOG_SYMPTOMS, ids, user.id);
+      if (!result.ok) {
+        Alert.alert("Could not delete", result.message);
+        throw new Error(result.message);
+      }
+      invalidateDashboardSnapshot(user.id);
+      await refresh();
+    });
+  }, [refresh, runBulkDelete, user.id]);
+
   return (
-    <ScrollView
-      style={[styles.screen, { backgroundColor: c.screen }]}
-      contentContainerStyle={{ paddingBottom: bottomScrollInset + 24 }}
-    >
-      <LogHistoryIntroSection tip="A list of your symptom events recorded through Log Symptoms.">
-        {loading && rows.length === 0 ? (
-          <LogHistoryListLoading />
-        ) : (
-          <LogHistoryPreviewList
-            emptyMessage="No symptom logs yet."
-            items={symptomLogItems}
-            visibleCount={visibleCount}
-            hasMore={hasMore}
-            loadingMore={loadingMore}
-            onLoadMore={() => void loadMore()}
-            onPressItem={(logId) => navigation.navigate("SymptomDetail", { id: logId })}
-          />
-        )}
-      </LogHistoryIntroSection>
-    </ScrollView>
+    <>
+      <ScrollView
+        style={[styles.screen, { backgroundColor: c.screen }]}
+        contentContainerStyle={{ paddingBottom: bottomScrollInset + selectionBarInset + 24 }}
+      >
+        <LogHistoryIntroSection tip="A list of your symptom events recorded through Log Symptoms.">
+          {loading && rows.length === 0 ? (
+            <LogHistoryListLoading />
+          ) : (
+            <LogHistoryPreviewList
+              emptyMessage="No symptom logs yet."
+              items={symptomLogItems}
+              visibleCount={visibleCount}
+              hasMore={hasMore}
+              loadingMore={loadingMore}
+              onLoadMore={() => void loadMore()}
+              onPressItem={(logId) => navigation.navigate("SymptomDetail", { id: logId })}
+              selectionMode={selectionMode}
+              selectedIds={selectedIds}
+              onToggleSelect={toggleSelect}
+              onLongPressItem={enterSelectionWith}
+            />
+          )}
+        </LogHistoryIntroSection>
+      </ScrollView>
+      <ConfirmModal
+        visible={bulkDeleteOpen}
+        title={selectedIds.size === 1 ? "Delete symptom log?" : `Delete ${selectedIds.size} symptom logs?`}
+        message="This action cannot be undone."
+        confirmLabel={bulkDeleting ? "Deleting…" : "Delete"}
+        confirmDestructive
+        onConfirm={handleBulkDeleteConfirm}
+        onCancel={() => setBulkDeleteOpen(false)}
+      />
+    </>
   );
 }
 
@@ -2051,7 +2117,7 @@ function SymptomDetailScreen({ user }: { user: SessionUser }) {
 
   if (loading) {
     return (
-      <View style={[styles.screen, styles.centered, { backgroundColor: c.screen, paddingBottom: bottomScrollInset }]}>
+      <View style={[logDetailStyles.scroll, styles.centered, { backgroundColor: c.screen, paddingBottom: bottomScrollInset }]}>
         <ActivityIndicator color={c.primary} />
         <Text style={[styles.muted, { color: c.textMuted, marginTop: 12 }]}>Loading…</Text>
       </View>
@@ -2060,7 +2126,7 @@ function SymptomDetailScreen({ user }: { user: SessionUser }) {
 
   if (!row) {
     return (
-      <ScrollView style={[styles.screen, { backgroundColor: c.screen }]} contentContainerStyle={{ paddingBottom: bottomScrollInset + 24 }}>
+      <ScrollView style={[logDetailStyles.scroll, { backgroundColor: c.screen }]} contentContainerStyle={{ paddingBottom: bottomScrollInset + 24 }}>
         <Text style={[styles.muted, { color: c.textMuted }]}>Could not load this entry.</Text>
       </ScrollView>
     );
@@ -2139,7 +2205,7 @@ function SymptomDetailScreen({ user }: { user: SessionUser }) {
   return (
     <>
       <ScrollView
-        style={[styles.screen, { backgroundColor: c.screen }]}
+        style={[logDetailStyles.scroll, { backgroundColor: c.screen }]}
         contentContainerStyle={{ paddingBottom: bottomScrollInset + 24 }}
       >
         <LogDetailAddedHeader text={formatAddedAtHeader(createdIso)} />
@@ -2189,9 +2255,28 @@ function SymptomDetailScreen({ user }: { user: SessionUser }) {
 function MedicationTrackingHistoryScreen({ user }: { user: SessionUser }) {
   const navigation = useNavigation<any>();
   const c = useFlareColors();
+  const insets = useSafeAreaInsets();
   const bottomScrollInset = useBottomTabScrollInset();
   const { rows, visibleCount, hasMore, loading, loadingMore, loadMore, refresh, syncExpandedFromCache } =
     useWizardLogHistory(user.id, TABLES.LOG_MEDICATIONS);
+  const medicationLogItemIds = useMemo(() => rows.map((row) => String(row.id)), [rows]);
+  const {
+    selectionMode,
+    selectedIds,
+    bulkDeleteOpen,
+    setBulkDeleteOpen,
+    bulkDeleting,
+    enterSelectionWith,
+    toggleSelect,
+    runBulkDelete,
+  } = useLogListSelection({
+    routeName: "MedicationTrackingHistory",
+    itemIds: medicationLogItemIds,
+    navigation,
+    headerTitle: "History",
+  });
+  const selectionBarInset = selectionMode ? bottomTabBarHeight(insets.bottom) : 0;
+
   useFocusEffect(
     useCallback(() => {
       syncExpandedFromCache();
@@ -2205,27 +2290,55 @@ function MedicationTrackingHistoryScreen({ user }: { user: SessionUser }) {
       whenIso: row.created_at,
     }),
   );
+
+  const handleBulkDeleteConfirm = useCallback(() => {
+    void runBulkDelete(async (ids) => {
+      const result = await deleteUserLogRows(TABLES.LOG_MEDICATIONS, ids, user.id);
+      if (!result.ok) {
+        Alert.alert("Could not delete", result.message);
+        throw new Error(result.message);
+      }
+      invalidateDashboardSnapshot(user.id);
+      await refresh();
+    });
+  }, [refresh, runBulkDelete, user.id]);
+
   return (
-    <ScrollView
-      style={[styles.screen, { backgroundColor: c.screen }]}
-      contentContainerStyle={{ paddingBottom: bottomScrollInset + 24 }}
-    >
-      <LogHistoryIntroSection tip="A list of your medication events recorded through Track Medications.">
-        {loading && rows.length === 0 ? (
-          <LogHistoryListLoading />
-        ) : (
-          <LogHistoryPreviewList
-            emptyMessage="No medication logs yet."
-            items={medicationLogItems}
-            visibleCount={visibleCount}
-            hasMore={hasMore}
-            loadingMore={loadingMore}
-            onLoadMore={() => void loadMore()}
-            onPressItem={(logId) => navigation.navigate("MedicationLogDetail", { id: logId })}
-          />
-        )}
-      </LogHistoryIntroSection>
-    </ScrollView>
+    <>
+      <ScrollView
+        style={[styles.screen, { backgroundColor: c.screen }]}
+        contentContainerStyle={{ paddingBottom: bottomScrollInset + selectionBarInset + 24 }}
+      >
+        <LogHistoryIntroSection tip="A list of your medication events recorded through Track Medications.">
+          {loading && rows.length === 0 ? (
+            <LogHistoryListLoading />
+          ) : (
+            <LogHistoryPreviewList
+              emptyMessage="No medication logs yet."
+              items={medicationLogItems}
+              visibleCount={visibleCount}
+              hasMore={hasMore}
+              loadingMore={loadingMore}
+              onLoadMore={() => void loadMore()}
+              onPressItem={(logId) => navigation.navigate("MedicationLogDetail", { id: logId })}
+              selectionMode={selectionMode}
+              selectedIds={selectedIds}
+              onToggleSelect={toggleSelect}
+              onLongPressItem={enterSelectionWith}
+            />
+          )}
+        </LogHistoryIntroSection>
+      </ScrollView>
+      <ConfirmModal
+        visible={bulkDeleteOpen}
+        title={selectedIds.size === 1 ? "Delete medication log?" : `Delete ${selectedIds.size} medication logs?`}
+        message="This action cannot be undone."
+        confirmLabel={bulkDeleting ? "Deleting…" : "Delete"}
+        confirmDestructive
+        onConfirm={handleBulkDeleteConfirm}
+        onCancel={() => setBulkDeleteOpen(false)}
+      />
+    </>
   );
 }
 
@@ -2320,7 +2433,7 @@ function MedicationLogDetailScreen({ user }: { user: SessionUser }) {
 
   if (loading) {
     return (
-      <View style={[styles.screen, styles.centered, { backgroundColor: c.screen, paddingBottom: bottomScrollInset }]}>
+      <View style={[logDetailStyles.scroll, styles.centered, { backgroundColor: c.screen, paddingBottom: bottomScrollInset }]}>
         <ActivityIndicator color={c.primary} />
         <Text style={[styles.muted, { color: c.textMuted, marginTop: 12 }]}>Loading…</Text>
       </View>
@@ -2329,7 +2442,7 @@ function MedicationLogDetailScreen({ user }: { user: SessionUser }) {
 
   if (!row) {
     return (
-      <ScrollView style={[styles.screen, { backgroundColor: c.screen }]} contentContainerStyle={{ paddingBottom: bottomScrollInset + 24 }}>
+      <ScrollView style={[logDetailStyles.scroll, { backgroundColor: c.screen }]} contentContainerStyle={{ paddingBottom: bottomScrollInset + 24 }}>
         <Text style={[styles.muted, { color: c.textMuted }]}>Could not load this entry.</Text>
       </ScrollView>
     );
@@ -2338,7 +2451,7 @@ function MedicationLogDetailScreen({ user }: { user: SessionUser }) {
   return (
     <>
       <ScrollView
-        style={[styles.screen, { backgroundColor: c.screen }]}
+        style={[logDetailStyles.scroll, { backgroundColor: c.screen }]}
         contentContainerStyle={{ paddingBottom: bottomScrollInset + 24 }}
       >
         <LogDetailAddedHeader text={formatAddedAtHeader(createdIso)} />
@@ -2553,130 +2666,6 @@ function HydrationScreen({ user }: { user: SessionUser }) {
   );
 }
 
-function WeightScreen({ user }: { user: SessionUser }) {
-  const c = useFlareColors();
-  const bottomScrollInset = useBottomTabScrollInset();
-  const [valueKg, setValueKg] = useState("");
-  const [notes, setNotes] = useState("");
-  const [rows, setRows] = useState<any[]>([]);
-
-  const load = async () => {
-    const { data } = await supabase.from(TABLES.TRACK_WEIGHT).select("*").eq("user_id", user.id).order("date", { ascending: false }).limit(30);
-    setRows(data ?? []);
-  };
-  useEffect(() => { load(); }, [user.id]);
-
-  const add = async () => {
-    const payload = { user_id: user.id, date: new Date().toISOString().split("T")[0], value_kg: Number(valueKg), notes: notes || null };
-    const { error } = await supabase.from(TABLES.TRACK_WEIGHT).insert([payload]);
-    if (error) return Alert.alert("Could not save weight", error.message);
-    setValueKg("");
-    setNotes("");
-    await load();
-  };
-
-  return (
-    <ScrollView
-      style={[styles.screen, { backgroundColor: c.screen }]}
-      contentContainerStyle={{ paddingBottom: bottomScrollInset }}
-    >
-      <Card title="Log Weight">
-        <LabeledInput label="Weight (kg)" value={valueKg} onChangeText={setValueKg} placeholder="Weight (kg)" keyboardType="decimal-pad" />
-        <LabeledInput label="Notes" value={notes} onChangeText={setNotes} placeholder="Notes" />
-        <PrimaryButton title="Save weight" onPress={add} />
-      </Card>
-      <Card title="Recent Weight">
-        {rows.map((r) => (
-          <Text key={r.id} style={[styles.text, { color: c.textMuted }]}>
-            {formatUkDate(r.date)} - {r.value_kg}kg
-          </Text>
-        ))}
-      </Card>
-    </ScrollView>
-  );
-}
-
-function AppointmentsScreen({ user }: { user: SessionUser }) {
-  const c = useFlareColors();
-  const bottomScrollInset = useBottomTabScrollInset();
-  const [date, setDate] = useState(new Date().toISOString().slice(0, 10));
-  const [time, setTime] = useState("09:00");
-  const [reminderMinutesBefore, setReminderMinutesBefore] = useState("60");
-  const [type, setType] = useState("");
-  const [notes, setNotes] = useState("");
-  const [rows, setRows] = useState<Appointment[]>([]);
-
-  const load = async () => {
-    const { data } = await supabase.from(TABLES.APPOINTMENTS).select("*").eq("user_id", user.id).order("date", { ascending: false });
-    setRows((data ?? []) as Appointment[]);
-  };
-  useEffect(() => { load(); }, [user.id]);
-
-  const add = async () => {
-    const lead = Number(reminderMinutesBefore);
-    const payload = {
-      user_id: user.id,
-      date,
-      time,
-      type: type || null,
-      notes: notes || null,
-      reminder_minutes_before: Number.isFinite(lead) && lead >= 0 ? lead : 60,
-    };
-    const { error } = await supabase.from(TABLES.APPOINTMENTS).insert([payload]);
-    if (error) return Alert.alert("Could not save appointment", error.message);
-    setReminderMinutesBefore("60");
-    setType("");
-    setNotes("");
-    await load();
-    try {
-      if (Notifications) {
-        const permission = await Notifications.getPermissionsAsync();
-        if (permission.status === "granted") {
-          const { scheduledCount } = await rescheduleAppointmentNotificationsForUser(user.id);
-          Alert.alert("Appointment saved", `Appointment reminders updated: ${scheduledCount}`);
-          return;
-        }
-      }
-    } catch (e: any) {
-      Alert.alert("Appointment saved", `Could not auto-update reminders: ${e?.message || "Unknown error"}`);
-      return;
-    }
-    Alert.alert(
-      "Appointment saved",
-      "Open the Reminders tab and tap Enable notifications once. New appointments will update reminders automatically after that.",
-    );
-  };
-
-  return (
-    <ScrollView
-      style={[styles.screen, { backgroundColor: c.screen }]}
-      contentContainerStyle={{ paddingBottom: bottomScrollInset + 24 }}
-    >
-      <Card title="Add Appointment">
-        <LabeledInput label="Appointment date" value={date} onChangeText={setDate} placeholder="YYYY-MM-DD" />
-        <LabeledInput label="Appointment time (24h)" value={time} onChangeText={setTime} placeholder="HH:mm" />
-        <LabeledInput
-          label="Reminder minutes before"
-          value={reminderMinutesBefore}
-          onChangeText={setReminderMinutesBefore}
-          placeholder="60"
-          keyboardType="number-pad"
-        />
-        <LabeledInput label="Appointment type" value={type} onChangeText={setType} placeholder="Type" />
-        <LabeledInput label="Notes" value={notes} onChangeText={setNotes} placeholder="Notes" />
-        <PrimaryButton title="Save appointment" onPress={add} />
-      </Card>
-      <Card title="Upcoming & Past">
-        {rows.map((row) => (
-          <Text key={row.id} style={[styles.text, { color: c.textMuted }]}>
-            {formatUkDate(row.date)} {row.time ?? ""} - {row.type ?? "Appointment"}
-          </Text>
-        ))}
-      </Card>
-    </ScrollView>
-  );
-}
-
 function ReportsScreen({ user }: { user: SessionUser }) {
   const c = useFlareColors();
   const bottomScrollInset = useBottomTabScrollInset();
@@ -2841,6 +2830,35 @@ function HydrationHelpContent() {
   );
 }
 
+function AppointmentSummaryHelpContent() {
+  const c = useFlareColors();
+  const steps = [
+    "From Appointments, tap Appointment summary.",
+    "Choose a time period — a preset (2, 4, or 6 weeks) or a custom date range.",
+    "Review each section: Health overview, Next appointment, and What changed.",
+    "Tap Share or Email to send your summary to your clinician.",
+  ];
+
+  return (
+    <>
+      <Text style={[logHistoryCardStyles.trackerIntro, { color: c.textMuted }]}>
+        Appointment summary pulls together your recent logs so you can prepare for a visit.
+      </Text>
+      <View style={styles.notificationHelpStepList}>
+        {steps.map((step) => (
+          <View key={step} style={styles.notificationHelpStepRow}>
+            <Text style={[styles.notificationHelpStepBullet, { color: c.primary }]}>•</Text>
+            <Text style={[styles.text, styles.notificationHelpStepText, { color: c.textMuted }]}>{step}</Text>
+          </View>
+        ))}
+      </View>
+      <Text style={[styles.muted, styles.notificationHelpEmphasis, { color: c.textMuted, lineHeight: 20 }]}>
+        Add upcoming appointments in Appointments so your summary can include your next visit.
+      </Text>
+    </>
+  );
+}
+
 function HelpSectionDropdown({
   title,
   expanded,
@@ -2881,6 +2899,7 @@ function AccountHelpScreen() {
   const bottomScrollInset = useBottomTabScrollInset();
   const [notificationsOpen, setNotificationsOpen] = useState(false);
   const [hydrationOpen, setHydrationOpen] = useState(false);
+  const [appointmentSummaryOpen, setAppointmentSummaryOpen] = useState(false);
 
   useFocusEffect(
     useCallback(() => {
@@ -2888,14 +2907,18 @@ function AccountHelpScreen() {
       if (section === "notifications") {
         setNotificationsOpen(true);
         setHydrationOpen(false);
+        setAppointmentSummaryOpen(false);
         navigation.setParams({ expandSection: undefined });
       } else if (section === "hydration") {
         setHydrationOpen(true);
         setNotificationsOpen(false);
+        setAppointmentSummaryOpen(false);
         navigation.setParams({ expandSection: undefined });
-      } else {
+      } else if (section === "appointmentSummary") {
+        setAppointmentSummaryOpen(true);
         setNotificationsOpen(false);
         setHydrationOpen(false);
+        navigation.setParams({ expandSection: undefined });
       }
     }, [navigation, route.params?.expandSection]),
   );
@@ -2918,6 +2941,13 @@ function AccountHelpScreen() {
         onToggle={() => setHydrationOpen((open) => !open)}
       >
         <HydrationHelpContent />
+      </HelpSectionDropdown>
+      <HelpSectionDropdown
+        title="Appointments"
+        expanded={appointmentSummaryOpen}
+        onToggle={() => setAppointmentSummaryOpen((open) => !open)}
+      >
+        <AppointmentSummaryHelpContent />
       </HelpSectionDropdown>
     </ScrollView>
   );
@@ -3239,54 +3269,6 @@ const ACCOUNT_OPTION_ROUTES = [
   { label: "Help", route: "AccountHelp" as const },
 ];
 
-function AccountOptionRow({
-  label,
-  onPress,
-  labelColor = "text",
-  labelMedium,
-  labelSize = 14,
-  chevronSize = 18,
-  rowStyle,
-}: {
-  label: string;
-  onPress: () => void;
-  labelColor?: "text" | "textMuted" | "textSecondary" | "primary";
-  labelMedium?: boolean;
-  labelSize?: number;
-  chevronSize?: number;
-  rowStyle?: StyleProp<ViewStyle>;
-}) {
-  const c = useFlareColors();
-  const labelTint =
-    labelColor === "primary"
-      ? c.primary
-      : labelColor === "textMuted"
-        ? c.textMuted
-        : labelColor === "textSecondary"
-          ? c.textSecondary
-          : c.text;
-  return (
-    <Pressable
-      accessibilityRole="button"
-      accessibilityLabel={label}
-      onPress={onPress}
-      hitSlop={10}
-      style={[styles.accountOptionNavRow, rowStyle]}
-    >
-      <Text
-        style={[
-          styles.accountSettingsNavLabel,
-          labelMedium ? styles.accountSettingsNavLabelMedium : null,
-          { color: labelTint, fontSize: labelSize },
-        ]}
-      >
-        {label}
-      </Text>
-      <Ionicons name="chevron-forward" size={chevronSize} color={labelTint} />
-    </Pressable>
-  );
-}
-
 function AccountInfoScreen({ user }: { user: SessionUser }) {
   const navigation = useNavigation<any>();
   const c = useFlareColors();
@@ -3404,6 +3386,7 @@ function AccountLegalScreen() {
             { id: "privacy", title: "Privacy Policy", accessibilityLabel: "Privacy Policy" },
             { id: "terms", title: "Terms of Use", accessibilityLabel: "Terms of Use" },
           ]}
+          rowPaddingHorizontal={ACCOUNT_LIST_ROW_PADDING}
           onPressItem={(document) => navigation.navigate("LegalDocument", { document })}
         />
       </View>
@@ -3445,14 +3428,20 @@ function SettingsScreen() {
       style={[styles.screen, { backgroundColor: c.screen }]}
       contentContainerStyle={[styles.accountScrollContent, { paddingBottom: bottomScrollInset + 16 }]}
     >
-      <Text style={[styles.dashboardSectionTitleLeft, { color: c.text }]}>Notifications</Text>
-      <Card title="" style={styles.accountOptionsListCard} compactBody>
-        <AccountOptionRow
-          label="Push notifications and reminders"
-          labelColor="textSecondary"
-          onPress={() => navigation.navigate("Reminders")}
+      <View style={[logHistoryCardStyles.trackerCard, flareCardSectionStyles.container, { backgroundColor: c.card }]}>
+        <FlareScreenSectionTitle inCard>Notifications</FlareScreenSectionTitle>
+        <LogHistoryList
+          items={[
+            {
+              id: "reminders",
+              title: "Push notifications and reminders",
+              accessibilityLabel: "Push notifications and reminders",
+            },
+          ]}
+          rowPaddingHorizontal={ACCOUNT_LIST_ROW_PADDING}
+          onPressItem={() => navigation.navigate("Reminders")}
         />
-      </Card>
+      </View>
       <Text style={[styles.dashboardSectionTitleLeft, { color: c.text }]}>Appearance</Text>
       <Card title="" style={styles.accountPaddedCard} compactBody>
         <Text style={[styles.muted, { color: c.textMuted }]}>Choose light or dark for the app.</Text>
@@ -3548,6 +3537,7 @@ function AccountScreen({
             title: item.label,
             accessibilityLabel: item.label,
           }))}
+          rowPaddingHorizontal={ACCOUNT_LIST_ROW_PADDING}
           onPressItem={(route) => navigation.navigate(route)}
         />
       </View>
@@ -3559,8 +3549,6 @@ function AccountScreen({
         <SecondaryButton
           title="Delete account"
           onPress={() => setDeleteAccountConfirmOpen(true)}
-          borderless
-          borderlessFill="surfaceSubtle"
         />
       </View>
       <ConfirmModal
@@ -3593,8 +3581,10 @@ function MainBottomTabBar({
   const { colors } = useFlareTheme();
   const c = useFlareColors();
   const insets = useSafeAreaInsets();
+  const { chrome } = useListSelectionChrome();
+  const selectionChrome = chrome?.routeName === routeName ? chrome : null;
 
-  if (!BOTTOM_BAR_VISIBLE_ROUTES.has(routeName)) {
+  if (!BOTTOM_BAR_VISIBLE_ROUTES.has(routeName) && !selectionChrome) {
     return null;
   }
 
@@ -3629,6 +3619,35 @@ function MainBottomTabBar({
     );
   };
 
+  const deleteSlot = selectionChrome ? (
+    <Pressable
+      key="delete-selected"
+      accessibilityRole="button"
+      accessibilityLabel="Delete selected"
+      accessibilityState={{ disabled: selectionChrome.deleteDisabled }}
+      disabled={selectionChrome.deleteDisabled}
+      onPress={selectionChrome.onDelete}
+      style={styles.bottomTabItem}
+    >
+      <MaterialCommunityIcons
+        name="trash-can-outline"
+        size={23}
+        color={selectionChrome.deleteDisabled ? colors.textMuted : c.destructiveFill}
+        accessibilityIgnoresInvertColors
+      />
+      <Text
+        style={[
+          styles.bottomTabLabel,
+          { color: selectionChrome.deleteDisabled ? colors.textMuted : c.destructiveFill },
+        ]}
+      >
+        Delete
+      </Text>
+    </Pressable>
+  ) : (
+    item("Account", ({ active }) => <Ionicons name={active ? "person-circle" : "person-circle-outline"} size={23} color={active ? colors.primary : colors.textMuted} />, "Account")
+  );
+
   return (
     <View style={[styles.bottomTabBarWrap, { backgroundColor: c.screen, borderTopColor: c.cardBorder, paddingBottom: Math.max(insets.bottom, 10) }]}>
       {item(
@@ -3643,7 +3662,7 @@ function MainBottomTabBar({
         ),
         "Reminders",
       )}
-      {item("Account", ({ active }) => <Ionicons name={active ? "person-circle" : "person-circle-outline"} size={23} color={active ? colors.primary : colors.textMuted} />, "Account")}
+      {deleteSlot}
     </View>
   );
 }
@@ -3813,6 +3832,17 @@ function AppTabs({
       Bowel: "Bowel Movements",
       BowelLogDetail: "Bowel log",
       BristolGuide: "Bristol Stool Chart",
+      Weight: "My Weight",
+      WeightLogDetail: "Weight log",
+      Appointments: "Appointments",
+      AppointmentsPast: "Past appointments",
+      AppointmentDetail: "Appointment",
+      AppointmentBrief: "Appointment summary",
+      AppointmentBriefCustomRange: "Custom range",
+      AppointmentBriefResult: "Your summary",
+      AppointmentBriefHealth: "Health overview",
+      AppointmentBriefNext: "Next appointment",
+      AppointmentBriefChanges: "What changed",
     };
     const isSymptomLogWizard = route.name === "SymptomLogWizard";
     const isMedicationTrackingWizard = route.name === "MedicationTrackingWizard";
@@ -3825,7 +3855,16 @@ function AppTabs({
       route.name === "MedicationDetail" ||
       route.name === "Reports" ||
       route.name === "Weight" ||
+      route.name === "WeightLogDetail" ||
       route.name === "Appointments" ||
+      route.name === "AppointmentsPast" ||
+      route.name === "AppointmentDetail" ||
+      route.name === "AppointmentBrief" ||
+      route.name === "AppointmentBriefCustomRange" ||
+      route.name === "AppointmentBriefResult" ||
+      route.name === "AppointmentBriefHealth" ||
+      route.name === "AppointmentBriefNext" ||
+      route.name === "AppointmentBriefChanges" ||
       route.name === "Hydration" ||
       route.name === "Bowel" ||
       route.name === "BowelLogDetail" ||
@@ -3906,9 +3945,10 @@ function AppTabs({
 
   return (
     <NavigationContainer ref={navigationRef} theme={nav} onReady={onNavigationReady} onStateChange={syncFocusRoute}>
-      <View style={{ flex: 1, backgroundColor: colors.screen }}>
-        <View style={{ flex: 1 }}>
-          <AppStack.Navigator initialRouteName="Dashboard" screenOptions={headerOptions as any}>
+      <ListSelectionChromeProvider>
+        <View style={{ flex: 1, backgroundColor: colors.screen }}>
+          <View style={{ flex: 1 }}>
+            <AppStack.Navigator initialRouteName="Dashboard" screenOptions={headerOptions as any}>
             <AppStack.Screen name="Dashboard">
               {() => (
                 <DashboardScreen
@@ -3929,10 +3969,19 @@ function AppTabs({
             <AppStack.Screen name="MedicationTrackingWizard">{() => <MedicationTrackingWizardScreen user={user} />}</AppStack.Screen>
             <AppStack.Screen name="Hydration">{() => <HydrationScreen user={user} />}</AppStack.Screen>
             <AppStack.Screen name="Weight">{() => <WeightScreen user={user} />}</AppStack.Screen>
+            <AppStack.Screen name="WeightLogDetail">{() => <WeightLogDetailScreen user={user} />}</AppStack.Screen>
             <AppStack.Screen name="Bowel">{() => <BowelScreen user={user} />}</AppStack.Screen>
             <AppStack.Screen name="BowelLogDetail">{() => <BowelLogDetailScreen user={user} />}</AppStack.Screen>
             <AppStack.Screen name="BristolGuide" component={BristolGuideScreen} />
             <AppStack.Screen name="Appointments">{() => <AppointmentsScreen user={user} />}</AppStack.Screen>
+            <AppStack.Screen name="AppointmentsPast">{() => <AppointmentsPastScreen user={user} />}</AppStack.Screen>
+            <AppStack.Screen name="AppointmentDetail">{() => <AppointmentDetailScreen user={user} />}</AppStack.Screen>
+            <AppStack.Screen name="AppointmentBrief">{() => <AppointmentBriefScreen user={user} />}</AppStack.Screen>
+            <AppStack.Screen name="AppointmentBriefCustomRange">{() => <AppointmentBriefCustomRangeScreen user={user} />}</AppStack.Screen>
+            <AppStack.Screen name="AppointmentBriefResult">{() => <AppointmentBriefResultScreen user={user} />}</AppStack.Screen>
+            <AppStack.Screen name="AppointmentBriefHealth">{() => <AppointmentBriefHealthScreen user={user} />}</AppStack.Screen>
+            <AppStack.Screen name="AppointmentBriefNext">{() => <AppointmentBriefNextScreen user={user} />}</AppStack.Screen>
+            <AppStack.Screen name="AppointmentBriefChanges">{() => <AppointmentBriefChangesScreen user={user} />}</AppStack.Screen>
             <AppStack.Screen name="Reports">{() => <ReportsScreen user={user} />}</AppStack.Screen>
             <AppStack.Screen name="Meds" component={MedsScreenRoute} />
             <AppStack.Screen name="MedicationDetail">{() => <MedicationDetailScreen user={user} />}</AppStack.Screen>
@@ -3969,6 +4018,7 @@ function AppTabs({
           />
         </View>
       </View>
+      </ListSelectionChromeProvider>
     </NavigationContainer>
   );
 }
@@ -4444,14 +4494,6 @@ const styles = StyleSheet.create({
     justifyContent: "space-between",
   },
   accountPaddedCard: { padding: 18 },
-  /** My account / Help link lists. */
-  accountOptionsListCard: { paddingHorizontal: 20, paddingVertical: 12 },
-  accountOptionNavRow: {
-    flexDirection: "row",
-    alignItems: "center",
-    justifyContent: "space-between",
-    paddingVertical: 10,
-  },
   accountAvatarWell: {
     width: 56,
     height: 56,
@@ -4469,11 +4511,7 @@ const styles = StyleSheet.create({
     alignItems: "center",
     justifyContent: "space-between",
   },
-  accountSettingsNavLabel: { flex: 1, fontSize: 14, fontFamily: "Inter_400Regular", paddingRight: 10 },
-  accountSettingsNavLabelMedium: { fontFamily: "Inter_500Medium" },
   accountScrollContent: { flexGrow: 1 },
-  /** My account list on Account tab — no extra card gap before logout. */
-  accountOptionsListCardLast: { marginBottom: 0 },
   /** Same height and radius as `PrimaryButton`; two equal slots like paired actions. */
   appearanceRow: { flexDirection: "row", gap: 8, marginTop: 14 },
   appearanceChip: {

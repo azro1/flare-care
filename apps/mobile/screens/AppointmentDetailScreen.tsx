@@ -1,51 +1,40 @@
 import { Ionicons, MaterialCommunityIcons } from "@expo/vector-icons";
 import { useFocusEffect, useNavigation, useRoute } from "@react-navigation/native";
 import React, { useCallback, useLayoutEffect, useRef, useState } from "react";
-import {
-  ActivityIndicator,
-  Alert,
-  Pressable,
-  StyleSheet,
-  Text,
-  View,
-} from "react-native";
+import { ActivityIndicator, Alert, Pressable, StyleSheet, Text, View } from "react-native";
 import { ScrollView } from "../lib/scrollViews";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { ConfirmModal } from "../components/ConfirmModal";
-import { PrimaryButton, SecondaryButton } from "../components/FlareButton";
 import { LogDetailAddedHeader, LogDetailCard, LogDetailFieldGroup, logDetailStyles } from "../components/LogDetailLayout";
 import { flareCardSectionStyles } from "../components/FlareScreenSectionTitle";
 import { invalidateDashboardSnapshot } from "../lib/dashboardSnapshotCache";
 import { formatAddedAtHeader } from "../lib/logDisplay";
-import {
-  deleteMedicationForUser,
-  invalidateMedicationsListCache,
-  emptyMedicationFormState,
-  fetchTakenMedicationIdsForToday,
-  formatMedicationReminderTime,
-  medicationFormFromRow,
-  normalizeFrequencyPreset,
-  medicationUpdatePayloadFromForm,
-  toggleMedicationTakenToday,
-  type MedicationFormState,
-  type MedicationRow,
-} from "../lib/medicationShared";
-import { rescheduleMedicationNotificationsForUser } from "../lib/medicationNotifications";
+import { formatUkDate } from "../lib/formatUkDate";
+import { rescheduleAppointmentNotificationsForUser } from "../lib/medicationNotifications";
 import { FLARE_FONT_FAMILY, FLARE_FONT_SIZE } from "../lib/layoutConstants";
+import { invalidateAllAppointmentCaches } from "../lib/appointmentCaches";
+import {
+  appointmentFormFromRow,
+  appointmentPayloadFromForm,
+  quickAppointmentFormState,
+  reminderLabelFromMinutes,
+  type AppointmentFormState,
+  type AppointmentRow,
+} from "../lib/appointmentShared";
 import { supabase, TABLES } from "../lib/supabase";
 import { useFlareColors } from "../theme";
-import { MedicationSheet } from "./MedicationsScreen";
+import { AppointmentSheet } from "./AppointmentsScreen";
 
 type SessionUser = { id: string };
 
-export type MedicationDetailParams = {
+export type AppointmentDetailParams = {
   id: string;
 };
 
 function DetailEditHeaderButton({ onPress, disabled }: { onPress: () => void; disabled?: boolean }) {
   const c = useFlareColors();
   return (
-    <Pressable accessibilityRole="button" accessibilityLabel="Edit medication" onPress={onPress} disabled={disabled} hitSlop={10} style={styles.headerIconBtn}>
+    <Pressable accessibilityRole="button" accessibilityLabel="Edit appointment" onPress={onPress} disabled={disabled} hitSlop={10} style={styles.headerIconBtn}>
       <Ionicons name="create-outline" size={22} color={c.textMuted} accessibilityIgnoresInvertColors />
     </Pressable>
   );
@@ -54,47 +43,46 @@ function DetailEditHeaderButton({ onPress, disabled }: { onPress: () => void; di
 function DetailDeleteHeaderButton({ onPress, disabled }: { onPress: () => void; disabled?: boolean }) {
   const c = useFlareColors();
   return (
-    <Pressable accessibilityRole="button" accessibilityLabel="Delete medication" onPress={onPress} disabled={disabled} hitSlop={10} style={styles.headerIconBtn}>
+    <Pressable accessibilityRole="button" accessibilityLabel="Delete appointment" onPress={onPress} disabled={disabled} hitSlop={10} style={styles.headerIconBtn}>
       <MaterialCommunityIcons name="trash-can-outline" size={22} color={c.textMuted} accessibilityIgnoresInvertColors />
     </Pressable>
   );
 }
 
-export function MedicationDetailScreen({ user }: { user: SessionUser }) {
+export function AppointmentDetailScreen({ user }: { user: SessionUser }) {
   const navigation = useNavigation<any>();
   const route = useRoute();
   const c = useFlareColors();
   const insets = useSafeAreaInsets();
-  const id = String((route.params as MedicationDetailParams | undefined)?.id ?? "");
-  const medId = parseInt(id, 10);
+  const id = String((route.params as AppointmentDetailParams | undefined)?.id ?? "");
+  const aptId = parseInt(id, 10);
 
   const [loading, setLoading] = useState(true);
-  const [row, setRow] = useState<MedicationRow | null>(null);
-  const [takenToday, setTakenToday] = useState(false);
-  const [takenBusy, setTakenBusy] = useState(false);
+  const [row, setRow] = useState<AppointmentRow | null>(null);
   const [deleteOpen, setDeleteOpen] = useState(false);
   const [deleting, setDeleting] = useState(false);
   const [sheetOpen, setSheetOpen] = useState(false);
-  const [form, setForm] = useState<MedicationFormState>(() => emptyMedicationFormState());
+  const [form, setForm] = useState<AppointmentFormState>(() => quickAppointmentFormState());
   const [saving, setSaving] = useState(false);
   const [saveError, setSaveError] = useState("");
   const deleteInFlight = useRef(false);
 
   const load = useCallback(async () => {
-    if (!id || Number.isNaN(medId)) {
+    if (!id || Number.isNaN(aptId)) {
       setRow(null);
       setLoading(false);
       return;
     }
     setLoading(true);
-    const [{ data, error }, takenIds] = await Promise.all([
-      supabase.from(TABLES.MEDICATIONS).select("*").eq("user_id", user.id).eq("id", medId).maybeSingle(),
-      fetchTakenMedicationIdsForToday(user.id),
-    ]);
-    setRow(error || !data ? null : (data as MedicationRow));
-    setTakenToday(takenIds.includes(String(medId)));
+    const { data, error } = await supabase
+      .from(TABLES.APPOINTMENTS)
+      .select("*")
+      .eq("user_id", user.id)
+      .eq("id", aptId)
+      .maybeSingle();
+    setRow(error || !data ? null : (data as AppointmentRow));
     setLoading(false);
-  }, [id, medId, user.id]);
+  }, [aptId, id, user.id]);
 
   useFocusEffect(
     useCallback(() => {
@@ -105,38 +93,40 @@ export function MedicationDetailScreen({ user }: { user: SessionUser }) {
   const closeSheet = useCallback(() => {
     setSheetOpen(false);
     setSaveError("");
+    setForm(quickAppointmentFormState());
   }, []);
 
   const handleEdit = useCallback(() => {
     if (!row) return;
-    setForm(medicationFormFromRow(row));
+    setForm(appointmentFormFromRow(row));
     setSaveError("");
     setSheetOpen(true);
   }, [row]);
 
   const handleSave = useCallback(
-    async (values: MedicationFormState) => {
+    async (values: AppointmentFormState) => {
       if (!row) return;
       setSaveError("");
       setSaving(true);
       try {
+        const payload = appointmentPayloadFromForm(values, true);
         const { error } = await supabase
-          .from(TABLES.MEDICATIONS)
-          .update(medicationUpdatePayloadFromForm(values))
+          .from(TABLES.APPOINTMENTS)
+          .update(payload)
           .eq("id", row.id)
           .eq("user_id", user.id);
         if (error) throw error;
         closeSheet();
         invalidateDashboardSnapshot(user.id);
-        invalidateMedicationsListCache(user.id);
+        invalidateAllAppointmentCaches(user.id);
         await load();
         try {
-          await rescheduleMedicationNotificationsForUser(user.id);
+          await rescheduleAppointmentNotificationsForUser(user.id);
         } catch {
           // non-fatal
         }
       } catch (err: unknown) {
-        setSaveError(err instanceof Error ? err.message : "Could not save this medication.");
+        setSaveError(err instanceof Error ? err.message : "Could not save this appointment.");
       } finally {
         setSaving(false);
       }
@@ -144,38 +134,23 @@ export function MedicationDetailScreen({ user }: { user: SessionUser }) {
     [closeSheet, load, row, user.id],
   );
 
-  const handleToggleTaken = useCallback(async () => {
-    if (!row || takenBusy) return;
-    const wasTaken = takenToday;
-    setTakenToday(!wasTaken);
-    setTakenBusy(true);
-    try {
-      await toggleMedicationTakenToday(user.id, row.id, wasTaken);
-      invalidateDashboardSnapshot(user.id);
-    } catch (err: unknown) {
-      setTakenToday(wasTaken);
-      Alert.alert("Could not update", err instanceof Error ? err.message : "Something went wrong.");
-    } finally {
-      setTakenBusy(false);
-    }
-  }, [row, takenBusy, takenToday, user.id]);
-
   const handleDelete = useCallback(async () => {
     if (deleteInFlight.current || !row) return;
     deleteInFlight.current = true;
     setDeleting(true);
     setDeleteOpen(false);
     try {
-      await deleteMedicationForUser(user.id, row.id);
+      const { error } = await supabase.from(TABLES.APPOINTMENTS).delete().eq("id", row.id).eq("user_id", user.id);
+      if (error) throw error;
       invalidateDashboardSnapshot(user.id);
-      invalidateMedicationsListCache(user.id);
+      invalidateAllAppointmentCaches(user.id);
       try {
-        await rescheduleMedicationNotificationsForUser(user.id);
+        await rescheduleAppointmentNotificationsForUser(user.id);
       } catch {
         // non-fatal
       }
       if (navigation.canGoBack()) navigation.goBack();
-      else navigation.navigate("Meds");
+      else navigation.navigate("Appointments");
     } catch (err: unknown) {
       Alert.alert("Could not delete", err instanceof Error ? err.message : "Something went wrong.");
     } finally {
@@ -216,7 +191,7 @@ export function MedicationDetailScreen({ user }: { user: SessionUser }) {
   if (!row) {
     return (
       <ScrollView style={[logDetailStyles.scroll, { backgroundColor: c.screen }]} contentContainerStyle={{ paddingBottom: bottomPad }}>
-        <Text style={[styles.muted, { color: c.textMuted }]}>Could not load this medication.</Text>
+        <Text style={[styles.muted, { color: c.textMuted }]}>Could not load this appointment.</Text>
       </ScrollView>
     );
   }
@@ -233,44 +208,29 @@ export function MedicationDetailScreen({ user }: { user: SessionUser }) {
         <LogDetailCard style={flareCardSectionStyles.container}>
           <LogDetailFieldGroup
             fields={[
-              { label: "Medication", value: row.name },
-              { label: "Dosage", value: row.dosage?.trim() || "Not set" },
-              { label: "Frequency", value: normalizeFrequencyPreset(row.frequency) || "Not set" },
-              { label: "Reminder time", value: formatMedicationReminderTime(row.time_of_day) },
+              { label: "Date", value: formatUkDate(row.date) || "Not set" },
+              { label: "Time", value: row.time?.trim() || "Not set" },
+              { label: "Type", value: row.type?.trim() || "Not set" },
+              { label: "Clinician", value: row.clinician_name?.trim() || "Not set" },
+              { label: "Location", value: row.location?.trim() || "Not set" },
+              { label: "Reminder", value: reminderLabelFromMinutes(row.reminder_minutes_before) },
               { label: "Notes", value: row.notes?.trim() || "Not set" },
             ]}
           />
         </LogDetailCard>
-
-        <View style={styles.takenActions}>
-          {takenToday ? (
-            <PrimaryButton
-              title="Taken today"
-              onPress={handleToggleTaken}
-              disabled={takenBusy}
-              leftIcon={<Ionicons name="checkmark" size={18} color={c.white} accessibilityIgnoresInvertColors />}
-            />
-          ) : (
-            <SecondaryButton
-              title="Mark as taken today"
-              onPress={handleToggleTaken}
-              disabled={takenBusy}
-            />
-          )}
-        </View>
       </ScrollView>
 
       <ConfirmModal
         visible={deleteOpen}
-        title="Delete medication"
-        message="Are you sure you want to delete this medication? This cannot be undone."
+        title="Delete appointment?"
+        message="This appointment will be removed. Are you sure you want to delete it?"
         confirmLabel={deleting ? "Deleting…" : "Delete"}
         confirmDestructive
         onConfirm={handleDelete}
         onCancel={() => setDeleteOpen(false)}
       />
 
-      <MedicationSheet
+      <AppointmentSheet
         visible={sheetOpen}
         editingId={row.id}
         initialValues={form}
@@ -288,5 +248,4 @@ const styles = StyleSheet.create({
   muted: { fontSize: FLARE_FONT_SIZE.body, fontFamily: FLARE_FONT_FAMILY.regular },
   headerBtnRow: { flexDirection: "row", alignItems: "center" },
   headerIconBtn: { width: 44, height: 44, alignItems: "center", justifyContent: "center" },
-  takenActions: { marginTop: 4 },
 });
