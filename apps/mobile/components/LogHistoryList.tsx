@@ -1,4 +1,4 @@
-import { Ionicons } from "@expo/vector-icons";
+import { Ionicons, MaterialCommunityIcons } from "@expo/vector-icons";
 import React from "react";
 import {
   ActivityIndicator,
@@ -6,6 +6,7 @@ import {
   StyleSheet,
   Text,
   View,
+  type ComponentProps,
   type ReactNode,
   type StyleProp,
   type ViewStyle,
@@ -24,6 +25,7 @@ import {
   FLARE_FONT_SIZE,
   FLARE_LINE_HEIGHT,
   SCREEN_EDGE_PADDING,
+  SECTION_TITLE_MARGIN_BOTTOM,
 } from "../lib/layoutConstants";
 import { useFlareColors } from "../theme";
 
@@ -113,6 +115,32 @@ export function LogHistoryIntroSection({
       </LogHistoryCard>
       <LogHistoryTipRow text={tip} />
     </>
+  );
+}
+
+type MciIconName = ComponentProps<typeof MaterialCommunityIcons>["name"];
+type IonIconName = ComponentProps<typeof Ionicons>["name"];
+
+/** Shared empty list — pass the tracker/wizard icon; copy is always “Nothing here yet”. */
+export function LogHistoryEmptyState({
+  icon,
+  iconFamily = "mci",
+}: {
+  icon: MciIconName | IonIconName;
+  iconFamily?: "mci" | "ion";
+}) {
+  const c = useFlareColors();
+  return (
+    <View style={logHistoryEmptyStateStyles.wrap}>
+      <View style={[logHistoryEmptyStateStyles.icon, { backgroundColor: c.surfaceSubtle }]}>
+        {iconFamily === "ion" ? (
+          <Ionicons name={icon as IonIconName} size={28} color={c.primary} accessibilityIgnoresInvertColors />
+        ) : (
+          <MaterialCommunityIcons name={icon as MciIconName} size={28} color={c.primary} accessibilityIgnoresInvertColors />
+        )}
+      </View>
+      <Text style={[logHistoryEmptyStateStyles.title, { color: c.textMuted }]}>Nothing here yet</Text>
+    </View>
   );
 }
 
@@ -525,5 +553,27 @@ export const logHistoryListStyles = StyleSheet.create({
     fontSize: FLARE_FONT_SIZE.muted,
     fontFamily: FLARE_FONT_FAMILY.medium,
     textDecorationLine: "underline",
+  },
+});
+
+const logHistoryEmptyStateStyles = StyleSheet.create({
+  wrap: {
+    alignItems: "center",
+    paddingVertical: 20,
+    paddingHorizontal: 8,
+  },
+  icon: {
+    width: 56,
+    height: 56,
+    borderRadius: 28,
+    alignItems: "center",
+    justifyContent: "center",
+    marginBottom: SECTION_TITLE_MARGIN_BOTTOM,
+  },
+  title: {
+    fontSize: FLARE_FONT_SIZE.sectionTitle,
+    fontFamily: FLARE_FONT_FAMILY.bold,
+    lineHeight: FLARE_LINE_HEIGHT.sectionTitle,
+    marginBottom: 6,
   },
 });

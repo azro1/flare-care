@@ -37,7 +37,7 @@
         "expo-notifications",
         {
           "defaultChannel": "reminders",
-          "color": "#0D9488"
+          "color": "#5F9EA0"
         }
       ],
       "@react-native-community/datetimepicker",

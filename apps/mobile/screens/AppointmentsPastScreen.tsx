@@ -14,7 +14,6 @@ export function AppointmentsPastScreen({ user }: { user: SessionUser }) {
       showFab={false}
       selectionRouteName="AppointmentsPast"
       headerTitle="Past appointments"
-      emptyTitle="No past appointments"
       tipText="Your past clinician visits are stored here for your records."
       list={list}
     />

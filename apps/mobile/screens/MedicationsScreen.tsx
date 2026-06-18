@@ -20,6 +20,7 @@ import { FlareScreenSectionTitle } from "../components/FlareScreenSectionTitle";
 import {
   LogHistoryCard,
   LogHistoryListLoading,
+  LogHistoryEmptyState,
   LogHistoryPreviewList,
   LogHistoryTipRow,
   LOG_HISTORY_LOAD_MORE_BATCH,
@@ -54,9 +55,7 @@ import { snapTimeHmFromDate } from "../lib/bowelMovementShared";
 import {
   FLARE_FONT_FAMILY,
   FLARE_FONT_SIZE,
-  FLARE_LINE_HEIGHT,
   SCREEN_EDGE_PADDING,
-  SECTION_TITLE_MARGIN_BOTTOM,
   TIME_PICKER_MINUTE_INTERVAL,
   bottomTabBarHeight,
 } from "../lib/layoutConstants";
@@ -466,12 +465,7 @@ export function MedicationsScreen({ user }: { user: SessionUser }) {
             {loading && meds.length === 0 ? (
               <LogHistoryListLoading />
             ) : meds.length === 0 ? (
-              <View style={styles.emptyWrap}>
-                <View style={[styles.emptyIcon, { backgroundColor: c.surfaceSubtle }]}>
-                  <MaterialCommunityIcons name={MY_MEDS_MCI_ICON} size={28} color={c.primary} accessibilityIgnoresInvertColors />
-                </View>
-                <Text style={[styles.emptyTitle, { color: c.textMuted }]}>Nothing here yet</Text>
-              </View>
+              <LogHistoryEmptyState icon={MY_MEDS_MCI_ICON} />
             ) : (
               <LogHistoryPreviewList
                 items={medListItems}
@@ -526,21 +520,6 @@ export function MedicationsScreen({ user }: { user: SessionUser }) {
 const styles = StyleSheet.create({
   screenRoot: { flex: 1 },
   screenScroll: { flex: 1, padding: SCREEN_EDGE_PADDING },
-  emptyWrap: { alignItems: "center", paddingVertical: 20, paddingHorizontal: 8 },
-  emptyIcon: {
-    width: 56,
-    height: 56,
-    borderRadius: 28,
-    alignItems: "center",
-    justifyContent: "center",
-    marginBottom: SECTION_TITLE_MARGIN_BOTTOM,
-  },
-  emptyTitle: {
-    fontSize: FLARE_FONT_SIZE.sectionTitle,
-    fontFamily: FLARE_FONT_FAMILY.bold,
-    lineHeight: FLARE_LINE_HEIGHT.sectionTitle,
-    marginBottom: 6,
-  },
   medSubtitleRow: { flexDirection: "row", alignItems: "center", flexShrink: 1, minWidth: 0 },
   medReminderTimeRow: { flexDirection: "row", alignItems: "center", gap: 4, flexShrink: 1, minWidth: 0 },
   sheetRoot: { flex: 1 },

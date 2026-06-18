@@ -6,6 +6,9 @@ export const SCREEN_EDGE_PADDING = 12;
 /** Extra inset for Account tab link rows inside the grey tray (My account, Legal). */
 export const ACCOUNT_LIST_ROW_PADDING = 20;
 
+/** Today → Goals rows inside the white card — between default list inset and Account links. */
+export const TODAY_GOALS_ROW_PADDING = 14;
+
 /** Native `DateTimePicker` time mode — medication reminders, bowel log, etc. */
 export const TIME_PICKER_MINUTE_INTERVAL = 5;
 

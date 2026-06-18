@@ -173,7 +173,18 @@ export function AppointmentSheet({
           style={[styles.sheetRoot, { backgroundColor: c.screen }]}
           behavior={Platform.OS === "ios" ? "padding" : undefined}
         >
-          <View style={[styles.sheetHeader, { borderBottomColor: c.cardBorder, paddingTop: Math.max(insets.top, 12) }]}>
+          <View
+            style={[
+              styles.sheetHeader,
+              {
+                borderBottomColor: c.cardBorder,
+                paddingTop: Math.max(insets.top, 12),
+                backgroundColor: c.screen,
+                zIndex: 1,
+                elevation: 1,
+              },
+            ]}
+          >
             <Pressable accessibilityRole="button" accessibilityLabel="Close" onPress={onClose} hitSlop={12} style={styles.sheetClose}>
               <Ionicons name="close" size={26} color={c.textMuted} />
             </Pressable>
@@ -186,6 +197,7 @@ export function AppointmentSheet({
             contentContainerStyle={[styles.sheetScroll, { paddingBottom: insets.bottom + 24 }]}
             showsVerticalScrollIndicator={false}
           >
+            <View style={styles.whenBlock}>
             <View style={styles.whenRow}>
               <View style={styles.whenCol}>
                 <FlareScreenSectionTitle compact>Date *</FlareScreenSectionTitle>
@@ -219,6 +231,7 @@ export function AppointmentSheet({
                   <Text style={[styles.whenPillText, { color: form.time ? c.text : c.textMuted }]}>{form.time || ""}</Text>
                 </Pressable>
               </View>
+            </View>
             </View>
 
             <FlareScreenSectionTitle compact style={{ marginTop: 16 }}>
@@ -381,7 +394,6 @@ export function AppointmentsScreen({ user }: { user: SessionUser }) {
         onAddPress={openAdd}
         selectionRouteName="Appointments"
         headerTitle="Appointments"
-        emptyTitle="No upcoming appointments"
         tipText="Tap + to add an appointment. Set reminders so you don't miss upcoming appointments."
         renderIdleHeaderRight={renderPastLink}
         onSummaryPress={openSummary}
@@ -414,7 +426,8 @@ const styles = StyleSheet.create({
   sheetClose: { width: 44, height: 44, alignItems: "center", justifyContent: "center" },
   sheetTitle: { fontSize: FLARE_FONT_SIZE.navTitle, fontFamily: FLARE_FONT_FAMILY.bold },
   sheetScroll: { paddingHorizontal: 20, paddingTop: 14 },
-  whenRow: { flexDirection: "row", gap: STACKED_DETAIL_ROW_EDGE, marginBottom: 4 },
+  whenBlock: { marginBottom: 4 },
+  whenRow: { flexDirection: "row", gap: STACKED_DETAIL_ROW_EDGE },
   whenCol: { flex: 1, gap: 6 },
   whenPill: {
     flexDirection: "row",

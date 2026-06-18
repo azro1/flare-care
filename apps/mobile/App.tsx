@@ -44,6 +44,7 @@ import {
   PrimaryButton,
   SecondaryButton,
 } from "./components/FlareButton";
+import { DashboardWelcomeCard } from "./components/DashboardWelcomeCard";
 import { flareFieldErrorStyle, LabeledInput } from "./components/FlareInput";
 import { flareCardSectionStyles, FlareScreenSectionTitle } from "./components/FlareScreenSectionTitle";
 import { HeaderOverflowMenu } from "./components/HeaderOverflowMenu";
@@ -66,6 +67,7 @@ import { HYDRATION_TARGET, HYDRATION_MCI_ICON, HYDRATION_MCI_ICON_EMPTY, loadHyd
 import {
   bottomTabBarHeight,
   ACCOUNT_LIST_ROW_PADDING,
+  TODAY_GOALS_ROW_PADDING,
   bottomTabBarScrollInset,
   FLARE_FONT_FAMILY,
   FLARE_FONT_SIZE,
@@ -89,6 +91,7 @@ import {
   LogHistoryListLoading,
   LogHistoryCard,
   LogHistoryIntroSection,
+  LogHistoryEmptyState,
   buildBrowseLogRowItem,
   buildTimestampLogRowItem,
   logHistoryCardStyles,
@@ -103,6 +106,8 @@ import {
   logDetailStyles,
 } from "./components/LogDetailLayout";
 import { formatAddedAtHeader } from "./lib/logDisplay";
+import { NEWS_FEED_LOAD_MORE_BATCH } from "./lib/logHistoryConstants";
+import { resolvePaginatedVisibleCount } from "./lib/paginatedLogList";
 import { useWizardLogHistory } from "./lib/wizardLogHistory";
 import { openAppNotificationSettings } from "./lib/openAppNotificationSettings";
 import { supabase, TABLES } from "./lib/supabase";
@@ -114,6 +119,13 @@ import {
   type DashboardNewsItem,
   type DashboardSnapshot,
 } from "./lib/dashboardSnapshotCache";
+import {
+  isNewAuthUser,
+  markDashboardWelcomeDismissed,
+  markDashboardWelcomeEligible,
+  readDashboardWelcomeDismissed,
+  readDashboardWelcomeEligible,
+} from "./lib/dashboardWelcome";
 /** Bowel UI lives in `screens/BowelScreen.tsx` — do not re-declare `BowelScreen` in this file. */
 import { BristolGuideScreen } from "./screens/BristolGuideScreen";
 import { BowelLogDetailScreen } from "./screens/BowelLogDetailScreen";
@@ -649,6 +661,9 @@ function AuthScreen({
     clearOtpSession();
     const user = data.user;
     if (user) {
+      if (isNewAuthUser(user)) {
+        await markDashboardWelcomeEligible(user.id);
+      }
       onSignedIn(sessionUserFromSupabaseAuthUser(user));
     }
   };
@@ -694,6 +709,9 @@ function AuthScreen({
         const { data: sessionData } = await supabase.auth.getSession();
         const sessionUser = sessionData.session?.user;
         if (sessionUser) {
+          if (isNewAuthUser(sessionUser)) {
+            await markDashboardWelcomeEligible(sessionUser.id);
+          }
           onSignedIn(sessionUserFromSupabaseAuthUser(sessionUser));
         } else {
           Alert.alert("Google sign in incomplete", "No session returned. Please try again.");
@@ -1244,11 +1262,15 @@ function DashboardScreen({
     return !(s.newsItems.length > 0 || s.newsError);
   });
   const [newsError, setNewsError] = useState<string | null>(() => snapshotSeed?.newsError ?? null);
+  const [newsExpandedCount, setNewsExpandedCount] = useState(NEWS_FEED_LOAD_MORE_BATCH);
   const [todaySummary, setTodaySummary] = useState<{ symptoms: number; medsTaken: number; medsTotal: number; hydration: number }>(
     () => snapshotSeed?.todaySummary ?? { symptoms: 0, medsTaken: 0, medsTotal: 0, hydration: 0 },
   );
   const [recentActivity, setRecentActivity] = useState<DashboardActivityRow[]>(() => snapshotSeed?.recentActivity ?? []);
   const [historyPreview, setHistoryPreview] = useState({ symptomCount: 0, medicationCount: 0 });
+  const [welcomeDismissed, setWelcomeDismissed] = useState(true);
+  const [welcomeEligible, setWelcomeEligible] = useState(false);
+  const [welcomeHydrated, setWelcomeHydrated] = useState(false);
   /** Dashboard pills — exclusive selection; default **More** shows the shortcuts grid. */
   const [homeDashTab, setHomeDashTab] = useState<HomeDashTab>("more");
   const hydrationTarget = HYDRATION_TARGET;
@@ -1282,6 +1304,30 @@ function DashboardScreen({
     computedGreetingFirst !== "there"
       ? computedGreetingFirst
       : dashboardGreetingFirstNameByUserId[user.id] ?? "there";
+  const showWelcomeCard = welcomeHydrated && welcomeEligible && !welcomeDismissed;
+
+  useEffect(() => {
+    let cancelled = false;
+    (async () => {
+      const [dismissed, eligible] = await Promise.all([
+        readDashboardWelcomeDismissed(user.id),
+        readDashboardWelcomeEligible(user.id),
+      ]);
+      if (!cancelled) {
+        setWelcomeDismissed(dismissed);
+        setWelcomeEligible(eligible);
+        setWelcomeHydrated(true);
+      }
+    })();
+    return () => {
+      cancelled = true;
+    };
+  }, [user.id]);
+
+  const dismissWelcomeCard = useCallback(() => {
+    setWelcomeDismissed(true);
+    void markDashboardWelcomeDismissed(user.id);
+  }, [user.id]);
   const todayLabel = `${new Date().toLocaleDateString("en-GB", { weekday: "long" })}, ${formatUkDate(new Date())}`;
   const formatRelativeTime = (timestamp: number) => {
     const diffMinutes = Math.floor((Date.now() - timestamp) / (1000 * 60));
@@ -1565,6 +1611,7 @@ function DashboardScreen({
             if (cancelled) return;
             setNewsItems(snap.newsItems);
             setNewsError(null);
+            setNewsExpandedCount(NEWS_FEED_LOAD_MORE_BATCH);
           }
         } catch {
           snap.newsItems = [];
@@ -1572,6 +1619,7 @@ function DashboardScreen({
           if (cancelled) return;
           setNewsItems([]);
           setNewsError(snap.newsError);
+          setNewsExpandedCount(NEWS_FEED_LOAD_MORE_BATCH);
         } finally {
           if (!cancelled) {
             setNewsLoading(false);
@@ -1586,6 +1634,16 @@ function DashboardScreen({
       };
     }, [user.id]),
   );
+
+  const newsVisibleCount = useMemo(
+    () => resolvePaginatedVisibleCount(newsItems.length, newsExpandedCount, NEWS_FEED_LOAD_MORE_BATCH),
+    [newsItems.length, newsExpandedCount],
+  );
+  const visibleNewsItems = useMemo(() => newsItems.slice(0, newsVisibleCount), [newsItems, newsVisibleCount]);
+  const hasMoreNews = newsItems.length > newsVisibleCount;
+  const loadMoreNews = useCallback(() => {
+    setNewsExpandedCount((count) => Math.min(count + NEWS_FEED_LOAD_MORE_BATCH, newsItems.length));
+  }, [newsItems.length]);
 
   const homeNavPills = (
     <View style={styles.homeNavPillsSection}>
@@ -1659,7 +1717,7 @@ function DashboardScreen({
           Goals
         </Text>
         <View style={[logHistoryCardStyles.trackerCard, { backgroundColor: c.card }]}>
-          <LogHistoryList items={todayGoalItems} rowPaddingHorizontal={ACCOUNT_LIST_ROW_PADDING} />
+          <LogHistoryList items={todayGoalItems} rowPaddingHorizontal={TODAY_GOALS_ROW_PADDING} />
         </View>
         <Text style={[styles.dashboardSectionTitleLeft, { color: c.text }]}>Summary</Text>
         <View style={[logHistoryCardStyles.trackerCard, { backgroundColor: c.card }]}>
@@ -1681,7 +1739,7 @@ function DashboardScreen({
           <Text style={[styles.muted, { color: c.textMuted }]}>No news available right now.</Text>
         ) : (
           <View style={styles.newsFeed}>
-            {newsItems.map((item) => (
+            {visibleNewsItems.map((item) => (
               <Pressable
                 key={item.link ?? item.title}
                 style={[styles.newsFeedCard, { backgroundColor: c.newsCardBg }]}
@@ -1707,6 +1765,16 @@ function DashboardScreen({
                 </View>
               </Pressable>
             ))}
+            {hasMoreNews ? (
+              <Pressable
+                accessibilityRole="button"
+                accessibilityLabel="load more"
+                onPress={loadMoreNews}
+                style={({ pressed }) => [logHistoryListStyles.loadMoreRow, pressed && { opacity: 0.7 }]}
+              >
+                <Text style={[logHistoryListStyles.loadMoreLabel, { color: c.primary }]}>load more</Text>
+              </Pressable>
+            ) : null}
           </View>
         )}
       </View>
@@ -1737,6 +1805,7 @@ function DashboardScreen({
               dashboardHomeDashTabRestore = "logs";
               navigation.navigate(rowId === "symptom" ? "SymptomHistory" : "MedicationTrackingHistory");
             }}
+            rowPaddingHorizontal={TODAY_GOALS_ROW_PADDING}
           />
         </LogHistoryCard>
       </View>
@@ -1767,11 +1836,15 @@ function DashboardScreen({
     );
 
   return (
-    <ScrollView
-      style={[styles.screen, { backgroundColor: c.screen }]}
-      contentContainerStyle={{ paddingBottom: bottomScrollInset }}
-      showsVerticalScrollIndicator={false}
-    >
+    <View style={[styles.dashboardScreen, { backgroundColor: c.screen }]}>
+      <ScrollView
+        style={styles.dashboardScroll}
+        contentContainerStyle={{
+          padding: SCREEN_EDGE_PADDING,
+          paddingBottom: bottomScrollInset,
+        }}
+        showsVerticalScrollIndicator={false}
+      >
       <Card title="">
         <View style={styles.weatherIntroWrap}>
           <Text style={[styles.weatherGreeting, { color: c.text }]}>Hi, {greetingFirstName}</Text>
@@ -1866,7 +1939,13 @@ function DashboardScreen({
       </Card>
       {homeNavPills}
       <View style={styles.homePillBodySection}>{homePillBody}</View>
-    </ScrollView>
+      </ScrollView>
+      {showWelcomeCard ? (
+        <View pointerEvents="box-none" style={styles.dashboardWelcomeFloat}>
+          <DashboardWelcomeCard onDismiss={dismissWelcomeCard} />
+        </View>
+      ) : null}
+    </View>
   );
 }
 
@@ -1930,9 +2009,10 @@ function SymptomHistoryScreen({ user }: { user: SessionUser }) {
         <LogHistoryIntroSection tip="A list of your symptom events recorded through Log Symptoms.">
           {loading && rows.length === 0 ? (
             <LogHistoryListLoading />
+          ) : rows.length === 0 ? (
+            <LogHistoryEmptyState icon="thermometer" />
           ) : (
             <LogHistoryPreviewList
-              emptyMessage="No symptom logs yet."
               items={symptomLogItems}
               visibleCount={visibleCount}
               hasMore={hasMore}
@@ -2312,9 +2392,10 @@ function MedicationTrackingHistoryScreen({ user }: { user: SessionUser }) {
         <LogHistoryIntroSection tip="A list of your medication events recorded through Track Medications.">
           {loading && rows.length === 0 ? (
             <LogHistoryListLoading />
+          ) : rows.length === 0 ? (
+            <LogHistoryEmptyState icon={TRACK_MEDICATIONS_MCI_ICON} />
           ) : (
             <LogHistoryPreviewList
-              emptyMessage="No medication logs yet."
               items={medicationLogItems}
               visibleCount={visibleCount}
               hasMore={hasMore}
@@ -3474,13 +3555,17 @@ function SettingsScreen() {
 
 function AccountScreen({
   user,
-  prepareSignOut,
+  beginSignOutBlocking,
+  endSignOutBlocking,
   finishSignOut,
+  prepareSignOut,
   restoreAfterAbortedSignOut,
 }: {
   user: SessionUser;
-  prepareSignOut: (reason: SignOutReason) => void;
+  beginSignOutBlocking: () => void;
+  endSignOutBlocking: () => void;
   finishSignOut: () => Promise<void>;
+  prepareSignOut: (reason: SignOutReason) => void;
   restoreAfterAbortedSignOut: () => Promise<void>;
 }) {
   const navigation = useNavigation<any>();
@@ -3495,7 +3580,7 @@ function AccountScreen({
     if (deleteAccountInFlight.current) return;
     deleteAccountInFlight.current = true;
     setDeleteAccountConfirmOpen(false);
-    prepareSignOut("account_deleted");
+    beginSignOutBlocking();
     try {
       const { error } = await supabase.rpc("delete_user_account");
       if (error) {
@@ -3504,14 +3589,16 @@ function AccountScreen({
         return;
       }
       await finishSignOut();
+      prepareSignOut("account_deleted");
     } catch (e: unknown) {
       await restoreAfterAbortedSignOut();
       const msg = e instanceof Error ? e.message : "Something went wrong.";
       Alert.alert("Could not delete account", msg);
     } finally {
       deleteAccountInFlight.current = false;
+      endSignOutBlocking();
     }
-  }, [finishSignOut, prepareSignOut, restoreAfterAbortedSignOut]);
+  }, [beginSignOutBlocking, endSignOutBlocking, finishSignOut, prepareSignOut, restoreAfterAbortedSignOut]);
 
   return (
     <ScrollView
@@ -3670,6 +3757,8 @@ function MainBottomTabBar({
 function AppTabs({
   user,
   onLogout,
+  beginSignOutBlocking,
+  endSignOutBlocking,
   prepareSignOut,
   finishSignOut,
   restoreAfterAbortedSignOut,
@@ -3677,6 +3766,8 @@ function AppTabs({
 }: {
   user: SessionUser;
   onLogout: (reason?: SignOutReason) => void | Promise<void>;
+  beginSignOutBlocking: () => void;
+  endSignOutBlocking: () => void;
   prepareSignOut: (reason: SignOutReason) => void;
   finishSignOut: () => Promise<void>;
   restoreAfterAbortedSignOut: () => Promise<void>;
@@ -3991,6 +4082,8 @@ function AppTabs({
               {() => (
                 <AccountScreen
                   user={user}
+                  beginSignOutBlocking={beginSignOutBlocking}
+                  endSignOutBlocking={endSignOutBlocking}
                   prepareSignOut={prepareSignOut}
                   finishSignOut={finishSignOut}
                   restoreAfterAbortedSignOut={restoreAfterAbortedSignOut}
@@ -4055,6 +4148,7 @@ function AppRoot() {
   const c = useFlareColors();
   const [user, setUser] = useState<SessionUser | null>(null);
   const [signOutNotice, setSignOutNotice] = useState<SignOutReason | null>(null);
+  const [signOutBlocking, setSignOutBlocking] = useState(false);
   const [appShellReady, setAppShellReady] = useState(false);
   const [loading, setLoading] = useState(true);
   const [authBusy, setAuthBusy] = useState(false);
@@ -4101,6 +4195,14 @@ function AppRoot() {
     setSignOutNotice(reason);
   }, []);
 
+  const beginSignOutBlocking = useCallback(() => {
+    setSignOutBlocking(true);
+  }, []);
+
+  const endSignOutBlocking = useCallback(() => {
+    setSignOutBlocking(false);
+  }, []);
+
   const finishSignOut = useCallback(async () => {
     try {
       await clearMedicationNotificationsForUser();
@@ -4120,10 +4222,15 @@ function AppRoot() {
 
   const completeSignOut = useCallback(
     async (reason: SignOutReason = "logout") => {
-      prepareSignOut(reason);
-      await finishSignOut();
+      beginSignOutBlocking();
+      try {
+        await finishSignOut();
+        prepareSignOut(reason);
+      } finally {
+        endSignOutBlocking();
+      }
     },
-    [finishSignOut, prepareSignOut],
+    [beginSignOutBlocking, endSignOutBlocking, finishSignOut, prepareSignOut],
   );
 
   const profileSetupActive = Boolean(user && profileNeedsSetup(user));
@@ -4137,33 +4244,19 @@ function AppRoot() {
   }, []);
 
   const content = useMemo(() => {
-    if (!fontsLoaded || loading || showSplash || !appearanceHydrated) {
+    if (!fontsLoaded || loading || showSplash || !appearanceHydrated || signOutBlocking) {
       return <SplashScreen />;
     }
     if (signOutNotice) {
       const copy = SIGN_OUT_COPY[signOutNotice];
       return (
-        <View style={[styles.signOutShell, { backgroundColor: c.screen }]}>
-          {user ? (
-            <AppTabs
-              user={user}
-              onLogout={completeSignOut}
-              prepareSignOut={prepareSignOut}
-              finishSignOut={finishSignOut}
-              restoreAfterAbortedSignOut={restoreAfterAbortedSignOut}
-              onAppShellReady={markAppShellReady}
-            />
-          ) : null}
-          <View style={styles.signOutOverlay}>
-            <SuccessNoticeScreen
-              title={copy.title}
-              message={copy.message}
-              buttonTitle="Sign in"
-              fullScreen
-              onPress={() => setSignOutNotice(null)}
-            />
-          </View>
-        </View>
+        <SuccessNoticeScreen
+          title={copy.title}
+          message={copy.message}
+          buttonTitle="Sign in"
+          fullScreen
+          onPress={() => setSignOutNotice(null)}
+        />
       );
     }
     if (profileSetupActive) {
@@ -4175,6 +4268,8 @@ function AppRoot() {
           <AppTabs
             user={user}
             onLogout={completeSignOut}
+            beginSignOutBlocking={beginSignOutBlocking}
+            endSignOutBlocking={endSignOutBlocking}
             prepareSignOut={prepareSignOut}
             finishSignOut={finishSignOut}
             restoreAfterAbortedSignOut={restoreAfterAbortedSignOut}
@@ -4203,9 +4298,12 @@ function AppRoot() {
     user,
     profileSetupActive,
     signOutNotice,
+    signOutBlocking,
     authBusy,
     appShellReady,
     c.screen,
+    beginSignOutBlocking,
+    endSignOutBlocking,
     completeSignOut,
     prepareSignOut,
     finishSignOut,
@@ -4219,6 +4317,7 @@ function AppRoot() {
     !showSplash &&
     appearanceHydrated &&
     !authBusy &&
+    !signOutBlocking &&
     !signOutNotice &&
     (!user || profileSetupActive);
 
@@ -4244,6 +4343,16 @@ const styles = StyleSheet.create({
   signOutShell: { flex: 1 },
   signOutOverlay: { ...StyleSheet.absoluteFillObject },
   screen: { flex: 1, padding: SCREEN_EDGE_PADDING },
+  dashboardScreen: { flex: 1 },
+  dashboardScroll: { flex: 1 },
+  dashboardWelcomeFloat: {
+    position: "absolute",
+    top: SCREEN_EDGE_PADDING,
+    left: SCREEN_EDGE_PADDING,
+    right: SCREEN_EDGE_PADDING,
+    zIndex: 20,
+    elevation: 20,
+  },
   authScreenFill: { flex: 1 },
   authShell: { flex: 1, transform: [{ translateY: 40 }] },
   authBrandBlock: {
@@ -4259,8 +4368,8 @@ const styles = StyleSheet.create({
   authBrandName: { fontSize: 28, fontFamily: "Inter_700Bold" },
   authBrandTagline: {
     textAlign: "center",
-    fontSize: 14,
-    lineHeight: 20,
+    fontSize: 16,
+    lineHeight: 22,
     fontFamily: "Inter_400Regular",
     paddingHorizontal: 8,
   },

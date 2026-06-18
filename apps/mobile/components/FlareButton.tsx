@@ -51,7 +51,7 @@ export function PrimaryButton({
   const onPrimary = variant === "onPrimary";
   const destructive = variant === "destructive";
   const inactive = disabled || loading;
-  const spinnerColor = onPrimary ? c.primary : c.white;
+  const spinnerColor = onPrimary ? (inactive ? c.primaryHover : c.primary) : inactive ? c.primaryHover : c.white;
   return (
     <Pressable
       onPress={onPress}
@@ -60,7 +60,7 @@ export function PrimaryButton({
         flareButtonStyles.button,
         fitContent ? { alignSelf: "flex-start" } : null,
         onPrimary
-          ? { backgroundColor: inactive ? "rgba(255,255,255,0.45)" : c.white }
+          ? { backgroundColor: inactive ? "rgba(255,255,255,0.78)" : c.white }
           : destructive
             ? { backgroundColor: c.destructiveFill, opacity: inactive ? 0.5 : 1 }
             : { backgroundColor: inactive ? c.primaryDisabledBg : c.primary },
@@ -75,8 +75,8 @@ export function PrimaryButton({
             style={[
               flareButtonStyles.buttonText,
               onPrimary
-                ? { color: c.primary, ...(inactive ? { opacity: 0.55 } : null) }
-                : { color: c.white },
+                ? { color: inactive ? c.primaryHover : c.primary }
+                : { color: inactive ? c.primaryHover : c.white },
             ]}
           >
             {title}
@@ -114,7 +114,9 @@ export function SecondaryButton({
   const c = useFlareColors();
   const onPrimary = variant === "onPrimary";
   const labelColor = onPrimary
-    ? c.white
+    ? disabled
+      ? "rgba(255,255,255,0.72)"
+      : c.white
     : titleColor === "primary"
       ? c.primary
       : titleColor === "destructive"
@@ -136,7 +138,10 @@ export function SecondaryButton({
       style={[
         flareButtonStyles.buttonSecondary,
         onPrimary
-          ? { backgroundColor: "rgba(255,255,255,0.12)", ...(outline ?? null) }
+          ? {
+              backgroundColor: disabled ? "rgba(255,255,255,0.08)" : "rgba(255,255,255,0.12)",
+              ...(outline ?? null),
+            }
           : {
               backgroundColor: borderless
                 ? borderlessFill === "surfaceSubtle"
@@ -145,7 +150,7 @@ export function SecondaryButton({
                 : c.secondaryBtnBg,
               ...(outline ?? null),
             },
-        disabled ? { opacity: 0.55 } : null,
+        !onPrimary && disabled ? { opacity: 0.55 } : null,
       ]}
     >
       <View style={flareButtonStyles.buttonSecondaryContent}>

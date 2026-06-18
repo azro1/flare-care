@@ -76,6 +76,28 @@ Use existing screens as reference — do **not** default to web-style teal hyper
 
 ---
 
+## First-time instruction cards (do not duplicate)
+
+**Direction:** small dismissible cards on key screens to orient **new accounts** — not returning users. Plan to roll these out page-by-page where users may need help. **Lightbulb tips** (`LogHistoryTipRow` / `LogHistoryIntroSection`) stay for now; we may phase them out later in favour of these cards, but **do not remove bulb tips yet**.
+
+| Piece | Use for |
+|-------|---------|
+| **`DashboardWelcomeCard`** (`components/DashboardWelcomeCard.tsx`) | Floating instruction card — copy + **X** dismiss. Reuse the shell for future per-page tips (pass different message props when we generalise). |
+| **`lib/dashboardWelcome.ts`** | Per-user **eligible** + **dismissed** flags in AsyncStorage. **`isNewAuthUser`** + **`markDashboardWelcomeEligible`** on sign-up only (`AuthScreen` email OTP / Google). |
+| **`App.tsx` → `DashboardScreen`** | Renders card in **`dashboardWelcomeFloat`** — `position: absolute` at top of dashboard content (not nav header); scroll runs underneath; no reserved spacer above weather card. |
+
+**Show when:** `welcomeEligible && !welcomeDismissed` (hydrated from storage). **Never** for existing accounts logging in — eligibility is set only at account creation.
+
+**Dismiss:** X → **`markDashboardWelcomeDismissed(userId)`** — do not show again unless they delete the account and sign up fresh (new user id).
+
+**Current dashboard copy:** *“Welcome to FlareCare. To get started, check out the Daily Check-in section below. Here you can log your first symptom.”*
+
+**Typography (welcome / instruction cards):** **`FLARE_FONT_SIZE.navTitle` (16)**, **`FLARE_FONT_FAMILY.semibold`**, **`c.textMuted`**, line height **22**, letter spacing **0.3**, card **`c.card`** + **`c.cardBorder`**, light shadow (`DashboardWelcomeCard` styles).
+
+**When adding another page:** new eligible key or generalised tip id in storage; same float pattern; one short paragraph; dismiss once per account per tip.
+
+---
+
 ## Log history lists (do not duplicate)
 
 All shared list UI lives in **`components/LogHistoryList.tsx`**. Do **not** hand-roll tray rows or duplicate card wrappers.

@@ -7,7 +7,7 @@ import { PrimaryButton, SecondaryButton } from "../components/FlareButton";
 import { flareFieldErrorStyle, FlareTextInput } from "../components/FlareInput";
 import { FlareScreenSectionTitle } from "../components/FlareScreenSectionTitle";
 import { formatUkDate } from "../lib/formatUkDate";
-import { FLARE_FONT_FAMILY, FLARE_FONT_SIZE } from "../lib/layoutConstants";
+import { FLARE_FONT_FAMILY, FLARE_FONT_SIZE, SCREEN_EDGE_PADDING } from "../lib/layoutConstants";
 import type { AppointmentBriefData } from "../lib/appointmentBriefShared";
 import { useFlareColors } from "../theme";
 
@@ -90,14 +90,18 @@ export function AppointmentBriefEmailSheet({
   return (
     <Modal visible={visible} animationType="slide" presentationStyle="pageSheet" onRequestClose={handleClose}>
       <KeyboardAvoidingView style={[styles.root, { backgroundColor: c.screen }]} behavior={Platform.OS === "ios" ? "padding" : undefined}>
-        <View style={[styles.header, { borderBottomColor: c.cardBorder, paddingTop: Math.max(insets.top, 12) }]}>
-          <Pressable accessibilityRole="button" onPress={handleClose} hitSlop={12}>
+        <View style={[styles.sheetHeader, { borderBottomColor: c.cardBorder, paddingTop: Math.max(insets.top, 12) }]}>
+          <Pressable accessibilityRole="button" accessibilityLabel="Close" onPress={handleClose} hitSlop={12} style={styles.sheetClose}>
             <Ionicons name="close" size={26} color={c.textMuted} />
           </Pressable>
-          <Text style={[styles.title, { color: c.text }]}>Email summary</Text>
-          <View style={{ width: 26 }} />
+          <Text style={[styles.sheetTitle, { color: c.text }]}>Email summary</Text>
+          <View style={styles.sheetClose} />
         </View>
-        <ScrollView contentContainerStyle={{ padding: 20, paddingBottom: insets.bottom + 24 }} keyboardShouldPersistTaps="handled">
+        <ScrollView
+          contentContainerStyle={[styles.sheetScroll, { paddingBottom: insets.bottom + 24 }]}
+          keyboardShouldPersistTaps="handled"
+          showsVerticalScrollIndicator={false}
+        >
           {brief ? (
             <Text style={[styles.period, { color: c.textMuted }]}>
               {`This summary will cover the period from ${formatUkDate(brief.period.start)} to ${formatUkDate(brief.period.end)}.`}
@@ -132,14 +136,16 @@ export function AppointmentBriefEmailSheet({
 
 const styles = StyleSheet.create({
   root: { flex: 1 },
-  header: {
+  sheetHeader: {
     flexDirection: "row",
     alignItems: "center",
     justifyContent: "space-between",
-    paddingHorizontal: 12,
-    paddingBottom: 12,
+    paddingHorizontal: 8,
+    paddingBottom: SCREEN_EDGE_PADDING,
     borderBottomWidth: StyleSheet.hairlineWidth,
   },
-  title: { fontSize: FLARE_FONT_SIZE.navTitle, fontFamily: FLARE_FONT_FAMILY.bold },
+  sheetClose: { width: 44, height: 44, alignItems: "center", justifyContent: "center" },
+  sheetTitle: { fontSize: FLARE_FONT_SIZE.navTitle, fontFamily: FLARE_FONT_FAMILY.bold },
+  sheetScroll: { paddingHorizontal: 20, paddingTop: 14 },
   period: { fontSize: FLARE_FONT_SIZE.body, marginBottom: 16 },
 });

@@ -112,13 +112,12 @@ export function AppointmentBriefResultScreen({ user }: { user: SessionUser }) {
                   onPressItem={onPressNavItem}
                   rowPaddingHorizontal={ACCOUNT_LIST_ROW_PADDING}
                 />,
+                <View key="actions" style={styles.actionRow}>
+                  <PrimaryButton title="Share" onPress={handleShare} />
+                  <SecondaryButton title="Email" onPress={() => setEmailOpen(true)} />
+                </View>,
               ]}
             </LogHistoryCard>
-
-            <View style={styles.actionRow}>
-              <PrimaryButton title="Share" onPress={handleShare} />
-              <SecondaryButton title="Email" onPress={() => setEmailOpen(true)} />
-            </View>
           </>
         ) : null}
       </AppointmentBriefScrollScreen>
@@ -138,5 +137,5 @@ const styles = StyleSheet.create({
   },
   loadingWrap: { alignItems: "center", paddingVertical: 32, gap: 12 },
   muted: { fontSize: FLARE_FONT_SIZE.body, fontFamily: FLARE_FONT_FAMILY.regular },
-  actionRow: { flexDirection: "row", gap: 8, marginTop: 12 },
+  actionRow: { flexDirection: "row", gap: 8, marginTop: 4 },
 });

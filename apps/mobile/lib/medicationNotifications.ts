@@ -37,7 +37,7 @@ export async function ensureLocalReminderNotificationsReady(): Promise<void> {
         name: "Reminders",
         importance: Notifications.AndroidImportance.HIGH,
         vibrationPattern: [0, 250, 250, 250],
-        lightColor: "#0D9488",
+        lightColor: "#5F9EA0",
         sound: "default",
         enableVibrate: true,
         showBadge: true,

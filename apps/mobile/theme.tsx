@@ -8,15 +8,16 @@ const APPEARANCE_STORAGE_KEY = "flarecare.appearance.preference";
 
 /**
  * Mobile brand accent — **only edit this object** to change primary CTAs, icons, tabs, nav tint,
- * weather accent, secondary labels (light), etc. Everything flows through `mapTokens` → `useFlareColors()`.
+ * weather accent, secondary labels (light), auth screen fill (light), etc.
+ * Cadet blue matches web (`globals.css` --bg-button-cadet); calmer than generic SaaS blue.
  */
 const MOBILE_BRAND_ACCENT = {
-  primary: "#0D9488",
-  hover: "#0F766E",
-  disabled: "#5EEAD4",
+  primary: "#5F9EA0",
+  hover: "#4A8A8A",
+  disabled: "#B8D4D5",
 } as const;
 
-/** Brand teal for custom UI (e.g. action-sheet cancel) — same as `useFlareColors().primary` in light mode. */
+/** Brand accent for custom UI (e.g. action-sheet cancel) — same as `useFlareColors().primary` in light mode. */
 export const MOBILE_BRAND_PRIMARY = MOBILE_BRAND_ACCENT.primary;
 
 /** Filled destructive controls (logout, meal remove, destructive modal confirm). Change only here. */

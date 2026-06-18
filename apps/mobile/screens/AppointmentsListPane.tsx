@@ -8,6 +8,7 @@ import { ConfirmModal } from "../components/ConfirmModal";
 import {
   LogHistoryCard,
   LogHistoryListLoading,
+  LogHistoryEmptyState,
   LogHistoryPreviewList,
   LogHistoryTipRow,
   LOG_HISTORY_LOAD_MORE_BATCH,
@@ -37,9 +38,7 @@ import {
 import {
   FLARE_FONT_FAMILY,
   FLARE_FONT_SIZE,
-  FLARE_LINE_HEIGHT,
   SCREEN_EDGE_PADDING,
-  SECTION_TITLE_MARGIN_BOTTOM,
   bottomTabBarHeight,
 } from "../lib/layoutConstants";
 import { useFlareColors } from "../theme";
@@ -62,7 +61,6 @@ export function AppointmentsListPane({
   selectionRouteName,
   headerTitle,
   tipText,
-  emptyTitle,
   renderIdleHeaderRight,
   onSummaryPress,
   list,
@@ -74,7 +72,6 @@ export function AppointmentsListPane({
   selectionRouteName: string;
   headerTitle: string;
   tipText: string;
-  emptyTitle: string;
   renderIdleHeaderRight?: () => React.ReactNode;
   onSummaryPress?: () => void;
   list: AppointmentsListState;
@@ -215,17 +212,7 @@ export function AppointmentsListPane({
             {listInitialLoad ? (
               <LogHistoryListLoading />
             ) : listEmpty ? (
-              <View style={styles.emptyWrap}>
-                <View style={[styles.emptyIcon, { backgroundColor: c.surfaceSubtle }]}>
-                  <Ionicons
-                    name={APPOINTMENTS_FEATURE_ION_ICON}
-                    size={28}
-                    color={c.primary}
-                    accessibilityIgnoresInvertColors
-                  />
-                </View>
-                <Text style={[styles.emptyTitle, { color: c.textMuted }]}>{emptyTitle}</Text>
-              </View>
+              <LogHistoryEmptyState icon={APPOINTMENTS_FEATURE_ION_ICON} iconFamily="ion" />
             ) : (
               <LogHistoryPreviewList
                 items={aptListItems}
@@ -279,21 +266,6 @@ export function AppointmentsListPane({
 const styles = StyleSheet.create({
   screenRoot: { flex: 1 },
   screenScroll: { flex: 1, padding: SCREEN_EDGE_PADDING },
-  emptyWrap: { alignItems: "center", paddingVertical: 20, paddingHorizontal: 8 },
-  emptyIcon: {
-    width: 56,
-    height: 56,
-    borderRadius: 28,
-    alignItems: "center",
-    justifyContent: "center",
-    marginBottom: SECTION_TITLE_MARGIN_BOTTOM,
-  },
-  emptyTitle: {
-    fontSize: FLARE_FONT_SIZE.sectionTitle,
-    fontFamily: FLARE_FONT_FAMILY.bold,
-    lineHeight: FLARE_LINE_HEIGHT.sectionTitle,
-    marginBottom: 6,
-  },
   aptSubtitleRow: { flexDirection: "row", alignItems: "center", flexShrink: 1, minWidth: 0 },
   aptReminderRow: { flexDirection: "row", alignItems: "center", gap: 4, flexShrink: 1, minWidth: 0 },
   summaryLink: {

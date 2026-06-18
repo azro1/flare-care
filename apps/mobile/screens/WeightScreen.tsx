@@ -21,6 +21,7 @@ import { FlareScreenSectionTitle } from "../components/FlareScreenSectionTitle";
 import {
   LogHistoryCard,
   LogHistoryListLoading,
+  LogHistoryEmptyState,
   LogHistoryPreviewList,
   LogHistoryTipRow,
   LOG_HISTORY_LOAD_MORE_BATCH,
@@ -37,9 +38,7 @@ import { formatUkDate } from "../lib/formatUkDate";
 import {
   FLARE_FONT_FAMILY,
   FLARE_FONT_SIZE,
-  FLARE_LINE_HEIGHT,
   SCREEN_EDGE_PADDING,
-  SECTION_TITLE_MARGIN_BOTTOM,
   bottomTabBarHeight,
 } from "../lib/layoutConstants";
 import {
@@ -356,17 +355,7 @@ export function WeightScreen({ user }: { user: SessionUser }) {
             {listInitialLoad ? (
               <LogHistoryListLoading />
             ) : historyEmpty ? (
-              <View style={styles.emptyWrap}>
-                <View style={[styles.emptyIcon, { backgroundColor: c.surfaceSubtle }]}>
-                  <MaterialCommunityIcons
-                    name={WEIGHT_FEATURE_MCI_ICON}
-                    size={28}
-                    color={c.primary}
-                    accessibilityIgnoresInvertColors
-                  />
-                </View>
-                <Text style={[styles.emptyTitle, { color: c.textMuted }]}>Nothing here yet</Text>
-              </View>
+              <LogHistoryEmptyState icon={WEIGHT_FEATURE_MCI_ICON} />
             ) : (
               <LogHistoryPreviewList
                 items={historyRows.map((row) =>
@@ -422,21 +411,6 @@ export function WeightScreen({ user }: { user: SessionUser }) {
 const styles = StyleSheet.create({
   screenRoot: { flex: 1 },
   screenScroll: { flex: 1, padding: SCREEN_EDGE_PADDING },
-  emptyWrap: { alignItems: "center", paddingVertical: 20, paddingHorizontal: 8 },
-  emptyIcon: {
-    width: 56,
-    height: 56,
-    borderRadius: 28,
-    alignItems: "center",
-    justifyContent: "center",
-    marginBottom: SECTION_TITLE_MARGIN_BOTTOM,
-  },
-  emptyTitle: {
-    fontSize: FLARE_FONT_SIZE.sectionTitle,
-    fontFamily: FLARE_FONT_FAMILY.bold,
-    lineHeight: FLARE_LINE_HEIGHT.sectionTitle,
-    marginBottom: 6,
-  },
   sheetRoot: { flex: 1 },
   sheetHeader: {
     flexDirection: "row",
