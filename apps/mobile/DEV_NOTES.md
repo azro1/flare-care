@@ -83,6 +83,7 @@ Use existing screens as reference — do **not** default to web-style teal hyper
 | Piece | Use for |
 |-------|---------|
 | **`DashboardWelcomeCard`** (`components/DashboardWelcomeCard.tsx`) | Floating instruction card — copy + **X** dismiss. Reuse the shell for future per-page tips (pass different message props when we generalise). |
+| **`lib/instructionCardCopy.ts`** | Shared instruction card title + paragraphs — **`DASHBOARD_GETTING_STARTED_INSTRUCTION`**, **`REPORTS_INSTRUCTION`** (Reports page, not wired yet). |
 | **`lib/dashboardWelcome.ts`** | Per-user **eligible** + **dismissed** flags in AsyncStorage. **`isNewAuthUser`** + **`markDashboardWelcomeEligible`** on sign-up only (`AuthScreen` email OTP / Google). |
 | **`App.tsx` → `DashboardScreen`** | Renders card in **`dashboardWelcomeFloat`** — `position: absolute` at top of dashboard content (not nav header); scroll runs underneath; no reserved spacer above weather card. |
 
@@ -90,9 +91,9 @@ Use existing screens as reference — do **not** default to web-style teal hyper
 
 **Dismiss:** X → **`markDashboardWelcomeDismissed(userId)`** — do not show again unless they delete the account and sign up fresh (new user id).
 
-**Current dashboard copy:** *“Welcome to FlareCare. To get started, check out the Daily Check-in section below. Here you can log your first symptom.”*
+**Current dashboard copy:** **`DASHBOARD_GETTING_STARTED_INSTRUCTION`** in `lib/instructionCardCopy.ts`. Reports copy saved as **`REPORTS_INSTRUCTION`** (same file) for when the Reports instruction card is built.
 
-**Typography (welcome / instruction cards):** **`FLARE_FONT_SIZE.navTitle` (16)**, **`FLARE_FONT_FAMILY.semibold`**, **`c.textMuted`**, line height **22**, letter spacing **0.3**, card **`c.card`** + **`c.cardBorder`**, light shadow (`DashboardWelcomeCard` styles).
+**Visual (instruction cards):** cadet **left accent bar** + **primary border** + stronger shadow; **compass** icon in `surfaceSubtle` circle; bold **section title** (`c.text`); body **`c.textSecondary`** — layout tokens **`INSTRUCTION_CARD_*`** in `layoutConstants.ts`; colours via **`useFlareColors()`**. Generalise this shell when adding tips on other screens.
 
 **When adding another page:** new eligible key or generalised tip id in storage; same float pattern; one short paragraph; dismiss once per account per tip.
 
@@ -224,6 +225,7 @@ Do **not** remove these checks when touching wizard back/next — they block the
 | `SCREEN_EDGE_PADDING` | Horizontal inset for screens, cards, headers |
 | `CARD_SECTION_INNER_GAP` | Gap below in-card section title before body; load-more row margin |
 | `CARD_SECTION_TITLE` | In-card section headings — **bold** 14px (`FlareScreenSectionTitle inCard`, wizard review section names) |
+| `INSTRUCTION_CARD_*` | Floating instruction cards — padding, radius, gaps, title/body typography (`DashboardWelcomeCard`, future per-screen tips) |
 | `NAV_ROW_LABEL` | Tappable row label — **regular** 14px (Account rows, wizard **Edit**) |
 | `NAV_ROW_CHEVRON_SIZE` | `chevron-forward` size on navigate / Edit rows (16px) |
 | `DETAIL_FIELD_LABEL` | Stacked field labels on log detail / review trays |

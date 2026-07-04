@@ -41,6 +41,13 @@ import {
   TIME_PICKER_MINUTE_INTERVAL,
 } from "../lib/layoutConstants";
 import { supabase, TABLES } from "../lib/supabase";
+import { APPOINTMENTS_HINT_LINE } from "../lib/instructionCardCopy";
+import {
+  markAppointmentsInstructionDismissed,
+  readAppointmentsInstructionDismissed,
+  readAppointmentsInstructionEligible,
+} from "../lib/appointmentsInstructionTip";
+import { useInstructionTip } from "../lib/useInstructionTip";
 import { useFlareColors } from "../theme";
 import { AppointmentsListPane } from "./AppointmentsListPane";
 
@@ -321,6 +328,12 @@ export function AppointmentSheet({
 export function AppointmentsScreen({ user }: { user: SessionUser }) {
   const c = useFlareColors();
   const navigation = useNavigation<any>();
+  const { visible: showAppointmentsInstruction, dismiss: dismissAppointmentsInstruction } = useInstructionTip(
+    user.id,
+    readAppointmentsInstructionEligible,
+    readAppointmentsInstructionDismissed,
+    markAppointmentsInstructionDismissed,
+  );
   const appointmentsList = useAppointmentsList(user.id);
   const { load } = appointmentsList;
   const [sheetOpen, setSheetOpen] = useState(false);
@@ -394,7 +407,9 @@ export function AppointmentsScreen({ user }: { user: SessionUser }) {
         onAddPress={openAdd}
         selectionRouteName="Appointments"
         headerTitle="Appointments"
-        tipText="Tap + to add an appointment. Set reminders so you don't miss upcoming appointments."
+        tipText={APPOINTMENTS_HINT_LINE}
+        showInstruction={showAppointmentsInstruction}
+        onDismissInstruction={dismissAppointmentsInstruction}
         renderIdleHeaderRight={renderPastLink}
         onSummaryPress={openSummary}
         list={appointmentsList}

@@ -17,6 +17,7 @@ import {
 } from "react-native";
 import { ScrollView } from "../lib/scrollViews";
 import { OptionPickerModal } from "../components/OptionPickerModal";
+import { InstructionCard } from "../components/InstructionCard";
 import { WizardReviewMedicationSection } from "../components/symptomReviewLayout";
 import { PrimaryButton, SecondaryButton } from "../components/FlareButton";
 import { flareFieldErrorStyle, FlareInputTrigger, FlareTextInput } from "../components/FlareInput";
@@ -47,6 +48,17 @@ import {
   type MedicationWizardHistoryEntry,
 } from "../lib/medicationWizardShared";
 import { TRACK_MEDICATIONS_MCI_ICON } from "../lib/medicationFeatureIcons";
+import { TRACK_MEDICATIONS_INSTRUCTION } from "../lib/instructionCardCopy";
+import {
+  INSTRUCTION_CARD_FLOAT_STYLE,
+  wizardInstructionFloatLandingPadding,
+} from "../lib/layoutConstants";
+import {
+  markTrackMedicationsInstructionDismissed,
+  readTrackMedicationsInstructionDismissed,
+  readTrackMedicationsInstructionEligible,
+} from "../lib/trackMedicationsInstructionTip";
+import { useInstructionTip } from "../lib/useInstructionTip";
 import { useFlareColors } from "../theme";
 
 type SessionUser = { id: string };
@@ -103,6 +115,12 @@ export function MedicationTrackingWizardScreen({ user }: { user: SessionUser }) 
   const route = useRoute();
   const editId = String((route.params as { editId?: string } | undefined)?.editId ?? "");
   const c = useFlareColors();
+  const { visible: showTrackMedicationsInstruction, dismiss: dismissTrackMedicationsInstruction } = useInstructionTip(
+    user.id,
+    readTrackMedicationsInstructionEligible,
+    readTrackMedicationsInstructionDismissed,
+    markTrackMedicationsInstructionDismissed,
+  );
   const errTextStyle = flareFieldErrorStyle(c, "wizard");
   const { height: windowHeight } = useWindowDimensions();
   const [currentStep, setCurrentStep] = useState(0);
@@ -512,8 +530,12 @@ export function MedicationTrackingWizardScreen({ user }: { user: SessionUser }) 
     );
   }
 
+  const showInstructionFloat = currentStep === 0 && !editId && showTrackMedicationsInstruction;
+  const wizardLandingScrollPadTop = 16;
+
   return (
     <KeyboardAvoidingView style={{ flex: 1, backgroundColor: c.screen }} behavior={Platform.OS === "ios" ? "padding" : undefined}>
+      <View style={styles.wizardShell}>
       <ScrollView
         contentContainerStyle={[
           styles.scrollPad,
@@ -528,7 +550,17 @@ export function MedicationTrackingWizardScreen({ user }: { user: SessionUser }) 
         ) : null}
 
         {currentStep === 0 ? (
-          <View style={[styles.landing, { minHeight: Math.max(windowHeight * 0.58, 420) }]}>
+          <View
+            style={[
+              styles.landing,
+              showInstructionFloat
+                ? {
+                    paddingTop: wizardInstructionFloatLandingPadding(wizardLandingScrollPadTop),
+                    justifyContent: "flex-start",
+                  }
+                : { minHeight: Math.max(windowHeight * 0.58, 420) },
+            ]}
+          >
             <View
               style={[
                 styles.landingIconPanel,
@@ -616,6 +648,18 @@ export function MedicationTrackingWizardScreen({ user }: { user: SessionUser }) 
           </View>
         ) : null}
       </ScrollView>
+      {showInstructionFloat ? (
+        <View pointerEvents="box-none" style={INSTRUCTION_CARD_FLOAT_STYLE}>
+          <InstructionCard
+            instruction={TRACK_MEDICATIONS_INSTRUCTION}
+            iconFamily="mci"
+            iconName={TRACK_MEDICATIONS_MCI_ICON}
+            onDismiss={dismissTrackMedicationsInstruction}
+            dismissAccessibilityLabel="Dismiss Track Medications guide"
+          />
+        </View>
+      ) : null}
+      </View>
 
       <OptionPickerModal
         visible={timePicker != null}
@@ -629,6 +673,7 @@ export function MedicationTrackingWizardScreen({ user }: { user: SessionUser }) 
 
 const styles = StyleSheet.create({
   centered: { flex: 1, justifyContent: "center", alignItems: "center" },
+  wizardShell: { flex: 1 },
   scrollPad: { paddingHorizontal: 16, paddingTop: 16, paddingBottom: 48 },
   scrollPadLanding: { flexGrow: 1 },
   scrollPadWizardSteps: { paddingTop: 12 },

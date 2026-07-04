@@ -42,6 +42,7 @@ import {
 } from "../components/LogHistoryList";
 import { TrackerThumbFab, useTrackerThumbFabLayout } from "../components/TrackerThumbFab";
 import { ConfirmModal } from "../components/ConfirmModal";
+import { InstructionCard } from "../components/InstructionCard";
 import { usePaginatedLogList } from "../lib/paginatedLogList";
 import { STACKED_DETAIL_ROW_EDGE } from "../components/StackedDetailField";
 import { FlareScreenSectionTitle } from "../components/FlareScreenSectionTitle";
@@ -66,11 +67,19 @@ import {
 } from "../lib/bowelMovementShared";
 import { bowelLogFormSchema } from "../lib/bowelLogFormSchema";
 import { invalidateDashboardSnapshot } from "../lib/dashboardSnapshotCache";
+import { BOWEL_INSTRUCTION, BOWEL_HINT_LINE } from "../lib/instructionCardCopy";
+import {
+  markBowelInstructionDismissed,
+  readBowelInstructionDismissed,
+  readBowelInstructionEligible,
+} from "../lib/bowelInstructionTip";
+import { useInstructionTip } from "../lib/useInstructionTip";
 import { useLogListSelection } from "../lib/useLogListSelection";
 import {
   FLARE_FONT_FAMILY,
   FLARE_FONT_SIZE,
   FLARE_LINE_HEIGHT,
+  CARD_SECTION_INNER_GAP,
   SCREEN_EDGE_PADDING,
   TIME_PICKER_MINUTE_INTERVAL,
   bottomTabBarHeight,
@@ -449,6 +458,12 @@ export function BowelScreen({ user }: { user: SessionUser }) {
   const c = useFlareColors();
   const navigation = useNavigation<any>();
   const route = useRoute();
+  const { visible: showBowelInstruction, dismiss: dismissBowelInstruction } = useInstructionTip(
+    user.id,
+    readBowelInstructionEligible,
+    readBowelInstructionDismissed,
+    markBowelInstructionDismissed,
+  );
   const insets = useSafeAreaInsets();
   const bottomScrollInset = useBottomTabScrollInset();
   const { scrollBottomPad } = useTrackerThumbFabLayout();
@@ -613,6 +628,16 @@ export function BowelScreen({ user }: { user: SessionUser }) {
         contentContainerStyle={{ paddingBottom: scrollBottomPadTotal }}
         showsVerticalScrollIndicator={false}
       >
+        {showBowelInstruction ? (
+          <InstructionCard
+            instruction={BOWEL_INSTRUCTION}
+            iconFamily="mci"
+            iconName={BOWEL_FEATURE_MCI_ICON}
+            onDismiss={dismissBowelInstruction}
+            dismissAccessibilityLabel="Dismiss Bowel Movements guide"
+            style={{ marginBottom: CARD_SECTION_INNER_GAP }}
+          />
+        ) : null}
         <LogHistoryCard>
           <View style={logHistoryCardStyles.trackerCardBody}>
             {listInitialLoad ? (
@@ -644,7 +669,9 @@ export function BowelScreen({ user }: { user: SessionUser }) {
             )}
           </View>
         </LogHistoryCard>
-        <LogHistoryTipRow text="Tap + to log a bowel movement — a Bristol type is enough." />
+        {!showBowelInstruction ? (
+          <LogHistoryTipRow text={BOWEL_HINT_LINE} />
+        ) : null}
       </ScrollView>
 
       {!selectionMode ? (

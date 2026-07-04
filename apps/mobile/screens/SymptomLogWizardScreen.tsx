@@ -24,7 +24,19 @@ import {
   type WizardReviewField,
 } from "../components/symptomReviewLayout";
 import { PrimaryButton, SecondaryButton } from "../components/FlareButton";
+import { InstructionCard } from "../components/InstructionCard";
 import { flareFieldErrorStyle, FlareInputTrigger, FlareTextInput } from "../components/FlareInput";
+import { LOG_SYMPTOMS_INSTRUCTION } from "../lib/instructionCardCopy";
+import {
+  INSTRUCTION_CARD_FLOAT_STYLE,
+  wizardInstructionFloatLandingPadding,
+} from "../lib/layoutConstants";
+import {
+  markSymptomLogInstructionDismissed,
+  readSymptomLogInstructionDismissed,
+  readSymptomLogInstructionEligible,
+} from "../lib/symptomLogInstructionTip";
+import { useInstructionTip } from "../lib/useInstructionTip";
 import { invalidateDashboardSnapshot } from "../lib/dashboardSnapshotCache";
 import { formatUkDate } from "../lib/formatUkDate";
 import { supabase, TABLES } from "../lib/supabase";
@@ -99,6 +111,12 @@ export function SymptomLogWizardScreen({ user }: { user: SessionUser }) {
   const route = useRoute();
   const editId = String((route.params as { editId?: string } | undefined)?.editId ?? "");
   const c = useFlareColors();
+  const { visible: showSymptomInstruction, dismiss: dismissSymptomInstruction } = useInstructionTip(
+    user.id,
+    readSymptomLogInstructionEligible,
+    readSymptomLogInstructionDismissed,
+    markSymptomLogInstructionDismissed,
+  );
   const errTextStyle = flareFieldErrorStyle(c, "wizard");
   const { height: windowHeight } = useWindowDimensions();
   const [loadingPrefs, setLoadingPrefs] = useState(true);
@@ -547,8 +565,12 @@ export function SymptomLogWizardScreen({ user }: { user: SessionUser }) {
     );
   }
 
+  const showInstructionFloat = currentStep === 0 && !editId && showSymptomInstruction;
+  const wizardLandingScrollPadTop = 16;
+
   return (
     <KeyboardAvoidingView style={{ flex: 1, backgroundColor: c.screen }} behavior={Platform.OS === "ios" ? "padding" : undefined}>
+      <View style={styles.wizardShell}>
       <ScrollView
         contentContainerStyle={[
           styles.scrollPad,
@@ -563,7 +585,17 @@ export function SymptomLogWizardScreen({ user }: { user: SessionUser }) {
         ) : null}
 
         {currentStep === 0 ? (
-          <View style={[styles.landing, { minHeight: Math.max(windowHeight * 0.58, 420) }]}>
+          <View
+            style={[
+              styles.landing,
+              showInstructionFloat
+                ? {
+                    paddingTop: wizardInstructionFloatLandingPadding(wizardLandingScrollPadTop),
+                    justifyContent: "flex-start",
+                  }
+                : { minHeight: Math.max(windowHeight * 0.58, 420) },
+            ]}
+          >
             {/* Same surface token as home `Card` (`c.card`) — matches section panels */}
             <View
               style={[
@@ -1040,12 +1072,25 @@ export function SymptomLogWizardScreen({ user }: { user: SessionUser }) {
           </View>
         ) : null}
       </ScrollView>
+      {showInstructionFloat ? (
+        <View pointerEvents="box-none" style={INSTRUCTION_CARD_FLOAT_STYLE}>
+          <InstructionCard
+            instruction={LOG_SYMPTOMS_INSTRUCTION}
+            iconFamily="mci"
+            iconName="thermometer"
+            onDismiss={dismissSymptomInstruction}
+            dismissAccessibilityLabel="Dismiss Log Symptoms guide"
+          />
+        </View>
+      ) : null}
+      </View>
     </KeyboardAvoidingView>
   );
 }
 
 const styles = StyleSheet.create({
   centered: { flex: 1, justifyContent: "center", alignItems: "center" },
+  wizardShell: { flex: 1 },
   scrollPad: { paddingHorizontal: 16, paddingTop: 16, paddingBottom: 48 },
   scrollPadLanding: { flexGrow: 1 },
   scrollPadWizardSteps: { paddingTop: 12 },

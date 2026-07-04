@@ -24,10 +24,7 @@ export function bottomTabBarHeight(bottomInset: number): number {
 
 /** Scroll padding so content clears the overlaid tab bar on Home / Reminders / Account. */
 export function bottomTabBarScrollInset(bottomInset: number): number {
-  const barHeight = bottomTabBarHeight(bottomInset);
-  // Tab bar is absolutely positioned; stacks are full height. Pad by bar height plus the
-  // scroll slack that used to live inside the flex-shortened area above the bar.
-  return barHeight * 2;
+  return bottomTabBarHeight(bottomInset) + SCREEN_EDGE_PADDING;
 }
 
 /** Inset for muted placeholder copy inside a `surfaceSubtle` empty tray. */
@@ -93,6 +90,66 @@ export const SECTION_TITLE_MARGIN_TOP = 10;
 export const SECTION_TITLE_MARGIN_BOTTOM = 12;
 /** Gap below in-card section title before card body (Account, wizard review). */
 export const CARD_SECTION_INNER_GAP = 12;
+
+/** Floating instruction cards — dashboard welcome + future per-screen tips. */
+export const INSTRUCTION_CARD_RADIUS = 14;
+export const INSTRUCTION_CARD_PADDING_H = 18;
+export const INSTRUCTION_CARD_PADDING_TOP = SCREEN_EDGE_PADDING;
+export const INSTRUCTION_CARD_PADDING_BOTTOM = 18;
+export const INSTRUCTION_CARD_ACCENT_WIDTH = 4;
+export const INSTRUCTION_CARD_BORDER_WIDTH = 1.5;
+export const INSTRUCTION_CARD_HEADER_GAP = 10;
+export const INSTRUCTION_CARD_HEADER_BODY_GAP = 8;
+export const INSTRUCTION_CARD_BODY_GAP = CARD_SECTION_INNER_GAP;
+export const INSTRUCTION_CARD_ICON_WELL_SIZE = 36;
+export const INSTRUCTION_CARD_CLOSE_SIZE = 30;
+export const INSTRUCTION_CARD_TITLE_ICON_ALIGN_PAD = 6;
+/** Header icon in instruction cards — one size for Ion + MCI. */
+export const INSTRUCTION_CARD_ICON_SIZE = 22;
+/** MCI glyphs read larger than Ionicons at the same pt — scale inside the well to match. */
+export const INSTRUCTION_CARD_MCI_ICON_SCALE = 0.84;
+export const INSTRUCTION_CARD_CLOSE_ICON_SIZE = FLARE_FONT_SIZE.body;
+/** Top offset when floating over dashboard scroll (`dashboardWelcomeFloat`). */
+export const INSTRUCTION_CARD_FLOAT_TOP = SCREEN_EDGE_PADDING;
+
+/** Typical rendered height of a 2-paragraph `InstructionCard` — tune if copy changes. */
+export const INSTRUCTION_CARD_FLOAT_ESTIMATED_HEIGHT = 138;
+/** Gap between float card bottom and wizard landing hero. */
+export const WIZARD_INSTRUCTION_FLOAT_GAP = 4;
+
+/** Shared absolute overlay — dashboard welcome + wizard step-0 instruction cards. */
+export const INSTRUCTION_CARD_FLOAT_STYLE = {
+  position: "absolute" as const,
+  top: INSTRUCTION_CARD_FLOAT_TOP,
+  left: SCREEN_EDGE_PADDING,
+  right: SCREEN_EDGE_PADDING,
+  zIndex: 20,
+  elevation: 20,
+};
+
+/**
+ * Wizard step-0 landing `paddingTop` while instruction card floats — hero starts below the card band.
+ * `scrollContentPaddingTop` = scroll `contentContainerStyle` top pad (wizard landing uses 16).
+ */
+export function wizardInstructionFloatLandingPadding(
+  scrollContentPaddingTop: number,
+  cardHeight = INSTRUCTION_CARD_FLOAT_ESTIMATED_HEIGHT,
+): number {
+  return INSTRUCTION_CARD_FLOAT_TOP + cardHeight + WIZARD_INSTRUCTION_FLOAT_GAP - scrollContentPaddingTop;
+}
+
+export const INSTRUCTION_CARD_TITLE = {
+  fontSize: FLARE_FONT_SIZE.sectionTitle,
+  lineHeight: FLARE_LINE_HEIGHT.sectionTitle,
+  fontFamily: FLARE_FONT_FAMILY.bold,
+} as const;
+
+export const INSTRUCTION_CARD_BODY = {
+  fontSize: FLARE_FONT_SIZE.body,
+  lineHeight: 22,
+  letterSpacing: 0.2,
+  fontFamily: FLARE_FONT_FAMILY.medium,
+} as const;
 
 /** Native stack nav row height (below status bar). */
 export const NAV_HEADER_BAR_HEIGHT = Platform.select({ ios: 44, default: 56 }) ?? 56;

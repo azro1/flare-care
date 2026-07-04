@@ -45,6 +45,7 @@ import {
   SecondaryButton,
 } from "./components/FlareButton";
 import { DashboardWelcomeCard } from "./components/DashboardWelcomeCard";
+import { InstructionCard } from "./components/InstructionCard";
 import { flareFieldErrorStyle, LabeledInput } from "./components/FlareInput";
 import { flareCardSectionStyles, FlareScreenSectionTitle } from "./components/FlareScreenSectionTitle";
 import { HeaderOverflowMenu } from "./components/HeaderOverflowMenu";
@@ -67,12 +68,14 @@ import { HYDRATION_TARGET, HYDRATION_MCI_ICON, HYDRATION_MCI_ICON_EMPTY, loadHyd
 import {
   bottomTabBarHeight,
   ACCOUNT_LIST_ROW_PADDING,
+  CARD_SECTION_INNER_GAP,
   TODAY_GOALS_ROW_PADDING,
   bottomTabBarScrollInset,
   FLARE_FONT_FAMILY,
   FLARE_FONT_SIZE,
   FLARE_LINE_HEIGHT,
   HOME_TILE_GAP,
+  INSTRUCTION_CARD_FLOAT_STYLE,
   SCREEN_EDGE_PADDING,
   SECTION_TITLE_MARGIN_BOTTOM,
   SECTION_TITLE_MARGIN_TOP,
@@ -90,8 +93,8 @@ import {
   LogHistoryPreviewList,
   LogHistoryListLoading,
   LogHistoryCard,
-  LogHistoryIntroSection,
   LogHistoryEmptyState,
+  LogHistoryTipRow,
   buildBrowseLogRowItem,
   buildTimestampLogRowItem,
   logHistoryCardStyles,
@@ -122,10 +125,39 @@ import {
 import {
   isNewAuthUser,
   markDashboardWelcomeDismissed,
-  markDashboardWelcomeEligible,
   readDashboardWelcomeDismissed,
   readDashboardWelcomeEligible,
 } from "./lib/dashboardWelcome";
+import { markNewAccountInstructionTipsEligible } from "./lib/newAccountInstructionTips";
+import {
+  REPORTS_INSTRUCTION,
+  HYDRATION_INSTRUCTION,
+  SYMPTOM_LOGS_HISTORY_INSTRUCTION,
+  SYMPTOM_LOGS_HISTORY_HINT_LINE,
+  MEDICATION_LOGS_HISTORY_INSTRUCTION,
+  MEDICATION_LOGS_HISTORY_HINT_LINE,
+} from "./lib/instructionCardCopy";
+import {
+  markReportsInstructionDismissed,
+  readReportsInstructionDismissed,
+  readReportsInstructionEligible,
+} from "./lib/reportsInstructionTip";
+import {
+  markSymptomHistoryInstructionDismissed,
+  readSymptomHistoryInstructionDismissed,
+  readSymptomHistoryInstructionEligible,
+} from "./lib/symptomHistoryInstructionTip";
+import {
+  markMedicationHistoryInstructionDismissed,
+  readMedicationHistoryInstructionDismissed,
+  readMedicationHistoryInstructionEligible,
+} from "./lib/medicationHistoryInstructionTip";
+import {
+  markHydrationInstructionDismissed,
+  readHydrationInstructionDismissed,
+  readHydrationInstructionEligible,
+} from "./lib/hydrationInstructionTip";
+import { useInstructionTip } from "./lib/useInstructionTip";
 /** Bowel UI lives in `screens/BowelScreen.tsx` — do not re-declare `BowelScreen` in this file. */
 import { BristolGuideScreen } from "./screens/BristolGuideScreen";
 import { BowelLogDetailScreen } from "./screens/BowelLogDetailScreen";
@@ -662,7 +694,7 @@ function AuthScreen({
     const user = data.user;
     if (user) {
       if (isNewAuthUser(user)) {
-        await markDashboardWelcomeEligible(user.id);
+        await markNewAccountInstructionTipsEligible(user.id);
       }
       onSignedIn(sessionUserFromSupabaseAuthUser(user));
     }
@@ -710,7 +742,7 @@ function AuthScreen({
         const sessionUser = sessionData.session?.user;
         if (sessionUser) {
           if (isNewAuthUser(sessionUser)) {
-            await markDashboardWelcomeEligible(sessionUser.id);
+            await markNewAccountInstructionTipsEligible(sessionUser.id);
           }
           onSignedIn(sessionUserFromSupabaseAuthUser(sessionUser));
         } else {
@@ -1770,7 +1802,11 @@ function DashboardScreen({
                 accessibilityRole="button"
                 accessibilityLabel="load more"
                 onPress={loadMoreNews}
-                style={({ pressed }) => [logHistoryListStyles.loadMoreRow, pressed && { opacity: 0.7 }]}
+                style={({ pressed }) => [
+                  logHistoryListStyles.loadMoreRow,
+                  styles.newsLoadMoreRow,
+                  pressed && { opacity: 0.7 },
+                ]}
               >
                 <Text style={[logHistoryListStyles.loadMoreLabel, { color: c.primary }]}>load more</Text>
               </Pressable>
@@ -1954,6 +1990,12 @@ function SymptomHistoryScreen({ user }: { user: SessionUser }) {
   const c = useFlareColors();
   const insets = useSafeAreaInsets();
   const bottomScrollInset = useBottomTabScrollInset();
+  const { visible: showSymptomHistoryInstruction, dismiss: dismissSymptomHistoryInstruction } = useInstructionTip(
+    user.id,
+    readSymptomHistoryInstructionEligible,
+    readSymptomHistoryInstructionDismissed,
+    markSymptomHistoryInstructionDismissed,
+  );
   const { rows, visibleCount, hasMore, loading, loadingMore, loadMore, refresh, syncExpandedFromCache } =
     useWizardLogHistory(user.id, TABLES.LOG_SYMPTOMS);
   const symptomLogItemIds = useMemo(() => rows.map((row) => String(row.id)), [rows]);
@@ -2006,26 +2048,41 @@ function SymptomHistoryScreen({ user }: { user: SessionUser }) {
         style={[styles.screen, { backgroundColor: c.screen }]}
         contentContainerStyle={{ paddingBottom: bottomScrollInset + selectionBarInset + 24 }}
       >
-        <LogHistoryIntroSection tip="A list of your symptom events recorded through Log Symptoms.">
-          {loading && rows.length === 0 ? (
-            <LogHistoryListLoading />
-          ) : rows.length === 0 ? (
-            <LogHistoryEmptyState icon="thermometer" />
-          ) : (
-            <LogHistoryPreviewList
-              items={symptomLogItems}
-              visibleCount={visibleCount}
-              hasMore={hasMore}
-              loadingMore={loadingMore}
-              onLoadMore={() => void loadMore()}
-              onPressItem={(logId) => navigation.navigate("SymptomDetail", { id: logId })}
-              selectionMode={selectionMode}
-              selectedIds={selectedIds}
-              onToggleSelect={toggleSelect}
-              onLongPressItem={enterSelectionWith}
-            />
-          )}
-        </LogHistoryIntroSection>
+        {showSymptomHistoryInstruction ? (
+          <InstructionCard
+            instruction={SYMPTOM_LOGS_HISTORY_INSTRUCTION}
+            iconFamily="mci"
+            iconName="thermometer"
+            onDismiss={dismissSymptomHistoryInstruction}
+            dismissAccessibilityLabel="Dismiss symptom logs guide"
+            style={{ marginBottom: CARD_SECTION_INNER_GAP }}
+          />
+        ) : null}
+        <LogHistoryCard>
+          <View style={logHistoryCardStyles.trackerCardBody}>
+            {loading && rows.length === 0 ? (
+              <LogHistoryListLoading />
+            ) : rows.length === 0 ? (
+              <LogHistoryEmptyState icon="thermometer" />
+            ) : (
+              <LogHistoryPreviewList
+                items={symptomLogItems}
+                visibleCount={visibleCount}
+                hasMore={hasMore}
+                loadingMore={loadingMore}
+                onLoadMore={() => void loadMore()}
+                onPressItem={(logId) => navigation.navigate("SymptomDetail", { id: logId })}
+                selectionMode={selectionMode}
+                selectedIds={selectedIds}
+                onToggleSelect={toggleSelect}
+                onLongPressItem={enterSelectionWith}
+              />
+            )}
+          </View>
+        </LogHistoryCard>
+        {!showSymptomHistoryInstruction ? (
+          <LogHistoryTipRow text={SYMPTOM_LOGS_HISTORY_HINT_LINE} />
+        ) : null}
       </ScrollView>
       <ConfirmModal
         visible={bulkDeleteOpen}
@@ -2337,6 +2394,13 @@ function MedicationTrackingHistoryScreen({ user }: { user: SessionUser }) {
   const c = useFlareColors();
   const insets = useSafeAreaInsets();
   const bottomScrollInset = useBottomTabScrollInset();
+  const { visible: showMedicationHistoryInstruction, dismiss: dismissMedicationHistoryInstruction } =
+    useInstructionTip(
+      user.id,
+      readMedicationHistoryInstructionEligible,
+      readMedicationHistoryInstructionDismissed,
+      markMedicationHistoryInstructionDismissed,
+    );
   const { rows, visibleCount, hasMore, loading, loadingMore, loadMore, refresh, syncExpandedFromCache } =
     useWizardLogHistory(user.id, TABLES.LOG_MEDICATIONS);
   const medicationLogItemIds = useMemo(() => rows.map((row) => String(row.id)), [rows]);
@@ -2389,26 +2453,41 @@ function MedicationTrackingHistoryScreen({ user }: { user: SessionUser }) {
         style={[styles.screen, { backgroundColor: c.screen }]}
         contentContainerStyle={{ paddingBottom: bottomScrollInset + selectionBarInset + 24 }}
       >
-        <LogHistoryIntroSection tip="A list of your medication events recorded through Track Medications.">
-          {loading && rows.length === 0 ? (
-            <LogHistoryListLoading />
-          ) : rows.length === 0 ? (
-            <LogHistoryEmptyState icon={TRACK_MEDICATIONS_MCI_ICON} />
-          ) : (
-            <LogHistoryPreviewList
-              items={medicationLogItems}
-              visibleCount={visibleCount}
-              hasMore={hasMore}
-              loadingMore={loadingMore}
-              onLoadMore={() => void loadMore()}
-              onPressItem={(logId) => navigation.navigate("MedicationLogDetail", { id: logId })}
-              selectionMode={selectionMode}
-              selectedIds={selectedIds}
-              onToggleSelect={toggleSelect}
-              onLongPressItem={enterSelectionWith}
-            />
-          )}
-        </LogHistoryIntroSection>
+        {showMedicationHistoryInstruction ? (
+          <InstructionCard
+            instruction={MEDICATION_LOGS_HISTORY_INSTRUCTION}
+            iconFamily="mci"
+            iconName={TRACK_MEDICATIONS_MCI_ICON}
+            onDismiss={dismissMedicationHistoryInstruction}
+            dismissAccessibilityLabel="Dismiss medication logs guide"
+            style={{ marginBottom: CARD_SECTION_INNER_GAP }}
+          />
+        ) : null}
+        <LogHistoryCard>
+          <View style={logHistoryCardStyles.trackerCardBody}>
+            {loading && rows.length === 0 ? (
+              <LogHistoryListLoading />
+            ) : rows.length === 0 ? (
+              <LogHistoryEmptyState icon={TRACK_MEDICATIONS_MCI_ICON} />
+            ) : (
+              <LogHistoryPreviewList
+                items={medicationLogItems}
+                visibleCount={visibleCount}
+                hasMore={hasMore}
+                loadingMore={loadingMore}
+                onLoadMore={() => void loadMore()}
+                onPressItem={(logId) => navigation.navigate("MedicationLogDetail", { id: logId })}
+                selectionMode={selectionMode}
+                selectedIds={selectedIds}
+                onToggleSelect={toggleSelect}
+                onLongPressItem={enterSelectionWith}
+              />
+            )}
+          </View>
+        </LogHistoryCard>
+        {!showMedicationHistoryInstruction ? (
+          <LogHistoryTipRow text={MEDICATION_LOGS_HISTORY_HINT_LINE} />
+        ) : null}
       </ScrollView>
       <ConfirmModal
         visible={bulkDeleteOpen}
@@ -2606,6 +2685,12 @@ function HydrationScreen({ user }: { user: SessionUser }) {
   const c = useFlareColors();
   const navigation = useNavigation<any>();
   const bottomScrollInset = useBottomTabScrollInset();
+  const { visible: showHydrationInstruction, dismiss: dismissHydrationInstruction } = useInstructionTip(
+    user.id,
+    readHydrationInstructionEligible,
+    readHydrationInstructionDismissed,
+    markHydrationInstructionDismissed,
+  );
   const [glasses, setGlasses] = useState(() => dashboardSnapshotByUserId[user.id]?.todaySummary.hydration ?? 0);
   const [resetConfirmOpen, setResetConfirmOpen] = useState(false);
   const today = todayYmd();
@@ -2663,6 +2748,16 @@ function HydrationScreen({ user }: { user: SessionUser }) {
         contentContainerStyle={{ paddingBottom: bottomScrollInset + 32 }}
         showsVerticalScrollIndicator={false}
       >
+        {showHydrationInstruction ? (
+          <InstructionCard
+            instruction={HYDRATION_INSTRUCTION}
+            iconFamily="mci"
+            iconName={HYDRATION_MCI_ICON}
+            onDismiss={dismissHydrationInstruction}
+            dismissAccessibilityLabel="Dismiss My Hydration guide"
+            style={{ marginBottom: CARD_SECTION_INNER_GAP }}
+          />
+        ) : null}
         <LogHistoryCard style={styles.hydrationCard}>
           <View style={styles.hydrationTrackerBody}>
             <Text style={[styles.hydrationTodayLabel, { color: c.textMuted }]}>{formatUkDate(today)}</Text>
@@ -2753,6 +2848,12 @@ function ReportsScreen({ user }: { user: SessionUser }) {
   const [loading, setLoading] = useState(false);
   const [report, setReport] = useState<string>("");
   const [email, setEmail] = useState("");
+  const { visible: showReportsInstruction, dismiss: dismissReportsInstruction } = useInstructionTip(
+    user.id,
+    readReportsInstructionEligible,
+    readReportsInstructionDismissed,
+    markReportsInstructionDismissed,
+  );
 
   const generate = async () => {
     setLoading(true);
@@ -2804,6 +2905,15 @@ function ReportsScreen({ user }: { user: SessionUser }) {
       style={[styles.screen, { backgroundColor: c.screen }]}
       contentContainerStyle={{ paddingBottom: bottomScrollInset }}
     >
+      {showReportsInstruction ? (
+        <InstructionCard
+          instruction={REPORTS_INSTRUCTION}
+          iconName="document-text-outline"
+          onDismiss={dismissReportsInstruction}
+          dismissAccessibilityLabel="Dismiss reports guide"
+          style={{ marginBottom: CARD_SECTION_INNER_GAP }}
+        />
+      ) : null}
       <Card title="Reports & Briefs">
         <PrimaryButton title={loading ? "Generating..." : "Generate report"} onPress={generate} />
         <Text
@@ -3628,7 +3738,14 @@ function AccountScreen({
           onPressItem={(route) => navigation.navigate(route)}
         />
       </View>
-      <View style={[logHistoryCardStyles.trackerCard, flareCardSectionStyles.container, { backgroundColor: c.card }]}>
+      <View
+        style={[
+          logHistoryCardStyles.trackerCard,
+          flareCardSectionStyles.container,
+          styles.accountDeleteCard,
+          { backgroundColor: c.card },
+        ]}
+      >
         <FlareScreenSectionTitle inCard>Delete account</FlareScreenSectionTitle>
         <Text style={[styles.muted, { color: c.textMuted, lineHeight: 20 }]}>
           Permanently delete your account and all associated data. This cannot be undone.
@@ -4345,14 +4462,7 @@ const styles = StyleSheet.create({
   screen: { flex: 1, padding: SCREEN_EDGE_PADDING },
   dashboardScreen: { flex: 1 },
   dashboardScroll: { flex: 1 },
-  dashboardWelcomeFloat: {
-    position: "absolute",
-    top: SCREEN_EDGE_PADDING,
-    left: SCREEN_EDGE_PADDING,
-    right: SCREEN_EDGE_PADDING,
-    zIndex: 20,
-    elevation: 20,
-  },
+  dashboardWelcomeFloat: INSTRUCTION_CARD_FLOAT_STYLE,
   authScreenFill: { flex: 1 },
   authShell: { flex: 1, transform: [{ translateY: 40 }] },
   authBrandBlock: {
@@ -4603,6 +4713,7 @@ const styles = StyleSheet.create({
     justifyContent: "space-between",
   },
   accountPaddedCard: { padding: 18 },
+  accountDeleteCard: { paddingBottom: 16 },
   accountAvatarWell: {
     width: 56,
     height: 56,
@@ -4782,6 +4893,7 @@ const styles = StyleSheet.create({
   recentLogsEmpty: { alignItems: "center", paddingVertical: 16, paddingHorizontal: 8 },
   recentLogsEmptyCta: { marginTop: 8 },
   newsFeed: { gap: 16 },
+  newsLoadMoreRow: { marginTop: 0 },
   newsFeedCard: {
     width: "100%",
     borderRadius: 12,

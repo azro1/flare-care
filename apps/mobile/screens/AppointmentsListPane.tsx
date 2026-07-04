@@ -5,6 +5,7 @@ import { Alert, Pressable, StyleSheet, Text, View } from "react-native";
 import { ScrollView } from "../lib/scrollViews";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { ConfirmModal } from "../components/ConfirmModal";
+import { InstructionCard } from "../components/InstructionCard";
 import {
   LogHistoryCard,
   LogHistoryListLoading,
@@ -38,9 +39,11 @@ import {
 import {
   FLARE_FONT_FAMILY,
   FLARE_FONT_SIZE,
+  CARD_SECTION_INNER_GAP,
   SCREEN_EDGE_PADDING,
   bottomTabBarHeight,
 } from "../lib/layoutConstants";
+import { APPOINTMENTS_INSTRUCTION } from "../lib/instructionCardCopy";
 import { useFlareColors } from "../theme";
 
 type SessionUser = { id: string };
@@ -61,6 +64,8 @@ export function AppointmentsListPane({
   selectionRouteName,
   headerTitle,
   tipText,
+  showInstruction,
+  onDismissInstruction,
   renderIdleHeaderRight,
   onSummaryPress,
   list,
@@ -72,6 +77,8 @@ export function AppointmentsListPane({
   selectionRouteName: string;
   headerTitle: string;
   tipText: string;
+  showInstruction?: boolean;
+  onDismissInstruction?: () => void;
   renderIdleHeaderRight?: () => React.ReactNode;
   onSummaryPress?: () => void;
   list: AppointmentsListState;
@@ -207,6 +214,15 @@ export function AppointmentsListPane({
         contentContainerStyle={{ paddingBottom: scrollBottomPadTotal }}
         showsVerticalScrollIndicator={false}
       >
+        {showInstruction && onDismissInstruction ? (
+          <InstructionCard
+            instruction={APPOINTMENTS_INSTRUCTION}
+            iconName={APPOINTMENTS_FEATURE_ION_ICON}
+            onDismiss={onDismissInstruction}
+            dismissAccessibilityLabel="Dismiss Appointments guide"
+            style={{ marginBottom: CARD_SECTION_INNER_GAP }}
+          />
+        ) : null}
         <LogHistoryCard>
           <View style={logHistoryCardStyles.trackerCardBody}>
             {listInitialLoad ? (
@@ -231,7 +247,7 @@ export function AppointmentsListPane({
           </View>
         </LogHistoryCard>
 
-        <LogHistoryTipRow text={tipText} />
+        {!showInstruction ? <LogHistoryTipRow text={tipText} /> : null}
 
         {onSummaryPress && !selectionMode ? (
           <Pressable
