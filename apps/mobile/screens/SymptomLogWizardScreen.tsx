@@ -25,12 +25,9 @@ import {
 } from "../components/symptomReviewLayout";
 import { PrimaryButton, SecondaryButton } from "../components/FlareButton";
 import { InstructionCard } from "../components/InstructionCard";
+import { InstructionCardOverlay } from "../components/InstructionCardOverlay";
 import { flareFieldErrorStyle, FlareInputTrigger, FlareTextInput } from "../components/FlareInput";
 import { LOG_SYMPTOMS_INSTRUCTION } from "../lib/instructionCardCopy";
-import {
-  INSTRUCTION_CARD_FLOAT_STYLE,
-  wizardInstructionFloatLandingPadding,
-} from "../lib/layoutConstants";
 import {
   markSymptomLogInstructionDismissed,
   readSymptomLogInstructionDismissed,
@@ -566,7 +563,6 @@ export function SymptomLogWizardScreen({ user }: { user: SessionUser }) {
   }
 
   const showInstructionFloat = currentStep === 0 && !editId && showSymptomInstruction;
-  const wizardLandingScrollPadTop = 16;
 
   return (
     <KeyboardAvoidingView style={{ flex: 1, backgroundColor: c.screen }} behavior={Platform.OS === "ios" ? "padding" : undefined}>
@@ -584,18 +580,8 @@ export function SymptomLogWizardScreen({ user }: { user: SessionUser }) {
           </Text>
         ) : null}
 
-        {currentStep === 0 ? (
-          <View
-            style={[
-              styles.landing,
-              showInstructionFloat
-                ? {
-                    paddingTop: wizardInstructionFloatLandingPadding(wizardLandingScrollPadTop),
-                    justifyContent: "flex-start",
-                  }
-                : { minHeight: Math.max(windowHeight * 0.58, 420) },
-            ]}
-          >
+        {currentStep === 0 && !showInstructionFloat ? (
+          <View style={[styles.landing, { minHeight: Math.max(windowHeight * 0.58, 420) }]}>
             {/* Same surface token as home `Card` (`c.card`) — matches section panels */}
             <View
               style={[
@@ -1073,7 +1059,7 @@ export function SymptomLogWizardScreen({ user }: { user: SessionUser }) {
         ) : null}
       </ScrollView>
       {showInstructionFloat ? (
-        <View pointerEvents="box-none" style={INSTRUCTION_CARD_FLOAT_STYLE}>
+        <InstructionCardOverlay>
           <InstructionCard
             instruction={LOG_SYMPTOMS_INSTRUCTION}
             iconFamily="mci"
@@ -1081,7 +1067,7 @@ export function SymptomLogWizardScreen({ user }: { user: SessionUser }) {
             onDismiss={dismissSymptomInstruction}
             dismissAccessibilityLabel="Dismiss Log Symptoms guide"
           />
-        </View>
+        </InstructionCardOverlay>
       ) : null}
       </View>
     </KeyboardAvoidingView>

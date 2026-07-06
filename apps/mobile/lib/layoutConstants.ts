@@ -112,11 +112,6 @@ export const INSTRUCTION_CARD_CLOSE_ICON_SIZE = FLARE_FONT_SIZE.body;
 /** Top offset when floating over dashboard scroll (`dashboardWelcomeFloat`). */
 export const INSTRUCTION_CARD_FLOAT_TOP = SCREEN_EDGE_PADDING;
 
-/** Typical rendered height of a 2-paragraph `InstructionCard` — tune if copy changes. */
-export const INSTRUCTION_CARD_FLOAT_ESTIMATED_HEIGHT = 138;
-/** Gap between float card bottom and wizard landing hero. */
-export const WIZARD_INSTRUCTION_FLOAT_GAP = 4;
-
 /** Shared absolute overlay — dashboard welcome + wizard step-0 instruction cards. */
 export const INSTRUCTION_CARD_FLOAT_STYLE = {
   position: "absolute" as const,
@@ -124,19 +119,17 @@ export const INSTRUCTION_CARD_FLOAT_STYLE = {
   left: SCREEN_EDGE_PADDING,
   right: SCREEN_EDGE_PADDING,
   zIndex: 20,
-  elevation: 20,
 };
 
-/**
- * Wizard step-0 landing `paddingTop` while instruction card floats — hero starts below the card band.
- * `scrollContentPaddingTop` = scroll `contentContainerStyle` top pad (wizard landing uses 16).
- */
-export function wizardInstructionFloatLandingPadding(
-  scrollContentPaddingTop: number,
-  cardHeight = INSTRUCTION_CARD_FLOAT_ESTIMATED_HEIGHT,
-): number {
-  return INSTRUCTION_CARD_FLOAT_TOP + cardHeight + WIZARD_INSTRUCTION_FLOAT_GAP - scrollContentPaddingTop;
-}
+/** Full-screen dim behind instruction cards — never add elevation (Android → solid black). */
+export const INSTRUCTION_CARD_SCRIM_STYLE = {
+  position: "absolute" as const,
+  top: 0,
+  left: 0,
+  right: 0,
+  bottom: 0,
+  zIndex: 19,
+} as const;
 
 export const INSTRUCTION_CARD_TITLE = {
   fontSize: FLARE_FONT_SIZE.sectionTitle,

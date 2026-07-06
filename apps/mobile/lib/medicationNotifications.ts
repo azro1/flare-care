@@ -18,6 +18,12 @@ const APPOINTMENT_NOTIFICATION_IDS_KEY = "flarecare.appointmentNotificationIds";
 
 let setupPromise: Promise<void> | null = null;
 
+async function hasRemindersPermission(): Promise<boolean> {
+  if (!Notifications) return false;
+  const { status } = await Notifications.getPermissionsAsync();
+  return status === "granted";
+}
+
 async function ensureRemindersPermissionGranted(): Promise<boolean> {
   if (!Notifications) return false;
   const { status } = await Notifications.getPermissionsAsync();
@@ -25,6 +31,16 @@ async function ensureRemindersPermissionGranted(): Promise<boolean> {
   if (status !== "undetermined") return false;
   const { status: nextStatus } = await Notifications.requestPermissionsAsync();
   return nextStatus === "granted";
+}
+
+function parseReminderTimeHm(raw: string | null | undefined): { hour: number; minute: number } {
+  const parts = String(raw || "08:00").trim().split(":");
+  const hour = Number(parts[0]);
+  const minute = Number(parts[1] ?? 0);
+  if (!Number.isFinite(hour) || hour < 0 || hour > 23 || !Number.isFinite(minute) || minute < 0 || minute > 59) {
+    return { hour: 8, minute: 0 };
+  }
+  return { hour, minute };
 }
 
 /** Android requires a channel before scheduled notifications are delivered (incl. app closed). */
@@ -62,7 +78,10 @@ function reminderNotificationContent(
     sound: "default" as const,
     data,
     ...(Platform.OS === "android"
-      ? { priority: Notifications.AndroidNotificationPriority.MAX }
+      ? {
+          channelId: REMINDER_NOTIFICATION_CHANNEL_ID,
+          priority: Notifications.AndroidNotificationPriority.MAX,
+        }
       : {}),
   };
 }
@@ -129,20 +148,23 @@ export async function rescheduleMedicationNotificationsForUser(userId: string) {
   if (!Notifications) return { scheduledCount: 0 };
 
   await ensureLocalReminderNotificationsReady();
-  if (!(await ensureRemindersPermissionGranted())) return { scheduledCount: 0 };
+  if (!(await hasRemindersPermission())) return { scheduledCount: 0 };
   await cancelStoredNotificationIds(MEDICATION_NOTIFICATION_IDS_KEY);
 
-  const { data: meds } = await supabase
+  const { data: meds, error } = await supabase
     .from(TABLES.MEDICATIONS)
     .select("id,name,time_of_day")
     .eq("user_id", userId)
     .eq("reminders_enabled", true);
 
+  if (error) {
+    console.error("MED_REMINDER_QUERY_ERROR", error);
+    throw error;
+  }
+
   const ids: string[] = [];
   for (const med of meds ?? []) {
-    const [hour, minute] = String(med.time_of_day || "08:00")
-      .split(":")
-      .map((v) => Number(v));
+    const { hour, minute } = parseReminderTimeHm(med.time_of_day);
     const id = await Notifications.scheduleNotificationAsync({
       content: reminderNotificationContent(
         "Medication Reminder",
@@ -151,10 +173,10 @@ export async function rescheduleMedicationNotificationsForUser(userId: string) {
       ),
       trigger: {
         type: Notifications.SchedulableTriggerInputTypes.DAILY,
-        hour: hour || 8,
-        minute: minute || 0,
+        hour,
+        minute,
+        repeats: true,
         ...androidReminderTriggerExtras(),
-        ...(Platform.OS === "android" ? { repeats: true } : {}),
       },
     });
     ids.push(id);
@@ -168,7 +190,7 @@ export async function rescheduleAppointmentNotificationsForUser(userId: string) 
   if (!Notifications) return { scheduledCount: 0 };
 
   await ensureLocalReminderNotificationsReady();
-  if (!(await ensureRemindersPermissionGranted())) return { scheduledCount: 0 };
+  if (!(await hasRemindersPermission())) return { scheduledCount: 0 };
   await cancelStoredNotificationIds(APPOINTMENT_NOTIFICATION_IDS_KEY);
 
   const { data: appointments } = await supabase
@@ -218,4 +240,12 @@ export async function rescheduleAllLocalRemindersForUser(userId: string) {
     scheduledCount: meds.scheduledCount + appts.scheduledCount,
     permissionGranted: true,
   };
+}
+
+/** Med/appt save paths — resync all local reminders when permission is already granted. */
+export async function rescheduleLocalRemindersIfGranted(userId: string): Promise<void> {
+  if (!Notifications) return;
+  await ensureLocalReminderNotificationsReady();
+  if (!(await hasRemindersPermission())) return;
+  await rescheduleAllLocalRemindersForUser(userId);
 }

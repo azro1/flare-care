@@ -53,10 +53,11 @@ export function ConfirmModal({
           {message ? <Text style={[styles.message, { color: c.textMuted }]}>{message}</Text> : null}
           <View style={styles.actions}>
             <View style={styles.actionSlot}>
-              <SecondaryButton title={cancelLabel} onPress={onCancel} />
+              <SecondaryButton noTopMargin title={cancelLabel} onPress={onCancel} />
             </View>
             <View style={styles.actionSlot}>
               <PrimaryButton
+                noTopMargin
                 title={confirmLabel}
                 onPress={onConfirm}
                 variant={confirmDestructive ? "destructive" : "default"}

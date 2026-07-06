@@ -41,7 +41,6 @@ import {
   TIME_PICKER_MINUTE_INTERVAL,
 } from "../lib/layoutConstants";
 import { supabase, TABLES } from "../lib/supabase";
-import { APPOINTMENTS_HINT_LINE } from "../lib/instructionCardCopy";
 import {
   markAppointmentsInstructionDismissed,
   readAppointmentsInstructionDismissed,
@@ -407,7 +406,6 @@ export function AppointmentsScreen({ user }: { user: SessionUser }) {
         onAddPress={openAdd}
         selectionRouteName="Appointments"
         headerTitle="Appointments"
-        tipText={APPOINTMENTS_HINT_LINE}
         showInstruction={showAppointmentsInstruction}
         onDismissInstruction={dismissAppointmentsInstruction}
         renderIdleHeaderRight={renderPastLink}

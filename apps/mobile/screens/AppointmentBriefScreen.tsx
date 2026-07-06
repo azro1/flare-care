@@ -1,21 +1,53 @@
-import { useNavigation } from "@react-navigation/native";
-import React, { useCallback, useMemo } from "react";
+import { useFocusEffect, useNavigation } from "@react-navigation/native";
+import React, { useCallback, useMemo, useState } from "react";
 import { Pressable, StyleSheet, Text } from "react-native";
-import { AppointmentBriefScrollScreen } from "../components/AppointmentBriefScrollScreen";
+import { useSafeAreaInsets } from "react-native-safe-area-context";
+import { InstructionCard } from "../components/InstructionCard";
+import { InstructionScreenShell } from "../components/InstructionScreenShell";
 import {
   buildBrowseLogRowItem,
   LogHistoryCard,
   LogHistoryList,
 } from "../components/LogHistoryList";
+import { APPOINTMENTS_FEATURE_ION_ICON } from "../lib/appointmentShared";
 import { BRIEF_WEEK_PRESETS } from "../lib/appointmentBriefShared";
+import {
+  markAppointmentBriefInstructionDismissed,
+  markAppointmentBriefInstructionEligible,
+  readAppointmentBriefInstructionDismissed,
+} from "../lib/appointmentBriefInstructionTip";
+import { APPOINTMENT_BRIEF_INSTRUCTION } from "../lib/instructionCardCopy";
 import { ACCOUNT_LIST_ROW_PADDING, FLARE_FONT_FAMILY, FLARE_FONT_SIZE } from "../lib/layoutConstants";
 import { useFlareColors } from "../theme";
 
 type SessionUser = { id: string };
 
-export function AppointmentBriefScreen({ user: _user }: { user: SessionUser }) {
+export function AppointmentBriefScreen({ user }: { user: SessionUser }) {
   const c = useFlareColors();
   const navigation = useNavigation<any>();
+  const insets = useSafeAreaInsets();
+  const contentPaddingBottom = Math.max(insets.bottom, 16) + 24;
+
+  const [showInstruction, setShowInstruction] = useState(false);
+
+  useFocusEffect(
+    useCallback(() => {
+      let cancelled = false;
+      void (async () => {
+        await markAppointmentBriefInstructionEligible(user.id);
+        const dismissed = await readAppointmentBriefInstructionDismissed(user.id);
+        if (!cancelled) setShowInstruction(!dismissed);
+      })();
+      return () => {
+        cancelled = true;
+      };
+    }, [user.id]),
+  );
+
+  const dismissAppointmentBriefInstruction = useCallback(() => {
+    setShowInstruction(false);
+    void markAppointmentBriefInstructionDismissed(user.id);
+  }, [user.id]);
 
   const items = useMemo(
     () => [
@@ -50,23 +82,30 @@ export function AppointmentBriefScreen({ user: _user }: { user: SessionUser }) {
   );
 
   return (
-    <AppointmentBriefScrollScreen
-      tip="Use a preset to quickly generate a health summary for your appointment."
-      afterTip={
-        <Pressable
-          accessibilityRole="link"
-          accessibilityLabel="Need help with appointment summary"
-          onPress={() => navigation.navigate("AccountHelp", { expandSection: "appointmentSummary" })}
-          style={({ pressed }) => [styles.needHelpLink, pressed && { opacity: 0.7 }]}
-        >
-          <Text style={[styles.needHelpLinkLabel, { color: c.text }]}>Need help?</Text>
-        </Pressable>
+    <InstructionScreenShell
+      showInstruction={showInstruction}
+      contentPaddingBottom={contentPaddingBottom}
+      instruction={
+        <InstructionCard
+          instruction={APPOINTMENT_BRIEF_INSTRUCTION}
+          iconName={APPOINTMENTS_FEATURE_ION_ICON}
+          onDismiss={dismissAppointmentBriefInstruction}
+          dismissAccessibilityLabel="Dismiss appointment summary guide"
+        />
       }
     >
       <LogHistoryCard>
         <LogHistoryList items={items} onPressItem={onPressItem} rowPaddingHorizontal={ACCOUNT_LIST_ROW_PADDING} />
       </LogHistoryCard>
-    </AppointmentBriefScrollScreen>
+      <Pressable
+        accessibilityRole="link"
+        accessibilityLabel="Need help with appointment summary"
+        onPress={() => navigation.navigate("AccountHelp", { expandSection: "appointmentSummary" })}
+        style={({ pressed }) => [styles.needHelpLink, pressed && { opacity: 0.7 }]}
+      >
+        <Text style={[styles.needHelpLinkLabel, { color: c.text }]}>Need help?</Text>
+      </Pressable>
+    </InstructionScreenShell>
   );
 }
 

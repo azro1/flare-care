@@ -2,20 +2,14 @@ import React from "react";
 import { StyleSheet, type StyleProp, type ViewStyle } from "react-native";
 import { ScrollView } from "../lib/scrollViews";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
-import { LogHistoryTipRow } from "./LogHistoryList";
 import { SCREEN_EDGE_PADDING } from "../lib/layoutConstants";
 import { useFlareColors } from "../theme";
 
-/** Card-first scroll + bulb tip directly below — same order as Bowel / My Meds. */
 export function AppointmentBriefScrollScreen({
-  tip,
-  afterTip,
   children,
   contentStyle,
 }: {
-  tip?: string;
   children: React.ReactNode;
-  afterTip?: React.ReactNode;
   contentStyle?: StyleProp<ViewStyle>;
 }) {
   const c = useFlareColors();
@@ -29,8 +23,6 @@ export function AppointmentBriefScrollScreen({
       showsVerticalScrollIndicator={false}
     >
       {children}
-      {tip ? <LogHistoryTipRow text={tip} /> : null}
-      {afterTip}
     </ScrollView>
   );
 }

@@ -37,6 +37,7 @@ export function PrimaryButton({
   fitContent,
   variant,
   leftIcon,
+  noTopMargin,
 }: {
   title: string;
   onPress: () => void;
@@ -46,6 +47,8 @@ export function PrimaryButton({
   fitContent?: boolean;
   variant?: "default" | "onPrimary" | "destructive";
   leftIcon?: React.ReactNode;
+  /** Use when parent layout already sets spacing above the button (e.g. confirm modals). */
+  noTopMargin?: boolean;
 }) {
   const c = useFlareColors();
   const onPrimary = variant === "onPrimary";
@@ -58,6 +61,7 @@ export function PrimaryButton({
       disabled={inactive}
       style={[
         flareButtonStyles.button,
+        noTopMargin ? { marginTop: 0 } : null,
         fitContent ? { alignSelf: "flex-start" } : null,
         onPrimary
           ? { backgroundColor: inactive ? "rgba(255,255,255,0.78)" : c.white }
@@ -97,6 +101,7 @@ export function SecondaryButton({
   softOutline,
   borderless,
   borderlessFill = "card",
+  noTopMargin,
 }: {
   title: string;
   onPress: () => void;
@@ -110,6 +115,8 @@ export function SecondaryButton({
   borderless?: boolean;
   /** `borderless` fill — `card` on screen bg; `surfaceSubtle` inside a white card. */
   borderlessFill?: "card" | "surfaceSubtle";
+  /** Use when parent layout already sets spacing above the button (e.g. confirm modals). */
+  noTopMargin?: boolean;
 }) {
   const c = useFlareColors();
   const onPrimary = variant === "onPrimary";
@@ -137,6 +144,7 @@ export function SecondaryButton({
       disabled={disabled}
       style={[
         flareButtonStyles.buttonSecondary,
+        noTopMargin ? { marginTop: 0 } : null,
         onPrimary
           ? {
               backgroundColor: disabled ? "rgba(255,255,255,0.08)" : "rgba(255,255,255,0.12)",

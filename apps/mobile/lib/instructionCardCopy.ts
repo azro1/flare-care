@@ -1,9 +1,9 @@
-/** First-time instruction card copy — import here; do not duplicate in screens. */
+import { REMINDER_WELCOME_CARD_LINE } from "./reminderSetupCopy";
 
 export const DASHBOARD_GETTING_STARTED_INSTRUCTION = {
   title: "Getting started",
   paragraphs: [
-    "Living with IBD isn't easy, especially on bad days. FlareCare helps you capture what matters, at your pace.",
+    "Living with IBD isn't easy, especially on bad days. FlareCare helps you capture what matters, at your own pace.",
     "Log symptoms, track medications, record your weight and bowel movements, and build reports to share with your care team.",
     "When you're ready, check out Daily Check-in to log your first symptom!",
   ],
@@ -23,7 +23,8 @@ export const LOG_SYMPTOMS_INSTRUCTION = {
   title: "Log Symptoms",
   paragraphs: [
     "This guided flow helps you record symptoms, severity, and lifestyle factors in one place.",
-    "Tap Start now when you're ready — you can move at your own pace and review everything before saving.",
+    "You can move at your own pace and review everything before saving.",
+    "Close when you're ready, then tap Start now to begin.",
   ],
 } as const;
 
@@ -33,19 +34,17 @@ export const MY_MEDS_INSTRUCTION = {
   paragraphs: [
     "Store and manage your current prescribed medications in one place.",
     "Tap + to add a medication and set a reminder so you don't miss a dose.",
+    REMINDER_WELCOME_CARD_LINE,
   ],
 } as const;
-
-/** My Meds — muted one-liner below the list after the instruction card is dismissed. */
-export const MY_MEDS_HINT_LINE =
-  "Tap + to add medications prescribed by your GP or healthcare team.";
 
 /** Track Medications wizard landing — first visit for new accounts. */
 export const TRACK_MEDICATIONS_INSTRUCTION = {
   title: "Track Medications",
   paragraphs: [
     "This guided flow helps you record missed doses, NSAIDs, and antibiotics in one place.",
-    "Tap Start now when you're ready — you can move at your own pace and review everything before saving.",
+    "You can move at your own pace and review everything before saving.",
+    "Close when you're ready, then tap Start now to begin.",
   ],
 } as const;
 
@@ -67,9 +66,6 @@ export const BOWEL_INSTRUCTION = {
   ],
 } as const;
 
-/** Bowel Movements — lightbulb tip below the list after the instruction card is dismissed. */
-export const BOWEL_HINT_LINE = "Tap + to log a bowel movement. Add as much detail as you can.";
-
 /** My Weight hub — first visit for new accounts. */
 export const WEIGHT_INSTRUCTION = {
   title: "My Weight",
@@ -79,40 +75,49 @@ export const WEIGHT_INSTRUCTION = {
   ],
 } as const;
 
-/** My Weight — lightbulb tip below the list after the instruction card is dismissed. */
-export const WEIGHT_HINT_LINE =
-  "Tap + to log your weight. Keep entries consistent to make changes easier to track over time.";
-
 /** Appointments hub — first visit for new accounts. */
 export const APPOINTMENTS_INSTRUCTION = {
   title: "Appointments",
   paragraphs: [
     "Store and manage your appointments to keep track of past and upcoming visits.",
     "Tap + to add an appointment and set a reminder so you don't miss it.",
+    REMINDER_WELCOME_CARD_LINE,
     "Use the summary to quickly generate a brief from your logs for your next appointment.",
   ],
 } as const;
 
-/** Appointments — lightbulb tip below the list after the instruction card is dismissed. */
-export const APPOINTMENTS_HINT_LINE =
-  "Tap + to add an appointment and set a reminder so you don't miss it.";
-
 /** Symptom logs history — first visit for new accounts. */
 export const SYMPTOM_LOGS_HISTORY_INSTRUCTION = {
   title: "Symptom logs",
-  paragraphs: ["Events recorded through Log Symptoms will appear here."],
+  paragraphs: [
+    "Events recorded through Log Symptoms will appear here.",
+    "Tap a log to view details, or load more to browse older entries.",
+  ],
 } as const;
-
-/** Symptom logs history — lightbulb tip after the instruction card is dismissed. */
-export const SYMPTOM_LOGS_HISTORY_HINT_LINE =
-  "Tap a log to view details, or load more to browse older entries.";
 
 /** Medication logs history — first visit for new accounts. */
 export const MEDICATION_LOGS_HISTORY_INSTRUCTION = {
   title: "Medication logs",
-  paragraphs: ["Events recorded through Track Medications will appear here."],
+  paragraphs: [
+    "Events recorded through Track Medications will appear here.",
+    "Tap a log to view details, or load more to browse older entries.",
+  ],
 } as const;
 
-/** Medication logs history — lightbulb tip after the instruction card is dismissed. */
-export const MEDICATION_LOGS_HISTORY_HINT_LINE =
-  "Tap a log to view details, or load more to browse older entries.";
+/** Bristol Stool Chart — first visit for new accounts. */
+export const BRISTOL_GUIDE_INSTRUCTION = {
+  title: "Bristol Stool Chart",
+  paragraphs: [
+    "The Bristol Stool Chart is used to record stool consistency on a scale from 1 to 7. Select the type that best matches your stool, from 1 (firmest) to 7 (loosest). Types 3–4 are generally considered normal.",
+  ],
+} as const;
+
+/** Appointment summary hub — first visit until dismissed. */
+export const APPOINTMENT_BRIEF_INSTRUCTION = {
+  title: "Appointment summary",
+  paragraphs: [
+    "Use a preset to quickly generate a health summary for your appointment.",
+    "Or use the Custom date range to pick the dates you want your summary to cover.",
+    'Tap "X" when you\'re ready to continue.',
+  ],
+} as const;

@@ -23,13 +23,13 @@ import {
   LogHistoryListLoading,
   LogHistoryEmptyState,
   LogHistoryPreviewList,
-  LogHistoryTipRow,
   LOG_HISTORY_LOAD_MORE_BATCH,
   buildTimestampLogRowItem,
   logHistoryCardStyles,
 } from "../components/LogHistoryList";
 import { ConfirmModal } from "../components/ConfirmModal";
 import { InstructionCard } from "../components/InstructionCard";
+import { InstructionScreenShell } from "../components/InstructionScreenShell";
 import { TrackerThumbFab, useTrackerThumbFabLayout } from "../components/TrackerThumbFab";
 import { STACKED_DETAIL_ROW_EDGE } from "../components/StackedDetailField";
 import { invalidateDashboardSnapshot } from "../lib/dashboardSnapshotCache";
@@ -57,7 +57,7 @@ import {
   type WeightFormState,
   type WeightRow,
 } from "../lib/weightShared";
-import { WEIGHT_INSTRUCTION, WEIGHT_HINT_LINE } from "../lib/instructionCardCopy";
+import { WEIGHT_INSTRUCTION } from "../lib/instructionCardCopy";
 import {
   markWeightInstructionDismissed,
   readWeightInstructionDismissed,
@@ -359,83 +359,81 @@ export function WeightScreen({ user }: { user: SessionUser }) {
   const scrollBottomPadTotal = selectionMode ? selectionBarClearance : scrollBottomPad;
 
   return (
-    <View style={[styles.screenRoot, { backgroundColor: c.screen }]}>
-      <ScrollView
-        style={styles.screenScroll}
-        contentContainerStyle={{ paddingBottom: scrollBottomPadTotal }}
-        showsVerticalScrollIndicator={false}
-      >
-        {showWeightInstruction ? (
-          <InstructionCard
-            instruction={WEIGHT_INSTRUCTION}
-            iconFamily="mci"
-            iconName={WEIGHT_FEATURE_MCI_ICON}
-            onDismiss={dismissWeightInstruction}
-            dismissAccessibilityLabel="Dismiss My Weight guide"
-            style={{ marginBottom: CARD_SECTION_INNER_GAP }}
+    <InstructionScreenShell
+      showInstruction={showWeightInstruction}
+      contentPaddingBottom={scrollBottomPadTotal}
+      instruction={
+        <InstructionCard
+          instruction={WEIGHT_INSTRUCTION}
+          iconFamily="mci"
+          iconName={WEIGHT_FEATURE_MCI_ICON}
+          onDismiss={dismissWeightInstruction}
+          dismissAccessibilityLabel="Dismiss My Weight guide"
+        />
+      }
+      floatingAction={
+        !selectionMode ? <TrackerThumbFab accessibilityLabel="Log weight" onPress={openNewLog} /> : null
+      }
+      footer={
+        <>
+          <ConfirmModal
+            visible={bulkDeleteOpen}
+            title={selectedIds.size === 1 ? "Delete weight entry?" : `Delete ${selectedIds.size} weight entries?`}
+            message="This action cannot be undone."
+            confirmLabel={bulkDeleting ? "Deleting…" : "Delete"}
+            confirmDestructive
+            onConfirm={handleBulkDeleteConfirm}
+            onCancel={() => setBulkDeleteOpen(false)}
           />
-        ) : null}
-        <LogHistoryCard>
-          <View style={logHistoryCardStyles.trackerCardBody}>
-            {listInitialLoad ? (
-              <LogHistoryListLoading />
-            ) : historyEmpty ? (
-              <LogHistoryEmptyState icon={WEIGHT_FEATURE_MCI_ICON} />
-            ) : (
-              <LogHistoryPreviewList
-                items={historyRows.map((row) =>
-                  buildTimestampLogRowItem({
-                    id: String(row.id),
-                    title: formatWeightKg(row.value_kg),
-                    whenIso: row.created_at,
-                    accessibilityLabel: `${formatUkDate(row.date)}. ${formatWeightKg(row.value_kg)}. View details`,
-                  }),
-                )}
-                visibleCount={historyVisibleCount}
-                hasMore={historyHasMore}
-                loadingMore={historyLoadingMore}
-                loadMoreLabel="load more"
-                onLoadMore={() => void loadMoreHistory()}
-                onPressItem={(logId) => navigation.navigate("WeightLogDetail", { id: logId })}
-                selectionMode={selectionMode}
-                selectedIds={selectedIds}
-                onToggleSelect={toggleSelect}
-                onLongPressItem={enterSelectionWith}
-              />
-            )}
-          </View>
-        </LogHistoryCard>
-        {!showWeightInstruction ? <LogHistoryTipRow text={WEIGHT_HINT_LINE} /> : null}
-      </ScrollView>
-
-      {!selectionMode ? <TrackerThumbFab accessibilityLabel="Log weight" onPress={openNewLog} /> : null}
-
-      <ConfirmModal
-        visible={bulkDeleteOpen}
-        title={selectedIds.size === 1 ? "Delete weight entry?" : `Delete ${selectedIds.size} weight entries?`}
-        message="This action cannot be undone."
-        confirmLabel={bulkDeleting ? "Deleting…" : "Delete"}
-        confirmDestructive
-        onConfirm={handleBulkDeleteConfirm}
-        onCancel={() => setBulkDeleteOpen(false)}
-      />
-
-      <WeightLogSheet
-        visible={sheetOpen}
-        editingId={editingId}
-        initialValues={form}
-        saving={saving}
-        saveError={saveError}
-        onClose={closeSheet}
-        onSave={handleSave}
-      />
-    </View>
+          {sheetOpen ? (
+            <WeightLogSheet
+              visible={sheetOpen}
+              editingId={editingId}
+              initialValues={form}
+              saving={saving}
+              saveError={saveError}
+              onClose={closeSheet}
+              onSave={handleSave}
+            />
+          ) : null}
+        </>
+      }
+    >
+      <LogHistoryCard>
+        <View style={logHistoryCardStyles.trackerCardBody}>
+          {listInitialLoad ? (
+            <LogHistoryListLoading />
+          ) : historyEmpty ? (
+            <LogHistoryEmptyState icon={WEIGHT_FEATURE_MCI_ICON} />
+          ) : (
+            <LogHistoryPreviewList
+              items={historyRows.map((row) =>
+                buildTimestampLogRowItem({
+                  id: String(row.id),
+                  title: formatWeightKg(row.value_kg),
+                  whenIso: row.created_at,
+                  accessibilityLabel: `${formatUkDate(row.date)}. ${formatWeightKg(row.value_kg)}. View details`,
+                }),
+              )}
+              visibleCount={historyVisibleCount}
+              hasMore={historyHasMore}
+              loadingMore={historyLoadingMore}
+              loadMoreLabel="load more"
+              onLoadMore={() => void loadMoreHistory()}
+              onPressItem={(logId) => navigation.navigate("WeightLogDetail", { id: logId })}
+              selectionMode={selectionMode}
+              selectedIds={selectedIds}
+              onToggleSelect={toggleSelect}
+              onLongPressItem={enterSelectionWith}
+            />
+          )}
+        </View>
+      </LogHistoryCard>
+    </InstructionScreenShell>
   );
 }
 
 const styles = StyleSheet.create({
-  screenRoot: { flex: 1 },
-  screenScroll: { flex: 1, padding: SCREEN_EDGE_PADDING },
   sheetRoot: { flex: 1 },
   sheetHeader: {
     flexDirection: "row",

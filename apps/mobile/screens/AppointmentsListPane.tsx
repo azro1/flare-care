@@ -6,12 +6,12 @@ import { ScrollView } from "../lib/scrollViews";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { ConfirmModal } from "../components/ConfirmModal";
 import { InstructionCard } from "../components/InstructionCard";
+import { InstructionScreenShell } from "../components/InstructionScreenShell";
 import {
   LogHistoryCard,
   LogHistoryListLoading,
   LogHistoryEmptyState,
   LogHistoryPreviewList,
-  LogHistoryTipRow,
   LOG_HISTORY_LOAD_MORE_BATCH,
   logHistoryCardStyles,
   logHistoryListStyles,
@@ -63,7 +63,6 @@ export function AppointmentsListPane({
   onAddPress,
   selectionRouteName,
   headerTitle,
-  tipText,
   showInstruction,
   onDismissInstruction,
   renderIdleHeaderRight,
@@ -76,7 +75,6 @@ export function AppointmentsListPane({
   onAddPress?: () => void;
   selectionRouteName: string;
   headerTitle: string;
-  tipText: string;
   showInstruction?: boolean;
   onDismissInstruction?: () => void;
   renderIdleHeaderRight?: () => React.ReactNode;
@@ -208,80 +206,76 @@ export function AppointmentsListPane({
   const listEmpty = !loading && visibleRows.length === 0;
 
   return (
-    <View style={[styles.screenRoot, { backgroundColor: c.screen }]}>
-      <ScrollView
-        style={styles.screenScroll}
-        contentContainerStyle={{ paddingBottom: scrollBottomPadTotal }}
-        showsVerticalScrollIndicator={false}
-      >
-        {showInstruction && onDismissInstruction ? (
-          <InstructionCard
-            instruction={APPOINTMENTS_INSTRUCTION}
-            iconName={APPOINTMENTS_FEATURE_ION_ICON}
-            onDismiss={onDismissInstruction}
-            dismissAccessibilityLabel="Dismiss Appointments guide"
-            style={{ marginBottom: CARD_SECTION_INNER_GAP }}
+    <InstructionScreenShell
+      showInstruction={Boolean(showInstruction && onDismissInstruction)}
+      contentPaddingBottom={scrollBottomPadTotal}
+      instruction={
+        <InstructionCard
+          instruction={APPOINTMENTS_INSTRUCTION}
+          iconName={APPOINTMENTS_FEATURE_ION_ICON}
+          onDismiss={onDismissInstruction!}
+          dismissAccessibilityLabel="Dismiss Appointments guide"
+        />
+      }
+      floatingAction={
+        showFab && !selectionMode && onAddPress ? (
+          <TrackerThumbFab accessibilityLabel="Add appointment" onPress={onAddPress} tabBarClearance={tabBarClearance} />
+        ) : null
+      }
+      footer={
+        <>
+          <ConfirmModal
+            visible={bulkDeleteOpen}
+            title={selectedIds.size === 1 ? "Delete appointment?" : `Delete ${selectedIds.size} appointments?`}
+            message="This appointment will be removed. This action cannot be undone."
+            confirmLabel={bulkDeleting ? "Deleting…" : "Delete"}
+            confirmDestructive
+            onConfirm={handleBulkDeleteConfirm}
+            onCancel={() => setBulkDeleteOpen(false)}
           />
-        ) : null}
-        <LogHistoryCard>
-          <View style={logHistoryCardStyles.trackerCardBody}>
-            {listInitialLoad ? (
-              <LogHistoryListLoading />
-            ) : listEmpty ? (
-              <LogHistoryEmptyState icon={APPOINTMENTS_FEATURE_ION_ICON} iconFamily="ion" />
-            ) : (
-              <LogHistoryPreviewList
-                items={aptListItems}
-                visibleCount={visibleCount}
-                hasMore={hasMore}
-                loadMoreLabel="load more"
-                onLoadMore={loadMore}
-                renderSubtitle={renderAptSubtitle}
-                onPressItem={(aptId) => navigation.navigate("AppointmentDetail", { id: aptId })}
-                selectionMode={selectionMode}
-                selectedIds={selectedIds}
-                onToggleSelect={toggleSelect}
-                onLongPressItem={enterSelectionWith}
-              />
-            )}
-          </View>
-        </LogHistoryCard>
+        </>
+      }
+    >
+      <LogHistoryCard>
+        <View style={logHistoryCardStyles.trackerCardBody}>
+          {listInitialLoad ? (
+            <LogHistoryListLoading />
+          ) : listEmpty ? (
+            <LogHistoryEmptyState icon={APPOINTMENTS_FEATURE_ION_ICON} iconFamily="ion" />
+          ) : (
+            <LogHistoryPreviewList
+              items={aptListItems}
+              visibleCount={visibleCount}
+              hasMore={hasMore}
+              loadMoreLabel="load more"
+              onLoadMore={loadMore}
+              renderSubtitle={renderAptSubtitle}
+              onPressItem={(aptId) => navigation.navigate("AppointmentDetail", { id: aptId })}
+              selectionMode={selectionMode}
+              selectedIds={selectedIds}
+              onToggleSelect={toggleSelect}
+              onLongPressItem={enterSelectionWith}
+            />
+          )}
+        </View>
+      </LogHistoryCard>
 
-        {!showInstruction ? <LogHistoryTipRow text={tipText} /> : null}
-
-        {onSummaryPress && !selectionMode ? (
-          <Pressable
-            accessibilityRole="button"
-            accessibilityLabel="Appointment summary"
-            onPress={onSummaryPress}
-            style={({ pressed }) => [styles.summaryLink, pressed && { opacity: 0.85 }]}
-          >
-            <Text style={[styles.summaryLinkLabel, { color: c.text }]}>Appointment summary</Text>
-            <Ionicons name="chevron-forward" size={FLARE_FONT_SIZE.navTitle} color={c.textMuted} accessibilityIgnoresInvertColors />
-          </Pressable>
-        ) : null}
-      </ScrollView>
-
-      {showFab && !selectionMode && onAddPress ? (
-        <TrackerThumbFab accessibilityLabel="Add appointment" onPress={onAddPress} tabBarClearance={tabBarClearance} />
+      {onSummaryPress && !selectionMode ? (
+        <Pressable
+          accessibilityRole="button"
+          accessibilityLabel="Appointment summary"
+          onPress={onSummaryPress}
+          style={({ pressed }) => [styles.summaryLink, pressed && { opacity: 0.85 }]}
+        >
+          <Text style={[styles.summaryLinkLabel, { color: c.text }]}>Appointment summary</Text>
+          <Ionicons name="chevron-forward" size={FLARE_FONT_SIZE.navTitle} color={c.textMuted} accessibilityIgnoresInvertColors />
+        </Pressable>
       ) : null}
-
-      <ConfirmModal
-        visible={bulkDeleteOpen}
-        title={selectedIds.size === 1 ? "Delete appointment?" : `Delete ${selectedIds.size} appointments?`}
-        message="This appointment will be removed. This action cannot be undone."
-        confirmLabel={bulkDeleting ? "Deleting…" : "Delete"}
-        confirmDestructive
-        onConfirm={handleBulkDeleteConfirm}
-        onCancel={() => setBulkDeleteOpen(false)}
-      />
-    </View>
+    </InstructionScreenShell>
   );
 }
 
 const styles = StyleSheet.create({
-  screenRoot: { flex: 1 },
-  screenScroll: { flex: 1, padding: SCREEN_EDGE_PADDING },
   aptSubtitleRow: { flexDirection: "row", alignItems: "center", flexShrink: 1, minWidth: 0 },
   aptReminderRow: { flexDirection: "row", alignItems: "center", gap: 4, flexShrink: 1, minWidth: 0 },
   summaryLink: {

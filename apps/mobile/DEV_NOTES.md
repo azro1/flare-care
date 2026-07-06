@@ -20,7 +20,6 @@ Use existing screens as reference — do **not** default to web-style teal hyper
 | **Selected state / type badge / hero feature icon** | Bowel bubbles, dashboard tiles | **`c.primary`** |
 | **Form field icons** (calendar, time) | Bowel log sheet | **`c.textSecondary`** — utility, not a CTA |
 | **Destructive** | Logout, delete confirm | **`c.destructiveFill`** / `danger` for text |
-| **Tips** | Hydration / bowel tip row | Bulb **`#EAB308`** only on the icon; copy **`c.textMuted`** |
 
 **Do not use `c.primary` / `c.link` for tappable text navigation** unless you deliberately want a CTA (e.g. wizard **“Add medication”** in a form — that’s adding data, not leaving the screen).
 
@@ -78,7 +77,7 @@ Use existing screens as reference — do **not** default to web-style teal hyper
 
 ## First-time instruction cards (do not duplicate)
 
-**Direction:** small dismissible cards on key screens to orient **new accounts** — not returning users. Plan to roll these out page-by-page where users may need help. **Lightbulb tips** (`LogHistoryTipRow` / `LogHistoryIntroSection`) stay for now; we may phase them out later in favour of these cards, but **do not remove bulb tips yet**.
+**Direction:** small dismissible welcome cards on key screens to orient **new accounts** — not returning users. Former lightbulb tips are retired; copy lives in **`lib/instructionCardCopy.ts`** and shows once until **X** dismiss.
 
 | Piece | Use for |
 |-------|---------|
@@ -97,6 +96,13 @@ Use existing screens as reference — do **not** default to web-style teal hyper
 
 **When adding another page:** new eligible key or generalised tip id in storage; same float pattern; one short paragraph; dismiss once per account per tip.
 
+**Dim scrim (`InstructionCardOverlay` + `InstructionScreenShell`):** soft dim via **`instructionScrim`** rgba. **Convention:** scroll stays usable; lists, links, primary buttons, and thumb FAB stay **visible** but blocked until **X** dismiss (`InstructionInteractionBlock`). Exception: Hydration **Daily Intake Guidelines** still uses **`interactiveWhileInstruction`** until aligned with dashboard.
+
+| Do | Don't |
+|----|-------|
+| Keep scroll content mounted; block taps with **`InstructionInteractionBlock`** | Hide page content when instruction shows |
+| Block help links and FAB until dismiss (default) | Allow CTAs through the dim layer |
+
 ---
 
 ## Log history lists (do not duplicate)
@@ -112,7 +118,7 @@ All shared list UI lives in **`components/LogHistoryList.tsx`**. Do **not** hand
 | **Navigate / browse rows** (chevron, 1 or 2 lines) — Account links, appointment presets, summary nav, legal links | **`LogHistoryCard`** + **`LogHistoryList`** + `onPressItem`. Items: plain `{ id, title }` or **`buildBrowseLogRowItem`** when you need a subtitle. |
 | **Saved log history** (title + date, tap → detail) | **`LogHistoryPreviewList`** (or **`LogHistoryList`**) + **`buildTimestampLogRowItem`**. Paginated: **`usePaginatedLogList`** / **`useWizardLogHistory`**. |
 | **Read-only counts** (title on left, number on right) — Today → Summary | **`LogHistoryList`** + `trailingText` on each item. |
-| **History hub** (list card + bulb tip below) | **`LogHistoryIntroSection`** or **`LogHistoryCard`** + list + **`LogHistoryTipRow`** below. |
+| **History hub** (list card only) | **`LogHistoryCard`** + list — first-time copy in welcome card (`InstructionScreenShell`). |
 | **Read-only label + value fields** (not tappable rows) — Account info, brief detail screens | **`LogDetailFieldGroup`** in **`LogDetailCard`** — **not** `LogHistoryList`. |
 
 **Default rule:** if it’s a **row list on the inset tray**, use **`LogHistoryList`** (1-line and 2-line rows both). Row height and chevron alignment are automatic — **never** copy `minHeight` / spacer logic into a screen. Use `renderLeading` / `getRowStyle` / `multilineTitle` / `renderTrailing={() => null}` when the row shape differs (Bristol chart, talking points).
@@ -123,8 +129,6 @@ All shared list UI lives in **`components/LogHistoryList.tsx`**. Do **not** hand
 | **`buildTimestampLogRowItem`** | One saved log row — title + `formatLogWhenLine` subtitle from `whenIso` |
 | **`buildBrowseLogRowItem`** | Browse row — `title` + optional `subtitle` (instruction line or entry count). Title-only: pass `""` or omit — height is automatic. |
 | **`LogHistoryCard`** | White card shell only (`trackerCard` + theme `card` background) |
-| **`LogHistoryIntroSection`** | White list card + **bulb tip below** (not intro copy above the list). Pass `tip` string; children = list only |
-| **`LogHistoryTipRow`** | Standalone bulb tip card (`embedded` variant for inside another card, e.g. My Meds) |
 | **`LogHistoryPreviewList`** | Paginated grey-tray list + **load more** link (`LogHistoryList` + batch reveal) |
 | **`LOG_HISTORY_RECENT_PREVIEW_COUNT`** | Wizard History first paint — **3** rows |
 | **`LOG_HISTORY_WIZARD_LOAD_MORE_BATCH`** | Wizard History each **Load more logs** tap — **+3** (same as preview count) |
@@ -156,11 +160,10 @@ All shared list UI lives in **`components/LogHistoryList.tsx`**. Do **not** hand
 - Dashboard → **Logs** tab → History card: `LogHistoryCard` + `buildBrowseLogRowItem` (`App.tsx` → `DashboardScreen`)
 - **Account** → My account / legal links: `LogHistoryList` + title-only items + `onPressItem` (`App.tsx` → `AccountScreen`, `LegalLinksScreen`)
 - **Appointment summary** period picker + result nav: `LogHistoryCard` + `LogHistoryList` + `buildBrowseLogRowItem` (`AppointmentBriefScreen`, `AppointmentBriefResultScreen`)
-- **Symptom history** / **Medication tracking history**: `LogHistoryIntroSection` + `LogHistoryPreviewList` + `buildTimestampLogRowItem` + `useWizardLogHistory`
+- **Symptom history** / **Medication tracking history**: `LogHistoryCard` + `LogHistoryPreviewList` + `buildTimestampLogRowItem` + `useWizardLogHistory` + welcome card copy in `instructionCardCopy.ts`
 - **Focus refresh:** **`syncExpandedFromCache()`** + **`refresh()`** on focus (not **`resetAndLoad`**) — refetches data; expansion reset only when navigation leaves the section (table above).
 - **Load more:** teal **`c.primary`**, underlined, **`FLARE_FONT_SIZE.muted`** — via `logHistoryListStyles.loadMoreLabel`; row sits **outside** the grey tray with `CARD_SECTION_INNER_GAP` margin
-- **History tips (current copy):** symptom — *“A list of your symptom events recorded through Log Symptoms.”*; medication — *“A list of your medication events recorded through Track Medications.”* — **Onset vs duration** explainer removed from symptom tip for now; find a better home later (not history bulb)
-- **Bowel** / **My Meds** (`screens/BowelScreen.tsx`, `screens/MedicationsScreen.tsx`): list-first — icon + **Nothing here yet** (`FLARE_FONT_SIZE.sectionTitle`, muted) when empty; **lightbulb tip below** the card (`LogHistoryTipRow`); no in-card intro line; **thumb-reach + FAB** (`TrackerThumbFab` + `layoutConstants` helpers — not header **+**). My Meds passes `tabBarClearance={bottomTabBarHeight(...)}` because the tab bar is visible. Bowel list subtitle = **`created_at`**; detail fields use **`occurred_at`** + **Added** header from `created_at`. **Weight** / **Appointments** — same FAB when built.
+- **Bowel** / **My Meds** (`screens/BowelScreen.tsx`, `screens/MedicationsScreen.tsx`): list-first — icon + **Nothing here yet** when empty; welcome card on first visit; **thumb-reach + FAB** (`TrackerThumbFab`). My Meds passes `tabBarClearance={bottomTabBarHeight(...)}`. Bowel list subtitle = **`created_at`**; detail fields use **`occurred_at`** + **Added** header from `created_at`. **Weight** / **Appointments** — same FAB pattern.
 - **Bristol chart** (`screens/BristolGuideScreen.tsx`): **exception** — manual tray; see table above.
 
 ### Row shapes (`LogHistoryList` handles all of these)
@@ -218,7 +221,7 @@ Do **not** remove these checks when touching wizard back/next — they block the
 
 **File:** `lib/layoutConstants.ts`
 
-**Do not hardcode font sizes, spacing insets, or chevron sizes in components** — add or reuse tokens here (`FLARE_FONT_SIZE`, `CARD_SECTION_*`, `NAV_ROW_*`, etc.). Same rule for colours: **`useFlareColors()`**, not one-off hex (except documented exceptions like tip bulb `#EAB308`).
+**Do not hardcode font sizes, spacing insets, or chevron sizes in components** — add or reuse tokens here (`FLARE_FONT_SIZE`, `CARD_SECTION_*`, `NAV_ROW_*`, etc.). Same rule for colours: **`useFlareColors()`**, not one-off hex.
 
 | Token / helper | Purpose |
 |----------------|---------|

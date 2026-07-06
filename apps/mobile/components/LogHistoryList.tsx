@@ -100,24 +100,6 @@ export function LogHistoryCard({
   );
 }
 
-/** White card list tray + bulb tip below — symptom/medication history pattern. */
-export function LogHistoryIntroSection({
-  tip,
-  children,
-}: {
-  tip: string;
-  children: ReactNode;
-}) {
-  return (
-    <>
-      <LogHistoryCard>
-        <View style={logHistoryCardStyles.trackerCardBody}>{children}</View>
-      </LogHistoryCard>
-      <LogHistoryTipRow text={tip} />
-    </>
-  );
-}
-
 type MciIconName = ComponentProps<typeof MaterialCommunityIcons>["name"];
 type IonIconName = ComponentProps<typeof Ionicons>["name"];
 
@@ -459,48 +441,6 @@ export function LogHistoryListLoading() {
     </View>
   );
 }
-
-/** Bulb tip — standalone card, or `embedded` inside another card (e.g. My Meds reminders). */
-export function LogHistoryTipRow({
-  text,
-  style,
-  embedded,
-}: {
-  text: string;
-  style?: StyleProp<ViewStyle>;
-  embedded?: boolean;
-}) {
-  const c = useFlareColors();
-  return (
-    <View
-      style={[
-        logHistoryTipRowStyles.tipRow,
-        embedded ? { backgroundColor: c.surfaceSubtle, borderRadius: 12 } : { backgroundColor: c.card },
-        style,
-      ]}
-    >
-      <Ionicons name="bulb-outline" size={18} color="#EAB308" accessibilityIgnoresInvertColors />
-      <Text style={[logHistoryTipRowStyles.tipText, { color: c.textMuted }]}>{text}</Text>
-    </View>
-  );
-}
-
-export const logHistoryTipRowStyles = StyleSheet.create({
-  tipRow: {
-    flexDirection: "row",
-    alignItems: "flex-start",
-    gap: STACKED_DETAIL_ROW_EDGE,
-    borderRadius: 14,
-    paddingHorizontal: 14,
-    paddingVertical: SCREEN_EDGE_PADDING,
-  },
-  tipText: {
-    flex: 1,
-    fontSize: FLARE_FONT_SIZE.muted,
-    fontFamily: FLARE_FONT_FAMILY.regular,
-    lineHeight: FLARE_LINE_HEIGHT.muted,
-  },
-});
 
 export const logHistoryListStyles = StyleSheet.create({
   logList: { borderRadius: 14, overflow: "hidden" },

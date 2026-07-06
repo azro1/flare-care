@@ -82,6 +82,8 @@ export type FlareColors = {
   appearanceChipInactiveText: string;
   /** Dim layer behind `ConfirmModal` and similar dialogs. */
   modalBackdrop: string;
+  /** Soft dim behind first-time instruction cards (~30% light). Not for modals. */
+  instructionScrim: string;
 };
 
 function mapTokens(t: StyleguideTheme, isDark: boolean): FlareColors {
@@ -117,6 +119,7 @@ function mapTokens(t: StyleguideTheme, isDark: boolean): FlareColors {
     appearanceChipInactiveBg: isDark ? "#ffffff" : screen,
     appearanceChipInactiveText: isDark ? "#121212" : t.text.default,
     modalBackdrop: isDark ? "rgba(0,0,0,0.78)" : "rgba(15,23,42,0.48)",
+    instructionScrim: isDark ? "rgba(0,0,0,0.52)" : "rgba(15,23,42,0.30)",
   };
 }
 

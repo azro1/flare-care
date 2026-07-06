@@ -30,7 +30,7 @@ import {
   type MedicationFormState,
   type MedicationRow,
 } from "../lib/medicationShared";
-import { rescheduleMedicationNotificationsForUser } from "../lib/medicationNotifications";
+import { rescheduleLocalRemindersIfGranted } from "../lib/medicationNotifications";
 import { FLARE_FONT_FAMILY, FLARE_FONT_SIZE } from "../lib/layoutConstants";
 import { supabase, TABLES } from "../lib/supabase";
 import { useFlareColors } from "../theme";
@@ -131,9 +131,9 @@ export function MedicationDetailScreen({ user }: { user: SessionUser }) {
         invalidateMedicationsListCache(user.id);
         await load();
         try {
-          await rescheduleMedicationNotificationsForUser(user.id);
-        } catch {
-          // non-fatal
+          await rescheduleLocalRemindersIfGranted(user.id);
+        } catch (error) {
+          console.error("MED_REMINDER_RESCHEDULE_ERROR", error);
         }
       } catch (err: unknown) {
         setSaveError(err instanceof Error ? err.message : "Could not save this medication.");
@@ -170,9 +170,9 @@ export function MedicationDetailScreen({ user }: { user: SessionUser }) {
       invalidateDashboardSnapshot(user.id);
       invalidateMedicationsListCache(user.id);
       try {
-        await rescheduleMedicationNotificationsForUser(user.id);
-      } catch {
-        // non-fatal
+        await rescheduleLocalRemindersIfGranted(user.id);
+      } catch (error) {
+        console.error("MED_REMINDER_RESCHEDULE_ERROR", error);
       }
       if (navigation.canGoBack()) navigation.goBack();
       else navigation.navigate("Meds");

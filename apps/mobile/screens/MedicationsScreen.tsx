@@ -16,6 +16,7 @@ import { ScrollView } from "../lib/scrollViews";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { PrimaryButton, SecondaryButton } from "../components/FlareButton";
 import { InstructionCard } from "../components/InstructionCard";
+import { InstructionScreenShell } from "../components/InstructionScreenShell";
 import { flareFieldErrorStyle, FlareTextInput } from "../components/FlareInput";
 import { FlareScreenSectionTitle } from "../components/FlareScreenSectionTitle";
 import {
@@ -23,7 +24,6 @@ import {
   LogHistoryListLoading,
   LogHistoryEmptyState,
   LogHistoryPreviewList,
-  LogHistoryTipRow,
   LOG_HISTORY_LOAD_MORE_BATCH,
   logHistoryCardStyles,
   logHistoryListStyles,
@@ -36,7 +36,7 @@ import { WriggleReminderBell } from "../components/WriggleReminderBell";
 import { invalidateDashboardSnapshot } from "../lib/dashboardSnapshotCache";
 import { useLogListSelection } from "../lib/useLogListSelection";
 import { MY_MEDS_MCI_ICON } from "../lib/medicationFeatureIcons";
-import { rescheduleMedicationNotificationsForUser } from "../lib/medicationNotifications";
+import { rescheduleLocalRemindersIfGranted } from "../lib/medicationNotifications";
 import {
   emptyMedicationFormState,
   formatMedicationReminderTime,
@@ -53,7 +53,7 @@ import {
 } from "../lib/medicationShared";
 import { useMedicationsList } from "../lib/useMedicationsList";
 import { snapTimeHmFromDate } from "../lib/bowelMovementShared";
-import { MY_MEDS_INSTRUCTION, MY_MEDS_HINT_LINE } from "../lib/instructionCardCopy";
+import { MY_MEDS_INSTRUCTION } from "../lib/instructionCardCopy";
 import {
   CARD_SECTION_INNER_GAP,
   FLARE_FONT_FAMILY,
@@ -299,9 +299,9 @@ export function MedicationSheet({
 
 async function maybeRescheduleReminders(userId: string) {
   try {
-    await rescheduleMedicationNotificationsForUser(userId);
-  } catch {
-    // non-fatal
+    await rescheduleLocalRemindersIfGranted(userId);
+  } catch (error) {
+    console.error("MED_REMINDER_RESCHEDULE_ERROR", error);
   }
 }
 
@@ -469,84 +469,80 @@ export function MedicationsScreen({ user }: { user: SessionUser }) {
   );
 
   return (
-    <View style={[styles.screenRoot, { backgroundColor: c.screen }]}>
-      <ScrollView
-        style={styles.screenScroll}
-        contentContainerStyle={{ paddingBottom: scrollBottomPad }}
-        showsVerticalScrollIndicator={false}
-      >
-        {showMyMedsInstruction ? (
-          <InstructionCard
-            instruction={MY_MEDS_INSTRUCTION}
-            iconFamily="mci"
-            iconName={MY_MEDS_MCI_ICON}
-            onDismiss={dismissMyMedsInstruction}
-            dismissAccessibilityLabel="Dismiss My Meds guide"
-            style={{ marginBottom: CARD_SECTION_INNER_GAP }}
-          />
-        ) : null}
-        <LogHistoryCard>
-          <View style={logHistoryCardStyles.trackerCardBody}>
-            {loading && meds.length === 0 ? (
-              <LogHistoryListLoading />
-            ) : meds.length === 0 ? (
-              <LogHistoryEmptyState icon={MY_MEDS_MCI_ICON} />
-            ) : (
-              <LogHistoryPreviewList
-                items={medListItems}
-                visibleCount={visibleMedCount}
-                hasMore={hasMoreMeds}
-                loadMoreLabel="load more"
-                onLoadMore={loadMoreMeds}
-                renderSubtitle={renderMedSubtitle}
-                onPressItem={(medId) => navigation.navigate("MedicationDetail", { id: medId })}
-                selectionMode={selectionMode}
-                selectedIds={selectedIds}
-                onToggleSelect={toggleSelect}
-                onLongPressItem={enterSelectionWith}
-              />
-            )}
-          </View>
-        </LogHistoryCard>
-        {!showMyMedsInstruction ? (
-          <LogHistoryTipRow text={MY_MEDS_HINT_LINE} />
-        ) : null}
-      </ScrollView>
-
-      {!selectionMode ? (
-        <TrackerThumbFab
-          accessibilityLabel="Add medication"
-          onPress={openAdd}
-          tabBarClearance={tabBarClearance}
+    <InstructionScreenShell
+      showInstruction={showMyMedsInstruction}
+      contentPaddingBottom={scrollBottomPad}
+      instruction={
+        <InstructionCard
+          instruction={MY_MEDS_INSTRUCTION}
+          iconFamily="mci"
+          iconName={MY_MEDS_MCI_ICON}
+          onDismiss={dismissMyMedsInstruction}
+          dismissAccessibilityLabel="Dismiss My Meds guide"
         />
-      ) : null}
-
-      <ConfirmModal
-        visible={bulkDeleteOpen}
-        title={selectedIds.size === 1 ? "Delete medication?" : `Delete ${selectedIds.size} medications?`}
-        message="This cannot be undone."
-        confirmLabel={bulkDeleting ? "Deleting…" : "Delete"}
-        confirmDestructive
-        onConfirm={handleBulkDeleteConfirm}
-        onCancel={() => setBulkDeleteOpen(false)}
-      />
-
-      <MedicationSheet
-        visible={sheetOpen}
-        editingId={editingId}
-        initialValues={form}
-        saving={saving}
-        saveError={saveError}
-        onClose={closeSheet}
-        onSave={handleSave}
-      />
-    </View>
+      }
+      floatingAction={
+        !selectionMode ? (
+          <TrackerThumbFab
+            accessibilityLabel="Add medication"
+            onPress={openAdd}
+            tabBarClearance={tabBarClearance}
+          />
+        ) : null
+      }
+      footer={
+        <>
+          <ConfirmModal
+            visible={bulkDeleteOpen}
+            title={selectedIds.size === 1 ? "Delete medication?" : `Delete ${selectedIds.size} medications?`}
+            message="This cannot be undone."
+            confirmLabel={bulkDeleting ? "Deleting…" : "Delete"}
+            confirmDestructive
+            onConfirm={handleBulkDeleteConfirm}
+            onCancel={() => setBulkDeleteOpen(false)}
+          />
+          {sheetOpen ? (
+            <MedicationSheet
+              visible={sheetOpen}
+              editingId={editingId}
+              initialValues={form}
+              saving={saving}
+              saveError={saveError}
+              onClose={closeSheet}
+              onSave={handleSave}
+            />
+          ) : null}
+        </>
+      }
+    >
+      <LogHistoryCard>
+        <View style={logHistoryCardStyles.trackerCardBody}>
+          {loading && meds.length === 0 ? (
+            <LogHistoryListLoading />
+          ) : meds.length === 0 ? (
+            <LogHistoryEmptyState icon={MY_MEDS_MCI_ICON} />
+          ) : (
+            <LogHistoryPreviewList
+              items={medListItems}
+              visibleCount={visibleMedCount}
+              hasMore={hasMoreMeds}
+              loadMoreLabel="load more"
+              onLoadMore={loadMoreMeds}
+              renderSubtitle={renderMedSubtitle}
+              onPressItem={(medId) => navigation.navigate("MedicationDetail", { id: medId })}
+              selectionMode={selectionMode}
+              selectedIds={selectedIds}
+              onToggleSelect={toggleSelect}
+              onLongPressItem={enterSelectionWith}
+            />
+          )}
+        </View>
+      </LogHistoryCard>
+    </InstructionScreenShell>
   );
 }
 
 const styles = StyleSheet.create({
-  screenRoot: { flex: 1 },
-  screenScroll: { flex: 1, padding: SCREEN_EDGE_PADDING },
   medSubtitleRow: { flexDirection: "row", alignItems: "center", flexShrink: 1, minWidth: 0 },
   medReminderTimeRow: { flexDirection: "row", alignItems: "center", gap: 4, flexShrink: 1, minWidth: 0 },
   sheetRoot: { flex: 1 },

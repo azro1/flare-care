@@ -35,7 +35,6 @@ import {
   LogHistoryListLoading,
   LogHistoryEmptyState,
   LogHistoryPreviewList,
-  LogHistoryTipRow,
   LOG_HISTORY_LOAD_MORE_BATCH,
   buildTimestampLogRowItem,
   logHistoryCardStyles,
@@ -43,6 +42,7 @@ import {
 import { TrackerThumbFab, useTrackerThumbFabLayout } from "../components/TrackerThumbFab";
 import { ConfirmModal } from "../components/ConfirmModal";
 import { InstructionCard } from "../components/InstructionCard";
+import { InstructionScreenShell } from "../components/InstructionScreenShell";
 import { usePaginatedLogList } from "../lib/paginatedLogList";
 import { STACKED_DETAIL_ROW_EDGE } from "../components/StackedDetailField";
 import { FlareScreenSectionTitle } from "../components/FlareScreenSectionTitle";
@@ -67,7 +67,7 @@ import {
 } from "../lib/bowelMovementShared";
 import { bowelLogFormSchema } from "../lib/bowelLogFormSchema";
 import { invalidateDashboardSnapshot } from "../lib/dashboardSnapshotCache";
-import { BOWEL_INSTRUCTION, BOWEL_HINT_LINE } from "../lib/instructionCardCopy";
+import { BOWEL_INSTRUCTION } from "../lib/instructionCardCopy";
 import {
   markBowelInstructionDismissed,
   readBowelInstructionDismissed,
@@ -622,91 +622,87 @@ export function BowelScreen({ user }: { user: SessionUser }) {
     bottomScrollInset + (selectionMode ? selectionBarClearance : scrollBottomPad);
 
   return (
-    <View style={[styles.screenRoot, { backgroundColor: c.screen }]}>
-      <ScrollView
-        style={styles.screenScroll}
-        contentContainerStyle={{ paddingBottom: scrollBottomPadTotal }}
-        showsVerticalScrollIndicator={false}
-      >
-        {showBowelInstruction ? (
-          <InstructionCard
-            instruction={BOWEL_INSTRUCTION}
-            iconFamily="mci"
-            iconName={BOWEL_FEATURE_MCI_ICON}
-            onDismiss={dismissBowelInstruction}
-            dismissAccessibilityLabel="Dismiss Bowel Movements guide"
-            style={{ marginBottom: CARD_SECTION_INNER_GAP }}
+    <InstructionScreenShell
+      showInstruction={showBowelInstruction}
+      contentPaddingBottom={scrollBottomPadTotal}
+      instruction={
+        <InstructionCard
+          instruction={BOWEL_INSTRUCTION}
+          iconFamily="mci"
+          iconName={BOWEL_FEATURE_MCI_ICON}
+          onDismiss={dismissBowelInstruction}
+          dismissAccessibilityLabel="Dismiss Bowel Movements guide"
+        />
+      }
+      floatingAction={
+        !selectionMode ? (
+          <TrackerThumbFab accessibilityLabel="Log bowel movement" onPress={openNewLog} />
+        ) : null
+      }
+      footer={
+        <>
+          <ConfirmModal
+            visible={bulkDeleteOpen}
+            title={selectedIds.size === 1 ? "Delete bowel log?" : `Delete ${selectedIds.size} bowel logs?`}
+            message="This action cannot be undone."
+            confirmLabel={bulkDeleting ? "Deleting…" : "Delete"}
+            confirmDestructive
+            onConfirm={handleBulkDeleteConfirm}
+            onCancel={() => setBulkDeleteOpen(false)}
           />
-        ) : null}
-        <LogHistoryCard>
-          <View style={logHistoryCardStyles.trackerCardBody}>
-            {listInitialLoad ? (
-              <LogHistoryListLoading />
-            ) : historyEmpty ? (
-              <LogHistoryEmptyState icon={BOWEL_FEATURE_MCI_ICON} />
-            ) : (
-              <LogHistoryPreviewList
-                items={historyRows.map((row) => {
-                  const meta = getBristolTypeMeta(row.bristol_type);
-                  return buildTimestampLogRowItem({
-                    id: row.id,
-                    title: meta?.shortLabel ?? formatBristolTypeOnly(row.bristol_type),
-                    whenIso: row.created_at,
-                    accessibilityLabel: `${formatBristolDetailLabel(row.bristol_type)}. View details`,
-                  });
-                })}
-                visibleCount={historyVisibleCount}
-                hasMore={historyHasMore}
-                loadingMore={historyLoadingMore}
-                loadMoreLabel="load more"
-                onLoadMore={() => void loadMoreHistory()}
-                onPressItem={(logId) => navigation.navigate("BowelLogDetail", { id: logId })}
-                selectionMode={selectionMode}
-                selectedIds={selectedIds}
-                onToggleSelect={toggleSelect}
-                onLongPressItem={enterSelectionWith}
-              />
-            )}
-          </View>
-        </LogHistoryCard>
-        {!showBowelInstruction ? (
-          <LogHistoryTipRow text={BOWEL_HINT_LINE} />
-        ) : null}
-      </ScrollView>
-
-      {!selectionMode ? (
-        <TrackerThumbFab accessibilityLabel="Log bowel movement" onPress={openNewLog} />
-      ) : null}
-
-      <ConfirmModal
-        visible={bulkDeleteOpen}
-        title={selectedIds.size === 1 ? "Delete bowel log?" : `Delete ${selectedIds.size} bowel logs?`}
-        message="This action cannot be undone."
-        confirmLabel={bulkDeleting ? "Deleting…" : "Delete"}
-        confirmDestructive
-        onConfirm={handleBulkDeleteConfirm}
-        onCancel={() => setBulkDeleteOpen(false)}
-      />
-
-      <BowelLogSheet
-        visible={sheetOpen}
-        editingId={editingId}
-        initialValues={form}
-        saving={saving}
-        saveError={saveError}
-        showOptional={showOptional}
-        setShowOptional={setShowOptional}
-        onClose={closeSheet}
-        onSave={handleSave}
-        onOpenGuide={(highlightedType) => openGuide(true, highlightedType)}
-      />
-    </View>
+          {sheetOpen ? (
+            <BowelLogSheet
+              visible={sheetOpen}
+              editingId={editingId}
+              initialValues={form}
+              saving={saving}
+              saveError={saveError}
+              showOptional={showOptional}
+              setShowOptional={setShowOptional}
+              onClose={closeSheet}
+              onSave={handleSave}
+              onOpenGuide={(highlightedType) => openGuide(true, highlightedType)}
+            />
+          ) : null}
+        </>
+      }
+    >
+      <LogHistoryCard>
+        <View style={logHistoryCardStyles.trackerCardBody}>
+          {listInitialLoad ? (
+            <LogHistoryListLoading />
+          ) : historyEmpty ? (
+            <LogHistoryEmptyState icon={BOWEL_FEATURE_MCI_ICON} />
+          ) : (
+            <LogHistoryPreviewList
+              items={historyRows.map((row) => {
+                const meta = getBristolTypeMeta(row.bristol_type);
+                return buildTimestampLogRowItem({
+                  id: row.id,
+                  title: meta?.shortLabel ?? formatBristolTypeOnly(row.bristol_type),
+                  whenIso: row.created_at,
+                  accessibilityLabel: `${formatBristolDetailLabel(row.bristol_type)}. View details`,
+                });
+              })}
+              visibleCount={historyVisibleCount}
+              hasMore={historyHasMore}
+              loadingMore={historyLoadingMore}
+              loadMoreLabel="load more"
+              onLoadMore={() => void loadMoreHistory()}
+              onPressItem={(logId) => navigation.navigate("BowelLogDetail", { id: logId })}
+              selectionMode={selectionMode}
+              selectedIds={selectedIds}
+              onToggleSelect={toggleSelect}
+              onLongPressItem={enterSelectionWith}
+            />
+          )}
+        </View>
+      </LogHistoryCard>
+    </InstructionScreenShell>
   );
 }
 
 const styles = StyleSheet.create({
-  screenRoot: { flex: 1 },
-  screenScroll: { flex: 1, padding: SCREEN_EDGE_PADDING },
   sheetRoot: { flex: 1 },
   sheetHeader: {
     flexDirection: "row",

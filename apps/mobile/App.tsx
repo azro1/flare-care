@@ -22,6 +22,7 @@ import { createNativeStackNavigator } from "@react-navigation/native-stack";
 import {
   ActivityIndicator,
   Alert,
+  AppState,
   Image,
   InteractionManager,
   Linking,
@@ -46,6 +47,8 @@ import {
 } from "./components/FlareButton";
 import { DashboardWelcomeCard } from "./components/DashboardWelcomeCard";
 import { InstructionCard } from "./components/InstructionCard";
+import { InstructionCardOverlay } from "./components/InstructionCardOverlay";
+import { InstructionScreenShell, InstructionInteractionBlock } from "./components/InstructionScreenShell";
 import { flareFieldErrorStyle, LabeledInput } from "./components/FlareInput";
 import { flareCardSectionStyles, FlareScreenSectionTitle } from "./components/FlareScreenSectionTitle";
 import { HeaderOverflowMenu } from "./components/HeaderOverflowMenu";
@@ -75,7 +78,6 @@ import {
   FLARE_FONT_SIZE,
   FLARE_LINE_HEIGHT,
   HOME_TILE_GAP,
-  INSTRUCTION_CARD_FLOAT_STYLE,
   SCREEN_EDGE_PADDING,
   SECTION_TITLE_MARGIN_BOTTOM,
   SECTION_TITLE_MARGIN_TOP,
@@ -94,7 +96,6 @@ import {
   LogHistoryListLoading,
   LogHistoryCard,
   LogHistoryEmptyState,
-  LogHistoryTipRow,
   buildBrowseLogRowItem,
   buildTimestampLogRowItem,
   logHistoryCardStyles,
@@ -113,6 +114,17 @@ import { NEWS_FEED_LOAD_MORE_BATCH } from "./lib/logHistoryConstants";
 import { resolvePaginatedVisibleCount } from "./lib/paginatedLogList";
 import { useWizardLogHistory } from "./lib/wizardLogHistory";
 import { openAppNotificationSettings } from "./lib/openAppNotificationSettings";
+import {
+  clearCachedReminderStatus,
+  getCachedReminderStatus,
+  hydrateReminderStatusCache,
+  setCachedReminderStatus,
+} from "./lib/reminderStatusCache";
+import {
+  REMINDERS_READY_BODY,
+  REMINDERS_READY_NONE,
+  REMINDERS_SETUP_INTRO_OFF,
+} from "./lib/reminderSetupCopy";
 import { supabase, TABLES } from "./lib/supabase";
 import {
   dashboardSnapshotByUserId,
@@ -133,9 +145,7 @@ import {
   REPORTS_INSTRUCTION,
   HYDRATION_INSTRUCTION,
   SYMPTOM_LOGS_HISTORY_INSTRUCTION,
-  SYMPTOM_LOGS_HISTORY_HINT_LINE,
   MEDICATION_LOGS_HISTORY_INSTRUCTION,
-  MEDICATION_LOGS_HISTORY_HINT_LINE,
 } from "./lib/instructionCardCopy";
 import {
   markReportsInstructionDismissed,
@@ -179,9 +189,7 @@ import {
   clearMedicationNotificationsForUser,
   ensureLocalReminderNotificationsReady,
   getLocalReminderScheduledCount,
-  rescheduleAllLocalRemindersForUser,
-  rescheduleAppointmentNotificationsForUser,
-  rescheduleMedicationNotificationsForUser,
+  rescheduleLocalRemindersIfGranted,
 } from "./lib/medicationNotifications";
 import {
   consumeReminderNotificationResponse,
@@ -363,10 +371,11 @@ function ConfirmModal({
           ) : null}
           <View style={styles.confirmModalActions}>
             <View style={styles.confirmModalActionSlot}>
-              <SecondaryButton title={cancelLabel} onPress={onCancel} />
+              <SecondaryButton noTopMargin title={cancelLabel} onPress={onCancel} />
             </View>
             <View style={styles.confirmModalActionSlot}>
               <PrimaryButton
+                noTopMargin
                 title={confirmLabel}
                 onPress={onConfirm}
                 variant={confirmDestructive ? "destructive" : "default"}
@@ -1881,6 +1890,7 @@ function DashboardScreen({
         }}
         showsVerticalScrollIndicator={false}
       >
+      <InstructionInteractionBlock active={showWelcomeCard}>
       <Card title="">
         <View style={styles.weatherIntroWrap}>
           <Text style={[styles.weatherGreeting, { color: c.text }]}>Hi, {greetingFirstName}</Text>
@@ -1975,11 +1985,12 @@ function DashboardScreen({
       </Card>
       {homeNavPills}
       <View style={styles.homePillBodySection}>{homePillBody}</View>
+      </InstructionInteractionBlock>
       </ScrollView>
       {showWelcomeCard ? (
-        <View pointerEvents="box-none" style={styles.dashboardWelcomeFloat}>
+        <InstructionCardOverlay>
           <DashboardWelcomeCard onDismiss={dismissWelcomeCard} />
-        </View>
+        </InstructionCardOverlay>
       ) : null}
     </View>
   );
@@ -2043,57 +2054,53 @@ function SymptomHistoryScreen({ user }: { user: SessionUser }) {
   }, [refresh, runBulkDelete, user.id]);
 
   return (
-    <>
-      <ScrollView
-        style={[styles.screen, { backgroundColor: c.screen }]}
-        contentContainerStyle={{ paddingBottom: bottomScrollInset + selectionBarInset + 24 }}
-      >
-        {showSymptomHistoryInstruction ? (
-          <InstructionCard
-            instruction={SYMPTOM_LOGS_HISTORY_INSTRUCTION}
-            iconFamily="mci"
-            iconName="thermometer"
-            onDismiss={dismissSymptomHistoryInstruction}
-            dismissAccessibilityLabel="Dismiss symptom logs guide"
-            style={{ marginBottom: CARD_SECTION_INNER_GAP }}
-          />
-        ) : null}
-        <LogHistoryCard>
-          <View style={logHistoryCardStyles.trackerCardBody}>
-            {loading && rows.length === 0 ? (
-              <LogHistoryListLoading />
-            ) : rows.length === 0 ? (
-              <LogHistoryEmptyState icon="thermometer" />
-            ) : (
-              <LogHistoryPreviewList
-                items={symptomLogItems}
-                visibleCount={visibleCount}
-                hasMore={hasMore}
-                loadingMore={loadingMore}
-                onLoadMore={() => void loadMore()}
-                onPressItem={(logId) => navigation.navigate("SymptomDetail", { id: logId })}
-                selectionMode={selectionMode}
-                selectedIds={selectedIds}
-                onToggleSelect={toggleSelect}
-                onLongPressItem={enterSelectionWith}
-              />
-            )}
-          </View>
-        </LogHistoryCard>
-        {!showSymptomHistoryInstruction ? (
-          <LogHistoryTipRow text={SYMPTOM_LOGS_HISTORY_HINT_LINE} />
-        ) : null}
-      </ScrollView>
-      <ConfirmModal
-        visible={bulkDeleteOpen}
-        title={selectedIds.size === 1 ? "Delete symptom log?" : `Delete ${selectedIds.size} symptom logs?`}
-        message="This action cannot be undone."
-        confirmLabel={bulkDeleting ? "Deleting…" : "Delete"}
-        confirmDestructive
-        onConfirm={handleBulkDeleteConfirm}
-        onCancel={() => setBulkDeleteOpen(false)}
-      />
-    </>
+    <InstructionScreenShell
+      showInstruction={showSymptomHistoryInstruction}
+      contentPaddingBottom={bottomScrollInset + selectionBarInset + 24}
+      instruction={
+        <InstructionCard
+          instruction={SYMPTOM_LOGS_HISTORY_INSTRUCTION}
+          iconFamily="mci"
+          iconName="thermometer"
+          onDismiss={dismissSymptomHistoryInstruction}
+          dismissAccessibilityLabel="Dismiss symptom logs guide"
+        />
+      }
+      footer={
+        <ConfirmModal
+          visible={bulkDeleteOpen}
+          title={selectedIds.size === 1 ? "Delete symptom log?" : `Delete ${selectedIds.size} symptom logs?`}
+          message="This action cannot be undone."
+          confirmLabel={bulkDeleting ? "Deleting…" : "Delete"}
+          confirmDestructive
+          onConfirm={handleBulkDeleteConfirm}
+          onCancel={() => setBulkDeleteOpen(false)}
+        />
+      }
+    >
+      <LogHistoryCard>
+        <View style={logHistoryCardStyles.trackerCardBody}>
+          {loading && rows.length === 0 ? (
+            <LogHistoryListLoading />
+          ) : rows.length === 0 ? (
+            <LogHistoryEmptyState icon="thermometer" />
+          ) : (
+            <LogHistoryPreviewList
+              items={symptomLogItems}
+              visibleCount={visibleCount}
+              hasMore={hasMore}
+              loadingMore={loadingMore}
+              onLoadMore={() => void loadMore()}
+              onPressItem={(logId) => navigation.navigate("SymptomDetail", { id: logId })}
+              selectionMode={selectionMode}
+              selectedIds={selectedIds}
+              onToggleSelect={toggleSelect}
+              onLongPressItem={enterSelectionWith}
+            />
+          )}
+        </View>
+      </LogHistoryCard>
+    </InstructionScreenShell>
   );
 }
 
@@ -2448,57 +2455,53 @@ function MedicationTrackingHistoryScreen({ user }: { user: SessionUser }) {
   }, [refresh, runBulkDelete, user.id]);
 
   return (
-    <>
-      <ScrollView
-        style={[styles.screen, { backgroundColor: c.screen }]}
-        contentContainerStyle={{ paddingBottom: bottomScrollInset + selectionBarInset + 24 }}
-      >
-        {showMedicationHistoryInstruction ? (
-          <InstructionCard
-            instruction={MEDICATION_LOGS_HISTORY_INSTRUCTION}
-            iconFamily="mci"
-            iconName={TRACK_MEDICATIONS_MCI_ICON}
-            onDismiss={dismissMedicationHistoryInstruction}
-            dismissAccessibilityLabel="Dismiss medication logs guide"
-            style={{ marginBottom: CARD_SECTION_INNER_GAP }}
-          />
-        ) : null}
-        <LogHistoryCard>
-          <View style={logHistoryCardStyles.trackerCardBody}>
-            {loading && rows.length === 0 ? (
-              <LogHistoryListLoading />
-            ) : rows.length === 0 ? (
-              <LogHistoryEmptyState icon={TRACK_MEDICATIONS_MCI_ICON} />
-            ) : (
-              <LogHistoryPreviewList
-                items={medicationLogItems}
-                visibleCount={visibleCount}
-                hasMore={hasMore}
-                loadingMore={loadingMore}
-                onLoadMore={() => void loadMore()}
-                onPressItem={(logId) => navigation.navigate("MedicationLogDetail", { id: logId })}
-                selectionMode={selectionMode}
-                selectedIds={selectedIds}
-                onToggleSelect={toggleSelect}
-                onLongPressItem={enterSelectionWith}
-              />
-            )}
-          </View>
-        </LogHistoryCard>
-        {!showMedicationHistoryInstruction ? (
-          <LogHistoryTipRow text={MEDICATION_LOGS_HISTORY_HINT_LINE} />
-        ) : null}
-      </ScrollView>
-      <ConfirmModal
-        visible={bulkDeleteOpen}
-        title={selectedIds.size === 1 ? "Delete medication log?" : `Delete ${selectedIds.size} medication logs?`}
-        message="This action cannot be undone."
-        confirmLabel={bulkDeleting ? "Deleting…" : "Delete"}
-        confirmDestructive
-        onConfirm={handleBulkDeleteConfirm}
-        onCancel={() => setBulkDeleteOpen(false)}
-      />
-    </>
+    <InstructionScreenShell
+      showInstruction={showMedicationHistoryInstruction}
+      contentPaddingBottom={bottomScrollInset + selectionBarInset + 24}
+      instruction={
+        <InstructionCard
+          instruction={MEDICATION_LOGS_HISTORY_INSTRUCTION}
+          iconFamily="mci"
+          iconName={TRACK_MEDICATIONS_MCI_ICON}
+          onDismiss={dismissMedicationHistoryInstruction}
+          dismissAccessibilityLabel="Dismiss medication logs guide"
+        />
+      }
+      footer={
+        <ConfirmModal
+          visible={bulkDeleteOpen}
+          title={selectedIds.size === 1 ? "Delete medication log?" : `Delete ${selectedIds.size} medication logs?`}
+          message="This action cannot be undone."
+          confirmLabel={bulkDeleting ? "Deleting…" : "Delete"}
+          confirmDestructive
+          onConfirm={handleBulkDeleteConfirm}
+          onCancel={() => setBulkDeleteOpen(false)}
+        />
+      }
+    >
+      <LogHistoryCard>
+        <View style={logHistoryCardStyles.trackerCardBody}>
+          {loading && rows.length === 0 ? (
+            <LogHistoryListLoading />
+          ) : rows.length === 0 ? (
+            <LogHistoryEmptyState icon={TRACK_MEDICATIONS_MCI_ICON} />
+          ) : (
+            <LogHistoryPreviewList
+              items={medicationLogItems}
+              visibleCount={visibleCount}
+              hasMore={hasMore}
+              loadingMore={loadingMore}
+              onLoadMore={() => void loadMore()}
+              onPressItem={(logId) => navigation.navigate("MedicationLogDetail", { id: logId })}
+              selectionMode={selectionMode}
+              selectedIds={selectedIds}
+              onToggleSelect={toggleSelect}
+              onLongPressItem={enterSelectionWith}
+            />
+          )}
+        </View>
+      </LogHistoryCard>
+    </InstructionScreenShell>
   );
 }
 
@@ -2742,82 +2745,30 @@ function HydrationScreen({ user }: { user: SessionUser }) {
   }, [persistGlasses, today, user.id]);
 
   return (
-    <>
-      <ScrollView
-        style={[styles.screen, { backgroundColor: c.screen }]}
-        contentContainerStyle={{ paddingBottom: bottomScrollInset + 32 }}
-        showsVerticalScrollIndicator={false}
-      >
-        {showHydrationInstruction ? (
-          <InstructionCard
-            instruction={HYDRATION_INSTRUCTION}
-            iconFamily="mci"
-            iconName={HYDRATION_MCI_ICON}
-            onDismiss={dismissHydrationInstruction}
-            dismissAccessibilityLabel="Dismiss My Hydration guide"
-            style={{ marginBottom: CARD_SECTION_INNER_GAP }}
-          />
-        ) : null}
-        <LogHistoryCard style={styles.hydrationCard}>
-          <View style={styles.hydrationTrackerBody}>
-            <Text style={[styles.hydrationTodayLabel, { color: c.textMuted }]}>{formatUkDate(today)}</Text>
-
-            <View style={styles.hydrationCupsRow}>
-              {Array.from({ length: HYDRATION_TARGET }, (_, index) => {
-                const filled = index < glasses;
-                return (
-                  <View key={index} style={styles.hydrationCupSlot}>
-                    <MaterialCommunityIcons
-                      name={filled ? HYDRATION_MCI_ICON : HYDRATION_MCI_ICON_EMPTY}
-                      size={40}
-                      color={filled ? c.primary : c.cardBorder}
-                      accessibilityElementsHidden
-                      importantForAccessibility="no"
-                      accessibilityIgnoresInvertColors
-                    />
-                  </View>
-                );
-              })}
-            </View>
-
-            <Text style={[styles.hydrationCountLabel, { color: c.text }]}>
-              {glasses} of {HYDRATION_TARGET} glasses
-            </Text>
-
-            <View style={[styles.hydrationStepperTrack, { backgroundColor: c.surfaceSubtle, borderColor: c.cardBorder }]}>
-              <HydrationStepperButton
-                icon="minus"
-                variant="secondary"
-                disabled={glasses === 0}
-                onPress={() => persistGlasses(glasses - 1)}
-              />
-              <View style={[styles.hydrationStepperDivider, { backgroundColor: c.cardBorder }]} />
-              <HydrationStepperButton
-                icon="plus"
-                variant="primary"
-                disabled={atGoal}
-                onPress={() => persistGlasses(glasses + 1)}
-              />
-            </View>
-
-            {atGoal ? (
-              <Text style={[styles.hydrationGoalReached, { color: c.primary }]}>Daily goal reached!</Text>
-            ) : null}
-
-            {glasses > 0 ? (
-              <Pressable
-                accessibilityRole="button"
-                accessibilityLabel="Reset today's hydration count"
-                onPress={() => setResetConfirmOpen(true)}
-                hitSlop={8}
-                style={({ pressed }) => [styles.hydrationResetLink, pressed && { opacity: 0.7 }]}
-              >
-                <Text style={[styles.hydrationResetText, { color: c.textSecondary }]}>Reset today</Text>
-              </Pressable>
-            ) : null}
-          </View>
-        </LogHistoryCard>
-
+    <InstructionScreenShell
+      showInstruction={showHydrationInstruction}
+      contentPaddingBottom={bottomScrollInset + 32}
+      instruction={
+        <InstructionCard
+          instruction={HYDRATION_INSTRUCTION}
+          iconFamily="mci"
+          iconName={HYDRATION_MCI_ICON}
+          onDismiss={dismissHydrationInstruction}
+          dismissAccessibilityLabel="Dismiss My Hydration guide"
+        />
+      }
+      footer={
+        <ConfirmModal
+          visible={resetConfirmOpen}
+          title="Reset today's count?"
+          message="Your hydration progress will be reset to 0. If you did not mean to do this, tap Cancel."
+          confirmLabel="Reset"
+          cancelLabel="Cancel"
+          onCancel={() => setResetConfirmOpen(false)}
+          onConfirm={handleResetConfirm}
+        />
+      }
+      interactiveWhileInstruction={
         <Pressable
           accessibilityRole="link"
           accessibilityLabel="Daily Intake Guidelines for adults"
@@ -2827,18 +2778,68 @@ function HydrationScreen({ user }: { user: SessionUser }) {
           <Ionicons name="book-outline" size={16} color={c.textSecondary} accessibilityIgnoresInvertColors />
           <Text style={[styles.hydrationHelpLink, { color: c.text }]}>Daily Intake Guidelines</Text>
         </Pressable>
-      </ScrollView>
+      }
+    >
+      <LogHistoryCard style={styles.hydrationCard}>
+        <View style={styles.hydrationTrackerBody}>
+          <Text style={[styles.hydrationTodayLabel, { color: c.textMuted }]}>{formatUkDate(today)}</Text>
 
-      <ConfirmModal
-        visible={resetConfirmOpen}
-        title="Reset today's count?"
-        message="Your hydration progress will be reset to 0. If you did not mean to do this, tap Cancel."
-        confirmLabel="Reset"
-        cancelLabel="Cancel"
-        onCancel={() => setResetConfirmOpen(false)}
-        onConfirm={handleResetConfirm}
-      />
-    </>
+          <View style={styles.hydrationCupsRow}>
+            {Array.from({ length: HYDRATION_TARGET }, (_, index) => {
+              const filled = index < glasses;
+              return (
+                <View key={index} style={styles.hydrationCupSlot}>
+                  <MaterialCommunityIcons
+                    name={filled ? HYDRATION_MCI_ICON : HYDRATION_MCI_ICON_EMPTY}
+                    size={40}
+                    color={filled ? c.primary : c.cardBorder}
+                    accessibilityElementsHidden
+                    importantForAccessibility="no"
+                    accessibilityIgnoresInvertColors
+                  />
+                </View>
+              );
+            })}
+          </View>
+
+          <Text style={[styles.hydrationCountLabel, { color: c.text }]}>
+            {glasses} of {HYDRATION_TARGET} glasses
+          </Text>
+
+          <View style={[styles.hydrationStepperTrack, { backgroundColor: c.surfaceSubtle, borderColor: c.cardBorder }]}>
+            <HydrationStepperButton
+              icon="minus"
+              variant="secondary"
+              disabled={glasses === 0}
+              onPress={() => persistGlasses(glasses - 1)}
+            />
+            <View style={[styles.hydrationStepperDivider, { backgroundColor: c.cardBorder }]} />
+            <HydrationStepperButton
+              icon="plus"
+              variant="primary"
+              disabled={atGoal}
+              onPress={() => persistGlasses(glasses + 1)}
+            />
+          </View>
+
+          {atGoal ? (
+            <Text style={[styles.hydrationGoalReached, { color: c.primary }]}>Daily goal reached!</Text>
+          ) : null}
+
+          {glasses > 0 ? (
+            <Pressable
+              accessibilityRole="button"
+              accessibilityLabel="Reset today's hydration count"
+              onPress={() => setResetConfirmOpen(true)}
+              hitSlop={8}
+              style={({ pressed }) => [styles.hydrationResetLink, pressed && { opacity: 0.7 }]}
+            >
+              <Text style={[styles.hydrationResetText, { color: c.textSecondary }]}>Reset today</Text>
+            </Pressable>
+          ) : null}
+        </View>
+      </LogHistoryCard>
+    </InstructionScreenShell>
   );
 }
 
@@ -2901,19 +2902,18 @@ function ReportsScreen({ user }: { user: SessionUser }) {
   };
 
   return (
-    <ScrollView
-      style={[styles.screen, { backgroundColor: c.screen }]}
-      contentContainerStyle={{ paddingBottom: bottomScrollInset }}
-    >
-      {showReportsInstruction ? (
+    <InstructionScreenShell
+      showInstruction={showReportsInstruction}
+      contentPaddingBottom={bottomScrollInset}
+      instruction={
         <InstructionCard
           instruction={REPORTS_INSTRUCTION}
           iconName="document-text-outline"
           onDismiss={dismissReportsInstruction}
           dismissAccessibilityLabel="Dismiss reports guide"
-          style={{ marginBottom: CARD_SECTION_INNER_GAP }}
         />
-      ) : null}
+      }
+    >
       <Card title="Reports & Briefs">
         <PrimaryButton title={loading ? "Generating..." : "Generate report"} onPress={generate} />
         <Text
@@ -2924,37 +2924,28 @@ function ReportsScreen({ user }: { user: SessionUser }) {
         <LabeledInput label="Clinician email" value={email} onChangeText={setEmail} placeholder="Clinician email" autoCapitalize="none" />
         <PrimaryButton title="Email report" onPress={emailReport} disabled={!report || !email} />
       </Card>
-    </ScrollView>
+    </InstructionScreenShell>
   );
 }
 
 const NOTIFICATION_HELP_SECTIONS = [
   {
-    label: "Device settings",
+    label: "Phone settings",
     steps: [
-      "Open your device's notification settings for Flare Care Mobile.",
-      "Ensure notifications are allowed.",
-    ],
-  },
-  {
-    label: "Flare Care reminders",
-    steps: [
-      "Open the Reminders screen.",
-      "Tap Enable Notifications if available.",
-      "Verify that reminder alerts are turned on.",
+      "Open your phone settings for Flare Care Mobile.",
+      "Turn notifications on.",
     ],
   },
 ];
 
 function NotificationHelpContent() {
   const c = useFlareColors();
-  const [deviceSection, remindersSection] = NOTIFICATION_HELP_SECTIONS;
+  const [deviceSection] = NOTIFICATION_HELP_SECTIONS;
 
   return (
     <>
       <Text style={[logHistoryCardStyles.trackerIntro, { color: c.textMuted }]}>
-        If you&apos;re not receiving alerts, check that notifications are enabled both in Flare Care and in your
-        device settings.
+        If you&apos;re still not getting alerts, check that notifications are enabled for the app in your device settings.
       </Text>
 
       <View style={styles.remindersHelpPathItem}>
@@ -2968,26 +2959,9 @@ function NotificationHelpContent() {
           ))}
         </View>
         <View style={styles.notificationHelpAction}>
-          <PrimaryButton title="Open notification settings" onPress={() => void openAppNotificationSettings()} />
+          <PrimaryButton title="Open phone settings" onPress={() => void openAppNotificationSettings()} />
         </View>
       </View>
-
-      <View style={styles.remindersHelpPathItem}>
-        <Text style={[styles.notificationHelpSectionTitle, { color: c.text }]}>{remindersSection.label}</Text>
-        <View style={styles.notificationHelpStepList}>
-          {remindersSection.steps.map((step) => (
-            <View key={step} style={styles.notificationHelpStepRow}>
-              <Text style={[styles.notificationHelpStepBullet, { color: c.primary }]}>•</Text>
-              <Text style={[styles.text, styles.notificationHelpStepText, { color: c.textMuted }]}>{step}</Text>
-            </View>
-          ))}
-        </View>
-      </View>
-
-      <Text style={[styles.muted, styles.notificationHelpEmphasis, { color: c.textMuted, lineHeight: 20 }]}>
-        Notification settings may vary by device
-        {Platform.OS === "android" ? " and Android version" : ""}.
-      </Text>
     </>
   );
 }
@@ -3148,90 +3122,81 @@ function NotificationsScreen({ user }: { user: SessionUser }) {
   const c = useFlareColors();
   const navigation = useNavigation<any>();
   const bottomScrollInset = useBottomTabScrollInset();
-  const [permissionGranted, setPermissionGranted] = useState(false);
-  const [scheduled, setScheduled] = useState(0);
+  const initialCache = getCachedReminderStatus();
+  const [permissionGranted, setPermissionGranted] = useState(
+    () => initialCache?.permissionGranted ?? false,
+  );
+  const [scheduled, setScheduled] = useState(() => initialCache?.scheduled ?? 0);
+  const [statusReady, setStatusReady] = useState(() => initialCache !== null);
   const [lastError, setLastError] = useState("");
-  const [registering, setRegistering] = useState(false);
+
+  useLayoutEffect(() => {
+    let cancelled = false;
+    void hydrateReminderStatusCache().then((cached) => {
+      if (cancelled || !cached) return;
+      setPermissionGranted(cached.permissionGranted);
+      setScheduled(cached.scheduled);
+      setStatusReady(true);
+    });
+    return () => {
+      cancelled = true;
+    };
+  }, []);
 
   const refreshReminderStatus = useCallback(async () => {
     if (!Notifications) return;
     try {
-      const { status } = await Notifications.getPermissionsAsync();
+      await ensureLocalReminderNotificationsReady();
+      let { status } = await Notifications.getPermissionsAsync();
+      if (status === "undetermined") {
+        const { status: nextStatus } = await Notifications.requestPermissionsAsync();
+        status = nextStatus;
+      }
       const granted = status === "granted";
+      let scheduledCount = 0;
+      if (granted) {
+        await rescheduleLocalRemindersIfGranted(user.id);
+        scheduledCount = await getLocalReminderScheduledCount();
+        void registerExpoPushTokenBestEffort().catch(() => {});
+      }
+      await setCachedReminderStatus({ permissionGranted: granted, scheduled: scheduledCount });
       setPermissionGranted(granted);
-      setScheduled(granted ? await getLocalReminderScheduledCount() : 0);
-    } catch {
-      // non-fatal status read
+      setScheduled(scheduledCount);
+      setStatusReady(true);
+      setLastError("");
+    } catch (error: unknown) {
+      const message = error instanceof Error ? error.message : "Could not update reminder status.";
+      setLastError(message);
+      setStatusReady(true);
     }
-  }, []);
+  }, [user.id]);
 
   useFocusEffect(
     useCallback(() => {
-      setRegistering(false);
       void refreshReminderStatus();
     }, [refreshReminderStatus]),
   );
 
-  const register = async () => {
-    setLastError("");
-    setRegistering(true);
-    if (!Notifications || !Device) {
-      setRegistering(false);
-      Alert.alert("Not supported in Expo Go", "Use a development build to test local reminders.");
-      return;
-    }
-    if (!Device.isDevice) {
-      setRegistering(false);
-      Alert.alert("Device required", "Use a physical device for reminders.");
-      return;
-    }
-    await ensureLocalReminderNotificationsReady();
-    const { status: existingStatus } = await Notifications.getPermissionsAsync();
-    let finalStatus = existingStatus;
-    if (existingStatus !== "granted") {
-      const { status } = await Notifications.requestPermissionsAsync();
-      finalStatus = status;
-    }
-    if (finalStatus !== "granted") {
-      setRegistering(false);
-      Alert.alert("Permission denied", "Notification permission is required.");
-      return;
-    }
-    setPermissionGranted(true);
-    try {
-      const { scheduledCount, permissionGranted } = await rescheduleAllLocalRemindersForUser(user.id);
-      if (!permissionGranted) {
-        setPermissionGranted(false);
-        setRegistering(false);
-        Alert.alert("Permission denied", "Notification permission is required.");
-        return;
+  useEffect(() => {
+    const subscription = AppState.addEventListener("change", (nextState) => {
+      if (nextState === "active") {
+        void refreshReminderStatus();
       }
-      setScheduled(scheduledCount);
-      setLastError("");
+    });
+    return () => subscription.remove();
+  }, [refreshReminderStatus]);
 
-      try {
-        await registerExpoPushTokenBestEffort();
-      } catch (pushError) {
-        console.warn("PUSH_REGISTER_SKIPPED", pushError);
-      }
-    } catch (error: any) {
-      const message =
-        error?.message ||
-        error?.toString?.() ||
-        (typeof error === "string" ? error : "Unknown error");
-      console.error("LOCAL_REMINDER_SETUP_ERROR", error);
-      setLastError(message);
-      Alert.alert("Notification setup failed", message);
-    } finally {
-      setRegistering(false);
-    }
-  };
+  const reminderStatusSubtitle = !statusReady
+    ? ""
+    : !permissionGranted
+      ? "Turn on notifications in your phone settings"
+      : scheduled === 0
+        ? "No reminders scheduled."
+        : `You have ${scheduled} reminder${scheduled === 1 ? "" : "s"} scheduled.`;
 
-  const reminderStatusSubtitle = !permissionGranted
-    ? "Turn on to receive medication and appointment reminders"
-    : scheduled > 0
-      ? `${scheduled} reminder${scheduled === 1 ? "" : "s"} scheduled`
-      : "No reminders scheduled yet";
+  const reminderStatusTitle = permissionGranted ? "Notifications on" : "Notifications off";
+
+  const reminderStatusIcon = permissionGranted ? "notifications" : "notifications-off-outline";
 
   return (
     <ScrollView
@@ -3242,42 +3207,45 @@ function NotificationsScreen({ user }: { user: SessionUser }) {
         <View style={styles.remindersStatusRow}>
           <View style={[styles.accountAvatarWell, { backgroundColor: c.surfaceSubtle }]}>
             <Ionicons
-              name={permissionGranted ? "notifications" : "notifications-off-outline"}
+              name={reminderStatusIcon}
               size={26}
               color={c.primary}
               accessibilityIgnoresInvertColors
             />
           </View>
           <View style={styles.accountIdentityTextCol}>
-            <Text style={[styles.accountFirstName, { color: c.text }]}>
-              {permissionGranted ? "Notifications on" : "Notifications off"}
-            </Text>
-            <Text style={[styles.remindersStatusSubtitle, { color: c.textMuted }]}>{reminderStatusSubtitle}</Text>
+            <Text style={[styles.accountFirstName, { color: c.text }]}>{reminderStatusTitle}</Text>
+            {reminderStatusSubtitle ? (
+              <Text style={[styles.remindersStatusSubtitle, { color: c.textMuted }]}>{reminderStatusSubtitle}</Text>
+            ) : null}
           </View>
         </View>
-        {!permissionGranted ? (
+
+        {!statusReady ? (
+          <View style={styles.remindersStatusLoading}>
+            <ActivityIndicator size="small" color={c.primary} />
+          </View>
+        ) : !permissionGranted ? (
+          <View style={styles.remindersSetupBlock}>
+            <Text style={[styles.muted, { color: c.textMuted, lineHeight: 20 }]}>{REMINDERS_SETUP_INTRO_OFF}</Text>
+            <PrimaryButton title="Open phone settings" onPress={() => void openAppNotificationSettings()} />
+          </View>
+        ) : (
           <Text style={[styles.muted, { color: c.textMuted, marginTop: 16, lineHeight: 20 }]}>
-            Tap once to allow notifications. After that, saving medications or appointments will schedule reminders
-            automatically.
+            {scheduled > 0 ? REMINDERS_READY_BODY : REMINDERS_READY_NONE}
           </Text>
-        ) : null}
-        <View style={styles.remindersSetupBlock}>
-          <PrimaryButton
-            title={permissionGranted ? "Refresh reminders" : "Enable notifications"}
-            onPress={register}
-            loading={registering}
-          />
-        </View>
+        )}
+
         {lastError ? (
           <Text style={[flareFieldErrorStyle(c, "wizard"), { marginTop: 12 }]}>{lastError}</Text>
         ) : null}
         <Pressable
           accessibilityRole="button"
-          accessibilityLabel="Troubleshoot notifications"
+          accessibilityLabel="Notification help"
           onPress={() => navigation.navigate("AccountHelp", { expandSection: "notifications" })}
           style={({ pressed }) => [styles.remindersGuideLinkPress, pressed && { opacity: 0.7 }]}
         >
-          <Text style={[styles.remindersGuideLink, { color: c.text }]}>Troubleshoot notifications</Text>
+          <Text style={[styles.remindersGuideLink, { color: c.text }]}>Not getting alerts?</Text>
         </Pressable>
       </Card>
     </ScrollView>
@@ -3747,13 +3715,16 @@ function AccountScreen({
         ]}
       >
         <FlareScreenSectionTitle inCard>Delete account</FlareScreenSectionTitle>
-        <Text style={[styles.muted, { color: c.textMuted, lineHeight: 20 }]}>
-          Permanently delete your account and all associated data. This cannot be undone.
-        </Text>
-        <SecondaryButton
-          title="Delete account"
-          onPress={() => setDeleteAccountConfirmOpen(true)}
-        />
+          <View style={styles.accountDeleteCardBody}>
+          <Text style={[styles.muted, { color: c.textMuted, lineHeight: 20 }]}>
+            Permanently delete your account and all associated data. This cannot be undone.
+          </Text>
+          <SecondaryButton
+            noTopMargin
+            title="Delete account"
+            onPress={() => setDeleteAccountConfirmOpen(true)}
+          />
+        </View>
       </View>
       <ConfirmModal
         visible={deleteAccountConfirmOpen}
@@ -4118,6 +4089,7 @@ function AppTabs({
       },
       headerTintColor: colors.textMuted,
       headerShadowVisible: false,
+      contentStyle: { backgroundColor: colors.screen },
       headerBackVisible: false,
       /** Match `styles.screen` horizontal inset so header controls line up with cards. */
       headerRightContainerStyle: { paddingRight: SCREEN_EDGE_PADDING, paddingLeft: 0 },
@@ -4180,7 +4152,7 @@ function AppTabs({
             <AppStack.Screen name="WeightLogDetail">{() => <WeightLogDetailScreen user={user} />}</AppStack.Screen>
             <AppStack.Screen name="Bowel">{() => <BowelScreen user={user} />}</AppStack.Screen>
             <AppStack.Screen name="BowelLogDetail">{() => <BowelLogDetailScreen user={user} />}</AppStack.Screen>
-            <AppStack.Screen name="BristolGuide" component={BristolGuideScreen} />
+            <AppStack.Screen name="BristolGuide">{() => <BristolGuideScreen user={user} />}</AppStack.Screen>
             <AppStack.Screen name="Appointments">{() => <AppointmentsScreen user={user} />}</AppStack.Screen>
             <AppStack.Screen name="AppointmentsPast">{() => <AppointmentsPastScreen user={user} />}</AppStack.Screen>
             <AppStack.Screen name="AppointmentDetail">{() => <AppointmentDetailScreen user={user} />}</AppStack.Screen>
@@ -4308,6 +4280,12 @@ function AppRoot() {
     };
   }, []);
 
+  useEffect(() => {
+    if (user?.id) {
+      void hydrateReminderStatusCache();
+    }
+  }, [user?.id]);
+
   const prepareSignOut = useCallback((reason: SignOutReason) => {
     setSignOutNotice(reason);
   }, []);
@@ -4326,6 +4304,7 @@ function AppRoot() {
     } catch {
       // non-fatal
     }
+    await clearCachedReminderStatus();
     setUser(null);
     await supabase.auth.signOut();
   }, []);
@@ -4462,7 +4441,6 @@ const styles = StyleSheet.create({
   screen: { flex: 1, padding: SCREEN_EDGE_PADDING },
   dashboardScreen: { flex: 1 },
   dashboardScroll: { flex: 1 },
-  dashboardWelcomeFloat: INSTRUCTION_CARD_FLOAT_STYLE,
   authScreenFill: { flex: 1 },
   authShell: { flex: 1, transform: [{ translateY: 40 }] },
   authBrandBlock: {
@@ -4608,6 +4586,13 @@ const styles = StyleSheet.create({
   text: { fontSize: 14, fontFamily: "Inter_400Regular" },
   muted: { fontSize: 13, fontFamily: "Inter_400Regular" },
   remindersSetupBlock: { gap: 12, marginTop: 16 },
+  remindersStatusLoading: { alignItems: "center", marginTop: 20, paddingVertical: 8 },
+  remindersSetupStep: { gap: 10, marginTop: 16 },
+  remindersSetupStepTitle: {
+    fontSize: FLARE_FONT_SIZE.body,
+    fontFamily: FLARE_FONT_FAMILY.medium,
+    lineHeight: FLARE_LINE_HEIGHT.body,
+  },
   remindersStatusRow: { flexDirection: "row", alignItems: "flex-start" },
   remindersStatusSubtitle: {
     fontSize: 14,
@@ -4713,7 +4698,8 @@ const styles = StyleSheet.create({
     justifyContent: "space-between",
   },
   accountPaddedCard: { padding: 18 },
-  accountDeleteCard: { paddingBottom: 16 },
+  accountDeleteCard: { paddingBottom: 20 },
+  accountDeleteCardBody: { gap: 12 },
   accountAvatarWell: {
     width: 56,
     height: 56,

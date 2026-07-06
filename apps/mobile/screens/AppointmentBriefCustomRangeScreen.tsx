@@ -160,7 +160,7 @@ export function AppointmentBriefCustomRangeScreen({ user: _user }: { user: Sessi
 
     <>
 
-      <AppointmentBriefScrollScreen tip="Pick the dates you want your summary to cover.">
+      <AppointmentBriefScrollScreen>
 
         <LogHistoryCard>
 

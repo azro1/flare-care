@@ -1,19 +1,25 @@
-import { useNavigation, useRoute } from "@react-navigation/native";
-import React, { useCallback, useMemo } from "react";
+import { useFocusEffect, useNavigation, useRoute } from "@react-navigation/native";
+import React, { useCallback, useMemo, useState } from "react";
 import { StyleSheet, Text, View } from "react-native";
-import { ScrollView } from "../lib/scrollViews";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
+import { InstructionCard } from "../components/InstructionCard";
+import { InstructionScreenShell } from "../components/InstructionScreenShell";
 import {
   LogHistoryCard,
   LogHistoryList,
-  LogHistoryTipRow,
   logHistoryListStyles,
   type LogHistoryListItem,
 } from "../components/LogHistoryList";
 import { BRISTOL_TYPES } from "../lib/bristolStoolChart";
-import { FLARE_FONT_FAMILY, FLARE_FONT_SIZE, SCREEN_EDGE_PADDING } from "../lib/layoutConstants";
+import { BOWEL_FEATURE_MCI_ICON } from "../lib/bowelMovementShared";
+import { BRISTOL_GUIDE_INSTRUCTION } from "../lib/instructionCardCopy";
+import {
+  markBristolGuideInstructionDismissed,
+  markBristolGuideInstructionEligible,
+  readBristolGuideInstructionDismissed,
+} from "../lib/bristolGuideInstructionTip";
+import { FLARE_FONT_FAMILY, FLARE_FONT_SIZE } from "../lib/layoutConstants";
 import { useFlareColors } from "../theme";
-
 export type BristolGuideParams = {
   pickMode?: boolean;
   highlightedType?: number;
@@ -28,7 +34,9 @@ export type BowelReturnParams = {
   openLogSheet?: boolean;
 };
 
-export function BristolGuideScreen() {
+type SessionUser = { id: string };
+
+export function BristolGuideScreen({ user }: { user: SessionUser }) {
   const c = useFlareColors();
   const navigation = useNavigation<any>();
   const route = useRoute();
@@ -38,6 +46,26 @@ export function BristolGuideScreen() {
   const highlightedType = params.highlightedType ?? null;
   const returnOpenLogSheet = Boolean(params.returnOpenLogSheet);
 
+  const [showInstruction, setShowInstruction] = useState(false);
+
+  useFocusEffect(
+    useCallback(() => {
+      let cancelled = false;
+      void (async () => {
+        await markBristolGuideInstructionEligible(user.id);
+        const dismissed = await readBristolGuideInstructionDismissed(user.id);
+        if (!cancelled) setShowInstruction(!dismissed);
+      })();
+      return () => {
+        cancelled = true;
+      };
+    }, [user.id]),
+  );
+
+  const dismissBristolGuideInstruction = useCallback(() => {
+    setShowInstruction(false);
+    void markBristolGuideInstructionDismissed(user.id);
+  }, [user.id]);
   const items: LogHistoryListItem[] = useMemo(
     () =>
       BRISTOL_TYPES.map((item) => ({
@@ -92,10 +120,18 @@ export function BristolGuideScreen() {
   );
 
   return (
-    <ScrollView
-      style={[styles.screen, { backgroundColor: c.screen, padding: SCREEN_EDGE_PADDING }]}
-      contentContainerStyle={{ paddingBottom: insets.bottom + 24 }}
-      showsVerticalScrollIndicator={false}
+    <InstructionScreenShell
+      showInstruction={showInstruction}
+      contentPaddingBottom={insets.bottom + 24}
+      instruction={
+        <InstructionCard
+          instruction={BRISTOL_GUIDE_INSTRUCTION}
+          iconFamily="mci"
+          iconName={BOWEL_FEATURE_MCI_ICON}
+          onDismiss={dismissBristolGuideInstruction}
+          dismissAccessibilityLabel="Dismiss Bristol Stool Chart guide"
+        />
+      }
     >
       <LogHistoryCard style={styles.guideCard}>
         <LogHistoryList
@@ -109,19 +145,14 @@ export function BristolGuideScreen() {
         />
       </LogHistoryCard>
 
-      <LogHistoryTipRow
-        text="The scale ranges from 1 (firmest) to 7 (loosest) — types 3–4 are considered normal."
-      />
-
       {pickMode ? (
         <Text style={[styles.pickFooter, { color: c.textMuted }]}>Tap a type to use it in your log.</Text>
       ) : null}
-    </ScrollView>
+    </InstructionScreenShell>
   );
 }
 
 const styles = StyleSheet.create({
-  screen: { flex: 1 },
   guideCard: { marginBottom: 12 },
   typeBadge: {
     width: 36,

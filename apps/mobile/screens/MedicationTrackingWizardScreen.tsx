@@ -18,6 +18,7 @@ import {
 import { ScrollView } from "../lib/scrollViews";
 import { OptionPickerModal } from "../components/OptionPickerModal";
 import { InstructionCard } from "../components/InstructionCard";
+import { InstructionCardOverlay } from "../components/InstructionCardOverlay";
 import { WizardReviewMedicationSection } from "../components/symptomReviewLayout";
 import { PrimaryButton, SecondaryButton } from "../components/FlareButton";
 import { flareFieldErrorStyle, FlareInputTrigger, FlareTextInput } from "../components/FlareInput";
@@ -49,10 +50,6 @@ import {
 } from "../lib/medicationWizardShared";
 import { TRACK_MEDICATIONS_MCI_ICON } from "../lib/medicationFeatureIcons";
 import { TRACK_MEDICATIONS_INSTRUCTION } from "../lib/instructionCardCopy";
-import {
-  INSTRUCTION_CARD_FLOAT_STYLE,
-  wizardInstructionFloatLandingPadding,
-} from "../lib/layoutConstants";
 import {
   markTrackMedicationsInstructionDismissed,
   readTrackMedicationsInstructionDismissed,
@@ -531,7 +528,6 @@ export function MedicationTrackingWizardScreen({ user }: { user: SessionUser }) 
   }
 
   const showInstructionFloat = currentStep === 0 && !editId && showTrackMedicationsInstruction;
-  const wizardLandingScrollPadTop = 16;
 
   return (
     <KeyboardAvoidingView style={{ flex: 1, backgroundColor: c.screen }} behavior={Platform.OS === "ios" ? "padding" : undefined}>
@@ -549,18 +545,8 @@ export function MedicationTrackingWizardScreen({ user }: { user: SessionUser }) 
           </Text>
         ) : null}
 
-        {currentStep === 0 ? (
-          <View
-            style={[
-              styles.landing,
-              showInstructionFloat
-                ? {
-                    paddingTop: wizardInstructionFloatLandingPadding(wizardLandingScrollPadTop),
-                    justifyContent: "flex-start",
-                  }
-                : { minHeight: Math.max(windowHeight * 0.58, 420) },
-            ]}
-          >
+        {currentStep === 0 && !showInstructionFloat ? (
+          <View style={[styles.landing, { minHeight: Math.max(windowHeight * 0.58, 420) }]}>
             <View
               style={[
                 styles.landingIconPanel,
@@ -649,7 +635,7 @@ export function MedicationTrackingWizardScreen({ user }: { user: SessionUser }) 
         ) : null}
       </ScrollView>
       {showInstructionFloat ? (
-        <View pointerEvents="box-none" style={INSTRUCTION_CARD_FLOAT_STYLE}>
+        <InstructionCardOverlay>
           <InstructionCard
             instruction={TRACK_MEDICATIONS_INSTRUCTION}
             iconFamily="mci"
@@ -657,7 +643,7 @@ export function MedicationTrackingWizardScreen({ user }: { user: SessionUser }) 
             onDismiss={dismissTrackMedicationsInstruction}
             dismissAccessibilityLabel="Dismiss Track Medications guide"
           />
-        </View>
+        </InstructionCardOverlay>
       ) : null}
       </View>
 

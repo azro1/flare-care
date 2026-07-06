@@ -66,5 +66,6 @@ const styles = StyleSheet.create({
     borderRadius: TRACKER_THUMB_FAB_SIZE / 2,
     alignItems: "center",
     justifyContent: "center",
+    zIndex: 21,
   },
 });
