@@ -6,6 +6,24 @@ Product overview, env vars, and how to run the app stay in **`README.md`**. Rece
 
 ---
 
+## Known-good checkpoints (rollback)
+
+If reminders / welcome cards / related mobile UX regress while we keep building, start from this commit before deep debugging:
+
+| When verified | Commit | Summary |
+|---------------|--------|---------|
+| **2026-07-23** (working in daily use since 2026-07-06) | **`413eca9`** (`413eca9d2a9eb3f4b607053738665b301d3de9a9`) | **`fix(mobile): med reminders, welcome card overlay, and Reminders UX`** |
+
+**What was solid at `413eca9`:**
+- Local medication + appointment reminders scheduling / firing after phone-settings permission
+- Reminders tab UX (setup copy, auto-refresh on return from settings, no wrong-state flash)
+- Welcome card transparent overlay + updated My Meds / Appointments reminder copy
+- Confirm modal / delete-account card spacing polish
+
+**Restore check:** `git show 413eca9` or `git checkout 413eca9` (detached) / create a branch from it if you need to compare.
+
+---
+
 ## UI conventions (check before new screens)
 
 Use existing screens as reference — do **not** default to web-style teal hyperlinks.
