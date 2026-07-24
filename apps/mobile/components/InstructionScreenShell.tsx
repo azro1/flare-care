@@ -23,6 +23,8 @@ export function InstructionInteractionBlock({
 /**
  * Scroll + floating instruction card. Convention: scroll + help links stay usable;
  * primary CTAs and thumb FAB stay visible but blocked until dismiss (X on card).
+ * Inline empty-section welcome: pass `blockFloatingAction` (not `showInstruction`) so + is
+ * blocked while the in-card X stays tappable.
  */
 export function InstructionScreenShell({
   children,
@@ -32,6 +34,7 @@ export function InstructionScreenShell({
   floatingAction,
   footer,
   interactiveWhileInstruction,
+  blockFloatingAction = false,
 }: {
   children: React.ReactNode;
   showInstruction: boolean;
@@ -41,8 +44,11 @@ export function InstructionScreenShell({
   footer?: React.ReactNode;
   /** Help links etc. — stay tappable while instruction shows (sibling outside interaction block). */
   interactiveWhileInstruction?: React.ReactNode;
+  /** Block thumb FAB without showing the floating overlay (inline welcome). */
+  blockFloatingAction?: boolean;
 }) {
   const c = useFlareColors();
+  const fabBlocked = showInstruction || blockFloatingAction;
 
   return (
     <>
@@ -59,9 +65,9 @@ export function InstructionScreenShell({
           {interactiveWhileInstruction}
         </ScrollView>
         {floatingAction ? (
-          <InstructionInteractionBlock active={showInstruction}>
+          <InstructionInteractionBlock active={fabBlocked}>
             <View
-              style={showInstruction ? styles.floatingActionUnderScrim : undefined}
+              style={fabBlocked ? styles.floatingActionUnderScrim : undefined}
               pointerEvents="box-none"
             >
               {floatingAction}

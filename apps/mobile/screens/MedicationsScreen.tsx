@@ -15,8 +15,8 @@ import {
 import { ScrollView } from "../lib/scrollViews";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { PrimaryButton, SecondaryButton } from "../components/FlareButton";
-import { InstructionCard } from "../components/InstructionCard";
 import { InstructionScreenShell } from "../components/InstructionScreenShell";
+import { FloatingWelcomeCard } from "../components/FloatingWelcomeCard";
 import { flareFieldErrorStyle, FlareTextInput } from "../components/FlareInput";
 import { FlareScreenSectionTitle } from "../components/FlareScreenSectionTitle";
 import {
@@ -34,6 +34,7 @@ import { ConfirmModal } from "../components/ConfirmModal";
 import { TrackerThumbFab, useTrackerThumbFabLayout } from "../components/TrackerThumbFab";
 import { WriggleReminderBell } from "../components/WriggleReminderBell";
 import { invalidateDashboardSnapshot } from "../lib/dashboardSnapshotCache";
+import { recordRecentActivityEvent } from "../lib/recentActivityEvents";
 import { useLogListSelection } from "../lib/useLogListSelection";
 import { MY_MEDS_MCI_ICON } from "../lib/medicationFeatureIcons";
 import { rescheduleLocalRemindersIfGranted } from "../lib/medicationNotifications";
@@ -346,6 +347,7 @@ export function MedicationsScreen({ user }: { user: SessionUser }) {
     void runBulkDelete(async (ids) => {
       try {
         await deleteMedicationsForUser(user.id, ids);
+        await recordRecentActivityEvent(user.id, "medication-deleted");
         invalidateDashboardSnapshot(user.id);
         invalidateMedicationsListCache(user.id);
         await load();
@@ -473,10 +475,9 @@ export function MedicationsScreen({ user }: { user: SessionUser }) {
       showInstruction={showMyMedsInstruction}
       contentPaddingBottom={scrollBottomPad}
       instruction={
-        <InstructionCard
+        <FloatingWelcomeCard
           instruction={MY_MEDS_INSTRUCTION}
-          iconFamily="mci"
-          iconName={MY_MEDS_MCI_ICON}
+          icon={MY_MEDS_MCI_ICON}
           onDismiss={dismissMyMedsInstruction}
           dismissAccessibilityLabel="Dismiss My Meds guide"
         />

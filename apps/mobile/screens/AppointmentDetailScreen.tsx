@@ -9,6 +9,7 @@ import { LogDetailAddedHeader, LogDetailCard, LogDetailFieldGroup, logDetailStyl
 import { flareCardSectionStyles } from "../components/FlareScreenSectionTitle";
 import { invalidateDashboardSnapshot } from "../lib/dashboardSnapshotCache";
 import { formatAddedAtHeader } from "../lib/logDisplay";
+import { recordRecentActivityEvent } from "../lib/recentActivityEvents";
 import { formatUkDate } from "../lib/formatUkDate";
 import { rescheduleAppointmentNotificationsForUser } from "../lib/medicationNotifications";
 import { FLARE_FONT_FAMILY, FLARE_FONT_SIZE } from "../lib/layoutConstants";
@@ -142,6 +143,7 @@ export function AppointmentDetailScreen({ user }: { user: SessionUser }) {
     try {
       const { error } = await supabase.from(TABLES.APPOINTMENTS).delete().eq("id", row.id).eq("user_id", user.id);
       if (error) throw error;
+      await recordRecentActivityEvent(user.id, "appointment-deleted");
       invalidateDashboardSnapshot(user.id);
       invalidateAllAppointmentCaches(user.id);
       try {

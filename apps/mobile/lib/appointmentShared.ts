@@ -5,6 +5,9 @@ import { sanitizeNotesMobile } from "./symptomWizardShared";
 
 export const APPOINTMENTS_FEATURE_ION_ICON = "calendar-outline" as const;
 
+export const APPOINTMENT_ADDED_ACTIVITY_TITLE = "Added new appointment";
+export const APPOINTMENT_UPDATED_ACTIVITY_TITLE = "Updated appointment";
+
 export type AppointmentRow = {
   id: number;
   user_id: string;

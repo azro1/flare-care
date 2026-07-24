@@ -19,6 +19,7 @@ import {
   FLARE_FONT_FAMILY,
   FLARE_FONT_SIZE,
   FLARE_LINE_HEIGHT,
+  INFORMATIONAL_PAGE_HORIZONTAL_PADDING,
   INFORMATIONAL_PAGE_TITLE,
   NAV_HEADER_BAR_HEIGHT,
   SCREEN_EDGE_PADDING,
@@ -130,7 +131,7 @@ function CollapsingHeader({
   );
 
   const titleCenterOffset =
-    titleWidth > 0 ? screenWidth / 2 - SCREEN_EDGE_PADDING - titleWidth / 2 : 0;
+    titleWidth > 0 ? screenWidth / 2 - INFORMATIONAL_PAGE_HORIZONTAL_PADDING - titleWidth / 2 : 0;
   const titleTranslateX = useMemo(
     () =>
       collapseProgress.interpolate({
@@ -154,10 +155,22 @@ function CollapsingHeader({
   return (
     <View style={styles.headerRoot} pointerEvents="box-none">
       <View style={[styles.headerBar, { height: headerHeight, backgroundColor: screenColor }]}>
-        <View style={[styles.headerRow, { paddingTop: insets.top, height: headerHeight }]}>
-          <View style={headerLeftContainerStyle}>{headerLeft}</View>
+        <View
+          style={[
+            styles.headerRow,
+            {
+              paddingTop: insets.top,
+              height: headerHeight,
+              paddingHorizontal: SCREEN_EDGE_PADDING,
+            },
+          ]}
+        >
+          {/* Row already insets both sides — don't also apply options container edge padding. */}
+          <View style={[headerLeftContainerStyle, styles.headerSideSlot]}>{headerLeft}</View>
           <View style={styles.headerSideSpacer} />
-          <View style={headerRightContainerStyle}>{headerRight}</View>
+          <View style={[headerRightContainerStyle, styles.headerSideSlot, styles.headerRightSlot]}>
+            {headerRight}
+          </View>
         </View>
       </View>
 
@@ -173,7 +186,7 @@ function CollapsingHeader({
             fontSize: expandedFontSize,
             lineHeight: expandedLineHeight,
             top: largeTitleTop,
-            left: SCREEN_EDGE_PADDING,
+            left: INFORMATIONAL_PAGE_HORIZONTAL_PADDING,
             color: textColor,
             transform: [
               { translateX: titleTranslateX },
@@ -275,7 +288,7 @@ export function CollapsingTitleScrollScreen({
       onContentSizeChange={(_, height) => setScrollContentHeight(height)}
       contentContainerStyle={[
         {
-          paddingHorizontal: SCREEN_EDGE_PADDING,
+          paddingHorizontal: INFORMATIONAL_PAGE_HORIZONTAL_PADDING,
           paddingTop: scrollPaddingTop,
           paddingBottom: bottomInset,
           minHeight: minContentHeight,
@@ -304,6 +317,17 @@ const styles = StyleSheet.create({
   headerRow: {
     flexDirection: "row",
     alignItems: "center",
+  },
+  /** Clears options `paddingLeft` / `paddingRight` so only `headerRow` edge inset applies. */
+  headerSideSlot: {
+    paddingLeft: 0,
+    paddingRight: 0,
+    marginLeft: 0,
+    marginRight: 0,
+  },
+  /** Light trailing nudge so ⋮ sits closer to native-stack screens (half screen-edge). */
+  headerRightSlot: {
+    paddingRight: SCREEN_EDGE_PADDING / 2,
   },
   headerSideSpacer: {
     flex: 1,

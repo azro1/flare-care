@@ -4,7 +4,7 @@ export type DashboardActivityRow = {
   key: string;
   title: string;
   ts: number;
-  icon: "symptom" | "medication" | "bowel" | "weight" | "hydration";
+  icon: "symptom" | "medication" | "bowel" | "weight" | "hydration" | "appointment";
 };
 
 export type DashboardNewsItem = {

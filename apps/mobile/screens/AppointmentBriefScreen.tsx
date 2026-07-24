@@ -2,7 +2,7 @@ import { useFocusEffect, useNavigation } from "@react-navigation/native";
 import React, { useCallback, useMemo, useState } from "react";
 import { Pressable, StyleSheet, Text } from "react-native";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
-import { InstructionCard } from "../components/InstructionCard";
+import { FloatingWelcomeCard } from "../components/FloatingWelcomeCard";
 import { InstructionScreenShell } from "../components/InstructionScreenShell";
 import {
   buildBrowseLogRowItem,
@@ -86,9 +86,10 @@ export function AppointmentBriefScreen({ user }: { user: SessionUser }) {
       showInstruction={showInstruction}
       contentPaddingBottom={contentPaddingBottom}
       instruction={
-        <InstructionCard
+        <FloatingWelcomeCard
           instruction={APPOINTMENT_BRIEF_INSTRUCTION}
-          iconName={APPOINTMENTS_FEATURE_ION_ICON}
+          icon={APPOINTMENTS_FEATURE_ION_ICON}
+          iconFamily="ion"
           onDismiss={dismissAppointmentBriefInstruction}
           dismissAccessibilityLabel="Dismiss appointment summary guide"
         />

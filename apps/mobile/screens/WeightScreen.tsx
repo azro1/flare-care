@@ -28,11 +28,12 @@ import {
   logHistoryCardStyles,
 } from "../components/LogHistoryList";
 import { ConfirmModal } from "../components/ConfirmModal";
-import { InstructionCard } from "../components/InstructionCard";
+import { FloatingWelcomeCard } from "../components/FloatingWelcomeCard";
 import { InstructionScreenShell } from "../components/InstructionScreenShell";
 import { TrackerThumbFab, useTrackerThumbFabLayout } from "../components/TrackerThumbFab";
 import { STACKED_DETAIL_ROW_EDGE } from "../components/StackedDetailField";
 import { invalidateDashboardSnapshot } from "../lib/dashboardSnapshotCache";
+import { recordRecentActivityEvent } from "../lib/recentActivityEvents";
 import { useLogListSelection } from "../lib/useLogListSelection";
 import { usePaginatedLogList } from "../lib/paginatedLogList";
 import { formatUkDate } from "../lib/formatUkDate";
@@ -287,6 +288,7 @@ export function WeightScreen({ user }: { user: SessionUser }) {
     void runBulkDelete(async (ids) => {
       try {
         await deleteWeightsForUser(user.id, ids);
+        await recordRecentActivityEvent(user.id, "weight-deleted");
         invalidateDashboardSnapshot(user.id);
         invalidateWeightListCache(user.id);
         await refreshHistoryLoad();
@@ -339,6 +341,7 @@ export function WeightScreen({ user }: { user: SessionUser }) {
           .eq("id", editingId)
           .eq("user_id", user.id);
         if (error) throw error;
+        await recordRecentActivityEvent(user.id, "weight-updated");
       } else {
         const { error } = await supabase.from(TABLES.TRACK_WEIGHT).insert([{ ...payload, user_id: user.id }]);
         if (error) throw error;
@@ -363,10 +366,9 @@ export function WeightScreen({ user }: { user: SessionUser }) {
       showInstruction={showWeightInstruction}
       contentPaddingBottom={scrollBottomPadTotal}
       instruction={
-        <InstructionCard
+        <FloatingWelcomeCard
           instruction={WEIGHT_INSTRUCTION}
-          iconFamily="mci"
-          iconName={WEIGHT_FEATURE_MCI_ICON}
+          icon={WEIGHT_FEATURE_MCI_ICON}
           onDismiss={dismissWeightInstruction}
           dismissAccessibilityLabel="Dismiss My Weight guide"
         />

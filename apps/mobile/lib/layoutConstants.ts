@@ -3,11 +3,29 @@ import { Dimensions, Platform } from "react-native";
 /** Horizontal inset for screens, cards, and header controls. */
 export const SCREEN_EDGE_PADDING = 12;
 
+/** Padding inside white cards (`trackerCard`, `styles.card`, etc.) — edge of card → content. */
+export const CARD_INNER_PADDING = 14;
+
+/**
+ * Card-less informational pages (About, What is IBD?, legal) —
+ * screen edge + card inner so body text matches card-screen inset.
+ */
+export const INFORMATIONAL_PAGE_HORIZONTAL_PADDING = SCREEN_EDGE_PADDING + CARD_INNER_PADDING;
+
 /** Extra inset for Account tab link rows inside the grey tray (My account, Legal). */
 export const ACCOUNT_LIST_ROW_PADDING = 20;
 
 /** Today → Goals rows inside the white card — between default list inset and Account links. */
 export const TODAY_GOALS_ROW_PADDING = 14;
+
+/**
+ * Dashboard content above the pill body (greeting, check-in, recent activity, pill row, paddings).
+ * Used so short pill tabs (Guides / Logs) keep a stable min height vs Latest news.
+ */
+export const HOME_DASHBOARD_CHROME_ABOVE_PILL_BODY = 420;
+
+/** Floor for home pill body min height when the window is short. */
+export const HOME_PILL_BODY_MIN_HEIGHT_FLOOR = 280;
 
 /** Native `DateTimePicker` time mode — medication reminders, bowel log, etc. */
 export const TIME_PICKER_MINUTE_INTERVAL = 5;

@@ -30,6 +30,7 @@ import {
 } from "../lib/bowelMovementShared";
 import { invalidateDashboardSnapshot } from "../lib/dashboardSnapshotCache";
 import { formatAddedAtHeader } from "../lib/logDisplay";
+import { recordRecentActivityEvent } from "../lib/recentActivityEvents";
 import { formatUkDate } from "../lib/formatUkDate";
 import { FLARE_FONT_FAMILY, FLARE_FONT_SIZE } from "../lib/layoutConstants";
 import { supabase, TABLES } from "../lib/supabase";
@@ -218,6 +219,7 @@ export function BowelLogDetailScreen({ user }: { user: SessionUser }) {
     try {
       const { error } = await supabase.from(TABLES.BOWEL_MOVEMENTS).delete().eq("id", id).eq("user_id", user.id);
       if (error) throw error;
+      await recordRecentActivityEvent(user.id, "bowel-deleted");
       invalidateDashboardSnapshot(user.id);
       invalidateBowelListCache(user.id);
       if (navigation.canGoBack()) navigation.goBack();

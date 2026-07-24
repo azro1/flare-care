@@ -29,6 +29,7 @@ import {
   Modal,
   Platform,
   Pressable,
+  Share,
   StyleProp,
   StyleSheet,
   Text,
@@ -46,8 +47,8 @@ import {
   SecondaryButton,
 } from "./components/FlareButton";
 import { DashboardWelcomeCard } from "./components/DashboardWelcomeCard";
-import { InstructionCard } from "./components/InstructionCard";
 import { InstructionCardOverlay } from "./components/InstructionCardOverlay";
+import { FloatingWelcomeCard } from "./components/FloatingWelcomeCard";
 import { InstructionScreenShell, InstructionInteractionBlock } from "./components/InstructionScreenShell";
 import { flareFieldErrorStyle, LabeledInput } from "./components/FlareInput";
 import { flareCardSectionStyles, FlareScreenSectionTitle } from "./components/FlareScreenSectionTitle";
@@ -65,8 +66,29 @@ import {
   fetchMedicationsForUser,
   MEDICATIONS_GOAL_ACTIVITY_TITLE,
   MEDICATION_ADDED_ACTIVITY_TITLE,
+  MEDICATION_UPDATED_ACTIVITY_TITLE,
   MEDICATION_TRACKING_ACTIVITY_TITLE,
 } from "./lib/medicationShared";
+import {
+  APPOINTMENT_ADDED_ACTIVITY_TITLE,
+  APPOINTMENT_UPDATED_ACTIVITY_TITLE,
+} from "./lib/appointmentShared";
+import {
+  isMeaningfulUpdate,
+  loadStoredRecentActivityEvents,
+  recordRecentActivityEvent,
+  RECENT_ACTIVITY_TITLE,
+} from "./lib/recentActivityEvents";
+import {
+  NUTRITION_CATEGORIES,
+  NUTRITION_GUIDE_INTRO,
+  NUTRITION_GUIDE_NOTE,
+  NUTRITION_HELPFUL_TIPS,
+  NUTRITION_IBD_AVOID_FLARE,
+  NUTRITION_IBD_CAREFUL,
+  NUTRITION_IBD_SAFE,
+  NUTRITION_QUICK_TIPS,
+} from "./lib/nutritionGuideCopy";
 import { HYDRATION_TARGET, HYDRATION_MCI_ICON, HYDRATION_MCI_ICON_EMPTY, loadHydrationResetTimestamp, saveHydrationReset, HYDRATION_GOAL_ACTIVITY_TITLE, HYDRATION_RESET_ACTIVITY_TITLE } from "./lib/hydrationShared";
 import {
   bottomTabBarHeight,
@@ -78,6 +100,8 @@ import {
   FLARE_FONT_SIZE,
   FLARE_LINE_HEIGHT,
   HOME_TILE_GAP,
+  HOME_DASHBOARD_CHROME_ABOVE_PILL_BODY,
+  HOME_PILL_BODY_MIN_HEIGHT_FLOOR,
   SCREEN_EDGE_PADDING,
   SECTION_TITLE_MARGIN_BOTTOM,
   SECTION_TITLE_MARGIN_TOP,
@@ -1205,7 +1229,7 @@ function parseMedicationLogList(raw: unknown, withDosage: boolean): MedicationLo
 /** Avoid greeting flicker (“there”) when session metadata/email arrives shortly after navigation. */
 const dashboardGreetingFirstNameByUserId: Record<string, string> = {};
 
-type HomeDashTab = "today" | "news" | "logs" | "more";
+type HomeDashTab = "today" | "news" | "logs" | "guides" | "more";
 /** When leaving Dashboard via a pill section, restore that pill on the next Dashboard focus (e.g. back from history). */
 let dashboardHomeDashTabRestore: HomeDashTab | null = null;
 
@@ -1284,12 +1308,21 @@ function DashboardScreen({
   onRegisterResetHome?: (reset: (() => void) | null) => void;
 }) {
   const navigation = useNavigation<any>();
-  const { width: windowWidth } = useWindowDimensions();
+  const { width: windowWidth, height: windowHeight } = useWindowDimensions();
+  const insets = useSafeAreaInsets();
   const c = useFlareColors();
   const bottomScrollInset = useBottomTabScrollInset();
   const tileWidth = useMemo(
     () => Math.floor((windowWidth - SCREEN_EDGE_PADDING * 2 - HOME_TILE_GAP) / 2),
     [windowWidth],
+  );
+  const homePillBodyMinHeight = useMemo(
+    () =>
+      Math.max(
+        HOME_PILL_BODY_MIN_HEIGHT_FLOOR,
+        windowHeight - bottomTabBarHeight(insets.bottom) - HOME_DASHBOARD_CHROME_ABOVE_PILL_BODY,
+      ),
+    [insets.bottom, windowHeight],
   );
   const snapshotSeed = dashboardSnapshotByUserId[user.id];
   const [weather, setWeather] = useState<string>(() => snapshotSeed?.weather ?? "Loading weather...");
@@ -1413,6 +1446,7 @@ function DashboardScreen({
             medicationHistoryCountRes,
             recentBowelRes,
             recentWeightRes,
+            recentAppointmentsRes,
           ] = await Promise.all([
             supabase.from(TABLES.LOG_SYMPTOMS).select("id,created_at").eq("user_id", user.id).gte("created_at", `${today}T00:00:00`),
             fetchMedicationsForUser(user.id),
@@ -1432,7 +1466,13 @@ function DashboardScreen({
               .eq("user_id", user.id)
               .order("updated_at", { ascending: false })
               .limit(1),
-            supabase.from(TABLES.TRACK_WEIGHT).select("id,date,value_kg").eq("user_id", user.id).order("date", { ascending: false }).limit(1),
+            supabase.from(TABLES.TRACK_WEIGHT).select("id,date,value_kg,created_at").eq("user_id", user.id).order("created_at", { ascending: false }).limit(1),
+            supabase
+              .from(TABLES.APPOINTMENTS)
+              .select("id,created_at,updated_at")
+              .eq("user_id", user.id)
+              .order("updated_at", { ascending: false })
+              .limit(10),
           ]);
 
           const prescribedMeds = medicationsList.filter((med) => med.name !== "Medication Tracking");
@@ -1459,7 +1499,7 @@ function DashboardScreen({
           if (recentSymptom?.created_at) {
             activityRows.push({
               key: `symptom-${recentSymptom.id}`,
-              title: "Logged symptom",
+              title: RECENT_ACTIVITY_TITLE.symptomLogged,
               ts: new Date(recentSymptom.created_at).getTime(),
               icon: "symptom",
             });
@@ -1474,6 +1514,16 @@ function DashboardScreen({
           }
 
           for (const med of prescribedMeds) {
+            const update = isMeaningfulUpdate(med.created_at, med.updated_at);
+            if (update && update.ts >= fourHoursAgo) {
+              activityRows.push({
+                key: `med-updated-${med.id}`,
+                title: MEDICATION_UPDATED_ACTIVITY_TITLE,
+                ts: update.ts,
+                icon: "medication",
+              });
+              continue;
+            }
             if (!med.created_at) continue;
             const ts = new Date(med.created_at).getTime();
             if (Number.isNaN(ts) || ts < fourHoursAgo) continue;
@@ -1483,6 +1533,32 @@ function DashboardScreen({
               ts,
               icon: "medication",
             });
+          }
+
+          for (const apt of (recentAppointmentsRes.data ?? []) as {
+            id: string | number;
+            created_at?: string | null;
+            updated_at?: string | null;
+          }[]) {
+            const createdTs = apt.created_at ? new Date(apt.created_at).getTime() : NaN;
+            const update = isMeaningfulUpdate(apt.created_at, apt.updated_at);
+            if (Number.isFinite(createdTs) && createdTs >= fourHoursAgo) {
+              activityRows.push({
+                key: `appt-added-${apt.id}`,
+                title: APPOINTMENT_ADDED_ACTIVITY_TITLE,
+                ts: createdTs,
+                icon: "appointment",
+              });
+              continue;
+            }
+            if (update && update.ts >= fourHoursAgo) {
+              activityRows.push({
+                key: `appt-updated-${apt.id}`,
+                title: APPOINTMENT_UPDATED_ACTIVITY_TITLE,
+                ts: update.ts,
+                icon: "appointment",
+              });
+            }
           }
 
           const allMedsTaken =
@@ -1505,25 +1581,42 @@ function DashboardScreen({
             }
           }
 
-          const recentBowel = recentBowelRes.data?.[0];
-          const recentBowelSavedAt = recentBowel?.updated_at ?? recentBowel?.created_at;
-          if (recentBowel && recentBowelSavedAt) {
-            activityRows.push({
-              key: `bowel-${recentBowel.id}`,
-              title: "Logged bowel movement",
-              ts: new Date(recentBowelSavedAt).getTime(),
-              icon: "bowel",
-            });
+          const recentBowel = recentBowelRes.data?.[0] as
+            | { id: string | number; created_at?: string; updated_at?: string }
+            | undefined;
+          if (recentBowel) {
+            const createdTs = recentBowel.created_at ? new Date(recentBowel.created_at).getTime() : NaN;
+            const update = isMeaningfulUpdate(recentBowel.created_at, recentBowel.updated_at);
+            if (update && update.ts >= fourHoursAgo) {
+              activityRows.push({
+                key: `bowel-updated-${recentBowel.id}`,
+                title: RECENT_ACTIVITY_TITLE.bowelUpdated,
+                ts: update.ts,
+                icon: "bowel",
+              });
+            } else if (Number.isFinite(createdTs) && createdTs >= fourHoursAgo) {
+              activityRows.push({
+                key: `bowel-${recentBowel.id}`,
+                title: RECENT_ACTIVITY_TITLE.bowelLogged,
+                ts: createdTs,
+                icon: "bowel",
+              });
+            }
           }
-          const recentWeight = recentWeightRes.data?.[0];
-          if (recentWeight?.date) {
-            const whenIso = `${recentWeight.date}T12:00:00`;
-            activityRows.push({
-              key: `weight-${recentWeight.id}`,
-              title: `Logged weight (${Number(recentWeight.value_kg)} kg)`,
-              ts: new Date(whenIso).getTime(),
-              icon: "weight",
-            });
+
+          const recentWeight = recentWeightRes.data?.[0] as
+            | { id: string | number; created_at?: string; date?: string; value_kg?: number }
+            | undefined;
+          if (recentWeight?.created_at) {
+            const ts = new Date(recentWeight.created_at).getTime();
+            if (!Number.isNaN(ts) && ts >= fourHoursAgo) {
+              activityRows.push({
+                key: `weight-${recentWeight.id}`,
+                title: RECENT_ACTIVITY_TITLE.weightLogged,
+                ts,
+                icon: "weight",
+              });
+            }
           }
 
           const hydrationRow = todayHydrationRes.data;
@@ -1545,6 +1638,19 @@ function DashboardScreen({
               ts: hydrationResetTs,
               icon: "hydration",
             });
+          }
+
+          const storedEvents = await loadStoredRecentActivityEvents(user.id, fourHoursAgo, today);
+          for (const event of storedEvents) {
+            // Prefer explicit weight-updated over a same-window "logged new weight" if both exist.
+            if (event.key.startsWith("weight-updated-")) {
+              for (let i = activityRows.length - 1; i >= 0; i -= 1) {
+                if (activityRows[i].key.startsWith("weight-") && !activityRows[i].key.startsWith("weight-deleted")) {
+                  activityRows.splice(i, 1);
+                }
+              }
+            }
+            activityRows.push(event);
           }
 
           snap.recentActivity = activityRows
@@ -1693,7 +1799,8 @@ function DashboardScreen({
           [
             ["today", "Today's"],
             ["logs", "Logs"],
-            ["news", "Latest"],
+            ["news", "Latest news"],
+            ["guides", "Guides"],
             ["more", "More"],
           ] as const
         ).map(([tab, label]) => {
@@ -1770,7 +1877,7 @@ function DashboardScreen({
         <Text
           style={[styles.dashboardSectionTitleLeft, styles.dashboardSectionTitleAfterPills, { color: c.text }]}
         >
-          News
+          Latest news
         </Text>
         {newsLoading ? (
           <Text style={[styles.muted, { color: c.textMuted }]}>Getting latest news...</Text>
@@ -1798,10 +1905,36 @@ function DashboardScreen({
                     <Text style={[styles.newsTitle, { color: c.text }]} numberOfLines={3}>
                       {item.title}
                     </Text>
-                    <Text style={[styles.newsMeta, { color: c.textMuted }]} numberOfLines={1}>
-                      {item.source}
-                      {item.publishedAt ? ` • ${formatUkDate(item.publishedAt)}` : ""}
-                    </Text>
+                    <View style={styles.newsCardFooter}>
+                      <Text style={[styles.newsMeta, { color: c.textMuted, flex: 1 }]} numberOfLines={1}>
+                        {item.source}
+                        {item.publishedAt ? ` • ${formatUkDate(item.publishedAt)}` : ""}
+                      </Text>
+                      <Pressable
+                        accessibilityRole="button"
+                        accessibilityLabel={`Share ${item.title}`}
+                        hitSlop={10}
+                        onPress={(event) => {
+                          event.stopPropagation?.();
+                          const message = item.link ? `${item.title}\n${item.link}` : item.title;
+                          void Share.share({
+                            message,
+                            title: item.title,
+                            ...(item.link && Platform.OS === "ios" ? { url: item.link } : null),
+                          }).catch(() => {
+                            // user dismissed / share unavailable
+                          });
+                        }}
+                        style={({ pressed }) => [styles.newsShareButton, pressed && { opacity: 0.7 }]}
+                      >
+                        <Ionicons
+                          name={Platform.OS === "ios" ? "share-outline" : "share-social-outline"}
+                          size={20}
+                          color={c.textMuted}
+                          accessibilityIgnoresInvertColors
+                        />
+                      </Pressable>
+                    </View>
                   </View>
                 </View>
               </Pressable>
@@ -1849,6 +1982,37 @@ function DashboardScreen({
             onPressItem={(rowId) => {
               dashboardHomeDashTabRestore = "logs";
               navigation.navigate(rowId === "symptom" ? "SymptomHistory" : "MedicationTrackingHistory");
+            }}
+            rowPaddingHorizontal={TODAY_GOALS_ROW_PADDING}
+          />
+        </LogHistoryCard>
+      </View>
+    ) : homeDashTab === "guides" ? (
+      <View style={styles.todayPillSection}>
+        <Text
+          style={[styles.dashboardSectionTitleLeft, styles.dashboardSectionTitleAfterPills, { color: c.text }]}
+        >
+          Guides
+        </Text>
+        <LogHistoryCard>
+          <LogHistoryList
+            items={[
+              buildBrowseLogRowItem({
+                id: "ibd",
+                title: "What is IBD?",
+                subtitle: "Understand Crohn's and ulcerative colitis",
+                accessibilityLabel: "Open What is IBD guide",
+              }),
+              buildBrowseLogRowItem({
+                id: "nutrition",
+                title: "Nutrition guide",
+                subtitle: "Food categories and IBD diet tips",
+                accessibilityLabel: "Open Nutrition guide",
+              }),
+            ]}
+            onPressItem={(rowId) => {
+              dashboardHomeDashTabRestore = "guides";
+              navigation.navigate(rowId === "ibd" ? "Ibd" : "NutritionGuide");
             }}
             rowPaddingHorizontal={TODAY_GOALS_ROW_PADDING}
           />
@@ -1980,11 +2144,11 @@ function DashboardScreen({
             ))}
           </View>
         ) : (
-          <Text style={[styles.muted, { color: c.textMuted }]}>No recent activity</Text>
+          <Text style={[styles.muted, { color: c.textMuted }]}>No recent activity.</Text>
         )}
       </Card>
       {homeNavPills}
-      <View style={styles.homePillBodySection}>{homePillBody}</View>
+      <View style={[styles.homePillBodySection, { minHeight: homePillBodyMinHeight }]}>{homePillBody}</View>
       </InstructionInteractionBlock>
       </ScrollView>
       {showWelcomeCard ? (
@@ -2048,6 +2212,7 @@ function SymptomHistoryScreen({ user }: { user: SessionUser }) {
         Alert.alert("Could not delete", result.message);
         throw new Error(result.message);
       }
+      await recordRecentActivityEvent(user.id, "symptom-deleted");
       invalidateDashboardSnapshot(user.id);
       await refresh();
     });
@@ -2058,10 +2223,9 @@ function SymptomHistoryScreen({ user }: { user: SessionUser }) {
       showInstruction={showSymptomHistoryInstruction}
       contentPaddingBottom={bottomScrollInset + selectionBarInset + 24}
       instruction={
-        <InstructionCard
+        <FloatingWelcomeCard
           instruction={SYMPTOM_LOGS_HISTORY_INSTRUCTION}
-          iconFamily="mci"
-          iconName="thermometer"
+          icon="thermometer"
           onDismiss={dismissSymptomHistoryInstruction}
           dismissAccessibilityLabel="Dismiss symptom logs guide"
         />
@@ -2186,6 +2350,7 @@ function SymptomDetailScreen({ user }: { user: SessionUser }) {
       Alert.alert("Could not delete", result.message);
       return;
     }
+    await recordRecentActivityEvent(user.id, "symptom-deleted");
     invalidateDashboardSnapshot(user.id);
     if (navigation.canGoBack()) navigation.goBack();
     else navigation.navigate("SymptomHistory");
@@ -2449,6 +2614,7 @@ function MedicationTrackingHistoryScreen({ user }: { user: SessionUser }) {
         Alert.alert("Could not delete", result.message);
         throw new Error(result.message);
       }
+      await recordRecentActivityEvent(user.id, "medication-log-deleted");
       invalidateDashboardSnapshot(user.id);
       await refresh();
     });
@@ -2459,10 +2625,9 @@ function MedicationTrackingHistoryScreen({ user }: { user: SessionUser }) {
       showInstruction={showMedicationHistoryInstruction}
       contentPaddingBottom={bottomScrollInset + selectionBarInset + 24}
       instruction={
-        <InstructionCard
+        <FloatingWelcomeCard
           instruction={MEDICATION_LOGS_HISTORY_INSTRUCTION}
-          iconFamily="mci"
-          iconName={TRACK_MEDICATIONS_MCI_ICON}
+          icon={TRACK_MEDICATIONS_MCI_ICON}
           onDismiss={dismissMedicationHistoryInstruction}
           dismissAccessibilityLabel="Dismiss medication logs guide"
         />
@@ -2549,6 +2714,7 @@ function MedicationLogDetailScreen({ user }: { user: SessionUser }) {
       Alert.alert("Could not delete", result.message);
       return;
     }
+    await recordRecentActivityEvent(user.id, "medication-log-deleted");
     invalidateDashboardSnapshot(user.id);
     if (navigation.canGoBack()) navigation.goBack();
     else navigation.navigate("MedicationTrackingHistory");
@@ -2749,10 +2915,9 @@ function HydrationScreen({ user }: { user: SessionUser }) {
       showInstruction={showHydrationInstruction}
       contentPaddingBottom={bottomScrollInset + 32}
       instruction={
-        <InstructionCard
+        <FloatingWelcomeCard
           instruction={HYDRATION_INSTRUCTION}
-          iconFamily="mci"
-          iconName={HYDRATION_MCI_ICON}
+          icon={HYDRATION_MCI_ICON}
           onDismiss={dismissHydrationInstruction}
           dismissAccessibilityLabel="Dismiss My Hydration guide"
         />
@@ -2906,9 +3071,10 @@ function ReportsScreen({ user }: { user: SessionUser }) {
       showInstruction={showReportsInstruction}
       contentPaddingBottom={bottomScrollInset}
       instruction={
-        <InstructionCard
+        <FloatingWelcomeCard
           instruction={REPORTS_INSTRUCTION}
-          iconName="document-text-outline"
+          icon="document-text-outline"
+          iconFamily="ion"
           onDismiss={dismissReportsInstruction}
           dismissAccessibilityLabel="Dismiss reports guide"
         />
@@ -3357,6 +3523,57 @@ function IbdScreen() {
 
       <Text style={[styles.dashboardSectionTitleLeft, styles.aboutContactSectionTitle, { color: c.text }]}>How FlareCare can help</Text>
       <IbdCheckList items={IBD_FLARECARE_HELPS} isLastInSection />
+    </CollapsingTitleScrollScreen>
+  );
+}
+
+function NutritionGuideScreen() {
+  const c = useFlareColors();
+  const insets = useSafeAreaInsets();
+  const bottomScrollInset = useBottomTabScrollInset();
+
+  return (
+    <CollapsingTitleScrollScreen
+      title="Nutrition guide"
+      titlePreset="informational"
+      bottomInset={Math.max(insets.bottom, 16) + 48 + bottomScrollInset}
+    >
+      <Text style={[styles.text, styles.ibdIntro, { color: c.textMuted }]}>{NUTRITION_GUIDE_INTRO}</Text>
+
+      <Text style={[styles.dashboardSectionTitleLeft, { color: c.text }]}>Food categories</Text>
+      {NUTRITION_CATEGORIES.map((category, index) => (
+        <View key={category.title}>
+          <Text style={[styles.ibdSubsectionTitle, index === 0 && { marginTop: 8 }, { color: c.text }]}>
+            {category.title}
+          </Text>
+          <Text style={[styles.text, styles.aboutBody, { color: c.textMuted }]}>{category.description}</Text>
+          <Text style={[styles.text, styles.nutritionExamplesLabel, { color: c.text }]}>Examples</Text>
+          <IbdBulletList items={category.examples} isLastInSection={index === NUTRITION_CATEGORIES.length - 1} />
+        </View>
+      ))}
+
+      <Text style={[styles.dashboardSectionTitleLeft, styles.aboutContactSectionTitle, { color: c.text }]}>
+        IBD foods
+      </Text>
+      <Text style={[styles.ibdSubsectionTitle, { marginTop: 8, color: c.text }]}>Generally safe</Text>
+      <Text style={[styles.text, styles.aboutBody, { color: c.textMuted }]}>{NUTRITION_IBD_SAFE}</Text>
+      <Text style={[styles.ibdSubsectionTitle, { color: c.text }]}>Try carefully</Text>
+      <Text style={[styles.text, styles.aboutBody, { color: c.textMuted }]}>{NUTRITION_IBD_CAREFUL}</Text>
+      <Text style={[styles.ibdSubsectionTitle, { color: c.text }]}>Avoid during flares</Text>
+      <Text style={[styles.text, styles.aboutBodyLast, { color: c.textMuted }]}>{NUTRITION_IBD_AVOID_FLARE}</Text>
+
+      <Text style={[styles.dashboardSectionTitleLeft, styles.aboutContactSectionTitle, { color: c.text }]}>
+        Quick food tips
+      </Text>
+      <IbdCheckList items={NUTRITION_QUICK_TIPS} isLastInSection />
+
+      <Text style={[styles.dashboardSectionTitleLeft, styles.aboutContactSectionTitle, { color: c.text }]}>
+        Helpful tips
+      </Text>
+      <IbdBulletList items={NUTRITION_HELPFUL_TIPS} isLastInSection />
+
+      <Text style={[styles.dashboardSectionTitleLeft, styles.aboutContactSectionTitle, { color: c.text }]}>Note</Text>
+      <Text style={[styles.text, styles.aboutBodyLast, { color: c.textMuted }]}>{NUTRITION_GUIDE_NOTE}</Text>
     </CollapsingTitleScrollScreen>
   );
 }
@@ -3988,6 +4205,7 @@ function AppTabs({
     const isDashboard = route.name === "Dashboard";
     const isAbout = route.name === "About";
     const isIbd = route.name === "Ibd";
+    const isNutritionGuide = route.name === "NutritionGuide";
     const isLegalDocument = route.name === "LegalDocument";
     const isAccount = route.name === "Account";
     const isReminders = route.name === "Reminders";
@@ -4068,6 +4286,8 @@ function AppTabs({
         : isAbout
             ? ""
             : isIbd
+            ? ""
+            : isNutritionGuide
             ? ""
             : isLegalDocument
               ? ""
@@ -4167,6 +4387,7 @@ function AppTabs({
             <AppStack.Screen name="MedicationDetail">{() => <MedicationDetailScreen user={user} />}</AppStack.Screen>
             <AppStack.Screen name="Reminders">{() => <NotificationsScreen user={user} />}</AppStack.Screen>
             <AppStack.Screen name="Ibd">{() => <IbdScreen />}</AppStack.Screen>
+            <AppStack.Screen name="NutritionGuide">{() => <NutritionGuideScreen />}</AppStack.Screen>
             <AppStack.Screen name="Account">
               {() => (
                 <AccountScreen
@@ -4837,6 +5058,11 @@ const styles = StyleSheet.create({
     marginTop: 16,
     marginBottom: 10,
   },
+  nutritionExamplesLabel: {
+    fontFamily: "Inter_700Bold",
+    fontSize: 13,
+    marginBottom: 8,
+  },
   aboutBody: { lineHeight: 22, marginBottom: 12 },
   aboutBodyLast: { lineHeight: 22, marginBottom: 0 },
   infoSectionContentEnd: { marginBottom: 0 },
@@ -4901,7 +5127,18 @@ const styles = StyleSheet.create({
   },
   newsCardBody: { marginTop: 14 },
   newsTitle: { fontSize: 14, fontFamily: "Inter_700Bold", lineHeight: 20 },
-  newsMeta: { fontSize: 11, fontFamily: "Inter_400Regular", marginTop: 6 },
+  newsCardFooter: {
+    marginTop: 6,
+    flexDirection: "row",
+    alignItems: "center",
+    gap: 8,
+  },
+  newsMeta: { fontSize: 11, fontFamily: "Inter_400Regular" },
+  newsShareButton: {
+    padding: 4,
+    marginRight: -4,
+    marginBottom: -4,
+  },
   /** Logged-at line above symptom detail review cards. */
   symptomDetailLoggedAt: { fontSize: 13, fontFamily: "Inter_400Regular", marginBottom: 16, textAlign: "center" },
   hydrationCard: { paddingVertical: 14 },

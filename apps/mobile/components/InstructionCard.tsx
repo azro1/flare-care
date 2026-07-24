@@ -34,6 +34,7 @@ export function InstructionCard({
   iconFamily = "ion",
   iconName = "compass-outline",
   dismissAccessibilityLabel = "Dismiss message",
+  bordered = true,
   style,
 }: {
   instruction: InstructionCopy;
@@ -41,6 +42,8 @@ export function InstructionCard({
   iconFamily?: "ion" | "mci";
   iconName?: React.ComponentProps<typeof Ionicons>["name"] | React.ComponentProps<typeof MaterialCommunityIcons>["name"];
   dismissAccessibilityLabel?: string;
+  /** Green border + left accent. Dashboard keeps true; wizards can turn off. */
+  bordered?: boolean;
   style?: StyleProp<ViewStyle>;
 }) {
   const c = useFlareColors();
@@ -70,18 +73,23 @@ export function InstructionCard({
     <View
       style={[
         styles.card,
+        !bordered && styles.cardBorderless,
         style,
         {
           backgroundColor: c.card,
-          borderColor: c.primary,
-          ...Platform.select({
-            ios: { shadowColor: c.primary },
-            android: {},
-          }),
+          ...(bordered
+            ? {
+                borderColor: c.primary,
+                ...Platform.select({
+                  ios: { shadowColor: c.primary },
+                  android: {},
+                }),
+              }
+            : null),
         },
       ]}
     >
-      <View style={[styles.accentBar, { backgroundColor: c.primary }]} />
+      {bordered ? <View style={[styles.accentBar, { backgroundColor: c.primary }]} /> : null}
       <View style={styles.content}>
         <View style={styles.headerRow}>
           <View style={[styles.iconWell, { backgroundColor: c.surfaceSubtle }]}>{icon}</View>
@@ -130,6 +138,9 @@ const styles = StyleSheet.create({
       },
       android: { elevation: 6 },
     }),
+  },
+  cardBorderless: {
+    borderWidth: 0,
   },
   accentBar: {
     width: INSTRUCTION_CARD_ACCENT_WIDTH,

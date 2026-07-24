@@ -13,7 +13,6 @@ type OverflowItem = {
 const OVERFLOW_ITEMS: OverflowItem[] = [
   { id: "settings", label: "Settings", route: "Settings" },
   { id: "about", label: "About FlareCare", route: "About" },
-  { id: "ibd", label: "What is IBD?", route: "Ibd" },
   { id: "help", label: "Help", route: "AccountHelp" },
 ];
 
@@ -22,7 +21,6 @@ const HIDE_ITEM_ON_ROUTE: Partial<Record<string, string[]>> = {
   Settings: ["settings"],
   AccountHelp: ["help"],
   About: ["about"],
-  Ibd: ["ibd"],
 };
 
 export function HeaderOverflowMenu({

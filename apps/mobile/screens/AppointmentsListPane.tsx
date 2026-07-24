@@ -5,7 +5,7 @@ import { Alert, Pressable, StyleSheet, Text, View } from "react-native";
 import { ScrollView } from "../lib/scrollViews";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { ConfirmModal } from "../components/ConfirmModal";
-import { InstructionCard } from "../components/InstructionCard";
+import { FloatingWelcomeCard } from "../components/FloatingWelcomeCard";
 import { InstructionScreenShell } from "../components/InstructionScreenShell";
 import {
   LogHistoryCard,
@@ -20,6 +20,7 @@ import {
 import { TrackerThumbFab, useTrackerThumbFabLayout } from "../components/TrackerThumbFab";
 import { WriggleReminderBell } from "../components/WriggleReminderBell";
 import { invalidateDashboardSnapshot } from "../lib/dashboardSnapshotCache";
+import { recordRecentActivityEvent } from "../lib/recentActivityEvents";
 import { useLogListSelection } from "../lib/useLogListSelection";
 import { type AppointmentsListState } from "../lib/useAppointmentsList";
 import { formatUkDateShort } from "../lib/formatUkDate";
@@ -191,6 +192,7 @@ export function AppointmentsListPane({
     void runBulkDelete(async (ids) => {
       try {
         await deleteAppointmentsForUser(user.id, ids);
+        await recordRecentActivityEvent(user.id, "appointment-deleted");
         invalidateDashboardSnapshot(user.id);
         invalidateAllAppointmentCaches(user.id);
         await load();
@@ -210,9 +212,10 @@ export function AppointmentsListPane({
       showInstruction={Boolean(showInstruction && onDismissInstruction)}
       contentPaddingBottom={scrollBottomPadTotal}
       instruction={
-        <InstructionCard
+        <FloatingWelcomeCard
           instruction={APPOINTMENTS_INSTRUCTION}
-          iconName={APPOINTMENTS_FEATURE_ION_ICON}
+          icon={APPOINTMENTS_FEATURE_ION_ICON}
+          iconFamily="ion"
           onDismiss={onDismissInstruction!}
           dismissAccessibilityLabel="Dismiss Appointments guide"
         />

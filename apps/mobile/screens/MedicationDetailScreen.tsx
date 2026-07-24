@@ -17,6 +17,7 @@ import { LogDetailAddedHeader, LogDetailCard, LogDetailFieldGroup, logDetailStyl
 import { flareCardSectionStyles } from "../components/FlareScreenSectionTitle";
 import { invalidateDashboardSnapshot } from "../lib/dashboardSnapshotCache";
 import { formatAddedAtHeader } from "../lib/logDisplay";
+import { recordRecentActivityEvent } from "../lib/recentActivityEvents";
 import {
   deleteMedicationForUser,
   invalidateMedicationsListCache,
@@ -167,6 +168,7 @@ export function MedicationDetailScreen({ user }: { user: SessionUser }) {
     setDeleteOpen(false);
     try {
       await deleteMedicationForUser(user.id, row.id);
+      await recordRecentActivityEvent(user.id, "medication-deleted");
       invalidateDashboardSnapshot(user.id);
       invalidateMedicationsListCache(user.id);
       try {

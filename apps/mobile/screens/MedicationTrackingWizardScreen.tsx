@@ -17,7 +17,7 @@ import {
 } from "react-native";
 import { ScrollView } from "../lib/scrollViews";
 import { OptionPickerModal } from "../components/OptionPickerModal";
-import { InstructionCard } from "../components/InstructionCard";
+import { FloatingWelcomeCard } from "../components/FloatingWelcomeCard";
 import { InstructionCardOverlay } from "../components/InstructionCardOverlay";
 import { WizardReviewMedicationSection } from "../components/symptomReviewLayout";
 import { PrimaryButton, SecondaryButton } from "../components/FlareButton";
@@ -636,10 +636,9 @@ export function MedicationTrackingWizardScreen({ user }: { user: SessionUser }) 
       </ScrollView>
       {showInstructionFloat ? (
         <InstructionCardOverlay>
-          <InstructionCard
+          <FloatingWelcomeCard
             instruction={TRACK_MEDICATIONS_INSTRUCTION}
-            iconFamily="mci"
-            iconName={TRACK_MEDICATIONS_MCI_ICON}
+            icon={TRACK_MEDICATIONS_MCI_ICON}
             onDismiss={dismissTrackMedicationsInstruction}
             dismissAccessibilityLabel="Dismiss Track Medications guide"
           />

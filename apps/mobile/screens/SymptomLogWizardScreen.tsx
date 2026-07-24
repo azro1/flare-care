@@ -24,7 +24,7 @@ import {
   type WizardReviewField,
 } from "../components/symptomReviewLayout";
 import { PrimaryButton, SecondaryButton } from "../components/FlareButton";
-import { InstructionCard } from "../components/InstructionCard";
+import { FloatingWelcomeCard } from "../components/FloatingWelcomeCard";
 import { InstructionCardOverlay } from "../components/InstructionCardOverlay";
 import { flareFieldErrorStyle, FlareInputTrigger, FlareTextInput } from "../components/FlareInput";
 import { LOG_SYMPTOMS_INSTRUCTION } from "../lib/instructionCardCopy";
@@ -1060,10 +1060,9 @@ export function SymptomLogWizardScreen({ user }: { user: SessionUser }) {
       </ScrollView>
       {showInstructionFloat ? (
         <InstructionCardOverlay>
-          <InstructionCard
+          <FloatingWelcomeCard
             instruction={LOG_SYMPTOMS_INSTRUCTION}
-            iconFamily="mci"
-            iconName="thermometer"
+            icon="thermometer"
             onDismiss={dismissSymptomInstruction}
             dismissAccessibilityLabel="Dismiss Log Symptoms guide"
           />

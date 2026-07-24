@@ -2,7 +2,7 @@ import { useFocusEffect, useNavigation, useRoute } from "@react-navigation/nativ
 import React, { useCallback, useMemo, useState } from "react";
 import { StyleSheet, Text, View } from "react-native";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
-import { InstructionCard } from "../components/InstructionCard";
+import { FloatingWelcomeCard } from "../components/FloatingWelcomeCard";
 import { InstructionScreenShell } from "../components/InstructionScreenShell";
 import {
   LogHistoryCard,
@@ -124,10 +124,9 @@ export function BristolGuideScreen({ user }: { user: SessionUser }) {
       showInstruction={showInstruction}
       contentPaddingBottom={insets.bottom + 24}
       instruction={
-        <InstructionCard
+        <FloatingWelcomeCard
           instruction={BRISTOL_GUIDE_INSTRUCTION}
-          iconFamily="mci"
-          iconName={BOWEL_FEATURE_MCI_ICON}
+          icon={BOWEL_FEATURE_MCI_ICON}
           onDismiss={dismissBristolGuideInstruction}
           dismissAccessibilityLabel="Dismiss Bristol Stool Chart guide"
         />

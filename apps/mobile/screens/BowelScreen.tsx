@@ -41,7 +41,7 @@ import {
 } from "../components/LogHistoryList";
 import { TrackerThumbFab, useTrackerThumbFabLayout } from "../components/TrackerThumbFab";
 import { ConfirmModal } from "../components/ConfirmModal";
-import { InstructionCard } from "../components/InstructionCard";
+import { FloatingWelcomeCard } from "../components/FloatingWelcomeCard";
 import { InstructionScreenShell } from "../components/InstructionScreenShell";
 import { usePaginatedLogList } from "../lib/paginatedLogList";
 import { STACKED_DETAIL_ROW_EDGE } from "../components/StackedDetailField";
@@ -68,6 +68,7 @@ import {
 import { bowelLogFormSchema } from "../lib/bowelLogFormSchema";
 import { invalidateDashboardSnapshot } from "../lib/dashboardSnapshotCache";
 import { BOWEL_INSTRUCTION } from "../lib/instructionCardCopy";
+import { recordRecentActivityEvent } from "../lib/recentActivityEvents";
 import {
   markBowelInstructionDismissed,
   readBowelInstructionDismissed,
@@ -517,6 +518,7 @@ export function BowelScreen({ user }: { user: SessionUser }) {
     void runBulkDelete(async (ids) => {
       try {
         await deleteBowelMovementsForUser(user.id, ids);
+        await recordRecentActivityEvent(user.id, "bowel-deleted");
         invalidateDashboardSnapshot(user.id);
         invalidateBowelListCache(user.id);
         await refreshHistoryLoad();
@@ -626,10 +628,9 @@ export function BowelScreen({ user }: { user: SessionUser }) {
       showInstruction={showBowelInstruction}
       contentPaddingBottom={scrollBottomPadTotal}
       instruction={
-        <InstructionCard
+        <FloatingWelcomeCard
           instruction={BOWEL_INSTRUCTION}
-          iconFamily="mci"
-          iconName={BOWEL_FEATURE_MCI_ICON}
+          icon={BOWEL_FEATURE_MCI_ICON}
           onDismiss={dismissBowelInstruction}
           dismissAccessibilityLabel="Dismiss Bowel Movements guide"
         />

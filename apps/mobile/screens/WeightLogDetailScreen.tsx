@@ -14,6 +14,7 @@ import {
 import { flareCardSectionStyles } from "../components/FlareScreenSectionTitle";
 import { invalidateDashboardSnapshot } from "../lib/dashboardSnapshotCache";
 import { formatAddedAtHeader } from "../lib/logDisplay";
+import { recordRecentActivityEvent } from "../lib/recentActivityEvents";
 import { formatUkDate } from "../lib/formatUkDate";
 import { FLARE_FONT_FAMILY, FLARE_FONT_SIZE } from "../lib/layoutConstants";
 import {
@@ -120,6 +121,7 @@ export function WeightLogDetailScreen({ user }: { user: SessionUser }) {
           .eq("id", row.id)
           .eq("user_id", user.id);
         if (error) throw error;
+        await recordRecentActivityEvent(user.id, "weight-updated");
         closeSheet();
         invalidateDashboardSnapshot(user.id);
         invalidateWeightListCache(user.id);
@@ -141,6 +143,7 @@ export function WeightLogDetailScreen({ user }: { user: SessionUser }) {
     try {
       const { error } = await supabase.from(TABLES.TRACK_WEIGHT).delete().eq("id", row.id).eq("user_id", user.id);
       if (error) throw error;
+      await recordRecentActivityEvent(user.id, "weight-deleted");
       invalidateDashboardSnapshot(user.id);
       invalidateWeightListCache(user.id);
       if (navigation.canGoBack()) navigation.goBack();

@@ -271,10 +271,12 @@ Hides vertical and horizontal scroll indicators app-wide. Do not re-enable scrol
 
 ## Informational pages & collapsing titles
 
-Use when adding pages like **What is IBD?** or **About** — long scroll content **without cards**, with a title that **shrinks into the nav bar** on scroll up and **expands back** on scroll down.
+Use when adding pages like **What is IBD?**, **Nutrition guide**, or **About** — long scroll content **without cards**, with a title that **shrinks into the nav bar** on scroll up and **expands back** on scroll down.
 
-**Live examples:** `IbdScreen`, `AboutScreen`, `LegalDocumentScreen` (Privacy Policy / Terms of Use) in `App.tsx`.  
-**Route names:** `Ibd`, `About`, `LegalDocument` (`document`: `privacy` | `terms`).
+**Live examples:** `IbdScreen`, `NutritionGuideScreen`, `AboutScreen`, `LegalDocumentScreen` (Privacy Policy / Terms of Use) in `App.tsx`.  
+**Route names:** `Ibd`, `NutritionGuide`, `About`, `LegalDocument` (`document`: `privacy` | `terms`).
+
+**Guides hub (Home):** dashboard pill **Guides** (Today's → Logs → Latest → Guides → More) lists Account-style rows for **What is IBD?** and **Nutrition guide**. IBD is **not** in the header overflow ⋮ — overflow keeps Settings / Help / About.
 
 ### What we built (vs normal screens)
 
