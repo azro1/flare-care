@@ -129,7 +129,7 @@ export const BRISTOL_GUIDE_INSTRUCTION = {
 export const APPOINTMENT_BRIEF_INSTRUCTION = {
   title: "Appointment summary",
   paragraphs: [
-    "Use a preset to quickly generate a health summary for your appointment.",
+    "Use a preset to quickly generate a health summary for your next appointment.",
     "Or use the Custom date range to pick the dates you want your summary to cover.",
     INSTRUCTION_CLOSE_TO_CONTINUE,
   ],

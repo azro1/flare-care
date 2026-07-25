@@ -119,7 +119,7 @@ function mapTokens(t: StyleguideTheme, isDark: boolean): FlareColors {
     appearanceChipInactiveBg: isDark ? "#ffffff" : screen,
     appearanceChipInactiveText: isDark ? "#121212" : t.text.default,
     modalBackdrop: isDark ? "rgba(0,0,0,0.78)" : "rgba(15,23,42,0.48)",
-    instructionScrim: isDark ? "rgba(0,0,0,0.62)" : "rgba(15,23,42,0.45)",
+    instructionScrim: isDark ? "rgba(0,0,0,0.52)" : "rgba(15,23,42,0.30)",
   };
 }
 

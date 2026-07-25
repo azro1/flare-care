@@ -6,6 +6,9 @@ export const SCREEN_EDGE_PADDING = 12;
 /** Padding inside white cards (`trackerCard`, `styles.card`, etc.) — edge of card → content. */
 export const CARD_INNER_PADDING = 14;
 
+/** Slightly roomier padding for first-time welcome cards. */
+export const WELCOME_CARD_INNER_PADDING = 16;
+
 /**
  * Card-less informational pages (About, What is IBD?, legal) —
  * screen edge + card inner so body text matches card-screen inset.

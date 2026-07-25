@@ -1800,7 +1800,7 @@ function DashboardScreen({
             ["today", "Today's"],
             ["logs", "Logs"],
             ["news", "Latest news"],
-            ["guides", "Guides"],
+            ["guides", "Info"],
             ["more", "More"],
           ] as const
         ).map(([tab, label]) => {
@@ -1992,7 +1992,7 @@ function DashboardScreen({
         <Text
           style={[styles.dashboardSectionTitleLeft, styles.dashboardSectionTitleAfterPills, { color: c.text }]}
         >
-          Guides
+          Info
         </Text>
         <LogHistoryCard>
           <LogHistoryList
@@ -3657,7 +3657,7 @@ function AccountInfoScreen({ user }: { user: SessionUser }) {
       style={[styles.screen, { backgroundColor: c.screen }]}
       contentContainerStyle={{ paddingBottom: bottomScrollInset + 24 }}
     >
-      <Card title="" style={styles.accountPaddedCard} compactBody>
+      <View style={[logHistoryCardStyles.trackerCard, styles.accountPaddedCard, { backgroundColor: c.card }]}>
         <Pressable
           accessibilityRole="button"
           accessibilityLabel={`Personal details, ${firstLine}, ${emailLine}`}
@@ -3671,14 +3671,13 @@ function AccountInfoScreen({ user }: { user: SessionUser }) {
             </View>
             <View style={styles.accountIdentityTextCol}>
               <Text style={[styles.accountFirstName, { color: c.text }]}>{firstLine}</Text>
-              <Text style={[styles.accountEmailLine, { color: c.textMuted }]}>{emailLine}</Text>
+              <Text style={[styles.accountEmailLine, { color: c.textSecondary }]}>{emailLine}</Text>
             </View>
           </View>
           <Ionicons name="chevron-forward" size={18} color={c.text} accessibilityIgnoresInvertColors />
         </Pressable>
-      </Card>
-      <View style={[logHistoryCardStyles.trackerCard, flareCardSectionStyles.container, { backgroundColor: c.card }]}>
-        <FlareScreenSectionTitle inCard>Account info</FlareScreenSectionTitle>
+      </View>
+      <View style={[logHistoryCardStyles.trackerCard, { backgroundColor: c.card }]}>
         <LogDetailFieldGroup
           fields={[
             {
@@ -3704,19 +3703,18 @@ function AccountPersonalDetailsScreen({ user }: { user: SessionUser }) {
       style={[styles.screen, { backgroundColor: c.screen }]}
       contentContainerStyle={{ flexGrow: 1, paddingBottom: bottomScrollInset + 24, backgroundColor: c.screen }}
     >
-      <Card title="" style={styles.accountPaddedCard} compactBody>
+      <View style={[logHistoryCardStyles.trackerCard, styles.accountPaddedCard, { backgroundColor: c.card }]}>
         <View style={styles.accountIdentityRow}>
           <View style={[styles.accountAvatarWell, { backgroundColor: c.surfaceSubtle }]}>
             <Ionicons name="person" size={26} color={c.primary} accessibilityIgnoresInvertColors />
           </View>
           <View style={styles.accountIdentityTextCol}>
             <Text style={[styles.accountFirstName, { color: c.text }]}>{accountIdentityFirstLine(user)}</Text>
-            <Text style={[styles.accountEmailLine, { color: c.textMuted }]}>{user.email || "Unknown user"}</Text>
+            <Text style={[styles.accountEmailLine, { color: c.textSecondary }]}>{user.email || "Unknown user"}</Text>
           </View>
         </View>
-      </Card>
-      <View style={[logHistoryCardStyles.trackerCard, flareCardSectionStyles.container, { backgroundColor: c.card }]}>
-        <FlareScreenSectionTitle inCard>Profile info</FlareScreenSectionTitle>
+      </View>
+      <View style={[logHistoryCardStyles.trackerCard, { backgroundColor: c.card }]}>
         <LogDetailFieldGroup
           fields={[
             { label: "Full name", value: displayName },
@@ -3804,8 +3802,7 @@ function SettingsScreen() {
       style={[styles.screen, { backgroundColor: c.screen }]}
       contentContainerStyle={[styles.accountScrollContent, { paddingBottom: bottomScrollInset + 16 }]}
     >
-      <View style={[logHistoryCardStyles.trackerCard, flareCardSectionStyles.container, { backgroundColor: c.card }]}>
-        <FlareScreenSectionTitle inCard>Notifications</FlareScreenSectionTitle>
+      <View style={[logHistoryCardStyles.trackerCard, { backgroundColor: c.card }]}>
         <LogHistoryList
           items={[
             {
@@ -3898,21 +3895,20 @@ function AccountScreen({
   return (
     <ScrollView
       style={[styles.screen, { backgroundColor: c.screen }]}
-      contentContainerStyle={{ paddingBottom: bottomScrollInset + 16 }}
+      contentContainerStyle={{ paddingBottom: bottomScrollInset + 24 }}
     >
-      <Card title="" style={styles.accountPaddedCard} compactBody>
+      <View style={[logHistoryCardStyles.trackerCard, styles.accountPaddedCard, { backgroundColor: c.card }]}>
         <View style={styles.accountIdentityRow}>
           <View style={[styles.accountAvatarWell, { backgroundColor: c.surfaceSubtle }]}>
             <Ionicons name="person" size={26} color={c.primary} accessibilityIgnoresInvertColors />
           </View>
           <View style={styles.accountIdentityTextCol}>
             <Text style={[styles.accountFirstName, { color: c.text }]}>{accountFirstName}</Text>
-            <Text style={[styles.accountEmailLine, { color: c.textMuted }]}>{user.email || "Unknown user"}</Text>
+            <Text style={[styles.accountEmailLine, { color: c.textSecondary }]}>{user.email || "Unknown user"}</Text>
           </View>
         </View>
-      </Card>
-      <View style={[logHistoryCardStyles.trackerCard, flareCardSectionStyles.container, { backgroundColor: c.card }]}>
-        <FlareScreenSectionTitle inCard>My account</FlareScreenSectionTitle>
+      </View>
+      <View style={[logHistoryCardStyles.trackerCard, { backgroundColor: c.card }]}>
         <LogHistoryList
           items={ACCOUNT_OPTION_ROUTES.map((item) => ({
             id: item.route,
@@ -3923,25 +3919,19 @@ function AccountScreen({
           onPressItem={(route) => navigation.navigate(route)}
         />
       </View>
-      <View
-        style={[
-          logHistoryCardStyles.trackerCard,
-          flareCardSectionStyles.container,
-          styles.accountDeleteCard,
-          { backgroundColor: c.card },
-        ]}
-      >
-        <FlareScreenSectionTitle inCard>Delete account</FlareScreenSectionTitle>
-          <View style={styles.accountDeleteCardBody}>
-          <Text style={[styles.muted, { color: c.textMuted, lineHeight: 20 }]}>
-            Permanently delete your account and all associated data. This cannot be undone.
-          </Text>
-          <SecondaryButton
-            noTopMargin
-            title="Delete account"
-            onPress={() => setDeleteAccountConfirmOpen(true)}
-          />
-        </View>
+      <View style={styles.accountDeleteFooter}>
+        <Pressable
+          accessibilityRole="button"
+          accessibilityLabel="Delete account"
+          onPress={() => setDeleteAccountConfirmOpen(true)}
+          hitSlop={8}
+          style={styles.accountDeleteLink}
+        >
+          <Text style={[styles.accountDeleteLinkText, { color: c.destructiveFill }]}>Delete account</Text>
+        </Pressable>
+        <Text style={[styles.accountDeleteHint, { color: c.textMuted }]}>
+          Permanently removes your account and data.
+        </Text>
       </View>
       <ConfirmModal
         visible={deleteAccountConfirmOpen}
@@ -4921,6 +4911,20 @@ const styles = StyleSheet.create({
   accountPaddedCard: { padding: 18 },
   accountDeleteCard: { paddingBottom: 20 },
   accountDeleteCardBody: { gap: 12 },
+  accountDeleteFooter: {
+    marginTop: 8,
+    paddingHorizontal: SCREEN_EDGE_PADDING,
+    alignItems: "center",
+    gap: 6,
+  },
+  accountDeleteLink: { paddingVertical: 10 },
+  accountDeleteLinkText: { fontSize: 15, fontFamily: "Inter_500Medium" },
+  accountDeleteHint: {
+    fontSize: 13,
+    fontFamily: "Inter_400Regular",
+    textAlign: "center",
+    lineHeight: 18,
+  },
   accountAvatarWell: {
     width: 56,
     height: 56,
@@ -4931,7 +4935,7 @@ const styles = StyleSheet.create({
   },
   accountIdentityTextCol: { flex: 1, minWidth: 0 },
   accountFirstName: { fontSize: 18, fontFamily: "Inter_700Bold" },
-  accountEmailLine: { fontSize: 14, fontFamily: "Inter_400Regular", marginTop: 2 },
+  accountEmailLine: { fontSize: 14, fontFamily: "Inter_400Regular", marginTop: 3 },
   accountMemberSince: { fontSize: 13, fontFamily: "Inter_400Regular", marginTop: 6 },
   accountNavRow: {
     flexDirection: "row",

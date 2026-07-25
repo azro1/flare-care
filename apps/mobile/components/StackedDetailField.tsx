@@ -9,7 +9,9 @@ const LABEL_TO_VALUE = 4;
 
 /** Vertical/horizontal inset for stacked detail rows; exported for grouped panels in screens. */
 export const STACKED_DETAIL_ROW_EDGE = 10;
-const ROW_EDGE = STACKED_DETAIL_ROW_EDGE;
+/** Roomier padding for stacked label + value rows (detail trays, Account info, etc.). */
+export const STACKED_DETAIL_ROW_VERTICAL_PADDING = 14;
+export const STACKED_DETAIL_ROW_HORIZONTAL_PADDING = 16;
 
 const textProps = Platform.OS === "android" ? ({ includeFontPadding: false } as const) : {};
 
@@ -71,8 +73,11 @@ export function StackedDetailField({
       <View
         style={[
           styles.inner,
-          { paddingTop: ROW_EDGE, paddingBottom: ROW_EDGE },
-          insetRow ? { paddingHorizontal: ROW_EDGE } : null,
+          {
+            paddingTop: STACKED_DETAIL_ROW_VERTICAL_PADDING,
+            paddingBottom: STACKED_DETAIL_ROW_VERTICAL_PADDING,
+            paddingHorizontal: STACKED_DETAIL_ROW_HORIZONTAL_PADDING,
+          },
           style,
         ]}
       >
@@ -124,8 +129,11 @@ export function StackedMealLine({
       <View
         style={[
           styles.inner,
-          { paddingTop: ROW_EDGE, paddingBottom: ROW_EDGE },
-          insetRow ? { paddingHorizontal: ROW_EDGE } : null,
+          {
+            paddingTop: STACKED_DETAIL_ROW_VERTICAL_PADDING,
+            paddingBottom: STACKED_DETAIL_ROW_VERTICAL_PADDING,
+            paddingHorizontal: STACKED_DETAIL_ROW_HORIZONTAL_PADDING,
+          },
           style,
         ]}
       >

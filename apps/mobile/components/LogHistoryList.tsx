@@ -276,8 +276,11 @@ export function LogHistoryList({
         const whenLine = item.trailingText
           ? ""
           : item.subtitle ?? (item.whenIso ? formatLogWhenLine(item.whenIso) : (item.whenFallback ?? ""));
-        const titleColor =
-          item.completed || item.trailingText !== undefined ? c.textMuted : c.text;
+        const titleColor = item.completed
+          ? c.textMuted
+          : item.trailingText !== undefined
+            ? c.textSecondary
+            : c.text;
         const useLogsPillText = rowTextLayout === "logsPill" && item.trailingText === undefined;
         const primaryStyle = useLogsPillText
           ? logsPillRowTextStyles.primary

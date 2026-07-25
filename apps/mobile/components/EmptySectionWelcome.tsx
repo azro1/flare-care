@@ -64,8 +64,8 @@ export function EmptySectionWelcome({
 }
 
 const styles = StyleSheet.create({
-  wrap: { gap: 10, paddingVertical: 4 },
-  header: { flexDirection: "row", alignItems: "center", gap: 8 },
+  wrap: { gap: 10 },
+  header: { flexDirection: "row", alignItems: "center", gap: 12 },
   iconWell: {
     width: 36,
     height: 36,

@@ -2,7 +2,7 @@ import React from "react";
 import { StyleSheet, Text, View, type StyleProp, type ViewStyle } from "react-native";
 import { flareCardSectionStyles, FlareScreenSectionTitle } from "./FlareScreenSectionTitle";
 import { WizardReviewEditButton } from "./WizardReviewEditButton";
-import { StackedDetailField } from "./StackedDetailField";
+import { StackedDetailField, STACKED_DETAIL_ROW_HORIZONTAL_PADDING } from "./StackedDetailField";
 import { FLARE_FONT_FAMILY, FLARE_FONT_SIZE, SCREEN_EDGE_PADDING } from "../lib/layoutConstants";
 import { useFlareColors } from "../theme";
 
@@ -91,7 +91,7 @@ export function LogDetailNotesTray({ notes }: { notes: string }) {
   const c = useFlareColors();
   return (
     <View style={[logDetailStyles.fieldGroup, { backgroundColor: c.surfaceSubtle }]}>
-      <StackedDetailField label="" hideLabel value={notes} style={{ paddingHorizontal: SCREEN_EDGE_PADDING }} />
+      <StackedDetailField label="" hideLabel value={notes} style={{ paddingHorizontal: STACKED_DETAIL_ROW_HORIZONTAL_PADDING }} />
     </View>
   );
 }
@@ -126,7 +126,7 @@ export function LogDetailFieldGroup({
           value={field.value}
           selectable={field.selectable}
           showDivider={index < visible.length - 1}
-          style={{ paddingHorizontal: SCREEN_EDGE_PADDING }}
+          style={{ paddingHorizontal: STACKED_DETAIL_ROW_HORIZONTAL_PADDING }}
         />
       ))}
     </View>
