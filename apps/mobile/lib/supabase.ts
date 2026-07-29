@@ -28,4 +28,5 @@ export const TABLES = {
   APPOINTMENTS: "appointments",
   MEDICATION_TAKEN: "is_medication_taken",
   USER_PREFERENCES: "user_preferences",
+  DAILY_WELLBEING: "daily_wellbeing",
 } as const;

@@ -23,6 +23,9 @@ export const RECENT_ACTIVITY_TITLE = {
   medsGoal: 'Completed Today\'s goal "Take Medications"',
   hydrationGoal: 'Completed Today\'s goal "Stay Hydrated"',
   hydrationReset: "Reset hydration progress",
+  wellbeingLogged: "Logged daily wellbeing",
+  wellbeingUpdated: "Updated daily wellbeing",
+  wellbeingDeleted: "Deleted wellbeing log",
 } as const;
 
 export type RecentActivityEventKind =
@@ -32,7 +35,10 @@ export type RecentActivityEventKind =
   | "appointment-deleted"
   | "bowel-deleted"
   | "weight-deleted"
-  | "weight-updated";
+  | "weight-updated"
+  | "wellbeing-logged"
+  | "wellbeing-updated"
+  | "wellbeing-deleted";
 
 const KIND_TITLE: Record<RecentActivityEventKind, string> = {
   "medication-deleted": RECENT_ACTIVITY_TITLE.medicationDeleted,
@@ -42,6 +48,9 @@ const KIND_TITLE: Record<RecentActivityEventKind, string> = {
   "bowel-deleted": RECENT_ACTIVITY_TITLE.bowelDeleted,
   "weight-deleted": RECENT_ACTIVITY_TITLE.weightDeleted,
   "weight-updated": RECENT_ACTIVITY_TITLE.weightUpdated,
+  "wellbeing-logged": RECENT_ACTIVITY_TITLE.wellbeingLogged,
+  "wellbeing-updated": RECENT_ACTIVITY_TITLE.wellbeingUpdated,
+  "wellbeing-deleted": RECENT_ACTIVITY_TITLE.wellbeingDeleted,
 };
 
 const KIND_ICON: Record<RecentActivityEventKind, DashboardActivityRow["icon"]> = {
@@ -52,6 +61,9 @@ const KIND_ICON: Record<RecentActivityEventKind, DashboardActivityRow["icon"]> =
   "bowel-deleted": "bowel",
   "weight-deleted": "weight",
   "weight-updated": "weight",
+  "wellbeing-logged": "symptom",
+  "wellbeing-updated": "symptom",
+  "wellbeing-deleted": "symptom",
 };
 
 function eventKey(kind: RecentActivityEventKind, userId: string, dateIso: string) {

@@ -125,6 +125,16 @@ export const BRISTOL_GUIDE_INSTRUCTION = {
   ],
 } as const;
 
+/** Daily Wellbeing check-in — first visit for new accounts. */
+export const WELLBEING_INSTRUCTION = {
+  title: "My Wellbeing",
+  paragraphs: [
+    "Check in on how you're feeling today — mood, energy, sleep, anxiety, pain and more.",
+    "Complete this section daily to help build a picture of your wellbeing over time.",
+    INSTRUCTION_CLOSE_TO_CONTINUE,
+  ],
+} as const;
+
 /** Appointment summary hub — first visit until dismissed. */
 export const APPOINTMENT_BRIEF_INSTRUCTION = {
   title: "Appointment summary",

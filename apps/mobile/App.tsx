@@ -105,6 +105,8 @@ import {
   SCREEN_EDGE_PADDING,
   SECTION_TITLE_MARGIN_BOTTOM,
   SECTION_TITLE_MARGIN_TOP,
+  RECENT_ACTIVITY_VISIBLE_ROWS,
+  recentActivityFeedMaxHeight,
 } from "./lib/layoutConstants";
 import {
   formatOtpCountdown,
@@ -200,6 +202,9 @@ import { MedicationDetailScreen } from "./screens/MedicationDetailScreen";
 import { MedicationsScreen } from "./screens/MedicationsScreen";
 import { WeightLogDetailScreen } from "./screens/WeightLogDetailScreen";
 import { WeightScreen } from "./screens/WeightScreen";
+import { WellbeingScreen } from "./screens/WellbeingScreen";
+import { WellbeingLogDetailScreen } from "./screens/WellbeingLogDetailScreen";
+import { WellbeingWizardScreen } from "./screens/WellbeingWizardScreen";
 import { AppointmentBriefChangesScreen } from "./screens/AppointmentBriefChangesScreen";
 import { AppointmentBriefCustomRangeScreen } from "./screens/AppointmentBriefCustomRangeScreen";
 import { AppointmentBriefHealthScreen } from "./screens/AppointmentBriefHealthScreen";
@@ -1363,6 +1368,7 @@ function DashboardScreen({
     { key: "track-meds" as const, label: "Track Medications", icon: TRACK_MEDICATIONS_MCI_ICON, family: "mci", goTo: "MedicationTrackingWizard" },
     { key: "hydration" as const, label: "My Hydration", icon: HYDRATION_MCI_ICON, family: "mci", goTo: "Hydration" },
     { key: "bowel" as const, label: "Bowel Movements", icon: BOWEL_FEATURE_MCI_ICON, family: "mci", goTo: "Bowel" },
+    { key: "wellbeing" as const, label: "My Wellbeing", icon: "heart-pulse", family: "mci", goTo: "WellbeingWizard" },
   ];
   const moreLinkCards = [
     { key: "meds", label: "My Meds", screen: "Meds" as const, icon: MY_MEDS_MCI_ICON, family: "mci" as const },
@@ -1655,8 +1661,7 @@ function DashboardScreen({
 
           snap.recentActivity = activityRows
             .filter((row) => row.ts >= fourHoursAgo)
-            .sort((a, b) => b.ts - a.ts)
-            .slice(0, 2);
+            .sort((a, b) => b.ts - a.ts);
 
           if (cancelled) return;
           setTodaySummary(snap.todaySummary);
@@ -2044,6 +2049,25 @@ function DashboardScreen({
       </View>
     );
 
+  const recentActivityFeedRows = recentActivity.map((item) => (
+    <View key={item.key} style={styles.recentActivityFeedItem}>
+      <Ionicons
+        name="pulse"
+        size={20}
+        color={c.primary}
+        style={styles.recentActivityFeedIcon}
+        accessibilityIgnoresInvertColors
+      />
+      <View style={styles.recentActivityFeedText}>
+        <Text style={[styles.recentActivityFeedTitle, { color: c.textMuted }]} numberOfLines={2}>
+          {item.title}
+        </Text>
+        <Text style={[styles.recentActivityFeedWhen, { color: c.textMuted }]}>{formatRelativeTime(item.ts)}</Text>
+      </View>
+    </View>
+  ));
+  const recentActivityOverflows = recentActivity.length > RECENT_ACTIVITY_VISIBLE_ROWS;
+
   return (
     <View style={[styles.dashboardScreen, { backgroundColor: c.screen }]}>
       <ScrollView
@@ -2124,25 +2148,20 @@ function DashboardScreen({
       <Text style={[styles.dashboardSectionTitleLeft, { color: c.text }]}>Recent Activity</Text>
       <Card title="" style={styles.accountPaddedCard} compactBody>
         {recentActivity.length ? (
-          <View style={styles.recentActivityFeed}>
-            {recentActivity.map((item) => (
-              <View key={item.key} style={styles.recentActivityFeedItem}>
-                <Ionicons
-                  name="pulse"
-                  size={20}
-                  color={c.primary}
-                  style={styles.recentActivityFeedIcon}
-                  accessibilityIgnoresInvertColors
-                />
-                <View style={styles.recentActivityFeedText}>
-                  <Text style={[styles.recentActivityFeedTitle, { color: c.textMuted }]} numberOfLines={2}>
-                    {item.title}
-                  </Text>
-                  <Text style={[styles.recentActivityFeedWhen, { color: c.textMuted }]}>{formatRelativeTime(item.ts)}</Text>
-                </View>
-              </View>
-            ))}
-          </View>
+          recentActivityOverflows ? (
+            <View style={[styles.recentActivityFeedClip, { height: recentActivityFeedMaxHeight() }]}>
+              <ScrollView
+                style={styles.recentActivityFeedScroll}
+                contentContainerStyle={styles.recentActivityFeed}
+                nestedScrollEnabled
+                showsVerticalScrollIndicator={false}
+              >
+                {recentActivityFeedRows}
+              </ScrollView>
+            </View>
+          ) : (
+            <View style={styles.recentActivityFeed}>{recentActivityFeedRows}</View>
+          )
         ) : (
           <Text style={[styles.muted, { color: c.textMuted }]}>No recent activity.</Text>
         )}
@@ -4206,6 +4225,7 @@ function AppTabs({
       MedicationLogDetail: "Medication Log",
       SymptomLogWizard: "Log Symptoms",
       MedicationTrackingWizard: "Track Medications",
+      WellbeingWizard: "My Wellbeing",
       AccountInfo: "Information",
       AccountPersonalDetails: "Personal details",
       AccountSecurity: "Security",
@@ -4217,6 +4237,8 @@ function AppTabs({
       Meds: "My Meds",
       MedicationDetail: "Medication",
       Bowel: "Bowel Movements",
+      Wellbeing: "My Wellbeing",
+      WellbeingLogDetail: "Wellbeing log",
       BowelLogDetail: "Bowel log",
       BristolGuide: "Bristol Stool Chart",
       Weight: "My Weight",
@@ -4233,11 +4255,13 @@ function AppTabs({
     };
     const isSymptomLogWizard = route.name === "SymptomLogWizard";
     const isMedicationTrackingWizard = route.name === "MedicationTrackingWizard";
+    const isWellbeingWizard = route.name === "WellbeingWizard";
 
     const headerHidesOverflowMenu =
       route.name === "Settings" ||
       route.name === "SymptomLogWizard" ||
       route.name === "MedicationTrackingWizard" ||
+      route.name === "WellbeingWizard" ||
       route.name === "Meds" ||
       route.name === "MedicationDetail" ||
       route.name === "Reports" ||
@@ -4254,6 +4278,8 @@ function AppTabs({
       route.name === "AppointmentBriefChanges" ||
       route.name === "Hydration" ||
       route.name === "Bowel" ||
+      route.name === "Wellbeing" ||
+      route.name === "WellbeingLogDetail" ||
       route.name === "BowelLogDetail" ||
       route.name === "BristolGuide" ||
       route.name === "SymptomHistory" ||
@@ -4285,7 +4311,7 @@ function AppTabs({
               ? "Account"
               : isReminders
                 ? "Reminders"
-                : isSymptomLogWizard || isMedicationTrackingWizard
+                : isSymptomLogWizard || isMedicationTrackingWizard || isWellbeingWizard
                   ? ""
                   : titleForRoute[route.name] ?? "",
       headerTitleAlign: "center" as const,
@@ -4309,6 +4335,7 @@ function AppTabs({
         !isDashboard &&
         !isSymptomLogWizard &&
         !isMedicationTrackingWizard &&
+        !isWellbeingWizard &&
         !isAccount &&
         !isReminders
           ? () => (
@@ -4361,6 +4388,9 @@ function AppTabs({
             <AppStack.Screen name="Weight">{() => <WeightScreen user={user} />}</AppStack.Screen>
             <AppStack.Screen name="WeightLogDetail">{() => <WeightLogDetailScreen user={user} />}</AppStack.Screen>
             <AppStack.Screen name="Bowel">{() => <BowelScreen user={user} />}</AppStack.Screen>
+            <AppStack.Screen name="Wellbeing">{() => <WellbeingScreen user={user} />}</AppStack.Screen>
+            <AppStack.Screen name="WellbeingWizard">{() => <WellbeingWizardScreen user={user} />}</AppStack.Screen>
+            <AppStack.Screen name="WellbeingLogDetail">{() => <WellbeingLogDetailScreen user={user} />}</AppStack.Screen>
             <AppStack.Screen name="BowelLogDetail">{() => <BowelLogDetailScreen user={user} />}</AppStack.Screen>
             <AppStack.Screen name="BristolGuide">{() => <BristolGuideScreen user={user} />}</AppStack.Screen>
             <AppStack.Screen name="Appointments">{() => <AppointmentsScreen user={user} />}</AppStack.Screen>
@@ -5041,6 +5071,8 @@ const styles = StyleSheet.create({
     overflow: "hidden",
   },
   recentActivityFeed: { gap: 14 },
+  recentActivityFeedClip: { overflow: "hidden", flexGrow: 0 },
+  recentActivityFeedScroll: { flexGrow: 0 },
   recentActivityFeedItem: { flexDirection: "row", alignItems: "flex-start", gap: 12 },
   recentActivityFeedIcon: { flexShrink: 0, alignSelf: "flex-start" },
   recentActivityFeedText: { flex: 1, minWidth: 0, gap: 4 },

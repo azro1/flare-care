@@ -21,6 +21,17 @@ export const ACCOUNT_LIST_ROW_PADDING = 20;
 /** Today → Goals rows inside the white card — between default list inset and Account links. */
 export const TODAY_GOALS_ROW_PADDING = 14;
 
+/** Dashboard Recent Activity — matches `styles.recentActivityFeed` / feed row layout. */
+export const RECENT_ACTIVITY_ROW_GAP = 14;
+/** Max row height (single-line title + timestamp) — matches original static card. */
+export const RECENT_ACTIVITY_ROW_HEIGHT = 42;
+/** Rows visible in the feed before scrolling. */
+export const RECENT_ACTIVITY_VISIBLE_ROWS = 2;
+
+export function recentActivityFeedMaxHeight(visibleRows = RECENT_ACTIVITY_VISIBLE_ROWS): number {
+  return visibleRows * RECENT_ACTIVITY_ROW_HEIGHT + Math.max(visibleRows - 1, 0) * RECENT_ACTIVITY_ROW_GAP;
+}
+
 /**
  * Dashboard content above the pill body (greeting, check-in, recent activity, pill row, paddings).
  * Used so short pill tabs (Guides / Logs) keep a stable min height vs Latest news.
