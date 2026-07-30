@@ -135,7 +135,7 @@ export function BristolGuideScreen({ user }: { user: SessionUser }) {
       <LogHistoryCard style={styles.guideCard}>
         <LogHistoryList
           items={items}
-          rowTextLayout="default"
+          rowTextLayout="compact"
           renderLeading={renderLeading}
           renderSubtitle={renderSubtitle}
           getRowStyle={getRowStyle}

@@ -7,7 +7,12 @@ import {
 } from "./LogDetailLayout";
 import { formatUkDate } from "../lib/formatUkDate";
 
-export type WizardReviewField = { label: string; value: string };
+export type WizardReviewField = {
+  label: string;
+  value: string;
+  /** Default muted (13). Pass caption only where decided. */
+  valueSize?: "muted" | "caption";
+};
 
 /** Review — muted in-card section title + `surfaceSubtle` fields. */
 export function WizardReviewSection({
@@ -77,8 +82,8 @@ export function WizardReviewMedicationSection({
   const groups = items.map((item) => [
     { label: "Medication", value: item.medication },
     ...(showDosage ? [{ label: "Dosage", value: item.dosage || "N/A" }] : []),
-    { label: "Date", value: item.date ? formatUkDate(item.date) : "N/A" },
-    { label: "Time of Day", value: item.timeOfDay || "N/A" },
+    { label: "Date", value: item.date ? formatUkDate(item.date) : "N/A", valueSize: "caption" as const },
+    { label: "Time of Day", value: item.timeOfDay || "N/A", valueSize: "caption" as const },
   ]);
   return (
     <LogDetailSectionCard title={title} onEdit={onEdit} editAccessibilityLabel={`Edit ${title}`}>

@@ -26,6 +26,8 @@ import {
   FLARE_LINE_HEIGHT,
   SCREEN_EDGE_PADDING,
   SECTION_TITLE_MARGIN_BOTTOM,
+  STACKED_LINE_GAP,
+  flareTextHasDigit,
 } from "../lib/layoutConstants";
 import { useFlareColors } from "../theme";
 
@@ -43,14 +45,14 @@ export type LogHistoryListItem = {
   subtitle?: string;
   /** Shown when neither `subtitle` nor `whenIso` is set. */
   whenFallback?: string;
-  /** Dashboard goals — dims title and uses status subtitle. */
+  /** When true with trailingText, shows a checkmark beside the count. */
   completed?: boolean;
   /** Shown on the right (e.g. Today summary counts). */
   trailingText?: string;
   accessibilityLabel?: string;
 };
 
-/** Timestamp log row — title + `formatLogWhenLine` subtitle (history lists, bowel). */
+/** Timestamp log row — title + when line from `whenIso` (history lists, bowel). */
 export function buildTimestampLogRowItem({
   id,
   title,
@@ -65,7 +67,7 @@ export function buildTimestampLogRowItem({
   return {
     id,
     title,
-    subtitle: formatLogWhenLine(whenIso),
+    whenIso: whenIso || undefined,
     accessibilityLabel,
   };
 }
@@ -126,20 +128,6 @@ export function LogHistoryEmptyState({
   );
 }
 
-/** Title → subtitle spacing used by Dashboard → Logs pill browse rows (`Symptom logs` / `3 entries`). */
-const logsPillRowTextStyles = {
-  primary: {
-    fontSize: FLARE_FONT_SIZE.body,
-    fontFamily: FLARE_FONT_FAMILY.medium,
-  },
-  secondary: {
-    fontSize: FLARE_FONT_SIZE.muted,
-    fontFamily: FLARE_FONT_FAMILY.regular,
-    marginTop: 2,
-    lineHeight: FLARE_LINE_HEIGHT.muted,
-  },
-} as const;
-
 type LogHistoryPreviewListProps = {
   items: LogHistoryListItem[];
   visibleCount: number;
@@ -152,7 +140,7 @@ type LogHistoryPreviewListProps = {
   renderTitleAccessory?: (item: LogHistoryListItem) => ReactNode;
   renderSubtitle?: (item: LogHistoryListItem) => ReactNode;
   renderTrailing?: (item: LogHistoryListItem) => ReactNode;
-  rowTextLayout?: "default" | "logsPill";
+  rowTextLayout?: "default" | "compact";
   selectionMode?: boolean;
   selectedIds?: ReadonlySet<string>;
   onToggleSelect?: (id: string) => void;
@@ -234,7 +222,7 @@ export function LogHistoryList({
   renderTitleAccessory,
   renderSubtitle,
   renderTrailing,
-  rowTextLayout = "logsPill",
+  rowTextLayout = "compact",
   selectionMode = false,
   selectedIds,
   onToggleSelect,
@@ -252,8 +240,8 @@ export function LogHistoryList({
   /** Replaces default subtitle line when provided (return null to fall back). */
   renderSubtitle?: (item: LogHistoryListItem) => ReactNode;
   renderTrailing?: (item: LogHistoryListItem) => ReactNode;
-  /** Title/subtitle typography. Default matches dashboard Logs pill + history rows. */
-  rowTextLayout?: "default" | "logsPill";
+  /** Title/subtitle typography. Default `compact` (13). Pass `default` for body (14) titles. */
+  rowTextLayout?: "default" | "compact";
   selectionMode?: boolean;
   selectedIds?: ReadonlySet<string>;
   onToggleSelect?: (id: string) => void;
@@ -273,22 +261,26 @@ export function LogHistoryList({
   return (
     <View style={[logHistoryListStyles.logList, { backgroundColor: c.surfaceSubtle }]}>
       {items.map((item, index) => {
-        const whenLine = item.trailingText
-          ? ""
-          : item.subtitle ?? (item.whenIso ? formatLogWhenLine(item.whenIso) : (item.whenFallback ?? ""));
-        const titleColor = item.completed
-          ? c.textMuted
-          : item.trailingText !== undefined
+        const textSubtitle = item.trailingText !== undefined ? undefined : item.subtitle;
+        const whenFormatted =
+          item.trailingText !== undefined || textSubtitle
+            ? ""
+            : item.whenIso
+              ? formatLogWhenLine(item.whenIso)
+              : (item.whenFallback ?? "");
+        const whenLine = textSubtitle ?? whenFormatted;
+        const titleColor =
+          item.trailingText !== undefined
             ? c.textSecondary
             : c.text;
-        const useLogsPillText = rowTextLayout === "logsPill" && item.trailingText === undefined;
-        const primaryStyle = useLogsPillText
-          ? logsPillRowTextStyles.primary
-          : item.trailingText !== undefined
-            ? logHistoryListStyles.logPrimaryRegular
-            : logHistoryListStyles.logPrimary;
-        const secondaryStyle = useLogsPillText
-          ? logsPillRowTextStyles.secondary
+        const useCompactText = rowTextLayout === "compact" || item.trailingText !== undefined;
+        const primaryStyle = useCompactText
+          ? logHistoryListStyles.logPrimaryToday
+          : logHistoryListStyles.logPrimary;
+        /** Numbers / dates / times under titles — caption; letter-only text stays muted. */
+        const secondLineNeedsCaption = !textSubtitle || flareTextHasDigit(textSubtitle);
+        const secondLineStyle = secondLineNeedsCaption
+          ? logHistoryListStyles.logSecondaryWhen
           : logHistoryListStyles.logSecondary;
         const titleAccessory = renderTitleAccessory?.(item) ?? null;
         const customSubtitle = renderSubtitle?.(item);
@@ -308,7 +300,17 @@ export function LogHistoryList({
             />
           </View>
         ) : item.trailingText ? (
-          <Text style={[logHistoryListStyles.trailingValue, { color: c.text }]}>{item.trailingText}</Text>
+          <View style={logHistoryListStyles.logTrailingWithStatus}>
+            {item.completed ? (
+              <Ionicons
+                name="checkmark-circle"
+                size={18}
+                color={c.primary}
+                accessibilityIgnoresInvertColors
+              />
+            ) : null}
+            <Text style={[logHistoryListStyles.trailingValueToday, { color: c.text }]}>{item.trailingText}</Text>
+          </View>
         ) : renderTrailing ? (
           renderTrailing(item)
         ) : onPressItem ? (
@@ -334,7 +336,6 @@ export function LogHistoryList({
                     multilineTitle ? logHistoryListStyles.logPrimaryRegular : primaryStyle,
                     logHistoryListStyles.logTitleText,
                     { color: titleColor },
-                    item.completed ? logHistoryListStyles.logPrimaryCompleted : null,
                   ]}
                   numberOfLines={multilineTitle ? undefined : 1}
                 >
@@ -342,14 +343,16 @@ export function LogHistoryList({
                 </Text>
                 {titleAccessory}
               </View>
-              {showSecondLine
-                ? customSubtitle ??
-                  (whenLine ? (
-                    <Text style={[secondaryStyle, { color: c.textMuted }]} numberOfLines={1}>
-                      {whenLine}
-                    </Text>
-                  ) : null)
-                : null}
+              {showSecondLine ? (
+                <View style={logHistoryListStyles.logSecondLine}>
+                  {customSubtitle ??
+                    (whenLine ? (
+                      <Text style={[secondLineStyle, { color: c.textMuted }]} numberOfLines={1}>
+                        {whenLine}
+                      </Text>
+                    ) : null)}
+                </View>
+              ) : null}
             </View>
             {trailingNode ? <View style={logHistoryListStyles.logActions}>{trailingNode}</View> : null}
           </>
@@ -464,7 +467,7 @@ export const logHistoryListStyles = StyleSheet.create({
   logMain: { flex: 1, minWidth: 0 },
   /** Title-only browse rows — same height as title + subtitle; title vertically centred with chevron. */
   logMainSingleLineBrowse: {
-    minHeight: FLARE_LINE_HEIGHT.body + 2 + FLARE_LINE_HEIGHT.muted,
+    minHeight: FLARE_LINE_HEIGHT.body + STACKED_LINE_GAP + FLARE_LINE_HEIGHT.muted,
     justifyContent: "center",
   },
   logTitleRow: {
@@ -475,16 +478,27 @@ export const logHistoryListStyles = StyleSheet.create({
   },
   logTitleText: { flexShrink: 1 },
   logPrimary: { fontSize: FLARE_FONT_SIZE.body, fontFamily: FLARE_FONT_FAMILY.medium },
-  logPrimaryRegular: { fontSize: FLARE_FONT_SIZE.body, fontFamily: FLARE_FONT_FAMILY.regular },
-  logPrimaryCompleted: { textDecorationLine: "line-through" },
+  logPrimaryRegular: { fontSize: FLARE_FONT_SIZE.muted, fontFamily: FLARE_FONT_FAMILY.regular },
+  /** Dashboard Today summary rows — slightly smaller than history browse rows. */
+  logPrimaryToday: { fontSize: FLARE_FONT_SIZE.muted, fontFamily: FLARE_FONT_FAMILY.regular },
+  /** Gap above second line (when / subtitle) — shared with stacked detail via `STACKED_LINE_GAP`. */
+  logSecondLine: { marginTop: STACKED_LINE_GAP },
   logSecondary: {
     fontSize: FLARE_FONT_SIZE.muted,
     fontFamily: FLARE_FONT_FAMILY.regular,
-    marginTop: 2,
     lineHeight: FLARE_LINE_HEIGHT.muted,
   },
+  /** Date/time under list titles — digits read large at muted, so use caption. */
+  logSecondaryWhen: {
+    fontSize: FLARE_FONT_SIZE.caption,
+    fontFamily: FLARE_FONT_FAMILY.regular,
+    lineHeight: FLARE_LINE_HEIGHT.caption,
+  },
   logActions: { flexDirection: "row", alignItems: "center", flexShrink: 0 },
+  logTrailingWithStatus: { flexDirection: "row", alignItems: "center", gap: 8 },
   trailingValue: { fontSize: FLARE_FONT_SIZE.body, fontFamily: FLARE_FONT_FAMILY.medium },
+  /** Today counts (e.g. 2/5) — caption so digits don't outsize titles. */
+  trailingValueToday: { fontSize: FLARE_FONT_SIZE.caption, fontFamily: FLARE_FONT_FAMILY.medium },
   logIconBtn: { padding: 6 },
   loadMoreRow: {
     alignItems: "center",

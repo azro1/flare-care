@@ -185,6 +185,7 @@ export function WellbeingScreen({ user }: { user: SessionUser }) {
               loadingMore={historyLoadingMore}
               loadMoreLabel="load more"
               onLoadMore={() => void loadMoreHistory()}
+              rowTextLayout="compact"
               onPressItem={(logId) => navigation.navigate("WellbeingLogDetail", { id: logId })}
               selectionMode={selectionMode}
               selectedIds={selectedIds}

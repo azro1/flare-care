@@ -29,3 +29,26 @@ export function formatUkDateShort(input: string | Date | null | undefined): stri
   if (parts.length !== 3 || parts[2].length !== 4) return full;
   return `${parts[0]}/${parts[1]}/${parts[2].slice(-2)}`;
 }
+
+function dayOrdinal(day: number): string {
+  const mod100 = day % 100;
+  if (mod100 >= 11 && mod100 <= 13) return `${day}th`;
+  switch (day % 10) {
+    case 1:
+      return `${day}st`;
+    case 2:
+      return `${day}nd`;
+    case 3:
+      return `${day}rd`;
+    default:
+      return `${day}th`;
+  }
+}
+
+/** Dashboard greeting — e.g. `Wed 4th Aug`. */
+export function formatUkGreetingDate(input: Date = new Date()): string {
+  if (Number.isNaN(input.getTime())) return "";
+  const weekday = input.toLocaleDateString("en-GB", { weekday: "short" });
+  const month = input.toLocaleDateString("en-GB", { month: "short" });
+  return `${weekday} ${dayOrdinal(input.getDate())} ${month}`;
+}

@@ -17,7 +17,6 @@ export type DashboardNewsItem = {
 
 export type DashboardSnapshot = {
   todaySummary: { symptoms: number; medsTaken: number; medsTotal: number; hydration: number };
-  recentActivity: DashboardActivityRow[];
   weatherMeta: { city: string; temp: number | null; desc: string; icon?: string | null } | null;
   weather: string;
   newsItems: DashboardNewsItem[];

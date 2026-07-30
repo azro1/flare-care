@@ -1,11 +1,14 @@
 import React from "react";
 import { Platform, StyleSheet, Text, View, type StyleProp, type TextStyle, type ViewStyle } from "react-native";
 import { FLARE_INPUT_BORDER_RADIUS } from "./FlareInput";
-import { DETAIL_FIELD_LABEL, FLARE_FONT_FAMILY, FLARE_FONT_SIZE, FLARE_LINE_HEIGHT } from "../lib/layoutConstants";
+import {
+  DETAIL_FIELD_LABEL,
+  FLARE_FONT_FAMILY,
+  FLARE_FONT_SIZE,
+  FLARE_LINE_HEIGHT,
+  STACKED_LINE_GAP,
+} from "../lib/layoutConstants";
 import { useFlareColors } from "../theme";
-
-/** Space between label and value (or between stacked value lines). */
-const LABEL_TO_VALUE = 4;
 
 /** Vertical/horizontal inset for stacked detail rows; exported for grouped panels in screens. */
 export const STACKED_DETAIL_ROW_EDGE = 10;
@@ -29,6 +32,10 @@ type Props = {
   /** Section title lives above the row — show value only. */
   hideLabel?: boolean;
   selectable?: boolean;
+  /** Match dashboard Today / Account compact lists (13). */
+  compact?: boolean;
+  /** Value size. Default muted (13). Pass `caption` only where decided (e.g. list when lines). */
+  valueSize?: "muted" | "caption";
 };
 
 /**
@@ -44,6 +51,8 @@ export function StackedDetailField({
   insetRow,
   hideLabel,
   selectable,
+  compact,
+  valueSize = "muted",
 }: Props) {
   const c = useFlareColors();
   const hasValue = value !== undefined && value !== "";
@@ -53,7 +62,8 @@ export function StackedDetailField({
 
   const showFieldLabel = !hideLabel;
   const valueStyles: StyleProp<TextStyle> = [
-    styles.valueText,
+    valueSize === "caption" ? styles.valueTextWhen : styles.valueText,
+    compact && valueSize !== "caption" ? styles.valueTextCompact : null,
     { color: valueColor ?? c.text },
     hasValue && showFieldLabel && styles.valueAfterLabel,
   ];
@@ -160,11 +170,20 @@ const styles = StyleSheet.create({
   },
   label: DETAIL_FIELD_LABEL,
   valueText: {
-    fontSize: FLARE_FONT_SIZE.body,
+    fontSize: FLARE_FONT_SIZE.muted,
     fontFamily: FLARE_FONT_FAMILY.regular,
-    lineHeight: FLARE_LINE_HEIGHT.body,
+    lineHeight: FLARE_LINE_HEIGHT.muted,
+  },
+  valueTextCompact: {
+    fontSize: FLARE_FONT_SIZE.muted,
+    lineHeight: FLARE_LINE_HEIGHT.muted,
+  },
+  valueTextWhen: {
+    fontSize: FLARE_FONT_SIZE.caption,
+    fontFamily: FLARE_FONT_FAMILY.regular,
+    lineHeight: FLARE_LINE_HEIGHT.caption,
   },
   valueAfterLabel: {
-    marginTop: LABEL_TO_VALUE,
+    marginTop: STACKED_LINE_GAP,
   },
 });

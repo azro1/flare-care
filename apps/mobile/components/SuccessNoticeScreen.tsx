@@ -5,6 +5,9 @@ import { initialWindowMetrics, SafeAreaView, useSafeAreaInsets } from "react-nat
 import { PrimaryButton } from "./FlareButton";
 import {
   bottomTabBarHeight,
+  FLARE_FONT_FAMILY,
+  FLARE_FONT_SIZE,
+  FLARE_LINE_HEIGHT,
   SCREEN_EDGE_PADDING,
   wizardLandingMinHeight,
   WIZARD_LANDING_BELOW_SAFE_TOP,
@@ -39,13 +42,23 @@ const styles = StyleSheet.create({
     paddingTop: WIZARD_LANDING_BLOCK_PADDING_TOP,
     paddingBottom: WIZARD_LANDING_BLOCK_PADDING_BOTTOM,
   },
+  /** Logout / full-screen success — edge padding + slight downward nudge. */
+  fullScreenLandingPad: {
+    paddingHorizontal: SCREEN_EDGE_PADDING,
+    paddingTop: 96,
+  },
   card: { width: "100%", maxWidth: 360, alignItems: "center", gap: 16 },
-  title: { fontSize: 22, fontFamily: "Inter_700Bold", textAlign: "center", marginTop: 8 },
-  message: {
-    fontSize: 15,
-    fontFamily: "Inter_400Regular",
+  title: {
+    fontSize: FLARE_FONT_SIZE.pageTitle,
+    fontFamily: FLARE_FONT_FAMILY.bold,
     textAlign: "center",
-    lineHeight: 22,
+    marginTop: 8,
+  },
+  message: {
+    fontSize: FLARE_FONT_SIZE.subhead,
+    fontFamily: FLARE_FONT_FAMILY.regular,
+    textAlign: "center",
+    lineHeight: FLARE_LINE_HEIGHT.sectionTitle,
     maxWidth: 320,
   },
   actions: { width: "100%" },
@@ -102,7 +115,15 @@ export function SuccessNoticeScreen({
         ]}
       >
         <View style={styles.wizardLandingScrollOffset}>
-          <View style={[styles.wizardLandingBlock, { minHeight: wizardLandingMinHeight() }]}>{card}</View>
+          <View
+            style={[
+              styles.wizardLandingBlock,
+              styles.fullScreenLandingPad,
+              { minHeight: wizardLandingMinHeight() },
+            ]}
+          >
+            {card}
+          </View>
         </View>
       </View>
     );

@@ -422,6 +422,7 @@ export function WeightScreen({ user }: { user: SessionUser }) {
               loadingMore={historyLoadingMore}
               loadMoreLabel="load more"
               onLoadMore={() => void loadMoreHistory()}
+              rowTextLayout="compact"
               onPressItem={(logId) => navigation.navigate("WeightLogDetail", { id: logId })}
               selectionMode={selectionMode}
               selectedIds={selectedIds}

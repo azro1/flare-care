@@ -426,6 +426,33 @@ For those, keep `headerTitle: "…"` in `headerOptions` and **18px** / **16px** 
 
 ---
 
+## Dashboard home — seed data cards (no layout jump)
+
+**Problem:** Home cards that show/hide or change height from fetched data (greeting weather, Coming up, today counts, news) will **jump** when the user adds/deletes elsewhere and returns — if UI waits for the focus refetch before updating.
+
+**Pattern (do this for any new dashboard card that displays live data):**
+
+1. **Keep an in-memory seed** in `lib/dashboardSnapshotCache.ts` (`DashboardSnapshot` + `dashboardSnapshotByUserId`).
+2. **`useState(() => snapshotSeed?.… ?? fallback)`** so remounts don’t flash empty → filled.
+3. On **`useFocusEffect`**, apply the seed **synchronously** before the async load (greeting weather, Coming up from list caches).
+4. After fetch, write results back into the snapshot **and** `setState`.
+5. On mutate (add/edit/delete), call **`invalidateDashboardSnapshot(userId)`** and keep domain list caches warm (`fetchXForUser` / `setXListCache` after save) so the next focus can seed correctly.
+
+| Card / block | Seed source | Files |
+|--------------|-------------|--------|
+| **Greeting / weather** | `DashboardSnapshot.weatherMeta` / `weather` | `App.tsx` `DashboardScreen`, `dashboardSnapshotCache.ts` |
+| **Today counts** | `DashboardSnapshot.todaySummary` | same |
+| **News shelf** | `DashboardSnapshot.newsItems` / `newsError` (skip loading flash if cache has items) | same + `newsShared.ts` |
+| **Coming up** (next appointment) | Appointments list cache first, else `DashboardSnapshot.upcoming` | `dashboardUpcomingShared.ts` (`buildDashboardUpcoming`), `appointmentShared.ts` |
+
+**Coming up rules:** Next future appointment only (reminder optional). Med reminders stay on notifications — not this card. No section title; in-card “Next visit:” eyebrow.
+
+**Coming up specifics:** Appointments refill list cache on save/delete (`load()` after invalidate). Home focus rebuilds upcoming from that cache **immediately**, then the network fetch confirms. Don’t gate the card only on the async dashboard Promise.
+
+**When adding another data card on home:** extend `DashboardSnapshot`, seed state + focus apply, persist on load, invalidate on write paths — same as above. Prefer domain list caches when the card is a projection of an existing list (like Coming up).
+
+---
+
 ## My Meds list cache
 
 **File:** `lib/medicationShared.ts` — `getMedicationsListCache`, `setMedicationsListCache`, `invalidateMedicationsListCache`.
@@ -445,7 +472,7 @@ Separate flows, separate data:
 
 ## Keeping these notes useful
 
-When you add shared UI patterns, success flows, log lists, or collapsing-title pages — **update this file**, not the README.
+When you add shared UI patterns, success flows, log lists, collapsing-title pages, or **dashboard home data cards** — **update this file**, not the README.
 
 When you change **product positioning** or **user-visible feature list** — update **`README.md`**.
 

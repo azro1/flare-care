@@ -12,6 +12,7 @@ type OverflowItem = {
 
 const OVERFLOW_ITEMS: OverflowItem[] = [
   { id: "settings", label: "Settings", route: "Settings" },
+  { id: "info", label: "Info", route: "Info" },
   { id: "about", label: "About FlareCare", route: "About" },
   { id: "help", label: "Help", route: "AccountHelp" },
 ];
@@ -19,6 +20,7 @@ const OVERFLOW_ITEMS: OverflowItem[] = [
 /** Routes where that menu entry is redundant (already on that screen). */
 const HIDE_ITEM_ON_ROUTE: Partial<Record<string, string[]>> = {
   Settings: ["settings"],
+  Info: ["info"],
   AccountHelp: ["help"],
   About: ["about"],
 };

@@ -1,8 +1,8 @@
 # Plan: Dashboard pill section redesign
 
-**Status:** Proposed — not started. Branch this work separately from wellbeing / recent-activity changes.
+**Status:** In progress on `dashboard-home-redesign` — Option C (compact shelves: Today goals, More grid, news peek). No switcher, no full dump.
 
-**Context:** Home dashboard currently uses five horizontal pills (`Today's`, `Logs`, `Latest news`, `Info`, `More`) that swap the lower content panel. Default is `More`. Research + product review: this mixes unrelated destinations into one control and fights modern health-app home patterns.
+**Context:** Three glanceable shelves after check-in — not Option A’s stacked full sections. Logs live in **More** tiles; news shows ~2 cards + See all.
 
 ---
 
@@ -81,10 +81,10 @@ Scroll to reveal; no exclusive selection.
 
 ## Checklist
 
-- [ ] Confirm Option A / B / C on a new branch  
-- [ ] Implement chosen layout  
-- [ ] Verify Reminders + Account unaffected  
-- [ ] Verify history / guide navigation return paths (no pill restore needed)  
+- [x] Try Option A (stacked home)  
+- [x] Try Option B (Today · Browse · News segments)  
+- [x] Implement Option C (Today + More + news shelves, no switcher)  
+- [x] Keep horizontal news shelf + LatestNews screen  
 - [ ] Visual pass on short and tall phones  
 - [ ] Commit on feature branch  
 

@@ -68,7 +68,7 @@ export const HYDRATION_INSTRUCTION = {
 export const BOWEL_INSTRUCTION = {
   title: "Bowel Movements",
   paragraphs: [
-    "Log your bowel movements by recording stool type using the Bristol Stool Chart.",
+    "Add bowel movements by recording stool type using the Bristol Stool Chart.",
     "Tap + to add a log. Please add as much detail as you can — it helps your care team.",
     INSTRUCTION_CLOSE_TO_CONTINUE,
   ],

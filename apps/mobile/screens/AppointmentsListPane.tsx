@@ -40,8 +40,6 @@ import {
 import {
   FLARE_FONT_FAMILY,
   FLARE_FONT_SIZE,
-  CARD_SECTION_INNER_GAP,
-  SCREEN_EDGE_PADDING,
   bottomTabBarHeight,
 } from "../lib/layoutConstants";
 import { APPOINTMENTS_INSTRUCTION } from "../lib/instructionCardCopy";
@@ -147,7 +145,7 @@ export function AppointmentsListPane({
       const hasReminder = appointmentHasReminder(row);
       const reminderLabel = hasReminder ? reminderListLabelFromMinutes(row.reminder_minutes_before) : null;
       if (!dateLine && !reminderLabel) return null;
-      const subtitleTextStyle = [logHistoryListStyles.logSecondary, { color: c.textMuted }];
+      const subtitleTextStyle = [logHistoryListStyles.logSecondaryWhen, { color: c.textMuted }];
       return (
         <View style={styles.aptSubtitleRow}>
           {dateLine ? (
@@ -252,6 +250,7 @@ export function AppointmentsListPane({
               hasMore={hasMore}
               loadMoreLabel="load more"
               onLoadMore={loadMore}
+              rowTextLayout="compact"
               renderSubtitle={renderAptSubtitle}
               onPressItem={(aptId) => navigation.navigate("AppointmentDetail", { id: aptId })}
               selectionMode={selectionMode}
@@ -271,7 +270,7 @@ export function AppointmentsListPane({
           style={({ pressed }) => [styles.summaryLink, pressed && { opacity: 0.85 }]}
         >
           <Text style={[styles.summaryLinkLabel, { color: c.text }]}>Appointment summary</Text>
-          <Ionicons name="chevron-forward" size={FLARE_FONT_SIZE.navTitle} color={c.textMuted} accessibilityIgnoresInvertColors />
+          <Ionicons name="chevron-forward" size={FLARE_FONT_SIZE.subhead} color={c.textMuted} accessibilityIgnoresInvertColors />
         </Pressable>
       ) : null}
     </InstructionScreenShell>
@@ -287,10 +286,10 @@ const styles = StyleSheet.create({
     alignSelf: "center",
     gap: 4,
     marginTop: 12,
-    paddingVertical: 10,
+    paddingVertical: 8,
   },
   summaryLinkLabel: {
-    fontSize: FLARE_FONT_SIZE.navTitle,
+    fontSize: FLARE_FONT_SIZE.subhead,
     fontFamily: FLARE_FONT_FAMILY.regular,
   },
 });

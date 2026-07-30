@@ -8,6 +8,7 @@ import {
   TERMS_INTRO,
   TERMS_SECTIONS,
 } from "../../../src/content/legalDocuments";
+import { FLARE_FONT_FAMILY, FLARE_FONT_SIZE, FLARE_LINE_HEIGHT } from "../lib/layoutConstants";
 import { useFlareColors } from "../theme";
 
 export type LegalDocumentKind = "privacy" | "terms";
@@ -55,7 +56,12 @@ export function LegalDocumentView({ kind }: { kind: LegalDocumentKind }) {
 
 const styles = StyleSheet.create({
   wrap: { paddingHorizontal: 4 },
-  updated: { fontSize: 13, fontFamily: "Inter_400Regular", marginBottom: 12 },
+  updated: {
+    fontSize: FLARE_FONT_SIZE.caption,
+    fontFamily: FLARE_FONT_FAMILY.regular,
+    lineHeight: FLARE_LINE_HEIGHT.caption,
+    marginBottom: 12,
+  },
   intro: { fontSize: 14, lineHeight: 21, fontFamily: "Inter_400Regular", marginBottom: 20 },
   section: { marginBottom: 22 },
   sectionTitle: { fontSize: 17, fontFamily: "Inter_700Bold", marginBottom: 8 },

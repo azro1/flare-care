@@ -690,6 +690,7 @@ export function BowelScreen({ user }: { user: SessionUser }) {
               loadingMore={historyLoadingMore}
               loadMoreLabel="load more"
               onLoadMore={() => void loadMoreHistory()}
+              rowTextLayout="compact"
               onPressItem={(logId) => navigation.navigate("BowelLogDetail", { id: logId })}
               selectionMode={selectionMode}
               selectedIds={selectedIds}

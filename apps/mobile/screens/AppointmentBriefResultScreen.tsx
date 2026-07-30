@@ -17,7 +17,7 @@ import {
 } from "../lib/appointmentBriefShared";
 import { formatUkDate } from "../lib/formatUkDate";
 import { useAppointmentBrief } from "../lib/useAppointmentBrief";
-import { ACCOUNT_LIST_ROW_PADDING, FLARE_FONT_FAMILY, FLARE_FONT_SIZE } from "../lib/layoutConstants";
+import { ACCOUNT_LIST_ROW_PADDING, FLARE_FONT_FAMILY, FLARE_FONT_SIZE, FLARE_LINE_HEIGHT } from "../lib/layoutConstants";
 import { useFlareColors } from "../theme";
 import { AppointmentBriefEmailSheet } from "./AppointmentBriefEmailSheet";
 
@@ -131,9 +131,9 @@ const styles = StyleSheet.create({
   summaryCard: { marginBottom: 0 },
   periodHeader: { gap: 4 },
   customDateRange: {
-    fontSize: FLARE_FONT_SIZE.body,
+    fontSize: FLARE_FONT_SIZE.caption,
     fontFamily: FLARE_FONT_FAMILY.regular,
-    lineHeight: 20,
+    lineHeight: FLARE_LINE_HEIGHT.caption,
   },
   loadingWrap: { alignItems: "center", paddingVertical: 32, gap: 12 },
   muted: { fontSize: FLARE_FONT_SIZE.body, fontFamily: FLARE_FONT_FAMILY.regular },

@@ -18,8 +18,8 @@ export const INFORMATIONAL_PAGE_HORIZONTAL_PADDING = SCREEN_EDGE_PADDING + CARD_
 /** Extra inset for Account tab link rows inside the grey tray (My account, Legal). */
 export const ACCOUNT_LIST_ROW_PADDING = 20;
 
-/** Today → Goals rows inside the white card — between default list inset and Account links. */
-export const TODAY_GOALS_ROW_PADDING = 14;
+/** Today / Logs pill rows — same horizontal inset as Account lists. */
+export const TODAY_GOALS_ROW_PADDING = ACCOUNT_LIST_ROW_PADDING;
 
 /** Dashboard Recent Activity — matches `styles.recentActivityFeed` / feed row layout. */
 export const RECENT_ACTIVITY_ROW_GAP = 14;
@@ -33,8 +33,8 @@ export function recentActivityFeedMaxHeight(visibleRows = RECENT_ACTIVITY_VISIBL
 }
 
 /**
- * Dashboard content above the pill body (greeting, check-in, recent activity, pill row, paddings).
- * Used so short pill tabs (Guides / Logs) keep a stable min height vs Latest news.
+ * Dashboard content above the pill body (greeting, check-in, recent activity, segment row, paddings).
+ * Used so short pill tabs keep a stable min height vs news shelf.
  */
 export const HOME_DASHBOARD_CHROME_ABOVE_PILL_BODY = 420;
 
@@ -65,9 +65,21 @@ export const EMPTY_TRAY_PADDING = 14;
 /** Space between sibling home tiles: Daily Check-in scroll + More grid. */
 export const HOME_TILE_GAP = 12;
 
+/**
+ * Digits optically read larger than letters at muted (13).
+ * Use caption (12) for values that contain a number, date, or time.
+ */
+export function flareTextHasDigit(text: string): boolean {
+  return /\d/.test(text);
+}
+
 export const FLARE_FONT_SIZE = {
+  /** Numbers / dates / times — digits read larger than letters at muted. */
+  caption: 12,
   muted: 13,
   body: 14,
+  /** Between body and nav — shelf titles, secondary links (e.g. Appointment summary). */
+  subhead: 15,
   navTitle: 16,
   sectionTitle: 18,
   /** Informational scroll pages (e.g. What is IBD?, About) — larger at rest so collapse reads clearly. */
@@ -75,8 +87,10 @@ export const FLARE_FONT_SIZE = {
 } as const;
 
 export const FLARE_LINE_HEIGHT = {
+  caption: 16,
   muted: 18,
   body: 20,
+  subhead: 21,
   sectionTitle: 22,
   pageTitle: 27,
 } as const;
@@ -94,6 +108,9 @@ export const FLARE_FONT_FAMILY = {
   bold: "Inter_700Bold",
   extrabold: "Inter_800ExtraBold",
 } as const;
+
+/** Gap between stacked text lines — list title→subtitle, detail label→value. */
+export const STACKED_LINE_GAP = 4;
 
 /** Stacked field labels on log detail / review screens (`StackedDetailField`). */
 export const DETAIL_FIELD_LABEL = {

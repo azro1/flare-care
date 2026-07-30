@@ -218,13 +218,13 @@ export function SymptomLogWizardScreen({ user }: { user: SessionUser }) {
 
   const reviewBasicFields = useMemo((): WizardReviewField[] => {
     const fields: WizardReviewField[] = [
-      { label: "Start Date", value: form.symptomStartDate ? formatUkDate(form.symptomStartDate) : "Not set" },
+      { label: "Start Date", value: form.symptomStartDate ? formatUkDate(form.symptomStartDate) : "Not set", valueSize: "caption" },
       { label: "Status", value: form.isOngoing ? "Ongoing" : "Ended" },
-      { label: "Severity", value: form.severity ? `${form.severity}/10` : "Not set" },
-      { label: "Stress Level", value: form.stress_level ? `${form.stress_level}/10` : "Not set" },
+      { label: "Severity", value: form.severity ? `${form.severity}/10` : "Not set", valueSize: "caption" },
+      { label: "Stress Level", value: form.stress_level ? `${form.stress_level}/10` : "Not set", valueSize: "caption" },
     ];
     if (!form.isOngoing && form.symptomEndDate) {
-      fields.splice(2, 0, { label: "End Date", value: formatUkDate(form.symptomEndDate) });
+      fields.splice(2, 0, { label: "End Date", value: formatUkDate(form.symptomEndDate), valueSize: "caption" });
     }
     return fields;
   }, [form]);

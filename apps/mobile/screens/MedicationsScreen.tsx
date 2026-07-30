@@ -447,11 +447,12 @@ export function MedicationsScreen({ user }: { user: SessionUser }) {
       const hasReminder = medicationHasReminder(row);
       const timeLabel = hasReminder ? formatMedicationReminderTime(row.time_of_day) : null;
       if (!dosage && !timeLabel) return null;
-      const subtitleTextStyle = [logHistoryListStyles.logSecondary, { color: c.textMuted }];
+      const dosageStyle = [logHistoryListStyles.logSecondaryWhen, { color: c.textMuted }];
+      const timeStyle = [logHistoryListStyles.logSecondaryWhen, { color: c.textMuted }];
       return (
         <View style={styles.medSubtitleRow}>
           {dosage ? (
-            <Text style={subtitleTextStyle} numberOfLines={1}>
+            <Text style={dosageStyle} numberOfLines={1}>
               {dosage}
               {timeLabel ? " · " : ""}
             </Text>
@@ -459,7 +460,7 @@ export function MedicationsScreen({ user }: { user: SessionUser }) {
           {timeLabel ? (
             <View style={styles.medReminderTimeRow}>
               <WriggleReminderBell color={c.textMuted} />
-              <Text style={subtitleTextStyle} numberOfLines={1}>
+              <Text style={timeStyle} numberOfLines={1}>
                 {timeLabel}
               </Text>
             </View>
@@ -529,6 +530,7 @@ export function MedicationsScreen({ user }: { user: SessionUser }) {
               hasMore={hasMoreMeds}
               loadMoreLabel="load more"
               onLoadMore={loadMoreMeds}
+              rowTextLayout="compact"
               renderSubtitle={renderMedSubtitle}
               onPressItem={(medId) => navigation.navigate("MedicationDetail", { id: medId })}
               selectionMode={selectionMode}

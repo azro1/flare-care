@@ -29,13 +29,14 @@ import {
   Modal,
   Platform,
   Pressable,
-  Share,
   StyleProp,
   StyleSheet,
   Text,
   useWindowDimensions,
   View,
   ViewStyle,
+  type NativeScrollEvent,
+  type NativeSyntheticEvent,
 } from "react-native";
 import { ScrollView } from "./lib/scrollViews";
 import { SafeAreaProvider, initialWindowMetrics, useSafeAreaInsets } from "react-native-safe-area-context";
@@ -53,32 +54,18 @@ import { InstructionScreenShell, InstructionInteractionBlock } from "./component
 import { flareFieldErrorStyle, LabeledInput } from "./components/FlareInput";
 import { flareCardSectionStyles, FlareScreenSectionTitle } from "./components/FlareScreenSectionTitle";
 import { HeaderOverflowMenu } from "./components/HeaderOverflowMenu";
+import { NewsFeedCard, newsFeedListStyles } from "./components/NewsFeed";
 import { SuccessNoticeScreen } from "./components/SuccessNoticeScreen";
 import { CollapsingTitleScrollScreen } from "./components/CollapsingTitleScrollScreen";
 import { FlareThemeProvider, useFlareColors, useFlareTheme } from "./theme";
-import { formatUkDate } from "./lib/formatUkDate";
+import { formatUkDate, formatUkGreetingDate } from "./lib/formatUkDate";
 import { BOWEL_FEATURE_MCI_ICON, todayYmd } from "./lib/bowelMovementShared";
 import { handleListExpansionNavigationRouteChange } from "./lib/listExpansionNavigation";
 import { ListSelectionChromeProvider, useListSelectionChrome } from "./lib/listSelectionChrome";
 import { useLogListSelection } from "./lib/useLogListSelection";
 import { MY_MEDS_MCI_ICON, TRACK_MEDICATIONS_MCI_ICON } from "./lib/medicationFeatureIcons";
-import {
-  fetchMedicationsForUser,
-  MEDICATIONS_GOAL_ACTIVITY_TITLE,
-  MEDICATION_ADDED_ACTIVITY_TITLE,
-  MEDICATION_UPDATED_ACTIVITY_TITLE,
-  MEDICATION_TRACKING_ACTIVITY_TITLE,
-} from "./lib/medicationShared";
-import {
-  APPOINTMENT_ADDED_ACTIVITY_TITLE,
-  APPOINTMENT_UPDATED_ACTIVITY_TITLE,
-} from "./lib/appointmentShared";
-import {
-  isMeaningfulUpdate,
-  loadStoredRecentActivityEvents,
-  recordRecentActivityEvent,
-  RECENT_ACTIVITY_TITLE,
-} from "./lib/recentActivityEvents";
+import { fetchMedicationsForUser } from "./lib/medicationShared";
+import { recordRecentActivityEvent } from "./lib/recentActivityEvents";
 import {
   NUTRITION_CATEGORIES,
   NUTRITION_GUIDE_INTRO,
@@ -89,10 +76,11 @@ import {
   NUTRITION_IBD_SAFE,
   NUTRITION_QUICK_TIPS,
 } from "./lib/nutritionGuideCopy";
-import { HYDRATION_TARGET, HYDRATION_MCI_ICON, HYDRATION_MCI_ICON_EMPTY, loadHydrationResetTimestamp, saveHydrationReset, HYDRATION_GOAL_ACTIVITY_TITLE, HYDRATION_RESET_ACTIVITY_TITLE } from "./lib/hydrationShared";
+import { HYDRATION_TARGET, HYDRATION_MCI_ICON, HYDRATION_MCI_ICON_EMPTY, saveHydrationReset } from "./lib/hydrationShared";
 import {
   bottomTabBarHeight,
   ACCOUNT_LIST_ROW_PADDING,
+  CARD_INNER_PADDING,
   CARD_SECTION_INNER_GAP,
   TODAY_GOALS_ROW_PADDING,
   bottomTabBarScrollInset,
@@ -100,13 +88,9 @@ import {
   FLARE_FONT_SIZE,
   FLARE_LINE_HEIGHT,
   HOME_TILE_GAP,
-  HOME_DASHBOARD_CHROME_ABOVE_PILL_BODY,
-  HOME_PILL_BODY_MIN_HEIGHT_FLOOR,
   SCREEN_EDGE_PADDING,
   SECTION_TITLE_MARGIN_BOTTOM,
   SECTION_TITLE_MARGIN_TOP,
-  RECENT_ACTIVITY_VISIBLE_ROWS,
-  recentActivityFeedMaxHeight,
 } from "./lib/layoutConstants";
 import {
   formatOtpCountdown,
@@ -136,8 +120,6 @@ import {
   logDetailStyles,
 } from "./components/LogDetailLayout";
 import { formatAddedAtHeader } from "./lib/logDisplay";
-import { NEWS_FEED_LOAD_MORE_BATCH } from "./lib/logHistoryConstants";
-import { resolvePaginatedVisibleCount } from "./lib/paginatedLogList";
 import { useWizardLogHistory } from "./lib/wizardLogHistory";
 import { openAppNotificationSettings } from "./lib/openAppNotificationSettings";
 import {
@@ -156,7 +138,6 @@ import {
   dashboardSnapshotByUserId,
   dedupeNewsItems,
   invalidateDashboardSnapshot,
-  type DashboardActivityRow,
   type DashboardNewsItem,
   type DashboardSnapshot,
 } from "./lib/dashboardSnapshotCache";
@@ -167,6 +148,7 @@ import {
   readDashboardWelcomeEligible,
 } from "./lib/dashboardWelcome";
 import { markNewAccountInstructionTipsEligible } from "./lib/newAccountInstructionTips";
+import { DASHBOARD_NEWS_HOME_SHELF_MAX, DASHBOARD_NEWS_SHELF_PEEK, dashboardNewsShelfCardWidth } from "./lib/newsShared";
 import {
   REPORTS_INSTRUCTION,
   HYDRATION_INSTRUCTION,
@@ -205,6 +187,7 @@ import { WeightScreen } from "./screens/WeightScreen";
 import { WellbeingScreen } from "./screens/WellbeingScreen";
 import { WellbeingLogDetailScreen } from "./screens/WellbeingLogDetailScreen";
 import { WellbeingWizardScreen } from "./screens/WellbeingWizardScreen";
+import { LatestNewsScreen } from "./screens/LatestNewsScreen";
 import { AppointmentBriefChangesScreen } from "./screens/AppointmentBriefChangesScreen";
 import { AppointmentBriefCustomRangeScreen } from "./screens/AppointmentBriefCustomRangeScreen";
 import { AppointmentBriefHealthScreen } from "./screens/AppointmentBriefHealthScreen";
@@ -535,56 +518,6 @@ async function registerExpoPushTokenBestEffort(): Promise<void> {
     }
   }
   await AsyncStorage.setItem("flarecare.pushToken", pushToken);
-}
-
-/** Match web /api/image-proxy for production https; on LAN (http web) load https images directly — Android blocks cleartext to the dev server. */
-function resolveNewsImageUri(raw: string): string | null {
-  const trimmed = raw.trim();
-  if (!trimmed) return null;
-  const webBase = (process.env.EXPO_PUBLIC_WEB_API_BASE_URL || "").replace(/\/$/, "");
-  const webIsHttps = webBase.startsWith("https://");
-  const imageIsHttps = /^https:\/\//i.test(trimmed);
-  if (webBase && webIsHttps) {
-    return `${webBase}/api/image-proxy?url=${encodeURIComponent(trimmed)}`;
-  }
-  if (webBase && !webIsHttps && !imageIsHttps) {
-    return `${webBase}/api/image-proxy?url=${encodeURIComponent(trimmed)}`;
-  }
-  return trimmed;
-}
-
-function NewsThumbnail({ imageUrl }: { imageUrl?: string | null }) {
-  const c = useFlareColors();
-  const candidates = useMemo(() => {
-    const trimmed = (imageUrl && String(imageUrl).trim()) || "";
-    if (!trimmed) return [] as string[];
-    const primary = resolveNewsImageUri(trimmed);
-    const list: string[] = [];
-    if (primary) list.push(primary);
-    if (!list.includes(trimmed)) list.push(trimmed);
-    return list;
-  }, [imageUrl]);
-
-  const [index, setIndex] = useState(0);
-  useEffect(() => {
-    setIndex(0);
-  }, [candidates.join("|")]);
-
-  if (!candidates.length) {
-    return <Ionicons name="newspaper-outline" size={30} color={c.primary} style={{ opacity: 0.45 }} />;
-  }
-  if (index >= candidates.length) {
-    return <Ionicons name="newspaper-outline" size={30} color={c.primary} style={{ opacity: 0.45 }} />;
-  }
-
-  return (
-    <Image
-      source={{ uri: candidates[index] }}
-      style={styles.newsCardImageAsset}
-      resizeMode="cover"
-      onError={() => setIndex((i) => i + 1)}
-    />
-  );
 }
 
 function AuthScreen({
@@ -1175,7 +1108,7 @@ function ProfileSetupScreen({ user, onComplete }: { user: SessionUser; onComplet
 const HOME_TILE_ICON_SIZE = 34;
 
 /** Show bottom shortcuts on tab roots + reminder-adjacent hubs; hide on wizard/detail flows, etc. */
-const BOTTOM_BAR_VISIBLE_ROUTES = new Set(["Dashboard", "Account", "Reminders", "Meds", "Appointments"]);
+const BOTTOM_BAR_VISIBLE_ROUTES = new Set(["Dashboard", "Account", "Reminders", "Meds", "Appointments", "AppointmentsPast"]);
 
 /** Padding uses this screen’s route—not the globally focused route—so the exiting page doesn’t jump during transitions. */
 function useBottomTabScrollInset() {
@@ -1184,7 +1117,6 @@ function useBottomTabScrollInset() {
   return BOTTOM_BAR_VISIBLE_ROUTES.has(route.name) ? bottomTabBarScrollInset(insets.bottom) : 0;
 }
 
-/** Matches `styles.screen` edge padding (used to size Daily Check-in row). */
 function formatHistoryBrowseSubtitle(count: number): string {
   if (count === 0) return "No entries";
   if (count === 1) return "1 entry";
@@ -1233,10 +1165,6 @@ function parseMedicationLogList(raw: unknown, withDosage: boolean): MedicationLo
 
 /** Avoid greeting flicker (“there”) when session metadata/email arrives shortly after navigation. */
 const dashboardGreetingFirstNameByUserId: Record<string, string> = {};
-
-type HomeDashTab = "today" | "news" | "logs" | "guides" | "more";
-/** When leaving Dashboard via a pill section, restore that pill on the next Dashboard focus (e.g. back from history). */
-let dashboardHomeDashTabRestore: HomeDashTab | null = null;
 
 /** OWM `/img/wn/{icon}@2x.png` id → Ionicons ( themed `color`; no remote bitmaps ). */
 function owmIconIdToIoniconsName(iconId: string | null | undefined): keyof typeof Ionicons.glyphMap {
@@ -1295,7 +1223,7 @@ function DashboardGridTile({
     >
       <View style={styles.homeDashboardTileBody}>
         <View style={styles.homeDashboardTileIconWrap}>{icon}</View>
-        <Text style={[styles.moreGridLabel, { color: c.textSecondary }]} numberOfLines={2}>
+        <Text style={[styles.moreGridLabel, { color: c.text }]} numberOfLines={2}>
           {label}
         </Text>
       </View>
@@ -1303,31 +1231,14 @@ function DashboardGridTile({
   );
 }
 
-function DashboardScreen({
-  user,
-  onTodayModeChange,
-  onRegisterResetHome,
-}: {
-  user: SessionUser;
-  onTodayModeChange?: (active: boolean) => void;
-  onRegisterResetHome?: (reset: (() => void) | null) => void;
-}) {
+function DashboardScreen({ user }: { user: SessionUser }) {
   const navigation = useNavigation<any>();
-  const { width: windowWidth, height: windowHeight } = useWindowDimensions();
-  const insets = useSafeAreaInsets();
+  const { width: windowWidth } = useWindowDimensions();
   const c = useFlareColors();
   const bottomScrollInset = useBottomTabScrollInset();
   const tileWidth = useMemo(
     () => Math.floor((windowWidth - SCREEN_EDGE_PADDING * 2 - HOME_TILE_GAP) / 2),
     [windowWidth],
-  );
-  const homePillBodyMinHeight = useMemo(
-    () =>
-      Math.max(
-        HOME_PILL_BODY_MIN_HEIGHT_FLOOR,
-        windowHeight - bottomTabBarHeight(insets.bottom) - HOME_DASHBOARD_CHROME_ABOVE_PILL_BODY,
-      ),
-    [insets.bottom, windowHeight],
   );
   const snapshotSeed = dashboardSnapshotByUserId[user.id];
   const [weather, setWeather] = useState<string>(() => snapshotSeed?.weather ?? "Loading weather...");
@@ -1341,28 +1252,14 @@ function DashboardScreen({
     return !(s.newsItems.length > 0 || s.newsError);
   });
   const [newsError, setNewsError] = useState<string | null>(() => snapshotSeed?.newsError ?? null);
-  const [newsExpandedCount, setNewsExpandedCount] = useState(NEWS_FEED_LOAD_MORE_BATCH);
   const [todaySummary, setTodaySummary] = useState<{ symptoms: number; medsTaken: number; medsTotal: number; hydration: number }>(
     () => snapshotSeed?.todaySummary ?? { symptoms: 0, medsTaken: 0, medsTotal: 0, hydration: 0 },
   );
-  const [recentActivity, setRecentActivity] = useState<DashboardActivityRow[]>(() => snapshotSeed?.recentActivity ?? []);
   const [historyPreview, setHistoryPreview] = useState({ symptomCount: 0, medicationCount: 0 });
   const [welcomeDismissed, setWelcomeDismissed] = useState(true);
   const [welcomeEligible, setWelcomeEligible] = useState(false);
   const [welcomeHydrated, setWelcomeHydrated] = useState(false);
-  /** Dashboard pills — exclusive selection; default **More** shows the shortcuts grid. */
-  const [homeDashTab, setHomeDashTab] = useState<HomeDashTab>("more");
   const hydrationTarget = HYDRATION_TARGET;
-  useEffect(() => {
-    onTodayModeChange?.(homeDashTab !== "more");
-  }, [homeDashTab, onTodayModeChange]);
-  useEffect(() => {
-    onRegisterResetHome?.(() => {
-      dashboardHomeDashTabRestore = null;
-      setHomeDashTab("more");
-    });
-    return () => onRegisterResetHome?.(null);
-  }, [onRegisterResetHome]);
   const dailyCheckinCards = [
     { key: "symptoms" as const, label: "Log Symptoms", icon: "thermometer", family: "mci", goTo: "SymptomLogWizard" },
     { key: "track-meds" as const, label: "Track Medications", icon: TRACK_MEDICATIONS_MCI_ICON, family: "mci", goTo: "MedicationTrackingWizard" },
@@ -1408,30 +1305,13 @@ function DashboardScreen({
     setWelcomeDismissed(true);
     void markDashboardWelcomeDismissed(user.id);
   }, [user.id]);
-  const todayLabel = `${new Date().toLocaleDateString("en-GB", { weekday: "long" })}, ${formatUkDate(new Date())}`;
-  const formatRelativeTime = (timestamp: number) => {
-    const diffMinutes = Math.floor((Date.now() - timestamp) / (1000 * 60));
-    if (diffMinutes < 1) return "Just now";
-    if (diffMinutes < 60) return `${diffMinutes}m ago`;
-    const diffHours = Math.floor(diffMinutes / 60);
-    if (diffHours < 24) return `${diffHours}h ago`;
-    const diffDays = Math.floor(diffHours / 24);
-    if (diffDays < 7) return `${diffDays}d ago`;
-    return formatUkDate(new Date(timestamp));
-  };
+  const todayLabel = formatUkGreetingDate(new Date());
   useFocusEffect(
     useCallback(() => {
-      const restoreTab = dashboardHomeDashTabRestore;
-      if (restoreTab !== null) {
-        dashboardHomeDashTabRestore = null;
-        setHomeDashTab(restoreTab);
-      }
-
       let cancelled = false;
       const seedSnap = dashboardSnapshotByUserId[user.id];
       const snap: DashboardSnapshot = {
         todaySummary: seedSnap?.todaySummary ?? { symptoms: 0, medsTaken: 0, medsTotal: 0, hydration: 0 },
-        recentActivity: seedSnap?.recentActivity ?? [],
         weatherMeta: seedSnap?.weatherMeta ?? null,
         weather: seedSnap?.weather ?? "Loading weather...",
         newsItems: seedSnap?.newsItems ?? [],
@@ -1446,13 +1326,8 @@ function DashboardScreen({
             medicationsList,
             takenMedsRes,
             todayHydrationRes,
-            recentSymptomsRes,
-            recentMedsRes,
             symptomHistoryCountRes,
             medicationHistoryCountRes,
-            recentBowelRes,
-            recentWeightRes,
-            recentAppointmentsRes,
           ] = await Promise.all([
             supabase.from(TABLES.LOG_SYMPTOMS).select("id,created_at").eq("user_id", user.id).gte("created_at", `${today}T00:00:00`),
             fetchMedicationsForUser(user.id),
@@ -1462,23 +1337,8 @@ function DashboardScreen({
               .eq("user_id", user.id)
               .eq("taken_date", today),
             supabase.from(TABLES.DAILY_HYDRATION).select("glasses,updated_at").eq("user_id", user.id).eq("date", today).maybeSingle(),
-            supabase.from(TABLES.LOG_SYMPTOMS).select("id,created_at").eq("user_id", user.id).order("created_at", { ascending: false }).limit(1),
-            supabase.from(TABLES.LOG_MEDICATIONS).select("id,name,created_at").eq("user_id", user.id).order("created_at", { ascending: false }).limit(1),
             supabase.from(TABLES.LOG_SYMPTOMS).select("id", { count: "exact", head: true }).eq("user_id", user.id),
             supabase.from(TABLES.LOG_MEDICATIONS).select("id", { count: "exact", head: true }).eq("user_id", user.id),
-            supabase
-              .from(TABLES.BOWEL_MOVEMENTS)
-              .select("id,occurred_at,updated_at,created_at")
-              .eq("user_id", user.id)
-              .order("updated_at", { ascending: false })
-              .limit(1),
-            supabase.from(TABLES.TRACK_WEIGHT).select("id,date,value_kg,created_at").eq("user_id", user.id).order("created_at", { ascending: false }).limit(1),
-            supabase
-              .from(TABLES.APPOINTMENTS)
-              .select("id,created_at,updated_at")
-              .eq("user_id", user.id)
-              .order("updated_at", { ascending: false })
-              .limit(10),
           ]);
 
           const prescribedMeds = medicationsList.filter((med) => med.name !== "Medication Tracking");
@@ -1490,188 +1350,17 @@ function DashboardScreen({
             hydration: todayHydrationRes.data?.glasses ?? 0,
           };
 
-          const activityRows: DashboardActivityRow[] = [];
-          const fourHoursAgo = Date.now() - 4 * 60 * 60 * 1000;
-
-          const takenMedRows = (takenMedsRes.data ?? []) as { medication_id: string | number; created_at?: string }[];
-
-          const recentSymptom = recentSymptomsRes.data?.[0] as { id: string; created_at: string } | undefined;
-          const recentMedLog = recentMedsRes.data?.[0] as { id: string; created_at: string } | undefined;
           setHistoryPreview({
             symptomCount: symptomHistoryCountRes.count ?? 0,
             medicationCount: medicationHistoryCountRes.count ?? 0,
           });
 
-          if (recentSymptom?.created_at) {
-            activityRows.push({
-              key: `symptom-${recentSymptom.id}`,
-              title: RECENT_ACTIVITY_TITLE.symptomLogged,
-              ts: new Date(recentSymptom.created_at).getTime(),
-              icon: "symptom",
-            });
-          }
-          if (recentMedLog?.created_at) {
-            activityRows.push({
-              key: `med-${recentMedLog.id}`,
-              title: MEDICATION_TRACKING_ACTIVITY_TITLE,
-              ts: new Date(recentMedLog.created_at).getTime(),
-              icon: "medication",
-            });
-          }
-
-          for (const med of prescribedMeds) {
-            const update = isMeaningfulUpdate(med.created_at, med.updated_at);
-            if (update && update.ts >= fourHoursAgo) {
-              activityRows.push({
-                key: `med-updated-${med.id}`,
-                title: MEDICATION_UPDATED_ACTIVITY_TITLE,
-                ts: update.ts,
-                icon: "medication",
-              });
-              continue;
-            }
-            if (!med.created_at) continue;
-            const ts = new Date(med.created_at).getTime();
-            if (Number.isNaN(ts) || ts < fourHoursAgo) continue;
-            activityRows.push({
-              key: `med-added-${med.id}`,
-              title: MEDICATION_ADDED_ACTIVITY_TITLE,
-              ts,
-              icon: "medication",
-            });
-          }
-
-          for (const apt of (recentAppointmentsRes.data ?? []) as {
-            id: string | number;
-            created_at?: string | null;
-            updated_at?: string | null;
-          }[]) {
-            const createdTs = apt.created_at ? new Date(apt.created_at).getTime() : NaN;
-            const update = isMeaningfulUpdate(apt.created_at, apt.updated_at);
-            if (Number.isFinite(createdTs) && createdTs >= fourHoursAgo) {
-              activityRows.push({
-                key: `appt-added-${apt.id}`,
-                title: APPOINTMENT_ADDED_ACTIVITY_TITLE,
-                ts: createdTs,
-                icon: "appointment",
-              });
-              continue;
-            }
-            if (update && update.ts >= fourHoursAgo) {
-              activityRows.push({
-                key: `appt-updated-${apt.id}`,
-                title: APPOINTMENT_UPDATED_ACTIVITY_TITLE,
-                ts: update.ts,
-                icon: "appointment",
-              });
-            }
-          }
-
-          const allMedsTaken =
-            prescribedMeds.length > 0 &&
-            prescribedMeds.every((med) =>
-              takenMedRows.some((row) => String(row.medication_id) === String(med.id)),
-            );
-          if (allMedsTaken && takenMedRows.length > 0) {
-            const completedTs = takenMedRows.reduce((max, row) => {
-              const ts = row.created_at ? new Date(row.created_at).getTime() : 0;
-              return ts > max ? ts : max;
-            }, 0);
-            if (completedTs >= fourHoursAgo) {
-              activityRows.push({
-                key: `meds-goal-${today}`,
-                title: MEDICATIONS_GOAL_ACTIVITY_TITLE,
-                ts: completedTs,
-                icon: "medication",
-              });
-            }
-          }
-
-          const recentBowel = recentBowelRes.data?.[0] as
-            | { id: string | number; created_at?: string; updated_at?: string }
-            | undefined;
-          if (recentBowel) {
-            const createdTs = recentBowel.created_at ? new Date(recentBowel.created_at).getTime() : NaN;
-            const update = isMeaningfulUpdate(recentBowel.created_at, recentBowel.updated_at);
-            if (update && update.ts >= fourHoursAgo) {
-              activityRows.push({
-                key: `bowel-updated-${recentBowel.id}`,
-                title: RECENT_ACTIVITY_TITLE.bowelUpdated,
-                ts: update.ts,
-                icon: "bowel",
-              });
-            } else if (Number.isFinite(createdTs) && createdTs >= fourHoursAgo) {
-              activityRows.push({
-                key: `bowel-${recentBowel.id}`,
-                title: RECENT_ACTIVITY_TITLE.bowelLogged,
-                ts: createdTs,
-                icon: "bowel",
-              });
-            }
-          }
-
-          const recentWeight = recentWeightRes.data?.[0] as
-            | { id: string | number; created_at?: string; date?: string; value_kg?: number }
-            | undefined;
-          if (recentWeight?.created_at) {
-            const ts = new Date(recentWeight.created_at).getTime();
-            if (!Number.isNaN(ts) && ts >= fourHoursAgo) {
-              activityRows.push({
-                key: `weight-${recentWeight.id}`,
-                title: RECENT_ACTIVITY_TITLE.weightLogged,
-                ts,
-                icon: "weight",
-              });
-            }
-          }
-
-          const hydrationRow = todayHydrationRes.data;
-          const hydrationGlasses = hydrationRow?.glasses ?? 0;
-          if (hydrationGlasses >= HYDRATION_TARGET && hydrationRow?.updated_at) {
-            activityRows.push({
-              key: `hydration-goal-${today}`,
-              title: HYDRATION_GOAL_ACTIVITY_TITLE,
-              ts: new Date(hydrationRow.updated_at).getTime(),
-              icon: "hydration",
-            });
-          }
-
-          const hydrationResetTs = await loadHydrationResetTimestamp(user.id, today);
-          if (hydrationResetTs != null) {
-            activityRows.push({
-              key: `hydration-reset-${today}`,
-              title: HYDRATION_RESET_ACTIVITY_TITLE,
-              ts: hydrationResetTs,
-              icon: "hydration",
-            });
-          }
-
-          const storedEvents = await loadStoredRecentActivityEvents(user.id, fourHoursAgo, today);
-          for (const event of storedEvents) {
-            // Prefer explicit weight-updated over a same-window "logged new weight" if both exist.
-            if (event.key.startsWith("weight-updated-")) {
-              for (let i = activityRows.length - 1; i >= 0; i -= 1) {
-                if (activityRows[i].key.startsWith("weight-") && !activityRows[i].key.startsWith("weight-deleted")) {
-                  activityRows.splice(i, 1);
-                }
-              }
-            }
-            activityRows.push(event);
-          }
-
-          snap.recentActivity = activityRows
-            .filter((row) => row.ts >= fourHoursAgo)
-            .sort((a, b) => b.ts - a.ts);
-
           if (cancelled) return;
           setTodaySummary(snap.todaySummary);
-          setRecentActivity(snap.recentActivity);
         } catch {
           snap.todaySummary = { symptoms: 0, medsTaken: 0, medsTotal: 0, hydration: 0 };
-          snap.recentActivity = [];
           if (cancelled) return;
           setTodaySummary(snap.todaySummary);
-          setRecentActivity(snap.recentActivity);
         }
 
         try {
@@ -1763,7 +1452,6 @@ function DashboardScreen({
             if (cancelled) return;
             setNewsItems(snap.newsItems);
             setNewsError(null);
-            setNewsExpandedCount(NEWS_FEED_LOAD_MORE_BATCH);
           }
         } catch {
           snap.newsItems = [];
@@ -1771,7 +1459,6 @@ function DashboardScreen({
           if (cancelled) return;
           setNewsItems([]);
           setNewsError(snap.newsError);
-          setNewsExpandedCount(NEWS_FEED_LOAD_MORE_BATCH);
         } finally {
           if (!cancelled) {
             setNewsLoading(false);
@@ -1787,43 +1474,26 @@ function DashboardScreen({
     }, [user.id]),
   );
 
-  const newsVisibleCount = useMemo(
-    () => resolvePaginatedVisibleCount(newsItems.length, newsExpandedCount, NEWS_FEED_LOAD_MORE_BATCH),
-    [newsItems.length, newsExpandedCount],
+  const shelfNewsItems = useMemo(
+    () => newsItems.slice(0, Math.min(DASHBOARD_NEWS_SHELF_PEEK, DASHBOARD_NEWS_HOME_SHELF_MAX)),
+    [newsItems],
   );
-  const visibleNewsItems = useMemo(() => newsItems.slice(0, newsVisibleCount), [newsItems, newsVisibleCount]);
-  const hasMoreNews = newsItems.length > newsVisibleCount;
-  const loadMoreNews = useCallback(() => {
-    setNewsExpandedCount((count) => Math.min(count + NEWS_FEED_LOAD_MORE_BATCH, newsItems.length));
-  }, [newsItems.length]);
+  const newsShelfCardWidth = useMemo(() => dashboardNewsShelfCardWidth(windowWidth), [windowWidth]);
+  const [newsShelfPageIndex, setNewsShelfPageIndex] = useState(0);
+  const newsShelfPageStride = newsShelfCardWidth + HOME_TILE_GAP;
 
-  const homeNavPills = (
-    <View style={styles.homeNavPillsSection}>
-      <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={styles.homeNavPillsRow}>
-        {(
-          [
-            ["today", "Today's"],
-            ["logs", "Logs"],
-            ["news", "Latest news"],
-            ["guides", "Info"],
-            ["more", "More"],
-          ] as const
-        ).map(([tab, label]) => {
-          const active = homeDashTab === tab;
-          return (
-            <Pressable
-              key={tab}
-              accessibilityRole="button"
-              accessibilityState={{ selected: active }}
-              onPress={() => setHomeDashTab(tab)}
-              style={[styles.homeNavPill, { backgroundColor: active ? c.primary : c.card }]}
-            >
-              <Text style={[styles.homeNavPillLabel, { color: active ? c.white : c.text }]}>{label}</Text>
-            </Pressable>
-          );
-        })}
-      </ScrollView>
-    </View>
+  useEffect(() => {
+    setNewsShelfPageIndex(0);
+  }, [shelfNewsItems.length]);
+
+  const onNewsShelfScroll = useCallback(
+    (event: NativeSyntheticEvent<NativeScrollEvent>) => {
+      const x = event.nativeEvent.contentOffset.x;
+      const next = Math.round(x / newsShelfPageStride);
+      const clamped = Math.max(0, Math.min(shelfNewsItems.length - 1, next));
+      setNewsShelfPageIndex(clamped);
+    },
+    [newsShelfPageStride, shelfNewsItems.length],
   );
 
   const medsGoalComplete =
@@ -1835,238 +1505,91 @@ function DashboardScreen({
       {
         id: "meds-goal",
         title: "Take Medications",
-        subtitle: medsGoalComplete ? "Complete" : "Active",
+        trailingText: `${todaySummary.medsTaken}/${todaySummary.medsTotal}`,
         completed: medsGoalComplete,
       },
       {
         id: "hydration-goal",
         title: "Stay Hydrated",
-        subtitle: hydrationGoalComplete ? "Complete" : "Active",
+        trailingText: `${todaySummary.hydration}/${hydrationTarget}`,
         completed: hydrationGoalComplete,
       },
     ],
-    [hydrationGoalComplete, medsGoalComplete],
-  );
-
-  const todaySummaryItems = useMemo(
-    () => [
-      { id: "symptoms-summary", title: "Symptoms logged", trailingText: String(todaySummary.symptoms) },
-      {
-        id: "meds-summary",
-        title: "Medications taken",
-        trailingText: `${todaySummary.medsTaken}/${todaySummary.medsTotal}`,
-      },
-      { id: "hydration-summary", title: "Hydration", trailingText: `${todaySummary.hydration}/${hydrationTarget}` },
+    [
+      hydrationGoalComplete,
+      hydrationTarget,
+      medsGoalComplete,
+      todaySummary.hydration,
+      todaySummary.medsTaken,
+      todaySummary.medsTotal,
     ],
-    [hydrationTarget, todaySummary],
   );
 
-  const homePillBody =
-    homeDashTab === "today" ? (
-      <View style={styles.todayPillSection}>
-        <Text
-          style={[styles.dashboardSectionTitleLeft, styles.dashboardSectionTitleAfterPills, { color: c.text }]}
-        >
-          Goals
-        </Text>
-        <View style={[logHistoryCardStyles.trackerCard, { backgroundColor: c.card }]}>
-          <LogHistoryList items={todayGoalItems} rowPaddingHorizontal={TODAY_GOALS_ROW_PADDING} />
-        </View>
-        <Text style={[styles.dashboardSectionTitleLeft, { color: c.text }]}>Summary</Text>
-        <View style={[logHistoryCardStyles.trackerCard, { backgroundColor: c.card }]}>
-          <LogHistoryList items={todaySummaryItems} rowPaddingHorizontal={ACCOUNT_LIST_ROW_PADDING} />
-        </View>
-      </View>
-    ) : homeDashTab === "news" ? (
-      <View style={styles.todayPillSection}>
-        <Text
-          style={[styles.dashboardSectionTitleLeft, styles.dashboardSectionTitleAfterPills, { color: c.text }]}
-        >
+  const homeNewsShelf = (
+    <View style={[styles.dashboardShelfSection, styles.dashboardShelfAfterCard, styles.dashboardShelfSectionLast]}>
+      <View style={styles.dashboardSubsectionHeader}>
+        <Text style={[styles.dashboardSubsectionTitleLeft, styles.dashboardSubsectionTitleInHeader, { color: c.text, flex: 1 }]}>
           Latest news
         </Text>
-        {newsLoading ? (
-          <Text style={[styles.muted, { color: c.textMuted }]}>Getting latest news...</Text>
-        ) : newsError ? (
-          <Text style={[styles.muted, { color: c.textMuted }]}>{newsError}</Text>
-        ) : newsItems.length === 0 ? (
-          <Text style={[styles.muted, { color: c.textMuted }]}>No news available right now.</Text>
-        ) : (
-          <View style={styles.newsFeed}>
-            {visibleNewsItems.map((item) => (
-              <Pressable
-                key={item.link ?? item.title}
-                style={[styles.newsFeedCard, { backgroundColor: c.newsCardBg }]}
-                onPress={() => {
-                  if (item.link) {
-                    Linking.openURL(item.link);
-                  }
-                }}
-              >
-                <View style={styles.newsCardInner}>
-                  <View style={[styles.newsCardImage, { backgroundColor: c.newsImageBg }]}>
-                    <NewsThumbnail imageUrl={item.imageUrl} />
-                  </View>
-                  <View style={styles.newsCardBody}>
-                    <Text style={[styles.newsTitle, { color: c.text }]} numberOfLines={3}>
-                      {item.title}
-                    </Text>
-                    <View style={styles.newsCardFooter}>
-                      <Text style={[styles.newsMeta, { color: c.textMuted, flex: 1 }]} numberOfLines={1}>
-                        {item.source}
-                        {item.publishedAt ? ` • ${formatUkDate(item.publishedAt)}` : ""}
-                      </Text>
-                      <Pressable
-                        accessibilityRole="button"
-                        accessibilityLabel={`Share ${item.title}`}
-                        hitSlop={10}
-                        onPress={(event) => {
-                          event.stopPropagation?.();
-                          const message = item.link ? `${item.title}\n${item.link}` : item.title;
-                          void Share.share({
-                            message,
-                            title: item.title,
-                            ...(item.link && Platform.OS === "ios" ? { url: item.link } : null),
-                          }).catch(() => {
-                            // user dismissed / share unavailable
-                          });
-                        }}
-                        style={({ pressed }) => [styles.newsShareButton, pressed && { opacity: 0.7 }]}
-                      >
-                        <Ionicons
-                          name={Platform.OS === "ios" ? "share-outline" : "share-social-outline"}
-                          size={20}
-                          color={c.textMuted}
-                          accessibilityIgnoresInvertColors
-                        />
-                      </Pressable>
-                    </View>
-                  </View>
-                </View>
-              </Pressable>
+        {!newsLoading && !newsError && newsItems.length > 0 ? (
+          <Pressable
+            accessibilityRole="button"
+            accessibilityLabel="See all news"
+            onPress={() => navigation.navigate("LatestNews")}
+            hitSlop={8}
+            style={({ pressed }) => pressed && { opacity: 0.7 }}
+          >
+            <Text style={[styles.dashboardNewsSeeAll, { color: c.primary }]}>See all</Text>
+          </Pressable>
+        ) : null}
+      </View>
+      {newsLoading ? (
+        <Text style={[styles.muted, styles.dashboardNewsStatus, { color: c.textMuted }]}>Getting latest news...</Text>
+      ) : newsError ? (
+        <Text style={[styles.muted, styles.dashboardNewsStatus, { color: c.textMuted }]}>{newsError}</Text>
+      ) : newsItems.length === 0 ? (
+        <Text style={[styles.muted, styles.dashboardNewsStatus, { color: c.textMuted }]}>No news available right now.</Text>
+      ) : (
+        <View>
+          <ScrollView
+            horizontal
+            showsHorizontalScrollIndicator={false}
+            contentContainerStyle={newsFeedListStyles.shelfRow}
+            decelerationRate="fast"
+            snapToInterval={newsShelfPageStride}
+            snapToAlignment="start"
+            nestedScrollEnabled
+            onScroll={onNewsShelfScroll}
+            onMomentumScrollEnd={onNewsShelfScroll}
+            scrollEventThrottle={16}
+          >
+            {shelfNewsItems.map((item) => (
+              <NewsFeedCard key={item.link ?? item.title} item={item} variant="shelf" width={newsShelfCardWidth} />
             ))}
-            {hasMoreNews ? (
-              <Pressable
-                accessibilityRole="button"
-                accessibilityLabel="load more"
-                onPress={loadMoreNews}
-                style={({ pressed }) => [
-                  logHistoryListStyles.loadMoreRow,
-                  styles.newsLoadMoreRow,
-                  pressed && { opacity: 0.7 },
-                ]}
-              >
-                <Text style={[logHistoryListStyles.loadMoreLabel, { color: c.primary }]}>load more</Text>
-              </Pressable>
-            ) : null}
-          </View>
-        )}
-      </View>
-    ) : homeDashTab === "logs" ? (
-      <View style={styles.todayPillSection}>
-        <Text
-          style={[styles.dashboardSectionTitleLeft, styles.dashboardSectionTitleAfterPills, { color: c.text }]}
-        >
-          History
-        </Text>
-        <LogHistoryCard>
-          <LogHistoryList
-            items={[
-              buildBrowseLogRowItem({
-                id: "symptom",
-                title: "Symptom logs",
-                subtitle: formatHistoryBrowseSubtitle(historyPreview.symptomCount),
-                accessibilityLabel: "Browse symptom history",
-              }),
-              buildBrowseLogRowItem({
-                id: "medication",
-                title: "Medication logs",
-                subtitle: formatHistoryBrowseSubtitle(historyPreview.medicationCount),
-                accessibilityLabel: "Browse medication tracking history",
-              }),
-            ]}
-            onPressItem={(rowId) => {
-              dashboardHomeDashTabRestore = "logs";
-              navigation.navigate(rowId === "symptom" ? "SymptomHistory" : "MedicationTrackingHistory");
-            }}
-            rowPaddingHorizontal={TODAY_GOALS_ROW_PADDING}
-          />
-        </LogHistoryCard>
-      </View>
-    ) : homeDashTab === "guides" ? (
-      <View style={styles.todayPillSection}>
-        <Text
-          style={[styles.dashboardSectionTitleLeft, styles.dashboardSectionTitleAfterPills, { color: c.text }]}
-        >
-          Info
-        </Text>
-        <LogHistoryCard>
-          <LogHistoryList
-            items={[
-              buildBrowseLogRowItem({
-                id: "ibd",
-                title: "What is IBD?",
-                subtitle: "Understand Crohn's and ulcerative colitis",
-                accessibilityLabel: "Open What is IBD guide",
-              }),
-              buildBrowseLogRowItem({
-                id: "nutrition",
-                title: "Nutrition guide",
-                subtitle: "Food categories and IBD diet tips",
-                accessibilityLabel: "Open Nutrition guide",
-              }),
-            ]}
-            onPressItem={(rowId) => {
-              dashboardHomeDashTabRestore = "guides";
-              navigation.navigate(rowId === "ibd" ? "Ibd" : "NutritionGuide");
-            }}
-            rowPaddingHorizontal={TODAY_GOALS_ROW_PADDING}
-          />
-        </LogHistoryCard>
-      </View>
-    ) : (
-      <View style={styles.moreSection}>
-        <Text style={[styles.dashboardSectionTitleLeft, styles.dashboardSectionTitleAfterPills, { color: c.text }]}>
-          More
-        </Text>
-        <View style={styles.moreGrid}>
-          {moreLinkCards.map((item) => (
-            <DashboardGridTile
-              key={item.key}
-              width={tileWidth}
-              label={item.label}
-              variant="grid"
-              onPress={() => navigation.navigate(item.screen)}
-              icon={
-                item.family === "ion" ? (
-                  <Ionicons name={item.icon as any} size={HOME_TILE_ICON_SIZE} color={c.primary} />
-                ) : (
-                  <MaterialCommunityIcons name={item.icon as any} size={HOME_TILE_ICON_SIZE} color={c.primary} />
-                )
-              }
-            />
-          ))}
+          </ScrollView>
+          {shelfNewsItems.length > 1 ? (
+            <View
+              style={styles.dashboardNewsDots}
+              accessibilityLabel={`News article ${newsShelfPageIndex + 1} of ${shelfNewsItems.length}`}
+            >
+              {shelfNewsItems.map((item, index) => (
+                <View
+                  key={item.link ?? item.title}
+                  style={[
+                    styles.dashboardNewsDot,
+                    {
+                      backgroundColor: index === newsShelfPageIndex ? c.primary : c.textMuted,
+                      opacity: index === newsShelfPageIndex ? 1 : 0.35,
+                    },
+                  ]}
+                />
+              ))}
+            </View>
+          ) : null}
         </View>
-      </View>
-    );
-
-  const recentActivityFeedRows = recentActivity.map((item) => (
-    <View key={item.key} style={styles.recentActivityFeedItem}>
-      <Ionicons
-        name="pulse"
-        size={20}
-        color={c.primary}
-        style={styles.recentActivityFeedIcon}
-        accessibilityIgnoresInvertColors
-      />
-      <View style={styles.recentActivityFeedText}>
-        <Text style={[styles.recentActivityFeedTitle, { color: c.textMuted }]} numberOfLines={2}>
-          {item.title}
-        </Text>
-        <Text style={[styles.recentActivityFeedWhen, { color: c.textMuted }]}>{formatRelativeTime(item.ts)}</Text>
-      </View>
+      )}
     </View>
-  ));
-  const recentActivityOverflows = recentActivity.length > RECENT_ACTIVITY_VISIBLE_ROWS;
+  );
 
   return (
     <View style={[styles.dashboardScreen, { backgroundColor: c.screen }]}>
@@ -2117,11 +1640,10 @@ function DashboardScreen({
         )}
       </Card>
       <View style={styles.checkinSection}>
-        <Text style={[styles.dashboardSectionTitle, { color: c.text }]}>Daily Check-in</Text>
+        <Text style={[styles.dashboardSubsectionTitleLeft, { color: c.text }]}>Daily Check-in</Text>
         <ScrollView
           horizontal
           showsHorizontalScrollIndicator={false}
-          contentContainerStyle={styles.checkinsRow}
           snapToInterval={2 * tileWidth + 2 * HOME_TILE_GAP}
           snapToAlignment="start"
           decelerationRate="fast"
@@ -2145,29 +1667,68 @@ function DashboardScreen({
           ))}
         </ScrollView>
       </View>
-      <Text style={[styles.dashboardSectionTitleLeft, { color: c.text }]}>Recent Activity</Text>
-      <Card title="" style={styles.accountPaddedCard} compactBody>
-        {recentActivity.length ? (
-          recentActivityOverflows ? (
-            <View style={[styles.recentActivityFeedClip, { height: recentActivityFeedMaxHeight() }]}>
-              <ScrollView
-                style={styles.recentActivityFeedScroll}
-                contentContainerStyle={styles.recentActivityFeed}
-                nestedScrollEnabled
-                showsVerticalScrollIndicator={false}
-              >
-                {recentActivityFeedRows}
-              </ScrollView>
-            </View>
-          ) : (
-            <View style={styles.recentActivityFeed}>{recentActivityFeedRows}</View>
-          )
-        ) : (
-          <Text style={[styles.muted, { color: c.textMuted }]}>No recent activity.</Text>
-        )}
-      </Card>
-      {homeNavPills}
-      <View style={[styles.homePillBodySection, { minHeight: homePillBodyMinHeight }]}>{homePillBody}</View>
+      <View style={[styles.dashboardShelfSection, styles.dashboardShelfBeforeTitle]}>
+        <Text style={[styles.dashboardSubsectionTitleLeft, { color: c.text }]}>Today</Text>
+        <View style={[logHistoryCardStyles.trackerCard, { backgroundColor: c.card }]}>
+          <LogHistoryList
+            items={todayGoalItems}
+            rowTextLayout="compact"
+            rowPaddingHorizontal={ACCOUNT_LIST_ROW_PADDING}
+            onPressItem={(rowId) => {
+              if (rowId === "meds-goal") navigation.navigate("MedicationTrackingWizard");
+              else if (rowId === "hydration-goal") navigation.navigate("Hydration");
+            }}
+          />
+        </View>
+      </View>
+      <View style={[styles.dashboardShelfSection, styles.dashboardShelfAfterCard]}>
+        <Text style={[styles.dashboardSubsectionTitleLeft, { color: c.text }]}>Shortcuts</Text>
+        <View style={styles.moreGrid}>
+          {moreLinkCards.map((item) => (
+            <DashboardGridTile
+              key={item.key}
+              width={tileWidth}
+              label={item.label}
+              variant="grid"
+              onPress={() => navigation.navigate(item.screen)}
+              icon={
+                item.family === "ion" ? (
+                  <Ionicons name={item.icon as any} size={HOME_TILE_ICON_SIZE} color={c.primary} />
+                ) : (
+                  <MaterialCommunityIcons name={item.icon as any} size={HOME_TILE_ICON_SIZE} color={c.primary} />
+                )
+              }
+            />
+          ))}
+        </View>
+      </View>
+      <View style={[styles.dashboardShelfSection, styles.dashboardShelfBeforeTitle]}>
+        <Text style={[styles.dashboardSubsectionTitleLeft, { color: c.text }]}>Logs</Text>
+        <LogHistoryCard>
+          <LogHistoryList
+            items={[
+              buildBrowseLogRowItem({
+                id: "symptom",
+                title: "Symptom logs",
+                subtitle: formatHistoryBrowseSubtitle(historyPreview.symptomCount),
+                accessibilityLabel: "Browse symptom history",
+              }),
+              buildBrowseLogRowItem({
+                id: "medication",
+                title: "Medication logs",
+                subtitle: formatHistoryBrowseSubtitle(historyPreview.medicationCount),
+                accessibilityLabel: "Browse medication tracking history",
+              }),
+            ]}
+            onPressItem={(rowId) => {
+              navigation.navigate(rowId === "symptom" ? "SymptomHistory" : "MedicationTrackingHistory");
+            }}
+            rowTextLayout="compact"
+            rowPaddingHorizontal={ACCOUNT_LIST_ROW_PADDING}
+          />
+        </LogHistoryCard>
+      </View>
+      {homeNewsShelf}
       </InstructionInteractionBlock>
       </ScrollView>
       {showWelcomeCard ? (
@@ -2274,6 +1835,7 @@ function SymptomHistoryScreen({ user }: { user: SessionUser }) {
               hasMore={hasMore}
               loadingMore={loadingMore}
               onLoadMore={() => void loadMore()}
+              rowTextLayout="compact"
               onPressItem={(logId) => navigation.navigate("SymptomDetail", { id: logId })}
               selectionMode={selectionMode}
               selectedIds={selectedIds}
@@ -2676,6 +2238,7 @@ function MedicationTrackingHistoryScreen({ user }: { user: SessionUser }) {
               hasMore={hasMore}
               loadingMore={loadingMore}
               onLoadMore={() => void loadMore()}
+              rowTextLayout="compact"
               onPressItem={(logId) => navigation.navigate("MedicationLogDetail", { id: logId })}
               selectionMode={selectionMode}
               selectedIds={selectedIds}
@@ -3698,6 +3261,7 @@ function AccountInfoScreen({ user }: { user: SessionUser }) {
       </View>
       <View style={[logHistoryCardStyles.trackerCard, { backgroundColor: c.card }]}>
         <LogDetailFieldGroup
+          compact
           fields={[
             {
               label: "Account created",
@@ -3735,6 +3299,7 @@ function AccountPersonalDetailsScreen({ user }: { user: SessionUser }) {
       </View>
       <View style={[logHistoryCardStyles.trackerCard, { backgroundColor: c.card }]}>
         <LogDetailFieldGroup
+          compact
           fields={[
             { label: "Full name", value: displayName },
             { label: "Email", value: user.email || "Not available" },
@@ -3779,8 +3344,45 @@ function AccountLegalScreen() {
             { id: "privacy", title: "Privacy Policy", accessibilityLabel: "Privacy Policy" },
             { id: "terms", title: "Terms of Use", accessibilityLabel: "Terms of Use" },
           ]}
+          rowTextLayout="compact"
           rowPaddingHorizontal={ACCOUNT_LIST_ROW_PADDING}
           onPressItem={(document) => navigation.navigate("LegalDocument", { document })}
+        />
+      </View>
+    </ScrollView>
+  );
+}
+
+/** Dashboard Info hub — What is IBD? + Nutrition guide (was the Info/Guides pill). */
+function InfoScreen() {
+  const navigation = useNavigation<any>();
+  const c = useFlareColors();
+  const bottomScrollInset = useBottomTabScrollInset();
+
+  return (
+    <ScrollView
+      style={[styles.screen, { backgroundColor: c.screen }]}
+      contentContainerStyle={{ paddingBottom: bottomScrollInset + 24 }}
+    >
+      <View style={[logHistoryCardStyles.trackerCard, { backgroundColor: c.card }]}>
+        <LogHistoryList
+          items={[
+            buildBrowseLogRowItem({
+              id: "ibd",
+              title: "What is IBD?",
+              subtitle: "Understand Crohn's and ulcerative colitis",
+              accessibilityLabel: "Open What is IBD guide",
+            }),
+            buildBrowseLogRowItem({
+              id: "nutrition",
+              title: "Nutrition guide",
+              subtitle: "Food categories and IBD diet tips",
+              accessibilityLabel: "Open Nutrition guide",
+            }),
+          ]}
+          rowTextLayout="compact"
+          rowPaddingHorizontal={ACCOUNT_LIST_ROW_PADDING}
+          onPressItem={(rowId) => navigation.navigate(rowId === "ibd" ? "Ibd" : "NutritionGuide")}
         />
       </View>
     </ScrollView>
@@ -3917,15 +3519,30 @@ function AccountScreen({
       contentContainerStyle={{ paddingBottom: bottomScrollInset + 24 }}
     >
       <View style={[logHistoryCardStyles.trackerCard, styles.accountPaddedCard, { backgroundColor: c.card }]}>
-        <View style={styles.accountIdentityRow}>
-          <View style={[styles.accountAvatarWell, { backgroundColor: c.surfaceSubtle }]}>
-            <Ionicons name="person" size={26} color={c.primary} accessibilityIgnoresInvertColors />
+        <Pressable
+          accessibilityRole="button"
+          accessibilityLabel={`Personal details, ${accountFirstName}, ${user.email || "Unknown user"}`}
+          onPress={() => navigation.navigate("AccountPersonalDetails")}
+          hitSlop={4}
+          style={styles.accountIdentityNavRow}
+        >
+          <View style={styles.accountIdentityRow}>
+            <View style={[styles.accountAvatarWell, { backgroundColor: c.surfaceSubtle }]}>
+              <Ionicons name="person" size={26} color={c.primary} accessibilityIgnoresInvertColors />
+            </View>
+            <View style={styles.accountIdentityTextCol}>
+              <Text style={[styles.accountFirstName, { color: c.text }]}>{accountFirstName}</Text>
+              <Text style={[styles.accountEmailLine, { color: c.textSecondary }]}>{user.email || "Unknown user"}</Text>
+            </View>
           </View>
-          <View style={styles.accountIdentityTextCol}>
-            <Text style={[styles.accountFirstName, { color: c.text }]}>{accountFirstName}</Text>
-            <Text style={[styles.accountEmailLine, { color: c.textSecondary }]}>{user.email || "Unknown user"}</Text>
-          </View>
-        </View>
+          <Ionicons
+            name="chevron-forward"
+            size={18}
+            color={c.text}
+            style={styles.accountIdentityChevronAlign}
+            accessibilityIgnoresInvertColors
+          />
+        </Pressable>
       </View>
       <View style={[logHistoryCardStyles.trackerCard, { backgroundColor: c.card }]}>
         <LogHistoryList
@@ -3934,6 +3551,7 @@ function AccountScreen({
             title: item.label,
             accessibilityLabel: item.label,
           }))}
+          rowTextLayout="compact"
           rowPaddingHorizontal={ACCOUNT_LIST_ROW_PADDING}
           onPressItem={(route) => navigation.navigate(route)}
         />
@@ -3971,13 +3589,9 @@ const AppStack = createNativeStackNavigator();
 function MainBottomTabBar({
   routeName,
   navigationRef,
-  suppressDashboardActive = false,
-  onResetDashboardHome,
 }: {
   routeName: string;
   navigationRef: NavigationContainerRef<Record<string, object | undefined>> | null;
-  suppressDashboardActive?: boolean;
-  onResetDashboardHome?: () => void;
 }) {
   const { colors } = useFlareTheme();
   const c = useFlareColors();
@@ -3990,13 +3604,6 @@ function MainBottomTabBar({
   }
 
   const go = (target: "Dashboard" | "Reminders" | "Account") => {
-    if (target === "Dashboard" && routeName === "Dashboard" && suppressDashboardActive) {
-      onResetDashboardHome?.();
-      return;
-    }
-    if (target === "Dashboard") {
-      dashboardHomeDashTabRestore = null;
-    }
     navigationRef?.navigate(target as never);
   };
 
@@ -4005,7 +3612,7 @@ function MainBottomTabBar({
     icon: ({ active }: { active: boolean }) => React.ReactNode,
     label: string,
   ) => {
-    const active = routeName === target && !(target === "Dashboard" && suppressDashboardActive);
+    const active = routeName === target;
     return (
       <Pressable
         key={target}
@@ -4091,11 +3698,6 @@ function AppTabs({
   const { nav, colors } = useFlareTheme();
   const navigationRef = useNavigationContainerRef<Record<string, object | undefined>>();
   const [focusRouteName, setFocusRouteName] = useState("Dashboard");
-  const [dashboardHomePillActive, setDashboardHomePillActive] = useState(false);
-  const resetDashboardHomeRef = useRef<(() => void) | null>(null);
-  const resetDashboardHome = useCallback(() => {
-    resetDashboardHomeRef.current?.();
-  }, []);
   const pendingReminderNavRef = useRef<Awaited<ReturnType<typeof consumeReminderNotificationResponse>>>(null);
   const lastReminderNavKeyRef = useRef<string | null>(null);
 
@@ -4232,6 +3834,7 @@ function AppTabs({
       AccountLegal: "Legal",
       AccountHelp: "Help",
       Settings: "Settings",
+      Info: "Info",
       Reminders: "Reminders",
       Hydration: "My Hydration",
       Meds: "My Meds",
@@ -4252,6 +3855,7 @@ function AppTabs({
       AppointmentBriefHealth: "Health overview",
       AppointmentBriefNext: "Next appointment",
       AppointmentBriefChanges: "What changed",
+      LatestNews: "Latest news",
     };
     const isSymptomLogWizard = route.name === "SymptomLogWizard";
     const isMedicationTrackingWizard = route.name === "MedicationTrackingWizard";
@@ -4367,16 +3971,7 @@ function AppTabs({
           <View style={{ flex: 1 }}>
             <AppStack.Navigator initialRouteName="Dashboard" screenOptions={headerOptions as any}>
             <AppStack.Screen name="Dashboard">
-              {() => (
-                <DashboardScreen
-                  key={user.id}
-                  user={user}
-                  onTodayModeChange={setDashboardHomePillActive}
-                  onRegisterResetHome={(reset) => {
-                    resetDashboardHomeRef.current = reset;
-                  }}
-                />
-              )}
+              {() => <DashboardScreen key={user.id} user={user} />}
             </AppStack.Screen>
             <AppStack.Screen name="SymptomHistory">{() => <SymptomHistoryScreen user={user} />}</AppStack.Screen>
             <AppStack.Screen name="SymptomDetail">{() => <SymptomDetailScreen user={user} />}</AppStack.Screen>
@@ -4408,6 +4003,7 @@ function AppTabs({
             <AppStack.Screen name="Reminders">{() => <NotificationsScreen user={user} />}</AppStack.Screen>
             <AppStack.Screen name="Ibd">{() => <IbdScreen />}</AppStack.Screen>
             <AppStack.Screen name="NutritionGuide">{() => <NutritionGuideScreen />}</AppStack.Screen>
+            <AppStack.Screen name="LatestNews">{() => <LatestNewsScreen user={user} />}</AppStack.Screen>
             <AppStack.Screen name="Account">
               {() => (
                 <AccountScreen
@@ -4421,6 +4017,7 @@ function AppTabs({
               )}
             </AppStack.Screen>
             <AppStack.Screen name="Settings">{() => <SettingsScreen />}</AppStack.Screen>
+            <AppStack.Screen name="Info">{() => <InfoScreen />}</AppStack.Screen>
             <AppStack.Screen name="AccountInfo">{() => <AccountInfoScreen user={user} />}</AppStack.Screen>
             <AppStack.Screen name="AccountPersonalDetails">
               {() => <AccountPersonalDetailsScreen user={user} />}
@@ -4433,12 +4030,7 @@ function AppTabs({
           </AppStack.Navigator>
         </View>
         <View style={styles.bottomTabBarOverlay} pointerEvents="box-none">
-          <MainBottomTabBar
-            routeName={focusRouteName}
-            navigationRef={navigationRef}
-            suppressDashboardActive={focusRouteName === "Dashboard" && dashboardHomePillActive}
-            onResetDashboardHome={resetDashboardHome}
-          />
+          <MainBottomTabBar routeName={focusRouteName} navigationRef={navigationRef} />
         </View>
       </View>
       </ListSelectionChromeProvider>
@@ -4796,20 +4388,82 @@ const styles = StyleSheet.create({
     alignSelf: "stretch",
     marginBottom: 12,
   },
-  todayPillSection: { width: "100%" },
-  homePillCard: { paddingHorizontal: 18, paddingVertical: 14 },
-  homePillNavRow: { paddingVertical: 0 },
-  todaySummaryRows: { gap: 8 },
-  homeNavPillsSection: { marginTop: 10 },
-  homePillBodySection: { marginTop: 16 },
-  dashboardSectionTitleAfterPills: { marginTop: 0 },
-  homeNavPillsRow: { flexDirection: "row", gap: 8, paddingVertical: 2 },
-  homeNavPill: {
-    borderRadius: 18,
-    paddingHorizontal: 18,
-    paddingVertical: 10,
+  dashboardShelfSection: { width: "100%", marginTop: 20 },
+  /** Same rhythm as greeting Card → Daily Check-in (card mb 12 + title mt 10). */
+  dashboardShelfBeforeTitle: { marginTop: 12 },
+  /** Previous block already has card mb 12; title/header keeps mt 10. */
+  dashboardShelfAfterCard: { marginTop: 0 },
+  dashboardShelfSectionLast: { marginBottom: 24 },
+  /** Daily Check-in shelf title. */
+  dashboardSubsectionTitle: {
+    fontSize: FLARE_FONT_SIZE.subhead,
+    lineHeight: FLARE_LINE_HEIGHT.subhead,
+    fontFamily: FLARE_FONT_FAMILY.bold,
+    marginTop: SECTION_TITLE_MARGIN_TOP,
+    marginBottom: SECTION_TITLE_MARGIN_BOTTOM,
+    textAlign: "center",
   },
-  homeNavPillLabel: { fontSize: 13, fontFamily: "Inter_600SemiBold" },
+  /** Title row when a trailing action shares the line (Latest news + See all). */
+  dashboardSubsectionHeader: {
+    flexDirection: "row",
+    alignItems: "center",
+    marginTop: SECTION_TITLE_MARGIN_TOP,
+    marginBottom: SECTION_TITLE_MARGIN_BOTTOM,
+  },
+  dashboardSubsectionHeaderSide: {
+    flex: 1,
+  },
+  dashboardSubsectionHeaderSideTrailing: {
+    alignItems: "flex-end",
+  },
+  dashboardSubsectionTitleInHeader: {
+    marginTop: 0,
+    marginBottom: 0,
+  },
+  /** Shelf labels — Logs, Latest news. */
+  dashboardSubsectionTitleLeft: {
+    fontSize: FLARE_FONT_SIZE.subhead,
+    lineHeight: FLARE_LINE_HEIGHT.subhead,
+    fontFamily: FLARE_FONT_FAMILY.bold,
+    marginTop: SECTION_TITLE_MARGIN_TOP,
+    marginBottom: SECTION_TITLE_MARGIN_BOTTOM,
+    textAlign: "left",
+  },
+  /** Primary shelf headings — attention-grabbing sections (Today, Logs). */
+  dashboardFocusSectionTitle: {
+    fontSize: FLARE_FONT_SIZE.sectionTitle,
+    fontFamily: FLARE_FONT_FAMILY.bold,
+    marginBottom: SECTION_TITLE_MARGIN_BOTTOM,
+    marginTop: SECTION_TITLE_MARGIN_TOP,
+    textAlign: "center",
+  },
+  dashboardFocusSectionTitleLeft: {
+    fontSize: FLARE_FONT_SIZE.sectionTitle,
+    fontFamily: FLARE_FONT_FAMILY.bold,
+    marginBottom: SECTION_TITLE_MARGIN_BOTTOM,
+    marginTop: SECTION_TITLE_MARGIN_TOP,
+    textAlign: "left",
+  },
+  dashboardNewsSeeAll: {
+    fontSize: FLARE_FONT_SIZE.body,
+    fontFamily: FLARE_FONT_FAMILY.medium,
+  },
+  dashboardNewsStatus: {
+    paddingBottom: 28,
+  },
+  dashboardNewsDots: {
+    flexDirection: "row",
+    justifyContent: "center",
+    alignItems: "center",
+    gap: 8,
+    marginTop: 12,
+  },
+  dashboardNewsDot: {
+    width: 7,
+    height: 7,
+    borderRadius: 4,
+  },
+  todaySummaryRows: { gap: 8 },
   dashboardSectionTitle: {
     fontSize: FLARE_FONT_SIZE.sectionTitle,
     fontFamily: FLARE_FONT_FAMILY.bold,
@@ -4938,6 +4592,10 @@ const styles = StyleSheet.create({
     alignItems: "center",
     justifyContent: "space-between",
   },
+  /** Nudge only the profile chevron to match list-row chevrons (card 14 + row 20 − profile pad 18). */
+  accountIdentityChevronAlign: {
+    marginRight: CARD_INNER_PADDING + ACCOUNT_LIST_ROW_PADDING - 18,
+  },
   accountPaddedCard: { padding: 18 },
   accountDeleteCard: { paddingBottom: 20 },
   accountDeleteCardBody: { gap: 12 },
@@ -4948,7 +4606,7 @@ const styles = StyleSheet.create({
     gap: 6,
   },
   accountDeleteLink: { paddingVertical: 10 },
-  accountDeleteLinkText: { fontSize: 15, fontFamily: "Inter_500Medium" },
+  accountDeleteLinkText: { fontSize: FLARE_FONT_SIZE.subhead, fontFamily: "Inter_500Medium" },
   accountDeleteHint: {
     fontSize: 13,
     fontFamily: "Inter_400Regular",
@@ -4965,7 +4623,7 @@ const styles = StyleSheet.create({
   },
   accountIdentityTextCol: { flex: 1, minWidth: 0 },
   accountFirstName: { fontSize: 18, fontFamily: "Inter_700Bold" },
-  accountEmailLine: { fontSize: 14, fontFamily: "Inter_400Regular", marginTop: 3 },
+  accountEmailLine: { fontSize: FLARE_FONT_SIZE.muted, fontFamily: "Inter_400Regular", marginTop: 3 },
   accountMemberSince: { fontSize: 13, fontFamily: "Inter_400Regular", marginTop: 6 },
   accountNavRow: {
     flexDirection: "row",
@@ -5012,15 +4670,14 @@ const styles = StyleSheet.create({
   },
   weatherIcon: { fontSize: 24 },
   weatherLeft: { flex: 1, paddingRight: 8 },
-  weatherCity: { fontSize: 15, fontFamily: "Inter_500Medium" },
-  weatherGreeting: { fontSize: 24, fontFamily: "Inter_800ExtraBold", marginBottom: 2 },
-  weatherDate: { fontSize: 13, fontFamily: "Inter_400Regular", marginBottom: 6 },
-  weatherDesc: { fontSize: 13, fontFamily: "Inter_400Regular", textTransform: "capitalize" },
+  weatherCity: { fontSize: 13, fontFamily: "Inter_500Medium" },
+  weatherGreeting: { fontSize: 22, fontFamily: "Inter_800ExtraBold", marginBottom: 4 },
+  weatherDate: { fontSize: 12, fontFamily: "Inter_400Regular", marginBottom: 6 },
+  weatherDesc: { fontSize: 12, fontFamily: "Inter_400Regular", textTransform: "capitalize" },
   weatherTempWrap: { flexDirection: "row", alignItems: "flex-start", marginRight: 8 },
   weatherTemp: { fontSize: 30, fontFamily: "Inter_800ExtraBold" },
   weatherUnit: { fontSize: 12, fontFamily: "Inter_700Bold", marginTop: 6, marginLeft: 2 },
-  checkinSection: { marginBottom: 12 },
-  checkinsRow: { paddingVertical: 2 },
+  checkinSection: {},
   /** Daily Check-in strip + More grid — shared shell */
   homeDashboardTile: {
     position: "relative",
@@ -5049,7 +4706,6 @@ const styles = StyleSheet.create({
     alignItems: "center",
     justifyContent: "center",
   },
-  moreSection: { marginBottom: 12 },
   moreGrid: { flexDirection: "row", flexWrap: "wrap", gap: HOME_TILE_GAP },
   moreGridLabel: {
     fontSize: 13,
@@ -5070,14 +4726,7 @@ const styles = StyleSheet.create({
     borderRadius: 10,
     overflow: "hidden",
   },
-  recentActivityFeed: { gap: 14 },
-  recentActivityFeedClip: { overflow: "hidden", flexGrow: 0 },
-  recentActivityFeedScroll: { flexGrow: 0 },
-  recentActivityFeedItem: { flexDirection: "row", alignItems: "flex-start", gap: 12 },
-  recentActivityFeedIcon: { flexShrink: 0, alignSelf: "flex-start" },
-  recentActivityFeedText: { flex: 1, minWidth: 0, gap: 4 },
-  recentActivityFeedTitle: { fontSize: 14, fontFamily: "Inter_400Regular", lineHeight: 20 },
-  recentActivityFeedWhen: { fontSize: 12, fontFamily: "Inter_400Regular" },
+  /** After today’s list — away from Daily Check-in title band. */
   activityNoteRowDivider: { borderBottomWidth: 1 },
   aboutTagline: {
     fontFamily: "Inter_400Regular",
@@ -5116,7 +4765,7 @@ const styles = StyleSheet.create({
   /** Sits directly under Contact intro copy. */
   aboutSupportButton: { alignSelf: "flex-start", marginTop: 10, paddingVertical: 10, paddingHorizontal: 4 },
   aboutSupportButtonPressed: { opacity: 0.75 },
-  aboutSupportButtonText: { fontFamily: "Inter_700Bold", fontSize: 15 },
+  aboutSupportButtonText: { fontFamily: "Inter_700Bold", fontSize: FLARE_FONT_SIZE.subhead },
   /** Version / build separated from branding hero — typical for production About screens. */
   aboutFooter: { paddingTop: 28, paddingBottom: 16, paddingHorizontal: 16 },
   moreNavRow: {
@@ -5140,48 +4789,20 @@ const styles = StyleSheet.create({
   recentLogsRowTime: { fontSize: 12, fontFamily: "Inter_400Regular" },
   recentLogsEmpty: { alignItems: "center", paddingVertical: 16, paddingHorizontal: 8 },
   recentLogsEmptyCta: { marginTop: 8 },
-  newsFeed: { gap: 16 },
-  newsLoadMoreRow: { marginTop: 0 },
-  newsFeedCard: {
-    width: "100%",
-    borderRadius: 12,
-    overflow: "hidden",
-  },
-  /** Inset for image + text; marginTop on body spaces image from title (gap on Pressable is unreliable). */
-  newsCardInner: { padding: 14 },
-  newsCardImage: {
-    width: "100%",
-    aspectRatio: 16 / 10,
-    alignItems: "center",
-    justifyContent: "center",
-    borderRadius: 8,
-    overflow: "hidden",
-  },
-  newsCardImageAsset: {
-    width: "100%",
-    height: "100%",
-  },
-  newsCardBody: { marginTop: 14 },
-  newsTitle: { fontSize: 14, fontFamily: "Inter_700Bold", lineHeight: 20 },
-  newsCardFooter: {
-    marginTop: 6,
-    flexDirection: "row",
-    alignItems: "center",
-    gap: 8,
-  },
-  newsMeta: { fontSize: 11, fontFamily: "Inter_400Regular" },
-  newsShareButton: {
-    padding: 4,
-    marginRight: -4,
-    marginBottom: -4,
-  },
   /** Logged-at line above symptom detail review cards. */
-  symptomDetailLoggedAt: { fontSize: 13, fontFamily: "Inter_400Regular", marginBottom: 16, textAlign: "center" },
+  symptomDetailLoggedAt: {
+    fontSize: FLARE_FONT_SIZE.caption,
+    fontFamily: FLARE_FONT_FAMILY.regular,
+    marginBottom: 16,
+    textAlign: "center",
+    lineHeight: FLARE_LINE_HEIGHT.caption,
+  },
   hydrationCard: { paddingVertical: 14 },
   hydrationTrackerBody: { alignSelf: "stretch", alignItems: "center", gap: 16 },
   hydrationTodayLabel: {
-    fontSize: FLARE_FONT_SIZE.body,
+    fontSize: FLARE_FONT_SIZE.caption,
     fontFamily: FLARE_FONT_FAMILY.regular,
+    lineHeight: FLARE_LINE_HEIGHT.caption,
   },
   hydrationCupsRow: {
     flexDirection: "row",

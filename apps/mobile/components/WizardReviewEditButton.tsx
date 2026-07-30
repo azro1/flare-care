@@ -1,10 +1,14 @@
 import { Ionicons } from "@expo/vector-icons";
 import React from "react";
 import { Pressable, StyleSheet, Text } from "react-native";
-import { CARD_SECTION_INNER_GAP, NAV_ROW_CHEVRON_SIZE, NAV_ROW_LABEL } from "../lib/layoutConstants";
+import {
+  CARD_SECTION_INNER_GAP,
+  FLARE_FONT_FAMILY,
+  FLARE_FONT_SIZE,
+} from "../lib/layoutConstants";
 import { useFlareColors } from "../theme";
 
-/** Review section Edit — `DEV_NOTES` navigate row: `c.text` label, muted chevron. */
+/** Review section Edit — matches compact field data (13). */
 export function WizardReviewEditButton({
   onPress,
   accessibilityLabel,
@@ -22,12 +26,15 @@ export function WizardReviewEditButton({
       style={({ pressed }) => [styles.row, pressed && { opacity: 0.7 }]}
     >
       <Text style={[styles.label, { color: c.text }]}>Edit</Text>
-      <Ionicons name="chevron-forward" size={NAV_ROW_CHEVRON_SIZE} color={c.textMuted} accessibilityIgnoresInvertColors />
+      <Ionicons name="chevron-forward" size={FLARE_FONT_SIZE.body} color={c.textMuted} accessibilityIgnoresInvertColors />
     </Pressable>
   );
 }
 
 const styles = StyleSheet.create({
   row: { flexDirection: "row", alignItems: "center", gap: 2, marginLeft: CARD_SECTION_INNER_GAP },
-  label: NAV_ROW_LABEL,
+  label: {
+    fontSize: FLARE_FONT_SIZE.muted,
+    fontFamily: FLARE_FONT_FAMILY.regular,
+  },
 });

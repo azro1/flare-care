@@ -3,16 +3,16 @@ import { StyleSheet, Text, View, type StyleProp, type ViewStyle } from "react-na
 import { flareCardSectionStyles, FlareScreenSectionTitle } from "./FlareScreenSectionTitle";
 import { WizardReviewEditButton } from "./WizardReviewEditButton";
 import { StackedDetailField, STACKED_DETAIL_ROW_HORIZONTAL_PADDING } from "./StackedDetailField";
-import { FLARE_FONT_FAMILY, FLARE_FONT_SIZE, SCREEN_EDGE_PADDING } from "../lib/layoutConstants";
+import { FLARE_FONT_FAMILY, FLARE_FONT_SIZE, FLARE_LINE_HEIGHT, SCREEN_EDGE_PADDING } from "../lib/layoutConstants";
 import { useFlareColors } from "../theme";
 
 export const logDetailStyles = StyleSheet.create({
   loggedAt: {
-    fontSize: 13,
+    fontSize: FLARE_FONT_SIZE.caption,
     fontFamily: FLARE_FONT_FAMILY.regular,
     marginBottom: 16,
     textAlign: "center",
-    lineHeight: 18,
+    lineHeight: FLARE_LINE_HEIGHT.caption,
   },
   detailCard: { borderRadius: 14, padding: 14, marginBottom: 12 },
   notesTitle: {
@@ -111,8 +111,11 @@ export function LogDetailFields({ fields }: { fields: { label: string; value: st
 /** One `surfaceSubtle` tray per entry — fields inside share dividers (medication lists). */
 export function LogDetailFieldGroup({
   fields,
+  compact,
 }: {
-  fields: { label: string; value: string; selectable?: boolean }[];
+  fields: { label: string; value: string; selectable?: boolean; valueSize?: "muted" | "caption" }[];
+  /** Match dashboard Today / Account compact lists (13). */
+  compact?: boolean;
 }) {
   const c = useFlareColors();
   const visible = fields.filter((f) => f.value !== "");
@@ -125,6 +128,8 @@ export function LogDetailFieldGroup({
           label={field.label}
           value={field.value}
           selectable={field.selectable}
+          compact={compact}
+          valueSize={field.valueSize}
           showDivider={index < visible.length - 1}
           style={{ paddingHorizontal: STACKED_DETAIL_ROW_HORIZONTAL_PADDING }}
         />
