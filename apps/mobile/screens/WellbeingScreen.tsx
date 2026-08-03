@@ -1,6 +1,7 @@
 import { useFocusEffect, useNavigation } from "@react-navigation/native";
 import React, { useCallback, useMemo, useRef } from "react";
-import { Alert, InteractionManager, View } from "react-native";
+import { InteractionManager, View } from "react-native";
+import { showFlareAlert } from "../components/FlareAlertHost";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 import {
   LogHistoryCard,
@@ -30,12 +31,12 @@ import {
   setWellbeingListCache,
   type WellbeingRow,
 } from "../lib/wellbeingShared";
-import { WELLBEING_INSTRUCTION } from "../lib/instructionCardCopy";
+import { WELLBEING_LOGS_HISTORY_INSTRUCTION } from "../lib/instructionCardCopy";
 import {
-  markWellbeingInstructionDismissed,
-  readWellbeingInstructionDismissed,
-  readWellbeingInstructionEligible,
-} from "../lib/wellbeingInstructionTip";
+  markWellbeingHistoryInstructionDismissed,
+  readWellbeingHistoryInstructionDismissed,
+  readWellbeingHistoryInstructionEligible,
+} from "../lib/wellbeingHistoryInstructionTip";
 import { useInstructionTip } from "../lib/useInstructionTip";
 import { TABLES } from "../lib/supabase";
 
@@ -45,9 +46,9 @@ export function WellbeingScreen({ user }: { user: SessionUser }) {
   const navigation = useNavigation<any>();
   const { visible: showInstruction, dismiss: dismissInstruction } = useInstructionTip(
     user.id,
-    readWellbeingInstructionEligible,
-    readWellbeingInstructionDismissed,
-    markWellbeingInstructionDismissed,
+    readWellbeingHistoryInstructionEligible,
+    readWellbeingHistoryInstructionDismissed,
+    markWellbeingHistoryInstructionDismissed,
   );
   const insets = useSafeAreaInsets();
   const { scrollBottomPad } = useTrackerThumbFabLayout();
@@ -90,7 +91,7 @@ export function WellbeingScreen({ user }: { user: SessionUser }) {
     routeName: "Wellbeing",
     itemIds,
     navigation,
-    headerTitle: "My Wellbeing",
+    headerTitle: "History",
   });
 
   const handleBulkDeleteConfirm = useCallback(() => {
@@ -103,7 +104,7 @@ export function WellbeingScreen({ user }: { user: SessionUser }) {
         await refreshHistoryLoad();
       } catch (err: unknown) {
         const message = err instanceof Error ? err.message : "Could not delete these entries.";
-        Alert.alert("Could not delete", message);
+        showFlareAlert("Could not delete", message);
         throw err;
       }
     });
@@ -134,10 +135,10 @@ export function WellbeingScreen({ user }: { user: SessionUser }) {
       contentPaddingBottom={scrollBottomPadTotal}
       instruction={
         <FloatingWelcomeCard
-          instruction={WELLBEING_INSTRUCTION}
+          instruction={WELLBEING_LOGS_HISTORY_INSTRUCTION}
           icon={WELLBEING_MCI_ICON}
           onDismiss={dismissInstruction}
-          dismissAccessibilityLabel="Dismiss My Wellbeing guide"
+          dismissAccessibilityLabel="Dismiss Wellbeing logs guide"
         />
       }
       floatingAction={

@@ -3,7 +3,6 @@ import { CommonActions, useNavigation, useRoute } from "@react-navigation/native
 import React, { useCallback, useEffect, useLayoutEffect, useMemo, useState } from "react";
 import {
   ActivityIndicator,
-  Alert,
   BackHandler,
   KeyboardAvoidingView,
   Platform,
@@ -13,6 +12,7 @@ import {
   useWindowDimensions,
   View,
 } from "react-native";
+import { showFlareAlert, dismissFlareAlert } from "../components/FlareAlertHost";
 import { ScrollView } from "../lib/scrollViews";
 import { PrimaryButton, SecondaryButton } from "../components/FlareButton";
 import { FloatingWelcomeCard } from "../components/FloatingWelcomeCard";
@@ -24,6 +24,7 @@ import { recordRecentActivityEvent } from "../lib/recentActivityEvents";
 import {
   FLARE_FONT_FAMILY,
   FLARE_FONT_SIZE,
+  FULL_WIDTH_CTA_EDGE_PADDING,
   wizardLandingMinHeight,
 } from "../lib/layoutConstants";
 import { WELLBEING_INSTRUCTION } from "../lib/instructionCardCopy";
@@ -111,12 +112,6 @@ export function WellbeingWizardScreen({ user }: { user: SessionUser }) {
 
   const phase = useMemo(() => getWellbeingWizardPhaseProgress(currentStep), [currentStep]);
 
-  const canGoToPreviousStep = useMemo(() => {
-    if (currentStep <= 0) return false;
-    if (history.length > 0) return true;
-    return getPreviousWellbeingStep(currentStep) != null;
-  }, [currentStep, history.length]);
-
   useEffect(() => {
     if (!editId) return;
     let cancelled = false;
@@ -130,7 +125,7 @@ export function WellbeingWizardScreen({ user }: { user: SessionUser }) {
         .maybeSingle();
       if (cancelled) return;
       if (error || !data) {
-        Alert.alert("Could not load entry", "This wellbeing log could not be opened for editing.");
+        showFlareAlert("Could not load entry", "This wellbeing log could not be opened for editing.");
         navigation.goBack();
         return;
       }
@@ -178,6 +173,10 @@ export function WellbeingWizardScreen({ user }: { user: SessionUser }) {
     }
     const prev = history[history.length - 1];
     if (prev) {
+      if (prev.step <= 0) {
+        navigation.goBack();
+        return true;
+      }
       setHistory((h) => h.slice(0, -1));
       setCurrentStep(prev.step);
       setForm(prev.form);
@@ -185,13 +184,10 @@ export function WellbeingWizardScreen({ user }: { user: SessionUser }) {
       return true;
     }
     const previousStep = getPreviousWellbeingStep(currentStep);
-    if (previousStep != null) {
+    // Don't return to landing (step 0) — exit the wizard like Log Symptoms / Track Medications.
+    if (previousStep != null && previousStep > 0) {
       setCurrentStep(previousStep);
       setFieldErrors({});
-      return true;
-    }
-    if (currentStep === 0) {
-      navigation.goBack();
       return true;
     }
     navigation.goBack();
@@ -242,7 +238,36 @@ export function WellbeingWizardScreen({ user }: { user: SessionUser }) {
     setCurrentStep(res.nextStep);
   }, [currentStep, editingReviewSection, form, returnToReview]);
 
-  const startWizard = () => {
+  /** Keep alert up until Dashboard paints (logout/Done overlay pattern) — no blank-cover jump. */
+  const showAlreadyCheckedInToday = useCallback(() => {
+    showFlareAlert(
+      "Already checked in today",
+      "You've already completed your wellbeing check-in today. You can view or edit it anytime from Logs.",
+      [
+        {
+          text: "OK",
+          onPress: () => {
+            navigation.dispatch(CommonActions.reset({ index: 0, routes: [{ name: "Dashboard" }] }));
+            requestAnimationFrame(() => {
+              requestAnimationFrame(() => {
+                dismissFlareAlert();
+              });
+            });
+          },
+        },
+      ],
+      { holdUntilDismissed: true },
+    );
+  }, [navigation]);
+
+  const startWizard = async () => {
+    if (!editId) {
+      const existing = await getTodayWellbeingEntry(user.id, form.date);
+      if (existing) {
+        showAlreadyCheckedInToday();
+        return;
+      }
+    }
     setHistory([{ step: 0, form: cloneWellbeingForm(form) }]);
     setCurrentStep(1);
   };
@@ -262,14 +287,11 @@ export function WellbeingWizardScreen({ user }: { user: SessionUser }) {
         invalidateDashboardSnapshot(user.id);
         invalidateWellbeingListCache(user.id);
         navigation.goBack();
-        Alert.alert("Saved", "Your wellbeing check-in was updated.");
+        showFlareAlert("Saved", "Your wellbeing log was updated.");
       } else {
         const existing = await getTodayWellbeingEntry(user.id, form.date);
         if (existing) {
-          Alert.alert(
-            "Already logged today",
-            "You already have a wellbeing check-in for today. Open it from My Wellbeing to edit.",
-          );
+          showAlreadyCheckedInToday();
           return;
         }
         const { error } = await supabase
@@ -280,10 +302,10 @@ export function WellbeingWizardScreen({ user }: { user: SessionUser }) {
         invalidateDashboardSnapshot(user.id);
         invalidateWellbeingListCache(user.id);
         navigation.dispatch(CommonActions.reset({ index: 0, routes: [{ name: "Dashboard" }] }));
-        Alert.alert("Saved", "Your wellbeing check-in was saved.");
+        showFlareAlert("Saved", "Your wellbeing log was saved.");
       }
     } catch (e: unknown) {
-      Alert.alert("Could not save", e instanceof Error ? e.message : "Unknown error");
+      showFlareAlert("Could not save", e instanceof Error ? e.message : "Unknown error");
     } finally {
       setSubmitting(false);
     }
@@ -461,7 +483,7 @@ export function WellbeingWizardScreen({ user }: { user: SessionUser }) {
                   disabled={submitting}
                 />
               )}
-              {canGoToPreviousStep && !editingReviewSection && currentStep !== WELLBEING_WIZARD_REVIEW_STEP ? (
+              {currentStep > 1 && !editingReviewSection && currentStep !== WELLBEING_WIZARD_REVIEW_STEP ? (
                 <SecondaryButton title="Previous step" onPress={goBackInternal} />
               ) : null}
             </View>
@@ -486,13 +508,12 @@ export function WellbeingWizardScreen({ user }: { user: SessionUser }) {
 const styles = StyleSheet.create({
   centered: { flex: 1, justifyContent: "center", alignItems: "center" },
   wizardShell: { flex: 1 },
-  scrollPad: { paddingHorizontal: 16, paddingTop: 16, paddingBottom: 48 },
-  scrollPadLanding: { flexGrow: 1 },
-  scrollPadWizardSteps: { paddingTop: 12 },
+  scrollPad: { paddingTop: 16, paddingBottom: 48 },
+  scrollPadLanding: { flexGrow: 1, paddingHorizontal: FULL_WIDTH_CTA_EDGE_PADDING },
+  scrollPadWizardSteps: { paddingTop: 12, paddingHorizontal: 16 },
   landing: {
     alignItems: "center",
     justifyContent: "center",
-    paddingHorizontal: 8,
     paddingTop: 8,
     paddingBottom: 32,
   },

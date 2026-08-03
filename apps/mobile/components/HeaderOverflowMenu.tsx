@@ -1,6 +1,7 @@
 import { Ionicons } from "@expo/vector-icons";
 import React, { useMemo, useState } from "react";
-import { Alert, Modal, Pressable, StyleSheet, Text, View } from "react-native";
+import { Modal, Pressable, StyleSheet, Text, View } from "react-native";
+import { showFlareAlert } from "../components/FlareAlertHost";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { useFlareColors } from "../theme";
 
@@ -56,7 +57,7 @@ export function HeaderOverflowMenu({
   const onLogoutPress = () => {
     close();
     if (!onLogout) return;
-    Alert.alert("Log out?", "Are you sure you want to log out?", [
+    showFlareAlert("Log out?", "Are you sure you want to log out?", [
       { text: "Stay signed in", style: "cancel" },
       { text: "Log out", style: "destructive", onPress: () => void onLogout() },
     ]);

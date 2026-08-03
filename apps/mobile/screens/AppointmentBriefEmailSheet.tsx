@@ -1,6 +1,7 @@
 import { Ionicons } from "@expo/vector-icons";
 import React, { useState } from "react";
-import { Alert, KeyboardAvoidingView, Modal, Platform, Pressable, StyleSheet, Text, View } from "react-native";
+import { KeyboardAvoidingView, Modal, Platform, Pressable, StyleSheet, Text, View } from "react-native";
+import { showFlareAlert } from "../components/FlareAlertHost";
 import { ScrollView } from "../lib/scrollViews";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { PrimaryButton, SecondaryButton } from "../components/FlareButton";
@@ -45,7 +46,7 @@ export function AppointmentBriefEmailSheet({
     }
     const base = process.env.EXPO_PUBLIC_WEB_API_BASE_URL?.replace(/\/$/, "");
     if (!base) {
-      Alert.alert("Missing API base URL", "Set EXPO_PUBLIC_WEB_API_BASE_URL");
+      showFlareAlert("Missing API base URL", "Set EXPO_PUBLIC_WEB_API_BASE_URL");
       return;
     }
 
@@ -79,7 +80,7 @@ export function AppointmentBriefEmailSheet({
       setConsultantName("");
       setEmailNote("");
       onClose();
-      Alert.alert("Summary sent", "Your appointment summary was emailed successfully.");
+      showFlareAlert("Summary sent", "Your appointment summary was emailed successfully.");
     } catch (err: unknown) {
       setEmailError(err instanceof Error ? err.message : "Failed to send email. Please try again.");
     } finally {

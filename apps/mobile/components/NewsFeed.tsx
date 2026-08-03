@@ -89,7 +89,7 @@ export function NewsFeedCard({ item, variant, width }: NewsFeedCardProps) {
         <View style={styles.footer}>
           <Text style={[styles.meta, { color: c.textMuted, flex: 1 }]} numberOfLines={1}>
             {item.source}
-            {item.publishedAt ? ` (${formatUkDate(item.publishedAt)})` : ""}
+            {!isShelf && item.publishedAt ? ` (${formatUkDate(item.publishedAt)})` : ""}
           </Text>
           {!isShelf ? (
             <Pressable
@@ -180,6 +180,8 @@ const styles = StyleSheet.create({
   cardShelf: {},
   cardFull: {
     width: "100%",
+    paddingHorizontal: 14,
+    paddingTop: 14,
   },
   imageWrap: {
     width: "100%",
@@ -194,8 +196,6 @@ const styles = StyleSheet.create({
   },
   imageWrapFull: {
     aspectRatio: 16 / 10,
-    margin: 14,
-    marginBottom: 0,
     borderRadius: 8,
   },
   bodyShelf: {
@@ -205,7 +205,6 @@ const styles = StyleSheet.create({
     gap: 4,
   },
   bodyFull: {
-    paddingHorizontal: 14,
     paddingTop: 14,
     paddingBottom: 14,
     gap: 6,

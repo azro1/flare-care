@@ -66,7 +66,8 @@ Use existing screens as reference — do **not** default to web-style teal hyper
 | Moment | Pattern in `App.tsx` | Why |
 |--------|----------------------|-----|
 | **After login → Dashboard** | **`AppEntryShell`** — solid `c.screen` blocker until `AppTabs` fires `onAppShellReady` (`onNavigationReady` + `requestAnimationFrame`). Dashboard route uses `animation: 'none'`. | Stops the home screen “dropping in” / sliding down when the stack first mounts. |
-| **After logout → signed-out success** | **`signOutShell`** + **`signOutOverlay`** — `SuccessNoticeScreen` overlays the app; `AppTabs` may stay mounted until `finishSignOut` clears `user`. | Avoids tearing down `NavigationContainer` in one frame (flash / slide). |
+| **After logout → signed-out success** | **`signOutBlocking`** (Splash cover) then **`signOutNotice`** → **`SuccessNoticeScreen`**. Set notice / blocking **before** tearing down session. | Avoids flashing Dashboard or Auth while session clears. |
+| **Alert → navigate** (e.g. wellbeing already checked in) | `showFlareAlert(..., { holdUntilDismissed: true })`, navigate in `onPress`, then `dismissFlareAlert()` after next paint. | Keeps the modal as the cover until Dashboard is ready — same idea as logout overlay / Reminders Done. Do **not** use a blank `c.screen` flash in between. |
 
 **Logout success layout:** `SuccessNoticeScreen` `fullScreen` — stable `initialWindowMetrics` safe area + wizard step-0 landing slot (`WIZARD_LANDING_BELOW_SAFE_TOP`, `wizardLandingMinHeight()` in `layoutConstants.ts`). **Do not** use `ScrollView`, `useWindowDimensions`, or animated `SafeAreaView` edges on logout — those caused vertical jump.
 
@@ -79,7 +80,8 @@ Use existing screens as reference — do **not** default to web-style teal hyper
 | Piece | Use for |
 |-------|---------|
 | **`SuccessNoticeScreen`** (`components/SuccessNoticeScreen.tsx`) | Full-screen **success** state after something completes — green checkmark, title, message, one **`PrimaryButton`**. Pass `title`, `message`, `buttonTitle`, `onPress`. Use `fullScreen` for root-level screens (logout) with no bottom nav. **Always pass `offsetForBottomTabBar`** when the success screen shows while the bottom tab bar is visible (Dashboard, Reminders, Account tab roots). |
-| **`ConfirmModal`** (`components/ConfirmModal.tsx`) | **Confirm/cancel** sheet before an action (logout, delete, etc.) — not a success screen. |
+| **`ConfirmModal`** (`components/ConfirmModal.tsx`) | **Confirm/cancel** (or single-button **notice**) sheet — follows in-app light/dark. Prefer this over `Alert.alert`. |
+| **`showFlareAlert` / `FlareAlertHost`** (`components/FlareAlertHost.tsx`) | Drop-in for `Alert.alert(title, message, buttons?)` — renders `ConfirmModal`. Host mounts once under `FlareThemeProvider`. When `onPress` navigates, use `{ holdUntilDismissed: true }` + `dismissFlareAlert()` after paint (see Auth table). |
 
 **Do not** copy the checkmark + title + message + button layout into `App.tsx` or a screen file. Extend **`SuccessNoticeScreen`** props only if a new success pattern is genuinely different (e.g. a second button).
 

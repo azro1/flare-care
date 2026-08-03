@@ -1,7 +1,8 @@
 import { Ionicons } from "@expo/vector-icons";
 import { useFocusEffect, useNavigation } from "@react-navigation/native";
 import React, { useCallback, useMemo, useState } from "react";
-import { Alert, Pressable, StyleSheet, Text, View } from "react-native";
+import { Pressable, StyleSheet, Text, View } from "react-native";
+import { showFlareAlert } from "../components/FlareAlertHost";
 import { ScrollView } from "../lib/scrollViews";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { ConfirmModal } from "../components/ConfirmModal";
@@ -196,7 +197,7 @@ export function AppointmentsListPane({
         await load();
         await maybeRescheduleAppointmentReminders(user.id);
       } catch (err: unknown) {
-        Alert.alert("Could not delete", err instanceof Error ? err.message : "Something went wrong.");
+        showFlareAlert("Could not delete", err instanceof Error ? err.message : "Something went wrong.");
         throw err;
       }
     });

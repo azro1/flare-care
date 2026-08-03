@@ -3,12 +3,12 @@ import { useFocusEffect, useNavigation, useRoute } from "@react-navigation/nativ
 import React, { useCallback, useLayoutEffect, useRef, useState } from "react";
 import {
   ActivityIndicator,
-  Alert,
-  Pressable,
+    Pressable,
   StyleSheet,
   Text,
   View,
 } from "react-native";
+import { showFlareAlert } from "../components/FlareAlertHost";
 import { ScrollView } from "../lib/scrollViews";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { ConfirmModal } from "../components/ConfirmModal";
@@ -226,7 +226,7 @@ export function BowelLogDetailScreen({ user }: { user: SessionUser }) {
       else navigation.navigate("Bowel");
     } catch (err: unknown) {
       const message = err instanceof Error ? err.message : "Could not delete this log.";
-      Alert.alert("Could not delete", message);
+      showFlareAlert("Could not delete", message);
     } finally {
       setDeleting(false);
       deleteInFlight.current = false;

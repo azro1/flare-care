@@ -1,7 +1,8 @@
 import { Ionicons, MaterialCommunityIcons } from "@expo/vector-icons";
 import { useFocusEffect, useNavigation, useRoute } from "@react-navigation/native";
 import React, { useCallback, useLayoutEffect, useRef, useState } from "react";
-import { ActivityIndicator, Alert, Pressable, StyleSheet, Text, View } from "react-native";
+import { ActivityIndicator, Pressable, StyleSheet, Text, View } from "react-native";
+import { showFlareAlert } from "../components/FlareAlertHost";
 import { ScrollView } from "../lib/scrollViews";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { ConfirmModal } from "../components/ConfirmModal";
@@ -130,7 +131,7 @@ export function WellbeingLogDetailScreen({ user }: { user: SessionUser }) {
       navigation.goBack();
     } catch (err: unknown) {
       const message = err instanceof Error ? err.message : "Could not delete this entry.";
-      Alert.alert("Could not delete", message);
+      showFlareAlert("Could not delete", message);
     } finally {
       setDeleting(false);
       setDeleteOpen(false);

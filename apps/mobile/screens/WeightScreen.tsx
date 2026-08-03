@@ -3,8 +3,7 @@ import { Ionicons, MaterialCommunityIcons } from "@expo/vector-icons";
 import { useFocusEffect, useNavigation } from "@react-navigation/native";
 import React, { useCallback, useMemo, useRef, useState } from "react";
 import {
-  Alert,
-  InteractionManager,
+    InteractionManager,
   KeyboardAvoidingView,
   Modal,
   Platform,
@@ -13,6 +12,7 @@ import {
   Text,
   View,
 } from "react-native";
+import { showFlareAlert } from "../components/FlareAlertHost";
 import { ScrollView } from "../lib/scrollViews";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { PrimaryButton, SecondaryButton } from "../components/FlareButton";
@@ -294,7 +294,7 @@ export function WeightScreen({ user }: { user: SessionUser }) {
         await refreshHistoryLoad();
       } catch (err: unknown) {
         const message = err instanceof Error ? err.message : "Could not delete these entries.";
-        Alert.alert("Could not delete", message);
+        showFlareAlert("Could not delete", message);
         throw err;
       }
     });

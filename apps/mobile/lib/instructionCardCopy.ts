@@ -1,15 +1,12 @@
-import { REMINDER_WELCOME_CARD_LINE } from "./reminderSetupCopy";
-
 /** Shared footer on inline section welcomes — + / primary actions stay blocked until dismiss. */
 export const INSTRUCTION_CLOSE_TO_CONTINUE = "To continue, tap the Close (×) button.";
 
 export const DASHBOARD_GETTING_STARTED_INSTRUCTION = {
   title: "Getting started",
   paragraphs: [
-    "Living with IBD isn't easy, especially on bad days. FlareCare helps you capture what matters, at your own pace.",
-    "Log symptoms, medications, habits and more over time — FlareCare organises everything into detailed reports you can share with your care team.",
-    "Ready to begin? Start by exploring Daily Check-in to log your first symptom.",
-    INSTRUCTION_CLOSE_TO_CONTINUE,
+    "Living with IBD can be unpredictable, but keeping track of it doesn't have to be.",
+    "FlareCare helps you build a clearer picture over time by recording your symptoms, medications, habits and more. Everything is organised into detailed reports, ready to share with your care team.",
+    "Close this card to continue.",
   ],
 } as const;
 
@@ -27,9 +24,9 @@ export const REPORTS_INSTRUCTION = {
 export const LOG_SYMPTOMS_INSTRUCTION = {
   title: "Log Symptoms",
   paragraphs: [
-    "This guided flow helps you record symptoms, severity, and lifestyle factors in one place.",
-    "You can move at your own pace and review everything before saving.",
-    INSTRUCTION_CLOSE_TO_CONTINUE,
+    "We'll guide you through recording your symptoms, their severity, and any relevant lifestyle factors.",
+    "Take your time—you can review everything before saving.",
+    "Close this card to continue.",
   ],
 } as const;
 
@@ -37,10 +34,10 @@ export const LOG_SYMPTOMS_INSTRUCTION = {
 export const MY_MEDS_INSTRUCTION = {
   title: "My Meds",
   paragraphs: [
-    "Store and manage your current prescribed medications in one place.",
-    "Tap + to add a medication and set a reminder so you don't miss a dose.",
-    REMINDER_WELCOME_CARD_LINE,
-    INSTRUCTION_CLOSE_TO_CONTINUE,
+    "Keep your current medications organised in one place.",
+    "Add your medications, set reminders, and stay on track with your doses.",
+    "To receive reminders, enable notifications for FlareCare in your device settings.",
+    "Close this card to continue.",
   ],
 } as const;
 
@@ -48,9 +45,9 @@ export const MY_MEDS_INSTRUCTION = {
 export const TRACK_MEDICATIONS_INSTRUCTION = {
   title: "Track Medications",
   paragraphs: [
-    "This guided flow helps you record missed doses, NSAIDs, and antibiotics in one place.",
-    "You can move at your own pace and review everything before saving.",
-    INSTRUCTION_CLOSE_TO_CONTINUE,
+    "We'll guide you through recording your medication activity.",
+    "You can review everything before saving.",
+    "Close this card to continue.",
   ],
 } as const;
 
@@ -60,7 +57,7 @@ export const HYDRATION_INSTRUCTION = {
   paragraphs: [
     "Track how much water you drink each day using the stepper below.",
     "Your goal is 6 glasses — tap − or + to update today's count.",
-    INSTRUCTION_CLOSE_TO_CONTINUE,
+    "Close this card to continue.",
   ],
 } as const;
 
@@ -68,9 +65,9 @@ export const HYDRATION_INSTRUCTION = {
 export const BOWEL_INSTRUCTION = {
   title: "Bowel Movements",
   paragraphs: [
-    "Add bowel movements by recording stool type using the Bristol Stool Chart.",
-    "Tap + to add a log. Please add as much detail as you can — it helps your care team.",
-    INSTRUCTION_CLOSE_TO_CONTINUE,
+    "Your bowel logs will appear here. Record your stool type using the Bristol Stool Chart.",
+    "Add as much detail as you can — it helps your care team.",
+    "Close this card to continue.",
   ],
 } as const;
 
@@ -78,9 +75,9 @@ export const BOWEL_INSTRUCTION = {
 export const WEIGHT_INSTRUCTION = {
   title: "My Weight",
   paragraphs: [
-    "Record your weight to help track changes over time.",
-    "Tap + to add a log. Keep entries consistent when you can — it helps your care team.",
-    INSTRUCTION_CLOSE_TO_CONTINUE,
+    "Your weight logs will appear here.",
+    "Record your weight over time to help track changes — keep entries consistent when you can.",
+    "Close this card to continue.",
   ],
 } as const;
 
@@ -88,11 +85,10 @@ export const WEIGHT_INSTRUCTION = {
 export const APPOINTMENTS_INSTRUCTION = {
   title: "Appointments",
   paragraphs: [
-    "Store and manage your appointments to keep track of past and upcoming visits.",
-    "Tap + to add an appointment and set a reminder so you don't miss it.",
-    REMINDER_WELCOME_CARD_LINE,
-    "Use the summary to quickly generate a brief from your logs for your next appointment.",
-    INSTRUCTION_CLOSE_TO_CONTINUE,
+    "Keep track of your appointments and stay prepared for upcoming visits.",
+    "Add reminders to help you remember important dates.",
+    "To receive reminders, enable notifications for FlareCare in your device settings.",
+    "Close this card to continue.",
   ],
 } as const;
 
@@ -102,7 +98,7 @@ export const SYMPTOM_LOGS_HISTORY_INSTRUCTION = {
   paragraphs: [
     "Events recorded through Log Symptoms will appear here.",
     "Tap a log to view details, or load more to browse older entries.",
-    INSTRUCTION_CLOSE_TO_CONTINUE,
+    "Close this card to continue.",
   ],
 } as const;
 
@@ -112,7 +108,17 @@ export const MEDICATION_LOGS_HISTORY_INSTRUCTION = {
   paragraphs: [
     "Events recorded through Track Medications will appear here.",
     "Tap a log to view details, or load more to browse older entries.",
-    INSTRUCTION_CLOSE_TO_CONTINUE,
+    "Close this card to continue.",
+  ],
+} as const;
+
+/** Wellbeing logs history — first visit for new accounts. */
+export const WELLBEING_LOGS_HISTORY_INSTRUCTION = {
+  title: "Wellbeing logs",
+  paragraphs: [
+    "Events recorded through My Wellbeing will appear here.",
+    "Tap a log to view details, or load more to browse older entries.",
+    "Close this card to continue.",
   ],
 } as const;
 
@@ -121,7 +127,7 @@ export const BRISTOL_GUIDE_INSTRUCTION = {
   title: "Bristol Stool Chart",
   paragraphs: [
     "The Bristol Stool Chart is used to record stool consistency on a scale from 1 to 7. Select the type that best matches your stool, from 1 (firmest) to 7 (loosest). Types 3–4 are generally considered normal.",
-    INSTRUCTION_CLOSE_TO_CONTINUE,
+    "Close this card to continue.",
   ],
 } as const;
 
@@ -131,7 +137,7 @@ export const WELLBEING_INSTRUCTION = {
   paragraphs: [
     "Check in on how you're feeling today — mood, energy, sleep, anxiety, pain and more.",
     "Complete this section daily to help build a picture of your wellbeing over time.",
-    INSTRUCTION_CLOSE_TO_CONTINUE,
+    "Close this card to continue.",
   ],
 } as const;
 
@@ -139,8 +145,8 @@ export const WELLBEING_INSTRUCTION = {
 export const APPOINTMENT_BRIEF_INSTRUCTION = {
   title: "Appointment summary",
   paragraphs: [
-    "Use a preset to quickly generate a health summary for your next appointment.",
-    "Or use the Custom date range to pick the dates you want your summary to cover.",
-    INSTRUCTION_CLOSE_TO_CONTINUE,
+    "Quickly create a summary of your health information for your next appointment.",
+    "Choose a suggested time period or select your own dates to include the information you need.",
+    "Close this card to continue.",
   ],
 } as const;

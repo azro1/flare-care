@@ -21,7 +21,6 @@ import {
 import { createNativeStackNavigator } from "@react-navigation/native-stack";
 import {
   ActivityIndicator,
-  Alert,
   AppState,
   Image,
   InteractionManager,
@@ -56,6 +55,8 @@ import { flareCardSectionStyles, FlareScreenSectionTitle } from "./components/Fl
 import { HeaderOverflowMenu } from "./components/HeaderOverflowMenu";
 import { NewsFeedCard, newsFeedListStyles } from "./components/NewsFeed";
 import { SuccessNoticeScreen } from "./components/SuccessNoticeScreen";
+import { ConfirmModal } from "./components/ConfirmModal";
+import { FlareAlertHost, showFlareAlert } from "./components/FlareAlertHost";
 import { CollapsingTitleScrollScreen } from "./components/CollapsingTitleScrollScreen";
 import { FlareThemeProvider, useFlareColors, useFlareTheme } from "./theme";
 import { formatUkDate, formatUkGreetingDate } from "./lib/formatUkDate";
@@ -89,6 +90,7 @@ import {
   FLARE_LINE_HEIGHT,
   HOME_TILE_GAP,
   SCREEN_EDGE_PADDING,
+  FULL_WIDTH_CTA_EDGE_PADDING,
   SECTION_TITLE_MARGIN_BOTTOM,
   SECTION_TITLE_MARGIN_TOP,
 } from "./lib/layoutConstants";
@@ -346,60 +348,6 @@ function Card({
   );
 }
 
-/** Reusable confirm sheet — use for logout, destructive actions, and future prompts. */
-function ConfirmModal({
-  visible,
-  title,
-  message,
-  confirmLabel,
-  cancelLabel = "Cancel",
-  confirmDestructive,
-  onConfirm,
-  onCancel,
-}: {
-  visible: boolean;
-  title: string;
-  message?: string;
-  confirmLabel: string;
-  cancelLabel?: string;
-  confirmDestructive?: boolean;
-  onConfirm: () => void;
-  onCancel: () => void;
-}) {
-  const c = useFlareColors();
-  return (
-    <Modal visible={visible} transparent animationType="fade" onRequestClose={onCancel} statusBarTranslucent>
-      <View style={styles.confirmModalRoot}>
-        <Pressable
-          accessibilityRole="button"
-          accessibilityLabel="Dismiss"
-          onPress={onCancel}
-          style={[StyleSheet.absoluteFillObject, { backgroundColor: c.modalBackdrop }]}
-        />
-        <View style={[styles.confirmModalCard, { backgroundColor: c.card, borderColor: c.cardBorder }]}>
-          <Text style={[styles.confirmModalTitle, { color: c.text }]}>{title}</Text>
-          {message ? (
-            <Text style={[styles.confirmModalMessage, { color: c.textMuted }]}>{message}</Text>
-          ) : null}
-          <View style={styles.confirmModalActions}>
-            <View style={styles.confirmModalActionSlot}>
-              <SecondaryButton noTopMargin title={cancelLabel} onPress={onCancel} />
-            </View>
-            <View style={styles.confirmModalActionSlot}>
-              <PrimaryButton
-                noTopMargin
-                title={confirmLabel}
-                onPress={onConfirm}
-                variant={confirmDestructive ? "destructive" : "default"}
-              />
-            </View>
-          </View>
-        </View>
-      </View>
-    </Modal>
-  );
-}
-
 async function deleteUserLogRow(
   table: string,
   id: string,
@@ -608,13 +556,13 @@ function AuthScreen({
     const { error } = await sendOtpToEmail(email);
     setActiveAuthAction(null);
     if (error) {
-      Alert.alert("Sign in failed", otpResendErrorMessage(error.message));
+      showFlareAlert("Sign in failed", otpResendErrorMessage(error.message));
       return;
     }
     setOtpResendCount(0);
     setOtpSentAt(Date.now());
     setStep("code");
-    Alert.alert(
+    showFlareAlert(
       "Check your email",
       "We've sent a 6-digit code to the email you entered. It may take a minute to arrive.",
     );
@@ -624,7 +572,7 @@ function AuthScreen({
     if (!canResendOtp) return;
     const email = getEmailValues("email");
     if (!email) {
-      Alert.alert("Missing email", "Please enter your email first.");
+      showFlareAlert("Missing email", "Please enter your email first.");
       setStep("email");
       clearOtpSession();
       return;
@@ -633,19 +581,19 @@ function AuthScreen({
     const { error } = await sendOtpToEmail(email);
     setActiveAuthAction(null);
     if (error) {
-      Alert.alert("Could not resend code", otpResendErrorMessage(error.message));
+      showFlareAlert("Could not resend code", otpResendErrorMessage(error.message));
       return;
     }
     setOtpResendCount((n) => n + 1);
     setOtpSentAt(Date.now());
     resetCode({ otpCode: "" });
-    Alert.alert("New code sent", "We've sent a new 6-digit code to your email.");
+    showFlareAlert("New code sent", "We've sent a new 6-digit code to your email.");
   };
 
   const verifyOtpCode = async ({ otpCode }: { otpCode: string }) => {
     const email = getEmailValues("email");
     if (!email) {
-      Alert.alert("Missing email", "Please enter your email first.");
+      showFlareAlert("Missing email", "Please enter your email first.");
       setStep("email");
       clearOtpSession();
       return;
@@ -658,7 +606,7 @@ function AuthScreen({
     });
     setActiveAuthAction(null);
     if (error) {
-      Alert.alert("Code verification failed", otpVerifyErrorMessage(error.message));
+      showFlareAlert("Code verification failed", otpVerifyErrorMessage(error.message));
       return;
     }
     clearOtpSession();
@@ -680,12 +628,12 @@ function AuthScreen({
     });
     if (error) {
       setActiveAuthAction(null);
-      Alert.alert("Google sign in failed", error.message);
+      showFlareAlert("Google sign in failed", error.message);
       return;
     }
     if (!data?.url) {
       setActiveAuthAction(null);
-      Alert.alert("Google sign in failed", "Missing auth URL.");
+      showFlareAlert("Google sign in failed", "Missing auth URL.");
       return;
     }
     const result = await WebBrowser.openAuthSessionAsync(data.url, redirectTo);
@@ -717,7 +665,7 @@ function AuthScreen({
           }
           onSignedIn(sessionUserFromSupabaseAuthUser(sessionUser));
         } else {
-          Alert.alert("Google sign in incomplete", "No session returned. Please try again.");
+          showFlareAlert("Google sign in incomplete", "No session returned. Please try again.");
         }
       } finally {
         onAuthBusy?.(false);
@@ -737,7 +685,7 @@ function AuthScreen({
           backgroundColor: authBlue ? cAuth.primary : cAuth.screen,
           paddingTop: insets.top + 32,
           paddingBottom: Math.max(insets.bottom, 12),
-          paddingHorizontal: SCREEN_EDGE_PADDING,
+          paddingHorizontal: FULL_WIDTH_CTA_EDGE_PADDING,
         },
       ]}
     >
@@ -1026,7 +974,7 @@ function ProfileSetupScreen({ user, onComplete }: { user: SessionUser; onComplet
     const { error } = await supabase.auth.updateUser({ data: { full_name: trimmed } });
     if (error) {
       setSaving(false);
-      Alert.alert("Could not save profile", error.message);
+      showFlareAlert("Could not save profile", error.message);
       return;
     }
     const { data: sessionData } = await supabase.auth.getSession();
@@ -1047,7 +995,7 @@ function ProfileSetupScreen({ user, onComplete }: { user: SessionUser; onComplet
           backgroundColor: authBlue ? cAuth.primary : cAuth.screen,
           paddingTop: insets.top + 32,
           paddingBottom: Math.max(insets.bottom, 12),
-          paddingHorizontal: SCREEN_EDGE_PADDING,
+          paddingHorizontal: FULL_WIDTH_CTA_EDGE_PADDING,
         },
       ]}
     >
@@ -1108,7 +1056,18 @@ function ProfileSetupScreen({ user, onComplete }: { user: SessionUser; onComplet
 const HOME_TILE_ICON_SIZE = 34;
 
 /** Show bottom shortcuts on tab roots + reminder-adjacent hubs; hide on wizard/detail flows, etc. */
-const BOTTOM_BAR_VISIBLE_ROUTES = new Set(["Dashboard", "Account", "Reminders", "Meds", "Appointments", "AppointmentsPast"]);
+const BOTTOM_BAR_VISIBLE_ROUTES = new Set([
+  "Dashboard",
+  "Account",
+  "Logs",
+  "SymptomHistory",
+  "MedicationTrackingHistory",
+  "Wellbeing",
+  "Reminders",
+  "Meds",
+  "Appointments",
+  "AppointmentsPast",
+]);
 
 /** Padding uses this screen’s route—not the globally focused route—so the exiting page doesn’t jump during transitions. */
 function useBottomTabScrollInset() {
@@ -1193,6 +1152,10 @@ function owmIconIdToIoniconsName(iconId: string | null | undefined): keyof typeo
   }
 }
 
+function weatherIconNudgeStyle(name: keyof typeof Ionicons.glyphMap) {
+  return name === "cloud" || name === "cloudy-night" ? { marginTop: 1 } : undefined;
+}
+
 function DashboardGridTile({
   width,
   label,
@@ -1255,7 +1218,6 @@ function DashboardScreen({ user }: { user: SessionUser }) {
   const [todaySummary, setTodaySummary] = useState<{ symptoms: number; medsTaken: number; medsTotal: number; hydration: number }>(
     () => snapshotSeed?.todaySummary ?? { symptoms: 0, medsTaken: 0, medsTotal: 0, hydration: 0 },
   );
-  const [historyPreview, setHistoryPreview] = useState({ symptomCount: 0, medicationCount: 0 });
   const [welcomeDismissed, setWelcomeDismissed] = useState(true);
   const [welcomeEligible, setWelcomeEligible] = useState(false);
   const [welcomeHydrated, setWelcomeHydrated] = useState(false);
@@ -1306,6 +1268,9 @@ function DashboardScreen({ user }: { user: SessionUser }) {
     void markDashboardWelcomeDismissed(user.id);
   }, [user.id]);
   const todayLabel = formatUkGreetingDate(new Date());
+  const weatherIconName = weatherMeta?.icon
+    ? owmIconIdToIoniconsName(weatherMeta.icon)
+    : "partly-sunny";
   useFocusEffect(
     useCallback(() => {
       let cancelled = false;
@@ -1326,8 +1291,6 @@ function DashboardScreen({ user }: { user: SessionUser }) {
             medicationsList,
             takenMedsRes,
             todayHydrationRes,
-            symptomHistoryCountRes,
-            medicationHistoryCountRes,
           ] = await Promise.all([
             supabase.from(TABLES.LOG_SYMPTOMS).select("id,created_at").eq("user_id", user.id).gte("created_at", `${today}T00:00:00`),
             fetchMedicationsForUser(user.id),
@@ -1337,8 +1300,6 @@ function DashboardScreen({ user }: { user: SessionUser }) {
               .eq("user_id", user.id)
               .eq("taken_date", today),
             supabase.from(TABLES.DAILY_HYDRATION).select("glasses,updated_at").eq("user_id", user.id).eq("date", today).maybeSingle(),
-            supabase.from(TABLES.LOG_SYMPTOMS).select("id", { count: "exact", head: true }).eq("user_id", user.id),
-            supabase.from(TABLES.LOG_MEDICATIONS).select("id", { count: "exact", head: true }).eq("user_id", user.id),
           ]);
 
           const prescribedMeds = medicationsList.filter((med) => med.name !== "Medication Tracking");
@@ -1349,11 +1310,6 @@ function DashboardScreen({ user }: { user: SessionUser }) {
             medsTotal: prescribedMeds.length,
             hydration: todayHydrationRes.data?.glasses ?? 0,
           };
-
-          setHistoryPreview({
-            symptomCount: symptomHistoryCountRes.count ?? 0,
-            medicationCount: medicationHistoryCountRes.count ?? 0,
-          });
 
           if (cancelled) return;
           setTodaySummary(snap.todaySummary);
@@ -1526,7 +1482,7 @@ function DashboardScreen({ user }: { user: SessionUser }) {
   );
 
   const homeNewsShelf = (
-    <View style={[styles.dashboardShelfSection, styles.dashboardShelfAfterCard, styles.dashboardShelfSectionLast]}>
+    <View style={[styles.dashboardShelfSection, styles.dashboardShelfBeforeTitle, styles.dashboardShelfSectionLast]}>
       <View style={styles.dashboardSubsectionHeader}>
         <Text style={[styles.dashboardSubsectionTitleLeft, styles.dashboardSubsectionTitleInHeader, { color: c.text, flex: 1 }]}>
           Latest news
@@ -1604,13 +1560,22 @@ function DashboardScreen({ user }: { user: SessionUser }) {
       <InstructionInteractionBlock active={showWelcomeCard}>
       <Card title="">
         <View style={styles.weatherIntroWrap}>
-          <Text style={[styles.weatherGreeting, { color: c.text }]}>Hi, {greetingFirstName}</Text>
-          <Text style={[styles.weatherDate, { color: c.textMuted }]}>{todayLabel}</Text>
+          <Text style={[styles.weatherGreeting, { color: c.text }]} numberOfLines={1}>
+            Hi, {greetingFirstName}
+          </Text>
+          <Text style={[styles.weatherDate, { color: c.textMuted }]} numberOfLines={1}>
+            {todayLabel}
+          </Text>
         </View>
         {weatherMeta ? (
           <View style={styles.weatherHero}>
             <View style={styles.weatherIconWrap}>
-              <Ionicons name={weatherMeta.icon ? owmIconIdToIoniconsName(weatherMeta.icon) : "partly-sunny"} size={28} color={c.primary} />
+              <Ionicons
+                name={weatherIconName}
+                size={28}
+                color={c.primary}
+                style={weatherIconNudgeStyle(weatherIconName)}
+              />
             </View>
             <View style={styles.weatherLeft}>
               <Text style={[styles.weatherCity, { color: c.textSecondary }]}>{weatherMeta.city}</Text>
@@ -1640,7 +1605,7 @@ function DashboardScreen({ user }: { user: SessionUser }) {
         )}
       </Card>
       <View style={styles.checkinSection}>
-        <Text style={[styles.dashboardSubsectionTitleLeft, { color: c.text }]}>Daily Check-in</Text>
+        <Text style={[styles.dashboardSubsectionTitle, { color: c.text }]}>Daily Check-in</Text>
         <ScrollView
           horizontal
           showsHorizontalScrollIndicator={false}
@@ -1674,15 +1639,11 @@ function DashboardScreen({ user }: { user: SessionUser }) {
             items={todayGoalItems}
             rowTextLayout="compact"
             rowPaddingHorizontal={ACCOUNT_LIST_ROW_PADDING}
-            onPressItem={(rowId) => {
-              if (rowId === "meds-goal") navigation.navigate("MedicationTrackingWizard");
-              else if (rowId === "hydration-goal") navigation.navigate("Hydration");
-            }}
           />
         </View>
       </View>
       <View style={[styles.dashboardShelfSection, styles.dashboardShelfAfterCard]}>
-        <Text style={[styles.dashboardSubsectionTitleLeft, { color: c.text }]}>Shortcuts</Text>
+        <Text style={[styles.dashboardSubsectionTitle, { color: c.text }]}>Shortcuts</Text>
         <View style={styles.moreGrid}>
           {moreLinkCards.map((item) => (
             <DashboardGridTile
@@ -1702,32 +1663,6 @@ function DashboardScreen({ user }: { user: SessionUser }) {
           ))}
         </View>
       </View>
-      <View style={[styles.dashboardShelfSection, styles.dashboardShelfBeforeTitle]}>
-        <Text style={[styles.dashboardSubsectionTitleLeft, { color: c.text }]}>Logs</Text>
-        <LogHistoryCard>
-          <LogHistoryList
-            items={[
-              buildBrowseLogRowItem({
-                id: "symptom",
-                title: "Symptom logs",
-                subtitle: formatHistoryBrowseSubtitle(historyPreview.symptomCount),
-                accessibilityLabel: "Browse symptom history",
-              }),
-              buildBrowseLogRowItem({
-                id: "medication",
-                title: "Medication logs",
-                subtitle: formatHistoryBrowseSubtitle(historyPreview.medicationCount),
-                accessibilityLabel: "Browse medication tracking history",
-              }),
-            ]}
-            onPressItem={(rowId) => {
-              navigation.navigate(rowId === "symptom" ? "SymptomHistory" : "MedicationTrackingHistory");
-            }}
-            rowTextLayout="compact"
-            rowPaddingHorizontal={ACCOUNT_LIST_ROW_PADDING}
-          />
-        </LogHistoryCard>
-      </View>
       {homeNewsShelf}
       </InstructionInteractionBlock>
       </ScrollView>
@@ -1737,6 +1672,77 @@ function DashboardScreen({ user }: { user: SessionUser }) {
         </InstructionCardOverlay>
       ) : null}
     </View>
+  );
+}
+
+function LogsScreen({ user }: { user: SessionUser }) {
+  const navigation = useNavigation<any>();
+  const c = useFlareColors();
+  const bottomScrollInset = useBottomTabScrollInset();
+  const [historyPreview, setHistoryPreview] = useState({
+    symptomCount: 0,
+    medicationCount: 0,
+    wellbeingCount: 0,
+  });
+
+  useFocusEffect(
+    useCallback(() => {
+      let cancelled = false;
+      void (async () => {
+        const [symptomHistoryCountRes, medicationHistoryCountRes, wellbeingHistoryCountRes] = await Promise.all([
+          supabase.from(TABLES.LOG_SYMPTOMS).select("id", { count: "exact", head: true }).eq("user_id", user.id),
+          supabase.from(TABLES.LOG_MEDICATIONS).select("id", { count: "exact", head: true }).eq("user_id", user.id),
+          supabase.from(TABLES.DAILY_WELLBEING).select("id", { count: "exact", head: true }).eq("user_id", user.id),
+        ]);
+        if (cancelled) return;
+        setHistoryPreview({
+          symptomCount: symptomHistoryCountRes.count ?? 0,
+          medicationCount: medicationHistoryCountRes.count ?? 0,
+          wellbeingCount: wellbeingHistoryCountRes.count ?? 0,
+        });
+      })();
+      return () => {
+        cancelled = true;
+      };
+    }, [user.id]),
+  );
+
+  return (
+    <ScrollView
+      style={[styles.screen, { backgroundColor: c.screen }]}
+      contentContainerStyle={{ paddingBottom: bottomScrollInset + 24 }}
+    >
+      <View style={[logHistoryCardStyles.trackerCard, { backgroundColor: c.card }]}>
+        <LogHistoryList
+          items={[
+            buildBrowseLogRowItem({
+              id: "symptom",
+              title: "Symptom logs",
+              subtitle: formatHistoryBrowseSubtitle(historyPreview.symptomCount),
+              accessibilityLabel: "Browse symptom history",
+            }),
+            buildBrowseLogRowItem({
+              id: "medication",
+              title: "Medication logs",
+              subtitle: formatHistoryBrowseSubtitle(historyPreview.medicationCount),
+              accessibilityLabel: "Browse medication tracking history",
+            }),
+            buildBrowseLogRowItem({
+              id: "wellbeing",
+              title: "Wellbeing logs",
+              subtitle: formatHistoryBrowseSubtitle(historyPreview.wellbeingCount),
+              accessibilityLabel: "Browse wellbeing history",
+            }),
+          ]}
+          onPressItem={(rowId) => {
+            if (rowId === "symptom") navigation.navigate("SymptomHistory");
+            else if (rowId === "medication") navigation.navigate("MedicationTrackingHistory");
+            else navigation.navigate("Wellbeing");
+          }}
+          rowTextLayout="compact"
+        />
+      </View>
+    </ScrollView>
   );
 }
 
@@ -1789,7 +1795,7 @@ function SymptomHistoryScreen({ user }: { user: SessionUser }) {
     void runBulkDelete(async (ids) => {
       const result = await deleteUserLogRows(TABLES.LOG_SYMPTOMS, ids, user.id);
       if (!result.ok) {
-        Alert.alert("Could not delete", result.message);
+        showFlareAlert("Could not delete", result.message);
         throw new Error(result.message);
       }
       await recordRecentActivityEvent(user.id, "symptom-deleted");
@@ -1928,7 +1934,7 @@ function SymptomDetailScreen({ user }: { user: SessionUser }) {
     setDeleting(false);
     deleteInFlight.current = false;
     if (!result.ok) {
-      Alert.alert("Could not delete", result.message);
+      showFlareAlert("Could not delete", result.message);
       return;
     }
     await recordRecentActivityEvent(user.id, "symptom-deleted");
@@ -2192,7 +2198,7 @@ function MedicationTrackingHistoryScreen({ user }: { user: SessionUser }) {
     void runBulkDelete(async (ids) => {
       const result = await deleteUserLogRows(TABLES.LOG_MEDICATIONS, ids, user.id);
       if (!result.ok) {
-        Alert.alert("Could not delete", result.message);
+        showFlareAlert("Could not delete", result.message);
         throw new Error(result.message);
       }
       await recordRecentActivityEvent(user.id, "medication-log-deleted");
@@ -2293,7 +2299,7 @@ function MedicationLogDetailScreen({ user }: { user: SessionUser }) {
     setDeleting(false);
     deleteInFlight.current = false;
     if (!result.ok) {
-      Alert.alert("Could not delete", result.message);
+      showFlareAlert("Could not delete", result.message);
       return;
     }
     await recordRecentActivityEvent(user.id, "medication-log-deleted");
@@ -2479,7 +2485,7 @@ function HydrationScreen({ user }: { user: SessionUser }) {
         { user_id: user.id, date: today, glasses: clamped, updated_at: new Date().toISOString() },
         { onConflict: "user_id,date" },
       );
-      if (error) return Alert.alert("Could not update hydration", error.message);
+      if (error) return showFlareAlert("Could not update hydration", error.message);
       setGlasses(clamped);
       invalidateDashboardSnapshot(user.id);
     },
@@ -2635,17 +2641,17 @@ function ReportsScreen({ user }: { user: SessionUser }) {
 
   const emailReport = async () => {
     const base = process.env.EXPO_PUBLIC_WEB_API_BASE_URL;
-    if (!base) return Alert.alert("Missing API base URL", "Set EXPO_PUBLIC_WEB_API_BASE_URL");
+    if (!base) return showFlareAlert("Missing API base URL", "Set EXPO_PUBLIC_WEB_API_BASE_URL");
     const response = await fetch(`${base}/api/send-report-email`, {
       method: "POST",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({ clinicianEmail: email, reportText: report }),
     });
     if (!response.ok) {
-      Alert.alert("Email failed", "Could not send report email.");
+      showFlareAlert("Email failed", "Could not send report email.");
       return;
     }
-    Alert.alert("Report sent", "Clinician email workflow completed.");
+    showFlareAlert("Report sent", "Clinician email workflow completed.");
   };
 
   return (
@@ -3253,7 +3259,7 @@ function AccountInfoScreen({ user }: { user: SessionUser }) {
             </View>
             <View style={styles.accountIdentityTextCol}>
               <Text style={[styles.accountFirstName, { color: c.text }]}>{firstLine}</Text>
-              <Text style={[styles.accountEmailLine, { color: c.textSecondary }]}>{emailLine}</Text>
+              <Text style={[styles.accountEmailLine, { color: c.textMuted }]}>{emailLine}</Text>
             </View>
           </View>
           <Ionicons name="chevron-forward" size={18} color={c.text} accessibilityIgnoresInvertColors />
@@ -3293,7 +3299,7 @@ function AccountPersonalDetailsScreen({ user }: { user: SessionUser }) {
           </View>
           <View style={styles.accountIdentityTextCol}>
             <Text style={[styles.accountFirstName, { color: c.text }]}>{accountIdentityFirstLine(user)}</Text>
-            <Text style={[styles.accountEmailLine, { color: c.textSecondary }]}>{user.email || "Unknown user"}</Text>
+            <Text style={[styles.accountEmailLine, { color: c.textMuted }]}>{user.email || "Unknown user"}</Text>
           </View>
         </View>
       </View>
@@ -3344,7 +3350,7 @@ function AccountLegalScreen() {
             { id: "privacy", title: "Privacy Policy", accessibilityLabel: "Privacy Policy" },
             { id: "terms", title: "Terms of Use", accessibilityLabel: "Terms of Use" },
           ]}
-          rowTextLayout="compact"
+          rowTextLayout="default"
           rowPaddingHorizontal={ACCOUNT_LIST_ROW_PADDING}
           onPressItem={(document) => navigation.navigate("LegalDocument", { document })}
         />
@@ -3433,6 +3439,7 @@ function SettingsScreen() {
             },
           ]}
           rowPaddingHorizontal={ACCOUNT_LIST_ROW_PADDING}
+          rowTextLayout="default"
           onPressItem={() => navigation.navigate("Reminders")}
         />
       </View>
@@ -3498,7 +3505,7 @@ function AccountScreen({
       const { error } = await supabase.rpc("delete_user_account");
       if (error) {
         await restoreAfterAbortedSignOut();
-        Alert.alert("Could not delete account", error.message);
+        showFlareAlert("Could not delete account", error.message);
         return;
       }
       await finishSignOut();
@@ -3506,7 +3513,7 @@ function AccountScreen({
     } catch (e: unknown) {
       await restoreAfterAbortedSignOut();
       const msg = e instanceof Error ? e.message : "Something went wrong.";
-      Alert.alert("Could not delete account", msg);
+      showFlareAlert("Could not delete account", msg);
     } finally {
       deleteAccountInFlight.current = false;
       endSignOutBlocking();
@@ -3532,7 +3539,7 @@ function AccountScreen({
             </View>
             <View style={styles.accountIdentityTextCol}>
               <Text style={[styles.accountFirstName, { color: c.text }]}>{accountFirstName}</Text>
-              <Text style={[styles.accountEmailLine, { color: c.textSecondary }]}>{user.email || "Unknown user"}</Text>
+              <Text style={[styles.accountEmailLine, { color: c.textMuted }]}>{user.email || "Unknown user"}</Text>
             </View>
           </View>
           <Ionicons
@@ -3551,7 +3558,7 @@ function AccountScreen({
             title: item.label,
             accessibilityLabel: item.label,
           }))}
-          rowTextLayout="compact"
+          rowTextLayout="default"
           rowPaddingHorizontal={ACCOUNT_LIST_ROW_PADDING}
           onPressItem={(route) => navigation.navigate(route)}
         />
@@ -3603,16 +3610,19 @@ function MainBottomTabBar({
     return null;
   }
 
-  const go = (target: "Dashboard" | "Reminders" | "Account") => {
+  const go = (target: "Dashboard" | "Logs" | "Account") => {
     navigationRef?.navigate(target as never);
   };
 
   const item = (
-    target: "Dashboard" | "Reminders" | "Account",
+    target: "Dashboard" | "Logs" | "Account",
     icon: ({ active }: { active: boolean }) => React.ReactNode,
     label: string,
   ) => {
-    const active = routeName === target;
+    const active =
+      routeName === target ||
+      (target === "Logs" &&
+        (routeName === "SymptomHistory" || routeName === "MedicationTrackingHistory" || routeName === "Wellbeing"));
     return (
       <Pressable
         key={target}
@@ -3664,11 +3674,9 @@ function MainBottomTabBar({
         "Home",
       )}
       {item(
-        "Reminders",
-        ({ active }) => (
-          <Ionicons name={active ? "notifications" : "notifications-outline"} size={23} color={active ? colors.primary : colors.textMuted} />
-        ),
-        "Reminders",
+        "Logs",
+        ({ active }) => <Ionicons name={active ? "list" : "list-outline"} size={23} color={active ? colors.primary : colors.textMuted} />,
+        "Logs",
       )}
       {deleteSlot}
     </View>
@@ -3819,8 +3827,10 @@ function AppTabs({
     const isNutritionGuide = route.name === "NutritionGuide";
     const isLegalDocument = route.name === "LegalDocument";
     const isAccount = route.name === "Account";
+    const isLogs = route.name === "Logs";
     const isReminders = route.name === "Reminders";
     const titleForRoute: Record<string, string> = {
+      Logs: "Logs",
       SymptomHistory: "History",
       SymptomDetail: "Symptom Details",
       MedicationTrackingHistory: "History",
@@ -3840,7 +3850,7 @@ function AppTabs({
       Meds: "My Meds",
       MedicationDetail: "Medication",
       Bowel: "Bowel Movements",
-      Wellbeing: "My Wellbeing",
+      Wellbeing: "History",
       WellbeingLogDetail: "Wellbeing log",
       BowelLogDetail: "Bowel log",
       BristolGuide: "Bristol Stool Chart",
@@ -3913,6 +3923,8 @@ function AppTabs({
               ? ""
             : isAccount
               ? "Account"
+              : isLogs
+                ? "Logs"
               : isReminders
                 ? "Reminders"
                 : isSymptomLogWizard || isMedicationTrackingWizard || isWellbeingWizard
@@ -3941,6 +3953,7 @@ function AppTabs({
         !isMedicationTrackingWizard &&
         !isWellbeingWizard &&
         !isAccount &&
+        !isLogs &&
         !isReminders
           ? () => (
               <Pressable
@@ -3973,6 +3986,7 @@ function AppTabs({
             <AppStack.Screen name="Dashboard">
               {() => <DashboardScreen key={user.id} user={user} />}
             </AppStack.Screen>
+            <AppStack.Screen name="Logs">{() => <LogsScreen user={user} />}</AppStack.Screen>
             <AppStack.Screen name="SymptomHistory">{() => <SymptomHistoryScreen user={user} />}</AppStack.Screen>
             <AppStack.Screen name="SymptomDetail">{() => <SymptomDetailScreen user={user} />}</AppStack.Screen>
             <AppStack.Screen name="MedicationTrackingHistory">{() => <MedicationTrackingHistoryScreen user={user} />}</AppStack.Screen>
@@ -4042,6 +4056,7 @@ export default function App() {
   return (
     <SafeAreaProvider initialMetrics={initialWindowMetrics}>
       <FlareThemeProvider>
+        <FlareAlertHost />
         <AppRoot />
       </FlareThemeProvider>
     </SafeAreaProvider>
@@ -4269,8 +4284,6 @@ function ThemedStatusBar({ authScreenActive }: { authScreenActive: boolean }) {
 const styles = StyleSheet.create({
   appEntryShell: { flex: 1 },
   appEntryBlocker: { ...StyleSheet.absoluteFillObject },
-  signOutShell: { flex: 1 },
-  signOutOverlay: { ...StyleSheet.absoluteFillObject },
   screen: { flex: 1, padding: SCREEN_EDGE_PADDING },
   dashboardScreen: { flex: 1 },
   dashboardScroll: { flex: 1 },
@@ -4294,7 +4307,7 @@ const styles = StyleSheet.create({
     fontFamily: "Inter_400Regular",
     paddingHorizontal: 8,
   },
-  authCardPlain: { flex: 1 },
+  authCardPlain: { flex: 1, paddingHorizontal: 0 },
   authMethodPanel: { flex: 1, justifyContent: "center" },
   authMethodActions: { marginTop: 18, gap: 8 },
   authLegalRow: { flexDirection: "row", alignItems: "flex-start", gap: 10, marginTop: 22, marginBottom: 4 },
@@ -4364,19 +4377,6 @@ const styles = StyleSheet.create({
   splashLogoMarkWell: { padding: 22, borderRadius: 9999, overflow: "hidden" },
   splashLogo: { width: 132, height: 132 },
   centered: { flex: 1, justifyContent: "center", alignItems: "center", gap: 10 },
-  confirmModalRoot: { flex: 1, justifyContent: "center", paddingHorizontal: 20 },
-  confirmModalCard: {
-    borderRadius: 14,
-    padding: 20,
-    borderWidth: StyleSheet.hairlineWidth,
-    width: "100%",
-    maxWidth: 400,
-    alignSelf: "center",
-  },
-  confirmModalTitle: { fontSize: 18, fontFamily: "Inter_700Bold" },
-  confirmModalMessage: { fontSize: 14, fontFamily: "Inter_400Regular", marginTop: 10, lineHeight: 20 },
-  confirmModalActions: { flexDirection: "row", gap: 8, marginTop: 22 },
-  confirmModalActionSlot: { flex: 1, minWidth: 0 },
   card: { borderRadius: 14, padding: 14, marginBottom: 12 },
   /** Stacks card content below the title; `gap` matches spacing between sibling blocks inside the card. */
   cardBody: { gap: 8 },
@@ -4428,6 +4428,15 @@ const styles = StyleSheet.create({
     marginTop: SECTION_TITLE_MARGIN_TOP,
     marginBottom: SECTION_TITLE_MARGIN_BOTTOM,
     textAlign: "left",
+  },
+  /** Alternating shelf label — staggers against left/center titles. */
+  dashboardSubsectionTitleRight: {
+    fontSize: FLARE_FONT_SIZE.subhead,
+    lineHeight: FLARE_LINE_HEIGHT.subhead,
+    fontFamily: FLARE_FONT_FAMILY.bold,
+    marginTop: SECTION_TITLE_MARGIN_TOP,
+    marginBottom: SECTION_TITLE_MARGIN_BOTTOM,
+    textAlign: "right",
   },
   /** Primary shelf headings — attention-grabbing sections (Today, Logs). */
   dashboardFocusSectionTitle: {
@@ -4650,7 +4659,16 @@ const styles = StyleSheet.create({
     borderRadius: 10,
     padding: 10,
   },
-  weatherIntroWrap: { paddingLeft: 3 },
+  weatherIntroWrap: {
+    flexDirection: "row",
+    alignItems: "flex-start",
+    justifyContent: "space-between",
+    gap: 12,
+    paddingLeft: 3,
+    /** Same height as stacked greeting + date (date now sits top-right). */
+    paddingBottom: 4 + FLARE_LINE_HEIGHT.muted - 8,
+    marginBottom: 6,
+  },
   weatherHero: {
     flexDirection: "row",
     alignItems: "center",
@@ -4670,10 +4688,25 @@ const styles = StyleSheet.create({
   },
   weatherIcon: { fontSize: 24 },
   weatherLeft: { flex: 1, paddingRight: 8 },
-  weatherCity: { fontSize: 13, fontFamily: "Inter_500Medium" },
-  weatherGreeting: { fontSize: 22, fontFamily: "Inter_800ExtraBold", marginBottom: 4 },
-  weatherDate: { fontSize: 12, fontFamily: "Inter_400Regular", marginBottom: 6 },
-  weatherDesc: { fontSize: 12, fontFamily: "Inter_400Regular", textTransform: "capitalize" },
+  weatherCity: { fontSize: FLARE_FONT_SIZE.muted, fontFamily: "Inter_500Medium" },
+  weatherGreeting: {
+    flex: 1,
+    fontSize: 22,
+    fontFamily: "Inter_800ExtraBold",
+    paddingRight: 8,
+    marginTop: 8,
+    marginLeft: 8,
+  },
+  weatherDate: {
+    fontSize: FLARE_FONT_SIZE.caption,
+    lineHeight: FLARE_LINE_HEIGHT.caption,
+    fontFamily: "Inter_400Regular",
+    marginTop: 8,
+    marginRight: 12,
+    flexShrink: 0,
+    textAlign: "right",
+  },
+  weatherDesc: { fontSize: FLARE_FONT_SIZE.muted, fontFamily: "Inter_400Regular", textTransform: "capitalize" },
   weatherTempWrap: { flexDirection: "row", alignItems: "flex-start", marginRight: 8 },
   weatherTemp: { fontSize: 30, fontFamily: "Inter_800ExtraBold" },
   weatherUnit: { fontSize: 12, fontFamily: "Inter_700Bold", marginTop: 6, marginLeft: 2 },
@@ -4687,7 +4720,7 @@ const styles = StyleSheet.create({
     paddingHorizontal: 10,
     alignItems: "stretch",
     justifyContent: "center",
-    minHeight: 124,
+    height: 124,
     overflow: "hidden",
   },
   homeDashboardTileScroll: { marginRight: HOME_TILE_GAP },

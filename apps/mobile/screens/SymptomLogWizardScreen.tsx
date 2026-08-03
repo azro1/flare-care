@@ -5,8 +5,7 @@ import { CommonActions, useNavigation, useRoute } from "@react-navigation/native
 import React, { useCallback, useEffect, useLayoutEffect, useMemo, useState } from "react";
 import {
   ActivityIndicator,
-  Alert,
-  BackHandler,
+    BackHandler,
   KeyboardAvoidingView,
   Platform,
   Pressable,
@@ -16,6 +15,7 @@ import {
   useWindowDimensions,
   View,
 } from "react-native";
+import { showFlareAlert } from "../components/FlareAlertHost";
 import { ScrollView } from "../lib/scrollViews";
 import {
   WizardReviewMealsSection,
@@ -60,6 +60,7 @@ import {
   wizardRatingToBand,
 } from "../lib/symptomWizardShared";
 import { useFlareColors } from "../theme";
+import { FULL_WIDTH_CTA_EDGE_PADDING } from "../lib/layoutConstants";
 
 type SessionUser = { id: string };
 
@@ -168,7 +169,7 @@ export function SymptomLogWizardScreen({ user }: { user: SessionUser }) {
         .maybeSingle();
       if (cancelled) return;
       if (error || !data) {
-        Alert.alert("Could not load entry", "This symptom log could not be opened for editing.");
+        showFlareAlert("Could not load entry", "This symptom log could not be opened for editing.");
         navigation.goBack();
         return;
       }
@@ -411,11 +412,11 @@ export function SymptomLogWizardScreen({ user }: { user: SessionUser }) {
       form.lunch_skipped ||
       form.dinner_skipped;
     if (!form.notes.trim() && !hasMealData) {
-      Alert.alert("Missing information", "Please add some notes or meal information to log this entry.");
+      showFlareAlert("Missing information", "Please add some notes or meal information to log this entry.");
       return;
     }
     if (!form.isOngoing && !form.symptomEndDate) {
-      Alert.alert("Missing end date", "Please specify when symptoms ended.");
+      showFlareAlert("Missing end date", "Please specify when symptoms ended.");
       return;
     }
     setSubmitting(true);
@@ -438,13 +439,13 @@ export function SymptomLogWizardScreen({ user }: { user: SessionUser }) {
       invalidateDashboardSnapshot(user.id);
       if (editId) {
         navigation.goBack();
-        Alert.alert("Saved", "Your symptom log was updated.");
+        showFlareAlert("Saved", "Your symptom log was updated.");
       } else {
         navigation.dispatch(CommonActions.reset({ index: 0, routes: [{ name: "Dashboard" }] }));
-        Alert.alert("Saved", "Your symptom log was saved.");
+        showFlareAlert("Saved", "Your symptom log was saved.");
       }
     } catch (e: any) {
-      Alert.alert("Could not save", e?.message || "Unknown error");
+      showFlareAlert("Could not save", e?.message || "Unknown error");
     } finally {
       setSubmitting(false);
     }
@@ -1076,13 +1077,12 @@ export function SymptomLogWizardScreen({ user }: { user: SessionUser }) {
 const styles = StyleSheet.create({
   centered: { flex: 1, justifyContent: "center", alignItems: "center" },
   wizardShell: { flex: 1 },
-  scrollPad: { paddingHorizontal: 16, paddingTop: 16, paddingBottom: 48 },
-  scrollPadLanding: { flexGrow: 1 },
-  scrollPadWizardSteps: { paddingTop: 12 },
+  scrollPad: { paddingTop: 16, paddingBottom: 48 },
+  scrollPadLanding: { flexGrow: 1, paddingHorizontal: FULL_WIDTH_CTA_EDGE_PADDING },
+  scrollPadWizardSteps: { paddingTop: 12, paddingHorizontal: 16 },
   landing: {
     alignItems: "center",
     justifyContent: "center",
-    paddingHorizontal: 8,
     paddingTop: 8,
     paddingBottom: 32,
   },

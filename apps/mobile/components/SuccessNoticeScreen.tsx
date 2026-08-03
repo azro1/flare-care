@@ -8,7 +8,7 @@ import {
   FLARE_FONT_FAMILY,
   FLARE_FONT_SIZE,
   FLARE_LINE_HEIGHT,
-  SCREEN_EDGE_PADDING,
+  FULL_WIDTH_CTA_EDGE_PADDING,
   wizardLandingMinHeight,
   WIZARD_LANDING_BELOW_SAFE_TOP,
   WIZARD_LANDING_BLOCK_PADDING_BOTTOM,
@@ -28,7 +28,7 @@ const styles = StyleSheet.create({
     flex: 1,
     justifyContent: "center",
     alignItems: "center",
-    paddingHorizontal: SCREEN_EDGE_PADDING,
+    paddingHorizontal: FULL_WIDTH_CTA_EDGE_PADDING,
   },
   /** Wizard `scrollPad` top inset below stack header (full-screen logout has no header). */
   wizardLandingScrollOffset: {
@@ -38,13 +38,12 @@ const styles = StyleSheet.create({
   wizardLandingBlock: {
     alignItems: "center",
     justifyContent: "center",
-    paddingHorizontal: 8,
     paddingTop: WIZARD_LANDING_BLOCK_PADDING_TOP,
     paddingBottom: WIZARD_LANDING_BLOCK_PADDING_BOTTOM,
   },
-  /** Logout / full-screen success — edge padding + slight downward nudge. */
+  /** Logout / full-screen success — same edge→CTA inset as sign-in / wizard landing. */
   fullScreenLandingPad: {
-    paddingHorizontal: SCREEN_EDGE_PADDING,
+    paddingHorizontal: FULL_WIDTH_CTA_EDGE_PADDING,
     paddingTop: 96,
   },
   card: { width: "100%", maxWidth: 360, alignItems: "center", gap: 16 },

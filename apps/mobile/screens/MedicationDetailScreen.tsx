@@ -3,12 +3,12 @@ import { useFocusEffect, useNavigation, useRoute } from "@react-navigation/nativ
 import React, { useCallback, useLayoutEffect, useRef, useState } from "react";
 import {
   ActivityIndicator,
-  Alert,
-  Pressable,
+    Pressable,
   StyleSheet,
   Text,
   View,
 } from "react-native";
+import { showFlareAlert } from "../components/FlareAlertHost";
 import { ScrollView } from "../lib/scrollViews";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { ConfirmModal } from "../components/ConfirmModal";
@@ -155,7 +155,7 @@ export function MedicationDetailScreen({ user }: { user: SessionUser }) {
       invalidateDashboardSnapshot(user.id);
     } catch (err: unknown) {
       setTakenToday(wasTaken);
-      Alert.alert("Could not update", err instanceof Error ? err.message : "Something went wrong.");
+      showFlareAlert("Could not update", err instanceof Error ? err.message : "Something went wrong.");
     } finally {
       setTakenBusy(false);
     }
@@ -179,7 +179,7 @@ export function MedicationDetailScreen({ user }: { user: SessionUser }) {
       if (navigation.canGoBack()) navigation.goBack();
       else navigation.navigate("Meds");
     } catch (err: unknown) {
-      Alert.alert("Could not delete", err instanceof Error ? err.message : "Something went wrong.");
+      showFlareAlert("Could not delete", err instanceof Error ? err.message : "Something went wrong.");
     } finally {
       setDeleting(false);
       deleteInFlight.current = false;

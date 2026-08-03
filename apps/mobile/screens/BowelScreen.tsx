@@ -5,8 +5,7 @@ import { yupResolver } from "@hookform/resolvers/yup";
 import React, { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { useForm } from "react-hook-form";
 import {
-  Alert,
-  KeyboardAvoidingView,
+    KeyboardAvoidingView,
   Modal,
   Platform,
   Pressable,
@@ -15,6 +14,7 @@ import {
   View,
   InteractionManager,
 } from "react-native";
+import { showFlareAlert } from "../components/FlareAlertHost";
 import { ScrollView } from "../lib/scrollViews";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 import type { BowelReturnParams, BristolGuideParams } from "./BristolGuideScreen";
@@ -524,7 +524,7 @@ export function BowelScreen({ user }: { user: SessionUser }) {
         await refreshHistoryLoad();
       } catch (err: unknown) {
         const message = err instanceof Error ? err.message : "Could not delete these logs.";
-        Alert.alert("Could not delete", message);
+        showFlareAlert("Could not delete", message);
         throw err;
       }
     });

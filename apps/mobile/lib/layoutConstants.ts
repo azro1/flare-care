@@ -112,6 +112,11 @@ export const FLARE_FONT_FAMILY = {
 /** Gap between stacked text lines — list title→subtitle, detail label→value. */
 export const STACKED_LINE_GAP = 4;
 
+/** Confirm / notice modal — title→message. */
+export const CONFIRM_MODAL_STACK_GAP = 8;
+/** Confirm / notice modal — message→actions. */
+export const CONFIRM_MODAL_ACTIONS_GAP = 16;
+
 /** Stacked field labels on log detail / review screens (`StackedDetailField`). */
 export const DETAIL_FIELD_LABEL = {
   fontSize: FLARE_FONT_SIZE.muted,
@@ -226,6 +231,9 @@ export function trackerThumbFabInsetRight(rightInset: number): number {
 export function trackerThumbFabScrollPadding(fabBottom: number): number {
   return fabBottom + TRACKER_THUMB_FAB_SIZE + SCREEN_EDGE_PADDING + 4;
 }
+
+/** Screen edge → full-width primary CTA (sign-in, wizard landing, logout success). */
+export const FULL_WIDTH_CTA_EDGE_PADDING = 26;
 
 /** Wizard step-0 `ScrollView` top inset — keep in sync with wizard screens. */
 export const WIZARD_LANDING_SCROLL_TOP_PADDING = 16;

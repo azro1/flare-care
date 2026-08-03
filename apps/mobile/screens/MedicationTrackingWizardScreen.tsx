@@ -5,8 +5,7 @@ import { CommonActions, useNavigation, useRoute } from "@react-navigation/native
 import React, { useCallback, useEffect, useLayoutEffect, useMemo, useState } from "react";
 import {
   ActivityIndicator,
-  Alert,
-  BackHandler,
+    BackHandler,
   KeyboardAvoidingView,
   Platform,
   Pressable,
@@ -15,6 +14,7 @@ import {
   useWindowDimensions,
   View,
 } from "react-native";
+import { showFlareAlert } from "../components/FlareAlertHost";
 import { ScrollView } from "../lib/scrollViews";
 import { OptionPickerModal } from "../components/OptionPickerModal";
 import { FloatingWelcomeCard } from "../components/FloatingWelcomeCard";
@@ -57,6 +57,7 @@ import {
 } from "../lib/trackMedicationsInstructionTip";
 import { useInstructionTip } from "../lib/useInstructionTip";
 import { useFlareColors } from "../theme";
+import { FULL_WIDTH_CTA_EDGE_PADDING } from "../lib/layoutConstants";
 
 type SessionUser = { id: string };
 
@@ -151,7 +152,7 @@ export function MedicationTrackingWizardScreen({ user }: { user: SessionUser }) 
         .maybeSingle();
       if (cancelled) return;
       if (error || !data) {
-        Alert.alert("Could not load entry", "This medication log could not be opened for editing.");
+        showFlareAlert("Could not load entry", "This medication log could not be opened for editing.");
         navigation.goBack();
         return;
       }
@@ -167,18 +168,12 @@ export function MedicationTrackingWizardScreen({ user }: { user: SessionUser }) 
 
   const phase = useMemo(() => getMedicationWizardPhaseProgress(currentStep, form), [currentStep, form]);
 
-  const canGoToPreviousStep = useMemo(() => {
-    if (currentStep <= 0) return false;
-    if (history.length > 0) return true;
-    return getPreviousMedicationStep(currentStep, form) != null;
-  }, [currentStep, form, history.length]);
-
   const cleanedForReview = useMemo(() => cleanMedicationForm(form), [form]);
   const reviewHasData = !cleanedMedicationHasNoData(cleanedForReview);
 
   const returnToReview = useCallback(() => {
     if (cleanedMedicationHasNoData(cleanMedicationForm(form))) {
-      Alert.alert(
+      showFlareAlert(
         "No tracking data entered",
         "You must add at least one medication in order to log this entry.",
       );
@@ -226,6 +221,10 @@ export function MedicationTrackingWizardScreen({ user }: { user: SessionUser }) 
     }
     const prev = history[history.length - 1];
     if (prev) {
+      if (prev.step <= 0) {
+        navigation.goBack();
+        return true;
+      }
       setHistory((h) => h.slice(0, -1));
       setCurrentStep(prev.step);
       setForm(prev.form);
@@ -236,7 +235,8 @@ export function MedicationTrackingWizardScreen({ user }: { user: SessionUser }) 
       return true;
     }
     const previousStep = getPreviousMedicationStep(currentStep, form);
-    if (previousStep != null) {
+    // Don't return to landing (step 0) — exit the wizard like Log Symptoms.
+    if (previousStep != null && previousStep > 0) {
       setCurrentStep(previousStep);
       setFieldErrors({});
       setDatePicker(null);
@@ -279,7 +279,7 @@ export function MedicationTrackingWizardScreen({ user }: { user: SessionUser }) 
     const res = medicationWizardTryAdvance({ currentStep, form });
     if (!res.ok) {
       if (res.noData) {
-        Alert.alert(
+        showFlareAlert(
           "No tracking data entered",
           "You must add at least one medication in order to log this entry.",
           [{ text: "Back to start", onPress: resetToLanding }],
@@ -314,7 +314,7 @@ export function MedicationTrackingWizardScreen({ user }: { user: SessionUser }) 
   const submit = async () => {
     const cleaned = cleanMedicationForm(form);
     if (cleanedMedicationHasNoData(cleaned)) {
-      Alert.alert(
+      showFlareAlert(
         "No tracking data entered",
         "You must add at least one medication in order to log this entry.",
       );
@@ -331,14 +331,14 @@ export function MedicationTrackingWizardScreen({ user }: { user: SessionUser }) 
       invalidateDashboardSnapshot(user.id);
       if (editId) {
         navigation.goBack();
-        Alert.alert("Saved", "Your medication log was updated.");
+        showFlareAlert("Saved", "Your medication log was updated.");
       } else {
         navigation.dispatch(CommonActions.reset({ index: 0, routes: [{ name: "Dashboard" }] }));
-        Alert.alert("Saved", "Your medication tracking entry was saved.");
+        showFlareAlert("Saved", "Your medication tracking entry was saved.");
       }
     } catch (e: unknown) {
       const message = e instanceof Error ? e.message : "Unknown error";
-      Alert.alert("Could not save", message);
+      showFlareAlert("Could not save", message);
     } finally {
       setSubmitting(false);
     }
@@ -628,7 +628,7 @@ export function MedicationTrackingWizardScreen({ user }: { user: SessionUser }) 
                 disabled={submitting || !reviewHasData}
               />
             )}
-            {canGoToPreviousStep && !editingReviewSection && currentStep !== MEDICATION_REVIEW_STEP ? (
+            {currentStep > 1 && !editingReviewSection && currentStep !== MEDICATION_REVIEW_STEP ? (
               <SecondaryButton title="Previous step" onPress={goBackInternal} />
             ) : null}
           </View>
@@ -659,13 +659,12 @@ export function MedicationTrackingWizardScreen({ user }: { user: SessionUser }) 
 const styles = StyleSheet.create({
   centered: { flex: 1, justifyContent: "center", alignItems: "center" },
   wizardShell: { flex: 1 },
-  scrollPad: { paddingHorizontal: 16, paddingTop: 16, paddingBottom: 48 },
-  scrollPadLanding: { flexGrow: 1 },
-  scrollPadWizardSteps: { paddingTop: 12 },
+  scrollPad: { paddingTop: 16, paddingBottom: 48 },
+  scrollPadLanding: { flexGrow: 1, paddingHorizontal: FULL_WIDTH_CTA_EDGE_PADDING },
+  scrollPadWizardSteps: { paddingTop: 12, paddingHorizontal: 16 },
   landing: {
     alignItems: "center",
     justifyContent: "center",
-    paddingHorizontal: 8,
     paddingTop: 8,
     paddingBottom: 32,
   },
