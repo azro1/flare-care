@@ -61,7 +61,7 @@ export function AppointmentBriefNextScreen({ user }: { user: SessionUser }) {
             ]}
           />
         ) : (
-          <LogDetailFieldGroup fields={[{ label: "Next appointment", value: "No upcoming appointment found." }]} />
+          <LogDetailFieldGroup fields={[{ label: "Next Appointment", value: "No upcoming appointment found." }]} />
         )}
       </LogDetailCard>
     </ScrollView>

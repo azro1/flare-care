@@ -61,9 +61,9 @@ export function AppointmentBriefScreen({ user }: { user: SessionUser }) {
       ),
       buildBrowseLogRowItem({
         id: "custom",
-        title: "Custom date range",
+        title: "Custom Date Range",
         subtitle: "Pick your own start and end dates",
-        accessibilityLabel: "Custom date range",
+        accessibilityLabel: "Custom Date Range",
       }),
     ],
     [],

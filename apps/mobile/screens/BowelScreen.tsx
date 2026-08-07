@@ -422,7 +422,7 @@ export function BowelLogSheet({
 
           <View style={styles.sheetActions}>
             <PrimaryButton
-              title={saving ? "Saving…" : editingId ? "Save changes" : "Save log"}
+              title={saving ? "Saving…" : "Save"}
               onPress={handleSubmit(onSave)}
               disabled={saving}
             />

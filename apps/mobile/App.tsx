@@ -411,7 +411,7 @@ const SIGN_OUT_COPY: Record<SignOutReason, { title: string; message: string }> =
     message: "Your session has ended.",
   },
   account_deleted: {
-    title: "Account deleted",
+    title: "Account Deleted",
     message: "Your account and associated data have been permanently deleted.",
   },
 };
@@ -1485,7 +1485,7 @@ function DashboardScreen({ user }: { user: SessionUser }) {
     <View style={[styles.dashboardShelfSection, styles.dashboardShelfBeforeTitle, styles.dashboardShelfSectionLast]}>
       <View style={styles.dashboardSubsectionHeader}>
         <Text style={[styles.dashboardSubsectionTitleLeft, styles.dashboardSubsectionTitleInHeader, { color: c.text, flex: 1 }]}>
-          Latest news
+          Latest News
         </Text>
         {!newsLoading && !newsError && newsItems.length > 0 ? (
           <Pressable
@@ -1717,19 +1717,19 @@ function LogsScreen({ user }: { user: SessionUser }) {
           items={[
             buildBrowseLogRowItem({
               id: "symptom",
-              title: "Symptom logs",
+              title: "Symptom Logs",
               subtitle: formatHistoryBrowseSubtitle(historyPreview.symptomCount),
               accessibilityLabel: "Browse symptom history",
             }),
             buildBrowseLogRowItem({
               id: "medication",
-              title: "Medication logs",
+              title: "Medication Logs",
               subtitle: formatHistoryBrowseSubtitle(historyPreview.medicationCount),
               accessibilityLabel: "Browse medication tracking history",
             }),
             buildBrowseLogRowItem({
               id: "wellbeing",
-              title: "Wellbeing logs",
+              title: "Wellbeing Logs",
               subtitle: formatHistoryBrowseSubtitle(historyPreview.wellbeingCount),
               accessibilityLabel: "Browse wellbeing history",
             }),
@@ -1786,7 +1786,7 @@ function SymptomHistoryScreen({ user }: { user: SessionUser }) {
   const symptomLogItems = rows.map((row) =>
     buildTimestampLogRowItem({
       id: String(row.id),
-      title: "Symptom log",
+      title: "Symptom Log",
       whenIso: row.created_at,
     }),
   );
@@ -2189,7 +2189,7 @@ function MedicationTrackingHistoryScreen({ user }: { user: SessionUser }) {
   const medicationLogItems = rows.map((row) =>
     buildTimestampLogRowItem({
       id: String(row.id),
-      title: "Medication log",
+      title: "Medication Log",
       whenIso: row.created_at,
     }),
   );
@@ -2752,16 +2752,16 @@ function HydrationHelpContent() {
 function AppointmentSummaryHelpContent() {
   const c = useFlareColors();
   const steps = [
-    "From Appointments, tap Appointment summary.",
+    "From Appointments, tap Appointment Summary.",
     "Choose a time period — a preset (2, 4, or 6 weeks) or a custom date range.",
-    "Review each section: Health overview, Next appointment, and What changed.",
+    "Review each section: Health Overview, Next Appointment, and What Changed.",
     "Tap Share or Email to send your summary to your clinician.",
   ];
 
   return (
     <>
       <Text style={[logHistoryCardStyles.trackerIntro, { color: c.textMuted }]}>
-        Appointment summary pulls together your recent logs so you can prepare for a visit.
+        Appointment Summary pulls together your recent logs so you can prepare for a visit.
       </Text>
       <View style={styles.notificationHelpStepList}>
         {steps.map((step) => (
@@ -3078,8 +3078,8 @@ function IbdScreen() {
         digestive tract.
       </Text>
 
-      <Text style={[styles.dashboardSectionTitleLeft, { color: c.text }]}>The two main types are:</Text>
-      <Text style={[styles.ibdSubsectionTitle, { color: c.text }]}>Crohn&apos;s disease</Text>
+      <Text style={[styles.dashboardSectionTitleLeft, { color: c.text }]}>The Two Main Types Are:</Text>
+      <Text style={[styles.ibdSubsectionTitle, { color: c.text }]}>Crohn&apos;s Disease</Text>
       <IbdBulletList
         items={[
           "Can affect any part of the digestive tract",
@@ -3090,7 +3090,7 @@ function IbdScreen() {
         isLastInSection
       />
 
-      <Text style={[styles.ibdSubsectionTitle, { color: c.text }]}>Ulcerative colitis</Text>
+      <Text style={[styles.ibdSubsectionTitle, { color: c.text }]}>Ulcerative Colitis</Text>
       <IbdBulletList
         items={[
           "Affects only the colon and rectum",
@@ -3102,14 +3102,14 @@ function IbdScreen() {
       />
 
       <Text style={[styles.dashboardSectionTitleLeft, styles.aboutContactSectionTitle, { color: c.text }]}>
-        Common symptoms include
+        Common Symptoms Include
       </Text>
       <IbdBulletList items={IBD_SYMPTOMS} isLastInSection />
 
-      <Text style={[styles.dashboardSectionTitleLeft, styles.aboutContactSectionTitle, { color: c.text }]}>Common triggers</Text>
+      <Text style={[styles.dashboardSectionTitleLeft, styles.aboutContactSectionTitle, { color: c.text }]}>Common Triggers</Text>
       <IbdBulletList items={IBD_TRIGGERS} isLastInSection />
 
-      <Text style={[styles.dashboardSectionTitleLeft, styles.aboutContactSectionTitle, { color: c.text }]}>How FlareCare can help</Text>
+      <Text style={[styles.dashboardSectionTitleLeft, styles.aboutContactSectionTitle, { color: c.text }]}>How FlareCare Can Help</Text>
       <IbdCheckList items={IBD_FLARECARE_HELPS} isLastInSection />
     </CollapsingTitleScrollScreen>
   );
@@ -3122,13 +3122,13 @@ function NutritionGuideScreen() {
 
   return (
     <CollapsingTitleScrollScreen
-      title="Nutrition guide"
+      title="Nutrition Guide"
       titlePreset="informational"
       bottomInset={Math.max(insets.bottom, 16) + 48 + bottomScrollInset}
     >
       <Text style={[styles.text, styles.ibdIntro, { color: c.textMuted }]}>{NUTRITION_GUIDE_INTRO}</Text>
 
-      <Text style={[styles.dashboardSectionTitleLeft, { color: c.text }]}>Food categories</Text>
+      <Text style={[styles.dashboardSectionTitleLeft, { color: c.text }]}>Food Categories</Text>
       {NUTRITION_CATEGORIES.map((category, index) => (
         <View key={category.title}>
           <Text style={[styles.ibdSubsectionTitle, index === 0 && { marginTop: 8 }, { color: c.text }]}>
@@ -3141,22 +3141,22 @@ function NutritionGuideScreen() {
       ))}
 
       <Text style={[styles.dashboardSectionTitleLeft, styles.aboutContactSectionTitle, { color: c.text }]}>
-        IBD foods
+        IBD Foods
       </Text>
-      <Text style={[styles.ibdSubsectionTitle, { marginTop: 8, color: c.text }]}>Generally safe</Text>
+      <Text style={[styles.ibdSubsectionTitle, { marginTop: 8, color: c.text }]}>Generally Safe</Text>
       <Text style={[styles.text, styles.aboutBody, { color: c.textMuted }]}>{NUTRITION_IBD_SAFE}</Text>
-      <Text style={[styles.ibdSubsectionTitle, { color: c.text }]}>Try carefully</Text>
+      <Text style={[styles.ibdSubsectionTitle, { color: c.text }]}>Try Carefully</Text>
       <Text style={[styles.text, styles.aboutBody, { color: c.textMuted }]}>{NUTRITION_IBD_CAREFUL}</Text>
-      <Text style={[styles.ibdSubsectionTitle, { color: c.text }]}>Avoid during flares</Text>
+      <Text style={[styles.ibdSubsectionTitle, { color: c.text }]}>Avoid During Flares</Text>
       <Text style={[styles.text, styles.aboutBodyLast, { color: c.textMuted }]}>{NUTRITION_IBD_AVOID_FLARE}</Text>
 
       <Text style={[styles.dashboardSectionTitleLeft, styles.aboutContactSectionTitle, { color: c.text }]}>
-        Quick food tips
+        Quick Food Tips
       </Text>
       <IbdCheckList items={NUTRITION_QUICK_TIPS} isLastInSection />
 
       <Text style={[styles.dashboardSectionTitleLeft, styles.aboutContactSectionTitle, { color: c.text }]}>
-        Helpful tips
+        Helpful Tips
       </Text>
       <IbdBulletList items={NUTRITION_HELPFUL_TIPS} isLastInSection />
 
@@ -3248,7 +3248,7 @@ function AccountInfoScreen({ user }: { user: SessionUser }) {
       <View style={[logHistoryCardStyles.trackerCard, styles.accountPaddedCard, { backgroundColor: c.card }]}>
         <Pressable
           accessibilityRole="button"
-          accessibilityLabel={`Personal details, ${firstLine}, ${emailLine}`}
+          accessibilityLabel={`Personal Details, ${firstLine}, ${emailLine}`}
           onPress={() => navigation.navigate("AccountPersonalDetails")}
           hitSlop={4}
           style={styles.accountIdentityNavRow}
@@ -3381,9 +3381,9 @@ function InfoScreen() {
             }),
             buildBrowseLogRowItem({
               id: "nutrition",
-              title: "Nutrition guide",
-              subtitle: "Food categories and IBD diet tips",
-              accessibilityLabel: "Open Nutrition guide",
+              title: "Nutrition Guide",
+              subtitle: "Food Categories and IBD Diet Tips",
+              accessibilityLabel: "Open Nutrition Guide",
             }),
           ]}
           rowTextLayout="compact"
@@ -3434,8 +3434,8 @@ function SettingsScreen() {
           items={[
             {
               id: "reminders",
-              title: "Push notifications and reminders",
-              accessibilityLabel: "Push notifications and reminders",
+              title: "Push Notifications and Reminders",
+              accessibilityLabel: "Push Notifications and Reminders",
             },
           ]}
           rowPaddingHorizontal={ACCOUNT_LIST_ROW_PADDING}
@@ -3528,7 +3528,7 @@ function AccountScreen({
       <View style={[logHistoryCardStyles.trackerCard, styles.accountPaddedCard, { backgroundColor: c.card }]}>
         <Pressable
           accessibilityRole="button"
-          accessibilityLabel={`Personal details, ${accountFirstName}, ${user.email || "Unknown user"}`}
+          accessibilityLabel={`Personal Details, ${accountFirstName}, ${user.email || "Unknown user"}`}
           onPress={() => navigation.navigate("AccountPersonalDetails")}
           hitSlop={4}
           style={styles.accountIdentityNavRow}
@@ -3839,7 +3839,7 @@ function AppTabs({
       MedicationTrackingWizard: "Track Medications",
       WellbeingWizard: "My Wellbeing",
       AccountInfo: "Information",
-      AccountPersonalDetails: "Personal details",
+      AccountPersonalDetails: "Personal Details",
       AccountSecurity: "Security",
       AccountLegal: "Legal",
       AccountHelp: "Help",
@@ -3851,21 +3851,21 @@ function AppTabs({
       MedicationDetail: "Medication",
       Bowel: "Bowel Movements",
       Wellbeing: "History",
-      WellbeingLogDetail: "Wellbeing log",
-      BowelLogDetail: "Bowel log",
+      WellbeingLogDetail: "Wellbeing Log",
+      BowelLogDetail: "Bowel Log",
       BristolGuide: "Bristol Stool Chart",
       Weight: "My Weight",
-      WeightLogDetail: "Weight log",
+      WeightLogDetail: "Weight Log",
       Appointments: "Appointments",
-      AppointmentsPast: "Past appointments",
+      AppointmentsPast: "Past Appointments",
       AppointmentDetail: "Appointment",
-      AppointmentBrief: "Appointment summary",
-      AppointmentBriefCustomRange: "Custom range",
-      AppointmentBriefResult: "Your summary",
-      AppointmentBriefHealth: "Health overview",
-      AppointmentBriefNext: "Next appointment",
-      AppointmentBriefChanges: "What changed",
-      LatestNews: "Latest news",
+      AppointmentBrief: "Appointment Summary",
+      AppointmentBriefCustomRange: "Custom Range",
+      AppointmentBriefResult: "Your Summary",
+      AppointmentBriefHealth: "Health Overview",
+      AppointmentBriefNext: "Next Appointment",
+      AppointmentBriefChanges: "What Changed",
+      LatestNews: "Latest News",
     };
     const isSymptomLogWizard = route.name === "SymptomLogWizard";
     const isMedicationTrackingWizard = route.name === "MedicationTrackingWizard";

@@ -37,7 +37,7 @@ export function AppointmentBriefResultScreen({ user }: { user: SessionUser }) {
   const handleShare = async () => {
     if (!briefText) return;
     try {
-      await Share.share({ message: briefText, title: `Appointment summary (${weeks} weeks)` });
+      await Share.share({ message: briefText, title: `Appointment Summary (${weeks} weeks)` });
     } catch {
       // user cancelled
     }
@@ -58,21 +58,21 @@ export function AppointmentBriefResultScreen({ user }: { user: SessionUser }) {
     return [
       buildBrowseLogRowItem({
         id: "health",
-        title: "Health overview",
+        title: "Health Overview",
         subtitle: "Symptoms, bowel, weight, medications",
-        accessibilityLabel: "Health overview",
+        accessibilityLabel: "Health Overview",
       }),
       buildBrowseLogRowItem({
         id: "next",
-        title: "Next appointment",
+        title: "Next Appointment",
         subtitle: nextSubtitle,
-        accessibilityLabel: "Next appointment",
+        accessibilityLabel: "Next Appointment",
       }),
       buildBrowseLogRowItem({
         id: "changes",
-        title: "What changed",
+        title: "What Changed",
         subtitle: `${brief.talkingPoints.length} talking point${brief.talkingPoints.length === 1 ? "" : "s"}`,
-        accessibilityLabel: "What changed",
+        accessibilityLabel: "What Changed",
       }),
     ];
   }, [brief, nextSubtitle]);

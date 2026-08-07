@@ -125,7 +125,7 @@ export function NewsSectionHeader({
   title?: string;
   onSeeAll?: () => void;
   showSeeAll?: boolean;
-  /** `focus` matches dashboard shelf headings (Today, More, Latest news). */
+  /** `focus` matches dashboard shelf headings (Today, More, Latest News). */
   titleVariant?: "focus" | "subtle";
 }) {
   const c = useFlareColors();

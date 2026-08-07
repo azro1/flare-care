@@ -266,11 +266,11 @@ export function AppointmentsListPane({
       {onSummaryPress && !selectionMode ? (
         <Pressable
           accessibilityRole="button"
-          accessibilityLabel="Appointment summary"
+          accessibilityLabel="Appointment Summary"
           onPress={onSummaryPress}
           style={({ pressed }) => [styles.summaryLink, pressed && { opacity: 0.85 }]}
         >
-          <Text style={[styles.summaryLinkLabel, { color: c.text }]}>Appointment summary</Text>
+          <Text style={[styles.summaryLinkLabel, { color: c.text }]}>Appointment Summary</Text>
           <Ionicons name="chevron-forward" size={FLARE_FONT_SIZE.subhead} color={c.textMuted} accessibilityIgnoresInvertColors />
         </Pressable>
       ) : null}

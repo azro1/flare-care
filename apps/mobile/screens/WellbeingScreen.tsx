@@ -138,7 +138,7 @@ export function WellbeingScreen({ user }: { user: SessionUser }) {
           instruction={WELLBEING_LOGS_HISTORY_INSTRUCTION}
           icon={WELLBEING_MCI_ICON}
           onDismiss={dismissInstruction}
-          dismissAccessibilityLabel="Dismiss Wellbeing logs guide"
+          dismissAccessibilityLabel="Dismiss Wellbeing Logs guide"
         />
       }
       floatingAction={

@@ -305,7 +305,7 @@ export function formatAppointmentBriefText(brief: AppointmentBriefData, weeks: n
     `Weight: ${brief.weight.startWeight != null && brief.weight.endWeight != null ? `${brief.weight.startWeight}kg -> ${brief.weight.endWeight}kg (${brief.weight.delta != null && brief.weight.delta >= 0 ? "+" : ""}${brief.weight.delta}kg)` : "Insufficient logs"}`,
     `Missed doses in selected period: ${brief.medications.missedCurrent}`,
     "",
-    "What changed:",
+    "What Changed:",
     ...brief.talkingPoints.map((point) => `- ${point}`),
   ];
   return lines.join("\n");

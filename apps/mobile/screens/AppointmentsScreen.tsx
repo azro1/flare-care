@@ -358,7 +358,7 @@ export function AppointmentsScreen({ user }: { user: SessionUser }) {
     () => (
       <Pressable
         accessibilityRole="button"
-        accessibilityLabel="Past appointments"
+        accessibilityLabel="Past Appointments"
         hitSlop={10}
         onPress={() => navigation.navigate("AppointmentsPast")}
       >

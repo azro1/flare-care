@@ -2,7 +2,7 @@
 export const INSTRUCTION_CLOSE_TO_CONTINUE = "To continue, tap the Close (×) button.";
 
 export const DASHBOARD_GETTING_STARTED_INSTRUCTION = {
-  title: "Getting started",
+  title: "Getting Started",
   paragraphs: [
     "Living with IBD can be unpredictable, but keeping track of it doesn't have to be.",
     "FlareCare helps you build a clearer picture over time by recording your symptoms, medications, habits and more. Everything is organised into detailed reports, ready to share with your care team.",
@@ -94,7 +94,7 @@ export const APPOINTMENTS_INSTRUCTION = {
 
 /** Symptom logs history — first visit for new accounts. */
 export const SYMPTOM_LOGS_HISTORY_INSTRUCTION = {
-  title: "Symptom logs",
+  title: "Symptom Logs",
   paragraphs: [
     "Events recorded through Log Symptoms will appear here.",
     "Tap a log to view details, or load more to browse older entries.",
@@ -104,7 +104,7 @@ export const SYMPTOM_LOGS_HISTORY_INSTRUCTION = {
 
 /** Medication logs history — first visit for new accounts. */
 export const MEDICATION_LOGS_HISTORY_INSTRUCTION = {
-  title: "Medication logs",
+  title: "Medication Logs",
   paragraphs: [
     "Events recorded through Track Medications will appear here.",
     "Tap a log to view details, or load more to browse older entries.",
@@ -114,7 +114,7 @@ export const MEDICATION_LOGS_HISTORY_INSTRUCTION = {
 
 /** Wellbeing logs history — first visit for new accounts. */
 export const WELLBEING_LOGS_HISTORY_INSTRUCTION = {
-  title: "Wellbeing logs",
+  title: "Wellbeing Logs",
   paragraphs: [
     "Events recorded through My Wellbeing will appear here.",
     "Tap a log to view details, or load more to browse older entries.",
@@ -143,7 +143,7 @@ export const WELLBEING_INSTRUCTION = {
 
 /** Appointment summary hub — first visit until dismissed. */
 export const APPOINTMENT_BRIEF_INSTRUCTION = {
-  title: "Appointment summary",
+  title: "Appointment Summary",
   paragraphs: [
     "Quickly create a summary of your health information for your next appointment.",
     "Choose a suggested time period or select your own dates to include the information you need.",

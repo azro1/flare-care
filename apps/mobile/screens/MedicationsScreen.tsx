@@ -258,7 +258,7 @@ export function MedicationSheet({
             {saveError ? <Text style={[errTextStyle, styles.saveError]}>{saveError}</Text> : null}
 
             <View style={styles.sheetActions}>
-              <PrimaryButton title={saving ? "Saving…" : editingId ? "Save changes" : "Save medication"} onPress={handleSavePress} disabled={saving} />
+              <PrimaryButton title={saving ? "Saving…" : "Save"} onPress={handleSavePress} disabled={saving} />
               <SecondaryButton title="Cancel" onPress={onClose} />
             </View>
           </ScrollView>

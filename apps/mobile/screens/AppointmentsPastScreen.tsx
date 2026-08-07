@@ -13,7 +13,7 @@ export function AppointmentsPastScreen({ user }: { user: SessionUser }) {
       tab="past"
       showFab={false}
       selectionRouteName="AppointmentsPast"
-      headerTitle="Past appointments"
+      headerTitle="Past Appointments"
       list={list}
     />
   );

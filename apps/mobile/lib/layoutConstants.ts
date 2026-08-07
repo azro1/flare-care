@@ -78,7 +78,7 @@ export const FLARE_FONT_SIZE = {
   caption: 12,
   muted: 13,
   body: 14,
-  /** Between body and nav — shelf titles, secondary links (e.g. Appointment summary). */
+  /** Between body and nav — shelf titles, secondary links (e.g. Appointment Summary). */
   subhead: 15,
   navTitle: 16,
   sectionTitle: 18,
