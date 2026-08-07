@@ -55,8 +55,8 @@ export const TRACK_MEDICATIONS_INSTRUCTION = {
 export const HYDRATION_INSTRUCTION = {
   title: "My Hydration",
   paragraphs: [
-    "Track how much water you drink each day using the stepper below.",
-    "Your goal is 6 glasses — tap − or + to update today's count.",
+    "Track how much water you drink each day.",
+    "Use − and + to count glasses toward your goal of 6.",
     "Close this card to continue.",
   ],
 } as const;

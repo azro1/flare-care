@@ -49,6 +49,8 @@ import {
 import { DashboardWelcomeCard } from "./components/DashboardWelcomeCard";
 import { InstructionCardOverlay } from "./components/InstructionCardOverlay";
 import { FloatingWelcomeCard } from "./components/FloatingWelcomeCard";
+import { HydrationProgressRing } from "./components/HydrationProgressRing";
+import { HydrationStepper } from "./components/HydrationStepper";
 import { InstructionScreenShell, InstructionInteractionBlock } from "./components/InstructionScreenShell";
 import { flareFieldErrorStyle, LabeledInput } from "./components/FlareInput";
 import { flareCardSectionStyles, FlareScreenSectionTitle } from "./components/FlareScreenSectionTitle";
@@ -77,7 +79,7 @@ import {
   NUTRITION_IBD_SAFE,
   NUTRITION_QUICK_TIPS,
 } from "./lib/nutritionGuideCopy";
-import { HYDRATION_TARGET, HYDRATION_MCI_ICON, HYDRATION_MCI_ICON_EMPTY, saveHydrationReset } from "./lib/hydrationShared";
+import { HYDRATION_TARGET, HYDRATION_MCI_ICON, saveHydrationReset } from "./lib/hydrationShared";
 import {
   bottomTabBarHeight,
   ACCOUNT_LIST_ROW_PADDING,
@@ -2400,44 +2402,6 @@ function MedicationLogDetailScreen({ user }: { user: SessionUser }) {
   );
 }
 
-function HydrationStepperButton({
-  icon,
-  onPress,
-  disabled,
-  variant,
-}: {
-  icon: "minus" | "plus";
-  onPress: () => void;
-  disabled?: boolean;
-  variant: "secondary" | "primary";
-}) {
-  const c = useFlareColors();
-  const isPrimary = variant === "primary";
-  return (
-    <Pressable
-      accessibilityRole="button"
-      accessibilityLabel={icon === "minus" ? "Remove one glass" : "Add one glass"}
-      accessibilityState={{ disabled: !!disabled }}
-      onPress={onPress}
-      disabled={disabled}
-      style={({ pressed }) => [
-        styles.hydrationStepperBtn,
-        isPrimary
-          ? { backgroundColor: disabled ? c.primaryDisabledBg : c.primary }
-          : { backgroundColor: c.secondaryBtnBg, borderWidth: 1, borderColor: c.secondaryBtnBorder },
-        disabled ? { opacity: 0.45 } : pressed ? { opacity: 0.88 } : null,
-      ]}
-    >
-      <Ionicons
-        name={icon === "minus" ? "remove" : "add"}
-        size={20}
-        color={isPrimary ? c.white : c.textSecondary}
-        accessibilityIgnoresInvertColors
-      />
-    </Pressable>
-  );
-}
-
 function HydrationScreen({ user }: { user: SessionUser }) {
   const c = useFlareColors();
   const navigation = useNavigation<any>();
@@ -2450,8 +2414,20 @@ function HydrationScreen({ user }: { user: SessionUser }) {
   );
   const [glasses, setGlasses] = useState(() => dashboardSnapshotByUserId[user.id]?.todaySummary.hydration ?? 0);
   const [resetConfirmOpen, setResetConfirmOpen] = useState(false);
+  const glassesRef = useRef(glasses);
+  const persistTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
   const today = todayYmd();
   const atGoal = glasses >= HYDRATION_TARGET;
+
+  useEffect(() => {
+    glassesRef.current = glasses;
+  }, [glasses]);
+
+  useEffect(() => {
+    return () => {
+      if (persistTimerRef.current) clearTimeout(persistTimerRef.current);
+    };
+  }, []);
 
   const load = useCallback(async () => {
     const { data, error } = await supabase
@@ -2479,23 +2455,34 @@ function HydrationScreen({ user }: { user: SessionUser }) {
   );
 
   const persistGlasses = useCallback(
-    async (next: number) => {
+    (next: number) => {
       const clamped = Math.max(0, Math.min(HYDRATION_TARGET, next));
-      const { error } = await supabase.from(TABLES.DAILY_HYDRATION).upsert(
-        { user_id: user.id, date: today, glasses: clamped, updated_at: new Date().toISOString() },
-        { onConflict: "user_id,date" },
-      );
-      if (error) return showFlareAlert("Could not update hydration", error.message);
+      glassesRef.current = clamped;
       setGlasses(clamped);
-      invalidateDashboardSnapshot(user.id);
+      if (persistTimerRef.current) clearTimeout(persistTimerRef.current);
+      persistTimerRef.current = setTimeout(() => {
+        void (async () => {
+          const toSave = glassesRef.current;
+          const { error } = await supabase.from(TABLES.DAILY_HYDRATION).upsert(
+            { user_id: user.id, date: today, glasses: toSave, updated_at: new Date().toISOString() },
+            { onConflict: "user_id,date" },
+          );
+          if (error) {
+            showFlareAlert("Could not update hydration", error.message);
+            void load();
+            return;
+          }
+          invalidateDashboardSnapshot(user.id);
+        })();
+      }, 280);
     },
-    [today, user.id],
+    [load, today, user.id],
   );
 
   const handleResetConfirm = useCallback(async () => {
     setResetConfirmOpen(false);
     await saveHydrationReset(user.id, today);
-    await persistGlasses(0);
+    persistGlasses(0);
   }, [persistGlasses, today, user.id]);
 
   return (
@@ -2513,8 +2500,8 @@ function HydrationScreen({ user }: { user: SessionUser }) {
       footer={
         <ConfirmModal
           visible={resetConfirmOpen}
-          title="Reset today's count?"
-          message="Your hydration progress will be reset to 0. If you did not mean to do this, tap Cancel."
+          title="Reset today's progress"
+          message="This will reset today's hydration progress to 0. This action can't be undone."
           confirmLabel="Reset"
           cancelLabel="Cancel"
           onCancel={() => setResetConfirmOpen(false)}
@@ -2535,61 +2522,16 @@ function HydrationScreen({ user }: { user: SessionUser }) {
     >
       <LogHistoryCard style={styles.hydrationCard}>
         <View style={styles.hydrationTrackerBody}>
-          <Text style={[styles.hydrationTodayLabel, { color: c.textMuted }]}>{formatUkDate(today)}</Text>
+          <HydrationProgressRing glasses={glasses} target={HYDRATION_TARGET} atGoal={atGoal} />
 
-          <View style={styles.hydrationCupsRow}>
-            {Array.from({ length: HYDRATION_TARGET }, (_, index) => {
-              const filled = index < glasses;
-              return (
-                <View key={index} style={styles.hydrationCupSlot}>
-                  <MaterialCommunityIcons
-                    name={filled ? HYDRATION_MCI_ICON : HYDRATION_MCI_ICON_EMPTY}
-                    size={40}
-                    color={filled ? c.primary : c.cardBorder}
-                    accessibilityElementsHidden
-                    importantForAccessibility="no"
-                    accessibilityIgnoresInvertColors
-                  />
-                </View>
-              );
-            })}
-          </View>
-
-          <Text style={[styles.hydrationCountLabel, { color: c.text }]}>
-            {glasses} of {HYDRATION_TARGET} glasses
-          </Text>
-
-          <View style={[styles.hydrationStepperTrack, { backgroundColor: c.surfaceSubtle, borderColor: c.cardBorder }]}>
-            <HydrationStepperButton
-              icon="minus"
-              variant="secondary"
-              disabled={glasses === 0}
-              onPress={() => persistGlasses(glasses - 1)}
-            />
-            <View style={[styles.hydrationStepperDivider, { backgroundColor: c.cardBorder }]} />
-            <HydrationStepperButton
-              icon="plus"
-              variant="primary"
-              disabled={atGoal}
-              onPress={() => persistGlasses(glasses + 1)}
-            />
-          </View>
-
-          {atGoal ? (
-            <Text style={[styles.hydrationGoalReached, { color: c.primary }]}>Daily goal reached!</Text>
-          ) : null}
-
-          {glasses > 0 ? (
-            <Pressable
-              accessibilityRole="button"
-              accessibilityLabel="Reset today's hydration count"
-              onPress={() => setResetConfirmOpen(true)}
-              hitSlop={8}
-              style={({ pressed }) => [styles.hydrationResetLink, pressed && { opacity: 0.7 }]}
-            >
-              <Text style={[styles.hydrationResetText, { color: c.textSecondary }]}>Reset today</Text>
-            </Pressable>
-          ) : null}
+          <HydrationStepper
+            value={glasses}
+            min={0}
+            max={HYDRATION_TARGET}
+            onChange={persistGlasses}
+            atGoal={atGoal}
+            onReset={() => setResetConfirmOpen(true)}
+          />
         </View>
       </LogHistoryCard>
     </InstructionScreenShell>
@@ -4830,44 +4772,8 @@ const styles = StyleSheet.create({
     textAlign: "center",
     lineHeight: FLARE_LINE_HEIGHT.caption,
   },
-  hydrationCard: { paddingVertical: 14 },
-  hydrationTrackerBody: { alignSelf: "stretch", alignItems: "center", gap: 16 },
-  hydrationTodayLabel: {
-    fontSize: FLARE_FONT_SIZE.caption,
-    fontFamily: FLARE_FONT_FAMILY.regular,
-    lineHeight: FLARE_LINE_HEIGHT.caption,
-  },
-  hydrationCupsRow: {
-    flexDirection: "row",
-    alignItems: "center",
-    alignSelf: "stretch",
-  },
-  hydrationCupSlot: { flex: 1, alignItems: "center" },
-  hydrationCountLabel: {
-    fontSize: FLARE_FONT_SIZE.navTitle,
-    fontFamily: FLARE_FONT_FAMILY.bold,
-  },
-  hydrationStepperTrack: {
-    flexDirection: "row",
-    alignItems: "center",
-    alignSelf: "stretch",
-    borderWidth: 1,
-    borderRadius: 12,
-    overflow: "hidden",
-  },
-  hydrationStepperDivider: { width: StyleSheet.hairlineWidth, alignSelf: "stretch" },
-  hydrationResetLink: { paddingVertical: 4 },
-  hydrationResetText: { fontSize: 14, fontFamily: "Inter_400Regular", textDecorationLine: "underline" },
-  hydrationStepperBtn: {
-    flex: 1,
-    height: 44,
-    alignItems: "center",
-    justifyContent: "center",
-  },
-  hydrationGoalReached: {
-    fontSize: 14,
-    fontFamily: "Inter_700Bold",
-  },
+  hydrationCard: { paddingTop: 28, paddingBottom: 24, paddingHorizontal: 16 },
+  hydrationTrackerBody: { alignSelf: "stretch", alignItems: "center", gap: 18 },
   hydrationHelpLinkPress: {
     flexDirection: "row",
     alignItems: "center",
