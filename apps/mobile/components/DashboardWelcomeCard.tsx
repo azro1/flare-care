@@ -9,6 +9,9 @@ export function DashboardWelcomeCard({ onDismiss }: { onDismiss: () => void }) {
       instruction={DASHBOARD_GETTING_STARTED_INSTRUCTION}
       icon="compass-outline"
       iconFamily="ion"
+      showIcon
+      showTitle
+      fillHeight={false}
       onDismiss={onDismiss}
       dismissAccessibilityLabel="Dismiss welcome message"
     />

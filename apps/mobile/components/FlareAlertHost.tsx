@@ -122,10 +122,11 @@ export function FlareAlertHost() {
     return () => bindHost(null, null);
   }, [show, dismiss]);
 
-  if (!payload) return null;
-
+  // Keep the native Modal permanently mounted and drive it via `visible` only.
+  // Unmounting/remounting makes Android recreate the dialog window and play its
+  // slide-in every time — toggling `visible` on a mounted Modal appears instantly.
   const run = (action: () => void) => {
-    if (busyRef.current) return;
+    if (busyRef.current || !payload) return;
     busyRef.current = true;
     action();
     if (!payload.holdUntilDismissed) dismiss();
@@ -134,14 +135,14 @@ export function FlareAlertHost() {
   return (
     <ConfirmModal
       visible={open}
-      title={payload.title}
-      message={payload.message}
-      confirmLabel={payload.confirmLabel}
-      cancelLabel={payload.cancelLabel}
-      confirmDestructive={payload.confirmDestructive}
-      notice={payload.notice}
-      onConfirm={() => run(payload.onConfirm)}
-      onCancel={() => run(payload.onCancel)}
+      title={payload?.title ?? ""}
+      message={payload?.message}
+      confirmLabel={payload?.confirmLabel ?? "OK"}
+      cancelLabel={payload?.cancelLabel ?? "Cancel"}
+      confirmDestructive={payload?.confirmDestructive}
+      notice={payload?.notice}
+      onConfirm={() => run(payload?.onConfirm ?? (() => {}))}
+      onCancel={() => run(payload?.onCancel ?? (() => {}))}
     />
   );
 }

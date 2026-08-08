@@ -1,5 +1,5 @@
-import React, { useEffect, useRef, useState } from "react";
-import { Animated, Modal, Pressable, StyleSheet, Text, View } from "react-native";
+import React, { useEffect } from "react";
+import { BackHandler, Pressable, StyleSheet, Text, View } from "react-native";
 import { PrimaryButton, SecondaryButton } from "./FlareButton";
 import {
   CONFIRM_MODAL_ACTIONS_GAP,
@@ -7,23 +7,24 @@ import {
   FLARE_FONT_SIZE,
   FLARE_LINE_HEIGHT,
 } from "../lib/layoutConstants";
+import { Portal } from "../lib/overlayPortal";
 import { useFlareColors } from "../theme";
 
-const FADE_IN_MS = 180;
-const FADE_OUT_MS = 140;
-
 const styles = StyleSheet.create({
-  root: {
-    flex: 1,
+  overlay: {
+    ...StyleSheet.absoluteFillObject,
     justifyContent: "center",
     paddingHorizontal: 20,
+    // Sit above everything in the same layer (no native Modal → no window slide).
+    zIndex: 9999,
+    elevation: 9999,
   },
   card: {
     borderRadius: 14,
     borderWidth: 1,
-    paddingHorizontal: 18,
-    paddingTop: 20,
-    paddingBottom: 18,
+    paddingHorizontal: 20,
+    paddingTop: 22,
+    paddingBottom: 20,
   },
   title: { fontSize: 18, fontFamily: "Inter_700Bold" },
   message: {
@@ -32,11 +33,19 @@ const styles = StyleSheet.create({
     marginTop: CONFIRM_MODAL_STACK_GAP,
     lineHeight: FLARE_LINE_HEIGHT.body,
   },
-  actions: { flexDirection: "row", gap: 8, marginTop: CONFIRM_MODAL_ACTIONS_GAP },
+  actions: { flexDirection: "row", gap: 12, marginTop: CONFIRM_MODAL_ACTIONS_GAP },
   actionSlot: { flex: 1, minWidth: 0 },
 });
 
-/** App-themed confirm / notice sheet — use instead of `Alert.alert` (follows in-app light/dark). */
+/**
+ * App-themed confirm / notice sheet — use instead of `Alert.alert` (follows in-app light/dark).
+ *
+ * Renders as an in-app absolute overlay, NOT a native `Modal`. React Native's Android `Modal`
+ * animates its dialog window on show regardless of `animationType="none"` (and toggling `visible`
+ * on a mounted Modal re-triggers it), which read as a slide-down. An in-app overlay simply
+ * appears/disappears. It must be mounted in the top-most layer to cover the app — the root alert
+ * host (`FlareAlertHost`) is rendered last under the app root; inline usages cover their screen.
+ */
 export function ConfirmModal({
   visible,
   title,
@@ -60,35 +69,21 @@ export function ConfirmModal({
   onCancel: () => void;
 }) {
   const c = useFlareColors();
-  const opacity = useRef(new Animated.Value(0)).current;
-  const [mounted, setMounted] = useState(visible);
 
   useEffect(() => {
-    if (visible) {
-      setMounted(true);
-      opacity.setValue(0);
-      Animated.timing(opacity, {
-        toValue: 1,
-        duration: FADE_IN_MS,
-        useNativeDriver: true,
-      }).start();
-      return;
-    }
-    if (!mounted) return;
-    Animated.timing(opacity, {
-      toValue: 0,
-      duration: FADE_OUT_MS,
-      useNativeDriver: true,
-    }).start(({ finished }) => {
-      if (finished) setMounted(false);
+    if (!visible) return;
+    const sub = BackHandler.addEventListener("hardwareBackPress", () => {
+      onCancel();
+      return true;
     });
-  }, [visible, mounted, opacity]);
+    return () => sub.remove();
+  }, [visible, onCancel]);
 
-  if (!mounted) return null;
+  if (!visible) return null;
 
   return (
-    <Modal visible transparent animationType="none" onRequestClose={onCancel} statusBarTranslucent>
-      <Animated.View style={[styles.root, { opacity }]}>
+    <Portal>
+      <View style={styles.overlay}>
         <Pressable
           accessibilityRole="button"
           accessibilityLabel="Dismiss"
@@ -114,7 +109,7 @@ export function ConfirmModal({
             </View>
           </View>
         </View>
-      </Animated.View>
-    </Modal>
+      </View>
+    </Portal>
   );
 }

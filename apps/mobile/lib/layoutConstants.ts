@@ -7,13 +7,17 @@ export const SCREEN_EDGE_PADDING = 12;
 export const CARD_INNER_PADDING = 14;
 
 /** Slightly roomier padding for first-time welcome cards. */
-export const WELCOME_CARD_INNER_PADDING = 16;
+export const WELCOME_CARD_INNER_PADDING = 18;
+
+/** Section welcome cards match the dashboard "Getting Started" card — our largest welcome. */
+export const WELCOME_CARD_MIN_HEIGHT = 280;
 
 /**
- * Card-less informational pages (About, What is IBD?, legal) —
- * screen edge + card inner so body text matches card-screen inset.
+ * Card-less informational pages (About, What is IBD?, legal) — a soft inset
+ * that sits just inside the header controls (chevron / ⋮ at SCREEN_EDGE_PADDING)
+ * so body text lines up closely with them instead of floating far inward.
  */
-export const INFORMATIONAL_PAGE_HORIZONTAL_PADDING = SCREEN_EDGE_PADDING + CARD_INNER_PADDING;
+export const INFORMATIONAL_PAGE_HORIZONTAL_PADDING = 18;
 
 /** Extra inset for Account tab link rows inside the grey tray (My account, Legal). */
 export const ACCOUNT_LIST_ROW_PADDING = 20;
@@ -97,8 +101,8 @@ export const FLARE_LINE_HEIGHT = {
 
 /** Pair for collapsing titles on informational pages — use via `titlePreset="informational"`. */
 export const INFORMATIONAL_PAGE_TITLE = {
-  fontSize: FLARE_FONT_SIZE.pageTitle,
-  lineHeight: FLARE_LINE_HEIGHT.pageTitle,
+  fontSize: 18,
+  lineHeight: 23,
 } as const;
 
 export const FLARE_FONT_FAMILY = {
@@ -147,9 +151,9 @@ export const CARD_SECTION_INNER_GAP = 12;
 
 /** Floating instruction cards — dashboard welcome + future per-screen tips. */
 export const INSTRUCTION_CARD_RADIUS = 14;
-export const INSTRUCTION_CARD_PADDING_H = 18;
-export const INSTRUCTION_CARD_PADDING_TOP = SCREEN_EDGE_PADDING;
-export const INSTRUCTION_CARD_PADDING_BOTTOM = 18;
+export const INSTRUCTION_CARD_PADDING_H = 20;
+export const INSTRUCTION_CARD_PADDING_TOP = SCREEN_EDGE_PADDING + 2;
+export const INSTRUCTION_CARD_PADDING_BOTTOM = 20;
 export const INSTRUCTION_CARD_ACCENT_WIDTH = 4;
 export const INSTRUCTION_CARD_BORDER_WIDTH = 1.5;
 export const INSTRUCTION_CARD_HEADER_GAP = 10;

@@ -16,55 +16,74 @@ export function EmptySectionWelcome({
   instruction,
   icon,
   iconFamily = "mci",
+  showIcon = true,
+  showTitle = true,
+  fillHeight = false,
   onDismiss,
   dismissAccessibilityLabel = "Dismiss message",
 }: {
   instruction: InstructionCopy;
   icon: MciIconName | IonIconName;
   iconFamily?: "mci" | "ion";
+  /** Leading icon well. Off for section welcomes (icon already on the tile / empty state). */
+  showIcon?: boolean;
+  /** Card title. */
+  showTitle?: boolean;
+  /** Give the card a tall min height (header + body stay at the top; extra space at the bottom). */
+  fillHeight?: boolean;
   onDismiss: () => void;
   dismissAccessibilityLabel?: string;
 }) {
   const c = useFlareColors();
   const { title, paragraphs } = instruction;
 
+  const closeButton = (
+    <Pressable
+      accessibilityRole="button"
+      accessibilityLabel={dismissAccessibilityLabel}
+      onPress={onDismiss}
+      hitSlop={SCREEN_EDGE_PADDING}
+      style={[styles.close, { backgroundColor: c.surfaceSubtle }]}
+    >
+      <Ionicons name="close" size={18} color={c.textSecondary} accessibilityIgnoresInvertColors />
+    </Pressable>
+  );
+
   return (
-    <View style={styles.wrap}>
+    <View style={[styles.wrap, fillHeight && styles.wrapFill]}>
       <View style={styles.header}>
-        <View style={[styles.iconWell, { backgroundColor: c.surfaceSubtle }]}>
-          {iconFamily === "ion" ? (
-            <Ionicons name={icon as IonIconName} size={22} color={c.primary} accessibilityIgnoresInvertColors />
-          ) : (
-            <MaterialCommunityIcons
-              name={icon as MciIconName}
-              size={22}
-              color={c.primary}
-              accessibilityIgnoresInvertColors
-            />
-          )}
-        </View>
-        <Text style={[styles.title, { color: c.text }]}>{title}</Text>
-        <Pressable
-          accessibilityRole="button"
-          accessibilityLabel={dismissAccessibilityLabel}
-          onPress={onDismiss}
-          hitSlop={SCREEN_EDGE_PADDING}
-          style={[styles.close, { backgroundColor: c.surfaceSubtle }]}
-        >
-          <Ionicons name="close" size={18} color={c.textSecondary} accessibilityIgnoresInvertColors />
-        </Pressable>
+        {showIcon ? (
+          <View style={[styles.iconWell, { backgroundColor: c.surfaceSubtle }]}>
+            {iconFamily === "ion" ? (
+              <Ionicons name={icon as IonIconName} size={22} color={c.primary} accessibilityIgnoresInvertColors />
+            ) : (
+              <MaterialCommunityIcons
+                name={icon as MciIconName}
+                size={22}
+                color={c.primary}
+                accessibilityIgnoresInvertColors
+              />
+            )}
+          </View>
+        ) : null}
+        {showTitle ? <Text style={[styles.title, { color: c.text }]}>{title}</Text> : null}
+        {closeButton}
       </View>
-      {paragraphs.map((paragraph) => (
-        <Text key={paragraph} style={[styles.body, { color: c.textSecondary }]}>
-          {paragraph}
-        </Text>
-      ))}
+      <View style={styles.bodyGroup}>
+        {paragraphs.map((paragraph) => (
+          <Text key={paragraph} style={[styles.body, { color: c.textSecondary }]}>
+            {paragraph}
+          </Text>
+        ))}
+      </View>
     </View>
   );
 }
 
 const styles = StyleSheet.create({
   wrap: { gap: 10 },
+  /** Tall card: header + body sit at the top (Getting Started look); extra space falls to the bottom. */
+  wrapFill: { flex: 1 },
   header: { flexDirection: "row", alignItems: "center", gap: 12 },
   iconWell: {
     width: 36,
@@ -78,6 +97,7 @@ const styles = StyleSheet.create({
     fontSize: FLARE_FONT_SIZE.sectionTitle,
     fontFamily: FLARE_FONT_FAMILY.bold,
   },
+  bodyGroup: { gap: 10 },
   close: {
     width: 32,
     height: 32,

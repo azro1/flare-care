@@ -14,7 +14,7 @@ type OverflowItem = {
 const OVERFLOW_ITEMS: OverflowItem[] = [
   { id: "settings", label: "Settings", route: "Settings" },
   { id: "info", label: "Info", route: "Info" },
-  { id: "about", label: "About FlareCare", route: "About" },
+  { id: "about", label: "About", route: "About" },
   { id: "help", label: "Help", route: "AccountHelp" },
 ];
 
@@ -57,7 +57,7 @@ export function HeaderOverflowMenu({
   const onLogoutPress = () => {
     close();
     if (!onLogout) return;
-    showFlareAlert("Log out?", "Are you sure you want to log out?", [
+    showFlareAlert("Log out?", "You will be logged out of your account. Are you sure you want to log out?", [
       { text: "Stay signed in", style: "cancel" },
       { text: "Log out", style: "destructive", onPress: () => void onLogout() },
     ]);
@@ -151,6 +151,6 @@ const styles = StyleSheet.create({
     elevation: 8,
   },
   row: { paddingHorizontal: 16, paddingVertical: 14 },
-  label: { fontSize: 16, fontFamily: "Inter_400Regular" },
+  label: { fontSize: 15, fontFamily: "Inter_500Medium" },
   separator: { height: StyleSheet.hairlineWidth },
 });

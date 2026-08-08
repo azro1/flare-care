@@ -611,7 +611,12 @@ export function MedicationTrackingWizardScreen({ user }: { user: SessionUser }) 
         ) : null}
 
         {currentStep > 0 ? (
-          <View style={styles.footerBtns}>
+          <View
+            style={[
+              styles.footerBtns,
+              currentStep === MEDICATION_REVIEW_STEP && !editingReviewSection && styles.footerBtnsReview,
+            ]}
+          >
             {editingReviewSection ? (
               <>
                 <PrimaryButton title="Back to review" onPress={returnToReview} />
@@ -708,4 +713,5 @@ const styles = StyleSheet.create({
     ...Platform.select({ android: { elevation: 4 }, ios: {} }),
   },
   footerBtns: { marginTop: 24, gap: 10 },
+  footerBtnsReview: { marginTop: 0 },
 });

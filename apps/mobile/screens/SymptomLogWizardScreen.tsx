@@ -1036,7 +1036,12 @@ export function SymptomLogWizardScreen({ user }: { user: SessionUser }) {
         ) : null}
 
         {currentStep > 0 ? (
-          <View style={styles.footerBtns}>
+          <View
+            style={[
+              styles.footerBtns,
+              currentStep === SYMPTOM_REVIEW_STEP && !editingReviewSection && styles.footerBtnsReview,
+            ]}
+          >
             {editingReviewSection ? (
               <>
                 <PrimaryButton title="Back to review" onPress={returnToReview} />
@@ -1127,5 +1132,6 @@ const styles = StyleSheet.create({
     ...Platform.select({ android: { elevation: 4 }, ios: {} }),
   },
   footerBtns: { marginTop: 24, gap: 10 },
+  footerBtnsReview: { marginTop: 0 },
   switchRow: { flexDirection: "row", alignItems: "center", marginTop: 12 },
 });

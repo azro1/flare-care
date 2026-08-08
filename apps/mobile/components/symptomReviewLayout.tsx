@@ -60,7 +60,7 @@ export function WizardReviewNotesSection({ notes, onEdit }: { notes: string; onE
   const trimmed = notes.trim();
   if (!trimmed) return null;
   return (
-    <LogDetailSectionCard title="Notes" last onEdit={onEdit} editAccessibilityLabel="Edit Notes">
+    <LogDetailSectionCard title="Notes" onEdit={onEdit} editAccessibilityLabel="Edit Notes">
       <LogDetailNotesTray notes={trimmed} />
     </LogDetailSectionCard>
   );

@@ -15,7 +15,6 @@ import {
 import { ConfirmModal } from "../components/ConfirmModal";
 import { FloatingWelcomeCard } from "../components/FloatingWelcomeCard";
 import { InstructionScreenShell } from "../components/InstructionScreenShell";
-import { TrackerThumbFab, useTrackerThumbFabLayout } from "../components/TrackerThumbFab";
 import { invalidateDashboardSnapshot } from "../lib/dashboardSnapshotCache";
 import { recordRecentActivityEvent } from "../lib/recentActivityEvents";
 import { useLogListSelection } from "../lib/useLogListSelection";
@@ -51,8 +50,7 @@ export function WellbeingScreen({ user }: { user: SessionUser }) {
     markWellbeingHistoryInstructionDismissed,
   );
   const insets = useSafeAreaInsets();
-  const { scrollBottomPad } = useTrackerThumbFabLayout();
-  const selectionBarClearance = bottomTabBarHeight(insets.bottom);
+  const bottomBarClearance = bottomTabBarHeight(insets.bottom);
 
   const {
     rows: historyRows,
@@ -127,7 +125,7 @@ export function WellbeingScreen({ user }: { user: SessionUser }) {
 
   const listInitialLoad = historyLoading && historyRows.length === 0;
   const historyEmpty = !historyLoading && historyTotalCount === 0;
-  const scrollBottomPadTotal = selectionMode ? selectionBarClearance : scrollBottomPad;
+  const scrollBottomPadTotal = bottomBarClearance;
 
   return (
     <InstructionScreenShell
@@ -140,14 +138,6 @@ export function WellbeingScreen({ user }: { user: SessionUser }) {
           onDismiss={dismissInstruction}
           dismissAccessibilityLabel="Dismiss Wellbeing Logs guide"
         />
-      }
-      floatingAction={
-        !selectionMode ? (
-          <TrackerThumbFab
-            accessibilityLabel="Log my wellbeing"
-            onPress={() => navigation.navigate("WellbeingWizard")}
-          />
-        ) : null
       }
       footer={
         <ConfirmModal

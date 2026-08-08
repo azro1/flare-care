@@ -466,7 +466,12 @@ export function WellbeingWizardScreen({ user }: { user: SessionUser }) {
           ) : null}
 
           {currentStep > 0 ? (
-            <View style={styles.footerBtns}>
+            <View
+              style={[
+                styles.footerBtns,
+                currentStep === WELLBEING_WIZARD_REVIEW_STEP && !editingReviewSection && styles.footerBtnsReview,
+              ]}
+            >
               {editingReviewSection ? (
                 <>
                   <PrimaryButton title="Back to review" onPress={returnToReview} />
@@ -550,4 +555,5 @@ const styles = StyleSheet.create({
   radioOuter: { width: 22, height: 22, borderRadius: 11, borderWidth: 2, alignItems: "center", justifyContent: "center" },
   radioInner: { width: 12, height: 12, borderRadius: 6 },
   footerBtns: { marginTop: 24, gap: 10 },
+  footerBtnsReview: { marginTop: 0 },
 });

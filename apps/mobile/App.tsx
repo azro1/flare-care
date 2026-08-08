@@ -59,6 +59,7 @@ import { NewsFeedCard, newsFeedListStyles } from "./components/NewsFeed";
 import { SuccessNoticeScreen } from "./components/SuccessNoticeScreen";
 import { ConfirmModal } from "./components/ConfirmModal";
 import { FlareAlertHost, showFlareAlert } from "./components/FlareAlertHost";
+import { OverlayOutlet } from "./lib/overlayPortal";
 import { CollapsingTitleScrollScreen } from "./components/CollapsingTitleScrollScreen";
 import { FlareThemeProvider, useFlareColors, useFlareTheme } from "./theme";
 import { formatUkDate, formatUkGreetingDate } from "./lib/formatUkDate";
@@ -156,6 +157,7 @@ import { DASHBOARD_NEWS_HOME_SHELF_MAX, DASHBOARD_NEWS_SHELF_PEEK, dashboardNews
 import {
   REPORTS_INSTRUCTION,
   HYDRATION_INSTRUCTION,
+  LOGS_INSTRUCTION,
   SYMPTOM_LOGS_HISTORY_INSTRUCTION,
   MEDICATION_LOGS_HISTORY_INSTRUCTION,
 } from "./lib/instructionCardCopy";
@@ -164,6 +166,11 @@ import {
   readReportsInstructionDismissed,
   readReportsInstructionEligible,
 } from "./lib/reportsInstructionTip";
+import {
+  markLogsInstructionDismissed,
+  readLogsInstructionDismissed,
+  readLogsInstructionEligible,
+} from "./lib/logsInstructionTip";
 import {
   markSymptomHistoryInstructionDismissed,
   readSymptomHistoryInstructionDismissed,
@@ -1227,15 +1234,17 @@ function DashboardScreen({ user }: { user: SessionUser }) {
   const dailyCheckinCards = [
     { key: "symptoms" as const, label: "Log Symptoms", icon: "thermometer", family: "mci", goTo: "SymptomLogWizard" },
     { key: "track-meds" as const, label: "Track Medications", icon: TRACK_MEDICATIONS_MCI_ICON, family: "mci", goTo: "MedicationTrackingWizard" },
-    { key: "hydration" as const, label: "My Hydration", icon: HYDRATION_MCI_ICON, family: "mci", goTo: "Hydration" },
-    { key: "bowel" as const, label: "Bowel Movements", icon: BOWEL_FEATURE_MCI_ICON, family: "mci", goTo: "Bowel" },
     { key: "wellbeing" as const, label: "My Wellbeing", icon: "heart-pulse", family: "mci", goTo: "WellbeingWizard" },
   ];
+  const dailyTrackingCards = [
+    { key: "meds", label: "My Meds", screen: "Meds" as const, icon: MY_MEDS_MCI_ICON, family: "mci" as "ion" | "mci" },
+    { key: "hydration", label: "My Hydration", screen: "Hydration" as const, icon: HYDRATION_MCI_ICON, family: "mci" as "ion" | "mci" },
+    { key: "bowel", label: "Bowel Movements", screen: "Bowel" as const, icon: BOWEL_FEATURE_MCI_ICON, family: "mci" as "ion" | "mci" },
+    { key: "weight", label: "My Weight", screen: "Weight" as const, icon: "scale-bathroom", family: "mci" as "ion" | "mci" },
+  ];
   const moreLinkCards = [
-    { key: "meds", label: "My Meds", screen: "Meds" as const, icon: MY_MEDS_MCI_ICON, family: "mci" as const },
-    { key: "reports", label: "Reports", screen: "Reports" as const, icon: "document-text-outline", family: "ion" as const },
-    { key: "weight", label: "My Weight", screen: "Weight" as const, icon: "scale-bathroom", family: "mci" as const },
     { key: "appointments", label: "Appointments", screen: "Appointments" as const, icon: "calendar-outline", family: "ion" as const },
+    { key: "reports", label: "Reports", screen: "Reports" as const, icon: "document-text-outline", family: "ion" as const },
   ];
   const computedGreetingFirst = firstNameFromSessionUser(user);
   useEffect(() => {
@@ -1606,8 +1615,8 @@ function DashboardScreen({ user }: { user: SessionUser }) {
           </View>
         )}
       </Card>
-      <View style={styles.checkinSection}>
-        <Text style={[styles.dashboardSubsectionTitle, { color: c.text }]}>Daily Check-in</Text>
+      <View style={[styles.dashboardShelfSection, styles.dashboardShelfAfterCard]}>
+        <Text style={[styles.dashboardSubsectionTitleLeft, { color: c.text }]}>Check in</Text>
         <ScrollView
           horizontal
           showsHorizontalScrollIndicator={false}
@@ -1635,7 +1644,7 @@ function DashboardScreen({ user }: { user: SessionUser }) {
         </ScrollView>
       </View>
       <View style={[styles.dashboardShelfSection, styles.dashboardShelfBeforeTitle]}>
-        <Text style={[styles.dashboardSubsectionTitleLeft, { color: c.text }]}>Today</Text>
+        <Text style={[styles.dashboardSubsectionTitleLeft, { color: c.text }]}>Today's Progress</Text>
         <View style={[logHistoryCardStyles.trackerCard, { backgroundColor: c.card }]}>
           <LogHistoryList
             items={todayGoalItems}
@@ -1645,7 +1654,28 @@ function DashboardScreen({ user }: { user: SessionUser }) {
         </View>
       </View>
       <View style={[styles.dashboardShelfSection, styles.dashboardShelfAfterCard]}>
-        <Text style={[styles.dashboardSubsectionTitle, { color: c.text }]}>Shortcuts</Text>
+        <Text style={[styles.dashboardSubsectionTitle, { color: c.text }]}>My Tools</Text>
+        <View style={styles.moreGrid}>
+          {dailyTrackingCards.map((item) => (
+            <DashboardGridTile
+              key={item.key}
+              width={tileWidth}
+              label={item.label}
+              variant="grid"
+              onPress={() => navigation.navigate(item.screen)}
+              icon={
+                item.family === "ion" ? (
+                  <Ionicons name={item.icon as any} size={HOME_TILE_ICON_SIZE} color={c.primary} />
+                ) : (
+                  <MaterialCommunityIcons name={item.icon as any} size={HOME_TILE_ICON_SIZE} color={c.primary} />
+                )
+              }
+            />
+          ))}
+        </View>
+      </View>
+      <View style={[styles.dashboardShelfSection, styles.dashboardShelfBeforeTitle]}>
+        <Text style={[styles.dashboardSubsectionTitle, { color: c.text }]}>Manage</Text>
         <View style={styles.moreGrid}>
           {moreLinkCards.map((item) => (
             <DashboardGridTile
@@ -1681,6 +1711,12 @@ function LogsScreen({ user }: { user: SessionUser }) {
   const navigation = useNavigation<any>();
   const c = useFlareColors();
   const bottomScrollInset = useBottomTabScrollInset();
+  const { visible: showLogsInstruction, dismiss: dismissLogsInstruction } = useInstructionTip(
+    user.id,
+    readLogsInstructionEligible,
+    readLogsInstructionDismissed,
+    markLogsInstructionDismissed,
+  );
   const [historyPreview, setHistoryPreview] = useState({
     symptomCount: 0,
     medicationCount: 0,
@@ -1710,9 +1746,18 @@ function LogsScreen({ user }: { user: SessionUser }) {
   );
 
   return (
-    <ScrollView
-      style={[styles.screen, { backgroundColor: c.screen }]}
-      contentContainerStyle={{ paddingBottom: bottomScrollInset + 24 }}
+    <InstructionScreenShell
+      showInstruction={showLogsInstruction}
+      contentPaddingBottom={bottomScrollInset + 24}
+      instruction={
+        <FloatingWelcomeCard
+          instruction={LOGS_INSTRUCTION}
+          icon="documents-outline"
+          iconFamily="ion"
+          onDismiss={dismissLogsInstruction}
+          dismissAccessibilityLabel="Dismiss logs guide"
+        />
+      }
     >
       <View style={[logHistoryCardStyles.trackerCard, { backgroundColor: c.card }]}>
         <LogHistoryList
@@ -1744,7 +1789,7 @@ function LogsScreen({ user }: { user: SessionUser }) {
           rowTextLayout="compact"
         />
       </View>
-    </ScrollView>
+    </InstructionScreenShell>
   );
 }
 
@@ -2640,7 +2685,7 @@ function NotificationHelpContent() {
 
   return (
     <>
-      <Text style={[logHistoryCardStyles.trackerIntro, { color: c.textMuted }]}>
+      <Text style={[logHistoryCardStyles.trackerIntro, styles.helpCardIntro, { color: c.textMuted }]}>
         If you&apos;re still not getting alerts, check that notifications are enabled for the app in your device settings.
       </Text>
 
@@ -2673,7 +2718,7 @@ function HydrationHelpContent() {
 
   return (
     <>
-      <Text style={[logHistoryCardStyles.trackerIntro, { color: c.textMuted }]}>
+      <Text style={[logHistoryCardStyles.trackerIntro, styles.helpCardIntro, { color: c.textMuted }]}>
         The guidelines below outline typical daily fluid intake recommendations for adults.
       </Text>
       <View style={styles.notificationHelpStepList}>
@@ -2702,7 +2747,7 @@ function AppointmentSummaryHelpContent() {
 
   return (
     <>
-      <Text style={[logHistoryCardStyles.trackerIntro, { color: c.textMuted }]}>
+      <Text style={[logHistoryCardStyles.trackerIntro, styles.helpCardIntro, { color: c.textMuted }]}>
         Appointment Summary pulls together your recent logs so you can prepare for a visit.
       </Text>
       <View style={styles.notificationHelpStepList}>
@@ -3020,8 +3065,8 @@ function IbdScreen() {
         digestive tract.
       </Text>
 
-      <Text style={[styles.dashboardSectionTitleLeft, { color: c.text }]}>The Two Main Types Are:</Text>
-      <Text style={[styles.ibdSubsectionTitle, { color: c.text }]}>Crohn&apos;s Disease</Text>
+      <Text style={[styles.text, styles.aboutBody, { color: c.textMuted }]}>The two main types are:</Text>
+      <Text style={[styles.dashboardSectionTitleLeft, { color: c.text }]}>Crohn&apos;s Disease</Text>
       <IbdBulletList
         items={[
           "Can affect any part of the digestive tract",
@@ -3032,7 +3077,7 @@ function IbdScreen() {
         isLastInSection
       />
 
-      <Text style={[styles.ibdSubsectionTitle, { color: c.text }]}>Ulcerative Colitis</Text>
+      <Text style={[styles.dashboardSectionTitleLeft, styles.aboutContactSectionTitle, { color: c.text }]}>Ulcerative Colitis</Text>
       <IbdBulletList
         items={[
           "Affects only the colon and rectum",
@@ -3077,7 +3122,7 @@ function NutritionGuideScreen() {
             {category.title}
           </Text>
           <Text style={[styles.text, styles.aboutBody, { color: c.textMuted }]}>{category.description}</Text>
-          <Text style={[styles.text, styles.nutritionExamplesLabel, { color: c.text }]}>Examples</Text>
+          <Text style={[styles.text, styles.nutritionExamplesLabel, { color: c.textMuted }]}>Examples</Text>
           <IbdBulletList items={category.examples} isLastInSection={index === NUTRITION_CATEGORIES.length - 1} />
         </View>
       ))}
@@ -3522,7 +3567,7 @@ function AccountScreen({
       <ConfirmModal
         visible={deleteAccountConfirmOpen}
         title="Delete account"
-        message="Are you sure you want to permanently delete your account? This action cannot be undone and all your data will be lost."
+        message="This permanently deletes your account and all your data. This action cannot be undone."
         confirmLabel="Delete"
         cancelLabel="Cancel"
         confirmDestructive
@@ -3998,8 +4043,11 @@ export default function App() {
   return (
     <SafeAreaProvider initialMetrics={initialWindowMetrics}>
       <FlareThemeProvider>
-        <FlareAlertHost />
         <AppRoot />
+        <FlareAlertHost />
+        {/* Last sibling → confirm overlays (via Portal) paint above the whole app, full-screen and
+            unpadded, with no native Modal window slide. */}
+        <OverlayOutlet />
       </FlareThemeProvider>
     </SafeAreaProvider>
   );
@@ -4343,7 +4391,7 @@ const styles = StyleSheet.create({
     fontFamily: FLARE_FONT_FAMILY.bold,
     marginTop: SECTION_TITLE_MARGIN_TOP,
     marginBottom: SECTION_TITLE_MARGIN_BOTTOM,
-    textAlign: "center",
+    textAlign: "left",
   },
   /** Title row when a trailing action shares the line (Latest news + See all). */
   dashboardSubsectionHeader: {
@@ -4423,7 +4471,8 @@ const styles = StyleSheet.create({
     textAlign: "center",
   },
   dashboardSectionTitleLeft: {
-    fontSize: FLARE_FONT_SIZE.sectionTitle,
+    fontSize: FLARE_FONT_SIZE.subhead,
+    lineHeight: FLARE_LINE_HEIGHT.subhead,
     fontFamily: FLARE_FONT_FAMILY.bold,
     marginBottom: SECTION_TITLE_MARGIN_BOTTOM,
     marginTop: SECTION_TITLE_MARGIN_TOP,
@@ -4455,8 +4504,9 @@ const styles = StyleSheet.create({
   },
   notificationHelpStepList: { gap: 6 },
   notificationHelpStepRow: { flexDirection: "row", alignItems: "flex-start" },
-  notificationHelpStepBullet: { fontSize: 14, lineHeight: 20, marginRight: 8, fontFamily: "Inter_700Bold" },
-  notificationHelpStepText: { flex: 1, lineHeight: 20 },
+  notificationHelpStepBullet: { fontSize: 13, lineHeight: 20, marginRight: 8, fontFamily: "Inter_700Bold" },
+  notificationHelpStepText: { flex: 1, fontSize: 13, lineHeight: 20 },
+  helpCardIntro: { fontSize: 13, lineHeight: 20 },
   notificationHelpEmphasis: { fontStyle: "italic" },
   notificationHelpAction: { marginTop: 6, marginBottom: 8 },
   helpSectionToggle: {
@@ -4705,35 +4755,36 @@ const styles = StyleSheet.create({
   activityNoteRowDivider: { borderBottomWidth: 1 },
   aboutTagline: {
     fontFamily: "Inter_400Regular",
-    fontSize: 14,
+    fontSize: 13,
     textAlign: "left",
     lineHeight: 20,
     marginBottom: 20,
   },
-  ibdIntro: { lineHeight: 22, marginBottom: 8 },
+  ibdIntro: { fontSize: 13, lineHeight: 20, marginBottom: 8 },
   ibdSubsectionTitle: {
-    fontSize: 17,
+    fontSize: FLARE_FONT_SIZE.body,
+    lineHeight: FLARE_LINE_HEIGHT.body,
     fontFamily: "Inter_700Bold",
     textAlign: "left",
     marginTop: 16,
     marginBottom: 10,
   },
   nutritionExamplesLabel: {
-    fontFamily: "Inter_700Bold",
+    fontFamily: FLARE_FONT_FAMILY.extrabold,
     fontSize: 13,
     marginBottom: 8,
   },
-  aboutBody: { lineHeight: 22, marginBottom: 12 },
-  aboutBodyLast: { lineHeight: 22, marginBottom: 0 },
+  aboutBody: { fontSize: 13, lineHeight: 20, marginBottom: 12 },
+  aboutBodyLast: { fontSize: 13, lineHeight: 20, marginBottom: 0 },
   infoSectionContentEnd: { marginBottom: 0 },
   ibdBulletList: { gap: 8 },
   ibdBulletRow: { flexDirection: "row", alignItems: "flex-start" },
   ibdBulletDot: { fontSize: 14, lineHeight: 20, marginRight: 8, fontFamily: "Inter_700Bold" },
-  ibdBulletText: { flex: 1, lineHeight: 20 },
+  ibdBulletText: { flex: 1, fontSize: 13, lineHeight: 20 },
   ibdCheckList: { gap: 8 },
   ibdCheckRow: { flexDirection: "row", alignItems: "flex-start" },
   ibdCheckIcon: { marginRight: 8, marginTop: 2 },
-  ibdCheckText: { flex: 1, lineHeight: 20 },
+  ibdCheckText: { flex: 1, fontSize: 13, lineHeight: 20 },
   aboutContactSectionTitle: { marginTop: 28 },
   /** Contact card: paragraph only; spacing to email row is handled by button `marginTop`. */
   aboutContactIntro: { marginBottom: 0 },

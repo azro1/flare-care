@@ -5,6 +5,7 @@ import { markBowelInstructionEligible } from "./bowelInstructionTip";
 import { markBristolGuideInstructionEligible } from "./bristolGuideInstructionTip";
 import { markDashboardWelcomeEligible } from "./dashboardWelcome";
 import { markHydrationInstructionEligible } from "./hydrationInstructionTip";
+import { markLogsInstructionEligible } from "./logsInstructionTip";
 import { markMyMedsInstructionEligible } from "./myMedsInstructionTip";
 import { markReportsInstructionEligible } from "./reportsInstructionTip";
 import { markSymptomHistoryInstructionEligible } from "./symptomHistoryInstructionTip";
@@ -17,6 +18,7 @@ import { markWellbeingHistoryInstructionEligible } from "./wellbeingHistoryInstr
 export async function markNewAccountInstructionTipsEligible(userId: string): Promise<void> {
   await Promise.all([
     markDashboardWelcomeEligible(userId),
+    markLogsInstructionEligible(userId),
     markReportsInstructionEligible(userId),
     markSymptomLogInstructionEligible(userId),
     markSymptomHistoryInstructionEligible(userId),

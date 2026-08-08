@@ -1,6 +1,10 @@
 /** Shared footer on inline section welcomes — + / primary actions stay blocked until dismiss. */
 export const INSTRUCTION_CLOSE_TO_CONTINUE = "To continue, tap the Close (×) button.";
 
+/** Shared notice for cards that rely on reminders — kept on its own line. */
+export const INSTRUCTION_ENABLE_NOTIFICATIONS =
+  "To receive reminders, enable notifications for FlareCare in your device settings.";
+
 export const DASHBOARD_GETTING_STARTED_INSTRUCTION = {
   title: "Getting Started",
   paragraphs: [
@@ -14,8 +18,7 @@ export const DASHBOARD_GETTING_STARTED_INSTRUCTION = {
 export const REPORTS_INSTRUCTION = {
   title: "Reports",
   paragraphs: [
-    "Build reports from your logs to share with your clinical team.",
-    "Generate a report below when you have entries to include, then email it to your care team.",
+    "Build reports from your logs to share with your clinical team. Generate a report below when you have entries to include, then email it to your care team.",
     INSTRUCTION_CLOSE_TO_CONTINUE,
   ],
 } as const;
@@ -24,8 +27,7 @@ export const REPORTS_INSTRUCTION = {
 export const LOG_SYMPTOMS_INSTRUCTION = {
   title: "Log Symptoms",
   paragraphs: [
-    "We'll guide you through recording your symptoms, their severity, and any relevant lifestyle factors.",
-    "Take your time—you can review everything before saving.",
+    "We'll guide you through recording your symptoms, their severity, and any relevant lifestyle factors. Take your time—you can review everything before saving.",
     "Close this card to continue.",
   ],
 } as const;
@@ -34,9 +36,8 @@ export const LOG_SYMPTOMS_INSTRUCTION = {
 export const MY_MEDS_INSTRUCTION = {
   title: "My Meds",
   paragraphs: [
-    "Keep your current medications organised in one place.",
-    "Add your medications, set reminders, and stay on track with your doses.",
-    "To receive reminders, enable notifications for FlareCare in your device settings.",
+    "Keep your current medications organised in one place. Add your medications, set reminders, and stay on track with your doses.",
+    INSTRUCTION_ENABLE_NOTIFICATIONS,
     "Close this card to continue.",
   ],
 } as const;
@@ -45,8 +46,7 @@ export const MY_MEDS_INSTRUCTION = {
 export const TRACK_MEDICATIONS_INSTRUCTION = {
   title: "Track Medications",
   paragraphs: [
-    "We'll guide you through recording your medication activity.",
-    "You can review everything before saving.",
+    "We'll guide you through recording your medication activity. You can review everything before saving.",
     "Close this card to continue.",
   ],
 } as const;
@@ -55,8 +55,7 @@ export const TRACK_MEDICATIONS_INSTRUCTION = {
 export const HYDRATION_INSTRUCTION = {
   title: "My Hydration",
   paragraphs: [
-    "Track how much water you drink each day.",
-    "Use − and + to count glasses toward your goal of 6.",
+    "Track how much water you drink each day. Use − and + to count glasses toward your goal of 6.",
     "Close this card to continue.",
   ],
 } as const;
@@ -65,8 +64,7 @@ export const HYDRATION_INSTRUCTION = {
 export const BOWEL_INSTRUCTION = {
   title: "Bowel Movements",
   paragraphs: [
-    "Your bowel logs will appear here. Record your stool type using the Bristol Stool Chart.",
-    "Add as much detail as you can — it helps your care team.",
+    "Your bowel logs will appear here. Record your stool type using the Bristol Stool Chart. Add as much detail as you can — it helps your care team.",
     "Close this card to continue.",
   ],
 } as const;
@@ -75,8 +73,7 @@ export const BOWEL_INSTRUCTION = {
 export const WEIGHT_INSTRUCTION = {
   title: "My Weight",
   paragraphs: [
-    "Your weight logs will appear here.",
-    "Record your weight over time to help track changes — keep entries consistent when you can.",
+    "Your weight logs will appear here. Record your weight over time to help track changes — keep entries consistent when you can.",
     "Close this card to continue.",
   ],
 } as const;
@@ -85,9 +82,17 @@ export const WEIGHT_INSTRUCTION = {
 export const APPOINTMENTS_INSTRUCTION = {
   title: "Appointments",
   paragraphs: [
-    "Keep track of your appointments and stay prepared for upcoming visits.",
-    "Add reminders to help you remember important dates.",
-    "To receive reminders, enable notifications for FlareCare in your device settings.",
+    "Keep track of your appointments and stay prepared for upcoming visits. Add reminders to help you remember important dates.",
+    INSTRUCTION_ENABLE_NOTIFICATIONS,
+    "Close this card to continue.",
+  ],
+} as const;
+
+/** Logs tab landing — first visit for new accounts. */
+export const LOGS_INSTRUCTION = {
+  title: "Logs",
+  paragraphs: [
+    "The Logs hub brings all your Check-in entries together in one place. Tap any section to look back at what you've recorded.",
     "Close this card to continue.",
   ],
 } as const;
@@ -96,8 +101,7 @@ export const APPOINTMENTS_INSTRUCTION = {
 export const SYMPTOM_LOGS_HISTORY_INSTRUCTION = {
   title: "Symptom Logs",
   paragraphs: [
-    "Events recorded through Log Symptoms will appear here.",
-    "Tap a log to view details, or load more to browse older entries.",
+    "Events recorded through Log Symptoms will appear here. Tap a log to view details, or load more to browse older entries.",
     "Close this card to continue.",
   ],
 } as const;
@@ -106,8 +110,7 @@ export const SYMPTOM_LOGS_HISTORY_INSTRUCTION = {
 export const MEDICATION_LOGS_HISTORY_INSTRUCTION = {
   title: "Medication Logs",
   paragraphs: [
-    "Events recorded through Track Medications will appear here.",
-    "Tap a log to view details, or load more to browse older entries.",
+    "Events recorded through Track Medications will appear here. Tap a log to view details, or load more to browse older entries.",
     "Close this card to continue.",
   ],
 } as const;
@@ -116,8 +119,7 @@ export const MEDICATION_LOGS_HISTORY_INSTRUCTION = {
 export const WELLBEING_LOGS_HISTORY_INSTRUCTION = {
   title: "Wellbeing Logs",
   paragraphs: [
-    "Events recorded through My Wellbeing will appear here.",
-    "Tap a log to view details, or load more to browse older entries.",
+    "Events recorded through My Wellbeing will appear here. Tap a log to view details, or load more to browse older entries.",
     "Close this card to continue.",
   ],
 } as const;
@@ -135,8 +137,7 @@ export const BRISTOL_GUIDE_INSTRUCTION = {
 export const WELLBEING_INSTRUCTION = {
   title: "My Wellbeing",
   paragraphs: [
-    "Check in on how you're feeling today — mood, energy, sleep, anxiety, pain and more.",
-    "Complete this section daily to help build a picture of your wellbeing over time.",
+    "Check in on how you're feeling today — mood, energy, sleep, anxiety, pain and more. Complete this section daily to help build a picture of your wellbeing over time.",
     "Close this card to continue.",
   ],
 } as const;
