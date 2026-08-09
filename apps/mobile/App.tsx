@@ -24,6 +24,7 @@ import {
   AppState,
   Image,
   InteractionManager,
+  Keyboard,
   Linking,
   Modal,
   Platform,
@@ -60,6 +61,7 @@ import { SuccessNoticeScreen } from "./components/SuccessNoticeScreen";
 import { ConfirmModal } from "./components/ConfirmModal";
 import { FlareAlertHost, showFlareAlert } from "./components/FlareAlertHost";
 import { OverlayOutlet } from "./lib/overlayPortal";
+import { SlideUpSheet } from "./components/SlideUpSheet";
 import { CollapsingTitleScrollScreen } from "./components/CollapsingTitleScrollScreen";
 import { FlareThemeProvider, useFlareColors, useFlareTheme } from "./theme";
 import { formatUkDate, formatUkGreetingDate } from "./lib/formatUkDate";
@@ -96,6 +98,9 @@ import {
   FULL_WIDTH_CTA_EDGE_PADDING,
   SECTION_TITLE_MARGIN_BOTTOM,
   SECTION_TITLE_MARGIN_TOP,
+  WIZARD_LANDING_BELOW_SAFE_TOP,
+  WIZARD_LANDING_BLOCK_PADDING_BOTTOM,
+  wizardLandingMinHeight,
 } from "./lib/layoutConstants";
 import {
   formatOtpCountdown,
@@ -685,21 +690,38 @@ function AuthScreen({
 
   /** Same layout as gray auth; fill page with blue in light appearance only. */
   const authBlue = !cAuth.isDark;
-  const onPrimaryChrome = authBlue;
+  // Sign-in controls now live in a card-colored slide-up sheet, so they always use card chrome.
+  const onPrimaryChrome = false;
+  const [sheetOpen, setSheetOpen] = useState(false);
+  const closeSheet = useCallback(() => {
+    setSheetOpen(false);
+    setStep("method");
+    Keyboard.dismiss();
+  }, []);
   return (
     <View
       style={[
         styles.authScreenFill,
         {
           backgroundColor: authBlue ? cAuth.primary : cAuth.screen,
-          paddingTop: insets.top + 32,
+          paddingTop: insets.top,
           paddingBottom: Math.max(insets.bottom, 12),
           paddingHorizontal: FULL_WIDTH_CTA_EDGE_PADDING,
         },
       ]}
     >
-      <View style={styles.authShell}>
-        <View style={styles.authBrandBlock}>
+      <Pressable
+        accessibilityRole="button"
+        accessibilityLabel="Sign in"
+        onPress={() => setSheetOpen(true)}
+        hitSlop={12}
+        style={[styles.authTopRightSignIn, { top: insets.top + 12 }]}
+      >
+        <Ionicons name="person-circle" size={34} color={cAuth.white} />
+      </Pressable>
+      <View style={styles.authLandingOffset}>
+        <View style={[styles.authLandingBlock, { minHeight: wizardLandingMinHeight() }]}>
+          <View style={styles.authBrandBlock}>
           <Image source={SPLASH_MARK_IMAGE} style={styles.authLogo} resizeMode="contain" />
           <Text style={[styles.authBrandName, { color: authBlue ? cAuth.white : cAuth.text }]}>FlareCare</Text>
           <Text
@@ -710,15 +732,18 @@ function AuthScreen({
           >
             Your health. Your IBD. Your control.
           </Text>
+          </View>
         </View>
-        <Card title="" plain style={styles.authCardPlain}>
+      </View>
+      <SlideUpSheet visible={sheetOpen} onClose={closeSheet} maxHeightFraction={0.9}>
+        <View style={styles.authSheetContent}>
           {step === "method" ? (
-            <View style={styles.authMethodPanel}>
+            <View style={[styles.authMethodPanel, styles.authSheetPanel]}>
               <Text style={[styles.authPromptTitle, { color: onPrimaryChrome ? cAuth.white : cAuth.text }]}>Sign in to continue</Text>
               <Pressable
                 accessibilityRole="checkbox"
                 accessibilityState={{ checked: legalAccepted }}
-                accessibilityLabel="Agree to Terms of Service and Privacy Policy, including how FlareCare processes health information you choose to provide"
+                accessibilityLabel="Agree to Terms of Service and Privacy Policy, including the processing of my health information"
                 onPress={() => setLegalAccepted((v) => !v)}
                 style={styles.authLegalRow}
               >
@@ -755,7 +780,7 @@ function AuthScreen({
                   >
                     Privacy Policy
                   </Text>
-                  , including how FlareCare processes health information I choose to provide.
+                  , including the processing of my health information.
                 </Text>
               </Pressable>
               <View style={styles.authMethodActions}>
@@ -791,7 +816,7 @@ function AuthScreen({
               </View>
             </View>
           ) : step === "email" ? (
-            <View style={styles.authFlowPanel}>
+            <View style={[styles.authFlowPanel, styles.authSheetPanel]}>
               <View style={styles.authFormCenter}>
                 <Text style={[styles.authPromptTitle, { color: onPrimaryChrome ? cAuth.white : cAuth.text }]}>Sign in with email</Text>
                 <Text
@@ -836,7 +861,7 @@ function AuthScreen({
               </View>
             </View>
           ) : (
-            <View style={styles.authFlowPanel}>
+            <View style={[styles.authFlowPanel, styles.authSheetPanel]}>
               <View style={styles.authFormCenter}>
                 <Text
                   style={[
@@ -917,8 +942,8 @@ function AuthScreen({
               </View>
             </View>
           )}
-        </Card>
-      </View>
+        </View>
+      </SlideUpSheet>
       <Modal
         visible={authLegalModal !== null}
         animationType="slide"
@@ -4286,7 +4311,14 @@ const styles = StyleSheet.create({
     gap: 8,
     marginBottom: 12,
     paddingTop: 12,
-    transform: [{ translateY: 44 }],
+  },
+  /** Mirror the logout success layout so the brand block lands in the same spot on the page. */
+  authLandingOffset: { paddingTop: WIZARD_LANDING_BELOW_SAFE_TOP },
+  authLandingBlock: {
+    alignItems: "center",
+    justifyContent: "center",
+    paddingTop: 96,
+    paddingBottom: WIZARD_LANDING_BLOCK_PADDING_BOTTOM,
   },
   authLogo: { width: 92, height: 92 },
   authBrandName: { fontSize: 28, fontFamily: "Inter_700Bold" },
@@ -4300,6 +4332,10 @@ const styles = StyleSheet.create({
   authCardPlain: { flex: 1, paddingHorizontal: 0 },
   authMethodPanel: { flex: 1, justifyContent: "center" },
   authMethodActions: { marginTop: 18, gap: 8 },
+  authTopRightSignIn: { position: "absolute", right: 20, zIndex: 2, padding: 4 },
+  authSheetContent: { paddingTop: 8, paddingBottom: 8 },
+  /** Neutralize the full-screen panels' `flex: 1` centering when hosted in the slide-up sheet. */
+  authSheetPanel: { flex: 0, justifyContent: "flex-start" },
   authLegalRow: { flexDirection: "row", alignItems: "flex-start", gap: 10, marginTop: 22, marginBottom: 4 },
   authLegalCheckbox: {
     width: 20,

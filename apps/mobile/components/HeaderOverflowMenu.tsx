@@ -57,7 +57,7 @@ export function HeaderOverflowMenu({
   const onLogoutPress = () => {
     close();
     if (!onLogout) return;
-    showFlareAlert("Log out?", "You will be logged out of your account. Are you sure you want to log out?", [
+    showFlareAlert("Log out?", "You will be logged out of your account. Are you sure?", [
       { text: "Stay signed in", style: "cancel" },
       { text: "Log out", style: "destructive", onPress: () => void onLogout() },
     ]);
