@@ -428,6 +428,25 @@ For those, keep `headerTitle: "…"` in `headerOptions` and **18px** / **16px** 
 
 ---
 
+## Biometric quick-login (bank-style) — when the fingerprint prompt shows
+
+**UI:** `App.tsx` (`AuthScreen` landing detect effect + `runQuickUnlock`, `AppRoot.finishSignOut`). **Helpers:** `lib/rememberedSession.ts` (SecureStore refresh token), `lib/biometricLock.ts`, `lib/supabase.ts` (`clearLocalSupabaseSession`).
+
+**The prompt only arms on an explicit logout while App lock is ON.** That's the *only* place we save the refresh token (`finishSignOut` → `rememberSession`). Don't expect it after other flows:
+
+| Scenario | Prompt on next landing? | Why |
+|----------|------------------------|-----|
+| **Log out** (App lock on) | **Yes** | `finishSignOut` saves the refresh token to SecureStore |
+| **Fresh signup / first login** | **No** | New login lands straight in the app; nothing is remembered until the *next* logout |
+| **Delete account** | **No** | `handleDeleteAccountConfirm` calls `clearRememberedSession()` — token wiped, and the server account is gone anyway |
+| **Log out with App lock OFF** | **No** | `finishSignOut` takes the else-branch: `clearRememberedSession()` + full `supabase.auth.signOut()` |
+
+**Do not "fix" the fresh-signup case by auto-prompting** — that was deliberately removed to stop double-prompting on first login.
+
+**Critical (intermittency bug):** on a remembered logout we must **not** call `supabase.auth.signOut()` (even `scope: "local"` hits the server and revokes the token). We use `clearLocalSupabaseSession()` (local storage wipe only) **and** `supabase.auth.stopAutoRefresh()` — otherwise the still-live in-memory session's auto-refresh timer rotates the saved token and re-persists the session, so the next cold start skips the landing and the prompt never shows. Re-arm with `startAutoRefresh()` on the next successful sign-in (`onSignedIn`).
+
+---
+
 ## Dashboard home — seed data cards (no layout jump)
 
 **Problem:** Home cards that show/hide or change height from fetched data (greeting weather, Coming up, today counts, news) will **jump** when the user adds/deletes elsewhere and returns — if UI waits for the focus refetch before updating.

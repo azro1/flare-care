@@ -26,7 +26,7 @@ export function BiometricLockScreen({
 
   const attempt = useCallback(async () => {
     setBusy(true);
-    const ok = await authenticate("Unlock FlareCare");
+    const ok = await authenticate("Face and fingerprint");
     setBusy(false);
     if (ok) onUnlock();
   }, [onUnlock]);

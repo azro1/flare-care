@@ -65,6 +65,7 @@ import { OverlayOutlet } from "./lib/overlayPortal";
 import { SlideUpSheet } from "./components/SlideUpSheet";
 import { BiometricLockScreen } from "./components/BiometricLockScreen";
 import { authenticate, biometricTypeLabel, isBiometricAvailable, readLockEnabled, setLockEnabled } from "./lib/biometricLock";
+import { clearRememberedSession, readRememberedSession, rememberSession } from "./lib/rememberedSession";
 import { CollapsingTitleScrollScreen } from "./components/CollapsingTitleScrollScreen";
 import { FlareThemeProvider, useFlareColors, useFlareTheme } from "./theme";
 import { formatUkDate, formatUkGreetingDate } from "./lib/formatUkDate";
@@ -146,7 +147,7 @@ import {
   REMINDERS_READY_NONE,
   REMINDERS_SETUP_INTRO_OFF,
 } from "./lib/reminderSetupCopy";
-import { supabase, TABLES } from "./lib/supabase";
+import { clearLocalSupabaseSession, supabase, TABLES } from "./lib/supabase";
 import {
   dashboardSnapshotByUserId,
   dedupeNewsItems,
@@ -701,6 +702,64 @@ function AuthScreen({
     setStep("method");
     Keyboard.dismiss();
   }, []);
+
+  // Bank-style quick login: if a remembered session exists and biometric unlock is on, we
+  // auto-prompt for Face ID / fingerprint on landing. If the prompt is dismissed, a tap-to-unlock
+  // affordance stays on the landing so they can retry without reopening the app.
+  const [quickUnlock, setQuickUnlock] = useState<{ label: string } | null>(null);
+  const [unlockBusy, setUnlockBusy] = useState(false);
+  const autoPromptedRef = useRef(false);
+
+  const runQuickUnlock = useCallback(async () => {
+    const remembered = await readRememberedSession();
+    if (!remembered) {
+      setQuickUnlock(null);
+      return;
+    }
+    setUnlockBusy(true);
+    const ok = await authenticate("Face and fingerprint");
+    if (!ok) {
+      // Dismissed — keep the affordance so they can tap to retry.
+      setUnlockBusy(false);
+      return;
+    }
+    const { data, error } = await supabase.auth.refreshSession({ refresh_token: remembered.refreshToken });
+    const sessionUser = data?.session?.user;
+    if (error || !sessionUser) {
+      await clearRememberedSession();
+      setUnlockBusy(false);
+      setQuickUnlock(null);
+      showFlareAlert("Couldn't unlock", "Please sign in again to continue.");
+      setSheetOpen(true);
+      return;
+    }
+    onSignedIn(sessionUserFromSupabaseAuthUser(sessionUser));
+  }, [onSignedIn]);
+
+  useEffect(() => {
+    let cancelled = false;
+    (async () => {
+      const [remembered, available, enabled] = await Promise.all([
+        readRememberedSession(),
+        isBiometricAvailable(),
+        readLockEnabled(),
+      ]);
+      if (cancelled || !remembered || !available || !enabled) return;
+      const label = await biometricTypeLabel();
+      if (cancelled) return;
+      setQuickUnlock({ label });
+      if (!autoPromptedRef.current) {
+        autoPromptedRef.current = true;
+        void runQuickUnlock();
+      }
+    })();
+    return () => {
+      cancelled = true;
+    };
+    // Detect + auto-prompt once on mount.
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
+
   return (
     <View
       style={[
@@ -715,12 +774,12 @@ function AuthScreen({
     >
       <Pressable
         accessibilityRole="button"
-        accessibilityLabel="Sign in"
+        accessibilityLabel={quickUnlock ? "Sign in with a different account" : "Sign in"}
         onPress={() => setSheetOpen(true)}
         hitSlop={12}
         style={[styles.authTopRightSignIn, { top: insets.top + 12 }]}
       >
-        <Ionicons name="person-circle" size={34} color={cAuth.white} />
+        <Ionicons name="person-circle" size={28} color={cAuth.white} />
       </Pressable>
       <View style={styles.authLandingOffset}>
         <View style={[styles.authLandingBlock, { minHeight: wizardLandingMinHeight() }]}>
@@ -738,6 +797,43 @@ function AuthScreen({
           </View>
         </View>
       </View>
+      {quickUnlock ? (
+        <>
+          <View style={styles.authQuickUnlockSpacer} />
+          <Pressable
+            accessibilityRole="button"
+            accessibilityLabel={`Unlock with ${quickUnlock.label}`}
+            onPress={runQuickUnlock}
+            disabled={unlockBusy}
+            style={styles.authQuickUnlock}
+          >
+            <View
+              style={[
+                styles.authFingerprintDisc,
+                {
+                  backgroundColor: authBlue ? "rgba(255,255,255,0.16)" : cAuth.surfaceSubtle,
+                  opacity: unlockBusy ? 0.6 : 1,
+                },
+              ]}
+            >
+              <Ionicons
+                name="finger-print"
+                size={34}
+                color={authBlue ? cAuth.white : cAuth.primary}
+                accessibilityIgnoresInvertColors
+              />
+            </View>
+            <Text
+              style={[
+                styles.authQuickUnlockLabel,
+                { color: authBlue ? "rgba(255,255,255,0.92)" : cAuth.textMuted },
+              ]}
+            >
+              {unlockBusy ? "Unlocking…" : `Tap to unlock with ${quickUnlock.label}`}
+            </Text>
+          </Pressable>
+        </>
+      ) : null}
       <SlideUpSheet visible={sheetOpen} onClose={closeSheet} maxHeightFraction={0.9}>
         <View style={styles.authSheetContent}>
           {step === "method" ? (
@@ -1162,6 +1258,14 @@ function parseMedicationLogList(raw: unknown, withDosage: boolean): MedicationLo
 /** Avoid greeting flicker (“there”) when session metadata/email arrives shortly after navigation. */
 const dashboardGreetingFirstNameByUserId: Record<string, string> = {};
 
+/**
+ * Seed the welcome-card visibility synchronously on remount. Tapping the Home tab remounts the
+ * dashboard, and reading the dismissed/eligible flags from storage is async — without this cache the
+ * card+backdrop are absent for one frame (a flash of the dashboard) before they paint. Swipe-back
+ * reuses the mounted screen so it never had the flash.
+ */
+const dashboardWelcomeStateByUserId: Record<string, { dismissed: boolean; eligible: boolean }> = {};
+
 /** OWM `/img/wn/{icon}@2x.png` id → Ionicons ( themed `color`; no remote bitmaps ). */
 function owmIconIdToIoniconsName(iconId: string | null | undefined): keyof typeof Ionicons.glyphMap {
   if (!iconId || iconId.length < 2) return "partly-sunny";
@@ -1255,9 +1359,10 @@ function DashboardScreen({ user }: { user: SessionUser }) {
   const [todaySummary, setTodaySummary] = useState<{ symptoms: number; medsTaken: number; medsTotal: number; hydration: number }>(
     () => snapshotSeed?.todaySummary ?? { symptoms: 0, medsTaken: 0, medsTotal: 0, hydration: 0 },
   );
-  const [welcomeDismissed, setWelcomeDismissed] = useState(true);
-  const [welcomeEligible, setWelcomeEligible] = useState(false);
-  const [welcomeHydrated, setWelcomeHydrated] = useState(false);
+  const welcomeSeed = dashboardWelcomeStateByUserId[user.id];
+  const [welcomeDismissed, setWelcomeDismissed] = useState(() => welcomeSeed?.dismissed ?? true);
+  const [welcomeEligible, setWelcomeEligible] = useState(() => welcomeSeed?.eligible ?? false);
+  const [welcomeHydrated, setWelcomeHydrated] = useState(() => welcomeSeed != null);
   const hydrationTarget = HYDRATION_TARGET;
   const dailyCheckinCards = [
     { key: "symptoms" as const, label: "Log Symptoms", icon: "thermometer", family: "mci", goTo: "SymptomLogWizard" },
@@ -1292,6 +1397,7 @@ function DashboardScreen({ user }: { user: SessionUser }) {
         readDashboardWelcomeEligible(user.id),
       ]);
       if (!cancelled) {
+        dashboardWelcomeStateByUserId[user.id] = { dismissed, eligible };
         setWelcomeDismissed(dismissed);
         setWelcomeEligible(eligible);
         setWelcomeHydrated(true);
@@ -1304,6 +1410,10 @@ function DashboardScreen({ user }: { user: SessionUser }) {
 
   const dismissWelcomeCard = useCallback(() => {
     setWelcomeDismissed(true);
+    dashboardWelcomeStateByUserId[user.id] = {
+      dismissed: true,
+      eligible: dashboardWelcomeStateByUserId[user.id]?.eligible ?? true,
+    };
     void markDashboardWelcomeDismissed(user.id);
   }, [user.id]);
   const todayLabel = formatUkGreetingDate(new Date());
@@ -3335,15 +3445,69 @@ function AccountSecurityScreen() {
   const c = useFlareColors();
   const bottomScrollInset = useBottomTabScrollInset();
 
+  const [bioAvailable, setBioAvailable] = useState(false);
+  const [bioOn, setBioOn] = useState(false);
+  const [bioLabel, setBioLabel] = useState("biometrics");
+
+  useEffect(() => {
+    let cancelled = false;
+    (async () => {
+      const [available, enabled, label] = await Promise.all([
+        isBiometricAvailable(),
+        readLockEnabled(),
+        biometricTypeLabel(),
+      ]);
+      if (cancelled) return;
+      setBioAvailable(available);
+      setBioOn(available && enabled);
+      setBioLabel(label);
+    })();
+    return () => {
+      cancelled = true;
+    };
+  }, []);
+
+  const toggleBio = useCallback(
+    async (next: boolean) => {
+      if (next) {
+        const ok = await authenticate(`Confirm ${bioLabel} to turn on app lock`);
+        if (!ok) return;
+        await setLockEnabled(true);
+        setBioOn(true);
+      } else {
+        await setLockEnabled(false);
+        setBioOn(false);
+      }
+    },
+    [bioLabel],
+  );
+
   return (
     <ScrollView
       style={[styles.screen, { backgroundColor: c.screen }]}
-      contentContainerStyle={{ paddingBottom: bottomScrollInset + 24 }}
+      contentContainerStyle={[styles.accountScrollContent, { paddingBottom: bottomScrollInset + 24 }]}
     >
-      <Card title="">
-        <Text style={[styles.muted, { color: c.textMuted, lineHeight: 20 }]}>
-          Sign-in and security options for your account will appear here.
-        </Text>
+      <Text style={[styles.dashboardSectionTitleLeft, { color: c.text }]}>App lock</Text>
+      <Card title="" style={styles.accountPaddedCard} compactBody>
+        <View style={styles.settingToggleRow}>
+          <View style={styles.settingToggleTextCol}>
+            <Text style={[styles.settingToggleTitle, { color: c.text }]}>
+              Unlock with {bioLabel === "biometrics" ? "biometrics" : bioLabel}
+            </Text>
+            <Text style={[styles.settingToggleHint, { color: c.textMuted }]}>
+              {bioAvailable
+                ? `Require ${bioLabel} each time you open FlareCare.`
+                : "Set up Face ID or fingerprint in your device settings to use this."}
+            </Text>
+          </View>
+          <Switch
+            value={bioOn}
+            onValueChange={toggleBio}
+            disabled={!bioAvailable}
+            trackColor={{ true: c.primary, false: c.appearanceChipInactiveBg }}
+            thumbColor={c.white}
+          />
+        </View>
       </Card>
     </ScrollView>
   );
@@ -3434,53 +3598,33 @@ function SettingsScreen() {
   const bottomScrollInset = useBottomTabScrollInset();
   const { appearancePreference, setAppearancePreference } = useFlareTheme();
 
-  const appearanceOptions = [
-    { key: "light" as const, label: "Light" },
-    { key: "dark" as const, label: "Dark" },
-  ];
-
-  const [bioAvailable, setBioAvailable] = useState(false);
-  const [bioOn, setBioOn] = useState(false);
-  const [bioLabel, setBioLabel] = useState("biometrics");
-
-  useEffect(() => {
-    let cancelled = false;
-    (async () => {
-      const [available, enabled, label] = await Promise.all([
-        isBiometricAvailable(),
-        readLockEnabled(),
-        biometricTypeLabel(),
-      ]);
-      if (cancelled) return;
-      setBioAvailable(available);
-      setBioOn(available && enabled);
-      setBioLabel(label);
-    })();
-    return () => {
-      cancelled = true;
-    };
-  }, []);
-
-  const toggleBio = useCallback(
-    async (next: boolean) => {
-      if (next) {
-        const ok = await authenticate(`Confirm ${bioLabel} to turn on app lock`);
-        if (!ok) return;
-        await setLockEnabled(true);
-        setBioOn(true);
-      } else {
-        await setLockEnabled(false);
-        setBioOn(false);
-      }
-    },
-    [bioLabel],
-  );
-
   return (
     <ScrollView
       style={[styles.screen, { backgroundColor: c.screen }]}
       contentContainerStyle={[styles.accountScrollContent, { paddingBottom: bottomScrollInset + 16 }]}
     >
+      <Text style={[styles.dashboardSectionTitleLeft, { color: c.text }]}>Appearance</Text>
+      <Card title="" style={styles.accountPaddedCard} compactBody>
+        <View style={styles.settingToggleRow}>
+          <View style={styles.settingToggleTextCol}>
+            <Text style={[styles.settingToggleTitle, { color: c.text }]}>
+              {appearancePreference === "dark" ? "Dark mode" : "Light mode"}
+            </Text>
+            <Text style={[styles.settingToggleHint, { color: c.textMuted }]}>
+              {appearancePreference === "dark"
+                ? "Use a darker theme that's easier on the eyes in low light."
+                : "Use a bright, clean theme that's easy to read in daylight."}
+            </Text>
+          </View>
+          <Switch
+            value={appearancePreference === "dark"}
+            onValueChange={(next) => setAppearancePreference(next ? "dark" : "light")}
+            trackColor={{ true: c.primary, false: c.appearanceChipInactiveBg }}
+            thumbColor={c.white}
+          />
+        </View>
+      </Card>
+      <Text style={[styles.dashboardSectionTitleLeft, { color: c.text }]}>Notifications</Text>
       <View style={[logHistoryCardStyles.trackerCard, { backgroundColor: c.card }]}>
         <LogHistoryList
           items={[
@@ -3495,54 +3639,6 @@ function SettingsScreen() {
           onPressItem={() => navigation.navigate("Reminders")}
         />
       </View>
-      <Text style={[styles.dashboardSectionTitleLeft, { color: c.text }]}>Appearance</Text>
-      <Card title="" style={styles.accountPaddedCard} compactBody>
-        <Text style={[styles.muted, { color: c.textMuted }]}>Choose light or dark for the app.</Text>
-        <View style={styles.appearanceRow}>
-          {appearanceOptions.map(({ key, label }) => {
-            const selected = appearancePreference === key;
-            return (
-              <Pressable
-                key={key}
-                accessibilityRole="button"
-                accessibilityState={{ selected }}
-                onPress={() => setAppearancePreference(key)}
-                style={({ pressed }) => [
-                  styles.appearanceChip,
-                  { backgroundColor: selected ? c.primary : c.appearanceChipInactiveBg },
-                  pressed && !selected ? { opacity: 0.92 } : null,
-                ]}
-              >
-                <Text style={[styles.appearanceChipText, { color: selected ? c.white : c.appearanceChipInactiveText }]}>
-                  {label}
-                </Text>
-              </Pressable>
-            );
-          })}
-        </View>
-      </Card>
-      <Text style={[styles.dashboardSectionTitleLeft, { color: c.text }]}>Security</Text>
-      <Card title="" style={styles.accountPaddedCard} compactBody>
-        <View style={styles.bioLockRow}>
-          <View style={styles.bioLockTextCol}>
-            <Text style={[styles.bioLockTitle, { color: c.text }]}>
-              Unlock with {bioLabel === "biometrics" ? "biometrics" : bioLabel}
-            </Text>
-            <Text style={[styles.muted, { color: c.textMuted }]}>
-              {bioAvailable
-                ? `Require ${bioLabel} each time you open FlareCare.`
-                : "Set up Face ID or fingerprint in your device settings to use this."}
-            </Text>
-          </View>
-          <Switch
-            value={bioOn}
-            onValueChange={toggleBio}
-            disabled={!bioAvailable}
-            trackColor={{ true: c.primary, false: c.appearanceChipInactiveBg }}
-            thumbColor={c.white}
-          />
-        </View>
-      </Card>
     </ScrollView>
   );
 }
@@ -3583,6 +3679,7 @@ function AccountScreen({
         return;
       }
       await finishSignOut();
+      await clearRememberedSession();
       prepareSignOut("account_deleted");
     } catch (e: unknown) {
       await restoreAfterAbortedSignOut();
@@ -4168,7 +4265,8 @@ function AppRoot() {
   const [authBusy, setAuthBusy] = useState(false);
   const [showSplash, setShowSplash] = useState(true);
   // Biometric app-lock: null = still checking (avoid revealing app before we know), false = off.
-  const [bioEnabled, setBioEnabled] = useState<boolean | null>(false);
+  // null = still resolving lock state on cold start (keep splash so we never flash the app first).
+  const [bioEnabled, setBioEnabled] = useState<boolean | null>(null);
   const [locked, setLocked] = useState(false);
   const [bioLabel, setBioLabel] = useState("biometrics");
   const [fontsLoaded] = useFonts({
@@ -4184,11 +4282,24 @@ function AppRoot() {
     const bootstrap = async () => {
       const { data } = await supabase.auth.getSession();
       const sessionUser = data.session?.user;
-      setUser(
-        sessionUser
-          ? sessionUserFromSupabaseAuthUser(sessionUser)
-          : null,
-      );
+      if (sessionUser) {
+        // Cold start with a restored session: decide the lock here (the one place we auto-lock on
+        // launch). Reopening the app shows the lock screen; fresh in-app logins never do.
+        const [available, enabled, label] = await Promise.all([
+          isBiometricAvailable(),
+          readLockEnabled(),
+          biometricTypeLabel(),
+        ]);
+        const on = available && enabled;
+        setBioLabel(label);
+        setBioEnabled(on);
+        setLocked(on);
+        setUser(sessionUserFromSupabaseAuthUser(sessionUser));
+      } else {
+        setBioEnabled(false);
+        setLocked(false);
+        setUser(null);
+      }
       setLoading(false);
     };
     bootstrap();
@@ -4215,7 +4326,9 @@ function AppRoot() {
     }
   }, [user?.id]);
 
-  // On login (or session restore), decide whether the app should open locked.
+  // Keep the biometric flag/label fresh when the signed-in user changes, but do NOT auto-lock
+  // here: cold-start locking is handled in bootstrap, resume-locking in the AppState effect.
+  // Fresh sign-in and biometric quick-login land straight in the app.
   useEffect(() => {
     let cancelled = false;
     if (!user?.id) {
@@ -4223,7 +4336,6 @@ function AppRoot() {
       setLocked(false);
       return;
     }
-    setBioEnabled(null);
     (async () => {
       const [available, enabled, label] = await Promise.all([
         isBiometricAvailable(),
@@ -4231,10 +4343,8 @@ function AppRoot() {
         biometricTypeLabel(),
       ]);
       if (cancelled) return;
-      const on = available && enabled;
       setBioLabel(label);
-      setBioEnabled(on);
-      setLocked(on);
+      setBioEnabled(available && enabled);
     })();
     return () => {
       cancelled = true;
@@ -4242,7 +4352,10 @@ function AppRoot() {
   }, [user?.id]);
 
   // Re-lock when the app is backgrounded (read fresh so toggling the setting takes effect next resume).
+  // Guarded by a signed-in user so the OS biometric dialog (which can flip the app to "inactive")
+  // during a quick-login unlock doesn't strand us on the lock screen right after signing in.
   useEffect(() => {
+    if (!user?.id) return;
     const sub = AppState.addEventListener("change", (state) => {
       if (state !== "background" && state !== "inactive") return;
       void (async () => {
@@ -4258,7 +4371,7 @@ function AppRoot() {
       })();
     });
     return () => sub.remove();
-  }, []);
+  }, [user?.id]);
 
   const prepareSignOut = useCallback((reason: SignOutReason) => {
     setSignOutNotice(reason);
@@ -4279,8 +4392,36 @@ function AppRoot() {
       // non-fatal
     }
     await clearCachedReminderStatus();
+    // Bank-style quick login: if biometric unlock is on, keep an encrypted refresh token so the
+    // user can get back in with just Face ID / fingerprint. We must NOT call supabase.auth.signOut()
+    // in this case — even scope "local" hits POST /logout and revokes the token server-side. Instead
+    // we clear the session from local storage only (below), leaving the refresh token valid.
+    let remembered = false;
+    try {
+      const [available, enabled] = await Promise.all([isBiometricAvailable(), readLockEnabled()]);
+      const { data } = await supabase.auth.getSession();
+      const refreshToken = data.session?.refresh_token;
+      if (available && enabled && refreshToken) {
+        await rememberSession({ refreshToken, email: data.session?.user?.email ?? null });
+        remembered = true;
+      }
+    } catch {
+      // non-fatal: fall back to a normal full sign-out
+    }
     setUser(null);
-    await supabase.auth.signOut();
+    if (remembered) {
+      // Local-only clear keeps the saved refresh token valid for biometric quick-login.
+      // Critical: the in-memory GoTrue session is still live with autoRefreshToken on. If we don't
+      // stop it, the background timer will (a) rotate the refresh token we just saved and (b) rewrite
+      // the session back into AsyncStorage — which makes the next cold start skip the landing and the
+      // fingerprint prompt never appear. Freeze auto-refresh so the saved token stays valid and the
+      // storage stays cleared. We re-arm auto-refresh on the next successful sign-in.
+      supabase.auth.stopAutoRefresh();
+      await clearLocalSupabaseSession();
+    } else {
+      await clearRememberedSession();
+      await supabase.auth.signOut();
+    }
   }, []);
 
   const restoreAfterAbortedSignOut = useCallback(async () => {
@@ -4365,6 +4506,8 @@ function AppRoot() {
     return (
       <AuthScreen
         onSignedIn={(next) => {
+          // Re-arm auto-refresh in case a prior "remembered" logout froze it (see finishSignOut).
+          supabase.auth.startAutoRefresh();
           setSignOutNotice(null);
           setUser(next);
         }}
@@ -4458,6 +4601,10 @@ const styles = StyleSheet.create({
   authMethodPanel: { flex: 1, justifyContent: "center" },
   authMethodActions: { marginTop: 18, gap: 8 },
   authTopRightSignIn: { position: "absolute", right: 20, zIndex: 2, padding: 4 },
+  authQuickUnlockSpacer: { flex: 1 },
+  authQuickUnlock: { alignItems: "center", gap: 12, paddingBottom: 24 },
+  authFingerprintDisc: { width: 72, height: 72, borderRadius: 36, alignItems: "center", justifyContent: "center" },
+  authQuickUnlockLabel: { fontSize: 14, fontFamily: "Inter_500Medium", textAlign: "center" },
   authSheetContent: { paddingTop: 8, paddingBottom: 8 },
   /** Neutralize the full-screen panels' `flex: 1` centering when hosted in the slide-up sheet. */
   authSheetPanel: { flex: 0, justifyContent: "flex-start" },
@@ -4794,9 +4941,10 @@ const styles = StyleSheet.create({
   },
   accountScrollContent: { flexGrow: 1 },
   /** Same height and radius as `PrimaryButton`; two equal slots like paired actions. */
-  bioLockRow: { flexDirection: "row", alignItems: "center", justifyContent: "space-between", gap: 12 },
-  bioLockTextCol: { flex: 1 },
-  bioLockTitle: { fontSize: 15, fontFamily: "Inter_500Medium", marginBottom: 2 },
+  settingToggleRow: { flexDirection: "row", alignItems: "flex-start", justifyContent: "space-between", gap: 14 },
+  settingToggleTextCol: { flex: 1, paddingRight: 2 },
+  settingToggleTitle: { fontSize: 15, lineHeight: 20, fontFamily: "Inter_500Medium", marginBottom: 4 },
+  settingToggleHint: { fontSize: 13, lineHeight: 18, fontFamily: "Inter_400Regular" },
   appearanceRow: { flexDirection: "row", gap: 8, marginTop: 14 },
   appearanceChip: {
     flex: 1,

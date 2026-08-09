@@ -3,7 +3,7 @@ import React, { type ComponentProps } from "react";
 import type { InstructionCopy } from "./InstructionCard";
 import { EmptySectionWelcome } from "./EmptySectionWelcome";
 import { LogHistoryCard } from "./LogHistoryList";
-import { WELCOME_CARD_INNER_PADDING, WELCOME_CARD_MIN_HEIGHT } from "../lib/layoutConstants";
+import { WELCOME_CARD_INNER_PADDING } from "../lib/layoutConstants";
 import { useFlareColors } from "../theme";
 
 type MciIconName = ComponentProps<typeof MaterialCommunityIcons>["name"];
@@ -36,11 +36,10 @@ export function FloatingWelcomeCard({
   dismissAccessibilityLabel?: string;
 }) {
   const c = useFlareColors();
-  const minHeight = fillHeight ? WELCOME_CARD_MIN_HEIGHT : undefined;
 
   return (
     <LogHistoryCard
-      style={{ marginBottom: 0, padding: WELCOME_CARD_INNER_PADDING, borderWidth: 1, borderColor: c.primary, minHeight }}
+      style={{ marginBottom: 0, padding: WELCOME_CARD_INNER_PADDING, borderWidth: 1, borderColor: c.primary }}
     >
       <EmptySectionWelcome
         instruction={instruction}

@@ -18,6 +18,25 @@ export const supabase = createClient(supabaseUrl, supabaseAnonKey, {
   },
 });
 
+/**
+ * Clear the persisted Supabase session locally WITHOUT calling the server logout endpoint.
+ * `supabase.auth.signOut()` (even with `scope: "local"`) revokes the current refresh token on the
+ * server, which would break biometric quick-login. This just removes the cached auth tokens from
+ * device storage so the next cold start shows the sign-in landing, while leaving the refresh token
+ * valid for a one-touch biometric restore.
+ */
+export async function clearLocalSupabaseSession(): Promise<void> {
+  try {
+    const keys = await AsyncStorage.getAllKeys();
+    const authKeys = keys.filter((k) => k.startsWith("sb-") && k.includes("-auth-token"));
+    if (authKeys.length) {
+      await AsyncStorage.multiRemove(authKeys);
+    }
+  } catch {
+    // non-fatal
+  }
+}
+
 export const TABLES = {
   LOG_SYMPTOMS: "log_symptoms",
   MEDICATIONS: "medications",
