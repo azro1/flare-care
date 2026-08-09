@@ -31,6 +31,7 @@ import {
   Pressable,
   StyleProp,
   StyleSheet,
+  Switch,
   Text,
   useWindowDimensions,
   View,
@@ -62,6 +63,8 @@ import { ConfirmModal } from "./components/ConfirmModal";
 import { FlareAlertHost, showFlareAlert } from "./components/FlareAlertHost";
 import { OverlayOutlet } from "./lib/overlayPortal";
 import { SlideUpSheet } from "./components/SlideUpSheet";
+import { BiometricLockScreen } from "./components/BiometricLockScreen";
+import { authenticate, biometricTypeLabel, isBiometricAvailable, readLockEnabled, setLockEnabled } from "./lib/biometricLock";
 import { CollapsingTitleScrollScreen } from "./components/CollapsingTitleScrollScreen";
 import { FlareThemeProvider, useFlareColors, useFlareTheme } from "./theme";
 import { formatUkDate, formatUkGreetingDate } from "./lib/formatUkDate";
@@ -3436,6 +3439,43 @@ function SettingsScreen() {
     { key: "dark" as const, label: "Dark" },
   ];
 
+  const [bioAvailable, setBioAvailable] = useState(false);
+  const [bioOn, setBioOn] = useState(false);
+  const [bioLabel, setBioLabel] = useState("biometrics");
+
+  useEffect(() => {
+    let cancelled = false;
+    (async () => {
+      const [available, enabled, label] = await Promise.all([
+        isBiometricAvailable(),
+        readLockEnabled(),
+        biometricTypeLabel(),
+      ]);
+      if (cancelled) return;
+      setBioAvailable(available);
+      setBioOn(available && enabled);
+      setBioLabel(label);
+    })();
+    return () => {
+      cancelled = true;
+    };
+  }, []);
+
+  const toggleBio = useCallback(
+    async (next: boolean) => {
+      if (next) {
+        const ok = await authenticate(`Confirm ${bioLabel} to turn on app lock`);
+        if (!ok) return;
+        await setLockEnabled(true);
+        setBioOn(true);
+      } else {
+        await setLockEnabled(false);
+        setBioOn(false);
+      }
+    },
+    [bioLabel],
+  );
+
   return (
     <ScrollView
       style={[styles.screen, { backgroundColor: c.screen }]}
@@ -3479,6 +3519,28 @@ function SettingsScreen() {
               </Pressable>
             );
           })}
+        </View>
+      </Card>
+      <Text style={[styles.dashboardSectionTitleLeft, { color: c.text }]}>Security</Text>
+      <Card title="" style={styles.accountPaddedCard} compactBody>
+        <View style={styles.bioLockRow}>
+          <View style={styles.bioLockTextCol}>
+            <Text style={[styles.bioLockTitle, { color: c.text }]}>
+              Unlock with {bioLabel === "biometrics" ? "biometrics" : bioLabel}
+            </Text>
+            <Text style={[styles.muted, { color: c.textMuted }]}>
+              {bioAvailable
+                ? `Require ${bioLabel} each time you open FlareCare.`
+                : "Set up Face ID or fingerprint in your device settings to use this."}
+            </Text>
+          </View>
+          <Switch
+            value={bioOn}
+            onValueChange={toggleBio}
+            disabled={!bioAvailable}
+            trackColor={{ true: c.primary, false: c.appearanceChipInactiveBg }}
+            thumbColor={c.white}
+          />
         </View>
       </Card>
     </ScrollView>
@@ -4105,6 +4167,10 @@ function AppRoot() {
   const [loading, setLoading] = useState(true);
   const [authBusy, setAuthBusy] = useState(false);
   const [showSplash, setShowSplash] = useState(true);
+  // Biometric app-lock: null = still checking (avoid revealing app before we know), false = off.
+  const [bioEnabled, setBioEnabled] = useState<boolean | null>(false);
+  const [locked, setLocked] = useState(false);
+  const [bioLabel, setBioLabel] = useState("biometrics");
   const [fontsLoaded] = useFonts({
     Inter_400Regular,
     Inter_500Medium,
@@ -4148,6 +4214,51 @@ function AppRoot() {
       void hydrateReminderStatusCache();
     }
   }, [user?.id]);
+
+  // On login (or session restore), decide whether the app should open locked.
+  useEffect(() => {
+    let cancelled = false;
+    if (!user?.id) {
+      setBioEnabled(false);
+      setLocked(false);
+      return;
+    }
+    setBioEnabled(null);
+    (async () => {
+      const [available, enabled, label] = await Promise.all([
+        isBiometricAvailable(),
+        readLockEnabled(),
+        biometricTypeLabel(),
+      ]);
+      if (cancelled) return;
+      const on = available && enabled;
+      setBioLabel(label);
+      setBioEnabled(on);
+      setLocked(on);
+    })();
+    return () => {
+      cancelled = true;
+    };
+  }, [user?.id]);
+
+  // Re-lock when the app is backgrounded (read fresh so toggling the setting takes effect next resume).
+  useEffect(() => {
+    const sub = AppState.addEventListener("change", (state) => {
+      if (state !== "background" && state !== "inactive") return;
+      void (async () => {
+        const [available, enabled, label] = await Promise.all([
+          isBiometricAvailable(),
+          readLockEnabled(),
+          biometricTypeLabel(),
+        ]);
+        if (available && enabled) {
+          setBioLabel(label);
+          setLocked(true);
+        }
+      })();
+    });
+    return () => sub.remove();
+  }, []);
 
   const prepareSignOut = useCallback((reason: SignOutReason) => {
     setSignOutNotice(reason);
@@ -4221,6 +4332,10 @@ function AppRoot() {
     if (profileSetupActive) {
       return <ProfileSetupScreen user={user!} onComplete={(next) => setUser(next)} />;
     }
+    if (user && bioEnabled === null) {
+      // Still resolving lock state — keep the splash so we never flash the app before locking.
+      return <SplashScreen />;
+    }
     if (user) {
       return (
         <AppEntryShell ready={appShellReady} backgroundColor={c.screen}>
@@ -4234,6 +4349,13 @@ function AppRoot() {
             restoreAfterAbortedSignOut={restoreAfterAbortedSignOut}
             onAppShellReady={markAppShellReady}
           />
+          {locked ? (
+            <BiometricLockScreen
+              label={bioLabel}
+              onUnlock={() => setLocked(false)}
+              onSignOut={() => void completeSignOut()}
+            />
+          ) : null}
         </AppEntryShell>
       );
     }
@@ -4260,6 +4382,9 @@ function AppRoot() {
     signOutBlocking,
     authBusy,
     appShellReady,
+    bioEnabled,
+    locked,
+    bioLabel,
     c.screen,
     beginSignOutBlocking,
     endSignOutBlocking,
@@ -4669,6 +4794,9 @@ const styles = StyleSheet.create({
   },
   accountScrollContent: { flexGrow: 1 },
   /** Same height and radius as `PrimaryButton`; two equal slots like paired actions. */
+  bioLockRow: { flexDirection: "row", alignItems: "center", justifyContent: "space-between", gap: 12 },
+  bioLockTextCol: { flex: 1 },
+  bioLockTitle: { fontSize: 15, fontFamily: "Inter_500Medium", marginBottom: 2 },
   appearanceRow: { flexDirection: "row", gap: 8, marginTop: 14 },
   appearanceChip: {
     flex: 1,
