@@ -1,37 +1,10 @@
-import { markMedicationHistoryInstructionEligible } from "./medicationHistoryInstructionTip";
-import { markAppointmentsInstructionEligible } from "./appointmentsInstructionTip";
-import { markAppointmentBriefInstructionEligible } from "./appointmentBriefInstructionTip";
-import { markBowelInstructionEligible } from "./bowelInstructionTip";
-import { markBristolGuideInstructionEligible } from "./bristolGuideInstructionTip";
-import { markDashboardWelcomeEligible } from "./dashboardWelcome";
-import { markHydrationInstructionEligible } from "./hydrationInstructionTip";
-import { markLogsInstructionEligible } from "./logsInstructionTip";
-import { markMyMedsInstructionEligible } from "./myMedsInstructionTip";
-import { markReportsInstructionEligible } from "./reportsInstructionTip";
-import { markSymptomHistoryInstructionEligible } from "./symptomHistoryInstructionTip";
-import { markSymptomLogInstructionEligible } from "./symptomLogInstructionTip";
-import { markTrackMedicationsInstructionEligible } from "./trackMedicationsInstructionTip";
-import { markWeightInstructionEligible } from "./weightInstructionTip";
-import { markWellbeingInstructionEligible } from "./wellbeingInstructionTip";
-import { markWellbeingHistoryInstructionEligible } from "./wellbeingHistoryInstructionTip";
+/**
+ * New-account first-run flags. While we trial the post-login intro screen, we pause marking
+ * every per-screen welcome card eligible — teach once at the start, then let the app breathe.
+ * Restore the Promise.all tip marks below if we roll the intro back.
+ */
+import { markNewUserIntroEligible } from "./newUserIntro";
 
 export async function markNewAccountInstructionTipsEligible(userId: string): Promise<void> {
-  await Promise.all([
-    markDashboardWelcomeEligible(userId),
-    markLogsInstructionEligible(userId),
-    markReportsInstructionEligible(userId),
-    markSymptomLogInstructionEligible(userId),
-    markSymptomHistoryInstructionEligible(userId),
-    markMyMedsInstructionEligible(userId),
-    markTrackMedicationsInstructionEligible(userId),
-    markMedicationHistoryInstructionEligible(userId),
-    markHydrationInstructionEligible(userId),
-    markBowelInstructionEligible(userId),
-    markBristolGuideInstructionEligible(userId),
-    markWeightInstructionEligible(userId),
-    markAppointmentsInstructionEligible(userId),
-    markAppointmentBriefInstructionEligible(userId),
-    markWellbeingInstructionEligible(userId),
-    markWellbeingHistoryInstructionEligible(userId),
-  ]);
+  await markNewUserIntroEligible(userId);
 }

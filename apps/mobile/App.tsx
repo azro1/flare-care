@@ -162,6 +162,8 @@ import {
   readDashboardWelcomeEligible,
 } from "./lib/dashboardWelcome";
 import { markNewAccountInstructionTipsEligible } from "./lib/newAccountInstructionTips";
+import { markNewUserIntroDismissed, shouldShowNewUserIntro } from "./lib/newUserIntro";
+import { NewUserIntroScreen } from "./components/NewUserIntroScreen";
 import { DASHBOARD_NEWS_HOME_SHELF_MAX, DASHBOARD_NEWS_SHELF_PEEK, dashboardNewsShelfCardWidth } from "./lib/newsShared";
 import {
   REPORTS_INSTRUCTION,
@@ -254,8 +256,19 @@ try {
   // Expo Go on Android SDK53+ does not support remote push API.
 }
 
-/** App mark: `fclogo_trans_splash.png` only (readable on dark UI and on primary blue “wells” in light). */
-const SPLASH_MARK_IMAGE = require("./assets/fclogo_trans_splash.png");
+/** App mark trial: MCI `hand-heart` (same as new-user intro). Revert to `fclogo_trans_splash.png` if needed. */
+const BRAND_MARK_MCI_ICON = "hand-heart" as const;
+
+function BrandMarkIcon({ size, color }: { size: number; color: string }) {
+  return (
+    <MaterialCommunityIcons
+      name={BRAND_MARK_MCI_ICON}
+      size={size}
+      color={color}
+      accessibilityIgnoresInvertColors
+    />
+  );
+}
 
 type SessionUser = {
   id: string;
@@ -410,10 +423,10 @@ function SplashScreen() {
     <View style={[styles.splashScreen, { backgroundColor: c.screen }]}>
       <View style={styles.splashLogoStage}>
         {c.isDark ? (
-          <Image source={SPLASH_MARK_IMAGE} style={styles.splashLogo} resizeMode="contain" />
+          <BrandMarkIcon size={96} color={c.white} />
         ) : (
           <View style={[styles.splashLogoMarkWell, { backgroundColor: c.primary }]}>
-            <Image source={SPLASH_MARK_IMAGE} style={styles.splashLogo} resizeMode="contain" />
+            <BrandMarkIcon size={96} color={c.white} />
           </View>
         )}
       </View>
@@ -779,21 +792,21 @@ function AuthScreen({
         hitSlop={12}
         style={[styles.authTopRightSignIn, { top: insets.top + 12 }]}
       >
-        <Ionicons name="person-circle" size={28} color={cAuth.white} />
+        <MaterialCommunityIcons name="login" size={24} color={cAuth.white} accessibilityIgnoresInvertColors />
       </Pressable>
       <View style={styles.authLandingOffset}>
         <View style={[styles.authLandingBlock, { minHeight: wizardLandingMinHeight() }]}>
           <View style={styles.authBrandBlock}>
-          <Image source={SPLASH_MARK_IMAGE} style={styles.authLogo} resizeMode="contain" />
-          <Text style={[styles.authBrandName, { color: authBlue ? cAuth.white : cAuth.text }]}>FlareCare</Text>
-          <Text
-            style={[
-              styles.authBrandTagline,
-              { color: authBlue ? "rgba(255,255,255,0.88)" : cAuth.textMuted },
-            ]}
-          >
-            Your health. Your IBD. Your control.
-          </Text>
+            <BrandMarkIcon size={64} color={authBlue ? cAuth.white : cAuth.primary} />
+            <Text style={[styles.authBrandName, { color: authBlue ? cAuth.white : cAuth.text }]}>FlareCare</Text>
+            <Text
+              style={[
+                styles.authBrandTagline,
+                { color: authBlue ? "rgba(255,255,255,0.88)" : cAuth.textMuted },
+              ]}
+            >
+              Your health. Your IBD. Your control.
+            </Text>
           </View>
         </View>
       </View>
@@ -834,7 +847,7 @@ function AuthScreen({
           </Pressable>
         </>
       ) : null}
-      <SlideUpSheet visible={sheetOpen} onClose={closeSheet} maxHeightFraction={0.9}>
+      <SlideUpSheet visible={sheetOpen} onClose={closeSheet} maxHeightFraction={0.9} sideInset={12} bottomInset={12}>
         <View style={styles.authSheetContent}>
           {step === "method" ? (
             <View style={[styles.authMethodPanel, styles.authSheetPanel]}>
@@ -1134,7 +1147,7 @@ function ProfileSetupScreen({ user, onComplete }: { user: SessionUser; onComplet
     >
       <View style={styles.authShell}>
         <View style={styles.authBrandBlock}>
-          <Image source={SPLASH_MARK_IMAGE} style={styles.authLogo} resizeMode="contain" />
+          <BrandMarkIcon size={64} color={authBlue ? cAuth.white : cAuth.primary} />
           <Text style={[styles.authBrandName, { color: authBlue ? cAuth.white : cAuth.text }]}>FlareCare</Text>
         </View>
         <Card title="" plain style={styles.authCardPlain}>
@@ -3988,7 +4001,11 @@ function AppTabs({
       navigateFromReminderNotification(navigationRef, pending);
       clearStoredReminderNotificationResponse();
     }
-    requestAnimationFrame(() => onAppShellReady?.());
+    // Two frames so the stack/header can settle before lifting the anti-drop cover
+    // (especially after new-user intro → dashboard remount).
+    requestAnimationFrame(() => {
+      requestAnimationFrame(() => onAppShellReady?.());
+    });
   }, [clearStoredReminderNotificationResponse, navigationRef, onAppShellReady, syncFocusRoute]);
 
   const headerOptions = ({ navigation, route }: { navigation: any; route: { name: string; params?: { document?: string } } }) => {
@@ -4269,6 +4286,8 @@ function AppRoot() {
   const [bioEnabled, setBioEnabled] = useState<boolean | null>(null);
   const [locked, setLocked] = useState(false);
   const [bioLabel, setBioLabel] = useState("biometrics");
+  /** null = still checking; true = show post-login intro before dashboard. */
+  const [newUserIntroPending, setNewUserIntroPending] = useState<boolean | null>(null);
   const [fontsLoaded] = useFonts({
     Inter_400Regular,
     Inter_500Medium,
@@ -4334,17 +4353,20 @@ function AppRoot() {
     if (!user?.id) {
       setBioEnabled(false);
       setLocked(false);
+      setNewUserIntroPending(false);
       return;
     }
     (async () => {
-      const [available, enabled, label] = await Promise.all([
+      const [available, enabled, label, showIntro] = await Promise.all([
         isBiometricAvailable(),
         readLockEnabled(),
         biometricTypeLabel(),
+        shouldShowNewUserIntro(user.id),
       ]);
       if (cancelled) return;
       setBioLabel(label);
       setBioEnabled(available && enabled);
+      setNewUserIntroPending(showIntro);
     })();
     return () => {
       cancelled = true;
@@ -4450,9 +4472,24 @@ function AppRoot() {
     setAppShellReady(false);
   }, [user?.id, profileSetupActive]);
 
+  // Intro sits outside AppEntryShell — force the anti-drop cover for the next dashboard mount.
+  useEffect(() => {
+    if (newUserIntroPending) setAppShellReady(false);
+  }, [newUserIntroPending]);
+
   const markAppShellReady = useCallback(() => {
     setAppShellReady(true);
   }, []);
+
+  const finishNewUserIntro = useCallback(() => {
+    if (!user?.id) {
+      setNewUserIntroPending(false);
+      return;
+    }
+    setAppShellReady(false);
+    setNewUserIntroPending(false);
+    void markNewUserIntroDismissed(user.id);
+  }, [user?.id]);
 
   const content = useMemo(() => {
     if (!fontsLoaded || loading || showSplash || !appearanceHydrated || signOutBlocking) {
@@ -4473,9 +4510,12 @@ function AppRoot() {
     if (profileSetupActive) {
       return <ProfileSetupScreen user={user!} onComplete={(next) => setUser(next)} />;
     }
-    if (user && bioEnabled === null) {
-      // Still resolving lock state — keep the splash so we never flash the app before locking.
+    if (user && (bioEnabled === null || newUserIntroPending === null)) {
+      // Still resolving lock / intro state — keep the splash so we never flash the app first.
       return <SplashScreen />;
+    }
+    if (user && newUserIntroPending) {
+      return <NewUserIntroScreen onFinished={finishNewUserIntro} />;
     }
     if (user) {
       return (
@@ -4528,6 +4568,8 @@ function AppRoot() {
     bioEnabled,
     locked,
     bioLabel,
+    newUserIntroPending,
+    finishNewUserIntro,
     c.screen,
     beginSignOutBlocking,
     endSignOutBlocking,
@@ -4619,7 +4661,7 @@ const styles = StyleSheet.create({
     marginTop: 1,
   },
   authLegalText: { flex: 1, fontSize: 13, lineHeight: 18, fontFamily: "Inter_400Regular" },
-  authLegalLink: { fontFamily: "Inter_600SemiBold", textDecorationLine: "underline" },
+  authLegalLink: { fontFamily: "Inter_600SemiBold" },
   legalModalRoot: { flex: 1 },
   legalModalHeader: {
     flexDirection: "row",
@@ -4914,8 +4956,8 @@ const styles = StyleSheet.create({
     alignItems: "center",
     gap: 6,
   },
-  accountDeleteLink: { paddingVertical: 10 },
-  accountDeleteLinkText: { fontSize: FLARE_FONT_SIZE.subhead, fontFamily: "Inter_500Medium" },
+  accountDeleteLink: { paddingVertical: 8 },
+  accountDeleteLinkText: { fontSize: FLARE_FONT_SIZE.subhead, fontFamily: FLARE_FONT_FAMILY.regular },
   accountDeleteHint: {
     fontSize: 13,
     fontFamily: "Inter_400Regular",

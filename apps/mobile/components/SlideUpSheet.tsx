@@ -30,11 +30,17 @@ export function SlideUpSheet({
   onClose,
   children,
   maxHeightFraction = 0.9,
+  /** Inset the sheet from the left/right screen edges (outside the card). */
+  sideInset = 0,
+  /** Inset the sheet from the bottom screen edge (outside the card). */
+  bottomInset = 0,
 }: {
   visible: boolean;
   onClose: () => void;
   children: React.ReactNode;
   maxHeightFraction?: number;
+  sideInset?: number;
+  bottomInset?: number;
 }) {
   const c = useFlareColors();
   const insets = useSafeAreaInsets();
@@ -142,6 +148,11 @@ export function SlideUpSheet({
               backgroundColor: c.card,
               maxHeight: winH * maxHeightFraction,
               paddingBottom: Math.max(insets.bottom, 24),
+              left: sideInset,
+              right: sideInset,
+              bottom: bottomInset,
+              borderBottomLeftRadius: bottomInset > 0 ? 22 : 0,
+              borderBottomRightRadius: bottomInset > 0 ? 22 : 0,
               transform: [{ translateY: composedTranslate }],
             },
           ]}
