@@ -8,19 +8,19 @@ Product overview, env vars, and how to run the app stay in **`README.md`**. Rece
 
 ## Known-good checkpoints (rollback)
 
-If reminders / welcome cards / related mobile UX regress while we keep building, start from this commit before deep debugging:
+If reminders / related mobile UX regress while we keep building, start from this commit before deep debugging:
 
 | When verified | Commit | Summary |
 |---------------|--------|---------|
-| **2026-07-23** (working in daily use since 2026-07-06) | **`413eca9`** (`413eca9d2a9eb3f4b607053738665b301d3de9a9`) | **`fix(mobile): med reminders, welcome card overlay, and Reminders UX`** |
+| **2026-08-10** | **`ed81d36`** (on `mobile-native`) | Auth polish, new-user intro, welcome cards removed, caption hints |
+| **2026-07-23** (working in daily use since 2026-07-06) | **`413eca9`** | **`fix(mobile): med reminders, welcome card overlay, and Reminders UX`** |
 
 **What was solid at `413eca9`:**
 - Local medication + appointment reminders scheduling / firing after phone-settings permission
 - Reminders tab UX (setup copy, auto-refresh on return from settings, no wrong-state flash)
-- Welcome card transparent overlay + updated My Meds / Appointments reminder copy
 - Confirm modal / delete-account card spacing polish
 
-**Restore check:** `git show 413eca9` or `git checkout 413eca9` (detached) / create a branch from it if you need to compare.
+**Restore check:** `git show <sha>` or `git checkout <sha>` (detached) / create a branch from it if you need to compare.
 
 ---
 
@@ -80,7 +80,7 @@ Use existing screens as reference — do **not** default to web-style teal hyper
 | Piece | Use for |
 |-------|---------|
 | **`SuccessNoticeScreen`** (`components/SuccessNoticeScreen.tsx`) | Full-screen **success** state after something completes — green checkmark, title, message, one **`PrimaryButton`**. Pass `title`, `message`, `buttonTitle`, `onPress`. Use `fullScreen` for root-level screens (logout) with no bottom nav. **Always pass `offsetForBottomTabBar`** when the success screen shows while the bottom tab bar is visible (Dashboard, Reminders, Account tab roots). |
-| **`ConfirmModal`** (`components/ConfirmModal.tsx`) | **Confirm/cancel** (or single-button **notice**) sheet — follows in-app light/dark. Prefer this over `Alert.alert`. |
+| **`ConfirmModal`** (`components/ConfirmModal.tsx`) | **Confirm/cancel** (or single-button **notice**) sheet — follows in-app light/dark. Prefer this over `Alert.alert`. Most destructive confirms use cadet **`confirmDestructive`**; **Delete account** only uses true red **`confirmDanger`**. Renders via **`Portal` → `OverlayOutlet`** (not native `Modal`). |
 | **`showFlareAlert` / `FlareAlertHost`** (`components/FlareAlertHost.tsx`) | Drop-in for `Alert.alert(title, message, buttons?)` — renders `ConfirmModal`. Host mounts once under `FlareThemeProvider`. When `onPress` navigates, use `{ holdUntilDismissed: true }` + `dismissFlareAlert()` after paint (see Auth table). |
 
 **Do not** copy the checkmark + title + message + button layout into `App.tsx` or a screen file. Extend **`SuccessNoticeScreen`** props only if a new success pattern is genuinely different (e.g. a second button).
@@ -95,33 +95,35 @@ Use existing screens as reference — do **not** default to web-style teal hyper
 
 ---
 
-## First-time instruction cards (do not duplicate)
+## New-user intro + caption hints (do not resurrect welcome cards)
 
-**Direction:** small dismissible welcome cards on key screens to orient **new accounts** — not returning users. Former lightbulb tips are retired; copy lives in **`lib/instructionCardCopy.ts`** and shows once until **X** dismiss.
+**Direction (2026-08):** Per-screen floating welcome / instruction cards are **gone**. New accounts get a **one-shot intro** after first sign-in; hubs use small **caption hints** under lists where helpful. Do **not** reintroduce `FloatingWelcomeCard` / `DashboardWelcomeCard` / `instructionCardCopy` / per-screen `*InstructionTip` modules.
+
+### New-user intro
 
 | Piece | Use for |
 |-------|---------|
-| **`DashboardWelcomeCard`** (`components/DashboardWelcomeCard.tsx`) | Floating instruction card — copy + **X** dismiss. Reuse the shell for future per-page tips (pass different message props when we generalise). |
-| **`lib/instructionCardCopy.ts`** | Shared instruction card title + paragraphs — **`DASHBOARD_GETTING_STARTED_INSTRUCTION`**, **`REPORTS_INSTRUCTION`** (Reports page, not wired yet). |
-| **`lib/dashboardWelcome.ts`** | Per-user **eligible** + **dismissed** flags in AsyncStorage. **`isNewAuthUser`** + **`markDashboardWelcomeEligible`** on sign-up only (`AuthScreen` email OTP / Google). |
-| **`App.tsx` → `DashboardScreen`** | Renders card in **`dashboardWelcomeFloat`** — `position: absolute` at top of dashboard content (not nav header); scroll runs underneath; no reserved spacer above weather card. |
+| **`NewUserIntroScreen`** (`components/NewUserIntroScreen.tsx`) | Full-screen post-login intro — **Done** finishes; copy in **`lib/newUserIntroCopy.ts`**. |
+| **`lib/newUserIntro.ts`** | Eligible / dismissed flags + **`isNewAuthUser`** + **`resolveNewUserIntroPending`**. Mark eligible via **`markNewUserIntroEligible`** / **`markNewAccountInstructionTipsEligible`** on new signup only. |
+| **`AppRoot`** | Keep **`newUserIntroPending === null`** until resolve finishes — never leave `false` after logout or the bottom nav can flash before intro. |
 
-**Show when:** `welcomeEligible && !welcomeDismissed` (hydrated from storage). **Never** for existing accounts logging in — eligibility is set only at account creation.
+**Show when:** eligible + not dismissed + recent account (`isNewAuthUser`). Returning users skip intro.
 
-**Dismiss:** X → **`markDashboardWelcomeDismissed(userId)`** — do not show again unless they delete the account and sign up fresh (new user id).
+### Caption hints (small helper text)
 
-**Current dashboard copy:** **`DASHBOARD_GETTING_STARTED_INSTRUCTION`** in `lib/instructionCardCopy.ts`. Reports copy saved as **`REPORTS_INSTRUCTION`** (same file) for when the Reports instruction card is built.
+| Token | Use |
+|-------|-----|
+| **`FLARE_CAPTION_HINT`** (`layoutConstants.ts`) | Muted 12px helper under hubs / destructive links. Pair with `c.textMuted` at the call site. |
 
-**Visual (instruction cards):** cadet **left accent bar** + **primary border** + stronger shadow; **compass** icon in `surfaceSubtle` circle; bold **section title** (`c.text`); body **`c.textSecondary`** — layout tokens **`INSTRUCTION_CARD_*`** in `layoutConstants.ts`; colours via **`useFlareColors()`**. Generalise this shell when adding tips on other screens.
+**Live examples:** Logs hub (`App.tsx` `LogsScreen`), Appointment Summary (`AppointmentsListPane`), Account delete hint.
 
-**When adding another page:** new eligible key or generalised tip id in storage; same float pattern; one short paragraph; dismiss once per account per tip.
+### Auth landing brand (keep in sync)
 
-**Dim scrim (`InstructionCardOverlay` + `InstructionScreenShell`):** soft dim via **`instructionScrim`** rgba. **Convention:** scroll stays usable; lists, links, primary buttons, and thumb FAB stay **visible** but blocked until **X** dismiss (`InstructionInteractionBlock`). Exception: Hydration **Daily Intake Guidelines** still uses **`interactiveWhileInstruction`** until aligned with dashboard.
+Sign-in (`AuthScreen`) and **Almost there** (`ProfileSetupScreen`) share the same lockup: **`authLandingBrandRow`** — `BrandMarkIcon` size **28** + **FlareCare** (`authLandingName`), same page padding / centered stack. Do not put a large solo logo back on profile setup.
 
-| Do | Don't |
-|----|-------|
-| Keep scroll content mounted; block taps with **`InstructionInteractionBlock`** | Hide page content when instruction shows |
-| Block help links and FAB until dismiss (default) | Allow CTAs through the dim layer |
+### `InstructionScreenShell`
+
+Still used as the scroll + FAB shell on tracker / list screens. Pass **`showInstruction={false}`** / **`instruction={null}`** — overlay API is dormant. Do not wire floating cards again.
 
 ---
 
@@ -138,7 +140,7 @@ All shared list UI lives in **`components/LogHistoryList.tsx`**. Do **not** hand
 | **Navigate / browse rows** (chevron, 1 or 2 lines) — Account links, appointment presets, summary nav, legal links | **`LogHistoryCard`** + **`LogHistoryList`** + `onPressItem`. Items: plain `{ id, title }` or **`buildBrowseLogRowItem`** when you need a subtitle. |
 | **Saved log history** (title + date, tap → detail) | **`LogHistoryPreviewList`** (or **`LogHistoryList`**) + **`buildTimestampLogRowItem`**. Paginated: **`usePaginatedLogList`** / **`useWizardLogHistory`**. |
 | **Read-only counts** (title on left, number on right) — Today → Summary | **`LogHistoryList`** + `trailingText` on each item. |
-| **History hub** (list card only) | **`LogHistoryCard`** + list — first-time copy in welcome card (`InstructionScreenShell`). |
+| **History hub** (list card only) | **`LogHistoryCard`** + list — optional **`FLARE_CAPTION_HINT`** under the card (Logs hub). |
 | **Read-only label + value fields** (not tappable rows) — Account info, brief detail screens | **`LogDetailFieldGroup`** in **`LogDetailCard`** — **not** `LogHistoryList`. |
 
 **Default rule:** if it’s a **row list on the inset tray**, use **`LogHistoryList`** (1-line and 2-line rows both). Row height and chevron alignment are automatic — **never** copy `minHeight` / spacer logic into a screen. Use `renderLeading` / `getRowStyle` / `multilineTitle` / `renderTrailing={() => null}` when the row shape differs (Bristol chart, talking points).
@@ -180,10 +182,10 @@ All shared list UI lives in **`components/LogHistoryList.tsx`**. Do **not** hand
 - Dashboard → **Logs** tab → History card: `LogHistoryCard` + `buildBrowseLogRowItem` (`App.tsx` → `DashboardScreen`)
 - **Account** → My account / legal links: `LogHistoryList` + title-only items + `onPressItem` (`App.tsx` → `AccountScreen`, `LegalLinksScreen`)
 - **Appointment summary** period picker + result nav: `LogHistoryCard` + `LogHistoryList` + `buildBrowseLogRowItem` (`AppointmentBriefScreen`, `AppointmentBriefResultScreen`)
-- **Symptom history** / **Medication tracking history**: `LogHistoryCard` + `LogHistoryPreviewList` + `buildTimestampLogRowItem` + `useWizardLogHistory` + welcome card copy in `instructionCardCopy.ts`
+- **Symptom history** / **Medication tracking history**: `LogHistoryCard` + `LogHistoryPreviewList` + `buildTimestampLogRowItem` + `useWizardLogHistory`
 - **Focus refresh:** **`syncExpandedFromCache()`** + **`refresh()`** on focus (not **`resetAndLoad`**) — refetches data; expansion reset only when navigation leaves the section (table above).
 - **Load more:** teal **`c.primary`**, underlined, **`FLARE_FONT_SIZE.muted`** — via `logHistoryListStyles.loadMoreLabel`; row sits **outside** the grey tray with `CARD_SECTION_INNER_GAP` margin
-- **Bowel** / **My Meds** (`screens/BowelScreen.tsx`, `screens/MedicationsScreen.tsx`): list-first — icon + **Nothing here yet** when empty; welcome card on first visit; **thumb-reach + FAB** (`TrackerThumbFab`). My Meds passes `tabBarClearance={bottomTabBarHeight(...)}`. Bowel list subtitle = **`created_at`**; detail fields use **`occurred_at`** + **Added** header from `created_at`. **Weight** / **Appointments** — same FAB pattern.
+- **Bowel** / **My Meds** (`screens/BowelScreen.tsx`, `screens/MedicationsScreen.tsx`): list-first — icon + **Nothing here yet** when empty; **thumb-reach + FAB** (`TrackerThumbFab`). My Meds passes `tabBarClearance={bottomTabBarHeight(...)}`. Bowel list subtitle = **`created_at`**; detail fields use **`occurred_at`** + **Added** header from `created_at`. **Weight** / **Appointments** — same FAB pattern.
 - **Bristol chart** (`screens/BristolGuideScreen.tsx`): **exception** — manual tray; see table above.
 
 ### Row shapes (`LogHistoryList` handles all of these)
@@ -248,7 +250,9 @@ Do **not** remove these checks when touching wizard back/next — they block the
 | `SCREEN_EDGE_PADDING` | Horizontal inset for screens, cards, headers |
 | `CARD_SECTION_INNER_GAP` | Gap below in-card section title before body; load-more row margin |
 | `CARD_SECTION_TITLE` | In-card section headings — **bold** 14px (`FlareScreenSectionTitle inCard`, wizard review section names) |
-| `INSTRUCTION_CARD_*` | Floating instruction cards — padding, radius, gaps, title/body typography (`DashboardWelcomeCard`, future per-screen tips) |
+| `FLARE_CAPTION_HINT` | Small muted helper under hubs / footers (Logs, Appointment Summary, Account delete) |
+| `CONFIRM_MODAL_*` | Confirm / notice modal title + message + action gap tokens |
+| `INSTRUCTION_CARD_*` | Legacy layout tokens for dormant overlay shell — **do not** wire floating welcome cards again |
 | `NAV_ROW_LABEL` | Tappable row label — **regular** 14px (Account rows, wizard **Edit**) |
 | `NAV_ROW_CHEVRON_SIZE` | `chevron-forward` size on navigate / Edit rows (16px) |
 | `DETAIL_FIELD_LABEL` | Stacked field labels on log detail / review trays |
@@ -422,15 +426,27 @@ For those, keep `headerTitle: "…"` in `headerOptions` and **18px** / **16px** 
 | App mirror | `EXPO_PUBLIC_OTP_EXPIRY_SECONDS` in env | `900` — **must match** Supabase |
 | Max resends | `OTP_MAX_RESENDS` in `lib/otpAuth.ts` | `3` |
 
+**Countdown:** owned by **`AuthOtpCountdown`** (child) so the code field is not re-rendered every second. **Resend** only appears after the timer hits zero (replaces the countdown).
+
+**Verify errors:** Supabase often returns one blob for wrong + expired (`Token has expired or is invalid`). Use **one** friendly message via **`otpVerifyErrorMessage`** — do not pretend we can split those cases from the API string. Current copy: *The code you entered is incorrect. Please check the digits and try again. You can request a new one once the timer ends.*
+
 **Key exports (`lib/otpAuth.ts`):** `OTP_EXPIRY_SECONDS`, `OTP_MAX_RESENDS`, `formatOtpCountdown`, `otpRemainingSeconds`, `isOtpExpired`, `otpVerifyErrorMessage`, `otpResendErrorMessage`.
 
-**Later (optional):** thin `sendOtp` / `verifyOtp` / `resendOtp` abstraction if auth provider changes off Supabase.
+**Alerts / overlays:** `ConfirmModal` portals into **`OverlayOutlet`** (`lib/overlayPortal.tsx`). Register/unregister in **`useLayoutEffect`** so a dismissed full-screen Pressable cannot linger and steal TextInput taps.
 
 ---
 
-## Biometric quick-login (bank-style) — when the fingerprint prompt shows
+## Biometric app lock + quick-login (fingerprint / Face ID)
 
-**UI:** `App.tsx` (`AuthScreen` landing detect effect + `runQuickUnlock`, `AppRoot.finishSignOut`). **Helpers:** `lib/rememberedSession.ts` (SecureStore refresh token), `lib/biometricLock.ts`, `lib/supabase.ts` (`clearLocalSupabaseSession`).
+### App lock (signed-in cover)
+
+**UI:** `components/BiometricLockScreen.tsx`. **Helpers:** `lib/biometricLock.ts` (`authenticate`, `readLockEnabled`, `setLockEnabled`, …).
+
+When App lock is ON and the app returns from background, show the lock cover over the already-mounted app (keeps nav state). Auto-prompt on mount; fingerprint affordance + **Sign out** at the bottom.
+
+### Bank-style quick-login (signed-out landing)
+
+**UI:** `App.tsx` (`AuthScreen` + `runQuickUnlock`, `AppRoot.finishSignOut`). **Helpers:** `lib/rememberedSession.ts` (SecureStore refresh token), `lib/biometricLock.ts`, `lib/supabase.ts` (`clearLocalSupabaseSession`).
 
 **The prompt only arms on an explicit logout while App lock is ON.** That's the *only* place we save the refresh token (`finishSignOut` → `rememberSession`). Don't expect it after other flows:
 
@@ -441,9 +457,38 @@ For those, keep `headerTitle: "…"` in `headerOptions` and **18px** / **16px** 
 | **Delete account** | **No** | `handleDeleteAccountConfirm` calls `clearRememberedSession()` — token wiped, and the server account is gone anyway |
 | **Log out with App lock OFF** | **No** | `finishSignOut` takes the else-branch: `clearRememberedSession()` + full `supabase.auth.signOut()` |
 
+**Fingerprint affordance UX:** do **not** show the bottom fingerprint control while the OS biometric sheet is up. Show it only **after** the user dismisses / fails the auto prompt (`showQuickUnlockAffordance`). Layout matches **`BiometricLockScreen`** (fingerprint + reserved Sign out row height) so Y positions align.
+
 **Do not "fix" the fresh-signup case by auto-prompting** — that was deliberately removed to stop double-prompting on first login.
 
 **Critical (intermittency bug):** on a remembered logout we must **not** call `supabase.auth.signOut()` (even `scope: "local"` hits the server and revokes the token). We use `clearLocalSupabaseSession()` (local storage wipe only) **and** `supabase.auth.stopAutoRefresh()` — otherwise the still-live in-memory session's auto-refresh timer rotates the saved token and re-persists the session, so the next cold start skips the landing and the prompt never shows. Re-arm with `startAutoRefresh()` on the next successful sign-in (`onSignedIn`).
+
+---
+
+## Auth / OTP / overlay gotchas (fix here first)
+
+Hard-won from the 2026-08 sign-in redesign. Check this table **before** inventing a new theory.
+
+| Symptom | Likely cause | Fix / rule |
+|---------|--------------|------------|
+| **Can't type in verification code** (email field worked) | (1) Parent re-renders every 1s from OTP countdown; (2) **ghost** full-screen `ConfirmModal` Pressable still in `OverlayOutlet` after dismiss; (3) fingerprint `Pressable` later sibling overlapping a tall code form | (1) Keep countdown in **`AuthOtpCountdown`** (or any child) — never `setInterval` → `setState` on whole `AuthScreen`. Prefer plain `useState` for the code field, not RHF if it fights focus. (2) Portal sync/cleanup in **`useLayoutEffect`**; `ConfirmModal` keeps `Portal` mounted and syncs `null` when `visible={false}`. After Fast Refresh with a stuck overlay: **full app reload**. (3) Raise form `zIndex` above fingerprint row; don't let a later sibling steal taps. |
+| **User taps OK on “Check your email” but still can't focus the field** | Overlay registry race (`useEffect` cleanup after paint) or Fast Refresh left a stale portal entry | `overlayPortal.tsx` must clear on unmount; full reload; focus input in alert `onPress` via ref after `InteractionManager.runAfterInteractions`. |
+| **Wrong code shows “expired / wait for timer / Resend”** | Parsing Supabase `error.message` for `expired` vs `invalid` — API often returns **both** in one string | **One** message only (`otpVerifyErrorMessage`). Never claim we know wrong vs expired from the API. Don't tell them to tap **Resend** while the countdown is still visible — Resend **replaces** the timer only when it hits 0. |
+| **Bottom nav flashes** right after first login before intro | `newUserIntroPending` left `false` from a prior logout | Keep **`null` until `resolveNewUserIntroPending` finishes**, then `true`/`false`. |
+| **Fingerprint sits in the user's face** while Face ID sheet is open | Affordance mounted at the same time as auto-prompt | Gate with **`showQuickUnlockAffordance`** — only after OS prompt dismissed/failed. |
+| **Fingerprint Y doesn't match lock screen** | Missing reserved Sign out row height on auth landing | Match **`BiometricLockScreen`** bottom stack (fingerprint + invisible Sign out slot). |
+| **Almost there looks different from sign-in** | Large solo logo / old `authShell` layout | Same **`authLandingBrandRow`** as `AuthScreen` (icon 28 + name). |
+| **Tempted to bring back welcome cards** | Old `DEV_NOTES` / muscle memory | **Don't.** Intro + `FLARE_CAPTION_HINT` only. Shell may stay; cards stay dead. |
+| **`master..HEAD` shows 100+ commits** on a new feat branch | Branch was cut from `mobile-native` tip, not from `master` | Commits **since this branch was created**: `git log --oneline <branch-create-sha>..HEAD` (check `git reflog show <branch>`). |
+
+**OTP field checklist if typing breaks again:**
+1. Full reload (clear ghost overlay).
+2. Confirm `AuthOtpCountdown` is isolated — no `otpTick` on `AuthScreen`.
+3. Confirm `OverlayOutlet` is empty when no alert is visible (no absoluteFill Pressable).
+4. Confirm code field uses local state + `editable` not stuck false.
+5. Temporarily hide fingerprint affordance — if typing works, it's z-order / overlap.
+
+**Destructive confirms:** most use cadet (`confirmDestructive`). **Delete account** only uses true red (`confirmDanger` / `c.destructiveFill`).
 
 ---
 
@@ -493,7 +538,7 @@ Separate flows, separate data:
 
 ## Keeping these notes useful
 
-When you add shared UI patterns, success flows, log lists, collapsing-title pages, or **dashboard home data cards** — **update this file**, not the README.
+When you add shared UI patterns, success flows, log lists, collapsing-title pages, **dashboard home data cards**, or **auth/biometric gotchas** — **update this file**, not the README. If something took more than one wrong guess to fix, add a row to **Auth / OTP / overlay gotchas**.
 
 When you change **product positioning** or **user-visible feature list** — update **`README.md`**.
 

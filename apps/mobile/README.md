@@ -21,12 +21,13 @@ For **recent UI / polish / changelog-style notes**, see **`CHANGELOG.md`**.
 
 ## What the mobile app does (feature areas)
 
-- **Auth:** Email **OTP** sign-in (countdown, resend limits, friendly errors) and **Google** sign-in via Supabase.
+- **Auth:** Email **OTP** sign-in (countdown, resend after expiry, friendly errors), **Google** sign-in via Supabase, optional **Face ID / fingerprint** app lock + bank-style quick unlock after logout, and a **one-shot new-user intro** after first sign-in.
 - **Dashboard:** Home overview, **weather** (via your web API where configured), **news** rail when available, shortcuts into trackers.
 - **Core tracking:** Symptoms, medications (including “taken” / tracking inserts), **hydration**, **bowel**, **weight**, **appointments**.
-- **Reports & briefs:** Mobile report views and sharing / email using the **existing report email API** from the web backend.
+- **Logs hub:** Browse symptom / medication / wellbeing history; short caption under the list.
+- **Reports & briefs:** Mobile report views and sharing / email using the **existing report email API** from the web backend; **Appointment Summary** from Appointments.
 - **Reminders:** Native notification permission and **medication reminder** scheduling (FCM on Android; see Firebase notes below).
-- **Account:** Profile / email display, **light / dark** theme, **About** (product + contact), **logout** (with confirmation modal).
+- **Account:** Profile / email display, **light / dark** theme, **App lock**, **About** (product + contact), **logout** (with confirmation modal).
 
 ---
 
@@ -41,18 +42,20 @@ For **recent UI / polish / changelog-style notes**, see **`CHANGELOG.md`**.
 
 ## Email OTP verification (user-facing)
 
-Email sign-in uses a **one-time code** (Supabase OTP). The verification step shows a **live expiry countdown**, controlled **resend**, and user-friendly error copy.
+Email sign-in uses a **one-time code** (Supabase OTP). The verification step shows a **live expiry countdown**, controlled **resend** (only after the timer ends), and user-friendly error copy.
 
 | Phase | What the user sees |
 |-------|-------------------|
 | **Code sent** | Alert to check email; user enters code on verification step |
-| **Time remaining** | `Code expires in M:SS` countdown (no resend button yet) |
+| **Time remaining** | `Code expires in M:SS` countdown (**Resend** not shown yet) |
 | **Expired** | Countdown hidden; **Resend code** enabled (same email, new OTP, timer restarts) |
 | **Resend limit** | Max **3** resend taps per attempt (**4** emails total incl. first send); then blocked with clear copy |
-| **Bad / expired code** | Friendly message pointing to resend after timer |
+| **Wrong / bad code** | One friendly message: check digits and try again; request a new code once the timer ends (Supabase does not reliably split “wrong” vs “expired”) |
 | **Leave flow** | Timer state is **not** persisted — restarting sign-in resets the attempt |
 
-Account → Information shows sign-in method as **Email OTP** when applicable. Config and code pointers: **`DEV_NOTES.md` § Email OTP**.
+**Almost there:** after email sign-in, if the profile has no full name, the same brand lockup as sign-in asks for a name.
+
+Account → Information shows sign-in method as **Email OTP** when applicable. Config and code pointers: **`DEV_NOTES.md` § Email OTP** and **§ Biometric**.
 
 ---
 

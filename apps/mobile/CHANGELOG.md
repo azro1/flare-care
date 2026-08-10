@@ -4,6 +4,15 @@ Recent UI and behavior updates on the Expo app (`apps/mobile`).
 
 ## Unreleased
 
+### Auth, intro & cleanup (2026-08)
+
+- **Sign-in landing:** brand lockup (logo + FlareCare), email OTP / Google, first-time legal consent; **Almost there** name step matches the same lockup.
+- **Biometric:** App lock cover + bank-style fingerprint / Face ID quick unlock after logout (affordance only after OS prompt dismisses; Y aligned with lock screen).
+- **New-user intro:** one-shot post-login intro (`NewUserIntroScreen`) replaces per-screen floating welcome cards.
+- **Welcome cards removed:** no more `FloatingWelcomeCard` / dashboard getting-started overlays; hubs use **`FLARE_CAPTION_HINT`** where needed (Logs, Appointment Summary).
+- **OTP:** isolated countdown; verify error copy is a single honest message (wrong vs expired not distinguishable from Supabase).
+- **Docs:** `DEV_NOTES.md` / `README.md` updated for intro, biometrics, captions, OTP.
+
 ### Wizards (Log Symptoms & Track Medications)
 
 - **Review hub:** **Edit** on each review section jumps straight to that section; **Back to review** returns without replaying the whole wizard.
