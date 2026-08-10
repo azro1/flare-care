@@ -9,7 +9,7 @@
     "userInterfaceStyle": "automatic",
     "newArchEnabled": true,
     "splash": {
-      "image": "./assets/fclogo_trans_splash.png",
+      "image": "./assets/splash-hand-heart.png",
       "resizeMode": "contain",
       "backgroundColor": "#ffffff"
     },

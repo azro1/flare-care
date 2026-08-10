@@ -21,6 +21,7 @@ import {
 import { createNativeStackNavigator } from "@react-navigation/native-stack";
 import {
   ActivityIndicator,
+  Appearance,
   AppState,
   Image,
   InteractionManager,
@@ -66,6 +67,7 @@ import { SlideUpSheet } from "./components/SlideUpSheet";
 import { BiometricLockScreen } from "./components/BiometricLockScreen";
 import { authenticate, biometricTypeLabel, isBiometricAvailable, readLockEnabled, setLockEnabled } from "./lib/biometricLock";
 import { clearRememberedSession, readRememberedSession, rememberSession } from "./lib/rememberedSession";
+import { readAuthLegalAccepted, setAuthLegalAccepted } from "./lib/authLegalAcceptance";
 import { CollapsingTitleScrollScreen } from "./components/CollapsingTitleScrollScreen";
 import { FlareThemeProvider, useFlareColors, useFlareTheme } from "./theme";
 import { formatUkDate, formatUkGreetingDate } from "./lib/formatUkDate";
@@ -419,16 +421,19 @@ function DetailDeleteHeaderButton({ onPress, disabled }: { onPress: () => void; 
 
 function SplashScreen() {
   const c = useFlareColors();
+  const { appearanceHydrated } = useFlareTheme();
+  // Don't paint mark/name (or a wrong-theme fill) until stored appearance is known.
+  if (!appearanceHydrated) {
+    const bootDark = Appearance.getColorScheme() === "dark";
+    return (
+      <View style={[styles.splashScreen, { backgroundColor: bootDark ? "#0C0D0E" : "#F4F4F4" }]} />
+    );
+  }
   return (
     <View style={[styles.splashScreen, { backgroundColor: c.screen }]}>
-      <View style={styles.splashLogoStage}>
-        {c.isDark ? (
-          <BrandMarkIcon size={96} color={c.white} />
-        ) : (
-          <View style={[styles.splashLogoMarkWell, { backgroundColor: c.primary }]}>
-            <BrandMarkIcon size={96} color={c.white} />
-          </View>
-        )}
+      <View style={styles.splashBrandRow}>
+        <BrandMarkIcon size={28} color={c.primary} />
+        <Text style={[styles.splashBrandName, { color: c.text }]}>FlareCare</Text>
       </View>
     </View>
   );
@@ -515,7 +520,35 @@ function AuthScreen({
   const [otpResendCount, setOtpResendCount] = useState(0);
   const [otpTick, setOtpTick] = useState(0);
   const [legalAccepted, setLegalAccepted] = useState(false);
+  /** false until we've read whether this install already agreed — avoids flashing the checkbox. */
+  const [legalHydrated, setLegalHydrated] = useState(false);
+  /** First-time on this install only — locked in after hydrate, not toggled away when they tick the box. */
+  const [showLegalConsent, setShowLegalConsent] = useState(false);
   const [authLegalModal, setAuthLegalModal] = useState<LegalDocumentKind | null>(null);
+
+  useEffect(() => {
+    let cancelled = false;
+    (async () => {
+      const [accepted, remembered] = await Promise.all([readAuthLegalAccepted(), readRememberedSession()]);
+      if (cancelled) return;
+      // Returning install (prior agree, or remembered session after logout): never re-ask.
+      const already = accepted || remembered != null;
+      if (already && !accepted) {
+        void setAuthLegalAccepted(true);
+      }
+      setLegalAccepted(already);
+      setShowLegalConsent(!already);
+      setLegalHydrated(true);
+    })();
+    return () => {
+      cancelled = true;
+    };
+  }, []);
+
+  const toggleLegalAccepted = useCallback(() => {
+    // Local only — persist after a completed sign-in, not on tick (or coming back from email hides the row).
+    setLegalAccepted((prev) => !prev);
+  }, []);
   const emailSchema = useMemo(
     () =>
       yup.object({
@@ -643,6 +676,7 @@ function AuthScreen({
     clearOtpSession();
     const user = data.user;
     if (user) {
+      await setAuthLegalAccepted(true);
       if (isNewAuthUser(user)) {
         await markNewAccountInstructionTipsEligible(user.id);
       }
@@ -691,6 +725,7 @@ function AuthScreen({
         const { data: sessionData } = await supabase.auth.getSession();
         const sessionUser = sessionData.session?.user;
         if (sessionUser) {
+          await setAuthLegalAccepted(true);
           if (isNewAuthUser(sessionUser)) {
             await markNewAccountInstructionTipsEligible(sessionUser.id);
           }
@@ -707,14 +742,8 @@ function AuthScreen({
 
   /** Same layout as gray auth; fill page with blue in light appearance only. */
   const authBlue = !cAuth.isDark;
-  // Sign-in controls now live in a card-colored slide-up sheet, so they always use card chrome.
-  const onPrimaryChrome = false;
-  const [sheetOpen, setSheetOpen] = useState(false);
-  const closeSheet = useCallback(() => {
-    setSheetOpen(false);
-    setStep("method");
-    Keyboard.dismiss();
-  }, []);
+  /** Content sits on the page (no card) — light mode uses on-primary chrome. */
+  const onPrimaryChrome = authBlue;
 
   // Bank-style quick login: if a remembered session exists and biometric unlock is on, we
   // auto-prompt for Face ID / fingerprint on landing. If the prompt is dismissed, a tap-to-unlock
@@ -743,10 +772,10 @@ function AuthScreen({
       setUnlockBusy(false);
       setQuickUnlock(null);
       showFlareAlert("Couldn't unlock", "Please sign in again to continue.");
-      setSheetOpen(true);
       return;
     }
     onSignedIn(sessionUserFromSupabaseAuthUser(sessionUser));
+    void setAuthLegalAccepted(true);
   }, [onSignedIn]);
 
   useEffect(() => {
@@ -779,84 +808,30 @@ function AuthScreen({
         styles.authScreenFill,
         {
           backgroundColor: authBlue ? cAuth.primary : cAuth.screen,
-          paddingTop: insets.top,
+          paddingTop: insets.top + 24,
           paddingBottom: Math.max(insets.bottom, 12),
           paddingHorizontal: FULL_WIDTH_CTA_EDGE_PADDING,
         },
       ]}
     >
-      <Pressable
-        accessibilityRole="button"
-        accessibilityLabel={quickUnlock ? "Sign in with a different account" : "Sign in"}
-        onPress={() => setSheetOpen(true)}
-        hitSlop={12}
-        style={[styles.authTopRightSignIn, { top: insets.top + 12 }]}
-      >
-        <MaterialCommunityIcons name="login" size={24} color={cAuth.white} accessibilityIgnoresInvertColors />
-      </Pressable>
-      <View style={styles.authLandingOffset}>
-        <View style={[styles.authLandingBlock, { minHeight: wizardLandingMinHeight() }]}>
-          <View style={styles.authBrandBlock}>
-            <BrandMarkIcon size={64} color={authBlue ? cAuth.white : cAuth.primary} />
-            <Text style={[styles.authBrandName, { color: authBlue ? cAuth.white : cAuth.text }]}>FlareCare</Text>
-            <Text
-              style={[
-                styles.authBrandTagline,
-                { color: authBlue ? "rgba(255,255,255,0.88)" : cAuth.textMuted },
-              ]}
-            >
-              Your health. Your IBD. Your control.
-            </Text>
-          </View>
-        </View>
-      </View>
-      {quickUnlock ? (
-        <>
-          <View style={styles.authQuickUnlockSpacer} />
-          <Pressable
-            accessibilityRole="button"
-            accessibilityLabel={`Unlock with ${quickUnlock.label}`}
-            onPress={runQuickUnlock}
-            disabled={unlockBusy}
-            style={styles.authQuickUnlock}
-          >
-            <View
-              style={[
-                styles.authFingerprintDisc,
-                {
-                  backgroundColor: authBlue ? "rgba(255,255,255,0.16)" : cAuth.surfaceSubtle,
-                  opacity: unlockBusy ? 0.6 : 1,
-                },
-              ]}
-            >
-              <Ionicons
-                name="finger-print"
-                size={34}
-                color={authBlue ? cAuth.white : cAuth.primary}
-                accessibilityIgnoresInvertColors
-              />
+      <View style={styles.authInlineBody}>
+        {step === "method" ? (
+          <View style={[styles.authInlinePanel, styles.authMethodPanel]}>
+            <View style={styles.authLandingBrandRow}>
+              <BrandMarkIcon size={28} color={onPrimaryChrome ? cAuth.white : cAuth.primary} />
+              <Text style={[styles.authLandingName, { color: onPrimaryChrome ? cAuth.white : cAuth.text }]}>
+                FlareCare
+              </Text>
             </View>
-            <Text
-              style={[
-                styles.authQuickUnlockLabel,
-                { color: authBlue ? "rgba(255,255,255,0.92)" : cAuth.textMuted },
-              ]}
-            >
-              {unlockBusy ? "Unlocking…" : `Tap to unlock with ${quickUnlock.label}`}
+            <Text style={[styles.authPromptTitle, { color: onPrimaryChrome ? cAuth.white : cAuth.text }]}>
+              Sign in to continue
             </Text>
-          </Pressable>
-        </>
-      ) : null}
-      <SlideUpSheet visible={sheetOpen} onClose={closeSheet} maxHeightFraction={0.9} sideInset={12} bottomInset={12}>
-        <View style={styles.authSheetContent}>
-          {step === "method" ? (
-            <View style={[styles.authMethodPanel, styles.authSheetPanel]}>
-              <Text style={[styles.authPromptTitle, { color: onPrimaryChrome ? cAuth.white : cAuth.text }]}>Sign in to continue</Text>
+            {showLegalConsent ? (
               <Pressable
                 accessibilityRole="checkbox"
                 accessibilityState={{ checked: legalAccepted }}
                 accessibilityLabel="Agree to Terms of Service and Privacy Policy, including the processing of my health information"
-                onPress={() => setLegalAccepted((v) => !v)}
+                onPress={toggleLegalAccepted}
                 style={styles.authLegalRow}
               >
                 <View
@@ -895,167 +870,207 @@ function AuthScreen({
                   , including the processing of my health information.
                 </Text>
               </Pressable>
-              <View style={styles.authMethodActions}>
-                <PrimaryButton
-                  title="Continue with email"
-                  onPress={() => setStep("email")}
-                  disabled={activeAuthAction !== null || !legalAccepted}
-                  variant={onPrimaryChrome ? "onPrimary" : "default"}
-                />
-                <SecondaryButton
-                  title={activeAuthAction === "google" ? "Loading..." : "Continue with Google"}
-                  onPress={signInGoogle}
-                  disabled={activeAuthAction !== null || !legalAccepted}
-                  variant={onPrimaryChrome ? "onPrimary" : "default"}
-                  leftIcon={<Ionicons name="logo-google" size={16} color={onPrimaryChrome ? "#ffffff" : cAuth.secondaryBtnText} />}
-                />
-              </View>
-              <View style={styles.authSecureNote}>
-                <Ionicons
-                  name="lock-closed-outline"
-                  size={13}
-                  color={onPrimaryChrome ? "rgba(255,255,255,0.75)" : cAuth.textMuted}
-                  accessibilityIgnoresInvertColors
-                />
-                <Text
-                  style={[
-                    styles.authSecureNoteText,
-                    { color: onPrimaryChrome ? "rgba(255,255,255,0.75)" : cAuth.textMuted },
-                  ]}
-                >
-                  Secure sign-in
-                </Text>
-              </View>
+            ) : null}
+            <View style={styles.authMethodActions}>
+              <PrimaryButton
+                title="Continue with email"
+                onPress={() => setStep("email")}
+                disabled={activeAuthAction !== null || !legalHydrated || !legalAccepted}
+                variant={onPrimaryChrome ? "onPrimary" : "default"}
+              />
+              <SecondaryButton
+                title={activeAuthAction === "google" ? "Loading..." : "Continue with Google"}
+                onPress={signInGoogle}
+                disabled={activeAuthAction !== null || !legalHydrated || !legalAccepted}
+                variant={onPrimaryChrome ? "onPrimary" : "default"}
+                leftIcon={
+                  <Ionicons name="logo-google" size={16} color={onPrimaryChrome ? "#ffffff" : cAuth.secondaryBtnText} />
+                }
+              />
             </View>
-          ) : step === "email" ? (
-            <View style={[styles.authFlowPanel, styles.authSheetPanel]}>
-              <View style={styles.authFormCenter}>
-                <Text style={[styles.authPromptTitle, { color: onPrimaryChrome ? cAuth.white : cAuth.text }]}>Sign in with email</Text>
+            <View style={styles.authSecureNote}>
+              <Ionicons
+                name="lock-closed-outline"
+                size={13}
+                color={onPrimaryChrome ? "rgba(255,255,255,0.75)" : cAuth.textMuted}
+                accessibilityIgnoresInvertColors
+              />
+              <Text
+                style={[
+                  styles.authSecureNoteText,
+                  { color: onPrimaryChrome ? "rgba(255,255,255,0.75)" : cAuth.textMuted },
+                ]}
+              >
+                Secure sign-in
+              </Text>
+            </View>
+          </View>
+        ) : step === "email" ? (
+          <View style={[styles.authInlinePanel, styles.authFlowPanel]}>
+            <View style={styles.authFormCenter}>
+              <Text style={[styles.authPromptTitle, { color: onPrimaryChrome ? cAuth.white : cAuth.text }]}>
+                Sign in with email
+              </Text>
+              <Text
+                style={[
+                  styles.authPromptSub,
+                  styles.authEmailHelperSub,
+                  { color: onPrimaryChrome ? "rgba(255,255,255,0.88)" : cAuth.textMuted },
+                ]}
+              >
+                We&apos;ll send a 6-digit code to this email
+              </Text>
+              <Controller
+                control={emailControl}
+                name="email"
+                render={({ field: { onChange, value } }) => (
+                  <LabeledInput
+                    label="Email"
+                    value={value}
+                    onChangeText={onChange}
+                    placeholder="you@example.com"
+                    autoCapitalize="none"
+                    keyboardType="email-address"
+                    error={emailErrors.email?.message}
+                    onPrimary={onPrimaryChrome}
+                  />
+                )}
+              />
+            </View>
+            <View style={styles.authBottomActions}>
+              <PrimaryButton
+                title={activeAuthAction === "email" ? "Loading..." : "Continue"}
+                onPress={handleEmailSubmit(sendMagicLink)}
+                disabled={activeAuthAction !== null}
+                variant={onPrimaryChrome ? "onPrimary" : "default"}
+              />
+              <SecondaryButton
+                title="Back"
+                onPress={() => setStep("method")}
+                disabled={activeAuthAction !== null}
+                variant={onPrimaryChrome ? "onPrimary" : "default"}
+              />
+            </View>
+          </View>
+        ) : (
+          <View style={[styles.authInlinePanel, styles.authFlowPanel]}>
+            <View style={styles.authFormCenter}>
+              <Text
+                style={[
+                  styles.authPromptSub,
+                  styles.authEmailHelperSub,
+                  { color: onPrimaryChrome ? "rgba(255,255,255,0.88)" : cAuth.textMuted },
+                ]}
+              >
+                Enter the 6-digit code from your inbox.
+              </Text>
+              <Controller
+                control={codeControl}
+                name="otpCode"
+                render={({ field: { onChange, value } }) => (
+                  <LabeledInput
+                    label="Verification code"
+                    value={value}
+                    onChangeText={onChange}
+                    placeholder="6-digit code"
+                    keyboardType="number-pad"
+                    maxLength={6}
+                    error={codeErrors.otpCode?.message}
+                    onPrimary={onPrimaryChrome}
+                  />
+                )}
+              />
+              {otpSentAt != null && otpRemaining > 0 ? (
                 <Text
                   style={[
-                    styles.authPromptSub,
-                    styles.authEmailHelperSub,
+                    styles.authOtpCountdown,
                     { color: onPrimaryChrome ? "rgba(255,255,255,0.88)" : cAuth.textMuted },
                   ]}
                 >
-                  We&apos;ll send a 6-digit code to this email.
+                  Code expires in {formatOtpCountdown(otpRemaining)}
                 </Text>
-                <Controller
-                  control={emailControl}
-                  name="email"
-                  render={({ field: { onChange, value } }) => (
-                    <LabeledInput
-                      label="Email"
-                      value={value}
-                      onChangeText={onChange}
-                      placeholder="you@example.com"
-                      autoCapitalize="none"
-                      keyboardType="email-address"
-                      error={emailErrors.email?.message}
-                      onPrimary={onPrimaryChrome}
-                    />
-                  )}
-                />
-              </View>
-              <View style={styles.authBottomActions}>
-                <PrimaryButton
-                  title={activeAuthAction === "email" ? "Loading..." : "Continue"}
-                  onPress={handleEmailSubmit(sendMagicLink)}
-                  disabled={activeAuthAction !== null}
-                  variant={onPrimaryChrome ? "onPrimary" : "default"}
-                />
-                <SecondaryButton
-                  title="Back"
-                  onPress={() => setStep("method")}
-                  disabled={activeAuthAction !== null}
-                  variant={onPrimaryChrome ? "onPrimary" : "default"}
-                />
-              </View>
-            </View>
-          ) : (
-            <View style={[styles.authFlowPanel, styles.authSheetPanel]}>
-              <View style={styles.authFormCenter}>
+              ) : null}
+              {canResendOtp ? (
+                <Pressable
+                  accessibilityRole="button"
+                  accessibilityLabel="Resend code"
+                  onPress={resendOtpCode}
+                  hitSlop={8}
+                  style={styles.authOtpResendPressable}
+                >
+                  <Text style={[styles.authOtpResendLabel, { color: onPrimaryChrome ? cAuth.white : cAuth.primary }]}>
+                    Resend code
+                  </Text>
+                </Pressable>
+              ) : null}
+              {resendLimitReached ? (
                 <Text
                   style={[
-                    styles.authPromptSub,
-                    styles.authEmailHelperSub,
+                    styles.authOtpLimitMessage,
                     { color: onPrimaryChrome ? "rgba(255,255,255,0.88)" : cAuth.textMuted },
                   ]}
                 >
-                  Enter the 6-digit code from your inbox.
+                  Too many code requests. Wait a few minutes or try a different email.
                 </Text>
-                <Controller
-                  control={codeControl}
-                  name="otpCode"
-                  render={({ field: { onChange, value } }) => (
-                    <LabeledInput
-                      label="Verification code"
-                      value={value}
-                      onChangeText={onChange}
-                      placeholder="6-digit code"
-                      keyboardType="number-pad"
-                      maxLength={6}
-                      error={codeErrors.otpCode?.message}
-                      onPrimary={onPrimaryChrome}
-                    />
-                  )}
-                />
-                {otpSentAt != null && otpRemaining > 0 ? (
-                  <Text
-                    style={[
-                      styles.authOtpCountdown,
-                      { color: onPrimaryChrome ? "rgba(255,255,255,0.88)" : cAuth.textMuted },
-                    ]}
-                  >
-                    Code expires in {formatOtpCountdown(otpRemaining)}
-                  </Text>
-                ) : null}
-                {canResendOtp ? (
-                  <Pressable
-                    accessibilityRole="button"
-                    accessibilityLabel="Resend code"
-                    onPress={resendOtpCode}
-                    hitSlop={8}
-                    style={styles.authOtpResendPressable}
-                  >
-                    <Text style={[styles.authOtpResendLabel, { color: onPrimaryChrome ? cAuth.white : cAuth.primary }]}>
-                      Resend code
-                    </Text>
-                  </Pressable>
-                ) : null}
-                {resendLimitReached ? (
-                  <Text
-                    style={[
-                      styles.authOtpLimitMessage,
-                      { color: onPrimaryChrome ? "rgba(255,255,255,0.88)" : cAuth.textMuted },
-                    ]}
-                  >
-                    Too many code requests. Wait a few minutes or try a different email.
-                  </Text>
-                ) : null}
-              </View>
-              <View style={styles.authBottomActions}>
-                <PrimaryButton
-                  title={activeAuthAction === "code" ? "Loading..." : "Verify code"}
-                  onPress={handleCodeSubmit(verifyOtpCode)}
-                  disabled={activeAuthAction !== null}
-                  variant={onPrimaryChrome ? "onPrimary" : "default"}
-                />
-                <SecondaryButton
-                  title="Use different email"
-                  onPress={() => {
-                    resetCode({ otpCode: "" });
-                    clearOtpSession();
-                    setStep("email");
-                  }}
-                  disabled={activeAuthAction !== null}
-                  variant={onPrimaryChrome ? "onPrimary" : "default"}
-                />
-              </View>
+              ) : null}
             </View>
-          )}
-        </View>
-      </SlideUpSheet>
+            <View style={styles.authBottomActions}>
+              <PrimaryButton
+                title={activeAuthAction === "code" ? "Loading..." : "Verify code"}
+                onPress={handleCodeSubmit(verifyOtpCode)}
+                disabled={activeAuthAction !== null}
+                variant={onPrimaryChrome ? "onPrimary" : "default"}
+              />
+              <SecondaryButton
+                title="Use different email"
+                onPress={() => {
+                  resetCode({ otpCode: "" });
+                  clearOtpSession();
+                  setStep("email");
+                }}
+                disabled={activeAuthAction !== null}
+                variant={onPrimaryChrome ? "onPrimary" : "default"}
+              />
+            </View>
+          </View>
+        )}
+
+        {quickUnlock ? (
+          <Pressable
+            accessibilityRole="button"
+            accessibilityLabel={`Unlock with ${quickUnlock.label}`}
+            onPress={runQuickUnlock}
+            disabled={unlockBusy}
+            style={styles.authQuickUnlock}
+          >
+            <View
+              style={[
+                styles.authFingerprintDisc,
+                {
+                  backgroundColor: authBlue ? "rgba(255,255,255,0.16)" : cAuth.surfaceSubtle,
+                  opacity: unlockBusy ? 0.6 : 1,
+                },
+              ]}
+            >
+              <Ionicons
+                name="finger-print"
+                size={34}
+                color={authBlue ? cAuth.white : cAuth.primary}
+                accessibilityIgnoresInvertColors
+              />
+            </View>
+            <Text
+              style={[
+                styles.authQuickUnlockLabel,
+                { color: authBlue ? "rgba(255,255,255,0.92)" : cAuth.textMuted },
+              ]}
+            >
+              {unlockBusy ? "Unlocking…" : `Tap to unlock with ${quickUnlock.label}`}
+            </Text>
+          </Pressable>
+        ) : null}
+      </View>
+
       <Modal
         visible={authLegalModal !== null}
         animationType="slide"
@@ -3693,6 +3708,7 @@ function AccountScreen({
       }
       await finishSignOut();
       await clearRememberedSession();
+      await setAuthLegalAccepted(false);
       prepareSignOut("account_deleted");
     } catch (e: unknown) {
       await restoreAfterAbortedSignOut();
@@ -4296,8 +4312,6 @@ function AppRoot() {
   });
 
   useEffect(() => {
-    const splashTimer = setTimeout(() => setShowSplash(false), 1400);
-
     const bootstrap = async () => {
       const { data } = await supabase.auth.getSession();
       const sessionUser = data.session?.user;
@@ -4334,10 +4348,16 @@ function AppRoot() {
       setLoading(false);
     });
     return () => {
-      clearTimeout(splashTimer);
       data.subscription.unsubscribe();
     };
   }, []);
+
+  // Hold branded splash after theme + fonts are ready (timer must not start on the blank pre-hydrate frame).
+  useEffect(() => {
+    if (!fontsLoaded || !appearanceHydrated) return;
+    const splashTimer = setTimeout(() => setShowSplash(false), 2200);
+    return () => clearTimeout(splashTimer);
+  }, [fontsLoaded, appearanceHydrated]);
 
   useEffect(() => {
     if (user?.id) {
@@ -4622,6 +4642,19 @@ const styles = StyleSheet.create({
     marginBottom: 12,
     paddingTop: 12,
   },
+  authInlineBody: {
+    flex: 1,
+    width: "100%",
+    paddingBottom: 8,
+  },
+  authInlineCard: {
+    width: "100%",
+    borderRadius: 22,
+    paddingHorizontal: 20,
+    paddingTop: 16,
+    paddingBottom: 16,
+  },
+  authInlinePanel: { flex: 0, justifyContent: "flex-start" },
   /** Mirror the logout success layout so the brand block lands in the same spot on the page. */
   authLandingOffset: { paddingTop: WIZARD_LANDING_BELOW_SAFE_TOP },
   authLandingBlock: {
@@ -4631,7 +4664,7 @@ const styles = StyleSheet.create({
     paddingBottom: WIZARD_LANDING_BLOCK_PADDING_BOTTOM,
   },
   authLogo: { width: 92, height: 92 },
-  authBrandName: { fontSize: 28, fontFamily: "Inter_700Bold" },
+  authBrandName: { fontSize: 28, fontFamily: "Inter_400Regular" },
   authBrandTagline: {
     textAlign: "center",
     fontSize: 16,
@@ -4641,10 +4674,23 @@ const styles = StyleSheet.create({
   },
   authCardPlain: { flex: 1, paddingHorizontal: 0 },
   authMethodPanel: { flex: 1, justifyContent: "center" },
+  /** Sits with the sign-in stack, with clear air above the prompt — not pinned to the top. */
+  authLandingBrandRow: {
+    flexDirection: "row",
+    alignItems: "center",
+    justifyContent: "center",
+    gap: 8,
+    marginBottom: 88,
+  },
+  authLandingName: {
+    textAlign: "center",
+    fontSize: 28,
+    fontFamily: "Inter_800ExtraBold",
+  },
   authMethodActions: { marginTop: 18, gap: 8 },
   authTopRightSignIn: { position: "absolute", right: 20, zIndex: 2, padding: 4 },
   authQuickUnlockSpacer: { flex: 1 },
-  authQuickUnlock: { alignItems: "center", gap: 12, paddingBottom: 24 },
+  authQuickUnlock: { alignItems: "center", gap: 12, paddingTop: 8, paddingBottom: 24 },
   authFingerprintDisc: { width: 72, height: 72, borderRadius: 36, alignItems: "center", justifyContent: "center" },
   authQuickUnlockLabel: { fontSize: 14, fontFamily: "Inter_500Medium", textAlign: "center" },
   authSheetContent: { paddingTop: 8, paddingBottom: 8 },
@@ -4705,16 +4751,19 @@ const styles = StyleSheet.create({
     flex: 1,
     alignItems: "center",
     justifyContent: "center",
+    paddingHorizontal: 28,
   },
-  /** Fixed box so light/dark logo layouts do not reflow vertically when theme hydrates from storage. */
-  splashLogoStage: {
-    width: 200,
-    height: 200,
+  splashBrandRow: {
+    flexDirection: "row",
     alignItems: "center",
     justifyContent: "center",
+    gap: 8,
   },
-  /** Light splash: circular primary well behind mark. */
-  splashLogoMarkWell: { padding: 22, borderRadius: 9999, overflow: "hidden" },
+  splashBrandName: {
+    fontSize: 28,
+    fontWeight: "700",
+    textAlign: "center",
+  },
   splashLogo: { width: 132, height: 132 },
   centered: { flex: 1, justifyContent: "center", alignItems: "center", gap: 10 },
   card: { borderRadius: 14, padding: 14, marginBottom: 12 },
