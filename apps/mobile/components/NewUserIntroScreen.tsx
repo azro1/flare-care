@@ -27,7 +27,7 @@ const FOOTER_LIFT = 56;
 
 /**
  * One-time swipe intro after sign-up — what FlareCare can do for you.
- * Skip anytime → dashboard. Last slide: Get started → dashboard.
+ * Skip anytime → dashboard. Last slide: Done → dashboard.
  */
 export function NewUserIntroScreen({ onFinished }: { onFinished: () => void }) {
   const c = useFlareColors();
@@ -96,7 +96,7 @@ export function NewUserIntroScreen({ onFinished }: { onFinished: () => void }) {
         </View>
       );
     },
-    [c.primary, c.text, c.textMuted, pagerHeight, width],
+    [c.text, c.textMuted, c.primary, pagerHeight, width],
   );
 
   return (
@@ -163,7 +163,7 @@ export function NewUserIntroScreen({ onFinished }: { onFinished: () => void }) {
 
         <View style={styles.ctaSlot}>
           {last ? (
-            <PrimaryButton title="Get started" onPress={onFinished} noTopMargin />
+            <PrimaryButton title="Done" onPress={onFinished} noTopMargin />
           ) : (
             <View style={styles.swipeHint} accessibilityRole="text" accessibilityLabel="Swipe to continue">
               <Text style={[styles.swipeHintText, { color: c.textMuted }]}>Swipe to continue</Text>

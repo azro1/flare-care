@@ -41,7 +41,6 @@ import {
 } from "../components/LogHistoryList";
 import { TrackerThumbFab, useTrackerThumbFabLayout } from "../components/TrackerThumbFab";
 import { ConfirmModal } from "../components/ConfirmModal";
-import { FloatingWelcomeCard } from "../components/FloatingWelcomeCard";
 import { InstructionScreenShell } from "../components/InstructionScreenShell";
 import { usePaginatedLogList } from "../lib/paginatedLogList";
 import { STACKED_DETAIL_ROW_EDGE } from "../components/StackedDetailField";
@@ -67,14 +66,7 @@ import {
 } from "../lib/bowelMovementShared";
 import { bowelLogFormSchema } from "../lib/bowelLogFormSchema";
 import { invalidateDashboardSnapshot } from "../lib/dashboardSnapshotCache";
-import { BOWEL_INSTRUCTION } from "../lib/instructionCardCopy";
 import { recordRecentActivityEvent } from "../lib/recentActivityEvents";
-import {
-  markBowelInstructionDismissed,
-  readBowelInstructionDismissed,
-  readBowelInstructionEligible,
-} from "../lib/bowelInstructionTip";
-import { useInstructionTip } from "../lib/useInstructionTip";
 import { useLogListSelection } from "../lib/useLogListSelection";
 import {
   FLARE_FONT_FAMILY,
@@ -459,12 +451,6 @@ export function BowelScreen({ user }: { user: SessionUser }) {
   const c = useFlareColors();
   const navigation = useNavigation<any>();
   const route = useRoute();
-  const { visible: showBowelInstruction, dismiss: dismissBowelInstruction } = useInstructionTip(
-    user.id,
-    readBowelInstructionEligible,
-    readBowelInstructionDismissed,
-    markBowelInstructionDismissed,
-  );
   const insets = useSafeAreaInsets();
   const bottomScrollInset = useBottomTabScrollInset();
   const { scrollBottomPad } = useTrackerThumbFabLayout();
@@ -625,16 +611,9 @@ export function BowelScreen({ user }: { user: SessionUser }) {
 
   return (
     <InstructionScreenShell
-      showInstruction={showBowelInstruction}
+      showInstruction={false}
       contentPaddingBottom={scrollBottomPadTotal}
-      instruction={
-        <FloatingWelcomeCard
-          instruction={BOWEL_INSTRUCTION}
-          icon={BOWEL_FEATURE_MCI_ICON}
-          onDismiss={dismissBowelInstruction}
-          dismissAccessibilityLabel="Dismiss Bowel Movements guide"
-        />
-      }
+      instruction={null}
       floatingAction={
         !selectionMode ? (
           <TrackerThumbFab accessibilityLabel="Log bowel movement" onPress={openNewLog} />

@@ -33,7 +33,7 @@ export function otpVerifyErrorMessage(errorMessage: string): string {
     lower.includes("expire") ||
     (lower.includes("invalid") && (lower.includes("otp") || lower.includes("token")))
   ) {
-    return "That code has expired or is incorrect. Wait for the timer to finish, then tap Resend code for a new one.";
+    return "The code you entered is incorrect. Please check the digits and try again. You can request a new one once the timer ends.";
   }
   return errorMessage;
 }

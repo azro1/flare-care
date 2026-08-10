@@ -6,7 +6,6 @@ import { showFlareAlert } from "../components/FlareAlertHost";
 import { ScrollView } from "../lib/scrollViews";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { ConfirmModal } from "../components/ConfirmModal";
-import { FloatingWelcomeCard } from "../components/FloatingWelcomeCard";
 import { InstructionScreenShell } from "../components/InstructionScreenShell";
 import {
   LogHistoryCard,
@@ -39,11 +38,11 @@ import {
   type AppointmentsTab,
 } from "../lib/appointmentShared";
 import {
+  FLARE_CAPTION_HINT,
   FLARE_FONT_FAMILY,
   FLARE_FONT_SIZE,
   bottomTabBarHeight,
 } from "../lib/layoutConstants";
-import { APPOINTMENTS_INSTRUCTION } from "../lib/instructionCardCopy";
 import { useFlareColors } from "../theme";
 
 type SessionUser = { id: string };
@@ -63,8 +62,6 @@ export function AppointmentsListPane({
   onAddPress,
   selectionRouteName,
   headerTitle,
-  showInstruction,
-  onDismissInstruction,
   renderIdleHeaderRight,
   onSummaryPress,
   list,
@@ -75,8 +72,6 @@ export function AppointmentsListPane({
   onAddPress?: () => void;
   selectionRouteName: string;
   headerTitle: string;
-  showInstruction?: boolean;
-  onDismissInstruction?: () => void;
   renderIdleHeaderRight?: () => React.ReactNode;
   onSummaryPress?: () => void;
   list: AppointmentsListState;
@@ -208,17 +203,9 @@ export function AppointmentsListPane({
 
   return (
     <InstructionScreenShell
-      showInstruction={Boolean(showInstruction && onDismissInstruction)}
+      showInstruction={false}
       contentPaddingBottom={scrollBottomPadTotal}
-      instruction={
-        <FloatingWelcomeCard
-          instruction={APPOINTMENTS_INSTRUCTION}
-          icon={APPOINTMENTS_FEATURE_ION_ICON}
-          iconFamily="ion"
-          onDismiss={onDismissInstruction!}
-          dismissAccessibilityLabel="Dismiss Appointments guide"
-        />
-      }
+      instruction={null}
       floatingAction={
         showFab && !selectionMode && onAddPress ? (
           <TrackerThumbFab accessibilityLabel="Add appointment" onPress={onAddPress} tabBarClearance={tabBarClearance} />
@@ -264,15 +251,20 @@ export function AppointmentsListPane({
       </LogHistoryCard>
 
       {onSummaryPress && !selectionMode ? (
-        <Pressable
-          accessibilityRole="button"
-          accessibilityLabel="Appointment Summary"
-          onPress={onSummaryPress}
-          style={({ pressed }) => [styles.summaryLink, pressed && { opacity: 0.85 }]}
-        >
-          <Text style={[styles.summaryLinkLabel, { color: c.text }]}>Appointment Summary</Text>
-          <Ionicons name="chevron-forward" size={FLARE_FONT_SIZE.subhead} color={c.textMuted} accessibilityIgnoresInvertColors />
-        </Pressable>
+        <View style={styles.summaryBlock}>
+          <Pressable
+            accessibilityRole="button"
+            accessibilityLabel="Appointment Summary"
+            onPress={onSummaryPress}
+            style={({ pressed }) => [styles.summaryLink, pressed && { opacity: 0.85 }]}
+          >
+            <Text style={[styles.summaryLinkLabel, { color: c.text }]}>Appointment Summary</Text>
+            <Ionicons name="chevron-forward" size={FLARE_FONT_SIZE.subhead} color={c.textMuted} accessibilityIgnoresInvertColors />
+          </Pressable>
+          <Text style={[styles.summaryHint, { color: c.textMuted }]}>
+            Generate a quick health summary from your records for your next appointment.
+          </Text>
+        </View>
       ) : null}
     </InstructionScreenShell>
   );
@@ -281,16 +273,25 @@ export function AppointmentsListPane({
 const styles = StyleSheet.create({
   aptSubtitleRow: { flexDirection: "row", alignItems: "center", flexShrink: 1, minWidth: 0 },
   aptReminderRow: { flexDirection: "row", alignItems: "center", gap: 4, flexShrink: 1, minWidth: 0 },
+  summaryBlock: {
+    alignItems: "center",
+    marginTop: 12,
+    paddingHorizontal: 24,
+  },
   summaryLink: {
     flexDirection: "row",
     alignItems: "center",
     alignSelf: "center",
     gap: 4,
-    marginTop: 12,
     paddingVertical: 8,
   },
   summaryLinkLabel: {
     fontSize: FLARE_FONT_SIZE.subhead,
     fontFamily: FLARE_FONT_FAMILY.regular,
+  },
+  summaryHint: {
+    ...FLARE_CAPTION_HINT,
+    textAlign: "center",
+    marginTop: 2,
   },
 });

@@ -20,7 +20,7 @@ const MOBILE_BRAND_ACCENT = {
 /** Brand accent for custom UI (e.g. action-sheet cancel) — same as `useFlareColors().primary` in light mode. */
 export const MOBILE_BRAND_PRIMARY = MOBILE_BRAND_ACCENT.primary;
 
-/** Filled destructive controls (logout, meal remove, destructive modal confirm). Change only here. */
+/** Danger red — Delete account link text + that modal’s Delete button only. */
 export const MOBILE_DESTRUCTIVE_FILL = "#dc2626" as const;
 
 /** Light mode only — grouped layout: gray page, white panels (dark mode uses styleguide tokens). */
@@ -65,7 +65,7 @@ export type FlareColors = {
   textMuted: string;
   link: string;
   danger: string;
-  /** Filled destructive buttons / chips (logout, meal remove, modal confirm). Use `danger` for error text. */
+  /** Danger text / icons (Delete account). Filled logout-style buttons use `primary` (cadet). */
   destructiveFill: string;
   inputBg: string;
   inputBorder: string;

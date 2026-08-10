@@ -3,6 +3,7 @@ import React, { useMemo, useState } from "react";
 import { Modal, Pressable, StyleSheet, Text, View } from "react-native";
 import { showFlareAlert } from "../components/FlareAlertHost";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
+import { FLARE_FONT_FAMILY, FLARE_FONT_SIZE } from "../lib/layoutConstants";
 import { useFlareColors } from "../theme";
 
 type OverflowItem = {
@@ -151,6 +152,6 @@ const styles = StyleSheet.create({
     elevation: 8,
   },
   row: { paddingHorizontal: 16, paddingVertical: 14 },
-  label: { fontSize: 15, fontFamily: "Inter_500Medium" },
+  label: { fontSize: FLARE_FONT_SIZE.subhead, fontFamily: FLARE_FONT_FAMILY.medium },
   separator: { height: StyleSheet.hairlineWidth },
 });

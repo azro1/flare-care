@@ -89,23 +89,22 @@ export function flareInputStyle(
   return [opts?.multiline ? flareInputStyles.textarea : flareInputStyles.input, theme];
 }
 
-export function FlareTextInput({
-  style,
-  onPrimary,
-  multiline,
-  ...props
-}: TextInputProps & { onPrimary?: boolean }) {
+export const FlareTextInput = React.forwardRef<
+  TextInput,
+  TextInputProps & { onPrimary?: boolean }
+>(function FlareTextInput({ style, onPrimary, multiline, ...props }, ref) {
   const c = useFlareColors();
   const theme = flareInputThemeColors(c, onPrimary);
   return (
     <TextInput
+      ref={ref}
       style={[multiline ? flareInputStyles.textarea : flareInputStyles.input, theme, style]}
       placeholderTextColor={theme.placeholderColor}
       multiline={multiline}
       {...props}
     />
   );
-}
+});
 
 /** Date/time (and similar) controls that should look like a text field. */
 export function FlareInputTrigger({
@@ -137,21 +136,17 @@ export function FlareInputTrigger({
   );
 }
 
-export function LabeledInput({
-  label,
-  error,
-  style,
-  onPrimary,
-  multiline,
-  ...props
-}: { label: string; error?: string; onPrimary?: boolean } & TextInputProps) {
+export const LabeledInput = React.forwardRef<
+  TextInput,
+  { label: string; error?: string; onPrimary?: boolean } & TextInputProps
+>(function LabeledInput({ label, error, style, onPrimary, multiline, ...props }, ref) {
   const c = useFlareColors();
   const onBlue = Boolean(onPrimary);
   return (
     <View style={flareInputStyles.fieldBlock}>
       <Text style={[flareInputStyles.label, { color: onBlue ? "rgba(255,255,255,0.92)" : c.textSecondary }]}>{label}</Text>
-      <FlareTextInput style={style} onPrimary={onPrimary} multiline={multiline} {...props} />
+      <FlareTextInput ref={ref} style={style} onPrimary={onPrimary} multiline={multiline} {...props} />
       {error ? <Text style={flareFieldErrorStyle(c, "input")}>{error}</Text> : null}
     </View>
   );
-}
+});

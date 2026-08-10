@@ -17,8 +17,6 @@ import {
 import { showFlareAlert } from "../components/FlareAlertHost";
 import { ScrollView } from "../lib/scrollViews";
 import { OptionPickerModal } from "../components/OptionPickerModal";
-import { FloatingWelcomeCard } from "../components/FloatingWelcomeCard";
-import { InstructionCardOverlay } from "../components/InstructionCardOverlay";
 import { WizardReviewMedicationSection } from "../components/symptomReviewLayout";
 import { PrimaryButton, SecondaryButton } from "../components/FlareButton";
 import { flareFieldErrorStyle, FlareInputTrigger, FlareTextInput } from "../components/FlareInput";
@@ -49,13 +47,6 @@ import {
   type MedicationWizardHistoryEntry,
 } from "../lib/medicationWizardShared";
 import { TRACK_MEDICATIONS_MCI_ICON } from "../lib/medicationFeatureIcons";
-import { TRACK_MEDICATIONS_INSTRUCTION } from "../lib/instructionCardCopy";
-import {
-  markTrackMedicationsInstructionDismissed,
-  readTrackMedicationsInstructionDismissed,
-  readTrackMedicationsInstructionEligible,
-} from "../lib/trackMedicationsInstructionTip";
-import { useInstructionTip } from "../lib/useInstructionTip";
 import { useFlareColors } from "../theme";
 import { FULL_WIDTH_CTA_EDGE_PADDING } from "../lib/layoutConstants";
 
@@ -113,12 +104,6 @@ export function MedicationTrackingWizardScreen({ user }: { user: SessionUser }) 
   const route = useRoute();
   const editId = String((route.params as { editId?: string } | undefined)?.editId ?? "");
   const c = useFlareColors();
-  const { visible: showTrackMedicationsInstruction, dismiss: dismissTrackMedicationsInstruction } = useInstructionTip(
-    user.id,
-    readTrackMedicationsInstructionEligible,
-    readTrackMedicationsInstructionDismissed,
-    markTrackMedicationsInstructionDismissed,
-  );
   const errTextStyle = flareFieldErrorStyle(c, "wizard");
   const { height: windowHeight } = useWindowDimensions();
   const [currentStep, setCurrentStep] = useState(0);
@@ -456,7 +441,7 @@ export function MedicationTrackingWizardScreen({ user }: { user: SessionUser }) 
                   accessibilityLabel="Remove medication"
                   hitSlop={{ top: 6, bottom: 6, left: 6, right: 6 }}
                   onPress={() => removeListRow(kind, i)}
-                  style={[styles.listRemoveBtn, { backgroundColor: c.destructiveFill }]}
+                  style={[styles.listRemoveBtn, { backgroundColor: c.primary }]}
                 >
                   <Ionicons name="close" size={14} color={c.white} />
                 </Pressable>
@@ -527,8 +512,6 @@ export function MedicationTrackingWizardScreen({ user }: { user: SessionUser }) 
     );
   }
 
-  const showInstructionFloat = currentStep === 0 && !editId && showTrackMedicationsInstruction;
-
   return (
     <KeyboardAvoidingView style={{ flex: 1, backgroundColor: c.screen }} behavior={Platform.OS === "ios" ? "padding" : undefined}>
       <View style={styles.wizardShell}>
@@ -545,7 +528,7 @@ export function MedicationTrackingWizardScreen({ user }: { user: SessionUser }) 
           </Text>
         ) : null}
 
-        {currentStep === 0 && !showInstructionFloat ? (
+        {currentStep === 0 ? (
           <View style={[styles.landing, { minHeight: Math.max(windowHeight * 0.58, 420) }]}>
             <View
               style={[
@@ -639,16 +622,6 @@ export function MedicationTrackingWizardScreen({ user }: { user: SessionUser }) 
           </View>
         ) : null}
       </ScrollView>
-      {showInstructionFloat ? (
-        <InstructionCardOverlay>
-          <FloatingWelcomeCard
-            instruction={TRACK_MEDICATIONS_INSTRUCTION}
-            icon={TRACK_MEDICATIONS_MCI_ICON}
-            onDismiss={dismissTrackMedicationsInstruction}
-            dismissAccessibilityLabel="Dismiss Track Medications guide"
-          />
-        </InstructionCardOverlay>
-      ) : null}
       </View>
 
       <OptionPickerModal

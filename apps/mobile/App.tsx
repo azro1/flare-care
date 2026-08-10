@@ -34,6 +34,7 @@ import {
   StyleSheet,
   Switch,
   Text,
+  TextInput,
   useWindowDimensions,
   View,
   ViewStyle,
@@ -49,13 +50,10 @@ import {
   PrimaryButton,
   SecondaryButton,
 } from "./components/FlareButton";
-import { DashboardWelcomeCard } from "./components/DashboardWelcomeCard";
-import { InstructionCardOverlay } from "./components/InstructionCardOverlay";
-import { FloatingWelcomeCard } from "./components/FloatingWelcomeCard";
 import { HydrationProgressRing } from "./components/HydrationProgressRing";
 import { HydrationStepper } from "./components/HydrationStepper";
-import { InstructionScreenShell, InstructionInteractionBlock } from "./components/InstructionScreenShell";
-import { flareFieldErrorStyle, LabeledInput } from "./components/FlareInput";
+import { InstructionScreenShell } from "./components/InstructionScreenShell";
+import { flareFieldErrorStyle, FlareTextInput, LabeledInput, flareInputStyles } from "./components/FlareInput";
 import { flareCardSectionStyles, FlareScreenSectionTitle } from "./components/FlareScreenSectionTitle";
 import { HeaderOverflowMenu } from "./components/HeaderOverflowMenu";
 import { NewsFeedCard, newsFeedListStyles } from "./components/NewsFeed";
@@ -99,6 +97,7 @@ import {
   FLARE_FONT_FAMILY,
   FLARE_FONT_SIZE,
   FLARE_LINE_HEIGHT,
+  FLARE_CAPTION_HINT,
   HOME_TILE_GAP,
   SCREEN_EDGE_PADDING,
   FULL_WIDTH_CTA_EDGE_PADDING,
@@ -158,48 +157,14 @@ import {
   type DashboardSnapshot,
 } from "./lib/dashboardSnapshotCache";
 import {
+  clearNewUserIntroState,
   isNewAuthUser,
-  markDashboardWelcomeDismissed,
-  readDashboardWelcomeDismissed,
-  readDashboardWelcomeEligible,
-} from "./lib/dashboardWelcome";
+  markNewUserIntroDismissed,
+  resolveNewUserIntroPending,
+} from "./lib/newUserIntro";
 import { markNewAccountInstructionTipsEligible } from "./lib/newAccountInstructionTips";
-import { markNewUserIntroDismissed, shouldShowNewUserIntro } from "./lib/newUserIntro";
 import { NewUserIntroScreen } from "./components/NewUserIntroScreen";
 import { DASHBOARD_NEWS_HOME_SHELF_MAX, DASHBOARD_NEWS_SHELF_PEEK, dashboardNewsShelfCardWidth } from "./lib/newsShared";
-import {
-  REPORTS_INSTRUCTION,
-  HYDRATION_INSTRUCTION,
-  LOGS_INSTRUCTION,
-  SYMPTOM_LOGS_HISTORY_INSTRUCTION,
-  MEDICATION_LOGS_HISTORY_INSTRUCTION,
-} from "./lib/instructionCardCopy";
-import {
-  markReportsInstructionDismissed,
-  readReportsInstructionDismissed,
-  readReportsInstructionEligible,
-} from "./lib/reportsInstructionTip";
-import {
-  markLogsInstructionDismissed,
-  readLogsInstructionDismissed,
-  readLogsInstructionEligible,
-} from "./lib/logsInstructionTip";
-import {
-  markSymptomHistoryInstructionDismissed,
-  readSymptomHistoryInstructionDismissed,
-  readSymptomHistoryInstructionEligible,
-} from "./lib/symptomHistoryInstructionTip";
-import {
-  markMedicationHistoryInstructionDismissed,
-  readMedicationHistoryInstructionDismissed,
-  readMedicationHistoryInstructionEligible,
-} from "./lib/medicationHistoryInstructionTip";
-import {
-  markHydrationInstructionDismissed,
-  readHydrationInstructionDismissed,
-  readHydrationInstructionEligible,
-} from "./lib/hydrationInstructionTip";
-import { useInstructionTip } from "./lib/useInstructionTip";
 /** Bowel UI lives in `screens/BowelScreen.tsx` — do not re-declare `BowelScreen` in this file. */
 import { BristolGuideScreen } from "./screens/BristolGuideScreen";
 import { BowelLogDetailScreen } from "./screens/BowelLogDetailScreen";
@@ -419,14 +384,19 @@ function DetailDeleteHeaderButton({ onPress, disabled }: { onPress: () => void; 
   );
 }
 
-function SplashScreen() {
+function SplashScreen({ showBrand = true }: { showBrand?: boolean }) {
   const c = useFlareColors();
   const { appearanceHydrated } = useFlareTheme();
-  // Don't paint mark/name (or a wrong-theme fill) until stored appearance is known.
-  if (!appearanceHydrated) {
+  // Don't paint mark/name until appearance + fonts are ready (Inter must be loaded).
+  if (!appearanceHydrated || !showBrand) {
     const bootDark = Appearance.getColorScheme() === "dark";
     return (
-      <View style={[styles.splashScreen, { backgroundColor: bootDark ? "#0C0D0E" : "#F4F4F4" }]} />
+      <View
+        style={[
+          styles.splashScreen,
+          { backgroundColor: appearanceHydrated ? c.screen : bootDark ? "#0C0D0E" : "#F4F4F4" },
+        ]}
+      />
     );
   }
   return (
@@ -504,6 +474,41 @@ async function registerExpoPushTokenBestEffort(): Promise<void> {
   await AsyncStorage.setItem("flarecare.pushToken", pushToken);
 }
 
+function AuthOtpCountdown({
+  sentAt,
+  color,
+  onExpire,
+}: {
+  sentAt: number;
+  color: string;
+  onExpire: () => void;
+}) {
+  const [remaining, setRemaining] = useState(() => otpRemainingSeconds(sentAt, Date.now()));
+  const expiredRef = useRef(false);
+
+  useEffect(() => {
+    expiredRef.current = false;
+    const tick = () => {
+      const next = otpRemainingSeconds(sentAt, Date.now());
+      setRemaining(next);
+      if (next <= 0 && !expiredRef.current) {
+        expiredRef.current = true;
+        onExpire();
+      }
+    };
+    tick();
+    const id = setInterval(tick, 1000);
+    return () => clearInterval(id);
+  }, [sentAt, onExpire]);
+
+  if (remaining <= 0) return null;
+  return (
+    <Text style={[styles.authOtpCountdown, { color }]}>
+      Code expires in {formatOtpCountdown(remaining)}
+    </Text>
+  );
+}
+
 function AuthScreen({
   onSignedIn,
   onAuthBusy,
@@ -518,32 +523,17 @@ function AuthScreen({
   const [step, setStep] = useState<"method" | "email" | "code">("method");
   const [otpSentAt, setOtpSentAt] = useState<number | null>(null);
   const [otpResendCount, setOtpResendCount] = useState(0);
-  const [otpTick, setOtpTick] = useState(0);
+  /** Plain state — RHF Controller + parent 1s tick was fighting the TextInput. */
+  const [otpCode, setOtpCode] = useState("");
+  const [otpCodeError, setOtpCodeError] = useState<string | undefined>();
+  const [otpExpired, setOtpExpired] = useState(false);
+  const otpInputRef = useRef<TextInput>(null);
   const [legalAccepted, setLegalAccepted] = useState(false);
   /** false until we've read whether this install already agreed — avoids flashing the checkbox. */
   const [legalHydrated, setLegalHydrated] = useState(false);
   /** First-time on this install only — locked in after hydrate, not toggled away when they tick the box. */
   const [showLegalConsent, setShowLegalConsent] = useState(false);
   const [authLegalModal, setAuthLegalModal] = useState<LegalDocumentKind | null>(null);
-
-  useEffect(() => {
-    let cancelled = false;
-    (async () => {
-      const [accepted, remembered] = await Promise.all([readAuthLegalAccepted(), readRememberedSession()]);
-      if (cancelled) return;
-      // Returning install (prior agree, or remembered session after logout): never re-ask.
-      const already = accepted || remembered != null;
-      if (already && !accepted) {
-        void setAuthLegalAccepted(true);
-      }
-      setLegalAccepted(already);
-      setShowLegalConsent(!already);
-      setLegalHydrated(true);
-    })();
-    return () => {
-      cancelled = true;
-    };
-  }, []);
 
   const toggleLegalAccepted = useCallback(() => {
     // Local only — persist after a completed sign-in, not on tick (or coming back from email hides the row).
@@ -553,16 +543,6 @@ function AuthScreen({
     () =>
       yup.object({
         email: yup.string().required("Email is required").email("Enter a valid email"),
-      }),
-    [],
-  );
-  const codeSchema = useMemo(
-    () =>
-      yup.object({
-        otpCode: yup
-          .string()
-          .required("Code is required")
-          .matches(/^\d{6}$/, "Code must be 6 digits"),
       }),
     [],
   );
@@ -578,21 +558,12 @@ function AuthScreen({
     mode: "onSubmit",
   });
 
-  const {
-    control: codeControl,
-    handleSubmit: handleCodeSubmit,
-    getValues: getCodeValues,
-    reset: resetCode,
-    formState: { errors: codeErrors },
-  } = useForm<{ otpCode: string }>({
-    defaultValues: { otpCode: "" },
-    resolver: yupResolver(codeSchema),
-    mode: "onSubmit",
-  });
-
   const clearOtpSession = useCallback(() => {
     setOtpSentAt(null);
     setOtpResendCount(0);
+    setOtpCode("");
+    setOtpCodeError(undefined);
+    setOtpExpired(false);
   }, []);
 
   const sendOtpToEmail = useCallback(async (email: string) => {
@@ -600,18 +571,14 @@ function AuthScreen({
     return supabase.auth.signInWithOtp({ email, options: { emailRedirectTo: redirectTo } });
   }, []);
 
-  useEffect(() => {
-    if (step !== "code" || otpSentAt == null) return;
-    const id = setInterval(() => setOtpTick((t) => t + 1), 1000);
-    return () => clearInterval(id);
-  }, [otpSentAt, step]);
+  const focusOtpInput = useCallback(() => {
+    InteractionManager.runAfterInteractions(() => {
+      otpInputRef.current?.focus();
+    });
+  }, []);
 
-  const otpRemaining = useMemo(
-    () => otpRemainingSeconds(otpSentAt, Date.now()),
-    // otpTick drives once-per-second refresh while on code step
-    [otpSentAt, otpTick],
-  );
-  const otpExpired = otpSentAt != null && otpRemaining <= 0;
+  const markOtpExpired = useCallback(() => setOtpExpired(true), []);
+
   const canResendOtp = otpExpired && otpResendCount < OTP_MAX_RESENDS && activeAuthAction === null;
   const resendLimitReached = otpExpired && otpResendCount >= OTP_MAX_RESENDS;
 
@@ -624,11 +591,15 @@ function AuthScreen({
       return;
     }
     setOtpResendCount(0);
+    setOtpCode("");
+    setOtpCodeError(undefined);
+    setOtpExpired(false);
     setOtpSentAt(Date.now());
     setStep("code");
     showFlareAlert(
       "Check your email",
       "We've sent a 6-digit code to the email you entered. It may take a minute to arrive.",
+      [{ text: "OK", onPress: focusOtpInput }],
     );
   };
 
@@ -649,12 +620,22 @@ function AuthScreen({
       return;
     }
     setOtpResendCount((n) => n + 1);
+    setOtpCode("");
+    setOtpCodeError(undefined);
+    setOtpExpired(false);
     setOtpSentAt(Date.now());
-    resetCode({ otpCode: "" });
-    showFlareAlert("New code sent", "We've sent a new 6-digit code to your email.");
+    showFlareAlert("New code sent", "We've sent a new 6-digit code to your email.", [
+      { text: "OK", onPress: focusOtpInput },
+    ]);
   };
 
-  const verifyOtpCode = async ({ otpCode }: { otpCode: string }) => {
+  const verifyOtpCode = async () => {
+    const trimmed = otpCode.trim();
+    if (!/^\d{6}$/.test(trimmed)) {
+      setOtpCodeError(trimmed ? "Code must be 6 digits" : "Code is required");
+      return;
+    }
+    setOtpCodeError(undefined);
     const email = getEmailValues("email");
     if (!email) {
       showFlareAlert("Missing email", "Please enter your email first.");
@@ -665,7 +646,7 @@ function AuthScreen({
     setActiveAuthAction("code");
     const { data, error } = await supabase.auth.verifyOtp({
       email,
-      token: otpCode.trim(),
+      token: trimmed,
       type: "email",
     });
     setActiveAuthAction(null);
@@ -746,23 +727,28 @@ function AuthScreen({
   const onPrimaryChrome = authBlue;
 
   // Bank-style quick login: if a remembered session exists and biometric unlock is on, we
-  // auto-prompt for Face ID / fingerprint on landing. If the prompt is dismissed, a tap-to-unlock
-  // affordance stays on the landing so they can retry without reopening the app.
+  // auto-prompt for Face ID / fingerprint on landing. The tap affordance only appears after that
+  // prompt is dismissed — no need to put fingerprint in their face while the OS already handles it.
   const [quickUnlock, setQuickUnlock] = useState<{ label: string } | null>(null);
+  const [showQuickUnlockAffordance, setShowQuickUnlockAffordance] = useState(false);
   const [unlockBusy, setUnlockBusy] = useState(false);
+  /** Hold first paint until legal + unlock checks finish — avoids title jump when fingerprint mounts. */
+  const [landingReady, setLandingReady] = useState(false);
   const autoPromptedRef = useRef(false);
 
   const runQuickUnlock = useCallback(async () => {
     const remembered = await readRememberedSession();
     if (!remembered) {
       setQuickUnlock(null);
+      setShowQuickUnlockAffordance(false);
       return;
     }
     setUnlockBusy(true);
     const ok = await authenticate("Face and fingerprint");
     if (!ok) {
-      // Dismissed — keep the affordance so they can tap to retry.
+      // Dismissed — now show the bottom retry control (same spot as lock screen).
       setUnlockBusy(false);
+      setShowQuickUnlockAffordance(true);
       return;
     }
     const { data, error } = await supabase.auth.refreshSession({ refresh_token: remembered.refreshToken });
@@ -771,6 +757,7 @@ function AuthScreen({
       await clearRememberedSession();
       setUnlockBusy(false);
       setQuickUnlock(null);
+      setShowQuickUnlockAffordance(false);
       showFlareAlert("Couldn't unlock", "Please sign in again to continue.");
       return;
     }
@@ -781,26 +768,48 @@ function AuthScreen({
   useEffect(() => {
     let cancelled = false;
     (async () => {
-      const [remembered, available, enabled] = await Promise.all([
+      const [accepted, remembered, available, enabled] = await Promise.all([
+        readAuthLegalAccepted(),
         readRememberedSession(),
         isBiometricAvailable(),
         readLockEnabled(),
       ]);
-      if (cancelled || !remembered || !available || !enabled) return;
-      const label = await biometricTypeLabel();
       if (cancelled) return;
-      setQuickUnlock({ label });
-      if (!autoPromptedRef.current) {
-        autoPromptedRef.current = true;
-        void runQuickUnlock();
+      const already = accepted || remembered != null;
+      if (already && !accepted) {
+        void setAuthLegalAccepted(true);
       }
+      setLegalAccepted(already);
+      setShowLegalConsent(!already);
+      setLegalHydrated(true);
+
+      if (remembered && available && enabled) {
+        const label = await biometricTypeLabel();
+        if (cancelled) return;
+        setQuickUnlock({ label });
+        if (!autoPromptedRef.current) {
+          autoPromptedRef.current = true;
+          void runQuickUnlock();
+        }
+      }
+      if (!cancelled) setLandingReady(true);
     })();
     return () => {
       cancelled = true;
     };
-    // Detect + auto-prompt once on mount.
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
+
+  if (!landingReady) {
+    return (
+      <View
+        style={[
+          styles.authScreenFill,
+          { backgroundColor: authBlue ? cAuth.primary : cAuth.screen },
+        ]}
+      />
+    );
+  }
 
   return (
     <View
@@ -809,108 +818,112 @@ function AuthScreen({
         {
           backgroundColor: authBlue ? cAuth.primary : cAuth.screen,
           paddingTop: insets.top + 24,
-          paddingBottom: Math.max(insets.bottom, 12),
+          // Match BiometricLockScreen bottom inset so the fingerprint sits on the same baseline.
+          paddingBottom: Math.max(insets.bottom, 16),
           paddingHorizontal: FULL_WIDTH_CTA_EDGE_PADDING,
         },
       ]}
     >
       <View style={styles.authInlineBody}>
-        {step === "method" ? (
-          <View style={[styles.authInlinePanel, styles.authMethodPanel]}>
-            <View style={styles.authLandingBrandRow}>
-              <BrandMarkIcon size={28} color={onPrimaryChrome ? cAuth.white : cAuth.primary} />
-              <Text style={[styles.authLandingName, { color: onPrimaryChrome ? cAuth.white : cAuth.text }]}>
-                FlareCare
-              </Text>
-            </View>
-            <Text style={[styles.authPromptTitle, { color: onPrimaryChrome ? cAuth.white : cAuth.text }]}>
-              Sign in to continue
+        <View style={[styles.authInlinePanel, styles.authMethodPanel]}>
+          <View style={styles.authLandingBrandRow}>
+            <BrandMarkIcon size={28} color={onPrimaryChrome ? cAuth.white : cAuth.primary} />
+            <Text style={[styles.authLandingName, { color: onPrimaryChrome ? cAuth.white : cAuth.text }]}>
+              FlareCare
             </Text>
-            {showLegalConsent ? (
-              <Pressable
-                accessibilityRole="checkbox"
-                accessibilityState={{ checked: legalAccepted }}
-                accessibilityLabel="Agree to Terms of Service and Privacy Policy, including the processing of my health information"
-                onPress={toggleLegalAccepted}
-                style={styles.authLegalRow}
-              >
-                <View
+          </View>
+          <Text style={[styles.authPromptTitle, { color: onPrimaryChrome ? cAuth.white : cAuth.text }]}>
+            {step === "method"
+              ? "Sign in to continue"
+              : step === "email"
+                ? "Sign in with email"
+                : "Enter your code"}
+          </Text>
+
+          <View style={styles.authStepBody}>
+          {step === "method" ? (
+            <>
+              {showLegalConsent ? (
+                <Pressable
+                  accessibilityRole="checkbox"
+                  accessibilityState={{ checked: legalAccepted }}
+                  accessibilityLabel="Agree to Terms of Service and Privacy Policy, including the processing of my health information"
+                  onPress={toggleLegalAccepted}
+                  style={styles.authLegalRow}
+                >
+                  <View
+                    style={[
+                      styles.authLegalCheckbox,
+                      {
+                        borderColor: onPrimaryChrome ? "rgba(255,255,255,0.6)" : cAuth.cardBorder,
+                        backgroundColor: legalAccepted ? (onPrimaryChrome ? cAuth.white : cAuth.primary) : "transparent",
+                      },
+                    ]}
+                  >
+                    {legalAccepted ? (
+                      <Ionicons
+                        name="checkmark"
+                        size={14}
+                        color={onPrimaryChrome ? cAuth.primary : cAuth.white}
+                        accessibilityIgnoresInvertColors
+                      />
+                    ) : null}
+                  </View>
+                  <Text style={[styles.authLegalText, { color: onPrimaryChrome ? "rgba(255,255,255,0.9)" : cAuth.textMuted }]}>
+                    I agree to the{" "}
+                    <Text
+                      style={[styles.authLegalLink, { color: onPrimaryChrome ? cAuth.white : cAuth.primary }]}
+                      onPress={() => setAuthLegalModal("terms")}
+                    >
+                      Terms of Service
+                    </Text>{" "}
+                    and{" "}
+                    <Text
+                      style={[styles.authLegalLink, { color: onPrimaryChrome ? cAuth.white : cAuth.primary }]}
+                      onPress={() => setAuthLegalModal("privacy")}
+                    >
+                      Privacy Policy
+                    </Text>
+                    , including the processing of my health information.
+                  </Text>
+                </Pressable>
+              ) : null}
+              <View style={styles.authMethodActions}>
+                <PrimaryButton
+                  title="Continue with email"
+                  onPress={() => setStep("email")}
+                  disabled={activeAuthAction !== null || !legalHydrated || !legalAccepted}
+                  variant={onPrimaryChrome ? "onPrimary" : "default"}
+                />
+                <SecondaryButton
+                  title={activeAuthAction === "google" ? "Loading..." : "Continue with Google"}
+                  onPress={signInGoogle}
+                  disabled={activeAuthAction !== null || !legalHydrated || !legalAccepted}
+                  variant={onPrimaryChrome ? "onPrimary" : "default"}
+                  leftIcon={
+                    <Ionicons name="logo-google" size={16} color={onPrimaryChrome ? "#ffffff" : cAuth.secondaryBtnText} />
+                  }
+                />
+              </View>
+              <View style={styles.authSecureNote}>
+                <Ionicons
+                  name="lock-closed-outline"
+                  size={13}
+                  color={onPrimaryChrome ? "rgba(255,255,255,0.75)" : cAuth.textMuted}
+                  accessibilityIgnoresInvertColors
+                />
+                <Text
                   style={[
-                    styles.authLegalCheckbox,
-                    {
-                      borderColor: onPrimaryChrome ? "rgba(255,255,255,0.6)" : cAuth.cardBorder,
-                      backgroundColor: legalAccepted ? (onPrimaryChrome ? cAuth.white : cAuth.primary) : "transparent",
-                    },
+                    styles.authSecureNoteText,
+                    { color: onPrimaryChrome ? "rgba(255,255,255,0.75)" : cAuth.textMuted },
                   ]}
                 >
-                  {legalAccepted ? (
-                    <Ionicons
-                      name="checkmark"
-                      size={14}
-                      color={onPrimaryChrome ? cAuth.primary : cAuth.white}
-                      accessibilityIgnoresInvertColors
-                    />
-                  ) : null}
-                </View>
-                <Text style={[styles.authLegalText, { color: onPrimaryChrome ? "rgba(255,255,255,0.9)" : cAuth.textMuted }]}>
-                  I agree to the{" "}
-                  <Text
-                    style={[styles.authLegalLink, { color: onPrimaryChrome ? cAuth.white : cAuth.primary }]}
-                    onPress={() => setAuthLegalModal("terms")}
-                  >
-                    Terms of Service
-                  </Text>{" "}
-                  and{" "}
-                  <Text
-                    style={[styles.authLegalLink, { color: onPrimaryChrome ? cAuth.white : cAuth.primary }]}
-                    onPress={() => setAuthLegalModal("privacy")}
-                  >
-                    Privacy Policy
-                  </Text>
-                  , including the processing of my health information.
+                  Secure sign-in
                 </Text>
-              </Pressable>
-            ) : null}
-            <View style={styles.authMethodActions}>
-              <PrimaryButton
-                title="Continue with email"
-                onPress={() => setStep("email")}
-                disabled={activeAuthAction !== null || !legalHydrated || !legalAccepted}
-                variant={onPrimaryChrome ? "onPrimary" : "default"}
-              />
-              <SecondaryButton
-                title={activeAuthAction === "google" ? "Loading..." : "Continue with Google"}
-                onPress={signInGoogle}
-                disabled={activeAuthAction !== null || !legalHydrated || !legalAccepted}
-                variant={onPrimaryChrome ? "onPrimary" : "default"}
-                leftIcon={
-                  <Ionicons name="logo-google" size={16} color={onPrimaryChrome ? "#ffffff" : cAuth.secondaryBtnText} />
-                }
-              />
-            </View>
-            <View style={styles.authSecureNote}>
-              <Ionicons
-                name="lock-closed-outline"
-                size={13}
-                color={onPrimaryChrome ? "rgba(255,255,255,0.75)" : cAuth.textMuted}
-                accessibilityIgnoresInvertColors
-              />
-              <Text
-                style={[
-                  styles.authSecureNoteText,
-                  { color: onPrimaryChrome ? "rgba(255,255,255,0.75)" : cAuth.textMuted },
-                ]}
-              >
-                Secure sign-in
-              </Text>
-            </View>
-          </View>
-        ) : step === "email" ? (
-          <View style={[styles.authInlinePanel, styles.authFlowPanel]}>
-            <View style={styles.authFormCenter}>
-              <Text style={[styles.authPromptTitle, { color: onPrimaryChrome ? cAuth.white : cAuth.text }]}>
-                Sign in with email
-              </Text>
+              </View>
+            </>
+          ) : step === "email" ? (
+            <>
               <Text
                 style={[
                   styles.authPromptSub,
@@ -936,25 +949,23 @@ function AuthScreen({
                   />
                 )}
               />
-            </View>
-            <View style={styles.authBottomActions}>
-              <PrimaryButton
-                title={activeAuthAction === "email" ? "Loading..." : "Continue"}
-                onPress={handleEmailSubmit(sendMagicLink)}
-                disabled={activeAuthAction !== null}
-                variant={onPrimaryChrome ? "onPrimary" : "default"}
-              />
-              <SecondaryButton
-                title="Back"
-                onPress={() => setStep("method")}
-                disabled={activeAuthAction !== null}
-                variant={onPrimaryChrome ? "onPrimary" : "default"}
-              />
-            </View>
-          </View>
-        ) : (
-          <View style={[styles.authInlinePanel, styles.authFlowPanel]}>
-            <View style={styles.authFormCenter}>
+              <View style={styles.authMethodActions}>
+                <PrimaryButton
+                  title={activeAuthAction === "email" ? "Loading..." : "Continue"}
+                  onPress={handleEmailSubmit(sendMagicLink)}
+                  disabled={activeAuthAction !== null}
+                  variant={onPrimaryChrome ? "onPrimary" : "default"}
+                />
+                <SecondaryButton
+                  title="Back"
+                  onPress={() => setStep("method")}
+                  disabled={activeAuthAction !== null}
+                  variant={onPrimaryChrome ? "onPrimary" : "default"}
+                />
+              </View>
+            </>
+          ) : (
+            <>
               <Text
                 style={[
                   styles.authPromptSub,
@@ -962,33 +973,38 @@ function AuthScreen({
                   { color: onPrimaryChrome ? "rgba(255,255,255,0.88)" : cAuth.textMuted },
                 ]}
               >
-                Enter the 6-digit code from your inbox.
+                Enter the 6-digit code from your inbox
               </Text>
-              <Controller
-                control={codeControl}
-                name="otpCode"
-                render={({ field: { onChange, value } }) => (
-                  <LabeledInput
-                    label="Verification code"
-                    value={value}
-                    onChangeText={onChange}
-                    placeholder="6-digit code"
-                    keyboardType="number-pad"
-                    maxLength={6}
-                    error={codeErrors.otpCode?.message}
-                    onPrimary={onPrimaryChrome}
-                  />
-                )}
-              />
-              {otpSentAt != null && otpRemaining > 0 ? (
+              <View style={flareInputStyles.fieldBlock}>
                 <Text
                   style={[
-                    styles.authOtpCountdown,
-                    { color: onPrimaryChrome ? "rgba(255,255,255,0.88)" : cAuth.textMuted },
+                    flareInputStyles.label,
+                    { color: onPrimaryChrome ? "rgba(255,255,255,0.92)" : cAuth.textSecondary },
                   ]}
                 >
-                  Code expires in {formatOtpCountdown(otpRemaining)}
+                  Verification code
                 </Text>
+                <FlareTextInput
+                  ref={otpInputRef}
+                  value={otpCode}
+                  onChangeText={(text) => {
+                    setOtpCode(text);
+                    if (otpCodeError) setOtpCodeError(undefined);
+                  }}
+                  placeholder="6-digit code"
+                  keyboardType="number-pad"
+                  maxLength={6}
+                  editable={activeAuthAction === null}
+                  onPrimary={onPrimaryChrome}
+                />
+                {otpCodeError ? <Text style={flareFieldErrorStyle(cAuth, "input")}>{otpCodeError}</Text> : null}
+              </View>
+              {otpSentAt != null ? (
+                <AuthOtpCountdown
+                  sentAt={otpSentAt}
+                  color={onPrimaryChrome ? "rgba(255,255,255,0.88)" : cAuth.textMuted}
+                  onExpire={markOtpExpired}
+                />
               ) : null}
               {canResendOtp ? (
                 <Pressable
@@ -1013,29 +1029,32 @@ function AuthScreen({
                   Too many code requests. Wait a few minutes or try a different email.
                 </Text>
               ) : null}
-            </View>
-            <View style={styles.authBottomActions}>
-              <PrimaryButton
-                title={activeAuthAction === "code" ? "Loading..." : "Verify code"}
-                onPress={handleCodeSubmit(verifyOtpCode)}
-                disabled={activeAuthAction !== null}
-                variant={onPrimaryChrome ? "onPrimary" : "default"}
-              />
-              <SecondaryButton
-                title="Use different email"
-                onPress={() => {
-                  resetCode({ otpCode: "" });
-                  clearOtpSession();
-                  setStep("email");
-                }}
-                disabled={activeAuthAction !== null}
-                variant={onPrimaryChrome ? "onPrimary" : "default"}
-              />
-            </View>
+              <View style={styles.authMethodActions}>
+                <PrimaryButton
+                  title={activeAuthAction === "code" ? "Loading..." : "Verify code"}
+                  onPress={() => void verifyOtpCode()}
+                  disabled={activeAuthAction !== null}
+                  variant={onPrimaryChrome ? "onPrimary" : "default"}
+                />
+                <SecondaryButton
+                  title="Use different email"
+                  onPress={() => {
+                    clearOtpSession();
+                    setStep("email");
+                  }}
+                  disabled={activeAuthAction !== null}
+                  variant={onPrimaryChrome ? "onPrimary" : "default"}
+                />
+              </View>
+            </>
+          )}
           </View>
-        )}
+        </View>
+      </View>
 
-        {quickUnlock ? (
+      {/* After OS prompt is dismissed — same bottom stack as BiometricLockScreen (fingerprint + footer slot). */}
+      {quickUnlock && showQuickUnlockAffordance ? (
+        <View style={styles.authQuickUnlockActions} pointerEvents="box-none">
           <Pressable
             accessibilityRole="button"
             accessibilityLabel={`Unlock with ${quickUnlock.label}`}
@@ -1068,8 +1087,12 @@ function AuthScreen({
               {unlockBusy ? "Unlocking…" : `Tap to unlock with ${quickUnlock.label}`}
             </Text>
           </Pressable>
-        ) : null}
-      </View>
+          {/* Matches lock-screen Sign out row so the fingerprint sits in the same spot. */}
+          <View style={styles.authQuickUnlockFooterSlot} accessibilityElementsHidden importantForAccessibility="no-hide-descendants">
+            <Text style={[styles.authQuickUnlockFooterSlotText, { opacity: 0 }]}>Sign out</Text>
+          </View>
+        </View>
+      ) : null}
 
       <Modal
         visible={authLegalModal !== null}
@@ -1154,60 +1177,59 @@ function ProfileSetupScreen({ user, onComplete }: { user: SessionUser; onComplet
         styles.authScreenFill,
         {
           backgroundColor: authBlue ? cAuth.primary : cAuth.screen,
-          paddingTop: insets.top + 32,
-          paddingBottom: Math.max(insets.bottom, 12),
+          paddingTop: insets.top + 24,
+          paddingBottom: Math.max(insets.bottom, 16),
           paddingHorizontal: FULL_WIDTH_CTA_EDGE_PADDING,
         },
       ]}
     >
-      <View style={styles.authShell}>
-        <View style={styles.authBrandBlock}>
-          <BrandMarkIcon size={64} color={authBlue ? cAuth.white : cAuth.primary} />
-          <Text style={[styles.authBrandName, { color: authBlue ? cAuth.white : cAuth.text }]}>FlareCare</Text>
-        </View>
-        <Card title="" plain style={styles.authCardPlain}>
-          <View style={styles.authFlowPanel}>
-            <View style={styles.authFormCenter}>
-              <Text style={[styles.authPromptTitle, { color: onPrimaryChrome ? cAuth.white : cAuth.text }]}>
-                Almost there!
-              </Text>
-              <Text
-                style={[
-                  styles.authPromptSub,
-                  styles.authEmailHelperSub,
-                  { color: onPrimaryChrome ? "rgba(255,255,255,0.88)" : cAuth.textMuted },
-                ]}
-              >
-                Help us personalise your experience — what should we call you?
-              </Text>
-              <Controller
-                control={control}
-                name="fullName"
-                render={({ field: { onChange, value } }) => (
-                  <LabeledInput
-                    label="Full name"
-                    value={value}
-                    onChangeText={onChange}
-                    placeholder="Your full name"
-                    autoCapitalize="words"
-                    autoComplete="name"
-                    error={profileErrors.fullName?.message}
-                    onPrimary={onPrimaryChrome}
-                  />
-                )}
-              />
-            </View>
-            <View style={styles.authBottomActions}>
+      <View style={styles.authInlineBody}>
+        <View style={[styles.authInlinePanel, styles.authMethodPanel]}>
+          <View style={styles.authLandingBrandRow}>
+            <BrandMarkIcon size={28} color={onPrimaryChrome ? cAuth.white : cAuth.primary} />
+            <Text style={[styles.authLandingName, { color: onPrimaryChrome ? cAuth.white : cAuth.text }]}>
+              FlareCare
+            </Text>
+          </View>
+          <Text style={[styles.authPromptTitle, { color: onPrimaryChrome ? cAuth.white : cAuth.text }]}>
+            Almost there!
+          </Text>
+          <View style={styles.authStepBody}>
+            <Text
+              style={[
+                styles.authPromptSub,
+                styles.authEmailHelperSub,
+                { color: onPrimaryChrome ? "rgba(255,255,255,0.88)" : cAuth.textMuted },
+              ]}
+            >
+              Help us personalise your experience — what should we call you?
+            </Text>
+            <Controller
+              control={control}
+              name="fullName"
+              render={({ field: { onChange, value } }) => (
+                <LabeledInput
+                  label="Full name"
+                  value={value}
+                  onChangeText={onChange}
+                  placeholder="Your full name"
+                  autoCapitalize="words"
+                  autoComplete="name"
+                  error={profileErrors.fullName?.message}
+                  onPrimary={onPrimaryChrome}
+                />
+              )}
+            />
+            <View style={styles.authMethodActions}>
               <PrimaryButton
                 title={saving ? "Saving…" : "Continue"}
                 onPress={handleSubmit(saveProfile)}
                 disabled={saving}
                 variant={onPrimaryChrome ? "onPrimary" : "default"}
               />
-              <View style={styles.authBottomActionSpacer} accessibilityElementsHidden importantForAccessibility="no-hide-descendants" />
             </View>
           </View>
-        </Card>
+        </View>
       </View>
     </View>
   );
@@ -1285,14 +1307,6 @@ function parseMedicationLogList(raw: unknown, withDosage: boolean): MedicationLo
 
 /** Avoid greeting flicker (“there”) when session metadata/email arrives shortly after navigation. */
 const dashboardGreetingFirstNameByUserId: Record<string, string> = {};
-
-/**
- * Seed the welcome-card visibility synchronously on remount. Tapping the Home tab remounts the
- * dashboard, and reading the dismissed/eligible flags from storage is async — without this cache the
- * card+backdrop are absent for one frame (a flash of the dashboard) before they paint. Swipe-back
- * reuses the mounted screen so it never had the flash.
- */
-const dashboardWelcomeStateByUserId: Record<string, { dismissed: boolean; eligible: boolean }> = {};
 
 /** OWM `/img/wn/{icon}@2x.png` id → Ionicons ( themed `color`; no remote bitmaps ). */
 function owmIconIdToIoniconsName(iconId: string | null | undefined): keyof typeof Ionicons.glyphMap {
@@ -1387,10 +1401,6 @@ function DashboardScreen({ user }: { user: SessionUser }) {
   const [todaySummary, setTodaySummary] = useState<{ symptoms: number; medsTaken: number; medsTotal: number; hydration: number }>(
     () => snapshotSeed?.todaySummary ?? { symptoms: 0, medsTaken: 0, medsTotal: 0, hydration: 0 },
   );
-  const welcomeSeed = dashboardWelcomeStateByUserId[user.id];
-  const [welcomeDismissed, setWelcomeDismissed] = useState(() => welcomeSeed?.dismissed ?? true);
-  const [welcomeEligible, setWelcomeEligible] = useState(() => welcomeSeed?.eligible ?? false);
-  const [welcomeHydrated, setWelcomeHydrated] = useState(() => welcomeSeed != null);
   const hydrationTarget = HYDRATION_TARGET;
   const dailyCheckinCards = [
     { key: "symptoms" as const, label: "Log Symptoms", icon: "thermometer", family: "mci", goTo: "SymptomLogWizard" },
@@ -1415,35 +1425,6 @@ function DashboardScreen({ user }: { user: SessionUser }) {
     computedGreetingFirst !== "there"
       ? computedGreetingFirst
       : dashboardGreetingFirstNameByUserId[user.id] ?? "there";
-  const showWelcomeCard = welcomeHydrated && welcomeEligible && !welcomeDismissed;
-
-  useEffect(() => {
-    let cancelled = false;
-    (async () => {
-      const [dismissed, eligible] = await Promise.all([
-        readDashboardWelcomeDismissed(user.id),
-        readDashboardWelcomeEligible(user.id),
-      ]);
-      if (!cancelled) {
-        dashboardWelcomeStateByUserId[user.id] = { dismissed, eligible };
-        setWelcomeDismissed(dismissed);
-        setWelcomeEligible(eligible);
-        setWelcomeHydrated(true);
-      }
-    })();
-    return () => {
-      cancelled = true;
-    };
-  }, [user.id]);
-
-  const dismissWelcomeCard = useCallback(() => {
-    setWelcomeDismissed(true);
-    dashboardWelcomeStateByUserId[user.id] = {
-      dismissed: true,
-      eligible: dashboardWelcomeStateByUserId[user.id]?.eligible ?? true,
-    };
-    void markDashboardWelcomeDismissed(user.id);
-  }, [user.id]);
   const todayLabel = formatUkGreetingDate(new Date());
   const weatherIconName = weatherMeta?.icon
     ? owmIconIdToIoniconsName(weatherMeta.icon)
@@ -1734,7 +1715,6 @@ function DashboardScreen({ user }: { user: SessionUser }) {
         }}
         showsVerticalScrollIndicator={false}
       >
-      <InstructionInteractionBlock active={showWelcomeCard}>
       <Card title="">
         <View style={styles.weatherIntroWrap}>
           <Text style={[styles.weatherGreeting, { color: c.text }]} numberOfLines={1}>
@@ -1862,13 +1842,7 @@ function DashboardScreen({ user }: { user: SessionUser }) {
         </View>
       </View>
       {homeNewsShelf}
-      </InstructionInteractionBlock>
       </ScrollView>
-      {showWelcomeCard ? (
-        <InstructionCardOverlay>
-          <DashboardWelcomeCard onDismiss={dismissWelcomeCard} />
-        </InstructionCardOverlay>
-      ) : null}
     </View>
   );
 }
@@ -1877,12 +1851,6 @@ function LogsScreen({ user }: { user: SessionUser }) {
   const navigation = useNavigation<any>();
   const c = useFlareColors();
   const bottomScrollInset = useBottomTabScrollInset();
-  const { visible: showLogsInstruction, dismiss: dismissLogsInstruction } = useInstructionTip(
-    user.id,
-    readLogsInstructionEligible,
-    readLogsInstructionDismissed,
-    markLogsInstructionDismissed,
-  );
   const [historyPreview, setHistoryPreview] = useState({
     symptomCount: 0,
     medicationCount: 0,
@@ -1913,17 +1881,9 @@ function LogsScreen({ user }: { user: SessionUser }) {
 
   return (
     <InstructionScreenShell
-      showInstruction={showLogsInstruction}
+      showInstruction={false}
       contentPaddingBottom={bottomScrollInset + 24}
-      instruction={
-        <FloatingWelcomeCard
-          instruction={LOGS_INSTRUCTION}
-          icon="documents-outline"
-          iconFamily="ion"
-          onDismiss={dismissLogsInstruction}
-          dismissAccessibilityLabel="Dismiss logs guide"
-        />
-      }
+      instruction={null}
     >
       <View style={[logHistoryCardStyles.trackerCard, { backgroundColor: c.card }]}>
         <LogHistoryList
@@ -1955,6 +1915,11 @@ function LogsScreen({ user }: { user: SessionUser }) {
           rowTextLayout="compact"
         />
       </View>
+      <View style={styles.logsHubHintBlock}>
+        <Text style={[styles.logsHubHint, { color: c.textMuted }]}>
+          Your Logs hub keeps all your Check-in entries together. Tap a section to view your records.
+        </Text>
+      </View>
     </InstructionScreenShell>
   );
 }
@@ -1964,12 +1929,6 @@ function SymptomHistoryScreen({ user }: { user: SessionUser }) {
   const c = useFlareColors();
   const insets = useSafeAreaInsets();
   const bottomScrollInset = useBottomTabScrollInset();
-  const { visible: showSymptomHistoryInstruction, dismiss: dismissSymptomHistoryInstruction } = useInstructionTip(
-    user.id,
-    readSymptomHistoryInstructionEligible,
-    readSymptomHistoryInstructionDismissed,
-    markSymptomHistoryInstructionDismissed,
-  );
   const { rows, visibleCount, hasMore, loading, loadingMore, loadMore, refresh, syncExpandedFromCache } =
     useWizardLogHistory(user.id, TABLES.LOG_SYMPTOMS);
   const symptomLogItemIds = useMemo(() => rows.map((row) => String(row.id)), [rows]);
@@ -2019,16 +1978,9 @@ function SymptomHistoryScreen({ user }: { user: SessionUser }) {
 
   return (
     <InstructionScreenShell
-      showInstruction={showSymptomHistoryInstruction}
+      showInstruction={false}
       contentPaddingBottom={bottomScrollInset + selectionBarInset + 24}
-      instruction={
-        <FloatingWelcomeCard
-          instruction={SYMPTOM_LOGS_HISTORY_INSTRUCTION}
-          icon="thermometer"
-          onDismiss={dismissSymptomHistoryInstruction}
-          dismissAccessibilityLabel="Dismiss symptom logs guide"
-        />
-      }
+      instruction={null}
       footer={
         <ConfirmModal
           visible={bulkDeleteOpen}
@@ -2366,13 +2318,6 @@ function MedicationTrackingHistoryScreen({ user }: { user: SessionUser }) {
   const c = useFlareColors();
   const insets = useSafeAreaInsets();
   const bottomScrollInset = useBottomTabScrollInset();
-  const { visible: showMedicationHistoryInstruction, dismiss: dismissMedicationHistoryInstruction } =
-    useInstructionTip(
-      user.id,
-      readMedicationHistoryInstructionEligible,
-      readMedicationHistoryInstructionDismissed,
-      markMedicationHistoryInstructionDismissed,
-    );
   const { rows, visibleCount, hasMore, loading, loadingMore, loadMore, refresh, syncExpandedFromCache } =
     useWizardLogHistory(user.id, TABLES.LOG_MEDICATIONS);
   const medicationLogItemIds = useMemo(() => rows.map((row) => String(row.id)), [rows]);
@@ -2422,16 +2367,9 @@ function MedicationTrackingHistoryScreen({ user }: { user: SessionUser }) {
 
   return (
     <InstructionScreenShell
-      showInstruction={showMedicationHistoryInstruction}
+      showInstruction={false}
       contentPaddingBottom={bottomScrollInset + selectionBarInset + 24}
-      instruction={
-        <FloatingWelcomeCard
-          instruction={MEDICATION_LOGS_HISTORY_INSTRUCTION}
-          icon={TRACK_MEDICATIONS_MCI_ICON}
-          onDismiss={dismissMedicationHistoryInstruction}
-          dismissAccessibilityLabel="Dismiss medication logs guide"
-        />
-      }
+      instruction={null}
       footer={
         <ConfirmModal
           visible={bulkDeleteOpen}
@@ -2617,12 +2555,6 @@ function HydrationScreen({ user }: { user: SessionUser }) {
   const c = useFlareColors();
   const navigation = useNavigation<any>();
   const bottomScrollInset = useBottomTabScrollInset();
-  const { visible: showHydrationInstruction, dismiss: dismissHydrationInstruction } = useInstructionTip(
-    user.id,
-    readHydrationInstructionEligible,
-    readHydrationInstructionDismissed,
-    markHydrationInstructionDismissed,
-  );
   const [glasses, setGlasses] = useState(() => dashboardSnapshotByUserId[user.id]?.todaySummary.hydration ?? 0);
   const [resetConfirmOpen, setResetConfirmOpen] = useState(false);
   const glassesRef = useRef(glasses);
@@ -2698,16 +2630,9 @@ function HydrationScreen({ user }: { user: SessionUser }) {
 
   return (
     <InstructionScreenShell
-      showInstruction={showHydrationInstruction}
+      showInstruction={false}
       contentPaddingBottom={bottomScrollInset + 32}
-      instruction={
-        <FloatingWelcomeCard
-          instruction={HYDRATION_INSTRUCTION}
-          icon={HYDRATION_MCI_ICON}
-          onDismiss={dismissHydrationInstruction}
-          dismissAccessibilityLabel="Dismiss My Hydration guide"
-        />
-      }
+      instruction={null}
       footer={
         <ConfirmModal
           visible={resetConfirmOpen}
@@ -2755,12 +2680,6 @@ function ReportsScreen({ user }: { user: SessionUser }) {
   const [loading, setLoading] = useState(false);
   const [report, setReport] = useState<string>("");
   const [email, setEmail] = useState("");
-  const { visible: showReportsInstruction, dismiss: dismissReportsInstruction } = useInstructionTip(
-    user.id,
-    readReportsInstructionEligible,
-    readReportsInstructionDismissed,
-    markReportsInstructionDismissed,
-  );
 
   const generate = async () => {
     setLoading(true);
@@ -2809,17 +2728,9 @@ function ReportsScreen({ user }: { user: SessionUser }) {
 
   return (
     <InstructionScreenShell
-      showInstruction={showReportsInstruction}
+      showInstruction={false}
       contentPaddingBottom={bottomScrollInset}
-      instruction={
-        <FloatingWelcomeCard
-          instruction={REPORTS_INSTRUCTION}
-          icon="document-text-outline"
-          iconFamily="ion"
-          onDismiss={dismissReportsInstruction}
-          dismissAccessibilityLabel="Dismiss reports guide"
-        />
-      }
+      instruction={null}
     >
       <Card title="Reports & Briefs">
         <PrimaryButton title={loading ? "Generating..." : "Generate report"} onPress={generate} />
@@ -3706,9 +3617,11 @@ function AccountScreen({
         showFlareAlert("Could not delete account", error.message);
         return;
       }
+      const deletedUserId = user.id;
       await finishSignOut();
       await clearRememberedSession();
       await setAuthLegalAccepted(false);
+      await clearNewUserIntroState(deletedUserId);
       prepareSignOut("account_deleted");
     } catch (e: unknown) {
       await restoreAfterAbortedSignOut();
@@ -3718,7 +3631,7 @@ function AccountScreen({
       deleteAccountInFlight.current = false;
       endSignOutBlocking();
     }
-  }, [beginSignOutBlocking, endSignOutBlocking, finishSignOut, prepareSignOut, restoreAfterAbortedSignOut]);
+  }, [beginSignOutBlocking, endSignOutBlocking, finishSignOut, prepareSignOut, restoreAfterAbortedSignOut, user.id]);
 
   return (
     <ScrollView
@@ -3783,7 +3696,7 @@ function AccountScreen({
         message="This permanently deletes your account and all your data. This action cannot be undone."
         confirmLabel="Delete"
         cancelLabel="Cancel"
-        confirmDestructive
+        confirmDanger
         onCancel={() => setDeleteAccountConfirmOpen(false)}
         onConfirm={handleDeleteAccountConfirm}
       />
@@ -4337,13 +4250,18 @@ function AppRoot() {
     };
     bootstrap();
 
-    const { data } = supabase.auth.onAuthStateChange((_event, session) => {
+    const { data } = supabase.auth.onAuthStateChange((event, session) => {
       const next = session?.user;
       if (next) {
         setSignOutNotice(null);
+        // Only on fresh sign-in — TOKEN_REFRESHED etc. must not re-null and flash splash/nav.
+        if (event === "SIGNED_IN") {
+          setNewUserIntroPending(null);
+        }
         setUser(sessionUserFromSupabaseAuthUser(next));
       } else {
         setUser(null);
+        setNewUserIntroPending(null);
       }
       setLoading(false);
     });
@@ -4373,15 +4291,18 @@ function AppRoot() {
     if (!user?.id) {
       setBioEnabled(false);
       setLocked(false);
-      setNewUserIntroPending(false);
+      setNewUserIntroPending(null);
       return;
     }
+    // Must be null until resolve finishes — `false` from a prior logout would mount AppTabs and
+    // flash the absolute bottom nav before the welcome intro.
+    setNewUserIntroPending(null);
     (async () => {
       const [available, enabled, label, showIntro] = await Promise.all([
         isBiometricAvailable(),
         readLockEnabled(),
         biometricTypeLabel(),
-        shouldShowNewUserIntro(user.id),
+        resolveNewUserIntroPending(user.id, user.accountCreatedAt),
       ]);
       if (cancelled) return;
       setBioLabel(label);
@@ -4513,7 +4434,7 @@ function AppRoot() {
 
   const content = useMemo(() => {
     if (!fontsLoaded || loading || showSplash || !appearanceHydrated || signOutBlocking) {
-      return <SplashScreen />;
+      return <SplashScreen showBrand={fontsLoaded && appearanceHydrated} />;
     }
     if (signOutNotice) {
       const copy = SIGN_OUT_COPY[signOutNotice];
@@ -4569,6 +4490,7 @@ function AppRoot() {
           // Re-arm auto-refresh in case a prior "remembered" logout froze it (see finishSignOut).
           supabase.auth.startAutoRefresh();
           setSignOutNotice(null);
+          setNewUserIntroPending(null);
           setUser(next);
         }}
         onAuthBusy={setAuthBusy}
@@ -4645,7 +4567,9 @@ const styles = StyleSheet.create({
   authInlineBody: {
     flex: 1,
     width: "100%",
-    paddingBottom: 8,
+    justifyContent: "center",
+    // Above fingerprint row so a tall code form isn't covered by that Pressable.
+    zIndex: 2,
   },
   authInlineCard: {
     width: "100%",
@@ -4673,7 +4597,9 @@ const styles = StyleSheet.create({
     paddingHorizontal: 8,
   },
   authCardPlain: { flex: 1, paddingHorizontal: 0 },
-  authMethodPanel: { flex: 1, justifyContent: "center" },
+  /** Brand + method/email/code — centered in the space above the fingerprint (when shown). */
+  authMethodPanel: { width: "100%", justifyContent: "center" },
+  authStepBody: { width: "100%" },
   /** Sits with the sign-in stack, with clear air above the prompt — not pinned to the top. */
   authLandingBrandRow: {
     flexDirection: "row",
@@ -4685,14 +4611,18 @@ const styles = StyleSheet.create({
   authLandingName: {
     textAlign: "center",
     fontSize: 28,
-    fontFamily: "Inter_800ExtraBold",
+    fontFamily: "Inter_700Bold",
   },
   authMethodActions: { marginTop: 18, gap: 8 },
   authTopRightSignIn: { position: "absolute", right: 20, zIndex: 2, padding: 4 },
-  authQuickUnlockSpacer: { flex: 1 },
-  authQuickUnlock: { alignItems: "center", gap: 12, paddingTop: 8, paddingBottom: 24 },
+  /** Same bottom stack as BiometricLockScreen `actions` (fingerprint above Sign out row). */
+  authQuickUnlockActions: { width: "100%", alignItems: "center", paddingBottom: 8, zIndex: 0 },
+  authQuickUnlock: { alignItems: "center", gap: 12 },
   authFingerprintDisc: { width: 72, height: 72, borderRadius: 36, alignItems: "center", justifyContent: "center" },
   authQuickUnlockLabel: { fontSize: 14, fontFamily: "Inter_500Medium", textAlign: "center" },
+  /** Same metrics as lock-screen Sign out so fingerprint Y matches when that link isn’t present. */
+  authQuickUnlockFooterSlot: { alignSelf: "center", marginTop: 14, paddingVertical: 6 },
+  authQuickUnlockFooterSlotText: { fontSize: 14, fontFamily: "Inter_500Medium" },
   authSheetContent: { paddingTop: 8, paddingBottom: 8 },
   /** Neutralize the full-screen panels' `flex: 1` centering when hosted in the slide-up sheet. */
   authSheetPanel: { flex: 0, justifyContent: "flex-start" },
@@ -4761,7 +4691,7 @@ const styles = StyleSheet.create({
   },
   splashBrandName: {
     fontSize: 28,
-    fontWeight: "700",
+    fontFamily: "Inter_700Bold",
     textAlign: "center",
   },
   splashLogo: { width: 132, height: 132 },
@@ -5008,10 +4938,16 @@ const styles = StyleSheet.create({
   accountDeleteLink: { paddingVertical: 8 },
   accountDeleteLinkText: { fontSize: FLARE_FONT_SIZE.subhead, fontFamily: FLARE_FONT_FAMILY.regular },
   accountDeleteHint: {
-    fontSize: 13,
-    fontFamily: "Inter_400Regular",
+    ...FLARE_CAPTION_HINT,
     textAlign: "center",
-    lineHeight: 18,
+  },
+  logsHubHintBlock: {
+    marginTop: 12,
+    paddingHorizontal: 24,
+  },
+  logsHubHint: {
+    ...FLARE_CAPTION_HINT,
+    textAlign: "center",
   },
   accountAvatarWell: {
     width: 56,

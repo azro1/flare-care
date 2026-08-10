@@ -13,7 +13,6 @@ import {
   logHistoryCardStyles,
 } from "../components/LogHistoryList";
 import { ConfirmModal } from "../components/ConfirmModal";
-import { FloatingWelcomeCard } from "../components/FloatingWelcomeCard";
 import { InstructionScreenShell } from "../components/InstructionScreenShell";
 import { invalidateDashboardSnapshot } from "../lib/dashboardSnapshotCache";
 import { recordRecentActivityEvent } from "../lib/recentActivityEvents";
@@ -30,25 +29,12 @@ import {
   setWellbeingListCache,
   type WellbeingRow,
 } from "../lib/wellbeingShared";
-import { WELLBEING_LOGS_HISTORY_INSTRUCTION } from "../lib/instructionCardCopy";
-import {
-  markWellbeingHistoryInstructionDismissed,
-  readWellbeingHistoryInstructionDismissed,
-  readWellbeingHistoryInstructionEligible,
-} from "../lib/wellbeingHistoryInstructionTip";
-import { useInstructionTip } from "../lib/useInstructionTip";
 import { TABLES } from "../lib/supabase";
 
 type SessionUser = { id: string };
 
 export function WellbeingScreen({ user }: { user: SessionUser }) {
   const navigation = useNavigation<any>();
-  const { visible: showInstruction, dismiss: dismissInstruction } = useInstructionTip(
-    user.id,
-    readWellbeingHistoryInstructionEligible,
-    readWellbeingHistoryInstructionDismissed,
-    markWellbeingHistoryInstructionDismissed,
-  );
   const insets = useSafeAreaInsets();
   const bottomBarClearance = bottomTabBarHeight(insets.bottom);
 
@@ -129,16 +115,9 @@ export function WellbeingScreen({ user }: { user: SessionUser }) {
 
   return (
     <InstructionScreenShell
-      showInstruction={showInstruction}
+      showInstruction={false}
       contentPaddingBottom={scrollBottomPadTotal}
-      instruction={
-        <FloatingWelcomeCard
-          instruction={WELLBEING_LOGS_HISTORY_INSTRUCTION}
-          icon={WELLBEING_MCI_ICON}
-          onDismiss={dismissInstruction}
-          dismissAccessibilityLabel="Dismiss Wellbeing Logs guide"
-        />
-      }
+      instruction={null}
       footer={
         <ConfirmModal
           visible={bulkDeleteOpen}

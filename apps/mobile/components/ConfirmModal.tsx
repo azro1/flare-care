@@ -3,9 +3,9 @@ import { BackHandler, Pressable, StyleSheet, Text, View } from "react-native";
 import { PrimaryButton, SecondaryButton } from "./FlareButton";
 import {
   CONFIRM_MODAL_ACTIONS_GAP,
+  CONFIRM_MODAL_MESSAGE,
   CONFIRM_MODAL_STACK_GAP,
-  FLARE_FONT_SIZE,
-  FLARE_LINE_HEIGHT,
+  CONFIRM_MODAL_TITLE,
 } from "../lib/layoutConstants";
 import { Portal } from "../lib/overlayPortal";
 import { useFlareColors } from "../theme";
@@ -26,12 +26,10 @@ const styles = StyleSheet.create({
     paddingTop: 22,
     paddingBottom: 20,
   },
-  title: { fontSize: 18, fontFamily: "Inter_700Bold" },
+  title: { ...CONFIRM_MODAL_TITLE },
   message: {
-    fontSize: FLARE_FONT_SIZE.body,
-    fontFamily: "Inter_400Regular",
+    ...CONFIRM_MODAL_MESSAGE,
     marginTop: CONFIRM_MODAL_STACK_GAP,
-    lineHeight: FLARE_LINE_HEIGHT.body,
   },
   actions: { flexDirection: "row", gap: 12, marginTop: CONFIRM_MODAL_ACTIONS_GAP },
   actionSlot: { flex: 1, minWidth: 0 },
@@ -53,6 +51,8 @@ export function ConfirmModal({
   confirmLabel,
   cancelLabel = "Cancel",
   confirmDestructive,
+  /** True red fill (`MOBILE_DESTRUCTIVE_FILL`) — account delete only; other confirms stay cadet. */
+  confirmDanger,
   /** Single primary button (OK / dismiss) — same card as confirm flows. */
   notice = false,
   onConfirm,
@@ -64,6 +64,7 @@ export function ConfirmModal({
   confirmLabel: string;
   cancelLabel?: string;
   confirmDestructive?: boolean;
+  confirmDanger?: boolean;
   notice?: boolean;
   onConfirm: () => void;
   onCancel: () => void;
@@ -79,37 +80,42 @@ export function ConfirmModal({
     return () => sub.remove();
   }, [visible, onCancel]);
 
-  if (!visible) return null;
+  const confirmVariant = confirmDanger ? "danger" : confirmDestructive ? "destructive" : "default";
 
+  // Keep Portal mounted while host is mounted — sync `null` into the outlet on dismiss so the
+  // absoluteFill Pressable cannot linger and block the verification TextInput (unmount races /
+  // Fast Refresh left ghost overlays in the registry).
   return (
     <Portal>
-      <View style={styles.overlay}>
-        <Pressable
-          accessibilityRole="button"
-          accessibilityLabel="Dismiss"
-          onPress={onCancel}
-          style={[StyleSheet.absoluteFillObject, { backgroundColor: c.modalBackdrop }]}
-        />
-        <View style={[styles.card, { backgroundColor: c.card, borderColor: c.cardBorder }]}>
-          <Text style={[styles.title, { color: c.text }]}>{title}</Text>
-          {message ? <Text style={[styles.message, { color: c.textMuted }]}>{message}</Text> : null}
-          <View style={styles.actions}>
-            {!notice ? (
+      {visible ? (
+        <View style={styles.overlay}>
+          <Pressable
+            accessibilityRole="button"
+            accessibilityLabel="Dismiss"
+            onPress={onCancel}
+            style={[StyleSheet.absoluteFillObject, { backgroundColor: c.modalBackdrop }]}
+          />
+          <View style={[styles.card, { backgroundColor: c.card, borderColor: c.cardBorder }]}>
+            <Text style={[styles.title, { color: c.text }]}>{title}</Text>
+            {message ? <Text style={[styles.message, { color: c.textMuted }]}>{message}</Text> : null}
+            <View style={styles.actions}>
+              {!notice ? (
+                <View style={styles.actionSlot}>
+                  <SecondaryButton noTopMargin title={cancelLabel} onPress={onCancel} />
+                </View>
+              ) : null}
               <View style={styles.actionSlot}>
-                <SecondaryButton noTopMargin title={cancelLabel} onPress={onCancel} />
+                <PrimaryButton
+                  noTopMargin
+                  title={confirmLabel}
+                  onPress={onConfirm}
+                  variant={confirmVariant}
+                />
               </View>
-            ) : null}
-            <View style={styles.actionSlot}>
-              <PrimaryButton
-                noTopMargin
-                title={confirmLabel}
-                onPress={onConfirm}
-                variant={confirmDestructive ? "destructive" : "default"}
-              />
             </View>
           </View>
         </View>
-      </View>
+      ) : null}
     </Portal>
   );
 }

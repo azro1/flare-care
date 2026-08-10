@@ -16,7 +16,6 @@ import { ScrollView } from "../lib/scrollViews";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { PrimaryButton, SecondaryButton } from "../components/FlareButton";
 import { InstructionScreenShell } from "../components/InstructionScreenShell";
-import { FloatingWelcomeCard } from "../components/FloatingWelcomeCard";
 import { flareFieldErrorStyle, FlareTextInput } from "../components/FlareInput";
 import { FlareScreenSectionTitle } from "../components/FlareScreenSectionTitle";
 import {
@@ -54,7 +53,6 @@ import {
 } from "../lib/medicationShared";
 import { useMedicationsList } from "../lib/useMedicationsList";
 import { snapTimeHmFromDate } from "../lib/bowelMovementShared";
-import { MY_MEDS_INSTRUCTION } from "../lib/instructionCardCopy";
 import {
   CARD_SECTION_INNER_GAP,
   FLARE_FONT_FAMILY,
@@ -63,12 +61,6 @@ import {
   TIME_PICKER_MINUTE_INTERVAL,
   bottomTabBarHeight,
 } from "../lib/layoutConstants";
-import {
-  markMyMedsInstructionDismissed,
-  readMyMedsInstructionDismissed,
-  readMyMedsInstructionEligible,
-} from "../lib/myMedsInstructionTip";
-import { useInstructionTip } from "../lib/useInstructionTip";
 import { supabase, TABLES } from "../lib/supabase";
 import { useFlareColors } from "../theme";
 
@@ -309,12 +301,6 @@ async function maybeRescheduleReminders(userId: string) {
 export function MedicationsScreen({ user }: { user: SessionUser }) {
   const c = useFlareColors();
   const navigation = useNavigation<any>();
-  const { visible: showMyMedsInstruction, dismiss: dismissMyMedsInstruction } = useInstructionTip(
-    user.id,
-    readMyMedsInstructionEligible,
-    readMyMedsInstructionDismissed,
-    markMyMedsInstructionDismissed,
-  );
   const insets = useSafeAreaInsets();
   const tabBarClearance = bottomTabBarHeight(insets.bottom);
   const { scrollBottomPad } = useTrackerThumbFabLayout(tabBarClearance);
@@ -473,16 +459,9 @@ export function MedicationsScreen({ user }: { user: SessionUser }) {
 
   return (
     <InstructionScreenShell
-      showInstruction={showMyMedsInstruction}
+      showInstruction={false}
       contentPaddingBottom={scrollBottomPad}
-      instruction={
-        <FloatingWelcomeCard
-          instruction={MY_MEDS_INSTRUCTION}
-          icon={MY_MEDS_MCI_ICON}
-          onDismiss={dismissMyMedsInstruction}
-          dismissAccessibilityLabel="Dismiss My Meds guide"
-        />
-      }
+      instruction={null}
       floatingAction={
         !selectionMode ? (
           <TrackerThumbFab

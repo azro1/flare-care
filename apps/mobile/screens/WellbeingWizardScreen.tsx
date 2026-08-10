@@ -15,8 +15,6 @@ import {
 import { showFlareAlert, dismissFlareAlert } from "../components/FlareAlertHost";
 import { ScrollView } from "../lib/scrollViews";
 import { PrimaryButton, SecondaryButton } from "../components/FlareButton";
-import { FloatingWelcomeCard } from "../components/FloatingWelcomeCard";
-import { InstructionCardOverlay } from "../components/InstructionCardOverlay";
 import { flareFieldErrorStyle, FlareTextInput } from "../components/FlareInput";
 import { WizardReviewSection, WizardReviewNotesSection, type WizardReviewField } from "../components/symptomReviewLayout";
 import { invalidateDashboardSnapshot } from "../lib/dashboardSnapshotCache";
@@ -27,13 +25,6 @@ import {
   FULL_WIDTH_CTA_EDGE_PADDING,
   wizardLandingMinHeight,
 } from "../lib/layoutConstants";
-import { WELLBEING_INSTRUCTION } from "../lib/instructionCardCopy";
-import {
-  markWellbeingInstructionDismissed,
-  readWellbeingInstructionDismissed,
-  readWellbeingInstructionEligible,
-} from "../lib/wellbeingInstructionTip";
-import { useInstructionTip } from "../lib/useInstructionTip";
 import {
   getTodayWellbeingEntry,
   invalidateWellbeingListCache,
@@ -95,12 +86,6 @@ export function WellbeingWizardScreen({ user }: { user: SessionUser }) {
   const c = useFlareColors();
   const errTextStyle = flareFieldErrorStyle(c, "wizard");
   const { height: windowHeight } = useWindowDimensions();
-  const { visible: showInstruction, dismiss: dismissInstruction } = useInstructionTip(
-    user.id,
-    readWellbeingInstructionEligible,
-    readWellbeingInstructionDismissed,
-    markWellbeingInstructionDismissed,
-  );
 
   const [loadingEdit, setLoadingEdit] = useState(Boolean(editId));
   const [currentStep, setCurrentStep] = useState(0);
@@ -335,8 +320,6 @@ export function WellbeingWizardScreen({ user }: { user: SessionUser }) {
     );
   }
 
-  const showInstructionFloat = currentStep === 0 && !editId && showInstruction;
-
   const scaleStep = (field: keyof WellbeingFormState, options: { value: WellbeingScale; label: string }[], title: string) => (
     <View>
       <Text style={[styles.h3, { color: c.text }]}>{title}</Text>
@@ -381,7 +364,7 @@ export function WellbeingWizardScreen({ user }: { user: SessionUser }) {
             </Text>
           ) : null}
 
-          {currentStep === 0 && !showInstructionFloat ? (
+          {currentStep === 0 ? (
             <View style={[styles.landing, { minHeight: wizardLandingMinHeight(windowHeight) }]}>
               <View
                 style={[
@@ -494,17 +477,6 @@ export function WellbeingWizardScreen({ user }: { user: SessionUser }) {
             </View>
           ) : null}
         </ScrollView>
-
-        {showInstructionFloat ? (
-          <InstructionCardOverlay>
-            <FloatingWelcomeCard
-              instruction={WELLBEING_INSTRUCTION}
-              icon={WELLBEING_MCI_ICON}
-              onDismiss={dismissInstruction}
-              dismissAccessibilityLabel="Dismiss My Wellbeing guide"
-            />
-          </InstructionCardOverlay>
-        ) : null}
       </View>
     </KeyboardAvoidingView>
   );

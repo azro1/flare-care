@@ -1,8 +1,7 @@
-import { useFocusEffect, useNavigation, useRoute } from "@react-navigation/native";
-import React, { useCallback, useMemo, useState } from "react";
+import { useNavigation, useRoute } from "@react-navigation/native";
+import React, { useCallback, useMemo } from "react";
 import { StyleSheet, Text, View } from "react-native";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
-import { FloatingWelcomeCard } from "../components/FloatingWelcomeCard";
 import { InstructionScreenShell } from "../components/InstructionScreenShell";
 import {
   LogHistoryCard,
@@ -11,13 +10,6 @@ import {
   type LogHistoryListItem,
 } from "../components/LogHistoryList";
 import { BRISTOL_TYPES } from "../lib/bristolStoolChart";
-import { BOWEL_FEATURE_MCI_ICON } from "../lib/bowelMovementShared";
-import { BRISTOL_GUIDE_INSTRUCTION } from "../lib/instructionCardCopy";
-import {
-  markBristolGuideInstructionDismissed,
-  markBristolGuideInstructionEligible,
-  readBristolGuideInstructionDismissed,
-} from "../lib/bristolGuideInstructionTip";
 import { FLARE_FONT_FAMILY, FLARE_FONT_SIZE } from "../lib/layoutConstants";
 import { useFlareColors } from "../theme";
 export type BristolGuideParams = {
@@ -46,26 +38,6 @@ export function BristolGuideScreen({ user }: { user: SessionUser }) {
   const highlightedType = params.highlightedType ?? null;
   const returnOpenLogSheet = Boolean(params.returnOpenLogSheet);
 
-  const [showInstruction, setShowInstruction] = useState(false);
-
-  useFocusEffect(
-    useCallback(() => {
-      let cancelled = false;
-      void (async () => {
-        await markBristolGuideInstructionEligible(user.id);
-        const dismissed = await readBristolGuideInstructionDismissed(user.id);
-        if (!cancelled) setShowInstruction(!dismissed);
-      })();
-      return () => {
-        cancelled = true;
-      };
-    }, [user.id]),
-  );
-
-  const dismissBristolGuideInstruction = useCallback(() => {
-    setShowInstruction(false);
-    void markBristolGuideInstructionDismissed(user.id);
-  }, [user.id]);
   const items: LogHistoryListItem[] = useMemo(
     () =>
       BRISTOL_TYPES.map((item) => ({
@@ -121,16 +93,9 @@ export function BristolGuideScreen({ user }: { user: SessionUser }) {
 
   return (
     <InstructionScreenShell
-      showInstruction={showInstruction}
+      showInstruction={false}
       contentPaddingBottom={insets.bottom + 24}
-      instruction={
-        <FloatingWelcomeCard
-          instruction={BRISTOL_GUIDE_INSTRUCTION}
-          icon={BOWEL_FEATURE_MCI_ICON}
-          onDismiss={dismissBristolGuideInstruction}
-          dismissAccessibilityLabel="Dismiss Bristol Stool Chart guide"
-        />
-      }
+      instruction={null}
     >
       <LogHistoryCard style={styles.guideCard}>
         <LogHistoryList

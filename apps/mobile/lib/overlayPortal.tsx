@@ -1,4 +1,4 @@
-import React, { useEffect, useReducer, useRef } from "react";
+import React, { useLayoutEffect, useReducer, useRef } from "react";
 
 /**
  * Minimal top-layer portal (no extra deps).
@@ -7,6 +7,9 @@ import React, { useEffect, useReducer, useRef } from "react";
  * their local parent's padding / ScrollView content box and cover the whole app. Uses an external
  * registry + subscription so mounting a portal re-renders ONLY the outlet, never the app tree
  * (which would loop). Mount `<OverlayOutlet />` once as the last sibling under the app root.
+ *
+ * Sync/remove in `useLayoutEffect` (before paint). A dismissed full-screen Pressable that lingered
+ * via `useEffect` cleanup after paint stole taps from inputs (e.g. OTP verification).
  */
 
 type Listener = () => void;
@@ -21,10 +24,14 @@ function emit() {
 
 export function OverlayOutlet() {
   const [, force] = useReducer((x: number) => x + 1, 0);
-  useEffect(() => {
+  useLayoutEffect(() => {
     listeners.add(force);
     return () => {
       listeners.delete(force);
+      // Fast Refresh can drop Portal instances without running their cleanups cleanly — wipe
+      // leftovers so a ghost absoluteFill Pressable cannot block TextInputs after reload.
+      registry.clear();
+      emit();
     };
   }, []);
   return (
@@ -41,13 +48,12 @@ export function Portal({ children }: { children: React.ReactNode }) {
   if (!idRef.current) idRef.current = `overlay-${++nextId}`;
   const id = idRef.current;
 
-  // Sync the latest children into the registry on every render (keeps dynamic content — e.g. a
-  // changing button label — up to date), then remove on unmount.
-  useEffect(() => {
+  useLayoutEffect(() => {
     registry.set(id, children);
     emit();
   });
-  useEffect(
+
+  useLayoutEffect(
     () => () => {
       registry.delete(id);
       emit();

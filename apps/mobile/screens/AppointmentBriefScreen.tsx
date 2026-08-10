@@ -1,23 +1,15 @@
-import { useFocusEffect, useNavigation } from "@react-navigation/native";
-import React, { useCallback, useMemo, useState } from "react";
-import { Pressable, StyleSheet, Text } from "react-native";
+import { useNavigation } from "@react-navigation/native";
+import React, { useCallback, useMemo } from "react";
+import { Pressable, StyleSheet, Text, View } from "react-native";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
-import { FloatingWelcomeCard } from "../components/FloatingWelcomeCard";
 import { InstructionScreenShell } from "../components/InstructionScreenShell";
 import {
   buildBrowseLogRowItem,
   LogHistoryCard,
   LogHistoryList,
 } from "../components/LogHistoryList";
-import { APPOINTMENTS_FEATURE_ION_ICON } from "../lib/appointmentShared";
 import { BRIEF_WEEK_PRESETS } from "../lib/appointmentBriefShared";
-import {
-  markAppointmentBriefInstructionDismissed,
-  markAppointmentBriefInstructionEligible,
-  readAppointmentBriefInstructionDismissed,
-} from "../lib/appointmentBriefInstructionTip";
-import { APPOINTMENT_BRIEF_INSTRUCTION } from "../lib/instructionCardCopy";
-import { ACCOUNT_LIST_ROW_PADDING, FLARE_FONT_FAMILY, FLARE_FONT_SIZE } from "../lib/layoutConstants";
+import { ACCOUNT_LIST_ROW_PADDING, FLARE_CAPTION_HINT } from "../lib/layoutConstants";
 import { useFlareColors } from "../theme";
 
 type SessionUser = { id: string };
@@ -27,27 +19,6 @@ export function AppointmentBriefScreen({ user }: { user: SessionUser }) {
   const navigation = useNavigation<any>();
   const insets = useSafeAreaInsets();
   const contentPaddingBottom = Math.max(insets.bottom, 16) + 24;
-
-  const [showInstruction, setShowInstruction] = useState(false);
-
-  useFocusEffect(
-    useCallback(() => {
-      let cancelled = false;
-      void (async () => {
-        await markAppointmentBriefInstructionEligible(user.id);
-        const dismissed = await readAppointmentBriefInstructionDismissed(user.id);
-        if (!cancelled) setShowInstruction(!dismissed);
-      })();
-      return () => {
-        cancelled = true;
-      };
-    }, [user.id]),
-  );
-
-  const dismissAppointmentBriefInstruction = useCallback(() => {
-    setShowInstruction(false);
-    void markAppointmentBriefInstructionDismissed(user.id);
-  }, [user.id]);
 
   const items = useMemo(
     () => [
@@ -83,42 +54,47 @@ export function AppointmentBriefScreen({ user }: { user: SessionUser }) {
 
   return (
     <InstructionScreenShell
-      showInstruction={showInstruction}
+      showInstruction={false}
       contentPaddingBottom={contentPaddingBottom}
-      instruction={
-        <FloatingWelcomeCard
-          instruction={APPOINTMENT_BRIEF_INSTRUCTION}
-          icon={APPOINTMENTS_FEATURE_ION_ICON}
-          iconFamily="ion"
-          onDismiss={dismissAppointmentBriefInstruction}
-          dismissAccessibilityLabel="Dismiss appointment summary guide"
-        />
-      }
+      instruction={null}
     >
       <LogHistoryCard>
         <LogHistoryList items={items} onPressItem={onPressItem} rowPaddingHorizontal={ACCOUNT_LIST_ROW_PADDING} />
       </LogHistoryCard>
-      <Pressable
-        accessibilityRole="link"
-        accessibilityLabel="Need help with appointment summary"
-        onPress={() => navigation.navigate("AccountHelp", { expandSection: "appointmentSummary" })}
-        style={({ pressed }) => [styles.needHelpLink, pressed && { opacity: 0.7 }]}
-      >
-        <Text style={[styles.needHelpLinkLabel, { color: c.text }]}>Need help?</Text>
-      </Pressable>
+      <View style={styles.needHelpBlock}>
+        <Text style={[styles.needHelpHint, { color: c.textMuted }]}>
+          Choose a suggested time period or select your own dates to include the information you need.
+        </Text>
+        <Pressable
+          accessibilityRole="link"
+          accessibilityLabel="Still need help with appointment summary"
+          onPress={() => navigation.navigate("AccountHelp", { expandSection: "appointmentSummary" })}
+          style={({ pressed }) => [styles.needHelpLink, pressed && { opacity: 0.7 }]}
+        >
+          <Text style={[styles.needHelpLinkLabel, { color: c.text }]}>Still need help?</Text>
+        </Pressable>
+      </View>
     </InstructionScreenShell>
   );
 }
 
 const styles = StyleSheet.create({
+  needHelpBlock: {
+    alignItems: "center",
+    marginTop: 12,
+    paddingHorizontal: 24,
+  },
+  needHelpHint: {
+    ...FLARE_CAPTION_HINT,
+    textAlign: "center",
+  },
   needHelpLink: {
     alignSelf: "center",
-    marginTop: 12,
-    paddingVertical: 10,
+    marginTop: 8,
+    paddingVertical: 6,
   },
   needHelpLinkLabel: {
-    fontSize: FLARE_FONT_SIZE.body,
-    fontFamily: FLARE_FONT_FAMILY.regular,
+    ...FLARE_CAPTION_HINT,
     textDecorationLine: "underline",
   },
 });

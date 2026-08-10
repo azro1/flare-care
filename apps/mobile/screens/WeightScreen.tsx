@@ -28,7 +28,6 @@ import {
   logHistoryCardStyles,
 } from "../components/LogHistoryList";
 import { ConfirmModal } from "../components/ConfirmModal";
-import { FloatingWelcomeCard } from "../components/FloatingWelcomeCard";
 import { InstructionScreenShell } from "../components/InstructionScreenShell";
 import { TrackerThumbFab, useTrackerThumbFabLayout } from "../components/TrackerThumbFab";
 import { STACKED_DETAIL_ROW_EDGE } from "../components/StackedDetailField";
@@ -58,13 +57,6 @@ import {
   type WeightFormState,
   type WeightRow,
 } from "../lib/weightShared";
-import { WEIGHT_INSTRUCTION } from "../lib/instructionCardCopy";
-import {
-  markWeightInstructionDismissed,
-  readWeightInstructionDismissed,
-  readWeightInstructionEligible,
-} from "../lib/weightInstructionTip";
-import { useInstructionTip } from "../lib/useInstructionTip";
 import { supabase, TABLES } from "../lib/supabase";
 import { useFlareColors } from "../theme";
 
@@ -228,12 +220,6 @@ export function WeightLogSheet({
 export function WeightScreen({ user }: { user: SessionUser }) {
   const c = useFlareColors();
   const navigation = useNavigation<any>();
-  const { visible: showWeightInstruction, dismiss: dismissWeightInstruction } = useInstructionTip(
-    user.id,
-    readWeightInstructionEligible,
-    readWeightInstructionDismissed,
-    markWeightInstructionDismissed,
-  );
   const insets = useSafeAreaInsets();
   const { scrollBottomPad } = useTrackerThumbFabLayout();
   const selectionBarClearance = bottomTabBarHeight(insets.bottom);
@@ -363,16 +349,9 @@ export function WeightScreen({ user }: { user: SessionUser }) {
 
   return (
     <InstructionScreenShell
-      showInstruction={showWeightInstruction}
+      showInstruction={false}
       contentPaddingBottom={scrollBottomPadTotal}
-      instruction={
-        <FloatingWelcomeCard
-          instruction={WEIGHT_INSTRUCTION}
-          icon={WEIGHT_FEATURE_MCI_ICON}
-          onDismiss={dismissWeightInstruction}
-          dismissAccessibilityLabel="Dismiss My Weight guide"
-        />
-      }
+      instruction={null}
       floatingAction={
         !selectionMode ? <TrackerThumbFab accessibilityLabel="Log weight" onPress={openNewLog} /> : null
       }

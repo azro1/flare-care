@@ -121,10 +121,33 @@ export const CONFIRM_MODAL_STACK_GAP = 8;
 /** Confirm / notice modal — message→actions. */
 export const CONFIRM_MODAL_ACTIONS_GAP = 16;
 
+/** Confirm / notice modal title — shared by every `ConfirmModal`. */
+export const CONFIRM_MODAL_TITLE = {
+  fontSize: FLARE_FONT_SIZE.sectionTitle,
+  fontFamily: FLARE_FONT_FAMILY.bold,
+} as const;
+
+/** Confirm / notice modal body — shared by every `ConfirmModal`. */
+export const CONFIRM_MODAL_MESSAGE = {
+  fontSize: FLARE_FONT_SIZE.body,
+  lineHeight: FLARE_LINE_HEIGHT.body,
+  fontFamily: FLARE_FONT_FAMILY.regular,
+} as const;
+
 /** Stacked field labels on log detail / review screens (`StackedDetailField`). */
 export const DETAIL_FIELD_LABEL = {
   fontSize: FLARE_FONT_SIZE.muted,
   lineHeight: FLARE_LINE_HEIGHT.muted,
+  fontFamily: FLARE_FONT_FAMILY.regular,
+} as const;
+
+/**
+ * Small helper under links / footers (Appointment Summary hint, Account delete hint, etc.).
+ * Pair with `textMuted` (or another color) at the call site.
+ */
+export const FLARE_CAPTION_HINT = {
+  fontSize: FLARE_FONT_SIZE.caption,
+  lineHeight: FLARE_LINE_HEIGHT.caption,
   fontFamily: FLARE_FONT_FAMILY.regular,
 } as const;
 
