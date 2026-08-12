@@ -83,14 +83,6 @@ import { useFlareColors } from "../theme";
 
 type SessionUser = { id: string };
 
-const BOTTOM_BAR_VISIBLE_ROUTES = new Set(["Dashboard", "Account", "Reminders"]);
-
-function useBottomTabScrollInset() {
-  const route = useRoute();
-  const insets = useSafeAreaInsets();
-  return BOTTOM_BAR_VISIBLE_ROUTES.has(route.name) ? Math.max(insets.bottom, 8) + 36 : 0;
-}
-
 function toYmd(d: Date): string {
   const y = d.getFullYear();
   const m = String(d.getMonth() + 1).padStart(2, "0");
@@ -452,9 +444,8 @@ export function BowelScreen({ user }: { user: SessionUser }) {
   const navigation = useNavigation<any>();
   const route = useRoute();
   const insets = useSafeAreaInsets();
-  const bottomScrollInset = useBottomTabScrollInset();
-  const { scrollBottomPad } = useTrackerThumbFabLayout();
-  const selectionBarClearance = bottomTabBarHeight(insets.bottom);
+  const tabBarClearance = bottomTabBarHeight(insets.bottom);
+  const { scrollBottomPad } = useTrackerThumbFabLayout(tabBarClearance);
 
   const [form, setForm] = useState<BowelFormState>(() => quickBowelFormState());
   const {
@@ -606,8 +597,7 @@ export function BowelScreen({ user }: { user: SessionUser }) {
 
   const listInitialLoad = historyLoading && historyRows.length === 0;
   const historyEmpty = !historyLoading && historyTotalCount === 0;
-  const scrollBottomPadTotal =
-    bottomScrollInset + (selectionMode ? selectionBarClearance : scrollBottomPad);
+  const scrollBottomPadTotal = selectionMode ? tabBarClearance : scrollBottomPad;
 
   return (
     <InstructionScreenShell
@@ -616,7 +606,11 @@ export function BowelScreen({ user }: { user: SessionUser }) {
       instruction={null}
       floatingAction={
         !selectionMode ? (
-          <TrackerThumbFab accessibilityLabel="Log bowel movement" onPress={openNewLog} />
+          <TrackerThumbFab
+            accessibilityLabel="Log bowel movement"
+            onPress={openNewLog}
+            tabBarClearance={tabBarClearance}
+          />
         ) : null
       }
       footer={

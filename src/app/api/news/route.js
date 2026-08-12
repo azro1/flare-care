@@ -1,6 +1,6 @@
 import Parser from 'rss-parser'
 
-const MAX_ITEMS = 12
+const MAX_ITEMS = 20
 
 // IBD-focused RSS feeds – Crohn's, colitis, digestive health (no API key needed)
 const IBD_RSS_FEEDS = [

@@ -28,6 +28,8 @@ import {
   Keyboard,
   Linking,
   Modal,
+  NativeScrollEvent,
+  NativeSyntheticEvent,
   Platform,
   Pressable,
   StyleProp,
@@ -38,10 +40,9 @@ import {
   useWindowDimensions,
   View,
   ViewStyle,
-  type NativeScrollEvent,
-  type NativeSyntheticEvent,
 } from "react-native";
 import { ScrollView } from "./lib/scrollViews";
+import { GestureHandlerRootView } from "react-native-gesture-handler";
 import { SafeAreaProvider, initialWindowMetrics, useSafeAreaInsets } from "react-native-safe-area-context";
 import {
   FLARE_BUTTON_BORDER_RADIUS,
@@ -56,14 +57,23 @@ import { InstructionScreenShell } from "./components/InstructionScreenShell";
 import { flareFieldErrorStyle, FlareTextInput, LabeledInput, flareInputStyles } from "./components/FlareInput";
 import { flareCardSectionStyles, FlareScreenSectionTitle } from "./components/FlareScreenSectionTitle";
 import { HeaderOverflowMenu } from "./components/HeaderOverflowMenu";
-import { NewsFeedCard, newsFeedListStyles } from "./components/NewsFeed";
 import { SuccessNoticeScreen } from "./components/SuccessNoticeScreen";
 import { ConfirmModal } from "./components/ConfirmModal";
 import { FlareAlertHost, showFlareAlert } from "./components/FlareAlertHost";
 import { OverlayOutlet } from "./lib/overlayPortal";
 import { SlideUpSheet } from "./components/SlideUpSheet";
 import { BiometricLockScreen } from "./components/BiometricLockScreen";
-import { authenticate, biometricTypeLabel, isBiometricAvailable, readLockEnabled, setLockEnabled } from "./lib/biometricLock";
+import { TodayActivitiesModal } from "./components/TodayActivityPrototypes";
+import {
+  authenticate,
+  biometricTypeLabel,
+  hydrateBioLockCacheFromStorage,
+  isBiometricAvailable,
+  loadBioLockSnapshot,
+  peekBioLockSnapshot,
+  readLockEnabled,
+  setLockEnabled,
+} from "./lib/biometricLock";
 import { clearRememberedSession, readRememberedSession, rememberSession } from "./lib/rememberedSession";
 import { readAuthLegalAccepted, setAuthLegalAccepted } from "./lib/authLegalAcceptance";
 import { CollapsingTitleScrollScreen } from "./components/CollapsingTitleScrollScreen";
@@ -87,17 +97,17 @@ import {
   NUTRITION_QUICK_TIPS,
 } from "./lib/nutritionGuideCopy";
 import { HYDRATION_TARGET, HYDRATION_MCI_ICON, saveHydrationReset } from "./lib/hydrationShared";
+import { EMPTY_ACTIVITY_INSIGHT } from "./lib/activityInsights";
 import {
   bottomTabBarHeight,
   ACCOUNT_LIST_ROW_PADDING,
   CARD_INNER_PADDING,
-  CARD_SECTION_INNER_GAP,
-  TODAY_GOALS_ROW_PADDING,
+  TRAY_ROW_PADDING_H,
+  TRAY_ROW_PADDING_Y,
   bottomTabBarScrollInset,
   FLARE_FONT_FAMILY,
   FLARE_FONT_SIZE,
   FLARE_LINE_HEIGHT,
-  FLARE_CAPTION_HINT,
   HOME_TILE_GAP,
   SCREEN_EDGE_PADDING,
   FULL_WIDTH_CTA_EDGE_PADDING,
@@ -121,6 +131,7 @@ import {
   LogHistoryListLoading,
   LogHistoryCard,
   LogHistoryEmptyState,
+  OneLineTrayList,
   buildBrowseLogRowItem,
   buildTimestampLogRowItem,
   logHistoryCardStyles,
@@ -151,10 +162,12 @@ import {
 import { clearLocalSupabaseSession, supabase, TABLES } from "./lib/supabase";
 import {
   dashboardSnapshotByUserId,
-  dedupeNewsItems,
+  EMPTY_TODAY_SUMMARY,
   invalidateDashboardSnapshot,
-  type DashboardNewsItem,
+  logsHubPreviewByUserId,
+  setLogsHubPreview,
   type DashboardSnapshot,
+  type DashboardTodaySummary,
 } from "./lib/dashboardSnapshotCache";
 import {
   clearNewUserIntroState,
@@ -164,7 +177,6 @@ import {
 } from "./lib/newUserIntro";
 import { markNewAccountInstructionTipsEligible } from "./lib/newAccountInstructionTips";
 import { NewUserIntroScreen } from "./components/NewUserIntroScreen";
-import { DASHBOARD_NEWS_HOME_SHELF_MAX, DASHBOARD_NEWS_SHELF_PEEK, dashboardNewsShelfCardWidth } from "./lib/newsShared";
 /** Bowel UI lives in `screens/BowelScreen.tsx` — do not re-declare `BowelScreen` in this file. */
 import { BristolGuideScreen } from "./screens/BristolGuideScreen";
 import { BowelLogDetailScreen } from "./screens/BowelLogDetailScreen";
@@ -177,6 +189,7 @@ import { WellbeingScreen } from "./screens/WellbeingScreen";
 import { WellbeingLogDetailScreen } from "./screens/WellbeingLogDetailScreen";
 import { WellbeingWizardScreen } from "./screens/WellbeingWizardScreen";
 import { LatestNewsScreen } from "./screens/LatestNewsScreen";
+import { HubTipCard } from "./components/HubTipCard";
 import { AppointmentBriefChangesScreen } from "./screens/AppointmentBriefChangesScreen";
 import { AppointmentBriefCustomRangeScreen } from "./screens/AppointmentBriefCustomRangeScreen";
 import { AppointmentBriefHealthScreen } from "./screens/AppointmentBriefHealthScreen";
@@ -710,12 +723,21 @@ function AuthScreen({
           if (isNewAuthUser(sessionUser)) {
             await markNewAccountInstructionTipsEligible(sessionUser.id);
           }
+          // Drop the OAuth cover before handing off — session is live; AppRoot shows splash only
+          // while intro/bio resolve, then Dashboard. Leaving authBusy true until after onSignedIn
+          // raced with that resolve on Android (stuck splash after Google return).
+          onAuthBusy?.(false);
           onSignedIn(sessionUserFromSupabaseAuthUser(sessionUser));
         } else {
+          onAuthBusy?.(false);
           showFlareAlert("Google sign in incomplete", "No session returned. Please try again.");
         }
-      } finally {
+      } catch (e) {
         onAuthBusy?.(false);
+        showFlareAlert(
+          "Google sign in failed",
+          e instanceof Error ? e.message : "Something went wrong. Please try again.",
+        );
       }
     }
     setActiveAuthAction(null);
@@ -726,29 +748,24 @@ function AuthScreen({
   /** Content sits on the page (no card) — light mode uses on-primary chrome. */
   const onPrimaryChrome = authBlue;
 
-  // Bank-style quick login: if a remembered session exists and biometric unlock is on, we
-  // auto-prompt for Face ID / fingerprint on landing. The tap affordance only appears after that
-  // prompt is dismissed — no need to put fingerprint in their face while the OS already handles it.
+  // Bank-style quick login: if a remembered session exists and biometric unlock is on, show the
+  // fingerprint control on landing. Do NOT auto-prompt — user taps when ready (e.g. after Sign in
+  // from the logout notice).
   const [quickUnlock, setQuickUnlock] = useState<{ label: string } | null>(null);
-  const [showQuickUnlockAffordance, setShowQuickUnlockAffordance] = useState(false);
   const [unlockBusy, setUnlockBusy] = useState(false);
   /** Hold first paint until legal + unlock checks finish — avoids title jump when fingerprint mounts. */
   const [landingReady, setLandingReady] = useState(false);
-  const autoPromptedRef = useRef(false);
 
   const runQuickUnlock = useCallback(async () => {
     const remembered = await readRememberedSession();
     if (!remembered) {
       setQuickUnlock(null);
-      setShowQuickUnlockAffordance(false);
       return;
     }
     setUnlockBusy(true);
-    const ok = await authenticate("Face and fingerprint");
+    const ok = await authenticate("Unlock with fingerprint");
     if (!ok) {
-      // Dismissed — now show the bottom retry control (same spot as lock screen).
       setUnlockBusy(false);
-      setShowQuickUnlockAffordance(true);
       return;
     }
     const { data, error } = await supabase.auth.refreshSession({ refresh_token: remembered.refreshToken });
@@ -757,7 +774,6 @@ function AuthScreen({
       await clearRememberedSession();
       setUnlockBusy(false);
       setQuickUnlock(null);
-      setShowQuickUnlockAffordance(false);
       showFlareAlert("Couldn't unlock", "Please sign in again to continue.");
       return;
     }
@@ -787,17 +803,12 @@ function AuthScreen({
         const label = await biometricTypeLabel();
         if (cancelled) return;
         setQuickUnlock({ label });
-        if (!autoPromptedRef.current) {
-          autoPromptedRef.current = true;
-          void runQuickUnlock();
-        }
       }
       if (!cancelled) setLandingReady(true);
     })();
     return () => {
       cancelled = true;
     };
-    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
   if (!landingReady) {
@@ -1052,8 +1063,8 @@ function AuthScreen({
         </View>
       </View>
 
-      {/* After OS prompt is dismissed — same bottom stack as BiometricLockScreen (fingerprint + footer slot). */}
-      {quickUnlock && showQuickUnlockAffordance ? (
+      {/* Always visible when quick-login is armed — tap to open OS biometric (no auto-prompt). */}
+      {quickUnlock ? (
         <View style={styles.authQuickUnlockActions} pointerEvents="box-none">
           <Pressable
             accessibilityRole="button"
@@ -1236,7 +1247,7 @@ function ProfileSetupScreen({ user, onComplete }: { user: SessionUser; onComplet
 }
 
 /** Icons inside dashboard home tiles (Daily Check-in + More). */
-const HOME_TILE_ICON_SIZE = 34;
+const HOME_TILE_ICON_SIZE_CHECKIN = 30;
 
 /** Show bottom shortcuts on tab roots + reminder-adjacent hubs; hide on wizard/detail flows, etc. */
 const BOTTOM_BAR_VISIBLE_ROUTES = new Set([
@@ -1248,8 +1259,13 @@ const BOTTOM_BAR_VISIBLE_ROUTES = new Set([
   "Wellbeing",
   "Reminders",
   "Meds",
+  "Hydration",
+  "Weight",
+  "Bowel",
   "Appointments",
   "AppointmentsPast",
+  "Reports",
+  "LatestNews",
 ]);
 
 /** Padding uses this screen’s route—not the globally focused route—so the exiting page doesn’t jump during transitions. */
@@ -1368,7 +1384,9 @@ function DashboardGridTile({
       ]}
     >
       <View style={styles.homeDashboardTileBody}>
-        <View style={styles.homeDashboardTileIconWrap}>{icon}</View>
+        <View style={styles.homeDashboardTileIconWrap}>
+          {icon}
+        </View>
         <Text style={[styles.moreGridLabel, { color: c.text }]} numberOfLines={2}>
           {label}
         </Text>
@@ -1382,6 +1400,8 @@ function DashboardScreen({ user }: { user: SessionUser }) {
   const { width: windowWidth } = useWindowDimensions();
   const c = useFlareColors();
   const bottomScrollInset = useBottomTabScrollInset();
+  const [activitiesOpen, setActivitiesOpen] = useState(false);
+  const [careOpen, setCareOpen] = useState(false);
   const tileWidth = useMemo(
     () => Math.floor((windowWidth - SCREEN_EDGE_PADDING * 2 - HOME_TILE_GAP) / 2),
     [windowWidth],
@@ -1391,32 +1411,60 @@ function DashboardScreen({ user }: { user: SessionUser }) {
   const [weatherMeta, setWeatherMeta] = useState<{ city: string; temp: number | null; desc: string; icon?: string | null } | null>(
     () => snapshotSeed?.weatherMeta ?? null,
   );
-  const [newsItems, setNewsItems] = useState<DashboardNewsItem[]>(() => dedupeNewsItems(snapshotSeed?.newsItems ?? []));
-  const [newsLoading, setNewsLoading] = useState(() => {
-    const s = dashboardSnapshotByUserId[user.id];
-    if (!s) return true;
-    return !(s.newsItems.length > 0 || s.newsError);
-  });
-  const [newsError, setNewsError] = useState<string | null>(() => snapshotSeed?.newsError ?? null);
-  const [todaySummary, setTodaySummary] = useState<{ symptoms: number; medsTaken: number; medsTotal: number; hydration: number }>(
-    () => snapshotSeed?.todaySummary ?? { symptoms: 0, medsTaken: 0, medsTotal: 0, hydration: 0 },
-  );
-  const hydrationTarget = HYDRATION_TARGET;
+  const [todaySummary, setTodaySummary] = useState<DashboardTodaySummary>(() => ({
+    ...EMPTY_TODAY_SUMMARY,
+    ...(snapshotSeed?.todaySummary ?? {}),
+  }));
   const dailyCheckinCards = [
     { key: "symptoms" as const, label: "Log Symptoms", icon: "thermometer", family: "mci", goTo: "SymptomLogWizard" },
     { key: "track-meds" as const, label: "Track Medications", icon: TRACK_MEDICATIONS_MCI_ICON, family: "mci", goTo: "MedicationTrackingWizard" },
     { key: "wellbeing" as const, label: "My Wellbeing", icon: "heart-pulse", family: "mci", goTo: "WellbeingWizard" },
   ];
-  const dailyTrackingCards = [
+  const healthCards = [
     { key: "meds", label: "My Meds", screen: "Meds" as const, icon: MY_MEDS_MCI_ICON, family: "mci" as "ion" | "mci" },
     { key: "hydration", label: "My Hydration", screen: "Hydration" as const, icon: HYDRATION_MCI_ICON, family: "mci" as "ion" | "mci" },
     { key: "bowel", label: "Bowel Movements", screen: "Bowel" as const, icon: BOWEL_FEATURE_MCI_ICON, family: "mci" as "ion" | "mci" },
     { key: "weight", label: "My Weight", screen: "Weight" as const, icon: "scale-bathroom", family: "mci" as "ion" | "mci" },
   ];
-  const moreLinkCards = [
-    { key: "appointments", label: "Appointments", screen: "Appointments" as const, icon: "calendar-outline", family: "ion" as const },
-    { key: "reports", label: "Reports", screen: "Reports" as const, icon: "document-text-outline", family: "ion" as const },
+  const careCards = [
+    { key: "appointments", label: "Appointments", screen: "Appointments" as const, icon: "calendar-outline", family: "ion" as "ion" | "mci" },
+    { key: "reports", label: "Reports", screen: "Reports" as const, icon: "document-text-outline", family: "ion" as "ion" | "mci" },
   ];
+  const renderToolTile = (item: (typeof healthCards)[number] | (typeof careCards)[number]) => (
+    <DashboardGridTile
+      key={item.key}
+      width={tileWidth}
+      label={item.label}
+      variant="grid"
+      onPress={() => navigation.navigate(item.screen)}
+      icon={
+        item.family === "ion" ? (
+          <Ionicons name={item.icon as any} size={HOME_TILE_ICON_SIZE_CHECKIN} color={c.primary} />
+        ) : (
+          <MaterialCommunityIcons name={item.icon as any} size={HOME_TILE_ICON_SIZE_CHECKIN} color={c.primary} />
+        )
+      }
+    />
+  );
+  const openActivityMeds = useCallback(() => {
+    navigation.navigate("Meds");
+    setTimeout(() => setActivitiesOpen(false), 450);
+  }, [navigation]);
+  const openActivityHydration = useCallback(() => {
+    navigation.navigate("Hydration");
+    setTimeout(() => setActivitiesOpen(false), 450);
+  }, [navigation]);
+  const activitySummary = useMemo(
+    () => ({
+      medsTaken: todaySummary.medsTaken,
+      medsTotal: todaySummary.medsTotal,
+      hydration: todaySummary.hydration,
+    }),
+    [todaySummary.hydration, todaySummary.medsTaken, todaySummary.medsTotal],
+  );
+  useLayoutEffect(() => {
+    navigation.setOptions({ headerTitle: "" });
+  }, [navigation]);
   const computedGreetingFirst = firstNameFromSessionUser(user);
   useEffect(() => {
     if (computedGreetingFirst !== "there") dashboardGreetingFirstNameByUserId[user.id] = computedGreetingFirst;
@@ -1434,31 +1482,47 @@ function DashboardScreen({ user }: { user: SessionUser }) {
       let cancelled = false;
       const seedSnap = dashboardSnapshotByUserId[user.id];
       const snap: DashboardSnapshot = {
-        todaySummary: seedSnap?.todaySummary ?? { symptoms: 0, medsTaken: 0, medsTotal: 0, hydration: 0 },
+        todaySummary: seedSnap?.todaySummary ?? { ...EMPTY_TODAY_SUMMARY },
+        activityInsight: seedSnap?.activityInsight ?? {
+          ...EMPTY_ACTIVITY_INSIGHT,
+          daysLogged: [...EMPTY_ACTIVITY_INSIGHT.daysLogged],
+        },
         weatherMeta: seedSnap?.weatherMeta ?? null,
         weather: seedSnap?.weather ?? "Loading weather...",
         newsItems: seedSnap?.newsItems ?? [],
         newsError: seedSnap?.newsError ?? null,
       };
+      if (seedSnap?.todaySummary) setTodaySummary({ ...EMPTY_TODAY_SUMMARY, ...seedSnap.todaySummary });
 
       const load = async () => {
         try {
           const today = todayYmd();
-          const [
-            todaySymptomsRes,
-            medicationsList,
-            takenMedsRes,
-            todayHydrationRes,
-          ] = await Promise.all([
-            supabase.from(TABLES.LOG_SYMPTOMS).select("id,created_at").eq("user_id", user.id).gte("created_at", `${today}T00:00:00`),
-            fetchMedicationsForUser(user.id),
-            supabase
-              .from(TABLES.MEDICATION_TAKEN)
-              .select("medication_id,created_at")
-              .eq("user_id", user.id)
-              .eq("taken_date", today),
-            supabase.from(TABLES.DAILY_HYDRATION).select("glasses,updated_at").eq("user_id", user.id).eq("date", today).maybeSingle(),
-          ]);
+          const [todaySymptomsRes, medicationsList, takenMedsRes, todayHydrationRes, todayWellbeingRes] =
+            await Promise.all([
+              supabase
+                .from(TABLES.LOG_SYMPTOMS)
+                .select("id,created_at")
+                .eq("user_id", user.id)
+                .gte("created_at", `${today}T00:00:00`),
+              fetchMedicationsForUser(user.id),
+              supabase
+                .from(TABLES.MEDICATION_TAKEN)
+                .select("medication_id,created_at")
+                .eq("user_id", user.id)
+                .eq("taken_date", today),
+              supabase
+                .from(TABLES.DAILY_HYDRATION)
+                .select("glasses,updated_at")
+                .eq("user_id", user.id)
+                .eq("date", today)
+                .maybeSingle(),
+              supabase
+                .from(TABLES.DAILY_WELLBEING)
+                .select("id")
+                .eq("user_id", user.id)
+                .eq("date", today)
+                .maybeSingle(),
+            ]);
 
           const prescribedMeds = medicationsList.filter((med) => med.name !== "Medication Tracking");
 
@@ -1467,14 +1531,12 @@ function DashboardScreen({ user }: { user: SessionUser }) {
             medsTaken: takenMedsRes.data?.length ?? 0,
             medsTotal: prescribedMeds.length,
             hydration: todayHydrationRes.data?.glasses ?? 0,
+            wellbeingLogged: Boolean(todayWellbeingRes.data?.id),
           };
-
-          if (cancelled) return;
-          setTodaySummary(snap.todaySummary);
+          if (!cancelled) setTodaySummary(snap.todaySummary);
         } catch {
-          snap.todaySummary = { symptoms: 0, medsTaken: 0, medsTotal: 0, hydration: 0 };
-          if (cancelled) return;
-          setTodaySummary(snap.todaySummary);
+          snap.todaySummary = { ...EMPTY_TODAY_SUMMARY };
+          if (!cancelled) setTodaySummary(snap.todaySummary);
         }
 
         try {
@@ -1505,13 +1567,8 @@ function DashboardScreen({ user }: { user: SessionUser }) {
               snap.weather = "Weather unavailable";
             }
           } else {
-            const newsUrl = `${apiBase}/api/news`;
-            const controller = new AbortController();
-            const timeout = setTimeout(() => controller.abort(), 4000);
-            const response = await fetch(newsUrl, { signal: controller.signal });
-            clearTimeout(timeout);
             snap.weatherMeta = null;
-            snap.weather = response.ok ? "News connected" : "Weather unavailable";
+            snap.weather = "Weather unavailable";
           }
           if (cancelled) return;
           setWeatherMeta(snap.weatherMeta);
@@ -1527,182 +1584,17 @@ function DashboardScreen({ user }: { user: SessionUser }) {
         if (!cancelled) {
           dashboardSnapshotByUserId[user.id] = { ...snap };
         }
-
-        try {
-          const hasCachedNews = (seedSnap?.newsItems?.length ?? 0) > 0;
-          if (!hasCachedNews) setNewsLoading(true);
-          setNewsError(null);
-          const apiBase =
-            process.env.EXPO_PUBLIC_API_BASE_URL ||
-            (process.env.EXPO_PUBLIC_SUPABASE_URL ? `${process.env.EXPO_PUBLIC_SUPABASE_URL}/functions/v1` : "") ||
-            process.env.EXPO_PUBLIC_WEB_API_BASE_URL ||
-            "";
-          if (!apiBase) {
-            snap.newsItems = [];
-            snap.newsError = "News unavailable";
-            if (cancelled) return;
-            setNewsItems([]);
-            setNewsError(snap.newsError);
-            setNewsLoading(false);
-          } else {
-            const newsUrl = apiBase.includes("/functions/v1") ? `${apiBase}/news` : `${apiBase}/api/news`;
-            const controller = new AbortController();
-            const timeout = setTimeout(() => controller.abort(), 6000);
-            const response = await fetch(newsUrl, { signal: controller.signal });
-            clearTimeout(timeout);
-            if (!response.ok) throw new Error("news request failed");
-            const json = await response.json();
-            snap.newsItems = dedupeNewsItems(
-              (Array.isArray(json?.items) ? json.items : []).map((item: any) => ({
-                title: String(item?.headline || item?.title || "Untitled"),
-                source: String(item?.source || item?.sourceName || "Source"),
-                publishedAt: item?.pubDate || item?.publishedAt || item?.date || undefined,
-                link: item?.link || item?.url || undefined,
-                imageUrl: item?.imageUrl || item?.image || item?.thumbnail || null,
-              })),
-            );
-
-            snap.newsError = null;
-            if (cancelled) return;
-            setNewsItems(snap.newsItems);
-            setNewsError(null);
-          }
-        } catch {
-          snap.newsItems = [];
-          snap.newsError = "Unable to load latest news.";
-          if (cancelled) return;
-          setNewsItems([]);
-          setNewsError(snap.newsError);
-        } finally {
-          if (!cancelled) {
-            setNewsLoading(false);
-            dashboardSnapshotByUserId[user.id] = snap;
-          }
-        }
       };
 
-      load();
+      /** Let the slide finish before network/setState — avoids end-of-transition hitch. */
+      const task = InteractionManager.runAfterInteractions(() => {
+        if (!cancelled) void load();
+      });
       return () => {
         cancelled = true;
+        task.cancel();
       };
     }, [user.id]),
-  );
-
-  const shelfNewsItems = useMemo(
-    () => newsItems.slice(0, Math.min(DASHBOARD_NEWS_SHELF_PEEK, DASHBOARD_NEWS_HOME_SHELF_MAX)),
-    [newsItems],
-  );
-  const newsShelfCardWidth = useMemo(() => dashboardNewsShelfCardWidth(windowWidth), [windowWidth]);
-  const [newsShelfPageIndex, setNewsShelfPageIndex] = useState(0);
-  const newsShelfPageStride = newsShelfCardWidth + HOME_TILE_GAP;
-
-  useEffect(() => {
-    setNewsShelfPageIndex(0);
-  }, [shelfNewsItems.length]);
-
-  const onNewsShelfScroll = useCallback(
-    (event: NativeSyntheticEvent<NativeScrollEvent>) => {
-      const x = event.nativeEvent.contentOffset.x;
-      const next = Math.round(x / newsShelfPageStride);
-      const clamped = Math.max(0, Math.min(shelfNewsItems.length - 1, next));
-      setNewsShelfPageIndex(clamped);
-    },
-    [newsShelfPageStride, shelfNewsItems.length],
-  );
-
-  const medsGoalComplete =
-    todaySummary.medsTotal > 0 && todaySummary.medsTaken >= todaySummary.medsTotal;
-  const hydrationGoalComplete = todaySummary.hydration >= hydrationTarget;
-
-  const todayGoalItems = useMemo(
-    () => [
-      {
-        id: "meds-goal",
-        title: "Take Medications",
-        trailingText: `${todaySummary.medsTaken}/${todaySummary.medsTotal}`,
-        completed: medsGoalComplete,
-      },
-      {
-        id: "hydration-goal",
-        title: "Stay Hydrated",
-        trailingText: `${todaySummary.hydration}/${hydrationTarget}`,
-        completed: hydrationGoalComplete,
-      },
-    ],
-    [
-      hydrationGoalComplete,
-      hydrationTarget,
-      medsGoalComplete,
-      todaySummary.hydration,
-      todaySummary.medsTaken,
-      todaySummary.medsTotal,
-    ],
-  );
-
-  const homeNewsShelf = (
-    <View style={[styles.dashboardShelfSection, styles.dashboardShelfBeforeTitle, styles.dashboardShelfSectionLast]}>
-      <View style={styles.dashboardSubsectionHeader}>
-        <Text style={[styles.dashboardSubsectionTitleLeft, styles.dashboardSubsectionTitleInHeader, { color: c.text, flex: 1 }]}>
-          Latest News
-        </Text>
-        {!newsLoading && !newsError && newsItems.length > 0 ? (
-          <Pressable
-            accessibilityRole="button"
-            accessibilityLabel="See all news"
-            onPress={() => navigation.navigate("LatestNews")}
-            hitSlop={8}
-            style={({ pressed }) => pressed && { opacity: 0.7 }}
-          >
-            <Text style={[styles.dashboardNewsSeeAll, { color: c.primary }]}>See all</Text>
-          </Pressable>
-        ) : null}
-      </View>
-      {newsLoading ? (
-        <Text style={[styles.muted, styles.dashboardNewsStatus, { color: c.textMuted }]}>Getting latest news...</Text>
-      ) : newsError ? (
-        <Text style={[styles.muted, styles.dashboardNewsStatus, { color: c.textMuted }]}>{newsError}</Text>
-      ) : newsItems.length === 0 ? (
-        <Text style={[styles.muted, styles.dashboardNewsStatus, { color: c.textMuted }]}>No news available right now.</Text>
-      ) : (
-        <View>
-          <ScrollView
-            horizontal
-            showsHorizontalScrollIndicator={false}
-            contentContainerStyle={newsFeedListStyles.shelfRow}
-            decelerationRate="fast"
-            snapToInterval={newsShelfPageStride}
-            snapToAlignment="start"
-            nestedScrollEnabled
-            onScroll={onNewsShelfScroll}
-            onMomentumScrollEnd={onNewsShelfScroll}
-            scrollEventThrottle={16}
-          >
-            {shelfNewsItems.map((item) => (
-              <NewsFeedCard key={item.link ?? item.title} item={item} variant="shelf" width={newsShelfCardWidth} />
-            ))}
-          </ScrollView>
-          {shelfNewsItems.length > 1 ? (
-            <View
-              style={styles.dashboardNewsDots}
-              accessibilityLabel={`News article ${newsShelfPageIndex + 1} of ${shelfNewsItems.length}`}
-            >
-              {shelfNewsItems.map((item, index) => (
-                <View
-                  key={item.link ?? item.title}
-                  style={[
-                    styles.dashboardNewsDot,
-                    {
-                      backgroundColor: index === newsShelfPageIndex ? c.primary : c.textMuted,
-                      opacity: index === newsShelfPageIndex ? 1 : 0.35,
-                    },
-                  ]}
-                />
-              ))}
-            </View>
-          ) : null}
-        </View>
-      )}
-    </View>
   );
 
   return (
@@ -1711,138 +1603,142 @@ function DashboardScreen({ user }: { user: SessionUser }) {
         style={styles.dashboardScroll}
         contentContainerStyle={{
           padding: SCREEN_EDGE_PADDING,
-          paddingBottom: bottomScrollInset,
+          paddingBottom: bottomScrollInset + 8,
         }}
         showsVerticalScrollIndicator={false}
       >
-      <Card title="">
-        <View style={styles.weatherIntroWrap}>
-          <Text style={[styles.weatherGreeting, { color: c.text }]} numberOfLines={1}>
-            Hi, {greetingFirstName}
+        <Card title="">
+          <View style={styles.weatherIntroWrap}>
+            <Text style={[styles.weatherGreeting, { color: c.text }]} numberOfLines={1}>
+              Hi, {greetingFirstName}
+            </Text>
+            <Text style={[styles.weatherDate, { color: c.textMuted }]} numberOfLines={1}>
+              {todayLabel}
+            </Text>
+          </View>
+          {weatherMeta ? (
+            <View style={styles.weatherHero}>
+              <View style={styles.weatherIconWrap}>
+                <Ionicons
+                  name={weatherIconName}
+                  size={28}
+                  color={c.primary}
+                  style={weatherIconNudgeStyle(weatherIconName)}
+                />
+              </View>
+              <View style={styles.weatherLeft}>
+                <Text style={[styles.weatherCity, { color: c.textSecondary }]}>{weatherMeta.city}</Text>
+                <Text style={[styles.weatherDesc, { color: c.textMuted }]}>{weatherMeta.desc}</Text>
+              </View>
+              <View style={styles.weatherTempWrap}>
+                <Text style={[styles.weatherTemp, { color: c.primary }]}>{weatherMeta.temp ?? "--"}°</Text>
+                <Text style={[styles.weatherUnit, { color: c.primary }]}>C</Text>
+              </View>
+            </View>
+          ) : (
+            <View style={styles.weatherHero}>
+              <View style={styles.weatherIconWrap}>
+                <ActivityIndicator size="small" color={c.primary} />
+              </View>
+              <View style={styles.weatherLeft}>
+                <Text style={[styles.weatherCity, { color: c.textMuted }]} numberOfLines={1}>
+                  {weather}
+                </Text>
+                <Text style={[styles.weatherDesc, { color: c.textMuted }]}>{"\u00a0"}</Text>
+              </View>
+              <View style={styles.weatherTempWrap}>
+                <Text style={[styles.weatherTemp, { color: c.textMuted, opacity: 0.4 }]}>--°</Text>
+                <Text style={[styles.weatherUnit, { color: c.textMuted, opacity: 0.4 }]}>C</Text>
+              </View>
+            </View>
+          )}
+        </Card>
+
+        <View style={[styles.dashboardShelfSection, styles.dashboardShelfAfterCard]}>
+          <Text style={[styles.dashboardSubsectionTitleLeft, { color: c.text }]}>
+            Check in
           </Text>
-          <Text style={[styles.weatherDate, { color: c.textMuted }]} numberOfLines={1}>
-            {todayLabel}
-          </Text>
-        </View>
-        {weatherMeta ? (
-          <View style={styles.weatherHero}>
-            <View style={styles.weatherIconWrap}>
-              <Ionicons
-                name={weatherIconName}
-                size={28}
-                color={c.primary}
-                style={weatherIconNudgeStyle(weatherIconName)}
+          <ScrollView
+            horizontal
+            showsHorizontalScrollIndicator={false}
+            snapToInterval={2 * tileWidth + 2 * HOME_TILE_GAP}
+            snapToAlignment="start"
+            decelerationRate="fast"
+            nestedScrollEnabled
+            style={styles.toolsGridBlock}
+          >
+            {dailyCheckinCards.map((item, index) => (
+              <DashboardGridTile
+                key={item.key}
+                width={tileWidth}
+                label={item.label}
+                variant="scroll"
+                isLastInScrollRow={index === dailyCheckinCards.length - 1}
+                onPress={() => navigation.navigate(item.goTo)}
+                icon={
+                  item.family === "ion" ? (
+                    <Ionicons name={item.icon as any} size={HOME_TILE_ICON_SIZE_CHECKIN} color={c.primary} />
+                  ) : (
+                    <MaterialCommunityIcons name={item.icon as any} size={HOME_TILE_ICON_SIZE_CHECKIN} color={c.primary} />
+                  )
+                }
               />
-            </View>
-            <View style={styles.weatherLeft}>
-              <Text style={[styles.weatherCity, { color: c.textSecondary }]}>{weatherMeta.city}</Text>
-              <Text style={[styles.weatherDesc, { color: c.textMuted }]}>{weatherMeta.desc}</Text>
-            </View>
-            <View style={styles.weatherTempWrap}>
-              <Text style={[styles.weatherTemp, { color: c.primary }]}>{weatherMeta.temp ?? "--"}°</Text>
-              <Text style={[styles.weatherUnit, { color: c.primary }]}>C</Text>
-            </View>
+            ))}
+          </ScrollView>
+        </View>
+        <View style={[styles.dashboardShelfSection, styles.dashboardShelfAfterCard]}>
+          <View style={styles.checkInTitleRow}>
+            <Text
+              style={[
+                styles.dashboardSubsectionTitleLeft,
+                styles.dashboardSubsectionTitleInHeader,
+                { color: c.text, flex: 1 },
+              ]}
+            >
+              My health
+            </Text>
+            <Pressable
+              accessibilityRole="link"
+              accessibilityLabel="My progress"
+              onPress={() => setActivitiesOpen(true)}
+              hitSlop={8}
+              style={{ marginRight: 4 }}
+            >
+              <Text style={[styles.activitiesInlineLink, { color: c.primary }]}>My progress</Text>
+            </Pressable>
           </View>
-        ) : (
-          <View style={styles.weatherHero}>
-            <View style={styles.weatherIconWrap}>
-              <ActivityIndicator size="small" color={c.primary} />
-            </View>
-            <View style={styles.weatherLeft}>
-              <Text style={[styles.weatherCity, { color: c.textMuted }]} numberOfLines={1}>
-                {weather}
-              </Text>
-              <Text style={[styles.weatherDesc, { color: c.textMuted }]}>{"\u00a0"}</Text>
-            </View>
-            <View style={styles.weatherTempWrap}>
-              <Text style={[styles.weatherTemp, { color: c.textMuted, opacity: 0.4 }]}>--°</Text>
-              <Text style={[styles.weatherUnit, { color: c.textMuted, opacity: 0.4 }]}>C</Text>
-            </View>
-          </View>
-        )}
-      </Card>
-      <View style={[styles.dashboardShelfSection, styles.dashboardShelfAfterCard]}>
-        <Text style={[styles.dashboardSubsectionTitleLeft, { color: c.text }]}>Check in</Text>
-        <ScrollView
-          horizontal
-          showsHorizontalScrollIndicator={false}
-          snapToInterval={2 * tileWidth + 2 * HOME_TILE_GAP}
-          snapToAlignment="start"
-          decelerationRate="fast"
-        >
-          {dailyCheckinCards.map((item, index) => (
-            <DashboardGridTile
-              key={item.key}
-              width={tileWidth}
-              label={item.label}
-              variant="scroll"
-              isLastInScrollRow={index === dailyCheckinCards.length - 1}
-              onPress={() => navigation.navigate(item.goTo)}
-              icon={
-                item.family === "ion" ? (
-                  <Ionicons name={item.icon as any} size={HOME_TILE_ICON_SIZE} color={c.primary} />
-                ) : (
-                  <MaterialCommunityIcons name={item.icon as any} size={HOME_TILE_ICON_SIZE} color={c.primary} />
-                )
-              }
-            />
-          ))}
-        </ScrollView>
-      </View>
-      <View style={[styles.dashboardShelfSection, styles.dashboardShelfBeforeTitle]}>
-        <Text style={[styles.dashboardSubsectionTitleLeft, { color: c.text }]}>Today's Progress</Text>
-        <View style={[logHistoryCardStyles.trackerCard, { backgroundColor: c.card }]}>
-          <LogHistoryList
-            items={todayGoalItems}
-            rowTextLayout="compact"
-            rowPaddingHorizontal={ACCOUNT_LIST_ROW_PADDING}
-          />
+          <View style={[styles.moreGrid, styles.toolsGridBlock]}>{healthCards.map(renderToolTile)}</View>
         </View>
-      </View>
-      <View style={[styles.dashboardShelfSection, styles.dashboardShelfAfterCard]}>
-        <Text style={[styles.dashboardSubsectionTitle, { color: c.text }]}>My Tools</Text>
-        <View style={styles.moreGrid}>
-          {dailyTrackingCards.map((item) => (
-            <DashboardGridTile
-              key={item.key}
-              width={tileWidth}
-              label={item.label}
-              variant="grid"
-              onPress={() => navigation.navigate(item.screen)}
-              icon={
-                item.family === "ion" ? (
-                  <Ionicons name={item.icon as any} size={HOME_TILE_ICON_SIZE} color={c.primary} />
-                ) : (
-                  <MaterialCommunityIcons name={item.icon as any} size={HOME_TILE_ICON_SIZE} color={c.primary} />
-                )
-              }
+        <View style={[styles.dashboardShelfSection, styles.dashboardShelfAfterCard]}>
+          <Pressable
+            accessibilityRole="button"
+            accessibilityState={{ expanded: careOpen }}
+            accessibilityLabel="My care"
+            onPress={() => setCareOpen((open) => !open)}
+            style={styles.dashboardCareToggle}
+          >
+            <Text style={[styles.dashboardSubsectionTitleLeft, styles.dashboardCareToggleTitle, { color: c.text }]}>
+              My care
+            </Text>
+            <Ionicons
+              name={careOpen ? "chevron-up" : "chevron-down"}
+              size={18}
+              color={c.textMuted}
             />
-          ))}
+          </Pressable>
+          {careOpen ? (
+            <View style={[styles.moreGrid, styles.toolsGridBlock]}>{careCards.map(renderToolTile)}</View>
+          ) : null}
         </View>
-      </View>
-      <View style={[styles.dashboardShelfSection, styles.dashboardShelfBeforeTitle]}>
-        <Text style={[styles.dashboardSubsectionTitle, { color: c.text }]}>Manage</Text>
-        <View style={styles.moreGrid}>
-          {moreLinkCards.map((item) => (
-            <DashboardGridTile
-              key={item.key}
-              width={tileWidth}
-              label={item.label}
-              variant="grid"
-              onPress={() => navigation.navigate(item.screen)}
-              icon={
-                item.family === "ion" ? (
-                  <Ionicons name={item.icon as any} size={HOME_TILE_ICON_SIZE} color={c.primary} />
-                ) : (
-                  <MaterialCommunityIcons name={item.icon as any} size={HOME_TILE_ICON_SIZE} color={c.primary} />
-                )
-              }
-            />
-          ))}
-        </View>
-      </View>
-      {homeNewsShelf}
       </ScrollView>
+
+      <TodayActivitiesModal
+        visible={activitiesOpen}
+        summary={activitySummary}
+        onClose={() => setActivitiesOpen(false)}
+        onOpenMeds={openActivityMeds}
+        onOpenHydration={openActivityHydration}
+      />
     </View>
   );
 }
@@ -1851,15 +1747,24 @@ function LogsScreen({ user }: { user: SessionUser }) {
   const navigation = useNavigation<any>();
   const c = useFlareColors();
   const bottomScrollInset = useBottomTabScrollInset();
-  const [historyPreview, setHistoryPreview] = useState({
-    symptomCount: 0,
-    medicationCount: 0,
-    wellbeingCount: 0,
-  });
+  const [historyPreview, setHistoryPreview] = useState(
+    () =>
+      logsHubPreviewByUserId[user.id] ?? {
+        symptomCount: 0,
+        medicationCount: 0,
+        wellbeingCount: 0,
+      },
+  );
+  const [previewReady, setPreviewReady] = useState(() => Boolean(logsHubPreviewByUserId[user.id]));
 
   useFocusEffect(
     useCallback(() => {
       let cancelled = false;
+      const seed = logsHubPreviewByUserId[user.id];
+      if (seed) {
+        setHistoryPreview(seed);
+        setPreviewReady(true);
+      }
       void (async () => {
         const [symptomHistoryCountRes, medicationHistoryCountRes, wellbeingHistoryCountRes] = await Promise.all([
           supabase.from(TABLES.LOG_SYMPTOMS).select("id", { count: "exact", head: true }).eq("user_id", user.id),
@@ -1867,11 +1772,14 @@ function LogsScreen({ user }: { user: SessionUser }) {
           supabase.from(TABLES.DAILY_WELLBEING).select("id", { count: "exact", head: true }).eq("user_id", user.id),
         ]);
         if (cancelled) return;
-        setHistoryPreview({
+        const next = {
           symptomCount: symptomHistoryCountRes.count ?? 0,
           medicationCount: medicationHistoryCountRes.count ?? 0,
           wellbeingCount: wellbeingHistoryCountRes.count ?? 0,
-        });
+        };
+        setLogsHubPreview(user.id, next);
+        setHistoryPreview(next);
+        setPreviewReady(true);
       })();
       return () => {
         cancelled = true;
@@ -1891,35 +1799,34 @@ function LogsScreen({ user }: { user: SessionUser }) {
             buildBrowseLogRowItem({
               id: "symptom",
               title: "Symptom Logs",
-              subtitle: formatHistoryBrowseSubtitle(historyPreview.symptomCount),
+              subtitle: previewReady ? formatHistoryBrowseSubtitle(historyPreview.symptomCount) : " ",
               accessibilityLabel: "Browse symptom history",
             }),
             buildBrowseLogRowItem({
               id: "medication",
               title: "Medication Logs",
-              subtitle: formatHistoryBrowseSubtitle(historyPreview.medicationCount),
+              subtitle: previewReady ? formatHistoryBrowseSubtitle(historyPreview.medicationCount) : " ",
               accessibilityLabel: "Browse medication tracking history",
             }),
             buildBrowseLogRowItem({
               id: "wellbeing",
               title: "Wellbeing Logs",
-              subtitle: formatHistoryBrowseSubtitle(historyPreview.wellbeingCount),
+              subtitle: previewReady ? formatHistoryBrowseSubtitle(historyPreview.wellbeingCount) : " ",
               accessibilityLabel: "Browse wellbeing history",
             }),
           ]}
+          rowTextLayout="compact"
           onPressItem={(rowId) => {
             if (rowId === "symptom") navigation.navigate("SymptomHistory");
             else if (rowId === "medication") navigation.navigate("MedicationTrackingHistory");
             else navigation.navigate("Wellbeing");
           }}
-          rowTextLayout="compact"
         />
       </View>
-      <View style={styles.logsHubHintBlock}>
-        <Text style={[styles.logsHubHint, { color: c.textMuted }]}>
-          Your Logs hub keeps all your Check-in entries together. Tap a section to view your records.
-        </Text>
-      </View>
+      <HubTipCard
+        tipId="logs-hub-card-v1"
+        message="Your Logs hub keeps all your Check-in entries together in one place. Tap to view your records."
+      />
     </InstructionScreenShell>
   );
 }
@@ -2863,7 +2770,7 @@ function HelpSectionDropdown({
         onPress={onToggle}
         style={[styles.helpSectionToggle, expanded && styles.helpSectionToggleExpanded]}
       >
-        <Text style={[logHistoryListStyles.logPrimary, styles.helpSectionToggleTitle, { color: c.text }]}>
+        <Text style={[styles.helpSectionToggleTitle, { color: c.text }]}>
           {title}
         </Text>
         <Text style={[styles.helpSectionToggleMark, { color: c.text }]} accessibilityElementsHidden>
@@ -3298,37 +3205,14 @@ const ACCOUNT_OPTION_ROUTES = [
 ];
 
 function AccountInfoScreen({ user }: { user: SessionUser }) {
-  const navigation = useNavigation<any>();
   const c = useFlareColors();
   const bottomScrollInset = useBottomTabScrollInset();
-  const firstLine = accountIdentityFirstLine(user);
-  const emailLine = user.email || "Unknown user";
 
   return (
     <ScrollView
       style={[styles.screen, { backgroundColor: c.screen }]}
       contentContainerStyle={{ paddingBottom: bottomScrollInset + 24 }}
     >
-      <View style={[logHistoryCardStyles.trackerCard, styles.accountPaddedCard, { backgroundColor: c.card }]}>
-        <Pressable
-          accessibilityRole="button"
-          accessibilityLabel={`Personal Details, ${firstLine}, ${emailLine}`}
-          onPress={() => navigation.navigate("AccountPersonalDetails")}
-          hitSlop={4}
-          style={styles.accountIdentityNavRow}
-        >
-          <View style={styles.accountIdentityRow}>
-            <View style={[styles.accountAvatarWell, { backgroundColor: c.surfaceSubtle }]}>
-              <Ionicons name="person" size={26} color={c.primary} accessibilityIgnoresInvertColors />
-            </View>
-            <View style={styles.accountIdentityTextCol}>
-              <Text style={[styles.accountFirstName, { color: c.text }]}>{firstLine}</Text>
-              <Text style={[styles.accountEmailLine, { color: c.textMuted }]}>{emailLine}</Text>
-            </View>
-          </View>
-          <Ionicons name="chevron-forward" size={18} color={c.text} accessibilityIgnoresInvertColors />
-        </Pressable>
-      </View>
       <View style={[logHistoryCardStyles.trackerCard, { backgroundColor: c.card }]}>
         <LogDetailFieldGroup
           compact
@@ -3336,6 +3220,7 @@ function AccountInfoScreen({ user }: { user: SessionUser }) {
             {
               label: "Account created",
               value: user.accountCreatedAt ? formatUkDate(user.accountCreatedAt) : "Not available",
+              valueSize: "caption",
             },
             { label: "Sign-in method", value: user.signInMethodLabel ?? "Not available" },
             { label: "Account ID", value: user.id, selectable: true },
@@ -3356,14 +3241,23 @@ function AccountPersonalDetailsScreen({ user }: { user: SessionUser }) {
       style={[styles.screen, { backgroundColor: c.screen }]}
       contentContainerStyle={{ flexGrow: 1, paddingBottom: bottomScrollInset + 24, backgroundColor: c.screen }}
     >
-      <View style={[logHistoryCardStyles.trackerCard, styles.accountPaddedCard, { backgroundColor: c.card }]}>
-        <View style={styles.accountIdentityRow}>
-          <View style={[styles.accountAvatarWell, { backgroundColor: c.surfaceSubtle }]}>
-            <Ionicons name="person" size={26} color={c.primary} accessibilityIgnoresInvertColors />
-          </View>
-          <View style={styles.accountIdentityTextCol}>
-            <Text style={[styles.accountFirstName, { color: c.text }]}>{accountIdentityFirstLine(user)}</Text>
-            <Text style={[styles.accountEmailLine, { color: c.textMuted }]}>{user.email || "Unknown user"}</Text>
+      <View style={[logHistoryCardStyles.trackerCard, { backgroundColor: c.card }]}>
+        <View
+          style={[
+            styles.accountIdentityNavRow,
+            styles.accountIdentityNavInset,
+            logHistoryListStyles.logList,
+            { backgroundColor: c.surfaceSubtle },
+          ]}
+        >
+          <View style={styles.accountIdentityRow}>
+            <View style={[styles.accountAvatarWell, { backgroundColor: c.surfaceRaised }]}>
+              <Ionicons name="person" size={26} color={c.primary} accessibilityIgnoresInvertColors />
+            </View>
+            <View style={styles.accountIdentityTextCol}>
+              <Text style={[styles.accountFirstName, { color: c.text }]}>{accountIdentityFirstLine(user)}</Text>
+              <Text style={[styles.accountEmailLine, { color: c.textMuted }]}>{user.email || "Unknown user"}</Text>
+            </View>
           </View>
         </View>
       </View>
@@ -3383,23 +3277,30 @@ function AccountPersonalDetailsScreen({ user }: { user: SessionUser }) {
 function AccountSecurityScreen() {
   const c = useFlareColors();
   const bottomScrollInset = useBottomTabScrollInset();
+  const seed = peekBioLockSnapshot();
 
-  const [bioAvailable, setBioAvailable] = useState(false);
-  const [bioOn, setBioOn] = useState(false);
-  const [bioLabel, setBioLabel] = useState("biometrics");
+  const [bioAvailable, setBioAvailable] = useState(() => seed?.available ?? false);
+  const [bioOn, setBioOn] = useState(() => seed?.enabled ?? false);
+  const [bioLabel, setBioLabel] = useState(() => seed?.label ?? "biometrics");
+  const [bioReady, setBioReady] = useState(() => seed != null);
 
   useEffect(() => {
     let cancelled = false;
-    (async () => {
-      const [available, enabled, label] = await Promise.all([
-        isBiometricAvailable(),
-        readLockEnabled(),
-        biometricTypeLabel(),
-      ]);
+    void (async () => {
+      // Disk hydrate is faster than hardware probes — paint the real card ASAP.
+      const hydrated = await hydrateBioLockCacheFromStorage();
+      if (!cancelled && hydrated) {
+        setBioAvailable(hydrated.available);
+        setBioOn(hydrated.enabled);
+        setBioLabel(hydrated.label);
+        setBioReady(true);
+      }
+      const snap = await loadBioLockSnapshot();
       if (cancelled) return;
-      setBioAvailable(available);
-      setBioOn(available && enabled);
-      setBioLabel(label);
+      setBioAvailable((prev) => (prev === snap.available ? prev : snap.available));
+      setBioOn((prev) => (prev === snap.enabled ? prev : snap.enabled));
+      setBioLabel((prev) => (prev === snap.label ? prev : snap.label));
+      setBioReady(true);
     })();
     return () => {
       cancelled = true;
@@ -3409,7 +3310,7 @@ function AccountSecurityScreen() {
   const toggleBio = useCallback(
     async (next: boolean) => {
       if (next) {
-        const ok = await authenticate(`Confirm ${bioLabel} to turn on app lock`);
+        const ok = await authenticate("Unlock with fingerprint");
         if (!ok) return;
         await setLockEnabled(true);
         setBioOn(true);
@@ -3421,33 +3322,48 @@ function AccountSecurityScreen() {
     [bioLabel],
   );
 
+  const unlockTitle = `Unlock with ${bioLabel === "biometrics" ? "biometrics" : bioLabel}`;
+  const unlockHint = bioAvailable
+    ? bioLabel === "biometrics"
+      ? "Enable biometrics each time you open the app."
+      : `Enable ${bioLabel} (biometrics) each time you open the app.`
+    : "Set up Face ID or fingerprint recognition in your device settings to use this.";
+
   return (
     <ScrollView
       style={[styles.screen, { backgroundColor: c.screen }]}
       contentContainerStyle={[styles.accountScrollContent, { paddingBottom: bottomScrollInset + 24 }]}
     >
-      <Text style={[styles.dashboardSectionTitleLeft, { color: c.text }]}>App lock</Text>
-      <Card title="" style={styles.accountPaddedCard} compactBody>
-        <View style={styles.settingToggleRow}>
-          <View style={styles.settingToggleTextCol}>
-            <Text style={[styles.settingToggleTitle, { color: c.text }]}>
-              Unlock with {bioLabel === "biometrics" ? "biometrics" : bioLabel}
-            </Text>
-            <Text style={[styles.settingToggleHint, { color: c.textMuted }]}>
-              {bioAvailable
-                ? `Require ${bioLabel} each time you open FlareCare.`
-                : "Set up Face ID or fingerprint in your device settings to use this."}
-            </Text>
+      <LogHistoryCard style={{ padding: CARD_INNER_PADDING + 2, gap: 10 }}>
+        <Text style={[styles.settingsCardSectionLabel, { color: c.textMuted }]}>App lock</Text>
+        {bioReady ? (
+          <View style={styles.settingToggleRow}>
+            <View style={styles.settingToggleTextCol}>
+              <Text
+                style={[
+                  styles.settingToggleTitle,
+                  styles.settingsCardTitle,
+                  { color: c.text, fontSize: FLARE_FONT_SIZE.muted, lineHeight: FLARE_LINE_HEIGHT.muted },
+                ]}
+              >
+                {unlockTitle}
+              </Text>
+              <Text style={[styles.settingToggleHint, styles.settingsCardHint, { color: c.textMuted }]}>
+                {unlockHint}
+              </Text>
+            </View>
+            <Switch
+              value={bioOn}
+              onValueChange={toggleBio}
+              disabled={!bioAvailable}
+              trackColor={{ true: c.primary, false: c.appearanceChipInactiveBg }}
+              thumbColor={c.white}
+            />
           </View>
-          <Switch
-            value={bioOn}
-            onValueChange={toggleBio}
-            disabled={!bioAvailable}
-            trackColor={{ true: c.primary, false: c.appearanceChipInactiveBg }}
-            thumbColor={c.white}
-          />
-        </View>
-      </Card>
+        ) : (
+          <View style={styles.securityTogglePlaceholder} />
+        )}
+      </LogHistoryCard>
     </ScrollView>
   );
 }
@@ -3462,17 +3378,13 @@ function AccountLegalScreen() {
       style={[styles.screen, { backgroundColor: c.screen }]}
       contentContainerStyle={{ paddingBottom: bottomScrollInset + 24 }}
     >
-      <View style={[logHistoryCardStyles.trackerCard, { backgroundColor: c.card }]}>
-        <LogHistoryList
-          items={[
-            { id: "privacy", title: "Privacy Policy", accessibilityLabel: "Privacy Policy" },
-            { id: "terms", title: "Terms of Use", accessibilityLabel: "Terms of Use" },
-          ]}
-          rowTextLayout="default"
-          rowPaddingHorizontal={ACCOUNT_LIST_ROW_PADDING}
-          onPressItem={(document) => navigation.navigate("LegalDocument", { document })}
-        />
-      </View>
+      <OneLineTrayList
+        items={[
+          { id: "privacy", title: "Privacy Policy", accessibilityLabel: "Privacy Policy" },
+          { id: "terms", title: "Terms of Use", accessibilityLabel: "Terms of Use" },
+        ]}
+        onPressItem={(document) => navigation.navigate("LegalDocument", { document })}
+      />
     </ScrollView>
   );
 }
@@ -3505,7 +3417,16 @@ function InfoScreen() {
             }),
           ]}
           rowTextLayout="compact"
-          rowPaddingHorizontal={ACCOUNT_LIST_ROW_PADDING}
+          renderSubtitle={(item) =>
+            item.subtitle ? (
+              <Text
+                style={[logHistoryListStyles.logSecondaryWhen, { color: c.textMuted }]}
+                numberOfLines={1}
+              >
+                {item.subtitle}
+              </Text>
+            ) : null
+          }
           onPressItem={(rowId) => navigation.navigate(rowId === "ibd" ? "Ibd" : "NutritionGuide")}
         />
       </View>
@@ -3542,42 +3463,52 @@ function SettingsScreen() {
       style={[styles.screen, { backgroundColor: c.screen }]}
       contentContainerStyle={[styles.accountScrollContent, { paddingBottom: bottomScrollInset + 16 }]}
     >
-      <Text style={[styles.dashboardSectionTitleLeft, { color: c.text }]}>Appearance</Text>
-      <Card title="" style={styles.accountPaddedCard} compactBody>
-        <View style={styles.settingToggleRow}>
-          <View style={styles.settingToggleTextCol}>
-            <Text style={[styles.settingToggleTitle, { color: c.text }]}>
-              {appearancePreference === "dark" ? "Dark mode" : "Light mode"}
-            </Text>
-            <Text style={[styles.settingToggleHint, { color: c.textMuted }]}>
-              {appearancePreference === "dark"
-                ? "Use a darker theme that's easier on the eyes in low light."
-                : "Use a bright, clean theme that's easy to read in daylight."}
-            </Text>
+      <LogHistoryCard style={{ padding: CARD_INNER_PADDING + 2, gap: 28 }}>
+        <View style={styles.settingsCardSection}>
+          <Text style={[styles.settingsCardSectionLabel, { color: c.textMuted }]}>Appearance</Text>
+          <View style={styles.settingToggleRow}>
+            <View style={styles.settingToggleTextCol}>
+              <Text
+                style={[
+                  styles.settingToggleTitle,
+                  styles.settingsCardTitle,
+                  { color: c.text, fontSize: FLARE_FONT_SIZE.muted, lineHeight: FLARE_LINE_HEIGHT.muted },
+                ]}
+              >
+                {appearancePreference === "dark" ? "Dark mode" : "Light mode"}
+              </Text>
+              <Text style={[styles.settingToggleHint, styles.settingsCardHint, { color: c.textMuted }]}>
+                {appearancePreference === "dark"
+                  ? "Use a darker theme that's easier on the eyes in low light."
+                  : "Use a bright, clean theme that's easy to read in daylight."}
+              </Text>
+            </View>
+            <Switch
+              value={appearancePreference === "dark"}
+              onValueChange={(next) => setAppearancePreference(next ? "dark" : "light")}
+              trackColor={{ true: c.primary, false: c.appearanceChipInactiveBg }}
+              thumbColor={c.white}
+            />
           </View>
-          <Switch
-            value={appearancePreference === "dark"}
-            onValueChange={(next) => setAppearancePreference(next ? "dark" : "light")}
-            trackColor={{ true: c.primary, false: c.appearanceChipInactiveBg }}
-            thumbColor={c.white}
+        </View>
+        <View style={styles.settingsCardSection}>
+          <Text style={[styles.settingsCardSectionLabel, { color: c.textMuted }]}>Notifications</Text>
+          <LogHistoryList
+            items={[
+              {
+                id: "reminders",
+                title: "Push Notifications and Reminders",
+                accessibilityLabel: "Push Notifications and Reminders",
+              },
+            ]}
+            insetTray={false}
+            rowPaddingHorizontal={0}
+            rowPaddingVertical={0}
+            rowTextLayout="compact"
+            onPressItem={() => navigation.navigate("Reminders")}
           />
         </View>
-      </Card>
-      <Text style={[styles.dashboardSectionTitleLeft, { color: c.text }]}>Notifications</Text>
-      <View style={[logHistoryCardStyles.trackerCard, { backgroundColor: c.card }]}>
-        <LogHistoryList
-          items={[
-            {
-              id: "reminders",
-              title: "Push Notifications and Reminders",
-              accessibilityLabel: "Push Notifications and Reminders",
-            },
-          ]}
-          rowPaddingHorizontal={ACCOUNT_LIST_ROW_PADDING}
-          rowTextLayout="default"
-          onPressItem={() => navigation.navigate("Reminders")}
-        />
-      </View>
+      </LogHistoryCard>
     </ScrollView>
   );
 }
@@ -3604,6 +3535,16 @@ function AccountScreen({
   const deleteAccountInFlight = useRef(false);
 
   const accountFirstName = useMemo(() => accountIdentityFirstLine(user), [user]);
+
+  useEffect(() => {
+    void loadBioLockSnapshot();
+  }, []);
+
+  useFocusEffect(
+    useCallback(() => {
+      void loadBioLockSnapshot();
+    }, []),
+  );
 
   const handleDeleteAccountConfirm = useCallback(async () => {
     if (deleteAccountInFlight.current) return;
@@ -3638,16 +3579,21 @@ function AccountScreen({
       style={[styles.screen, { backgroundColor: c.screen }]}
       contentContainerStyle={{ paddingBottom: bottomScrollInset + 24 }}
     >
-      <View style={[logHistoryCardStyles.trackerCard, styles.accountPaddedCard, { backgroundColor: c.card }]}>
+      <View style={[logHistoryCardStyles.trackerCard, { backgroundColor: c.card }]}>
         <Pressable
           accessibilityRole="button"
           accessibilityLabel={`Personal Details, ${accountFirstName}, ${user.email || "Unknown user"}`}
           onPress={() => navigation.navigate("AccountPersonalDetails")}
           hitSlop={4}
-          style={styles.accountIdentityNavRow}
+          style={[
+            styles.accountIdentityNavRow,
+            styles.accountIdentityNavInset,
+            logHistoryListStyles.logList,
+            { backgroundColor: c.surfaceSubtle },
+          ]}
         >
           <View style={styles.accountIdentityRow}>
-            <View style={[styles.accountAvatarWell, { backgroundColor: c.surfaceSubtle }]}>
+            <View style={[styles.accountAvatarWell, { backgroundColor: c.surfaceRaised }]}>
               <Ionicons name="person" size={26} color={c.primary} accessibilityIgnoresInvertColors />
             </View>
             <View style={styles.accountIdentityTextCol}>
@@ -3659,23 +3605,18 @@ function AccountScreen({
             name="chevron-forward"
             size={18}
             color={c.text}
-            style={styles.accountIdentityChevronAlign}
             accessibilityIgnoresInvertColors
           />
         </Pressable>
       </View>
-      <View style={[logHistoryCardStyles.trackerCard, { backgroundColor: c.card }]}>
-        <LogHistoryList
-          items={ACCOUNT_OPTION_ROUTES.map((item) => ({
-            id: item.route,
-            title: item.label,
-            accessibilityLabel: item.label,
-          }))}
-          rowTextLayout="default"
-          rowPaddingHorizontal={ACCOUNT_LIST_ROW_PADDING}
-          onPressItem={(route) => navigation.navigate(route)}
-        />
-      </View>
+      <OneLineTrayList
+        items={ACCOUNT_OPTION_ROUTES.map((item) => ({
+          id: item.route,
+          title: item.label,
+          accessibilityLabel: item.label,
+        }))}
+        onPressItem={(route) => navigation.navigate(route)}
+      />
       <View style={styles.accountDeleteFooter}>
         <Pressable
           accessibilityRole="button"
@@ -3735,7 +3676,16 @@ function MainBottomTabBar({
     const active =
       routeName === target ||
       (target === "Logs" &&
-        (routeName === "SymptomHistory" || routeName === "MedicationTrackingHistory" || routeName === "Wellbeing"));
+        (routeName === "SymptomHistory" || routeName === "MedicationTrackingHistory" || routeName === "Wellbeing")) ||
+      (target === "Dashboard" &&
+        (routeName === "Meds" ||
+          routeName === "Appointments" ||
+          routeName === "AppointmentsPast" ||
+          routeName === "LatestNews" ||
+          routeName === "Reports" ||
+          routeName === "Hydration" ||
+          routeName === "Weight" ||
+          routeName === "Bowel"));
     return (
       <Pressable
         key={target}
@@ -3783,8 +3733,8 @@ function MainBottomTabBar({
     <View style={[styles.bottomTabBarWrap, { backgroundColor: c.screen, borderTopColor: c.cardBorder, paddingBottom: Math.max(insets.bottom, 10) }]}>
       {item(
         "Dashboard",
-        ({ active }) => <Ionicons name={active ? "home" : "home-outline"} size={23} color={active ? colors.primary : colors.textMuted} />,
-        "Home",
+        ({ active }) => <Ionicons name={active ? "grid" : "grid-outline"} size={23} color={active ? colors.primary : colors.textMuted} />,
+        "Dashboard",
       )}
       {item(
         "Logs",
@@ -3919,7 +3869,10 @@ function AppTabs({
     const name = navigationRef.getCurrentRoute()?.name;
     if (!name) return;
     handleListExpansionNavigationRouteChange(user.id, name);
-    setFocusRouteName(name);
+    /** Defer tab-bar setState until the slide settles — mid-transition re-renders hitch the animation. */
+    InteractionManager.runAfterInteractions(() => {
+      setFocusRouteName((prev) => (prev === name ? prev : name));
+    });
   }, [navigationRef, user.id]);
 
   const onNavigationReady = useCallback(() => {
@@ -4089,8 +4042,8 @@ function AppTabs({
           : undefined,
       headerRight: headerRightContent ? () => headerRightContent : undefined,
       freezeOnBlur: true,
-      /** First paint after login — avoid stack enter animation sliding content down. */
-      animation: isDashboard ? ("none" as const) : ("default" as const),
+      /** Keep platform slide; Home still slides (no hard `none` cut). */
+      animation: "default" as const,
     } as const;
   };
 
@@ -4171,15 +4124,17 @@ function AppTabs({
 
 export default function App() {
   return (
-    <SafeAreaProvider initialMetrics={initialWindowMetrics}>
-      <FlareThemeProvider>
-        <AppRoot />
-        <FlareAlertHost />
-        {/* Last sibling → confirm overlays (via Portal) paint above the whole app, full-screen and
-            unpadded, with no native Modal window slide. */}
-        <OverlayOutlet />
-      </FlareThemeProvider>
-    </SafeAreaProvider>
+    <GestureHandlerRootView style={{ flex: 1 }}>
+      <SafeAreaProvider initialMetrics={initialWindowMetrics}>
+        <FlareThemeProvider>
+          <AppRoot />
+          <FlareAlertHost />
+          {/* Last sibling → confirm overlays (via Portal) paint above the whole app, full-screen and
+              unpadded, with no native Modal window slide. */}
+          <OverlayOutlet />
+        </FlareThemeProvider>
+      </SafeAreaProvider>
+    </GestureHandlerRootView>
   );
 }
 
@@ -4231,17 +4186,14 @@ function AppRoot() {
       if (sessionUser) {
         // Cold start with a restored session: decide the lock here (the one place we auto-lock on
         // launch). Reopening the app shows the lock screen; fresh in-app logins never do.
-        const [available, enabled, label] = await Promise.all([
-          isBiometricAvailable(),
-          readLockEnabled(),
-          biometricTypeLabel(),
-        ]);
-        const on = available && enabled;
-        setBioLabel(label);
+        const snap = await loadBioLockSnapshot();
+        const on = snap.enabled;
+        setBioLabel(snap.label);
         setBioEnabled(on);
         setLocked(on);
         setUser(sessionUserFromSupabaseAuthUser(sessionUser));
       } else {
+        void hydrateBioLockCacheFromStorage();
         setBioEnabled(false);
         setLocked(false);
         setUser(null);
@@ -4254,14 +4206,15 @@ function AppRoot() {
       const next = session?.user;
       if (next) {
         setSignOutNotice(null);
-        // Only on fresh sign-in — TOKEN_REFRESHED etc. must not re-null and flash splash/nav.
-        if (event === "SIGNED_IN") {
-          setNewUserIntroPending(null);
-        }
+        // Do not touch newUserIntroPending here. Google OAuth often fires SIGNED_IN during
+        // exchangeCodeForSession *before* AuthScreen.onSignedIn; if we null pending after the
+        // user.id effect already resolved to false, splash sticks forever (effect won't re-run).
+        // The user.id effect owns null → resolve.
         setUser(sessionUserFromSupabaseAuthUser(next));
       } else {
         setUser(null);
         setNewUserIntroPending(null);
+        setAppShellReady(false);
       }
       setLoading(false);
     });
@@ -4292,27 +4245,38 @@ function AppRoot() {
       setBioEnabled(false);
       setLocked(false);
       setNewUserIntroPending(null);
+      setAppShellReady(false);
       return;
     }
     // Must be null until resolve finishes — `false` from a prior logout would mount AppTabs and
     // flash the absolute bottom nav before the welcome intro.
     setNewUserIntroPending(null);
+    const userId = user.id;
+    const accountCreatedAt = user.accountCreatedAt;
     (async () => {
-      const [available, enabled, label, showIntro] = await Promise.all([
-        isBiometricAvailable(),
-        readLockEnabled(),
-        biometricTypeLabel(),
-        resolveNewUserIntroPending(user.id, user.accountCreatedAt),
-      ]);
-      if (cancelled) return;
-      setBioLabel(label);
-      setBioEnabled(available && enabled);
-      setNewUserIntroPending(showIntro);
+      try {
+        const [available, enabled, label, showIntro] = await Promise.all([
+          isBiometricAvailable(),
+          readLockEnabled(),
+          biometricTypeLabel(),
+          resolveNewUserIntroPending(userId, accountCreatedAt),
+        ]);
+        if (cancelled) return;
+        setBioLabel(label);
+        setBioEnabled(available && enabled);
+        setNewUserIntroPending(showIntro);
+      } catch {
+        // Never leave pending at null — that keeps SplashScreen up forever.
+        if (!cancelled) {
+          setBioEnabled(false);
+          setNewUserIntroPending(false);
+        }
+      }
     })();
     return () => {
       cancelled = true;
     };
-  }, [user?.id]);
+  }, [user?.id, user?.accountCreatedAt]);
 
   // Re-lock when the app is backgrounded (read fresh so toggling the setting takes effect next resume).
   // Guarded by a signed-in user so the OS biometric dialog (which can flip the app to "inactive")
@@ -4432,6 +4396,14 @@ function AppRoot() {
     void markNewUserIntroDismissed(user.id);
   }, [user?.id]);
 
+  const unlockBiometricLock = useCallback(() => {
+    setLocked(false);
+  }, []);
+
+  const signOutFromBiometricLock = useCallback(() => {
+    void completeSignOut();
+  }, [completeSignOut]);
+
   const content = useMemo(() => {
     if (!fontsLoaded || loading || showSplash || !appearanceHydrated || signOutBlocking) {
       return <SplashScreen showBrand={fontsLoaded && appearanceHydrated} />;
@@ -4474,8 +4446,8 @@ function AppRoot() {
           {locked ? (
             <BiometricLockScreen
               label={bioLabel}
-              onUnlock={() => setLocked(false)}
-              onSignOut={() => void completeSignOut()}
+              onUnlock={unlockBiometricLock}
+              onSignOut={signOutFromBiometricLock}
             />
           ) : null}
         </AppEntryShell>
@@ -4490,7 +4462,9 @@ function AppRoot() {
           // Re-arm auto-refresh in case a prior "remembered" logout froze it (see finishSignOut).
           supabase.auth.startAutoRefresh();
           setSignOutNotice(null);
-          setNewUserIntroPending(null);
+          // Do not setNewUserIntroPending(null) here. Google often applies the session (and the
+          // user.id intro effect may already have resolved) before this callback runs; re-nulling
+          // sticks the post-login splash forever because the effect does not re-run for the same id.
           setUser(next);
         }}
         onAuthBusy={setAuthBusy}
@@ -4512,6 +4486,8 @@ function AppRoot() {
     bioLabel,
     newUserIntroPending,
     finishNewUserIntro,
+    unlockBiometricLock,
+    signOutFromBiometricLock,
     c.screen,
     beginSignOutBlocking,
     endSignOutBlocking,
@@ -4554,6 +4530,44 @@ const styles = StyleSheet.create({
   screen: { flex: 1, padding: SCREEN_EDGE_PADDING },
   dashboardScreen: { flex: 1 },
   dashboardScroll: { flex: 1 },
+  checkInTitleRow: {
+    flexDirection: "row",
+    alignItems: "center",
+    marginTop: SECTION_TITLE_MARGIN_TOP,
+    marginBottom: SECTION_TITLE_MARGIN_BOTTOM,
+  },
+  activitiesInlineLink: {
+    fontSize: FLARE_FONT_SIZE.muted,
+    lineHeight: FLARE_LINE_HEIGHT.muted,
+    fontFamily: FLARE_FONT_FAMILY.medium,
+  },
+  homeSwipeHint: {
+    flexDirection: "row",
+    alignItems: "center",
+    justifyContent: "center",
+    gap: 4,
+    paddingVertical: 18,
+    marginBottom: 8,
+  },
+  homeSwipeHintText: {
+    fontSize: 13,
+    fontFamily: "Inter_400Regular",
+    textAlign: "center",
+  },
+  homePagerDots: {
+    position: "absolute",
+    left: 0,
+    right: 0,
+    bottom: 10,
+    flexDirection: "row",
+    justifyContent: "center",
+    gap: 6,
+  },
+  homePagerDot: {
+    width: 6,
+    height: 6,
+    borderRadius: 3,
+  },
   authScreenFill: { flex: 1 },
   authShell: { flex: 1, transform: [{ translateY: 40 }] },
   authBrandBlock: {
@@ -4713,6 +4727,8 @@ const styles = StyleSheet.create({
   /** Previous block already has card mb 12; title/header keeps mt 10. */
   dashboardShelfAfterCard: { marginTop: 0 },
   dashboardShelfSectionLast: { marginBottom: 24 },
+  /** Same bottom margin as dashboard cards (`styles.card` / tracker trays) before the next shelf title. */
+  toolsGridBlock: { marginBottom: 12 },
   /** Daily Check-in shelf title. */
   dashboardSubsectionTitle: {
     fontSize: FLARE_FONT_SIZE.subhead,
@@ -4721,6 +4737,10 @@ const styles = StyleSheet.create({
     marginTop: SECTION_TITLE_MARGIN_TOP,
     marginBottom: SECTION_TITLE_MARGIN_BOTTOM,
     textAlign: "left",
+  },
+  dashboardSubsectionTitleCenter: {
+    textAlign: "center",
+    alignSelf: "stretch",
   },
   /** Title row when a trailing action shares the line (Latest news + See all). */
   dashboardSubsectionHeader: {
@@ -4748,6 +4768,18 @@ const styles = StyleSheet.create({
     marginBottom: SECTION_TITLE_MARGIN_BOTTOM,
     textAlign: "left",
   },
+  dashboardCareToggle: {
+    flexDirection: "row",
+    alignItems: "center",
+    gap: 6,
+    marginTop: SECTION_TITLE_MARGIN_TOP,
+    marginBottom: SECTION_TITLE_MARGIN_BOTTOM,
+  },
+  dashboardCareToggleTitle: {
+    flex: 1,
+    marginTop: 0,
+    marginBottom: 0,
+  },
   /** Alternating shelf label — staggers against left/center titles. */
   dashboardSubsectionTitleRight: {
     fontSize: FLARE_FONT_SIZE.subhead,
@@ -4771,25 +4803,6 @@ const styles = StyleSheet.create({
     marginBottom: SECTION_TITLE_MARGIN_BOTTOM,
     marginTop: SECTION_TITLE_MARGIN_TOP,
     textAlign: "left",
-  },
-  dashboardNewsSeeAll: {
-    fontSize: FLARE_FONT_SIZE.body,
-    fontFamily: FLARE_FONT_FAMILY.medium,
-  },
-  dashboardNewsStatus: {
-    paddingBottom: 28,
-  },
-  dashboardNewsDots: {
-    flexDirection: "row",
-    justifyContent: "center",
-    alignItems: "center",
-    gap: 8,
-    marginTop: 12,
-  },
-  dashboardNewsDot: {
-    width: 7,
-    height: 7,
-    borderRadius: 4,
   },
   todaySummaryRows: { gap: 8 },
   dashboardSectionTitle: {
@@ -4845,7 +4858,12 @@ const styles = StyleSheet.create({
     gap: 12,
   },
   helpSectionToggleExpanded: { paddingBottom: 12 },
-  helpSectionToggleTitle: { flex: 1 },
+  helpSectionToggleTitle: {
+    flex: 1,
+    fontSize: FLARE_FONT_SIZE.muted,
+    lineHeight: FLARE_LINE_HEIGHT.muted,
+    fontFamily: FLARE_FONT_FAMILY.medium,
+  },
   helpSectionToggleMark: {
     fontSize: 20,
     lineHeight: 20,
@@ -4922,9 +4940,10 @@ const styles = StyleSheet.create({
     alignItems: "center",
     justifyContent: "space-between",
   },
-  /** Nudge only the profile chevron to match list-row chevrons (card 14 + row 20 − profile pad 18). */
-  accountIdentityChevronAlign: {
-    marginRight: CARD_INNER_PADDING + ACCOUNT_LIST_ROW_PADDING - 18,
+  /** Slightly roomier than list rows — avatar needs a little air in the dark tray. */
+  accountIdentityNavInset: {
+    paddingHorizontal: ACCOUNT_LIST_ROW_PADDING + 2,
+    paddingVertical: TRAY_ROW_PADDING_Y + 2,
   },
   accountPaddedCard: { padding: 18 },
   accountDeleteCard: { paddingBottom: 20 },
@@ -4938,15 +4957,9 @@ const styles = StyleSheet.create({
   accountDeleteLink: { paddingVertical: 8 },
   accountDeleteLinkText: { fontSize: FLARE_FONT_SIZE.subhead, fontFamily: FLARE_FONT_FAMILY.regular },
   accountDeleteHint: {
-    ...FLARE_CAPTION_HINT,
-    textAlign: "center",
-  },
-  logsHubHintBlock: {
-    marginTop: 12,
-    paddingHorizontal: 24,
-  },
-  logsHubHint: {
-    ...FLARE_CAPTION_HINT,
+    fontSize: FLARE_FONT_SIZE.caption,
+    lineHeight: FLARE_LINE_HEIGHT.caption,
+    fontFamily: FLARE_FONT_FAMILY.regular,
     textAlign: "center",
   },
   accountAvatarWell: {
@@ -4958,7 +4971,7 @@ const styles = StyleSheet.create({
     marginRight: 14,
   },
   accountIdentityTextCol: { flex: 1, minWidth: 0 },
-  accountFirstName: { fontSize: 18, fontFamily: "Inter_700Bold" },
+  accountFirstName: { fontSize: 14, fontFamily: "Inter_500Medium" },
   accountEmailLine: { fontSize: FLARE_FONT_SIZE.muted, fontFamily: "Inter_400Regular", marginTop: 3 },
   accountMemberSince: { fontSize: 13, fontFamily: "Inter_400Regular", marginTop: 6 },
   accountNavRow: {
@@ -4969,9 +4982,30 @@ const styles = StyleSheet.create({
   accountScrollContent: { flexGrow: 1 },
   /** Same height and radius as `PrimaryButton`; two equal slots like paired actions. */
   settingToggleRow: { flexDirection: "row", alignItems: "flex-start", justifyContent: "space-between", gap: 14 },
+  settingsCardSectionLabel: {
+    fontSize: FLARE_FONT_SIZE.muted,
+    lineHeight: FLARE_LINE_HEIGHT.muted,
+    fontFamily: FLARE_FONT_FAMILY.bold,
+    marginBottom: 0,
+  },
+  settingsCardSection: { gap: 10 },
+  /** Reserves toggle-row height while bio lock snapshot hydrates — avoids empty-page blink. */
+  securityTogglePlaceholder: { minHeight: 52 },
   settingToggleTextCol: { flex: 1, paddingRight: 2 },
-  settingToggleTitle: { fontSize: 15, lineHeight: 20, fontFamily: "Inter_500Medium", marginBottom: 4 },
-  settingToggleHint: { fontSize: 13, lineHeight: 18, fontFamily: "Inter_400Regular" },
+  settingToggleTitle: {
+    fontSize: FLARE_FONT_SIZE.body,
+    lineHeight: FLARE_LINE_HEIGHT.body,
+    fontFamily: FLARE_FONT_FAMILY.medium,
+    marginBottom: 6,
+  },
+  settingToggleHint: {
+    fontSize: FLARE_FONT_SIZE.caption,
+    lineHeight: FLARE_LINE_HEIGHT.muted,
+    fontFamily: FLARE_FONT_FAMILY.regular,
+  },
+  /** Settings / Security toggle — same body + caption as Logs tray. */
+  settingsCardTitle: { fontSize: FLARE_FONT_SIZE.body, lineHeight: FLARE_LINE_HEIGHT.body },
+  settingsCardHint: { fontSize: FLARE_FONT_SIZE.caption, lineHeight: FLARE_LINE_HEIGHT.muted },
   appearanceRow: { flexDirection: "row", gap: 8, marginTop: 14 },
   appearanceChip: {
     flex: 1,
@@ -4998,7 +5032,7 @@ const styles = StyleSheet.create({
     paddingLeft: 3,
     /** Same height as stacked greeting + date (date now sits top-right). */
     paddingBottom: 4 + FLARE_LINE_HEIGHT.muted - 8,
-    marginBottom: 6,
+    marginBottom: 0,
   },
   weatherHero: {
     flexDirection: "row",
@@ -5022,7 +5056,7 @@ const styles = StyleSheet.create({
   weatherCity: { fontSize: FLARE_FONT_SIZE.muted, fontFamily: "Inter_500Medium" },
   weatherGreeting: {
     flex: 1,
-    fontSize: 22,
+    fontSize: 21,
     fontFamily: "Inter_800ExtraBold",
     paddingRight: 8,
     marginTop: 8,
@@ -5042,20 +5076,24 @@ const styles = StyleSheet.create({
   weatherTemp: { fontSize: 30, fontFamily: "Inter_800ExtraBold" },
   weatherUnit: { fontSize: 12, fontFamily: "Inter_700Bold", marginTop: 6, marginLeft: 2 },
   checkinSection: {},
-  /** Daily Check-in strip + More grid — shared shell */
+  /** Daily Check-in + Tools grid — shared tile shell. */
   homeDashboardTile: {
     position: "relative",
     flexDirection: "column",
     borderRadius: 12,
-    paddingVertical: 12,
+    paddingVertical: 10,
     paddingHorizontal: 10,
     alignItems: "stretch",
     justifyContent: "center",
-    height: 124,
+    height: 116,
     overflow: "hidden",
   },
-  homeDashboardTileScroll: { marginRight: HOME_TILE_GAP },
-  homeDashboardTileScrollLast: { marginRight: 0 },
+  homeDashboardTileScroll: {
+    marginRight: HOME_TILE_GAP,
+  },
+  homeDashboardTileScrollLast: {
+    marginRight: 0,
+  },
   homeDashboardTileBody: {
     flex: 1,
     flexDirection: "column",
@@ -5065,8 +5103,8 @@ const styles = StyleSheet.create({
     width: "100%",
   },
   homeDashboardTileIconWrap: {
-    width: 52,
-    height: 52,
+    width: 44,
+    height: 44,
     alignItems: "center",
     justifyContent: "center",
   },

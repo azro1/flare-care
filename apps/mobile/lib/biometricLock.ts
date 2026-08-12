@@ -7,6 +7,45 @@ import AsyncStorage from "@react-native-async-storage/async-storage";
  * access to the persisted session — it does not store credentials.
  */
 const ENABLED_KEY = "biometricLockEnabled";
+const SNAPSHOT_KEY = "biometricLockSnapshot.v1";
+
+export type BioLockSnapshot = {
+  available: boolean;
+  enabled: boolean;
+  label: string;
+};
+
+/** Last known lock UI state — seeds Security so the card doesn’t blink empty→filled. */
+let cachedBioLock: BioLockSnapshot | null = null;
+
+export function peekBioLockSnapshot(): BioLockSnapshot | null {
+  return cachedBioLock;
+}
+
+function isBioLockSnapshot(value: unknown): value is BioLockSnapshot {
+  if (!value || typeof value !== "object") return false;
+  const v = value as Record<string, unknown>;
+  return (
+    typeof v.available === "boolean" &&
+    typeof v.enabled === "boolean" &&
+    typeof v.label === "string"
+  );
+}
+
+/** Pull last snapshot from disk into memory (faster than re-probing hardware). */
+export async function hydrateBioLockCacheFromStorage(): Promise<BioLockSnapshot | null> {
+  if (cachedBioLock) return cachedBioLock;
+  try {
+    const raw = await AsyncStorage.getItem(SNAPSHOT_KEY);
+    if (!raw) return null;
+    const parsed: unknown = JSON.parse(raw);
+    if (!isBioLockSnapshot(parsed)) return null;
+    cachedBioLock = parsed;
+    return parsed;
+  } catch {
+    return null;
+  }
+}
 
 export async function isBiometricAvailable(): Promise<boolean> {
   try {
@@ -39,11 +78,42 @@ export async function readLockEnabled(): Promise<boolean> {
   }
 }
 
+async function persistBioLockSnapshot(snap: BioLockSnapshot): Promise<void> {
+  cachedBioLock = snap;
+  try {
+    await AsyncStorage.setItem(SNAPSHOT_KEY, JSON.stringify(snap));
+  } catch {
+    // non-fatal
+  }
+}
+
+/** Load + cache availability / enabled / label for Security (and callers that need all three). */
+export async function loadBioLockSnapshot(): Promise<BioLockSnapshot> {
+  const [available, enabledRaw, label] = await Promise.all([
+    isBiometricAvailable(),
+    readLockEnabled(),
+    biometricTypeLabel(),
+  ]);
+  const snap: BioLockSnapshot = {
+    available,
+    enabled: available && enabledRaw,
+    label,
+  };
+  await persistBioLockSnapshot(snap);
+  return snap;
+}
+
 export async function setLockEnabled(enabled: boolean): Promise<void> {
   try {
     await AsyncStorage.setItem(ENABLED_KEY, enabled ? "1" : "0");
   } catch {
     // non-fatal
+  }
+  if (cachedBioLock) {
+    await persistBioLockSnapshot({
+      ...cachedBioLock,
+      enabled: cachedBioLock.available && enabled,
+    });
   }
 }
 
@@ -54,8 +124,13 @@ export async function authenticate(promptMessage: string): Promise<boolean> {
       cancelLabel: "Cancel",
       disableDeviceFallback: false,
     });
+    if (!res.success && __DEV__) {
+      // Helps diagnose “sheet never shows” vs user cancel vs system error.
+      console.warn("[biometric] authenticate failed", "error" in res ? res.error : "unknown");
+    }
     return res.success;
-  } catch {
+  } catch (e) {
+    if (__DEV__) console.warn("[biometric] authenticate threw", e);
     return false;
   }
 }

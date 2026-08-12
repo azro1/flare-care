@@ -45,10 +45,23 @@ function dayOrdinal(day: number): string {
   }
 }
 
-/** Dashboard greeting — e.g. `Wed 4th Aug`. */
-export function formatUkGreetingDate(input: Date = new Date()): string {
-  if (Number.isNaN(input.getTime())) return "";
-  const weekday = input.toLocaleDateString("en-GB", { weekday: "short" });
-  const month = input.toLocaleDateString("en-GB", { month: "short" });
-  return `${weekday} ${dayOrdinal(input.getDate())} ${month}`;
+/** Short readable date — e.g. `Wed 4th Aug`. Accepts Date or `YYYY-MM-DD` / ISO strings. */
+export function formatUkGreetingDate(input: string | Date = new Date()): string {
+  let d: Date;
+  if (input instanceof Date) {
+    d = input;
+  } else {
+    const s = String(input).trim();
+    if (!s) return "";
+    const dateOnly = s.match(/^(\d{4})-(\d{2})-(\d{2})$/);
+    if (dateOnly) {
+      d = new Date(Number(dateOnly[1]), Number(dateOnly[2]) - 1, Number(dateOnly[3]));
+    } else {
+      d = new Date(s);
+    }
+  }
+  if (Number.isNaN(d.getTime())) return "";
+  const weekday = d.toLocaleDateString("en-GB", { weekday: "short" });
+  const month = d.toLocaleDateString("en-GB", { month: "short" });
+  return `${weekday} ${dayOrdinal(d.getDate())} ${month}`;
 }

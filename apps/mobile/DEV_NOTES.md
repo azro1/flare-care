@@ -12,7 +12,7 @@ If reminders / related mobile UX regress while we keep building, start from this
 
 | When verified | Commit | Summary |
 |---------------|--------|---------|
-| **2026-08-10** | **`ed81d36`** (on `mobile-native`) | Auth polish, new-user intro, welcome cards removed, caption hints |
+| **2026-08-10** | **`ed81d36`** (on `mobile-native`) | Auth polish, new-user intro, welcome cards removed, caption hints — **biometric baseline** |
 | **2026-07-23** (working in daily use since 2026-07-06) | **`413eca9`** | **`fix(mobile): med reminders, welcome card overlay, and Reminders UX`** |
 
 **What was solid at `413eca9`:**
@@ -30,7 +30,8 @@ Use existing screens as reference — do **not** default to web-style teal hyper
 
 | Pattern | Reference | Colour / style |
 |---------|-----------|----------------|
-| **Navigate to another screen** (Account lists, chart link, “View all types”) | `LogHistoryList` + `onPressItem` in `LogHistoryCard` | Label **`c.text`**, chevron on browse rows — Account uses `rowPaddingHorizontal={ACCOUNT_LIST_ROW_PADDING}` |
+| **One-line link list** (Account, Legal) | **`OneLineTrayList`** | Label **`c.text`**, chevron — pad **`ONE_LINE_TRAY_PADDING`** |
+| **Two-line browse / Logs tray** (title + subtitle, history) | `LogHistoryList` + `onPressItem` in `LogHistoryCard` | Label **`c.text`**, chevron — tray inset **`TRAY_ROW_PADDING_H`** by default |
 | **Inline link in body copy** (e.g. tip “Open chart”) | Hydration **Reset** | **`c.text`** or **`c.textSecondary`** + `textDecorationLine: "underline"` — not `c.primary` |
 | **Primary action** (Save, Log now) | `PrimaryButton` | Teal fill — **`c.primary`** |
 | **Secondary on white card** (e.g. Mark as taken) | `SecondaryButton` `borderless` + `borderlessFill="surfaceSubtle"` | Subtle fill, no border — see `FlareButton.tsx` |
@@ -127,6 +128,12 @@ Still used as the scroll + FAB shell on tracker / list screens. Pass **`showInst
 
 ---
 
+## Today's Activity (Home swipe page)
+
+Home page 1 — **`TodayActivityPulseScreen`**: date title “Today's Activity”, % (water only if no meds; else avg of meds + water), Meds/Water meters, tap rows. Status: **No meds saved yet** / **Nothing taken today** / **Keep going — still time today** / **All done for today**. Same `todaySummary` only.
+
+---
+
 ## Log history lists (do not duplicate)
 
 All shared list UI lives in **`components/LogHistoryList.tsx`**. Do **not** hand-roll tray rows or duplicate card wrappers.
@@ -137,17 +144,25 @@ All shared list UI lives in **`components/LogHistoryList.tsx`**. Do **not** hand
 
 | You are building… | Use |
 |-----------------|-----|
-| **Navigate / browse rows** (chevron, 1 or 2 lines) — Account links, appointment presets, summary nav, legal links | **`LogHistoryCard`** + **`LogHistoryList`** + `onPressItem`. Items: plain `{ id, title }` or **`buildBrowseLogRowItem`** when you need a subtitle. |
+| **One-line link rows** (title + chevron only) — Account, Legal | **`OneLineTrayList`** — pad **`ONE_LINE_TRAY_PADDING`**, separator **`ONE_LINE_TRAY_SEPARATOR_PAD`**. Do **not** hand-roll this tray. |
+| **Navigate / browse rows** (chevron, **2 lines** title + subtitle) — Logs hub, appointment presets, summary nav | **`LogHistoryCard`** + **`LogHistoryList`** + `onPressItem`. Items: plain `{ id, title }` or **`buildBrowseLogRowItem`** when you need a subtitle. |
 | **Saved log history** (title + date, tap → detail) | **`LogHistoryPreviewList`** (or **`LogHistoryList`**) + **`buildTimestampLogRowItem`**. Paginated: **`usePaginatedLogList`** / **`useWizardLogHistory`**. |
 | **Read-only counts** (title on left, number on right) — Today → Summary | **`LogHistoryList`** + `trailingText` on each item. |
 | **History hub** (list card only) | **`LogHistoryCard`** + list — optional **`FLARE_CAPTION_HINT`** under the card (Logs hub). |
 | **Read-only label + value fields** (not tappable rows) — Account info, brief detail screens | **`LogDetailFieldGroup`** in **`LogDetailCard`** — **not** `LogHistoryList`. |
 
-**Default rule:** if it’s a **row list on the inset tray**, use **`LogHistoryList`** (1-line and 2-line rows both). Row height and chevron alignment are automatic — **never** copy `minHeight` / spacer logic into a screen. Use `renderLeading` / `getRowStyle` / `multilineTitle` / `renderTrailing={() => null}` when the row shape differs (Bristol chart, talking points).
+**Default rule:** if it’s a **one-line link list**, use **`OneLineTrayList`**. If it’s a **two-line / history / counts row list on the inset tray**, use **`LogHistoryList`**. Row height and chevron alignment are automatic — **never** copy `minHeight` / spacer logic into a screen. Use `renderLeading` / `getRowStyle` / `multilineTitle` / `renderTrailing={() => null}` when the row shape differs (Bristol chart, talking points).
+
+**One-line tray padding:** **`ONE_LINE_TRAY_PADDING`** / **`ONE_LINE_TRAY_SEPARATOR_PAD`** (`OneLineTrayList` only).
+
+**Tray row padding (Logs / two-line):** every `LogHistoryList` row uses **`TRAY_ROW_PADDING_H`** (horizontal) and **`TRAY_ROW_PADDING_Y`** (vertical). `ACCOUNT_LIST_ROW_PADDING` and `TODAY_GOALS_ROW_PADDING` are aliases of `TRAY_ROW_PADDING_H` — do not invent new per-screen insets. Optional `rowPaddingHorizontal` only to deviate.
+
+**Title→subtitle gap:** **`LOG_TRAY_SECOND_LINE_GAP`** (`STACKED_LINE_GAP` + 1) via `logSecondLine` in `LogHistoryList` — do **not** add per-screen `marginTop: 1` on subtitles.
 
 | Piece | Use for |
 |-------|---------|
-| **`LogHistoryList`** | Inset-tray row list — see **Quick pick** and **Row shapes** below. |
+| **`OneLineTrayList`** | One-line link tray (Account, Legal) — see Quick pick. |
+| **`LogHistoryList`** | Two-line / history / counts inset-tray rows — see **Quick pick** and **Row shapes** below. |
 | **`buildTimestampLogRowItem`** | One saved log row — title + `formatLogWhenLine` subtitle from `whenIso` |
 | **`buildBrowseLogRowItem`** | Browse row — `title` + optional `subtitle` (instruction line or entry count). Title-only: pass `""` or omit — height is automatic. |
 | **`LogHistoryCard`** | White card shell only (`trackerCard` + theme `card` background) |
@@ -442,7 +457,9 @@ For those, keep `headerTitle: "…"` in `headerOptions` and **18px** / **16px** 
 
 **UI:** `components/BiometricLockScreen.tsx`. **Helpers:** `lib/biometricLock.ts` (`authenticate`, `readLockEnabled`, `setLockEnabled`, …).
 
-When App lock is ON and the app returns from background, show the lock cover over the already-mounted app (keeps nav state). Auto-prompt on mount; fingerprint affordance + **Sign out** at the bottom.
+When App lock is ON and the app returns from background, show the lock cover over the already-mounted app (keeps nav state). Auto-prompt **once** on mount (`promptedRef` + stable `attempt`) so `appShellReady` / dashboard re-renders cannot cancel the OS sheet. Fingerprint affordance + **Sign out** at the bottom.
+
+**Restore note (2026-08-12):** biometric helpers match checkpoint **`ed81d36`**. Do not reintroduce AppState “active-only” / outside-`content` lock experiments without a device repro — they made this worse.
 
 ### Bank-style quick-login (signed-out landing)
 
@@ -452,12 +469,12 @@ When App lock is ON and the app returns from background, show the lock cover ove
 
 | Scenario | Prompt on next landing? | Why |
 |----------|------------------------|-----|
-| **Log out** (App lock on) | **Yes** | `finishSignOut` saves the refresh token to SecureStore |
+| **Log out** (App lock on) | **Fingerprint control shown** (tap to unlock — **no** auto OS sheet) | `finishSignOut` saves the refresh token to SecureStore |
 | **Fresh signup / first login** | **No** | New login lands straight in the app; nothing is remembered until the *next* logout |
 | **Delete account** | **No** | `handleDeleteAccountConfirm` calls `clearRememberedSession()` — token wiped, and the server account is gone anyway |
 | **Log out with App lock OFF** | **No** | `finishSignOut` takes the else-branch: `clearRememberedSession()` + full `supabase.auth.signOut()` |
 
-**Fingerprint affordance UX:** do **not** show the bottom fingerprint control while the OS biometric sheet is up. Show it only **after** the user dismisses / fails the auto prompt (`showQuickUnlockAffordance`). Layout matches **`BiometricLockScreen`** (fingerprint + reserved Sign out row height) so Y positions align.
+**Fingerprint affordance UX:** always show the bottom fingerprint + “Tap to unlock…” when quick-login is armed. **Do not** auto-prompt on landing (especially after Sign in from the logout notice). Layout matches **`BiometricLockScreen`** (fingerprint + reserved Sign out row height) so Y positions align.
 
 **Do not "fix" the fresh-signup case by auto-prompting** — that was deliberately removed to stop double-prompting on first login.
 
@@ -474,8 +491,9 @@ Hard-won from the 2026-08 sign-in redesign. Check this table **before** inventin
 | **Can't type in verification code** (email field worked) | (1) Parent re-renders every 1s from OTP countdown; (2) **ghost** full-screen `ConfirmModal` Pressable still in `OverlayOutlet` after dismiss; (3) fingerprint `Pressable` later sibling overlapping a tall code form | (1) Keep countdown in **`AuthOtpCountdown`** (or any child) — never `setInterval` → `setState` on whole `AuthScreen`. Prefer plain `useState` for the code field, not RHF if it fights focus. (2) Portal sync/cleanup in **`useLayoutEffect`**; `ConfirmModal` keeps `Portal` mounted and syncs `null` when `visible={false}`. After Fast Refresh with a stuck overlay: **full app reload**. (3) Raise form `zIndex` above fingerprint row; don't let a later sibling steal taps. |
 | **User taps OK on “Check your email” but still can't focus the field** | Overlay registry race (`useEffect` cleanup after paint) or Fast Refresh left a stale portal entry | `overlayPortal.tsx` must clear on unmount; full reload; focus input in alert `onPress` via ref after `InteractionManager.runAfterInteractions`. |
 | **Wrong code shows “expired / wait for timer / Resend”** | Parsing Supabase `error.message` for `expired` vs `invalid` — API often returns **both** in one string | **One** message only (`otpVerifyErrorMessage`). Never claim we know wrong vs expired from the API. Don't tell them to tap **Resend** while the countdown is still visible — Resend **replaces** the timer only when it hits 0. |
-| **Bottom nav flashes** right after first login before intro | `newUserIntroPending` left `false` from a prior logout | Keep **`null` until `resolveNewUserIntroPending` finishes**, then `true`/`false`. |
-| **Fingerprint sits in the user's face** while Face ID sheet is open | Affordance mounted at the same time as auto-prompt | Gate with **`showQuickUnlockAffordance`** — only after OS prompt dismissed/failed. |
+| **Google return: splash stuck, Dashboard maybe underneath** | `newUserIntroPending` re-nulled **after** the user.id effect already resolved (Google `SIGNED_IN` / `onSignedIn` race). Splash shows while `pending === null` and never clears | **Never** `setNewUserIntroPending(null)` from `onAuthStateChange` or `onSignedIn`. Only the **`user.id` effect** may null → resolve. Clear `authBusy` **before** `onSignedIn` once the session exists. Reset `appShellReady` on logout. |
+| **Fingerprint / Face ID sheet flashes then vanishes** (app lock) | `authenticate` re-fired when parent re-rendered (`appShellReady`) because `onUnlock` was in effect deps | **`BiometricLockScreen`**: prompt once via ref; do not put `onUnlock` in the auto-prompt effect deps. |
+| **Fingerprint sits in the user's face** on sign-in landing | Auto OS prompt on AuthScreen mount | **No auto-prompt** on landing — always show tap affordance when quick-login is armed. |
 | **Fingerprint Y doesn't match lock screen** | Missing reserved Sign out row height on auth landing | Match **`BiometricLockScreen`** bottom stack (fingerprint + invisible Sign out slot). |
 | **Almost there looks different from sign-in** | Large solo logo / old `authShell` layout | Same **`authLandingBrandRow`** as `AuthScreen` (icon 28 + name). |
 | **Tempted to bring back welcome cards** | Old `DEV_NOTES` / muscle memory | **Don't.** Intro + `FLARE_CAPTION_HINT` only. Shell may stay; cards stay dead. |
@@ -507,7 +525,7 @@ Hard-won from the 2026-08 sign-in redesign. Check this table **before** inventin
 | Card / block | Seed source | Files |
 |--------------|-------------|--------|
 | **Greeting / weather** | `DashboardSnapshot.weatherMeta` / `weather` | `App.tsx` `DashboardScreen`, `dashboardSnapshotCache.ts` |
-| **Today counts** | `DashboardSnapshot.todaySummary` | same |
+| **Today counts** | `DashboardSnapshot.todaySummary` (incl. `wellbeingLogged`) | same |
 | **News shelf** | `DashboardSnapshot.newsItems` / `newsError` (skip loading flash if cache has items) | same + `newsShared.ts` |
 | **Coming up** (next appointment) | Appointments list cache first, else `DashboardSnapshot.upcoming` | `dashboardUpcomingShared.ts` (`buildDashboardUpcoming`), `appointmentShared.ts` |
 

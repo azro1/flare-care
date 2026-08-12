@@ -1,5 +1,22 @@
 # Mobile — follow-up / known issues
 
+## Upcoming (2026-08-12)
+
+### 1. Wizard review redesign (especially Log Symptoms)
+
+Review after the wizard dumps **everything onto one screen**. **Log Symptoms** is the worst — crowded / looks awful. Track Medications and Wellbeing reviews are more tolerable because they have less content, but we may still want a shared redesign.
+
+- [ ] Figure out a less crowded way to show wizard review (not one giant code-dump screen)
+- [ ] Prioritise **Log Symptoms** review; check Meds / Wellbeing once the pattern is clearer
+
+### 2. Wellbeing wizard — step 3/11 Feelings asks sleep
+
+On **Wellbeing** wizard **step 3/11 (Feelings)**, the prompt is **“How well did you sleep last night?”** but the UI shows the feelings radios (**1 – Very low**, **2 – Low**, etc.). Prompt and options don’t match.
+
+- [ ] Fix copy vs options (sleep question vs feelings scale) so the step asks what the radios answer
+
+---
+
 ## Done (section titles in cards)
 
 - **In-card section titles** — small muted titles back **inside** white cards (not on page background) on Account (`My account`, `Delete account`), symptom/medication wizard review, and log detail screens (symptom, medication log, bowel log, medication profile).

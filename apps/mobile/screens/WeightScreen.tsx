@@ -221,8 +221,8 @@ export function WeightScreen({ user }: { user: SessionUser }) {
   const c = useFlareColors();
   const navigation = useNavigation<any>();
   const insets = useSafeAreaInsets();
-  const { scrollBottomPad } = useTrackerThumbFabLayout();
-  const selectionBarClearance = bottomTabBarHeight(insets.bottom);
+  const tabBarClearance = bottomTabBarHeight(insets.bottom);
+  const { scrollBottomPad } = useTrackerThumbFabLayout(tabBarClearance);
 
   const {
     rows: historyRows,
@@ -345,7 +345,7 @@ export function WeightScreen({ user }: { user: SessionUser }) {
 
   const listInitialLoad = historyLoading && historyRows.length === 0;
   const historyEmpty = !historyLoading && historyTotalCount === 0;
-  const scrollBottomPadTotal = selectionMode ? selectionBarClearance : scrollBottomPad;
+  const scrollBottomPadTotal = selectionMode ? tabBarClearance : scrollBottomPad;
 
   return (
     <InstructionScreenShell
@@ -353,7 +353,13 @@ export function WeightScreen({ user }: { user: SessionUser }) {
       contentPaddingBottom={scrollBottomPadTotal}
       instruction={null}
       floatingAction={
-        !selectionMode ? <TrackerThumbFab accessibilityLabel="Log weight" onPress={openNewLog} /> : null
+        !selectionMode ? (
+          <TrackerThumbFab
+            accessibilityLabel="Log weight"
+            onPress={openNewLog}
+            tabBarClearance={tabBarClearance}
+          />
+        ) : null
       }
       footer={
         <>

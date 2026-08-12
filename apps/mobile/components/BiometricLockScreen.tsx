@@ -1,6 +1,6 @@
 import { Ionicons } from "@expo/vector-icons";
-import React, { useCallback, useEffect, useState } from "react";
-import { Pressable, StyleSheet, Text, View } from "react-native";
+import React, { useCallback, useEffect, useRef, useState } from "react";
+import { AppState, Pressable, StyleSheet, Text, View } from "react-native";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { authenticate } from "../lib/biometricLock";
 import { FULL_WIDTH_CTA_EDGE_PADDING } from "../lib/layoutConstants";
@@ -8,7 +8,10 @@ import { useFlareColors } from "../theme";
 
 /**
  * Full-screen lock cover shown over the (already mounted) app when biometric app-lock is on.
- * Auto-prompts on mount; the app underneath stays mounted so unlocking keeps navigation state.
+ *
+ * Auto-prompt rules (Android-sensitive):
+ * - Prompt only while AppState is `active` (background authenticate fails silently).
+ * - Prompt only once per mount (parent `appShellReady` re-renders must not re-fire).
  */
 export function BiometricLockScreen({
   label,
@@ -22,16 +25,36 @@ export function BiometricLockScreen({
   const c = useFlareColors();
   const insets = useSafeAreaInsets();
   const [busy, setBusy] = useState(false);
+  const onUnlockRef = useRef(onUnlock);
+  const promptedRef = useRef(false);
+  onUnlockRef.current = onUnlock;
 
   const attempt = useCallback(async () => {
     setBusy(true);
-    const ok = await authenticate("Face and fingerprint");
+    const ok = await authenticate("Unlock with fingerprint");
     setBusy(false);
-    if (ok) onUnlock();
-  }, [onUnlock]);
+    if (ok) onUnlockRef.current();
+  }, []);
 
   useEffect(() => {
-    void attempt();
+    let cancelled = false;
+
+    const promptWhenActive = () => {
+      if (cancelled || promptedRef.current) return;
+      if (AppState.currentState !== "active") return;
+      promptedRef.current = true;
+      void attempt();
+    };
+
+    promptWhenActive();
+    const sub = AppState.addEventListener("change", (state) => {
+      if (state === "active") promptWhenActive();
+    });
+
+    return () => {
+      cancelled = true;
+      sub.remove();
+    };
   }, [attempt]);
 
   return (

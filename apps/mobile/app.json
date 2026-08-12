@@ -43,7 +43,13 @@
       "@react-native-community/datetimepicker",
       "expo-secure-store",
       "expo-web-browser",
-      "expo-font"
+      "expo-font",
+      [
+        "expo-local-authentication",
+        {
+          "faceIDPermission": "Allow FlareCare to use Face ID."
+        }
+      ]
     ],
     "extra": {
       "eas": {

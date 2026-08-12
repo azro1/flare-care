@@ -24,9 +24,12 @@ import {
   FLARE_FONT_FAMILY,
   FLARE_FONT_SIZE,
   FLARE_LINE_HEIGHT,
-  SCREEN_EDGE_PADDING,
   SECTION_TITLE_MARGIN_BOTTOM,
-  STACKED_LINE_GAP,
+  LOG_TRAY_SECOND_LINE_GAP,
+  ONE_LINE_TRAY_PADDING,
+  ONE_LINE_TRAY_SEPARATOR_PAD,
+  TRAY_ROW_PADDING_H,
+  TRAY_ROW_PADDING_Y,
   flareTextHasDigit,
 } from "../lib/layoutConstants";
 import { useFlareColors } from "../theme";
@@ -36,6 +39,17 @@ export {
   LOG_HISTORY_RECENT_PREVIEW_COUNT,
   LOG_HISTORY_WIZARD_LOAD_MORE_BATCH,
 } from "../lib/logHistoryConstants";
+
+/** Row pad so text clears the hairline without growing the outer tray inset. */
+export function oneLineTraySeparatorRowStyle(index: number, count: number): ViewStyle {
+  return {
+    paddingTop: index > 0 ? ONE_LINE_TRAY_SEPARATOR_PAD : 0,
+    paddingBottom: index < count - 1 ? ONE_LINE_TRAY_SEPARATOR_PAD : 0,
+  };
+}
+
+/** @deprecated Use `oneLineTraySeparatorRowStyle`. */
+export const trayInCardSeparatorRowStyle = oneLineTraySeparatorRowStyle;
 
 export type LogHistoryListItem = {
   id: string;
@@ -49,6 +63,8 @@ export type LogHistoryListItem = {
   completed?: boolean;
   /** Shown on the right (e.g. Today summary counts). */
   trailingText?: string;
+  /** Smaller + `textSecondary` title (e.g. dashboard “Next appointment”). */
+  titleSecondary?: boolean;
   accessibilityLabel?: string;
 };
 
@@ -102,6 +118,57 @@ export function LogHistoryCard({
   );
 }
 
+/**
+ * One-line link tray — white card + dark inset tray of title-only rows (Account, Legal).
+ * Use this for **one-liners**. Two-line Logs / history rows use `LogHistoryList` instead.
+ * Outer pad `ONE_LINE_TRAY_PADDING`; hairline clearance `ONE_LINE_TRAY_SEPARATOR_PAD`.
+ */
+export function OneLineTrayList({
+  items,
+  onPressItem,
+  emptyMessage,
+  renderTrailing,
+  renderSubtitle,
+}: {
+  items: LogHistoryListItem[];
+  onPressItem?: (id: string) => void;
+  emptyMessage?: string;
+  renderTrailing?: (item: LogHistoryListItem) => ReactNode;
+  renderSubtitle?: (item: LogHistoryListItem) => ReactNode;
+}) {
+  const c = useFlareColors();
+  return (
+    <LogHistoryCard>
+      <View
+        style={[
+          logHistoryListStyles.logList,
+          {
+            backgroundColor: c.surfaceSubtle,
+            paddingVertical: ONE_LINE_TRAY_PADDING,
+          },
+        ]}
+      >
+        <LogHistoryList
+          items={items}
+          emptyMessage={emptyMessage}
+          rowTextLayout="default"
+          titleRegular
+          rowPaddingHorizontal={ONE_LINE_TRAY_PADDING}
+          rowPaddingVertical={0}
+          insetTray={false}
+          getRowStyle={(_item, index) => oneLineTraySeparatorRowStyle(index, items.length)}
+          renderTrailing={renderTrailing}
+          renderSubtitle={renderSubtitle}
+          onPressItem={onPressItem}
+        />
+      </View>
+    </LogHistoryCard>
+  );
+}
+
+/** @deprecated Use `OneLineTrayList`. */
+export const TrayInCardList = OneLineTrayList;
+
 type MciIconName = ComponentProps<typeof MaterialCommunityIcons>["name"];
 type IonIconName = ComponentProps<typeof Ionicons>["name"];
 
@@ -146,6 +213,7 @@ type LogHistoryPreviewListProps = {
   onToggleSelect?: (id: string) => void;
   onLongPressItem?: (id: string) => void;
   rowPaddingHorizontal?: number;
+  rowPaddingVertical?: number;
   renderLeading?: (item: LogHistoryListItem) => ReactNode;
   getRowStyle?: (item: LogHistoryListItem, index: number) => StyleProp<ViewStyle>;
   multilineTitle?: boolean;
@@ -170,6 +238,7 @@ export function LogHistoryPreviewList({
   onToggleSelect,
   onLongPressItem,
   rowPaddingHorizontal,
+  rowPaddingVertical,
   renderLeading,
   getRowStyle,
   multilineTitle,
@@ -192,6 +261,7 @@ export function LogHistoryPreviewList({
         onToggleSelect={onToggleSelect}
         onLongPressItem={onLongPressItem}
         rowPaddingHorizontal={rowPaddingHorizontal}
+        rowPaddingVertical={rowPaddingVertical}
         renderLeading={renderLeading}
         getRowStyle={getRowStyle}
         multilineTitle={multilineTitle}
@@ -228,9 +298,13 @@ export function LogHistoryList({
   onToggleSelect,
   onLongPressItem,
   rowPaddingHorizontal,
+  rowPaddingVertical,
   renderLeading,
   getRowStyle,
   multilineTitle,
+  insetTray = true,
+  titleRegular = false,
+  rowSeparator = "hairline",
 }: {
   items: LogHistoryListItem[];
   emptyMessage?: string;
@@ -242,24 +316,37 @@ export function LogHistoryList({
   renderTrailing?: (item: LogHistoryListItem) => ReactNode;
   /** Title/subtitle typography. Default `compact` (13). Pass `default` for body (14) titles. */
   rowTextLayout?: "default" | "compact";
+  /** Title-only link rows (`OneLineTrayList` — Account, Legal) — muted size, regular weight. */
+  titleRegular?: boolean;
   selectionMode?: boolean;
   selectedIds?: ReadonlySet<string>;
   onToggleSelect?: (id: string) => void;
   onLongPressItem?: (id: string) => void;
-  /** Override `logRow` horizontal padding (e.g. Account link lists). */
+  /** Override `logRow` horizontal padding. Default is `TRAY_ROW_PADDING_H` — only pass to deviate. */
   rowPaddingHorizontal?: number;
+  /** Override `logRow` vertical padding. Default is `TRAY_ROW_PADDING_Y` — only pass to deviate. */
+  rowPaddingVertical?: number;
   /** Badge or icon before the title column (e.g. Bristol type number). */
   renderLeading?: (item: LogHistoryListItem) => ReactNode;
   getRowStyle?: (item: LogHistoryListItem, index: number) => StyleProp<ViewStyle>;
   /** Full-width body text per row (e.g. talking points) — no single-line clamp. */
   multilineTitle?: boolean;
+  /** Grey inset tray behind rows. Pass `false` to sit on the white card (e.g. dashboard appointment). */
+  insetTray?: boolean;
+  /** `gap` = no hairline (spacing comes from `getRowStyle` / pad). */
+  rowSeparator?: "hairline" | "gap";
 }) {
   if (items.length === 0 && emptyMessage) {
     return <EmptyTrayMessage message={emptyMessage} />;
   }
   const c = useFlareColors();
   return (
-    <View style={[logHistoryListStyles.logList, { backgroundColor: c.surfaceSubtle }]}>
+    <View
+      style={[
+        insetTray ? logHistoryListStyles.logList : null,
+        { backgroundColor: insetTray ? c.surfaceSubtle : "transparent" },
+      ]}
+    >
       {items.map((item, index) => {
         const textSubtitle = item.trailingText !== undefined ? undefined : item.subtitle;
         const whenFormatted =
@@ -270,13 +357,16 @@ export function LogHistoryList({
               : (item.whenFallback ?? "");
         const whenLine = textSubtitle ?? whenFormatted;
         const titleColor =
-          item.trailingText !== undefined
+          item.trailingText !== undefined || item.titleSecondary
             ? c.textSecondary
             : c.text;
-        const useCompactText = rowTextLayout === "compact" || item.trailingText !== undefined;
+        const useCompactText =
+          rowTextLayout === "compact" || item.trailingText !== undefined || !!item.titleSecondary;
         const primaryStyle = useCompactText
           ? logHistoryListStyles.logPrimaryToday
-          : logHistoryListStyles.logPrimary;
+          : titleRegular
+            ? logHistoryListStyles.logPrimaryRegular
+            : logHistoryListStyles.logPrimary;
         /** Numbers / dates / times under titles — caption; letter-only text stays muted. */
         const secondLineNeedsCaption = !textSubtitle || flareTextHasDigit(textSubtitle);
         const secondLineStyle = secondLineNeedsCaption
@@ -286,7 +376,8 @@ export function LogHistoryList({
         const customSubtitle = renderSubtitle?.(item);
         const reserveSubtitleLine = item.trailingText === undefined && !multilineTitle;
         const showSecondLine = reserveSubtitleLine && (customSubtitle != null || !!whenLine);
-        const centerSingleLineBrowse = !showSecondLine && !multilineTitle;
+        /** Title-only / count rows match title+subtitle height in trays; flat-on-card lists stay dense. */
+        const centerSingleLineBrowse = insetTray && !showSecondLine && !multilineTitle;
         const leadingNode = renderLeading?.(item) ?? null;
         const extraRowStyle = getRowStyle?.(item, index) ?? null;
         const isSelected = !!selectedIds?.has(item.id);
@@ -358,11 +449,16 @@ export function LogHistoryList({
           </>
         );
         const rowBorder =
-          index !== items.length - 1
+          rowSeparator === "hairline" && index !== items.length - 1
             ? { borderBottomWidth: StyleSheet.hairlineWidth, borderBottomColor: c.cardBorder }
             : null;
         const rowPadStyle =
-          rowPaddingHorizontal != null ? { paddingHorizontal: rowPaddingHorizontal } : null;
+          rowPaddingHorizontal != null || rowPaddingVertical != null
+            ? {
+                ...(rowPaddingHorizontal != null ? { paddingHorizontal: rowPaddingHorizontal } : {}),
+                ...(rowPaddingVertical != null ? { paddingVertical: rowPaddingVertical } : {}),
+              }
+            : null;
         const rowPressStyle = ({ pressed }: { pressed: boolean }) => [
           logHistoryListStyles.logRow,
           leadingNode ? logHistoryListStyles.logRowWithLeading : null,
@@ -453,8 +549,8 @@ export const logHistoryListStyles = StyleSheet.create({
   logRow: {
     flexDirection: "row",
     alignItems: "center",
-    paddingHorizontal: SCREEN_EDGE_PADDING,
-    paddingVertical: 12,
+    paddingHorizontal: TRAY_ROW_PADDING_H,
+    paddingVertical: TRAY_ROW_PADDING_Y,
     gap: STACKED_DETAIL_ROW_EDGE,
   },
   logRowWithLeading: { alignItems: "flex-start" },
@@ -467,7 +563,7 @@ export const logHistoryListStyles = StyleSheet.create({
   logMain: { flex: 1, minWidth: 0 },
   /** Title-only browse rows — same height as title + subtitle; title vertically centred with chevron. */
   logMainSingleLineBrowse: {
-    minHeight: FLARE_LINE_HEIGHT.body + STACKED_LINE_GAP + FLARE_LINE_HEIGHT.muted,
+    minHeight: FLARE_LINE_HEIGHT.body + LOG_TRAY_SECOND_LINE_GAP + FLARE_LINE_HEIGHT.muted,
     justifyContent: "center",
   },
   logTitleRow: {
@@ -478,11 +574,12 @@ export const logHistoryListStyles = StyleSheet.create({
   },
   logTitleText: { flexShrink: 1 },
   logPrimary: { fontSize: FLARE_FONT_SIZE.body, fontFamily: FLARE_FONT_FAMILY.medium },
+  logPrimaryRegularBody: { fontSize: FLARE_FONT_SIZE.body, fontFamily: FLARE_FONT_FAMILY.regular },
   logPrimaryRegular: { fontSize: FLARE_FONT_SIZE.muted, fontFamily: FLARE_FONT_FAMILY.regular },
   /** Dashboard Today summary rows — slightly smaller than history browse rows. */
   logPrimaryToday: { fontSize: FLARE_FONT_SIZE.muted, fontFamily: FLARE_FONT_FAMILY.regular },
-  /** Gap above second line (when / subtitle) — shared with stacked detail via `STACKED_LINE_GAP`. */
-  logSecondLine: { marginTop: STACKED_LINE_GAP },
+  /** Gap above second line (when / subtitle) — `LOG_TRAY_SECOND_LINE_GAP` (includes +1 optical pad). */
+  logSecondLine: { marginTop: LOG_TRAY_SECOND_LINE_GAP },
   logSecondary: {
     fontSize: FLARE_FONT_SIZE.muted,
     fontFamily: FLARE_FONT_FAMILY.regular,

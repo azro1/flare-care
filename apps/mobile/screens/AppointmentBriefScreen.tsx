@@ -2,6 +2,7 @@ import { useNavigation } from "@react-navigation/native";
 import React, { useCallback, useMemo } from "react";
 import { Pressable, StyleSheet, Text, View } from "react-native";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
+import { HubTipCard } from "../components/HubTipCard";
 import { InstructionScreenShell } from "../components/InstructionScreenShell";
 import {
   buildBrowseLogRowItem,
@@ -61,10 +62,11 @@ export function AppointmentBriefScreen({ user }: { user: SessionUser }) {
       <LogHistoryCard>
         <LogHistoryList items={items} onPressItem={onPressItem} rowPaddingHorizontal={ACCOUNT_LIST_ROW_PADDING} />
       </LogHistoryCard>
+      <HubTipCard
+        tipId="appointment-summary-card-v1"
+        message="Choose a suggested time period or select your own dates to include the information you need."
+      />
       <View style={styles.needHelpBlock}>
-        <Text style={[styles.needHelpHint, { color: c.textMuted }]}>
-          Choose a suggested time period or select your own dates to include the information you need.
-        </Text>
         <Pressable
           accessibilityRole="link"
           accessibilityLabel="Still need help with appointment summary"
@@ -81,12 +83,8 @@ export function AppointmentBriefScreen({ user }: { user: SessionUser }) {
 const styles = StyleSheet.create({
   needHelpBlock: {
     alignItems: "center",
-    marginTop: 12,
+    marginTop: 4,
     paddingHorizontal: 24,
-  },
-  needHelpHint: {
-    ...FLARE_CAPTION_HINT,
-    textAlign: "center",
   },
   needHelpLink: {
     alignSelf: "center",

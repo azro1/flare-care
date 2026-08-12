@@ -19,11 +19,41 @@ export const WELCOME_CARD_MIN_HEIGHT = 280;
  */
 export const INFORMATIONAL_PAGE_HORIZONTAL_PADDING = 18;
 
-/** Extra inset for Account tab link rows inside the grey tray (My account, Legal). */
-export const ACCOUNT_LIST_ROW_PADDING = 20;
+/** Horizontal inset for every `LogHistoryList` tray row (inside the grey tray). */
+export const TRAY_ROW_PADDING_H = 16;
 
-/** Today / Logs pill rows — same horizontal inset as Account lists. */
-export const TODAY_GOALS_ROW_PADDING = ACCOUNT_LIST_ROW_PADDING;
+/** Vertical pad for every `LogHistoryList` tray row. */
+export const TRAY_ROW_PADDING_Y = 12;
+
+/**
+ * Alias of `TRAY_ROW_PADDING_H` — Account / browse trays.
+ * Prefer `TRAY_ROW_PADDING_H` in new code; keep this export so existing call sites stay valid.
+ */
+export const ACCOUNT_LIST_ROW_PADDING = TRAY_ROW_PADDING_H;
+
+/**
+ * Dashboard Today’s activity tray — horizontal matches shared tray default.
+ * @deprecated Prefer `ONE_LINE_TRAY_PADDING` for one-line link trays.
+ */
+export const TODAY_GOALS_ROW_PADDING = TRAY_ROW_PADDING_H;
+
+/** @deprecated Prefer `ONE_LINE_TRAY_SEPARATOR_PAD`. */
+export const TODAY_GOALS_ROW_PADDING_Y = 16;
+
+/** @deprecated Use `ONE_LINE_TRAY_PADDING`. */
+export const TRAY_IN_CARD_PADDING = 20;
+
+/** @deprecated Use `ONE_LINE_TRAY_SEPARATOR_PAD`. */
+export const TRAY_IN_CARD_SEPARATOR_PAD = 16;
+
+/**
+ * Outer pad inside the dark tray for **one-line** link lists (`OneLineTrayList` — Account, Legal).
+ * Not the Logs two-line tray (`TRAY_ROW_PADDING_*`).
+ */
+export const ONE_LINE_TRAY_PADDING = TRAY_IN_CARD_PADDING;
+
+/** Space above/below the hairline between one-line tray rows. */
+export const ONE_LINE_TRAY_SEPARATOR_PAD = TRAY_IN_CARD_SEPARATOR_PAD;
 
 /** Dashboard Recent Activity — matches `styles.recentActivityFeed` / feed row layout. */
 export const RECENT_ACTIVITY_ROW_GAP = 14;
@@ -116,6 +146,12 @@ export const FLARE_FONT_FAMILY = {
 /** Gap between stacked text lines — list title→subtitle, detail label→value. */
 export const STACKED_LINE_GAP = 4;
 
+/**
+ * Title→subtitle gap inside `LogHistoryList` trays.
+ * `STACKED_LINE_GAP` plus the +1 optical pad Logs browse rows use — do not re-add `marginTop: 1` in screens.
+ */
+export const LOG_TRAY_SECOND_LINE_GAP = STACKED_LINE_GAP + 1;
+
 /** Confirm / notice modal — title→message. */
 export const CONFIRM_MODAL_STACK_GAP = 8;
 /** Confirm / notice modal — message→actions. */
@@ -171,6 +207,17 @@ export const SECTION_TITLE_MARGIN_TOP = 10;
 export const SECTION_TITLE_MARGIN_BOTTOM = 12;
 /** Gap below in-card section title before card body (Account, wizard review). */
 export const CARD_SECTION_INNER_GAP = 12;
+
+/**
+ * Home dashboard: vertical gap between sibling cards / tile blocks.
+ * Same as a titled shelf (card/tile `marginBottom` 12 + title mt + title mb).
+ * When a section has no title, still use this between blocks — never leave only the 12px card margin.
+ */
+export const DASHBOARD_BLOCK_GAP =
+  CARD_SECTION_INNER_GAP + SECTION_TITLE_MARGIN_TOP + SECTION_TITLE_MARGIN_BOTTOM;
+/** Extra top inset when the previous block already has the 12px bottom margin (replaces a missing title). */
+export const DASHBOARD_UNTITLED_AFTER_BLOCK =
+  SECTION_TITLE_MARGIN_TOP + SECTION_TITLE_MARGIN_BOTTOM;
 
 /** Floating instruction cards — dashboard welcome + future per-screen tips. */
 export const INSTRUCTION_CARD_RADIUS = 14;

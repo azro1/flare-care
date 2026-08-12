@@ -89,7 +89,7 @@ export function NewsFeedCard({ item, variant, width }: NewsFeedCardProps) {
         <View style={styles.footer}>
           <Text style={[styles.meta, { color: c.textMuted, flex: 1 }]} numberOfLines={1}>
             {item.source}
-            {!isShelf && item.publishedAt ? ` (${formatUkDate(item.publishedAt)})` : ""}
+            {!isShelf && item.publishedAt ? ` · ${formatUkDate(item.publishedAt)}` : ""}
           </Text>
           {!isShelf ? (
             <Pressable

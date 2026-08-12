@@ -1,7 +1,8 @@
 /** In-memory dashboard seed per user — cleared after symptom submit so home refetch shows fresh data. */
 
-export type DashboardActivityRow = {
-  key: string;
+import type { ActivityInsight } from "./activityInsights";
+
+export type DashboardActivityRow = {  key: string;
   title: string;
   ts: number;
   icon: "symptom" | "medication" | "bowel" | "weight" | "hydration" | "appointment";
@@ -15,8 +16,26 @@ export type DashboardNewsItem = {
   imageUrl?: string | null;
 };
 
+export type DashboardTodaySummary = {
+  symptoms: number;
+  medsTaken: number;
+  medsTotal: number;
+  hydration: number;
+  /** True when a daily_wellbeing row exists for today. */
+  wellbeingLogged: boolean;
+};
+
+export const EMPTY_TODAY_SUMMARY: DashboardTodaySummary = {
+  symptoms: 0,
+  medsTaken: 0,
+  medsTotal: 0,
+  hydration: 0,
+  wellbeingLogged: false,
+};
+
 export type DashboardSnapshot = {
-  todaySummary: { symptoms: number; medsTaken: number; medsTotal: number; hydration: number };
+  todaySummary: DashboardTodaySummary;
+  activityInsight: ActivityInsight;
   weatherMeta: { city: string; temp: number | null; desc: string; icon?: string | null } | null;
   weather: string;
   newsItems: DashboardNewsItem[];
@@ -62,6 +81,19 @@ export function dedupeNewsItems(items: DashboardNewsItem[]): DashboardNewsItem[]
 }
 
 export const dashboardSnapshotByUserId: Record<string, DashboardSnapshot> = {};
+
+/** Logs hub row counts — kept across dashboard invalidate so Logs doesn’t flash “No entries”. */
+export type LogsHubPreview = {
+  symptomCount: number;
+  medicationCount: number;
+  wellbeingCount: number;
+};
+
+export const logsHubPreviewByUserId: Record<string, LogsHubPreview> = {};
+
+export function setLogsHubPreview(userId: string, preview: LogsHubPreview) {
+  logsHubPreviewByUserId[userId] = preview;
+}
 
 export function invalidateDashboardSnapshot(userId: string) {
   delete dashboardSnapshotByUserId[userId];
