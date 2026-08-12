@@ -20,6 +20,12 @@ If reminders / related mobile UX regress while we keep building, start from this
 - Reminders tab UX (setup copy, auto-refresh on return from settings, no wrong-state flash)
 - Confirm modal / delete-account card spacing polish
 
+**Reminders count + schedule rules (`lib/medicationNotifications.ts`):**
+- Count is **per OS alarm**, not “1 for meds + 1 for appointments”. Reminders screen: `You have N reminders scheduled` = `getAllScheduledNotificationsAsync().length` (fallback: med IDs + appointment IDs).
+- **Meds:** one **DAILY** repeating notification per row with `reminders_enabled`. Still scheduled (and counted) even if today’s dose time has already passed.
+- **Appointments:** one **DATE** one-shot per row with `reminder_minutes_before != null`, only if `appointmentTime − leadMinutes > now`. If that fire time has passed, rebuild **skips** it — UI can still show a reminder label, but it is **not** in the scheduled count. Opening Reminders / saving a med runs cancel-all + rebuild, so a past lead window can drop the appointment alarm even though the appointment remains upcoming.
+- Parse appointments with `getAppointmentDateTime()` (accepts `HH:mm` / optional seconds; plain `YYYY-MM-DD` date). Do **not** build `` new Date(`${date}T${time}:00`) `` — breaks if `time` already has seconds or `date` is ISO.
+
 **Restore check:** `git show <sha>` or `git checkout <sha>` (detached) / create a branch from it if you need to compare.
 
 ---

@@ -98,9 +98,12 @@ export function getAppointmentDateTime(apt: Pick<AppointmentRow, "date" | "time"
 
   let hours = 23;
   let minutes = 59;
-  if (typeof apt.time === "string" && /^\d{2}:\d{2}$/.test(apt.time)) {
-    const [h, m] = apt.time.split(":").map(Number);
-    if (Number.isFinite(h) && Number.isFinite(m)) {
+  // Postgres `time` often comes back as HH:mm:ss — accept optional seconds.
+  const hm = typeof apt.time === "string" ? apt.time.trim().match(/^(\d{1,2}):(\d{2})(?::\d{2})?$/) : null;
+  if (hm) {
+    const h = Number(hm[1]);
+    const m = Number(hm[2]);
+    if (Number.isFinite(h) && h >= 0 && h <= 23 && Number.isFinite(m) && m >= 0 && m <= 59) {
       hours = h;
       minutes = m;
     }

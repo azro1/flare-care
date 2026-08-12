@@ -1,5 +1,6 @@
 import AsyncStorage from "@react-native-async-storage/async-storage";
 import { Platform } from "react-native";
+import { appointmentHasReminder, getAppointmentDateTime } from "./appointmentShared";
 import { supabase, TABLES } from "./supabase";
 import { reminderNotificationData } from "./reminderNotificationNavigation";
 
@@ -201,17 +202,22 @@ export async function rescheduleAppointmentNotificationsForUser(userId: string) 
   const ids: string[] = [];
   const now = Date.now();
   for (const apt of appointments ?? []) {
-    const time = String(apt.time || "09:00");
-    const dateTime = new Date(`${apt.date}T${time}:00`);
-    if (Number.isNaN(dateTime.getTime())) continue;
-    const leadMinutes = Number(apt.reminder_minutes_before ?? 60);
+    if (!appointmentHasReminder(apt)) continue;
+    const dateTime = getAppointmentDateTime(apt);
+    if (!dateTime) continue;
+    const leadMinutes = Number(apt.reminder_minutes_before);
+    if (!Number.isFinite(leadMinutes) || leadMinutes < 0) continue;
     const triggerDate = new Date(dateTime.getTime() - leadMinutes * 60 * 1000);
     if (triggerDate.getTime() <= now) continue;
 
+    const timeLabel =
+      typeof apt.time === "string" && apt.time.trim()
+        ? apt.time.trim().slice(0, 5)
+        : "09:00";
     const id = await Notifications.scheduleNotificationAsync({
       content: reminderNotificationContent(
         "Appointment Reminder",
-        `${apt.type || "Appointment"} at ${apt.time || "09:00"}`,
+        `${apt.type || "Appointment"} at ${timeLabel}`,
         reminderNotificationData({ kind: "appointment", appointmentId: String(apt.id) }),
       ),
       trigger: {
