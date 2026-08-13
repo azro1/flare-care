@@ -1,11 +1,18 @@
 import { Ionicons } from "@expo/vector-icons";
 import React, { useEffect, useRef } from "react";
-import { Animated } from "react-native";
+import { Animated, InteractionManager } from "react-native";
+
+/** Wait for push + modal cover to settle before the first wriggle (avoids post-land shimmy). */
+const WRIGGLE_START_DELAY_MS = 800;
 
 export function WriggleReminderBell({ color }: { color: string }) {
   const rotate = useRef(new Animated.Value(0)).current;
 
   useEffect(() => {
+    let cancelled = false;
+    let startTimer: ReturnType<typeof setTimeout> | null = null;
+    let loop: Animated.CompositeAnimation | null = null;
+
     const wriggle = Animated.sequence([
       Animated.timing(rotate, { toValue: 1, duration: 90, useNativeDriver: true }),
       Animated.timing(rotate, { toValue: -1, duration: 90, useNativeDriver: true }),
@@ -13,9 +20,21 @@ export function WriggleReminderBell({ color }: { color: string }) {
       Animated.timing(rotate, { toValue: -0.65, duration: 75, useNativeDriver: true }),
       Animated.timing(rotate, { toValue: 0, duration: 70, useNativeDriver: true }),
     ]);
-    const loop = Animated.loop(Animated.sequence([wriggle, Animated.delay(4500)]));
-    loop.start();
-    return () => loop.stop();
+
+    const task = InteractionManager.runAfterInteractions(() => {
+      startTimer = setTimeout(() => {
+        if (cancelled) return;
+        loop = Animated.loop(Animated.sequence([wriggle, Animated.delay(4500)]));
+        loop.start();
+      }, WRIGGLE_START_DELAY_MS);
+    });
+
+    return () => {
+      cancelled = true;
+      task.cancel();
+      if (startTimer) clearTimeout(startTimer);
+      loop?.stop();
+    };
   }, [rotate]);
 
   const wiggle = rotate.interpolate({

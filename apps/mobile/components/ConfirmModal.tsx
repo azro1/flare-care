@@ -22,9 +22,9 @@ const styles = StyleSheet.create({
   card: {
     borderRadius: 14,
     borderWidth: 1,
-    paddingHorizontal: 20,
-    paddingTop: 22,
-    paddingBottom: 20,
+    paddingHorizontal: 24,
+    paddingTop: 26,
+    paddingBottom: 24,
   },
   title: { ...CONFIRM_MODAL_TITLE },
   message: {

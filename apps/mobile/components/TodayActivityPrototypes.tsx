@@ -39,14 +39,14 @@ import { MY_MEDS_MCI_ICON } from "../lib/medicationFeatureIcons";
 import { Portal } from "../lib/overlayPortal";
 import { useFlareColors } from "../theme";
 
-const PULSE_METER_HEIGHT = 88;
-const PULSE_METER_WIDTH = 36;
+const PULSE_METER_HEIGHT = 80;
+const PULSE_METER_WIDTH = 34;
 const PULSE_METER_RADIUS = PULSE_METER_WIDTH / 2;
-/** Matches dashboard weather temp / `bigText` — not larger. */
-const PULSE_SCORE_SIZE = 30;
+/** Card score — readable, not a hero panel. */
+const PULSE_SCORE_SIZE = 34;
 /** One sine period — path is 2 periods wide; slide by one period for a seamless loop. */
-const WAVE_CYCLE = 40;
-const WAVE_AMP = 4.5;
+const WAVE_CYCLE = 36;
+const WAVE_AMP = 4;
 const WAVE_SVG_W = WAVE_CYCLE * 2;
 const WAVE_SVG_H = PULSE_METER_HEIGHT + WAVE_AMP * 2;
 
@@ -298,12 +298,18 @@ export function TodayActivityBoardScreen({
 /** Modal card — fixed title/intro + day score; swipe activity body (Meds, Water, …). */
 export function TodayActivitiesModal({
   visible,
+  leaving = false,
   summary,
   onClose,
   onOpenMeds,
   onOpenHydration,
 }: {
   visible: boolean;
+  /**
+   * Hold an opaque `c.screen` cover (card hidden) until the destination has painted —
+   * same idea as AppEntryShell / alert `holdUntilDismissed`. Do not fade the dim away over content.
+   */
+  leaving?: boolean;
   summary: TodayActivitySummary;
   onClose: () => void;
 } & NavHandlers) {
@@ -313,20 +319,101 @@ export function TodayActivitiesModal({
   const pagerRef = useRef<InstanceType<typeof GHScrollView> | null>(null);
   const [pagerWidth, setPagerWidth] = useState(0);
   const [activityIndex, setActivityIndex] = useState(0);
+  const [displayPct, setDisplayPct] = useState(0);
   const pageW = pagerWidth > 0 ? pagerWidth : Math.max(0, windowWidth - 64);
+
+  const overlayOpacity = useRef(new Animated.Value(0)).current;
+  const cardOpacity = useRef(new Animated.Value(0)).current;
+  const cardScale = useRef(new Animated.Value(0.94)).current;
+  const cardLift = useRef(new Animated.Value(14)).current;
+  const pctAnim = useRef(new Animated.Value(0)).current;
+  const scorePulse = useRef(new Animated.Value(1)).current;
 
   useEffect(() => {
     if (!visible) return;
     setActivityIndex(0);
+    overlayOpacity.setValue(0);
+    cardOpacity.setValue(0);
+    cardScale.setValue(0.94);
+    cardLift.setValue(14);
+    scorePulse.setValue(1);
     requestAnimationFrame(() => {
       pagerRef.current?.scrollTo({ x: 0, animated: false });
     });
+
+    Animated.parallel([
+      Animated.timing(overlayOpacity, {
+        toValue: 1,
+        duration: 220,
+        easing: Easing.out(Easing.cubic),
+        useNativeDriver: true,
+      }),
+      Animated.timing(cardOpacity, {
+        toValue: 1,
+        duration: 260,
+        easing: Easing.out(Easing.cubic),
+        useNativeDriver: true,
+      }),
+      Animated.spring(cardScale, {
+        toValue: 1,
+        friction: 8,
+        tension: 92,
+        useNativeDriver: true,
+      }),
+      Animated.spring(cardLift, {
+        toValue: 0,
+        friction: 9,
+        tension: 88,
+        useNativeDriver: true,
+      }),
+    ]).start();
+
     const sub = BackHandler.addEventListener("hardwareBackPress", () => {
       onClose();
       return true;
     });
     return () => sub.remove();
-  }, [visible, onClose]);
+  }, [visible, onClose, overlayOpacity, cardOpacity, cardScale, cardLift, scorePulse]);
+  useEffect(() => {
+    if (!visible) {
+      setDisplayPct(0);
+      pctAnim.setValue(0);
+      return;
+    }
+    setDisplayPct(0);
+    pctAnim.setValue(0);
+    const pctListener = pctAnim.addListener(({ value }) => {
+      setDisplayPct(Math.round(value));
+    });
+    Animated.timing(pctAnim, {
+      toValue: copy.pulsePct,
+      duration: 900,
+      delay: 120,
+      easing: Easing.out(Easing.cubic),
+      useNativeDriver: false,
+    }).start(({ finished }) => {
+      if (!finished) return;
+      if (copy.pulsePct >= 100) {
+        Animated.sequence([
+          Animated.timing(scorePulse, {
+            toValue: 1.06,
+            duration: 160,
+            easing: Easing.out(Easing.quad),
+            useNativeDriver: true,
+          }),
+          Animated.spring(scorePulse, {
+            toValue: 1,
+            friction: 5,
+            tension: 120,
+            useNativeDriver: true,
+          }),
+        ]).start();
+      }
+    });
+    return () => {
+      pctAnim.removeListener(pctListener);
+    };
+  }, [visible, copy.pulsePct, pctAnim, scorePulse]);
 
   const activities = [
     {
@@ -337,6 +424,7 @@ export function TodayActivitiesModal({
       detail: copy.medsLabel,
       icon: MY_MEDS_MCI_ICON,
       onPress: onOpenMeds,
+      complete: copy.hasMeds && copy.medsComplete,
     },
     {
       id: "hydration",
@@ -346,6 +434,7 @@ export function TodayActivitiesModal({
       detail: copy.hydrationLabel,
       icon: HYDRATION_MCI_ICON,
       onPress: onOpenHydration,
+      complete: copy.hydrationComplete,
     },
   ] as const;
 
@@ -370,19 +459,47 @@ export function TodayActivitiesModal({
           ? "No water consumed"
           : "Keep going — still time today";
 
+  const pageComplete = activities[activityIndex]?.complete;
+
+  if (!visible) return null;
+
   return (
     <Portal>
-      {visible ? (
-        <View style={styles.modalOverlay}>
-          <Pressable
-            accessibilityRole="button"
-            accessibilityLabel="Dismiss"
-            onPress={onClose}
-            style={[StyleSheet.absoluteFillObject, { backgroundColor: c.modalBackdrop }]}
-          />
-          <View style={[styles.modalCard, { backgroundColor: c.card, borderColor: c.primary }]}>
+      <View style={styles.modalOverlay} pointerEvents={leaving ? "none" : "box-none"}>
+        <Animated.View
+          pointerEvents="none"
+          style={[
+            StyleSheet.absoluteFillObject,
+            {
+              backgroundColor: leaving ? c.screen : c.modalBackdrop,
+              opacity: leaving ? 1 : overlayOpacity,
+            },
+          ]}
+        />
+        {leaving ? null : (
+          <>
+            <Pressable
+              accessibilityRole="button"
+              accessibilityLabel="Dismiss"
+              onPress={onClose}
+              style={StyleSheet.absoluteFillObject}
+            />
+            <Animated.View
+              style={[
+                styles.modalCard,
+                {
+                  backgroundColor: c.card,
+                  borderColor: c.primary,
+                  opacity: cardOpacity,
+                  transform: [{ translateY: cardLift }, { scale: cardScale }],
+                },
+              ]}
+            >
+          <View style={styles.modalScoreWash}>
             <View style={styles.modalHeaderRow}>
-              <Text style={[styles.pulseHeroLabel, { color: c.text, flex: 1 }]}>Today's progress</Text>
+              <Text style={[styles.pulseHeroLabel, { color: c.text }]}>
+                Let's stay on track
+              </Text>
               <Pressable
                 accessibilityRole="button"
                 accessibilityLabel="Close"
@@ -393,80 +510,99 @@ export function TodayActivitiesModal({
                 <Ionicons name="close" size={22} color={c.textMuted} />
               </Pressable>
             </View>
-            <Text style={[styles.pulseHeroIntro, { color: c.textMuted }]}>
-              Complete the daily tasks below to help manage your health.
-            </Text>
-            <View style={styles.pulseScore}>
-              <Text style={[styles.pulseHeroValue, { color: c.primary }]}>{copy.pulsePct}%</Text>
-              <Text style={[styles.pulseHeroSub, { color: c.textSecondary }]}>{pageStatusLine}</Text>
-            </View>
+            <Animated.View style={[styles.pulseScore, { transform: [{ scale: scorePulse }] }]}>
+              <Text style={[styles.pulseHeroValue, { color: c.primary }]}>{displayPct}%</Text>
+              <View style={styles.pulseStatusRow}>
+                {pageComplete ? (
+                  <Ionicons name="checkmark-circle" size={16} color={c.primary} accessibilityIgnoresInvertColors />
+                ) : null}
+                <Text style={[styles.pulseHeroSub, { color: c.textSecondary }]} numberOfLines={1}>
+                  {pageStatusLine}
+                </Text>
+              </View>
+            </Animated.View>
+          </View>
 
-            <View
-              style={styles.activityPagerWrap}
-              onLayout={(e) => setPagerWidth(e.nativeEvent.layout.width)}
-            >
-              {pageW > 0 ? (
-                <GHScrollView
-                  ref={pagerRef}
-                  horizontal
-                  pagingEnabled
-                  bounces={false}
-                  overScrollMode="never"
-                  decelerationRate="fast"
-                  disableIntervalMomentum
-                  directionalLockEnabled
-                  showsHorizontalScrollIndicator={false}
-                  onMomentumScrollEnd={onActivityPagerEnd}
-                  onScrollEndDrag={onActivityPagerEnd}
-                  style={{ width: pageW }}
-                >
-                  {activities.map((activity) => (
-                    <View key={activity.id} style={[styles.activityPage, { width: pageW }]}>
-                      <View style={styles.pulseMeters}>
-                        <PulseMeterBar
-                          ratio={activity.ratio}
-                          label={activity.meterLabel}
-                          fillColor={c.primary}
-                          trackColor={c.surfaceSubtle}
-                          captionColor={c.textMuted}
-                        />
-                      </View>
-                      <Pressable
-                        accessibilityRole="button"
-                        accessibilityLabel={`${activity.title}, ${activity.detail}`}
-                        onPress={activity.onPress}
-                        style={styles.pulseRowInCardSingle}
-                      >
-                        <MaterialCommunityIcons name={activity.icon} size={INSTRUCTION_CARD_ICON_SIZE} color={c.primary} />
-                        <View style={styles.pulseRowText}>
-                          <Text style={[styles.pulseRowTitle, { color: c.text }]}>{activity.title}</Text>
-                          <Text style={[styles.slabMeta, { color: c.textMuted }]}>{activity.detail}</Text>
-                        </View>
-                        <Ionicons name="chevron-forward" size={18} color={c.text} />
-                      </Pressable>
+          <View
+            style={styles.activityPagerWrap}
+            onLayout={(e) => setPagerWidth(e.nativeEvent.layout.width)}
+          >
+            {pageW > 0 ? (
+              <GHScrollView
+                ref={pagerRef}
+                horizontal
+                pagingEnabled
+                bounces={false}
+                overScrollMode="never"
+                decelerationRate="fast"
+                disableIntervalMomentum
+                directionalLockEnabled
+                showsHorizontalScrollIndicator={false}
+                onMomentumScrollEnd={onActivityPagerEnd}
+                onScrollEndDrag={onActivityPagerEnd}
+                style={{ width: pageW }}
+              >
+                {activities.map((activity) => (
+                  <View key={activity.id} style={[styles.activityPage, { width: pageW }]}>
+                    <View style={styles.pulseMeters}>
+                      <PulseMeterBar
+                        ratio={activity.ratio}
+                        label={activity.meterLabel}
+                        fillColor={c.primary}
+                        trackColor={c.surfaceSubtle}
+                        captionColor={c.textMuted}
+                      />
                     </View>
-                  ))}
-                </GHScrollView>
-              ) : null}
-            </View>
+                    <Pressable
+                      accessibilityRole="button"
+                      accessibilityLabel={`${activity.title}, ${activity.detail}`}
+                      onPress={activity.onPress}
+                      style={styles.pulseRowTray}
+                    >
+                      <MaterialCommunityIcons
+                        name={activity.icon}
+                        size={INSTRUCTION_CARD_ICON_SIZE}
+                        color={c.primary}
+                      />
+                      <View style={styles.pulseRowText}>
+                        <Text style={[styles.pulseRowTitle, { color: c.text }]}>{activity.title}</Text>
+                        <Text style={[styles.slabMeta, { color: c.textMuted }]}>{activity.detail}</Text>
+                      </View>
+                      {activity.complete ? (
+                        <Ionicons name="checkmark-circle" size={20} color={c.primary} accessibilityIgnoresInvertColors />
+                      ) : (
+                        <Ionicons name="chevron-forward" size={18} color={c.text} />
+                      )}
+                    </Pressable>
+                  </View>
+                ))}
+              </GHScrollView>
+            ) : null}
+          </View>
 
+          <View style={styles.activityFooter}>
             <View style={styles.activityDots}>
-              {activities.map((activity, index) => (
-                <View
-                  key={activity.id}
-                  style={[
-                    styles.activityDot,
-                    {
-                      backgroundColor:
-                        index === activityIndex ? c.primary : c.appearanceChipInactiveBg,
-                    },
-                  ]}
-                />
-              ))}
+              {activities.map((activity, index) => {
+                const active = index === activityIndex;
+                return (
+                  <View
+                    key={activity.id}
+                    style={[
+                      styles.activityDot,
+                      active ? styles.activityDotActive : null,
+                      {
+                        backgroundColor: active ? c.primary : c.appearanceChipInactiveBg,
+                      },
+                    ]}
+                  />
+                );
+              })}
             </View>
           </View>
-        </View>
-      ) : null}
+            </Animated.View>
+          </>
+        )}
+      </View>
     </Portal>
   );
 }
@@ -685,37 +821,47 @@ const styles = StyleSheet.create({
   modalOverlay: {
     ...StyleSheet.absoluteFillObject,
     justifyContent: "center",
-    paddingHorizontal: SCREEN_EDGE_PADDING + 8,
+    paddingHorizontal: SCREEN_EDGE_PADDING + 12,
     zIndex: 9999,
     elevation: 9999,
   },
   modalCard: {
     borderRadius: INSTRUCTION_CARD_RADIUS,
     borderWidth: 1,
-    padding: INSTRUCTION_CARD_PADDING_H,
-    gap: INSTRUCTION_CARD_PADDING_BOTTOM,
-    maxHeight: "88%",
+    paddingHorizontal: INSTRUCTION_CARD_PADDING_H,
+    paddingTop: 16,
+    paddingBottom: 14,
+    gap: 12,
+    overflow: "hidden",
+  },
+  modalScoreWash: {
+    alignSelf: "stretch",
+    gap: 18,
   },
   modalHeaderRow: {
     flexDirection: "row",
     alignItems: "flex-start",
-    gap: HOME_TILE_GAP,
+    gap: 12,
   },
   modalCloseBtn: {
     padding: 2,
     marginTop: -2,
+    flexShrink: 0,
   },
   activityPagerWrap: {
     alignSelf: "stretch",
-    minHeight: PULSE_METER_HEIGHT + 72,
   },
   activityPage: {
     alignItems: "center",
-    gap: INSTRUCTION_CARD_PADDING_BOTTOM,
+    gap: 12,
+  },
+  activityFooter: {
+    alignItems: "center",
   },
   activityDots: {
     flexDirection: "row",
     justifyContent: "center",
+    alignItems: "center",
     gap: 6,
   },
   activityDot: {
@@ -723,23 +869,43 @@ const styles = StyleSheet.create({
     height: 6,
     borderRadius: 3,
   },
+  activityDotActive: {
+    width: 14,
+    borderRadius: 3,
+  },
+  activitySwipeHint: {
+    fontSize: FLARE_FONT_SIZE.caption,
+    lineHeight: FLARE_LINE_HEIGHT.caption,
+    fontFamily: FLARE_FONT_FAMILY.medium,
+  },
+  activitySwipeHintSpacer: {
+    height: 0,
+  },
   pulseHeroLabel: {
-    alignSelf: "stretch",
-    fontSize: FLARE_FONT_SIZE.sectionTitle,
-    lineHeight: FLARE_LINE_HEIGHT.sectionTitle,
-    fontFamily: FLARE_FONT_FAMILY.bold,
+    flex: 1,
+    paddingRight: 8,
+    fontSize: FLARE_FONT_SIZE.sectionTitle + 1,
+    lineHeight: 27,
+    fontFamily: FLARE_FONT_FAMILY.extrabold,
     textAlign: "left",
   },
   pulseHeroIntro: {
     alignSelf: "stretch",
-    fontSize: FLARE_FONT_SIZE.body,
+    fontSize: FLARE_FONT_SIZE.caption,
     fontFamily: FLARE_FONT_FAMILY.regular,
-    lineHeight: FLARE_LINE_HEIGHT.body,
+    lineHeight: FLARE_LINE_HEIGHT.caption,
     textAlign: "left",
   },
   pulseScore: {
     alignItems: "center",
-    gap: CONFIRM_MODAL_STACK_GAP,
+    gap: 4,
+  },
+  pulseStatusRow: {
+    flexDirection: "row",
+    alignItems: "center",
+    justifyContent: "center",
+    gap: 6,
+    minHeight: FLARE_LINE_HEIGHT.muted,
   },
   pulseHeroValue: {
     fontSize: PULSE_SCORE_SIZE,
@@ -747,8 +913,8 @@ const styles = StyleSheet.create({
     letterSpacing: -0.5,
   },
   pulseHeroSub: {
-    fontSize: FLARE_FONT_SIZE.body,
-    lineHeight: FLARE_LINE_HEIGHT.body,
+    fontSize: FLARE_FONT_SIZE.muted,
+    lineHeight: FLARE_LINE_HEIGHT.muted,
     fontFamily: FLARE_FONT_FAMILY.medium,
     textAlign: "center",
   },
@@ -757,7 +923,7 @@ const styles = StyleSheet.create({
     gap: CONFIRM_MODAL_ACTIONS_GAP + HOME_TILE_GAP,
     alignItems: "flex-end",
   },
-  pulseMeterCol: { alignItems: "center", gap: INSTRUCTION_CARD_HEADER_GAP },
+  pulseMeterCol: { alignItems: "center", gap: 6 },
   pulseMeterTrack: {
     width: PULSE_METER_WIDTH,
     borderRadius: PULSE_METER_RADIUS,
@@ -794,6 +960,14 @@ const styles = StyleSheet.create({
     alignItems: "center",
     gap: HOME_TILE_GAP,
     paddingVertical: CARD_INNER_PADDING,
+  },
+  pulseRowTray: {
+    alignSelf: "stretch",
+    flexDirection: "row",
+    alignItems: "center",
+    gap: HOME_TILE_GAP,
+    paddingVertical: 8,
+    paddingHorizontal: 0,
   },
   pulseRows: {
     alignSelf: "stretch",

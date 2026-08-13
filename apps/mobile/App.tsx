@@ -1281,6 +1281,21 @@ function formatHistoryBrowseSubtitle(count: number): string {
   return `${count} entries`;
 }
 
+async function loadLogsHubPreview(userId: string) {
+  const [symptomHistoryCountRes, medicationHistoryCountRes, wellbeingHistoryCountRes] = await Promise.all([
+    supabase.from(TABLES.LOG_SYMPTOMS).select("id", { count: "exact", head: true }).eq("user_id", userId),
+    supabase.from(TABLES.LOG_MEDICATIONS).select("id", { count: "exact", head: true }).eq("user_id", userId),
+    supabase.from(TABLES.DAILY_WELLBEING).select("id", { count: "exact", head: true }).eq("user_id", userId),
+  ]);
+  const next = {
+    symptomCount: symptomHistoryCountRes.count ?? 0,
+    medicationCount: medicationHistoryCountRes.count ?? 0,
+    wellbeingCount: wellbeingHistoryCountRes.count ?? 0,
+  };
+  setLogsHubPreview(userId, next);
+  return next;
+}
+
 type MedicationLogDetailItem = {
   medication: string;
   date: string;
@@ -1401,6 +1416,7 @@ function DashboardScreen({ user }: { user: SessionUser }) {
   const c = useFlareColors();
   const bottomScrollInset = useBottomTabScrollInset();
   const [activitiesOpen, setActivitiesOpen] = useState(false);
+  const [activityLeaving, setActivityLeaving] = useState(false);
   const [careOpen, setCareOpen] = useState(false);
   const tileWidth = useMemo(
     () => Math.floor((windowWidth - SCREEN_EDGE_PADDING * 2 - HOME_TILE_GAP) / 2),
@@ -1446,14 +1462,32 @@ function DashboardScreen({ user }: { user: SessionUser }) {
       }
     />
   );
-  const openActivityMeds = useCallback(() => {
-    navigation.navigate("Meds");
-    setTimeout(() => setActivitiesOpen(false), 450);
-  }, [navigation]);
-  const openActivityHydration = useCallback(() => {
-    navigation.navigate("Hydration");
-    setTimeout(() => setActivitiesOpen(false), 450);
-  }, [navigation]);
+  const dismissActivityModalAfterPaint = useCallback(() => {
+    // Same as AppEntryShell / wellbeing alert: lift cover only after the destination has painted.
+    InteractionManager.runAfterInteractions(() => {
+      requestAnimationFrame(() => {
+        requestAnimationFrame(() => {
+          setActivitiesOpen(false);
+          setActivityLeaving(false);
+          suppressNextPushAnimation = false;
+        });
+      });
+    });
+  }, []);
+  const openActivityTarget = useCallback(
+    (screen: "Meds" | "Hydration") => {
+      // 1) Solid cover on (card gone)  2) instant push underneath  3) lift cover after paint.
+      suppressNextPushAnimation = true;
+      setActivityLeaving(true);
+      requestAnimationFrame(() => {
+        navigation.navigate(screen);
+        dismissActivityModalAfterPaint();
+      });
+    },
+    [dismissActivityModalAfterPaint, navigation],
+  );
+  const openActivityMeds = useCallback(() => openActivityTarget("Meds"), [openActivityTarget]);
+  const openActivityHydration = useCallback(() => openActivityTarget("Hydration"), [openActivityTarget]);
   const activitySummary = useMemo(
     () => ({
       medsTaken: todaySummary.medsTaken,
@@ -1584,6 +1618,9 @@ function DashboardScreen({ user }: { user: SessionUser }) {
         if (!cancelled) {
           dashboardSnapshotByUserId[user.id] = { ...snap };
         }
+
+        // Warm Logs hub counts so the first Logs open doesn't flash blank → entry lines.
+        void loadLogsHubPreview(user.id).catch(() => {});
       };
 
       /** Let the slide finish before network/setState — avoids end-of-transition hitch. */
@@ -1734,8 +1771,13 @@ function DashboardScreen({ user }: { user: SessionUser }) {
 
       <TodayActivitiesModal
         visible={activitiesOpen}
+        leaving={activityLeaving}
         summary={activitySummary}
-        onClose={() => setActivitiesOpen(false)}
+        onClose={() => {
+          setActivityLeaving(false);
+          setActivitiesOpen(false);
+          suppressNextPushAnimation = false;
+        }}
         onOpenMeds={openActivityMeds}
         onOpenHydration={openActivityHydration}
       />
@@ -1766,20 +1808,14 @@ function LogsScreen({ user }: { user: SessionUser }) {
         setPreviewReady(true);
       }
       void (async () => {
-        const [symptomHistoryCountRes, medicationHistoryCountRes, wellbeingHistoryCountRes] = await Promise.all([
-          supabase.from(TABLES.LOG_SYMPTOMS).select("id", { count: "exact", head: true }).eq("user_id", user.id),
-          supabase.from(TABLES.LOG_MEDICATIONS).select("id", { count: "exact", head: true }).eq("user_id", user.id),
-          supabase.from(TABLES.DAILY_WELLBEING).select("id", { count: "exact", head: true }).eq("user_id", user.id),
-        ]);
-        if (cancelled) return;
-        const next = {
-          symptomCount: symptomHistoryCountRes.count ?? 0,
-          medicationCount: medicationHistoryCountRes.count ?? 0,
-          wellbeingCount: wellbeingHistoryCountRes.count ?? 0,
-        };
-        setLogsHubPreview(user.id, next);
-        setHistoryPreview(next);
-        setPreviewReady(true);
+        try {
+          const next = await loadLogsHubPreview(user.id);
+          if (cancelled) return;
+          setHistoryPreview(next);
+          setPreviewReady(true);
+        } catch {
+          if (!cancelled) setPreviewReady(true);
+        }
       })();
       return () => {
         cancelled = true;
@@ -1793,25 +1829,31 @@ function LogsScreen({ user }: { user: SessionUser }) {
       contentPaddingBottom={bottomScrollInset + 24}
       instruction={null}
     >
-      <View style={[logHistoryCardStyles.trackerCard, { backgroundColor: c.card }]}>
+      <View
+        style={[
+          logHistoryCardStyles.trackerCard,
+          { backgroundColor: c.card, opacity: previewReady ? 1 : 0 },
+        ]}
+        pointerEvents={previewReady ? "auto" : "none"}
+      >
         <LogHistoryList
           items={[
             buildBrowseLogRowItem({
               id: "symptom",
               title: "Symptom Logs",
-              subtitle: previewReady ? formatHistoryBrowseSubtitle(historyPreview.symptomCount) : " ",
+              subtitle: formatHistoryBrowseSubtitle(historyPreview.symptomCount),
               accessibilityLabel: "Browse symptom history",
             }),
             buildBrowseLogRowItem({
               id: "medication",
               title: "Medication Logs",
-              subtitle: previewReady ? formatHistoryBrowseSubtitle(historyPreview.medicationCount) : " ",
+              subtitle: formatHistoryBrowseSubtitle(historyPreview.medicationCount),
               accessibilityLabel: "Browse medication tracking history",
             }),
             buildBrowseLogRowItem({
               id: "wellbeing",
               title: "Wellbeing Logs",
-              subtitle: previewReady ? formatHistoryBrowseSubtitle(historyPreview.wellbeingCount) : " ",
+              subtitle: formatHistoryBrowseSubtitle(historyPreview.wellbeingCount),
               accessibilityLabel: "Browse wellbeing history",
             }),
           ]}
@@ -1823,10 +1865,12 @@ function LogsScreen({ user }: { user: SessionUser }) {
           }}
         />
       </View>
-      <HubTipCard
-        tipId="logs-hub-card-v1"
-        message="Your Logs hub keeps all your Check-in entries together in one place. Tap to view your records."
-      />
+      {previewReady ? (
+        <HubTipCard
+          tipId="logs-hub-card-v1"
+          message="Your Logs hub keeps all your Check-in entries together in one place. Tap to view your records."
+        />
+      ) : null}
     </InstructionScreenShell>
   );
 }
@@ -3647,6 +3691,12 @@ function AccountScreen({
 
 const AppStack = createNativeStackNavigator();
 
+/**
+ * Progress modal → Meds/Hydration: land under a solid cover with no slide
+ * (same idea as AppEntryShell / alert holdUntilDismissed — cover stays until paint).
+ */
+let suppressNextPushAnimation = false;
+
 function MainBottomTabBar({
   routeName,
   navigationRef,
@@ -4042,8 +4092,8 @@ function AppTabs({
           : undefined,
       headerRight: headerRightContent ? () => headerRightContent : undefined,
       freezeOnBlur: true,
-      /** Keep platform slide; Home still slides (no hard `none` cut). */
-      animation: "default" as const,
+      /** Progress modal open uses a one-shot `none` so the cover can lift onto a settled screen. */
+      animation: suppressNextPushAnimation ? ("none" as const) : ("default" as const),
     } as const;
   };
 
