@@ -3,7 +3,7 @@ import React, { useMemo, useState } from "react";
 import { Modal, Pressable, StyleSheet, Text, View } from "react-native";
 import { showFlareAlert } from "../components/FlareAlertHost";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
-import { FLARE_FONT_FAMILY, FLARE_FONT_SIZE } from "../lib/layoutConstants";
+import { FLARE_FONT_FAMILY } from "../lib/layoutConstants";
 import { useFlareColors } from "../theme";
 
 type OverflowItem = {
@@ -100,29 +100,24 @@ export function HeaderOverflowMenu({
               },
             ]}
           >
-            {items.map((item, index) => (
-              <View key={item.id}>
-                {index > 0 ? <View style={[styles.separator, { backgroundColor: c.cardBorder }]} /> : null}
-                <Pressable
-                  accessibilityRole="menuitem"
-                  onPress={() => onSelect(item.route)}
-                  style={({ pressed }) => [styles.row, pressed ? { opacity: 0.75 } : null]}
-                >
-                  <Text style={[styles.label, { color: c.text }]}>{item.label}</Text>
-                </Pressable>
-              </View>
+            {items.map((item) => (
+              <Pressable
+                key={item.id}
+                accessibilityRole="menuitem"
+                onPress={() => onSelect(item.route)}
+                style={({ pressed }) => [styles.row, pressed ? { opacity: 0.75 } : null]}
+              >
+                <Text style={[styles.label, { color: c.text }]}>{item.label}</Text>
+              </Pressable>
             ))}
             {onLogout ? (
-              <View>
-                {items.length > 0 ? <View style={[styles.separator, { backgroundColor: c.cardBorder }]} /> : null}
-                <Pressable
-                  accessibilityRole="menuitem"
-                  onPress={onLogoutPress}
-                  style={({ pressed }) => [styles.row, pressed ? { opacity: 0.75 } : null]}
-                >
-                  <Text style={[styles.label, { color: c.text }]}>Log out</Text>
-                </Pressable>
-              </View>
+              <Pressable
+                accessibilityRole="menuitem"
+                onPress={onLogoutPress}
+                style={({ pressed }) => [styles.row, pressed ? { opacity: 0.75 } : null]}
+              >
+                <Text style={[styles.label, { color: c.text }]}>Log out</Text>
+              </Pressable>
             ) : null}
           </View>
         </View>
@@ -151,7 +146,9 @@ const styles = StyleSheet.create({
     shadowRadius: 12,
     elevation: 8,
   },
-  row: { paddingHorizontal: 16, paddingVertical: 14 },
-  label: { fontSize: FLARE_FONT_SIZE.subhead, fontFamily: FLARE_FONT_FAMILY.medium },
-  separator: { height: StyleSheet.hairlineWidth },
+  row: {
+    paddingHorizontal: 16,
+    paddingVertical: 14,
+  },
+  label: { fontSize: 14, fontFamily: FLARE_FONT_FAMILY.medium },
 });

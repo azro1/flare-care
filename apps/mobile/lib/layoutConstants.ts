@@ -44,7 +44,7 @@ export const TODAY_GOALS_ROW_PADDING_Y = 16;
 export const TRAY_IN_CARD_PADDING = 20;
 
 /** @deprecated Use `ONE_LINE_TRAY_SEPARATOR_PAD`. */
-export const TRAY_IN_CARD_SEPARATOR_PAD = 16;
+export const TRAY_IN_CARD_SEPARATOR_PAD = 20;
 
 /**
  * Outer pad inside the dark tray for **one-line** link lists (`OneLineTrayList` — Account, Legal).
@@ -184,6 +184,17 @@ export const DETAIL_FIELD_LABEL = {
 export const FLARE_CAPTION_HINT = {
   fontSize: FLARE_FONT_SIZE.caption,
   lineHeight: FLARE_LINE_HEIGHT.caption,
+  fontFamily: FLARE_FONT_FAMILY.regular,
+} as const;
+
+/**
+ * Secondary text actions next to shelf titles / under lists —
+ * See my progress, See all, load more. Regular so they don’t fight bold titles.
+ * Pair with `primary` (or another color) at the call site. Add underline only if the pattern needs it.
+ */
+export const FLARE_INLINE_ACTION_LINK = {
+  fontSize: FLARE_FONT_SIZE.muted,
+  lineHeight: FLARE_LINE_HEIGHT.muted,
   fontFamily: FLARE_FONT_FAMILY.regular,
 } as const;
 

@@ -3,7 +3,7 @@ import React, { useEffect, useMemo, useState } from "react";
 import { Image, Linking, Platform, Pressable, Share, StyleSheet, Text, View } from "react-native";
 import type { DashboardNewsItem } from "../lib/dashboardSnapshotCache";
 import { formatUkDate } from "../lib/formatUkDate";
-import { FLARE_FONT_FAMILY, FLARE_FONT_SIZE, FLARE_LINE_HEIGHT, HOME_TILE_GAP, SECTION_TITLE_MARGIN_BOTTOM, SECTION_TITLE_MARGIN_TOP } from "../lib/layoutConstants";
+import { FLARE_FONT_FAMILY, FLARE_FONT_SIZE, FLARE_INLINE_ACTION_LINK, FLARE_LINE_HEIGHT, HOME_TILE_GAP, SECTION_TITLE_MARGIN_BOTTOM, SECTION_TITLE_MARGIN_TOP } from "../lib/layoutConstants";
 import { resolveNewsImageUri } from "../lib/newsShared";
 import { useFlareColors } from "../theme";
 
@@ -252,7 +252,6 @@ const styles = StyleSheet.create({
     fontFamily: FLARE_FONT_FAMILY.bold,
   },
   seeAll: {
-    fontSize: FLARE_FONT_SIZE.body,
-    fontFamily: FLARE_FONT_FAMILY.medium,
+    ...FLARE_INLINE_ACTION_LINK,
   },
 });

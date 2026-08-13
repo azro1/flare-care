@@ -23,6 +23,7 @@ import {
   CARD_SECTION_INNER_GAP,
   FLARE_FONT_FAMILY,
   FLARE_FONT_SIZE,
+  FLARE_INLINE_ACTION_LINK,
   FLARE_LINE_HEIGHT,
   SECTION_TITLE_MARGIN_BOTTOM,
   LOG_TRAY_SECOND_LINE_GAP,
@@ -154,7 +155,7 @@ export function OneLineTrayList({
           rowTextLayout="default"
           titleRegular
           rowPaddingHorizontal={ONE_LINE_TRAY_PADDING}
-          rowPaddingVertical={0}
+          rowPaddingVertical={4}
           insetTray={false}
           getRowStyle={(_item, index) => oneLineTraySeparatorRowStyle(index, items.length)}
           renderTrailing={renderTrailing}
@@ -604,8 +605,7 @@ export const logHistoryListStyles = StyleSheet.create({
     marginBottom: CARD_SECTION_INNER_GAP,
   },
   loadMoreLabel: {
-    fontSize: FLARE_FONT_SIZE.muted,
-    fontFamily: FLARE_FONT_FAMILY.medium,
+    ...FLARE_INLINE_ACTION_LINK,
     textDecorationLine: "underline",
   },
 });

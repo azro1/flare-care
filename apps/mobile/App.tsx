@@ -21,6 +21,7 @@ import {
 import { createNativeStackNavigator } from "@react-navigation/native-stack";
 import {
   ActivityIndicator,
+  Animated,
   Appearance,
   AppState,
   Image,
@@ -41,7 +42,7 @@ import {
   View,
   ViewStyle,
 } from "react-native";
-import { ScrollView } from "./lib/scrollViews";
+import { AnimatedScrollView, ScrollView } from "./lib/scrollViews";
 import { GestureHandlerRootView } from "react-native-gesture-handler";
 import { SafeAreaProvider, initialWindowMetrics, useSafeAreaInsets } from "react-native-safe-area-context";
 import {
@@ -107,6 +108,7 @@ import {
   bottomTabBarScrollInset,
   FLARE_FONT_FAMILY,
   FLARE_FONT_SIZE,
+  FLARE_INLINE_ACTION_LINK,
   FLARE_LINE_HEIGHT,
   HOME_TILE_GAP,
   SCREEN_EDGE_PADDING,
@@ -145,6 +147,7 @@ import {
   LogDetailSectionCard,
   logDetailStyles,
 } from "./components/LogDetailLayout";
+import { NewsFeedCard, newsFeedListStyles } from "./components/NewsFeed";
 import { formatAddedAtHeader } from "./lib/logDisplay";
 import { useWizardLogHistory } from "./lib/wizardLogHistory";
 import { openAppNotificationSettings } from "./lib/openAppNotificationSettings";
@@ -162,13 +165,22 @@ import {
 import { clearLocalSupabaseSession, supabase, TABLES } from "./lib/supabase";
 import {
   dashboardSnapshotByUserId,
+  dedupeNewsItems,
   EMPTY_TODAY_SUMMARY,
   invalidateDashboardSnapshot,
   logsHubPreviewByUserId,
   setLogsHubPreview,
+  type DashboardNewsItem,
   type DashboardSnapshot,
   type DashboardTodaySummary,
 } from "./lib/dashboardSnapshotCache";
+import {
+  DASHBOARD_NEWS_HOME_SHELF_MAX,
+  DASHBOARD_NEWS_SHELF_PEEK,
+  dashboardNewsShelfCardWidth,
+  mapNewsItems,
+  newsApiBase,
+} from "./lib/newsShared";
 import {
   clearNewUserIntroState,
   isNewAuthUser,
@@ -1372,6 +1384,7 @@ function weatherIconNudgeStyle(name: keyof typeof Ionicons.glyphMap) {
 
 function DashboardGridTile({
   width,
+  height,
   label,
   icon,
   onPress,
@@ -1379,6 +1392,8 @@ function DashboardGridTile({
   isLastInScrollRow,
 }: {
   width: number;
+  /** Override default tile height (e.g. tall My care placeholder). */
+  height?: number;
   label: string;
   icon: React.ReactNode;
   onPress: () => void;
@@ -1387,25 +1402,30 @@ function DashboardGridTile({
   isLastInScrollRow?: boolean;
 }) {
   const c = useFlareColors();
+  const showLabel = Boolean(label);
+  const showIcon = icon != null;
   return (
     <Pressable
       accessibilityRole="button"
-      accessibilityLabel={label}
+      accessibilityLabel={label || undefined}
       onPress={onPress}
       style={[
         styles.homeDashboardTile,
         { width, backgroundColor: c.card },
+        height != null ? { height } : null,
         variant === "scroll" && (isLastInScrollRow ? styles.homeDashboardTileScrollLast : styles.homeDashboardTileScroll),
       ]}
     >
-      <View style={styles.homeDashboardTileBody}>
-        <View style={styles.homeDashboardTileIconWrap}>
-          {icon}
+      {showIcon || showLabel ? (
+        <View style={styles.homeDashboardTileBody}>
+          {showIcon ? <View style={styles.homeDashboardTileIconWrap}>{icon}</View> : null}
+          {showLabel ? (
+            <Text style={[styles.moreGridLabel, { color: c.text }]} numberOfLines={2}>
+              {label}
+            </Text>
+          ) : null}
         </View>
-        <Text style={[styles.moreGridLabel, { color: c.text }]} numberOfLines={2}>
-          {label}
-        </Text>
-      </View>
+      ) : null}
     </Pressable>
   );
 }
@@ -1417,7 +1437,15 @@ function DashboardScreen({ user }: { user: SessionUser }) {
   const bottomScrollInset = useBottomTabScrollInset();
   const [activitiesOpen, setActivitiesOpen] = useState(false);
   const [activityLeaving, setActivityLeaving] = useState(false);
-  const [careOpen, setCareOpen] = useState(false);
+  const [healthCarePageW, setHealthCarePageW] = useState(() =>
+    Math.max(0, Math.round(windowWidth - SCREEN_EDGE_PADDING * 2)),
+  );
+  const [healthCarePage, setHealthCarePage] = useState(0);
+  const healthCareScrollX = useRef(new Animated.Value(0)).current;
+  const healthCarePagerRef = useRef<React.ElementRef<typeof AnimatedScrollView> | null>(null);
+  const healthCarePageGap = HOME_TILE_GAP;
+  /** Page width + inter-page gap — snap interval only (title fade still uses page width). */
+  const healthCarePageStride = Math.max(1, healthCarePageW + healthCarePageGap);
   const tileWidth = useMemo(
     () => Math.floor((windowWidth - SCREEN_EDGE_PADDING * 2 - HOME_TILE_GAP) / 2),
     [windowWidth],
@@ -1427,10 +1455,23 @@ function DashboardScreen({ user }: { user: SessionUser }) {
   const [weatherMeta, setWeatherMeta] = useState<{ city: string; temp: number | null; desc: string; icon?: string | null } | null>(
     () => snapshotSeed?.weatherMeta ?? null,
   );
+  const [newsItems, setNewsItems] = useState<DashboardNewsItem[]>(() => dedupeNewsItems(snapshotSeed?.newsItems ?? []));
+  const [newsLoading, setNewsLoading] = useState(() => {
+    const s = dashboardSnapshotByUserId[user.id];
+    if (!s) return true;
+    return !(s.newsItems.length > 0 || s.newsError);
+  });
+  const [newsError, setNewsError] = useState<string | null>(() => snapshotSeed?.newsError ?? null);
   const [todaySummary, setTodaySummary] = useState<DashboardTodaySummary>(() => ({
     ...EMPTY_TODAY_SUMMARY,
     ...(snapshotSeed?.todaySummary ?? {}),
   }));
+  const shelfNewsItems = useMemo(
+    () => newsItems.slice(0, Math.min(DASHBOARD_NEWS_SHELF_PEEK, DASHBOARD_NEWS_HOME_SHELF_MAX)),
+    [newsItems],
+  );
+  const newsShelfCardWidth = useMemo(() => dashboardNewsShelfCardWidth(windowWidth), [windowWidth]);
+  const newsShelfPageStride = newsShelfCardWidth + HOME_TILE_GAP;
   const dailyCheckinCards = [
     { key: "symptoms" as const, label: "Log Symptoms", icon: "thermometer", family: "mci", goTo: "SymptomLogWizard" },
     { key: "track-meds" as const, label: "Track Medications", icon: TRACK_MEDICATIONS_MCI_ICON, family: "mci", goTo: "MedicationTrackingWizard" },
@@ -1440,11 +1481,18 @@ function DashboardScreen({ user }: { user: SessionUser }) {
     { key: "meds", label: "My Meds", screen: "Meds" as const, icon: MY_MEDS_MCI_ICON, family: "mci" as "ion" | "mci" },
     { key: "hydration", label: "My Hydration", screen: "Hydration" as const, icon: HYDRATION_MCI_ICON, family: "mci" as "ion" | "mci" },
     { key: "bowel", label: "Bowel Movements", screen: "Bowel" as const, icon: BOWEL_FEATURE_MCI_ICON, family: "mci" as "ion" | "mci" },
-    { key: "weight", label: "My Weight", screen: "Weight" as const, icon: "scale-bathroom", family: "mci" as "ion" | "mci" },
   ];
   const careCards = [
     { key: "appointments", label: "Appointments", screen: "Appointments" as const, icon: "calendar-outline", family: "ion" as "ion" | "mci" },
     { key: "reports", label: "Reports", screen: "Reports" as const, icon: "document-text-outline", family: "ion" as "ion" | "mci" },
+  ];
+  /** Matches `homeDashboardTile` height — tall dummy spans both left tiles + gap. */
+  const HOME_DASHBOARD_TILE_HEIGHT = 116;
+  const careTallTileHeight = HOME_DASHBOARD_TILE_HEIGHT * 2 + HOME_TILE_GAP;
+  const healthMedsCard = healthCards[0];
+  const healthGridCards = [
+    healthCards.find((card) => card.key === "bowel")!,
+    healthCards.find((card) => card.key === "hydration")!,
   ];
   const renderToolTile = (item: (typeof healthCards)[number] | (typeof careCards)[number]) => (
     <DashboardGridTile
@@ -1527,6 +1575,11 @@ function DashboardScreen({ user }: { user: SessionUser }) {
         newsError: seedSnap?.newsError ?? null,
       };
       if (seedSnap?.todaySummary) setTodaySummary({ ...EMPTY_TODAY_SUMMARY, ...seedSnap.todaySummary });
+      if ((seedSnap?.newsItems?.length ?? 0) > 0) {
+        setNewsItems(dedupeNewsItems(seedSnap!.newsItems));
+        setNewsError(seedSnap!.newsError);
+        setNewsLoading(false);
+      }
 
       const load = async () => {
         try {
@@ -1615,6 +1668,46 @@ function DashboardScreen({ user }: { user: SessionUser }) {
           setWeather(snap.weather);
         }
 
+        try {
+          const hasCachedNews = (seedSnap?.newsItems?.length ?? 0) > 0;
+          if (!hasCachedNews) setNewsLoading(true);
+          setNewsError(null);
+          const apiBase = newsApiBase();
+          if (!apiBase) {
+            snap.newsItems = [];
+            snap.newsError = "News unavailable";
+            if (cancelled) return;
+            setNewsItems([]);
+            setNewsError(snap.newsError);
+            setNewsLoading(false);
+          } else {
+            const newsUrl = apiBase.includes("/functions/v1") ? `${apiBase}/news` : `${apiBase}/api/news`;
+            const controller = new AbortController();
+            const timeout = setTimeout(() => controller.abort(), 6000);
+            const response = await fetch(newsUrl, { signal: controller.signal });
+            clearTimeout(timeout);
+            if (!response.ok) throw new Error("news request failed");
+            const json = await response.json();
+            snap.newsItems = mapNewsItems(json);
+            snap.newsError = null;
+            if (cancelled) return;
+            setNewsItems(snap.newsItems);
+            setNewsError(null);
+            setNewsLoading(false);
+          }
+        } catch {
+          const hasCachedNews = (seedSnap?.newsItems?.length ?? 0) > 0;
+          if (!hasCachedNews) {
+            snap.newsItems = [];
+            snap.newsError = "Unable to load latest news.";
+            if (!cancelled) {
+              setNewsItems([]);
+              setNewsError(snap.newsError);
+            }
+          }
+          if (!cancelled) setNewsLoading(false);
+        }
+
         if (!cancelled) {
           dashboardSnapshotByUserId[user.id] = { ...snap };
         }
@@ -1639,12 +1732,13 @@ function DashboardScreen({ user }: { user: SessionUser }) {
       <ScrollView
         style={styles.dashboardScroll}
         contentContainerStyle={{
-          padding: SCREEN_EDGE_PADDING,
+          paddingHorizontal: SCREEN_EDGE_PADDING,
+          paddingTop: 0,
           paddingBottom: bottomScrollInset + 8,
         }}
         showsVerticalScrollIndicator={false}
       >
-        <Card title="">
+        <Card title="" style={styles.greetingCard} compactBody>
           <View style={styles.weatherIntroWrap}>
             <Text style={[styles.weatherGreeting, { color: c.text }]} numberOfLines={1}>
               Hi, {greetingFirstName}
@@ -1725,6 +1819,158 @@ function DashboardScreen({ user }: { user: SessionUser }) {
         </View>
         <View style={[styles.dashboardShelfSection, styles.dashboardShelfAfterCard]}>
           <View style={styles.checkInTitleRow}>
+            <View style={styles.healthCareTitleSlot}>
+              <Animated.Text
+                pointerEvents="none"
+                style={[
+                  styles.dashboardSubsectionTitleLeft,
+                  styles.dashboardSubsectionTitleInHeader,
+                  styles.healthCareTitleLayer,
+                  {
+                    color: c.text,
+                    opacity: healthCareScrollX.interpolate({
+                      inputRange: [0, Math.max(1, healthCarePageW)],
+                      outputRange: [1, 0],
+                      extrapolate: "clamp",
+                    }),
+                  },
+                ]}
+              >
+                My health
+              </Animated.Text>
+              <Animated.Text
+                pointerEvents="none"
+                style={[
+                  styles.dashboardSubsectionTitleLeft,
+                  styles.dashboardSubsectionTitleInHeader,
+                  styles.healthCareTitleLayer,
+                  {
+                    color: c.text,
+                    opacity: healthCareScrollX.interpolate({
+                      inputRange: [0, Math.max(1, healthCarePageW)],
+                      outputRange: [0, 1],
+                      extrapolate: "clamp",
+                    }),
+                  },
+                ]}
+              >
+                My care
+              </Animated.Text>
+            </View>
+            <Animated.View
+              pointerEvents={healthCarePage === 0 ? "auto" : "none"}
+              style={{
+                marginRight: 4,
+                opacity: healthCareScrollX.interpolate({
+                  inputRange: [0, Math.max(1, healthCarePageW)],
+                  outputRange: [1, 0],
+                  extrapolate: "clamp",
+                }),
+              }}
+            >
+              <Pressable
+                accessibilityRole="link"
+                accessibilityLabel="See my progress"
+                onPress={() => setActivitiesOpen(true)}
+                hitSlop={8}
+              >
+                <Text style={[styles.activitiesInlineLink, { color: c.primary }]}>See my progress</Text>
+              </Pressable>
+            </Animated.View>
+          </View>
+
+          <View style={styles.toolsGridBlock}>
+            <View
+              style={styles.healthCarePagerWrap}
+              onLayout={(e) => {
+                const w = Math.round(e.nativeEvent.layout.width);
+                if (w > 0 && w !== healthCarePageW) setHealthCarePageW(w);
+              }}
+            >
+              {healthCarePageW > 0 ? (
+                <AnimatedScrollView
+                  ref={healthCarePagerRef}
+                  horizontal
+                  showsHorizontalScrollIndicator={false}
+                  snapToInterval={healthCarePageStride}
+                  snapToAlignment="start"
+                  decelerationRate="fast"
+                  nestedScrollEnabled
+                  style={{ width: healthCarePageW }}
+                  contentContainerStyle={[styles.healthCarePagerContent, { gap: healthCarePageGap }]}
+                  onScroll={Animated.event(
+                    [{ nativeEvent: { contentOffset: { x: healthCareScrollX } } }],
+                    { useNativeDriver: true },
+                  )}
+                  scrollEventThrottle={16}
+                  onMomentumScrollEnd={(e: NativeSyntheticEvent<NativeScrollEvent>) => {
+                    const next = Math.round(e.nativeEvent.contentOffset.x / healthCarePageStride);
+                    setHealthCarePage(Math.max(0, Math.min(1, next)));
+                  }}
+                >
+                  <View style={[styles.healthCarePage, { width: healthCarePageW }]}>
+                    <View style={styles.healthPageLayout}>
+                      <DashboardGridTile
+                        width={healthCarePageW}
+                        label={healthMedsCard.label}
+                        variant="grid"
+                        onPress={() => navigation.navigate(healthMedsCard.screen)}
+                        icon={
+                          <MaterialCommunityIcons
+                            name={healthMedsCard.icon as any}
+                            size={HOME_TILE_ICON_SIZE_CHECKIN}
+                            color={c.primary}
+                          />
+                        }
+                      />
+                      <View style={styles.moreGrid}>{healthGridCards.map(renderToolTile)}</View>
+                    </View>
+                  </View>
+                  <View style={[styles.healthCarePage, { width: healthCarePageW }]}>
+                    <View style={styles.carePageLayout}>
+                      <View style={styles.carePageLeftStack}>{careCards.map(renderToolTile)}</View>
+                      <DashboardGridTile
+                        width={tileWidth}
+                        height={careTallTileHeight}
+                        label="My Weight"
+                        variant="grid"
+                        onPress={() => navigation.navigate("Weight")}
+                        icon={
+                          <MaterialCommunityIcons
+                            name="scale-bathroom"
+                            size={HOME_TILE_ICON_SIZE_CHECKIN}
+                            color={c.primary}
+                          />
+                        }
+                      />
+                    </View>
+                  </View>
+                </AnimatedScrollView>
+              ) : null}
+            </View>
+
+            <View style={styles.healthCareDots}>
+              {[0, 1].map((index) => {
+                const active = index === healthCarePage;
+                return (
+                  <View
+                    key={index === 0 ? "health" : "care"}
+                    style={[
+                      styles.healthCareDot,
+                      active ? styles.healthCareDotActive : null,
+                      {
+                        backgroundColor: active ? c.primary : c.appearanceChipInactiveBg,
+                      },
+                    ]}
+                  />
+                );
+              })}
+            </View>
+          </View>
+        </View>
+
+        <View style={[styles.dashboardShelfSection, styles.dashboardShelfAfterCard, styles.dashboardShelfSectionLast]}>
+          <View style={styles.dashboardSubsectionHeader}>
             <Text
               style={[
                 styles.dashboardSubsectionTitleLeft,
@@ -1732,40 +1978,43 @@ function DashboardScreen({ user }: { user: SessionUser }) {
                 { color: c.text, flex: 1 },
               ]}
             >
-              My health
+              Latest News
             </Text>
-            <Pressable
-              accessibilityRole="link"
-              accessibilityLabel="My progress"
-              onPress={() => setActivitiesOpen(true)}
-              hitSlop={8}
-              style={{ marginRight: 4 }}
-            >
-              <Text style={[styles.activitiesInlineLink, { color: c.primary }]}>My progress</Text>
-            </Pressable>
+            {!newsLoading && !newsError && newsItems.length > 0 ? (
+              <Pressable
+                accessibilityRole="button"
+                accessibilityLabel="See all news"
+                onPress={() => navigation.navigate("LatestNews")}
+                hitSlop={8}
+                style={({ pressed }) => pressed && { opacity: 0.7 }}
+              >
+                <Text style={[styles.dashboardNewsSeeAll, { color: c.primary }]}>See all</Text>
+              </Pressable>
+            ) : null}
           </View>
-          <View style={[styles.moreGrid, styles.toolsGridBlock]}>{healthCards.map(renderToolTile)}</View>
-        </View>
-        <View style={[styles.dashboardShelfSection, styles.dashboardShelfAfterCard]}>
-          <Pressable
-            accessibilityRole="button"
-            accessibilityState={{ expanded: careOpen }}
-            accessibilityLabel="My care"
-            onPress={() => setCareOpen((open) => !open)}
-            style={styles.dashboardCareToggle}
-          >
-            <Text style={[styles.dashboardSubsectionTitleLeft, styles.dashboardCareToggleTitle, { color: c.text }]}>
-              My care
-            </Text>
-            <Ionicons
-              name={careOpen ? "chevron-up" : "chevron-down"}
-              size={18}
-              color={c.textMuted}
-            />
-          </Pressable>
-          {careOpen ? (
-            <View style={[styles.moreGrid, styles.toolsGridBlock]}>{careCards.map(renderToolTile)}</View>
-          ) : null}
+          {newsLoading ? (
+            <Text style={[styles.muted, styles.dashboardNewsStatus, { color: c.textMuted }]}>Getting latest news...</Text>
+          ) : newsError ? (
+            <Text style={[styles.muted, styles.dashboardNewsStatus, { color: c.textMuted }]}>{newsError}</Text>
+          ) : newsItems.length === 0 ? (
+            <Text style={[styles.muted, styles.dashboardNewsStatus, { color: c.textMuted }]}>No news available right now.</Text>
+          ) : (
+            <View>
+              <ScrollView
+                horizontal
+                showsHorizontalScrollIndicator={false}
+                contentContainerStyle={newsFeedListStyles.shelfRow}
+                decelerationRate="fast"
+                snapToInterval={newsShelfPageStride}
+                snapToAlignment="start"
+                nestedScrollEnabled
+              >
+                {shelfNewsItems.map((item) => (
+                  <NewsFeedCard key={item.link ?? item.title} item={item} variant="shelf" width={newsShelfCardWidth} />
+                ))}
+              </ScrollView>
+            </View>
+          )}
         </View>
       </ScrollView>
 
@@ -4586,10 +4835,55 @@ const styles = StyleSheet.create({
     marginTop: SECTION_TITLE_MARGIN_TOP,
     marginBottom: SECTION_TITLE_MARGIN_BOTTOM,
   },
+  healthCareTitleSlot: {
+    flex: 1,
+    height: FLARE_LINE_HEIGHT.subhead,
+    justifyContent: "center",
+    marginRight: 8,
+  },
+  healthCareTitleLayer: {
+    position: "absolute",
+    left: 0,
+    right: 0,
+    top: 0,
+  },
+  healthCarePagerWrap: {
+    alignSelf: "stretch",
+  },
+  healthCarePagerContent: {
+    flexDirection: "row",
+    alignItems: "flex-start",
+  },
+  healthCarePage: {},
+  healthCareDots: {
+    flexDirection: "row",
+    justifyContent: "center",
+    alignItems: "center",
+    gap: 6,
+    marginTop: 12,
+  },
+  healthCareDot: {
+    width: 6,
+    height: 6,
+    borderRadius: 3,
+  },
+  healthCareDotActive: {
+    width: 14,
+    borderRadius: 3,
+  },
   activitiesInlineLink: {
-    fontSize: FLARE_FONT_SIZE.muted,
-    lineHeight: FLARE_LINE_HEIGHT.muted,
-    fontFamily: FLARE_FONT_FAMILY.medium,
+    ...FLARE_INLINE_ACTION_LINK,
+    fontSize: 12,
+    lineHeight: 16,
+    textDecorationLine: "underline",
+  },
+  dashboardNewsSeeAll: {
+    ...FLARE_INLINE_ACTION_LINK,
+    fontSize: 12,
+    lineHeight: 16,
+  },
+  dashboardNewsStatus: {
+    paddingBottom: 28,
   },
   homeSwipeHint: {
     flexDirection: "row",
@@ -4761,6 +5055,10 @@ const styles = StyleSheet.create({
   splashLogo: { width: 132, height: 132 },
   centered: { flex: 1, justifyContent: "center", alignItems: "center", gap: 10 },
   card: { borderRadius: 14, padding: 14, marginBottom: 12 },
+  /** Dashboard greeting — equal pad; weather metrics cleaned so inset isn’t faked. */
+  greetingCard: {
+    padding: 20,
+  },
   /** Stacks card content below the title; `gap` matches spacing between sibling blocks inside the card. */
   cardBody: { gap: 8 },
   cardBodyCompact: { gap: 0 },
@@ -4817,18 +5115,6 @@ const styles = StyleSheet.create({
     marginTop: SECTION_TITLE_MARGIN_TOP,
     marginBottom: SECTION_TITLE_MARGIN_BOTTOM,
     textAlign: "left",
-  },
-  dashboardCareToggle: {
-    flexDirection: "row",
-    alignItems: "center",
-    gap: 6,
-    marginTop: SECTION_TITLE_MARGIN_TOP,
-    marginBottom: SECTION_TITLE_MARGIN_BOTTOM,
-  },
-  dashboardCareToggleTitle: {
-    flex: 1,
-    marginTop: 0,
-    marginBottom: 0,
   },
   /** Alternating shelf label — staggers against left/center titles. */
   dashboardSubsectionTitleRight: {
@@ -5080,9 +5366,7 @@ const styles = StyleSheet.create({
     justifyContent: "space-between",
     gap: 12,
     paddingLeft: 3,
-    /** Same height as stacked greeting + date (date now sits top-right). */
-    paddingBottom: 4 + FLARE_LINE_HEIGHT.muted - 8,
-    marginBottom: 0,
+    marginBottom: 30,
   },
   weatherHero: {
     flexDirection: "row",
@@ -5090,7 +5374,7 @@ const styles = StyleSheet.create({
     justifyContent: "space-between",
     borderRadius: 12,
     paddingHorizontal: 0,
-    paddingVertical: 8,
+    paddingVertical: 0,
   },
   weatherIconWrap: {
     width: 42,
@@ -5109,14 +5393,12 @@ const styles = StyleSheet.create({
     fontSize: 21,
     fontFamily: "Inter_800ExtraBold",
     paddingRight: 8,
-    marginTop: 8,
     marginLeft: 8,
   },
   weatherDate: {
     fontSize: FLARE_FONT_SIZE.caption,
     lineHeight: FLARE_LINE_HEIGHT.caption,
     fontFamily: "Inter_400Regular",
-    marginTop: 8,
     marginRight: 12,
     flexShrink: 0,
     textAlign: "right",
@@ -5159,6 +5441,18 @@ const styles = StyleSheet.create({
     justifyContent: "center",
   },
   moreGrid: { flexDirection: "row", flexWrap: "wrap", gap: HOME_TILE_GAP },
+  healthPageLayout: {
+    gap: HOME_TILE_GAP,
+  },
+  carePageLayout: {
+    flexDirection: "row",
+    alignItems: "stretch",
+    gap: HOME_TILE_GAP,
+  },
+  carePageLeftStack: {
+    width: "auto",
+    gap: HOME_TILE_GAP,
+  },
   moreGridLabel: {
     fontSize: 13,
     fontFamily: "Inter_500Medium",
@@ -5230,7 +5524,7 @@ const styles = StyleSheet.create({
   },
   moreNavRowLabel: { fontSize: 14, fontFamily: "Inter_400Regular", flex: 1, paddingRight: 10 },
   recentLogsViewAllRow: { alignItems: "flex-end", marginBottom: 8 },
-  recentLogsViewAllText: { fontSize: 13, fontFamily: "Inter_700Bold" },
+  recentLogsViewAllText: { ...FLARE_INLINE_ACTION_LINK },
   recentLogsRow: {
     flexDirection: "row",
     alignItems: "center",

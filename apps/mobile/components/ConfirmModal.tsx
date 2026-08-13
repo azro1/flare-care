@@ -23,7 +23,7 @@ const styles = StyleSheet.create({
     borderRadius: 14,
     borderWidth: 1,
     paddingHorizontal: 24,
-    paddingTop: 26,
+    paddingTop: 24,
     paddingBottom: 24,
   },
   title: { ...CONFIRM_MODAL_TITLE },
