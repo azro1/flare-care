@@ -1511,21 +1511,20 @@ function DashboardScreen({ user }: { user: SessionUser }) {
     />
   );
   const dismissActivityModalAfterPaint = useCallback(() => {
-    // Same as AppEntryShell / wellbeing alert: lift cover only after the destination has painted.
+    // Lift cover ASAP after paint — one less frame than before (snappier; watch for black blink).
     InteractionManager.runAfterInteractions(() => {
       requestAnimationFrame(() => {
-        requestAnimationFrame(() => {
-          setActivitiesOpen(false);
-          setActivityLeaving(false);
-          suppressNextPushAnimation = false;
-        });
+        setActivitiesOpen(false);
+        setActivityLeaving(false);
+        suppressNextPushAnimation = false;
       });
     });
   }, []);
   const openActivityTarget = useCallback(
     (screen: "Meds" | "Hydration") => {
-      // 1) Solid cover on (card gone)  2) instant push underneath  3) lift cover after paint.
+      // 1) Solid screen cover on (card gone)  2) instant push underneath  3) lift cover after paint.
       suppressNextPushAnimation = true;
+      // Pin dim fully opaque before the leave sheet mounts (avoids a transparent frame).
       setActivityLeaving(true);
       requestAnimationFrame(() => {
         navigation.navigate(screen);
@@ -1536,6 +1535,11 @@ function DashboardScreen({ user }: { user: SessionUser }) {
   );
   const openActivityMeds = useCallback(() => openActivityTarget("Meds"), [openActivityTarget]);
   const openActivityHydration = useCallback(() => openActivityTarget("Hydration"), [openActivityTarget]);
+  const closeActivitiesModal = useCallback(() => {
+    setActivityLeaving(false);
+    setActivitiesOpen(false);
+    suppressNextPushAnimation = false;
+  }, []);
   const activitySummary = useMemo(
     () => ({
       medsTaken: todaySummary.medsTaken,
@@ -2022,11 +2026,7 @@ function DashboardScreen({ user }: { user: SessionUser }) {
         visible={activitiesOpen}
         leaving={activityLeaving}
         summary={activitySummary}
-        onClose={() => {
-          setActivityLeaving(false);
-          setActivitiesOpen(false);
-          suppressNextPushAnimation = false;
-        }}
+        onClose={closeActivitiesModal}
         onOpenMeds={openActivityMeds}
         onOpenHydration={openActivityHydration}
       />

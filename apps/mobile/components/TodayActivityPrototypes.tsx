@@ -296,6 +296,54 @@ export function TodayActivityBoardScreen({
   );
 }
 
+/** Count-up % in its own component so the modal/Portal tree doesn’t re-render every frame. */
+function CountingPercentLabel({
+  visible,
+  target,
+  color,
+  onReachFull,
+}: {
+  visible: boolean;
+  target: number;
+  color: string;
+  onReachFull?: () => void;
+}) {
+  const [displayPct, setDisplayPct] = useState(0);
+  const pctAnim = useRef(new Animated.Value(0)).current;
+  const onReachFullRef = useRef(onReachFull);
+  onReachFullRef.current = onReachFull;
+
+  useEffect(() => {
+    if (!visible) {
+      setDisplayPct(0);
+      pctAnim.setValue(0);
+      return;
+    }
+    setDisplayPct(0);
+    pctAnim.setValue(0);
+    const pctListener = pctAnim.addListener(({ value }) => {
+      const next = Math.round(value);
+      setDisplayPct((prev) => (prev === next ? prev : next));
+    });
+    Animated.timing(pctAnim, {
+      toValue: target,
+      duration: 900,
+      delay: 120,
+      easing: Easing.out(Easing.cubic),
+      useNativeDriver: false,
+    }).start(({ finished }) => {
+      if (!finished) return;
+      if (target >= 100) onReachFullRef.current?.();
+    });
+    return () => {
+      pctAnim.stopAnimation();
+      pctAnim.removeListener(pctListener);
+    };
+  }, [visible, target, pctAnim]);
+
+  return <Text style={[styles.pulseHeroValue, { color }]}>{displayPct}%</Text>;
+}
+
 /** Modal card — fixed title/score; swipe Meds ↔ Hydration body. */
 export function TodayActivitiesModal({
   visible,
@@ -320,15 +368,21 @@ export function TodayActivitiesModal({
   const pagerRef = useRef<InstanceType<typeof GHScrollView> | null>(null);
   const [pagerWidth, setPagerWidth] = useState(0);
   const [activityIndex, setActivityIndex] = useState(0);
-  const [displayPct, setDisplayPct] = useState(0);
   const pageW = pagerWidth > 0 ? pagerWidth : Math.max(0, windowWidth - 64);
 
   const overlayOpacity = useRef(new Animated.Value(0)).current;
   const cardOpacity = useRef(new Animated.Value(0)).current;
   const cardScale = useRef(new Animated.Value(0.94)).current;
   const cardLift = useRef(new Animated.Value(14)).current;
-  const pctAnim = useRef(new Animated.Value(0)).current;
   const scorePulse = useRef(new Animated.Value(1)).current;
+  const onCloseRef = useRef(onClose);
+  onCloseRef.current = onClose;
+
+  useEffect(() => {
+    if (!leaving) return;
+    // Dim stays on the animated node at 1; solid `c.screen` sheet covers on top while leaving.
+    overlayOpacity.setValue(1);
+  }, [leaving, overlayOpacity]);
 
   const activities = [
     {
@@ -370,6 +424,23 @@ export function TodayActivitiesModal({
 
   const pageComplete = activities[activityIndex]?.complete;
 
+  const pulseScoreToFull = () => {
+    Animated.sequence([
+      Animated.timing(scorePulse, {
+        toValue: 1.06,
+        duration: 160,
+        easing: Easing.out(Easing.quad),
+        useNativeDriver: true,
+      }),
+      Animated.spring(scorePulse, {
+        toValue: 1,
+        friction: 5,
+        tension: 120,
+        useNativeDriver: true,
+      }),
+    ]).start();
+  };
+
   useEffect(() => {
     if (!visible) return;
     setActivityIndex(0);
@@ -410,52 +481,13 @@ export function TodayActivitiesModal({
     ]).start();
 
     const sub = BackHandler.addEventListener("hardwareBackPress", () => {
-      onClose();
+      onCloseRef.current();
       return true;
     });
     return () => sub.remove();
-  }, [visible, onClose, overlayOpacity, cardOpacity, cardScale, cardLift, scorePulse]);
-
-  useEffect(() => {
-    if (!visible) {
-      setDisplayPct(0);
-      pctAnim.setValue(0);
-      return;
-    }
-    setDisplayPct(0);
-    pctAnim.setValue(0);
-    const pctListener = pctAnim.addListener(({ value }) => {
-      setDisplayPct(Math.round(value));
-    });
-    Animated.timing(pctAnim, {
-      toValue: copy.pulsePct,
-      duration: 900,
-      delay: 120,
-      easing: Easing.out(Easing.cubic),
-      useNativeDriver: false,
-    }).start(({ finished }) => {
-      if (!finished) return;
-      if (copy.pulsePct >= 100) {
-        Animated.sequence([
-          Animated.timing(scorePulse, {
-            toValue: 1.06,
-            duration: 160,
-            easing: Easing.out(Easing.quad),
-            useNativeDriver: true,
-          }),
-          Animated.spring(scorePulse, {
-            toValue: 1,
-            friction: 5,
-            tension: 120,
-            useNativeDriver: true,
-          }),
-        ]).start();
-      }
-    });
-    return () => {
-      pctAnim.removeListener(pctListener);
-    };
-  }, [visible, copy.pulsePct, pctAnim, scorePulse]);
+    // Intentionally only `visible`: a new `onClose` identity (Dashboard re-render after Meds/Hydration
+    // refetch) must not replay the entrance animation — that flashed the whole modal + backdrop.
+  }, [visible, overlayOpacity, cardOpacity, cardScale, cardLift, scorePulse]);
 
   const onActivityPagerEnd = (e: NativeSyntheticEvent<NativeScrollEvent>) => {
     if (pageW <= 0) return;
@@ -468,16 +500,24 @@ export function TodayActivitiesModal({
   return (
     <Portal>
       <View style={styles.modalOverlay} pointerEvents={leaving ? "none" : "box-none"}>
+        {/* Keep dim on the animated node — never swap its opacity to a plain number (native-driver flash). */}
         <Animated.View
           pointerEvents="none"
           style={[
             StyleSheet.absoluteFillObject,
             {
-              backgroundColor: leaving ? c.screen : c.modalBackdrop,
-              opacity: leaving ? 1 : overlayOpacity,
+              backgroundColor: c.modalBackdrop,
+              opacity: overlayOpacity,
             },
           ]}
         />
+        {/* Solid screen sheet on top while handing off — matches Meds/Hydration `contentStyle`. */}
+        {leaving ? (
+          <View
+            pointerEvents="none"
+            style={[StyleSheet.absoluteFillObject, { backgroundColor: c.screen }]}
+          />
+        ) : null}
         {leaving ? null : (
           <>
             <Pressable
@@ -513,7 +553,12 @@ export function TodayActivitiesModal({
                   </Pressable>
                 </View>
                 <Animated.View style={[styles.pulseScore, { transform: [{ scale: scorePulse }] }]}>
-                  <Text style={[styles.pulseHeroValue, { color: c.primary }]}>{displayPct}%</Text>
+                  <CountingPercentLabel
+                    visible={visible}
+                    target={copy.pulsePct}
+                    color={c.primary}
+                    onReachFull={pulseScoreToFull}
+                  />
                   <View style={styles.pulseStatusRow}>
                     {pageComplete ? (
                       <Ionicons
@@ -532,7 +577,10 @@ export function TodayActivitiesModal({
 
               <View
                 style={styles.activityPagerWrap}
-                onLayout={(e) => setPagerWidth(e.nativeEvent.layout.width)}
+                onLayout={(e) => {
+                  const w = Math.round(e.nativeEvent.layout.width);
+                  if (w > 0) setPagerWidth((prev) => (prev === w ? prev : w));
+                }}
               >
                 {pageW > 0 ? (
                   <GHScrollView
@@ -842,7 +890,7 @@ const styles = StyleSheet.create({
     borderWidth: 1,
     paddingHorizontal: INSTRUCTION_CARD_PADDING_H,
     paddingTop: 16,
-    paddingBottom: 14,
+    paddingBottom: 24,
     gap: 12,
     overflow: "hidden",
   },
