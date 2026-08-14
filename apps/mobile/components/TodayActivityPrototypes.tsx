@@ -1,5 +1,5 @@
 import { Ionicons, MaterialCommunityIcons } from "@expo/vector-icons";
-import React, { useEffect, useMemo, useRef, useState } from "react";
+import React, { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import {
   Animated,
   BackHandler,
@@ -376,6 +376,7 @@ export function TodayActivitiesModal({
   const [scoreHeight, setScoreHeight] = useState(0);
   const [taskPageHeight, setTaskPageHeight] = useState(0);
   const [shellIndex, setShellIndex] = useState(0);
+  const [mounted, setMounted] = useState(visible);
   const sheetPadH = 20;
   const pageW =
     pagerWidth > 0
@@ -389,6 +390,9 @@ export function TodayActivitiesModal({
   const shellScrollX = useRef(new Animated.Value(0)).current;
   const onCloseRef = useRef(onClose);
   onCloseRef.current = onClose;
+  const closingRef = useRef(false);
+  const leavingRef = useRef(leaving);
+  leavingRef.current = leaving;
 
   const scoreSlideX = shellScrollX.interpolate({
     inputRange: [0, Math.max(1, pageW), Math.max(2, pageW * 2)],
@@ -409,8 +413,75 @@ export function TodayActivitiesModal({
 
   useEffect(() => {
     if (!leaving) return;
+    // Meds/Hydration handoff — keep cover opaque; do not run a slide-down close.
+    closingRef.current = false;
     overlayOpacity.setValue(1);
   }, [leaving, overlayOpacity]);
+
+  /** Normal dismiss (X / backdrop / back) — animate out, then tell parent. Handoff skips this. */
+  const requestClose = useCallback(() => {
+    if (leavingRef.current || closingRef.current) return;
+    closingRef.current = true;
+    Animated.parallel([
+      Animated.timing(overlayOpacity, {
+        toValue: 0,
+        duration: 220,
+        easing: Easing.in(Easing.quad),
+        useNativeDriver: true,
+      }),
+      Animated.timing(sheetY, {
+        toValue: windowHeight,
+        duration: 260,
+        easing: Easing.in(Easing.cubic),
+        useNativeDriver: true,
+      }),
+    ]).start(({ finished }) => {
+      if (finished) onCloseRef.current();
+      closingRef.current = false;
+    });
+  }, [overlayOpacity, sheetY, windowHeight]);
+
+  useEffect(() => {
+    if (visible) {
+      closingRef.current = false;
+      setMounted(true);
+      setShellIndex(0);
+      setTaskPageHeight(0);
+      overlayOpacity.setValue(0);
+      sheetY.setValue(windowHeight);
+      scorePulse.setValue(1);
+      shellScrollX.setValue(0);
+      requestAnimationFrame(() => {
+        pagerRef.current?.scrollTo({ x: 0, animated: false });
+        // Dim fades in; sheet springs up solid (no opacity fade — feels less muddy).
+        Animated.parallel([
+          Animated.timing(overlayOpacity, {
+            toValue: 1,
+            duration: 300,
+            easing: Easing.out(Easing.quad),
+            useNativeDriver: true,
+          }),
+          Animated.spring(sheetY, {
+            toValue: 0,
+            damping: 28,
+            stiffness: 260,
+            mass: 0.9,
+            useNativeDriver: true,
+          }),
+        ]).start();
+      });
+
+      const sub = BackHandler.addEventListener("hardwareBackPress", () => {
+        requestClose();
+        return true;
+      });
+      return () => sub.remove();
+    }
+
+    // Parent cleared visible (handoff or after our close animation).
+    setMounted(false);
+    closingRef.current = false;
+  }, [visible, windowHeight, overlayOpacity, sheetY, scorePulse, shellScrollX, requestClose]);
 
   const activities = [
     {
@@ -472,41 +543,6 @@ export function TodayActivitiesModal({
     ]).start();
   };
 
-  useEffect(() => {
-    if (!visible) return;
-    setShellIndex(0);
-    setTaskPageHeight(0);
-    overlayOpacity.setValue(0);
-    sheetY.setValue(windowHeight);
-    scorePulse.setValue(1);
-    shellScrollX.setValue(0);
-    requestAnimationFrame(() => {
-      pagerRef.current?.scrollTo({ x: 0, animated: false });
-      // Dim fades in; sheet springs up solid (no opacity fade — feels less muddy).
-      Animated.parallel([
-        Animated.timing(overlayOpacity, {
-          toValue: 1,
-          duration: 300,
-          easing: Easing.out(Easing.quad),
-          useNativeDriver: true,
-        }),
-        Animated.spring(sheetY, {
-          toValue: 0,
-          damping: 28,
-          stiffness: 260,
-          mass: 0.9,
-          useNativeDriver: true,
-        }),
-      ]).start();
-    });
-
-    const sub = BackHandler.addEventListener("hardwareBackPress", () => {
-      onCloseRef.current();
-      return true;
-    });
-    return () => sub.remove();
-  }, [visible, windowHeight, overlayOpacity, sheetY, scorePulse, shellScrollX]);
-
   const onShellPagerEnd = (e: NativeSyntheticEvent<NativeScrollEvent>) => {
     if (pageW <= 0) return;
     const next = Math.round(e.nativeEvent.contentOffset.x / pageW);
@@ -556,7 +592,7 @@ export function TodayActivitiesModal({
     </View>
   );
 
-  if (!visible) return null;
+  if (!mounted) return null;
 
   return (
     <Portal>
@@ -582,7 +618,7 @@ export function TodayActivitiesModal({
             <Pressable
               accessibilityRole="button"
               accessibilityLabel="Dismiss"
-              onPress={onClose}
+              onPress={requestClose}
               style={StyleSheet.absoluteFillObject}
             />
             <Animated.View
@@ -600,7 +636,7 @@ export function TodayActivitiesModal({
               <Pressable
                 accessibilityRole="button"
                 accessibilityLabel="Close"
-                onPress={onClose}
+                onPress={requestClose}
                 hitSlop={10}
                 style={styles.modalCloseBtnAbsolute}
               >
@@ -693,11 +729,11 @@ export function TodayActivitiesModal({
                         pagingEnabled
                         bounces
                         overScrollMode="never"
-                        decelerationRate="fast"
+                        decelerationRate="normal"
                         directionalLockEnabled
                         showsHorizontalScrollIndicator={false}
-                        activeOffsetX={[-10, 10]}
-                        failOffsetY={[-18, 18]}
+                        activeOffsetX={[-4, 4]}
+                        failOffsetY={[-24, 24]}
                         onScroll={Animated.event(
                           [{ nativeEvent: { contentOffset: { x: shellScrollX } } }],
                           { useNativeDriver: true },

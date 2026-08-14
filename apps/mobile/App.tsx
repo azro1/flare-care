@@ -535,6 +535,15 @@ function AuthOtpCountdown({
   );
 }
 
+/**
+ * Fixed top inset for the FlareCare brand on Auth + Almost there.
+ * Must stay identical on both screens so the lockup never jumps when step/content height changes.
+ * (Do not use flex vertical centering for that stack — shorter forms drop the brand.)
+ */
+function authLockupTopSpacer(windowHeight: number): number {
+  return Math.max(48, Math.round(windowHeight * 0.12));
+}
+
 function AuthScreen({
   onSignedIn,
   onAuthBusy,
@@ -545,6 +554,8 @@ function AuthScreen({
 }) {
   const cAuth = useFlareColors();
   const insets = useSafeAreaInsets();
+  const { height: windowHeight } = useWindowDimensions();
+  const lockupTop = authLockupTopSpacer(windowHeight);
   const [activeAuthAction, setActiveAuthAction] = useState<"email" | "code" | "google" | "resend" | null>(null);
   const [step, setStep] = useState<"method" | "email" | "code">("method");
   const [otpSentAt, setOtpSentAt] = useState<number | null>(null);
@@ -836,7 +847,9 @@ function AuthScreen({
   }
 
   return (
-    <View
+    <Pressable
+      accessible={false}
+      onPress={Keyboard.dismiss}
       style={[
         styles.authScreenFill,
         {
@@ -849,6 +862,7 @@ function AuthScreen({
       ]}
     >
       <View style={styles.authInlineBody}>
+        <View style={{ height: lockupTop }} />
         <View style={[styles.authInlinePanel, styles.authMethodPanel]}>
           <View style={styles.authLandingBrandRow}>
             <BrandMarkIcon size={28} color={onPrimaryChrome ? cAuth.white : cAuth.primary} />
@@ -1074,6 +1088,7 @@ function AuthScreen({
           )}
           </View>
         </View>
+        <View style={styles.authLockupBottomFill} />
       </View>
 
       {/* Always visible when quick-login is armed — tap to open OS biometric (no auto-prompt). */}
@@ -1146,7 +1161,7 @@ function AuthScreen({
           </ScrollView>
         </View>
       </Modal>
-    </View>
+    </Pressable>
   );
 }
 
@@ -1154,6 +1169,8 @@ function AuthScreen({
 function ProfileSetupScreen({ user, onComplete }: { user: SessionUser; onComplete: (u: SessionUser) => void }) {
   const cAuth = useFlareColors();
   const insets = useSafeAreaInsets();
+  const { height: windowHeight } = useWindowDimensions();
+  const lockupTop = authLockupTopSpacer(windowHeight);
   const authBlue = !cAuth.isDark;
   const onPrimaryChrome = authBlue;
   const [saving, setSaving] = useState(false);
@@ -1196,7 +1213,9 @@ function ProfileSetupScreen({ user, onComplete }: { user: SessionUser; onComplet
   };
 
   return (
-    <View
+    <Pressable
+      accessible={false}
+      onPress={Keyboard.dismiss}
       style={[
         styles.authScreenFill,
         {
@@ -1208,6 +1227,7 @@ function ProfileSetupScreen({ user, onComplete }: { user: SessionUser; onComplet
       ]}
     >
       <View style={styles.authInlineBody}>
+        <View style={{ height: lockupTop }} />
         <View style={[styles.authInlinePanel, styles.authMethodPanel]}>
           <View style={styles.authLandingBrandRow}>
             <BrandMarkIcon size={28} color={onPrimaryChrome ? cAuth.white : cAuth.primary} />
@@ -1254,8 +1274,9 @@ function ProfileSetupScreen({ user, onComplete }: { user: SessionUser; onComplet
             </View>
           </View>
         </View>
+        <View style={styles.authLockupBottomFill} />
       </View>
-    </View>
+    </Pressable>
   );
 }
 
@@ -4940,10 +4961,12 @@ const styles = StyleSheet.create({
   authInlineBody: {
     flex: 1,
     width: "100%",
-    justifyContent: "center",
+    justifyContent: "flex-start",
     // Above fingerprint row so a tall code form isn't covered by that Pressable.
     zIndex: 2,
   },
+  /** Absorbs leftover height under the auth lockup so the brand stays pinned. */
+  authLockupBottomFill: { flex: 1, minHeight: 0 },
   authInlineCard: {
     width: "100%",
     borderRadius: 22,
@@ -4970,8 +4993,8 @@ const styles = StyleSheet.create({
     paddingHorizontal: 8,
   },
   authCardPlain: { flex: 1, paddingHorizontal: 0 },
-  /** Brand + method/email/code — centered in the space above the fingerprint (when shown). */
-  authMethodPanel: { width: "100%", justifyContent: "center" },
+  /** Brand + method/email/code — top-pinned lockup (see `authLockupTopSpacer`). */
+  authMethodPanel: { width: "100%" },
   authStepBody: { width: "100%" },
   /** Sits with the sign-in stack, with clear air above the prompt — not pinned to the top. */
   authLandingBrandRow: {
