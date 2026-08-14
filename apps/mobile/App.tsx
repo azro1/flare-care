@@ -5550,7 +5550,11 @@ const styles = StyleSheet.create({
   /** Sits directly under Contact intro copy. */
   aboutSupportButton: { alignSelf: "flex-start", marginTop: 10, paddingVertical: 10, paddingHorizontal: 4 },
   aboutSupportButtonPressed: { opacity: 0.75 },
-  aboutSupportButtonText: { fontFamily: "Inter_700Bold", fontSize: FLARE_FONT_SIZE.subhead },
+  aboutSupportButtonText: {
+    fontFamily: "Inter_400Regular",
+    fontSize: 13,
+    lineHeight: 20,
+  },
   /** Version / build separated from branding hero — typical for production About screens. */
   aboutFooter: { paddingTop: 28, paddingBottom: 16, paddingHorizontal: 16 },
   moreNavRow: {

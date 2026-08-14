@@ -150,5 +150,5 @@ const styles = StyleSheet.create({
     paddingHorizontal: 16,
     paddingVertical: 14,
   },
-  label: { fontSize: 14, fontFamily: FLARE_FONT_FAMILY.medium },
+  label: { fontSize: 15, fontFamily: FLARE_FONT_FAMILY.medium },
 });
