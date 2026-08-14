@@ -622,7 +622,10 @@ export function TodayActivitiesModal({
                               color={c.primary}
                             />
                             <View style={styles.pulseRowText}>
-                              <Text style={[styles.pulseRowTitle, { color: c.text }]}>{activity.title}</Text>
+                              <View style={styles.pulseRowTitleRow}>
+                                <Text style={[styles.pulseRowTitle, { color: c.text }]}>{activity.title}</Text>
+                                <Text style={[styles.pulseRowTapHint, { color: c.textMuted }]}>Tap to open</Text>
+                              </View>
                               <Text style={[styles.slabMeta, { color: c.textMuted }]}>{activity.detail}</Text>
                             </View>
                             {activity.complete ? (
@@ -1087,9 +1090,22 @@ const styles = StyleSheet.create({
     gap: CONFIRM_MODAL_ACTIONS_GAP,
   },
   pulseRowText: { flex: 1, gap: STACKED_LINE_GAP, alignItems: "flex-start" },
+  pulseRowTitleRow: {
+    flexDirection: "row",
+    alignItems: "baseline",
+    flexWrap: "wrap",
+    gap: 14,
+    width: "100%",
+    justifyContent: "space-between",
+  },
   pulseRowTitle: {
     fontSize: FLARE_FONT_SIZE.body,
     fontFamily: FLARE_FONT_FAMILY.bold,
+  },
+  pulseRowTapHint: {
+    fontSize: 10,
+    lineHeight: 14,
+    fontFamily: FLARE_FONT_FAMILY.regular,
   },
   pulseRow: {
     flexDirection: "row",

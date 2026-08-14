@@ -1486,7 +1486,7 @@ function DashboardScreen({ user }: { user: SessionUser }) {
     { key: "appointments", label: "Appointments", screen: "Appointments" as const, icon: "calendar-outline", family: "ion" as "ion" | "mci" },
     { key: "reports", label: "Reports", screen: "Reports" as const, icon: "document-text-outline", family: "ion" as "ion" | "mci" },
   ];
-  /** Matches `homeDashboardTile` height — tall dummy spans both left tiles + gap. */
+  /** Matches `homeDashboardTile` height — tall Weight spans both left tiles + gap. */
   const HOME_DASHBOARD_TILE_HEIGHT = 116;
   const careTallTileHeight = HOME_DASHBOARD_TILE_HEIGHT * 2 + HOME_TILE_GAP;
   const healthMedsCard = healthCards[0];
