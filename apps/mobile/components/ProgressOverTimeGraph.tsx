@@ -1,6 +1,6 @@
 /**
  * Progress-over-time graph (area/line + period chips).
- * Not wired into My progress yet — kept for feat/progress-graph.
+ * Used on My progress sheet (graph swipe page).
  * Pair with `lib/progressGraphShared.ts`.
  */
 import React, { useEffect, useMemo, useState } from "react";
@@ -18,14 +18,15 @@ import {
 import { useFlareColors } from "../theme";
 
 const CHART_HEIGHT = 168;
+const CHART_HEIGHT_FALLBACK = 160;
 const PAD_L = 28;
 const PAD_R = 8;
 const PAD_T = 12;
 const PAD_B = 28;
 
-function buildAreaAndLine(points: ProgressDayPoint[], width: number) {
+function buildAreaAndLine(points: ProgressDayPoint[], width: number, chartHeight: number) {
   const innerW = Math.max(1, width - PAD_L - PAD_R);
-  const innerH = Math.max(1, CHART_HEIGHT - PAD_T - PAD_B);
+  const innerH = Math.max(1, chartHeight - PAD_T - PAD_B);
   if (points.length === 0) {
     return { line: "", area: "", dots: [] as { x: number; y: number }[] };
   }
@@ -63,10 +64,13 @@ function buildAreaAndLine(points: ProgressDayPoint[], width: number) {
 export function ProgressOverTimeGraph({
   userId,
   active,
+  compact = false,
 }: {
   userId: string;
   /** Load when this swipe page is active (or becoming active). */
   active: boolean;
+  /** Fill the My progress sheet page — larger chips, chart grows into leftover space. */
+  compact?: boolean;
 }) {
   const c = useFlareColors();
   const [period, setPeriod] = useState<ProgressGraphPeriod>("4w");
@@ -74,6 +78,9 @@ export function ProgressOverTimeGraph({
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");
   const [chartW, setChartW] = useState(0);
+  const [chartH, setChartH] = useState(0);
+
+  const chartHeight = chartH > 0 ? chartH : compact ? CHART_HEIGHT_FALLBACK : CHART_HEIGHT;
 
   useEffect(() => {
     if (!active) return;
@@ -99,19 +106,22 @@ export function ProgressOverTimeGraph({
     };
   }, [active, period, userId]);
 
-  const paths = useMemo(() => buildAreaAndLine(points, chartW), [points, chartW]);
+  const paths = useMemo(() => buildAreaAndLine(points, chartW, chartHeight), [points, chartW, chartHeight]);
   const avg = useMemo(() => averageProgressPct(points), [points]);
   const startLabel = points[0] ? formatUkDateShort(points[0].date) : "";
   const endLabel = points.length ? formatUkDateShort(points[points.length - 1].date) : "";
 
   const onChartLayout = (e: LayoutChangeEvent) => {
-    const w = Math.round(e.nativeEvent.layout.width);
+    const { width, height } = e.nativeEvent.layout;
+    const w = Math.round(width);
+    const h = Math.round(height);
     if (w > 0 && w !== chartW) setChartW(w);
+    if (h > 0 && h !== chartH) setChartH(h);
   };
 
   return (
-    <View style={styles.root}>
-      <View style={styles.periodRow}>
+    <View style={[styles.root, compact ? styles.rootSheet : null]}>
+      <View style={[styles.periodRow, compact ? styles.periodRowSheet : null]}>
         {PROGRESS_GRAPH_PERIODS.map((item) => {
           const selected = item.id === period;
           return (
@@ -122,7 +132,7 @@ export function ProgressOverTimeGraph({
               accessibilityLabel={item.label}
               onPress={() => setPeriod(item.id)}
               style={[
-                styles.periodChip,
+                compact ? styles.periodChipSheet : styles.periodChip,
                 {
                   backgroundColor: selected ? c.primary : c.surfaceSubtle,
                 },
@@ -130,7 +140,7 @@ export function ProgressOverTimeGraph({
             >
               <Text
                 style={[
-                  styles.periodChipText,
+                  compact ? styles.periodChipTextSheet : styles.periodChipText,
                   { color: selected ? c.white : c.textMuted },
                 ]}
                 numberOfLines={1}
@@ -142,17 +152,20 @@ export function ProgressOverTimeGraph({
         })}
       </View>
 
-      <Text style={[styles.avgLine, { color: c.textSecondary }]}>
+      <Text style={[compact ? styles.avgLineSheet : styles.avgLine, { color: c.textSecondary }]}>
         {loading ? "Loading…" : error ? error : `Average ${avg}% over this period`}
       </Text>
 
-      <View style={styles.chartWrap} onLayout={onChartLayout}>
+      <View
+        style={[styles.chartWrap, compact ? styles.chartWrapSheet : { minHeight: chartHeight + 8 }]}
+        onLayout={onChartLayout}
+      >
         {loading && points.length === 0 ? (
-          <View style={styles.chartPlaceholder}>
+          <View style={[styles.chartPlaceholder, { height: chartHeight }]}>
             <ActivityIndicator color={c.primary} />
           </View>
-        ) : chartW > 0 ? (
-          <Svg width={chartW} height={CHART_HEIGHT}>
+        ) : chartW > 0 && chartHeight > 0 ? (
+          <Svg width={chartW} height={chartHeight}>
             <Defs>
               <LinearGradient id="progressFill" x1="0" y1="0" x2="0" y2="1">
                 <Stop offset="0%" stopColor={c.primary} stopOpacity={0.35} />
@@ -161,7 +174,7 @@ export function ProgressOverTimeGraph({
             </Defs>
             {/* Soft guides */}
             {[0, 0.5, 1].map((t) => {
-              const y = PAD_T + (1 - t) * (CHART_HEIGHT - PAD_T - PAD_B);
+              const y = PAD_T + (1 - t) * (chartHeight - PAD_T - PAD_B);
               return (
                 <Path
                   key={`g-${t}`}
@@ -181,7 +194,7 @@ export function ProgressOverTimeGraph({
             ))}
           </Svg>
         ) : (
-          <View style={[styles.chartPlaceholder, { height: CHART_HEIGHT }]} />
+          <View style={[styles.chartPlaceholder, compact ? styles.chartPlaceholderSheet : { height: chartHeight }]} />
         )}
 
         <View style={styles.yLabels} pointerEvents="none">
@@ -202,11 +215,18 @@ const styles = StyleSheet.create({
   root: {
     alignSelf: "stretch",
     gap: 12,
-    flexGrow: 1,
+  },
+  rootSheet: {
+    flex: 1,
+    gap: 16,
   },
   periodRow: {
     flexDirection: "row",
     flexWrap: "wrap",
+    gap: 8,
+  },
+  periodRowSheet: {
+    flexWrap: "nowrap",
     gap: 8,
   },
   periodChip: {
@@ -214,9 +234,22 @@ const styles = StyleSheet.create({
     paddingHorizontal: 10,
     paddingVertical: 7,
   },
+  periodChipSheet: {
+    flex: 1,
+    alignItems: "center",
+    justifyContent: "center",
+    borderRadius: 10,
+    paddingHorizontal: 8,
+    paddingVertical: 8,
+  },
   periodChipText: {
     fontSize: FLARE_FONT_SIZE.caption,
     lineHeight: FLARE_LINE_HEIGHT.caption,
+    fontFamily: FLARE_FONT_FAMILY.medium,
+  },
+  periodChipTextSheet: {
+    fontSize: FLARE_FONT_SIZE.muted,
+    lineHeight: FLARE_LINE_HEIGHT.muted,
     fontFamily: FLARE_FONT_FAMILY.medium,
   },
   avgLine: {
@@ -224,15 +257,25 @@ const styles = StyleSheet.create({
     lineHeight: FLARE_LINE_HEIGHT.caption,
     fontFamily: FLARE_FONT_FAMILY.medium,
   },
+  avgLineSheet: {
+    fontSize: FLARE_FONT_SIZE.caption,
+    lineHeight: FLARE_LINE_HEIGHT.caption,
+    fontFamily: FLARE_FONT_FAMILY.medium,
+  },
   chartWrap: {
     alignSelf: "stretch",
-    minHeight: CHART_HEIGHT + 8,
     position: "relative",
   },
+  chartWrapSheet: {
+    flex: 1,
+    minHeight: 140,
+  },
   chartPlaceholder: {
-    height: CHART_HEIGHT,
     alignItems: "center",
     justifyContent: "center",
+  },
+  chartPlaceholderSheet: {
+    ...StyleSheet.absoluteFillObject,
   },
   yLabels: {
     position: "absolute",

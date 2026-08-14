@@ -1,5 +1,5 @@
 /**
- * Daily stay-on-track scores for the progress graph (not wired into UI yet).
+ * Daily stay-on-track scores for the progress graph.
  * Used by `components/ProgressOverTimeGraph.tsx`.
  */
 import { HYDRATION_TARGET } from "./hydrationShared";

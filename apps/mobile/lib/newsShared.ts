@@ -1,6 +1,9 @@
 import { SCREEN_EDGE_PADDING } from "./layoutConstants";
 import { dedupeNewsItems, type DashboardNewsItem } from "./dashboardSnapshotCache";
 
+/** Set true to show Latest News on the dashboard again (fetch + shelf). */
+export const SHOW_DASHBOARD_NEWS = false;
+
 /** Horizontal news shelf on dashboard — cards loaded in the swipe row. */
 export const DASHBOARD_NEWS_HOME_SHELF_MAX = 5;
 

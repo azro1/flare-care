@@ -180,6 +180,7 @@ import {
   dashboardNewsShelfCardWidth,
   mapNewsItems,
   newsApiBase,
+  SHOW_DASHBOARD_NEWS,
 } from "./lib/newsShared";
 import {
   clearNewUserIntroState,
@@ -1673,6 +1674,11 @@ function DashboardScreen({ user }: { user: SessionUser }) {
         }
 
         try {
+          if (!SHOW_DASHBOARD_NEWS) {
+            snap.newsItems = seedSnap?.newsItems ?? [];
+            snap.newsError = seedSnap?.newsError ?? null;
+            if (!cancelled) setNewsLoading(false);
+          } else {
           const hasCachedNews = (seedSnap?.newsItems?.length ?? 0) > 0;
           if (!hasCachedNews) setNewsLoading(true);
           setNewsError(null);
@@ -1698,6 +1704,7 @@ function DashboardScreen({ user }: { user: SessionUser }) {
             setNewsItems(snap.newsItems);
             setNewsError(null);
             setNewsLoading(false);
+          }
           }
         } catch {
           const hasCachedNews = (seedSnap?.newsItems?.length ?? 0) > 0;
@@ -1821,7 +1828,13 @@ function DashboardScreen({ user }: { user: SessionUser }) {
             ))}
           </ScrollView>
         </View>
-        <View style={[styles.dashboardShelfSection, styles.dashboardShelfAfterCard]}>
+        <View
+          style={[
+            styles.dashboardShelfSection,
+            styles.dashboardShelfAfterCard,
+            !SHOW_DASHBOARD_NEWS ? styles.dashboardShelfSectionLast : null,
+          ]}
+        >
           <View style={styles.checkInTitleRow}>
             <View style={styles.healthCareTitleSlot}>
               <Animated.Text
@@ -1973,6 +1986,7 @@ function DashboardScreen({ user }: { user: SessionUser }) {
           </View>
         </View>
 
+        {SHOW_DASHBOARD_NEWS ? (
         <View style={[styles.dashboardShelfSection, styles.dashboardShelfAfterCard, styles.dashboardShelfSectionLast]}>
           <View style={styles.dashboardSubsectionHeader}>
             <Text
@@ -2020,12 +2034,14 @@ function DashboardScreen({ user }: { user: SessionUser }) {
             </View>
           )}
         </View>
+        ) : null}
       </ScrollView>
 
       <TodayActivitiesModal
         visible={activitiesOpen}
         leaving={activityLeaving}
         summary={activitySummary}
+        userId={user.id}
         onClose={closeActivitiesModal}
         onOpenMeds={openActivityMeds}
         onOpenHydration={openActivityHydration}

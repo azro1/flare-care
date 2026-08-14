@@ -39,7 +39,9 @@ import {
 import { MY_MEDS_MCI_ICON } from "../lib/medicationFeatureIcons";
 import { Portal } from "../lib/overlayPortal";
 import { useFlareColors } from "../theme";
-// Progress graph kept for later: `./ProgressOverTimeGraph` + `../lib/progressGraphShared`
+import { ProgressOverTimeGraph } from "./ProgressOverTimeGraph";
+
+const AnimatedGHScrollView = Animated.createAnimatedComponent(GHScrollView);
 
 const PULSE_METER_HEIGHT = 80;
 const PULSE_METER_WIDTH = 34;
@@ -345,11 +347,12 @@ function CountingPercentLabel({
   return <Text style={[styles.pulseHeroValue, { color }]}>{displayPct}%</Text>;
 }
 
-/** Slide-up sheet — score + swipe Meds ↔ Hydration. Keeps solid-cover handoff when opening a task. */
+/** Slide-up sheet — Meds ↔ Hydration (shared %), then full-card progress graph. */
 export function TodayActivitiesModal({
   visible,
   leaving = false,
   summary,
+  userId,
   onClose,
   onOpenMeds,
   onOpenHydration,
@@ -361,30 +364,51 @@ export function TodayActivitiesModal({
    */
   leaving?: boolean;
   summary: TodayActivitySummary;
+  userId: string;
   onClose: () => void;
 } & NavHandlers) {
   const c = useFlareColors();
   const insets = useSafeAreaInsets();
   const copy = useActivityCopy(summary);
-  const { width: windowWidth } = useWindowDimensions();
+  const { width: windowWidth, height: windowHeight } = useWindowDimensions();
   const pagerRef = useRef<InstanceType<typeof GHScrollView> | null>(null);
   const [pagerWidth, setPagerWidth] = useState(0);
-  const [activityIndex, setActivityIndex] = useState(0);
+  const [scoreHeight, setScoreHeight] = useState(0);
+  const [taskPageHeight, setTaskPageHeight] = useState(0);
+  const [shellIndex, setShellIndex] = useState(0);
   const sheetPadH = 20;
   const pageW =
     pagerWidth > 0
       ? pagerWidth
       : Math.max(0, windowWidth - SCREEN_EDGE_PADDING * 2 - sheetPadH * 2);
+  const shellPageCount = 3;
 
   const overlayOpacity = useRef(new Animated.Value(0)).current;
-  const sheetY = useRef(new Animated.Value(480)).current;
+  const sheetY = useRef(new Animated.Value(windowHeight)).current;
   const scorePulse = useRef(new Animated.Value(1)).current;
+  const shellScrollX = useRef(new Animated.Value(0)).current;
   const onCloseRef = useRef(onClose);
   onCloseRef.current = onClose;
 
+  const scoreSlideX = shellScrollX.interpolate({
+    inputRange: [0, Math.max(1, pageW), Math.max(2, pageW * 2)],
+    outputRange: [0, 0, -pageW],
+    extrapolate: "clamp",
+  });
+  /** Wash stays for Meds/Hydration, fades out as the graph page comes in (no bleed into graph). */
+  const taskWashOpacity = shellScrollX.interpolate({
+    inputRange: [0, Math.max(1, pageW), Math.max(1, pageW) * 1.55, Math.max(2, pageW * 2)],
+    outputRange: [0.06, 0.06, 0, 0],
+    extrapolate: "clamp",
+  });
+  const taskBandBorderOpacity = shellScrollX.interpolate({
+    inputRange: [0, Math.max(1, pageW), Math.max(1, pageW) * 1.55, Math.max(2, pageW * 2)],
+    outputRange: [1, 1, 0, 0],
+    extrapolate: "clamp",
+  });
+
   useEffect(() => {
     if (!leaving) return;
-    // Dim stays on the animated node at 1; solid `c.screen` sheet covers on top while leaving.
     overlayOpacity.setValue(1);
   }, [leaving, overlayOpacity]);
 
@@ -411,8 +435,11 @@ export function TodayActivitiesModal({
     },
   ] as const;
 
+  const taskIndex = shellIndex <= 1 ? shellIndex : 0;
+  const onGraphPage = shellIndex >= 2;
+
   const pageStatusLine =
-    activityIndex === 0
+    taskIndex === 0
       ? !copy.hasMeds
         ? "No meds saved yet"
         : copy.medsComplete
@@ -426,7 +453,7 @@ export function TodayActivitiesModal({
           ? "No water consumed"
           : "Keep going — still time today";
 
-  const pageComplete = activities[activityIndex]?.complete;
+  const pageComplete = activities[taskIndex]?.complete;
 
   const pulseScoreToFull = () => {
     Animated.sequence([
@@ -447,50 +474,93 @@ export function TodayActivitiesModal({
 
   useEffect(() => {
     if (!visible) return;
-    setActivityIndex(0);
+    setShellIndex(0);
+    setTaskPageHeight(0);
     overlayOpacity.setValue(0);
-    sheetY.setValue(480);
+    sheetY.setValue(windowHeight);
     scorePulse.setValue(1);
+    shellScrollX.setValue(0);
     requestAnimationFrame(() => {
       pagerRef.current?.scrollTo({ x: 0, animated: false });
+      // Dim fades in; sheet springs up solid (no opacity fade — feels less muddy).
+      Animated.parallel([
+        Animated.timing(overlayOpacity, {
+          toValue: 1,
+          duration: 300,
+          easing: Easing.out(Easing.quad),
+          useNativeDriver: true,
+        }),
+        Animated.spring(sheetY, {
+          toValue: 0,
+          damping: 28,
+          stiffness: 260,
+          mass: 0.9,
+          useNativeDriver: true,
+        }),
+      ]).start();
     });
-
-    Animated.parallel([
-      Animated.timing(overlayOpacity, {
-        toValue: 1,
-        duration: 220,
-        easing: Easing.out(Easing.cubic),
-        useNativeDriver: true,
-      }),
-      Animated.timing(sheetY, {
-        toValue: 0,
-        duration: 280,
-        easing: Easing.out(Easing.cubic),
-        useNativeDriver: true,
-      }),
-    ]).start();
 
     const sub = BackHandler.addEventListener("hardwareBackPress", () => {
       onCloseRef.current();
       return true;
     });
     return () => sub.remove();
-    // Intentionally only `visible`: a new `onClose` identity (Dashboard re-render after Meds/Hydration
-    // refetch) must not replay the entrance animation — that flashed the whole modal + backdrop.
-  }, [visible, overlayOpacity, sheetY, scorePulse]);
+  }, [visible, windowHeight, overlayOpacity, sheetY, scorePulse, shellScrollX]);
 
-  const onActivityPagerEnd = (e: NativeSyntheticEvent<NativeScrollEvent>) => {
+  const onShellPagerEnd = (e: NativeSyntheticEvent<NativeScrollEvent>) => {
     if (pageW <= 0) return;
     const next = Math.round(e.nativeEvent.contentOffset.x / pageW);
-    setActivityIndex(Math.max(0, Math.min(activities.length - 1, next)));
+    setShellIndex(Math.max(0, Math.min(shellPageCount - 1, next)));
   };
+
+  const renderTaskPage = (activity: (typeof activities)[number]) => (
+    <View style={[styles.activityPage, { width: pageW }]}>
+      <View style={styles.pulseMeters}>
+        <PulseMeterBar
+          ratio={activity.ratio}
+          label={activity.meterLabel}
+          fillColor={c.primary}
+          trackColor={c.surfaceSubtle}
+          captionColor={c.textMuted}
+        />
+      </View>
+      <GHPressable
+        accessibilityRole="button"
+        accessibilityLabel={`${activity.title}, ${activity.detail}`}
+        onPress={activity.onPress}
+        style={styles.pulseRowTray}
+      >
+        <MaterialCommunityIcons
+          name={activity.icon}
+          size={INSTRUCTION_CARD_ICON_SIZE}
+          color={c.primary}
+        />
+        <View style={styles.pulseRowText}>
+          <View style={styles.pulseRowTitleRow}>
+            <Text style={[styles.pulseRowTitle, { color: c.text }]}>{activity.title}</Text>
+            <Text style={[styles.pulseRowTapHint, { color: c.textMuted }]}>Tap to open</Text>
+          </View>
+          <Text style={[styles.slabMeta, { color: c.textMuted }]}>{activity.detail}</Text>
+        </View>
+        {activity.complete ? (
+          <Ionicons
+            name="checkmark-circle"
+            size={20}
+            color={c.primary}
+            accessibilityIgnoresInvertColors
+          />
+        ) : (
+          <Ionicons name="chevron-forward" size={18} color={c.text} />
+        )}
+      </GHPressable>
+    </View>
+  );
 
   if (!visible) return null;
 
   return (
     <Portal>
       <View style={styles.sheetOverlay} pointerEvents={leaving ? "none" : "box-none"}>
-        {/* Keep dim on the animated node — never swap its opacity to a plain number (native-driver flash). */}
         <Animated.View
           pointerEvents="none"
           style={[
@@ -501,7 +571,6 @@ export function TodayActivitiesModal({
             },
           ]}
         />
-        {/* Solid screen sheet on top while handing off — matches Meds/Hydration `contentStyle`. */}
         {leaving ? (
           <View
             pointerEvents="none"
@@ -521,7 +590,6 @@ export function TodayActivitiesModal({
                 styles.sheetCard,
                 {
                   backgroundColor: c.card,
-                  opacity: overlayOpacity,
                   transform: [{ translateY: sheetY }],
                 },
               ]}
@@ -538,132 +606,176 @@ export function TodayActivitiesModal({
               >
                 <Ionicons name="close" size={22} color={c.textMuted} />
               </Pressable>
-              <View style={styles.modalScoreWash}>
-                <Animated.View style={[styles.pulseScore, { transform: [{ scale: scorePulse }] }]}>
-                  <CountingPercentLabel
-                    visible={visible}
-                    target={copy.pulsePct}
-                    color={c.primary}
-                    onReachFull={pulseScoreToFull}
-                  />
-                  <View style={styles.pulseStatusRow}>
-                    {pageComplete ? (
-                      <Ionicons
-                        name="checkmark-circle"
-                        size={16}
-                        color={c.primary}
-                        accessibilityIgnoresInvertColors
-                      />
-                    ) : null}
-                    <Text style={[styles.pulseHeroSub, { color: c.textSecondary }]} numberOfLines={1}>
-                      {pageStatusLine}
-                    </Text>
-                  </View>
-                </Animated.View>
-              </View>
 
               <View
-                style={[
-                  styles.activitySwipeBand,
-                  {
-                    borderTopColor: c.cardBorder,
-                    paddingBottom: Math.max(insets.bottom, 16),
-                  },
-                ]}
+                style={styles.shellPagerWrap}
+                onLayout={(e) => {
+                  const w = Math.round(e.nativeEvent.layout.width);
+                  if (w > 0) setPagerWidth((prev) => (prev === w ? prev : w));
+                }}
               >
-                <View
-                  pointerEvents="none"
-                  style={[styles.activitySwipeBandWash, { backgroundColor: c.primary }]}
-                />
-                <View
-                  style={styles.activityPagerWrap}
-                  onLayout={(e) => {
-                    const w = Math.round(e.nativeEvent.layout.width);
-                    if (w > 0) setPagerWidth((prev) => (prev === w ? prev : w));
-                  }}
-                >
-                  {pageW > 0 ? (
-                    <GHScrollView
-                      ref={pagerRef}
-                      horizontal
-                      pagingEnabled
-                      bounces
-                      overScrollMode="never"
-                      decelerationRate="fast"
-                      directionalLockEnabled
-                      showsHorizontalScrollIndicator={false}
-                      // Prefer horizontal page swipes over vertical / row presses.
-                      activeOffsetX={[-10, 10]}
-                      failOffsetY={[-18, 18]}
-                      onMomentumScrollEnd={onActivityPagerEnd}
-                      onScrollEndDrag={onActivityPagerEnd}
-                      style={{ width: pageW }}
+                {pageW > 0 ? (
+                  <View style={{ width: pageW }}>
+                    {/* Score stays for Meds/Hydration, then slides away with the graph page. */}
+                    <Animated.View
+                      pointerEvents={onGraphPage ? "none" : "box-none"}
+                      onLayout={(e) => {
+                        const h = Math.round(e.nativeEvent.layout.height);
+                        if (h > 0) setScoreHeight((prev) => (prev === h ? prev : h));
+                      }}
+                      style={[
+                        styles.shellScoreSticky,
+                        {
+                          width: pageW,
+                          transform: [{ translateX: scoreSlideX }],
+                        },
+                      ]}
                     >
-                      {activities.map((activity) => (
-                        <View key={activity.id} style={[styles.activityPage, { width: pageW }]}>
-                          <View style={styles.pulseMeters}>
-                            <PulseMeterBar
-                              ratio={activity.ratio}
-                              label={activity.meterLabel}
-                              fillColor={c.primary}
-                              trackColor={c.surfaceSubtle}
-                              captionColor={c.textMuted}
-                            />
-                          </View>
-                          <GHPressable
-                            accessibilityRole="button"
-                            accessibilityLabel={`${activity.title}, ${activity.detail}`}
-                            onPress={activity.onPress}
-                            style={styles.pulseRowTray}
-                          >
-                            <MaterialCommunityIcons
-                              name={activity.icon}
-                              size={INSTRUCTION_CARD_ICON_SIZE}
-                              color={c.primary}
-                            />
-                            <View style={styles.pulseRowText}>
-                              <View style={styles.pulseRowTitleRow}>
-                                <Text style={[styles.pulseRowTitle, { color: c.text }]}>{activity.title}</Text>
-                                <Text style={[styles.pulseRowTapHint, { color: c.textMuted }]}>Tap to open</Text>
-                              </View>
-                              <Text style={[styles.slabMeta, { color: c.textMuted }]}>{activity.detail}</Text>
-                            </View>
-                            {activity.complete ? (
+                      <View style={styles.modalScoreWash}>
+                        <Animated.View style={[styles.pulseScore, { transform: [{ scale: scorePulse }] }]}>
+                          <CountingPercentLabel
+                            visible={visible}
+                            target={copy.pulsePct}
+                            color={c.primary}
+                            onReachFull={pulseScoreToFull}
+                          />
+                          <View style={styles.pulseStatusRow}>
+                            {pageComplete ? (
                               <Ionicons
                                 name="checkmark-circle"
-                                size={20}
+                                size={16}
                                 color={c.primary}
                                 accessibilityIgnoresInvertColors
                               />
-                            ) : (
-                              <Ionicons name="chevron-forward" size={18} color={c.text} />
-                            )}
-                          </GHPressable>
-                        </View>
-                      ))}
-                    </GHScrollView>
-                  ) : null}
-                </View>
+                            ) : null}
+                            <Text
+                              style={[styles.pulseHeroSub, { color: c.textSecondary }]}
+                              numberOfLines={1}
+                            >
+                              {pageStatusLine}
+                            </Text>
+                          </View>
+                        </Animated.View>
+                      </View>
+                    </Animated.View>
 
-                <View style={styles.activityFooter}>
-                  <View style={styles.activityDots}>
-                    {activities.map((activity, index) => {
-                      const active = index === activityIndex;
-                      return (
+                    {/*
+                      Shared task wash (outside the pager): full side/bottom bleed like before,
+                      starts below the %, fades on the graph so it can't peek into the next page.
+                    */}
+                    <View style={styles.activitySwipeRegion}>
+                      <Animated.View
+                        pointerEvents="none"
+                        style={[
+                          styles.activitySwipeBandWash,
+                          {
+                            top: Math.max(scoreHeight, 1) + 16,
+                            backgroundColor: c.primary,
+                            opacity: taskWashOpacity,
+                          },
+                        ]}
+                      />
+                      <Animated.View
+                        pointerEvents="none"
+                        style={[
+                          styles.activitySwipeBandEdge,
+                          {
+                            top: Math.max(scoreHeight, 1) + 16,
+                            borderTopColor: c.cardBorder,
+                            opacity: taskBandBorderOpacity,
+                          },
+                        ]}
+                      />
+
+                      <AnimatedGHScrollView
+                        ref={pagerRef}
+                        horizontal
+                        pagingEnabled
+                        bounces
+                        overScrollMode="never"
+                        decelerationRate="fast"
+                        directionalLockEnabled
+                        showsHorizontalScrollIndicator={false}
+                        activeOffsetX={[-10, 10]}
+                        failOffsetY={[-18, 18]}
+                        onScroll={Animated.event(
+                          [{ nativeEvent: { contentOffset: { x: shellScrollX } } }],
+                          { useNativeDriver: true },
+                        )}
+                        scrollEventThrottle={16}
+                        onMomentumScrollEnd={onShellPagerEnd}
+                        onScrollEndDrag={onShellPagerEnd}
+                        style={
+                          taskPageHeight > 0
+                            ? { width: pageW, height: taskPageHeight }
+                            : { width: pageW }
+                        }
+                      >
+                        {activities.map((activity) => (
+                          <View
+                            key={activity.id}
+                            style={{ width: pageW }}
+                            onLayout={
+                              activity.id === "meds"
+                                ? (e) => {
+                                    const h = Math.round(e.nativeEvent.layout.height);
+                                    // Grow with the real task layout (score settles late); never shrink.
+                                    if (h > 0 && scoreHeight > 0) {
+                                      setTaskPageHeight((prev) => (h > prev ? h : prev));
+                                    }
+                                  }
+                                : undefined
+                            }
+                          >
+                            {/* Score slot + former sheetCard gap (16) before the meter band. */}
+                            <View style={{ height: Math.max(scoreHeight, 1) + 16 }} />
+                            <View style={styles.activityTaskBandPad}>{renderTaskPage(activity)}</View>
+                          </View>
+                        ))}
                         <View
-                          key={activity.id}
                           style={[
-                            styles.activityDot,
-                            active ? styles.activityDotActive : null,
+                            styles.graphPage,
                             {
-                              backgroundColor: active ? c.primary : c.appearanceChipInactiveBg,
+                              width: pageW,
+                              // Same 16px gap as first-card score→band — clears the X;
+                              // height is locked so the chart absorbs it (card won’t grow).
+                              paddingTop: 16,
+                              ...(taskPageHeight > 0
+                                ? { height: taskPageHeight, minHeight: taskPageHeight }
+                                : { minHeight: scoreHeight + 200 }),
                             },
                           ]}
-                        />
-                      );
-                    })}
+                        >
+                          <ProgressOverTimeGraph userId={userId} active={onGraphPage} compact />
+                        </View>
+                      </AnimatedGHScrollView>
+
+                      <View style={styles.activityFooter}>
+                        <View style={styles.activityDots}>
+                          {Array.from({ length: shellPageCount }, (_, index) => {
+                            const active = index === shellIndex;
+                            return (
+                              <View
+                                key={index === 2 ? "graph" : activities[index]?.id ?? index}
+                                style={[
+                                  styles.activityDot,
+                                  active ? styles.activityDotActive : null,
+                                  {
+                                    backgroundColor: active
+                                      ? c.primary
+                                      : c.appearanceChipInactiveBg,
+                                  },
+                                ]}
+                              />
+                            );
+                          })}
+                        </View>
+                      </View>
+                      {/* Inside the wash (not padding) so the tint reaches the card bottom. */}
+                      <View style={{ height: Math.max(insets.bottom, 16) }} />
+                    </View>
                   </View>
-                </View>
+                ) : null}
               </View>
             </Animated.View>
           </>
@@ -945,6 +1057,39 @@ const styles = StyleSheet.create({
     zIndex: 2,
     padding: 2,
   },
+  shellPagerWrap: {
+    alignSelf: "stretch",
+  },
+  shellScoreSticky: {
+    position: "absolute",
+    top: 0,
+    left: 0,
+    zIndex: 2,
+  },
+  graphPage: {
+    flexDirection: "column",
+  },
+  activitySwipeRegion: {
+    alignSelf: "stretch",
+    position: "relative",
+    overflow: "visible",
+    gap: 16,
+  },
+  activitySwipeBandWash: {
+    position: "absolute",
+    left: -20,
+    right: -20,
+    bottom: 0,
+  },
+  activitySwipeBandEdge: {
+    position: "absolute",
+    left: -20,
+    right: -20,
+    borderTopWidth: StyleSheet.hairlineWidth,
+  },
+  activityTaskBandPad: {
+    paddingTop: 16,
+  },
   activitySwipeBand: {
     alignSelf: "stretch",
     // Bleed to sheet edges / bottom so the wash is one strip to the card edge.
@@ -956,10 +1101,6 @@ const styles = StyleSheet.create({
     gap: 16,
     borderTopWidth: StyleSheet.hairlineWidth,
     overflow: "hidden",
-  },
-  activitySwipeBandWash: {
-    ...StyleSheet.absoluteFillObject,
-    opacity: 0.06,
   },
   activityPagerWrap: {
     alignSelf: "stretch",
