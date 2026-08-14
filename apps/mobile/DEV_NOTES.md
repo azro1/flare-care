@@ -10,10 +10,34 @@ Product overview, env vars, and how to run the app stay in **`README.md`**. Rece
 
 If reminders / related mobile UX regress while we keep building, start from this commit before deep debugging:
 
-| When verified | Commit | Summary |
-|---------------|--------|---------|
+| When verified | Commit / tag | Summary |
+|---------------|--------------|---------|
+| **2026-08-14** | **`0997203`** · tag **`save-point-polished-baseline`** (on `feat/progress-graph`) | **SAVE POINT — first polished app baseline.** Progress graph on My progress sheet, spring slide-up, news shelf hidden (`SHOW_DASHBOARD_NEWS`). Page transitions + sign-in slide feeling solid; first time the app felt flawless end-to-end. |
 | **2026-08-10** | **`ed81d36`** (on `mobile-native`) | Auth polish, new-user intro, welcome cards removed, caption hints — **biometric baseline** |
 | **2026-07-23** (working in daily use since 2026-07-06) | **`413eca9`** | **`fix(mobile): med reminders, welcome card overlay, and Reminders UX`** |
+
+### Find / restore the 2026-08-14 SAVE POINT
+
+```bash
+# Find it
+git log --grep="SAVE POINT"
+git show save-point-polished-baseline
+
+# Inspect without moving HEAD
+git show 0997203
+
+# Check out the tagged save point (detached) — or branch from it to compare
+git checkout save-point-polished-baseline
+# git checkout -b recover/polished-baseline save-point-polished-baseline
+```
+
+Commit subject starts with **`SAVE POINT:`** so grepping that string always surfaces it. Tag name: **`save-point-polished-baseline`**.
+
+**What was solid at `0997203`:**
+- My progress slide-up sheet (Meds ↔ Hydration ↔ progress graph), wash layout, locked card height
+- Spring sheet open animation; Meds/Hydration handoff
+- Dashboard news shelf gated off via `SHOW_DASHBOARD_NEWS` in `lib/newsShared.ts` (flip to `true` to bring back)
+- Overall page transitions / sign-in slide polish felt good together
 
 **What was solid at `413eca9`:**
 - Local medication + appointment reminders scheduling / firing after phone-settings permission
