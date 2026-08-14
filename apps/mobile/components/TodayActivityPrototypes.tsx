@@ -12,7 +12,8 @@ import {
   View,
   useWindowDimensions,
 } from "react-native";
-import { ScrollView as GHScrollView } from "react-native-gesture-handler";
+import { Pressable as GHPressable, ScrollView as GHScrollView } from "react-native-gesture-handler";
+import { useSafeAreaInsets } from "react-native-safe-area-context";
 import Svg, { Path } from "react-native-svg";
 import { formatUkGreetingDate } from "../lib/formatUkDate";
 import { HYDRATION_MCI_ICON, HYDRATION_TARGET } from "../lib/hydrationShared";
@@ -344,7 +345,7 @@ function CountingPercentLabel({
   return <Text style={[styles.pulseHeroValue, { color }]}>{displayPct}%</Text>;
 }
 
-/** Modal card — fixed title/score; swipe Meds ↔ Hydration body. */
+/** Slide-up sheet — score + swipe Meds ↔ Hydration. Keeps solid-cover handoff when opening a task. */
 export function TodayActivitiesModal({
   visible,
   leaving = false,
@@ -363,17 +364,20 @@ export function TodayActivitiesModal({
   onClose: () => void;
 } & NavHandlers) {
   const c = useFlareColors();
+  const insets = useSafeAreaInsets();
   const copy = useActivityCopy(summary);
   const { width: windowWidth } = useWindowDimensions();
   const pagerRef = useRef<InstanceType<typeof GHScrollView> | null>(null);
   const [pagerWidth, setPagerWidth] = useState(0);
   const [activityIndex, setActivityIndex] = useState(0);
-  const pageW = pagerWidth > 0 ? pagerWidth : Math.max(0, windowWidth - 64);
+  const sheetPadH = 20;
+  const pageW =
+    pagerWidth > 0
+      ? pagerWidth
+      : Math.max(0, windowWidth - SCREEN_EDGE_PADDING * 2 - sheetPadH * 2);
 
   const overlayOpacity = useRef(new Animated.Value(0)).current;
-  const cardOpacity = useRef(new Animated.Value(0)).current;
-  const cardScale = useRef(new Animated.Value(0.94)).current;
-  const cardLift = useRef(new Animated.Value(14)).current;
+  const sheetY = useRef(new Animated.Value(480)).current;
   const scorePulse = useRef(new Animated.Value(1)).current;
   const onCloseRef = useRef(onClose);
   onCloseRef.current = onClose;
@@ -445,9 +449,7 @@ export function TodayActivitiesModal({
     if (!visible) return;
     setActivityIndex(0);
     overlayOpacity.setValue(0);
-    cardOpacity.setValue(0);
-    cardScale.setValue(0.94);
-    cardLift.setValue(14);
+    sheetY.setValue(480);
     scorePulse.setValue(1);
     requestAnimationFrame(() => {
       pagerRef.current?.scrollTo({ x: 0, animated: false });
@@ -460,22 +462,10 @@ export function TodayActivitiesModal({
         easing: Easing.out(Easing.cubic),
         useNativeDriver: true,
       }),
-      Animated.timing(cardOpacity, {
-        toValue: 1,
-        duration: 260,
-        easing: Easing.out(Easing.cubic),
-        useNativeDriver: true,
-      }),
-      Animated.spring(cardScale, {
-        toValue: 1,
-        friction: 8,
-        tension: 92,
-        useNativeDriver: true,
-      }),
-      Animated.spring(cardLift, {
+      Animated.timing(sheetY, {
         toValue: 0,
-        friction: 9,
-        tension: 88,
+        duration: 280,
+        easing: Easing.out(Easing.cubic),
         useNativeDriver: true,
       }),
     ]).start();
@@ -487,7 +477,7 @@ export function TodayActivitiesModal({
     return () => sub.remove();
     // Intentionally only `visible`: a new `onClose` identity (Dashboard re-render after Meds/Hydration
     // refetch) must not replay the entrance animation — that flashed the whole modal + backdrop.
-  }, [visible, overlayOpacity, cardOpacity, cardScale, cardLift, scorePulse]);
+  }, [visible, overlayOpacity, sheetY, scorePulse]);
 
   const onActivityPagerEnd = (e: NativeSyntheticEvent<NativeScrollEvent>) => {
     if (pageW <= 0) return;
@@ -499,7 +489,7 @@ export function TodayActivitiesModal({
 
   return (
     <Portal>
-      <View style={styles.modalOverlay} pointerEvents={leaving ? "none" : "box-none"}>
+      <View style={styles.sheetOverlay} pointerEvents={leaving ? "none" : "box-none"}>
         {/* Keep dim on the animated node — never swap its opacity to a plain number (native-driver flash). */}
         <Animated.View
           pointerEvents="none"
@@ -528,30 +518,27 @@ export function TodayActivitiesModal({
             />
             <Animated.View
               style={[
-                styles.modalCard,
+                styles.sheetCard,
                 {
                   backgroundColor: c.card,
-                  borderColor: c.primary,
-                  opacity: cardOpacity,
-                  transform: [{ translateY: cardLift }, { scale: cardScale }],
+                  opacity: overlayOpacity,
+                  transform: [{ translateY: sheetY }],
                 },
               ]}
             >
+              <View style={styles.sheetGrabberWrap}>
+                <View style={[styles.sheetGrabber, { backgroundColor: c.cardBorder }]} />
+              </View>
+              <Pressable
+                accessibilityRole="button"
+                accessibilityLabel="Close"
+                onPress={onClose}
+                hitSlop={10}
+                style={styles.modalCloseBtnAbsolute}
+              >
+                <Ionicons name="close" size={22} color={c.textMuted} />
+              </Pressable>
               <View style={styles.modalScoreWash}>
-                <View style={styles.modalHeaderRow}>
-                  <Text style={[styles.pulseHeroLabel, { color: c.text }]}>
-                    Let's stay on track
-                  </Text>
-                  <Pressable
-                    accessibilityRole="button"
-                    accessibilityLabel="Close"
-                    onPress={onClose}
-                    hitSlop={10}
-                    style={styles.modalCloseBtn}
-                  >
-                    <Ionicons name="close" size={22} color={c.textMuted} />
-                  </Pressable>
-                </View>
                 <Animated.View style={[styles.pulseScore, { transform: [{ scale: scorePulse }] }]}>
                   <CountingPercentLabel
                     visible={visible}
@@ -576,87 +563,103 @@ export function TodayActivitiesModal({
               </View>
 
               <View
-                style={styles.activityPagerWrap}
-                onLayout={(e) => {
-                  const w = Math.round(e.nativeEvent.layout.width);
-                  if (w > 0) setPagerWidth((prev) => (prev === w ? prev : w));
-                }}
+                style={[
+                  styles.activitySwipeBand,
+                  {
+                    borderTopColor: c.cardBorder,
+                    paddingBottom: Math.max(insets.bottom, 16),
+                  },
+                ]}
               >
-                {pageW > 0 ? (
-                  <GHScrollView
-                    ref={pagerRef}
-                    horizontal
-                    pagingEnabled
-                    bounces={false}
-                    overScrollMode="never"
-                    decelerationRate="fast"
-                    disableIntervalMomentum
-                    directionalLockEnabled
-                    showsHorizontalScrollIndicator={false}
-                    onMomentumScrollEnd={onActivityPagerEnd}
-                    onScrollEndDrag={onActivityPagerEnd}
-                    style={{ width: pageW }}
-                  >
-                    {activities.map((activity) => (
-                      <View key={activity.id} style={[styles.activityPage, { width: pageW }]}>
-                        <View style={styles.pulseMeters}>
-                          <PulseMeterBar
-                            ratio={activity.ratio}
-                            label={activity.meterLabel}
-                            fillColor={c.primary}
-                            trackColor={c.surfaceSubtle}
-                            captionColor={c.textMuted}
-                          />
-                        </View>
-                        <Pressable
-                          accessibilityRole="button"
-                          accessibilityLabel={`${activity.title}, ${activity.detail}`}
-                          onPress={activity.onPress}
-                          style={styles.pulseRowTray}
-                        >
-                          <MaterialCommunityIcons
-                            name={activity.icon}
-                            size={INSTRUCTION_CARD_ICON_SIZE}
-                            color={c.primary}
-                          />
-                          <View style={styles.pulseRowText}>
-                            <Text style={[styles.pulseRowTitle, { color: c.text }]}>{activity.title}</Text>
-                            <Text style={[styles.slabMeta, { color: c.textMuted }]}>{activity.detail}</Text>
-                          </View>
-                          {activity.complete ? (
-                            <Ionicons
-                              name="checkmark-circle"
-                              size={20}
-                              color={c.primary}
-                              accessibilityIgnoresInvertColors
+                <View
+                  pointerEvents="none"
+                  style={[styles.activitySwipeBandWash, { backgroundColor: c.primary }]}
+                />
+                <View
+                  style={styles.activityPagerWrap}
+                  onLayout={(e) => {
+                    const w = Math.round(e.nativeEvent.layout.width);
+                    if (w > 0) setPagerWidth((prev) => (prev === w ? prev : w));
+                  }}
+                >
+                  {pageW > 0 ? (
+                    <GHScrollView
+                      ref={pagerRef}
+                      horizontal
+                      pagingEnabled
+                      bounces
+                      overScrollMode="never"
+                      decelerationRate="fast"
+                      directionalLockEnabled
+                      showsHorizontalScrollIndicator={false}
+                      // Prefer horizontal page swipes over vertical / row presses.
+                      activeOffsetX={[-10, 10]}
+                      failOffsetY={[-18, 18]}
+                      onMomentumScrollEnd={onActivityPagerEnd}
+                      onScrollEndDrag={onActivityPagerEnd}
+                      style={{ width: pageW }}
+                    >
+                      {activities.map((activity) => (
+                        <View key={activity.id} style={[styles.activityPage, { width: pageW }]}>
+                          <View style={styles.pulseMeters}>
+                            <PulseMeterBar
+                              ratio={activity.ratio}
+                              label={activity.meterLabel}
+                              fillColor={c.primary}
+                              trackColor={c.surfaceSubtle}
+                              captionColor={c.textMuted}
                             />
-                          ) : (
-                            <Ionicons name="chevron-forward" size={18} color={c.text} />
-                          )}
-                        </Pressable>
-                      </View>
-                    ))}
-                  </GHScrollView>
-                ) : null}
-              </View>
+                          </View>
+                          <GHPressable
+                            accessibilityRole="button"
+                            accessibilityLabel={`${activity.title}, ${activity.detail}`}
+                            onPress={activity.onPress}
+                            style={styles.pulseRowTray}
+                          >
+                            <MaterialCommunityIcons
+                              name={activity.icon}
+                              size={INSTRUCTION_CARD_ICON_SIZE}
+                              color={c.primary}
+                            />
+                            <View style={styles.pulseRowText}>
+                              <Text style={[styles.pulseRowTitle, { color: c.text }]}>{activity.title}</Text>
+                              <Text style={[styles.slabMeta, { color: c.textMuted }]}>{activity.detail}</Text>
+                            </View>
+                            {activity.complete ? (
+                              <Ionicons
+                                name="checkmark-circle"
+                                size={20}
+                                color={c.primary}
+                                accessibilityIgnoresInvertColors
+                              />
+                            ) : (
+                              <Ionicons name="chevron-forward" size={18} color={c.text} />
+                            )}
+                          </GHPressable>
+                        </View>
+                      ))}
+                    </GHScrollView>
+                  ) : null}
+                </View>
 
-              <View style={styles.activityFooter}>
-                <View style={styles.activityDots}>
-                  {activities.map((activity, index) => {
-                    const active = index === activityIndex;
-                    return (
-                      <View
-                        key={activity.id}
-                        style={[
-                          styles.activityDot,
-                          active ? styles.activityDotActive : null,
-                          {
-                            backgroundColor: active ? c.primary : c.appearanceChipInactiveBg,
-                          },
-                        ]}
-                      />
-                    );
-                  })}
+                <View style={styles.activityFooter}>
+                  <View style={styles.activityDots}>
+                    {activities.map((activity, index) => {
+                      const active = index === activityIndex;
+                      return (
+                        <View
+                          key={activity.id}
+                          style={[
+                            styles.activityDot,
+                            active ? styles.activityDotActive : null,
+                            {
+                              backgroundColor: active ? c.primary : c.appearanceChipInactiveBg,
+                            },
+                          ]}
+                        />
+                      );
+                    })}
+                  </View>
                 </View>
               </View>
             </Animated.View>
@@ -885,6 +888,14 @@ const styles = StyleSheet.create({
     zIndex: 9999,
     elevation: 9999,
   },
+  sheetOverlay: {
+    ...StyleSheet.absoluteFillObject,
+    justifyContent: "flex-end",
+    paddingHorizontal: SCREEN_EDGE_PADDING,
+    paddingBottom: SCREEN_EDGE_PADDING,
+    zIndex: 9999,
+    elevation: 9999,
+  },
   modalCard: {
     borderRadius: INSTRUCTION_CARD_RADIUS,
     borderWidth: 1,
@@ -894,9 +905,25 @@ const styles = StyleSheet.create({
     gap: 12,
     overflow: "hidden",
   },
+  sheetCard: {
+    borderRadius: 22,
+    paddingHorizontal: 20,
+    paddingTop: 0,
+    gap: 16,
+    overflow: "hidden",
+  },
+  sheetGrabberWrap: {
+    alignItems: "center",
+    paddingTop: 10,
+    paddingBottom: 8,
+  },
+  sheetGrabber: {
+    width: 40,
+    height: 4,
+    borderRadius: 2,
+  },
   modalScoreWash: {
     alignSelf: "stretch",
-    gap: 18,
   },
   modalHeaderRow: {
     flexDirection: "row",
@@ -908,12 +935,35 @@ const styles = StyleSheet.create({
     marginTop: -2,
     flexShrink: 0,
   },
+  modalCloseBtnAbsolute: {
+    position: "absolute",
+    top: 14,
+    right: 18,
+    zIndex: 2,
+    padding: 2,
+  },
+  activitySwipeBand: {
+    alignSelf: "stretch",
+    // Bleed to sheet edges / bottom so the wash is one strip to the card edge.
+    marginHorizontal: -20,
+    marginTop: 4,
+    marginBottom: 0,
+    paddingHorizontal: 20,
+    paddingTop: 16,
+    gap: 16,
+    borderTopWidth: StyleSheet.hairlineWidth,
+    overflow: "hidden",
+  },
+  activitySwipeBandWash: {
+    ...StyleSheet.absoluteFillObject,
+    opacity: 0.06,
+  },
   activityPagerWrap: {
     alignSelf: "stretch",
   },
   activityPage: {
     alignItems: "center",
-    gap: 12,
+    gap: 16,
   },
   activityFooter: {
     alignItems: "center",

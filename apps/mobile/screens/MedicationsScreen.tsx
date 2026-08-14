@@ -105,6 +105,7 @@ export function MedicationSheet({
   const errTextStyle = flareFieldErrorStyle(c, "input");
   const [form, setForm] = useState<MedicationFormState>(initialValues);
   const [nameError, setNameError] = useState("");
+  const [dosageError, setDosageError] = useState("");
   const [frequencyPickerOpen, setFrequencyPickerOpen] = useState(false);
   const [customFrequencyEditing, setCustomFrequencyEditing] = useState(false);
   const [timePickerOpen, setTimePickerOpen] = useState(false);
@@ -114,6 +115,7 @@ export function MedicationSheet({
     if (visible) {
       setForm(initialValues);
       setNameError("");
+      setDosageError("");
       setCustomFrequencyEditing(
         initialValues.frequencyMode === "custom" && !initialValues.frequency.trim(),
       );
@@ -125,11 +127,11 @@ export function MedicationSheet({
   };
 
   const handleSavePress = () => {
-    if (!form.name.trim()) {
-      setNameError("Medication name is required.");
-      return;
-    }
-    setNameError("");
+    const nameMissing = !form.name.trim();
+    const dosageMissing = !form.dosage.trim();
+    setNameError(nameMissing ? "Medication name is required." : "");
+    setDosageError(dosageMissing ? "Dosage is required." : "");
+    if (nameMissing || dosageMissing) return;
     onSave(form);
   };
 
@@ -177,14 +179,18 @@ export function MedicationSheet({
             {nameError ? <Text style={errTextStyle}>{nameError}</Text> : null}
 
             <FlareScreenSectionTitle compact style={{ marginTop: 16 }}>
-              Dosage (mg)
+              Dosage (mg) *
             </FlareScreenSectionTitle>
             <FlareTextInput
               value={form.dosage}
-              onChangeText={(dosage) => setField("dosage", dosage.replace(/\D/g, "").slice(0, 5))}
-              placeholder="Optional"
+              onChangeText={(dosage) => {
+                setDosageError("");
+                setField("dosage", dosage.replace(/\D/g, "").slice(0, 5));
+              }}
+              placeholder="e.g. 400"
               keyboardType="number-pad"
             />
+            {dosageError ? <Text style={errTextStyle}>{dosageError}</Text> : null}
 
             <FlareScreenSectionTitle compact style={{ marginTop: 16 }}>
               Frequency

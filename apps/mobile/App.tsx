@@ -1874,11 +1874,11 @@ function DashboardScreen({ user }: { user: SessionUser }) {
             >
               <Pressable
                 accessibilityRole="link"
-                accessibilityLabel="See my progress"
+                accessibilityLabel="View progress"
                 onPress={() => setActivitiesOpen(true)}
                 hitSlop={8}
               >
-                <Text style={[styles.activitiesInlineLink, { color: c.primary }]}>See my progress</Text>
+                <Text style={[styles.activitiesInlineLink, { color: c.primary }]}>View progress</Text>
               </Pressable>
             </Animated.View>
           </View>
@@ -4875,7 +4875,6 @@ const styles = StyleSheet.create({
     ...FLARE_INLINE_ACTION_LINK,
     fontSize: 12,
     lineHeight: 16,
-    textDecorationLine: "underline",
   },
   dashboardNewsSeeAll: {
     ...FLARE_INLINE_ACTION_LINK,
