@@ -120,7 +120,7 @@ function HydrationPageContent() {
           <div className="flex flex-wrap items-center justify-between gap-4">
             <div>
               <span className="text-3xl sm:text-4xl font-bold text-primary">{glasses}</span>
-              <span className="text-xl text-secondary ml-1">/ {HYDRATION_TARGET} glasses</span>
+              <span className="text-xl text-secondary ml-1">/ {HYDRATION_TARGET} cups</span>
               <div className="min-h-6 mt-2">
                 {glasses > 0 && (
                   <button
@@ -137,7 +137,7 @@ function HydrationPageContent() {
                 type="button"
                 onClick={handleDecrement}
                 disabled={glasses === 0}
-                aria-label="Remove one glass"
+                aria-label="Remove one cup"
                 className="card-inner inline-flex h-10 w-10 shrink-0 items-center justify-center rounded-lg border border-[var(--border-primary)] transition-colors hover:opacity-90 disabled:cursor-not-allowed disabled:opacity-40"
               >
                 <Minus className="w-4 h-4" strokeWidth={2.5} />
@@ -146,7 +146,7 @@ function HydrationPageContent() {
                 type="button"
                 onClick={handleIncrement}
                 disabled={glasses >= HYDRATION_TARGET}
-                aria-label="Add one glass"
+                aria-label="Add one cup"
                 className="inline-flex h-10 w-10 items-center justify-center rounded-lg bg-[#5F9EA0] text-white transition-colors hover:bg-[#5F9EA0]/90 disabled:cursor-not-allowed disabled:opacity-50"
               >
                 <Plus className="w-4 h-4" strokeWidth={2.5} />
@@ -160,7 +160,7 @@ function HydrationPageContent() {
       <div className="mt-4 sm:mt-6 card">
         <div>
           <p className="text-sm text-secondary font-sans leading-normal">
-            Use − and + to update your daily intake count. Your target is {HYDRATION_TARGET} glasses per day (roughly 250ml each).
+            Use − and + to update your daily intake count. Your target is {HYDRATION_TARGET} cups per day (roughly 250ml each).
           </p>
           <div className="card-inner p-5 sm:p-6 mt-4">
             <div className="flex items-center gap-2 mb-2">
@@ -168,7 +168,7 @@ function HydrationPageContent() {
               <span className="text-base sm:text-sm font-semibold text-primary font-title">Important to know:</span>
             </div>
             <p className="text-xs text-secondary font-sans leading-normal">
-              Most guidelines recommend around 1.5–2 litres (about 6–8 glasses) of water per day for adults.
+              Most guidelines recommend around 1.5–2 litres (about 6–8 cups) of water per day for adults.
             </p>
           </div>
         </div>

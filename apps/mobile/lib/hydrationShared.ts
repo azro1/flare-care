@@ -1,6 +1,6 @@
 import AsyncStorage from "@react-native-async-storage/async-storage";
 
-/** Daily glass target — matches web `HYDRATION_TARGET`. */
+/** Daily cup target — matches web `HYDRATION_TARGET`. */
 export const HYDRATION_TARGET = 6;
 
 /** Plain cup — MaterialCommunityIcons (`cup` filled, `cup-outline` empty). Not `cup-water`. */

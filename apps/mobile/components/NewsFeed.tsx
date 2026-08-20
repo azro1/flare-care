@@ -5,6 +5,7 @@ import type { DashboardNewsItem } from "../lib/dashboardSnapshotCache";
 import { formatUkDate } from "../lib/formatUkDate";
 import { FLARE_FONT_FAMILY, FLARE_FONT_SIZE, FLARE_INLINE_ACTION_LINK, FLARE_LINE_HEIGHT, HOME_TILE_GAP, SECTION_TITLE_MARGIN_BOTTOM, SECTION_TITLE_MARGIN_TOP } from "../lib/layoutConstants";
 import { resolveNewsImageUri } from "../lib/newsShared";
+import { withAppLockExternalUi } from "../lib/biometricLock";
 import { useFlareColors } from "../theme";
 
 export function NewsThumbnail({ imageUrl, iconSize = 30 }: { imageUrl?: string | null; iconSize?: number }) {
@@ -54,11 +55,13 @@ export function NewsFeedCard({ item, variant, width }: NewsFeedCardProps) {
 
   const shareArticle = () => {
     const message = item.link ? `${item.title}\n${item.link}` : item.title;
-    void Share.share({
-      message,
-      title: item.title,
-      ...(item.link && Platform.OS === "ios" ? { url: item.link } : null),
-    }).catch(() => {
+    void withAppLockExternalUi(() =>
+      Share.share({
+        message,
+        title: item.title,
+        ...(item.link && Platform.OS === "ios" ? { url: item.link } : null),
+      }),
+    ).catch(() => {
       // user dismissed / share unavailable
     });
   };

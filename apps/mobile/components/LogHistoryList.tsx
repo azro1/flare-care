@@ -173,25 +173,36 @@ export const TrayInCardList = OneLineTrayList;
 type MciIconName = ComponentProps<typeof MaterialCommunityIcons>["name"];
 type IonIconName = ComponentProps<typeof Ionicons>["name"];
 
-/** Shared empty list — pass the tracker/wizard icon; copy is always “Nothing here yet”. */
+/** Shared empty list — pass the tracker/wizard icon; copy defaults to “Nothing here yet”. */
 export function LogHistoryEmptyState({
   icon,
   iconFamily = "mci",
+  showTitle = true,
 }: {
   icon: MciIconName | IonIconName;
   iconFamily?: "mci" | "ion";
+  /** Set false for icon-only empty trays (e.g. Supplies setup). */
+  showTitle?: boolean;
 }) {
   const c = useFlareColors();
   return (
     <View style={logHistoryEmptyStateStyles.wrap}>
-      <View style={[logHistoryEmptyStateStyles.icon, { backgroundColor: c.surfaceSubtle }]}>
+      <View
+        style={[
+          logHistoryEmptyStateStyles.icon,
+          !showTitle && logHistoryEmptyStateStyles.iconOnly,
+          { backgroundColor: c.surfaceSubtle },
+        ]}
+      >
         {iconFamily === "ion" ? (
           <Ionicons name={icon as IonIconName} size={28} color={c.primary} accessibilityIgnoresInvertColors />
         ) : (
           <MaterialCommunityIcons name={icon as MciIconName} size={28} color={c.primary} accessibilityIgnoresInvertColors />
         )}
       </View>
-      <Text style={[logHistoryEmptyStateStyles.title, { color: c.textMuted }]}>Nothing here yet</Text>
+      {showTitle ? (
+        <Text style={[logHistoryEmptyStateStyles.title, { color: c.textMuted }]}>Nothing here yet</Text>
+      ) : null}
     </View>
   );
 }
@@ -624,6 +635,7 @@ const logHistoryEmptyStateStyles = StyleSheet.create({
     justifyContent: "center",
     marginBottom: SECTION_TITLE_MARGIN_BOTTOM,
   },
+  iconOnly: { marginBottom: 0 },
   title: {
     fontSize: FLARE_FONT_SIZE.sectionTitle,
     fontFamily: FLARE_FONT_FAMILY.bold,

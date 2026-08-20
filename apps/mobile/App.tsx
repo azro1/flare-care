@@ -69,6 +69,7 @@ import {
   authenticate,
   biometricTypeLabel,
   hydrateBioLockCacheFromStorage,
+  isAppLockExternalUiActive,
   isBiometricAvailable,
   loadBioLockSnapshot,
   peekBioLockSnapshot,
@@ -108,6 +109,7 @@ import {
   bottomTabBarScrollInset,
   FLARE_FONT_FAMILY,
   FLARE_FONT_SIZE,
+  FLARE_CAPTION_HINT,
   FLARE_INLINE_ACTION_LINK,
   FLARE_LINE_HEIGHT,
   HOME_TILE_GAP,
@@ -203,6 +205,7 @@ import { WellbeingLogDetailScreen } from "./screens/WellbeingLogDetailScreen";
 import { WellbeingWizardScreen } from "./screens/WellbeingWizardScreen";
 import { LatestNewsScreen } from "./screens/LatestNewsScreen";
 import { HubTipCard } from "./components/HubTipCard";
+import { clearAllHubTipsDismissed } from "./lib/hubTipDismiss";
 import { AppointmentBriefChangesScreen } from "./screens/AppointmentBriefChangesScreen";
 import { AppointmentBriefCustomRangeScreen } from "./screens/AppointmentBriefCustomRangeScreen";
 import { AppointmentBriefHealthScreen } from "./screens/AppointmentBriefHealthScreen";
@@ -212,6 +215,23 @@ import { AppointmentBriefScreen } from "./screens/AppointmentBriefScreen";
 import { AppointmentDetailScreen } from "./screens/AppointmentDetailScreen";
 import { AppointmentsPastScreen } from "./screens/AppointmentsPastScreen";
 import { AppointmentsScreen } from "./screens/AppointmentsScreen";
+import { MedicalSuppliesScreen } from "./screens/MedicalSuppliesScreen";
+import { MedicalSupplyRequestScreen } from "./screens/MedicalSupplyRequestScreen";
+import {
+  buildTodayPriorities,
+  findNearTermAppointment,
+  nextUntakenMedicationTimeLabel,
+  TODAY_PRIORITIES_COLLAPSED_COUNT,
+} from "./lib/todayPriorities";
+import {
+  fetchAppointmentsForUser,
+  getAppointmentsListCache,
+  type AppointmentRow,
+} from "./lib/appointmentShared";
+import {
+  fetchSupplyDashboardSummary,
+  type SupplyDueStatus,
+} from "./lib/medicalSuppliesShared";
 import {
   clearMedicationNotificationsForUser,
   ensureLocalReminderNotificationsReady,
@@ -1300,6 +1320,8 @@ const BOTTOM_BAR_VISIBLE_ROUTES = new Set([
   "AppointmentsPast",
   "Reports",
   "LatestNews",
+  "MedicalSupplies",
+  "MedicalSupplyRequest",
 ]);
 
 /** Padding uses this screen’s route—not the globally focused route—so the exiting page doesn’t jump during transitions. */
@@ -1488,6 +1510,25 @@ function DashboardScreen({ user }: { user: SessionUser }) {
     ...EMPTY_TODAY_SUMMARY,
     ...(snapshotSeed?.todaySummary ?? {}),
   }));
+  const [nearAppointment, setNearAppointment] = useState<AppointmentRow | null>(null);
+  const [nextMedicationTimeLabel, setNextMedicationTimeLabel] = useState<string | null>(null);
+  const [suppliesStatus, setSuppliesStatus] = useState<SupplyDueStatus | null>(null);
+  const [prioritiesExpanded, setPrioritiesExpanded] = useState(false);
+  const priorityItems = useMemo(
+    () =>
+      buildTodayPriorities({
+        todaySummary,
+        nearAppointment,
+        nextMedicationTimeLabel,
+        hydrationTarget: HYDRATION_TARGET,
+        suppliesStatus,
+      }),
+    [todaySummary, nearAppointment, nextMedicationTimeLabel, suppliesStatus],
+  );
+  const visiblePriorityItems = prioritiesExpanded
+    ? priorityItems
+    : priorityItems.slice(0, TODAY_PRIORITIES_COLLAPSED_COUNT);
+  const hasMorePriorities = priorityItems.length > TODAY_PRIORITIES_COLLAPSED_COUNT;
   const shelfNewsItems = useMemo(
     () => newsItems.slice(0, Math.min(DASHBOARD_NEWS_SHELF_PEEK, DASHBOARD_NEWS_HOME_SHELF_MAX)),
     [newsItems],
@@ -1508,7 +1549,7 @@ function DashboardScreen({ user }: { user: SessionUser }) {
     { key: "appointments", label: "Appointments", screen: "Appointments" as const, icon: "calendar-outline", family: "ion" as "ion" | "mci" },
     { key: "reports", label: "Reports", screen: "Reports" as const, icon: "document-text-outline", family: "ion" as "ion" | "mci" },
   ];
-  /** Matches `homeDashboardTile` height — tall Weight spans both left tiles + gap. */
+  /** Matches `homeDashboardTile` height — tall tiles span both stacked tiles + gap. */
   const HOME_DASHBOARD_TILE_HEIGHT = 116;
   const careTallTileHeight = HOME_DASHBOARD_TILE_HEIGHT * 2 + HOME_TILE_GAP;
   const healthMedsCard = healthCards[0];
@@ -1588,6 +1629,31 @@ function DashboardScreen({ user }: { user: SessionUser }) {
   useFocusEffect(
     useCallback(() => {
       let cancelled = false;
+      const applyRows = (rows: AppointmentRow[]) => {
+        if (!cancelled) setNearAppointment(findNearTermAppointment(rows));
+      };
+      const cached = getAppointmentsListCache(user.id);
+      if (cached) applyRows(cached);
+      void fetchAppointmentsForUser(user.id)
+        .then(applyRows)
+        .catch(() => {
+          if (!cancelled && !cached) setNearAppointment(null);
+        });
+      void fetchSupplyDashboardSummary(user.id)
+        .then((summary) => {
+          if (!cancelled) setSuppliesStatus(summary.status);
+        })
+        .catch(() => {
+          if (!cancelled) setSuppliesStatus(null);
+        });
+      return () => {
+        cancelled = true;
+      };
+    }, [user.id]),
+  );
+  useFocusEffect(
+    useCallback(() => {
+      let cancelled = false;
       const seedSnap = dashboardSnapshotByUserId[user.id];
       const snap: DashboardSnapshot = {
         todaySummary: seedSnap?.todaySummary ?? { ...EMPTY_TODAY_SUMMARY },
@@ -1646,10 +1712,17 @@ function DashboardScreen({ user }: { user: SessionUser }) {
             hydration: todayHydrationRes.data?.glasses ?? 0,
             wellbeingLogged: Boolean(todayWellbeingRes.data?.id),
           };
-          if (!cancelled) setTodaySummary(snap.todaySummary);
+          if (!cancelled) {
+            setTodaySummary(snap.todaySummary);
+            const takenIds = (takenMedsRes.data ?? []).map((row: { medication_id?: number | string }) => row.medication_id);
+            setNextMedicationTimeLabel(nextUntakenMedicationTimeLabel(medicationsList, takenIds.filter((id) => id != null) as (number | string)[]));
+          }
         } catch {
           snap.todaySummary = { ...EMPTY_TODAY_SUMMARY };
-          if (!cancelled) setTodaySummary(snap.todaySummary);
+          if (!cancelled) {
+            setTodaySummary(snap.todaySummary);
+            setNextMedicationTimeLabel(null);
+          }
         }
 
         try {
@@ -1766,7 +1839,7 @@ function DashboardScreen({ user }: { user: SessionUser }) {
         contentContainerStyle={{
           paddingHorizontal: SCREEN_EDGE_PADDING,
           paddingTop: 0,
-          paddingBottom: bottomScrollInset + 8,
+          paddingBottom: bottomScrollInset,
         }}
         showsVerticalScrollIndicator={false}
       >
@@ -1849,6 +1922,43 @@ function DashboardScreen({ user }: { user: SessionUser }) {
             ))}
           </ScrollView>
         </View>
+
+        <View style={[styles.dashboardShelfSection, styles.dashboardShelfAfterCard]}>
+          <Text style={[styles.dashboardSubsectionTitleLeft, styles.dashboardSubsectionTitleCenter, { color: c.text }]}>
+            {"Today's priorities"}
+          </Text>
+          <View style={[logHistoryCardStyles.trackerCard, styles.prioritiesCard, { backgroundColor: c.card }]}>
+            <View style={[styles.prioritiesTray, { backgroundColor: c.surfaceSubtle }]}>
+              {priorityItems.length === 0 ? (
+                <Text style={[styles.prioritiesCaughtUp, { color: c.textMuted }]}>{"You're caught up for today"}</Text>
+              ) : (
+                <>
+                  {visiblePriorityItems.map((item) => (
+                    <View key={item.id} style={styles.priorityRow}>
+                      <Text style={[styles.priorityEmoji, { color: c.text }]}>{item.emoji}</Text>
+                      <Text style={[styles.priorityLabel, { color: c.text }]} numberOfLines={2}>
+                        {item.text}
+                      </Text>
+                    </View>
+                  ))}
+                  {hasMorePriorities ? (
+                    <Pressable
+                      accessibilityRole="button"
+                      accessibilityLabel={prioritiesExpanded ? "Show fewer priorities" : "View all priorities"}
+                      onPress={() => setPrioritiesExpanded((v) => !v)}
+                      style={({ pressed }) => [styles.prioritiesViewAll, pressed && { opacity: 0.7 }]}
+                    >
+                      <Text style={[styles.prioritiesViewAllLabel, { color: c.primary }]}>
+                        {prioritiesExpanded ? "Show less" : "View all"}
+                      </Text>
+                    </Pressable>
+                  ) : null}
+                </>
+              )}
+            </View>
+          </View>
+        </View>
+
         <View
           style={[
             styles.dashboardShelfSection,
@@ -1947,9 +2057,10 @@ function DashboardScreen({ user }: { user: SessionUser }) {
                   }}
                 >
                   <View style={[styles.healthCarePage, { width: healthCarePageW }]}>
-                    <View style={styles.healthPageLayout}>
+                    <View style={styles.carePageLayout}>
                       <DashboardGridTile
-                        width={healthCarePageW}
+                        width={tileWidth}
+                        height={careTallTileHeight}
                         label={healthMedsCard.label}
                         variant="grid"
                         onPress={() => navigation.navigate(healthMedsCard.screen)}
@@ -1961,7 +2072,7 @@ function DashboardScreen({ user }: { user: SessionUser }) {
                           />
                         }
                       />
-                      <View style={styles.moreGrid}>{healthGridCards.map(renderToolTile)}</View>
+                      <View style={styles.carePageLeftStack}>{healthGridCards.map(renderToolTile)}</View>
                     </View>
                   </View>
                   <View style={[styles.healthCarePage, { width: healthCarePageW }]}>
@@ -2934,7 +3045,7 @@ function ReportsScreen({ user }: { user: SessionUser }) {
       .map((entry) => {
         const count = entry.glasses ?? 0;
         const met = count >= HYDRATION_TARGET ? " (goal met)" : "";
-        return `${entry.date}: ${count}/${HYDRATION_TARGET} glasses${met}`;
+        return `${entry.date}: ${count}/${HYDRATION_TARGET} cups${met}`;
       });
     const text = [
       `Symptoms: ${symptoms.data?.length ?? 0}`,
@@ -3024,8 +3135,8 @@ function NotificationHelpContent() {
 function HydrationHelpContent() {
   const c = useFlareColors();
   const guidelineSteps = [
-    `Aim for ${HYDRATION_TARGET} glasses of fluid per day (around 250ml per glass).`,
-    "Most adults need about 1.5–2 litres of fluid daily (roughly 6–8 glasses).",
+    `Aim for ${HYDRATION_TARGET} cups of fluid per day (around 250ml per cup).`,
+    "Most adults need about 1.5–2 litres of fluid daily (roughly 6–8 cups).",
     "Water is usually the best choice, though other drinks also contribute to your fluid intake.",
     "You may need more fluids during hot weather, exercise, or a flare. Follow advice from your care team if it differs.",
   ];
@@ -3893,6 +4004,7 @@ function AccountScreen({
       await clearRememberedSession();
       await setAuthLegalAccepted(false);
       await clearNewUserIntroState(deletedUserId);
+      await clearAllHubTipsDismissed();
       prepareSignOut("account_deleted");
     } catch (e: unknown) {
       await restoreAfterAbortedSignOut();
@@ -4000,12 +4112,12 @@ function MainBottomTabBar({
     return null;
   }
 
-  const go = (target: "Dashboard" | "Logs" | "Account") => {
+  const go = (target: "Dashboard" | "Logs" | "MedicalSupplies" | "Account") => {
     navigationRef?.navigate(target as never);
   };
 
   const item = (
-    target: "Dashboard" | "Logs" | "Account",
+    target: "Dashboard" | "Logs" | "MedicalSupplies" | "Account",
     icon: ({ active }: { active: boolean }) => React.ReactNode,
     label: string,
   ) => {
@@ -4013,6 +4125,7 @@ function MainBottomTabBar({
       routeName === target ||
       (target === "Logs" &&
         (routeName === "SymptomHistory" || routeName === "MedicationTrackingHistory" || routeName === "Wellbeing")) ||
+      (target === "MedicalSupplies" && routeName === "MedicalSupplyRequest") ||
       (target === "Dashboard" &&
         (routeName === "Meds" ||
           routeName === "Appointments" ||
@@ -4071,6 +4184,11 @@ function MainBottomTabBar({
         "Dashboard",
         ({ active }) => <Ionicons name={active ? "grid" : "grid-outline"} size={23} color={active ? colors.primary : colors.textMuted} />,
         "Dashboard",
+      )}
+      {item(
+        "MedicalSupplies",
+        ({ active }) => <Ionicons name={active ? "cube" : "cube-outline"} size={23} color={active ? colors.primary : colors.textMuted} />,
+        "Supplies",
       )}
       {item(
         "Logs",
@@ -4235,6 +4353,7 @@ function AppTabs({
     const isAccount = route.name === "Account";
     const isLogs = route.name === "Logs";
     const isReminders = route.name === "Reminders";
+    const isMedicalSupplies = route.name === "MedicalSupplies";
     const titleForRoute: Record<string, string> = {
       Logs: "Logs",
       SymptomHistory: "History",
@@ -4272,6 +4391,8 @@ function AppTabs({
       AppointmentBriefNext: "Next Appointment",
       AppointmentBriefChanges: "What Changed",
       LatestNews: "Latest News",
+      MedicalSupplies: "Supplies",
+      MedicalSupplyRequest: "Request supplies",
     };
     const isSymptomLogWizard = route.name === "SymptomLogWizard";
     const isMedicationTrackingWizard = route.name === "MedicationTrackingWizard";
@@ -4305,7 +4426,9 @@ function AppTabs({
       route.name === "SymptomHistory" ||
       route.name === "SymptomDetail" ||
       route.name === "MedicationTrackingHistory" ||
-      route.name === "MedicationLogDetail";
+      route.name === "MedicationLogDetail" ||
+      route.name === "MedicalSupplies" ||
+      route.name === "MedicalSupplyRequest";
 
     const headerRightContent = headerHidesOverflowMenu ? null : (
       <HeaderOverflowMenu
@@ -4360,7 +4483,8 @@ function AppTabs({
         !isWellbeingWizard &&
         !isAccount &&
         !isLogs &&
-        !isReminders
+        !isReminders &&
+        !isMedicalSupplies
           ? () => (
               <Pressable
                 accessibilityRole="button"
@@ -4418,6 +4542,8 @@ function AppTabs({
             <AppStack.Screen name="AppointmentBriefNext">{() => <AppointmentBriefNextScreen user={user} />}</AppStack.Screen>
             <AppStack.Screen name="AppointmentBriefChanges">{() => <AppointmentBriefChangesScreen user={user} />}</AppStack.Screen>
             <AppStack.Screen name="Reports">{() => <ReportsScreen user={user} />}</AppStack.Screen>
+            <AppStack.Screen name="MedicalSupplies">{() => <MedicalSuppliesScreen user={user} />}</AppStack.Screen>
+            <AppStack.Screen name="MedicalSupplyRequest">{() => <MedicalSupplyRequestScreen user={user} />}</AppStack.Screen>
             <AppStack.Screen name="Meds" component={MedsScreenRoute} />
             <AppStack.Screen name="MedicationDetail">{() => <MedicationDetailScreen user={user} />}</AppStack.Screen>
             <AppStack.Screen name="Reminders">{() => <NotificationsScreen user={user} />}</AppStack.Screen>
@@ -4614,19 +4740,22 @@ function AppRoot() {
     };
   }, [user?.id, user?.accountCreatedAt]);
 
-  // Re-lock when the app is backgrounded (read fresh so toggling the setting takes effect next resume).
-  // Guarded by a signed-in user so the OS biometric dialog (which can flip the app to "inactive")
-  // during a quick-login unlock doesn't strand us on the lock screen right after signing in.
+  // Re-lock when the app is truly backgrounded (home / switcher). Do not lock on `inactive` —
+  // Share sheets, pickers, and the OS biometric dialog all flip inactive and would false-lock.
+  // Share call sites also wrap with `withAppLockExternalUi` (Android often backgrounds for Share).
   useEffect(() => {
     if (!user?.id) return;
     const sub = AppState.addEventListener("change", (state) => {
-      if (state !== "background" && state !== "inactive") return;
+      if (state !== "background") return;
+      if (isAppLockExternalUiActive()) return;
       void (async () => {
+        if (isAppLockExternalUiActive()) return;
         const [available, enabled, label] = await Promise.all([
           isBiometricAvailable(),
           readLockEnabled(),
           biometricTypeLabel(),
         ]);
+        if (isAppLockExternalUiActive()) return;
         if (available && enabled) {
           setBioLabel(label);
           setLocked(true);
@@ -5112,7 +5241,47 @@ const styles = StyleSheet.create({
   dashboardShelfBeforeTitle: { marginTop: 12 },
   /** Previous block already has card mb 12; title/header keeps mt 10. */
   dashboardShelfAfterCard: { marginTop: 0 },
-  dashboardShelfSectionLast: { marginBottom: 24 },
+  dashboardShelfSectionLast: { marginBottom: 8 },
+  prioritiesCard: {
+    marginTop: 0,
+    marginBottom: 12,
+    padding: 12,
+    gap: 0,
+  },
+  prioritiesTray: {
+    borderRadius: 12,
+    paddingVertical: 14,
+    paddingHorizontal: 14,
+    gap: 10,
+  },
+  priorityRow: {
+    flexDirection: "row",
+    alignItems: "flex-start",
+    gap: 8,
+  },
+  priorityEmoji: {
+    fontSize: FLARE_FONT_SIZE.muted,
+    lineHeight: FLARE_LINE_HEIGHT.muted,
+  },
+  priorityLabel: {
+    flex: 1,
+    minWidth: 0,
+    fontSize: FLARE_FONT_SIZE.muted,
+    fontFamily: FLARE_FONT_FAMILY.regular,
+    lineHeight: FLARE_LINE_HEIGHT.muted,
+  },
+  prioritiesCaughtUp: {
+    fontSize: FLARE_FONT_SIZE.muted,
+    fontFamily: FLARE_FONT_FAMILY.regular,
+    textAlign: "center",
+  },
+  prioritiesViewAll: {
+    alignSelf: "flex-start",
+    paddingTop: 2,
+  },
+  prioritiesViewAllLabel: {
+    ...FLARE_INLINE_ACTION_LINK,
+  },
   /** Same bottom margin as dashboard cards (`styles.card` / tracker trays) before the next shelf title. */
   toolsGridBlock: { marginBottom: 12 },
   /** Daily Check-in shelf title. */

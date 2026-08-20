@@ -104,7 +104,7 @@ export function HydrationStepper({
       ) : (
         <>
           <StepperButton
-            label="Decrease glasses"
+            label="Decrease cups"
             symbol="−"
             disabled={!canDecrement}
             color={c.text}
@@ -116,7 +116,7 @@ export function HydrationStepper({
           />
 
           <StepperButton
-            label="Increase glasses"
+            label="Increase cups"
             symbol="+"
             disabled={!canIncrement}
             color={c.white}

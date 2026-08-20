@@ -49,7 +49,7 @@ export function HydrationProgressRing({
       style={styles.wrap}
       accessibilityRole="summary"
       accessibilityLabel={
-        atGoal ? `Goal met. ${target} of ${target} glasses` : `${glasses} of ${target} glasses`
+        atGoal ? `Goal met. ${target} of ${target} cups` : `${glasses} of ${target} cups`
       }
     >
       <Svg width={RING_SIZE} height={RING_SIZE}>
@@ -90,7 +90,7 @@ export function HydrationProgressRing({
               </View>
               <Text style={[styles.goalTitle, { color: c.text }]}>Goal met</Text>
               <Text style={[styles.goalCaption, { color: c.textMuted }]}>
-                {target}/{target} glasses today
+                {target}/{target} cups today
               </Text>
             </View>
           </Animated.View>
@@ -100,7 +100,7 @@ export function HydrationProgressRing({
               {glasses}
               <Text style={[styles.countOf, { color: c.textMuted }]}>/{target}</Text>
             </Text>
-            <Text style={[styles.caption, { color: c.textMuted }]}>glasses today</Text>
+            <Text style={[styles.caption, { color: c.textMuted }]}>cups today</Text>
           </View>
         )}
       </View>

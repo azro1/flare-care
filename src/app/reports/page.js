@@ -948,7 +948,7 @@ function ReportsPageContent() {
           yPosition = 20
         }
         const dateText = entry.date ? formatUKDate(entry.date) : ''
-        const glassesText = `${entry.glasses}/${reportData.hydrationTarget || 6} glasses`
+        const glassesText = `${entry.glasses}/${reportData.hydrationTarget || 6} cups`
         const targetMet = entry.targetMet ? ' (Target met)' : ''
         doc.text(`${dateText} - ${glassesText}${targetMet}`, margin, yPosition)
         yPosition += 8
@@ -1360,7 +1360,7 @@ function ReportsPageContent() {
     if (reportData.hydrationEntries && reportData.hydrationEntries.length > 0) {
       csvData.push([])
       csvData.push(['HYDRATION LOGS'])
-      csvData.push(['Date', 'Glasses', 'Target', 'Target Met'])
+      csvData.push(['Date', 'Cups', 'Target', 'Target Met'])
       const target = reportData.hydrationTarget || 6
       reportData.hydrationEntries.forEach(entry => {
         csvData.push([
@@ -2105,7 +2105,7 @@ function ReportsPageContent() {
                     <span className="text-sm sm:text-base font-medium text-primary font-sans">{formatUKDate(entry.date)}</span>
                   </div>
                   <div className="flex justify-between items-center gap-4 py-3 border-b min-w-0 overflow-hidden" style={{ borderColor: 'var(--separator-card)' }}>
-                    <span className="text-sm sm:text-base text-secondary font-sans">Glasses</span>
+                    <span className="text-sm sm:text-base text-secondary font-sans">Cups</span>
                     <span className="text-sm sm:text-base font-medium text-primary font-sans">{entry.glasses}/{reportData.hydrationTarget || 6}</span>
                   </div>
                   <div className="flex justify-between items-center gap-4 py-3 min-w-0 overflow-hidden">

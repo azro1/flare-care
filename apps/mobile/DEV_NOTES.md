@@ -4,6 +4,8 @@
 
 Product overview, env vars, and how to run the app stay in **`README.md`**. Recent polish / changelog-style notes: **`CHANGELOG.md`**.
 
+**Brain-full cheat sheet — mobile Email:** phone → `EXPO_PUBLIC_WEB_API_BASE_URL` (live = `https://flare-care.vercel.app`) → web route on **`master`**/Vercel → Resend. Details under **Recurring Medical Supplies → Mobile Email → web**.
+
 ---
 
 ## Known-good checkpoints (rollback)
@@ -523,6 +525,7 @@ Hard-won from the 2026-08 sign-in redesign. Check this table **before** inventin
 | **Wrong code shows “expired / wait for timer / Resend”** | Parsing Supabase `error.message` for `expired` vs `invalid` — API often returns **both** in one string | **One** message only (`otpVerifyErrorMessage`). Never claim we know wrong vs expired from the API. Don't tell them to tap **Resend** while the countdown is still visible — Resend **replaces** the timer only when it hits 0. |
 | **Google return: splash stuck, Dashboard maybe underneath** | `newUserIntroPending` re-nulled **after** the user.id effect already resolved (Google `SIGNED_IN` / `onSignedIn` race). Splash shows while `pending === null` and never clears | **Never** `setNewUserIntroPending(null)` from `onAuthStateChange` or `onSignedIn`. Only the **`user.id` effect** may null → resolve. Clear `authBusy` **before** `onSignedIn` once the session exists. Reset `appShellReady` on logout. |
 | **Fingerprint / Face ID sheet flashes then vanishes** (app lock) | `authenticate` re-fired when parent re-rendered (`appShellReady`) because `onUnlock` was in effect deps | **`BiometricLockScreen`**: prompt once via ref; do not put `onUnlock` in the auto-prompt effect deps. |
+| **Share / dismiss → fingerprint keeps locking** | App lock listened for `inactive` + `background`; OS Share sheet backgrounds the app | Re-lock only on **`background`**, and wrap `Share.share` in **`withAppLockExternalUi`** (`biometricLock.ts`). Same for news / appointment summary share. |
 | **Fingerprint sits in the user's face** on sign-in landing | Auto OS prompt on AuthScreen mount | **No auto-prompt** on landing — always show tap affordance when quick-login is armed. |
 | **Fingerprint Y doesn't match lock screen** | Missing reserved Sign out row height on auth landing | Match **`BiometricLockScreen`** bottom stack (fingerprint + invisible Sign out slot). |
 | **Almost there looks different from sign-in** | Large solo logo / old `authShell` layout | Same **`authLandingBrandRow`** as `AuthScreen` (icon 28 + name). |
@@ -584,10 +587,146 @@ Separate flows, separate data:
 
 ---
 
+## Today's priorities (dashboard)
+
+**Job:** Action nudges for *today* on the home shelf (last section). Not a to-do list. Not View progress.
+
+| Feature | Job |
+|---------|-----|
+| **View progress** | Reflective Meds / Hydration / graph sheet from My health |
+| **Today's priorities** | Incomplete actions: remaining meds, hydration nudge, check-in, today/tomorrow appt, **supplies due/overdue** |
+| **Supplies** | Bottom nav tab only — not on this card |
+
+Helpers: `lib/todayPriorities.ts` (`buildTodayPriorities`, `findNearTermAppointment`). Reuses `todaySummary` from the dashboard snapshot; appointments are cache-first via `appointmentShared`. Cap 3 rows + **View all** expands in-card. Caught-up empty state still shows the section.
+
+**Look (trial):** white card + inset `surfaceSubtle` tray, **emoji** lines, no separators / not tappable — so this shelf reads differently from Check in tiles and list trays. Shelf order: Check in → **Today's priorities** → My health / My care → News (if on).
+
+---
+
+## Recurring Medical Supplies (v1)
+
+**Purpose:** Named reorder orders + stock + Request supplies (Share / Email / Copy message). **Nothing auto-sent.** Not prescriptions / partner linking.
+
+| Piece | Location |
+|-------|----------|
+| Shared CRUD / request text / due helpers | `lib/medicalSuppliesShared.ts` |
+| Order list + order detail + in-place setup | `screens/MedicalSuppliesScreen.tsx` + `MedicalSuppliesSetupScreen.tsx` |
+| Request with order-name picker | `screens/MedicalSupplyRequestScreen.tsx` |
+| Add/edit item sheet | `components/MedicalSupplyItemSheet.tsx` |
+| Email API (web) | Repo root: `src/app/api/send-supply-request-email/route.js` |
+| Tables | `medical_supply_kits` (named orders), `medical_supplies` (`kit_id`) |
+
+**Setup:** intro → **name** → how often (week / 2 / 4 / **custom weeks**) → next due. Stock on the order detail (+). Multiple orders via hub **+**. Light multi-step form on the Supplies **tab** — **not** a health wizard (no step counter / wizard landing). Bare page (no cards) uses **`INFORMATIONAL_PAGE_HORIZONTAL_PADDING`** (same gutter as About / IBD / guides) — not `SCREEN_EDGE_PADDING`.
+
+**Request:** pick order name → loads that kit’s stock + saved wording. **Email** / **Copy message** persist `recipient_email`, `email_subject`, `request_body` on the kit (pre-fill next time) **and** advance `next_due_date`. **Share** = OS handoff only (no save, no due advance). No separate “Remember” button — send/copy *is* remember.
+
+### Mobile Email → web (READ THIS)
+
+Same monorepo. Mobile does **not** send mail itself.
+
+1. Phone POSTs to `EXPO_PUBLIC_WEB_API_BASE_URL` + `/api/send-supply-request-email`
+2. Live value in `apps/mobile/.env`: **`https://flare-care.vercel.app`** (no trailing slash)
+3. That route lives in the **web** app (`src/app/api/...`). Production branch is **`master`** → Vercel
+4. Most data still = **Supabase**. Web is only for shared API routes (supply email, appointment brief email, reports, etc.)
+
+| Symptom | Meaning | Fix |
+|---------|---------|-----|
+| Stuck on Sending… then “Network request failed” | Phone can’t reach the base URL (localhost / dead LAN IP) | Point `.env` at live Vercel URL; restart Expo `--clear` |
+| Instant “Could not send” / generic fail | Route missing on Vercel (404) or Resend rejected | Deploy route on **`master`**; check Vercel Resend env vars |
+| Works only to *your* email | Resend free / unverified domain | Normal until you verify a domain in Resend |
+
+**Ship a new email API:** commit the `src/app/api/...` file → push **`master`** → wait for Vercel Ready → then test on phone. Local `npm run dev` web is not what the phone uses when `.env` points at Vercel.
+
+### Supabase SQL (run in dashboard SQL editor)
+
+```sql
+-- Named orders (multi per user)
+create table if not exists public.medical_supply_kits (
+  id bigint generated always as identity primary key,
+  user_id uuid not null references auth.users (id) on delete cascade,
+  name text not null,
+  cadence_days int not null default 7,
+  next_due_date date not null,
+  recipient_email text,
+  email_subject text,
+  request_body text,
+  sort_order int not null default 0,
+  created_at timestamptz not null default now(),
+  updated_at timestamptz
+);
+
+create index if not exists medical_supply_kits_user_id_idx
+  on public.medical_supply_kits (user_id);
+
+alter table public.medical_supply_kits enable row level security;
+
+create policy "medical_supply_kits_select_own"
+  on public.medical_supply_kits for select
+  using (auth.uid() = user_id);
+
+create policy "medical_supply_kits_insert_own"
+  on public.medical_supply_kits for insert
+  with check (auth.uid() = user_id);
+
+create policy "medical_supply_kits_update_own"
+  on public.medical_supply_kits for update
+  using (auth.uid() = user_id)
+  with check (auth.uid() = user_id);
+
+create policy "medical_supply_kits_delete_own"
+  on public.medical_supply_kits for delete
+  using (auth.uid() = user_id);
+
+-- Items (per named order)
+create table if not exists public.medical_supplies (
+  id bigint generated always as identity primary key,
+  user_id uuid not null references auth.users (id) on delete cascade,
+  kit_id bigint not null references public.medical_supply_kits (id) on delete cascade,
+  name text not null,
+  quantity text not null,
+  sort_order int not null default 0,
+  notes text,
+  created_at timestamptz not null default now(),
+  updated_at timestamptz
+);
+
+create index if not exists medical_supplies_user_id_idx on public.medical_supplies (user_id);
+create index if not exists medical_supplies_kit_id_idx on public.medical_supplies (kit_id);
+
+alter table public.medical_supplies enable row level security;
+
+create policy "medical_supplies_select_own"
+  on public.medical_supplies for select
+  using (auth.uid() = user_id);
+
+create policy "medical_supplies_insert_own"
+  on public.medical_supplies for insert
+  with check (auth.uid() = user_id);
+
+create policy "medical_supplies_update_own"
+  on public.medical_supplies for update
+  using (auth.uid() = user_id)
+  with check (auth.uid() = user_id);
+
+create policy "medical_supplies_delete_own"
+  on public.medical_supplies for delete
+  using (auth.uid() = user_id);
+```
+
+**If you already created the old single-kit schema** (`medical_supply_kits.user_id` as PK, no `kit_id` on items), migrate carefully or recreate in a fresh project. Dev-friendly wipe + recreate:
+
+```sql
+drop table if exists public.medical_supplies;
+drop table if exists public.medical_supply_kits;
+-- then run the create statements above
+```
+
+---
+
 ## Keeping these notes useful
 
 When you add shared UI patterns, success flows, log lists, collapsing-title pages, **dashboard home data cards**, or **auth/biometric gotchas** — **update this file**, not the README. If something took more than one wrong guess to fix, add a row to **Auth / OTP / overlay gotchas**.
 
-When you change **product positioning** or **user-visible feature list** — update **`README.md`**.
+When you change **product positioning** or **user-visible feature list** — update **`FEATURES.md`** (full inventory) and the short map in **`README.md`**.
 
 When you ship polish / fixes — **`CHANGELOG.md`**.

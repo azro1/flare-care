@@ -234,7 +234,7 @@ export async function POST(request) {
         const date = formatUKDate(entry.date)
         const glasses = entry.glasses != null ? entry.glasses : 'n/a'
         const met = entry.targetMet ? ' (target met)' : ''
-        textLines.push(`${date} - ${glasses}/${hydrationTarget} glasses${met}`)
+        textLines.push(`${date} - ${glasses}/${hydrationTarget} cups${met}`)
       })
       textLines.push('')
     }
@@ -453,7 +453,7 @@ export async function POST(request) {
         const date = formatUKDate(entry.date)
         const glasses = entry.glasses != null ? entry.glasses : 'n/a'
         const met = entry.targetMet ? ' (target met)' : ''
-        htmlParts.push(`<li style="margin: 0 0 4px 0;">• ${safe(date)} - ${safe(glasses)}/${hydrationTarget} glasses${safe(met)}</li>`)
+        htmlParts.push(`<li style="margin: 0 0 4px 0;">• ${safe(date)} - ${safe(glasses)}/${hydrationTarget} cups${safe(met)}</li>`)
       })
       htmlParts.push('</ul>')
     }

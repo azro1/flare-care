@@ -16,6 +16,7 @@ import {
   type AppointmentBriefRouteParams,
 } from "../lib/appointmentBriefShared";
 import { formatUkDate } from "../lib/formatUkDate";
+import { withAppLockExternalUi } from "../lib/biometricLock";
 import { useAppointmentBrief } from "../lib/useAppointmentBrief";
 import { ACCOUNT_LIST_ROW_PADDING, FLARE_FONT_FAMILY, FLARE_FONT_SIZE, FLARE_LINE_HEIGHT } from "../lib/layoutConstants";
 import { useFlareColors } from "../theme";
@@ -37,7 +38,9 @@ export function AppointmentBriefResultScreen({ user }: { user: SessionUser }) {
   const handleShare = async () => {
     if (!briefText) return;
     try {
-      await Share.share({ message: briefText, title: `Appointment Summary (${weeks} weeks)` });
+      await withAppLockExternalUi(() =>
+        Share.share({ message: briefText, title: `Appointment Summary (${weeks} weeks)` }),
+      );
     } catch {
       // user cancelled
     }

@@ -4,15 +4,19 @@ A personal app for managing Crohn's & Colitis day to day.
 
 ## Core Features
 
-- Dashboard with recent activity, daily goals, and health news
-- Symptom logging wizard with detail pages
-- Medication management with reminders and medication tracking wizard
-- Hydration tracking
-- Weight and bowel movement tracking with detail pages
-- Appointment management with reminders and detail pages
-- Appointment Brief generator (2/4/6-week presets + custom range)
-- Reports (PDF/CSV)
-- Google sign-in with Supabase-backed data
+**Native mobile (source of truth for the full list):** [`apps/mobile/FEATURES.md`](apps/mobile/FEATURES.md)
+
+Web + mobile highlights:
+
+- Dashboard (weather, check-in, today's priorities, health/care tiles, view progress)
+- Symptom / medication / wellbeing logging wizards + history
+- Medication management with reminders
+- Hydration (cups), weight, bowel tracking
+- Appointments + Appointment Summary (Share/Email)
+- Recurring medical **Supplies** + Create request (Share/Email/Copy)
+- Reports
+- Google / email OTP sign-in with Supabase-backed data
+- Biometric app lock (mobile)
 
 ## Tech Stack
 

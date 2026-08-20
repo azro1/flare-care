@@ -199,7 +199,7 @@ function useActivityCopy(summary: TodayActivitySummary) {
         ? "All taken"
         : `${summary.medsTaken} of ${summary.medsTotal} taken`;
     const medsRatio = hasMeds ? Math.min(1, summary.medsTaken / summary.medsTotal) : 0;
-    const hydrationLabel = `${summary.hydration} of ${HYDRATION_TARGET} glasses`;
+    const hydrationLabel = `${summary.hydration} of ${HYDRATION_TARGET} cups`;
     const hydrationRatio = Math.min(1, summary.hydration / HYDRATION_TARGET);
     const hydrationComplete = summary.hydration >= HYDRATION_TARGET;
     const anyProgress = (hasMeds && summary.medsTaken > 0) || summary.hydration > 0;

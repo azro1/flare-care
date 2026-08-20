@@ -134,3 +134,25 @@ export async function authenticate(promptMessage: string): Promise<boolean> {
     return false;
   }
 }
+
+/**
+ * Share sheets / system UI often flip AppState to background — that must not re-lock the app.
+ * Wrap those awaits with `withAppLockExternalUi`.
+ */
+let appLockExternalUiDepth = 0;
+let appLockExternalUiTrailingUntil = 0;
+
+export function isAppLockExternalUiActive(): boolean {
+  return appLockExternalUiDepth > 0 || Date.now() < appLockExternalUiTrailingUntil;
+}
+
+export async function withAppLockExternalUi<T>(fn: () => Promise<T>): Promise<T> {
+  appLockExternalUiDepth += 1;
+  try {
+    return await fn();
+  } finally {
+    appLockExternalUiDepth = Math.max(0, appLockExternalUiDepth - 1);
+    // Trailing inactive/background events often fire after the sheet closes.
+    appLockExternalUiTrailingUntil = Date.now() + 1500;
+  }
+}

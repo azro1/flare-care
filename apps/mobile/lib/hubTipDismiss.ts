@@ -55,3 +55,14 @@ export async function clearHubTipDismissed(tipId: string): Promise<void> {
     // ignore
   }
 }
+
+/** Wipe all tip dismissals (account delete → fresh account should see tips again). */
+export async function clearAllHubTipsDismissed(): Promise<void> {
+  for (const id of Object.keys(dismissedMemory)) delete dismissedMemory[id];
+  hydrated = false;
+  try {
+    await AsyncStorage.removeItem(STORAGE_KEY);
+  } catch {
+    // ignore
+  }
+}

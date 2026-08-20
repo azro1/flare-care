@@ -8,6 +8,8 @@ This folder is the **native mobile app** (Expo / React Native, **iOS + Android**
 
 **Implementation conventions** (shared components, UI patterns, “don’t duplicate this”): **`DEV_NOTES.md`** in this folder — for dev + AI agents.
 
+**Full product feature list** (what the app does, for Simon to remember): **`FEATURES.md`** in this folder.
+
 For **recent UI / polish / changelog-style notes**, see **`CHANGELOG.md`**.
 
 ---
@@ -21,13 +23,16 @@ For **recent UI / polish / changelog-style notes**, see **`CHANGELOG.md`**.
 
 ## What the mobile app does (feature areas)
 
-- **Auth:** Email **OTP** sign-in (countdown, resend after expiry, friendly errors), **Google** sign-in via Supabase, optional **Face ID / fingerprint** app lock + bank-style quick unlock after logout, and a **one-shot new-user intro** after first sign-in.
-- **Dashboard:** Home overview, **weather** (via your web API where configured), **news** rail when available, shortcuts into trackers.
-- **Core tracking:** Symptoms, medications (including “taken” / tracking inserts), **hydration**, **bowel**, **weight**, **appointments**.
-- **Logs hub:** Browse symptom / medication / wellbeing history; short caption under the list.
-- **Reports & briefs:** Mobile report views and sharing / email using the **existing report email API** from the web backend; **Appointment Summary** from Appointments.
-- **Reminders:** Native notification permission and **medication reminder** scheduling (FCM on Android; see Firebase notes below).
-- **Account:** Profile / email display, **light / dark** theme, **App lock**, **About** (product + contact), **logout** (with confirmation modal).
+See **`FEATURES.md`** for the full inventory. Short map:
+
+- **Auth:** Email OTP, Google, biometric lock + quick unlock, new-user intro.
+- **Dashboard:** Weather, Check in wizards, **Today's priorities**, My health / My care, **View progress** (meds/hydration + graph).
+- **Tracking:** Symptoms, meds list + taken tracking, hydration (cups), bowel, weight, wellbeing.
+- **Care:** Appointments + reminders, Appointment Summary (Share/Email), Reports.
+- **Supplies:** Short setup → quiet hub → editable Request supplies (Email / Share / Copy; due date advances automatically).
+- **Logs hub:** Symptom / medication / wellbeing history.
+- **Reminders:** Local med + appointment notifications.
+- **Account:** Theme, app lock, legal, help, about, IBD/nutrition guides.
 
 ---
 
@@ -65,10 +70,10 @@ Set these before running (e.g. `.env` or your shell, depending on how you load E
 
 - `EXPO_PUBLIC_SUPABASE_URL`
 - `EXPO_PUBLIC_SUPABASE_ANON_KEY`
-- `EXPO_PUBLIC_WEB_API_BASE_URL` (example: `https://your-web-app.vercel.app`)
+- `EXPO_PUBLIC_WEB_API_BASE_URL` — live: `https://flare-care.vercel.app` (no trailing slash). Phone calls web API routes here (supply email, brief email, etc.). Restart Expo after changes.
 - `EXPO_PUBLIC_OTP_EXPIRY_SECONDS` (optional, default `900` — must match Supabase Auth → Email → OTP expiry)
 
-The web base URL is used for things like **weather** and **image proxying** where the mobile app calls your deployed web API.
+See **`DEV_NOTES.md` → Recurring Medical Supplies → Mobile Email → web** for the short “how email actually works / what broke last time” notes.
 
 ---
 
@@ -111,7 +116,7 @@ Mobile push uses **Firebase Cloud Messaging (FCM)** on Android. Short checklist:
 
 ## Keeping this README useful
 
-When you add a **user-visible feature** or change **product positioning**, update **“What the mobile app does”** and **“Who it is for”** here.
+When you add a **user-visible feature** or change **product positioning**, update **`FEATURES.md`** (full list) and the short map under **“What the mobile app does”** here.
 
 When you add **implementation patterns** or **“don’t duplicate”** rules, update **`DEV_NOTES.md`**.
 
