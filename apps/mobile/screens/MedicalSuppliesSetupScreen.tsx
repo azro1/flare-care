@@ -322,9 +322,9 @@ export function MedicalSuppliesSetupScreen({
   const questionTitle = useMemo(() => {
     switch (step) {
       case STEP_INTRO:
-        return "Let’s set up a supply order";
+        return "Let’s set up a stock order";
       case STEP_NAME:
-        return "What shall we call this order?";
+        return "Name your order";
       case STEP_CADENCE:
         return "How often do you order?";
       case STEP_DUE:

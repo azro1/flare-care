@@ -15,6 +15,7 @@ import {
 import { flareCardSectionStyles, FlareScreenSectionTitle } from "../components/FlareScreenSectionTitle";
 import { LogHistoryCard } from "../components/LogHistoryList";
 import { OptionPickerModal } from "../components/OptionPickerModal";
+import { ConfirmModal } from "../components/ConfirmModal";
 import { ScrollView } from "../lib/scrollViews";
 import {
   advanceMedicalSupplyKitDueDate,
@@ -73,6 +74,7 @@ export function MedicalSupplyRequestScreen({ user }: { user: SessionUser }) {
   const [error, setError] = useState("");
   const [sendingEmail, setSendingEmail] = useState(false);
   const [orderPickerOpen, setOrderPickerOpen] = useState(false);
+  const [noStockOpen, setNoStockOpen] = useState(false);
 
   const applyDraftFromKit = (rows: MedicalSupplyRow[], kitRow: MedicalSupplyKitRow | null) => {
     setSubject(kitRow?.email_subject?.trim() || "");
@@ -130,8 +132,16 @@ export function MedicalSupplyRequestScreen({ user }: { user: SessionUser }) {
     setLoading(true);
     setError("");
     try {
+      const rows = await fetchMedicalSuppliesForKit(user.id, match.id);
+      if (rows.length === 0) {
+        setNoStockOpen(true);
+        return;
+      }
       setKitId(match.id);
-      await loadKitContent(match.id, kits);
+      const kitRow = kits.find((k) => k.id === match.id) || null;
+      setKit(kitRow);
+      setItems(rows);
+      applyDraftFromKit(rows, kitRow);
     } catch (err: unknown) {
       setError(err instanceof Error ? err.message : "Could not load that order.");
     } finally {
@@ -207,12 +217,7 @@ export function MedicalSupplyRequestScreen({ user }: { user: SessionUser }) {
     if (!body.trim() || items.length === 0) return;
     try {
       await Clipboard.setStringAsync(body.trim());
-      await afterSent({
-        successTitle: "Copied",
-        successBody: "Request text copied to the clipboard.",
-        emailSubject: subject.trim() || DEFAULT_SUPPLY_REQUEST_SUBJECT,
-        recipientEmail: toEmail.trim() || undefined,
-      });
+      showFlareAlert("Copied", "Message copied to the clipboard.");
     } catch (err: unknown) {
       const message = err instanceof Error ? err.message : "Could not copy.";
       showFlareAlert("Could not copy", message);
@@ -371,6 +376,15 @@ export function MedicalSupplyRequestScreen({ user }: { user: SessionUser }) {
         options={orderNames}
         onSelect={(value) => void selectOrder(value)}
         onCancel={() => setOrderPickerOpen(false)}
+      />
+      <ConfirmModal
+        visible={noStockOpen}
+        notice
+        title="Add supplies first"
+        message="Add supplies to this order first, then request supplies."
+        confirmLabel="OK"
+        onConfirm={() => setNoStockOpen(false)}
+        onCancel={() => setNoStockOpen(false)}
       />
     </View>
   );

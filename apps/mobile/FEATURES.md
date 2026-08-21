@@ -124,7 +124,7 @@ Then add stock on that order with **+**.
 **Hub:** cards for each named order (due + cadence). **+** adds another order. Tap a card to manage its stock.
 
 **Request supplies:** pick the order name (dropdown) → loads that order’s stock + wording → Email / Share / Copy message.
-**Email** or **Copy message** saves **send-to email, subject, and message** for that order (so next week they’re pre-filled) and advances **that** order’s due date. **Share** does not save or advance due.
+**Email** saves **send-to email, subject, and message** for that order (so next week they’re pre-filled) and advances **that** order’s due date. **Share** / **Copy message** only hand off the text — they do not save, advance due, or leave the request screen.
 
 
 When any order is due or overdue, home shows it under **Today’s priorities**.

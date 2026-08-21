@@ -6,14 +6,19 @@ import { HYDRATION_TARGET } from "./hydrationShared";
 import { fetchMedicationsForUser } from "./medicationShared";
 import { supabase, TABLES } from "./supabase";
 
-export type ProgressGraphPeriod = "4w" | "3m" | "6m" | "1y";
+export type ProgressGraphPeriod = "2w" | "3w" | "4w" | "3m" | "6m" | "1y";
 
-export const PROGRESS_GRAPH_PERIODS: { id: ProgressGraphPeriod; label: string }[] = [
-  { id: "4w", label: "4 weeks" },
-  { id: "3m", label: "3 months" },
-  { id: "6m", label: "6 months" },
-  { id: "1y", label: "Year" },
+export const PROGRESS_GRAPH_PERIODS: { id: ProgressGraphPeriod; label: string; days: number }[] = [
+  { id: "2w", label: "2 weeks", days: 14 },
+  { id: "3w", label: "3 weeks", days: 21 },
+  { id: "4w", label: "4 weeks", days: 28 },
+  { id: "3m", label: "3 months", days: 90 },
+  { id: "6m", label: "6 months", days: 180 },
+  { id: "1y", label: "Year", days: 365 },
 ];
+
+export const DEFAULT_PROGRESS_GRAPH_PERIOD: ProgressGraphPeriod = "2w";
+export const PROGRESS_GRAPH_PERIOD_LABELS = PROGRESS_GRAPH_PERIODS.map((p) => p.label);
 
 export type ProgressDayPoint = {
   /** YYYY-MM-DD */
@@ -37,16 +42,15 @@ function addDays(d: Date, days: number): Date {
 }
 
 export function progressGraphDayCount(period: ProgressGraphPeriod): number {
-  switch (period) {
-    case "4w":
-      return 28;
-    case "3m":
-      return 90;
-    case "6m":
-      return 180;
-    case "1y":
-      return 365;
-  }
+  return PROGRESS_GRAPH_PERIODS.find((p) => p.id === period)?.days ?? 14;
+}
+
+export function progressGraphPeriodLabel(period: ProgressGraphPeriod): string {
+  return PROGRESS_GRAPH_PERIODS.find((p) => p.id === period)?.label ?? "2 weeks";
+}
+
+export function progressGraphPeriodFromLabel(label: string): ProgressGraphPeriod | null {
+  return PROGRESS_GRAPH_PERIODS.find((p) => p.label === label)?.id ?? null;
 }
 
 /** Same day % as the My progress modal: meds+water average, or water only when no meds. */

@@ -4182,8 +4182,8 @@ function MainBottomTabBar({
     <View style={[styles.bottomTabBarWrap, { backgroundColor: c.screen, borderTopColor: c.cardBorder, paddingBottom: Math.max(insets.bottom, 10) }]}>
       {item(
         "Dashboard",
-        ({ active }) => <Ionicons name={active ? "grid" : "grid-outline"} size={23} color={active ? colors.primary : colors.textMuted} />,
-        "Dashboard",
+        ({ active }) => <Ionicons name={active ? "home" : "home-outline"} size={23} color={active ? colors.primary : colors.textMuted} />,
+        "Home",
       )}
       {item(
         "MedicalSupplies",
@@ -4427,7 +4427,6 @@ function AppTabs({
       route.name === "SymptomDetail" ||
       route.name === "MedicationTrackingHistory" ||
       route.name === "MedicationLogDetail" ||
-      route.name === "MedicalSupplies" ||
       route.name === "MedicalSupplyRequest";
 
     const headerRightContent = headerHidesOverflowMenu ? null : (
@@ -5239,8 +5238,8 @@ const styles = StyleSheet.create({
   dashboardShelfSection: { width: "100%", marginTop: 20 },
   /** Same rhythm as greeting Card → Daily Check-in (card mb 12 + title mt 10). */
   dashboardShelfBeforeTitle: { marginTop: 12 },
-  /** Previous block already has card mb 12; title/header keeps mt 10. */
-  dashboardShelfAfterCard: { marginTop: 0 },
+  /** Previous block already has card mb 12; title/header keeps mt 10 — +6 breathes between home shelves. */
+  dashboardShelfAfterCard: { marginTop: 6 },
   dashboardShelfSectionLast: { marginBottom: 8 },
   prioritiesCard: {
     marginTop: 0,

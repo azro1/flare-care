@@ -618,7 +618,7 @@ Helpers: `lib/todayPriorities.ts` (`buildTodayPriorities`, `findNearTermAppointm
 
 **Setup:** intro → **name** → how often (week / 2 / 4 / **custom weeks**) → next due. Stock on the order detail (+). Multiple orders via hub **+**. Light multi-step form on the Supplies **tab** — **not** a health wizard (no step counter / wizard landing). Bare page (no cards) uses **`INFORMATIONAL_PAGE_HORIZONTAL_PADDING`** (same gutter as About / IBD / guides) — not `SCREEN_EDGE_PADDING`.
 
-**Request:** pick order name → loads that kit’s stock + saved wording. **Email** / **Copy message** persist `recipient_email`, `email_subject`, `request_body` on the kit (pre-fill next time) **and** advance `next_due_date`. **Share** = OS handoff only (no save, no due advance). No separate “Remember” button — send/copy *is* remember.
+**Request:** pick order name → loads that kit’s stock + saved wording. **Email** persists `recipient_email`, `email_subject`, `request_body` on the kit (pre-fill next time) **and** advance `next_due_date`, then leaves the request screen. **Share** / **Copy message** = handoff only (stay on screen; no save, no due advance). No separate “Remember” button — email send *is* remember.
 
 ### Mobile Email → web (READ THIS)
 

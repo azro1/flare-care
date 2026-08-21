@@ -16,6 +16,7 @@ import {
   type LogHistoryListItem,
 } from "../components/LogHistoryList";
 import { ConfirmModal } from "../components/ConfirmModal";
+import { HeaderOverflowMenu } from "../components/HeaderOverflowMenu";
 import { HubTipCard } from "../components/HubTipCard";
 import { TrackerThumbFab, useTrackerThumbFabLayout } from "../components/TrackerThumbFab";
 import {
@@ -24,6 +25,7 @@ import {
   FLARE_INLINE_ACTION_LINK,
   FLARE_LINE_HEIGHT,
   INSTRUCTION_CARD_HEADER_GAP,
+  SCREEN_EDGE_PADDING,
   STACKED_LINE_GAP,
   bottomTabBarHeight,
 } from "../lib/layoutConstants";
@@ -108,6 +110,16 @@ export function MedicalSuppliesScreen({ user }: { user: SessionUser }) {
   const orderIds = useMemo(() => entries.map((e) => String(e.kit.id)), [entries]);
   const stockIds = useMemo(() => items.map((row) => String(row.id)), [items]);
   const selectionItemIds = selectedKitId != null ? stockIds : orderIds;
+  const renderIdleHeaderRight = useCallback(() => {
+    if (selectedKitId != null || inSetup) return null;
+    return (
+      <HeaderOverflowMenu
+        navigation={navigation}
+        routeName="MedicalSupplies"
+        edgePadding={SCREEN_EDGE_PADDING}
+      />
+    );
+  }, [inSetup, navigation, selectedKitId]);
   const {
     selectionMode,
     selectedIds,
@@ -123,6 +135,7 @@ export function MedicalSuppliesScreen({ user }: { user: SessionUser }) {
     itemIds: selectionItemIds,
     navigation,
     headerTitle: selectedKitId != null ? kit?.name || "Supplies" : "Supplies",
+    renderIdleHeaderRight,
   });
 
   // Hub ↔ detail: drop selection so chrome/ids stay in sync.
@@ -226,12 +239,20 @@ export function MedicalSuppliesScreen({ user }: { user: SessionUser }) {
             <Ionicons name="chevron-back" size={24} color={c.textMuted} />
           </Pressable>
         ),
+        headerRight: undefined,
       });
       return;
     }
     navigation.setOptions({
       title: "Supplies",
       headerLeft: undefined,
+      headerRight: () => (
+        <HeaderOverflowMenu
+          navigation={navigation}
+          routeName="MedicalSupplies"
+          edgePadding={SCREEN_EDGE_PADDING}
+        />
+      ),
     });
   }, [c.textMuted, inSetup, kit, leaveDetail, navigation, selectedKitId, selectionMode]);
 
@@ -290,13 +311,18 @@ export function MedicalSuppliesScreen({ user }: { user: SessionUser }) {
 
       const idSet = new Set(ids);
       const prev = entries;
-      setEntries((rows) => rows.filter((e) => !idSet.has(String(e.kit.id))));
+      const remaining = prev.filter((e) => !idSet.has(String(e.kit.id)));
+      const goingToSetup = needsMedicalSuppliesSetup(remaining.length);
+      // Keep hub painted until deletes finish when emptying — avoids empty-list flash into setup.
+      if (!goingToSetup) {
+        setEntries(remaining);
+      }
       try {
         for (const id of ids) {
           await deleteMedicalSupplyKit(user.id, Number(id));
         }
-        const remaining = prev.filter((e) => !idSet.has(String(e.kit.id)));
-        if (needsMedicalSuppliesSetup(remaining.length)) {
+        if (goingToSetup) {
+          setEntries([]);
           openNewOrderSetup();
         }
       } catch (err: unknown) {
@@ -694,9 +720,9 @@ const styles = StyleSheet.create({
   },
   orderCopy: { flex: 1, gap: STACKED_LINE_GAP },
   orderName: {
-    fontSize: FLARE_FONT_SIZE.subhead,
-    lineHeight: FLARE_LINE_HEIGHT.subhead,
-    fontFamily: FLARE_FONT_FAMILY.bold,
+    fontSize: FLARE_FONT_SIZE.muted,
+    lineHeight: FLARE_LINE_HEIGHT.muted,
+    fontFamily: FLARE_FONT_FAMILY.regular,
   },
   orderDue: {
     fontSize: FLARE_FONT_SIZE.muted,
@@ -708,7 +734,7 @@ const styles = StyleSheet.create({
   statusHeadline: {
     fontSize: FLARE_FONT_SIZE.subhead,
     lineHeight: FLARE_LINE_HEIGHT.subhead,
-    fontFamily: FLARE_FONT_FAMILY.bold,
+    fontFamily: FLARE_FONT_FAMILY.medium,
   },
   statusMeta: {
     fontSize: FLARE_FONT_SIZE.muted,

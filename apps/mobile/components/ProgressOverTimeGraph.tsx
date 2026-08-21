@@ -1,21 +1,26 @@
 /**
- * Progress-over-time graph (area/line + period chips).
+ * Progress-over-time graph (area/line + compact period dropdown).
  * Used on My progress sheet (graph swipe page).
  * Pair with `lib/progressGraphShared.ts`.
  */
+import { Ionicons } from "@expo/vector-icons";
 import React, { useEffect, useMemo, useState } from "react";
 import { ActivityIndicator, LayoutChangeEvent, Pressable, StyleSheet, Text, View } from "react-native";
 import Svg, { Circle, Defs, LinearGradient, Path, Stop } from "react-native-svg";
 import { formatUkDateShort } from "../lib/formatUkDate";
 import { FLARE_FONT_FAMILY, FLARE_FONT_SIZE, FLARE_LINE_HEIGHT } from "../lib/layoutConstants";
 import {
-  PROGRESS_GRAPH_PERIODS,
+  DEFAULT_PROGRESS_GRAPH_PERIOD,
+  PROGRESS_GRAPH_PERIOD_LABELS,
   averageProgressPct,
   fetchProgressDayPoints,
+  progressGraphPeriodFromLabel,
+  progressGraphPeriodLabel,
   type ProgressDayPoint,
   type ProgressGraphPeriod,
 } from "../lib/progressGraphShared";
 import { useFlareColors } from "../theme";
+import { OptionPickerModal } from "./OptionPickerModal";
 
 const CHART_HEIGHT = 168;
 const CHART_HEIGHT_FALLBACK = 160;
@@ -69,16 +74,18 @@ export function ProgressOverTimeGraph({
   userId: string;
   /** Load when this swipe page is active (or becoming active). */
   active: boolean;
-  /** Fill the My progress sheet page — larger chips, chart grows into leftover space. */
+  /** Fill the My progress sheet page — chart grows into leftover space. */
   compact?: boolean;
 }) {
   const c = useFlareColors();
-  const [period, setPeriod] = useState<ProgressGraphPeriod>("4w");
+  const [period, setPeriod] = useState<ProgressGraphPeriod>(DEFAULT_PROGRESS_GRAPH_PERIOD);
+  const [periodPickerOpen, setPeriodPickerOpen] = useState(false);
   const [points, setPoints] = useState<ProgressDayPoint[]>([]);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");
   const [chartW, setChartW] = useState(0);
   const [chartH, setChartH] = useState(0);
+  const periodLabel = progressGraphPeriodLabel(period);
 
   const chartHeight = chartH > 0 ? chartH : compact ? CHART_HEIGHT_FALLBACK : CHART_HEIGHT;
 
@@ -120,41 +127,24 @@ export function ProgressOverTimeGraph({
   };
 
   return (
-    <View style={[styles.root, compact ? styles.rootSheet : null]}>
-      <View style={[styles.periodRow, compact ? styles.periodRowSheet : null]}>
-        {PROGRESS_GRAPH_PERIODS.map((item) => {
-          const selected = item.id === period;
-          return (
-            <Pressable
-              key={item.id}
-              accessibilityRole="button"
-              accessibilityState={{ selected }}
-              accessibilityLabel={item.label}
-              onPress={() => setPeriod(item.id)}
-              style={[
-                compact ? styles.periodChipSheet : styles.periodChip,
-                {
-                  backgroundColor: selected ? c.primary : c.surfaceSubtle,
-                },
-              ]}
-            >
-              <Text
-                style={[
-                  compact ? styles.periodChipTextSheet : styles.periodChipText,
-                  { color: selected ? c.white : c.textMuted },
-                ]}
-                numberOfLines={1}
-              >
-                {item.label}
-              </Text>
-            </Pressable>
-          );
-        })}
-      </View>
-
-      <Text style={[compact ? styles.avgLineSheet : styles.avgLine, { color: c.textSecondary }]}>
-        {loading ? "Loading…" : error ? error : `Average ${avg}% over this period`}
-      </Text>
+    <>
+      <View style={[styles.root, compact ? styles.rootSheet : null]}>
+        <View style={styles.periodRow}>
+          <Pressable
+            accessibilityRole="button"
+            accessibilityLabel={`Time period, ${periodLabel}`}
+            onPress={() => setPeriodPickerOpen(true)}
+            style={[styles.periodField, { backgroundColor: c.inputBg, borderColor: c.inputBorder }]}
+          >
+            <Text style={[styles.periodFieldText, { color: c.text }]} numberOfLines={1}>
+              {periodLabel}
+            </Text>
+            <Ionicons name="chevron-down" size={16} color={c.textMuted} />
+          </Pressable>
+          <Text style={[styles.avgLine, { color: c.textSecondary }]} numberOfLines={1}>
+            {loading ? "Loading…" : error ? error : `Average ${avg}% over this period`}
+          </Text>
+        </View>
 
       <View
         style={[styles.chartWrap, compact ? styles.chartWrapSheet : { minHeight: chartHeight + 8 }]}
@@ -207,7 +197,19 @@ export function ProgressOverTimeGraph({
           <Text style={[styles.axisLabel, { color: c.textMuted }]}>{endLabel}</Text>
         </View>
       </View>
-    </View>
+      </View>
+
+      <OptionPickerModal
+        visible={periodPickerOpen}
+        options={PROGRESS_GRAPH_PERIOD_LABELS}
+        onSelect={(label) => {
+          const next = progressGraphPeriodFromLabel(label);
+          if (next) setPeriod(next);
+          setPeriodPickerOpen(false);
+        }}
+        onCancel={() => setPeriodPickerOpen(false)}
+      />
+    </>
   );
 }
 
@@ -222,42 +224,27 @@ const styles = StyleSheet.create({
   },
   periodRow: {
     flexDirection: "row",
-    flexWrap: "wrap",
-    gap: 8,
-  },
-  periodRowSheet: {
-    flexWrap: "nowrap",
-    gap: 8,
-  },
-  periodChip: {
-    borderRadius: 10,
-    paddingHorizontal: 10,
-    paddingVertical: 7,
-  },
-  periodChipSheet: {
-    flex: 1,
     alignItems: "center",
-    justifyContent: "center",
-    borderRadius: 10,
-    paddingHorizontal: 8,
-    paddingVertical: 8,
+    gap: 10,
   },
-  periodChipText: {
+  periodField: {
+    flexDirection: "row",
+    alignItems: "center",
+    flexShrink: 0,
+    gap: 8,
+    borderWidth: 1,
+    borderRadius: 10,
+    paddingVertical: 7,
+    paddingLeft: 10,
+    paddingRight: 8,
+  },
+  periodFieldText: {
     fontSize: FLARE_FONT_SIZE.caption,
     lineHeight: FLARE_LINE_HEIGHT.caption,
-    fontFamily: FLARE_FONT_FAMILY.medium,
-  },
-  periodChipTextSheet: {
-    fontSize: FLARE_FONT_SIZE.muted,
-    lineHeight: FLARE_LINE_HEIGHT.muted,
-    fontFamily: FLARE_FONT_FAMILY.medium,
+    fontFamily: FLARE_FONT_FAMILY.regular,
   },
   avgLine: {
-    fontSize: FLARE_FONT_SIZE.caption,
-    lineHeight: FLARE_LINE_HEIGHT.caption,
-    fontFamily: FLARE_FONT_FAMILY.medium,
-  },
-  avgLineSheet: {
+    flex: 1,
     fontSize: FLARE_FONT_SIZE.caption,
     lineHeight: FLARE_LINE_HEIGHT.caption,
     fontFamily: FLARE_FONT_FAMILY.medium,
