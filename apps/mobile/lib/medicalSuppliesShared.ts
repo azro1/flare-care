@@ -267,6 +267,15 @@ export function clearMedicalSupplyKitListCache(userId: string): void {
   delete medicalSupplyKitListCacheByUserId[userId];
 }
 
+export function supplyDueStatusFromKitListCache(userId: string): SupplyDueStatus | null {
+  const entries = getMedicalSupplyKitListCache(userId);
+  if (entries === undefined) return null;
+  if (entries.length === 0) return "empty";
+  if (entries.some((e) => e.status === "overdue")) return "overdue";
+  if (entries.some((e) => e.status === "due")) return "due";
+  return "upcoming";
+}
+
 export async function fetchSupplyDashboardSummary(userId: string): Promise<SupplyDashboardSummary> {
   const entries = await fetchKitListEntries(userId);
   const kitCount = entries.length;

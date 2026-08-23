@@ -8,7 +8,7 @@ import React, { useEffect, useMemo, useState } from "react";
 import { ActivityIndicator, LayoutChangeEvent, Pressable, StyleSheet, Text, View } from "react-native";
 import Svg, { Circle, Defs, LinearGradient, Path, Stop } from "react-native-svg";
 import { formatUkDateShort } from "../lib/formatUkDate";
-import { FLARE_FONT_FAMILY, FLARE_FONT_SIZE, FLARE_LINE_HEIGHT } from "../lib/layoutConstants";
+import { FLARE_FONT_FAMILY, FLARE_FONT_SIZE, FLARE_LINE_HEIGHT, NAV_ROW_CHEVRON_SIZE } from "../lib/layoutConstants";
 import {
   DEFAULT_PROGRESS_GRAPH_PERIOD,
   PROGRESS_GRAPH_PERIOD_LABELS,
@@ -139,7 +139,7 @@ export function ProgressOverTimeGraph({
             <Text style={[styles.periodFieldText, { color: c.text }]} numberOfLines={1}>
               {periodLabel}
             </Text>
-            <Ionicons name="chevron-down" size={16} color={c.textMuted} />
+            <Ionicons name="chevron-down" size={NAV_ROW_CHEVRON_SIZE} color={c.textMuted} />
           </Pressable>
           <Text style={[styles.avgLine, { color: c.textSecondary }]} numberOfLines={1}>
             {loading ? "Loading…" : error ? error : `Average ${avg}% over this period`}

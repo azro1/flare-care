@@ -5,6 +5,7 @@ import {
   CARD_SECTION_INNER_GAP,
   FLARE_FONT_FAMILY,
   FLARE_FONT_SIZE,
+  NAV_ROW_CHEVRON_SIZE,
 } from "../lib/layoutConstants";
 import { useFlareColors } from "../theme";
 
@@ -26,7 +27,7 @@ export function WizardReviewEditButton({
       style={({ pressed }) => [styles.row, pressed && { opacity: 0.7 }]}
     >
       <Text style={[styles.label, { color: c.text }]}>Edit</Text>
-      <Ionicons name="chevron-forward" size={FLARE_FONT_SIZE.body} color={c.textMuted} accessibilityIgnoresInvertColors />
+      <Ionicons name="chevron-forward" size={NAV_ROW_CHEVRON_SIZE} color={c.textMuted} accessibilityIgnoresInvertColors />
     </Pressable>
   );
 }

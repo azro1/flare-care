@@ -35,11 +35,13 @@ import {
   type MedicalSupplyKitRow,
   type MedicalSupplyRow,
 } from "../lib/medicalSuppliesShared";
+import { rescheduleSupplyNotificationsForUser } from "../lib/medicationNotifications";
 import {
   FLARE_FONT_FAMILY,
   FLARE_FONT_SIZE,
   FLARE_INLINE_ACTION_LINK,
   FLARE_LINE_HEIGHT,
+  NAV_ROW_CHEVRON_SIZE,
   WIZARD_LANDING_BLOCK_PADDING_BOTTOM,
   bottomTabBarScrollInset,
 } from "../lib/layoutConstants";
@@ -188,6 +190,11 @@ export function MedicalSupplyRequestScreen({ user }: { user: SessionUser }) {
         setKit(updated);
         setKits((prev) => prev.map((k) => (k.id === updated.id ? updated : k)));
         nextDueLabel = formatUkDate(updated.next_due_date);
+        try {
+          await rescheduleSupplyNotificationsForUser(user.id);
+        } catch {
+          // non-fatal
+        }
       }
     } catch {
       // wording may have saved; due advance failed — still tell them send worked
@@ -303,7 +310,7 @@ export function MedicalSupplyRequestScreen({ user }: { user: SessionUser }) {
                 <Text style={[styles.orderPickerText, { color: kit?.name ? c.text : c.textMuted }]} numberOfLines={1}>
                   {kit?.name || "Select order"}
                 </Text>
-                <Ionicons name="chevron-down" size={18} color={c.textMuted} />
+                <Ionicons name="chevron-down" size={NAV_ROW_CHEVRON_SIZE} color={c.textMuted} />
               </View>
             </FlareInputTrigger>
 

@@ -15,7 +15,7 @@ import {
   type LogHistoryListItem,
 } from "../components/LogHistoryList";
 import { ConfirmModal } from "../components/ConfirmModal";
-import { HubTipCard } from "../components/HubTipCard";
+import { InfoHintButton } from "../components/InfoHintButton";
 import { TrackerThumbFab, useTrackerThumbFabLayout } from "../components/TrackerThumbFab";
 import {
   FLARE_FONT_FAMILY,
@@ -48,6 +48,7 @@ import {
   type MedicalSupplyKitRow,
   type MedicalSupplyRow,
 } from "../lib/medicalSuppliesShared";
+import { rescheduleSupplyNotificationsForUser } from "../lib/medicationNotifications";
 import { formatUkDate } from "../lib/formatUkDate";
 import { SUPPLIES_SETUP_STEP_INTRO } from "./MedicalSuppliesSetupScreen";
 import { useFlareColors } from "../theme";
@@ -86,6 +87,28 @@ export function MedicalSupplyOrderScreen({ user }: { user: SessionUser }) {
 
   const headerName = kit?.name?.trim() || paramOrderName || "Order";
   const stockIds = useMemo(() => items.map((row) => String(row.id)), [items]);
+  const renderOrderHeaderTitle = useCallback(
+    () => (
+      <View style={styles.headerTitleWithHint}>
+        <Text
+          style={{
+            fontFamily: FLARE_FONT_FAMILY.bold,
+            fontSize: FLARE_FONT_SIZE.navTitle,
+            color: c.text,
+          }}
+          numberOfLines={1}
+        >
+          {headerName}
+        </Text>
+        <InfoHintButton
+          title={headerName}
+          message="Tap an item to edit it. Long-press to select and remove."
+          accessibilityLabel="About this order"
+        />
+      </View>
+    ),
+    [c.text, headerName],
+  );
   const {
     selectionMode,
     selectedIds,
@@ -100,7 +123,7 @@ export function MedicalSupplyOrderScreen({ user }: { user: SessionUser }) {
     routeName: "MedicalSupplyOrder",
     itemIds: stockIds,
     navigation,
-    headerTitle: headerName,
+    headerTitle: renderOrderHeaderTitle,
     renderIdleHeaderRight: () => null,
   });
 
@@ -143,9 +166,9 @@ export function MedicalSupplyOrderScreen({ user }: { user: SessionUser }) {
   useLayoutEffect(() => {
     if (selectionMode) return;
     navigation.setOptions({
-      title: headerName,
+      headerTitle: renderOrderHeaderTitle,
     });
-  }, [headerName, navigation, selectionMode]);
+  }, [navigation, renderOrderHeaderTitle, selectionMode]);
 
   const handleBulkDeleteConfirm = useCallback(() => {
     void runBulkDelete(async (ids) => {
@@ -156,6 +179,11 @@ export function MedicalSupplyOrderScreen({ user }: { user: SessionUser }) {
       clearMedicalSupplyKitListCache(user.id);
       try {
         await deleteMedicalSuppliesForUser(user.id, ids);
+        try {
+          await rescheduleSupplyNotificationsForUser(user.id);
+        } catch {
+          // non-fatal
+        }
       } catch (err: unknown) {
         setItems(prev);
         const message = err instanceof Error ? err.message : "Could not delete these items.";
@@ -204,6 +232,11 @@ export function MedicalSupplyOrderScreen({ user }: { user: SessionUser }) {
       } else {
         const created = await insertMedicalSupply(user.id, kitId, values);
         setItems((prev) => [...prev, created]);
+        try {
+          await rescheduleSupplyNotificationsForUser(user.id);
+        } catch {
+          // non-fatal
+        }
       }
       closeSheet();
     } catch (err: unknown) {
@@ -220,6 +253,11 @@ export function MedicalSupplyOrderScreen({ user }: { user: SessionUser }) {
       const remaining =
         previous == null ? null : previous.filter((entry) => entry.kit.id !== kitId);
       await deleteMedicalSupplyKit(user.id, kitId);
+      try {
+        await rescheduleSupplyNotificationsForUser(user.id);
+      } catch {
+        // non-fatal
+      }
       if (remaining != null) {
         setMedicalSupplyKitListCache(user.id, remaining);
       }
@@ -344,34 +382,39 @@ export function MedicalSupplyOrderScreen({ user }: { user: SessionUser }) {
           <Text style={[styles.statusMeta, { color: c.textMuted }]}>{cadenceLabel(cadenceDays)}</Text>
         </View>
 
-        {!selectionMode ? (
-          <View style={styles.statusActions}>
-            <PrimaryButton title="Send request" onPress={openRequestSupplies} />
-            <Pressable
-              accessibilityRole="button"
-              onPress={() =>
-                navigation.navigate({
-                  name: "MedicalSuppliesSetup",
-                  params: { editKitId: kitId },
-                })
-              }
-              style={[styles.changeLink, styles.editSetupLink]}
-            >
-              <Text style={[FLARE_INLINE_ACTION_LINK, { color: c.primary, textAlign: "center" }]}>
-                Edit setup
-              </Text>
-            </Pressable>
-            <Pressable
-              accessibilityRole="button"
-              onPress={() => setDeleteOrderOpen(true)}
-              style={styles.changeLink}
-            >
-              <Text style={[FLARE_INLINE_ACTION_LINK, { color: c.danger, textAlign: "center" }]}>
-                Delete
-              </Text>
-            </Pressable>
-          </View>
-        ) : null}
+        <View
+          style={[styles.statusActions, selectionMode ? styles.statusActionsDisabled : null]}
+          pointerEvents={selectionMode ? "none" : "auto"}
+        >
+          <PrimaryButton title="Send request" onPress={openRequestSupplies} disabled={selectionMode} />
+          <Pressable
+            accessibilityRole="button"
+            accessibilityState={{ disabled: selectionMode }}
+            disabled={selectionMode}
+            onPress={() =>
+              navigation.navigate({
+                name: "MedicalSuppliesSetup",
+                params: { editKitId: kitId },
+              })
+            }
+            style={[styles.changeLink, styles.editSetupLink]}
+          >
+            <Text style={[FLARE_INLINE_ACTION_LINK, { color: c.primary, textAlign: "center" }]}>
+              Edit setup
+            </Text>
+          </Pressable>
+          <Pressable
+            accessibilityRole="button"
+            accessibilityState={{ disabled: selectionMode }}
+            disabled={selectionMode}
+            onPress={() => setDeleteOrderOpen(true)}
+            style={styles.changeLink}
+          >
+            <Text style={[FLARE_INLINE_ACTION_LINK, { color: c.danger, textAlign: "center" }]}>
+              Delete
+            </Text>
+          </Pressable>
+        </View>
       </View>
 
       <LogHistoryCard>
@@ -398,18 +441,18 @@ export function MedicalSupplyOrderScreen({ user }: { user: SessionUser }) {
           )}
         </View>
       </LogHistoryCard>
-      {items.length > 0 && !selectionMode ? (
-        <HubTipCard
-          tipId="supplies-order-stock-hint-v1"
-          message="Tap to edit · long-press to remove"
-        />
-      ) : null}
     </InstructionScreenShell>
   );
 }
 
 const styles = StyleSheet.create({
   centered: { flex: 1, alignItems: "center", justifyContent: "center" },
+  headerTitleWithHint: {
+    flexDirection: "row",
+    alignItems: "center",
+    gap: 6,
+    maxWidth: "100%",
+  },
   statusCopy: { gap: STACKED_LINE_GAP },
   statusCard: { padding: 18 },
   statusHeadline: {
@@ -423,6 +466,7 @@ const styles = StyleSheet.create({
     fontFamily: FLARE_FONT_FAMILY.regular,
   },
   statusActions: { gap: INSTRUCTION_CARD_HEADER_GAP },
+  statusActionsDisabled: { opacity: 0.4 },
   editSetupLink: { marginTop: 4 },
   changeLink: { paddingVertical: STACKED_LINE_GAP },
 });

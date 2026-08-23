@@ -47,9 +47,10 @@ Commit subject starts with **`SAVE POINT:`** so grepping that string always surf
 - Confirm modal / delete-account card spacing polish
 
 **Reminders count + schedule rules (`lib/medicationNotifications.ts`):**
-- Count is **per OS alarm**, not “1 for meds + 1 for appointments”. Reminders screen: `You have N reminders scheduled` = `getAllScheduledNotificationsAsync().length` (fallback: med IDs + appointment IDs).
+- Count is **per OS alarm**, not “1 for meds + 1 for appointments”. Reminders screen: `You have N reminders scheduled` = `getAllScheduledNotificationsAsync().length` (fallback: med + appointment + supply stored IDs).
 - **Meds:** one **DAILY** repeating notification per row with `reminders_enabled`. Still scheduled (and counted) even if today’s dose time has already passed.
 - **Appointments:** one **DATE** one-shot per row with `reminder_minutes_before != null`, only if `appointmentTime − leadMinutes > now`. If that fire time has passed, rebuild **skips** it — UI can still show a reminder label, but it is **not** in the scheduled count. Opening Reminders / saving a med runs cancel-all + rebuild, so a past lead window can drop the appointment alarm even though the appointment remains upcoming.
+- **Supplies:** one **DATE** one-shot per **stocked** kit (`itemCount > 0`) at **09:00 local** on `next_due_date`. Empty kits and past triggers are skipped (overdue stays a dashboard priority — no catch-up ping). Soft gate: schedule only if notification permission is **already** granted (no prompt from supply screens). Tap → `MedicalSupplyOrder` for that kit. Rebuild via `rescheduleSupplyNotificationsForUser` after kit save/delete, first item add / item wipe, and due advance after email send; full rebuild (`rescheduleLocalRemindersIfGranted`) also includes supplies.
 - Parse appointments with `getAppointmentDateTime()` (accepts `HH:mm` / optional seconds; plain `YYYY-MM-DD` date). Do **not** build `` new Date(`${date}T${time}:00`) `` — breaks if `time` already has seconds or `date` is ISO.
 
 **Restore check:** `git show <sha>` or `git checkout <sha>` (detached) / create a branch from it if you need to compare.
@@ -619,6 +620,8 @@ Helpers: `lib/todayPriorities.ts` (`buildTodayPriorities`, `findNearTermAppointm
 **Setup:** intro → **name** → how often (week / 2 / 4 / **custom weeks**) → next due. Stock on the order detail (+). Multiple orders via hub **+**. Light multi-step form on the Supplies **tab** — **not** a health wizard (no step counter / wizard landing). Bare page (no cards) uses **`INFORMATIONAL_PAGE_HORIZONTAL_PADDING`** (same gutter as About / IBD / guides) — not `SCREEN_EDGE_PADDING`.
 
 **Request:** pick order name → loads that kit’s stock + saved wording. **Email** persists `recipient_email`, `email_subject`, `request_body` on the kit (pre-fill next time) **and** advance `next_due_date`, then leaves the request screen. **Share** / **Copy message** = handoff only (stay on screen; no save, no due advance). No separate “Remember” button — email send *is* remember.
+
+**Due-day phone alert:** fixed **09:00 local** on `next_due_date` for stocked orders only (see Reminders schedule rules above). No per-order reminder time — due is a date; Edit setup is for changing that date / cadence, not a clock. Example: order due tomorrow → fires tomorrow 09:00 if permission is on and the order has stock.
 
 ### Mobile Email → web (READ THIS)
 

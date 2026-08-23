@@ -36,8 +36,8 @@ export function useLogListSelection({
   routeName: string;
   itemIds: string[];
   navigation: NavigationWithOptions;
-  /** Restored when leaving selection mode — must match `headerOptions` title for this route. */
-  headerTitle: string;
+  /** Restored when leaving selection mode — string or custom header title element. */
+  headerTitle: string | (() => React.ReactNode);
   /** Optional header action when not in selection mode (e.g. navigate to a sibling list). */
   renderIdleHeaderRight?: () => React.ReactNode;
 }) {

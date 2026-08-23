@@ -38,9 +38,9 @@ import {
   type AppointmentsTab,
 } from "../lib/appointmentShared";
 import {
-  FLARE_CAPTION_HINT,
   FLARE_FONT_FAMILY,
   FLARE_FONT_SIZE,
+  NAV_ROW_CHEVRON_SIZE,
   bottomTabBarHeight,
 } from "../lib/layoutConstants";
 import { useFlareColors } from "../theme";
@@ -259,11 +259,8 @@ export function AppointmentsListPane({
             style={({ pressed }) => [styles.summaryLink, pressed && { opacity: 0.85 }]}
           >
             <Text style={[styles.summaryLinkLabel, { color: c.text }]}>Appointment Summary</Text>
-            <Ionicons name="chevron-forward" size={FLARE_FONT_SIZE.subhead} color={c.textMuted} accessibilityIgnoresInvertColors />
+            <Ionicons name="chevron-forward" size={NAV_ROW_CHEVRON_SIZE} color={c.textMuted} accessibilityIgnoresInvertColors />
           </Pressable>
-          <Text style={[styles.summaryHint, { color: c.textMuted }]}>
-            Generate a quick health summary from your records for your next appointment.
-          </Text>
         </View>
       ) : null}
     </InstructionScreenShell>
@@ -288,10 +285,5 @@ const styles = StyleSheet.create({
   summaryLinkLabel: {
     fontSize: FLARE_FONT_SIZE.subhead,
     fontFamily: FLARE_FONT_FAMILY.regular,
-  },
-  summaryHint: {
-    ...FLARE_CAPTION_HINT,
-    textAlign: "center",
-    marginTop: 2,
   },
 });

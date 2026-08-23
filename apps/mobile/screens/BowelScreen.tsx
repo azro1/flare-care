@@ -73,6 +73,7 @@ import {
   FLARE_FONT_SIZE,
   FLARE_LINE_HEIGHT,
   CARD_SECTION_INNER_GAP,
+  NAV_ROW_CHEVRON_SIZE,
   SCREEN_EDGE_PADDING,
   TIME_PICKER_MINUTE_INTERVAL,
   bottomTabBarHeight,
@@ -371,7 +372,7 @@ export function BowelLogSheet({
             <Text style={[styles.optionalToggleText, { color: c.text }]}>
               {showOptional ? "Hide optional details" : "Add optional details"}
             </Text>
-            <Ionicons name={showOptional ? "chevron-up" : "chevron-down"} size={18} color={c.textMuted} />
+            <Ionicons name={showOptional ? "chevron-up" : "chevron-down"} size={NAV_ROW_CHEVRON_SIZE} color={c.textMuted} />
           </Pressable>
 
           {showOptional ? (

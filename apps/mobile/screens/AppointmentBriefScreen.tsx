@@ -2,7 +2,6 @@ import { useNavigation } from "@react-navigation/native";
 import React, { useCallback, useMemo } from "react";
 import { Pressable, StyleSheet, Text, View } from "react-native";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
-import { HubTipCard } from "../components/HubTipCard";
 import { InstructionScreenShell } from "../components/InstructionScreenShell";
 import {
   buildBrowseLogRowItem,
@@ -62,10 +61,6 @@ export function AppointmentBriefScreen({ user }: { user: SessionUser }) {
       <LogHistoryCard>
         <LogHistoryList items={items} onPressItem={onPressItem} rowPaddingHorizontal={ACCOUNT_LIST_ROW_PADDING} />
       </LogHistoryCard>
-      <HubTipCard
-        tipId="appointment-summary-card-v1"
-        message="Choose a suggested time period or select your own dates to include the information you need."
-      />
       <View style={styles.needHelpBlock}>
         <Pressable
           accessibilityRole="link"

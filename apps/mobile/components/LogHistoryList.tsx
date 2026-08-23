@@ -25,6 +25,7 @@ import {
   FLARE_FONT_SIZE,
   FLARE_INLINE_ACTION_LINK,
   FLARE_LINE_HEIGHT,
+  NAV_ROW_CHEVRON_SIZE,
   SECTION_TITLE_MARGIN_BOTTOM,
   LOG_TRAY_SECOND_LINE_GAP,
   ONE_LINE_TRAY_PADDING,
@@ -419,7 +420,7 @@ export function LogHistoryList({
         ) : onPressItem ? (
           <Ionicons
             name="chevron-forward"
-            size={18}
+            size={NAV_ROW_CHEVRON_SIZE}
             color={c.text}
             accessibilityIgnoresInvertColors
           />

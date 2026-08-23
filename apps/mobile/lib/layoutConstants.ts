@@ -204,7 +204,7 @@ export const NAV_ROW_LABEL = {
   fontFamily: FLARE_FONT_FAMILY.regular,
 } as const;
 
-/** Chevron on navigate rows (`chevron-forward`). */
+/** Navigate / disclosure chevrons (`chevron-forward` / `-down` / `-up`). Not header back. */
 export const NAV_ROW_CHEVRON_SIZE = FLARE_FONT_SIZE.navTitle;
 
 /** In-card section title — Account, wizard review (`FlareScreenSectionTitle inCard`). */

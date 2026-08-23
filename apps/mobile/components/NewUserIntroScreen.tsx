@@ -14,7 +14,7 @@ import { Ionicons, MaterialCommunityIcons } from "@expo/vector-icons";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { FLARE_BUTTON_MIN_HEIGHT, PrimaryButton } from "./FlareButton";
 import { NEW_USER_INTRO_SLIDES, type NewUserIntroSlide } from "../lib/newUserIntroCopy";
-import { FLARE_FONT_FAMILY, FULL_WIDTH_CTA_EDGE_PADDING, SCREEN_EDGE_PADDING } from "../lib/layoutConstants";
+import { FLARE_FONT_FAMILY, FULL_WIDTH_CTA_EDGE_PADDING, NAV_ROW_CHEVRON_SIZE, SCREEN_EDGE_PADDING } from "../lib/layoutConstants";
 import { useFlareColors } from "../theme";
 
 /** Shared media band — all slides use the same icon size. */
@@ -167,7 +167,7 @@ export function NewUserIntroScreen({ onFinished }: { onFinished: () => void }) {
           ) : (
             <View style={styles.swipeHint} accessibilityRole="text" accessibilityLabel="Swipe to continue">
               <Text style={[styles.swipeHintText, { color: c.textMuted }]}>Swipe to continue</Text>
-              <Ionicons name="chevron-forward" size={16} color={c.textMuted} />
+              <Ionicons name="chevron-forward" size={NAV_ROW_CHEVRON_SIZE} color={c.textMuted} />
             </View>
           )}
         </View>

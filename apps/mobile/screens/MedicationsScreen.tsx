@@ -57,6 +57,7 @@ import {
   CARD_SECTION_INNER_GAP,
   FLARE_FONT_FAMILY,
   FLARE_FONT_SIZE,
+  NAV_ROW_CHEVRON_SIZE,
   SCREEN_EDGE_PADDING,
   TIME_PICKER_MINUTE_INTERVAL,
   bottomTabBarHeight,
@@ -206,7 +207,7 @@ export function MedicationSheet({
                   ? form.frequency
                   : form.frequency || "Select frequency"}
               </Text>
-              <Ionicons name="chevron-down" size={18} color={c.textMuted} />
+              <Ionicons name="chevron-down" size={NAV_ROW_CHEVRON_SIZE} color={c.textMuted} />
             </Pressable>
             {form.frequencyMode === "custom" && customFrequencyEditing ? (
               <FlareTextInput

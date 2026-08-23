@@ -7,13 +7,14 @@ import { showFlareAlert } from "../components/FlareAlertHost";
 import { InstructionScreenShell } from "../components/InstructionScreenShell";
 import { ConfirmModal } from "../components/ConfirmModal";
 import { HeaderOverflowMenu } from "../components/HeaderOverflowMenu";
-import { HubTipCard } from "../components/HubTipCard";
+import { InfoHintButton } from "../components/InfoHintButton";
 import { TrackerThumbFab, useTrackerThumbFabLayout } from "../components/TrackerThumbFab";
 import {
   FLARE_FONT_FAMILY,
   FLARE_FONT_SIZE,
   FLARE_INLINE_ACTION_LINK,
   FLARE_LINE_HEIGHT,
+  NAV_ROW_CHEVRON_SIZE,
   SCREEN_EDGE_PADDING,
   STACKED_LINE_GAP,
   bottomTabBarHeight,
@@ -27,6 +28,7 @@ import {
   supplyDueListLabel,
   type KitListEntry,
 } from "../lib/medicalSuppliesShared";
+import { rescheduleSupplyNotificationsForUser } from "../lib/medicationNotifications";
 import { SUPPLIES_SETUP_STEP_INTRO } from "./MedicalSuppliesSetupScreen";
 import { useFlareColors } from "../theme";
 
@@ -69,6 +71,29 @@ export function MedicalSuppliesScreen({ user }: { user: SessionUser }) {
     ),
     [navigation],
   );
+  const renderSuppliesHeaderTitle = useCallback(
+    () => (
+      <View style={styles.headerTitleWithHint}>
+        <Text
+          style={{
+            fontFamily: FLARE_FONT_FAMILY.bold,
+            fontSize: FLARE_FONT_SIZE.navTitle,
+            color: c.text,
+          }}
+        >
+          My Supplies
+        </Text>
+        <InfoHintButton
+          title="My Supplies"
+          message={
+            "Your supplies hub keeps your supply orders together in one place. Create an order for each set of supplies you regularly need. Tap to manage, or long-press to delete."
+          }
+          accessibilityLabel="About My Supplies"
+        />
+      </View>
+    ),
+    [c.text],
+  );
   const {
     selectionMode,
     selectedIds,
@@ -82,7 +107,7 @@ export function MedicalSuppliesScreen({ user }: { user: SessionUser }) {
     routeName: "MedicalSupplies",
     itemIds: orderIds,
     navigation,
-    headerTitle: "My Supplies",
+    headerTitle: renderSuppliesHeaderTitle,
     renderIdleHeaderRight,
   });
 
@@ -121,7 +146,7 @@ export function MedicalSuppliesScreen({ user }: { user: SessionUser }) {
   useLayoutEffect(() => {
     if (selectionMode) return;
     navigation.setOptions({
-      title: "My Supplies",
+      headerTitle: renderSuppliesHeaderTitle,
       headerLeft: undefined,
       headerRight: () => (
         <HeaderOverflowMenu
@@ -131,7 +156,7 @@ export function MedicalSuppliesScreen({ user }: { user: SessionUser }) {
         />
       ),
     });
-  }, [navigation, selectionMode]);
+  }, [navigation, renderSuppliesHeaderTitle, selectionMode]);
 
   const handleBulkDeleteConfirm = useCallback(() => {
     void runBulkDelete(async (ids) => {
@@ -145,6 +170,11 @@ export function MedicalSuppliesScreen({ user }: { user: SessionUser }) {
       try {
         for (const id of ids) {
           await deleteMedicalSupplyKit(user.id, Number(id));
+        }
+        try {
+          await rescheduleSupplyNotificationsForUser(user.id);
+        } catch {
+          // non-fatal
         }
         if (goingToSetup) {
           setEntries([]);
@@ -248,34 +278,34 @@ export function MedicalSuppliesScreen({ user }: { user: SessionUser }) {
                 color={isSelected ? c.primary : c.textMuted}
               />
             ) : (
-              <Ionicons name="chevron-forward" size={18} color={c.text} accessibilityIgnoresInvertColors />
+              <Ionicons name="chevron-forward" size={NAV_ROW_CHEVRON_SIZE} color={c.text} accessibilityIgnoresInvertColors />
             )}
           </Pressable>
         );
       })}
-      {!selectionMode ? (
-        <HubTipCard
-          tipId="supplies-hub-card-v2"
-          message="Tap an order to manage it. Long-press to select and delete."
-        />
-      ) : null}
-      {!selectionMode ? (
-        <Pressable
-          accessibilityRole="button"
-          onPress={() => openRequestSupplies()}
-          style={styles.changeLink}
-        >
-          <Text style={[FLARE_INLINE_ACTION_LINK, { color: c.primary, textAlign: "center" }]}>
-            Send request
-          </Text>
-        </Pressable>
-      ) : null}
+      <Pressable
+        accessibilityRole="button"
+        accessibilityState={{ disabled: selectionMode }}
+        disabled={selectionMode}
+        onPress={() => openRequestSupplies()}
+        style={[styles.changeLink, selectionMode ? styles.changeLinkDisabled : null]}
+        pointerEvents={selectionMode ? "none" : "auto"}
+      >
+        <Text style={[FLARE_INLINE_ACTION_LINK, { color: c.primary, textAlign: "center" }]}>
+          Send request
+        </Text>
+      </Pressable>
     </InstructionScreenShell>
   );
 }
 
 const styles = StyleSheet.create({
   centered: { flex: 1, alignItems: "center", justifyContent: "center" },
+  headerTitleWithHint: {
+    flexDirection: "row",
+    alignItems: "center",
+    gap: 6,
+  },
   orderCard: {
     borderRadius: 14,
     padding: 14,
@@ -296,4 +326,5 @@ const styles = StyleSheet.create({
     fontFamily: FLARE_FONT_FAMILY.regular,
   },
   changeLink: { paddingVertical: STACKED_LINE_GAP },
+  changeLinkDisabled: { opacity: 0.4 },
 });

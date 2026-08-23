@@ -140,8 +140,7 @@ Open from **Settings → Push Notifications / Reminders** (wording in the app).
 - Open phone settings if alerts aren’t arriving  
 - Daily alerts for medicines (when a reminder time is set)  
 - Alerts before appointments (when a reminder is set)  
-
-Supplies due is on the home priorities list for now — not a phone notification yet.
+- Supply-order due alerts at **9:00am** on the due date (when the order has items and notifications are on). Tap opens that order. Overdue stays on home priorities — no catch-up alert.
 
 ---
 

@@ -117,6 +117,7 @@ import {
   STACKED_LINE_GAP,
   SCREEN_EDGE_PADDING,
   FULL_WIDTH_CTA_EDGE_PADDING,
+  NAV_ROW_CHEVRON_SIZE,
   SECTION_TITLE_MARGIN_BOTTOM,
   SECTION_TITLE_MARGIN_TOP,
   WIZARD_LANDING_BELOW_SAFE_TOP,
@@ -206,7 +207,7 @@ import { WellbeingScreen } from "./screens/WellbeingScreen";
 import { WellbeingLogDetailScreen } from "./screens/WellbeingLogDetailScreen";
 import { WellbeingWizardScreen } from "./screens/WellbeingWizardScreen";
 import { LatestNewsScreen } from "./screens/LatestNewsScreen";
-import { HubTipCard } from "./components/HubTipCard";
+import { InfoHintButton } from "./components/InfoHintButton";
 import { clearAllHubTipsDismissed } from "./lib/hubTipDismiss";
 import { AppointmentBriefChangesScreen } from "./screens/AppointmentBriefChangesScreen";
 import { AppointmentBriefCustomRangeScreen } from "./screens/AppointmentBriefCustomRangeScreen";
@@ -233,6 +234,8 @@ import {
 } from "./lib/appointmentShared";
 import {
   fetchSupplyDashboardSummary,
+  getMedicalSupplyKitListCache,
+  supplyDueStatusFromKitListCache,
   type SupplyDueStatus,
 } from "./lib/medicalSuppliesShared";
 import {
@@ -1305,6 +1308,8 @@ function ProfileSetupScreen({ user, onComplete }: { user: SessionUser; onComplet
 
 /** Icons inside dashboard home tiles (Daily Check-in + More). */
 const HOME_TILE_ICON_SIZE_CHECKIN = 30;
+/** Default home grid / check-in tile height (`styles.homeDashboardTile`). */
+const HOME_DASHBOARD_TILE_HEIGHT = 116;
 
 /** Show bottom shortcuts on tab roots + reminder-adjacent hubs; hide on wizard/detail flows, etc. */
 const BOTTOM_BAR_VISIBLE_ROUTES = new Set([
@@ -1512,9 +1517,19 @@ function DashboardScreen({ user }: { user: SessionUser }) {
     ...EMPTY_TODAY_SUMMARY,
     ...(snapshotSeed?.todaySummary ?? {}),
   }));
-  const [nearAppointment, setNearAppointment] = useState<AppointmentRow | null>(null);
-  const [suppliesStatus, setSuppliesStatus] = useState<SupplyDueStatus | null>(null);
+  const [nearAppointment, setNearAppointment] = useState<AppointmentRow | null>(() => {
+    const cached = getAppointmentsListCache(user.id);
+    return cached ? findNearTermAppointment(cached) : null;
+  });
+  const [suppliesStatus, setSuppliesStatus] = useState<SupplyDueStatus | null>(() =>
+    supplyDueStatusFromKitListCache(user.id),
+  );
   const [prioritiesExpanded, setPrioritiesExpanded] = useState(false);
+  const [prioritiesExtrasReady, setPrioritiesExtrasReady] = useState(() => {
+    const aptCached = getAppointmentsListCache(user.id) !== undefined;
+    const supplyCached = getMedicalSupplyKitListCache(user.id) !== undefined;
+    return aptCached && supplyCached;
+  });
   const priorityItems = useMemo(
     () =>
       buildTodayPriorities({
@@ -1529,6 +1544,10 @@ function DashboardScreen({ user }: { user: SessionUser }) {
     ? priorityItems
     : priorityItems.slice(0, TODAY_PRIORITIES_COLLAPSED_COUNT);
   const hasMorePriorities = priorityItems.length > TODAY_PRIORITIES_COLLAPSED_COUNT;
+  const showPrioritiesViewAll = hasMorePriorities && prioritiesExtrasReady;
+  const reservePrioritiesViewAll =
+    !prioritiesExtrasReady &&
+    visiblePriorityItems.length >= TODAY_PRIORITIES_COLLAPSED_COUNT;
   const shelfNewsItems = useMemo(
     () => newsItems.slice(0, Math.min(DASHBOARD_NEWS_SHELF_PEEK, DASHBOARD_NEWS_HOME_SHELF_MAX)),
     [newsItems],
@@ -1554,11 +1573,12 @@ function DashboardScreen({ user }: { user: SessionUser }) {
   const careTopRowCards = careCards.slice(0, 2);
   const careBottomRowCards = careCards.slice(2);
   const healthMedsCard = healthCards[0];
-  const healthTopRowCards = [
+  const healthLeftColumnCards = [
     healthCards.find((card) => card.key === "bowel")!,
     healthCards.find((card) => card.key === "hydration")!,
   ];
-  const healthMedsSpanWidth = tileWidth * 2 + HOME_TILE_GAP;
+  /** Matches `styles.homeDashboardTile` height — Meds spans both left-column rows. */
+  const healthMedsTallHeight = HOME_DASHBOARD_TILE_HEIGHT * 2 + HOME_TILE_GAP;
   const renderToolTile = (item: (typeof healthCards)[number] | (typeof careCards)[number]) => (
     <DashboardGridTile
       key={item.key}
@@ -1617,18 +1637,28 @@ function DashboardScreen({ user }: { user: SessionUser }) {
       };
       const cached = getAppointmentsListCache(user.id);
       if (cached) applyRows(cached);
-      void fetchAppointmentsForUser(user.id)
+      const cachedSupplyStatus = supplyDueStatusFromKitListCache(user.id);
+      if (cachedSupplyStatus != null) setSuppliesStatus(cachedSupplyStatus);
+      if (cached !== undefined && getMedicalSupplyKitListCache(user.id) !== undefined) {
+        setPrioritiesExtrasReady(true);
+      } else {
+        setPrioritiesExtrasReady(false);
+      }
+      const appointmentsReady = fetchAppointmentsForUser(user.id)
         .then(applyRows)
         .catch(() => {
           if (!cancelled && !cached) setNearAppointment(null);
         });
-      void fetchSupplyDashboardSummary(user.id)
+      const suppliesReady = fetchSupplyDashboardSummary(user.id)
         .then((summary) => {
           if (!cancelled) setSuppliesStatus(summary.status);
         })
         .catch(() => {
           if (!cancelled) setSuppliesStatus(null);
         });
+      void Promise.allSettled([appointmentsReady, suppliesReady]).then(() => {
+        if (!cancelled) setPrioritiesExtrasReady(true);
+      });
       return () => {
         cancelled = true;
       };
@@ -1854,8 +1884,8 @@ function DashboardScreen({ user }: { user: SessionUser }) {
                 <Text style={[styles.weatherDesc, { color: c.textMuted }]}>{weatherMeta.desc}</Text>
               </View>
               <View style={styles.weatherTempWrap}>
-                <Text style={[styles.weatherTemp, { color: c.primary }]}>{weatherMeta.temp ?? "--"}°</Text>
-                <Text style={[styles.weatherUnit, { color: c.primary }]}>C</Text>
+                <Text style={[styles.weatherTemp, { color: c.text }]}>{weatherMeta.temp ?? "--"}°</Text>
+                <Text style={[styles.weatherUnit, { color: c.text }]}>C</Text>
               </View>
             </View>
           ) : (
@@ -1928,12 +1958,18 @@ function DashboardScreen({ user }: { user: SessionUser }) {
                       </Text>
                     </View>
                   ))}
-                  {hasMorePriorities ? (
+                  {showPrioritiesViewAll || reservePrioritiesViewAll ? (
                     <Pressable
                       accessibilityRole="button"
                       accessibilityLabel={prioritiesExpanded ? "Show fewer priorities" : "View all priorities"}
                       onPress={() => setPrioritiesExpanded((v) => !v)}
-                      style={({ pressed }) => [styles.prioritiesViewAll, pressed && { opacity: 0.7 }]}
+                      disabled={!showPrioritiesViewAll}
+                      pointerEvents={showPrioritiesViewAll ? "auto" : "none"}
+                      style={({ pressed }) => [
+                        styles.prioritiesViewAll,
+                        !showPrioritiesViewAll && { opacity: 0 },
+                        showPrioritiesViewAll && pressed && { opacity: 0.7 },
+                      ]}
                     >
                       <Text style={[styles.prioritiesViewAllLabel, { color: c.primary }]}>
                         {prioritiesExpanded ? "Show less" : "View all"}
@@ -2025,7 +2061,13 @@ function DashboardScreen({ user }: { user: SessionUser }) {
             </Animated.View>
           </View>
 
-          <View style={styles.toolsGridBlock}>
+          <View
+            style={[
+              styles.toolsGridBlock,
+              // Carousel mb is for when MH/MC is last; with news shelf after, dots cover the shelf gap.
+              SHOW_DASHBOARD_NEWS ? styles.toolsGridBlockFlushBottom : null,
+            ]}
+          >
             <View
               style={styles.healthCarePagerWrap}
               onLayout={(e) => {
@@ -2055,10 +2097,11 @@ function DashboardScreen({ user }: { user: SessionUser }) {
                   }}
                 >
                   <View style={[styles.healthCarePage, { width: healthCarePageW }]}>
-                    <View style={styles.carePageColumn}>
-                      <View style={styles.carePageRow}>{healthTopRowCards.map(renderToolTile)}</View>
+                    <View style={styles.carePageRow}>
+                      <View style={styles.carePageColumn}>{healthLeftColumnCards.map(renderToolTile)}</View>
                       <DashboardGridTile
-                        width={healthMedsSpanWidth}
+                        width={tileWidth}
+                        height={healthMedsTallHeight}
                         label={healthMedsCard.label}
                         variant="grid"
                         onPress={() => navigation.navigate(healthMedsCard.screen)}
@@ -2103,37 +2146,40 @@ function DashboardScreen({ user }: { user: SessionUser }) {
         </View>
 
         {SHOW_DASHBOARD_NEWS ? (
-        <View style={[styles.dashboardShelfSection, styles.dashboardShelfAfterCard, styles.dashboardShelfSectionLast]}>
-          <View style={styles.dashboardSubsectionHeader}>
-            <Text
-              style={[
-                styles.dashboardSubsectionTitleLeft,
-                styles.dashboardSubsectionTitleInHeader,
-                { color: c.text, flex: 1 },
-              ]}
-            >
-              Latest News
-            </Text>
-            {!newsLoading && !newsError && newsItems.length > 0 ? (
-              <Pressable
-                accessibilityRole="button"
-                accessibilityLabel="See all news"
-                onPress={() => navigation.navigate("LatestNews")}
-                hitSlop={8}
-                style={({ pressed }) => pressed && { opacity: 0.7 }}
+          <View style={[styles.dashboardShelfSection, styles.dashboardShelfSectionLast, { marginTop: 0 }]}>
+            <View style={styles.dashboardSubsectionHeader}>
+              <Text
+                style={[
+                  styles.dashboardSubsectionTitleLeft,
+                  styles.dashboardSubsectionTitleInHeader,
+                  { color: c.text, flex: 1 },
+                ]}
               >
-                <Text style={[styles.dashboardNewsSeeAll, { color: c.primary }]}>See all</Text>
-              </Pressable>
-            ) : null}
-          </View>
-          {newsLoading ? (
-            <Text style={[styles.muted, styles.dashboardNewsStatus, { color: c.textMuted }]}>Getting latest news...</Text>
-          ) : newsError ? (
-            <Text style={[styles.muted, styles.dashboardNewsStatus, { color: c.textMuted }]}>{newsError}</Text>
-          ) : newsItems.length === 0 ? (
-            <Text style={[styles.muted, styles.dashboardNewsStatus, { color: c.textMuted }]}>No news available right now.</Text>
-          ) : (
-            <View>
+                Latest news
+              </Text>
+              {!newsLoading && !newsError && newsItems.length > 0 ? (
+                <Pressable
+                  accessibilityRole="button"
+                  accessibilityLabel="See all news"
+                  onPress={() => navigation.navigate("LatestNews")}
+                  hitSlop={8}
+                  style={({ pressed }) => pressed && { opacity: 0.7 }}
+                >
+                  <Text style={[styles.dashboardNewsSeeAll, { color: c.primary }]}>See all</Text>
+                </Pressable>
+              ) : null}
+            </View>
+            {newsLoading ? (
+              <Text style={[styles.muted, styles.dashboardNewsStatus, { color: c.textMuted }]}>
+                Getting latest news...
+              </Text>
+            ) : newsError ? (
+              <Text style={[styles.muted, styles.dashboardNewsStatus, { color: c.textMuted }]}>{newsError}</Text>
+            ) : newsItems.length === 0 ? (
+              <Text style={[styles.muted, styles.dashboardNewsStatus, { color: c.textMuted }]}>
+                No news available right now.
+              </Text>
+            ) : (
               <ScrollView
                 horizontal
                 showsHorizontalScrollIndicator={false}
@@ -2144,12 +2190,16 @@ function DashboardScreen({ user }: { user: SessionUser }) {
                 nestedScrollEnabled
               >
                 {shelfNewsItems.map((item) => (
-                  <NewsFeedCard key={item.link ?? item.title} item={item} variant="shelf" width={newsShelfCardWidth} />
+                  <NewsFeedCard
+                    key={item.link ?? item.title}
+                    item={item}
+                    variant="shelf"
+                    width={newsShelfCardWidth}
+                  />
                 ))}
               </ScrollView>
-            </View>
-          )}
-        </View>
+            )}
+          </View>
         ) : null}
       </ScrollView>
 
@@ -2244,12 +2294,6 @@ function LogsScreen({ user }: { user: SessionUser }) {
           }}
         />
       </View>
-      {previewReady ? (
-        <HubTipCard
-          tipId="logs-hub-card-v1"
-          message="Your Logs hub keeps all your Check-in entries together in one place. Tap to view your records."
-        />
-      ) : null}
     </InstructionScreenShell>
   );
 }
@@ -4027,7 +4071,7 @@ function AccountScreen({
           </View>
           <Ionicons
             name="chevron-forward"
-            size={18}
+            size={NAV_ROW_CHEVRON_SIZE}
             color={c.text}
             accessibilityIgnoresInvertColors
           />
@@ -4216,7 +4260,9 @@ function AppTabs({
       const navKey =
         target.kind === "medication"
           ? `medication:${target.medicationId}`
-          : `appointment:${target.appointmentId}`;
+          : target.kind === "appointment"
+            ? `appointment:${target.appointmentId}`
+            : `medicalSupply:${target.kitId}`;
       if (lastReminderNavKeyRef.current === navKey) return;
       lastReminderNavKeyRef.current = navKey;
       setTimeout(() => {
@@ -4332,6 +4378,8 @@ function AppTabs({
     const isLegalDocument = route.name === "LegalDocument";
     const isAccount = route.name === "Account";
     const isLogs = route.name === "Logs";
+    const isAppointmentBrief = route.name === "AppointmentBrief";
+    const isMedicalSupplies = route.name === "MedicalSupplies";
     const isReminders = route.name === "Reminders";
     const titleForRoute: Record<string, string> = {
       Logs: "Logs",
@@ -4369,7 +4417,7 @@ function AppTabs({
       AppointmentBriefHealth: "Health Overview",
       AppointmentBriefNext: "Next Appointment",
       AppointmentBriefChanges: "What Changed",
-      LatestNews: "Latest News",
+      LatestNews: "Latest news",
       MedicalSupplies: "My Supplies",
       MedicalSuppliesSetup: "My Supplies",
       MedicalSupplyOrder: "Order",
@@ -4436,7 +4484,64 @@ function AppTabs({
             : isAccount
               ? "Account"
               : isLogs
-                ? "Logs"
+                ? () => (
+                    <View style={styles.headerTitleWithHint}>
+                      <Text
+                        style={{
+                          fontFamily: FLARE_FONT_FAMILY.bold,
+                          fontSize: FLARE_FONT_SIZE.navTitle,
+                          color: colors.text,
+                        }}
+                      >
+                        Logs
+                      </Text>
+                      <InfoHintButton
+                        title="Your Logs"
+                        message="Your Logs hub keeps all your Check-in entries together in one place. Tap a list to view your records."
+                        accessibilityLabel="About Logs"
+                      />
+                    </View>
+                  )
+              : isAppointmentBrief
+                ? () => (
+                    <View style={styles.headerTitleWithHint}>
+                      <Text
+                        style={{
+                          fontFamily: FLARE_FONT_FAMILY.bold,
+                          fontSize: FLARE_FONT_SIZE.navTitle,
+                          color: colors.text,
+                        }}
+                      >
+                        Appointment Summary
+                      </Text>
+                      <InfoHintButton
+                        title="Appointment Summary"
+                        message="Generate a quick health summary from your records for your next appointment. Choose a suggested time period or pick your own dates to include the information you need."
+                        accessibilityLabel="About Appointment Summary"
+                      />
+                    </View>
+                  )
+              : isMedicalSupplies
+                ? () => (
+                    <View style={styles.headerTitleWithHint}>
+                      <Text
+                        style={{
+                          fontFamily: FLARE_FONT_FAMILY.bold,
+                          fontSize: FLARE_FONT_SIZE.navTitle,
+                          color: colors.text,
+                        }}
+                      >
+                        My Supplies
+                      </Text>
+                      <InfoHintButton
+                        title="My Supplies"
+                        message={
+                          "Your supplies hub keeps your supply orders together in one place. Create an order for each set of supplies you regularly need. Tap to manage, or long-press to delete."
+                        }
+                        accessibilityLabel="About My Supplies"
+                      />
+                    </View>
+                  )
               : isReminders
                 ? "Reminders"
                 : isSymptomLogWizard || isMedicationTrackingWizard || isWellbeingWizard
@@ -5282,6 +5387,8 @@ const styles = StyleSheet.create({
   },
   /** Same bottom margin as dashboard cards (`styles.card` / tracker trays) before the next shelf title. */
   toolsGridBlock: { marginBottom: HOME_TILE_GAP },
+  /** MH/MC is not last — drop carousel mb so Latest News uses the normal after-card shelf gap only. */
+  toolsGridBlockFlushBottom: { marginBottom: 0 },
   /** Daily Check-in shelf title. */
   dashboardSubsectionTitle: {
     fontSize: FLARE_FONT_SIZE.subhead,
@@ -5622,7 +5729,7 @@ const styles = StyleSheet.create({
     paddingHorizontal: 10,
     alignItems: "stretch",
     justifyContent: "center",
-    height: 116,
+    height: HOME_DASHBOARD_TILE_HEIGHT,
     overflow: "hidden",
   },
   homeDashboardTileScroll: {
@@ -5727,6 +5834,11 @@ const styles = StyleSheet.create({
     paddingHorizontal: 12,
   },
   moreNavRowLabel: { fontSize: 14, fontFamily: "Inter_400Regular", flex: 1, paddingRight: 10 },
+  headerTitleWithHint: {
+    flexDirection: "row",
+    alignItems: "center",
+    gap: 6,
+  },
   recentLogsViewAllRow: { alignItems: "flex-end", marginBottom: 8 },
   recentLogsViewAllText: { ...FLARE_INLINE_ACTION_LINK },
   recentLogsRow: {

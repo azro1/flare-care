@@ -3,7 +3,8 @@ import type { NavigationContainerRef } from "@react-navigation/native";
 
 export type ReminderNotificationTarget =
   | { kind: "medication"; medicationId: string }
-  | { kind: "appointment"; appointmentId: string };
+  | { kind: "appointment"; appointmentId: string }
+  | { kind: "medicalSupply"; kitId: string };
 
 const CONSUMED_RESPONSES_KEY = "flarecare.consumedNotificationResponses";
 const MAX_STORED_FINGERPRINTS = 100;
@@ -16,7 +17,10 @@ export function reminderNotificationData(
   if (target.kind === "medication") {
     return { kind: "medication", medicationId: target.medicationId };
   }
-  return { kind: "appointment", appointmentId: target.appointmentId };
+  if (target.kind === "appointment") {
+    return { kind: "appointment", appointmentId: target.appointmentId };
+  }
+  return { kind: "medicalSupply", kitId: target.kitId };
 }
 
 function normalizeNotificationData(raw: unknown): Record<string, unknown> | null {
@@ -49,6 +53,7 @@ export function parseReminderNotificationTarget(response: {
   const kind = readStringField(data, "kind") ?? "";
   const medicationId = readStringField(data, "medicationId");
   const appointmentId = readStringField(data, "appointmentId");
+  const kitId = readStringField(data, "kitId");
 
   if (kind === "medication" && medicationId) {
     return { kind: "medication", medicationId };
@@ -56,13 +61,16 @@ export function parseReminderNotificationTarget(response: {
   if (kind === "appointment" && appointmentId) {
     return { kind: "appointment", appointmentId };
   }
+  if (kind === "medicalSupply" && kitId) {
+    return { kind: "medicalSupply", kitId };
+  }
   return null;
 }
 
 export function reminderNotificationDedupKey(target: ReminderNotificationTarget): string {
-  return target.kind === "medication"
-    ? `medication:${target.medicationId}`
-    : `appointment:${target.appointmentId}`;
+  if (target.kind === "medication") return `medication:${target.medicationId}`;
+  if (target.kind === "appointment") return `appointment:${target.appointmentId}`;
+  return `medicalSupply:${target.kitId}`;
 }
 
 function notificationDateMs(date: unknown): number | null {
@@ -155,5 +163,12 @@ export function navigateFromReminderNotification(
     return;
   }
 
-  navigationRef.navigate("AppointmentDetail" as never, { id: target.appointmentId } as never);
+  if (target.kind === "appointment") {
+    navigationRef.navigate("AppointmentDetail" as never, { id: target.appointmentId } as never);
+    return;
+  }
+
+  const kitId = Number(target.kitId);
+  if (!Number.isFinite(kitId)) return;
+  navigationRef.navigate("MedicalSupplyOrder" as never, { kitId } as never);
 }

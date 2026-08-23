@@ -35,6 +35,7 @@ import {
 import {
   FLARE_FONT_FAMILY,
   FLARE_FONT_SIZE,
+  NAV_ROW_CHEVRON_SIZE,
   NAV_ROW_LABEL,
   SCREEN_EDGE_PADDING,
   TIME_PICKER_MINUTE_INTERVAL,
@@ -270,7 +271,7 @@ export function AppointmentSheet({
             >
               <Ionicons name="notifications-outline" size={18} color={c.textSecondary} />
               <Text style={[styles.whenPillText, { color: c.text }]}>{reminderLabel}</Text>
-              <Ionicons name="chevron-down" size={18} color={c.textMuted} />
+              <Ionicons name="chevron-down" size={NAV_ROW_CHEVRON_SIZE} color={c.textMuted} />
             </Pressable>
 
             {fieldError ? <Text style={[errTextStyle, styles.fieldError]}>{fieldError}</Text> : null}

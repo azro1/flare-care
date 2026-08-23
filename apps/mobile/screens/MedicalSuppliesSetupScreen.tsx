@@ -15,6 +15,7 @@ import {
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { showFlareAlert } from "../components/FlareAlertHost";
 import { PrimaryButton, SecondaryButton } from "../components/FlareButton";
+import { InfoHintTitleRow } from "../components/InfoHintButton";
 import {
   FLARE_INPUT_BORDER_RADIUS,
   flareFieldErrorStyle,
@@ -53,6 +54,7 @@ import {
   updateMedicalSupplyKit,
   weeksToCadenceDays,
 } from "../lib/medicalSuppliesShared";
+import { rescheduleSupplyNotificationsForUser } from "../lib/medicationNotifications";
 import { useFlareColors } from "../theme";
 
 type SessionUser = { id: string };
@@ -263,6 +265,11 @@ export function MedicalSuppliesSetupScreen({
           cadence_days: days,
           next_due_date: nextDueDate,
         });
+        try {
+          await rescheduleSupplyNotificationsForUser(user.id);
+        } catch {
+          // non-fatal
+        }
         onFinished(updated.id, name);
       } else {
         const created = await insertMedicalSupplyKit(user.id, {
@@ -270,6 +277,11 @@ export function MedicalSuppliesSetupScreen({
           cadence_days: days,
           next_due_date: nextDueDate,
         });
+        try {
+          await rescheduleSupplyNotificationsForUser(user.id);
+        } catch {
+          // non-fatal
+        }
         onFinished(created.id, name);
       }
     } catch (err: unknown) {
@@ -361,7 +373,19 @@ export function MedicalSuppliesSetupScreen({
         keyboardShouldPersistTaps="handled"
         showsVerticalScrollIndicator={false}
       >
-        <Text style={[styles.question, { color: c.text }]}>{questionTitle}</Text>
+        {step === STEP_DUE ? (
+          <InfoHintTitleRow
+            hintTitle="Due-day reminder"
+            hintMessage="You'll get a phone notification at 9:00am on this date when the order has items and notifications are on."
+            hintAccessibilityLabel="About due-day reminders"
+          >
+            <Text style={[styles.question, styles.questionBesideHint, { color: c.text }]}>
+              {questionTitle}
+            </Text>
+          </InfoHintTitleRow>
+        ) : (
+          <Text style={[styles.question, { color: c.text }]}>{questionTitle}</Text>
+        )}
 
         {step === STEP_INTRO ? (
           <Text style={[styles.support, { color: c.textMuted }]}>
@@ -494,6 +518,10 @@ const styles = StyleSheet.create({
     fontSize: 20,
     marginBottom: CARD_SECTION_INNER_GAP,
   },
+  questionBesideHint: {
+    marginBottom: 0,
+    flexShrink: 1,
+  },
   support: {
     fontSize: FLARE_FONT_SIZE.body,
     fontFamily: FLARE_FONT_FAMILY.regular,
@@ -563,15 +591,14 @@ export function MedicalSuppliesSetupRoute({ user }: { user: SessionUser }) {
       startStep={startStep}
       editKitId={editKitId}
       onFinished={(kitId, orderName) => {
-        if (editKitId != null) {
-          navigation.navigate({
-            name: "MedicalSupplyOrder",
-            params: { kitId, orderName },
-            merge: true,
-          });
-        } else {
-          navigation.replace("MedicalSupplyOrder", { kitId, orderName });
-        }
+        // Finish leaves setup entirely: Home → this order. Back/swipe returns home.
+        navigation.reset({
+          index: 1,
+          routes: [
+            { name: "Dashboard" },
+            { name: "MedicalSupplyOrder", params: { kitId, orderName } },
+          ],
+        });
       }}
       onDismiss={() => {
         if (navigation.canGoBack()) navigation.goBack();

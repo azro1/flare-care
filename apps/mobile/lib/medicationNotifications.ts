@@ -1,8 +1,9 @@
 import AsyncStorage from "@react-native-async-storage/async-storage";
 import { Platform } from "react-native";
 import { appointmentHasReminder, getAppointmentDateTime } from "./appointmentShared";
-import { supabase, TABLES } from "./supabase";
+import { fetchKitListEntries, parseYmdLocal } from "./medicalSuppliesShared";
 import { reminderNotificationData } from "./reminderNotificationNavigation";
+import { supabase, TABLES } from "./supabase";
 
 let Notifications: any = null;
 try {
@@ -16,6 +17,17 @@ export const REMINDER_NOTIFICATION_CHANNEL_ID = "reminders";
 
 const MEDICATION_NOTIFICATION_IDS_KEY = "flarecare.notificationIds";
 const APPOINTMENT_NOTIFICATION_IDS_KEY = "flarecare.appointmentNotificationIds";
+const SUPPLY_NOTIFICATION_IDS_KEY = "flarecare.supplyNotificationIds";
+
+/** Local clock time for supply due-day alerts (due is date-only). */
+const SUPPLY_DUE_REMINDER_HOUR = 9;
+const SUPPLY_DUE_REMINDER_MINUTE = 0;
+
+const ALL_REMINDER_NOTIFICATION_ID_KEYS = [
+  MEDICATION_NOTIFICATION_IDS_KEY,
+  APPOINTMENT_NOTIFICATION_IDS_KEY,
+  SUPPLY_NOTIFICATION_IDS_KEY,
+] as const;
 
 let setupPromise: Promise<void> | null = null;
 
@@ -68,11 +80,7 @@ function androidReminderTriggerExtras() {
   return Platform.OS === "android" ? { channelId: REMINDER_NOTIFICATION_CHANNEL_ID } : {};
 }
 
-function reminderNotificationContent(
-  title: string,
-  body: string,
-  data: Record<string, string>,
-) {
+function reminderNotificationContent(title: string, body: string, data: Record<string, string>) {
   return {
     title,
     body,
@@ -85,17 +93,6 @@ function reminderNotificationContent(
         }
       : {}),
   };
-}
-
-async function cancelAllScheduledLocalReminders() {
-  if (!Notifications) return;
-  if (typeof Notifications.cancelAllScheduledNotificationsAsync === "function") {
-    await Notifications.cancelAllScheduledNotificationsAsync();
-  } else {
-    await cancelStoredNotificationIds(MEDICATION_NOTIFICATION_IDS_KEY);
-    await cancelStoredNotificationIds(APPOINTMENT_NOTIFICATION_IDS_KEY);
-  }
-  await AsyncStorage.multiRemove([MEDICATION_NOTIFICATION_IDS_KEY, APPOINTMENT_NOTIFICATION_IDS_KEY]);
 }
 
 async function cancelStoredNotificationIds(storageKey: string) {
@@ -111,20 +108,29 @@ async function cancelStoredNotificationIds(storageKey: string) {
   }
 }
 
+async function cancelAllScheduledLocalReminders() {
+  if (!Notifications) return;
+  if (typeof Notifications.cancelAllScheduledNotificationsAsync === "function") {
+    await Notifications.cancelAllScheduledNotificationsAsync();
+  } else {
+    for (const key of ALL_REMINDER_NOTIFICATION_ID_KEYS) {
+      await cancelStoredNotificationIds(key);
+    }
+  }
+  await AsyncStorage.multiRemove([...ALL_REMINDER_NOTIFICATION_ID_KEYS]);
+}
+
 /** Clears all local reminder alarms (e.g. on sign-out). */
 export async function clearMedicationNotificationsForUser() {
   if (!Notifications) return;
   if (typeof Notifications.cancelAllScheduledNotificationsAsync === "function") {
     await Notifications.cancelAllScheduledNotificationsAsync();
   } else {
-    await cancelStoredNotificationIds(MEDICATION_NOTIFICATION_IDS_KEY);
-    await cancelStoredNotificationIds(APPOINTMENT_NOTIFICATION_IDS_KEY);
+    for (const key of ALL_REMINDER_NOTIFICATION_ID_KEYS) {
+      await cancelStoredNotificationIds(key);
+    }
   }
-  await AsyncStorage.multiRemove([
-    MEDICATION_NOTIFICATION_IDS_KEY,
-    APPOINTMENT_NOTIFICATION_IDS_KEY,
-    "flarecare.pushToken",
-  ]);
+  await AsyncStorage.multiRemove([...ALL_REMINDER_NOTIFICATION_ID_KEYS, "flarecare.pushToken"]);
 }
 
 export async function getLocalReminderScheduledCount(): Promise<number> {
@@ -136,13 +142,11 @@ export async function getLocalReminderScheduledCount(): Promise<number> {
       // fall back to stored ids
     }
   }
-  const [medRaw, apptRaw] = await AsyncStorage.multiGet([
-    MEDICATION_NOTIFICATION_IDS_KEY,
-    APPOINTMENT_NOTIFICATION_IDS_KEY,
-  ]);
-  const medIds: string[] = medRaw[1] ? JSON.parse(medRaw[1]) : [];
-  const apptIds: string[] = apptRaw[1] ? JSON.parse(apptRaw[1]) : [];
-  return medIds.length + apptIds.length;
+  const rows = await AsyncStorage.multiGet([...ALL_REMINDER_NOTIFICATION_ID_KEYS]);
+  return rows.reduce((sum, [, raw]) => {
+    const ids: string[] = raw ? JSON.parse(raw) : [];
+    return sum + ids.length;
+  }, 0);
 }
 
 export async function rescheduleMedicationNotificationsForUser(userId: string) {
@@ -211,9 +215,7 @@ export async function rescheduleAppointmentNotificationsForUser(userId: string) 
     if (triggerDate.getTime() <= now) continue;
 
     const timeLabel =
-      typeof apt.time === "string" && apt.time.trim()
-        ? apt.time.trim().slice(0, 5)
-        : "09:00";
+      typeof apt.time === "string" && apt.time.trim() ? apt.time.trim().slice(0, 5) : "09:00";
     const id = await Notifications.scheduleNotificationAsync({
       content: reminderNotificationContent(
         "Appointment Reminder",
@@ -233,7 +235,56 @@ export async function rescheduleAppointmentNotificationsForUser(userId: string) 
   return { scheduledCount: ids.length };
 }
 
-/** Rebuild all local reminders from Supabase (meds + appointments). */
+function supplyDueTriggerDate(nextDueYmd: string): Date | null {
+  const d = parseYmdLocal(nextDueYmd);
+  if (!Number.isFinite(d.getTime())) return null;
+  d.setHours(SUPPLY_DUE_REMINDER_HOUR, SUPPLY_DUE_REMINDER_MINUTE, 0, 0);
+  return d;
+}
+
+/**
+ * One-shot alert on the morning of each stocked kit’s next due date.
+ * Empty kits and past triggers are skipped (overdue stays a dashboard priority).
+ */
+export async function rescheduleSupplyNotificationsForUser(userId: string) {
+  if (!Notifications) return { scheduledCount: 0 };
+
+  await ensureLocalReminderNotificationsReady();
+  if (!(await hasRemindersPermission())) return { scheduledCount: 0 };
+  await cancelStoredNotificationIds(SUPPLY_NOTIFICATION_IDS_KEY);
+
+  const entries = await fetchKitListEntries(userId);
+  const ids: string[] = [];
+  const now = Date.now();
+
+  for (const entry of entries) {
+    if (entry.status === "empty") continue;
+    const dueYmd = entry.kit.next_due_date?.trim();
+    if (!dueYmd) continue;
+    const triggerDate = supplyDueTriggerDate(dueYmd);
+    if (!triggerDate || triggerDate.getTime() <= now) continue;
+
+    const name = entry.kit.name?.trim() || "Supply order";
+    const id = await Notifications.scheduleNotificationAsync({
+      content: reminderNotificationContent(
+        "Supply order due",
+        `${name} is due today`,
+        reminderNotificationData({ kind: "medicalSupply", kitId: String(entry.kit.id) }),
+      ),
+      trigger: {
+        type: Notifications.SchedulableTriggerInputTypes.DATE,
+        date: triggerDate,
+        ...androidReminderTriggerExtras(),
+      },
+    });
+    ids.push(id);
+  }
+
+  await AsyncStorage.setItem(SUPPLY_NOTIFICATION_IDS_KEY, JSON.stringify(ids));
+  return { scheduledCount: ids.length };
+}
+
+/** Rebuild all local reminders from Supabase (meds + appointments + supplies). */
 export async function rescheduleAllLocalRemindersForUser(userId: string) {
   await ensureLocalReminderNotificationsReady();
   if (!(await ensureRemindersPermissionGranted())) {
@@ -242,13 +293,14 @@ export async function rescheduleAllLocalRemindersForUser(userId: string) {
   await cancelAllScheduledLocalReminders();
   const meds = await rescheduleMedicationNotificationsForUser(userId);
   const appts = await rescheduleAppointmentNotificationsForUser(userId);
+  const supplies = await rescheduleSupplyNotificationsForUser(userId);
   return {
-    scheduledCount: meds.scheduledCount + appts.scheduledCount,
+    scheduledCount: meds.scheduledCount + appts.scheduledCount + supplies.scheduledCount,
     permissionGranted: true,
   };
 }
 
-/** Med/appt save paths — resync all local reminders when permission is already granted. */
+/** Med/appt/supply save paths — resync all local reminders when permission is already granted. */
 export async function rescheduleLocalRemindersIfGranted(userId: string): Promise<void> {
   if (!Notifications) return;
   await ensureLocalReminderNotificationsReady();
