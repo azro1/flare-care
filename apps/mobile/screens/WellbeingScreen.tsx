@@ -23,7 +23,6 @@ import { bottomTabBarHeight } from "../lib/layoutConstants";
 import {
   WELLBEING_MCI_ICON,
   deleteWellbeingEntriesForUser,
-  formatWellbeingDate,
   getWellbeingListCache,
   invalidateWellbeingListCache,
   setWellbeingListCache,
@@ -145,9 +144,9 @@ export function WellbeingScreen({ user }: { user: SessionUser }) {
               items={historyRows.map((row) =>
                 buildTimestampLogRowItem({
                   id: String(row.id),
-                  title: formatWellbeingDate(row.date),
+                  title: "Wellbeing Log",
                   whenIso: row.created_at,
-                  accessibilityLabel: `${formatUkDate(row.date)}. View details`,
+                  accessibilityLabel: `Wellbeing Log, ${formatUkDate(row.date)}. View details`,
                 }),
               )}
               visibleCount={historyVisibleCount}

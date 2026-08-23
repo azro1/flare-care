@@ -242,24 +242,25 @@ export function MedicationDetailScreen({ user }: { user: SessionUser }) {
               { label: "Notes", value: row.notes?.trim() || "Not set" },
             ]}
           />
+          <View style={styles.takenActions}>
+            {takenToday ? (
+              <PrimaryButton
+                title="Taken today"
+                onPress={handleToggleTaken}
+                disabled={takenBusy}
+                noTopMargin
+                leftIcon={<Ionicons name="checkmark" size={18} color={c.white} accessibilityIgnoresInvertColors />}
+              />
+            ) : (
+              <SecondaryButton
+                title="Mark as taken today"
+                onPress={handleToggleTaken}
+                disabled={takenBusy}
+                noTopMargin
+              />
+            )}
+          </View>
         </LogDetailCard>
-
-        <View style={styles.takenActions}>
-          {takenToday ? (
-            <PrimaryButton
-              title="Taken today"
-              onPress={handleToggleTaken}
-              disabled={takenBusy}
-              leftIcon={<Ionicons name="checkmark" size={18} color={c.white} accessibilityIgnoresInvertColors />}
-            />
-          ) : (
-            <SecondaryButton
-              title="Mark as taken today"
-              onPress={handleToggleTaken}
-              disabled={takenBusy}
-            />
-          )}
-        </View>
       </ScrollView>
 
       <ConfirmModal
@@ -290,5 +291,5 @@ const styles = StyleSheet.create({
   muted: { fontSize: FLARE_FONT_SIZE.body, fontFamily: FLARE_FONT_FAMILY.regular },
   headerBtnRow: { flexDirection: "row", alignItems: "center" },
   headerIconBtn: { width: 44, height: 44, alignItems: "center", justifyContent: "center" },
-  takenActions: { marginTop: 4 },
+  takenActions: { marginTop: 14 },
 });

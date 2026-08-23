@@ -1990,32 +1990,20 @@ function DashboardScreen({ user }: { user: SessionUser }) {
                 My care
               </Animated.Text>
             </View>
-            <Animated.View
-              pointerEvents={healthCarePage === 0 ? "auto" : "none"}
-              style={{
-                marginRight: 4,
-                opacity: healthCareScrollX.interpolate({
-                  inputRange: [0, Math.max(1, healthCarePageW)],
-                  outputRange: [1, 0],
-                  extrapolate: "clamp",
-                }),
-              }}
+            <Pressable
+              accessibilityRole="button"
+              accessibilityLabel="Open activity"
+              onPress={() => setActivitiesOpen(true)}
+              style={({ pressed }) => [
+                styles.progressChip,
+                { backgroundColor: c.isDark ? c.text : c.primary, marginRight: 4 },
+                pressed && { opacity: 0.85 },
+              ]}
             >
-              <Pressable
-                accessibilityRole="button"
-                accessibilityLabel="Open activity"
-                onPress={() => setActivitiesOpen(true)}
-                style={({ pressed }) => [
-                  styles.progressChip,
-                  { backgroundColor: c.isDark ? c.text : c.primary },
-                  pressed && { opacity: 0.85 },
-                ]}
-              >
-                <Text style={[styles.progressChipLabel, { color: c.isDark ? "#121212" : c.white }]}>
-                  Activity
-                </Text>
-              </Pressable>
-            </Animated.View>
+              <Text style={[styles.progressChipLabel, { color: c.isDark ? "#121212" : c.white }]}>
+                Activity
+              </Text>
+            </Pressable>
           </View>
 
           <View style={styles.toolsGridBlock}>

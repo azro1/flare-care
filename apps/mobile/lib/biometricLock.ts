@@ -121,6 +121,8 @@ export async function authenticate(promptMessage: string): Promise<boolean> {
   try {
     const res = await LocalAuthentication.authenticateAsync({
       promptMessage,
+      // Android: subtitle is single-line marquee when long — use description so it wraps.
+      promptDescription: "Please use your biometric sensor to authenticate",
       cancelLabel: "Cancel",
       disableDeviceFallback: false,
     });
