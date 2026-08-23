@@ -525,7 +525,9 @@ export function TodayActivitiesModal({
     setShellIndex(Math.max(0, Math.min(shellPageCount - 1, next)));
   };
 
-  const renderTaskPage = (activity: (typeof activities)[number]) => (
+  const renderTaskPage = (activity: (typeof activities)[number]) => {
+    const showSwipeHint = activity.id === "meds";
+    return (
     <View style={[styles.activityPage, { width: pageW }]}>
       <View style={styles.pulseMeters}>
         <PulseMeterBar
@@ -538,7 +540,11 @@ export function TodayActivitiesModal({
       </View>
       <View
         accessibilityRole="text"
-        accessibilityLabel={`${activity.title}, ${activity.detail}. Swipe for more`}
+        accessibilityLabel={
+          showSwipeHint
+            ? `${activity.title}, ${activity.detail}. Swipe for more`
+            : `${activity.title}, ${activity.detail}`
+        }
         style={styles.pulseRowTray}
       >
         <MaterialCommunityIcons
@@ -549,7 +555,9 @@ export function TodayActivitiesModal({
         <View style={styles.pulseRowText}>
           <View style={styles.pulseRowTitleRow}>
             <Text style={[styles.pulseRowTitle, { color: c.text }]}>{activity.title}</Text>
-            <Text style={[styles.pulseRowTapHint, { color: c.textMuted }]}>Swipe for more</Text>
+            {showSwipeHint ? (
+              <Text style={[styles.pulseRowTapHint, { color: c.textMuted }]}>Swipe for more</Text>
+            ) : null}
           </View>
           <Text style={[styles.slabMeta, { color: c.textMuted }]}>{activity.detail}</Text>
         </View>
@@ -563,7 +571,8 @@ export function TodayActivitiesModal({
         ) : null}
       </View>
     </View>
-  );
+    );
+  };
 
   if (!mounted) return null;
 
