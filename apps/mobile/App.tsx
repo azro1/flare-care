@@ -216,11 +216,12 @@ import { AppointmentDetailScreen } from "./screens/AppointmentDetailScreen";
 import { AppointmentsPastScreen } from "./screens/AppointmentsPastScreen";
 import { AppointmentsScreen } from "./screens/AppointmentsScreen";
 import { MedicalSuppliesScreen } from "./screens/MedicalSuppliesScreen";
+import { MedicalSupplyOrderScreen } from "./screens/MedicalSupplyOrderScreen";
 import { MedicalSupplyRequestScreen } from "./screens/MedicalSupplyRequestScreen";
+import { MedicalSuppliesSetupRoute } from "./screens/MedicalSuppliesSetupScreen";
 import {
   buildTodayPriorities,
   findNearTermAppointment,
-  nextUntakenMedicationTimeLabel,
   TODAY_PRIORITIES_COLLAPSED_COUNT,
 } from "./lib/todayPriorities";
 import {
@@ -1511,7 +1512,6 @@ function DashboardScreen({ user }: { user: SessionUser }) {
     ...(snapshotSeed?.todaySummary ?? {}),
   }));
   const [nearAppointment, setNearAppointment] = useState<AppointmentRow | null>(null);
-  const [nextMedicationTimeLabel, setNextMedicationTimeLabel] = useState<string | null>(null);
   const [suppliesStatus, setSuppliesStatus] = useState<SupplyDueStatus | null>(null);
   const [prioritiesExpanded, setPrioritiesExpanded] = useState(false);
   const priorityItems = useMemo(
@@ -1519,11 +1519,10 @@ function DashboardScreen({ user }: { user: SessionUser }) {
       buildTodayPriorities({
         todaySummary,
         nearAppointment,
-        nextMedicationTimeLabel,
         hydrationTarget: HYDRATION_TARGET,
         suppliesStatus,
       }),
-    [todaySummary, nearAppointment, nextMedicationTimeLabel, suppliesStatus],
+    [todaySummary, nearAppointment, suppliesStatus],
   );
   const visiblePriorityItems = prioritiesExpanded
     ? priorityItems
@@ -1546,17 +1545,19 @@ function DashboardScreen({ user }: { user: SessionUser }) {
     { key: "bowel", label: "Bowel Movements", screen: "Bowel" as const, icon: BOWEL_FEATURE_MCI_ICON, family: "mci" as "ion" | "mci" },
   ];
   const careCards = [
+    { key: "weight", label: "My Weight", screen: "Weight" as const, icon: "scale-bathroom", family: "mci" as "ion" | "mci" },
+    { key: "supplies", label: "My Supplies", screen: "MedicalSupplies" as const, icon: "cube-outline", family: "ion" as "ion" | "mci" },
     { key: "appointments", label: "Appointments", screen: "Appointments" as const, icon: "calendar-outline", family: "ion" as "ion" | "mci" },
     { key: "reports", label: "Reports", screen: "Reports" as const, icon: "document-text-outline", family: "ion" as "ion" | "mci" },
   ];
-  /** Matches `homeDashboardTile` height — tall tiles span both stacked tiles + gap. */
-  const HOME_DASHBOARD_TILE_HEIGHT = 116;
-  const careTallTileHeight = HOME_DASHBOARD_TILE_HEIGHT * 2 + HOME_TILE_GAP;
+  const careTopRowCards = careCards.slice(0, 2);
+  const careBottomRowCards = careCards.slice(2);
   const healthMedsCard = healthCards[0];
-  const healthGridCards = [
+  const healthTopRowCards = [
     healthCards.find((card) => card.key === "bowel")!,
     healthCards.find((card) => card.key === "hydration")!,
   ];
+  const healthMedsSpanWidth = tileWidth * 2 + HOME_TILE_GAP;
   const renderToolTile = (item: (typeof healthCards)[number] | (typeof careCards)[number]) => (
     <DashboardGridTile
       key={item.key}
@@ -1714,14 +1715,11 @@ function DashboardScreen({ user }: { user: SessionUser }) {
           };
           if (!cancelled) {
             setTodaySummary(snap.todaySummary);
-            const takenIds = (takenMedsRes.data ?? []).map((row: { medication_id?: number | string }) => row.medication_id);
-            setNextMedicationTimeLabel(nextUntakenMedicationTimeLabel(medicationsList, takenIds.filter((id) => id != null) as (number | string)[]));
           }
         } catch {
           snap.todaySummary = { ...EMPTY_TODAY_SUMMARY };
           if (!cancelled) {
             setTodaySummary(snap.todaySummary);
-            setNextMedicationTimeLabel(null);
           }
         }
 
@@ -2057,10 +2055,10 @@ function DashboardScreen({ user }: { user: SessionUser }) {
                   }}
                 >
                   <View style={[styles.healthCarePage, { width: healthCarePageW }]}>
-                    <View style={styles.carePageLayout}>
+                    <View style={styles.carePageColumn}>
+                      <View style={styles.carePageRow}>{healthTopRowCards.map(renderToolTile)}</View>
                       <DashboardGridTile
-                        width={tileWidth}
-                        height={careTallTileHeight}
+                        width={healthMedsSpanWidth}
                         label={healthMedsCard.label}
                         variant="grid"
                         onPress={() => navigation.navigate(healthMedsCard.screen)}
@@ -2072,26 +2070,12 @@ function DashboardScreen({ user }: { user: SessionUser }) {
                           />
                         }
                       />
-                      <View style={styles.carePageLeftStack}>{healthGridCards.map(renderToolTile)}</View>
                     </View>
                   </View>
                   <View style={[styles.healthCarePage, { width: healthCarePageW }]}>
-                    <View style={styles.carePageLayout}>
-                      <View style={styles.carePageLeftStack}>{careCards.map(renderToolTile)}</View>
-                      <DashboardGridTile
-                        width={tileWidth}
-                        height={careTallTileHeight}
-                        label="My Weight"
-                        variant="grid"
-                        onPress={() => navigation.navigate("Weight")}
-                        icon={
-                          <MaterialCommunityIcons
-                            name="scale-bathroom"
-                            size={HOME_TILE_ICON_SIZE_CHECKIN}
-                            color={c.primary}
-                          />
-                        }
-                      />
+                    <View style={styles.carePageColumn}>
+                      <View style={styles.carePageRow}>{careTopRowCards.map(renderToolTile)}</View>
+                      <View style={styles.carePageRow}>{careBottomRowCards.map(renderToolTile)}</View>
                     </View>
                   </View>
                 </AnimatedScrollView>
@@ -4112,12 +4096,12 @@ function MainBottomTabBar({
     return null;
   }
 
-  const go = (target: "Dashboard" | "Logs" | "MedicalSupplies" | "Account") => {
+  const go = (target: "Dashboard" | "Logs" | "Account") => {
     navigationRef?.navigate(target as never);
   };
 
   const item = (
-    target: "Dashboard" | "Logs" | "MedicalSupplies" | "Account",
+    target: "Dashboard" | "Logs" | "Account",
     icon: ({ active }: { active: boolean }) => React.ReactNode,
     label: string,
   ) => {
@@ -4125,7 +4109,6 @@ function MainBottomTabBar({
       routeName === target ||
       (target === "Logs" &&
         (routeName === "SymptomHistory" || routeName === "MedicationTrackingHistory" || routeName === "Wellbeing")) ||
-      (target === "MedicalSupplies" && routeName === "MedicalSupplyRequest") ||
       (target === "Dashboard" &&
         (routeName === "Meds" ||
           routeName === "Appointments" ||
@@ -4134,7 +4117,11 @@ function MainBottomTabBar({
           routeName === "Reports" ||
           routeName === "Hydration" ||
           routeName === "Weight" ||
-          routeName === "Bowel"));
+          routeName === "Bowel" ||
+          routeName === "MedicalSupplies" ||
+          routeName === "MedicalSuppliesSetup" ||
+          routeName === "MedicalSupplyRequest" ||
+          routeName === "MedicalSupplyOrder"));
     return (
       <Pressable
         key={target}
@@ -4184,11 +4171,6 @@ function MainBottomTabBar({
         "Dashboard",
         ({ active }) => <Ionicons name={active ? "home" : "home-outline"} size={23} color={active ? colors.primary : colors.textMuted} />,
         "Home",
-      )}
-      {item(
-        "MedicalSupplies",
-        ({ active }) => <Ionicons name={active ? "cube" : "cube-outline"} size={23} color={active ? colors.primary : colors.textMuted} />,
-        "Supplies",
       )}
       {item(
         "Logs",
@@ -4353,7 +4335,6 @@ function AppTabs({
     const isAccount = route.name === "Account";
     const isLogs = route.name === "Logs";
     const isReminders = route.name === "Reminders";
-    const isMedicalSupplies = route.name === "MedicalSupplies";
     const titleForRoute: Record<string, string> = {
       Logs: "Logs",
       SymptomHistory: "History",
@@ -4391,8 +4372,10 @@ function AppTabs({
       AppointmentBriefNext: "Next Appointment",
       AppointmentBriefChanges: "What Changed",
       LatestNews: "Latest News",
-      MedicalSupplies: "Supplies",
-      MedicalSupplyRequest: "Request supplies",
+      MedicalSupplies: "My Supplies",
+      MedicalSuppliesSetup: "My Supplies",
+      MedicalSupplyOrder: "Order",
+      MedicalSupplyRequest: "Send request",
     };
     const isSymptomLogWizard = route.name === "SymptomLogWizard";
     const isMedicationTrackingWizard = route.name === "MedicationTrackingWizard";
@@ -4405,6 +4388,7 @@ function AppTabs({
       route.name === "WellbeingWizard" ||
       route.name === "Meds" ||
       route.name === "MedicationDetail" ||
+      route.name === "MedicalSupplyOrder" ||
       route.name === "Reports" ||
       route.name === "Weight" ||
       route.name === "WeightLogDetail" ||
@@ -4427,6 +4411,8 @@ function AppTabs({
       route.name === "SymptomDetail" ||
       route.name === "MedicationTrackingHistory" ||
       route.name === "MedicationLogDetail" ||
+      route.name === "MedicalSupplies" ||
+      route.name === "MedicalSuppliesSetup" ||
       route.name === "MedicalSupplyRequest";
 
     const headerRightContent = headerHidesOverflowMenu ? null : (
@@ -4457,7 +4443,10 @@ function AppTabs({
                 ? "Reminders"
                 : isSymptomLogWizard || isMedicationTrackingWizard || isWellbeingWizard
                   ? ""
-                  : titleForRoute[route.name] ?? "",
+                  : route.name === "MedicalSupplyOrder"
+                    ? String((route.params as { orderName?: string } | undefined)?.orderName ?? "").trim() ||
+                      "Order"
+                    : titleForRoute[route.name] ?? "",
       headerTitleAlign: "center" as const,
       headerLargeTitleEnabled: false,
       headerLargeTitleShadowVisible: false,
@@ -4482,8 +4471,7 @@ function AppTabs({
         !isWellbeingWizard &&
         !isAccount &&
         !isLogs &&
-        !isReminders &&
-        !isMedicalSupplies
+        !isReminders
           ? () => (
               <Pressable
                 accessibilityRole="button"
@@ -4542,6 +4530,8 @@ function AppTabs({
             <AppStack.Screen name="AppointmentBriefChanges">{() => <AppointmentBriefChangesScreen user={user} />}</AppStack.Screen>
             <AppStack.Screen name="Reports">{() => <ReportsScreen user={user} />}</AppStack.Screen>
             <AppStack.Screen name="MedicalSupplies">{() => <MedicalSuppliesScreen user={user} />}</AppStack.Screen>
+            <AppStack.Screen name="MedicalSuppliesSetup">{() => <MedicalSuppliesSetupRoute user={user} />}</AppStack.Screen>
+            <AppStack.Screen name="MedicalSupplyOrder">{() => <MedicalSupplyOrderScreen user={user} />}</AppStack.Screen>
             <AppStack.Screen name="MedicalSupplyRequest">{() => <MedicalSupplyRequestScreen user={user} />}</AppStack.Screen>
             <AppStack.Screen name="Meds" component={MedsScreenRoute} />
             <AppStack.Screen name="MedicationDetail">{() => <MedicationDetailScreen user={user} />}</AppStack.Screen>
@@ -5525,8 +5515,8 @@ const styles = StyleSheet.create({
   /** Same height and radius as `PrimaryButton`; two equal slots like paired actions. */
   settingToggleRow: { flexDirection: "row", alignItems: "flex-start", justifyContent: "space-between", gap: 14 },
   settingsCardSectionLabel: {
-    fontSize: FLARE_FONT_SIZE.muted,
-    lineHeight: FLARE_LINE_HEIGHT.muted,
+    fontSize: FLARE_FONT_SIZE.caption,
+    lineHeight: FLARE_LINE_HEIGHT.caption,
     fontFamily: FLARE_FONT_FAMILY.bold,
     marginBottom: 0,
   },
@@ -5647,16 +5637,11 @@ const styles = StyleSheet.create({
     justifyContent: "center",
   },
   moreGrid: { flexDirection: "row", flexWrap: "wrap", gap: HOME_TILE_GAP },
-  healthPageLayout: {
+  carePageColumn: {
     gap: HOME_TILE_GAP,
   },
-  carePageLayout: {
+  carePageRow: {
     flexDirection: "row",
-    alignItems: "stretch",
-    gap: HOME_TILE_GAP,
-  },
-  carePageLeftStack: {
-    width: "auto",
     gap: HOME_TILE_GAP,
   },
   moreGridLabel: {

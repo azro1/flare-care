@@ -189,13 +189,13 @@ export const FLARE_CAPTION_HINT = {
 
 /**
  * Secondary text actions next to shelf titles / under lists —
- * See my progress, See all, load more. Regular so they don’t fight bold titles.
+ * See my progress, See all, load more. Medium so they stay readable at small size.
  * Pair with `primary` (or another color) at the call site. Add underline only if the pattern needs it.
  */
 export const FLARE_INLINE_ACTION_LINK = {
   fontSize: FLARE_FONT_SIZE.muted,
   lineHeight: FLARE_LINE_HEIGHT.muted,
-  fontFamily: FLARE_FONT_FAMILY.regular,
+  fontFamily: FLARE_FONT_FAMILY.medium,
 } as const;
 
 /** Tappable navigate row label — Account lists, wizard Edit, chart links. */

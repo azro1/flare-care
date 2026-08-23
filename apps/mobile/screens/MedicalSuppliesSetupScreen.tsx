@@ -1,7 +1,7 @@
 import DateTimePicker from "@react-native-community/datetimepicker";
 import { Ionicons } from "@expo/vector-icons";
-import { useFocusEffect, useNavigation } from "@react-navigation/native";
-import React, { useCallback, useEffect, useLayoutEffect, useMemo, useState } from "react";
+import { useFocusEffect, useNavigation, useRoute } from "@react-navigation/native";
+import React, { useCallback, useEffect, useLayoutEffect, useMemo, useRef, useState } from "react";
 import {
   ActivityIndicator,
   BackHandler,
@@ -101,7 +101,7 @@ function RadioRow({
 }
 
 /**
- * Add / edit a named order. Parent stays on the Supplies tab (header “Supplies setup”).
+ * Add / edit a named order. Parent stays on the Stock tab (header “Stock”).
  */
 export function MedicalSuppliesSetupScreen({
   user,
@@ -114,7 +114,7 @@ export function MedicalSuppliesSetupScreen({
   startStep?: number;
   /** When set, updates that order instead of creating a new one. */
   editKitId?: number | null;
-  onFinished: (kitId: number) => void;
+  onFinished: (kitId: number, orderName: string) => void;
   onDismiss: () => void;
 }) {
   const c = useFlareColors();
@@ -137,6 +137,8 @@ export function MedicalSuppliesSetupScreen({
   const [datePickerOpen, setDatePickerOpen] = useState(false);
   const [pickerDraftDate, setPickerDraftDate] = useState<Date | null>(null);
   const [alreadySetUp, setAlreadySetUp] = useState(false);
+  /** When true, allow leaving the screen (Finish / dismiss) without stepBack hijacking. */
+  const allowLeaveRef = useRef(false);
 
   const applyDefaults = useCallback((kitRow: Awaited<ReturnType<typeof fetchMedicalSupplyKit>>) => {
     const defaults = defaultKitFormValues(kitRow);
@@ -175,16 +177,10 @@ export function MedicalSuppliesSetupScreen({
   }, [load, startStep]);
 
   const leaveSetup = useCallback(() => {
-    if (!alreadySetUp && startStep < STEP_NAME) {
-      onDismiss();
-      return;
-    }
-    if (editKitId != null) {
-      onFinished(editKitId);
-      return;
-    }
+    // Cancel / swipe-back always dismisses — never treat cancel as “finished”.
+    allowLeaveRef.current = true;
     onDismiss();
-  }, [alreadySetUp, editKitId, onDismiss, onFinished, startStep]);
+  }, [onDismiss]);
 
   const stepBack = useCallback(() => {
     setStepError("");
@@ -201,16 +197,26 @@ export function MedicalSuppliesSetupScreen({
 
   useLayoutEffect(() => {
     navigation.setOptions({
-      title: "Supplies",
-      // Tab root — same as Dashboard / Logs / Account: leave via bottom nav, not a header back.
-      headerLeft: () => null,
+      title: "My Supplies",
+      // Finish uses replace — interactive pop + beforeRemove was stepping back to cadence.
+      gestureEnabled: false,
+      headerLeft: () => (
+        <Pressable
+          accessibilityRole="button"
+          accessibilityLabel="Back"
+          hitSlop={{ top: 10, bottom: 10, left: 8, right: 20 }}
+          onPress={stepBack}
+          style={{ paddingLeft: 4, paddingVertical: 4 }}
+        >
+          <Ionicons name="chevron-back" size={24} color={c.textMuted} />
+        </Pressable>
+      ),
     });
-  }, [navigation]);
+  }, [c.textMuted, navigation, stepBack]);
 
   useFocusEffect(
     useCallback(() => {
       const onBack = () => {
-        // In-wizard: step back. On intro / first step of edit: dismiss (hub or stay on tab).
         stepBack();
         return true;
       };
@@ -235,8 +241,9 @@ export function MedicalSuppliesSetupScreen({
       setStep(STEP_NAME);
       return;
     }
-    const days = resolveCadenceDays();
-    if (days == null) {
+    // Prefer live resolve; fall back to last confirmed cadenceDays from the cadence step.
+    const days = resolveCadenceDays() ?? normalizeCadenceDays(cadenceDays);
+    if (!Number.isFinite(days) || days < 1) {
       setStepError("Enter how many weeks between orders (1–52).");
       setStep(STEP_CADENCE);
       return;
@@ -248,6 +255,7 @@ export function MedicalSuppliesSetupScreen({
     }
     setSaving(true);
     setStepError("");
+    allowLeaveRef.current = true;
     try {
       if (editKitId != null) {
         const updated = await updateMedicalSupplyKit(user.id, editKitId, {
@@ -255,16 +263,17 @@ export function MedicalSuppliesSetupScreen({
           cadence_days: days,
           next_due_date: nextDueDate,
         });
-        onFinished(updated.id);
+        onFinished(updated.id, name);
       } else {
         const created = await insertMedicalSupplyKit(user.id, {
           name,
           cadence_days: days,
           next_due_date: nextDueDate,
         });
-        onFinished(created.id);
+        onFinished(created.id, name);
       }
     } catch (err: unknown) {
+      allowLeaveRef.current = false;
       const message = err instanceof Error ? err.message : "Could not save setup.";
       showFlareAlert("Could not save", message);
     } finally {
@@ -322,7 +331,7 @@ export function MedicalSuppliesSetupScreen({
   const questionTitle = useMemo(() => {
     switch (step) {
       case STEP_INTRO:
-        return "Let’s set up a stock order";
+        return "Let’s set up an order";
       case STEP_NAME:
         return "Name your order";
       case STEP_CADENCE:
@@ -356,21 +365,21 @@ export function MedicalSuppliesSetupScreen({
 
         {step === STEP_INTRO ? (
           <Text style={[styles.support, { color: c.textMuted }]}>
-            Set up stock orders once and reuse them whenever you need to reorder.
+            Set up orders once, then reuse them whenever you need to reorder.
           </Text>
         ) : null}
 
         {step === STEP_NAME ? (
           <View style={styles.nameBlock}>
             <Text style={[styles.support, styles.supportInBlock, { color: c.textMuted }]}>
-              Give each order a name so you can easily identify and switch between your orders.
+              Choose a name to easily identify and switch between saved orders.
             </Text>
             <View style={styles.fieldGroup}>
               <FlareScreenSectionTitle compact>Order name</FlareScreenSectionTitle>
               <FlareTextInput
                 value={kitName}
                 onChangeText={setKitName}
-                placeholder="e.g. My stock order"
+                placeholder="e.g. Home stoma"
                 autoCapitalize="sentences"
                 style={styles.fieldInput}
               />
@@ -530,3 +539,44 @@ const styles = StyleSheet.create({
   stepError: { marginTop: CARD_SECTION_INNER_GAP },
   actions: { gap: CONFIRM_MODAL_STACK_GAP, marginTop: COLLAPSING_TITLE_CONTENT_GAP },
 });
+
+export type MedicalSuppliesSetupParams = {
+  editKitId?: number;
+  startStep?: number;
+};
+
+/** Stack route — keeps setup off the My Supplies hub so back returns to the previous screen. */
+export function MedicalSuppliesSetupRoute({ user }: { user: SessionUser }) {
+  const navigation = useNavigation<any>();
+  const route = useRoute();
+  const params = (route.params ?? {}) as MedicalSuppliesSetupParams;
+  const editKitId =
+    params.editKitId != null && Number.isFinite(Number(params.editKitId))
+      ? Number(params.editKitId)
+      : null;
+  const startStep =
+    params.startStep ?? (editKitId != null ? SUPPLIES_SETUP_STEP_NAME : SUPPLIES_SETUP_STEP_INTRO);
+
+  return (
+    <MedicalSuppliesSetupScreen
+      user={user}
+      startStep={startStep}
+      editKitId={editKitId}
+      onFinished={(kitId, orderName) => {
+        if (editKitId != null) {
+          navigation.navigate({
+            name: "MedicalSupplyOrder",
+            params: { kitId, orderName },
+            merge: true,
+          });
+        } else {
+          navigation.replace("MedicalSupplyOrder", { kitId, orderName });
+        }
+      }}
+      onDismiss={() => {
+        if (navigation.canGoBack()) navigation.goBack();
+        else navigation.navigate("Dashboard");
+      }}
+    />
+  );
+}

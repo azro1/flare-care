@@ -77,7 +77,7 @@ export function HeaderOverflowMenu({
         <Ionicons
           name="ellipsis-vertical"
           size={20}
-          color={c.isDark ? c.textMuted : c.text}
+          color={c.text}
           accessibilityIgnoresInvertColors
         />
       </Pressable>

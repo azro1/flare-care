@@ -89,7 +89,7 @@ export function MedicalSupplyItemSheet({
           >
             <Ionicons name="close" size={SHEET_CLOSE_ICON_SIZE} color={c.textMuted} />
           </Pressable>
-          <Text style={[styles.sheetTitle, { color: c.text }]}>{editingId ? "Edit supply" : "Add supply"}</Text>
+          <Text style={[styles.sheetTitle, { color: c.text }]}>{editingId ? "Edit item" : "Add item"}</Text>
           <View style={styles.sheetClose} />
         </View>
 

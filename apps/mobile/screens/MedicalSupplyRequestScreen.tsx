@@ -2,18 +2,26 @@ import * as Clipboard from "expo-clipboard";
 import { Ionicons } from "@expo/vector-icons";
 import { useFocusEffect, useNavigation, useRoute } from "@react-navigation/native";
 import React, { useCallback, useState } from "react";
-import { ActivityIndicator, Pressable, Share, StyleSheet, Text, View } from "react-native";
+import {
+  ActivityIndicator,
+  KeyboardAvoidingView,
+  Platform,
+  Pressable,
+  Share,
+  StyleSheet,
+  Text,
+  View,
+} from "react-native";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { showFlareAlert } from "../components/FlareAlertHost";
 import { PrimaryButton, SecondaryButton } from "../components/FlareButton";
 import {
-  FLARE_INPUT_BORDER_RADIUS,
+  FlareInputTrigger,
   flareFieldErrorStyle,
   FlareTextInput,
   flareInputStyles,
 } from "../components/FlareInput";
-import { flareCardSectionStyles, FlareScreenSectionTitle } from "../components/FlareScreenSectionTitle";
-import { LogHistoryCard } from "../components/LogHistoryList";
+import { FlareScreenSectionTitle } from "../components/FlareScreenSectionTitle";
 import { OptionPickerModal } from "../components/OptionPickerModal";
 import { ConfirmModal } from "../components/ConfirmModal";
 import { ScrollView } from "../lib/scrollViews";
@@ -28,16 +36,10 @@ import {
   type MedicalSupplyRow,
 } from "../lib/medicalSuppliesShared";
 import {
-  CARD_SECTION_INNER_GAP,
-  COLLAPSING_TITLE_CONTENT_GAP,
-  CONFIRM_MODAL_ACTIONS_GAP,
-  CONFIRM_MODAL_STACK_GAP,
   FLARE_FONT_FAMILY,
   FLARE_FONT_SIZE,
   FLARE_INLINE_ACTION_LINK,
   FLARE_LINE_HEIGHT,
-  SCREEN_EDGE_PADDING,
-  STACKED_LINE_GAP,
   WIZARD_LANDING_BLOCK_PADDING_BOTTOM,
   bottomTabBarScrollInset,
 } from "../lib/layoutConstants";
@@ -190,7 +192,7 @@ export function MedicalSupplyRequestScreen({ user }: { user: SessionUser }) {
     } catch {
       // wording may have saved; due advance failed — still tell them send worked
     }
-    const dueLine = nextDueLabel ? ` Your next supplies are due on ${nextDueLabel}.` : "";
+    const dueLine = nextDueLabel ? ` Your next order is due on ${nextDueLabel}.` : "";
     showFlareAlert(opts?.successTitle || "Sent", `${opts?.successBody || ""}${dueLine}`.trim());
     navigation.goBack();
   };
@@ -271,12 +273,12 @@ export function MedicalSupplyRequestScreen({ user }: { user: SessionUser }) {
   const orderNames = kits.map((k) => k.name);
 
   return (
-    <View style={[styles.screen, { backgroundColor: c.screen }]}>
+    <KeyboardAvoidingView
+      style={[styles.screen, { backgroundColor: c.screen }]}
+      behavior={Platform.OS === "ios" ? "padding" : undefined}
+    >
       <ScrollView
-        contentContainerStyle={[
-          styles.scroll,
-          { paddingBottom: bottomScrollInset + CONFIRM_MODAL_ACTIONS_GAP + SCREEN_EDGE_PADDING },
-        ]}
+        contentContainerStyle={[styles.scroll, { paddingBottom: bottomScrollInset + 24 }]}
         keyboardShouldPersistTaps="handled"
         showsVerticalScrollIndicator={false}
       >
@@ -288,29 +290,30 @@ export function MedicalSupplyRequestScreen({ user }: { user: SessionUser }) {
         ) : error ? (
           <Text style={errTextStyle}>{error}</Text>
         ) : kits.length === 0 ? (
-          <Text style={[styles.muted, { color: c.textMuted }]}>Set up a named order on Supplies first.</Text>
+          <Text style={[styles.muted, { color: c.textMuted }]}>Set up an order in My Supplies first.</Text>
         ) : (
-          <LogHistoryCard style={[flareCardSectionStyles.container, styles.previewCard]}>
-            <FlareScreenSectionTitle inCard>Order</FlareScreenSectionTitle>
-            <Pressable
+          <>
+            <FlareScreenSectionTitle compact>Order *</FlareScreenSectionTitle>
+            <FlareInputTrigger
               accessibilityRole="button"
               accessibilityLabel="Choose order"
               onPress={() => setOrderPickerOpen(true)}
-              style={[styles.orderPicker, { backgroundColor: c.surfaceSubtle, borderColor: c.cardBorder }]}
             >
-              <Text style={[styles.orderPickerText, { color: kit?.name ? c.text : c.textMuted }]} numberOfLines={1}>
-                {kit?.name || "Select order"}
-              </Text>
-              <Ionicons name="chevron-down" size={FLARE_FONT_SIZE.sectionTitle} color={c.textMuted} />
-            </Pressable>
+              <View style={styles.orderPickerRow}>
+                <Text style={[styles.orderPickerText, { color: kit?.name ? c.text : c.textMuted }]} numberOfLines={1}>
+                  {kit?.name || "Select order"}
+                </Text>
+                <Ionicons name="chevron-down" size={18} color={c.textMuted} />
+              </View>
+            </FlareInputTrigger>
 
             {items.length === 0 ? (
               <Text style={[styles.muted, styles.emptyItems, { color: c.textMuted }]}>
-                Add supplies to this order first, then request supplies.
+                Add items to this order first, then you can send a request.
               </Text>
             ) : (
               <>
-                <FlareScreenSectionTitle inCard style={styles.sectionSpaced}>
+                <FlareScreenSectionTitle compact style={styles.fieldGap}>
                   Subject
                 </FlareScreenSectionTitle>
                 <FlareTextInput
@@ -320,8 +323,8 @@ export function MedicalSupplyRequestScreen({ user }: { user: SessionUser }) {
                   autoCapitalize="sentences"
                 />
 
-                <FlareScreenSectionTitle inCard style={styles.sectionSpaced}>
-                  Message
+                <FlareScreenSectionTitle compact style={styles.fieldGap}>
+                  Message *
                 </FlareScreenSectionTitle>
                 <FlareTextInput
                   multiline
@@ -340,8 +343,8 @@ export function MedicalSupplyRequestScreen({ user }: { user: SessionUser }) {
                   </Text>
                 </Pressable>
 
-                <FlareScreenSectionTitle inCard style={styles.sendToTitle}>
-                  Send to
+                <FlareScreenSectionTitle compact style={styles.fieldGap}>
+                  Send to *
                 </FlareScreenSectionTitle>
                 <FlareTextInput
                   value={toEmail}
@@ -367,7 +370,7 @@ export function MedicalSupplyRequestScreen({ user }: { user: SessionUser }) {
                 </View>
               </>
             )}
-          </LogHistoryCard>
+          </>
         )}
       </ScrollView>
 
@@ -380,51 +383,41 @@ export function MedicalSupplyRequestScreen({ user }: { user: SessionUser }) {
       <ConfirmModal
         visible={noStockOpen}
         notice
-        title="Add supplies first"
-        message="Add supplies to this order first, then request supplies."
+        title="Add items first"
+        message="Add items to this order first, then you can send a request."
         confirmLabel="OK"
         onConfirm={() => setNoStockOpen(false)}
         onCancel={() => setNoStockOpen(false)}
       />
-    </View>
+    </KeyboardAvoidingView>
   );
 }
 
 const styles = StyleSheet.create({
   screen: { flex: 1 },
-  scroll: { paddingHorizontal: SCREEN_EDGE_PADDING, paddingTop: CONFIRM_MODAL_STACK_GAP },
+  scroll: { paddingHorizontal: 20, paddingTop: 14 },
   loadingWrap: {
     alignItems: "center",
     paddingVertical: WIZARD_LANDING_BLOCK_PADDING_BOTTOM,
-    gap: CARD_SECTION_INNER_GAP,
+    gap: 12,
   },
   muted: {
     fontSize: FLARE_FONT_SIZE.muted,
     lineHeight: FLARE_LINE_HEIGHT.muted,
     fontFamily: FLARE_FONT_FAMILY.regular,
   },
-  emptyItems: { marginTop: CARD_SECTION_INNER_GAP },
-  previewCard: { marginBottom: 0, gap: CONFIRM_MODAL_STACK_GAP },
-  orderPicker: {
-    flexDirection: "row",
-    alignItems: "center",
-    gap: CONFIRM_MODAL_STACK_GAP,
-    borderWidth: 1,
-    borderRadius: FLARE_INPUT_BORDER_RADIUS,
-    paddingHorizontal: SCREEN_EDGE_PADDING,
-    minHeight: flareInputStyles.trigger.minHeight,
-  },
+  emptyItems: { marginTop: 16 },
+  orderPickerRow: { flex: 1, flexDirection: "row", alignItems: "center", gap: 8 },
   orderPickerText: {
     flex: 1,
     fontSize: FLARE_FONT_SIZE.body,
     fontFamily: FLARE_FONT_FAMILY.regular,
   },
-  sectionSpaced: { marginTop: COLLAPSING_TITLE_CONTENT_GAP },
-  sendToTitle: { marginTop: CONFIRM_MODAL_STACK_GAP },
+  fieldGap: { marginTop: 16 },
   bodyInput: {
-    minHeight: flareInputStyles.textarea.minHeight + COLLAPSING_TITLE_CONTENT_GAP * 5,
+    minHeight: flareInputStyles.textarea.minHeight + 80,
   },
-  rebuildLink: { alignSelf: "flex-start", paddingVertical: STACKED_LINE_GAP },
-  fieldError: { marginTop: STACKED_LINE_GAP },
-  actionCol: { gap: CONFIRM_MODAL_STACK_GAP, marginTop: CARD_SECTION_INNER_GAP },
+  rebuildLink: { alignSelf: "flex-start", paddingVertical: 10 },
+  fieldError: { marginTop: 8 },
+  actionCol: { gap: 8, marginTop: 20 },
 });

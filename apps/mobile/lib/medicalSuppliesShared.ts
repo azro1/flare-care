@@ -160,20 +160,18 @@ export function supplyDueStatus(kit: MedicalSupplyKitRow | null, itemCount: numb
 }
 
 export function supplyDueHeadline(kit: MedicalSupplyKitRow | null, itemCount: number): string {
-  if (!kit?.next_due_date) {
-    return itemCount <= 0 ? "Add your regular medical supplies" : "Set when your next supplies are due";
-  }
+  if (itemCount <= 0) return "Add items to this order";
+  if (!kit?.next_due_date) return "Set when this order is due";
   const today = todayYmd();
-  if (kit.next_due_date < today) return `Supplies overdue · was due: ${formatUkDate(kit.next_due_date)}`;
-  if (kit.next_due_date === today) return `Supplies due today: ${formatUkDate(kit.next_due_date)}`;
-  return `Next supplies due: ${formatUkDate(kit.next_due_date)}`;
+  if (kit.next_due_date < today) return `Order overdue: ${formatUkDate(kit.next_due_date)}`;
+  if (kit.next_due_date === today) return `Order due today: ${formatUkDate(kit.next_due_date)}`;
+  return `Next order due: ${formatUkDate(kit.next_due_date)}`;
 }
 
 /** Short due line for hub order cards — detail screen keeps the fuller headline. */
 export function supplyDueListLabel(kit: MedicalSupplyKitRow, itemCount: number): string {
-  if (!kit.next_due_date) {
-    return itemCount <= 0 ? "Add supplies" : "Set next due date";
-  }
+  if (itemCount <= 0) return "Add items";
+  if (!kit.next_due_date) return "Set next due date";
   const today = todayYmd();
   if (kit.next_due_date < today) return `Overdue · ${formatUkDate(kit.next_due_date)}`;
   if (kit.next_due_date === today) return "Due today";
@@ -446,6 +444,7 @@ export async function deleteMedicalSuppliesForUser(userId: string, ids: string[]
     .eq("user_id", userId)
     .in("id", numericIds);
   if (error) throw error;
+  clearMedicalSupplyKitListCache(userId);
 }
 
 export function defaultKitFormValues(kit: MedicalSupplyKitRow | null): {

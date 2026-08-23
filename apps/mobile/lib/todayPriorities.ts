@@ -5,10 +5,6 @@ import {
 import { todayYmd } from "./bowelMovementShared";
 import type { DashboardTodaySummary } from "./dashboardSnapshotCache";
 import { HYDRATION_TARGET } from "./hydrationShared";
-import {
-  formatMedicationReminderTime,
-  type MedicationRow,
-} from "./medicationShared";
 
 import type { SupplyDueStatus } from "./medicalSuppliesShared";
 
@@ -37,13 +33,6 @@ function appointmentDateOnly(row: AppointmentRow): string | null {
   return String(row.date || "").match(/^(\d{4}-\d{2}-\d{2})/)?.[1] ?? null;
 }
 
-function timeOfDaySortKey(timeOfDay: string | null | undefined): number {
-  const t = (timeOfDay || "").trim();
-  if (!/^\d{2}:\d{2}$/.test(t)) return Number.MAX_SAFE_INTEGER;
-  const [h, m] = t.split(":").map(Number);
-  return h * 60 + m;
-}
-
 /** Earliest appointment on today or tomorrow (calendar). */
 export function findNearTermAppointment(
   rows: AppointmentRow[],
@@ -62,29 +51,9 @@ export function findNearTermAppointment(
   return candidates[0]?.apt ?? null;
 }
 
-/** Next untaken prescribed med with a clock time — for “Take medication at 6:00 PM”. */
-export function nextUntakenMedicationTimeLabel(
-  meds: MedicationRow[],
-  takenMedicationIds: Iterable<number | string>,
-): string | null {
-  const taken = new Set([...takenMedicationIds].map((id) => String(id)));
-  const untaken = meds
-    .filter((med) => med.name !== "Medication Tracking")
-    .filter((med) => !taken.has(String(med.id)))
-    .filter((med) => {
-      const t = med.time_of_day?.trim();
-      return Boolean(t && t !== "as-needed" && /^\d{2}:\d{2}$/.test(t));
-    })
-    .sort((a, b) => timeOfDaySortKey(a.time_of_day) - timeOfDaySortKey(b.time_of_day));
-  if (untaken.length === 0) return null;
-  const label = formatMedicationReminderTime(untaken[0].time_of_day);
-  return label === "Not set" ? null : label;
-}
-
 export function buildTodayPriorities(input: {
   todaySummary: DashboardTodaySummary;
   nearAppointment: AppointmentRow | null;
-  nextMedicationTimeLabel?: string | null;
   today?: string;
   hydrationTarget?: number;
   /** From supplies kit — show nudge when due or overdue and the list isn’t empty. */
@@ -97,11 +66,10 @@ export function buildTodayPriorities(input: {
 
   const remainingMeds = Math.max(0, todaySummary.medsTotal - todaySummary.medsTaken);
   if (todaySummary.medsTotal > 0 && remainingMeds > 0) {
-    const time = input.nextMedicationTimeLabel?.trim();
     items.push({
       id: "meds",
       emoji: "💊",
-      text: time ? `Take medication at ${time}` : "Take medication",
+      text: "Take medication",
     });
   }
 
@@ -119,7 +87,7 @@ export function buildTodayPriorities(input: {
     items.push({
       id: "check-in",
       emoji: "📝",
-      text: "Check-in not completed",
+      text: "Check-in",
     });
   }
 
@@ -137,7 +105,7 @@ export function buildTodayPriorities(input: {
     items.push({
       id: "supplies",
       emoji: "📦",
-      text: input.suppliesStatus === "overdue" ? "Supplies overdue" : "Supplies due",
+      text: input.suppliesStatus === "overdue" ? "Order overdue" : "Order due",
     });
   }
 

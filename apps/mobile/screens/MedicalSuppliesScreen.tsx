@@ -1,20 +1,10 @@
 import { Ionicons } from "@expo/vector-icons";
 import { useFocusEffect, useNavigation } from "@react-navigation/native";
-import React, { useCallback, useEffect, useLayoutEffect, useMemo, useState } from "react";
-import { BackHandler, Pressable, StyleSheet, Text, View } from "react-native";
+import React, { useCallback, useLayoutEffect, useMemo, useState } from "react";
+import { Pressable, StyleSheet, Text, View } from "react-native";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { showFlareAlert } from "../components/FlareAlertHost";
-import { PrimaryButton } from "../components/FlareButton";
 import { InstructionScreenShell } from "../components/InstructionScreenShell";
-import { MedicalSupplyItemSheet } from "../components/MedicalSupplyItemSheet";
-import {
-  LogHistoryCard,
-  LogHistoryEmptyState,
-  LogHistoryPreviewList,
-  LOG_HISTORY_LOAD_MORE_BATCH,
-  logHistoryCardStyles,
-  type LogHistoryListItem,
-} from "../components/LogHistoryList";
 import { ConfirmModal } from "../components/ConfirmModal";
 import { HeaderOverflowMenu } from "../components/HeaderOverflowMenu";
 import { HubTipCard } from "../components/HubTipCard";
@@ -24,57 +14,33 @@ import {
   FLARE_FONT_SIZE,
   FLARE_INLINE_ACTION_LINK,
   FLARE_LINE_HEIGHT,
-  INSTRUCTION_CARD_HEADER_GAP,
   SCREEN_EDGE_PADDING,
   STACKED_LINE_GAP,
   bottomTabBarHeight,
 } from "../lib/layoutConstants";
 import { useLogListSelection } from "../lib/useLogListSelection";
 import {
-  MEDICAL_SUPPLIES_FEATURE_ION_ICON,
-  cadenceLabel,
-  deleteMedicalSuppliesForUser,
   deleteMedicalSupplyKit,
-  emptyMedicalSupplyFormState,
   fetchKitListEntries,
-  fetchMedicalSuppliesForKit,
-  fetchMedicalSupplyKit,
   getMedicalSupplyKitListCache,
-  insertMedicalSupply,
-  medicalSupplyFormFromRow,
   needsMedicalSuppliesSetup,
-  normalizeCadenceDays,
-  supplyDueHeadline,
   supplyDueListLabel,
-  updateMedicalSupply,
   type KitListEntry,
-  type MedicalSupplyFormState,
-  type MedicalSupplyKitRow,
-  type MedicalSupplyRow,
 } from "../lib/medicalSuppliesShared";
-import {
-  MedicalSuppliesSetupScreen,
-  SUPPLIES_SETUP_STEP_INTRO,
-  SUPPLIES_SETUP_STEP_NAME,
-} from "./MedicalSuppliesSetupScreen";
+import { SUPPLIES_SETUP_STEP_INTRO } from "./MedicalSuppliesSetupScreen";
 import { useFlareColors } from "../theme";
 
 type SessionUser = { id: string };
 
 function seedFromKitCache(userId: string): {
   entries: KitListEntry[];
-  inSetup: boolean;
   hubReady: boolean;
 } {
   const cached = getMedicalSupplyKitListCache(userId);
-  if (cached == null) {
-    // Assume setup so DB → Supplies paints intro with the transition (dashboard warms cache).
-    return { entries: [], inSetup: true, hubReady: true };
+  if (cached == null || needsMedicalSuppliesSetup(cached.length)) {
+    return { entries: [], hubReady: true };
   }
-  if (needsMedicalSuppliesSetup(cached.length)) {
-    return { entries: [], inSetup: true, hubReady: true };
-  }
-  return { entries: cached, inSetup: false, hubReady: true };
+  return { entries: cached, hubReady: true };
 }
 
 export function MedicalSuppliesScreen({ user }: { user: SessionUser }) {
@@ -85,41 +51,24 @@ export function MedicalSuppliesScreen({ user }: { user: SessionUser }) {
   const { scrollBottomPad } = useTrackerThumbFabLayout(tabBarClearance);
 
   const seed = useMemo(() => seedFromKitCache(user.id), [user.id]);
-  const [inSetup, setInSetup] = useState(seed.inSetup);
-  const [setupStartStep, setSetupStartStep] = useState(SUPPLIES_SETUP_STEP_INTRO);
-  const [setupEditKitId, setSetupEditKitId] = useState<number | null>(null);
   const [hubReady, setHubReady] = useState(seed.hubReady);
   const [entries, setEntries] = useState<KitListEntry[]>(seed.entries);
-  const [selectedKitId, setSelectedKitId] = useState<number | null>(null);
-  const [kit, setKit] = useState<MedicalSupplyKitRow | null>(null);
-  const [items, setItems] = useState<MedicalSupplyRow[]>([]);
-  const [detailLoading, setDetailLoading] = useState(false);
-  const [sheetOpen, setSheetOpen] = useState(false);
-  const [editingId, setEditingId] = useState<number | null>(null);
-  const [form, setForm] = useState<MedicalSupplyFormState>(() => emptyMedicalSupplyFormState());
-  const [saving, setSaving] = useState(false);
-  const [saveError, setSaveError] = useState("");
-  const [expandedCount, setExpandedCount] = useState(LOG_HISTORY_LOAD_MORE_BATCH);
-  const [deleteOrderOpen, setDeleteOrderOpen] = useState(false);
-  const [deletingOrder, setDeletingOrder] = useState(false);
   const [noStockOpen, setNoStockOpen] = useState(false);
   const [noStockMessage, setNoStockMessage] = useState(
-    "Add supplies to this order first, then request supplies.",
+    "Add items to an order first, then you can send a request.",
   );
 
   const orderIds = useMemo(() => entries.map((e) => String(e.kit.id)), [entries]);
-  const stockIds = useMemo(() => items.map((row) => String(row.id)), [items]);
-  const selectionItemIds = selectedKitId != null ? stockIds : orderIds;
-  const renderIdleHeaderRight = useCallback(() => {
-    if (selectedKitId != null || inSetup) return null;
-    return (
+  const renderIdleHeaderRight = useCallback(
+    () => (
       <HeaderOverflowMenu
         navigation={navigation}
         routeName="MedicalSupplies"
         edgePadding={SCREEN_EDGE_PADDING}
       />
-    );
-  }, [inSetup, navigation, selectedKitId]);
+    ),
+    [navigation],
+  );
   const {
     selectionMode,
     selectedIds,
@@ -128,123 +77,51 @@ export function MedicalSuppliesScreen({ user }: { user: SessionUser }) {
     bulkDeleting,
     enterSelectionWith,
     toggleSelect,
-    exitSelectionMode,
     runBulkDelete,
   } = useLogListSelection({
     routeName: "MedicalSupplies",
-    itemIds: selectionItemIds,
+    itemIds: orderIds,
     navigation,
-    headerTitle: selectedKitId != null ? kit?.name || "Supplies" : "Supplies",
+    headerTitle: "My Supplies",
     renderIdleHeaderRight,
   });
 
-  // Hub ↔ detail: drop selection so chrome/ids stay in sync.
-  useEffect(() => {
-    exitSelectionMode();
-  }, [selectedKitId, exitSelectionMode]);
   const openNewOrderSetup = useCallback(() => {
-    setSetupEditKitId(null);
-    setSetupStartStep(SUPPLIES_SETUP_STEP_INTRO);
-    setInSetup(true);
-  }, []);
-
-  const openEditOrderSetup = useCallback((kitId: number) => {
-    setSetupEditKitId(kitId);
-    setSetupStartStep(SUPPLIES_SETUP_STEP_NAME);
-    setInSetup(true);
-  }, []);
+    navigation.navigate("MedicalSuppliesSetup", { startStep: SUPPLIES_SETUP_STEP_INTRO });
+  }, [navigation]);
 
   const loadList = useCallback(async () => {
     try {
       const rows = await fetchKitListEntries(user.id);
-      setEntries(rows);
       if (needsMedicalSuppliesSetup(rows.length)) {
-        openNewOrderSetup();
+        // Replace before painting an empty list (avoids list → setup flash).
+        navigation.replace("MedicalSuppliesSetup", { startStep: SUPPLIES_SETUP_STEP_INTRO });
         return;
       }
-      // Has orders — drop optimistic first-time setup (not mid edit / add-another).
-      setInSetup((was) => {
-        if (!was) return false;
-        if (setupEditKitId != null) return true;
-        return false;
-      });
+      setEntries(rows);
     } catch (err: unknown) {
       const message = err instanceof Error ? err.message : "Could not load supplies.";
       showFlareAlert("Could not load", message);
-      setInSetup(false);
     } finally {
       setHubReady(true);
     }
-  }, [openNewOrderSetup, setupEditKitId, user.id]);
-
-  const loadDetail = useCallback(
-    async (kitId: number, opts?: { quiet?: boolean }) => {
-      if (!opts?.quiet) setDetailLoading(true);
-      try {
-        const [kitRow, rows] = await Promise.all([
-          fetchMedicalSupplyKit(user.id, kitId),
-          fetchMedicalSuppliesForKit(user.id, kitId),
-        ]);
-        if (!kitRow) {
-          setSelectedKitId(null);
-          setKit(null);
-          setItems([]);
-          void loadList();
-          return;
-        }
-        setKit(kitRow);
-        setItems(rows);
-      } catch (err: unknown) {
-        const message = err instanceof Error ? err.message : "Could not load this order.";
-        showFlareAlert("Could not load", message);
-      } finally {
-        setDetailLoading(false);
-      }
-    },
-    [loadList, user.id],
-  );
+  }, [navigation, user.id]);
 
   useFocusEffect(
     useCallback(() => {
-      if (selectedKitId != null && !inSetup) {
-        void loadDetail(selectedKitId, { quiet: true });
-        return;
+      const cached = getMedicalSupplyKitListCache(user.id);
+      if (cached != null && !needsMedicalSuppliesSetup(cached.length)) {
+        setEntries(cached);
+        setHubReady(true);
       }
-      // Mid setup for an existing order / add-another — don't yank the wizard.
-      if (inSetup && (setupEditKitId != null || entries.length > 0)) return;
       void loadList();
-    }, [entries.length, inSetup, loadDetail, loadList, selectedKitId, setupEditKitId]),
+    }, [loadList, user.id]),
   );
 
-  const leaveDetail = useCallback(() => {
-    setSelectedKitId(null);
-    setKit(null);
-    setItems([]);
-    void loadList();
-  }, [loadList]);
-
   useLayoutEffect(() => {
-    if (inSetup || selectionMode) return;
-    if (selectedKitId != null && kit) {
-      navigation.setOptions({
-        title: kit.name,
-        headerLeft: () => (
-          <Pressable
-            accessibilityRole="button"
-            accessibilityLabel="Back"
-            hitSlop={{ top: 10, bottom: 10, left: 8, right: 20 }}
-            onPress={leaveDetail}
-            style={styles.headerBackHit}
-          >
-            <Ionicons name="chevron-back" size={24} color={c.textMuted} />
-          </Pressable>
-        ),
-        headerRight: undefined,
-      });
-      return;
-    }
+    if (selectionMode) return;
     navigation.setOptions({
-      title: "Supplies",
+      title: "My Supplies",
       headerLeft: undefined,
       headerRight: () => (
         <HeaderOverflowMenu
@@ -254,66 +131,14 @@ export function MedicalSuppliesScreen({ user }: { user: SessionUser }) {
         />
       ),
     });
-  }, [c.textMuted, inSetup, kit, leaveDetail, navigation, selectedKitId, selectionMode]);
-
-  useFocusEffect(
-    useCallback(() => {
-      if (inSetup || selectedKitId == null) return;
-      const onBack = () => {
-        leaveDetail();
-        return true;
-      };
-      const sub = BackHandler.addEventListener("hardwareBackPress", onBack);
-      return () => sub.remove();
-    }, [inSetup, leaveDetail, selectedKitId]),
-  );
-
-  const handleSetupFinished = useCallback(
-    (kitId: number) => {
-      setInSetup(false);
-      setSetupEditKitId(null);
-      setSelectedKitId(kitId);
-      setHubReady(true);
-      void loadDetail(kitId);
-    },
-    [loadDetail],
-  );
-
-  const handleSetupDismiss = useCallback(() => {
-    if (setupEditKitId != null) {
-      setInSetup(false);
-      setSetupEditKitId(null);
-      return;
-    }
-    if (entries.length > 0 || selectedKitId != null) {
-      setInSetup(false);
-      return;
-    }
-    navigation.navigate("Dashboard");
-  }, [entries.length, navigation, selectedKitId, setupEditKitId]);
+  }, [navigation, selectionMode]);
 
   const handleBulkDeleteConfirm = useCallback(() => {
     void runBulkDelete(async (ids) => {
-      if (selectedKitId != null) {
-        const idSet = new Set(ids);
-        const prev = items;
-        setItems((rows) => rows.filter((row) => !idSet.has(String(row.id))));
-        try {
-          await deleteMedicalSuppliesForUser(user.id, ids);
-        } catch (err: unknown) {
-          setItems(prev);
-          const message = err instanceof Error ? err.message : "Could not delete these items.";
-          showFlareAlert("Could not delete", message);
-          throw err;
-        }
-        return;
-      }
-
       const idSet = new Set(ids);
       const prev = entries;
       const remaining = prev.filter((e) => !idSet.has(String(e.kit.id)));
       const goingToSetup = needsMedicalSuppliesSetup(remaining.length);
-      // Keep hub painted until deletes finish when emptying — avoids empty-list flash into setup.
       if (!goingToSetup) {
         setEntries(remaining);
       }
@@ -323,7 +148,7 @@ export function MedicalSuppliesScreen({ user }: { user: SessionUser }) {
         }
         if (goingToSetup) {
           setEntries([]);
-          openNewOrderSetup();
+          navigation.replace("MedicalSuppliesSetup", { startStep: SUPPLIES_SETUP_STEP_INTRO });
         }
       } catch (err: unknown) {
         setEntries(prev);
@@ -332,280 +157,20 @@ export function MedicalSuppliesScreen({ user }: { user: SessionUser }) {
         throw err;
       }
     });
-  }, [entries, items, openNewOrderSetup, runBulkDelete, selectedKitId, user.id]);
+  }, [entries, navigation, runBulkDelete, user.id]);
 
-  const openRequestSupplies = useCallback(
-    (kitId?: number | null) => {
-      if (kitId != null) {
-        if (items.length === 0) {
-          setNoStockMessage("Add supplies to this order first, then request supplies.");
-          setNoStockOpen(true);
-          return;
-        }
-        navigation.navigate("MedicalSupplyRequest", { kitId });
-        return;
-      }
-      const withStock = entries.find((e) => e.itemCount > 0);
-      if (!withStock) {
-        setNoStockMessage("Add supplies to an order first, then request supplies.");
-        setNoStockOpen(true);
-        return;
-      }
-      navigation.navigate("MedicalSupplyRequest", { kitId: withStock.kit.id });
-    },
-    [entries, items.length, navigation],
-  );
-
-  const noStockNotice = (
-    <ConfirmModal
-      visible={noStockOpen}
-      notice
-      title="Add supplies first"
-      message={noStockMessage}
-      confirmLabel="OK"
-      onConfirm={() => setNoStockOpen(false)}
-      onCancel={() => setNoStockOpen(false)}
-    />
-  );
-
-  const closeSheet = useCallback(() => {
-    setSheetOpen(false);
-    setEditingId(null);
-    setSaveError("");
-    setForm(emptyMedicalSupplyFormState());
-  }, []);
-
-  const openAdd = useCallback(() => {
-    setForm(emptyMedicalSupplyFormState());
-    setEditingId(null);
-    setSaveError("");
-    setSheetOpen(true);
-  }, []);
-
-  const openEdit = useCallback((row: MedicalSupplyRow) => {
-    setForm(medicalSupplyFormFromRow(row));
-    setEditingId(row.id);
-    setSaveError("");
-    setSheetOpen(true);
-  }, []);
-
-  const handleSave = async (values: MedicalSupplyFormState) => {
-    if (selectedKitId == null) return;
-    setSaveError("");
-    setSaving(true);
-    try {
-      if (editingId) {
-        const updated = await updateMedicalSupply(user.id, editingId, values);
-        setItems((prev) => prev.map((row) => (row.id === updated.id ? updated : row)));
-      } else {
-        const created = await insertMedicalSupply(user.id, selectedKitId, values);
-        setItems((prev) => [...prev, created]);
-      }
-      closeSheet();
-    } catch (err: unknown) {
-      setSaveError(err instanceof Error ? err.message : "Could not save this item.");
-    } finally {
-      setSaving(false);
+  const openRequestSupplies = useCallback(() => {
+    const withStock = entries.find((e) => e.itemCount > 0);
+    if (!withStock) {
+      setNoStockMessage("Add items to an order first, then you can send a request.");
+      setNoStockOpen(true);
+      return;
     }
-  };
+    navigation.navigate("MedicalSupplyRequest", { kitId: withStock.kit.id });
+  }, [entries, navigation]);
 
-  const handleDeleteOrder = async () => {
-    if (selectedKitId == null) return;
-    setDeletingOrder(true);
-    try {
-      await deleteMedicalSupplyKit(user.id, selectedKitId);
-      setDeleteOrderOpen(false);
-      // Resolve next screen before leaving detail — avoids empty-hub flash then setup.
-      const rows = await fetchKitListEntries(user.id);
-      setEntries(rows);
-      setSelectedKitId(null);
-      setKit(null);
-      setItems([]);
-      if (needsMedicalSuppliesSetup(rows.length)) {
-        openNewOrderSetup();
-      } else {
-        setInSetup(false);
-      }
-      setHubReady(true);
-    } catch (err: unknown) {
-      const message = err instanceof Error ? err.message : "Could not delete this order.";
-      showFlareAlert("Could not delete", message);
-    } finally {
-      setDeletingOrder(false);
-    }
-  };
-
-  const listItems: LogHistoryListItem[] = items.map((row) => ({
-    id: String(row.id),
-    title: row.name,
-    subtitle: row.quantity,
-    accessibilityLabel: row.notes?.trim()
-      ? `${row.name}. ${row.quantity}. ${row.notes}. Edit`
-      : `${row.name}. ${row.quantity}. Edit`,
-  }));
-
-  const visibleCount = useMemo(() => {
-    if (items.length === 0) return LOG_HISTORY_LOAD_MORE_BATCH;
-    if (items.length <= LOG_HISTORY_LOAD_MORE_BATCH) return items.length;
-    return Math.min(expandedCount, items.length);
-  }, [items.length, expandedCount]);
-
-  const hasMore = items.length > visibleCount;
-  const loadMore = useCallback(() => {
-    setExpandedCount((count) => Math.min(count + LOG_HISTORY_LOAD_MORE_BATCH, items.length));
-  }, [items.length]);
-
-  if (inSetup) {
-    return (
-      <MedicalSuppliesSetupScreen
-        user={user}
-        startStep={setupStartStep}
-        editKitId={setupEditKitId}
-        onFinished={handleSetupFinished}
-        onDismiss={handleSetupDismiss}
-      />
-    );
-  }
-
-  // Hold a blank screen (same bg as setup) — never a spinner — until we know hub vs setup.
-  if (!hubReady && selectedKitId == null) {
+  if (!hubReady || entries.length === 0) {
     return <View style={[styles.centered, { backgroundColor: c.screen }]} />;
-  }
-
-  if (selectedKitId != null) {
-    if (detailLoading && !kit) {
-      // Keep shell stable after first create; blank is fine for a beat, not a spinner flash.
-      return <View style={[styles.centered, { backgroundColor: c.screen }]} />;
-    }
-
-    const dueHeadline = supplyDueHeadline(kit, items.length);
-    const cadenceDays = normalizeCadenceDays(kit?.cadence_days ?? 7);
-
-    return (
-      <InstructionScreenShell
-        showInstruction={false}
-        contentPaddingBottom={scrollBottomPad}
-        instruction={null}
-        floatingAction={
-          !selectionMode ? (
-            <TrackerThumbFab
-              accessibilityLabel="Add supply"
-              onPress={openAdd}
-              tabBarClearance={tabBarClearance}
-            />
-          ) : null
-        }
-        footer={
-          <>
-            <ConfirmModal
-              visible={bulkDeleteOpen}
-              title={
-                selectedKitId != null
-                  ? selectedIds.size === 1
-                    ? "Delete supply?"
-                    : `Delete ${selectedIds.size} supplies?`
-                  : selectedIds.size === 1
-                    ? "Delete this order?"
-                    : `Delete ${selectedIds.size} orders?`
-              }
-              message={
-                selectedKitId != null
-                  ? "This cannot be undone."
-                  : "This removes each order and all data associated with it."
-              }
-              confirmLabel={bulkDeleting ? "Deleting…" : "Delete"}
-              confirmDestructive
-              onConfirm={handleBulkDeleteConfirm}
-              onCancel={() => setBulkDeleteOpen(false)}
-            />
-            <ConfirmModal
-              visible={deleteOrderOpen}
-              title="Delete this order?"
-              message="This removes the order and all data associated with it."
-              confirmLabel={deletingOrder ? "Deleting…" : "Delete"}
-              confirmDestructive
-              onConfirm={() => void handleDeleteOrder()}
-              onCancel={() => setDeleteOrderOpen(false)}
-            />
-            <MedicalSupplyItemSheet
-              visible={sheetOpen}
-              editingId={editingId}
-              initialValues={form}
-              saving={saving}
-              saveError={saveError}
-              onClose={closeSheet}
-              onSave={handleSave}
-            />
-            {noStockNotice}
-          </>
-        }
-      >
-        <View style={[logHistoryCardStyles.trackerCard, styles.statusCard, { backgroundColor: c.card }]}>
-          <View style={styles.statusCopy}>
-            <Text style={[styles.statusHeadline, { color: c.text }]}>{dueHeadline}</Text>
-            <Text style={[styles.statusMeta, { color: c.textMuted }]}>{cadenceLabel(cadenceDays)}</Text>
-          </View>
-
-          {!selectionMode ? (
-            <View style={styles.statusActions}>
-              <PrimaryButton
-                title="Request supplies"
-                onPress={() => openRequestSupplies(selectedKitId)}
-              />
-              <Pressable
-                accessibilityRole="button"
-                onPress={() => openEditOrderSetup(selectedKitId)}
-                style={[styles.changeLink, styles.editSetupLink]}
-              >
-                <Text style={[FLARE_INLINE_ACTION_LINK, { color: c.primary, textAlign: "center" }]}>
-                  Edit setup
-                </Text>
-              </Pressable>
-              <Pressable
-                accessibilityRole="button"
-                onPress={() => setDeleteOrderOpen(true)}
-                style={styles.changeLink}
-              >
-                <Text style={[FLARE_INLINE_ACTION_LINK, { color: c.danger, textAlign: "center" }]}>
-                  Delete
-                </Text>
-              </Pressable>
-            </View>
-          ) : null}
-        </View>
-
-        <LogHistoryCard>
-          <View style={logHistoryCardStyles.trackerCardBody}>
-            {items.length === 0 ? (
-              <LogHistoryEmptyState icon={MEDICAL_SUPPLIES_FEATURE_ION_ICON} iconFamily="ion" />
-            ) : (
-              <LogHistoryPreviewList
-                items={listItems}
-                visibleCount={visibleCount}
-                hasMore={hasMore}
-                loadMoreLabel="load more"
-                onLoadMore={loadMore}
-                rowTextLayout="compact"
-                onPressItem={(id) => {
-                  const row = items.find((r) => String(r.id) === id);
-                  if (row) openEdit(row);
-                }}
-                selectionMode={selectionMode}
-                selectedIds={selectedIds}
-                onToggleSelect={toggleSelect}
-                onLongPressItem={enterSelectionWith}
-              />
-            )}
-          </View>
-        </LogHistoryCard>
-        {items.length > 0 && !selectionMode ? (
-          <HubTipCard
-            tipId="supplies-order-stock-hint-v1"
-            message="Tap to edit · long-press to remove"
-          />
-        ) : null}
-      </InstructionScreenShell>
-    );
   }
 
   return (
@@ -633,7 +198,15 @@ export function MedicalSuppliesScreen({ user }: { user: SessionUser }) {
             onConfirm={handleBulkDeleteConfirm}
             onCancel={() => setBulkDeleteOpen(false)}
           />
-          {noStockNotice}
+          <ConfirmModal
+            visible={noStockOpen}
+            notice
+            title="Add items first"
+            message={noStockMessage}
+            confirmLabel="OK"
+            onConfirm={() => setNoStockOpen(false)}
+            onCancel={() => setNoStockOpen(false)}
+          />
         </>
       }
     >
@@ -651,8 +224,7 @@ export function MedicalSuppliesScreen({ user }: { user: SessionUser }) {
                 toggleSelect(id);
                 return;
               }
-              setSelectedKitId(row.id);
-              void loadDetail(row.id);
+              navigation.navigate("MedicalSupplyOrder", { kitId: row.id, orderName: row.name });
             }}
             onLongPress={() => enterSelectionWith(id)}
             delayLongPress={280}
@@ -676,7 +248,7 @@ export function MedicalSuppliesScreen({ user }: { user: SessionUser }) {
                 color={isSelected ? c.primary : c.textMuted}
               />
             ) : (
-              <Ionicons name="chevron-forward" size={FLARE_FONT_SIZE.navTitle} color={c.textMuted} />
+              <Ionicons name="chevron-forward" size={18} color={c.text} accessibilityIgnoresInvertColors />
             )}
           </Pressable>
         );
@@ -694,7 +266,7 @@ export function MedicalSuppliesScreen({ user }: { user: SessionUser }) {
           style={styles.changeLink}
         >
           <Text style={[FLARE_INLINE_ACTION_LINK, { color: c.primary, textAlign: "center" }]}>
-            Request supplies
+            Send request
           </Text>
         </Pressable>
       ) : null}
@@ -704,12 +276,6 @@ export function MedicalSuppliesScreen({ user }: { user: SessionUser }) {
 
 const styles = StyleSheet.create({
   centered: { flex: 1, alignItems: "center", justifyContent: "center" },
-  headerBackHit: {
-    width: 44,
-    height: 44,
-    alignItems: "center",
-    justifyContent: "center",
-  },
   orderCard: {
     borderRadius: 14,
     padding: 14,
@@ -722,26 +288,12 @@ const styles = StyleSheet.create({
   orderName: {
     fontSize: FLARE_FONT_SIZE.muted,
     lineHeight: FLARE_LINE_HEIGHT.muted,
-    fontFamily: FLARE_FONT_FAMILY.regular,
+    fontFamily: FLARE_FONT_FAMILY.medium,
   },
   orderDue: {
     fontSize: FLARE_FONT_SIZE.muted,
     lineHeight: FLARE_LINE_HEIGHT.muted,
     fontFamily: FLARE_FONT_FAMILY.regular,
   },
-  statusCopy: { gap: STACKED_LINE_GAP },
-  statusCard: { padding: 18 },
-  statusHeadline: {
-    fontSize: FLARE_FONT_SIZE.subhead,
-    lineHeight: FLARE_LINE_HEIGHT.subhead,
-    fontFamily: FLARE_FONT_FAMILY.medium,
-  },
-  statusMeta: {
-    fontSize: FLARE_FONT_SIZE.muted,
-    lineHeight: FLARE_LINE_HEIGHT.muted,
-    fontFamily: FLARE_FONT_FAMILY.regular,
-  },
-  statusActions: { gap: INSTRUCTION_CARD_HEADER_GAP },
-  editSetupLink: { marginTop: 4 },
   changeLink: { paddingVertical: STACKED_LINE_GAP },
 });
