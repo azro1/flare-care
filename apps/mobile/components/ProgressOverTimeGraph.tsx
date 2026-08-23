@@ -1,6 +1,6 @@
 /**
  * Progress-over-time graph (area/line + compact period dropdown).
- * Used on My progress sheet (graph swipe page).
+ * Kept for a future Trends screen — not wired into the Activity sheet.
  * Pair with `lib/progressGraphShared.ts`.
  */
 import { Ionicons } from "@expo/vector-icons";

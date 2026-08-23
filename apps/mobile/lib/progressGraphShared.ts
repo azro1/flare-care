@@ -1,6 +1,6 @@
 /**
  * Daily stay-on-track scores for the progress graph.
- * Used by `components/ProgressOverTimeGraph.tsx`.
+ * Used by `components/ProgressOverTimeGraph.tsx` (held for a future Trends screen).
  */
 import { HYDRATION_TARGET } from "./hydrationShared";
 import { fetchMedicationsForUser } from "./medicationShared";

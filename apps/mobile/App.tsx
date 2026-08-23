@@ -1481,7 +1481,6 @@ function DashboardScreen({ user }: { user: SessionUser }) {
   const c = useFlareColors();
   const bottomScrollInset = useBottomTabScrollInset();
   const [activitiesOpen, setActivitiesOpen] = useState(false);
-  const [activityLeaving, setActivityLeaving] = useState(false);
   const [healthCarePageW, setHealthCarePageW] = useState(() =>
     Math.max(0, Math.round(windowWidth - SCREEN_EDGE_PADDING * 2)),
   );
@@ -1574,36 +1573,17 @@ function DashboardScreen({ user }: { user: SessionUser }) {
       }
     />
   );
-  const dismissActivityModalAfterPaint = useCallback(() => {
-    // Lift cover ASAP after paint — one less frame than before (snappier; watch for black blink).
-    InteractionManager.runAfterInteractions(() => {
-      requestAnimationFrame(() => {
-        setActivitiesOpen(false);
-        setActivityLeaving(false);
-        suppressNextPushAnimation = false;
-      });
-    });
-  }, []);
-  const openActivityTarget = useCallback(
-    (screen: "Meds" | "Hydration") => {
-      // 1) Solid screen cover on (card gone)  2) instant push underneath  3) lift cover after paint.
-      suppressNextPushAnimation = true;
-      // Pin dim fully opaque before the leave sheet mounts (avoids a transparent frame).
-      setActivityLeaving(true);
-      requestAnimationFrame(() => {
-        navigation.navigate(screen);
-        dismissActivityModalAfterPaint();
-      });
-    },
-    [dismissActivityModalAfterPaint, navigation],
-  );
-  const openActivityMeds = useCallback(() => openActivityTarget("Meds"), [openActivityTarget]);
-  const openActivityHydration = useCallback(() => openActivityTarget("Hydration"), [openActivityTarget]);
   const closeActivitiesModal = useCallback(() => {
-    setActivityLeaving(false);
     setActivitiesOpen(false);
-    suppressNextPushAnimation = false;
   }, []);
+  const openMedsFromActivities = useCallback(() => {
+    setActivitiesOpen(false);
+    navigation.navigate("Meds");
+  }, [navigation]);
+  const openHydrationFromActivities = useCallback(() => {
+    setActivitiesOpen(false);
+    navigation.navigate("Hydration");
+  }, [navigation]);
   const activitySummary = useMemo(
     () => ({
       medsTaken: todaySummary.medsTaken,
@@ -1677,7 +1657,7 @@ function DashboardScreen({ user }: { user: SessionUser }) {
       const load = async () => {
         try {
           const today = todayYmd();
-          const [todaySymptomsRes, medicationsList, takenMedsRes, todayHydrationRes, todayWellbeingRes] =
+          const [todaySymptomsRes, medicationsList, takenMedsRes, todayHydrationRes, todayWellbeingRes, todayMedTrackRes] =
             await Promise.all([
               supabase
                 .from(TABLES.LOG_SYMPTOMS)
@@ -1702,6 +1682,12 @@ function DashboardScreen({ user }: { user: SessionUser }) {
                 .eq("user_id", user.id)
                 .eq("date", today)
                 .maybeSingle(),
+              supabase
+                .from(TABLES.LOG_MEDICATIONS)
+                .select("id")
+                .eq("user_id", user.id)
+                .gte("created_at", `${today}T00:00:00`)
+                .limit(1),
             ]);
 
           const prescribedMeds = medicationsList.filter((med) => med.name !== "Medication Tracking");
@@ -1712,6 +1698,7 @@ function DashboardScreen({ user }: { user: SessionUser }) {
             medsTotal: prescribedMeds.length,
             hydration: todayHydrationRes.data?.glasses ?? 0,
             wellbeingLogged: Boolean(todayWellbeingRes.data?.id),
+            medicationTrackingLogged: (todayMedTrackRes.data?.length ?? 0) > 0,
           };
           if (!cancelled) {
             setTodaySummary(snap.todaySummary);
@@ -2015,12 +2002,18 @@ function DashboardScreen({ user }: { user: SessionUser }) {
               }}
             >
               <Pressable
-                accessibilityRole="link"
-                accessibilityLabel="View progress"
+                accessibilityRole="button"
+                accessibilityLabel="Open activity"
                 onPress={() => setActivitiesOpen(true)}
-                hitSlop={8}
+                style={({ pressed }) => [
+                  styles.progressChip,
+                  { backgroundColor: c.isDark ? c.text : c.primary },
+                  pressed && { opacity: 0.85 },
+                ]}
               >
-                <Text style={[styles.activitiesInlineLink, { color: c.primary }]}>View progress</Text>
+                <Text style={[styles.progressChipLabel, { color: c.isDark ? "#121212" : c.white }]}>
+                  Activity
+                </Text>
               </Pressable>
             </Animated.View>
           </View>
@@ -2155,12 +2148,10 @@ function DashboardScreen({ user }: { user: SessionUser }) {
 
       <TodayActivitiesModal
         visible={activitiesOpen}
-        leaving={activityLeaving}
         summary={activitySummary}
-        userId={user.id}
         onClose={closeActivitiesModal}
-        onOpenMeds={openActivityMeds}
-        onOpenHydration={openActivityHydration}
+        onOpenMeds={openMedsFromActivities}
+        onOpenHydration={openHydrationFromActivities}
       />
     </View>
   );
@@ -5270,6 +5261,17 @@ const styles = StyleSheet.create({
   },
   prioritiesViewAllLabel: {
     ...FLARE_INLINE_ACTION_LINK,
+  },
+  /** Pill CTA — single-word label. */
+  progressChip: {
+    paddingVertical: 6,
+    paddingHorizontal: 12,
+    borderRadius: 999,
+  },
+  progressChipLabel: {
+    fontSize: 12,
+    lineHeight: 16,
+    fontFamily: FLARE_FONT_FAMILY.bold,
   },
   /** Same bottom margin as dashboard cards (`styles.card` / tracker trays) before the next shelf title. */
   toolsGridBlock: { marginBottom: 12 },

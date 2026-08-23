@@ -81,9 +81,11 @@ export function buildTodayPriorities(input: {
     });
   }
 
-  const needsSymptoms = todaySummary.symptoms <= 0;
-  const needsWellbeing = !todaySummary.wellbeingLogged;
-  if (needsSymptoms || needsWellbeing) {
+  const hasCheckedIn =
+    todaySummary.symptoms > 0 ||
+    todaySummary.wellbeingLogged ||
+    todaySummary.medicationTrackingLogged;
+  if (!hasCheckedIn) {
     items.push({
       id: "check-in",
       emoji: "📝",

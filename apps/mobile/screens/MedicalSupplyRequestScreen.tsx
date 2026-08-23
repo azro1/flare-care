@@ -193,7 +193,7 @@ export function MedicalSupplyRequestScreen({ user }: { user: SessionUser }) {
       // wording may have saved; due advance failed — still tell them send worked
     }
     const dueLine = nextDueLabel ? ` Your next order is due on ${nextDueLabel}.` : "";
-    showFlareAlert(opts?.successTitle || "Sent", `${opts?.successBody || ""}${dueLine}`.trim());
+    showFlareAlert(opts?.successTitle || "Sent!", `${opts?.successBody || ""}${dueLine}`.trim());
     navigation.goBack();
   };
 
@@ -258,7 +258,7 @@ export function MedicalSupplyRequestScreen({ user }: { user: SessionUser }) {
       await afterSent({
         recipientEmail: email,
         emailSubject: subject.trim() || DEFAULT_SUPPLY_REQUEST_SUBJECT,
-        successTitle: "Sent",
+        successTitle: "Sent!",
         successBody: "Your supply request was sent.",
       });
     } catch (err: unknown) {
@@ -361,7 +361,7 @@ export function MedicalSupplyRequestScreen({ user }: { user: SessionUser }) {
 
                 <View style={styles.actionCol}>
                   <PrimaryButton
-                    title={sendingEmail ? "Sending…" : "Email"}
+                    title={sendingEmail ? "Sending…" : "Send email"}
                     onPress={handleEmail}
                     disabled={!canSend || sendingEmail}
                   />

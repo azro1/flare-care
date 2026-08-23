@@ -39,7 +39,7 @@ import {
 import { MY_MEDS_MCI_ICON } from "../lib/medicationFeatureIcons";
 import { Portal } from "../lib/overlayPortal";
 import { useFlareColors } from "../theme";
-import { ProgressOverTimeGraph } from "./ProgressOverTimeGraph";
+// ProgressOverTimeGraph kept for a future Trends screen — not shown in this sheet.
 
 const AnimatedGHScrollView = Animated.createAnimatedComponent(GHScrollView);
 
@@ -347,12 +347,11 @@ function CountingPercentLabel({
   return <Text style={[styles.pulseHeroValue, { color }]}>{displayPct}%</Text>;
 }
 
-/** Slide-up sheet — Meds ↔ Hydration (shared %), then full-card progress graph. */
+/** Slide-up sheet — Meds ↔ Hydration (shared %). Graph held for a future Trends screen. */
 export function TodayActivitiesModal({
   visible,
   leaving = false,
   summary,
-  userId,
   onClose,
   onOpenMeds,
   onOpenHydration,
@@ -364,7 +363,6 @@ export function TodayActivitiesModal({
    */
   leaving?: boolean;
   summary: TodayActivitySummary;
-  userId: string;
   onClose: () => void;
 } & NavHandlers) {
   const c = useFlareColors();
@@ -382,7 +380,7 @@ export function TodayActivitiesModal({
     pagerWidth > 0
       ? pagerWidth
       : Math.max(0, windowWidth - SCREEN_EDGE_PADDING * 2 - sheetPadH * 2);
-  const shellPageCount = 3;
+  const shellPageCount = 2;
 
   const overlayOpacity = useRef(new Animated.Value(0)).current;
   const sheetY = useRef(new Animated.Value(windowHeight)).current;
@@ -393,23 +391,6 @@ export function TodayActivitiesModal({
   const closingRef = useRef(false);
   const leavingRef = useRef(leaving);
   leavingRef.current = leaving;
-
-  const scoreSlideX = shellScrollX.interpolate({
-    inputRange: [0, Math.max(1, pageW), Math.max(2, pageW * 2)],
-    outputRange: [0, 0, -pageW],
-    extrapolate: "clamp",
-  });
-  /** Wash stays for Meds/Hydration, fades out as the graph page comes in (no bleed into graph). */
-  const taskWashOpacity = shellScrollX.interpolate({
-    inputRange: [0, Math.max(1, pageW), Math.max(1, pageW) * 1.55, Math.max(2, pageW * 2)],
-    outputRange: [0.06, 0.06, 0, 0],
-    extrapolate: "clamp",
-  });
-  const taskBandBorderOpacity = shellScrollX.interpolate({
-    inputRange: [0, Math.max(1, pageW), Math.max(1, pageW) * 1.55, Math.max(2, pageW * 2)],
-    outputRange: [1, 1, 0, 0],
-    extrapolate: "clamp",
-  });
 
   useEffect(() => {
     if (!leaving) return;
@@ -491,7 +472,6 @@ export function TodayActivitiesModal({
       title: "My Meds",
       detail: copy.medsLabel,
       icon: MY_MEDS_MCI_ICON,
-      onPress: onOpenMeds,
       complete: copy.hasMeds && copy.medsComplete,
     },
     {
@@ -501,30 +481,26 @@ export function TodayActivitiesModal({
       title: "My Hydration",
       detail: copy.hydrationLabel,
       icon: HYDRATION_MCI_ICON,
-      onPress: onOpenHydration,
       complete: copy.hydrationComplete,
     },
   ] as const;
 
-  const taskIndex = shellIndex <= 1 ? shellIndex : 0;
-  const onGraphPage = shellIndex >= 2;
+  const taskIndex = shellIndex;
 
   const pageStatusLine =
     taskIndex === 0
       ? !copy.hasMeds
         ? "No meds saved yet"
         : copy.medsComplete
-          ? "All taken"
+          ? "All taken for today!"
           : summary.medsTaken === 0
             ? "Nothing taken today"
             : "Keep going — still time today"
       : copy.hydrationComplete
         ? "All done for today!"
         : summary.hydration === 0
-          ? "No water consumed"
+          ? "No water consumed today"
           : "Keep going — still time today";
-
-  const pageComplete = activities[taskIndex]?.complete;
 
   const pulseScoreToFull = () => {
     Animated.sequence([
@@ -560,10 +536,9 @@ export function TodayActivitiesModal({
           captionColor={c.textMuted}
         />
       </View>
-      <GHPressable
-        accessibilityRole="button"
-        accessibilityLabel={`${activity.title}, ${activity.detail}`}
-        onPress={activity.onPress}
+      <View
+        accessibilityRole="text"
+        accessibilityLabel={`${activity.title}, ${activity.detail}. Swipe for more`}
         style={styles.pulseRowTray}
       >
         <MaterialCommunityIcons
@@ -574,7 +549,7 @@ export function TodayActivitiesModal({
         <View style={styles.pulseRowText}>
           <View style={styles.pulseRowTitleRow}>
             <Text style={[styles.pulseRowTitle, { color: c.text }]}>{activity.title}</Text>
-            <Text style={[styles.pulseRowTapHint, { color: c.textMuted }]}>Tap to open</Text>
+            <Text style={[styles.pulseRowTapHint, { color: c.textMuted }]}>Swipe for more</Text>
           </View>
           <Text style={[styles.slabMeta, { color: c.textMuted }]}>{activity.detail}</Text>
         </View>
@@ -585,10 +560,8 @@ export function TodayActivitiesModal({
             color={c.primary}
             accessibilityIgnoresInvertColors
           />
-        ) : (
-          <Ionicons name="chevron-forward" size={18} color={c.text} />
-        )}
-      </GHPressable>
+        ) : null}
+      </View>
     </View>
   );
 
@@ -652,20 +625,13 @@ export function TodayActivitiesModal({
               >
                 {pageW > 0 ? (
                   <View style={{ width: pageW }}>
-                    {/* Score stays for Meds/Hydration, then slides away with the graph page. */}
-                    <Animated.View
-                      pointerEvents={onGraphPage ? "none" : "box-none"}
+                    <View
+                      pointerEvents="box-none"
                       onLayout={(e) => {
                         const h = Math.round(e.nativeEvent.layout.height);
                         if (h > 0) setScoreHeight((prev) => (prev === h ? prev : h));
                       }}
-                      style={[
-                        styles.shellScoreSticky,
-                        {
-                          width: pageW,
-                          transform: [{ translateX: scoreSlideX }],
-                        },
-                      ]}
+                      style={[styles.shellScoreSticky, { width: pageW }]}
                     >
                       <View style={styles.modalScoreWash}>
                         <Animated.View style={[styles.pulseScore, { transform: [{ scale: scorePulse }] }]}>
@@ -676,14 +642,6 @@ export function TodayActivitiesModal({
                             onReachFull={pulseScoreToFull}
                           />
                           <View style={styles.pulseStatusRow}>
-                            {pageComplete ? (
-                              <Ionicons
-                                name="checkmark-circle"
-                                size={16}
-                                color={c.primary}
-                                accessibilityIgnoresInvertColors
-                              />
-                            ) : null}
                             <Text
                               style={[styles.pulseHeroSub, { color: c.textSecondary }]}
                               numberOfLines={1}
@@ -693,36 +651,9 @@ export function TodayActivitiesModal({
                           </View>
                         </Animated.View>
                       </View>
-                    </Animated.View>
+                    </View>
 
-                    {/*
-                      Shared task wash (outside the pager): full side/bottom bleed like before,
-                      starts below the %, fades on the graph so it can't peek into the next page.
-                    */}
                     <View style={styles.activitySwipeRegion}>
-                      <Animated.View
-                        pointerEvents="none"
-                        style={[
-                          styles.activitySwipeBandWash,
-                          {
-                            top: Math.max(scoreHeight, 1) + 16,
-                            backgroundColor: c.primary,
-                            opacity: taskWashOpacity,
-                          },
-                        ]}
-                      />
-                      <Animated.View
-                        pointerEvents="none"
-                        style={[
-                          styles.activitySwipeBandEdge,
-                          {
-                            top: Math.max(scoreHeight, 1) + 16,
-                            borderTopColor: c.cardBorder,
-                            opacity: taskBandBorderOpacity,
-                          },
-                        ]}
-                      />
-
                       <AnimatedGHScrollView
                         ref={pagerRef}
                         horizontal
@@ -768,22 +699,6 @@ export function TodayActivitiesModal({
                             <View style={styles.activityTaskBandPad}>{renderTaskPage(activity)}</View>
                           </View>
                         ))}
-                        <View
-                          style={[
-                            styles.graphPage,
-                            {
-                              width: pageW,
-                              // Same 16px gap as first-card score→band — clears the X;
-                              // height is locked so the chart absorbs it (card won’t grow).
-                              paddingTop: 16,
-                              ...(taskPageHeight > 0
-                                ? { height: taskPageHeight, minHeight: taskPageHeight }
-                                : { minHeight: scoreHeight + 200 }),
-                            },
-                          ]}
-                        >
-                          <ProgressOverTimeGraph userId={userId} active={onGraphPage} compact />
-                        </View>
                       </AnimatedGHScrollView>
 
                       <View style={styles.activityFooter}>
@@ -792,7 +707,7 @@ export function TodayActivitiesModal({
                             const active = index === shellIndex;
                             return (
                               <View
-                                key={index === 2 ? "graph" : activities[index]?.id ?? index}
+                                key={activities[index]?.id ?? index}
                                 style={[
                                   styles.activityDot,
                                   active ? styles.activityDotActive : null,
@@ -807,7 +722,6 @@ export function TodayActivitiesModal({
                           })}
                         </View>
                       </View>
-                      {/* Inside the wash (not padding) so the tint reaches the card bottom. */}
                       <View style={{ height: Math.max(insets.bottom, 16) }} />
                     </View>
                   </View>
@@ -1102,26 +1016,11 @@ const styles = StyleSheet.create({
     left: 0,
     zIndex: 2,
   },
-  graphPage: {
-    flexDirection: "column",
-  },
   activitySwipeRegion: {
     alignSelf: "stretch",
     position: "relative",
     overflow: "visible",
     gap: 16,
-  },
-  activitySwipeBandWash: {
-    position: "absolute",
-    left: -20,
-    right: -20,
-    bottom: 0,
-  },
-  activitySwipeBandEdge: {
-    position: "absolute",
-    left: -20,
-    right: -20,
-    borderTopWidth: StyleSheet.hairlineWidth,
   },
   activityTaskBandPad: {
     paddingTop: 16,

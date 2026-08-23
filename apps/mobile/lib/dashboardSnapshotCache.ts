@@ -23,6 +23,8 @@ export type DashboardTodaySummary = {
   hydration: number;
   /** True when a daily_wellbeing row exists for today. */
   wellbeingLogged: boolean;
+  /** True when a Track Medications (`log_medications`) row exists for today. */
+  medicationTrackingLogged: boolean;
 };
 
 export const EMPTY_TODAY_SUMMARY: DashboardTodaySummary = {
@@ -31,6 +33,7 @@ export const EMPTY_TODAY_SUMMARY: DashboardTodaySummary = {
   medsTotal: 0,
   hydration: 0,
   wellbeingLogged: false,
+  medicationTrackingLogged: false,
 };
 
 export type DashboardSnapshot = {
