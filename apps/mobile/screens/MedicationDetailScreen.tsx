@@ -32,7 +32,7 @@ import {
   type MedicationRow,
 } from "../lib/medicationShared";
 import { rescheduleLocalRemindersIfGranted } from "../lib/medicationNotifications";
-import { FLARE_FONT_FAMILY, FLARE_FONT_SIZE } from "../lib/layoutConstants";
+import { CARD_INNER_PADDING, FLARE_FONT_FAMILY, FLARE_FONT_SIZE } from "../lib/layoutConstants";
 import { supabase, TABLES } from "../lib/supabase";
 import { useFlareColors } from "../theme";
 import { MedicationSheet } from "./MedicationsScreen";
@@ -291,5 +291,5 @@ const styles = StyleSheet.create({
   muted: { fontSize: FLARE_FONT_SIZE.body, fontFamily: FLARE_FONT_FAMILY.regular },
   headerBtnRow: { flexDirection: "row", alignItems: "center" },
   headerIconBtn: { width: 44, height: 44, alignItems: "center", justifyContent: "center" },
-  takenActions: { marginTop: 14 },
+  takenActions: { marginTop: CARD_INNER_PADDING },
 });

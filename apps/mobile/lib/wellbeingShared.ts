@@ -2,6 +2,9 @@ import { supabase, TABLES } from "./supabase";
 
 export const WELLBEING_MCI_ICON = "heart-pulse" as const;
 
+/** History row + detail header title (matches Symptom/Medication Log naming). */
+export const WELLBEING_LOG_TITLE = "Wellbeing Log";
+
 /** 1–5 scale option for mood, energy, sleep, anxiety, IBD impact, pain, brain fog. */
 export type WellbeingScale = 1 | 2 | 3 | 4 | 5;
 

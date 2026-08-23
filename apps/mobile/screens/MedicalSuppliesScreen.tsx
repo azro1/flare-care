@@ -291,8 +291,8 @@ const styles = StyleSheet.create({
     fontFamily: FLARE_FONT_FAMILY.medium,
   },
   orderDue: {
-    fontSize: FLARE_FONT_SIZE.muted,
-    lineHeight: FLARE_LINE_HEIGHT.muted,
+    fontSize: FLARE_FONT_SIZE.caption,
+    lineHeight: FLARE_LINE_HEIGHT.caption,
     fontFamily: FLARE_FONT_FAMILY.regular,
   },
   changeLink: { paddingVertical: STACKED_LINE_GAP },

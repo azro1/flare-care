@@ -87,6 +87,7 @@ import { ListSelectionChromeProvider, useListSelectionChrome } from "./lib/listS
 import { useLogListSelection } from "./lib/useLogListSelection";
 import { MY_MEDS_MCI_ICON, TRACK_MEDICATIONS_MCI_ICON } from "./lib/medicationFeatureIcons";
 import { fetchMedicationsForUser } from "./lib/medicationShared";
+import { WELLBEING_LOG_TITLE } from "./lib/wellbeingShared";
 import { recordRecentActivityEvent } from "./lib/recentActivityEvents";
 import {
   NUTRITION_CATEGORIES,
@@ -113,6 +114,7 @@ import {
   FLARE_INLINE_ACTION_LINK,
   FLARE_LINE_HEIGHT,
   HOME_TILE_GAP,
+  STACKED_LINE_GAP,
   SCREEN_EDGE_PADDING,
   FULL_WIDTH_CTA_EDGE_PADDING,
   SECTION_TITLE_MARGIN_BOTTOM,
@@ -1990,20 +1992,37 @@ function DashboardScreen({ user }: { user: SessionUser }) {
                 My care
               </Animated.Text>
             </View>
-            <Pressable
-              accessibilityRole="button"
-              accessibilityLabel="Open activity"
-              onPress={() => setActivitiesOpen(true)}
-              style={({ pressed }) => [
-                styles.progressChip,
-                { backgroundColor: c.isDark ? c.text : c.primary, marginRight: 4 },
-                pressed && { opacity: 0.85 },
-              ]}
+            <Animated.View
+              pointerEvents={healthCarePage === 0 ? "auto" : "none"}
+              style={{
+                marginRight: STACKED_LINE_GAP,
+                opacity: healthCareScrollX.interpolate({
+                  inputRange: [0, Math.max(1, healthCarePageW)],
+                  outputRange: [1, 0],
+                  extrapolate: "clamp",
+                }),
+              }}
             >
-              <Text style={[styles.progressChipLabel, { color: c.isDark ? "#121212" : c.white }]}>
-                Activity
-              </Text>
-            </Pressable>
+              <Pressable
+                accessibilityRole="button"
+                accessibilityLabel="Open activity"
+                onPress={() => setActivitiesOpen(true)}
+                style={({ pressed }) => [
+                  styles.progressChip,
+                  { backgroundColor: c.isDark ? c.text : c.primary },
+                  pressed && { opacity: 0.85 },
+                ]}
+              >
+                <Text
+                  style={[
+                    styles.progressChipLabel,
+                    { color: c.isDark ? c.appearanceChipInactiveText : c.white },
+                  ]}
+                >
+                  Activity
+                </Text>
+              </Pressable>
+            </Animated.View>
           </View>
 
           <View style={styles.toolsGridBlock}>
@@ -4336,7 +4355,7 @@ function AppTabs({
       MedicationDetail: "Medication",
       Bowel: "Bowel Movements",
       Wellbeing: "History",
-      WellbeingLogDetail: "Wellbeing Log",
+      WellbeingLogDetail: WELLBEING_LOG_TITLE,
       BowelLogDetail: "Bowel Log",
       BristolGuide: "Bristol Stool Chart",
       Weight: "My Weight",
@@ -5253,16 +5272,16 @@ const styles = StyleSheet.create({
   /** Pill CTA — single-word label. */
   progressChip: {
     paddingVertical: 6,
-    paddingHorizontal: 12,
+    paddingHorizontal: HOME_TILE_GAP,
     borderRadius: 999,
   },
   progressChipLabel: {
-    fontSize: 12,
-    lineHeight: 16,
+    fontSize: FLARE_FONT_SIZE.caption,
+    lineHeight: FLARE_LINE_HEIGHT.caption,
     fontFamily: FLARE_FONT_FAMILY.bold,
   },
   /** Same bottom margin as dashboard cards (`styles.card` / tracker trays) before the next shelf title. */
-  toolsGridBlock: { marginBottom: 12 },
+  toolsGridBlock: { marginBottom: HOME_TILE_GAP },
   /** Daily Check-in shelf title. */
   dashboardSubsectionTitle: {
     fontSize: FLARE_FONT_SIZE.subhead,

@@ -43,6 +43,9 @@ import { useFlareColors } from "../theme";
 
 const AnimatedGHScrollView = Animated.createAnimatedComponent(GHScrollView);
 
+/** Hint on Meds page only — Hydration is the last Activity page (graph parked). */
+const ACTIVITY_SWIPE_HINT = "Swipe for more";
+
 const PULSE_METER_HEIGHT = 80;
 const PULSE_METER_WIDTH = 34;
 const PULSE_METER_RADIUS = PULSE_METER_WIDTH / 2;
@@ -542,7 +545,7 @@ export function TodayActivitiesModal({
         accessibilityRole="text"
         accessibilityLabel={
           showSwipeHint
-            ? `${activity.title}, ${activity.detail}. Swipe for more`
+            ? `${activity.title}, ${activity.detail}. ${ACTIVITY_SWIPE_HINT}`
             : `${activity.title}, ${activity.detail}`
         }
         style={styles.pulseRowTray}
@@ -556,7 +559,7 @@ export function TodayActivitiesModal({
           <View style={styles.pulseRowTitleRow}>
             <Text style={[styles.pulseRowTitle, { color: c.text }]}>{activity.title}</Text>
             {showSwipeHint ? (
-              <Text style={[styles.pulseRowTapHint, { color: c.textMuted }]}>Swipe for more</Text>
+              <Text style={[styles.pulseRowTapHint, { color: c.textMuted }]}>{ACTIVITY_SWIPE_HINT}</Text>
             ) : null}
           </View>
           <Text style={[styles.slabMeta, { color: c.textMuted }]}>{activity.detail}</Text>
@@ -1179,7 +1182,7 @@ const styles = StyleSheet.create({
     flexDirection: "row",
     alignItems: "baseline",
     flexWrap: "wrap",
-    gap: 14,
+    gap: CARD_INNER_PADDING,
     width: "100%",
     justifyContent: "space-between",
   },
