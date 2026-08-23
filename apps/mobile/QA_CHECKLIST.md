@@ -26,6 +26,8 @@
 - Grant permission on iOS and Android physical devices.
 - Register Expo token and verify `/api/push/subscribe` accepts `expo_push_token`.
 - Confirm daily medication notifications are scheduled.
+- Confirm stocked supply orders schedule a **09:00 local** due-date alert; empty kits skip; tap opens that order.
+- Confirm Reminders screen count includes supply alarms when permission is on.
 
 ## Release Readiness
 

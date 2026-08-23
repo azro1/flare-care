@@ -129,6 +129,8 @@ Then add stock on that order with **+**.
 
 When any order is due or overdue, home shows it under **Today’s priorities**.
 
+**Due-day alert:** if notifications are already on, stocked orders get a local phone alert at **9:00am** on the due date (tap opens that order). Empty orders are skipped; overdue stays on home priorities only (no catch-up ping).
+
 ---
 
 ## Reminders (phone alerts)
@@ -175,7 +177,7 @@ Right now news on home is **turned off** in the app, so you normally won’t see
 - Give medical advice or tell you to go to A&E  
 - Send supply requests or emails by itself  
 - Keep a history of old supply requests (not in this version)  
-- Phone push specifically for supplies due (not yet)  
+- Remote/server push for supplies (due alerts are **local** device notifications, same as meds/appointments)
 
 ---
 

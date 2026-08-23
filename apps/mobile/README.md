@@ -31,7 +31,7 @@ See **`FEATURES.md`** for the full inventory. Short map:
 - **Care:** Appointments + reminders, Appointment Summary (Share/Email), Reports.
 - **Supplies:** Short setup → quiet hub → editable Request supplies (Email / Share / Copy; due date advances automatically).
 - **Logs hub:** Symptom / medication / wellbeing history.
-- **Reminders:** Local med + appointment notifications.
+- **Reminders:** Local med, appointment, and supply-order due notifications.
 - **Account:** Theme, app lock, legal, help, about, IBD/nutrition guides.
 
 ---
