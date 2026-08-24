@@ -28,7 +28,7 @@ import {
 } from "../lib/layoutConstants";
 import { useLogListSelection } from "../lib/useLogListSelection";
 import {
-  MEDICAL_SUPPLIES_FEATURE_ION_ICON,
+  MEDICAL_SUPPLIES_FEATURE_ICON,
   cadenceLabel,
   clearMedicalSupplyKitListCache,
   deleteMedicalSuppliesForUser,
@@ -420,7 +420,7 @@ export function MedicalSupplyOrderScreen({ user }: { user: SessionUser }) {
       <LogHistoryCard>
         <View style={logHistoryCardStyles.trackerCardBody}>
           {items.length === 0 ? (
-            <LogHistoryEmptyState icon={MEDICAL_SUPPLIES_FEATURE_ION_ICON} iconFamily="ion" />
+            <LogHistoryEmptyState icon={MEDICAL_SUPPLIES_FEATURE_ICON} />
           ) : (
             <LogHistoryPreviewList
               items={listItems}

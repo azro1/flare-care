@@ -1,4 +1,4 @@
-import { Ionicons } from "@expo/vector-icons";
+import { FLARE_CHROME_LUCIDE, FlareLucideIcon } from "../lib/flareLucideIcons";
 import React, { useEffect, useMemo, useState } from "react";
 import { Image, Linking, Platform, Pressable, Share, StyleSheet, Text, View } from "react-native";
 import type { DashboardNewsItem } from "../lib/dashboardSnapshotCache";
@@ -26,7 +26,7 @@ export function NewsThumbnail({ imageUrl, iconSize = 30 }: { imageUrl?: string |
   }, [candidates.join("|")]);
 
   if (!candidates.length || index >= candidates.length) {
-    return <Ionicons name="newspaper-outline" size={iconSize} color={c.primary} style={{ opacity: 0.45 }} />;
+    return <FlareLucideIcon icon={FLARE_CHROME_LUCIDE.newspaper} size={iconSize} color={c.primary} style={{ opacity: 0.45 }} />;
   }
 
   return (
@@ -105,12 +105,7 @@ export function NewsFeedCard({ item, variant, width }: NewsFeedCardProps) {
               }}
               style={({ pressed }) => [styles.shareButton, pressed && { opacity: 0.7 }]}
             >
-              <Ionicons
-                name={Platform.OS === "ios" ? "share-outline" : "share-social-outline"}
-                size={20}
-                color={c.textMuted}
-                accessibilityIgnoresInvertColors
-              />
+              <FlareLucideIcon icon={FLARE_CHROME_LUCIDE.share} size={20} color={c.textMuted} />
             </Pressable>
           ) : null}
         </View>

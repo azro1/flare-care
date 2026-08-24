@@ -1,4 +1,4 @@
-import { Ionicons } from "@expo/vector-icons";
+import { FLARE_CHROME_LUCIDE, FlareLucideIcon } from "../lib/flareLucideIcons";
 import React, { useState } from "react";
 import { KeyboardAvoidingView, Modal, Platform, Pressable, StyleSheet, Text, View } from "react-native";
 import { showFlareAlert } from "../components/FlareAlertHost";
@@ -93,7 +93,7 @@ export function AppointmentBriefEmailSheet({
       <KeyboardAvoidingView style={[styles.root, { backgroundColor: c.screen }]} behavior={Platform.OS === "ios" ? "padding" : undefined}>
         <View style={[styles.sheetHeader, { borderBottomColor: c.cardBorder, paddingTop: Math.max(insets.top, 12) }]}>
           <Pressable accessibilityRole="button" accessibilityLabel="Close" onPress={handleClose} hitSlop={12} style={styles.sheetClose}>
-            <Ionicons name="close" size={26} color={c.textMuted} />
+            <FlareLucideIcon icon={FLARE_CHROME_LUCIDE.close} size={26} color={c.textMuted} />
           </Pressable>
           <Text style={[styles.sheetTitle, { color: c.text }]}>Email summary</Text>
           <View style={styles.sheetClose} />

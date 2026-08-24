@@ -1,17 +1,17 @@
-import { Ionicons, MaterialCommunityIcons } from "@expo/vector-icons";
 import React from "react";
+import type { LucideIcon } from "lucide-react-native";
 import {
   ActivityIndicator,
   Pressable,
   StyleSheet,
   Text,
   View,
-  type ComponentProps,
   type ReactNode,
   type StyleProp,
   type ViewStyle,
 } from "react-native";
 import { EmptyTrayMessage } from "./EmptyTrayMessage";
+import { FLARE_CHROME_LUCIDE, FlareLucideIcon } from "../lib/flareLucideIcons";
 import { STACKED_DETAIL_ROW_EDGE } from "./StackedDetailField";
 import { formatLogWhenLine } from "../lib/logDisplay";
 import {
@@ -171,17 +171,12 @@ export function OneLineTrayList({
 /** @deprecated Use `OneLineTrayList`. */
 export const TrayInCardList = OneLineTrayList;
 
-type MciIconName = ComponentProps<typeof MaterialCommunityIcons>["name"];
-type IonIconName = ComponentProps<typeof Ionicons>["name"];
-
 /** Shared empty list — pass the tracker/wizard icon; copy defaults to “Nothing here yet”. */
 export function LogHistoryEmptyState({
   icon,
-  iconFamily = "mci",
   showTitle = true,
 }: {
-  icon: MciIconName | IonIconName;
-  iconFamily?: "mci" | "ion";
+  icon: LucideIcon;
   /** Set false for icon-only empty trays (e.g. Supplies setup). */
   showTitle?: boolean;
 }) {
@@ -195,11 +190,7 @@ export function LogHistoryEmptyState({
           { backgroundColor: c.surfaceSubtle },
         ]}
       >
-        {iconFamily === "ion" ? (
-          <Ionicons name={icon as IonIconName} size={28} color={c.primary} accessibilityIgnoresInvertColors />
-        ) : (
-          <MaterialCommunityIcons name={icon as MciIconName} size={28} color={c.primary} accessibilityIgnoresInvertColors />
-        )}
+        <FlareLucideIcon icon={icon} size={28} color={c.primary} />
       </View>
       {showTitle ? (
         <Text style={[logHistoryEmptyStateStyles.title, { color: c.textMuted }]}>Nothing here yet</Text>
@@ -396,34 +387,23 @@ export function LogHistoryList({
         const isSelected = !!selectedIds?.has(item.id);
         const trailingNode = selectionMode ? (
           <View style={logHistoryListStyles.logSelectionCircle}>
-            <Ionicons
-              name={isSelected ? "checkmark-circle" : "ellipse-outline"}
+            <FlareLucideIcon
+              icon={isSelected ? FLARE_CHROME_LUCIDE.checkCircle : FLARE_CHROME_LUCIDE.circle}
               size={22}
               color={isSelected ? c.primary : c.textMuted}
-              accessibilityIgnoresInvertColors
             />
           </View>
         ) : item.trailingText ? (
           <View style={logHistoryListStyles.logTrailingWithStatus}>
             {item.completed ? (
-              <Ionicons
-                name="checkmark-circle"
-                size={18}
-                color={c.primary}
-                accessibilityIgnoresInvertColors
-              />
+              <FlareLucideIcon icon={FLARE_CHROME_LUCIDE.checkCircle} size={18} color={c.primary} />
             ) : null}
             <Text style={[logHistoryListStyles.trailingValueToday, { color: c.text }]}>{item.trailingText}</Text>
           </View>
         ) : renderTrailing ? (
           renderTrailing(item)
         ) : onPressItem ? (
-          <Ionicons
-            name="chevron-forward"
-            size={NAV_ROW_CHEVRON_SIZE}
-            color={c.text}
-            accessibilityIgnoresInvertColors
-          />
+          <FlareLucideIcon icon={FLARE_CHROME_LUCIDE.forward} size={NAV_ROW_CHEVRON_SIZE} color={c.text} />
         ) : null;
         const rowContent = (
           <>

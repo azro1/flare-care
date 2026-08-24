@@ -1,4 +1,4 @@
-import { Ionicons } from "@expo/vector-icons";
+import { FLARE_CHROME_LUCIDE, FlareLucideIcon } from "../lib/flareLucideIcons";
 import { useFocusEffect, useNavigation } from "@react-navigation/native";
 import React, { useCallback, useLayoutEffect, useMemo, useState } from "react";
 import { Pressable, StyleSheet, Text, View } from "react-native";
@@ -272,13 +272,13 @@ export function MedicalSuppliesScreen({ user }: { user: SessionUser }) {
               </Text>
             </View>
             {selectionMode ? (
-              <Ionicons
-                name={isSelected ? "checkmark-circle" : "ellipse-outline"}
+              <FlareLucideIcon
+                icon={isSelected ? FLARE_CHROME_LUCIDE.checkCircle : FLARE_CHROME_LUCIDE.circle}
                 size={22}
                 color={isSelected ? c.primary : c.textMuted}
               />
             ) : (
-              <Ionicons name="chevron-forward" size={NAV_ROW_CHEVRON_SIZE} color={c.text} accessibilityIgnoresInvertColors />
+              <FlareLucideIcon icon={FLARE_CHROME_LUCIDE.forward} size={NAV_ROW_CHEVRON_SIZE} color={c.text} />
             )}
           </Pressable>
         );

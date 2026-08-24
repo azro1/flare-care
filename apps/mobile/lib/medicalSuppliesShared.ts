@@ -1,9 +1,10 @@
 import { todayYmd } from "./bowelMovementShared";
+import { FLARE_FEATURE_LUCIDE } from "./flareLucideIcons";
 import { formatUkDate } from "./formatUkDate";
 import { sanitizeNotesMobile } from "./symptomWizardShared";
 import { supabase, TABLES } from "./supabase";
 
-export const MEDICAL_SUPPLIES_FEATURE_ION_ICON = "cube-outline" as const;
+export const MEDICAL_SUPPLIES_FEATURE_ICON = FLARE_FEATURE_LUCIDE.supplies;
 
 export const SUPPLY_CADENCE_OPTIONS = [
   { days: 7, label: "Weekly" },

@@ -1,5 +1,5 @@
+import { FLARE_CHROME_LUCIDE, FlareLucideIcon } from "../lib/flareLucideIcons";
 import DateTimePicker from "@react-native-community/datetimepicker";
-import { Ionicons, MaterialCommunityIcons } from "@expo/vector-icons";
 import { useFocusEffect, useNavigation } from "@react-navigation/native";
 import React, { useCallback, useMemo, useRef, useState } from "react";
 import {
@@ -44,7 +44,7 @@ import {
   bottomTabBarHeight,
 } from "../lib/layoutConstants";
 import {
-  WEIGHT_FEATURE_MCI_ICON,
+  WEIGHT_FEATURE_ICON,
   deleteWeightsForUser,
   formatWeightKg,
   getWeightListCache,
@@ -146,7 +146,7 @@ export function WeightLogSheet({
       >
         <View style={[styles.sheetHeader, { borderBottomColor: c.cardBorder, paddingTop: Math.max(insets.top, 12) }]}>
           <Pressable accessibilityRole="button" accessibilityLabel="Close" onPress={onClose} hitSlop={12} style={styles.sheetClose}>
-            <Ionicons name="close" size={26} color={c.textMuted} />
+            <FlareLucideIcon icon={FLARE_CHROME_LUCIDE.close} size={26} color={c.textMuted} />
           </Pressable>
           <Text style={[styles.sheetTitle, { color: c.text }]}>{editingId ? "Edit weight" : "Log weight"}</Text>
           <View style={styles.sheetClose} />
@@ -167,7 +167,7 @@ export function WeightLogSheet({
             }}
             style={[styles.datePill, { backgroundColor: c.surfaceSubtle, borderColor: c.cardBorder }]}
           >
-            <Ionicons name="calendar-outline" size={18} color={c.textSecondary} />
+            <FlareLucideIcon icon={FLARE_CHROME_LUCIDE.calendar} size={18} color={c.textSecondary} />
             <Text style={[styles.datePillText, { color: form.date ? c.text : c.textMuted }]}>
               {form.date ? formatUkDate(form.date) : ""}
             </Text>
@@ -391,7 +391,7 @@ export function WeightScreen({ user }: { user: SessionUser }) {
           {listInitialLoad ? (
             <LogHistoryListLoading />
           ) : historyEmpty ? (
-            <LogHistoryEmptyState icon={WEIGHT_FEATURE_MCI_ICON} />
+            <LogHistoryEmptyState icon={WEIGHT_FEATURE_ICON} />
           ) : (
             <LogHistoryPreviewList
               items={historyRows.map((row) =>

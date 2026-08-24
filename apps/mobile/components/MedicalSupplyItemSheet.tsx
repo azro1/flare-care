@@ -1,4 +1,4 @@
-import { Ionicons } from "@expo/vector-icons";
+import { FLARE_CHROME_LUCIDE, FlareLucideIcon } from "../lib/flareLucideIcons";
 import React, { useEffect, useState } from "react";
 import { KeyboardAvoidingView, Modal, Platform, Pressable, StyleSheet, Text, View } from "react-native";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
@@ -87,7 +87,7 @@ export function MedicalSupplyItemSheet({
             hitSlop={SCREEN_EDGE_PADDING}
             style={styles.sheetClose}
           >
-            <Ionicons name="close" size={SHEET_CLOSE_ICON_SIZE} color={c.textMuted} />
+            <FlareLucideIcon icon={FLARE_CHROME_LUCIDE.close} size={SHEET_CLOSE_ICON_SIZE} color={c.textMuted} />
           </Pressable>
           <Text style={[styles.sheetTitle, { color: c.text }]}>{editingId ? "Edit item" : "Add item"}</Text>
           <View style={styles.sheetClose} />

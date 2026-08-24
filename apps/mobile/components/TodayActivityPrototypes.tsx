@@ -1,4 +1,4 @@
-import { Ionicons, MaterialCommunityIcons } from "@expo/vector-icons";
+import { FLARE_CHROME_LUCIDE, FlareLucideIcon } from "../lib/flareLucideIcons";
 import React, { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import {
   Animated,
@@ -16,7 +16,7 @@ import { Pressable as GHPressable, ScrollView as GHScrollView } from "react-nati
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 import Svg, { Path } from "react-native-svg";
 import { formatUkGreetingDate } from "../lib/formatUkDate";
-import { HYDRATION_MCI_ICON, HYDRATION_TARGET } from "../lib/hydrationShared";
+import { HYDRATION_ICON, HYDRATION_TARGET } from "../lib/hydrationShared";
 import {
   CARD_INNER_PADDING,
   CARD_SECTION_INNER_GAP,
@@ -36,7 +36,7 @@ import {
   WELCOME_CARD_INNER_PADDING,
   WIZARD_LANDING_BLOCK_PADDING_TOP,
 } from "../lib/layoutConstants";
-import { MY_MEDS_MCI_ICON } from "../lib/medicationFeatureIcons";
+import { MY_MEDS_ICON } from "../lib/medicationFeatureIcons";
 import { Portal } from "../lib/overlayPortal";
 import { useFlareColors } from "../theme";
 // ProgressOverTimeGraph kept for a future Trends screen — not shown in this sheet.
@@ -262,7 +262,7 @@ export function TodayActivityBoardScreen({
         style={[styles.slab, { backgroundColor: c.card, borderColor: c.cardBorder }]}
       >
         <View style={[styles.slabIcon, { backgroundColor: c.surfaceSubtle }]}>
-          <MaterialCommunityIcons name={MY_MEDS_MCI_ICON} size={28} color={c.primary} />
+          <FlareLucideIcon icon={MY_MEDS_ICON} size={28} color={c.primary} />
         </View>
         <View style={styles.slabBody}>
           <Text style={[styles.slabTitle, { color: c.text }]}>My Meds</Text>
@@ -283,7 +283,7 @@ export function TodayActivityBoardScreen({
         style={[styles.slab, { backgroundColor: c.card, borderColor: c.cardBorder }]}
       >
         <View style={[styles.slabIcon, { backgroundColor: c.surfaceSubtle }]}>
-          <MaterialCommunityIcons name={HYDRATION_MCI_ICON} size={28} color={c.primary} />
+          <FlareLucideIcon icon={HYDRATION_ICON} size={28} color={c.primary} />
         </View>
         <View style={styles.slabBody}>
           <Text style={[styles.slabTitle, { color: c.text }]}>My Hydration</Text>
@@ -474,7 +474,7 @@ export function TodayActivitiesModal({
       meterLabel: "Meds",
       title: "My Meds",
       detail: copy.medsLabel,
-      icon: MY_MEDS_MCI_ICON,
+      icon: MY_MEDS_ICON,
       complete: copy.hasMeds && copy.medsComplete,
     },
     {
@@ -483,7 +483,7 @@ export function TodayActivitiesModal({
       meterLabel: "Water",
       title: "My Hydration",
       detail: copy.hydrationLabel,
-      icon: HYDRATION_MCI_ICON,
+      icon: HYDRATION_ICON,
       complete: copy.hydrationComplete,
     },
   ] as const;
@@ -497,7 +497,7 @@ export function TodayActivitiesModal({
         : copy.medsComplete
           ? "All taken for today!"
           : summary.medsTaken === 0
-            ? "Nothing taken today"
+            ? "No meds taken today"
             : "Keep going — still time today"
       : copy.hydrationComplete
         ? "All done for today!"
@@ -550,8 +550,8 @@ export function TodayActivitiesModal({
         }
         style={styles.pulseRowTray}
       >
-        <MaterialCommunityIcons
-          name={activity.icon}
+        <FlareLucideIcon
+          icon={activity.icon}
           size={INSTRUCTION_CARD_ICON_SIZE}
           color={c.primary}
         />
@@ -565,11 +565,10 @@ export function TodayActivitiesModal({
           <Text style={[styles.slabMeta, { color: c.textMuted }]}>{activity.detail}</Text>
         </View>
         {activity.complete ? (
-          <Ionicons
-            name="checkmark-circle"
+          <FlareLucideIcon
+            icon={FLARE_CHROME_LUCIDE.checkCircle}
             size={20}
             color={c.primary}
-            accessibilityIgnoresInvertColors
           />
         ) : null}
       </View>
@@ -625,7 +624,7 @@ export function TodayActivitiesModal({
                 hitSlop={10}
                 style={styles.modalCloseBtnAbsolute}
               >
-                <Ionicons name="close" size={22} color={c.textMuted} />
+                <FlareLucideIcon icon={FLARE_CHROME_LUCIDE.close} size={22} color={c.textMuted} />
               </Pressable>
 
               <View
@@ -790,7 +789,7 @@ export function TodayActivityPulseScreen({
             onPress={onOpenMeds}
             style={styles.pulseRowInCard}
           >
-            <MaterialCommunityIcons name={MY_MEDS_MCI_ICON} size={INSTRUCTION_CARD_ICON_SIZE} color={c.primary} />
+            <FlareLucideIcon icon={MY_MEDS_ICON} size={INSTRUCTION_CARD_ICON_SIZE} color={c.primary} />
             <View style={styles.pulseRowText}>
               <Text style={[styles.pulseRowTitle, { color: c.text }]}>My Meds</Text>
               <Text style={[styles.slabMeta, { color: c.textMuted }]}>{copy.medsLabel}</Text>
@@ -802,7 +801,7 @@ export function TodayActivityPulseScreen({
             onPress={onOpenHydration}
             style={styles.pulseRowInCard}
           >
-            <MaterialCommunityIcons name={HYDRATION_MCI_ICON} size={INSTRUCTION_CARD_ICON_SIZE} color={c.primary} />
+            <FlareLucideIcon icon={HYDRATION_ICON} size={INSTRUCTION_CARD_ICON_SIZE} color={c.primary} />
             <View style={styles.pulseRowText}>
               <Text style={[styles.pulseRowTitle, { color: c.text }]}>My Hydration</Text>
               <Text style={[styles.slabMeta, { color: c.textMuted }]}>{copy.hydrationLabel}</Text>
@@ -831,7 +830,7 @@ export function TodayActivityTimelineScreen({
       detail: copy.medsLabel,
       done: copy.medsComplete || summary.medsTotal <= 0,
       onPress: onOpenMeds,
-      icon: MY_MEDS_MCI_ICON,
+      icon: MY_MEDS_ICON,
     },
     {
       id: "hydration",
@@ -840,7 +839,7 @@ export function TodayActivityTimelineScreen({
       detail: copy.hydrationLabel,
       done: copy.hydrationComplete,
       onPress: onOpenHydration,
-      icon: HYDRATION_MCI_ICON,
+      icon: HYDRATION_ICON,
     },
   ] as const;
 
@@ -875,7 +874,7 @@ export function TodayActivityTimelineScreen({
               >
                 <View style={styles.timelineCardTop}>
                   <Text style={[styles.timelineWhen, { color: c.textMuted }]}>{beat.when}</Text>
-                  <MaterialCommunityIcons name={beat.icon} size={20} color={c.primary} />
+                  <FlareLucideIcon icon={beat.icon} size={20} color={c.primary} />
                 </View>
                 <Text style={[styles.slabTitle, { color: c.text }]}>{beat.title}</Text>
                 <Text style={[styles.slabMeta, { color: c.textMuted }]}>{beat.detail}</Text>

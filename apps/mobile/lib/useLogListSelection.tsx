@@ -1,4 +1,4 @@
-import { Ionicons } from "@expo/vector-icons";
+import { FLARE_CHROME_LUCIDE, FlareLucideIcon } from "../lib/flareLucideIcons";
 import { useFocusEffect } from "@react-navigation/native";
 import React, { useCallback, useEffect, useLayoutEffect, useRef, useState } from "react";
 import { BackHandler, Pressable, StyleSheet } from "react-native";
@@ -152,7 +152,7 @@ export function useLogListSelection({
           hitSlop={{ top: 10, bottom: 10, left: 8, right: 12 }}
           style={logListSelectionHeaderStyles.closeBtn}
         >
-          <Ionicons name="close" size={26} color={c.textMuted} accessibilityIgnoresInvertColors />
+          <FlareLucideIcon icon={FLARE_CHROME_LUCIDE.close} size={26} color={c.textMuted} />
         </Pressable>
       ),
       headerRight: () => (
@@ -163,7 +163,7 @@ export function useLogListSelection({
           hitSlop={10}
           style={logListSelectionHeaderStyles.selectAllBtn}
         >
-          <Ionicons name="checkmark-done-outline" size={24} color={c.textMuted} accessibilityIgnoresInvertColors />
+          <FlareLucideIcon icon={FLARE_CHROME_LUCIDE.checkDone} size={24} color={c.textMuted} />
         </Pressable>
       ),
     });

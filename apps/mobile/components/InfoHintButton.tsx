@@ -1,4 +1,4 @@
-import { Ionicons } from "@expo/vector-icons";
+import { FLARE_CHROME_LUCIDE, FlareLucideIcon } from "../lib/flareLucideIcons";
 import React, { useState } from "react";
 import { Pressable, StyleSheet, View } from "react-native";
 import { ConfirmModal } from "./ConfirmModal";
@@ -29,7 +29,7 @@ export function InfoHintButton({
         onPress={() => setOpen(true)}
         style={styles.hit}
       >
-        <Ionicons name="information-circle-outline" size={22} color={c.textMuted} />
+        <FlareLucideIcon icon={FLARE_CHROME_LUCIDE.info} size={22} color={c.textMuted} />
       </Pressable>
       <ConfirmModal
         visible={open}

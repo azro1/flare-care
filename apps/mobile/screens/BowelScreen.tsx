@@ -1,5 +1,5 @@
+import { FLARE_CHROME_LUCIDE, FlareLucideIcon } from "../lib/flareLucideIcons";
 import DateTimePicker from "@react-native-community/datetimepicker";
-import { Ionicons, MaterialCommunityIcons } from "@expo/vector-icons";
 import { useFocusEffect, useNavigation, useRoute } from "@react-navigation/native";
 import { yupResolver } from "@hookform/resolvers/yup";
 import React, { useCallback, useEffect, useMemo, useRef, useState } from "react";
@@ -52,7 +52,7 @@ import {
   getBristolTypeMeta,
 } from "../lib/bristolStoolChart";
 import {
-  BOWEL_FEATURE_MCI_ICON,
+  BOWEL_FEATURE_ICON,
   snapTimeHmFromDate,
   bowelPayloadFromForm,
   deleteBowelMovementsForUser,
@@ -251,7 +251,7 @@ export function BowelLogSheet({
       >
         <View style={[styles.sheetHeader, { borderBottomColor: c.cardBorder, paddingTop: Math.max(insets.top, 12) }]}>
           <Pressable accessibilityRole="button" accessibilityLabel="Close" onPress={onClose} hitSlop={12} style={styles.sheetClose}>
-            <Ionicons name="close" size={26} color={c.textMuted} />
+            <FlareLucideIcon icon={FLARE_CHROME_LUCIDE.close} size={26} color={c.textMuted} />
           </Pressable>
           <Text style={[styles.sheetTitle, { color: c.text }]}>{editingId ? "Edit log" : "Add bowel movement"}</Text>
           <View style={styles.sheetClose} />
@@ -277,7 +277,7 @@ export function BowelLogSheet({
                 }}
                 style={[styles.whenPill, { backgroundColor: c.surfaceSubtle, borderColor: c.cardBorder }]}
               >
-                <Ionicons name="calendar-outline" size={18} color={c.textSecondary} />
+                <FlareLucideIcon icon={FLARE_CHROME_LUCIDE.calendar} size={18} color={c.textSecondary} />
                 <Text style={[styles.whenPillText, { color: form.date ? c.text : c.textMuted }]}>
                   {form.date ? formatUkDate(form.date) : ""}
                 </Text>
@@ -296,7 +296,7 @@ export function BowelLogSheet({
                 }}
                 style={[styles.whenPill, { backgroundColor: c.surfaceSubtle, borderColor: c.cardBorder }]}
               >
-                <Ionicons name="time-outline" size={18} color={c.textSecondary} />
+                <FlareLucideIcon icon={FLARE_CHROME_LUCIDE.time} size={18} color={c.textSecondary} />
                 <Text style={[styles.whenPillText, { color: form.time ? c.text : c.textMuted }]}>
                   {form.time}
                 </Text>
@@ -316,7 +316,7 @@ export function BowelLogSheet({
             hitSlop={8}
             style={({ pressed }) => [styles.guideLinkAboveRow, pressed && { opacity: 0.7 }]}
           >
-            <Ionicons name="book-outline" size={16} color={c.textSecondary} accessibilityIgnoresInvertColors />
+            <FlareLucideIcon icon={FLARE_CHROME_LUCIDE.book} size={16} color={c.textSecondary} />
             <Text style={[styles.guideLink, { color: c.text }]}>Bristol stool chart</Text>
           </Pressable>
           <View style={styles.sectionHeadRow}>
@@ -372,7 +372,11 @@ export function BowelLogSheet({
             <Text style={[styles.optionalToggleText, { color: c.text }]}>
               {showOptional ? "Hide optional details" : "Add optional details"}
             </Text>
-            <Ionicons name={showOptional ? "chevron-up" : "chevron-down"} size={NAV_ROW_CHEVRON_SIZE} color={c.textMuted} />
+            <FlareLucideIcon
+              icon={showOptional ? FLARE_CHROME_LUCIDE.up : FLARE_CHROME_LUCIDE.down}
+              size={NAV_ROW_CHEVRON_SIZE}
+              color={c.textMuted}
+            />
           </Pressable>
 
           {showOptional ? (
@@ -647,7 +651,7 @@ export function BowelScreen({ user }: { user: SessionUser }) {
           {listInitialLoad ? (
             <LogHistoryListLoading />
           ) : historyEmpty ? (
-            <LogHistoryEmptyState icon={BOWEL_FEATURE_MCI_ICON} />
+            <LogHistoryEmptyState icon={BOWEL_FEATURE_ICON} />
           ) : (
             <LogHistoryPreviewList
               items={historyRows.map((row) => {

@@ -1,11 +1,11 @@
 import AsyncStorage from "@react-native-async-storage/async-storage";
+import { FLARE_FEATURE_LUCIDE } from "./flareLucideIcons";
 
 /** Daily cup target — matches web `HYDRATION_TARGET`. */
 export const HYDRATION_TARGET = 6;
 
-/** Plain cup — MaterialCommunityIcons (`cup` filled, `cup-outline` empty). Not `cup-water`. */
-export const HYDRATION_MCI_ICON = "cup" as const;
-export const HYDRATION_MCI_ICON_EMPTY = "cup-outline" as const;
+export const HYDRATION_ICON = FLARE_FEATURE_LUCIDE.hydration;
+export const HYDRATION_EMPTY_ICON = FLARE_FEATURE_LUCIDE.hydration;
 
 export const HYDRATION_GOAL_ACTIVITY_TITLE = 'Completed Today\'s goal "Stay Hydrated"';
 export const HYDRATION_RESET_ACTIVITY_TITLE = "Reset hydration progress";

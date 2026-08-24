@@ -9,7 +9,7 @@ import { Controller, useForm } from "react-hook-form";
 import { yupResolver } from "@hookform/resolvers/yup";
 import * as yup from "yup";
 import { useFonts, Inter_400Regular, Inter_500Medium, Inter_700Bold, Inter_800ExtraBold } from "@expo-google-fonts/inter";
-import { Ionicons, MaterialCommunityIcons } from "@expo/vector-icons";
+import { Ionicons } from "@expo/vector-icons";
 import {
   NavigationContainer,
   useFocusEffect,
@@ -81,11 +81,20 @@ import { readAuthLegalAccepted, setAuthLegalAccepted } from "./lib/authLegalAcce
 import { CollapsingTitleScrollScreen } from "./components/CollapsingTitleScrollScreen";
 import { FlareThemeProvider, useFlareColors, useFlareTheme } from "./theme";
 import { formatUkDate, formatUkGreetingDate } from "./lib/formatUkDate";
-import { BOWEL_FEATURE_MCI_ICON, todayYmd } from "./lib/bowelMovementShared";
+import { todayYmd } from "./lib/bowelMovementShared";
 import { handleListExpansionNavigationRouteChange } from "./lib/listExpansionNavigation";
 import { ListSelectionChromeProvider, useListSelectionChrome } from "./lib/listSelectionChrome";
 import { useLogListSelection } from "./lib/useLogListSelection";
-import { MY_MEDS_MCI_ICON, TRACK_MEDICATIONS_MCI_ICON } from "./lib/medicationFeatureIcons";
+import { TRACK_MEDICATIONS_ICON } from "./lib/medicationFeatureIcons";
+import {
+  FLARE_CHROME_LUCIDE,
+  FLARE_FEATURE_LUCIDE,
+  FLARE_TAB_LUCIDE,
+  FLARE_TAB_LUCIDE_SIZE,
+  FLARE_WEATHER_LUCIDE,
+  FlareLucideIcon,
+  owmIconIdToLucide,
+} from "./lib/flareLucideIcons";
 import { fetchMedicationsForUser } from "./lib/medicationShared";
 import { WELLBEING_LOG_TITLE } from "./lib/wellbeingShared";
 import { recordRecentActivityEvent } from "./lib/recentActivityEvents";
@@ -99,7 +108,7 @@ import {
   NUTRITION_IBD_SAFE,
   NUTRITION_QUICK_TIPS,
 } from "./lib/nutritionGuideCopy";
-import { HYDRATION_TARGET, HYDRATION_MCI_ICON, saveHydrationReset } from "./lib/hydrationShared";
+import { HYDRATION_TARGET, saveHydrationReset } from "./lib/hydrationShared";
 import { EMPTY_ACTIVITY_INSIGHT } from "./lib/activityInsights";
 import {
   bottomTabBarHeight,
@@ -275,18 +284,8 @@ try {
   // Expo Go on Android SDK53+ does not support remote push API.
 }
 
-/** App mark trial: MCI `hand-heart` (same as new-user intro). Revert to `fclogo_trans_splash.png` if needed. */
-const BRAND_MARK_MCI_ICON = "hand-heart" as const;
-
 function BrandMarkIcon({ size, color }: { size: number; color: string }) {
-  return (
-    <MaterialCommunityIcons
-      name={BRAND_MARK_MCI_ICON}
-      size={size}
-      color={color}
-      accessibilityIgnoresInvertColors
-    />
-  );
+  return <FlareLucideIcon icon={FLARE_CHROME_LUCIDE.brandMark} size={size} color={color} />;
 }
 
 type SessionUser = {
@@ -431,7 +430,7 @@ function DetailDeleteHeaderButton({ onPress, disabled }: { onPress: () => void; 
       hitSlop={10}
       style={styles.headerDeleteButton}
     >
-      <MaterialCommunityIcons name="trash-can-outline" size={22} color={c.textMuted} accessibilityIgnoresInvertColors />
+      <FlareLucideIcon icon={FLARE_CHROME_LUCIDE.delete} size={22} color={c.textMuted} />
     </Pressable>
   );
 }
@@ -925,11 +924,10 @@ function AuthScreen({
                     ]}
                   >
                     {legalAccepted ? (
-                      <Ionicons
-                        name="checkmark"
+                      <FlareLucideIcon
+                        icon={FLARE_CHROME_LUCIDE.check}
                         size={14}
                         color={onPrimaryChrome ? cAuth.primary : cAuth.white}
-                        accessibilityIgnoresInvertColors
                       />
                     ) : null}
                   </View>
@@ -970,11 +968,10 @@ function AuthScreen({
                 />
               </View>
               <View style={styles.authSecureNote}>
-                <Ionicons
-                  name="lock-closed-outline"
+                <FlareLucideIcon
+                  icon={FLARE_CHROME_LUCIDE.lock}
                   size={13}
                   color={onPrimaryChrome ? "rgba(255,255,255,0.75)" : cAuth.textMuted}
-                  accessibilityIgnoresInvertColors
                 />
                 <Text
                   style={[
@@ -1136,11 +1133,10 @@ function AuthScreen({
                 },
               ]}
             >
-              <Ionicons
-                name="finger-print"
+              <FlareLucideIcon
+                icon={FLARE_CHROME_LUCIDE.fingerprint}
                 size={34}
                 color={authBlue ? cAuth.white : cAuth.primary}
-                accessibilityIgnoresInvertColors
               />
             </View>
             <Text
@@ -1307,7 +1303,7 @@ function ProfileSetupScreen({ user, onComplete }: { user: SessionUser; onComplet
 }
 
 /** Icons inside dashboard home tiles (Daily Check-in + More). */
-const HOME_TILE_ICON_SIZE_CHECKIN = 30;
+const HOME_TILE_ICON_SIZE_CHECKIN = 28;
 /** Default home grid / check-in tile height (`styles.homeDashboardTile`). */
 const HOME_DASHBOARD_TILE_HEIGHT = 116;
 
@@ -1402,37 +1398,6 @@ function parseMedicationLogList(raw: unknown, withDosage: boolean): MedicationLo
 
 /** Avoid greeting flicker (“there”) when session metadata/email arrives shortly after navigation. */
 const dashboardGreetingFirstNameByUserId: Record<string, string> = {};
-
-/** OWM `/img/wn/{icon}@2x.png` id → Ionicons ( themed `color`; no remote bitmaps ). */
-function owmIconIdToIoniconsName(iconId: string | null | undefined): keyof typeof Ionicons.glyphMap {
-  if (!iconId || iconId.length < 2) return "partly-sunny";
-  const code = iconId.slice(0, 2);
-  const night = iconId.endsWith("n");
-  switch (code) {
-    case "01":
-      return (night ? "moon" : "sunny") as keyof typeof Ionicons.glyphMap;
-    case "02":
-      return ((night ? "cloudy-night" : "partly-sunny") as keyof typeof Ionicons.glyphMap);
-    case "03":
-    case "04":
-      return ((night ? "cloudy-night" : "cloud") as keyof typeof Ionicons.glyphMap);
-    case "09":
-    case "10":
-      return "rainy";
-    case "11":
-      return "thunderstorm";
-    case "13":
-      return "snow";
-    case "50":
-      return "cloud";
-    default:
-      return "partly-sunny";
-  }
-}
-
-function weatherIconNudgeStyle(name: keyof typeof Ionicons.glyphMap) {
-  return name === "cloud" || name === "cloudy-night" ? { marginTop: 1 } : undefined;
-}
 
 function DashboardGridTile({
   width,
@@ -1555,20 +1520,20 @@ function DashboardScreen({ user }: { user: SessionUser }) {
   const newsShelfCardWidth = useMemo(() => dashboardNewsShelfCardWidth(windowWidth), [windowWidth]);
   const newsShelfPageStride = newsShelfCardWidth + HOME_TILE_GAP;
   const dailyCheckinCards = [
-    { key: "symptoms" as const, label: "Log Symptoms", icon: "thermometer", family: "mci", goTo: "SymptomLogWizard" },
-    { key: "track-meds" as const, label: "Track Medications", icon: TRACK_MEDICATIONS_MCI_ICON, family: "mci", goTo: "MedicationTrackingWizard" },
-    { key: "wellbeing" as const, label: "My Wellbeing", icon: "heart-pulse", family: "mci", goTo: "WellbeingWizard" },
+    { key: "symptoms" as const, label: "Log Symptoms", lucide: FLARE_FEATURE_LUCIDE.symptoms, goTo: "SymptomLogWizard" },
+    { key: "track-meds" as const, label: "Track Medications", lucide: FLARE_FEATURE_LUCIDE.trackMeds, goTo: "MedicationTrackingWizard" },
+    { key: "wellbeing" as const, label: "My Wellbeing", lucide: FLARE_FEATURE_LUCIDE.wellbeing, goTo: "WellbeingWizard" },
   ];
   const healthCards = [
-    { key: "meds", label: "My Meds", screen: "Meds" as const, icon: MY_MEDS_MCI_ICON, family: "mci" as "ion" | "mci" },
-    { key: "hydration", label: "My Hydration", screen: "Hydration" as const, icon: HYDRATION_MCI_ICON, family: "mci" as "ion" | "mci" },
-    { key: "bowel", label: "Bowel Movements", screen: "Bowel" as const, icon: BOWEL_FEATURE_MCI_ICON, family: "mci" as "ion" | "mci" },
+    { key: "meds", label: "My Meds", screen: "Meds" as const, lucide: FLARE_FEATURE_LUCIDE.meds },
+    { key: "hydration", label: "My Hydration", screen: "Hydration" as const, lucide: FLARE_FEATURE_LUCIDE.hydration },
+    { key: "bowel", label: "Bowel Movements", screen: "Bowel" as const, lucide: FLARE_FEATURE_LUCIDE.bowel },
   ];
   const careCards = [
-    { key: "weight", label: "My Weight", screen: "Weight" as const, icon: "scale-bathroom", family: "mci" as "ion" | "mci" },
-    { key: "supplies", label: "My Supplies", screen: "MedicalSupplies" as const, icon: "cube-outline", family: "ion" as "ion" | "mci" },
-    { key: "appointments", label: "Appointments", screen: "Appointments" as const, icon: "calendar-outline", family: "ion" as "ion" | "mci" },
-    { key: "reports", label: "Reports", screen: "Reports" as const, icon: "document-text-outline", family: "ion" as "ion" | "mci" },
+    { key: "weight", label: "My Weight", screen: "Weight" as const, lucide: FLARE_FEATURE_LUCIDE.weight },
+    { key: "supplies", label: "My Supplies", screen: "MedicalSupplies" as const, lucide: FLARE_FEATURE_LUCIDE.supplies },
+    { key: "appointments", label: "Appointments", screen: "Appointments" as const, lucide: FLARE_FEATURE_LUCIDE.appointments },
+    { key: "reports", label: "Reports", screen: "Reports" as const, lucide: FLARE_FEATURE_LUCIDE.reports },
   ];
   const careTopRowCards = careCards.slice(0, 2);
   const careBottomRowCards = careCards.slice(2);
@@ -1586,13 +1551,7 @@ function DashboardScreen({ user }: { user: SessionUser }) {
       label={item.label}
       variant="grid"
       onPress={() => navigation.navigate(item.screen)}
-      icon={
-        item.family === "ion" ? (
-          <Ionicons name={item.icon as any} size={HOME_TILE_ICON_SIZE_CHECKIN} color={c.primary} />
-        ) : (
-          <MaterialCommunityIcons name={item.icon as any} size={HOME_TILE_ICON_SIZE_CHECKIN} color={c.primary} />
-        )
-      }
+      icon={<FlareLucideIcon icon={item.lucide} size={HOME_TILE_ICON_SIZE_CHECKIN} color={c.primary} />}
     />
   );
   const closeActivitiesModal = useCallback(() => {
@@ -1626,9 +1585,9 @@ function DashboardScreen({ user }: { user: SessionUser }) {
       ? computedGreetingFirst
       : dashboardGreetingFirstNameByUserId[user.id] ?? "there";
   const todayLabel = formatUkGreetingDate(new Date());
-  const weatherIconName = weatherMeta?.icon
-    ? owmIconIdToIoniconsName(weatherMeta.icon)
-    : "partly-sunny";
+  const weatherIcon = weatherMeta?.icon
+    ? owmIconIdToLucide(weatherMeta.icon)
+    : FLARE_WEATHER_LUCIDE.partlyCloudyDay;
   useFocusEffect(
     useCallback(() => {
       let cancelled = false;
@@ -1872,12 +1831,7 @@ function DashboardScreen({ user }: { user: SessionUser }) {
           {weatherMeta ? (
             <View style={styles.weatherHero}>
               <View style={styles.weatherIconWrap}>
-                <Ionicons
-                  name={weatherIconName}
-                  size={28}
-                  color={c.primary}
-                  style={weatherIconNudgeStyle(weatherIconName)}
-                />
+                <FlareLucideIcon icon={weatherIcon} size={HOME_TILE_ICON_SIZE_CHECKIN} color={c.primary} />
               </View>
               <View style={styles.weatherLeft}>
                 <Text style={[styles.weatherCity, { color: c.textSecondary }]}>{weatherMeta.city}</Text>
@@ -1928,13 +1882,7 @@ function DashboardScreen({ user }: { user: SessionUser }) {
                 variant="scroll"
                 isLastInScrollRow={index === dailyCheckinCards.length - 1}
                 onPress={() => navigation.navigate(item.goTo)}
-                icon={
-                  item.family === "ion" ? (
-                    <Ionicons name={item.icon as any} size={HOME_TILE_ICON_SIZE_CHECKIN} color={c.primary} />
-                  ) : (
-                    <MaterialCommunityIcons name={item.icon as any} size={HOME_TILE_ICON_SIZE_CHECKIN} color={c.primary} />
-                  )
-                }
+                icon={<FlareLucideIcon icon={item.lucide} size={HOME_TILE_ICON_SIZE_CHECKIN} color={c.primary} />}
               />
             ))}
           </ScrollView>
@@ -2106,8 +2054,8 @@ function DashboardScreen({ user }: { user: SessionUser }) {
                         variant="grid"
                         onPress={() => navigation.navigate(healthMedsCard.screen)}
                         icon={
-                          <MaterialCommunityIcons
-                            name={healthMedsCard.icon as any}
+                          <FlareLucideIcon
+                            icon={healthMedsCard.lucide}
                             size={HOME_TILE_ICON_SIZE_CHECKIN}
                             color={c.primary}
                           />
@@ -2372,7 +2320,7 @@ function SymptomHistoryScreen({ user }: { user: SessionUser }) {
           {loading && rows.length === 0 ? (
             <LogHistoryListLoading />
           ) : rows.length === 0 ? (
-            <LogHistoryEmptyState icon="thermometer" />
+            <LogHistoryEmptyState icon={FLARE_FEATURE_LUCIDE.symptoms} />
           ) : (
             <LogHistoryPreviewList
               items={symptomLogItems}
@@ -2761,7 +2709,7 @@ function MedicationTrackingHistoryScreen({ user }: { user: SessionUser }) {
           {loading && rows.length === 0 ? (
             <LogHistoryListLoading />
           ) : rows.length === 0 ? (
-            <LogHistoryEmptyState icon={TRACK_MEDICATIONS_MCI_ICON} />
+            <LogHistoryEmptyState icon={TRACK_MEDICATIONS_ICON} />
           ) : (
             <LogHistoryPreviewList
               items={medicationLogItems}
@@ -3025,7 +2973,7 @@ function HydrationScreen({ user }: { user: SessionUser }) {
           onPress={() => navigation.navigate("AccountHelp", { expandSection: "hydration" })}
           style={({ pressed }) => [styles.hydrationHelpLinkPress, pressed && { opacity: 0.7 }]}
         >
-          <Ionicons name="book-outline" size={16} color={c.textSecondary} accessibilityIgnoresInvertColors />
+          <FlareLucideIcon icon={FLARE_CHROME_LUCIDE.book} size={16} color={c.textSecondary} />
           <Text style={[styles.hydrationHelpLink, { color: c.text }]}>Daily Intake Guidelines</Text>
         </Pressable>
       }
@@ -3388,7 +3336,9 @@ function NotificationsScreen({ user }: { user: SessionUser }) {
 
   const reminderStatusTitle = permissionGranted ? "Notifications on" : "Notifications off";
 
-  const reminderStatusIcon = permissionGranted ? "notifications" : "notifications-off-outline";
+  const reminderStatusIcon = permissionGranted
+    ? FLARE_CHROME_LUCIDE.notifications
+    : FLARE_CHROME_LUCIDE.notificationsOff;
 
   return (
     <ScrollView
@@ -3398,11 +3348,10 @@ function NotificationsScreen({ user }: { user: SessionUser }) {
       <Card title="" style={styles.accountPaddedCard} compactBody>
         <View style={styles.remindersStatusRow}>
           <View style={[styles.accountAvatarWell, { backgroundColor: c.surfaceSubtle }]}>
-            <Ionicons
-              name={reminderStatusIcon}
+            <FlareLucideIcon
+              icon={reminderStatusIcon}
               size={26}
               color={c.primary}
-              accessibilityIgnoresInvertColors
             />
           </View>
           <View style={styles.accountIdentityTextCol}>
@@ -3492,7 +3441,7 @@ function IbdCheckList({ items, isLastInSection }: { items: string[]; isLastInSec
     <View style={[styles.ibdCheckList, isLastInSection && styles.infoSectionContentEnd]}>
       {items.map((item) => (
         <View key={item} style={styles.ibdCheckRow}>
-          <Ionicons name="checkmark" size={16} color={c.primary} style={styles.ibdCheckIcon} accessibilityIgnoresInvertColors />
+          <FlareLucideIcon icon={FLARE_CHROME_LUCIDE.check} size={16} color={c.primary} style={styles.ibdCheckIcon} />
           <Text style={[styles.text, styles.ibdCheckText, { color: c.textMuted }]}>{item}</Text>
         </View>
       ))}
@@ -3719,7 +3668,7 @@ function AccountPersonalDetailsScreen({ user }: { user: SessionUser }) {
         >
           <View style={styles.accountIdentityRow}>
             <View style={[styles.accountAvatarWell, { backgroundColor: c.surfaceRaised }]}>
-              <Ionicons name="person" size={26} color={c.primary} accessibilityIgnoresInvertColors />
+              <FlareLucideIcon icon={FLARE_CHROME_LUCIDE.person} size={26} color={c.primary} />
             </View>
             <View style={styles.accountIdentityTextCol}>
               <Text style={[styles.accountFirstName, { color: c.text }]}>{accountIdentityFirstLine(user)}</Text>
@@ -4026,12 +3975,12 @@ function AccountScreen({
         return;
       }
       const deletedUserId = user.id;
+      prepareSignOut("account_deleted");
       await finishSignOut();
       await clearRememberedSession();
       await setAuthLegalAccepted(false);
       await clearNewUserIntroState(deletedUserId);
       await clearAllHubTipsDismissed();
-      prepareSignOut("account_deleted");
     } catch (e: unknown) {
       await restoreAfterAbortedSignOut();
       const msg = e instanceof Error ? e.message : "Something went wrong.";
@@ -4062,18 +4011,17 @@ function AccountScreen({
         >
           <View style={styles.accountIdentityRow}>
             <View style={[styles.accountAvatarWell, { backgroundColor: c.surfaceRaised }]}>
-              <Ionicons name="person" size={26} color={c.primary} accessibilityIgnoresInvertColors />
+              <FlareLucideIcon icon={FLARE_CHROME_LUCIDE.person} size={26} color={c.primary} />
             </View>
             <View style={styles.accountIdentityTextCol}>
               <Text style={[styles.accountFirstName, { color: c.text }]}>{accountFirstName}</Text>
               <Text style={[styles.accountEmailLine, { color: c.textMuted }]}>{user.email || "Unknown user"}</Text>
             </View>
           </View>
-          <Ionicons
-            name="chevron-forward"
+          <FlareLucideIcon
+            icon={FLARE_CHROME_LUCIDE.forward}
             size={NAV_ROW_CHEVRON_SIZE}
             color={c.text}
-            accessibilityIgnoresInvertColors
           />
         </Pressable>
       </View>
@@ -4188,11 +4136,10 @@ function MainBottomTabBar({
       onPress={selectionChrome.onDelete}
       style={styles.bottomTabItem}
     >
-      <MaterialCommunityIcons
-        name="trash-can-outline"
-        size={23}
+      <FlareLucideIcon
+        icon={FLARE_TAB_LUCIDE.delete}
+        size={FLARE_TAB_LUCIDE_SIZE}
         color={selectionChrome.deleteDisabled ? colors.textMuted : c.destructiveFill}
-        accessibilityIgnoresInvertColors
       />
       <Text
         style={[
@@ -4204,19 +4151,41 @@ function MainBottomTabBar({
       </Text>
     </Pressable>
   ) : (
-    item("Account", ({ active }) => <Ionicons name={active ? "person-circle" : "person-circle-outline"} size={23} color={active ? colors.primary : colors.textMuted} />, "Account")
+    item(
+      "Account",
+      ({ active }) => (
+        <FlareLucideIcon
+          icon={FLARE_TAB_LUCIDE.account}
+          size={FLARE_TAB_LUCIDE_SIZE}
+          color={active ? colors.primary : colors.textMuted}
+        />
+      ),
+      "Account",
+    )
   );
 
   return (
     <View style={[styles.bottomTabBarWrap, { backgroundColor: c.screen, borderTopColor: c.cardBorder, paddingBottom: Math.max(insets.bottom, 10) }]}>
       {item(
         "Dashboard",
-        ({ active }) => <Ionicons name={active ? "home" : "home-outline"} size={23} color={active ? colors.primary : colors.textMuted} />,
+        ({ active }) => (
+          <FlareLucideIcon
+            icon={FLARE_TAB_LUCIDE.home}
+            size={FLARE_TAB_LUCIDE_SIZE}
+            color={active ? colors.primary : colors.textMuted}
+          />
+        ),
         "Home",
       )}
       {item(
         "Logs",
-        ({ active }) => <Ionicons name={active ? "list" : "list-outline"} size={23} color={active ? colors.primary : colors.textMuted} />,
+        ({ active }) => (
+          <FlareLucideIcon
+            icon={FLARE_TAB_LUCIDE.logs}
+            size={FLARE_TAB_LUCIDE_SIZE}
+            color={active ? colors.primary : colors.textMuted}
+          />
+        ),
         "Logs",
       )}
       {deleteSlot}
@@ -4586,7 +4555,7 @@ function AppTabs({
                 }}
                 style={styles.headerBackButton}
               >
-                <Ionicons name="chevron-back" size={24} color={colors.textMuted} />
+                <FlareLucideIcon icon={FLARE_CHROME_LUCIDE.back} size={24} color={colors.textMuted} />
               </Pressable>
             )
           : undefined,
@@ -4918,9 +4887,11 @@ function AppRoot() {
   const completeSignOut = useCallback(
     async (reason: SignOutReason = "logout") => {
       beginSignOutBlocking();
+      // Set the notice before clearing the session so we never paint Auth (FlareCare brand)
+      // or the branded splash between tabs and the logout success screen.
+      prepareSignOut(reason);
       try {
         await finishSignOut();
-        prepareSignOut(reason);
       } finally {
         endSignOutBlocking();
       }
@@ -4962,9 +4933,7 @@ function AppRoot() {
   }, [completeSignOut]);
 
   const content = useMemo(() => {
-    if (!fontsLoaded || loading || showSplash || !appearanceHydrated || signOutBlocking) {
-      return <SplashScreen showBrand={fontsLoaded && appearanceHydrated} />;
-    }
+    // Logout / delete success first — avoids a frame of branded splash or Auth lockup.
     if (signOutNotice) {
       const copy = SIGN_OUT_COPY[signOutNotice];
       return (
@@ -4976,6 +4945,13 @@ function AppRoot() {
           onPress={() => setSignOutNotice(null)}
         />
       );
+    }
+    // Blank cover while session clears (no FlareCare mark — that was the logout flash).
+    if (signOutBlocking) {
+      return <SplashScreen showBrand={false} />;
+    }
+    if (!fontsLoaded || loading || showSplash || !appearanceHydrated) {
+      return <SplashScreen showBrand={fontsLoaded && appearanceHydrated} />;
     }
     if (profileSetupActive) {
       return <ProfileSetupScreen user={user!} onComplete={(next) => setUser(next)} />;
@@ -5376,12 +5352,12 @@ const styles = StyleSheet.create({
   },
   /** Pill CTA — single-word label. */
   progressChip: {
-    paddingVertical: 6,
-    paddingHorizontal: HOME_TILE_GAP,
+    paddingVertical: 8,
+    paddingHorizontal: HOME_TILE_GAP + 4,
     borderRadius: 999,
   },
   progressChipLabel: {
-    fontSize: FLARE_FONT_SIZE.caption,
+    fontSize: 12,
     lineHeight: FLARE_LINE_HEIGHT.caption,
     fontFamily: FLARE_FONT_FAMILY.bold,
   },

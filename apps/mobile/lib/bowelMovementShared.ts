@@ -1,9 +1,9 @@
 import { LOG_HISTORY_LOAD_MORE_BATCH } from "./logHistoryConstants";
+import { FLARE_FEATURE_LUCIDE } from "./flareLucideIcons";
 import { TIME_PICKER_MINUTE_INTERVAL } from "./layoutConstants";
 import { supabase, TABLES } from "./supabase";
 
-/** MaterialCommunityIcons — no bowel/intestine glyph; `toilet` is the closest match in the set. */
-export const BOWEL_FEATURE_MCI_ICON = "toilet" as const;
+export const BOWEL_FEATURE_ICON = FLARE_FEATURE_LUCIDE.bowel;
 
 /** Tri-state form values — match web `bowel-movements/page.js`. */
 export type TriStateValue = "" | "skip" | "true" | "false";

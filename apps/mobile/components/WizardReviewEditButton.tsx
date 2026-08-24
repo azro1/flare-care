@@ -1,4 +1,4 @@
-import { Ionicons } from "@expo/vector-icons";
+import { FLARE_CHROME_LUCIDE, FlareLucideIcon } from "../lib/flareLucideIcons";
 import React from "react";
 import { Pressable, StyleSheet, Text } from "react-native";
 import {
@@ -27,7 +27,7 @@ export function WizardReviewEditButton({
       style={({ pressed }) => [styles.row, pressed && { opacity: 0.7 }]}
     >
       <Text style={[styles.label, { color: c.text }]}>Edit</Text>
-      <Ionicons name="chevron-forward" size={NAV_ROW_CHEVRON_SIZE} color={c.textMuted} accessibilityIgnoresInvertColors />
+      <FlareLucideIcon icon={FLARE_CHROME_LUCIDE.forward} size={NAV_ROW_CHEVRON_SIZE} color={c.textMuted} />
     </Pressable>
   );
 }

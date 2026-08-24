@@ -1,4 +1,4 @@
-import { Ionicons } from "@expo/vector-icons";
+import { FLARE_CHROME_LUCIDE, FlareLucideIcon } from "../lib/flareLucideIcons";
 import React from "react";
 import { StyleSheet, Text, View } from "react-native";
 import { initialWindowMetrics, SafeAreaView, useSafeAreaInsets } from "react-native-safe-area-context";
@@ -92,7 +92,7 @@ export function SuccessNoticeScreen({
 
   const card = (
     <View style={styles.card}>
-      <Ionicons name="checkmark-circle" size={72} color={c.primary} accessibilityIgnoresInvertColors />
+      <FlareLucideIcon icon={FLARE_CHROME_LUCIDE.checkCircle} size={72} color={c.primary} />
       <Text style={[styles.title, { color: c.text }]}>{title}</Text>
       <Text style={[styles.message, { color: c.textMuted }]}>{message}</Text>
       <View style={styles.actions}>

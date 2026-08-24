@@ -1,4 +1,4 @@
-import { Ionicons } from "@expo/vector-icons";
+import { FLARE_CHROME_LUCIDE, FlareLucideIcon } from "../lib/flareLucideIcons";
 import { useFocusEffect, useNavigation } from "@react-navigation/native";
 import React, { useCallback, useMemo, useState } from "react";
 import { Pressable, StyleSheet, Text, View } from "react-native";
@@ -27,7 +27,7 @@ import { formatUkDateShort } from "../lib/formatUkDate";
 import { rescheduleAppointmentNotificationsForUser } from "../lib/medicationNotifications";
 import { invalidateAllAppointmentCaches } from "../lib/appointmentCaches";
 import {
-  APPOINTMENTS_FEATURE_ION_ICON,
+  APPOINTMENTS_FEATURE_ICON,
   appointmentHasReminder,
   deleteAppointmentsForUser,
   getApptsListExpandedCount,
@@ -230,7 +230,7 @@ export function AppointmentsListPane({
           {listInitialLoad ? (
             <LogHistoryListLoading />
           ) : listEmpty ? (
-            <LogHistoryEmptyState icon={APPOINTMENTS_FEATURE_ION_ICON} iconFamily="ion" />
+            <LogHistoryEmptyState icon={APPOINTMENTS_FEATURE_ICON} />
           ) : (
             <LogHistoryPreviewList
               items={aptListItems}
@@ -259,7 +259,7 @@ export function AppointmentsListPane({
             style={({ pressed }) => [styles.summaryLink, pressed && { opacity: 0.85 }]}
           >
             <Text style={[styles.summaryLinkLabel, { color: c.text }]}>Appointment Summary</Text>
-            <Ionicons name="chevron-forward" size={NAV_ROW_CHEVRON_SIZE} color={c.textMuted} accessibilityIgnoresInvertColors />
+            <FlareLucideIcon icon={FLARE_CHROME_LUCIDE.forward} size={NAV_ROW_CHEVRON_SIZE} color={c.textMuted} />
           </Pressable>
         </View>
       ) : null}

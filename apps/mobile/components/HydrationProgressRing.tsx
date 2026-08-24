@@ -1,7 +1,7 @@
+import { FLARE_CHROME_LUCIDE, FlareLucideIcon } from "../lib/flareLucideIcons";
 import React, { useEffect, useRef } from "react";
 import { Animated, StyleSheet, Text, View } from "react-native";
 import Svg, { Circle } from "react-native-svg";
-import { Ionicons } from "@expo/vector-icons";
 import { FLARE_FONT_FAMILY, FLARE_FONT_SIZE, FLARE_LINE_HEIGHT } from "../lib/layoutConstants";
 import { useFlareColors } from "../theme";
 
@@ -86,7 +86,7 @@ export function HydrationProgressRing({
             <View style={[styles.innerDisc, { backgroundColor: c.primary, opacity: 0.1 }]} />
             <View style={styles.goalStack}>
               <View style={[styles.checkBadge, { backgroundColor: c.primary }]}>
-                <Ionicons name="checkmark" size={22} color={c.white} accessibilityIgnoresInvertColors />
+                <FlareLucideIcon icon={FLARE_CHROME_LUCIDE.check} size={22} color={c.white} />
               </View>
               <Text style={[styles.goalTitle, { color: c.text }]}>Goal met</Text>
               <Text style={[styles.goalCaption, { color: c.textMuted }]}>

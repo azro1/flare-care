@@ -1,5 +1,5 @@
+import { FLARE_CHROME_LUCIDE, FlareLucideIcon } from "../lib/flareLucideIcons";
 import DateTimePicker from "@react-native-community/datetimepicker";
-import { Ionicons } from "@expo/vector-icons";
 import { useFocusEffect, useNavigation, useRoute } from "@react-navigation/native";
 import React, { useCallback, useEffect, useLayoutEffect, useMemo, useRef, useState } from "react";
 import {
@@ -210,7 +210,7 @@ export function MedicalSuppliesSetupScreen({
           onPress={stepBack}
           style={{ paddingLeft: 4, paddingVertical: 4 }}
         >
-          <Ionicons name="chevron-back" size={24} color={c.textMuted} />
+          <FlareLucideIcon icon={FLARE_CHROME_LUCIDE.back} size={24} color={c.textMuted} />
         </Pressable>
       ),
     });
@@ -465,7 +465,7 @@ export function MedicalSuppliesSetupScreen({
               }}
               style={[styles.pickerPill, { backgroundColor: c.surfaceSubtle, borderColor: c.cardBorder }]}
             >
-              <Ionicons name="calendar-outline" size={FLARE_FONT_SIZE.sectionTitle} color={c.textSecondary} />
+              <FlareLucideIcon icon={FLARE_CHROME_LUCIDE.calendar} size={FLARE_FONT_SIZE.sectionTitle} color={c.textSecondary} />
               <Text style={[styles.pickerPillText, { color: nextDueDate ? c.text : c.textMuted }]}>
                 {nextDueDate ? formatUkDate(nextDueDate) : "Select date"}
               </Text>

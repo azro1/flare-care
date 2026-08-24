@@ -1,5 +1,5 @@
+import { FLARE_CHROME_LUCIDE, FlareLucideIcon } from "../lib/flareLucideIcons";
 import DateTimePicker from "@react-native-community/datetimepicker";
-import { Ionicons } from "@expo/vector-icons";
 import { useNavigation } from "@react-navigation/native";
 import React, { useCallback, useState } from "react";
 import {
@@ -186,7 +186,7 @@ export function AppointmentSheet({
             ]}
           >
             <Pressable accessibilityRole="button" accessibilityLabel="Close" onPress={onClose} hitSlop={12} style={styles.sheetClose}>
-              <Ionicons name="close" size={26} color={c.textMuted} />
+              <FlareLucideIcon icon={FLARE_CHROME_LUCIDE.close} size={26} color={c.textMuted} />
             </Pressable>
             <Text style={[styles.sheetTitle, { color: c.text }]}>{editingId ? "Edit appointment" : "Add appointment"}</Text>
             <View style={styles.sheetClose} />
@@ -211,7 +211,7 @@ export function AppointmentSheet({
                   }}
                   style={[styles.whenPill, { backgroundColor: c.surfaceSubtle, borderColor: c.cardBorder }]}
                 >
-                  <Ionicons name="calendar-outline" size={18} color={c.textSecondary} />
+                  <FlareLucideIcon icon={FLARE_CHROME_LUCIDE.calendar} size={18} color={c.textSecondary} />
                   <Text style={[styles.whenPillText, { color: form.date ? c.text : c.textMuted }]}>{form.date ? formatUkDate(form.date) : ""}</Text>
                 </Pressable>
               </View>
@@ -227,7 +227,7 @@ export function AppointmentSheet({
                   }}
                   style={[styles.whenPill, { backgroundColor: c.surfaceSubtle, borderColor: c.cardBorder }]}
                 >
-                  <Ionicons name="time-outline" size={18} color={c.textSecondary} />
+                  <FlareLucideIcon icon={FLARE_CHROME_LUCIDE.time} size={18} color={c.textSecondary} />
                   <Text style={[styles.whenPillText, { color: form.time ? c.text : c.textMuted }]}>{form.time || ""}</Text>
                 </Pressable>
               </View>
@@ -269,9 +269,9 @@ export function AppointmentSheet({
               onPress={() => setReminderPickerOpen(true)}
               style={[styles.whenPill, { backgroundColor: c.surfaceSubtle, borderColor: c.cardBorder }]}
             >
-              <Ionicons name="notifications-outline" size={18} color={c.textSecondary} />
+              <FlareLucideIcon icon={FLARE_CHROME_LUCIDE.notifications} size={18} color={c.textSecondary} />
               <Text style={[styles.whenPillText, { color: c.text }]}>{reminderLabel}</Text>
-              <Ionicons name="chevron-down" size={NAV_ROW_CHEVRON_SIZE} color={c.textMuted} />
+              <FlareLucideIcon icon={FLARE_CHROME_LUCIDE.down} size={NAV_ROW_CHEVRON_SIZE} color={c.textMuted} />
             </Pressable>
 
             {fieldError ? <Text style={[errTextStyle, styles.fieldError]}>{fieldError}</Text> : null}

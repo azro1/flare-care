@@ -245,8 +245,6 @@ export const INSTRUCTION_CARD_CLOSE_SIZE = 30;
 export const INSTRUCTION_CARD_TITLE_ICON_ALIGN_PAD = 6;
 /** Header icon in instruction cards — one size for Ion + MCI. */
 export const INSTRUCTION_CARD_ICON_SIZE = 22;
-/** MCI glyphs read larger than Ionicons at the same pt — scale inside the well to match. */
-export const INSTRUCTION_CARD_MCI_ICON_SCALE = 0.84;
 export const INSTRUCTION_CARD_CLOSE_ICON_SIZE = FLARE_FONT_SIZE.body;
 /** Top offset when floating over dashboard scroll (`dashboardWelcomeFloat`). */
 export const INSTRUCTION_CARD_FLOAT_TOP = SCREEN_EDGE_PADDING;

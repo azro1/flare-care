@@ -1,9 +1,10 @@
+import { FLARE_FEATURE_LUCIDE } from "./flareLucideIcons";
 import { LOG_HISTORY_LOAD_MORE_BATCH } from "./logHistoryConstants";
 import { TIME_PICKER_MINUTE_INTERVAL } from "./layoutConstants";
 import { supabase, TABLES } from "./supabase";
 import { sanitizeNotesMobile } from "./symptomWizardShared";
 
-export const APPOINTMENTS_FEATURE_ION_ICON = "calendar-outline" as const;
+export const APPOINTMENTS_FEATURE_ICON = FLARE_FEATURE_LUCIDE.appointments;
 
 export const APPOINTMENT_ADDED_ACTIVITY_TITLE = "Added new appointment";
 export const APPOINTMENT_UPDATED_ACTIVITY_TITLE = "Updated appointment";

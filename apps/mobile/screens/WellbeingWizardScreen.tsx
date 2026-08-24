@@ -1,6 +1,6 @@
-import { MaterialCommunityIcons } from "@expo/vector-icons";
 import { CommonActions, useNavigation, useRoute } from "@react-navigation/native";
 import React, { useCallback, useEffect, useLayoutEffect, useMemo, useState } from "react";
+import { FlareLucideIcon } from "../lib/flareLucideIcons";
 import {
   ActivityIndicator,
   BackHandler,
@@ -31,7 +31,7 @@ import {
   quickWellbeingFormState,
   SCALE_OPTIONS_MOOD,
   SCALE_OPTIONS_SEVERITY,
-  WELLBEING_MCI_ICON,
+  WELLBEING_ICON,
   wellbeingPayloadFromForm,
   type WellbeingFormState,
   type WellbeingScale,
@@ -383,7 +383,7 @@ export function WellbeingWizardScreen({ user }: { user: SessionUser }) {
                   },
                 ]}
               >
-                <MaterialCommunityIcons name={WELLBEING_MCI_ICON} size={28} color={c.primary} />
+                <FlareLucideIcon icon={WELLBEING_ICON} size={28} color={c.primary} />
               </View>
               <Text style={[styles.landingTitle, { color: c.text }]}>My Wellbeing</Text>
               <Text style={[styles.landingSub, { color: c.textMuted }]}>

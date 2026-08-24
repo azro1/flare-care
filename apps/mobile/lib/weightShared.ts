@@ -1,9 +1,10 @@
 import { LOG_HISTORY_LOAD_MORE_BATCH } from "./logHistoryConstants";
+import { FLARE_FEATURE_LUCIDE } from "./flareLucideIcons";
 import { supabase, TABLES } from "./supabase";
 import { sanitizeNotesMobile } from "./symptomWizardShared";
 import { todayYmd } from "./bowelMovementShared";
 
-export const WEIGHT_FEATURE_MCI_ICON = "scale-bathroom" as const;
+export const WEIGHT_FEATURE_ICON = FLARE_FEATURE_LUCIDE.weight;
 
 export type WeightRow = {
   id: number;

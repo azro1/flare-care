@@ -10,9 +10,9 @@ import {
   View,
   type ViewToken,
 } from "react-native";
-import { Ionicons, MaterialCommunityIcons } from "@expo/vector-icons";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { FLARE_BUTTON_MIN_HEIGHT, PrimaryButton } from "./FlareButton";
+import { FLARE_CHROME_LUCIDE, FlareLucideIcon } from "../lib/flareLucideIcons";
 import { NEW_USER_INTRO_SLIDES, type NewUserIntroSlide } from "../lib/newUserIntroCopy";
 import { FLARE_FONT_FAMILY, FULL_WIDTH_CTA_EDGE_PADDING, NAV_ROW_CHEVRON_SIZE, SCREEN_EDGE_PADDING } from "../lib/layoutConstants";
 import { useFlareColors } from "../theme";
@@ -75,11 +75,7 @@ export function NewUserIntroScreen({ onFinished }: { onFinished: () => void }) {
                       : null
                   }
                 >
-                  {item.icon.family === "mci" ? (
-                    <MaterialCommunityIcons name={item.icon.name} size={MEDIA_GLYPH_SIZE} color={c.primary} />
-                  ) : (
-                    <Ionicons name={item.icon.name} size={MEDIA_GLYPH_SIZE} color={c.primary} />
-                  )}
+                  <FlareLucideIcon icon={item.icon} size={MEDIA_GLYPH_SIZE} color={c.primary} />
                 </View>
               ) : null}
             </View>
@@ -167,7 +163,7 @@ export function NewUserIntroScreen({ onFinished }: { onFinished: () => void }) {
           ) : (
             <View style={styles.swipeHint} accessibilityRole="text" accessibilityLabel="Swipe to continue">
               <Text style={[styles.swipeHintText, { color: c.textMuted }]}>Swipe to continue</Text>
-              <Ionicons name="chevron-forward" size={NAV_ROW_CHEVRON_SIZE} color={c.textMuted} />
+              <FlareLucideIcon icon={FLARE_CHROME_LUCIDE.forward} size={NAV_ROW_CHEVRON_SIZE} color={c.textMuted} />
             </View>
           )}
         </View>

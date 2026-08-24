@@ -21,7 +21,7 @@ import { usePaginatedLogList } from "../lib/paginatedLogList";
 import { formatUkDate } from "../lib/formatUkDate";
 import { bottomTabBarHeight } from "../lib/layoutConstants";
 import {
-  WELLBEING_MCI_ICON,
+  WELLBEING_ICON,
   WELLBEING_LOG_TITLE,
   deleteWellbeingEntriesForUser,
   getWellbeingListCache,
@@ -139,7 +139,7 @@ export function WellbeingScreen({ user }: { user: SessionUser }) {
           {listInitialLoad ? (
             <LogHistoryListLoading />
           ) : historyEmpty ? (
-            <LogHistoryEmptyState icon={WELLBEING_MCI_ICON} iconFamily="mci" />
+            <LogHistoryEmptyState icon={WELLBEING_ICON} />
           ) : (
             <LogHistoryPreviewList
               items={historyRows.map((row) =>

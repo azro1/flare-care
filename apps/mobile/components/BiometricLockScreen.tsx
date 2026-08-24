@@ -1,4 +1,4 @@
-import { Ionicons } from "@expo/vector-icons";
+import { FLARE_CHROME_LUCIDE, FlareLucideIcon } from "../lib/flareLucideIcons";
 import React, { useCallback, useEffect, useRef, useState } from "react";
 import { AppState, Pressable, StyleSheet, Text, View } from "react-native";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
@@ -70,7 +70,7 @@ export function BiometricLockScreen({
     >
       <View style={styles.center}>
         <View style={[styles.lockDisc, { backgroundColor: c.surfaceSubtle }]}>
-          <Ionicons name="lock-closed" size={34} color={c.primary} accessibilityIgnoresInvertColors />
+          <FlareLucideIcon icon={FLARE_CHROME_LUCIDE.lock} size={34} color={c.primary} />
         </View>
         <Text style={[styles.title, { color: c.text }]}>FlareCare is locked</Text>
         <Text style={[styles.subtitle, { color: c.textMuted }]}>Unlock to access your account.</Text>
@@ -89,11 +89,10 @@ export function BiometricLockScreen({
               { backgroundColor: c.surfaceSubtle, opacity: busy ? 0.6 : 1 },
             ]}
           >
-            <Ionicons
-              name="finger-print"
+            <FlareLucideIcon
+              icon={FLARE_CHROME_LUCIDE.fingerprint}
               size={34}
               color={c.primary}
-              accessibilityIgnoresInvertColors
             />
           </View>
           <Text style={[styles.unlockLabel, { color: c.textMuted }]}>

@@ -1,11 +1,7 @@
-/**
- * Dashboard / feature icons — MaterialCommunityIcons only (@expo/vector-icons).
- *
- * **My Meds** — user's prescribed medication list (GP / hospital team).
- * **Track Medications** — wizard for missed prescribed meds, NSAIDs, antibiotics (`log_medications`).
- * These flows are separate; icons must stay distinct.
- */
-export const MY_MEDS_MCI_ICON = "pill" as const;
+import { FLARE_FEATURE_LUCIDE } from "./flareLucideIcons";
 
-/** Adherence logging — chart/patterns (matches web track page `ChartLine`); not the prescribed-med list. */
-export const TRACK_MEDICATIONS_MCI_ICON = "chart-line" as const;
+/** User's prescribed medication list (GP / hospital team). */
+export const MY_MEDS_ICON = FLARE_FEATURE_LUCIDE.meds;
+
+/** Adherence logging; distinct from the prescribed-medication list. */
+export const TRACK_MEDICATIONS_ICON = FLARE_FEATURE_LUCIDE.trackMeds;

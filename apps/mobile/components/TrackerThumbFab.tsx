@@ -1,4 +1,4 @@
-import { Ionicons } from "@expo/vector-icons";
+import { FLARE_CHROME_LUCIDE, FlareLucideIcon } from "../lib/flareLucideIcons";
 import { Platform, Pressable, StyleSheet } from "react-native";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 import {
@@ -53,7 +53,7 @@ export function TrackerThumbFab({
         },
       ]}
     >
-      <Ionicons name="add" size={30} color={c.white} accessibilityIgnoresInvertColors />
+      <FlareLucideIcon icon={FLARE_CHROME_LUCIDE.add} size={30} color={c.white} />
     </Pressable>
   );
 }

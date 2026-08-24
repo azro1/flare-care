@@ -1,4 +1,4 @@
-import { Ionicons, MaterialCommunityIcons } from "@expo/vector-icons";
+import { FLARE_CHROME_LUCIDE, FlareLucideIcon } from "../lib/flareLucideIcons";
 import { useFocusEffect, useNavigation, useRoute } from "@react-navigation/native";
 import React, { useCallback, useLayoutEffect, useRef, useState } from "react";
 import { ActivityIndicator, Pressable, StyleSheet, Text, View } from "react-native";
@@ -41,7 +41,7 @@ function DetailEditHeaderButton({ onPress, disabled }: { onPress: () => void; di
   const c = useFlareColors();
   return (
     <Pressable accessibilityRole="button" accessibilityLabel="Edit entry" onPress={onPress} disabled={disabled} hitSlop={10} style={styles.headerIconBtn}>
-      <Ionicons name="create-outline" size={22} color={c.textMuted} accessibilityIgnoresInvertColors />
+      <FlareLucideIcon icon={FLARE_CHROME_LUCIDE.edit} size={22} color={c.textMuted} />
     </Pressable>
   );
 }
@@ -50,7 +50,7 @@ function DetailDeleteHeaderButton({ onPress, disabled }: { onPress: () => void; 
   const c = useFlareColors();
   return (
     <Pressable accessibilityRole="button" accessibilityLabel="Delete entry" onPress={onPress} disabled={disabled} hitSlop={10} style={styles.headerIconBtn}>
-      <MaterialCommunityIcons name="trash-can-outline" size={22} color={c.textMuted} accessibilityIgnoresInvertColors />
+      <FlareLucideIcon icon={FLARE_CHROME_LUCIDE.delete} size={22} color={c.textMuted} />
     </Pressable>
   );
 }

@@ -1,4 +1,3 @@
-import { Ionicons } from "@expo/vector-icons";
 import React from "react";
 import {
   Pressable,
@@ -13,6 +12,7 @@ import {
   type ViewStyle,
 } from "react-native";
 import { FLARE_BUTTON_BORDER_RADIUS } from "./FlareButton";
+import { FLARE_CHROME_LUCIDE, FlareLucideIcon } from "../lib/flareLucideIcons";
 import type { FlareColors } from "../theme";
 import { useFlareColors } from "../theme";
 
@@ -116,17 +116,17 @@ export function FlareInputTrigger({
 }: PressableProps & {
   children: React.ReactNode;
   onPrimary?: boolean;
-  /** Leading Ionicons glyph for date/time pickers (wizards, forms). */
+  /** Leading Lucide glyph for date/time pickers (wizards, forms). */
   pickerIcon?: "date" | "time";
 }) {
   const c = useFlareColors();
   const theme = flareInputThemeColors(c, onPrimary);
-  const iconName = pickerIcon === "date" ? "calendar-outline" : pickerIcon === "time" ? "time-outline" : null;
+  const icon = pickerIcon === "date" ? FLARE_CHROME_LUCIDE.calendar : pickerIcon === "time" ? FLARE_CHROME_LUCIDE.time : null;
   return (
     <Pressable style={[flareInputStyles.trigger, theme, style]} {...props}>
-      {iconName ? (
+      {icon ? (
         <View style={flareInputStyles.triggerRow}>
-          <Ionicons name={iconName} size={18} color={c.textSecondary} accessibilityIgnoresInvertColors />
+          <FlareLucideIcon icon={icon} size={18} color={c.textSecondary} />
           {children}
         </View>
       ) : (

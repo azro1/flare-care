@@ -1,4 +1,4 @@
-import { Ionicons } from "@expo/vector-icons";
+import { FLARE_CHROME_LUCIDE, FlareLucideIcon } from "../lib/flareLucideIcons";
 import React, { useCallback, useEffect, useState } from "react";
 import { Pressable, StyleSheet, Text, View } from "react-native";
 import { logHistoryCardStyles } from "./LogHistoryList";
@@ -44,10 +44,10 @@ export function HubTipCard({ tipId, message }: { tipId: string; message: string 
           onPress={onDismiss}
           style={styles.closeHit}
         >
-          <Ionicons name="close" size={16} color={c.textMuted} />
+          <FlareLucideIcon icon={FLARE_CHROME_LUCIDE.close} size={16} color={c.textMuted} />
         </Pressable>
         <View style={styles.body}>
-          <Ionicons name="information-circle-outline" size={20} color={c.primary} />
+          <FlareLucideIcon icon={FLARE_CHROME_LUCIDE.info} size={20} color={c.primary} />
           <Text style={[styles.message, { color: c.textMuted }]}>{message}</Text>
         </View>
       </View>

@@ -1,6 +1,7 @@
 import { supabase, TABLES } from "./supabase";
+import { FLARE_FEATURE_LUCIDE } from "./flareLucideIcons";
 
-export const WELLBEING_MCI_ICON = "heart-pulse" as const;
+export const WELLBEING_ICON = FLARE_FEATURE_LUCIDE.wellbeing;
 
 /** History row + detail header title (matches Symptom/Medication Log naming). */
 export const WELLBEING_LOG_TITLE = "Wellbeing Log";

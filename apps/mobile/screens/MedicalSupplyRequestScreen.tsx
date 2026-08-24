@@ -1,5 +1,5 @@
+import { FLARE_CHROME_LUCIDE, FlareLucideIcon } from "../lib/flareLucideIcons";
 import * as Clipboard from "expo-clipboard";
-import { Ionicons } from "@expo/vector-icons";
 import { useFocusEffect, useNavigation, useRoute } from "@react-navigation/native";
 import React, { useCallback, useState } from "react";
 import {
@@ -310,7 +310,7 @@ export function MedicalSupplyRequestScreen({ user }: { user: SessionUser }) {
                 <Text style={[styles.orderPickerText, { color: kit?.name ? c.text : c.textMuted }]} numberOfLines={1}>
                   {kit?.name || "Select order"}
                 </Text>
-                <Ionicons name="chevron-down" size={NAV_ROW_CHEVRON_SIZE} color={c.textMuted} />
+                <FlareLucideIcon icon={FLARE_CHROME_LUCIDE.down} size={NAV_ROW_CHEVRON_SIZE} color={c.textMuted} />
               </View>
             </FlareInputTrigger>
 

@@ -1,9 +1,9 @@
-import { Ionicons } from "@expo/vector-icons";
 import React, { useMemo, useState } from "react";
 import { Modal, Pressable, StyleSheet, Text, View } from "react-native";
 import { showFlareAlert } from "../components/FlareAlertHost";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { FLARE_FONT_FAMILY } from "../lib/layoutConstants";
+import { FLARE_CHROME_LUCIDE, FlareLucideIcon } from "../lib/flareLucideIcons";
 import { useFlareColors } from "../theme";
 
 type OverflowItem = {
@@ -74,12 +74,7 @@ export function HeaderOverflowMenu({
         style={styles.trigger}
         hitSlop={{ top: 10, bottom: 10, left: 20, right: 6 }}
       >
-        <Ionicons
-          name="ellipsis-vertical"
-          size={20}
-          color={c.text}
-          accessibilityIgnoresInvertColors
-        />
+        <FlareLucideIcon icon={FLARE_CHROME_LUCIDE.overflow} size={20} color={c.text} />
       </Pressable>
       <Modal visible={open} transparent animationType="fade" onRequestClose={close}>
         <View style={styles.modalRoot}>

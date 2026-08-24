@@ -1,4 +1,4 @@
-import { Ionicons } from "@expo/vector-icons";
+import { FLARE_CHROME_LUCIDE, FlareLucideIcon } from "../lib/flareLucideIcons";
 import React, { useEffect, useRef } from "react";
 import { Animated, InteractionManager } from "react-native";
 
@@ -44,13 +44,12 @@ export function WriggleReminderBell({ color }: { color: string }) {
 
   return (
     <Animated.View style={{ transform: [{ rotate: wiggle }] }}>
-      <Ionicons
-        name="notifications"
+      <FlareLucideIcon
+        icon={FLARE_CHROME_LUCIDE.notifications}
         size={14}
         color={color}
         accessibilityElementsHidden
         importantForAccessibility="no"
-        accessibilityIgnoresInvertColors
       />
     </Animated.View>
   );

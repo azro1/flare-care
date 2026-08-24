@@ -1,9 +1,9 @@
+import { FLARE_CHROME_LUCIDE, FlareLucideIcon } from "../lib/flareLucideIcons";
 /**
  * Progress-over-time graph (area/line + compact period dropdown).
  * Kept for a future Trends screen — not wired into the Activity sheet.
  * Pair with `lib/progressGraphShared.ts`.
  */
-import { Ionicons } from "@expo/vector-icons";
 import React, { useEffect, useMemo, useState } from "react";
 import { ActivityIndicator, LayoutChangeEvent, Pressable, StyleSheet, Text, View } from "react-native";
 import Svg, { Circle, Defs, LinearGradient, Path, Stop } from "react-native-svg";
@@ -139,7 +139,7 @@ export function ProgressOverTimeGraph({
             <Text style={[styles.periodFieldText, { color: c.text }]} numberOfLines={1}>
               {periodLabel}
             </Text>
-            <Ionicons name="chevron-down" size={NAV_ROW_CHEVRON_SIZE} color={c.textMuted} />
+            <FlareLucideIcon icon={FLARE_CHROME_LUCIDE.down} size={NAV_ROW_CHEVRON_SIZE} color={c.textMuted} />
           </Pressable>
           <Text style={[styles.avgLine, { color: c.textSecondary }]} numberOfLines={1}>
             {loading ? "Loading…" : error ? error : `Average ${avg}% over this period`}

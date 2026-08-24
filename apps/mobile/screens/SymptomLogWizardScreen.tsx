@@ -1,5 +1,5 @@
+import { FLARE_CHROME_LUCIDE, FLARE_FEATURE_LUCIDE, FlareLucideIcon } from "../lib/flareLucideIcons";
 import DateTimePicker from "@react-native-community/datetimepicker";
-import { Ionicons, MaterialCommunityIcons } from "@expo/vector-icons";
 import AsyncStorage from "@react-native-async-storage/async-storage";
 import { CommonActions, useNavigation, useRoute } from "@react-navigation/native";
 import React, { useCallback, useEffect, useLayoutEffect, useMemo, useState } from "react";
@@ -486,7 +486,7 @@ export function SymptomLogWizardScreen({ user }: { user: SessionUser }) {
                 onPress={() => removeMealRow(meal, i)}
                 style={[styles.mealRemoveBtn, { backgroundColor: c.primary }]}
               >
-                <Ionicons name="close" size={14} color={c.white} />
+                <FlareLucideIcon icon={FLARE_CHROME_LUCIDE.close} size={14} color={c.white} />
               </Pressable>
             ) : null}
           </View>
@@ -584,8 +584,8 @@ export function SymptomLogWizardScreen({ user }: { user: SessionUser }) {
                 },
               ]}
             >
-              <MaterialCommunityIcons
-                name="thermometer"
+              <FlareLucideIcon
+                icon={FLARE_FEATURE_LUCIDE.symptoms}
                 size={28}
                 color={c.isDark ? "#34d399" : "#059669"}
               />

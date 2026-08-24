@@ -1,5 +1,5 @@
+import { FLARE_CHROME_LUCIDE, FlareLucideIcon } from "../lib/flareLucideIcons";
 import DateTimePicker from "@react-native-community/datetimepicker";
-import { Ionicons, MaterialCommunityIcons } from "@expo/vector-icons";
 import AsyncStorage from "@react-native-async-storage/async-storage";
 import { CommonActions, useNavigation, useRoute } from "@react-navigation/native";
 import React, { useCallback, useEffect, useLayoutEffect, useMemo, useState } from "react";
@@ -46,7 +46,7 @@ import {
   type MedicationReviewSectionId,
   type MedicationWizardHistoryEntry,
 } from "../lib/medicationWizardShared";
-import { TRACK_MEDICATIONS_MCI_ICON } from "../lib/medicationFeatureIcons";
+import { TRACK_MEDICATIONS_ICON } from "../lib/medicationFeatureIcons";
 import { useFlareColors } from "../theme";
 import { FULL_WIDTH_CTA_EDGE_PADDING } from "../lib/layoutConstants";
 
@@ -443,7 +443,7 @@ export function MedicationTrackingWizardScreen({ user }: { user: SessionUser }) 
                   onPress={() => removeListRow(kind, i)}
                   style={[styles.listRemoveBtn, { backgroundColor: c.primary }]}
                 >
-                  <Ionicons name="close" size={14} color={c.white} />
+                  <FlareLucideIcon icon={FLARE_CHROME_LUCIDE.close} size={14} color={c.white} />
                 </Pressable>
               ) : null}
             </View>
@@ -547,7 +547,7 @@ export function MedicationTrackingWizardScreen({ user }: { user: SessionUser }) 
                 },
               ]}
             >
-              <MaterialCommunityIcons name={TRACK_MEDICATIONS_MCI_ICON} size={28} color={c.primary} />
+              <FlareLucideIcon icon={TRACK_MEDICATIONS_ICON} size={28} color={c.primary} />
             </View>
             <Text style={[styles.landingTitle, { color: c.text }]}>Track Medications</Text>
             <Text style={[styles.landingSub, { color: c.textMuted }]}>

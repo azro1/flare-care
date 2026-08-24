@@ -1,5 +1,5 @@
+import { FLARE_CHROME_LUCIDE, FlareLucideIcon } from "../lib/flareLucideIcons";
 import DateTimePicker from "@react-native-community/datetimepicker";
-import { Ionicons, MaterialCommunityIcons } from "@expo/vector-icons";
 import { useFocusEffect, useNavigation } from "@react-navigation/native";
 import React, { useCallback, useEffect, useMemo, useState } from "react";
 import {
@@ -35,7 +35,7 @@ import { WriggleReminderBell } from "../components/WriggleReminderBell";
 import { invalidateDashboardSnapshot } from "../lib/dashboardSnapshotCache";
 import { recordRecentActivityEvent } from "../lib/recentActivityEvents";
 import { useLogListSelection } from "../lib/useLogListSelection";
-import { MY_MEDS_MCI_ICON } from "../lib/medicationFeatureIcons";
+import { MY_MEDS_ICON } from "../lib/medicationFeatureIcons";
 import { rescheduleLocalRemindersIfGranted } from "../lib/medicationNotifications";
 import {
   emptyMedicationFormState,
@@ -159,7 +159,7 @@ export function MedicationSheet({
         >
           <View style={[styles.sheetHeader, { borderBottomColor: c.cardBorder, paddingTop: Math.max(insets.top, 12) }]}>
             <Pressable accessibilityRole="button" accessibilityLabel="Close" onPress={onClose} hitSlop={12} style={styles.sheetClose}>
-              <Ionicons name="close" size={26} color={c.textMuted} />
+              <FlareLucideIcon icon={FLARE_CHROME_LUCIDE.close} size={26} color={c.textMuted} />
             </Pressable>
             <Text style={[styles.sheetTitle, { color: c.text }]}>{editingId ? "Edit medication" : "Add medication"}</Text>
             <View style={styles.sheetClose} />
@@ -207,7 +207,7 @@ export function MedicationSheet({
                   ? form.frequency
                   : form.frequency || "Select frequency"}
               </Text>
-              <Ionicons name="chevron-down" size={NAV_ROW_CHEVRON_SIZE} color={c.textMuted} />
+              <FlareLucideIcon icon={FLARE_CHROME_LUCIDE.down} size={NAV_ROW_CHEVRON_SIZE} color={c.textMuted} />
             </Pressable>
             {form.frequencyMode === "custom" && customFrequencyEditing ? (
               <FlareTextInput
@@ -237,7 +237,7 @@ export function MedicationSheet({
               }}
               style={[styles.pickerPill, { backgroundColor: c.surfaceSubtle, borderColor: c.cardBorder }]}
             >
-              <Ionicons name="time-outline" size={18} color={c.textSecondary} />
+              <FlareLucideIcon icon={FLARE_CHROME_LUCIDE.time} size={18} color={c.textSecondary} />
               <Text style={[styles.pickerPillText, { color: form.timeOfDay ? c.text : c.textMuted }]}>
                 {form.timeOfDay ? formatMedicationReminderTime(form.timeOfDay) : "Select time"}
               </Text>
@@ -508,7 +508,7 @@ export function MedicationsScreen({ user }: { user: SessionUser }) {
           {loading && meds.length === 0 ? (
             <LogHistoryListLoading />
           ) : meds.length === 0 ? (
-            <LogHistoryEmptyState icon={MY_MEDS_MCI_ICON} />
+            <LogHistoryEmptyState icon={MY_MEDS_ICON} />
           ) : (
             <LogHistoryPreviewList
               items={medListItems}
