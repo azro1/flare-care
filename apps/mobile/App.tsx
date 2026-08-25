@@ -572,10 +572,17 @@ function authLockupTopSpacer(windowHeight: number): number {
 function AuthScreen({
   onSignedIn,
   onAuthBusy,
+  onBeginSessionHandoff,
+  onCancelSessionHandoff,
 }: {
-  onSignedIn: (u: SessionUser) => void;
+  /** Optional handoff skips the post-auth splash blink (intro already resolved). */
+  onSignedIn: (u: SessionUser, handoff?: { newUserIntroPending: boolean }) => void;
   /** Hide login while OAuth completes after browser closes (avoids flash). */
   onAuthBusy?: (busy: boolean) => void;
+  /** Ignore onAuthStateChange setUser until onSignedIn finishes (prevents splash blink). */
+  onBeginSessionHandoff?: () => void;
+  /** Clear handoff guard if sign-in aborts after the session was created. */
+  onCancelSessionHandoff?: () => void;
 }) {
   const cAuth = useFlareColors();
   const insets = useSafeAreaInsets();
@@ -691,6 +698,31 @@ function AuthScreen({
     ]);
   };
 
+  const finishAuthAsSignedIn = useCallback(
+    async (authUser: {
+      id: string;
+      email?: string | null;
+      created_at?: string | null;
+      user_metadata?: Record<string, unknown> | null;
+      identities?: { provider: string }[] | null;
+      app_metadata?: Record<string, unknown> | null;
+    }) => {
+      await setAuthLegalAccepted(true);
+      if (isNewAuthUser(authUser)) {
+        await markNewAccountInstructionTipsEligible(authUser.id);
+      }
+      const sessionUser = sessionUserFromSupabaseAuthUser(authUser);
+      // Resolve intro before leaving Auth so AppRoot can mount welcome in the same paint —
+      // no intermediate splash blink between verification and the first welcome slide.
+      const newUserIntroPending = await resolveNewUserIntroPending(
+        sessionUser.id,
+        sessionUser.accountCreatedAt,
+      );
+      onSignedIn(sessionUser, { newUserIntroPending });
+    },
+    [onSignedIn],
+  );
+
   const verifyOtpCode = async () => {
     const trimmed = otpCode.trim();
     if (!/^\d{6}$/.test(trimmed)) {
@@ -706,6 +738,7 @@ function AuthScreen({
       return;
     }
     setActiveAuthAction("code");
+    onBeginSessionHandoff?.();
     const { data, error } = await supabase.auth.verifyOtp({
       email,
       token: trimmed,
@@ -713,17 +746,24 @@ function AuthScreen({
     });
     setActiveAuthAction(null);
     if (error) {
+      onCancelSessionHandoff?.();
       showFlareAlert("Code verification failed", otpVerifyErrorMessage(error.message));
       return;
     }
     clearOtpSession();
     const user = data.user;
     if (user) {
-      await setAuthLegalAccepted(true);
-      if (isNewAuthUser(user)) {
-        await markNewAccountInstructionTipsEligible(user.id);
+      try {
+        await finishAuthAsSignedIn(user);
+      } catch (e) {
+        onCancelSessionHandoff?.();
+        showFlareAlert(
+          "Sign in failed",
+          e instanceof Error ? e.message : "Something went wrong. Please try again.",
+        );
       }
-      onSignedIn(sessionUserFromSupabaseAuthUser(user));
+    } else {
+      onCancelSessionHandoff?.();
     }
   };
 
@@ -747,6 +787,7 @@ function AuthScreen({
     const result = await WebBrowser.openAuthSessionAsync(data.url, redirectTo);
     if (result.type === "success" && result.url) {
       onAuthBusy?.(true);
+      onBeginSessionHandoff?.();
       try {
         // Supabase may return either ?code=... or #access_token=...&refresh_token=...
         const parsedUrl = new URL(result.url);
@@ -768,20 +809,17 @@ function AuthScreen({
         const { data: sessionData } = await supabase.auth.getSession();
         const sessionUser = sessionData.session?.user;
         if (sessionUser) {
-          await setAuthLegalAccepted(true);
-          if (isNewAuthUser(sessionUser)) {
-            await markNewAccountInstructionTipsEligible(sessionUser.id);
-          }
-          // Drop the OAuth cover before handing off — session is live; AppRoot shows splash only
-          // while intro/bio resolve, then Dashboard. Leaving authBusy true until after onSignedIn
-          // raced with that resolve on Android (stuck splash after Google return).
+          // Keep the plain cover up until handoff finishes. Clearing authBusy here painted Auth
+          // for a frame (blink) while intro was still resolving.
+          await finishAuthAsSignedIn(sessionUser);
           onAuthBusy?.(false);
-          onSignedIn(sessionUserFromSupabaseAuthUser(sessionUser));
         } else {
+          onCancelSessionHandoff?.();
           onAuthBusy?.(false);
           showFlareAlert("Google sign in incomplete", "No session returned. Please try again.");
         }
       } catch (e) {
+        onCancelSessionHandoff?.();
         onAuthBusy?.(false);
         showFlareAlert(
           "Google sign in failed",
@@ -826,9 +864,15 @@ function AuthScreen({
       showFlareAlert("Couldn't unlock", "Please sign in again to continue.");
       return;
     }
-    onSignedIn(sessionUserFromSupabaseAuthUser(sessionUser));
-    void setAuthLegalAccepted(true);
-  }, [onSignedIn]);
+    onBeginSessionHandoff?.();
+    onAuthBusy?.(true);
+    try {
+      await finishAuthAsSignedIn(sessionUser);
+    } catch {
+      onCancelSessionHandoff?.();
+    }
+    onAuthBusy?.(false);
+  }, [finishAuthAsSignedIn, onAuthBusy, onBeginSessionHandoff, onCancelSessionHandoff]);
 
   useEffect(() => {
     let cancelled = false;
@@ -3966,6 +4010,7 @@ function AccountScreen({
     if (deleteAccountInFlight.current) return;
     deleteAccountInFlight.current = true;
     setDeleteAccountConfirmOpen(false);
+    // Cover the app while the delete RPC runs (blank, not Auth/dashboard).
     beginSignOutBlocking();
     try {
       const { error } = await supabase.rpc("delete_user_account");
@@ -3975,6 +4020,7 @@ function AccountScreen({
         return;
       }
       const deletedUserId = user.id;
+      // Set notice before session teardown so the next paint is SuccessNotice — not Auth.
       prepareSignOut("account_deleted");
       await finishSignOut();
       await clearRememberedSession();
@@ -4695,6 +4741,8 @@ function AppRoot() {
   const [bioLabel, setBioLabel] = useState("biometrics");
   /** null = still checking; true = show post-login intro before dashboard. */
   const [newUserIntroPending, setNewUserIntroPending] = useState<boolean | null>(null);
+  /** While Auth finishes OTP/Google handoff, ignore onAuthStateChange setUser (prevents splash blink). */
+  const authSessionHandoffRef = useRef(false);
   const [fontsLoaded] = useFonts({
     Inter_400Regular,
     Inter_500Medium,
@@ -4729,10 +4777,13 @@ function AppRoot() {
       const next = session?.user;
       if (next) {
         setSignOutNotice(null);
+        // AuthScreen owns setUser during OTP/Google handoff — applying the session here first
+        // forced a splash frame (pending still null) before welcome.
+        if (authSessionHandoffRef.current) return;
         // Do not touch newUserIntroPending here. Google OAuth often fires SIGNED_IN during
         // exchangeCodeForSession *before* AuthScreen.onSignedIn; if we null pending after the
         // user.id effect already resolved to false, splash sticks forever (effect won't re-run).
-        // The user.id effect owns null → resolve.
+        // The user.id effect owns null → resolve for cold start / non-handoff paths.
         setUser(sessionUserFromSupabaseAuthUser(next));
       } else {
         setUser(null);
@@ -4771,9 +4822,8 @@ function AppRoot() {
       setAppShellReady(false);
       return;
     }
-    // Must be null until resolve finishes — `false` from a prior logout would mount AppTabs and
-    // flash the absolute bottom nav before the welcome intro.
-    setNewUserIntroPending(null);
+    // Do not set newUserIntroPending(null) here. Auth handoff may already have set true so we
+    // can paint welcome immediately; clearing it first causes a splash blink (Auth → blank → welcome).
     const userId = user.id;
     const accountCreatedAt = user.accountCreatedAt;
     (async () => {
@@ -4957,7 +5007,7 @@ function AppRoot() {
       return <ProfileSetupScreen user={user!} onComplete={(next) => setUser(next)} />;
     }
     if (user && (bioEnabled === null || newUserIntroPending === null)) {
-      // Still resolving lock / intro state — keep the splash so we never flash the app first.
+      // Cold start / rare path still resolving — keep cover so we never flash tabs first.
       return <SplashScreen />;
     }
     if (user && newUserIntroPending) {
@@ -4987,18 +5037,30 @@ function AppRoot() {
       );
     }
     if (authBusy) {
-      return <SplashScreen />;
+      // Same screen colour as welcome — branded splash between Google return and intro reads as a blink.
+      return <SplashScreen showBrand={false} />;
     }
     return (
       <AuthScreen
-        onSignedIn={(next) => {
+        onBeginSessionHandoff={() => {
+          authSessionHandoffRef.current = true;
+        }}
+        onCancelSessionHandoff={() => {
+          authSessionHandoffRef.current = false;
+        }}
+        onSignedIn={(next, handoff) => {
           // Re-arm auto-refresh in case a prior "remembered" logout froze it (see finishSignOut).
           supabase.auth.startAutoRefresh();
           setSignOutNotice(null);
-          // Do not setNewUserIntroPending(null) here. Google often applies the session (and the
-          // user.id intro effect may already have resolved) before this callback runs; re-nulling
-          // sticks the post-login splash forever because the effect does not re-run for the same id.
+          // Fresh in-app sign-in never auto-locks; set bio off in the same paint as user + intro
+          // so we don't sit on Splash while bioEnabled is still null.
+          setBioEnabled(false);
+          setLocked(false);
+          if (handoff) {
+            setNewUserIntroPending(handoff.newUserIntroPending);
+          }
           setUser(next);
+          authSessionHandoffRef.current = false;
         }}
         onAuthBusy={setAuthBusy}
       />

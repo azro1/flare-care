@@ -1,5 +1,7 @@
-import React, { useCallback, useRef, useState } from "react";
+import React, { useCallback, useEffect, useRef, useState } from "react";
 import {
+  Animated,
+  Easing,
   FlatList,
   NativeScrollEvent,
   NativeSyntheticEvent,
@@ -12,30 +14,91 @@ import {
 } from "react-native";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { FLARE_BUTTON_MIN_HEIGHT, PrimaryButton } from "./FlareButton";
-import { FLARE_CHROME_LUCIDE, FlareLucideIcon } from "../lib/flareLucideIcons";
+import { FlareLucideIcon } from "../lib/flareLucideIcons";
 import { NEW_USER_INTRO_SLIDES, type NewUserIntroSlide } from "../lib/newUserIntroCopy";
-import { FLARE_FONT_FAMILY, FULL_WIDTH_CTA_EDGE_PADDING, NAV_ROW_CHEVRON_SIZE, SCREEN_EDGE_PADDING } from "../lib/layoutConstants";
+import { FLARE_FONT_FAMILY, FULL_WIDTH_CTA_EDGE_PADDING } from "../lib/layoutConstants";
 import { useFlareColors } from "../theme";
 
-/** Shared media band — all slides use the same icon size. */
+/** Shared media band — disc stays 72; smaller glyph for clear inset. */
 const MEDIA_SIZE = 72;
-const MEDIA_GLYPH_SIZE = 56;
-/** Fixed top inset — must not track pager height, or lifting the footer pulls slide content up. */
-const SLIDE_CONTENT_TOP = 96;
-/** Extra space under dots/CTA (on top of safe-area). */
-const FOOTER_LIFT = 56;
+const MEDIA_GLYPH_SIZE = 40;
+/**
+ * Title size for new-user intro slides.
+ * Welcome (first slide) is one step larger; change INTRO_SLIDE_TITLE_SIZE to scale both.
+ */
+const INTRO_SLIDE_TITLE_SIZE = 21;
+const WELCOME_SLIDE_TITLE_SIZE = INTRO_SLIDE_TITLE_SIZE + 1;
+/** Top padding above the icon/title stack on each intro slide. */
+const SLIDE_CONTENT_TOP = 72;
+/** Matches `contentBlock.gap` — keep in sync. */
+const INTRO_COPY_STACK_GAP = 26;
+/** Matches `mediaSlot.marginBottom` — keep in sync. */
+const INTRO_MEDIA_MARGIN_BOTTOM = 10;
+/** Support line-height × typical two lines on the welcome slide. */
+const INTRO_SUPPORT_BLOCK_HEIGHT = 26 * 2;
+/**
+ * Fixed Y for page dots — derived from layout constants (not onLayout).
+ * Measuring after paint made the dots slide up on first land.
+ */
+const INTRO_COPY_STACK_HEIGHT =
+  MEDIA_SIZE +
+  INTRO_MEDIA_MARGIN_BOTTOM +
+  INTRO_COPY_STACK_GAP +
+  (WELCOME_SLIDE_TITLE_SIZE + 6) +
+  INTRO_COPY_STACK_GAP +
+  INTRO_SUPPORT_BLOCK_HEIGHT;
+const DOTS_TOP = SLIDE_CONTENT_TOP + INTRO_COPY_STACK_HEIGHT + 28;
+const DOT_SIZE = 8;
+/** Active page indicator stretches into a short pill. */
+const DOT_ACTIVE_WIDTH = 22;
+/** Extra padding under Skip (above safe-area) — lifts CTAs into the thumb zone. */
+const FOOTER_PAD = 64;
 
 /**
  * One-time swipe intro after sign-up — what FlareCare can do for you.
- * Skip anytime → dashboard. Last slide: Done → dashboard.
+ * Full-height pager (swipe + Next); dots stay fixed under the copy.
  */
 export function NewUserIntroScreen({ onFinished }: { onFinished: () => void }) {
   const c = useFlareColors();
   const insets = useSafeAreaInsets();
   const { width } = useWindowDimensions();
+  const listRef = useRef<FlatList<NewUserIntroSlide>>(null);
   const [index, setIndex] = useState(0);
   const [pagerHeight, setPagerHeight] = useState(0);
   const last = index >= NEW_USER_INTRO_SLIDES.length - 1;
+  const dotProgress = useRef(
+    NEW_USER_INTRO_SLIDES.map((_, i) => new Animated.Value(i === 0 ? 1 : 0)),
+  ).current;
+
+  useEffect(() => {
+    Animated.parallel(
+      dotProgress.map((progress, i) =>
+        Animated.timing(progress, {
+          toValue: i === index ? 1 : 0,
+          duration: 280,
+          easing: Easing.out(Easing.cubic),
+          useNativeDriver: false,
+        }),
+      ),
+    ).start();
+  }, [dotProgress, index]);
+
+  const goTo = useCallback(
+    (next: number) => {
+      const clamped = Math.max(0, Math.min(NEW_USER_INTRO_SLIDES.length - 1, next));
+      listRef.current?.scrollToIndex({ index: clamped, animated: true });
+      setIndex(clamped);
+    },
+    [],
+  );
+
+  const onNext = useCallback(() => {
+    if (last) {
+      onFinished();
+      return;
+    }
+    goTo(index + 1);
+  }, [goTo, index, last, onFinished]);
 
   const onMomentumScrollEnd = useCallback(
     (e: NativeSyntheticEvent<NativeScrollEvent>) => {
@@ -53,7 +116,9 @@ export function NewUserIntroScreen({ onFinished }: { onFinished: () => void }) {
   const viewabilityConfig = useRef({ viewAreaCoveragePercentThreshold: 60 }).current;
 
   const renderSlide = useCallback(
-    ({ item }: { item: NewUserIntroSlide }) => {
+    ({ item, index: slideIndex }: { item: NewUserIntroSlide; index: number }) => {
+      const titleSize =
+        slideIndex === 0 ? WELCOME_SLIDE_TITLE_SIZE : INTRO_SLIDE_TITLE_SIZE;
       return (
         <View
           style={[
@@ -66,33 +131,32 @@ export function NewUserIntroScreen({ onFinished }: { onFinished: () => void }) {
           ]}
         >
           <View style={styles.contentBlock}>
-            <View style={styles.mediaSlot}>
-              {item.icon ? (
-                <View
-                  style={
-                    item.iconOpticalOffsetY
-                      ? { transform: [{ translateY: item.iconOpticalOffsetY }] }
-                      : null
-                  }
-                >
-                  <FlareLucideIcon icon={item.icon} size={MEDIA_GLYPH_SIZE} color={c.primary} />
-                </View>
-              ) : null}
+            <View style={[styles.mediaSlot, { backgroundColor: c.surfaceSubtle }]}>
+              <View
+                style={
+                  item.iconOpticalOffsetY
+                    ? { transform: [{ translateY: item.iconOpticalOffsetY }] }
+                    : null
+                }
+              >
+                <FlareLucideIcon icon={item.icon} size={MEDIA_GLYPH_SIZE} color={c.primary} />
+              </View>
             </View>
 
-            {item.headline ? (
-              <>
-                <Text style={[styles.welcomeHeadline, { color: c.text }]}>{item.headline}</Text>
-                <Text style={[styles.welcomeSub, { color: c.textMuted }]}>{item.text}</Text>
-              </>
-            ) : (
-              <Text style={[styles.text, { color: c.text }]}>{item.text}</Text>
-            )}
+            <Text
+              style={[
+                styles.slideTitle,
+                { color: c.text, fontSize: titleSize, lineHeight: titleSize + 6 },
+              ]}
+            >
+              {item.title}
+            </Text>
+            <Text style={[styles.supportText, { color: c.textMuted }]}>{item.text}</Text>
           </View>
         </View>
       );
     },
-    [c.text, c.textMuted, c.primary, pagerHeight, width],
+    [c.primary, c.surfaceSubtle, c.text, c.textMuted, pagerHeight, width],
   );
 
   return (
@@ -101,12 +165,77 @@ export function NewUserIntroScreen({ onFinished }: { onFinished: () => void }) {
         styles.screen,
         {
           backgroundColor: c.screen,
-          paddingTop: insets.top + 12,
-          paddingBottom: Math.max(insets.bottom, 12) + FOOTER_LIFT,
+          paddingTop: insets.top + 8,
+          paddingBottom: Math.max(insets.bottom, 12) + FOOTER_PAD,
         },
       ]}
     >
-      <View style={styles.topBar}>
+      <View
+        style={styles.pagerWrap}
+        onLayout={(e) => setPagerHeight(e.nativeEvent.layout.height)}
+      >
+        <FlatList
+          ref={listRef}
+          data={NEW_USER_INTRO_SLIDES}
+          keyExtractor={(item) => item.title}
+          horizontal
+          pagingEnabled
+          bounces={false}
+          overScrollMode="never"
+          showsHorizontalScrollIndicator={false}
+          decelerationRate="fast"
+          disableIntervalMomentum
+          snapToInterval={width}
+          snapToAlignment="start"
+          getItemLayout={(_, i) => ({
+            length: width,
+            offset: width * i,
+            index: i,
+          })}
+          onMomentumScrollEnd={onMomentumScrollEnd}
+          onViewableItemsChanged={onViewableItemsChanged}
+          viewabilityConfig={viewabilityConfig}
+          onScrollToIndexFailed={({ index: failed }) => {
+            requestAnimationFrame(() => {
+              listRef.current?.scrollToIndex({ index: failed, animated: true });
+            });
+          }}
+          style={styles.pager}
+          contentContainerStyle={pagerHeight > 0 ? { height: pagerHeight } : undefined}
+          renderItem={renderSlide}
+        />
+
+        {/* Fixed under copy — constant Y from layout tokens (no onLayout slide). */}
+        <View
+          pointerEvents="none"
+          style={[styles.dots, { top: DOTS_TOP }]}
+          accessibilityElementsHidden
+          importantForAccessibility="no-hide-descendants"
+        >
+          {NEW_USER_INTRO_SLIDES.map((_, i) => (
+            <Animated.View
+              key={i}
+              style={[
+                styles.dot,
+                {
+                  width: dotProgress[i].interpolate({
+                    inputRange: [0, 1],
+                    outputRange: [DOT_SIZE, DOT_ACTIVE_WIDTH],
+                  }),
+                  backgroundColor: dotProgress[i].interpolate({
+                    inputRange: [0, 1],
+                    outputRange: [c.appearanceChipInactiveBg, c.primary],
+                  }),
+                },
+              ]}
+            />
+          ))}
+        </View>
+      </View>
+
+      <View style={styles.footer}>
+        <PrimaryButton title={last ? "Done" : "Next"} onPress={onNext} noTopMargin />
+
         <Pressable
           accessibilityRole="button"
           accessibilityLabel="Skip introduction"
@@ -117,137 +246,78 @@ export function NewUserIntroScreen({ onFinished }: { onFinished: () => void }) {
           <Text style={[styles.skip, { color: c.textMuted }]}>Skip</Text>
         </Pressable>
       </View>
-
-      <FlatList
-        data={NEW_USER_INTRO_SLIDES}
-        keyExtractor={(item) => item.text}
-        horizontal
-        pagingEnabled
-        bounces={false}
-        overScrollMode="never"
-        showsHorizontalScrollIndicator={false}
-        decelerationRate="fast"
-        disableIntervalMomentum
-        snapToInterval={width}
-        snapToAlignment="start"
-        getItemLayout={(_, i) => ({ length: width, offset: width * i, index: i })}
-        onMomentumScrollEnd={onMomentumScrollEnd}
-        onViewableItemsChanged={onViewableItemsChanged}
-        viewabilityConfig={viewabilityConfig}
-        onLayout={(e) => setPagerHeight(e.nativeEvent.layout.height)}
-        style={styles.pager}
-        contentContainerStyle={pagerHeight > 0 ? { height: pagerHeight } : styles.pagerContent}
-        renderItem={renderSlide}
-      />
-
-      <View style={styles.footer}>
-        <View style={styles.dots} accessibilityElementsHidden importantForAccessibility="no-hide-descendants">
-          {NEW_USER_INTRO_SLIDES.map((_, i) => (
-            <View
-              key={i}
-              style={[
-                styles.dot,
-                {
-                  backgroundColor: c.primary,
-                  opacity: i === index ? 1 : 0.28,
-                  transform: [{ scale: i === index ? 1.15 : 1 }],
-                },
-              ]}
-            />
-          ))}
-        </View>
-
-        <View style={styles.ctaSlot}>
-          {last ? (
-            <PrimaryButton title="Done" onPress={onFinished} noTopMargin />
-          ) : (
-            <View style={styles.swipeHint} accessibilityRole="text" accessibilityLabel="Swipe to continue">
-              <Text style={[styles.swipeHintText, { color: c.textMuted }]}>Swipe to continue</Text>
-              <FlareLucideIcon icon={FLARE_CHROME_LUCIDE.forward} size={NAV_ROW_CHEVRON_SIZE} color={c.textMuted} />
-            </View>
-          )}
-        </View>
-      </View>
     </View>
   );
 }
 
 const styles = StyleSheet.create({
   screen: { flex: 1 },
-  topBar: {
-    paddingHorizontal: SCREEN_EDGE_PADDING,
-    alignItems: "flex-end",
-    minHeight: 36,
+  pagerWrap: {
+    flex: 1,
+    position: "relative",
   },
-  skipHit: { paddingVertical: 6, paddingHorizontal: 4 },
-  skip: { fontSize: 15, fontFamily: FLARE_FONT_FAMILY.medium },
   pager: { flex: 1 },
-  pagerContent: { flexGrow: 1 },
   page: {
-    paddingHorizontal: SCREEN_EDGE_PADDING + 8,
+    paddingHorizontal: FULL_WIDTH_CTA_EDGE_PADDING,
     justifyContent: "flex-start",
-    alignItems: "center",
+    alignItems: "stretch",
   },
   contentBlock: {
-    alignItems: "center",
     width: "100%",
-    maxWidth: 320,
-    gap: 12,
+    alignItems: "stretch",
+    gap: INTRO_COPY_STACK_GAP,
   },
   mediaSlot: {
     width: MEDIA_SIZE,
     height: MEDIA_SIZE,
+    borderRadius: MEDIA_SIZE / 2,
+    alignSelf: "center",
     alignItems: "center",
     justifyContent: "center",
-    marginBottom: 4,
+    marginBottom: INTRO_MEDIA_MARGIN_BOTTOM,
   },
-  welcomeHeadline: {
-    fontSize: 24,
-    lineHeight: 30,
+  slideTitle: {
     fontFamily: FLARE_FONT_FAMILY.bold,
     textAlign: "center",
+    alignSelf: "stretch",
+    width: "100%",
   },
-  welcomeSub: {
-    fontSize: 16,
-    lineHeight: 22,
-    fontFamily: FLARE_FONT_FAMILY.regular,
-    textAlign: "center",
-  },
-  text: {
+  supportText: {
     fontSize: 18,
-    lineHeight: 28,
+    lineHeight: 26,
     fontFamily: FLARE_FONT_FAMILY.regular,
     textAlign: "center",
+    alignSelf: "stretch",
+    width: "100%",
+  },
+  dots: {
+    position: "absolute",
+    left: 0,
+    right: 0,
+    flexDirection: "row",
+    alignItems: "center",
+    justifyContent: "center",
+    gap: 10,
+  },
+  dot: {
+    height: DOT_SIZE,
+    borderRadius: DOT_SIZE / 2,
   },
   footer: {
     paddingHorizontal: FULL_WIDTH_CTA_EDGE_PADDING,
-    gap: 20,
-    paddingTop: 8,
+    gap: 16,
+    alignItems: "stretch",
   },
-  dots: {
-    flexDirection: "row",
-    alignItems: "center",
-    justifyContent: "center",
-    gap: 8,
-  },
-  dot: {
-    width: 8,
-    height: 8,
-    borderRadius: 4,
-  },
-  ctaSlot: {
-    minHeight: FLARE_BUTTON_MIN_HEIGHT,
+  skipHit: {
+    alignSelf: "center",
+    paddingVertical: 8,
+    paddingHorizontal: 12,
+    minHeight: FLARE_BUTTON_MIN_HEIGHT - 8,
     justifyContent: "center",
   },
-  swipeHint: {
-    flexDirection: "row",
-    alignItems: "center",
-    justifyContent: "center",
-    gap: 4,
-    minHeight: FLARE_BUTTON_MIN_HEIGHT,
-  },
-  swipeHintText: {
+  skip: {
     fontSize: 15,
     fontFamily: FLARE_FONT_FAMILY.medium,
+    textAlign: "center",
   },
 });

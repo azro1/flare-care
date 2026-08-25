@@ -1,7 +1,7 @@
 import { Ionicons } from "@expo/vector-icons";
 import { FLARE_CHROME_LUCIDE, FlareLucideIcon } from "../lib/flareLucideIcons";
-import React from "react";
-import { StyleSheet, Text, View } from "react-native";
+import React, { useEffect, useRef } from "react";
+import { Animated, Easing, StyleSheet, Text, View } from "react-native";
 import { initialWindowMetrics, SafeAreaView, useSafeAreaInsets } from "react-native-safe-area-context";
 import { PrimaryButton } from "./FlareButton";
 import {
@@ -22,6 +22,9 @@ const FULL_SCREEN_SAFE_INSETS = {
   top: initialWindowMetrics?.insets.top ?? 0,
   bottom: initialWindowMetrics?.insets.bottom ?? 0,
 };
+
+/** Fade-in for logout / account-deleted full-screen landings. */
+const FULL_SCREEN_FADE_MS = 220;
 
 const styles = StyleSheet.create({
   safeArea: { flex: 1 },
@@ -90,6 +93,18 @@ export function SuccessNoticeScreen({
   // Overlay tab bar: stack is full height, but keep the extra inset that flex layout used to
   // provide implicitly so centered success content matches the pre-overlay position.
   const tabBarHeight = offsetForBottomTabBar ? bottomTabBarHeight(insets.bottom) * 2 : 0;
+  const fade = useRef(new Animated.Value(fullScreen ? 0 : 1)).current;
+
+  useEffect(() => {
+    if (!fullScreen) return;
+    fade.setValue(0);
+    Animated.timing(fade, {
+      toValue: 1,
+      duration: FULL_SCREEN_FADE_MS,
+      easing: Easing.out(Easing.cubic),
+      useNativeDriver: true,
+    }).start();
+  }, [fade, fullScreen, title]);
 
   const card = (
     <View style={styles.card}>
@@ -119,7 +134,7 @@ export function SuccessNoticeScreen({
           },
         ]}
       >
-        <View style={styles.wizardLandingScrollOffset}>
+        <Animated.View style={[styles.wizardLandingScrollOffset, { opacity: fade }]}>
           <View
             style={[
               styles.wizardLandingBlock,
@@ -129,7 +144,7 @@ export function SuccessNoticeScreen({
           >
             {card}
           </View>
-        </View>
+        </Animated.View>
       </View>
     );
   }
