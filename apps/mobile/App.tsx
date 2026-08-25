@@ -711,7 +711,10 @@ function AuthScreen({
       if (isNewAuthUser(authUser)) {
         await markNewAccountInstructionTipsEligible(authUser.id);
       }
-      const sessionUser = sessionUserFromSupabaseAuthUser(authUser);
+      const sessionUser = sessionUserFromSupabaseAuthUser({
+        ...authUser,
+        created_at: authUser.created_at ?? undefined,
+      });
       // Resolve intro before leaving Auth so AppRoot can mount welcome in the same paint —
       // no intermediate splash blink between verification and the first welcome slide.
       const newUserIntroPending = await resolveNewUserIntroPending(
