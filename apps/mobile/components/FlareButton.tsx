@@ -8,6 +8,15 @@ export const FLARE_BUTTON_BORDER_RADIUS = 10;
 export const FLARE_BUTTON_MIN_HEIGHT = 42;
 export const FLARE_BUTTON_PADDING_H = 12;
 
+/**
+ * Entry / orientation CTAs only (welcome, auth, wizard landings).
+ * Taller than in-app `PrimaryButton` — same corner radius so the shape family stays consistent.
+ */
+export const FLARE_ENTRY_BUTTON_BORDER_RADIUS = FLARE_BUTTON_BORDER_RADIUS;
+export const FLARE_ENTRY_BUTTON_MIN_HEIGHT = 46;
+export const FLARE_ENTRY_BUTTON_PADDING_H = 12;
+export const FLARE_ENTRY_BUTTON_FONT_SIZE = FLARE_FONT_SIZE.navTitle;
+
 export const flareButtonStyles = StyleSheet.create({
   button: {
     borderRadius: FLARE_BUTTON_BORDER_RADIUS,
@@ -18,6 +27,20 @@ export const flareButtonStyles = StyleSheet.create({
     marginTop: 6,
   },
   buttonText: { fontFamily: FLARE_FONT_FAMILY.bold, fontSize: FLARE_FONT_SIZE.body },
+  entryButton: {
+    borderRadius: FLARE_ENTRY_BUTTON_BORDER_RADIUS,
+    minHeight: FLARE_ENTRY_BUTTON_MIN_HEIGHT,
+    alignItems: "center",
+    justifyContent: "center",
+    paddingHorizontal: FLARE_ENTRY_BUTTON_PADDING_H,
+    marginTop: 6,
+    alignSelf: "stretch",
+    width: "100%",
+  },
+  entryButtonText: {
+    fontFamily: FLARE_FONT_FAMILY.bold,
+    fontSize: FLARE_ENTRY_BUTTON_FONT_SIZE,
+  },
   buttonSecondary: {
     borderRadius: FLARE_BUTTON_BORDER_RADIUS,
     minHeight: FLARE_BUTTON_MIN_HEIGHT,
@@ -91,6 +114,131 @@ export function PrimaryButton({
           </Text>
         </View>
       )}
+    </Pressable>
+  );
+}
+
+/**
+ * Primary CTA for entry / orientation screens (welcome intro, auth, wizard landings).
+ * Prefer this over `PrimaryButton` on those surfaces so in-app forms stay denser.
+ */
+export function EntryPrimaryButton({
+  title,
+  onPress,
+  disabled,
+  loading,
+  variant,
+  leftIcon,
+  noTopMargin,
+  /** Match in-app button label size (14) — e.g. sign-in; welcome/landings keep entry size. */
+  compactLabel,
+}: {
+  title: string;
+  onPress: () => void;
+  disabled?: boolean;
+  loading?: boolean;
+  variant?: "default" | "onPrimary";
+  leftIcon?: React.ReactNode;
+  noTopMargin?: boolean;
+  compactLabel?: boolean;
+}) {
+  const c = useFlareColors();
+  const onPrimary = variant === "onPrimary";
+  const inactive = disabled || loading;
+  const spinnerColor = onPrimary ? (inactive ? c.primaryHover : c.primary) : inactive ? c.primaryHover : c.white;
+  return (
+    <Pressable
+      onPress={onPress}
+      disabled={inactive}
+      style={[
+        flareButtonStyles.entryButton,
+        noTopMargin ? { marginTop: 0 } : null,
+        onPrimary
+          ? { backgroundColor: inactive ? "rgba(255,255,255,0.78)" : c.white }
+          : { backgroundColor: inactive ? c.primaryDisabledBg : c.primary },
+      ]}
+    >
+      {loading ? (
+        <ActivityIndicator color={spinnerColor} />
+      ) : (
+        <View style={flareButtonStyles.buttonSecondaryContent}>
+          {leftIcon ? leftIcon : null}
+          <Text
+            style={[
+              flareButtonStyles.entryButtonText,
+              compactLabel ? { fontSize: FLARE_FONT_SIZE.body } : null,
+              onPrimary
+                ? { color: inactive ? c.primaryHover : c.primary }
+                : { color: inactive ? c.primaryHover : c.white },
+            ]}
+          >
+            {title}
+          </Text>
+        </View>
+      )}
+    </Pressable>
+  );
+}
+
+/** Secondary CTA matching `EntryPrimaryButton` scale (auth method / email / OTP stacks). */
+export function EntrySecondaryButton({
+  title,
+  onPress,
+  disabled,
+  leftIcon,
+  variant,
+  noTopMargin,
+  compactLabel,
+}: {
+  title: string;
+  onPress: () => void;
+  disabled?: boolean;
+  leftIcon?: React.ReactNode;
+  variant?: "default" | "onPrimary";
+  noTopMargin?: boolean;
+  compactLabel?: boolean;
+}) {
+  const c = useFlareColors();
+  const onPrimary = variant === "onPrimary";
+  const labelColor = onPrimary
+    ? disabled
+      ? "rgba(255,255,255,0.72)"
+      : c.white
+    : c.secondaryBtnText;
+  const outline = onPrimary
+    ? { borderWidth: 1, borderColor: "rgba(255,255,255,0.55)" }
+    : { borderWidth: 1, borderColor: c.secondaryBtnBorder };
+  return (
+    <Pressable
+      onPress={onPress}
+      disabled={disabled}
+      style={[
+        flareButtonStyles.entryButton,
+        noTopMargin ? { marginTop: 0 } : null,
+        onPrimary
+          ? {
+              backgroundColor: disabled ? "rgba(255,255,255,0.08)" : "rgba(255,255,255,0.12)",
+              ...outline,
+            }
+          : {
+              backgroundColor: c.secondaryBtnBg,
+              ...outline,
+            },
+        !onPrimary && disabled ? { opacity: 0.55 } : null,
+      ]}
+    >
+      <View style={flareButtonStyles.buttonSecondaryContent}>
+        {leftIcon ? leftIcon : null}
+        <Text
+          style={[
+            flareButtonStyles.entryButtonText,
+            compactLabel ? { fontSize: FLARE_FONT_SIZE.body } : null,
+            { color: labelColor },
+          ]}
+        >
+          {title}
+        </Text>
+      </View>
     </Pressable>
   );
 }

@@ -9,7 +9,7 @@ import ScrollManager from '@/components/ScrollManager'
 
 export const metadata = {
   metadataBase: new URL(process.env.NEXT_PUBLIC_SITE_URL || 'http://localhost:3000'),
-  title: 'FlareCare - Crohn\'s & Colitis Management',
+  title: 'Flarecare - Crohn\'s & Colitis Management',
   description: 'Track symptoms, medications, and generate reports for Crohn\'s & Colitis patients',
   icons: {
     icon: '/fclogo.svg',
@@ -17,20 +17,20 @@ export const metadata = {
     apple: '/fclogo.svg',
   },
   openGraph: {
-    title: 'FlareCare - Crohn\'s & Colitis Management',
+    title: 'Flarecare - Crohn\'s & Colitis Management',
     description: 'Track symptoms, medications, and generate reports for Crohn\'s & Colitis patients',
     images: [
       {
         url: '/fclogo.svg',
         width: 48,
         height: 48,
-        alt: 'FlareCare logo',
+        alt: 'Flarecare logo',
       },
     ],
   },
   twitter: {
     card: 'summary',
-    title: 'FlareCare - Crohn\'s & Colitis Management',
+    title: 'Flarecare - Crohn\'s & Colitis Management',
     description: 'Track symptoms, medications, and generate reports for Crohn\'s & Colitis patients',
     images: ['/fclogo.svg'],
   },

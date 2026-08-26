@@ -98,12 +98,16 @@ export function SlideUpSheet({
     const showSub = Keyboard.addListener(showEvt, (e) => {
       Animated.timing(keyboard, {
         toValue: e.endCoordinates?.height ?? 0,
-        duration: 220,
+        duration: Platform.OS === "ios" ? e.duration || 250 : 200,
         useNativeDriver: false,
       }).start();
     });
-    const hideSub = Keyboard.addListener(hideEvt, () => {
-      Animated.timing(keyboard, { toValue: 0, duration: 180, useNativeDriver: false }).start();
+    const hideSub = Keyboard.addListener(hideEvt, (e) => {
+      Animated.timing(keyboard, {
+        toValue: 0,
+        duration: Platform.OS === "ios" ? (e as { duration?: number }).duration || 250 : 200,
+        useNativeDriver: false,
+      }).start();
     });
     return () => {
       showSub.remove();
@@ -134,6 +138,7 @@ export function SlideUpSheet({
   if (!mounted) return null;
 
   const composedTranslate = Animated.subtract(translateY, keyboard);
+  const floating = sideInset > 0 || bottomInset > 0;
 
   return (
     <Portal>
@@ -151,8 +156,8 @@ export function SlideUpSheet({
               left: sideInset,
               right: sideInset,
               bottom: bottomInset,
-              borderBottomLeftRadius: bottomInset > 0 ? 22 : 0,
-              borderBottomRightRadius: bottomInset > 0 ? 22 : 0,
+              borderBottomLeftRadius: floating ? 22 : 0,
+              borderBottomRightRadius: floating ? 22 : 0,
               transform: [{ translateY: composedTranslate }],
             },
           ]}

@@ -72,7 +72,7 @@ export function BiometricLockScreen({
         <View style={[styles.lockDisc, { backgroundColor: c.surfaceSubtle }]}>
           <FlareLucideIcon icon={FLARE_CHROME_LUCIDE.lock} size={34} color={c.primary} />
         </View>
-        <Text style={[styles.title, { color: c.text }]}>FlareCare is locked</Text>
+        <Text style={[styles.title, { color: c.text }]}>App is locked</Text>
         <Text style={[styles.subtitle, { color: c.textMuted }]}>Unlock to access your account.</Text>
       </View>
       <View style={styles.actions}>

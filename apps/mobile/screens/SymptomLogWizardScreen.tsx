@@ -1,4 +1,4 @@
-import { FLARE_CHROME_LUCIDE, FLARE_FEATURE_LUCIDE, FlareLucideIcon } from "../lib/flareLucideIcons";
+import { FLARE_FEATURE_LUCIDE, FlareLucideIcon } from "../lib/flareLucideIcons";
 import DateTimePicker from "@react-native-community/datetimepicker";
 import AsyncStorage from "@react-native-async-storage/async-storage";
 import { CommonActions, useNavigation, useRoute } from "@react-navigation/native";
@@ -25,6 +25,8 @@ import {
 } from "../components/symptomReviewLayout";
 import { PrimaryButton, SecondaryButton } from "../components/FlareButton";
 import { flareFieldErrorStyle, FlareInputTrigger, FlareTextInput } from "../components/FlareInput";
+import { InfoHintTitleRow } from "../components/InfoHintButton";
+import { SwipeToRemoveRow } from "../components/SwipeToRemoveRow";
 import { invalidateDashboardSnapshot } from "../lib/dashboardSnapshotCache";
 import { formatUkDate } from "../lib/formatUkDate";
 import { supabase, TABLES } from "../lib/supabase";
@@ -51,7 +53,7 @@ import {
   wizardRatingToBand,
 } from "../lib/symptomWizardShared";
 import { useFlareColors } from "../theme";
-import { FULL_WIDTH_CTA_EDGE_PADDING } from "../lib/layoutConstants";
+import { FULL_WIDTH_CTA_EDGE_PADDING, LANDING_CTA_SIDE_PAD } from "../lib/layoutConstants";
 
 type SessionUser = { id: string };
 
@@ -65,12 +67,11 @@ async function clearSymptomWizardStorage(userId: string) {
 }
 
 /** Example wording aligned with web `src/app/symptoms/page.js` helper `<p>` copy — mobile uses as input placeholders only */
-const PLACEHOLDER_BATHROOM_CHANGE_EXAMPLE =
-  "For example, 'increased to 8-10 times per day, blood present, mucus, loose stools'";
-const PLACEHOLDER_SMOKE_DAY_AMOUNT_EXAMPLE = "For example, '3 cigarettes' or '1 cigar'";
-const PLACEHOLDER_SMOKE_AMOUNT_RETURNING_EXAMPLE = "For example, '5 cigarettes' or '1 cigar'";
-const PLACEHOLDER_SMOKING_HABITS_EXAMPLE = "For example, '1 pack of cigarettes per day'";
-const PLACEHOLDER_ALCOHOL_UNITS_EXAMPLE = "For example, 0.5, 2 or 5";
+const PLACEHOLDER_BATHROOM_CHANGE_EXAMPLE = "e.g. more often, blood, or loose stools";
+const PLACEHOLDER_SMOKE_DAY_AMOUNT_EXAMPLE = "e.g. 3 cigarettes or 1 cigar";
+const PLACEHOLDER_SMOKE_AMOUNT_RETURNING_EXAMPLE = "e.g. 5 cigarettes or 1 cigar";
+const PLACEHOLDER_SMOKING_HABITS_EXAMPLE = "e.g. 1 pack of cigarettes per day";
+const PLACEHOLDER_ALCOHOL_UNITS_EXAMPLE = "e.g. 0.5 or 2";
 
 function cloneForm(f: SymptomFormData): SymptomFormData {
   return JSON.parse(JSON.stringify(f)) as SymptomFormData;
@@ -313,6 +314,11 @@ export function SymptomLogWizardScreen({ user }: { user: SessionUser }) {
     }
     const prev = history[history.length - 1];
     if (prev && !editingReviewSection) {
+      // Don't return to landing (step 0) — exit the wizard like Track Medications / Wellbeing.
+      if (prev.step <= 0) {
+        navigation.goBack();
+        return true;
+      }
       setHistory((h) => h.slice(0, -1));
       setCurrentStep(prev.step);
       setForm(prev.form);
@@ -459,10 +465,16 @@ export function SymptomLogWizardScreen({ user }: { user: SessionUser }) {
 
   const renderMeal = (meal: "breakfast" | "lunch" | "dinner", skipKey: "breakfast_skipped" | "lunch_skipped" | "dinner_skipped") => (
     <View>
-      <Text style={[styles.h3, { color: c.text }]}>{mealLabel(meal)}</Text>
+      <InfoHintTitleRow
+        hintTitle="Remove a meal"
+        hintMessage="Swipe left on a meal, then tap Remove. You need at least two meals listed."
+        hintAccessibilityLabel="How to remove a meal item"
+      >
+        <Text style={[styles.h3, styles.h3BesideHint, { color: c.text }]}>{mealLabel(meal)}</Text>
+      </InfoHintTitleRow>
       {form[meal].map((item, i) => (
         <View key={i} style={[styles.mealEntryWrap, i === 0 ? styles.mealEntryWrapFirst : null]}>
-          <View style={styles.mealFoodRow}>
+          <SwipeToRemoveRow enabled={form[meal].length > 1} onRemove={() => removeMealRow(meal, i)}>
             <FlareTextInput
               placeholder="Food"
               value={item.food}
@@ -473,33 +485,19 @@ export function SymptomLogWizardScreen({ user }: { user: SessionUser }) {
                   [skipKey]: false,
                 }))
               }
-              style={{
-                marginTop: 0,
-                ...(form[meal].length > 1 ? { paddingRight: 30 } : null),
-              }}
+              style={styles.mealFoodInput}
             />
-            {form[meal].length > 1 ? (
-              <Pressable
-                accessibilityRole="button"
-                accessibilityLabel="Remove meal item"
-                hitSlop={{ top: 6, bottom: 6, left: 6, right: 6 }}
-                onPress={() => removeMealRow(meal, i)}
-                style={[styles.mealRemoveBtn, { backgroundColor: c.primary }]}
-              >
-                <FlareLucideIcon icon={FLARE_CHROME_LUCIDE.close} size={14} color={c.white} />
-              </Pressable>
-            ) : null}
-          </View>
-          <FlareTextInput
-            placeholder="Quantity"
-            value={item.quantity}
-            onChangeText={(t) =>
-              setForm((p) => ({
-                ...p,
-                [meal]: p[meal].map((row, j) => (j === i ? { ...row, quantity: t } : row)),
-              }))
-            }
-          />
+            <FlareTextInput
+              placeholder="Quantity"
+              value={item.quantity}
+              onChangeText={(t) =>
+                setForm((p) => ({
+                  ...p,
+                  [meal]: p[meal].map((row, j) => (j === i ? { ...row, quantity: t } : row)),
+                }))
+              }
+            />
+          </SwipeToRemoveRow>
         </View>
       ))}
       <Pressable
@@ -513,7 +511,7 @@ export function SymptomLogWizardScreen({ user }: { user: SessionUser }) {
             [skipKey]: false,
           }))
         }
-        style={{ marginBottom: 8, alignSelf: "flex-start" }}
+        style={styles.addItemLink}
       >
         <Text style={{ color: c.primary, fontFamily: "Inter_700Bold" }}>Add item</Text>
       </Pressable>
@@ -584,18 +582,14 @@ export function SymptomLogWizardScreen({ user }: { user: SessionUser }) {
                 },
               ]}
             >
-              <FlareLucideIcon
-                icon={FLARE_FEATURE_LUCIDE.symptoms}
-                size={28}
-                color={c.isDark ? "#34d399" : "#059669"}
-              />
+              <FlareLucideIcon icon={FLARE_FEATURE_LUCIDE.symptoms} size={28} color={c.primary} />
             </View>
             <Text style={[styles.landingTitle, { color: c.text }]}>Log Symptoms</Text>
             <Text style={[styles.landingSub, { color: c.textMuted }]}>
-              Track your daily symptoms to identify patterns and triggers
+              Tell us about your symptoms and any other related details.
             </Text>
             <View style={styles.landingCta}>
-              <PrimaryButton title="Start now" onPress={startWizard} />
+              <PrimaryButton title="Start now" onPress={startWizard} noTopMargin />
             </View>
           </View>
         ) : null}
@@ -729,7 +723,7 @@ export function SymptomLogWizardScreen({ user }: { user: SessionUser }) {
                 if (t && (Number.isNaN(n) || n < 0 || n > 99)) return;
                 setForm((p) => ({ ...p, normal_bathroom_frequency: t }));
               }}
-              placeholder="0–99"
+              placeholder="e.g. 1 or 3"
             />
             {fieldErrors.normal_bathroom_frequency ? <Text style={errTextStyle}>{fieldErrors.normal_bathroom_frequency}</Text> : null}
           </View>
@@ -994,7 +988,12 @@ export function SymptomLogWizardScreen({ user }: { user: SessionUser }) {
         {currentStep === 16 ? (
           <View>
             <Text style={[styles.h3, { color: c.text }]}>Additional notes</Text>
-            <FlareTextInput multiline value={form.notes} onChangeText={(t) => setForm((p) => ({ ...p, notes: t }))} />
+            <FlareTextInput
+              multiline
+              placeholder="Anything else you would like to add…"
+              value={form.notes}
+              onChangeText={(t) => setForm((p) => ({ ...p, notes: t }))}
+            />
           </View>
         ) : null}
 
@@ -1062,48 +1061,49 @@ const styles = StyleSheet.create({
     alignItems: "center",
     justifyContent: "center",
     paddingTop: 8,
-    paddingBottom: 32,
+    paddingBottom: 36,
+    width: "100%",
   },
-  /** Web: `w-14 h-14` (56), `rounded-2xl` (16), `mb-6` (24) */
+  /** Web: `w-14 h-14` (56), `rounded-2xl` (16); spaced from title so the icon reads as its own band. */
   landingIconPanel: {
     width: 56,
     height: 56,
     borderRadius: 16,
     alignItems: "center",
     justifyContent: "center",
-    marginBottom: 24,
+    marginBottom: 32,
   },
   landingTitle: {
     fontFamily: "Inter_800ExtraBold",
-    fontSize: 24,
-    lineHeight: 30,
-    marginBottom: 14,
+    fontSize: 22,
+    lineHeight: 28,
+    marginBottom: 20,
     textAlign: "center",
     letterSpacing: -0.4,
+    maxWidth: 360,
+    width: "100%",
   },
-  landingSub: { fontSize: 16, lineHeight: 24, textAlign: "center", marginBottom: 6, maxWidth: 360, paddingHorizontal: 4 },
-  landingCta: { width: "100%", maxWidth: 360, marginTop: 20 },
+  landingSub: {
+    fontSize: 16,
+    lineHeight: 22,
+    textAlign: "center",
+    marginBottom: 0,
+    paddingHorizontal: 4,
+    maxWidth: 360,
+    width: "100%",
+  },
+  landingCta: { width: "100%", paddingHorizontal: LANDING_CTA_SIDE_PAD, marginTop: 28 },
   phaseLine: { fontSize: 13, marginBottom: 12, fontFamily: "Inter_500Medium" },
-  h3: { fontFamily: "Inter_700Bold", fontSize: 20, marginBottom: 12 },
+  h3: { fontFamily: "Inter_700Bold", fontSize: 20, lineHeight: 28, marginBottom: 12 },
+  h3BesideHint: { marginBottom: 0 },
   rowGap: { gap: 14, marginTop: 8 },
   radioRow: { flexDirection: "row", alignItems: "center", gap: 10 },
   radioOuter: { width: 22, height: 22, borderRadius: 11, borderWidth: 2, alignItems: "center", justifyContent: "center" },
   radioInner: { width: 12, height: 12, borderRadius: 6 },
   mealEntryWrap: { marginBottom: 12 },
-  mealEntryWrapFirst: { paddingTop: 6 },
-  mealFoodRow: { position: "relative", overflow: "visible" },
-  mealRemoveBtn: {
-    position: "absolute",
-    top: -7,
-    right: -7,
-    zIndex: 4,
-    width: 22,
-    height: 22,
-    borderRadius: 11,
-    alignItems: "center",
-    justifyContent: "center",
-    ...Platform.select({ android: { elevation: 4 }, ios: {} }),
-  },
+  mealEntryWrapFirst: { paddingTop: 0 },
+  mealFoodInput: { marginTop: 0 },
+  addItemLink: { marginTop: 8, marginBottom: 8, alignSelf: "flex-start" },
   footerBtns: { marginTop: 24, gap: 10 },
   footerBtnsReview: { marginTop: 0 },
   switchRow: { flexDirection: "row", alignItems: "center", marginTop: 12 },

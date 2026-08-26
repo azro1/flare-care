@@ -2,8 +2,8 @@ import LegalDocumentPage from '@/components/LegalDocumentPage'
 import { LEGAL_FOOTER_NOTE, LEGAL_LAST_UPDATED, TERMS_INTRO, TERMS_SECTIONS } from '@/content/legalDocuments'
 
 export const metadata = {
-  title: 'Terms of Use | FlareCare',
-  description: 'Terms of Use for the FlareCare health logging app and website.',
+  title: 'Terms of Use | Flarecare',
+  description: 'Terms of Use for the Flarecare health logging app and website.',
 }
 
 export default function TermsPage() {

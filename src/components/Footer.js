@@ -44,14 +44,14 @@ export default function Footer() {
               <a href="/privacy" className="transition-colors hover:text-[#5F9EA0]">Privacy</a>
               <a href="/terms" className="transition-colors hover:text-[#5F9EA0]">Terms</a>
             </div>
-            <span style={{color: 'var(--text-footer)'}}>© 2025 FlareCare</span>
+            <span style={{color: 'var(--text-footer)'}}>© 2025 Flarecare</span>
           </div>
         </div>
 
         {/* Desktop full footer */}
         <div className="hidden lg:flex lg:flex-col">
           <div className="flex flex-col md:flex-row justify-between items-center gap-6">
-            <p className="text-sm" style={{color: 'var(--text-footer)'}}>© FlareCare 2025. All rights reserved</p>
+            <p className="text-sm" style={{color: 'var(--text-footer)'}}>© Flarecare 2025. All rights reserved</p>
             <div className="flex gap-8 text-sm" style={{color: 'var(--text-footer)'}}>
               <a href="/privacy" className="transition-colors hover:text-[#5F9EA0]">Privacy Policy</a>
               <a href="/terms" className="transition-colors hover:text-[#5F9EA0]">Terms of Use</a>

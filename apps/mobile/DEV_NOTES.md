@@ -1,4 +1,4 @@
-# FlareCare Mobile — dev notes
+# Flarecare Mobile — dev notes
 
 **For Simon + AI agents.** Implementation conventions and “don’t duplicate this” reminders. Not user-facing docs.
 
@@ -153,7 +153,7 @@ Use existing screens as reference — do **not** default to web-style teal hyper
 
 ### Auth landing brand (keep in sync)
 
-Sign-in (`AuthScreen`) and **Almost there** (`ProfileSetupScreen`) share the same lockup: **`authLandingBrandRow`** — `BrandMarkIcon` size **28** + **FlareCare** (`authLandingName`), same page padding / centered stack. Do not put a large solo logo back on profile setup.
+Sign-in (`AuthScreen`) and **Almost there** (`ProfileSetupScreen`) share the same lockup: **`authLandingBrandRow`** — `BrandMarkIcon` size **28** + **Flarecare** (`authLandingName`), same page padding / centered stack. Do not put a large solo logo back on profile setup.
 
 ### `InstructionScreenShell`
 
@@ -299,6 +299,7 @@ Do **not** remove these checks when touching wizard back/next — they block the
 | `CARD_SECTION_INNER_GAP` | Gap below in-card section title before body; load-more row margin |
 | `CARD_SECTION_TITLE` | In-card section headings — **bold** 14px (`FlareScreenSectionTitle inCard`, wizard review section names) |
 | `FLARE_CAPTION_HINT` | Small muted helper under hubs / footers (Logs, Appointment Summary, Account delete) |
+| `HELP_NAV_LINK_*` | Underlined Help → AccountHelp links (Hydration, Reminders, Track Meds); pair with `c.text` |
 | `CONFIRM_MODAL_*` | Confirm / notice modal title + message + action gap tokens |
 | `INSTRUCTION_CARD_*` | Legacy layout tokens for dormant overlay shell — **do not** wire floating welcome cards again |
 | `NAV_ROW_LABEL` | Tappable row label — **regular** 14px (Account rows, wizard **Edit**) |
@@ -374,7 +375,7 @@ Other routes keep the normal stack header. You do **not** add a separate custom 
 
 **At rest:** page title is **22px**, left-aligned under the header.  
 **Collapsed:** scales to **16px**, centred in the nav bar.  
-**In-page headings** (e.g. “What is FlareCare?”, “Contact”) stay **18px** — same as dashboard section titles.
+**In-page headings** (e.g. “What is Flarecare?”, “Contact”) stay **18px** — same as dashboard section titles.
 
 **Layout tokens** (usually only touch these in `layoutConstants.ts`):
 
@@ -554,7 +555,7 @@ Hard-won from the 2026-08 sign-in redesign. Check this table **before** inventin
 2. **`useState(() => snapshotSeed?.… ?? fallback)`** so remounts don’t flash empty → filled.
 3. On **`useFocusEffect`**, apply the seed **synchronously** before the async load (greeting weather, Coming up from list caches).
 4. After fetch, write results back into the snapshot **and** `setState`.
-5. On mutate (add/edit/delete), call **`invalidateDashboardSnapshot(userId)`** and keep domain list caches warm (`fetchXForUser` / `setXListCache` after save) so the next focus can seed correctly.
+5. On mutate (add/edit/delete), call **`invalidateDashboardSnapshot(userId)`** — this **keeps weather + news** in the seed (only resets today counts) so the greeting doesn’t flash “Loading…” on return. Keep domain list caches warm (`fetchXForUser` / `setXListCache` after save) so the next focus can seed correctly.
 
 | Card / block | Seed source | Files |
 |--------------|-------------|--------|
@@ -726,10 +727,24 @@ drop table if exists public.medical_supply_kits;
 
 ---
 
+## Looking ahead
+
+Product backlog for later — not implementation work yet. Ship notes go in **`CHANGELOG.md`**; this list is “we want to do”.
+
+### Auth — more OAuth providers
+
+- **Now:** email OTP + **Google** only on the method screen.
+- **Later:** add more OAuth (e.g. Apple). Do **not** stack many full-width provider buttons under email — the quick-unlock fingerprint is pinned to the bottom and will collide.
+- **Preferred approach:** keep email (+ maybe one OAuth) on the landing; put extra providers behind **“More ways to sign in”** (sheet) or a compact icon row.
+
+---
+
 ## Keeping these notes useful
 
 When you add shared UI patterns, success flows, log lists, collapsing-title pages, **dashboard home data cards**, or **auth/biometric gotchas** — **update this file**, not the README. If something took more than one wrong guess to fix, add a row to **Auth / OTP / overlay gotchas**.
 
 When you change **product positioning** or **user-visible feature list** — update **`FEATURES.md`** (full inventory) and the short map in **`README.md`**.
+
+When something is **planned but not built** — add a short bullet under **Looking ahead** (and mirror in **`FEATURES.md` → Looking ahead** if it’s product-facing).
 
 When you ship polish / fixes — **`CHANGELOG.md`**.

@@ -33,14 +33,14 @@ export async function POST(request) {
 
     const apiKey = process.env.RESEND_API_KEY
     const senderEmail = process.env.RESEND_SENDER_EMAIL
-    const senderName = process.env.RESEND_SENDER_NAME || 'FlareCare'
+    const senderName = process.env.RESEND_SENDER_NAME || 'Flarecare'
 
     if (!apiKey || !senderEmail) {
       console.warn('RESEND_API_KEY or RESEND_SENDER_EMAIL is not set; skipping send.')
       return NextResponse.json({ ok: true, skipped: true })
     }
 
-    const subject = 'FlareCare appointment brief for your patient'
+    const subject = 'Flarecare appointment brief for your patient'
     const symptoms = summary?.symptoms || {}
     const bowel = summary?.bowel || {}
     const weight = summary?.weight || {}
@@ -78,7 +78,7 @@ export async function POST(request) {
     }
 
     textLines.push(
-      'Generated from FlareCare appointment brief.',
+      'Generated from Flarecare appointment brief.',
       'Please interpret this summary in the context of your clinical judgment.'
     )
 
@@ -117,7 +117,7 @@ export async function POST(request) {
     }
 
     htmlParts.push(
-      `<p style="margin-top: 24px;">Generated from FlareCare appointment brief. Please interpret this summary in the context of your clinical judgment.</p>`,
+      `<p style="margin-top: 24px;">Generated from Flarecare appointment brief. Please interpret this summary in the context of your clinical judgment.</p>`,
       '</body></html>'
     )
 

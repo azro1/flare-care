@@ -76,20 +76,20 @@ export default function AuthForm() {
         <div className="text-center">
             <Image
               src="/fclogoaflm.svg"
-              alt="FlareCare logo"
+              alt="Flarecare logo"
               width={88}
               height={88}
               className="mx-auto mb-0 sm:mb-2 w-[5.5rem] h-[5.5rem] dark:hidden"
             />
             <Image
               src="/fclogo.svg"
-              alt="FlareCare logo"
+              alt="Flarecare logo"
               width={88}
               height={88}
               className="hidden dark:block mx-auto mb-0 sm:mb-2 w-[5.5rem] h-[5.5rem]"
             />
             <h2 className="text-3xl font-bold font-title text-primary mb-4">
-              FlareCare
+              Flarecare
             </h2>
           <p className="text-sm font-sans text-secondary mb-4 sm:mb-6 leading-normal">
            Your comprehensive health management app for Crohn's & Colitis
@@ -119,7 +119,7 @@ export default function AuthForm() {
               <Link href="/privacy" className="text-[#5F9EA0] hover:underline">
                 Privacy Policy
               </Link>
-              , including processing of my health-related data to provide FlareCare.
+              , including processing of my health-related data to provide Flarecare.
             </span>
           </label>
 

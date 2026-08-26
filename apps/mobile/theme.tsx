@@ -33,7 +33,7 @@ export type AppearancePreference = "light" | "dark";
 type StyleguideTheme = typeof lightTokens;
 
 /**
- * Single palette for FlareCare mobile. Prefer `useFlareColors()` over hard-coded hex wherever
+ * Single palette for Flarecare mobile. Prefer `useFlareColors()` over hard-coded hex wherever
  * screens follow light/dark.
  *
  * - **screen**: page scaffold; ScrollView/SafeArea; nav/tab bar (light: grouped gray; dark: styleguide).

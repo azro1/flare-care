@@ -125,7 +125,7 @@ export default function LearnPage() {
       <div className="mb-5 sm:mb-6 card">
         <h1 className="text-2xl sm:text-3xl lg:text-4xl font-bold font-title text-primary mb-3 sm:mb-4">IBD</h1>
         <p className="text-sm text-secondary break-words leading-normal">
-          Learn about Crohn's disease and Ulcerative Colitis, and how FlareCare can help you manage your condition
+          Learn about Crohn's disease and Ulcerative Colitis, and how Flarecare can help you manage your condition
         </p>
       </div>
 
@@ -276,9 +276,9 @@ export default function LearnPage() {
         </div>
       </div>
 
-      {/* How FlareCare Helps Section */}
+      {/* How Flarecare Helps Section */}
       <div className="card backdrop-blur-sm mb-5 sm:mb-6">
-        <h2 className="text-xl font-semibold font-title text-primary mb-3 sm:mb-6">How FlareCare Can Help</h2>
+        <h2 className="text-xl font-semibold font-title text-primary mb-3 sm:mb-6">How Flarecare Can Help</h2>
         <div className="card-inner p-4 sm:p-6">
         <div className="grid gap-3 md:gap-6 md:grid-cols-2">
           <div>

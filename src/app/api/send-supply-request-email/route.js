@@ -18,7 +18,7 @@ export async function POST(request) {
 
     const apiKey = process.env.RESEND_API_KEY
     const senderEmail = process.env.RESEND_SENDER_EMAIL
-    const senderName = process.env.RESEND_SENDER_NAME || 'FlareCare'
+    const senderName = process.env.RESEND_SENDER_NAME || 'Flarecare'
 
     if (!apiKey || !senderEmail) {
       console.warn('RESEND_API_KEY or RESEND_SENDER_EMAIL is not set; skipping send.')
@@ -27,7 +27,7 @@ export async function POST(request) {
 
     const emailSubject = subject?.trim() || 'Medical supply request'
 
-    // Body is user-authored. Only prepend an optional greeting / note — no FlareCare footer.
+    // Body is user-authored. Only prepend an optional greeting / note — no Flarecare footer.
     const textLines = []
     if (recipientName || note) {
       textLines.push(recipientName ? `${safe(recipientName)},` : 'Hello,', '')

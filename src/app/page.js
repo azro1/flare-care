@@ -955,7 +955,7 @@ export default function Home() {
           <div className="max-w-4xl mx-auto">
             <div className="text-center space-y-6 mb-12 md:mb-20">
               <div>
-                <div className="text-cadet-blue text-xl font-medium font-title mb-1.5">FlareCare</div>
+                <div className="text-cadet-blue text-xl font-medium font-title mb-1.5">Flarecare</div>
                 <h1 className="text-4xl md:text-5xl lg:text-6xl font-bold text-primary leading-tight">
               Take control of
                 <br />

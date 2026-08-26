@@ -1,6 +1,6 @@
-# FlareCare Mobile (native)
+# Flarecare Mobile (native)
 
-**FlareCare** is a **personal health companion for people living with inflammatory bowel disease (IBD)**—especially **Crohn’s disease** and **ulcerative colitis**. The app helps you **track day‑to‑day data** (symptoms, medications, hydration, bowel movements, weight, appointments), **see summaries** on a dashboard, **prepare for clinic visits** (reports / briefs), and **stay on schedule** with reminders—**on your phone**, with a **fixed light or dark** appearance you choose in Account.
+**Flarecare** is a **personal health companion for people living with inflammatory bowel disease (IBD)**—especially **Crohn’s disease** and **ulcerative colitis**. The app helps you **track day‑to‑day data** (symptoms, medications, hydration, bowel movements, weight, appointments), **see summaries** on a dashboard, **prepare for clinic visits** (reports / briefs), and **stay on schedule** with reminders—**on your phone**, with a **fixed light or dark** appearance you choose in Account.
 
 **It is not medical advice.** It does not diagnose or treat. Always follow your qualified clinicians.
 
@@ -17,7 +17,7 @@ For **recent UI / polish / changelog-style notes**, see **`CHANGELOG.md`**.
 ## Who it is for
 
 - Adults managing **IBD** who want **simple, consistent tracking** between appointments.
-- Anyone already using **FlareCare on the web** who wants the same flows on mobile (auth, data model, and many behaviours are shared).
+- Anyone already using **Flarecare on the web** who wants the same flows on mobile (auth, data model, and many behaviours are shared).
 
 ---
 

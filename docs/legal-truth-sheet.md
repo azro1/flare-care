@@ -1,4 +1,4 @@
-# FlareCare legal truth sheet (internal)
+# Flarecare legal truth sheet (internal)
 
 **Not legal advice.** Use this to keep Privacy Policy and Terms aligned with the product. Review with a UK solicitor before calling documents “final.”
 
@@ -8,13 +8,13 @@
 
 | Field | Value |
 |-------|--------|
-| Service name | FlareCare |
-| Operator | Simon Sutherland (FlareCare) |
+| Service name | Flarecare |
+| Operator | Simon Sutherland (Flarecare) |
 | Contact | support@flarecare.app |
 | Public site | https://flarecare.com (and deployed web app URL) |
 | Users | Primarily UK; policy written for UK GDPR |
 
-## What FlareCare does (web = source of truth; mobile being ported)
+## What Flarecare does (web = source of truth; mobile being ported)
 
 - **IBD day-to-day tracking:** symptom wizard, medications + tracking, hydration, weight, bowel movements, appointments, dashboard
 - **Reports:** date-range summary → view, **Export PDF/CSV**, or **email to clinician** (user enters consultant email — not to self)

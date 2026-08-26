@@ -37,12 +37,18 @@ type SessionUser = { id: string };
 function seedFromKitCache(userId: string): {
   entries: KitListEntry[];
   hubReady: boolean;
+  /** Cache already says no orders — replace to setup before painting hub. */
+  openSetup: boolean;
 } {
   const cached = getMedicalSupplyKitListCache(userId);
-  if (cached == null || needsMedicalSuppliesSetup(cached.length)) {
-    return { entries: [], hubReady: true };
+  if (cached == null) {
+    // Hold blank until fetch; dashboard usually warms cache before the tile tap.
+    return { entries: [], hubReady: false, openSetup: false };
   }
-  return { entries: cached, hubReady: true };
+  if (needsMedicalSuppliesSetup(cached.length)) {
+    return { entries: [], hubReady: false, openSetup: true };
+  }
+  return { entries: cached, hubReady: true, openSetup: false };
 }
 
 export function MedicalSuppliesScreen({ user }: { user: SessionUser }) {
@@ -59,6 +65,11 @@ export function MedicalSuppliesScreen({ user }: { user: SessionUser }) {
   const [noStockMessage, setNoStockMessage] = useState(
     "Add items to an order first, then you can send a request.",
   );
+
+  useLayoutEffect(() => {
+    if (!seed.openSetup) return;
+    navigation.replace("MedicalSuppliesSetup", { startStep: SUPPLIES_SETUP_STEP_INTRO });
+  }, [navigation, seed.openSetup]);
 
   const orderIds = useMemo(() => entries.map((e) => String(e.kit.id)), [entries]);
   const renderIdleHeaderRight = useCallback(
@@ -135,12 +146,16 @@ export function MedicalSuppliesScreen({ user }: { user: SessionUser }) {
   useFocusEffect(
     useCallback(() => {
       const cached = getMedicalSupplyKitListCache(user.id);
-      if (cached != null && !needsMedicalSuppliesSetup(cached.length)) {
+      if (cached != null && needsMedicalSuppliesSetup(cached.length)) {
+        navigation.replace("MedicalSuppliesSetup", { startStep: SUPPLIES_SETUP_STEP_INTRO });
+        return;
+      }
+      if (cached != null) {
         setEntries(cached);
         setHubReady(true);
       }
       void loadList();
-    }, [loadList, user.id]),
+    }, [loadList, navigation, user.id]),
   );
 
   useLayoutEffect(() => {

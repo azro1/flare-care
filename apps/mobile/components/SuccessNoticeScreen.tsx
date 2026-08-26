@@ -10,6 +10,7 @@ import {
   FLARE_FONT_SIZE,
   FLARE_LINE_HEIGHT,
   FULL_WIDTH_CTA_EDGE_PADDING,
+  LANDING_CTA_SIDE_PAD,
   wizardLandingMinHeight,
   WIZARD_LANDING_BELOW_SAFE_TOP,
   WIZARD_LANDING_BLOCK_PADDING_BOTTOM,
@@ -51,6 +52,28 @@ const styles = StyleSheet.create({
     paddingTop: 96,
   },
   card: { width: "100%", maxWidth: 360, alignItems: "center", gap: 16 },
+  /** Full-screen logout / delete — message sits with title; more air before CTA. */
+  entryCard: { width: "100%", alignItems: "center" },
+  entryTitle: {
+    fontFamily: FLARE_FONT_FAMILY.extrabold,
+    fontSize: 21,
+    lineHeight: 27,
+    letterSpacing: -0.4,
+    textAlign: "center",
+    marginTop: 16,
+    marginBottom: 16,
+    alignSelf: "stretch",
+    width: "100%",
+  },
+  entryMessage: {
+    fontSize: 16,
+    lineHeight: 22,
+    fontFamily: FLARE_FONT_FAMILY.regular,
+    textAlign: "center",
+    alignSelf: "stretch",
+    width: "100%",
+    marginBottom: 30,
+  },
   title: {
     fontSize: FLARE_FONT_SIZE.pageTitle,
     fontFamily: FLARE_FONT_FAMILY.bold,
@@ -64,7 +87,7 @@ const styles = StyleSheet.create({
     lineHeight: FLARE_LINE_HEIGHT.sectionTitle,
     maxWidth: 320,
   },
-  actions: { width: "100%" },
+  actions: { width: "100%", paddingHorizontal: LANDING_CTA_SIDE_PAD },
 });
 
 /** Full-screen success state — checkmark, title, message, primary button.
@@ -107,17 +130,21 @@ export function SuccessNoticeScreen({
   }, [fade, fullScreen, title]);
 
   const card = (
-    <View style={styles.card}>
+    <View style={fullScreen ? styles.entryCard : styles.card}>
       {fullScreen ? (
         // Logout / account-deleted only — sole allowed filled glyph in the app.
         <Ionicons name="checkmark-circle" size={72} color={c.primary} accessibilityIgnoresInvertColors />
       ) : (
         <FlareLucideIcon icon={FLARE_CHROME_LUCIDE.checkCircle} size={72} color={c.primary} />
       )}
-      <Text style={[styles.title, { color: c.text }]}>{title}</Text>
-      <Text style={[styles.message, { color: c.textMuted }]}>{message}</Text>
+      <Text style={[fullScreen ? styles.entryTitle : styles.title, { color: c.text }]}>{title}</Text>
+      <Text style={[fullScreen ? styles.entryMessage : styles.message, { color: c.textMuted }]}>{message}</Text>
       <View style={styles.actions}>
-        <PrimaryButton title={buttonTitle} onPress={onPress} />
+        {fullScreen ? (
+          <PrimaryButton title={buttonTitle} onPress={onPress} noTopMargin />
+        ) : (
+          <PrimaryButton title={buttonTitle} onPress={onPress} />
+        )}
       </View>
     </View>
   );

@@ -7,7 +7,7 @@ self.addEventListener('push', (event) => {
   } catch (_) {
     payload.body = event.data.text()
   }
-  const title = payload.title || 'FlareCare'
+  const title = payload.title || 'Flarecare'
   const options = {
     body: payload.body || 'Reminder',
     tag: payload.tag || 'flarecare-reminder',

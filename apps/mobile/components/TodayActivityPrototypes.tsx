@@ -378,11 +378,11 @@ export function TodayActivitiesModal({
   const [taskPageHeight, setTaskPageHeight] = useState(0);
   const [shellIndex, setShellIndex] = useState(0);
   const [mounted, setMounted] = useState(visible);
-  const sheetPadH = 20;
+  const sheetPadH = 24;
   const pageW =
     pagerWidth > 0
       ? pagerWidth
-      : Math.max(0, windowWidth - SCREEN_EDGE_PADDING * 2 - sheetPadH * 2);
+      : Math.max(0, windowWidth - sheetPadH * 2);
   const shellPageCount = 2;
 
   const overlayOpacity = useRef(new Animated.Value(0)).current;
@@ -392,13 +392,19 @@ export function TodayActivitiesModal({
   const onCloseRef = useRef(onClose);
   onCloseRef.current = onClose;
   const closingRef = useRef(false);
+  const closeGenRef = useRef(0);
+  const [sheetClosing, setSheetClosing] = useState(false);
   const leavingRef = useRef(leaving);
   leavingRef.current = leaving;
+  const windowHeightRef = useRef(windowHeight);
+  windowHeightRef.current = windowHeight;
 
   useEffect(() => {
     if (!leaving) return;
     // Meds/Hydration handoff — keep cover opaque; do not run a slide-down close.
+    closeGenRef.current += 1;
     closingRef.current = false;
+    setSheetClosing(false);
     overlayOpacity.setValue(1);
   }, [leaving, overlayOpacity]);
 
@@ -406,6 +412,11 @@ export function TodayActivitiesModal({
   const requestClose = useCallback(() => {
     if (leavingRef.current || closingRef.current) return;
     closingRef.current = true;
+    setSheetClosing(true);
+    const gen = ++closeGenRef.current;
+    const h = windowHeightRef.current;
+    overlayOpacity.stopAnimation();
+    sheetY.stopAnimation();
     Animated.parallel([
       Animated.timing(overlayOpacity, {
         toValue: 0,
@@ -414,58 +425,80 @@ export function TodayActivitiesModal({
         useNativeDriver: true,
       }),
       Animated.timing(sheetY, {
-        toValue: windowHeight,
+        toValue: h,
         duration: 260,
         easing: Easing.in(Easing.cubic),
         useNativeDriver: true,
       }),
-    ]).start(({ finished }) => {
-      if (finished) onCloseRef.current();
+    ]).start(() => {
+      if (gen !== closeGenRef.current) return;
       closingRef.current = false;
+      setSheetClosing(false);
+      // Always notify parent — if `finished` were false and we skipped, an invisible
+      // full-screen Pressable could keep eating taps until reload.
+      onCloseRef.current();
     });
-  }, [overlayOpacity, sheetY, windowHeight]);
+    // Failsafe if the native driver never delivers the completion callback.
+    setTimeout(() => {
+      if (gen !== closeGenRef.current) return;
+      if (!closingRef.current) return;
+      closingRef.current = false;
+      setSheetClosing(false);
+      onCloseRef.current();
+    }, 500);
+  }, [overlayOpacity, sheetY]);
+
+  const requestCloseRef = useRef(requestClose);
+  requestCloseRef.current = requestClose;
 
   useEffect(() => {
-    if (visible) {
+    if (!visible) {
+      closeGenRef.current += 1;
+      setMounted(false);
       closingRef.current = false;
-      setMounted(true);
-      setShellIndex(0);
-      setTaskPageHeight(0);
-      overlayOpacity.setValue(0);
-      sheetY.setValue(windowHeight);
-      scorePulse.setValue(1);
-      shellScrollX.setValue(0);
-      requestAnimationFrame(() => {
-        pagerRef.current?.scrollTo({ x: 0, animated: false });
-        // Dim fades in; sheet springs up solid (no opacity fade — feels less muddy).
-        Animated.parallel([
-          Animated.timing(overlayOpacity, {
-            toValue: 1,
-            duration: 300,
-            easing: Easing.out(Easing.quad),
-            useNativeDriver: true,
-          }),
-          Animated.spring(sheetY, {
-            toValue: 0,
-            damping: 28,
-            stiffness: 260,
-            mass: 0.9,
-            useNativeDriver: true,
-          }),
-        ]).start();
-      });
-
-      const sub = BackHandler.addEventListener("hardwareBackPress", () => {
-        requestClose();
-        return true;
-      });
-      return () => sub.remove();
+      setSheetClosing(false);
+      return;
     }
 
-    // Parent cleared visible (handoff or after our close animation).
-    setMounted(false);
+    closeGenRef.current += 1;
     closingRef.current = false;
-  }, [visible, windowHeight, overlayOpacity, sheetY, scorePulse, shellScrollX, requestClose]);
+    setSheetClosing(false);
+    setMounted(true);
+    setShellIndex(0);
+    setTaskPageHeight(0);
+    overlayOpacity.stopAnimation();
+    sheetY.stopAnimation();
+    overlayOpacity.setValue(0);
+    sheetY.setValue(windowHeightRef.current);
+    scorePulse.setValue(1);
+    shellScrollX.setValue(0);
+    requestAnimationFrame(() => {
+      pagerRef.current?.scrollTo({ x: 0, animated: false });
+      Animated.parallel([
+        Animated.timing(overlayOpacity, {
+          toValue: 1,
+          duration: 300,
+          easing: Easing.out(Easing.quad),
+          useNativeDriver: true,
+        }),
+        Animated.spring(sheetY, {
+          toValue: 0,
+          damping: 28,
+          stiffness: 260,
+          mass: 0.9,
+          useNativeDriver: true,
+        }),
+      ]).start();
+    });
+
+    const sub = BackHandler.addEventListener("hardwareBackPress", () => {
+      requestCloseRef.current();
+      return true;
+    });
+    return () => sub.remove();
+    // Only re-run on open/close — not on windowHeight / requestClose identity churn.
+    // eslint-disable-next-line react-hooks/exhaustive-deps -- intentional
+  }, [visible]);
 
   const activities = [
     {
@@ -580,7 +613,7 @@ export function TodayActivitiesModal({
 
   return (
     <Portal>
-      <View style={styles.sheetOverlay} pointerEvents={leaving ? "none" : "box-none"}>
+      <View style={styles.sheetOverlay} pointerEvents={leaving || sheetClosing ? "none" : "box-none"}>
         <Animated.View
           pointerEvents="none"
           style={[
@@ -599,12 +632,14 @@ export function TodayActivitiesModal({
         ) : null}
         {leaving ? null : (
           <>
-            <Pressable
-              accessibilityRole="button"
-              accessibilityLabel="Dismiss"
-              onPress={requestClose}
-              style={StyleSheet.absoluteFillObject}
-            />
+            {sheetClosing ? null : (
+              <Pressable
+                accessibilityRole="button"
+                accessibilityLabel="Dismiss"
+                onPress={requestClose}
+                style={StyleSheet.absoluteFillObject}
+              />
+            )}
             <Animated.View
               style={[
                 styles.sheetCard,
@@ -733,7 +768,7 @@ export function TodayActivitiesModal({
                           })}
                         </View>
                       </View>
-                      <View style={{ height: Math.max(insets.bottom, 16) }} />
+                      <View style={{ height: Math.max(insets.bottom, 24) }} />
                     </View>
                   </View>
                 ) : null}
@@ -967,8 +1002,6 @@ const styles = StyleSheet.create({
   sheetOverlay: {
     ...StyleSheet.absoluteFillObject,
     justifyContent: "flex-end",
-    paddingHorizontal: SCREEN_EDGE_PADDING,
-    paddingBottom: SCREEN_EDGE_PADDING,
     zIndex: 9999,
     elevation: 9999,
   },
@@ -981,10 +1014,13 @@ const styles = StyleSheet.create({
     gap: 12,
     overflow: "hidden",
   },
+  /** Match sign-in legal consent sheet chrome (full-bleed, top radius only). */
   sheetCard: {
-    borderRadius: 22,
-    paddingHorizontal: 20,
+    borderTopLeftRadius: 22,
+    borderTopRightRadius: 22,
+    paddingHorizontal: 24,
     paddingTop: 0,
+    paddingBottom: 0,
     gap: 16,
     overflow: "hidden",
   },

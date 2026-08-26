@@ -1,4 +1,4 @@
-# FlareCare mobile changelog
+# Flarecare mobile changelog
 
 Recent UI and behavior updates on the Expo app (`apps/mobile`).
 
@@ -6,7 +6,7 @@ Recent UI and behavior updates on the Expo app (`apps/mobile`).
 
 ### Auth, intro & cleanup (2026-08)
 
-- **Sign-in landing:** brand lockup (logo + FlareCare), email OTP / Google, first-time legal consent; **Almost there** name step matches the same lockup.
+- **Sign-in landing:** brand lockup (logo + Flarecare), email OTP / Google, first-time legal consent; **Almost there** name step matches the same lockup.
 - **Biometric:** App lock cover + bank-style fingerprint / Face ID quick unlock after logout (affordance only after OS prompt dismisses; Y aligned with lock screen).
 - **New-user intro:** one-shot post-login intro (`NewUserIntroScreen`) replaces per-screen floating welcome cards.
 - **Welcome cards removed:** no more `FloatingWelcomeCard` / dashboard getting-started overlays; hubs use **`FLARE_CAPTION_HINT`** where needed (Logs, Appointment Summary).

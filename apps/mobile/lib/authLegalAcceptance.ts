@@ -2,7 +2,7 @@ import AsyncStorage from "@react-native-async-storage/async-storage";
 
 /**
  * Device-local record that Terms + Privacy were accepted on a completed sign-in.
- * Checkbox stays visible for the whole first auth flow; only after they finish signing in
+ * First-time installs see a consent sheet before email/Google; only after they finish signing in
  * do later visits (including after logout) skip it.
  */
 const KEY = "flarecare.authLegalAccepted.v2";

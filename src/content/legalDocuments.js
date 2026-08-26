@@ -3,13 +3,13 @@
 export const LEGAL_LAST_UPDATED = '19 May 2026'
 
 export const LEGAL_FOOTER_NOTE =
-  'These documents explain how FlareCare handles your information and may be updated as the Service changes.'
+  'These documents explain how Flarecare handles your information and may be updated as the Service changes.'
 
 export const PRIVACY_INTRO =
-  'FlareCare helps people with inflammatory bowel disease (IBD) manage their condition day to day. This policy explains what data we collect, how we use it, and what choices are available to you.'
+  'Flarecare helps people with inflammatory bowel disease (IBD) manage their condition day to day. This policy explains what data we collect, how we use it, and what choices are available to you.'
 
 export const TERMS_INTRO =
-  'These Terms explain your rights and responsibilities when you use FlareCare. Please read them together with our Privacy Policy.'
+  'These Terms explain your rights and responsibilities when you use Flarecare. Please read them together with our Privacy Policy.'
 
 /** @type {LegalSection[]} */
 export const PRIVACY_SECTIONS = [
@@ -17,7 +17,7 @@ export const PRIVACY_SECTIONS = [
     id: 'who-we-are',
     title: 'Who we are',
     paragraphs: [
-      'The data controller is Simon Sutherland, operating FlareCare ("we", "us", "our").',
+      'The data controller is Simon Sutherland, operating Flarecare ("we", "us", "our").',
       'Contact: support@flarecare.app',
     ],
   },
@@ -25,8 +25,8 @@ export const PRIVACY_SECTIONS = [
     id: 'scope',
     title: 'What this policy covers',
     paragraphs: [
-      'This policy applies when you use the FlareCare website or mobile apps.',
-      'It is written for UK users with UK GDPR and the Data Protection Act 2018 in mind. If you use FlareCare from another country, local laws may also apply.',
+      'This policy applies when you use the Flarecare website or mobile apps.',
+      'It is written for UK users with UK GDPR and the Data Protection Act 2018 in mind. If you use Flarecare from another country, local laws may also apply.',
     ],
   },
   {
@@ -36,7 +36,7 @@ export const PRIVACY_SECTIONS = [
       'Account information you provide (such as email address and name) and information about how you sign in.',
       'Health-related information you choose to enter in the app.',
       'Technical information needed to run the service (such as keeping you signed in, notifications if you enable them, and basic device or app settings).',
-      'We do not sell your personal data. We do not use third-party advertising or behavioural tracking tools inside FlareCare.',
+      'We do not sell your personal data. We do not use third-party advertising or behavioural tracking tools inside Flarecare.',
     ],
   },
   {
@@ -44,7 +44,7 @@ export const PRIVACY_SECTIONS = [
     title: 'Health information',
     paragraphs: [
       'Health information you log may be special category data under UK GDPR.',
-      'We process health information you choose to provide in order to deliver FlareCare to you, including storing and syncing your data across devices when you use an account.',
+      'We process health information you choose to provide in order to deliver Flarecare to you, including storing and syncing your data across devices when you use an account.',
       'Where required under UK GDPR, we rely on your explicit consent, which you provide during sign-up and can withdraw at any time by deleting your account or contacting us (see Your rights).',
     ],
   },
@@ -53,7 +53,7 @@ export const PRIVACY_SECTIONS = [
     title: 'Legal bases for processing',
     paragraphs: [
       'We process personal data on the following bases, depending on what the data is used for:',
-      'Contract — to provide your account and the features of FlareCare you use.',
+      'Contract — to provide your account and the features of Flarecare you use.',
       'Legitimate interests — to keep the Service secure, prevent misuse, and maintain, secure, and improve the Service (balanced against your rights).',
       'Consent — for health information you log, and for optional features such as push notifications, where consent is required under UK GDPR.',
     ],
@@ -62,7 +62,7 @@ export const PRIVACY_SECTIONS = [
     id: 'how-we-use',
     title: 'How we use your information',
     paragraphs: [
-      'We use your information to operate FlareCare, including your account, the data you store in the app, and features you use.',
+      'We use your information to operate Flarecare, including your account, the data you store in the app, and features you use.',
       'We use it to send service messages (such as sign-in codes) and, if you turn them on, reminders.',
       'We use it to show information on the home dashboard (such as weather) and to keep the service secure and to respond to support requests.',
     ],
@@ -71,7 +71,7 @@ export const PRIVACY_SECTIONS = [
     id: 'how-you-share',
     title: 'How you may share your information',
     paragraphs: [
-      'FlareCare does not sell or publish your health information.',
+      'Flarecare does not sell or publish your health information.',
       'You may choose to share information from the app in ways we provide, such as downloading an export or sending a summary by email to an address you enter (for example your doctor or nurse).',
       'We only send email on your behalf when you ask us to and provide the recipient\'s address. We do not share your data with clinicians or anyone else unless you take that step.',
     ],
@@ -82,7 +82,7 @@ export const PRIVACY_SECTIONS = [
     paragraphs: [
       'Your data is stored using Supabase (cloud hosting and authentication). Data is transmitted over encrypted connections (HTTPS) and stored using industry-standard security measures provided by our hosting infrastructure.',
       'Some information is also held on your device (for example to keep you signed in or run notifications).',
-      'When you use an account, your data is stored in the cloud so you can use it across devices. FlareCare is not a local-only app.',
+      'When you use an account, your data is stored in the cloud so you can use it across devices. Flarecare is not a local-only app.',
     ],
   },
   {
@@ -97,7 +97,7 @@ export const PRIVACY_SECTIONS = [
     id: 'sharing',
     title: 'When we share information with others',
     paragraphs: [
-      'We share information only with service providers that help us run FlareCare, or when you choose to share as described above:',
+      'We share information only with service providers that help us run Flarecare, or when you choose to share as described above:',
       'Supabase — hosting, database, and authentication.',
       'Google — only if you sign in with Google.',
       'Our email provider — only when you use the in-app email feature to send a summary to an address you provide.',
@@ -137,7 +137,7 @@ export const PRIVACY_SECTIONS = [
     id: 'children',
     title: 'Children',
     paragraphs: [
-      'FlareCare is not aimed at children under 16. If we learn that a child under 16 has provided personal information, we will take steps to delete it. Contact us at support@flarecare.app if you believe this has happened.',
+      'Flarecare is not aimed at children under 16. If we learn that a child under 16 has provided personal information, we will take steps to delete it. Contact us at support@flarecare.app if you believe this has happened.',
     ],
   },
   {
@@ -155,7 +155,7 @@ export const TERMS_SECTIONS = [
     id: 'agreement',
     title: 'Agreement',
     paragraphs: [
-      'These Terms of Use ("Terms") apply to the FlareCare website and mobile apps ("the Service"), operated by Simon Sutherland ("we", "us").',
+      'These Terms of Use ("Terms") apply to the Flarecare website and mobile apps ("the Service"), operated by Simon Sutherland ("we", "us").',
       'By creating an account or using the Service, you agree to these Terms and our Privacy Policy. If you do not agree, do not use the Service.',
     ],
   },
@@ -163,8 +163,8 @@ export const TERMS_SECTIONS = [
     id: 'not-medical',
     title: 'Not medical advice',
     paragraphs: [
-      'FlareCare is an IBD health management tool. It does not provide medical advice, diagnosis, or treatment.',
-      'Always speak to a qualified healthcare professional about your condition. Do not use FlareCare in an emergency. In the UK, call 999.',
+      'Flarecare is an IBD health management tool. It does not provide medical advice, diagnosis, or treatment.',
+      'Always speak to a qualified healthcare professional about your condition. Do not use Flarecare in an emergency. In the UK, call 999.',
       'Information in the app is for your own use and discussions with your care team. We are not responsible for clinical decisions made using the app.',
     ],
   },
@@ -196,7 +196,7 @@ export const TERMS_SECTIONS = [
     id: 'availability',
     title: 'Availability and changes',
     paragraphs: [
-      'We try to keep FlareCare available but cannot promise uninterrupted access. We may change or remove features where practical.',
+      'We try to keep Flarecare available but cannot promise uninterrupted access. We may change or remove features where practical.',
       'The Service relies on third parties (for example hosting and app stores). Outages outside our control may affect access.',
     ],
   },
@@ -213,7 +213,7 @@ export const TERMS_SECTIONS = [
     id: 'intellectual-property',
     title: 'Intellectual property',
     paragraphs: [
-      'FlareCare\'s name, branding, software, and design belong to us or our licensors. You may not copy them except as the law allows or we permit in writing.',
+      'Flarecare\'s name, branding, software, and design belong to us or our licensors. You may not copy them except as the law allows or we permit in writing.',
     ],
   },
   {

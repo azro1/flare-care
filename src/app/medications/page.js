@@ -593,11 +593,11 @@ function MedicationsPageContent() {
             className="min-w-0 overflow-hidden"
           >
             <form onSubmit={handleSubmit} className="space-y-4" autoComplete="off">
-              <div className="grid lg:grid-cols-2 gap-6 min-w-0">
-                <div>
-                  <label htmlFor="name" className="block text-sm sm:text-base font-semibold font-sans text-primary mb-2 sm:mb-3">
-                    Medication Name *
-                  </label>
+              <div>
+                <label htmlFor="name" className="block text-sm sm:text-base font-semibold font-sans text-primary mb-2 sm:mb-3">
+                  Medication *
+                </label>
+                <div className="flex items-stretch gap-1.5 min-w-0">
                   <input
                     type="text"
                     id="name"
@@ -605,17 +605,11 @@ function MedicationsPageContent() {
                     value={formData.name}
                     onChange={handleInputChange}
                     placeholder="Medication name"
-                    className="input-field-wizard"
+                    className="input-field-wizard flex-1 min-w-0"
                     autoComplete="off"
                     required
                   />
-                </div>
-
-                <div>
-                  <label htmlFor="dosage" className="block text-sm sm:text-base font-semibold font-sans text-primary mb-2 sm:mb-3">
-                    Dosage
-                  </label>
-                  <div className="flex items-center gap-2">
+                  <div className="relative w-[104px] flex-shrink-0">
                     <input
                       type="text"
                       inputMode="numeric"
@@ -623,11 +617,15 @@ function MedicationsPageContent() {
                       name="dosage"
                       value={formData.dosage}
                       onChange={handleInputChange}
-                      placeholder="10mg"
+                      placeholder=""
                       maxLength={5}
-                      className="input-field-wizard flex-1 min-w-0"
+                      aria-label="Dose in milligrams"
+                      className="input-field-wizard w-full pr-9"
                       autoComplete="off"
                     />
+                    <span className="pointer-events-none absolute inset-y-0 right-3 flex items-center text-sm font-medium text-primary/55 font-sans">
+                      mg
+                    </span>
                   </div>
                 </div>
               </div>

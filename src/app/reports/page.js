@@ -734,7 +734,7 @@ function ReportsPageContent() {
     // Title
     doc.setFontSize(20)
     doc.setFont('helvetica', 'bold')
-    doc.text('FlareCare Health Report', pageWidth / 2, yPosition, { align: 'center' })
+    doc.text('Flarecare Health Report', pageWidth / 2, yPosition, { align: 'center' })
     yPosition += 10
 
     // Period

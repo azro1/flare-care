@@ -173,7 +173,7 @@ export default function Navigation() {
             <div className="relative w-[2.625rem] h-[2.625rem] md:w-10 md:h-10 rounded-full flex items-center justify-center overflow-visible">
               <Image
                 src="/fclogo.svg"
-                alt="FlareCare logo"
+                alt="Flarecare logo"
                 width={48}
                 height={48}
                 className="w-full h-full object-contain block lg:scale-[1.28] origin-center"
@@ -181,7 +181,7 @@ export default function Navigation() {
               />
             </div>
             <span className="hidden lg:inline-block ml-3 text-lg font-semibold font-title text-white">
-              FlareCare
+              Flarecare
             </span>
           </Link>
 

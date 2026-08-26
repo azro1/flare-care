@@ -1,6 +1,6 @@
 /** In-memory dashboard seed per user — cleared after symptom submit so home refetch shows fresh data. */
 
-import type { ActivityInsight } from "./activityInsights";
+import { EMPTY_ACTIVITY_INSIGHT, type ActivityInsight } from "./activityInsights";
 
 export type DashboardActivityRow = {  key: string;
   title: string;
@@ -99,5 +99,18 @@ export function setLogsHubPreview(userId: string, preview: LogsHubPreview) {
 }
 
 export function invalidateDashboardSnapshot(userId: string) {
-  delete dashboardSnapshotByUserId[userId];
+  const prev = dashboardSnapshotByUserId[userId];
+  if (!prev) return;
+  // Keep weather (and news) — logging a symptom shouldn't blank the greeting while home refetches.
+  dashboardSnapshotByUserId[userId] = {
+    todaySummary: { ...EMPTY_TODAY_SUMMARY },
+    activityInsight: {
+      daysLogged: [...EMPTY_ACTIVITY_INSIGHT.daysLogged],
+      loggedCount: 0,
+    },
+    weatherMeta: prev.weatherMeta,
+    weather: prev.weather,
+    newsItems: prev.newsItems,
+    newsError: prev.newsError,
+  };
 }

@@ -1,4 +1,4 @@
-# FlareCare legal & privacy checklist
+# Flarecare legal & privacy checklist
 
 **Not legal advice.** Use this as a practical roadmap. Your policy text in `src/content/legalDocuments.js` is already strong for an indie health app — a solicitor is **not required** before early launch, but becomes more valuable as the product grows (see below).
 
@@ -18,7 +18,7 @@ If you **collect or store health-related data** (symptoms, meds, bowel, weight, 
 
 - [ ] **Privacy Policy** live at `/privacy` (matches what the app actually does)
 - [ ] **Terms of Use** live at `/terms` (includes *not medical advice*, *not for emergencies*)
-- [ ] **Data controller** named (e.g. Simon Sutherland / FlareCare) + **support@flarecare.app**
+- [ ] **Data controller** named (e.g. Simon Sutherland / Flarecare) + **support@flarecare.app**
 - [ ] Policy says **cloud storage** (Supabase) — not “local-only” unless that’s true
 - [ ] Policy lists **why** you process health data (to run the logging service)
 
@@ -102,7 +102,7 @@ Separate from GDPR but required to publish:
 
 ## Do you need a solicitor right now?
 
-**For FlareCare at your current stage** (bootstrapping, early-stage, consumer app, not selling to clinics/NHS, not making diagnostic claims, handling data roughly as described in the policy): **you do not need to pay a solicitor before launch.**
+**For Flarecare at your current stage** (bootstrapping, early-stage, consumer app, not selling to clinics/NHS, not making diagnostic claims, handling data roughly as described in the policy): **you do not need to pay a solicitor before launch.**
 
 Your documents are already above the quality of most indie app policies. A solicitor **reviews and signs off** wording — they do **not** replace getting the product right.
 
@@ -171,7 +171,7 @@ Any of these triggers a **policy + consent + store form** update:
 
 ---
 
-## FlareCare status snapshot
+## Flarecare status snapshot
 
 | Item | Status (as of checklist creation) |
 |------|-----------------------------------|

@@ -12,7 +12,7 @@ import {
   type ViewStyle,
 } from "react-native";
 import { FLARE_BUTTON_BORDER_RADIUS } from "./FlareButton";
-import { FLARE_CHROME_LUCIDE, FlareLucideIcon } from "../lib/flareLucideIcons";
+import { FLARE_CHROME_LUCIDE, FLARE_FEATURE_LUCIDE, FlareLucideIcon } from "../lib/flareLucideIcons";
 import type { FlareColors } from "../theme";
 import { useFlareColors } from "../theme";
 
@@ -38,6 +38,7 @@ export const flareInputStyles = StyleSheet.create({
     minHeight: 100,
     textAlignVertical: "top",
     fontSize: 14,
+    lineHeight: 20,
     fontFamily: "Inter_400Regular",
   },
   trigger: {
@@ -49,7 +50,26 @@ export const flareInputStyles = StyleSheet.create({
     minHeight: 42,
     justifyContent: "center",
   },
-  triggerRow: { flexDirection: "row", alignItems: "center", gap: 8 },
+  triggerRow: { flexDirection: "row", alignItems: "center", gap: 8, width: "100%" },
+  triggerValue: { flex: 1, minWidth: 0 },
+  inputWithIcon: {
+    flexDirection: "row",
+    alignItems: "center",
+    gap: 8,
+  },
+  inputWithIconField: {
+    flex: 1,
+    marginTop: 0,
+    borderWidth: 0,
+    paddingHorizontal: 0,
+    paddingVertical: 0,
+    backgroundColor: "transparent",
+  },
+  inputTrailingLabel: {
+    fontSize: 14,
+    fontFamily: "Inter_500Medium",
+    flexShrink: 0,
+  },
   fieldBlock: { gap: 6, marginBottom: 2 },
   label: { fontSize: 13, fontFamily: "Inter_500Medium", marginTop: 2 },
 });
@@ -91,10 +111,38 @@ export function flareInputStyle(
 
 export const FlareTextInput = React.forwardRef<
   TextInput,
-  TextInputProps & { onPrimary?: boolean }
->(function FlareTextInput({ style, onPrimary, multiline, ...props }, ref) {
+  TextInputProps & {
+    onPrimary?: boolean;
+    /** Leading Lucide glyph (e.g. medication / dose in TM wizard). */
+    fieldIcon?: "pill" | "dose";
+    /** Fixed unit after the value (e.g. mg) — keeps placeholder-free fields readable. */
+    trailingLabel?: string;
+  }
+>(function FlareTextInput({ style, onPrimary, multiline, fieldIcon, trailingLabel, ...props }, ref) {
   const c = useFlareColors();
   const theme = flareInputThemeColors(c, onPrimary);
+  const icon =
+    fieldIcon === "pill"
+      ? FLARE_FEATURE_LUCIDE.meds
+      : fieldIcon === "dose"
+        ? FLARE_CHROME_LUCIDE.dose
+        : null;
+  if ((icon || trailingLabel) && !multiline) {
+    return (
+      <View style={[flareInputStyles.input, flareInputStyles.inputWithIcon, theme, style]}>
+        {icon ? <FlareLucideIcon icon={icon} size={18} color={c.textSecondary} /> : null}
+        <TextInput
+          ref={ref}
+          style={[flareInputStyles.inputWithIconField, { color: theme.color, fontSize: 14, fontFamily: "Inter_400Regular" }]}
+          placeholderTextColor={theme.placeholderColor}
+          {...props}
+        />
+        {trailingLabel ? (
+          <Text style={[flareInputStyles.inputTrailingLabel, { color: c.textMuted }]}>{trailingLabel}</Text>
+        ) : null}
+      </View>
+    );
+  }
   return (
     <TextInput
       ref={ref}
@@ -112,26 +160,36 @@ export function FlareInputTrigger({
   style,
   onPrimary,
   pickerIcon,
+  trailingLabel,
   ...props
 }: PressableProps & {
   children: React.ReactNode;
   onPrimary?: boolean;
   /** Leading Lucide glyph for date/time pickers (wizards, forms). */
   pickerIcon?: "date" | "time";
+  /** Right-side muted label (e.g. date / time) — matches unit trailers on text fields. */
+  trailingLabel?: string;
 }) {
   const c = useFlareColors();
   const theme = flareInputThemeColors(c, onPrimary);
   const icon = pickerIcon === "date" ? FLARE_CHROME_LUCIDE.calendar : pickerIcon === "time" ? FLARE_CHROME_LUCIDE.time : null;
+  const trailing = trailingLabel ? (
+    <Text style={[flareInputStyles.inputTrailingLabel, { color: c.textMuted }]}>{trailingLabel}</Text>
+  ) : null;
+  if (icon || trailing) {
+    return (
+      <Pressable style={[flareInputStyles.trigger, theme, style]} {...props}>
+        <View style={flareInputStyles.triggerRow}>
+          {icon ? <FlareLucideIcon icon={icon} size={18} color={c.textSecondary} /> : null}
+          <View style={flareInputStyles.triggerValue}>{children}</View>
+          {trailing}
+        </View>
+      </Pressable>
+    );
+  }
   return (
     <Pressable style={[flareInputStyles.trigger, theme, style]} {...props}>
-      {icon ? (
-        <View style={flareInputStyles.triggerRow}>
-          <FlareLucideIcon icon={icon} size={18} color={c.textSecondary} />
-          {children}
-        </View>
-      ) : (
-        children
-      )}
+      {children}
     </Pressable>
   );
 }

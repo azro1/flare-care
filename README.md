@@ -1,4 +1,4 @@
-# FlareCare
+# Flarecare
 
 A personal app for managing Crohn's & Colitis day to day.
 

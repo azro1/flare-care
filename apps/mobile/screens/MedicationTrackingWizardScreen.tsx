@@ -1,4 +1,4 @@
-import { FLARE_CHROME_LUCIDE, FlareLucideIcon } from "../lib/flareLucideIcons";
+import { FlareLucideIcon } from "../lib/flareLucideIcons";
 import DateTimePicker from "@react-native-community/datetimepicker";
 import AsyncStorage from "@react-native-async-storage/async-storage";
 import { CommonActions, useNavigation, useRoute } from "@react-navigation/native";
@@ -20,6 +20,8 @@ import { OptionPickerModal } from "../components/OptionPickerModal";
 import { WizardReviewMedicationSection } from "../components/symptomReviewLayout";
 import { PrimaryButton, SecondaryButton } from "../components/FlareButton";
 import { flareFieldErrorStyle, FlareInputTrigger, FlareTextInput } from "../components/FlareInput";
+import { InfoHintTitleRow } from "../components/InfoHintButton";
+import { SwipeToRemoveRow } from "../components/SwipeToRemoveRow";
 import { invalidateDashboardSnapshot } from "../lib/dashboardSnapshotCache";
 import { formatUkDate } from "../lib/formatUkDate";
 import { supabase, TABLES } from "../lib/supabase";
@@ -48,7 +50,13 @@ import {
 } from "../lib/medicationWizardShared";
 import { TRACK_MEDICATIONS_ICON } from "../lib/medicationFeatureIcons";
 import { useFlareColors } from "../theme";
-import { FULL_WIDTH_CTA_EDGE_PADDING } from "../lib/layoutConstants";
+import {
+  FULL_WIDTH_CTA_EDGE_PADDING,
+  HELP_NAV_LINK_BELOW_ACTIONS_MARGIN_TOP,
+  HELP_NAV_LINK_LABEL,
+  HELP_NAV_LINK_PRESS,
+  LANDING_CTA_SIDE_PAD,
+} from "../lib/layoutConstants";
 
 type SessionUser = { id: string };
 
@@ -425,56 +433,60 @@ export function MedicationTrackingWizardScreen({ user }: { user: SessionUser }) 
 
     return (
       <View>
-        <Text style={[styles.h3, { color: c.text }]}>{title}</Text>
+        <InfoHintTitleRow
+          hintTitle="Remove a medication"
+          hintMessage="Swipe left on a medication, then tap Remove. You need at least two medications listed."
+          hintAccessibilityLabel="How to remove a medication"
+        >
+          <Text style={[styles.h3, styles.h3BesideHint, { color: c.text }]}>{title}</Text>
+        </InfoHintTitleRow>
         {list.map((item, i) => (
           <View key={i} style={[styles.listEntryWrap, i === 0 ? styles.listEntryWrapFirst : null]}>
-            <View style={styles.listMedRow}>
-              <FlareTextInput
-                placeholder="Medication"
-                value={item.medication}
-                onChangeText={(t) => updateListRow(kind, i, "medication", t)}
-                style={{ marginTop: 0, paddingRight: 30 }}
-              />
-              {list.length > 1 ? (
-                <Pressable
-                  accessibilityRole="button"
-                  accessibilityLabel="Remove medication"
-                  hitSlop={{ top: 6, bottom: 6, left: 6, right: 6 }}
-                  onPress={() => removeListRow(kind, i)}
-                  style={[styles.listRemoveBtn, { backgroundColor: c.primary }]}
-                >
-                  <FlareLucideIcon icon={FLARE_CHROME_LUCIDE.close} size={14} color={c.white} />
-                </Pressable>
-              ) : null}
-            </View>
-            <FlareInputTrigger pickerIcon="date" onPress={() => openDatePicker(kind, i)}>
-              <Text style={{ color: item.date ? c.text : c.textMuted }}>
-                {item.date ? formatUkDate(item.date) : ""}
-              </Text>
-            </FlareInputTrigger>
-            <FlareInputTrigger pickerIcon="time" onPress={() => openTimePicker(kind, i)}>
-              <Text style={{ color: item.timeOfDay ? c.text : c.textMuted }}>
-                {item.timeOfDay || ""}
-              </Text>
-            </FlareInputTrigger>
-            {withDosage ? (
-              <FlareTextInput
-                placeholder="dose (mg)"
-                keyboardType="number-pad"
-                value={item.dosage ?? ""}
-                maxLength={5}
-                onChangeText={(t) => updateListRow(kind, i, "dosage", t)}
-              />
-            ) : null}
+            <SwipeToRemoveRow enabled={list.length > 1} onRemove={() => removeListRow(kind, i)}>
+              <View style={styles.listMedNameDoseRow}>
+                <FlareTextInput
+                  fieldIcon="pill"
+                  placeholder=""
+                  value={item.medication}
+                  onChangeText={(t) => updateListRow(kind, i, "medication", t)}
+                  style={styles.listMedNameInput}
+                />
+                {withDosage ? (
+                  <FlareTextInput
+                    trailingLabel="mg"
+                    placeholder=""
+                    keyboardType="number-pad"
+                    value={item.dosage ?? ""}
+                    maxLength={5}
+                    onChangeText={(t) => updateListRow(kind, i, "dosage", t)}
+                    style={styles.listMedDoseInput}
+                    accessibilityLabel="Dose in milligrams"
+                  />
+                ) : null}
+              </View>
+              <FlareInputTrigger pickerIcon="date" onPress={() => openDatePicker(kind, i)}>
+                <Text style={{ color: item.date ? c.text : c.textMuted }}>
+                  {item.date ? formatUkDate(item.date) : ""}
+                </Text>
+              </FlareInputTrigger>
+              <FlareInputTrigger pickerIcon="time" onPress={() => openTimePicker(kind, i)}>
+                <Text style={{ color: item.timeOfDay ? c.text : c.textMuted }}>
+                  {item.timeOfDay || ""}
+                </Text>
+              </FlareInputTrigger>
+            </SwipeToRemoveRow>
           </View>
         ))}
         <Pressable
           accessibilityRole="button"
           disabled={!canAdd}
           onPress={() => canAdd && addListRow(kind)}
-          style={{ marginBottom: 8, alignSelf: "flex-start", opacity: canAdd ? 1 : 0.45 }}
+          hitSlop={{ top: 10, bottom: 10, left: 8, right: 8 }}
+          style={styles.addMedLink}
         >
-          <Text style={{ color: c.primary, fontFamily: "Inter_700Bold" }}>Add medication</Text>
+          <Text style={{ color: c.primary, fontFamily: "Inter_700Bold", opacity: canAdd ? 1 : 0.45 }}>
+            Add medication
+          </Text>
         </Pressable>
         {fieldErrors[errKey] ? <Text style={errTextStyle}>{fieldErrors[errKey]}</Text> : null}
         {datePicker?.list === kind && datePicker.index >= 0 && pickerDraftDate ? (
@@ -551,24 +563,22 @@ export function MedicationTrackingWizardScreen({ user }: { user: SessionUser }) 
             </View>
             <Text style={[styles.landingTitle, { color: c.text }]}>Track Medications</Text>
             <Text style={[styles.landingSub, { color: c.textMuted }]}>
-              Track your medication adherence to identify patterns and triggers
+              Log medication events that may be relevant to your IBD.
             </Text>
             <View style={styles.landingCta}>
-              <PrimaryButton title="Start now" onPress={startWizard} />
+              <PrimaryButton title="Start now" onPress={startWizard} noTopMargin />
             </View>
           </View>
         ) : null}
 
         {currentStep === 1
-          ? renderYesNo("missedMedications", "Did you miss any prescribed medications recently?")
+          ? renderYesNo("missedMedications", "Did you miss any medications?")
           : null}
-        {currentStep === 2 ? renderMedicationList("missed", "Which medications did you miss?", false, "missedMedicationsList") : null}
-        {currentStep === 3
-          ? renderYesNo("nsaidUsage", "Did you take any NSAIDs (ibuprofen, naproxen, aspirin) recently?")
-          : null}
-        {currentStep === 4 ? renderMedicationList("nsaid", "Which NSAIDs did you take?", true, "nsaidList") : null}
+        {currentStep === 2 ? renderMedicationList("missed", "Please list any medications you missed below", false, "missedMedicationsList") : null}
+        {currentStep === 3 ? renderYesNo("nsaidUsage", "Did you take any NSAIDs recently?") : null}
+        {currentStep === 4 ? renderMedicationList("nsaid", "Please list any NSAIDs you have taken recently", true, "nsaidList") : null}
         {currentStep === 5 ? renderYesNo("antibioticUsage", "Did you take any antibiotics recently?") : null}
-        {currentStep === 6 ? renderMedicationList("antibiotic", "Which antibiotics did you take?", true, "antibioticList") : null}
+        {currentStep === 6 ? renderMedicationList("antibiotic", "Please list any antibiotics you have taken recently", true, "antibioticList") : null}
 
         {currentStep === 7 ? (
           <View>
@@ -621,6 +631,21 @@ export function MedicationTrackingWizardScreen({ user }: { user: SessionUser }) 
             ) : null}
           </View>
         ) : null}
+
+        {currentStep === 3 ? (
+          <Pressable
+            accessibilityRole="link"
+            accessibilityLabel="What are NSAIDs — open Help"
+            onPress={() => navigation.navigate("AccountHelp", { expandSection: "nsaids" })}
+            style={({ pressed }) => [
+              HELP_NAV_LINK_PRESS,
+              styles.helpLinkBelowActions,
+              pressed && { opacity: 0.7 },
+            ]}
+          >
+            <Text style={[HELP_NAV_LINK_LABEL, { color: c.text }]}>What are NSAIDs?</Text>
+          </Pressable>
+        ) : null}
       </ScrollView>
       </View>
 
@@ -644,7 +669,8 @@ const styles = StyleSheet.create({
     alignItems: "center",
     justifyContent: "center",
     paddingTop: 8,
-    paddingBottom: 32,
+    paddingBottom: 36,
+    width: "100%",
   },
   landingIconPanel: {
     width: 56,
@@ -652,39 +678,44 @@ const styles = StyleSheet.create({
     borderRadius: 16,
     alignItems: "center",
     justifyContent: "center",
-    marginBottom: 24,
+    marginBottom: 32,
   },
   landingTitle: {
     fontFamily: "Inter_800ExtraBold",
-    fontSize: 24,
-    lineHeight: 30,
-    marginBottom: 14,
+    fontSize: 22,
+    lineHeight: 28,
+    marginBottom: 20,
     textAlign: "center",
     letterSpacing: -0.4,
+    maxWidth: 360,
+    width: "100%",
   },
-  landingSub: { fontSize: 16, lineHeight: 24, textAlign: "center", marginBottom: 6, maxWidth: 360, paddingHorizontal: 4 },
-  landingCta: { width: "100%", maxWidth: 360, marginTop: 20 },
+  landingSub: {
+    fontSize: 16,
+    lineHeight: 22,
+    textAlign: "center",
+    marginBottom: 0,
+    paddingHorizontal: 4,
+    maxWidth: 360,
+    width: "100%",
+  },
+  landingCta: { width: "100%", paddingHorizontal: LANDING_CTA_SIDE_PAD, marginTop: 28 },
   phaseLine: { fontSize: 13, marginBottom: 12, fontFamily: "Inter_500Medium" },
-  h3: { fontFamily: "Inter_700Bold", fontSize: 20, marginBottom: 12 },
+  h3: { fontFamily: "Inter_700Bold", fontSize: 20, lineHeight: 28, marginBottom: 12 },
+  h3BesideHint: { marginBottom: 0 },
   rowGap: { gap: 14, marginTop: 8 },
   radioRow: { flexDirection: "row", alignItems: "center", gap: 10 },
   radioOuter: { width: 22, height: 22, borderRadius: 11, borderWidth: 2, alignItems: "center", justifyContent: "center" },
   radioInner: { width: 12, height: 12, borderRadius: 6 },
-  listEntryWrap: { marginBottom: 12 },
-  listEntryWrapFirst: { paddingTop: 4 },
-  listMedRow: { position: "relative", overflow: "visible" },
-  listRemoveBtn: {
-    position: "absolute",
-    top: -7,
-    right: -7,
-    zIndex: 4,
-    width: 22,
-    height: 22,
-    borderRadius: 11,
-    alignItems: "center",
-    justifyContent: "center",
-    ...Platform.select({ android: { elevation: 4 }, ios: {} }),
+  helpLinkBelowActions: {
+    marginTop: HELP_NAV_LINK_BELOW_ACTIONS_MARGIN_TOP,
   },
+  listEntryWrap: { marginBottom: 12 },
+  listEntryWrapFirst: { paddingTop: 0 },
+  addMedLink: { marginTop: 8, marginBottom: 8, alignSelf: "flex-start" },
+  listMedNameDoseRow: { flexDirection: "row", alignItems: "center", gap: 6 },
+  listMedNameInput: { flex: 1, minWidth: 0, marginTop: 0 },
+  listMedDoseInput: { width: 104, marginTop: 0, flexShrink: 0 },
   footerBtns: { marginTop: 24, gap: 10 },
   footerBtnsReview: { marginTop: 0 },
 });

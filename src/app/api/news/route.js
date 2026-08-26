@@ -22,7 +22,7 @@ async function fetchOgImage(articleUrl) {
     const controller = new AbortController()
     const timeout = setTimeout(() => controller.abort(), OG_FETCH_TIMEOUT_MS)
     const res = await fetch(articleUrl, {
-      headers: { 'User-Agent': 'Mozilla/5.0 (compatible; FlareCare/1.0; +https://flarecare.com)' },
+      headers: { 'User-Agent': 'Mozilla/5.0 (compatible; Flarecare/1.0; +https://flarecare.com)' },
       signal: controller.signal
     })
     clearTimeout(timeout)
@@ -99,7 +99,7 @@ export async function GET() {
   try {
     const parser = new Parser({
       timeout: 10000,
-      headers: { 'User-Agent': 'FlareCare/1.0 (IBD news aggregator)' }
+      headers: { 'User-Agent': 'Flarecare/1.0 (IBD news aggregator)' }
     })
 
     const seen = new Set()

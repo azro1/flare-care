@@ -188,6 +188,30 @@ export const FLARE_CAPTION_HINT = {
 } as const;
 
 /**
+ * Underlined Help navigation (Hydration, Reminders, Track Meds → AccountHelp).
+ * Pair with `c.text` — not `c.primary` (see DEV_NOTES tappable text rule).
+ */
+export const HELP_NAV_LINK_LABEL = {
+  fontSize: FLARE_FONT_SIZE.body,
+  lineHeight: FLARE_LINE_HEIGHT.body,
+  fontFamily: FLARE_FONT_FAMILY.regular,
+  textDecorationLine: "underline" as const,
+};
+
+/** Hit target for `HELP_NAV_LINK_LABEL` — center under content / CTAs. */
+export const HELP_NAV_LINK_PRESS = {
+  alignSelf: "center" as const,
+  paddingVertical: STACKED_LINE_GAP + 2,
+};
+
+/**
+ * Top margin when a Help link sits under stacked actions (wizard Next / Previous).
+ * Clears the last button label without a one-off magic number.
+ */
+export const HELP_NAV_LINK_BELOW_ACTIONS_MARGIN_TOP =
+  CONFIRM_MODAL_ACTIONS_GAP + HOME_TILE_GAP;
+
+/**
  * Secondary text actions next to shelf titles / under lists —
  * See my progress, See all, load more. Medium so they stay readable at small size.
  * Pair with `primary` (or another color) at the call site. Add underline only if the pattern needs it.
@@ -315,8 +339,14 @@ export function trackerThumbFabScrollPadding(fabBottom: number): number {
   return fabBottom + TRACKER_THUMB_FAB_SIZE + SCREEN_EDGE_PADDING + 4;
 }
 
-/** Screen edge → full-width primary CTA (sign-in, wizard landing, logout success). */
-export const FULL_WIDTH_CTA_EDGE_PADDING = 26;
+/** Screen edge → full-width CTA — same inset as in-wizard / form primary buttons. */
+export const FULL_WIDTH_CTA_EDGE_PADDING = 16;
+
+/**
+ * Extra side inset on landing CTAs (sign-in, logout/delete, wizard Start now).
+ * Applied inside `FULL_WIDTH_CTA_EDGE_PADDING` so those surfaces match when sliding.
+ */
+export const LANDING_CTA_SIDE_PAD = 10;
 
 /** Wizard step-0 `ScrollView` top inset — keep in sync with wizard screens. */
 export const WIZARD_LANDING_SCROLL_TOP_PADDING = 16;

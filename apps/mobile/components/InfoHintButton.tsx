@@ -1,12 +1,16 @@
 import { FLARE_CHROME_LUCIDE, FlareLucideIcon } from "../lib/flareLucideIcons";
 import React, { useState } from "react";
-import { Pressable, StyleSheet, View } from "react-native";
+import { Pressable, StyleSheet, Text, View } from "react-native";
 import { ConfirmModal } from "./ConfirmModal";
 import { useFlareColors } from "../theme";
 
 /**
  * Small info icon that opens a notice modal — keeps helper copy off the page
- * until someone wants it. Trial pattern for replacing always-on muted body text.
+ * until someone wants it.
+ *
+ * Works best for short “how to” tips next to list titles (e.g. swipe to remove).
+ * For longer explanations (what NSAIDs are, guidelines), prefer a Help link /
+ * AccountHelp section instead — title-row (i) placement fights long/short titles.
  */
 export function InfoHintButton({
   title,
@@ -44,7 +48,7 @@ export function InfoHintButton({
   );
 }
 
-/** Title + optional trailing info hint on one row. */
+/** Title + trailing info hint — space-between, items end (icon at top corner of content below). */
 export function InfoHintTitleRow({
   children,
   hintTitle,
@@ -73,17 +77,17 @@ export function InfoHintTitleRow({
 
 const styles = StyleSheet.create({
   hit: {
-    paddingVertical: 2,
-    paddingLeft: 4,
+    paddingVertical: 0,
   },
   titleRow: {
     flexDirection: "row",
-    alignItems: "center",
-    flexWrap: "wrap",
-    gap: 6,
+    justifyContent: "space-between",
+    alignItems: "flex-end",
+    gap: 8,
     marginBottom: 12,
   },
   titleSlot: {
-    flexShrink: 1,
+    flex: 1,
+    minWidth: 0,
   },
 });

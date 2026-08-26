@@ -29,12 +29,12 @@
 - Scroll up: title animates smaller and pins in the navigation header.
 - Scroll down: title expands back into the content area.
 
-FlareCare today uses a **fixed** small centered header title (`headerLargeTitleShown: false` in `App.tsx` `headerOptions`). No collapse animation.
+Flarecare today uses a **fixed** small centered header title (`headerLargeTitleShown: false` in `App.tsx` `headerOptions`). No collapse animation.
 
 ## Why consider it
 
 - Familiar on iOS; can feel polished on long scroll screens (Account, sub-screens).
-- Home/Dashboard: user prefers **no** fixed “FlareCare” title in header — large title is a different pattern; only add if it still feels clean.
+- Home/Dashboard: user prefers **no** fixed “Flarecare” title in header — large title is a different pattern; only add if it still feels clean.
 
 ## How (no new library)
 

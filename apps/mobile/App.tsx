@@ -24,6 +24,7 @@ import {
   Animated,
   Appearance,
   AppState,
+  Easing,
   Image,
   InteractionManager,
   Keyboard,
@@ -122,11 +123,16 @@ import {
   FLARE_CAPTION_HINT,
   FLARE_INLINE_ACTION_LINK,
   FLARE_LINE_HEIGHT,
+  HELP_NAV_LINK_LABEL,
+  HELP_NAV_LINK_PRESS,
   HOME_TILE_GAP,
   STACKED_LINE_GAP,
   SCREEN_EDGE_PADDING,
   FULL_WIDTH_CTA_EDGE_PADDING,
+  LANDING_CTA_SIDE_PAD,
   NAV_ROW_CHEVRON_SIZE,
+  CONFIRM_MODAL_STACK_GAP,
+  CONFIRM_MODAL_ACTIONS_GAP,
   SECTION_TITLE_MARGIN_BOTTOM,
   SECTION_TITLE_MARGIN_TOP,
   WIZARD_LANDING_BELOW_SAFE_TOP,
@@ -244,9 +250,11 @@ import {
 import {
   fetchSupplyDashboardSummary,
   getMedicalSupplyKitListCache,
+  needsMedicalSuppliesSetup,
   supplyDueStatusFromKitListCache,
   type SupplyDueStatus,
 } from "./lib/medicalSuppliesShared";
+import { SUPPLIES_SETUP_STEP_INTRO } from "./screens/MedicalSuppliesSetupScreen";
 import {
   clearMedicationNotificationsForUser,
   ensureLocalReminderNotificationsReady,
@@ -288,6 +296,29 @@ function BrandMarkIcon({ size, color }: { size: number; color: string }) {
   return <FlareLucideIcon icon={FLARE_CHROME_LUCIDE.brandMark} size={size} color={color} />;
 }
 
+/** Side-by-side hand+heart + Flarecare — splash, auth, Almost there. */
+const FLARE_BRAND_MARK_SIZE = 28;
+
+function FlareBrandLockup({
+  markColor,
+  nameColor,
+  nameSize = 28,
+  style,
+}: {
+  markColor: string;
+  nameColor: string;
+  /** Wordmark size — splash stays 28; sign-in uses 26. */
+  nameSize?: number;
+  style?: StyleProp<ViewStyle>;
+}) {
+  return (
+    <View style={[styles.flareBrandLockup, style]}>
+      <BrandMarkIcon size={FLARE_BRAND_MARK_SIZE} color={markColor} />
+      <Text style={[styles.flareBrandLockupName, { color: nameColor, fontSize: nameSize }]}>Flarecare</Text>
+    </View>
+  );
+}
+
 type SessionUser = {
   id: string;
   email?: string | null;
@@ -322,7 +353,7 @@ function sessionUserFromSupabaseAuthUser(u: {
   id: string;
   email?: string | null;
   user_metadata?: Record<string, unknown> | null;
-  created_at?: string;
+  created_at?: string | null;
   identities?: { provider: string }[] | null;
   app_metadata?: Record<string, unknown> | null;
 }): SessionUser {
@@ -452,10 +483,7 @@ function SplashScreen({ showBrand = true }: { showBrand?: boolean }) {
   }
   return (
     <View style={[styles.splashScreen, { backgroundColor: c.screen }]}>
-      <View style={styles.splashBrandRow}>
-        <BrandMarkIcon size={28} color={c.primary} />
-        <Text style={[styles.splashBrandName, { color: c.text }]}>FlareCare</Text>
-      </View>
+      <FlareBrandLockup markColor={c.primary} nameColor={c.text} />
     </View>
   );
 }
@@ -468,8 +496,8 @@ const SIGN_OUT_COPY: Record<SignOutReason, { title: string; message: string }> =
     message: "Your session has ended.",
   },
   account_deleted: {
-    title: "Account Deleted",
-    message: "Your account and associated data have been permanently deleted.",
+    title: "Account deleted",
+    message: "Your account and data have been permanently deleted.",
   },
 };
 
@@ -529,10 +557,13 @@ function AuthOtpCountdown({
   sentAt,
   color,
   onExpire,
+  /** Keep the timer row mounted (e.g. while verifying) so the form doesn’t jump up. */
+  freeze = false,
 }: {
   sentAt: number;
   color: string;
   onExpire: () => void;
+  freeze?: boolean;
 }) {
   const [remaining, setRemaining] = useState(() => otpRemainingSeconds(sentAt, Date.now()));
   const expiredRef = useRef(false);
@@ -542,7 +573,7 @@ function AuthOtpCountdown({
     const tick = () => {
       const next = otpRemainingSeconds(sentAt, Date.now());
       setRemaining(next);
-      if (next <= 0 && !expiredRef.current) {
+      if (next <= 0 && !expiredRef.current && !freeze) {
         expiredRef.current = true;
         onExpire();
       }
@@ -550,23 +581,29 @@ function AuthOtpCountdown({
     tick();
     const id = setInterval(tick, 1000);
     return () => clearInterval(id);
-  }, [sentAt, onExpire]);
+  }, [sentAt, onExpire, freeze]);
 
-  if (remaining <= 0) return null;
+  if (remaining <= 0 && !freeze) return null;
   return (
     <Text style={[styles.authOtpCountdown, { color }]}>
-      Code expires in {formatOtpCountdown(remaining)}
+      Code expires in {formatOtpCountdown(Math.max(0, remaining))}
     </Text>
   );
 }
 
 /**
- * Fixed top inset for the FlareCare brand on Auth + Almost there.
- * Must stay identical on both screens so the lockup never jumps when step/content height changes.
- * (Do not use flex vertical centering for that stack — shorter forms drop the brand.)
+ * Fixed top inset for the auth content block (brand → CTAs) on Auth + Almost there.
+ * Places the method stack slightly above vertical centre (optical balance above fingerprint).
+ * Same offset on every step so the brand never jumps.
  */
-function authLockupTopSpacer(windowHeight: number): number {
-  return Math.max(48, Math.round(windowHeight * 0.12));
+const AUTH_METHOD_STACK_HEIGHT = 270;
+const AUTH_BOTTOM_CLUSTER_RESERVE = 150;
+
+function authLockupTopSpacer(windowHeight: number, topChrome: number): number {
+  const usable = windowHeight - topChrome - AUTH_BOTTOM_CLUSTER_RESERVE;
+  const targetCenter = usable * 0.42;
+  const top = Math.round(targetCenter - AUTH_METHOD_STACK_HEIGHT / 2);
+  return Math.max(40, top);
 }
 
 function AuthScreen({
@@ -576,7 +613,10 @@ function AuthScreen({
   onCancelSessionHandoff,
 }: {
   /** Optional handoff skips the post-auth splash blink (intro already resolved). */
-  onSignedIn: (u: SessionUser, handoff?: { newUserIntroPending: boolean }) => void;
+  onSignedIn: (
+    u: SessionUser,
+    handoff?: { newUserIntroPending: boolean; brandSplash?: boolean },
+  ) => void;
   /** Hide login while OAuth completes after browser closes (avoids flash). */
   onAuthBusy?: (busy: boolean) => void;
   /** Ignore onAuthStateChange setUser until onSignedIn finishes (prevents splash blink). */
@@ -587,7 +627,8 @@ function AuthScreen({
   const cAuth = useFlareColors();
   const insets = useSafeAreaInsets();
   const { height: windowHeight } = useWindowDimensions();
-  const lockupTop = authLockupTopSpacer(windowHeight);
+  const authTopChrome = insets.top + 24;
+  const lockupTop = authLockupTopSpacer(windowHeight, authTopChrome);
   const [activeAuthAction, setActiveAuthAction] = useState<"email" | "code" | "google" | "resend" | null>(null);
   const [step, setStep] = useState<"method" | "email" | "code">("method");
   const [otpSentAt, setOtpSentAt] = useState<number | null>(null);
@@ -598,16 +639,13 @@ function AuthScreen({
   const [otpExpired, setOtpExpired] = useState(false);
   const otpInputRef = useRef<TextInput>(null);
   const [legalAccepted, setLegalAccepted] = useState(false);
-  /** false until we've read whether this install already agreed — avoids flashing the checkbox. */
+  /** false until we've read whether this install already agreed — avoids enabling CTAs too early. */
   const [legalHydrated, setLegalHydrated] = useState(false);
-  /** First-time on this install only — locked in after hydrate, not toggled away when they tick the box. */
+  /** First-time on this install only — sheet required before email/Google until they agree this session. */
   const [showLegalConsent, setShowLegalConsent] = useState(false);
+  const [legalConsentVisible, setLegalConsentVisible] = useState(false);
   const [authLegalModal, setAuthLegalModal] = useState<LegalDocumentKind | null>(null);
 
-  const toggleLegalAccepted = useCallback(() => {
-    // Local only — persist after a completed sign-in, not on tick (or coming back from email hides the row).
-    setLegalAccepted((prev) => !prev);
-  }, []);
   const emailSchema = useMemo(
     () =>
       yup.object({
@@ -699,29 +737,34 @@ function AuthScreen({
   };
 
   const finishAuthAsSignedIn = useCallback(
-    async (authUser: {
-      id: string;
-      email?: string | null;
-      created_at?: string | null;
-      user_metadata?: Record<string, unknown> | null;
-      identities?: { provider: string }[] | null;
-      app_metadata?: Record<string, unknown> | null;
-    }) => {
+    async (
+      authUser: {
+        id: string;
+        email?: string | null;
+        created_at?: string | null;
+        user_metadata?: Record<string, unknown> | null;
+        identities?: { provider: string }[] | null;
+        app_metadata?: Record<string, unknown> | null;
+      },
+      opts?: { brandSplash?: boolean },
+    ) => {
       await setAuthLegalAccepted(true);
       if (isNewAuthUser(authUser)) {
         await markNewAccountInstructionTipsEligible(authUser.id);
       }
-      const sessionUser = sessionUserFromSupabaseAuthUser({
-        ...authUser,
-        created_at: authUser.created_at ?? undefined,
-      });
-      // Resolve intro before leaving Auth so AppRoot can mount welcome in the same paint —
-      // no intermediate splash blink between verification and the first welcome slide.
+      const sessionUser = sessionUserFromSupabaseAuthUser(authUser);
+      // Resolve intro before leaving Auth so AppRoot can mount welcome after the brand beat.
       const newUserIntroPending = await resolveNewUserIntroPending(
         sessionUser.id,
         sessionUser.accountCreatedAt,
       );
-      onSignedIn(sessionUser, { newUserIntroPending });
+      // Profile setup ("Almost there") is the next step — don't cover it with a brand fade.
+      const needsProfileSetup = profileNeedsSetup(sessionUser);
+      onSignedIn(sessionUser, {
+        newUserIntroPending,
+        // Fingerprint quick-unlock skips the celebratory splash (already on the auth landing).
+        brandSplash: opts?.brandSplash !== false && !needsProfileSetup,
+      });
     },
     [onSignedIn],
   );
@@ -742,23 +785,26 @@ function AuthScreen({
     }
     setActiveAuthAction("code");
     onBeginSessionHandoff?.();
+    otpInputRef.current?.blur();
+    Keyboard.dismiss();
     const { data, error } = await supabase.auth.verifyOtp({
       email,
       token: trimmed,
       type: "email",
     });
-    setActiveAuthAction(null);
     if (error) {
+      setActiveAuthAction(null);
       onCancelSessionHandoff?.();
       showFlareAlert("Code verification failed", otpVerifyErrorMessage(error.message));
       return;
     }
-    clearOtpSession();
+    // Keep code + timer on screen until Auth unmounts — clearing them mid-handoff jumps the layout up.
     const user = data.user;
     if (user) {
       try {
         await finishAuthAsSignedIn(user);
       } catch (e) {
+        setActiveAuthAction(null);
         onCancelSessionHandoff?.();
         showFlareAlert(
           "Sign in failed",
@@ -766,6 +812,7 @@ function AuthScreen({
         );
       }
     } else {
+      setActiveAuthAction(null);
       onCancelSessionHandoff?.();
     }
   };
@@ -812,8 +859,7 @@ function AuthScreen({
         const { data: sessionData } = await supabase.auth.getSession();
         const sessionUser = sessionData.session?.user;
         if (sessionUser) {
-          // Keep the plain cover up until handoff finishes. Clearing authBusy here painted Auth
-          // for a frame (blink) while intro was still resolving.
+          // Keep the brand cover up until handoff finishes, then postSignInSplash holds it.
           await finishAuthAsSignedIn(sessionUser);
           onAuthBusy?.(false);
         } else {
@@ -831,6 +877,25 @@ function AuthScreen({
       }
     }
     setActiveAuthAction(null);
+  };
+
+  /** First-time installs: open consent sheet before email/Google; returning users skip. */
+  const beginAuthAction = (action: "email" | "google") => {
+    if (showLegalConsent && !legalAccepted) {
+      setLegalConsentVisible(true);
+      return;
+    }
+    if (action === "email") setStep("email");
+    else void signInGoogle();
+  };
+
+  const closeLegalConsentSheet = () => {
+    setLegalConsentVisible(false);
+  };
+
+  const agreeLegalAndContinue = () => {
+    setLegalAccepted(true);
+    setLegalConsentVisible(false);
   };
 
   /** Same layout as gray auth; fill page with blue in light appearance only. */
@@ -870,7 +935,7 @@ function AuthScreen({
     onBeginSessionHandoff?.();
     onAuthBusy?.(true);
     try {
-      await finishAuthAsSignedIn(sessionUser);
+      await finishAuthAsSignedIn(sessionUser, { brandSplash: false });
     } catch {
       onCancelSessionHandoff?.();
     }
@@ -926,7 +991,7 @@ function AuthScreen({
         styles.authScreenFill,
         {
           backgroundColor: authBlue ? cAuth.primary : cAuth.screen,
-          paddingTop: insets.top + 24,
+          paddingTop: authTopChrome,
           // Match BiometricLockScreen bottom inset so the fingerprint sits on the same baseline.
           paddingBottom: Math.max(insets.bottom, 16),
           paddingHorizontal: FULL_WIDTH_CTA_EDGE_PADDING,
@@ -936,79 +1001,57 @@ function AuthScreen({
       <View style={styles.authInlineBody}>
         <View style={{ height: lockupTop }} />
         <View style={[styles.authInlinePanel, styles.authMethodPanel]}>
-          <View style={styles.authLandingBrandRow}>
-            <BrandMarkIcon size={28} color={onPrimaryChrome ? cAuth.white : cAuth.primary} />
-            <Text style={[styles.authLandingName, { color: onPrimaryChrome ? cAuth.white : cAuth.text }]}>
-              FlareCare
+          <FlareBrandLockup
+            markColor={onPrimaryChrome ? cAuth.white : cAuth.primary}
+            nameColor={onPrimaryChrome ? cAuth.white : cAuth.text}
+            nameSize={26}
+            style={step === "method" ? styles.authLandingBrandRowWithTagline : styles.authLandingBrandRowSpaced}
+          />
+          {step === "method" ? (
+            <Text
+              style={[
+                styles.authLandingTagline,
+                { color: onPrimaryChrome ? "rgba(255,255,255,0.82)" : cAuth.textMuted },
+              ]}
+            >
+              Your health. Your IBD. Your control.
             </Text>
-          </View>
-          <Text style={[styles.authPromptTitle, { color: onPrimaryChrome ? cAuth.white : cAuth.text }]}>
-            {step === "method"
-              ? "Sign in to continue"
-              : step === "email"
-                ? "Sign in with email"
-                : "Enter your code"}
-          </Text>
+          ) : (
+            <Text style={[styles.authPromptTitle, { color: onPrimaryChrome ? cAuth.white : cAuth.text }]}>
+              {step === "email" ? "Sign in with email" : "Enter your code"}
+            </Text>
+          )}
 
           <View style={styles.authStepBody}>
           {step === "method" ? (
             <>
-              {showLegalConsent ? (
-                <Pressable
-                  accessibilityRole="checkbox"
-                  accessibilityState={{ checked: legalAccepted }}
-                  accessibilityLabel="Agree to Terms of Service and Privacy Policy, including the processing of my health information"
-                  onPress={toggleLegalAccepted}
-                  style={styles.authLegalRow}
-                >
-                  <View
-                    style={[
-                      styles.authLegalCheckbox,
-                      {
-                        borderColor: onPrimaryChrome ? "rgba(255,255,255,0.6)" : cAuth.cardBorder,
-                        backgroundColor: legalAccepted ? (onPrimaryChrome ? cAuth.white : cAuth.primary) : "transparent",
-                      },
-                    ]}
-                  >
-                    {legalAccepted ? (
-                      <FlareLucideIcon
-                        icon={FLARE_CHROME_LUCIDE.check}
-                        size={14}
-                        color={onPrimaryChrome ? cAuth.primary : cAuth.white}
-                      />
-                    ) : null}
-                  </View>
-                  <Text style={[styles.authLegalText, { color: onPrimaryChrome ? "rgba(255,255,255,0.9)" : cAuth.textMuted }]}>
-                    I agree to the{" "}
-                    <Text
-                      style={[styles.authLegalLink, { color: onPrimaryChrome ? cAuth.white : cAuth.primary }]}
-                      onPress={() => setAuthLegalModal("terms")}
-                    >
-                      Terms of Service
-                    </Text>{" "}
-                    and{" "}
-                    <Text
-                      style={[styles.authLegalLink, { color: onPrimaryChrome ? cAuth.white : cAuth.primary }]}
-                      onPress={() => setAuthLegalModal("privacy")}
-                    >
-                      Privacy Policy
-                    </Text>
-                    , including the processing of my health information.
-                  </Text>
-                </Pressable>
-              ) : null}
-              <View style={styles.authMethodActions}>
+              <View style={[styles.authMethodActions, styles.authMethodActionsUnderTagline]}>
                 <PrimaryButton
                   title="Continue with email"
-                  onPress={() => setStep("email")}
-                  disabled={activeAuthAction !== null || !legalHydrated || !legalAccepted}
+                  onPress={() => beginAuthAction("email")}
+                  disabled={activeAuthAction !== null || !legalHydrated}
                   variant={onPrimaryChrome ? "onPrimary" : "default"}
+                  noTopMargin
+                  leftIcon={
+                    <FlareLucideIcon
+                      icon={FLARE_CHROME_LUCIDE.mail}
+                      size={16}
+                      color={
+                        activeAuthAction !== null || !legalHydrated
+                          ? cAuth.primaryHover
+                          : onPrimaryChrome
+                            ? cAuth.primary
+                            : cAuth.white
+                      }
+                    />
+                  }
                 />
                 <SecondaryButton
                   title={activeAuthAction === "google" ? "Loading..." : "Continue with Google"}
-                  onPress={signInGoogle}
-                  disabled={activeAuthAction !== null || !legalHydrated || !legalAccepted}
+                  onPress={() => beginAuthAction("google")}
+                  disabled={activeAuthAction !== null || !legalHydrated}
                   variant={onPrimaryChrome ? "onPrimary" : "default"}
+                  noTopMargin
                   leftIcon={
                     <Ionicons name="logo-google" size={16} color={onPrimaryChrome ? "#ffffff" : cAuth.secondaryBtnText} />
                   }
@@ -1018,12 +1061,12 @@ function AuthScreen({
                 <FlareLucideIcon
                   icon={FLARE_CHROME_LUCIDE.lock}
                   size={13}
-                  color={onPrimaryChrome ? "rgba(255,255,255,0.75)" : cAuth.textMuted}
+                  color={onPrimaryChrome ? "rgba(255,255,255,0.7)" : cAuth.textMuted}
                 />
                 <Text
                   style={[
                     styles.authSecureNoteText,
-                    { color: onPrimaryChrome ? "rgba(255,255,255,0.75)" : cAuth.textMuted },
+                    { color: onPrimaryChrome ? "rgba(255,255,255,0.7)" : cAuth.textMuted },
                   ]}
                 >
                   Secure sign-in
@@ -1112,6 +1155,7 @@ function AuthScreen({
                   sentAt={otpSentAt}
                   color={onPrimaryChrome ? "rgba(255,255,255,0.88)" : cAuth.textMuted}
                   onExpire={markOtpExpired}
+                  freeze={activeAuthAction === "code"}
                 />
               ) : null}
               {canResendOtp ? (
@@ -1202,6 +1246,30 @@ function AuthScreen({
         </View>
       ) : null}
 
+      <SlideUpSheet visible={legalConsentVisible} onClose={closeLegalConsentSheet}>
+        <View style={styles.authLegalSheetBody}>
+          <Text style={[styles.authLegalSheetTitle, { color: cAuth.text }]}>Before you continue</Text>
+          <Text style={[styles.authLegalSheetCopy, { color: cAuth.textMuted }]}>
+            To use Flarecare you need to agree to our{" "}
+            <Text
+              style={[styles.authLegalLink, { color: cAuth.primary }]}
+              onPress={() => setAuthLegalModal("terms")}
+            >
+              Terms of Service
+            </Text>{" "}
+            and{" "}
+            <Text
+              style={[styles.authLegalLink, { color: cAuth.primary }]}
+              onPress={() => setAuthLegalModal("privacy")}
+            >
+              Privacy Policy
+            </Text>
+            , including the processing of your health information.
+          </Text>
+          <PrimaryButton title="Agree" onPress={agreeLegalAndContinue} noTopMargin />
+        </View>
+      </SlideUpSheet>
+
       <Modal
         visible={authLegalModal !== null}
         animationType="slide"
@@ -1239,7 +1307,8 @@ function ProfileSetupScreen({ user, onComplete }: { user: SessionUser; onComplet
   const cAuth = useFlareColors();
   const insets = useSafeAreaInsets();
   const { height: windowHeight } = useWindowDimensions();
-  const lockupTop = authLockupTopSpacer(windowHeight);
+  const authTopChrome = insets.top + 24;
+  const lockupTop = authLockupTopSpacer(windowHeight, authTopChrome);
   const authBlue = !cAuth.isDark;
   const onPrimaryChrome = authBlue;
   const [saving, setSaving] = useState(false);
@@ -1289,7 +1358,7 @@ function ProfileSetupScreen({ user, onComplete }: { user: SessionUser; onComplet
         styles.authScreenFill,
         {
           backgroundColor: authBlue ? cAuth.primary : cAuth.screen,
-          paddingTop: insets.top + 24,
+          paddingTop: authTopChrome,
           paddingBottom: Math.max(insets.bottom, 16),
           paddingHorizontal: FULL_WIDTH_CTA_EDGE_PADDING,
         },
@@ -1298,12 +1367,11 @@ function ProfileSetupScreen({ user, onComplete }: { user: SessionUser; onComplet
       <View style={styles.authInlineBody}>
         <View style={{ height: lockupTop }} />
         <View style={[styles.authInlinePanel, styles.authMethodPanel]}>
-          <View style={styles.authLandingBrandRow}>
-            <BrandMarkIcon size={28} color={onPrimaryChrome ? cAuth.white : cAuth.primary} />
-            <Text style={[styles.authLandingName, { color: onPrimaryChrome ? cAuth.white : cAuth.text }]}>
-              FlareCare
-            </Text>
-          </View>
+          <FlareBrandLockup
+            markColor={onPrimaryChrome ? cAuth.white : cAuth.primary}
+            nameColor={onPrimaryChrome ? cAuth.white : cAuth.text}
+            style={styles.authLandingBrandRowSpaced}
+          />
           <Text style={[styles.authPromptTitle, { color: onPrimaryChrome ? cAuth.white : cAuth.text }]}>
             Almost there!
           </Text>
@@ -1597,7 +1665,17 @@ function DashboardScreen({ user }: { user: SessionUser }) {
       width={tileWidth}
       label={item.label}
       variant="grid"
-      onPress={() => navigation.navigate(item.screen)}
+      onPress={() => {
+        // Skip empty hub when cache already says first-time setup (avoids list → setup flash).
+        if (item.key === "supplies") {
+          const cached = getMedicalSupplyKitListCache(user.id);
+          if (cached == null || needsMedicalSuppliesSetup(cached.length)) {
+            navigation.navigate("MedicalSuppliesSetup", { startStep: SUPPLIES_SETUP_STEP_INTRO });
+            return;
+          }
+        }
+        navigation.navigate(item.screen);
+      }}
       icon={<FlareLucideIcon icon={item.lucide} size={HOME_TILE_ICON_SIZE_CHECKIN} color={c.primary} />}
     />
   );
@@ -1686,13 +1764,66 @@ function DashboardScreen({ user }: { user: SessionUser }) {
         newsError: seedSnap?.newsError ?? null,
       };
       if (seedSnap?.todaySummary) setTodaySummary({ ...EMPTY_TODAY_SUMMARY, ...seedSnap.todaySummary });
+      // Show last weather immediately — don't wait for the network round-trip (greeting was always late).
+      if (seedSnap?.weatherMeta) {
+        setWeatherMeta(seedSnap.weatherMeta);
+        setWeather(seedSnap.weather);
+      }
       if ((seedSnap?.newsItems?.length ?? 0) > 0) {
         setNewsItems(dedupeNewsItems(seedSnap!.newsItems));
         setNewsError(seedSnap!.newsError);
         setNewsLoading(false);
       }
 
+      const loadWeather = async () => {
+        try {
+          const apiBase =
+            process.env.EXPO_PUBLIC_API_BASE_URL ||
+            (process.env.EXPO_PUBLIC_SUPABASE_URL ? `${process.env.EXPO_PUBLIC_SUPABASE_URL}/functions/v1` : "") ||
+            process.env.EXPO_PUBLIC_WEB_API_BASE_URL ||
+            "";
+          if (!apiBase) {
+            snap.weatherMeta = null;
+            snap.weather = "Weather unavailable";
+          } else if (apiBase.includes("/functions/v1")) {
+            const weatherUrl = `${apiBase}/weather?lat=51.5074&lon=-0.1278`;
+            const weatherRes = await fetch(weatherUrl);
+            if (!weatherRes.ok) throw new Error("weather function failed");
+            const weatherJson = await weatherRes.json();
+            if (weatherJson?.city && weatherJson?.temp != null) {
+              const desc = weatherJson.desc ?? weatherJson.main ?? "Weather";
+              snap.weatherMeta = {
+                city: weatherJson.city,
+                temp: weatherJson.temp,
+                desc,
+                icon: weatherJson.icon ?? null,
+              };
+              snap.weather = "Connected";
+            } else {
+              snap.weatherMeta = null;
+              snap.weather = "Weather unavailable";
+            }
+          } else {
+            snap.weatherMeta = null;
+            snap.weather = "Weather unavailable";
+          }
+          if (cancelled) return;
+          setWeatherMeta(snap.weatherMeta);
+          setWeather(snap.weather);
+        } catch {
+          // Keep seeded weather on failure — don't blank a good greeting for a flaky fetch.
+          if (seedSnap?.weatherMeta) return;
+          snap.weatherMeta = null;
+          snap.weather = "Weather unavailable";
+          if (cancelled) return;
+          setWeatherMeta(null);
+          setWeather(snap.weather);
+        }
+      };
+
       const load = async () => {
+        // Weather in parallel with today counts — was sequential after meds/hydration and always late.
+        const weatherReady = loadWeather();
         try {
           const today = todayYmd();
           const [todaySymptomsRes, medicationsList, takenMedsRes, todayHydrationRes, todayWellbeingRes, todayMedTrackRes] =
@@ -1748,47 +1879,7 @@ function DashboardScreen({ user }: { user: SessionUser }) {
           }
         }
 
-        try {
-          const apiBase =
-            process.env.EXPO_PUBLIC_API_BASE_URL ||
-            (process.env.EXPO_PUBLIC_SUPABASE_URL ? `${process.env.EXPO_PUBLIC_SUPABASE_URL}/functions/v1` : "") ||
-            process.env.EXPO_PUBLIC_WEB_API_BASE_URL ||
-            "";
-          if (!apiBase) {
-            snap.weatherMeta = null;
-            snap.weather = "Weather unavailable";
-          } else if (apiBase.includes("/functions/v1")) {
-            const weatherUrl = `${apiBase}/weather?lat=51.5074&lon=-0.1278`;
-            const weatherRes = await fetch(weatherUrl);
-            if (!weatherRes.ok) throw new Error("weather function failed");
-            const weatherJson = await weatherRes.json();
-            if (weatherJson?.city && weatherJson?.temp != null) {
-              const desc = weatherJson.desc ?? weatherJson.main ?? "Weather";
-              snap.weatherMeta = {
-                city: weatherJson.city,
-                temp: weatherJson.temp,
-                desc,
-                icon: weatherJson.icon ?? null,
-              };
-              snap.weather = "Connected";
-            } else {
-              snap.weatherMeta = null;
-              snap.weather = "Weather unavailable";
-            }
-          } else {
-            snap.weatherMeta = null;
-            snap.weather = "Weather unavailable";
-          }
-          if (cancelled) return;
-          setWeatherMeta(snap.weatherMeta);
-          setWeather(snap.weather);
-        } catch {
-          snap.weatherMeta = null;
-          snap.weather = "Weather unavailable";
-          if (cancelled) return;
-          setWeatherMeta(null);
-          setWeather(snap.weather);
-        }
+        await weatherReady;
 
         try {
           if (!SHOW_DASHBOARD_NEWS) {
@@ -1942,7 +2033,7 @@ function DashboardScreen({ user }: { user: SessionUser }) {
           <View style={[logHistoryCardStyles.trackerCard, styles.prioritiesCard, { backgroundColor: c.card }]}>
             <View style={[styles.prioritiesTray, { backgroundColor: c.surfaceSubtle }]}>
               {priorityItems.length === 0 ? (
-                <Text style={[styles.prioritiesCaughtUp, { color: c.textMuted }]}>{"You're caught up for today"}</Text>
+                <Text style={[styles.prioritiesCaughtUp, { color: c.textMuted }]}>{"All set for today!"}</Text>
               ) : (
                 <>
                   {visiblePriorityItems.map((item) => (
@@ -3119,7 +3210,7 @@ const NOTIFICATION_HELP_SECTIONS = [
   {
     label: "Phone settings",
     steps: [
-      "Open your phone settings for Flare Care Mobile.",
+      "Open your phone settings for Flarecare Mobile.",
       "Turn notifications on.",
     ],
   },
@@ -3211,6 +3302,31 @@ function AppointmentSummaryHelpContent() {
   );
 }
 
+function NsaidHelpContent() {
+  const c = useFlareColors();
+  const examples = ["Ibuprofen", "Naproxen", "Aspirin"];
+
+  return (
+    <>
+      <Text style={[logHistoryCardStyles.trackerIntro, styles.helpCardIntro, { color: c.textMuted }]}>
+        NSAIDs are common painkillers. They’re useful to track because they can affect IBD symptoms for some people.
+      </Text>
+      <Text style={[styles.notificationHelpSectionTitle, { color: c.text }]}>Common examples</Text>
+      <View style={styles.notificationHelpStepList}>
+        {examples.map((name) => (
+          <View key={name} style={styles.notificationHelpStepRow}>
+            <Text style={[styles.notificationHelpStepBullet, { color: c.primary }]}>•</Text>
+            <Text style={[styles.text, styles.notificationHelpStepText, { color: c.textMuted }]}>{name}</Text>
+          </View>
+        ))}
+      </View>
+      <Text style={[styles.muted, styles.notificationHelpEmphasis, { color: c.textMuted, lineHeight: 20 }]}>
+        This is for your own records — not medical advice. Ask your clinician if you’re unsure about any medicine.
+      </Text>
+    </>
+  );
+}
+
 function HelpSectionDropdown({
   title,
   expanded,
@@ -3252,6 +3368,7 @@ function AccountHelpScreen() {
   const [notificationsOpen, setNotificationsOpen] = useState(false);
   const [hydrationOpen, setHydrationOpen] = useState(false);
   const [appointmentSummaryOpen, setAppointmentSummaryOpen] = useState(false);
+  const [nsaidsOpen, setNsaidsOpen] = useState(false);
 
   useFocusEffect(
     useCallback(() => {
@@ -3260,16 +3377,25 @@ function AccountHelpScreen() {
         setNotificationsOpen(true);
         setHydrationOpen(false);
         setAppointmentSummaryOpen(false);
+        setNsaidsOpen(false);
         navigation.setParams({ expandSection: undefined });
       } else if (section === "hydration") {
         setHydrationOpen(true);
         setNotificationsOpen(false);
         setAppointmentSummaryOpen(false);
+        setNsaidsOpen(false);
         navigation.setParams({ expandSection: undefined });
       } else if (section === "appointmentSummary") {
         setAppointmentSummaryOpen(true);
         setNotificationsOpen(false);
         setHydrationOpen(false);
+        setNsaidsOpen(false);
+        navigation.setParams({ expandSection: undefined });
+      } else if (section === "nsaids") {
+        setNsaidsOpen(true);
+        setNotificationsOpen(false);
+        setHydrationOpen(false);
+        setAppointmentSummaryOpen(false);
         navigation.setParams({ expandSection: undefined });
       }
     }, [navigation, route.params?.expandSection]),
@@ -3300,6 +3426,13 @@ function AccountHelpScreen() {
         onToggle={() => setAppointmentSummaryOpen((open) => !open)}
       >
         <AppointmentSummaryHelpContent />
+      </HelpSectionDropdown>
+      <HelpSectionDropdown
+        title="NSAIDs"
+        expanded={nsaidsOpen}
+        onToggle={() => setNsaidsOpen((open) => !open)}
+      >
+        <NsaidHelpContent />
       </HelpSectionDropdown>
     </ScrollView>
   );
@@ -3543,7 +3676,7 @@ function IbdScreen() {
       <Text style={[styles.dashboardSectionTitleLeft, styles.aboutContactSectionTitle, { color: c.text }]}>Common Triggers</Text>
       <IbdBulletList items={IBD_TRIGGERS} isLastInSection />
 
-      <Text style={[styles.dashboardSectionTitleLeft, styles.aboutContactSectionTitle, { color: c.text }]}>How FlareCare Can Help</Text>
+      <Text style={[styles.dashboardSectionTitleLeft, styles.aboutContactSectionTitle, { color: c.text }]}>How Flarecare Can Help</Text>
       <IbdCheckList items={IBD_FLARECARE_HELPS} isLastInSection />
     </CollapsingTitleScrollScreen>
   );
@@ -3621,9 +3754,9 @@ function AboutScreen() {
         A personal journey turned into a tool for the community
       </Text>
 
-      <Text style={[styles.dashboardSectionTitleLeft, { color: c.text }]}>What is FlareCare?</Text>
+      <Text style={[styles.dashboardSectionTitleLeft, { color: c.text }]}>What is Flarecare?</Text>
       <Text style={[styles.text, styles.aboutBody, { color: c.textMuted }]}>
-        FlareCare is a mobile app for IBD self-management. You can record symptoms, medications, hydration, bowel
+        Flarecare is a mobile app for IBD self-management. You can record symptoms, medications, hydration, bowel
         movements, weight, and appointments; receive medication reminders; review summaries on your dashboard; prepare
         appointment briefs; and export reports to share with your clinician—all in one place on your device.
       </Text>
@@ -3633,7 +3766,7 @@ function AboutScreen() {
         enough to sustain between clinic visits.
       </Text>
       <Text style={[styles.text, styles.aboutBodyLast, { color: c.textMuted }]}>
-        FlareCare does not provide medical advice, diagnosis, or treatment, and it is not a substitute for professional
+        Flarecare does not provide medical advice, diagnosis, or treatment, and it is not a substitute for professional
         medical care. Always follow the advice of your qualified healthcare providers.
       </Text>
 
@@ -3643,7 +3776,7 @@ function AboutScreen() {
       </Text>
       <Pressable
         accessibilityRole="button"
-        accessibilityLabel="Email FlareCare support"
+        accessibilityLabel="Email Flarecare support"
         onPress={aboutSupportEmail}
         style={({ pressed }) => [styles.aboutSupportButton, pressed && styles.aboutSupportButtonPressed]}
       >
@@ -4737,6 +4870,8 @@ function AppRoot() {
   const [loading, setLoading] = useState(true);
   const [authBusy, setAuthBusy] = useState(false);
   const [showSplash, setShowSplash] = useState(true);
+  /** Deliberate branded beat after email/Google sign-in (not cold start, not fingerprint unlock). */
+  const [postSignInSplash, setPostSignInSplash] = useState(false);
   // Biometric app-lock: null = still checking (avoid revealing app before we know), false = off.
   // null = still resolving lock state on cold start (keep splash so we never flash the app first).
   const [bioEnabled, setBioEnabled] = useState<boolean | null>(null);
@@ -4790,6 +4925,7 @@ function AppRoot() {
         setUser(sessionUserFromSupabaseAuthUser(next));
       } else {
         setUser(null);
+        setPostSignInSplash(false);
         setNewUserIntroPending(null);
         setAppShellReady(false);
       }
@@ -4806,6 +4942,13 @@ function AppRoot() {
     const splashTimer = setTimeout(() => setShowSplash(false), 2200);
     return () => clearTimeout(splashTimer);
   }, [fontsLoaded, appearanceHydrated]);
+
+  // Post email/Google sign-in brand beat — fixed length so it never blinks or sticks.
+  useEffect(() => {
+    if (!postSignInSplash) return;
+    const t = setTimeout(() => setPostSignInSplash(false), 2200);
+    return () => clearTimeout(t);
+  }, [postSignInSplash]);
 
   useEffect(() => {
     if (user?.id) {
@@ -4915,6 +5058,7 @@ function AppRoot() {
       // non-fatal: fall back to a normal full sign-out
     }
     setUser(null);
+    setPostSignInSplash(false);
     if (remembered) {
       // Local-only clear keeps the saved refresh token valid for biometric quick-login.
       // Critical: the in-memory GoTrue session is still live with autoRefreshToken on. If we don't
@@ -4940,7 +5084,7 @@ function AppRoot() {
   const completeSignOut = useCallback(
     async (reason: SignOutReason = "logout") => {
       beginSignOutBlocking();
-      // Set the notice before clearing the session so we never paint Auth (FlareCare brand)
+      // Set the notice before clearing the session so we never paint Auth (Flarecare brand)
       // or the branded splash between tabs and the logout success screen.
       prepareSignOut(reason);
       try {
@@ -4999,12 +5143,16 @@ function AppRoot() {
         />
       );
     }
-    // Blank cover while session clears (no FlareCare mark — that was the logout flash).
+    // Blank cover while session clears (no Flarecare mark — that was the logout flash).
     if (signOutBlocking) {
       return <SplashScreen showBrand={false} />;
     }
     if (!fontsLoaded || loading || showSplash || !appearanceHydrated) {
       return <SplashScreen showBrand={fontsLoaded && appearanceHydrated} />;
+    }
+    // Email/Google: branded cover while session resolves, then a fixed beat before intro/tabs.
+    if (postSignInSplash || authBusy) {
+      return <SplashScreen />;
     }
     if (profileSetupActive) {
       return <ProfileSetupScreen user={user!} onComplete={(next) => setUser(next)} />;
@@ -5039,10 +5187,6 @@ function AppRoot() {
         </AppEntryShell>
       );
     }
-    if (authBusy) {
-      // Same screen colour as welcome — branded splash between Google return and intro reads as a blink.
-      return <SplashScreen showBrand={false} />;
-    }
     return (
       <AuthScreen
         onBeginSessionHandoff={() => {
@@ -5061,6 +5205,9 @@ function AppRoot() {
           setLocked(false);
           if (handoff) {
             setNewUserIntroPending(handoff.newUserIntroPending);
+            if (handoff.brandSplash) {
+              setPostSignInSplash(true);
+            }
           }
           setUser(next);
           authSessionHandoffRef.current = false;
@@ -5072,6 +5219,7 @@ function AppRoot() {
     fontsLoaded,
     loading,
     showSplash,
+    postSignInSplash,
     appearanceHydrated,
     user,
     profileSetupActive,
@@ -5100,6 +5248,7 @@ function AppRoot() {
     fontsLoaded &&
     !loading &&
     !showSplash &&
+    !postSignInSplash &&
     appearanceHydrated &&
     !authBusy &&
     !signOutBlocking &&
@@ -5255,23 +5404,41 @@ const styles = StyleSheet.create({
     paddingHorizontal: 8,
   },
   authCardPlain: { flex: 1, paddingHorizontal: 0 },
-  /** Brand + method/email/code — top-pinned lockup (see `authLockupTopSpacer`). */
+  /** Brand + method/email/code — mid-screen lockup (see `authLockupTopSpacer`). */
   authMethodPanel: { width: "100%" },
-  authStepBody: { width: "100%" },
-  /** Sits with the sign-in stack, with clear air above the prompt — not pinned to the top. */
-  authLandingBrandRow: {
+  authStepBody: { width: "100%", paddingHorizontal: LANDING_CTA_SIDE_PAD },
+  /** Shared stacked brand (splash + auth). */
+  /** Shared brand lockup (splash + auth) — icon beside name. */
+  flareBrandLockup: {
+    alignSelf: "center",
     flexDirection: "row",
     alignItems: "center",
     justifyContent: "center",
     gap: 8,
-    marginBottom: 88,
   },
-  authLandingName: {
+  flareBrandLockupName: {
     textAlign: "center",
     fontSize: 28,
     fontFamily: "Inter_700Bold",
   },
-  authMethodActions: { marginTop: 18, gap: 8 },
+  /** Email/code / Almost there: air under brand before the step title. */
+  authLandingBrandRowSpaced: { marginBottom: 72 },
+  /** Method: brand + tagline read as one lockup. */
+  authLandingBrandRowWithTagline: { marginBottom: 10 },
+  authLandingTagline: {
+    textAlign: "center",
+    fontSize: 16,
+    lineHeight: 24,
+    fontFamily: "Inter_400Regular",
+    /** Section air above CTAs — matches `authSecureNote` below. */
+    marginBottom: 28,
+  },
+  authMethodActions: {
+    marginTop: 18,
+    gap: 12,
+  },
+  /** Method screen: CTA stack uses tagline/secure section gaps only. */
+  authMethodActionsUnderTagline: { marginTop: 0 },
   authTopRightSignIn: { position: "absolute", right: 20, zIndex: 2, padding: 4 },
   /** Same bottom stack as BiometricLockScreen `actions` (fingerprint above Sign out row). */
   authQuickUnlockActions: { width: "100%", alignItems: "center", paddingBottom: 8, zIndex: 0 },
@@ -5284,17 +5451,15 @@ const styles = StyleSheet.create({
   authSheetContent: { paddingTop: 8, paddingBottom: 8 },
   /** Neutralize the full-screen panels' `flex: 1` centering when hosted in the slide-up sheet. */
   authSheetPanel: { flex: 0, justifyContent: "flex-start" },
-  authLegalRow: { flexDirection: "row", alignItems: "flex-start", gap: 10, marginTop: 22, marginBottom: 4 },
-  authLegalCheckbox: {
-    width: 20,
-    height: 20,
-    borderRadius: 4,
-    borderWidth: 1.5,
-    alignItems: "center",
-    justifyContent: "center",
-    marginTop: 1,
+  authLegalSheetBody: { paddingTop: 12, paddingBottom: 20, gap: 24 },
+  authLegalSheetTitle: { fontSize: 20, fontFamily: "Inter_700Bold", textAlign: "center" },
+  authLegalSheetCopy: {
+    fontSize: 14,
+    lineHeight: 22,
+    fontFamily: "Inter_400Regular",
+    textAlign: "center",
+    paddingHorizontal: 4,
   },
-  authLegalText: { flex: 1, fontSize: 13, lineHeight: 18, fontFamily: "Inter_400Regular" },
   authLegalLink: { fontFamily: "Inter_600SemiBold" },
   legalModalRoot: { flex: 1 },
   legalModalHeader: {
@@ -5309,7 +5474,8 @@ const styles = StyleSheet.create({
   legalModalClose: { fontSize: 16, fontFamily: "Inter_600SemiBold" },
   legalModalScroll: { flex: 1 },
   legalModalScrollContent: { paddingHorizontal: 16, paddingTop: 16 },
-  authSecureNote: { flexDirection: "row", alignItems: "center", justifyContent: "center", gap: 5, marginTop: 18 },
+  /** Same section air as tagline → CTAs. */
+  authSecureNote: { flexDirection: "row", alignItems: "center", justifyContent: "center", gap: 6, marginTop: 28 },
   authSecureNoteText: { fontSize: 13, lineHeight: 18, fontFamily: "Inter_400Regular" },
   authPromptTitle: { textAlign: "center", fontSize: 19, fontFamily: "Inter_500Medium" },
   authPromptSub: { textAlign: "center", fontSize: 14, lineHeight: 20, fontFamily: "Inter_400Regular", marginTop: 4 },
@@ -5340,17 +5506,6 @@ const styles = StyleSheet.create({
     alignItems: "center",
     justifyContent: "center",
     paddingHorizontal: 28,
-  },
-  splashBrandRow: {
-    flexDirection: "row",
-    alignItems: "center",
-    justifyContent: "center",
-    gap: 8,
-  },
-  splashBrandName: {
-    fontSize: 28,
-    fontFamily: "Inter_700Bold",
-    textAlign: "center",
   },
   splashLogo: { width: 132, height: 132 },
   centered: { flex: 1, justifyContent: "center", alignItems: "center", gap: 10 },
@@ -5564,16 +5719,13 @@ const styles = StyleSheet.create({
   remindersGuideLinkPress: {
     flexDirection: "row",
     alignItems: "center",
-    alignSelf: "center",
-    gap: 6,
-    marginTop: 20,
-    marginBottom: 4,
-    paddingVertical: 4,
+    ...HELP_NAV_LINK_PRESS,
+    gap: STACKED_LINE_GAP + 2,
+    marginTop: CONFIRM_MODAL_ACTIONS_GAP + STACKED_LINE_GAP,
+    marginBottom: STACKED_LINE_GAP,
   },
   remindersGuideLink: {
-    fontSize: FLARE_FONT_SIZE.body,
-    fontFamily: FLARE_FONT_FAMILY.regular,
-    textDecorationLine: "underline",
+    ...HELP_NAV_LINK_LABEL,
   },
   bigText: { fontSize: 30, fontFamily: "Inter_700Bold", marginBottom: 8 },
   headerIconButton: {
@@ -5906,15 +6058,12 @@ const styles = StyleSheet.create({
   hydrationHelpLinkPress: {
     flexDirection: "row",
     alignItems: "center",
-    alignSelf: "center",
-    gap: 6,
-    marginTop: 8,
-    paddingVertical: 4,
+    ...HELP_NAV_LINK_PRESS,
+    gap: STACKED_LINE_GAP + 2,
+    marginTop: CONFIRM_MODAL_STACK_GAP,
   },
   hydrationHelpLink: {
-    fontSize: FLARE_FONT_SIZE.body,
-    fontFamily: FLARE_FONT_FAMILY.regular,
-    textDecorationLine: "underline",
+    ...HELP_NAV_LINK_LABEL,
   },
   /** Keeps stacked detail rows out of `cardBody` gap (which would add space between every field). */
   detailFieldsStack: { alignSelf: "stretch" },

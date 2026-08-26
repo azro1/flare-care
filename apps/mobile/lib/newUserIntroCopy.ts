@@ -21,7 +21,7 @@ export type NewUserIntroSlide = {
 export const NEW_USER_INTRO_SLIDES: NewUserIntroSlide[] = [
   {
     icon: FLARE_CHROME_LUCIDE.brandMark,
-    title: "Welcome to FlareCare",
+    title: "Welcome to",
     text: "Your IBD health companion — built to make managing IBD easier.",
   },
   {

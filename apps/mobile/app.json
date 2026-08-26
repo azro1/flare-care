@@ -1,6 +1,6 @@
 {
   "expo": {
-    "name": "Flare Care Mobile",
+    "name": "Flarecare Mobile",
     "slug": "flare-care-mobile",
     "version": "1.0.0",
     "scheme": "flarecare",
@@ -47,7 +47,7 @@
       [
         "expo-local-authentication",
         {
-          "faceIDPermission": "Allow FlareCare to use Face ID."
+          "faceIDPermission": "Allow Flarecare to use Face ID."
         }
       ]
     ],

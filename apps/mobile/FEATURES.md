@@ -1,9 +1,9 @@
-# What FlareCare does
+# What Flarecare does
 
 A simple list of everything in **your** app, so you can remember it.
 Update this when you add or remove something users can see.
 
-FlareCare helps people with Crohn’s / Colitis track their day and prepare for clinic.
+Flarecare helps people with Crohn’s / Colitis track their day and prepare for clinic.
 **It is not medical advice.**
 
 ---
@@ -160,7 +160,7 @@ Open from **Settings → Push Notifications / Reminders** (wording in the app).
 - Sign out
 
 **Info (from ⋮)**
-- **What is IBD?** — plain-language IBD info and how FlareCare helps  
+- **What is IBD?** — plain-language IBD info and how Flarecare helps  
 - **Nutrition Guide** — food categories and tips (with a disclaimer)
 
 ---
@@ -172,7 +172,7 @@ Right now news on home is **turned off** in the app, so you normally won’t see
 
 ---
 
-## What FlareCare does **not** do
+## What Flarecare does **not** do
 
 - Give medical advice or tell you to go to A&E  
 - Send supply requests or emails by itself  
@@ -181,6 +181,13 @@ Right now news on home is **turned off** in the app, so you normally won’t see
 
 ---
 
+## Looking ahead (not built yet)
+
+- **More sign-in OAuth** (e.g. Apple) — keep **email** as the main CTA; don’t stack many full-width OAuth buttons on the method screen (fingerprint quick-unlock sits at the bottom and will cover them). Prefer **“More ways to sign in”** → sheet with providers, or a compact icon row. Today: email code + Google only.
+
+---
+
 ## Tip for you
 
 When you invent a new feature, add one short line here so future-you knows it’s real.
+When something is only planned, put it under **Looking ahead** instead.

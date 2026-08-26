@@ -105,14 +105,14 @@ export async function POST(request) {
 
     const apiKey = process.env.RESEND_API_KEY
     const senderEmail = process.env.RESEND_SENDER_EMAIL
-    const senderName = process.env.RESEND_SENDER_NAME || 'FlareCare Report'
+    const senderName = process.env.RESEND_SENDER_NAME || 'Flarecare Report'
 
     if (!apiKey || !senderEmail) {
       console.warn('RESEND_API_KEY or RESEND_SENDER_EMAIL is not set; skipping send.')
       return NextResponse.json({ ok: true, skipped: true })
     }
 
-    const subject = 'FlareCare symptom & treatment report for your patient'
+    const subject = 'Flarecare symptom & treatment report for your patient'
 
     const totalEntries = summary?.totalEntries ?? 0
     const averageSeverity = summary?.averageSeverity
@@ -306,7 +306,7 @@ export async function POST(request) {
       })
     }
     textLines.push(
-      'This summary was generated from the patient\'s FlareCare tracking over the selected period.',
+      'This summary was generated from the patient\'s Flarecare tracking over the selected period.',
       'Please interpret in the context of your clinical judgment.'
     )
     const textBody = textLines.join('\n')
@@ -534,7 +534,7 @@ export async function POST(request) {
     }
 
     htmlParts.push(
-      `<p style="margin-top: 24px;">This summary was generated from the patient's FlareCare tracking over the selected period. Please interpret in the context of your clinical judgment.</p>`,
+      `<p style="margin-top: 24px;">This summary was generated from the patient's Flarecare tracking over the selected period. Please interpret in the context of your clinical judgment.</p>`,
       '</body></html>'
     )
 

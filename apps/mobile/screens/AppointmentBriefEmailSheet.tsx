@@ -103,11 +103,6 @@ export function AppointmentBriefEmailSheet({
           keyboardShouldPersistTaps="handled"
           showsVerticalScrollIndicator={false}
         >
-          {brief ? (
-            <Text style={[styles.period, { color: c.textMuted }]}>
-              {`This summary will cover the period from ${formatUkDate(brief.period.start)} to ${formatUkDate(brief.period.end)}.`}
-            </Text>
-          ) : null}
           <FlareScreenSectionTitle compact>Clinician email *</FlareScreenSectionTitle>
           <FlareTextInput
             value={consultantEmail}
@@ -125,6 +120,11 @@ export function AppointmentBriefEmailSheet({
           </FlareScreenSectionTitle>
           <FlareTextInput multiline value={emailNote} onChangeText={setEmailNote} placeholder="Optional note" />
           {emailError ? <Text style={[errTextStyle, { marginTop: 8 }]}>{emailError}</Text> : null}
+          {brief ? (
+            <Text style={[styles.period, { color: c.textMuted }]}>
+              {`This summary will cover the period from ${formatUkDate(brief.period.start)} to ${formatUkDate(brief.period.end)}.`}
+            </Text>
+          ) : null}
           <View style={{ marginTop: 20, gap: 8 }}>
             <PrimaryButton title={sendingEmail ? "Sending…" : "Send summary"} onPress={handleSend} disabled={sendingEmail} />
             <SecondaryButton title="Cancel" onPress={handleClose} />
@@ -148,5 +148,5 @@ const styles = StyleSheet.create({
   sheetClose: { width: 44, height: 44, alignItems: "center", justifyContent: "center" },
   sheetTitle: { fontSize: FLARE_FONT_SIZE.navTitle, fontFamily: FLARE_FONT_FAMILY.bold },
   sheetScroll: { paddingHorizontal: 20, paddingTop: 14 },
-  period: { fontSize: FLARE_FONT_SIZE.body, marginBottom: 16 },
+  period: { fontSize: FLARE_FONT_SIZE.body, marginTop: 16, textAlign: "left" },
 });

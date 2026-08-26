@@ -11,7 +11,7 @@ export default function About() {
       <div className="text-center mb-5 sm:mb-6 card">
         <div>
         <h1 className="text-2xl sm:text-3xl lg:text-4xl font-bold font-title text-primary mb-3 sm:mb-4">
-          FlareCare
+          Flarecare
         </h1>
         <p className="text-sm font-sans text-secondary leading-normal">
           A personal journey turned into a tool for the community
@@ -43,10 +43,10 @@ export default function About() {
         </div>
 
         <div className="card backdrop-blur-sm">
-          <h2 className="text-xl sm:text-2xl font-semibold font-title text-primary mb-3 sm:mb-4">Why FlareCare?</h2>
+          <h2 className="text-xl sm:text-2xl font-semibold font-title text-primary mb-3 sm:mb-4">Why Flarecare?</h2>
           <div className="space-y-4 text-sm text-secondary font-sans">
             <p className="leading-normal">
-              FlareCare was born from my personal need for a simple, effective way to 
+              Flarecare was born from my personal need for a simple, effective way to 
               track my health journey. I wanted something that would:
             </p>
             <ul className="space-y-2 ml-4 font-sans">
@@ -84,7 +84,7 @@ export default function About() {
         <div className="space-y-4 text-sm text-secondary font-sans">
           <p className="leading-normal">
             Living with Crohn's or Colitis can feel isolating, but you're not alone. 
-            FlareCare is built by someone who understands the daily challenges of 
+            Flarecare is built by someone who understands the daily challenges of 
             managing these conditions.
           </p>
           <p className="leading-normal">
@@ -95,7 +95,7 @@ export default function About() {
           </p>
           <p className="leading-normal">
             Whether you're tracking your first flare or managing a complex medication 
-            regimen, FlareCare is here to support you on your journey to better health.
+            regimen, Flarecare is here to support you on your journey to better health.
           </p>
         </div>
       </div>
@@ -104,7 +104,7 @@ export default function About() {
         <h2 className="text-xl sm:text-2xl font-semibold font-title text-primary mb-3 sm:mb-4">Stay Connected</h2>
         <p className="text-sm text-secondary mb-4 sm:mb-6 font-sans leading-normal">
           Have questions, suggestions, or want to share your own story? 
-          I'd love to hear from you and learn how FlareCare can better serve 
+          I'd love to hear from you and learn how Flarecare can better serve 
           the Crohn's and Colitis community.
         </p>
         

@@ -170,27 +170,30 @@ export function MedicationSheet({
             contentContainerStyle={[styles.sheetScroll, { paddingBottom: insets.bottom + 24 }]}
             showsVerticalScrollIndicator={false}
           >
-            <FlareScreenSectionTitle compact>Medication name *</FlareScreenSectionTitle>
-            <FlareTextInput
-              value={form.name}
-              onChangeText={(name) => setField("name", name)}
-              placeholder="e.g. Mesalazine"
-              autoCapitalize="words"
-            />
+            <FlareScreenSectionTitle compact>Medication *</FlareScreenSectionTitle>
+            <View style={styles.nameDoseRow}>
+              <FlareTextInput
+                value={form.name}
+                onChangeText={(name) => setField("name", name)}
+                placeholder="e.g. Mesalazine"
+                autoCapitalize="words"
+                style={styles.nameInput}
+              />
+              <FlareTextInput
+                trailingLabel="mg"
+                value={form.dosage}
+                onChangeText={(dosage) => {
+                  setDosageError("");
+                  setField("dosage", dosage.replace(/\D/g, "").slice(0, 5));
+                }}
+                placeholder=""
+                keyboardType="number-pad"
+                maxLength={5}
+                style={styles.doseInput}
+                accessibilityLabel="Dose in milligrams"
+              />
+            </View>
             {nameError ? <Text style={errTextStyle}>{nameError}</Text> : null}
-
-            <FlareScreenSectionTitle compact style={{ marginTop: 16 }}>
-              Dosage (mg) *
-            </FlareScreenSectionTitle>
-            <FlareTextInput
-              value={form.dosage}
-              onChangeText={(dosage) => {
-                setDosageError("");
-                setField("dosage", dosage.replace(/\D/g, "").slice(0, 5));
-              }}
-              placeholder="e.g. 400"
-              keyboardType="number-pad"
-            />
             {dosageError ? <Text style={errTextStyle}>{dosageError}</Text> : null}
 
             <FlareScreenSectionTitle compact style={{ marginTop: 16 }}>
@@ -546,6 +549,9 @@ const styles = StyleSheet.create({
   sheetClose: { width: 44, height: 44, alignItems: "center", justifyContent: "center" },
   sheetTitle: { fontSize: FLARE_FONT_SIZE.navTitle, fontFamily: FLARE_FONT_FAMILY.bold },
   sheetScroll: { paddingHorizontal: 20, paddingTop: 14 },
+  nameDoseRow: { flexDirection: "row", alignItems: "stretch", gap: 6 },
+  nameInput: { flex: 1, minWidth: 0 },
+  doseInput: { width: 104, flexShrink: 0 },
   pickerPill: {
     flexDirection: "row",
     alignItems: "center",

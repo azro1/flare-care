@@ -13,62 +13,101 @@ import {
   type ViewToken,
 } from "react-native";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
-import { FLARE_BUTTON_MIN_HEIGHT, PrimaryButton } from "./FlareButton";
+import { FLARE_BUTTON_MIN_HEIGHT, EntryPrimaryButton } from "./FlareButton";
 import { FlareLucideIcon } from "../lib/flareLucideIcons";
 import { NEW_USER_INTRO_SLIDES, type NewUserIntroSlide } from "../lib/newUserIntroCopy";
-import { FLARE_FONT_FAMILY, FULL_WIDTH_CTA_EDGE_PADDING } from "../lib/layoutConstants";
+import {
+  FLARE_FONT_FAMILY,
+  FLARE_FONT_SIZE,
+  FULL_WIDTH_CTA_EDGE_PADDING,
+  HOME_TILE_GAP,
+  NAV_HEADER_BAR_HEIGHT,
+} from "../lib/layoutConstants";
 import { useFlareColors } from "../theme";
 
-/** Shared media band — disc stays 72; smaller glyph for clear inset. */
-const MEDIA_SIZE = 72;
-const MEDIA_GLYPH_SIZE = 40;
+/** Shared media band — large glyph to fill mid-stack visual weight. */
+const MEDIA_SIZE = 148;
+const MEDIA_GLYPH_SIZE = 60;
 /**
  * Title size for new-user intro slides.
  * Welcome (first slide) is one step larger; change INTRO_SLIDE_TITLE_SIZE to scale both.
  */
 const INTRO_SLIDE_TITLE_SIZE = 21;
 const WELCOME_SLIDE_TITLE_SIZE = INTRO_SLIDE_TITLE_SIZE + 1;
-/** Top padding above the icon/title stack on each intro slide. */
-const SLIDE_CONTENT_TOP = 72;
-/** Matches `contentBlock.gap` — keep in sync. */
-const INTRO_COPY_STACK_GAP = 26;
-/** Matches `mediaSlot.marginBottom` — keep in sync. */
-const INTRO_MEDIA_MARGIN_BOTTOM = 10;
+/** Icon → title — tight so the glyph reads as part of the copy stack. */
+const INTRO_ICON_TO_TITLE_GAP = HOME_TILE_GAP;
+/** Title → support. */
+const INTRO_TITLE_TO_SUPPORT_GAP = HOME_TILE_GAP * 2 + 4;
 /** Support line-height × typical two lines on the welcome slide. */
 const INTRO_SUPPORT_BLOCK_HEIGHT = 26 * 2;
 /**
- * Fixed Y for page dots — derived from layout constants (not onLayout).
- * Measuring after paint made the dots slide up on first land.
+ * Fixed copy stack height (icon → title → support) for centering + fixed dots Y.
+ * Do not measure onLayout — that made the dots slide on first land.
  */
 const INTRO_COPY_STACK_HEIGHT =
   MEDIA_SIZE +
-  INTRO_MEDIA_MARGIN_BOTTOM +
-  INTRO_COPY_STACK_GAP +
+  INTRO_ICON_TO_TITLE_GAP +
   (WELCOME_SLIDE_TITLE_SIZE + 6) +
-  INTRO_COPY_STACK_GAP +
+  INTRO_TITLE_TO_SUPPORT_GAP +
   INTRO_SUPPORT_BLOCK_HEIGHT;
-const DOTS_TOP = SLIDE_CONTENT_TOP + INTRO_COPY_STACK_HEIGHT + 28;
+/**
+ * Copy sits below true vertical centre, then lifts with `INTRO_COPY_UP_NUDGE`.
+ * Dots track under the support line.
+ */
+const INTRO_CONTENT_DOWN_NUDGE = HOME_TILE_GAP * 3;
+/** Lift icon + title + support (+ dots follow). */
+const INTRO_COPY_UP_NUDGE = HOME_TILE_GAP * 8;
+/** Space between support copy and page dots. */
+const INTRO_DOTS_GAP = HOME_TILE_GAP * 2 + 8;
 const DOT_SIZE = 8;
 /** Active page indicator stretches into a short pill. */
 const DOT_ACTIVE_WIDTH = 22;
-/** Extra padding under Skip (above safe-area) — lifts CTAs into the thumb zone. */
-const FOOTER_PAD = 64;
+/**
+ * Moves Next/Done + Skip only. Lower = closer to the bottom edge.
+ * Mid-stack (icon / title / support / dots) uses `CONTENT_LAYOUT_FOOTER_PAD` instead.
+ */
+const FOOTER_PAD = 28;
+/** Fixed reserve for copy + dots layout — leave this alone when nudging CTAs. */
+const CONTENT_LAYOUT_FOOTER_PAD = 64;
+/** Footer stack: Next + gap(16) + Skip hit — keep in sync with `styles.footer` / `skipHit`. */
+const INTRO_FOOTER_STACK_HEIGHT = FLARE_BUTTON_MIN_HEIGHT + 16 + (FLARE_BUTTON_MIN_HEIGHT - 8);
 
 /**
- * One-time swipe intro after sign-up — what FlareCare can do for you.
- * Full-height pager (swipe + Next); dots stay fixed under the copy.
+ * One-time swipe intro after sign-up — what Flarecare can do for you.
+ * Copy centered between header and CTAs; dots stay fixed under the copy (do not swipe).
+ * `FOOTER_PAD` and `CONTENT_LAYOUT_FOOTER_PAD` are independent on purpose.
  */
 export function NewUserIntroScreen({ onFinished }: { onFinished: () => void }) {
   const c = useFlareColors();
   const insets = useSafeAreaInsets();
-  const { width } = useWindowDimensions();
+  const { width, height: windowHeight } = useWindowDimensions();
   const listRef = useRef<FlatList<NewUserIntroSlide>>(null);
   const [index, setIndex] = useState(0);
-  const [pagerHeight, setPagerHeight] = useState(0);
   const last = index >= NEW_USER_INTRO_SLIDES.length - 1;
   const dotProgress = useRef(
     NEW_USER_INTRO_SLIDES.map((_, i) => new Animated.Value(i === 0 ? 1 : 0)),
   ).current;
+
+  /** Stable on first paint — no onLayout jump (that caused the welcome land blip). */
+  const safeBottom = Math.max(insets.bottom, 12);
+  const bottomPad = safeBottom + FOOTER_PAD;
+  const pagerHeight = Math.max(
+    0,
+    windowHeight - insets.top - NAV_HEADER_BAR_HEIGHT - INTRO_FOOTER_STACK_HEIGHT - bottomPad,
+  );
+  const layoutPagerHeight = Math.max(
+    0,
+    windowHeight -
+      insets.top -
+      NAV_HEADER_BAR_HEIGHT -
+      INTRO_FOOTER_STACK_HEIGHT -
+      (safeBottom + CONTENT_LAYOUT_FOOTER_PAD),
+  );
+  const contentTop =
+    (layoutPagerHeight - INTRO_COPY_STACK_HEIGHT) / 2 +
+    INTRO_CONTENT_DOWN_NUDGE -
+    INTRO_COPY_UP_NUDGE;
+  const dotsTop = contentTop + INTRO_COPY_STACK_HEIGHT + INTRO_DOTS_GAP;
 
   useEffect(() => {
     Animated.parallel(
@@ -125,22 +164,21 @@ export function NewUserIntroScreen({ onFinished }: { onFinished: () => void }) {
             styles.page,
             {
               width,
-              height: pagerHeight || undefined,
-              paddingTop: SLIDE_CONTENT_TOP,
+              height: pagerHeight,
+              paddingTop: contentTop,
             },
           ]}
         >
           <View style={styles.contentBlock}>
-            <View style={[styles.mediaSlot, { backgroundColor: c.surfaceSubtle }]}>
-              <View
-                style={
-                  item.iconOpticalOffsetY
-                    ? { transform: [{ translateY: item.iconOpticalOffsetY }] }
-                    : null
-                }
-              >
-                <FlareLucideIcon icon={item.icon} size={MEDIA_GLYPH_SIZE} color={c.primary} />
-              </View>
+            <View
+              style={[
+                styles.mediaSlot,
+                item.iconOpticalOffsetY
+                  ? { transform: [{ translateY: item.iconOpticalOffsetY }] }
+                  : null,
+              ]}
+            >
+              <FlareLucideIcon icon={item.icon} size={MEDIA_GLYPH_SIZE} color={c.primary} />
             </View>
 
             <Text
@@ -156,7 +194,7 @@ export function NewUserIntroScreen({ onFinished }: { onFinished: () => void }) {
         </View>
       );
     },
-    [c.primary, c.surfaceSubtle, c.text, c.textMuted, pagerHeight, width],
+    [c.primary, c.text, c.textMuted, contentTop, pagerHeight, width],
   );
 
   return (
@@ -165,15 +203,25 @@ export function NewUserIntroScreen({ onFinished }: { onFinished: () => void }) {
         styles.screen,
         {
           backgroundColor: c.screen,
-          paddingTop: insets.top + 8,
-          paddingBottom: Math.max(insets.bottom, 12) + FOOTER_PAD,
+          paddingTop: insets.top,
+          paddingBottom: bottomPad,
         },
       ]}
     >
-      <View
-        style={styles.pagerWrap}
-        onLayout={(e) => setPagerHeight(e.nativeEvent.layout.height)}
-      >
+      <View style={[styles.header, { backgroundColor: c.screen }]} accessibilityRole="header">
+        <Text
+          style={{
+            fontFamily: FLARE_FONT_FAMILY.bold,
+            fontSize: FLARE_FONT_SIZE.navTitle,
+            color: c.text,
+            textAlign: "center",
+          }}
+        >
+          Flarecare
+        </Text>
+      </View>
+
+      <View style={[styles.pagerWrap, { height: pagerHeight }]}>
         <FlatList
           ref={listRef}
           data={NEW_USER_INTRO_SLIDES}
@@ -201,14 +249,14 @@ export function NewUserIntroScreen({ onFinished }: { onFinished: () => void }) {
             });
           }}
           style={styles.pager}
-          contentContainerStyle={pagerHeight > 0 ? { height: pagerHeight } : undefined}
+          contentContainerStyle={{ height: pagerHeight }}
           renderItem={renderSlide}
         />
 
-        {/* Fixed under copy — constant Y from layout tokens (no onLayout slide). */}
+        {/* Fixed under centered copy — does not swipe with slides. */}
         <View
           pointerEvents="none"
-          style={[styles.dots, { top: DOTS_TOP }]}
+          style={[styles.dots, { top: dotsTop }]}
           accessibilityElementsHidden
           importantForAccessibility="no-hide-descendants"
         >
@@ -224,7 +272,8 @@ export function NewUserIntroScreen({ onFinished }: { onFinished: () => void }) {
                   }),
                   backgroundColor: dotProgress[i].interpolate({
                     inputRange: [0, 1],
-                    outputRange: [c.appearanceChipInactiveBg, c.primary],
+                    // Not `appearanceChipInactiveBg` — in light mode that matches screen and vanishes.
+                    outputRange: [c.cardBorder, c.primary],
                   }),
                 },
               ]}
@@ -234,7 +283,7 @@ export function NewUserIntroScreen({ onFinished }: { onFinished: () => void }) {
       </View>
 
       <View style={styles.footer}>
-        <PrimaryButton title={last ? "Done" : "Next"} onPress={onNext} noTopMargin />
+        <EntryPrimaryButton title={last ? "Done" : "Next"} onPress={onNext} noTopMargin />
 
         <Pressable
           accessibilityRole="button"
@@ -252,8 +301,12 @@ export function NewUserIntroScreen({ onFinished }: { onFinished: () => void }) {
 
 const styles = StyleSheet.create({
   screen: { flex: 1 },
+  header: {
+    height: NAV_HEADER_BAR_HEIGHT,
+    alignItems: "center",
+    justifyContent: "center",
+  },
   pagerWrap: {
-    flex: 1,
     position: "relative",
   },
   pager: { flex: 1 },
@@ -265,22 +318,21 @@ const styles = StyleSheet.create({
   contentBlock: {
     width: "100%",
     alignItems: "stretch",
-    gap: INTRO_COPY_STACK_GAP,
   },
   mediaSlot: {
     width: MEDIA_SIZE,
     height: MEDIA_SIZE,
-    borderRadius: MEDIA_SIZE / 2,
     alignSelf: "center",
     alignItems: "center",
     justifyContent: "center",
-    marginBottom: INTRO_MEDIA_MARGIN_BOTTOM,
+    marginBottom: INTRO_ICON_TO_TITLE_GAP,
   },
   slideTitle: {
     fontFamily: FLARE_FONT_FAMILY.bold,
     textAlign: "center",
     alignSelf: "stretch",
     width: "100%",
+    marginBottom: INTRO_TITLE_TO_SUPPORT_GAP,
   },
   supportText: {
     fontSize: 18,

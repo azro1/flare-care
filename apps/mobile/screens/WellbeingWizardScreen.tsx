@@ -23,6 +23,7 @@ import {
   FLARE_FONT_FAMILY,
   FLARE_FONT_SIZE,
   FULL_WIDTH_CTA_EDGE_PADDING,
+  LANDING_CTA_SIDE_PAD,
   wizardLandingMinHeight,
 } from "../lib/layoutConstants";
 import {
@@ -387,10 +388,10 @@ export function WellbeingWizardScreen({ user }: { user: SessionUser }) {
               </View>
               <Text style={[styles.landingTitle, { color: c.text }]}>My Wellbeing</Text>
               <Text style={[styles.landingSub, { color: c.textMuted }]}>
-                Check in on how you&apos;re feeling today — mood, energy, sleep, pain and more.
+                Check in on how you&apos;re feeling today — mood, energy, sleep and more.
               </Text>
               <View style={styles.landingCta}>
-                <PrimaryButton title="Start now" onPress={startWizard} />
+                <PrimaryButton title="Start now" onPress={startWizard} noTopMargin />
               </View>
             </View>
           ) : null}
@@ -492,7 +493,8 @@ const styles = StyleSheet.create({
     alignItems: "center",
     justifyContent: "center",
     paddingTop: 8,
-    paddingBottom: 32,
+    paddingBottom: 36,
+    width: "100%",
   },
   landingIconPanel: {
     width: 56,
@@ -500,27 +502,30 @@ const styles = StyleSheet.create({
     borderRadius: 16,
     alignItems: "center",
     justifyContent: "center",
-    marginBottom: 24,
+    marginBottom: 32,
   },
   landingTitle: {
     fontFamily: FLARE_FONT_FAMILY.extrabold,
-    fontSize: 24,
-    lineHeight: 30,
-    marginBottom: 14,
+    fontSize: 22,
+    lineHeight: 28,
+    marginBottom: 20,
     textAlign: "center",
     letterSpacing: -0.4,
+    maxWidth: 360,
+    width: "100%",
   },
   landingSub: {
     fontSize: 16,
-    lineHeight: 24,
+    lineHeight: 22,
     textAlign: "center",
-    marginBottom: 6,
-    maxWidth: 360,
+    marginBottom: 0,
     paddingHorizontal: 4,
+    maxWidth: 360,
+    width: "100%",
   },
-  landingCta: { width: "100%", maxWidth: 360, marginTop: 20 },
+  landingCta: { width: "100%", paddingHorizontal: LANDING_CTA_SIDE_PAD, marginTop: 28 },
   phaseLine: { fontSize: 13, marginBottom: 12, fontFamily: FLARE_FONT_FAMILY.medium },
-  h3: { fontFamily: FLARE_FONT_FAMILY.bold, fontSize: 20, marginBottom: 12 },
+  h3: { fontFamily: FLARE_FONT_FAMILY.bold, fontSize: 20, lineHeight: 28, marginBottom: 12 },
   subLabel: { fontSize: FLARE_FONT_SIZE.body, fontFamily: FLARE_FONT_FAMILY.medium, marginBottom: 6 },
   rowGap: { gap: 14, marginTop: 8 },
   radioRow: { flexDirection: "row", alignItems: "center", gap: 10 },

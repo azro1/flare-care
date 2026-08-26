@@ -2,8 +2,8 @@ import LegalDocumentPage from '@/components/LegalDocumentPage'
 import { LEGAL_FOOTER_NOTE, LEGAL_LAST_UPDATED, PRIVACY_INTRO, PRIVACY_SECTIONS } from '@/content/legalDocuments'
 
 export const metadata = {
-  title: 'Privacy Policy | FlareCare',
-  description: 'How FlareCare collects, uses, and protects your personal and health-related data.',
+  title: 'Privacy Policy | Flarecare',
+  description: 'How Flarecare collects, uses, and protects your personal and health-related data.',
 }
 
 export default function PrivacyPage() {
