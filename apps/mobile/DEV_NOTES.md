@@ -737,17 +737,6 @@ Product backlog for later — not implementation work yet. Ship notes go in **`C
 - **Later:** add more OAuth (e.g. Apple). Do **not** stack many full-width provider buttons under email — the quick-unlock fingerprint is pinned to the bottom and will collide.
 - **Preferred approach:** keep email (+ maybe one OAuth) on the landing; put extra providers behind **“More ways to sign in”** (sheet) or a compact icon row.
 
-### Supplies — email editor formatting
-
-- When users can **edit** the supply-request message, use an **email formatting library** instead of hand-rolling formatting ourselves.
-
-### Supplies — company mail inside FlareCare
-
-- Let the user enter/save the **supplier company email** (repeat orders).
-- Somehow route or surface replies/order mail **into FlareCare** so the user can check a FlareCare “inbox” instead of only their personal email.
-- Likely patterns to evaluate later: FlareCare-managed inbound alias, user forwarding rules, or connected inbox (OAuth/IMAP).
-- **Not decided:** feasibility, privacy/consent, and legal — research before any build.
-
 ---
 
 ## Keeping these notes useful
