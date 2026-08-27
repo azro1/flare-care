@@ -184,6 +184,8 @@ Right now news on home is **turned off** in the app, so you normally won’t see
 ## Looking ahead (not built yet)
 
 - **More sign-in OAuth** (e.g. Apple) — keep **email** as the main CTA; don’t stack many full-width OAuth buttons on the method screen (fingerprint quick-unlock sits at the bottom and will cover them). Prefer **“More ways to sign in”** → sheet with providers, or a compact icon row. Today: email code + Google only.
+- **Supply request email — proper editor formatting** — use an email formatting library when users can edit the supply request message; don’t hand-roll HTML/plain formatting ourselves.
+- **Supply company inbox in FlareCare** — let the user save a supplier’s email (for repeat orders) and somehow surface order/reply mail **inside FlareCare** (e.g. FlareCare-managed alias the company writes to, or forwarding / connected inbox). Goal: company emails aren’t only scattered in the user’s personal inbox. **Open questions:** technical approach, privacy/consent, and legality — research before building.
 
 ---
 

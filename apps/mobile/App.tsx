@@ -168,6 +168,7 @@ import {
   logDetailStyles,
 } from "./components/LogDetailLayout";
 import { NewsFeedCard, newsFeedListStyles } from "./components/NewsFeed";
+import { CareTileBoard } from "./components/CareTileBoard";
 import { formatAddedAtHeader } from "./lib/logDisplay";
 import { useWizardLogHistory } from "./lib/wizardLogHistory";
 import { openAppNotificationSettings } from "./lib/openAppNotificationSettings";
@@ -1645,13 +1646,11 @@ function DashboardScreen({ user }: { user: SessionUser }) {
     { key: "bowel", label: "Bowel Movements", screen: "Bowel" as const, lucide: FLARE_FEATURE_LUCIDE.bowel },
   ];
   const careCards = [
-    { key: "weight", label: "My Weight", screen: "Weight" as const, lucide: FLARE_FEATURE_LUCIDE.weight },
-    { key: "supplies", label: "My Supplies", screen: "MedicalSupplies" as const, lucide: FLARE_FEATURE_LUCIDE.supplies },
-    { key: "appointments", label: "Appointments", screen: "Appointments" as const, lucide: FLARE_FEATURE_LUCIDE.appointments },
-    { key: "reports", label: "Reports", screen: "Reports" as const, lucide: FLARE_FEATURE_LUCIDE.reports },
+    { key: "weight" as const, label: "My Weight", screen: "Weight" as const, lucide: FLARE_FEATURE_LUCIDE.weight },
+    { key: "supplies" as const, label: "My Supplies", screen: "MedicalSupplies" as const, lucide: FLARE_FEATURE_LUCIDE.supplies },
+    { key: "appointments" as const, label: "Appointments", screen: "Appointments" as const, lucide: FLARE_FEATURE_LUCIDE.appointments },
+    { key: "reports" as const, label: "Reports", screen: "Reports" as const, lucide: FLARE_FEATURE_LUCIDE.reports },
   ];
-  const careTopRowCards = careCards.slice(0, 2);
-  const careBottomRowCards = careCards.slice(2);
   const healthMedsCard = healthCards[0];
   const healthLeftColumnCards = [
     healthCards.find((card) => card.key === "bowel")!,
@@ -1659,6 +1658,23 @@ function DashboardScreen({ user }: { user: SessionUser }) {
   ];
   /** Matches `styles.homeDashboardTile` height — Meds spans both left-column rows. */
   const healthMedsTallHeight = HOME_DASHBOARD_TILE_HEIGHT * 2 + HOME_TILE_GAP;
+  const openCareTool = (key: (typeof careCards)[number]["key"]) => {
+    if (key === "supplies") {
+      const cached = getMedicalSupplyKitListCache(user.id);
+      if (cached == null || needsMedicalSuppliesSetup(cached.length)) {
+        navigation.navigate("MedicalSuppliesSetup", { startStep: SUPPLIES_SETUP_STEP_INTRO });
+        return;
+      }
+    }
+    const card = careCards.find((c) => c.key === key);
+    if (card) navigation.navigate(card.screen);
+  };
+  const careBoardTools = careCards.map((item) => ({
+    id: item.key,
+    label: item.label,
+    lucide: item.lucide,
+    onOpen: () => openCareTool(item.key),
+  }));
   const renderToolTile = (item: (typeof healthCards)[number] | (typeof careCards)[number]) => (
     <DashboardGridTile
       key={item.key}
@@ -1666,15 +1682,11 @@ function DashboardScreen({ user }: { user: SessionUser }) {
       label={item.label}
       variant="grid"
       onPress={() => {
-        // Skip empty hub when cache already says first-time setup (avoids list → setup flash).
-        if (item.key === "supplies") {
-          const cached = getMedicalSupplyKitListCache(user.id);
-          if (cached == null || needsMedicalSuppliesSetup(cached.length)) {
-            navigation.navigate("MedicalSuppliesSetup", { startStep: SUPPLIES_SETUP_STEP_INTRO });
-            return;
-          }
+        if ("screen" in item && item.key === "supplies") {
+          openCareTool("supplies");
+          return;
         }
-        navigation.navigate(item.screen);
+        if ("screen" in item) navigation.navigate(item.screen);
       }}
       icon={<FlareLucideIcon icon={item.lucide} size={HOME_TILE_ICON_SIZE_CHECKIN} color={c.primary} />}
     />
@@ -2202,10 +2214,12 @@ function DashboardScreen({ user }: { user: SessionUser }) {
                     </View>
                   </View>
                   <View style={[styles.healthCarePage, { width: healthCarePageW }]}>
-                    <View style={styles.carePageColumn}>
-                      <View style={styles.carePageRow}>{careTopRowCards.map(renderToolTile)}</View>
-                      <View style={styles.carePageRow}>{careBottomRowCards.map(renderToolTile)}</View>
-                    </View>
+                    <CareTileBoard
+                      userId={user.id}
+                      tileWidth={tileWidth}
+                      tileHeight={HOME_DASHBOARD_TILE_HEIGHT}
+                      tools={careBoardTools}
+                    />
                   </View>
                 </AnimatedScrollView>
               ) : null}
