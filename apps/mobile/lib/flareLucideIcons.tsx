@@ -24,6 +24,7 @@ import {
   CloudRain,
   CloudSun,
   CupSoda,
+  Droplet,
   EllipsisVertical,
   Eye,
   EyeOff,
@@ -78,7 +79,7 @@ export const FLARE_FEATURE_LUCIDE = {
   appointments: Calendar,
   reports: FileText,
   /** Fluid / measurement output log (My care). */
-  output: Hash,
+  output: Droplet,
 } as const;
 
 export type FlareFeatureLucideKey = keyof typeof FLARE_FEATURE_LUCIDE;

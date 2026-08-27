@@ -11,7 +11,8 @@ import {
 export function useMedicationsList(userId: string) {
   const [meds, setMeds] = useState<MedicationRow[]>(() => getMedicationsListCache(userId) ?? []);
   const medsListKeyRef = useRef(medicationsListCacheKey(meds));
-  const [loading, setLoading] = useState(false);
+  // No cache yet → treat as loading so first paint stays quiet (not empty → spinner).
+  const [loading, setLoading] = useState(() => getMedicationsListCache(userId) === undefined);
 
   const applyMeds = useCallback((rows: MedicationRow[]) => {
     const nextKey = medicationsListCacheKey(rows);

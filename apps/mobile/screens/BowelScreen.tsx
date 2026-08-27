@@ -38,11 +38,13 @@ import {
   LOG_HISTORY_LOAD_MORE_BATCH,
   buildTimestampLogRowItem,
   logHistoryCardStyles,
+  LogHistoryListQuietPlaceholder,
 } from "../components/LogHistoryList";
 import { TrackerThumbFab, useTrackerThumbFabLayout } from "../components/TrackerThumbFab";
 import { ConfirmModal } from "../components/ConfirmModal";
 import { InstructionScreenShell } from "../components/InstructionScreenShell";
 import { usePaginatedLogList } from "../lib/paginatedLogList";
+import { useDeferredListLoading } from "../lib/useDeferredListLoading";
 import { STACKED_DETAIL_ROW_EDGE } from "../components/StackedDetailField";
 import { FlareScreenSectionTitle } from "../components/FlareScreenSectionTitle";
 import {
@@ -601,6 +603,7 @@ export function BowelScreen({ user }: { user: SessionUser }) {
   };
 
   const listInitialLoad = historyLoading && historyRows.length === 0;
+  const showListLoading = useDeferredListLoading(listInitialLoad);
   const historyEmpty = !historyLoading && historyTotalCount === 0;
   const scrollBottomPadTotal = selectionMode ? tabBarClearance : scrollBottomPad;
 
@@ -648,8 +651,10 @@ export function BowelScreen({ user }: { user: SessionUser }) {
     >
       <LogHistoryCard>
         <View style={logHistoryCardStyles.trackerCardBody}>
-          {listInitialLoad ? (
+          {showListLoading ? (
             <LogHistoryListLoading />
+          ) : listInitialLoad ? (
+            <LogHistoryListQuietPlaceholder />
           ) : historyEmpty ? (
             <LogHistoryEmptyState icon={BOWEL_FEATURE_ICON} />
           ) : (

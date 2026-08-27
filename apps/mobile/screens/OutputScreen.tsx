@@ -25,6 +25,7 @@ import {
   LOG_HISTORY_LOAD_MORE_BATCH,
   buildTimestampLogRowItem,
   logHistoryCardStyles,
+  LogHistoryListQuietPlaceholder,
 } from "../components/LogHistoryList";
 import { ConfirmModal } from "../components/ConfirmModal";
 import { InstructionScreenShell } from "../components/InstructionScreenShell";
@@ -63,6 +64,7 @@ import {
   type OutputFormState,
   type OutputRow,
 } from "../lib/outputShared";
+import { useDeferredListLoading } from "../lib/useDeferredListLoading";
 import { supabase, TABLES } from "../lib/supabase";
 import { useFlareColors } from "../theme";
 
@@ -455,16 +457,7 @@ export function OutputScreen({ user }: { user: SessionUser }) {
   };
 
   const listInitialLoad = historyLoading && historyRows.length === 0;
-  const [showListLoading, setShowListLoading] = useState(false);
-  useEffect(() => {
-    if (!listInitialLoad) {
-      setShowListLoading(false);
-      return;
-    }
-    // Skip spinner for fast first paints — avoids a spit-second loading flash.
-    const t = setTimeout(() => setShowListLoading(true), 160);
-    return () => clearTimeout(t);
-  }, [listInitialLoad]);
+  const showListLoading = useDeferredListLoading(listInitialLoad);
   const historyEmpty = !historyLoading && historyTotalCount === 0;
   const scrollBottomPadTotal = selectionMode ? tabBarClearance : scrollBottomPad;
 
@@ -519,7 +512,7 @@ export function OutputScreen({ user }: { user: SessionUser }) {
           {showListLoading ? (
             <LogHistoryListLoading />
           ) : listInitialLoad ? (
-            <View style={styles.listQuietPlaceholder} />
+            <LogHistoryListQuietPlaceholder />
           ) : historyEmpty ? (
             <LogHistoryEmptyState icon={OUTPUT_FEATURE_ICON} />
           ) : (
@@ -594,8 +587,5 @@ const styles = StyleSheet.create({
   todayTotalValue: {
     fontSize: 28,
     fontFamily: FLARE_FONT_FAMILY.bold,
-  },
-  listQuietPlaceholder: {
-    minHeight: 72,
   },
 });

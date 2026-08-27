@@ -11,6 +11,7 @@ import {
   LOG_HISTORY_LOAD_MORE_BATCH,
   buildTimestampLogRowItem,
   logHistoryCardStyles,
+  LogHistoryListQuietPlaceholder,
 } from "../components/LogHistoryList";
 import { ConfirmModal } from "../components/ConfirmModal";
 import { InstructionScreenShell } from "../components/InstructionScreenShell";
@@ -18,6 +19,7 @@ import { invalidateDashboardSnapshot } from "../lib/dashboardSnapshotCache";
 import { recordRecentActivityEvent } from "../lib/recentActivityEvents";
 import { useLogListSelection } from "../lib/useLogListSelection";
 import { usePaginatedLogList } from "../lib/paginatedLogList";
+import { useDeferredListLoading } from "../lib/useDeferredListLoading";
 import { formatUkDate } from "../lib/formatUkDate";
 import { bottomTabBarHeight } from "../lib/layoutConstants";
 import {
@@ -110,6 +112,7 @@ export function WellbeingScreen({ user }: { user: SessionUser }) {
   );
 
   const listInitialLoad = historyLoading && historyRows.length === 0;
+  const showListLoading = useDeferredListLoading(listInitialLoad);
   const historyEmpty = !historyLoading && historyTotalCount === 0;
   const scrollBottomPadTotal = bottomBarClearance;
 
@@ -136,8 +139,10 @@ export function WellbeingScreen({ user }: { user: SessionUser }) {
     >
       <LogHistoryCard>
         <View style={logHistoryCardStyles.trackerCardBody}>
-          {listInitialLoad ? (
+          {showListLoading ? (
             <LogHistoryListLoading />
+          ) : listInitialLoad ? (
+            <LogHistoryListQuietPlaceholder />
           ) : historyEmpty ? (
             <LogHistoryEmptyState icon={WELLBEING_ICON} />
           ) : (

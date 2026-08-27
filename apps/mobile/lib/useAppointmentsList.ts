@@ -18,7 +18,8 @@ export function useAppointmentsList(userId: string) {
     () => getAppointmentsListCache(userId) ?? [],
   );
   const cacheKeyRef = useRef(appointmentsListCacheKey(appointments));
-  const [loading, setLoading] = useState(false);
+  // No cache yet → treat as loading so first paint stays quiet (not empty → spinner).
+  const [loading, setLoading] = useState(() => getAppointmentsListCache(userId) === undefined);
 
   const applyRows = useCallback((rows: AppointmentRow[]) => {
     const nextKey = appointmentsListCacheKey(rows);

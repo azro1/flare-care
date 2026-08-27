@@ -31,11 +31,26 @@ function wizardHistoryCacheKey(userId: string, table: string) {
   return `${userId}::${table}`;
 }
 
+export function getWizardLogHistoryCache(
+  userId: string,
+  table: string,
+): PaginatedLogListCacheSnapshot<WizardLogHistoryRow> | undefined {
+  return wizardLogHistoryCacheByKey[wizardHistoryCacheKey(userId, table)];
+}
+
+export function setWizardLogHistoryCache(
+  userId: string,
+  table: string,
+  snapshot: PaginatedLogListCacheSnapshot<WizardLogHistoryRow>,
+) {
+  wizardLogHistoryCacheByKey[wizardHistoryCacheKey(userId, table)] = snapshot;
+}
+
 function createWizardLogHistoryCache(table: string): PaginatedLogListCache<WizardLogHistoryRow> {
   return {
-    get: (userId) => wizardLogHistoryCacheByKey[wizardHistoryCacheKey(userId, table)],
+    get: (userId) => getWizardLogHistoryCache(userId, table),
     set: (userId, snapshot) => {
-      wizardLogHistoryCacheByKey[wizardHistoryCacheKey(userId, table)] = snapshot;
+      setWizardLogHistoryCache(userId, table, snapshot);
     },
   };
 }

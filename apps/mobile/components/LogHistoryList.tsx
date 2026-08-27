@@ -539,6 +539,11 @@ export function LogHistoryListLoading() {
   );
 }
 
+/** Same tray height as loading — no spinner (quiet first paint while cache warms). */
+export function LogHistoryListQuietPlaceholder() {
+  return <View style={logHistoryCardStyles.listTrayLoading} />;
+}
+
 export const logHistoryListStyles = StyleSheet.create({
   logList: { borderRadius: 14, overflow: "hidden" },
   logRow: {

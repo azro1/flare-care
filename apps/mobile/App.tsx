@@ -84,8 +84,10 @@ import { FlareThemeProvider, useFlareColors, useFlareTheme } from "./theme";
 import { formatUkDate, formatUkGreetingDate } from "./lib/formatUkDate";
 import { todayYmd } from "./lib/bowelMovementShared";
 import { handleListExpansionNavigationRouteChange } from "./lib/listExpansionNavigation";
+import { prefetchHubListCaches } from "./lib/prefetchHubListCaches";
 import { ListSelectionChromeProvider, useListSelectionChrome } from "./lib/listSelectionChrome";
 import { useLogListSelection } from "./lib/useLogListSelection";
+import { useDeferredListLoading } from "./lib/useDeferredListLoading";
 import { TRACK_MEDICATIONS_ICON } from "./lib/medicationFeatureIcons";
 import {
   FLARE_CHROME_LUCIDE,
@@ -151,6 +153,7 @@ import {
   LogHistoryList,
   LogHistoryPreviewList,
   LogHistoryListLoading,
+  LogHistoryListQuietPlaceholder,
   LogHistoryCard,
   LogHistoryEmptyState,
   OneLineTrayList,
@@ -1754,6 +1757,8 @@ function DashboardScreen({ user }: { user: SessionUser }) {
         .catch(() => {
           if (!cancelled) setSuppliesStatus(null);
         });
+      // Warm hub list caches ASAP (don't wait for weather/news) so first tile open is instant.
+      void prefetchHubListCaches(user.id).catch(() => {});
       void Promise.allSettled([appointmentsReady, suppliesReady]).then(() => {
         if (!cancelled) setPrioritiesExtrasReady(true);
       });
@@ -2491,6 +2496,8 @@ function SymptomHistoryScreen({ user }: { user: SessionUser }) {
   const bottomScrollInset = useBottomTabScrollInset();
   const { rows, visibleCount, hasMore, loading, loadingMore, loadMore, refresh, syncExpandedFromCache } =
     useWizardLogHistory(user.id, TABLES.LOG_SYMPTOMS);
+  const listInitialLoad = loading && rows.length === 0;
+  const showListLoading = useDeferredListLoading(listInitialLoad);
   const symptomLogItemIds = useMemo(() => rows.map((row) => String(row.id)), [rows]);
   const {
     selectionMode,
@@ -2555,8 +2562,10 @@ function SymptomHistoryScreen({ user }: { user: SessionUser }) {
     >
       <LogHistoryCard>
         <View style={logHistoryCardStyles.trackerCardBody}>
-          {loading && rows.length === 0 ? (
+          {showListLoading ? (
             <LogHistoryListLoading />
+          ) : listInitialLoad ? (
+            <LogHistoryListQuietPlaceholder />
           ) : rows.length === 0 ? (
             <LogHistoryEmptyState icon={FLARE_FEATURE_LUCIDE.symptoms} />
           ) : (
@@ -2879,6 +2888,8 @@ function MedicationTrackingHistoryScreen({ user }: { user: SessionUser }) {
   const bottomScrollInset = useBottomTabScrollInset();
   const { rows, visibleCount, hasMore, loading, loadingMore, loadMore, refresh, syncExpandedFromCache } =
     useWizardLogHistory(user.id, TABLES.LOG_MEDICATIONS);
+  const listInitialLoad = loading && rows.length === 0;
+  const showListLoading = useDeferredListLoading(listInitialLoad);
   const medicationLogItemIds = useMemo(() => rows.map((row) => String(row.id)), [rows]);
   const {
     selectionMode,
@@ -2943,8 +2954,10 @@ function MedicationTrackingHistoryScreen({ user }: { user: SessionUser }) {
     >
       <LogHistoryCard>
         <View style={logHistoryCardStyles.trackerCardBody}>
-          {loading && rows.length === 0 ? (
+          {showListLoading ? (
             <LogHistoryListLoading />
+          ) : listInitialLoad ? (
+            <LogHistoryListQuietPlaceholder />
           ) : rows.length === 0 ? (
             <LogHistoryEmptyState icon={TRACK_MEDICATIONS_ICON} />
           ) : (

@@ -15,6 +15,7 @@ import {
   LOG_HISTORY_LOAD_MORE_BATCH,
   logHistoryCardStyles,
   logHistoryListStyles,
+  LogHistoryListQuietPlaceholder,
   type LogHistoryListItem,
 } from "../components/LogHistoryList";
 import { TrackerThumbFab, useTrackerThumbFabLayout } from "../components/TrackerThumbFab";
@@ -26,6 +27,7 @@ import { type AppointmentsListState } from "../lib/useAppointmentsList";
 import { formatUkDateShort } from "../lib/formatUkDate";
 import { rescheduleAppointmentNotificationsForUser } from "../lib/medicationNotifications";
 import { invalidateAllAppointmentCaches } from "../lib/appointmentCaches";
+import { useDeferredListLoading } from "../lib/useDeferredListLoading";
 import {
   APPOINTMENTS_FEATURE_ICON,
   appointmentHasReminder,
@@ -199,6 +201,7 @@ export function AppointmentsListPane({
   }, [load, runBulkDelete, user.id]);
 
   const listInitialLoad = loading && appointments.length === 0;
+  const showListLoading = useDeferredListLoading(listInitialLoad);
   const listEmpty = !loading && visibleRows.length === 0;
 
   return (
@@ -227,8 +230,10 @@ export function AppointmentsListPane({
     >
       <LogHistoryCard>
         <View style={logHistoryCardStyles.trackerCardBody}>
-          {listInitialLoad ? (
+          {showListLoading ? (
             <LogHistoryListLoading />
+          ) : listInitialLoad ? (
+            <LogHistoryListQuietPlaceholder />
           ) : listEmpty ? (
             <LogHistoryEmptyState icon={APPOINTMENTS_FEATURE_ICON} />
           ) : (

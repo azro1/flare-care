@@ -26,6 +26,7 @@ import {
   LOG_HISTORY_LOAD_MORE_BATCH,
   logHistoryCardStyles,
   logHistoryListStyles,
+  LogHistoryListQuietPlaceholder,
   type LogHistoryListItem,
 } from "../components/LogHistoryList";
 import { OptionPickerModal } from "../components/OptionPickerModal";
@@ -33,6 +34,7 @@ import { ConfirmModal } from "../components/ConfirmModal";
 import { TrackerThumbFab, useTrackerThumbFabLayout } from "../components/TrackerThumbFab";
 import { WriggleReminderBell } from "../components/WriggleReminderBell";
 import { invalidateDashboardSnapshot } from "../lib/dashboardSnapshotCache";
+import { useDeferredListLoading } from "../lib/useDeferredListLoading";
 import { recordRecentActivityEvent } from "../lib/recentActivityEvents";
 import { useLogListSelection } from "../lib/useLogListSelection";
 import { MY_MEDS_ICON } from "../lib/medicationFeatureIcons";
@@ -467,6 +469,8 @@ export function MedicationsScreen({ user }: { user: SessionUser }) {
     [c.textMuted, medById],
   );
 
+  const showListLoading = useDeferredListLoading(loading && meds.length === 0);
+
   return (
     <InstructionScreenShell
       showInstruction={false}
@@ -509,7 +513,7 @@ export function MedicationsScreen({ user }: { user: SessionUser }) {
       <LogHistoryCard>
         <View style={logHistoryCardStyles.trackerCardBody}>
           {loading && meds.length === 0 ? (
-            <LogHistoryListLoading />
+            showListLoading ? <LogHistoryListLoading /> : <LogHistoryListQuietPlaceholder />
           ) : meds.length === 0 ? (
             <LogHistoryEmptyState icon={MY_MEDS_ICON} />
           ) : (
