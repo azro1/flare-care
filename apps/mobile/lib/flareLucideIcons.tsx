@@ -77,7 +77,7 @@ export const FLARE_FEATURE_LUCIDE = {
   supplies: Package,
   appointments: Calendar,
   reports: FileText,
-  /** Fluid / measurement output log (My care — coming soon). */
+  /** Fluid / measurement output log (My care). */
   output: Hash,
 } as const;
 

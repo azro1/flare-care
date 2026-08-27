@@ -218,6 +218,8 @@ import { MedicationDetailScreen } from "./screens/MedicationDetailScreen";
 import { MedicationsScreen } from "./screens/MedicationsScreen";
 import { WeightLogDetailScreen } from "./screens/WeightLogDetailScreen";
 import { WeightScreen } from "./screens/WeightScreen";
+import { OutputLogDetailScreen } from "./screens/OutputLogDetailScreen";
+import { OutputScreen } from "./screens/OutputScreen";
 import { WellbeingScreen } from "./screens/WellbeingScreen";
 import { WellbeingLogDetailScreen } from "./screens/WellbeingLogDetailScreen";
 import { WellbeingWizardScreen } from "./screens/WellbeingWizardScreen";
@@ -1434,6 +1436,7 @@ const BOTTOM_BAR_VISIBLE_ROUTES = new Set([
   "Meds",
   "Hydration",
   "Weight",
+  "Output",
   "Bowel",
   "Appointments",
   "AppointmentsPast",
@@ -1572,9 +1575,10 @@ function DashboardScreen({ user }: { user: SessionUser }) {
     Math.max(0, Math.round(windowWidth - SCREEN_EDGE_PADDING * 2)),
   );
   const [healthCarePage, setHealthCarePage] = useState(0);
-  const [careSwipeHintVisible, setCareSwipeHintVisible] = useState(true);
+  const [careVerticalPage, setCareVerticalPage] = useState(0);
   const healthCareScrollX = useRef(new Animated.Value(0)).current;
   const healthCarePagerRef = useRef<React.ElementRef<typeof AnimatedScrollView> | null>(null);
+  const careVerticalScrollRef = useRef<React.ElementRef<typeof ScrollView> | null>(null);
   const healthCarePageGap = HOME_TILE_GAP;
   /** Page width + inter-page gap — snap interval only (title fade still uses page width). */
   const healthCarePageStride = Math.max(1, healthCarePageW + healthCarePageGap);
@@ -1651,15 +1655,21 @@ function DashboardScreen({ user }: { user: SessionUser }) {
     { key: "appointments", label: "Appointments", screen: "Appointments" as const, lucide: FLARE_FEATURE_LUCIDE.appointments },
     { key: "reports", label: "Reports", screen: "Reports" as const, lucide: FLARE_FEATURE_LUCIDE.reports },
   ];
-  const careTopRowCards = careCards.slice(0, 2);
-  const careBottomRowCards = careCards.slice(2);
+  const careAppointmentsCard = careCards.find((card) => card.key === "appointments")!;
+  const careTopRowCards = [
+    careCards.find((card) => card.key === "weight")!,
+    careCards.find((card) => card.key === "supplies")!,
+  ];
+  const careMorePageCards = [careCards.find((card) => card.key === "reports")!];
   const healthMedsCard = healthCards[0];
   const healthLeftColumnCards = [
     healthCards.find((card) => card.key === "bowel")!,
     healthCards.find((card) => card.key === "hydration")!,
   ];
-  /** Matches `styles.homeDashboardTile` height — Meds spans both left-column rows. */
+  /** Matches `styles.homeDashboardTile` height — Meds spans both rows. */
   const healthMedsTallHeight = HOME_DASHBOARD_TILE_HEIGHT * 2 + HOME_TILE_GAP;
+  /** Full-width care tile (Appointments across both columns). */
+  const careWideTileWidth = tileWidth * 2 + HOME_TILE_GAP;
   /** Same gap as horizontal My health ↔ My care pages. */
   const careVerticalPageGap = healthCarePageGap;
   const careVerticalPageStride = healthMedsTallHeight + careVerticalPageGap;
@@ -2118,37 +2128,69 @@ function DashboardScreen({ user }: { user: SessionUser }) {
                 My care
               </Animated.Text>
             </View>
-            <Animated.View
-              pointerEvents={healthCarePage === 0 ? "auto" : "none"}
-              style={{
-                marginRight: STACKED_LINE_GAP,
-                opacity: healthCareScrollX.interpolate({
-                  inputRange: [0, Math.max(1, healthCarePageW)],
-                  outputRange: [1, 0],
-                  extrapolate: "clamp",
-                }),
-              }}
-            >
-              <Pressable
-                accessibilityRole="button"
-                accessibilityLabel="Open activity"
-                onPress={() => setActivitiesOpen(true)}
-                style={({ pressed }) => [
-                  styles.progressChip,
-                  { backgroundColor: c.isDark ? c.text : c.primary },
-                  pressed && { opacity: 0.85 },
-                ]}
+            <View style={[styles.healthCareTitleActionSlot, { marginRight: STACKED_LINE_GAP }]}>
+              <Animated.View
+                pointerEvents={healthCarePage === 0 ? "auto" : "none"}
+                style={{
+                  opacity: healthCareScrollX.interpolate({
+                    inputRange: [0, Math.max(1, healthCarePageW)],
+                    outputRange: [1, 0],
+                    extrapolate: "clamp",
+                  }),
+                }}
               >
-                <Text
-                  style={[
-                    styles.progressChipLabel,
-                    { color: c.isDark ? c.appearanceChipInactiveText : c.white },
+                <Pressable
+                  accessibilityRole="button"
+                  accessibilityLabel="Open activity"
+                  onPress={() => setActivitiesOpen(true)}
+                  style={({ pressed }) => [
+                    styles.progressChip,
+                    { backgroundColor: c.isDark ? c.text : c.primary },
+                    pressed && { opacity: 0.85 },
                   ]}
                 >
-                  Activity
-                </Text>
-              </Pressable>
-            </Animated.View>
+                  <Text
+                    style={[
+                      styles.progressChipLabel,
+                      { color: c.isDark ? c.appearanceChipInactiveText : c.white },
+                    ]}
+                  >
+                    Activity
+                  </Text>
+                </Pressable>
+              </Animated.View>
+              <Animated.View
+                pointerEvents={healthCarePage === 1 ? "auto" : "none"}
+                style={[
+                  styles.healthCareTitleActionLayer,
+                  {
+                    opacity: healthCareScrollX.interpolate({
+                      inputRange: [0, Math.max(1, healthCarePageW)],
+                      outputRange: [0, 1],
+                      extrapolate: "clamp",
+                    }),
+                  },
+                ]}
+              >
+                <Pressable
+                  accessibilityRole="button"
+                  accessibilityLabel={careVerticalPage === 0 ? "Show more care tools" : "Back to care tools"}
+                  hitSlop={10}
+                  onPress={() => {
+                    const nextY = careVerticalPage === 0 ? careVerticalPageStride : 0;
+                    careVerticalScrollRef.current?.scrollTo({ y: nextY, animated: true });
+                    setCareVerticalPage(careVerticalPage === 0 ? 1 : 0);
+                  }}
+                  style={({ pressed }) => [styles.careTitleChevBtn, pressed && { opacity: 0.7 }]}
+                >
+                  <FlareLucideIcon
+                    icon={careVerticalPage === 0 ? FLARE_CHROME_LUCIDE.up : FLARE_CHROME_LUCIDE.down}
+                    size={18}
+                    color={c.textMuted}
+                  />
+                </Pressable>
+              </Animated.View>
+            </View>
           </View>
 
           <View
@@ -2212,6 +2254,7 @@ function DashboardScreen({ user }: { user: SessionUser }) {
                     ]}
                   >
                     <ScrollView
+                      ref={careVerticalScrollRef}
                       nestedScrollEnabled
                       showsVerticalScrollIndicator={false}
                       bounces
@@ -2221,39 +2264,37 @@ function DashboardScreen({ user }: { user: SessionUser }) {
                       disableIntervalMomentum
                       style={{ height: healthMedsTallHeight }}
                       contentContainerStyle={{ gap: careVerticalPageGap }}
-                      onScroll={(e: NativeSyntheticEvent<NativeScrollEvent>) => {
-                        const y = e.nativeEvent.contentOffset.y;
-                        setCareSwipeHintVisible(y < 24);
+                      onMomentumScrollEnd={(e: NativeSyntheticEvent<NativeScrollEvent>) => {
+                        const next = Math.round(e.nativeEvent.contentOffset.y / careVerticalPageStride);
+                        setCareVerticalPage(Math.max(0, Math.min(1, next)));
                       }}
-                      scrollEventThrottle={16}
                     >
                       <View style={{ height: healthMedsTallHeight }}>
                         <View style={styles.carePageColumn}>
                           <View style={styles.carePageRow}>{careTopRowCards.map(renderToolTile)}</View>
-                          <View style={styles.carePageRow}>{careBottomRowCards.map(renderToolTile)}</View>
+                          <DashboardGridTile
+                            width={careWideTileWidth}
+                            label={careAppointmentsCard.label}
+                            variant="grid"
+                            onPress={() => navigation.navigate(careAppointmentsCard.screen)}
+                            icon={
+                              <FlareLucideIcon
+                                icon={careAppointmentsCard.lucide}
+                                size={HOME_TILE_ICON_SIZE_CHECKIN}
+                                color={c.primary}
+                              />
+                            }
+                          />
                         </View>
-                        {careSwipeHintVisible ? (
-                          <View style={styles.careSwipeUpHint} pointerEvents="none">
-                            <FlareLucideIcon
-                              icon={FLARE_CHROME_LUCIDE.up}
-                              size={16}
-                              color={c.textMuted}
-                            />
-                            <Text style={[styles.careSwipeUpHintText, { color: c.textMuted }]}>
-                              Swipe up
-                            </Text>
-                          </View>
-                        ) : null}
                       </View>
                       <View style={[styles.carePageColumn, { height: healthMedsTallHeight }]}>
                         <View style={styles.carePageRow}>
+                          {careMorePageCards.map(renderToolTile)}
                           <DashboardGridTile
                             width={tileWidth}
                             label="My Output"
                             variant="grid"
-                            onPress={() => {
-                              /* Output hub — not wired yet */
-                            }}
+                            onPress={() => navigation.navigate("Output")}
                             icon={
                               <FlareLucideIcon
                                 icon={FLARE_FEATURE_LUCIDE.output}
@@ -4344,6 +4385,7 @@ function MainBottomTabBar({
           routeName === "Reports" ||
           routeName === "Hydration" ||
           routeName === "Weight" ||
+          routeName === "Output" ||
           routeName === "Bowel" ||
           routeName === "MedicalSupplies" ||
           routeName === "MedicalSuppliesSetup" ||
@@ -4614,6 +4656,8 @@ function AppTabs({
       BristolGuide: "Bristol Stool Chart",
       Weight: "My Weight",
       WeightLogDetail: "Weight Log",
+      Output: "My Output",
+      OutputLogDetail: "Output Log",
       Appointments: "Appointments",
       AppointmentsPast: "Past Appointments",
       AppointmentDetail: "Appointment",
@@ -4644,6 +4688,8 @@ function AppTabs({
       route.name === "Reports" ||
       route.name === "Weight" ||
       route.name === "WeightLogDetail" ||
+      route.name === "Output" ||
+      route.name === "OutputLogDetail" ||
       route.name === "Appointments" ||
       route.name === "AppointmentsPast" ||
       route.name === "AppointmentDetail" ||
@@ -4824,6 +4870,8 @@ function AppTabs({
             <AppStack.Screen name="Hydration">{() => <HydrationScreen user={user} />}</AppStack.Screen>
             <AppStack.Screen name="Weight">{() => <WeightScreen user={user} />}</AppStack.Screen>
             <AppStack.Screen name="WeightLogDetail">{() => <WeightLogDetailScreen user={user} />}</AppStack.Screen>
+            <AppStack.Screen name="Output">{() => <OutputScreen user={user} />}</AppStack.Screen>
+            <AppStack.Screen name="OutputLogDetail">{() => <OutputLogDetailScreen user={user} />}</AppStack.Screen>
             <AppStack.Screen name="Bowel">{() => <BowelScreen user={user} />}</AppStack.Screen>
             <AppStack.Screen name="Wellbeing">{() => <WellbeingScreen user={user} />}</AppStack.Screen>
             <AppStack.Screen name="WellbeingWizard">{() => <WellbeingWizardScreen user={user} />}</AppStack.Screen>
@@ -5351,6 +5399,22 @@ const styles = StyleSheet.create({
     left: 0,
     right: 0,
     top: 0,
+  },
+  healthCareTitleActionSlot: {
+    justifyContent: "center",
+    alignItems: "flex-end",
+  },
+  healthCareTitleActionLayer: {
+    ...StyleSheet.absoluteFillObject,
+    justifyContent: "center",
+    alignItems: "flex-end",
+  },
+  careTitleChevBtn: {
+    alignItems: "center",
+    justifyContent: "center",
+    // Match Activity chip height; keep tap target without widening past the right edge.
+    minHeight: 44,
+    paddingLeft: 12,
   },
   healthCarePagerWrap: {
     alignSelf: "stretch",
@@ -6009,20 +6073,6 @@ const styles = StyleSheet.create({
   carePageRow: {
     flexDirection: "row",
     gap: HOME_TILE_GAP,
-  },
-  careSwipeUpHint: {
-    position: "absolute",
-    left: 0,
-    right: 0,
-    bottom: 6,
-    alignItems: "center",
-    justifyContent: "center",
-    gap: 2,
-  },
-  careSwipeUpHintText: {
-    fontSize: 11,
-    fontFamily: "Inter_500Medium",
-    letterSpacing: 0.2,
   },
   moreGridLabel: {
     fontSize: 13,

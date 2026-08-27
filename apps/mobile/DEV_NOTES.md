@@ -725,6 +725,54 @@ drop table if exists public.medical_supply_kits;
 -- then run the create statements above
 ```
 
+### My Output (`track_output`)
+
+Fluid / measurement log (ml + time + type). Run in the Supabase SQL editor before testing the hub:
+
+```sql
+create table if not exists public.track_output (
+  id bigint generated always as identity primary key,
+  user_id uuid not null references auth.users (id) on delete cascade,
+  amount_ml numeric not null,
+  kind text not null default 'other',
+  occurred_at timestamptz not null,
+  notes text,
+  created_at timestamptz not null default now()
+);
+
+create index if not exists track_output_user_id_idx
+  on public.track_output (user_id);
+
+create index if not exists track_output_user_occurred_at_idx
+  on public.track_output (user_id, occurred_at desc);
+
+alter table public.track_output enable row level security;
+
+create policy "track_output_select_own"
+  on public.track_output for select
+  using (auth.uid() = user_id);
+
+create policy "track_output_insert_own"
+  on public.track_output for insert
+  with check (auth.uid() = user_id);
+
+create policy "track_output_update_own"
+  on public.track_output for update
+  using (auth.uid() = user_id)
+  with check (auth.uid() = user_id);
+
+create policy "track_output_delete_own"
+  on public.track_output for delete
+  using (auth.uid() = user_id);
+```
+
+**If you already created `track_output` without `kind`**, run this alter:
+
+```sql
+alter table public.track_output
+  add column if not exists kind text not null default 'other';
+```
+
 ---
 
 ## Looking ahead
