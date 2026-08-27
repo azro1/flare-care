@@ -25,8 +25,6 @@ import {
 } from "../components/symptomReviewLayout";
 import { PrimaryButton, SecondaryButton } from "../components/FlareButton";
 import { flareFieldErrorStyle, FlareInputTrigger, FlareTextInput } from "../components/FlareInput";
-import { InfoHintTitleRow } from "../components/InfoHintButton";
-import { SwipeToRemoveRow } from "../components/SwipeToRemoveRow";
 import { invalidateDashboardSnapshot } from "../lib/dashboardSnapshotCache";
 import { formatUkDate } from "../lib/formatUkDate";
 import { supabase, TABLES } from "../lib/supabase";
@@ -53,7 +51,7 @@ import {
   wizardRatingToBand,
 } from "../lib/symptomWizardShared";
 import { useFlareColors } from "../theme";
-import { FULL_WIDTH_CTA_EDGE_PADDING, LANDING_CTA_SIDE_PAD } from "../lib/layoutConstants";
+import { FULL_WIDTH_CTA_EDGE_PADDING, LANDING_CTA_SIDE_PAD, QUESTIONNAIRE_STEP_FOOTER, QUESTIONNAIRE_STEP_OPTION_LIST, QUESTIONNAIRE_STEP_RADIO_ROW, QUESTIONNAIRE_STEP_SCROLL, QUESTIONNAIRE_STEP_SCROLL_BOTTOM, QUESTIONNAIRE_STEP_TITLE } from "../lib/layoutConstants";
 
 type SessionUser = { id: string };
 
@@ -433,7 +431,7 @@ export function SymptomLogWizardScreen({ user }: { user: SessionUser }) {
         showFlareAlert("Saved", "Your symptom log was updated.");
       } else {
         navigation.dispatch(CommonActions.reset({ index: 0, routes: [{ name: "Dashboard" }] }));
-        showFlareAlert("Saved", "Your symptom log was saved.");
+        showFlareAlert("Saved", "Your symptom log was saved. To view, tap Logs.");
       }
     } catch (e: any) {
       showFlareAlert("Could not save", e?.message || "Unknown error");
@@ -463,18 +461,17 @@ export function SymptomLogWizardScreen({ user }: { user: SessionUser }) {
     });
   };
 
-  const renderMeal = (meal: "breakfast" | "lunch" | "dinner", skipKey: "breakfast_skipped" | "lunch_skipped" | "dinner_skipped") => (
+  const renderMeal = (meal: "breakfast" | "lunch" | "dinner", skipKey: "breakfast_skipped" | "lunch_skipped" | "dinner_skipped") => {
+    const list = form[meal];
+    const last = list[list.length - 1];
+    const canAdd =
+      Boolean(last?.food.trim() && last?.quantity.trim()) && !form[skipKey];
+
+    return (
     <View>
-      <InfoHintTitleRow
-        hintTitle="Remove a meal"
-        hintMessage="Swipe left on a meal, then tap Remove. You need at least two meals listed."
-        hintAccessibilityLabel="How to remove a meal item"
-      >
-        <Text style={[styles.h3, styles.h3BesideHint, { color: c.text }]}>{mealLabel(meal)}</Text>
-      </InfoHintTitleRow>
-      {form[meal].map((item, i) => (
+      <Text style={[styles.h3, { color: c.text }]}>{mealLabel(meal)}</Text>
+      {list.map((item, i) => (
         <View key={i} style={[styles.mealEntryWrap, i === 0 ? styles.mealEntryWrapFirst : null]}>
-          <SwipeToRemoveRow enabled={form[meal].length > 1} onRemove={() => removeMealRow(meal, i)}>
             <FlareTextInput
               placeholder="Food"
               value={item.food}
@@ -497,23 +494,37 @@ export function SymptomLogWizardScreen({ user }: { user: SessionUser }) {
                 }))
               }
             />
-          </SwipeToRemoveRow>
+          {list.length > 1 ? (
+            <Pressable
+              accessibilityRole="button"
+              accessibilityLabel="Remove meal item"
+              hitSlop={{ top: 8, bottom: 8, left: 8, right: 8 }}
+              onPress={() => removeMealRow(meal, i)}
+              style={styles.removeItemLink}
+            >
+              <Text style={{ color: c.textMuted, fontFamily: "Inter_600SemiBold" }}>Remove</Text>
+            </Pressable>
+          ) : null}
         </View>
       ))}
       <Pressable
         accessibilityRole="button"
         accessibilityLabel={`Add another ${meal} item`}
+        disabled={!canAdd}
         hitSlop={{ top: 10, bottom: 10, left: 8, right: 8 }}
-        onPress={() =>
+        onPress={() => {
+          if (!canAdd) return;
           setForm((p) => ({
             ...p,
             [meal]: [...p[meal], { food: "", quantity: "" }],
             [skipKey]: false,
-          }))
-        }
+          }));
+        }}
         style={styles.addItemLink}
       >
-        <Text style={{ color: c.primary, fontFamily: "Inter_700Bold" }}>Add item</Text>
+        <Text style={{ color: c.primary, fontFamily: "Inter_700Bold", opacity: canAdd ? 1 : 0.45 }}>
+          Add item
+        </Text>
       </Pressable>
       <View style={styles.switchRow}>
         <Text style={{ color: c.text, flex: 1 }}>I didn&apos;t eat anything</Text>
@@ -536,7 +547,8 @@ export function SymptomLogWizardScreen({ user }: { user: SessionUser }) {
       </View>
       {fieldErrors[meal] ? <Text style={errTextStyle}>{fieldErrors[meal]}</Text> : null}
     </View>
-  );
+    );
+  };
 
   if (loadingPrefs || loadingEdit) {
     return (
@@ -1054,9 +1066,9 @@ export function SymptomLogWizardScreen({ user }: { user: SessionUser }) {
 const styles = StyleSheet.create({
   centered: { flex: 1, justifyContent: "center", alignItems: "center" },
   wizardShell: { flex: 1 },
-  scrollPad: { paddingTop: 16, paddingBottom: 48 },
+  scrollPad: { paddingTop: 16, paddingBottom: QUESTIONNAIRE_STEP_SCROLL_BOTTOM },
   scrollPadLanding: { flexGrow: 1, paddingHorizontal: FULL_WIDTH_CTA_EDGE_PADDING },
-  scrollPadWizardSteps: { paddingTop: 12, paddingHorizontal: 16 },
+  scrollPadWizardSteps: { ...QUESTIONNAIRE_STEP_SCROLL },
   landing: {
     alignItems: "center",
     justifyContent: "center",
@@ -1084,8 +1096,8 @@ const styles = StyleSheet.create({
     width: "100%",
   },
   landingSub: {
-    fontSize: 16,
-    lineHeight: 22,
+    fontSize: 17,
+    lineHeight: 26,
     textAlign: "center",
     marginBottom: 0,
     paddingHorizontal: 4,
@@ -1094,17 +1106,17 @@ const styles = StyleSheet.create({
   },
   landingCta: { width: "100%", paddingHorizontal: LANDING_CTA_SIDE_PAD, marginTop: 28 },
   phaseLine: { fontSize: 13, marginBottom: 12, fontFamily: "Inter_500Medium" },
-  h3: { fontFamily: "Inter_700Bold", fontSize: 20, lineHeight: 28, marginBottom: 12 },
-  h3BesideHint: { marginBottom: 0 },
-  rowGap: { gap: 14, marginTop: 8 },
-  radioRow: { flexDirection: "row", alignItems: "center", gap: 10 },
+  h3: { ...QUESTIONNAIRE_STEP_TITLE },
+  rowGap: { ...QUESTIONNAIRE_STEP_OPTION_LIST },
+  radioRow: { ...QUESTIONNAIRE_STEP_RADIO_ROW },
   radioOuter: { width: 22, height: 22, borderRadius: 11, borderWidth: 2, alignItems: "center", justifyContent: "center" },
   radioInner: { width: 12, height: 12, borderRadius: 6 },
   mealEntryWrap: { marginBottom: 12 },
   mealEntryWrapFirst: { paddingTop: 0 },
   mealFoodInput: { marginTop: 0 },
+  removeItemLink: { marginTop: 6, alignSelf: "flex-end" },
   addItemLink: { marginTop: 8, marginBottom: 8, alignSelf: "flex-start" },
-  footerBtns: { marginTop: 24, gap: 10 },
+  footerBtns: { ...QUESTIONNAIRE_STEP_FOOTER },
   footerBtnsReview: { marginTop: 0 },
   switchRow: { flexDirection: "row", alignItems: "center", marginTop: 12 },
 });

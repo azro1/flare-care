@@ -217,7 +217,7 @@ export function NewUserIntroScreen({ onFinished }: { onFinished: () => void }) {
             textAlign: "center",
           }}
         >
-          Flarecare
+          {index === 0 ? "Welcome to" : "Flarecare"}
         </Text>
       </View>
 

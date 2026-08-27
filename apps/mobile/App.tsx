@@ -2372,7 +2372,7 @@ function LogsScreen({ user }: { user: SessionUser }) {
               accessibilityLabel: "Browse wellbeing history",
             }),
           ]}
-          rowTextLayout="compact"
+          rowTextLayout="default"
           onPressItem={(rowId) => {
             if (rowId === "symptom") navigation.navigate("SymptomHistory");
             else if (rowId === "medication") navigation.navigate("MedicationTrackingHistory");
@@ -2466,7 +2466,6 @@ function SymptomHistoryScreen({ user }: { user: SessionUser }) {
               hasMore={hasMore}
               loadingMore={loadingMore}
               onLoadMore={() => void loadMore()}
-              rowTextLayout="compact"
               onPressItem={(logId) => navigation.navigate("SymptomDetail", { id: logId })}
               selectionMode={selectionMode}
               selectedIds={selectedIds}
@@ -2855,7 +2854,6 @@ function MedicationTrackingHistoryScreen({ user }: { user: SessionUser }) {
               hasMore={hasMore}
               loadingMore={loadingMore}
               onLoadMore={() => void loadMore()}
-              rowTextLayout="compact"
               onPressItem={(logId) => navigation.navigate("MedicationLogDetail", { id: logId })}
               selectionMode={selectionMode}
               selectedIds={selectedIds}
@@ -3939,7 +3937,7 @@ function AccountSecurityScreen() {
                 style={[
                   styles.settingToggleTitle,
                   styles.settingsCardTitle,
-                  { color: c.text, fontSize: FLARE_FONT_SIZE.muted, lineHeight: FLARE_LINE_HEIGHT.muted },
+                  { color: c.text },
                 ]}
               >
                 {unlockTitle}
@@ -4012,7 +4010,6 @@ function InfoScreen() {
               accessibilityLabel: "Open Nutrition Guide",
             }),
           ]}
-          rowTextLayout="compact"
           renderSubtitle={(item) =>
             item.subtitle ? (
               <Text
@@ -4068,7 +4065,7 @@ function SettingsScreen() {
                 style={[
                   styles.settingToggleTitle,
                   styles.settingsCardTitle,
-                  { color: c.text, fontSize: FLARE_FONT_SIZE.muted, lineHeight: FLARE_LINE_HEIGHT.muted },
+                  { color: c.text },
                 ]}
               >
                 {appearancePreference === "dark" ? "Dark mode" : "Light mode"}
@@ -4100,7 +4097,6 @@ function SettingsScreen() {
             insetTray={false}
             rowPaddingHorizontal={0}
             rowPaddingVertical={0}
-            rowTextLayout="compact"
             onPressItem={() => navigation.navigate("Reminders")}
           />
         </View>
@@ -4570,7 +4566,7 @@ function AppTabs({
       AppointmentBriefChanges: "What Changed",
       LatestNews: "Latest news",
       MedicalSupplies: "My Supplies",
-      MedicalSuppliesSetup: "My Supplies",
+      MedicalSuppliesSetup: "",
       MedicalSupplyOrder: "Order",
       MedicalSupplyRequest: "Send request",
     };
@@ -4697,6 +4693,8 @@ function AppTabs({
                 ? "Reminders"
                 : isSymptomLogWizard || isMedicationTrackingWizard || isWellbeingWizard
                   ? ""
+                  : route.name === "MedicalSuppliesSetup"
+                    ? ""
                   : route.name === "MedicalSupplyOrder"
                     ? String((route.params as { orderName?: string } | undefined)?.orderName ?? "").trim() ||
                       "Order"
@@ -5704,8 +5702,8 @@ const styles = StyleSheet.create({
   helpSectionToggleExpanded: { paddingBottom: 12 },
   helpSectionToggleTitle: {
     flex: 1,
-    fontSize: FLARE_FONT_SIZE.muted,
-    lineHeight: FLARE_LINE_HEIGHT.muted,
+    fontSize: FLARE_FONT_SIZE.body,
+    lineHeight: FLARE_LINE_HEIGHT.body,
     fontFamily: FLARE_FONT_FAMILY.medium,
   },
   helpSectionToggleMark: {

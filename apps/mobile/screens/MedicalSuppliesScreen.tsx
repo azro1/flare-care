@@ -331,8 +331,8 @@ const styles = StyleSheet.create({
   },
   orderCopy: { flex: 1, gap: STACKED_LINE_GAP },
   orderName: {
-    fontSize: FLARE_FONT_SIZE.muted,
-    lineHeight: FLARE_LINE_HEIGHT.muted,
+    fontSize: FLARE_FONT_SIZE.body,
+    lineHeight: FLARE_LINE_HEIGHT.body,
     fontFamily: FLARE_FONT_FAMILY.medium,
   },
   orderDue: {

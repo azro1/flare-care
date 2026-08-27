@@ -519,7 +519,7 @@ export function MedicationsScreen({ user }: { user: SessionUser }) {
               hasMore={hasMoreMeds}
               loadMoreLabel="load more"
               onLoadMore={loadMoreMeds}
-              rowTextLayout="compact"
+              rowTextLayout="default"
               renderSubtitle={renderMedSubtitle}
               onPressItem={(medId) => navigation.navigate("MedicationDetail", { id: medId })}
               selectionMode={selectionMode}

@@ -4,6 +4,7 @@ import { FlareLucideIcon } from "../lib/flareLucideIcons";
 import {
   ActivityIndicator,
   BackHandler,
+  InteractionManager,
   KeyboardAvoidingView,
   Platform,
   Pressable,
@@ -24,6 +25,12 @@ import {
   FLARE_FONT_SIZE,
   FULL_WIDTH_CTA_EDGE_PADDING,
   LANDING_CTA_SIDE_PAD,
+  QUESTIONNAIRE_STEP_FOOTER,
+  QUESTIONNAIRE_STEP_OPTION_LIST,
+  QUESTIONNAIRE_STEP_RADIO_ROW,
+  QUESTIONNAIRE_STEP_SCROLL,
+  QUESTIONNAIRE_STEP_SCROLL_BOTTOM,
+  QUESTIONNAIRE_STEP_TITLE,
   wizardLandingMinHeight,
 } from "../lib/layoutConstants";
 import {
@@ -228,16 +235,20 @@ export function WellbeingWizardScreen({ user }: { user: SessionUser }) {
   const showAlreadyCheckedInToday = useCallback(() => {
     showFlareAlert(
       "Already checked in today",
-      "You've already completed your wellbeing check-in today. You can view or edit it anytime from Logs.",
+      "You've already completed your wellbeing check-in for today. Come back tomorrow.",
       [
         {
           text: "OK",
           onPress: () => {
-            navigation.dispatch(CommonActions.reset({ index: 0, routes: [{ name: "Dashboard" }] }));
-            requestAnimationFrame(() => {
-              requestAnimationFrame(() => {
-                dismissFlareAlert();
-              });
+            // Prefer pop so the existing Dashboard stays mounted; hold the modal until the
+            // transition finishes so the wizard never flashes under the dismiss.
+            if (navigation.canGoBack()) {
+              navigation.goBack();
+            } else {
+              navigation.dispatch(CommonActions.reset({ index: 0, routes: [{ name: "Dashboard" }] }));
+            }
+            InteractionManager.runAfterInteractions(() => {
+              requestAnimationFrame(() => dismissFlareAlert());
             });
           },
         },
@@ -288,7 +299,7 @@ export function WellbeingWizardScreen({ user }: { user: SessionUser }) {
         invalidateDashboardSnapshot(user.id);
         invalidateWellbeingListCache(user.id);
         navigation.dispatch(CommonActions.reset({ index: 0, routes: [{ name: "Dashboard" }] }));
-        showFlareAlert("Saved", "Your wellbeing log was saved.");
+        showFlareAlert("Saved", "Your wellbeing log was saved. To view, tap Logs.");
       }
     } catch (e: unknown) {
       showFlareAlert("Could not save", e instanceof Error ? e.message : "Unknown error");
@@ -486,9 +497,9 @@ export function WellbeingWizardScreen({ user }: { user: SessionUser }) {
 const styles = StyleSheet.create({
   centered: { flex: 1, justifyContent: "center", alignItems: "center" },
   wizardShell: { flex: 1 },
-  scrollPad: { paddingTop: 16, paddingBottom: 48 },
+  scrollPad: { paddingTop: 16, paddingBottom: QUESTIONNAIRE_STEP_SCROLL_BOTTOM },
   scrollPadLanding: { flexGrow: 1, paddingHorizontal: FULL_WIDTH_CTA_EDGE_PADDING },
-  scrollPadWizardSteps: { paddingTop: 12, paddingHorizontal: 16 },
+  scrollPadWizardSteps: { ...QUESTIONNAIRE_STEP_SCROLL },
   landing: {
     alignItems: "center",
     justifyContent: "center",
@@ -515,8 +526,8 @@ const styles = StyleSheet.create({
     width: "100%",
   },
   landingSub: {
-    fontSize: 16,
-    lineHeight: 22,
+    fontSize: 17,
+    lineHeight: 26,
     textAlign: "center",
     marginBottom: 0,
     paddingHorizontal: 4,
@@ -525,12 +536,12 @@ const styles = StyleSheet.create({
   },
   landingCta: { width: "100%", paddingHorizontal: LANDING_CTA_SIDE_PAD, marginTop: 28 },
   phaseLine: { fontSize: 13, marginBottom: 12, fontFamily: FLARE_FONT_FAMILY.medium },
-  h3: { fontFamily: FLARE_FONT_FAMILY.bold, fontSize: 20, lineHeight: 28, marginBottom: 12 },
+  h3: { ...QUESTIONNAIRE_STEP_TITLE },
   subLabel: { fontSize: FLARE_FONT_SIZE.body, fontFamily: FLARE_FONT_FAMILY.medium, marginBottom: 6 },
-  rowGap: { gap: 14, marginTop: 8 },
-  radioRow: { flexDirection: "row", alignItems: "center", gap: 10 },
+  rowGap: { ...QUESTIONNAIRE_STEP_OPTION_LIST },
+  radioRow: { ...QUESTIONNAIRE_STEP_RADIO_ROW },
   radioOuter: { width: 22, height: 22, borderRadius: 11, borderWidth: 2, alignItems: "center", justifyContent: "center" },
   radioInner: { width: 12, height: 12, borderRadius: 6 },
-  footerBtns: { marginTop: 24, gap: 10 },
+  footerBtns: { ...QUESTIONNAIRE_STEP_FOOTER },
   footerBtnsReview: { marginTop: 0 },
 });

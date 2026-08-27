@@ -428,7 +428,7 @@ export function MedicalSupplyOrderScreen({ user }: { user: SessionUser }) {
               hasMore={hasMore}
               loadMoreLabel="load more"
               onLoadMore={loadMore}
-              rowTextLayout="compact"
+              rowTextLayout="default"
               onPressItem={(id) => {
                 const row = items.find((r) => String(r.id) === id);
                 if (row) openEdit(row);

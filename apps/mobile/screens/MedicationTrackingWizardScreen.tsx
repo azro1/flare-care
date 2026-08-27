@@ -20,8 +20,6 @@ import { OptionPickerModal } from "../components/OptionPickerModal";
 import { WizardReviewMedicationSection } from "../components/symptomReviewLayout";
 import { PrimaryButton, SecondaryButton } from "../components/FlareButton";
 import { flareFieldErrorStyle, FlareInputTrigger, FlareTextInput } from "../components/FlareInput";
-import { InfoHintTitleRow } from "../components/InfoHintButton";
-import { SwipeToRemoveRow } from "../components/SwipeToRemoveRow";
 import { invalidateDashboardSnapshot } from "../lib/dashboardSnapshotCache";
 import { formatUkDate } from "../lib/formatUkDate";
 import { supabase, TABLES } from "../lib/supabase";
@@ -56,6 +54,12 @@ import {
   HELP_NAV_LINK_LABEL,
   HELP_NAV_LINK_PRESS,
   LANDING_CTA_SIDE_PAD,
+  QUESTIONNAIRE_STEP_FOOTER,
+  QUESTIONNAIRE_STEP_OPTION_LIST,
+  QUESTIONNAIRE_STEP_RADIO_ROW,
+  QUESTIONNAIRE_STEP_SCROLL,
+  QUESTIONNAIRE_STEP_SCROLL_BOTTOM,
+  QUESTIONNAIRE_STEP_TITLE,
 } from "../lib/layoutConstants";
 
 type SessionUser = { id: string };
@@ -327,7 +331,7 @@ export function MedicationTrackingWizardScreen({ user }: { user: SessionUser }) 
         showFlareAlert("Saved", "Your medication log was updated.");
       } else {
         navigation.dispatch(CommonActions.reset({ index: 0, routes: [{ name: "Dashboard" }] }));
-        showFlareAlert("Saved", "Your medication tracking entry was saved.");
+        showFlareAlert("Saved", "Your medication tracking log was saved. To view, tap Logs.");
       }
     } catch (e: unknown) {
       const message = e instanceof Error ? e.message : "Unknown error";
@@ -433,16 +437,9 @@ export function MedicationTrackingWizardScreen({ user }: { user: SessionUser }) 
 
     return (
       <View>
-        <InfoHintTitleRow
-          hintTitle="Remove a medication"
-          hintMessage="Swipe left on a medication, then tap Remove. You need at least two medications listed."
-          hintAccessibilityLabel="How to remove a medication"
-        >
-          <Text style={[styles.h3, styles.h3BesideHint, { color: c.text }]}>{title}</Text>
-        </InfoHintTitleRow>
+        <Text style={[styles.h3, { color: c.text }]}>{title}</Text>
         {list.map((item, i) => (
           <View key={i} style={[styles.listEntryWrap, i === 0 ? styles.listEntryWrapFirst : null]}>
-            <SwipeToRemoveRow enabled={list.length > 1} onRemove={() => removeListRow(kind, i)}>
               <View style={styles.listMedNameDoseRow}>
                 <FlareTextInput
                   fieldIcon="pill"
@@ -474,7 +471,17 @@ export function MedicationTrackingWizardScreen({ user }: { user: SessionUser }) 
                   {item.timeOfDay || ""}
                 </Text>
               </FlareInputTrigger>
-            </SwipeToRemoveRow>
+            {list.length > 1 ? (
+              <Pressable
+                accessibilityRole="button"
+                accessibilityLabel="Remove medication"
+                hitSlop={{ top: 8, bottom: 8, left: 8, right: 8 }}
+                onPress={() => removeListRow(kind, i)}
+                style={styles.removeItemLink}
+              >
+                <Text style={{ color: c.textMuted, fontFamily: "Inter_600SemiBold" }}>Remove</Text>
+              </Pressable>
+            ) : null}
           </View>
         ))}
         <Pressable
@@ -563,7 +570,7 @@ export function MedicationTrackingWizardScreen({ user }: { user: SessionUser }) 
             </View>
             <Text style={[styles.landingTitle, { color: c.text }]}>Track Medications</Text>
             <Text style={[styles.landingSub, { color: c.textMuted }]}>
-              Log medication events that may be relevant to your IBD.
+              Capture medication events that could be important to your IBD care.
             </Text>
             <View style={styles.landingCta}>
               <PrimaryButton title="Start now" onPress={startWizard} noTopMargin />
@@ -662,9 +669,9 @@ export function MedicationTrackingWizardScreen({ user }: { user: SessionUser }) 
 const styles = StyleSheet.create({
   centered: { flex: 1, justifyContent: "center", alignItems: "center" },
   wizardShell: { flex: 1 },
-  scrollPad: { paddingTop: 16, paddingBottom: 48 },
+  scrollPad: { paddingTop: 16, paddingBottom: QUESTIONNAIRE_STEP_SCROLL_BOTTOM },
   scrollPadLanding: { flexGrow: 1, paddingHorizontal: FULL_WIDTH_CTA_EDGE_PADDING },
-  scrollPadWizardSteps: { paddingTop: 12, paddingHorizontal: 16 },
+  scrollPadWizardSteps: { ...QUESTIONNAIRE_STEP_SCROLL },
   landing: {
     alignItems: "center",
     justifyContent: "center",
@@ -691,8 +698,8 @@ const styles = StyleSheet.create({
     width: "100%",
   },
   landingSub: {
-    fontSize: 16,
-    lineHeight: 22,
+    fontSize: 17,
+    lineHeight: 26,
     textAlign: "center",
     marginBottom: 0,
     paddingHorizontal: 4,
@@ -701,10 +708,9 @@ const styles = StyleSheet.create({
   },
   landingCta: { width: "100%", paddingHorizontal: LANDING_CTA_SIDE_PAD, marginTop: 28 },
   phaseLine: { fontSize: 13, marginBottom: 12, fontFamily: "Inter_500Medium" },
-  h3: { fontFamily: "Inter_700Bold", fontSize: 20, lineHeight: 28, marginBottom: 12 },
-  h3BesideHint: { marginBottom: 0 },
-  rowGap: { gap: 14, marginTop: 8 },
-  radioRow: { flexDirection: "row", alignItems: "center", gap: 10 },
+  h3: { ...QUESTIONNAIRE_STEP_TITLE },
+  rowGap: { ...QUESTIONNAIRE_STEP_OPTION_LIST },
+  radioRow: { ...QUESTIONNAIRE_STEP_RADIO_ROW },
   radioOuter: { width: 22, height: 22, borderRadius: 11, borderWidth: 2, alignItems: "center", justifyContent: "center" },
   radioInner: { width: 12, height: 12, borderRadius: 6 },
   helpLinkBelowActions: {
@@ -712,10 +718,11 @@ const styles = StyleSheet.create({
   },
   listEntryWrap: { marginBottom: 12 },
   listEntryWrapFirst: { paddingTop: 0 },
+  removeItemLink: { marginTop: 6, alignSelf: "flex-end" },
   addMedLink: { marginTop: 8, marginBottom: 8, alignSelf: "flex-start" },
   listMedNameDoseRow: { flexDirection: "row", alignItems: "center", gap: 6 },
   listMedNameInput: { flex: 1, minWidth: 0, marginTop: 0 },
   listMedDoseInput: { width: 104, marginTop: 0, flexShrink: 0 },
-  footerBtns: { marginTop: 24, gap: 10 },
+  footerBtns: { ...QUESTIONNAIRE_STEP_FOOTER },
   footerBtnsReview: { marginTop: 0 },
 });

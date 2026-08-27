@@ -165,8 +165,8 @@ export const CONFIRM_MODAL_TITLE = {
 
 /** Confirm / notice modal body — shared by every `ConfirmModal`. */
 export const CONFIRM_MODAL_MESSAGE = {
-  fontSize: FLARE_FONT_SIZE.body,
-  lineHeight: FLARE_LINE_HEIGHT.body,
+  fontSize: FLARE_FONT_SIZE.subhead,
+  lineHeight: FLARE_LINE_HEIGHT.subhead,
   fontFamily: FLARE_FONT_FAMILY.regular,
 } as const;
 
@@ -347,6 +347,43 @@ export const FULL_WIDTH_CTA_EDGE_PADDING = 16;
  * Applied inside `FULL_WIDTH_CTA_EDGE_PADDING` so those surfaces match when sliding.
  */
 export const LANDING_CTA_SIDE_PAD = 10;
+
+/**
+ * App questionnaire step chrome — one family for:
+ * Symptoms / Meds / Wellbeing wizard steps + Supplies order setup.
+ * Spread into screen StyleSheets so these flows can’t drift apart.
+ */
+export const QUESTIONNAIRE_STEP_SCROLL = {
+  paddingHorizontal: 16,
+  paddingTop: 12,
+} as const;
+
+export const QUESTIONNAIRE_STEP_SCROLL_BOTTOM = 48;
+
+export const QUESTIONNAIRE_STEP_TITLE = {
+  fontFamily: FLARE_FONT_FAMILY.bold,
+  fontSize: 20,
+  lineHeight: 28,
+  marginBottom: 24,
+} as const;
+
+/** Option / radio stacks under a step title. */
+export const QUESTIONNAIRE_STEP_OPTION_LIST = {
+  gap: 14,
+  marginTop: 0,
+} as const;
+
+export const QUESTIONNAIRE_STEP_RADIO_ROW = {
+  flexDirection: "row" as const,
+  alignItems: "center" as const,
+  gap: 10,
+};
+
+/** Primary + secondary CTA stack at the bottom of a step. */
+export const QUESTIONNAIRE_STEP_FOOTER = {
+  marginTop: 24,
+  gap: 10,
+} as const;
 
 /** Wizard step-0 `ScrollView` top inset — keep in sync with wizard screens. */
 export const WIZARD_LANDING_SCROLL_TOP_PADDING = 16;

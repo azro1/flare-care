@@ -154,7 +154,6 @@ export function OneLineTrayList({
           items={items}
           emptyMessage={emptyMessage}
           rowTextLayout="default"
-          titleRegular
           rowPaddingHorizontal={ONE_LINE_TRAY_PADDING}
           rowPaddingVertical={4}
           insetTray={false}
@@ -296,7 +295,7 @@ export function LogHistoryList({
   renderTitleAccessory,
   renderSubtitle,
   renderTrailing,
-  rowTextLayout = "compact",
+  rowTextLayout = "default",
   selectionMode = false,
   selectedIds,
   onToggleSelect,
@@ -318,9 +317,12 @@ export function LogHistoryList({
   /** Replaces default subtitle line when provided (return null to fall back). */
   renderSubtitle?: (item: LogHistoryListItem) => ReactNode;
   renderTrailing?: (item: LogHistoryListItem) => ReactNode;
-  /** Title/subtitle typography. Default `compact` (13). Pass `default` for body (14) titles. */
+  /** Title/subtitle typography.
+   *  - `default` (14 body): clickable browse/list titles (Logs, Meds, Account, history, etc.).
+   *  - `compact` (13 muted): denser rows; Today summary still forces this via trailing counts.
+   */
   rowTextLayout?: "default" | "compact";
-  /** Title-only link rows (`OneLineTrayList` — Account, Legal) — muted size, regular weight. */
+  /** Regular-weight title at muted size (multiline overflow titles). Prefer `default` layout for browse rows. */
   titleRegular?: boolean;
   selectionMode?: boolean;
   selectedIds?: ReadonlySet<string>;

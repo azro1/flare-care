@@ -238,7 +238,7 @@ export function AppointmentsListPane({
               hasMore={hasMore}
               loadMoreLabel="load more"
               onLoadMore={loadMore}
-              rowTextLayout="compact"
+              rowTextLayout="default"
               renderSubtitle={renderAptSubtitle}
               onPressItem={(aptId) => navigation.navigate("AppointmentDetail", { id: aptId })}
               selectionMode={selectionMode}

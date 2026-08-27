@@ -26,18 +26,15 @@ import { FlareScreenSectionTitle } from "../components/FlareScreenSectionTitle";
 import { ScrollView } from "../lib/scrollViews";
 import { formatUkDate } from "../lib/formatUkDate";
 import {
-  CARD_SECTION_INNER_GAP,
-  COLLAPSING_TITLE_CONTENT_GAP,
-  CONFIRM_MODAL_STACK_GAP,
   FLARE_FONT_FAMILY,
   FLARE_FONT_SIZE,
-  FLARE_LINE_HEIGHT,
-  HOME_TILE_GAP,
-  INSTRUCTION_CARD_HEADER_GAP,
-  RECENT_ACTIVITY_ROW_GAP,
+  QUESTIONNAIRE_STEP_FOOTER,
+  QUESTIONNAIRE_STEP_OPTION_LIST,
+  QUESTIONNAIRE_STEP_RADIO_ROW,
+  QUESTIONNAIRE_STEP_SCROLL,
+  QUESTIONNAIRE_STEP_SCROLL_BOTTOM,
+  QUESTIONNAIRE_STEP_TITLE,
   SCREEN_EDGE_PADDING,
-  WIZARD_LANDING_SCROLL_TOP_PADDING,
-  INFORMATIONAL_PAGE_HORIZONTAL_PADDING,
   bottomTabBarScrollInset,
 } from "../lib/layoutConstants";
 import {
@@ -54,6 +51,7 @@ import {
   updateMedicalSupplyKit,
   weeksToCadenceDays,
 } from "../lib/medicalSuppliesShared";
+import { todayYmd } from "../lib/bowelMovementShared";
 import { rescheduleSupplyNotificationsForUser } from "../lib/medicationNotifications";
 import { useFlareColors } from "../theme";
 
@@ -72,6 +70,18 @@ const STEP_LAST = STEP_DUE;
 
 const RADIO_OUTER_SIZE = 22;
 const RADIO_INNER_SIZE = 12;
+
+/** Midnight local today — keeps “today” selectable with `minimumDate`. */
+function startOfLocalToday(): Date {
+  const d = new Date();
+  d.setHours(0, 0, 0, 0);
+  return d;
+}
+
+function clampDuePickerDate(d: Date): Date {
+  const min = startOfLocalToday();
+  return d.getTime() < min.getTime() ? min : d;
+}
 
 function isAndroidPickerDismissed(event: { type?: string }): boolean {
   return Platform.OS === "android" && event.type === "dismissed";
@@ -199,7 +209,7 @@ export function MedicalSuppliesSetupScreen({
 
   useLayoutEffect(() => {
     navigation.setOptions({
-      title: "My Supplies",
+      title: "",
       // Finish uses replace — interactive pop + beforeRemove was stepping back to cadence.
       gestureEnabled: false,
       headerLeft: () => (
@@ -252,6 +262,11 @@ export function MedicalSuppliesSetupScreen({
     }
     if (!nextDueDate) {
       setStepError("Pick when your next order is due.");
+      setStep(STEP_DUE);
+      return;
+    }
+    if (nextDueDate < todayYmd()) {
+      setStepError("Pick today or a future date.");
       setStep(STEP_DUE);
       return;
     }
@@ -314,6 +329,10 @@ export function MedicalSuppliesSetupScreen({
         setStepError("Pick a date.");
         return;
       }
+      if (nextDueDate < todayYmd()) {
+        setStepError("Pick today or a future date.");
+        return;
+      }
       void finishSetup();
       return;
     }
@@ -326,7 +345,7 @@ export function MedicalSuppliesSetupScreen({
       setPickerDraftDate(null);
       if (isAndroidPickerDismissed(event)) return;
       if (event.type === "set" && d) {
-        setNextDueDate(formatYmdLocal(d));
+        setNextDueDate(formatYmdLocal(clampDuePickerDate(d)));
         setStepError("");
       }
       return;
@@ -335,7 +354,7 @@ export function MedicalSuppliesSetupScreen({
     setPickerDraftDate(null);
     if (event.type === "dismissed") return;
     if (d) {
-      setNextDueDate(formatYmdLocal(d));
+      setNextDueDate(formatYmdLocal(clampDuePickerDate(d)));
       setStepError("");
     }
   };
@@ -343,9 +362,9 @@ export function MedicalSuppliesSetupScreen({
   const questionTitle = useMemo(() => {
     switch (step) {
       case STEP_INTRO:
-        return "Let’s set up an order";
+        return "Set up an order";
       case STEP_NAME:
-        return "Name your order";
+        return "Choose a name";
       case STEP_CADENCE:
         return "How often do you order?";
       case STEP_DUE:
@@ -368,7 +387,7 @@ export function MedicalSuppliesSetupScreen({
       <ScrollView
         contentContainerStyle={[
           styles.scroll,
-          { paddingBottom: bottomScrollInset + COLLAPSING_TITLE_CONTENT_GAP + INFORMATIONAL_PAGE_HORIZONTAL_PADDING },
+          { paddingBottom: bottomScrollInset + QUESTIONNAIRE_STEP_SCROLL_BOTTOM },
         ]}
         keyboardShouldPersistTaps="handled"
         showsVerticalScrollIndicator={false}
@@ -396,7 +415,7 @@ export function MedicalSuppliesSetupScreen({
         {step === STEP_NAME ? (
           <View style={styles.nameBlock}>
             <Text style={[styles.support, styles.supportInBlock, { color: c.textMuted }]}>
-              Choose a name to easily identify and switch between saved orders.
+              Let&apos;s give it a name so you can easily identify it.
             </Text>
             <View style={styles.fieldGroup}>
               <FlareScreenSectionTitle compact>Order name</FlareScreenSectionTitle>
@@ -460,7 +479,8 @@ export function MedicalSuppliesSetupScreen({
               accessibilityRole="button"
               accessibilityLabel="Next due date"
               onPress={() => {
-                setPickerDraftDate(nextDueDate ? parseYmdLocal(nextDueDate) : new Date());
+                const parsed = nextDueDate ? parseYmdLocal(nextDueDate) : startOfLocalToday();
+                setPickerDraftDate(clampDuePickerDate(parsed));
                 setDatePickerOpen(true);
               }}
               style={[styles.pickerPill, { backgroundColor: c.surfaceSubtle, borderColor: c.cardBorder }]}
@@ -488,18 +508,22 @@ export function MedicalSuppliesSetupScreen({
             }
             onPress={goNext}
             disabled={saving}
+            noTopMargin
           />
           {step > STEP_NAME || startStep >= STEP_NAME ? (
-            <SecondaryButton title="Back" onPress={stepBack} disabled={saving} />
+            <SecondaryButton title="Back" onPress={stepBack} disabled={saving} noTopMargin />
           ) : null}
         </View>
       </ScrollView>
 
       {datePickerOpen ? (
         <DateTimePicker
-          value={pickerDraftDate || (nextDueDate ? parseYmdLocal(nextDueDate) : new Date())}
+          value={clampDuePickerDate(
+            pickerDraftDate || (nextDueDate ? parseYmdLocal(nextDueDate) : startOfLocalToday()),
+          )}
           mode="date"
           display="default"
+          minimumDate={startOfLocalToday()}
           onChange={handleDatePickerChange}
         />
       ) : null}
@@ -509,33 +533,26 @@ export function MedicalSuppliesSetupScreen({
 
 const styles = StyleSheet.create({
   centered: { flex: 1, alignItems: "center", justifyContent: "center" },
-  scroll: {
-    paddingHorizontal: INFORMATIONAL_PAGE_HORIZONTAL_PADDING,
-    paddingTop: WIZARD_LANDING_SCROLL_TOP_PADDING,
-  },
-  question: {
-    fontFamily: FLARE_FONT_FAMILY.bold,
-    fontSize: 20,
-    marginBottom: CARD_SECTION_INNER_GAP,
-  },
+  scroll: { ...QUESTIONNAIRE_STEP_SCROLL },
+  question: { ...QUESTIONNAIRE_STEP_TITLE },
   questionBesideHint: {
     marginBottom: 0,
     flexShrink: 1,
   },
   support: {
-    fontSize: FLARE_FONT_SIZE.body,
+    fontSize: FLARE_FONT_SIZE.subhead,
     fontFamily: FLARE_FONT_FAMILY.regular,
-    lineHeight: FLARE_LINE_HEIGHT.body,
-    marginBottom: COLLAPSING_TITLE_CONTENT_GAP,
+    lineHeight: 24,
+    marginBottom: QUESTIONNAIRE_STEP_TITLE.marginBottom,
   },
   supportInBlock: { marginBottom: 0 },
-  nameBlock: { gap: HOME_TILE_GAP },
-  fieldGroup: { gap: CARD_SECTION_INNER_GAP },
-  block: { gap: CARD_SECTION_INNER_GAP },
+  nameBlock: { gap: QUESTIONNAIRE_STEP_TITLE.marginBottom },
+  fieldGroup: { gap: QUESTIONNAIRE_STEP_TITLE.marginBottom },
+  block: { gap: QUESTIONNAIRE_STEP_TITLE.marginBottom },
   fieldInput: { marginTop: 0 },
-  radioList: { gap: RECENT_ACTIVITY_ROW_GAP, marginTop: CONFIRM_MODAL_STACK_GAP },
-  customWeeks: { gap: CARD_SECTION_INNER_GAP, marginTop: CONFIRM_MODAL_STACK_GAP },
-  radioRow: { flexDirection: "row", alignItems: "center", gap: INSTRUCTION_CARD_HEADER_GAP },
+  radioList: { ...QUESTIONNAIRE_STEP_OPTION_LIST },
+  customWeeks: { gap: QUESTIONNAIRE_STEP_TITLE.marginBottom, marginTop: QUESTIONNAIRE_STEP_OPTION_LIST.marginTop },
+  radioRow: { ...QUESTIONNAIRE_STEP_RADIO_ROW },
   radioOuter: {
     width: RADIO_OUTER_SIZE,
     height: RADIO_OUTER_SIZE,
@@ -557,15 +574,15 @@ const styles = StyleSheet.create({
   pickerPill: {
     flexDirection: "row",
     alignItems: "center",
-    gap: CONFIRM_MODAL_STACK_GAP,
+    gap: 8,
     borderWidth: 1,
     borderRadius: FLARE_INPUT_BORDER_RADIUS,
     paddingHorizontal: SCREEN_EDGE_PADDING,
     minHeight: flareInputStyles.trigger.minHeight,
   },
   pickerPillText: { flex: 1, fontSize: FLARE_FONT_SIZE.body, fontFamily: FLARE_FONT_FAMILY.regular },
-  stepError: { marginTop: CARD_SECTION_INNER_GAP },
-  actions: { gap: CONFIRM_MODAL_STACK_GAP, marginTop: COLLAPSING_TITLE_CONTENT_GAP },
+  stepError: { marginTop: QUESTIONNAIRE_STEP_TITLE.marginBottom },
+  actions: { ...QUESTIONNAIRE_STEP_FOOTER },
 });
 
 export type MedicalSuppliesSetupParams = {

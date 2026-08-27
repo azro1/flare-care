@@ -8,7 +8,7 @@ import { useFlareColors } from "../theme";
  * Small info icon that opens a notice modal — keeps helper copy off the page
  * until someone wants it.
  *
- * Works best for short “how to” tips next to list titles (e.g. swipe to remove).
+ * Works best for short “how to” tips next to field labels.
  * For longer explanations (what NSAIDs are, guidelines), prefer a Help link /
  * AccountHelp section instead — title-row (i) placement fights long/short titles.
  */
