@@ -1572,6 +1572,7 @@ function DashboardScreen({ user }: { user: SessionUser }) {
     Math.max(0, Math.round(windowWidth - SCREEN_EDGE_PADDING * 2)),
   );
   const [healthCarePage, setHealthCarePage] = useState(0);
+  const [careSwipeHintVisible, setCareSwipeHintVisible] = useState(true);
   const healthCareScrollX = useRef(new Animated.Value(0)).current;
   const healthCarePagerRef = useRef<React.ElementRef<typeof AnimatedScrollView> | null>(null);
   const healthCarePageGap = HOME_TILE_GAP;
@@ -1659,6 +1660,9 @@ function DashboardScreen({ user }: { user: SessionUser }) {
   ];
   /** Matches `styles.homeDashboardTile` height — Meds spans both left-column rows. */
   const healthMedsTallHeight = HOME_DASHBOARD_TILE_HEIGHT * 2 + HOME_TILE_GAP;
+  /** Same gap as horizontal My health ↔ My care pages. */
+  const careVerticalPageGap = healthCarePageGap;
+  const careVerticalPageStride = healthMedsTallHeight + careVerticalPageGap;
   const renderToolTile = (item: (typeof healthCards)[number] | (typeof careCards)[number]) => (
     <DashboardGridTile
       key={item.key}
@@ -2201,11 +2205,66 @@ function DashboardScreen({ user }: { user: SessionUser }) {
                       />
                     </View>
                   </View>
-                  <View style={[styles.healthCarePage, { width: healthCarePageW }]}>
-                    <View style={styles.carePageColumn}>
-                      <View style={styles.carePageRow}>{careTopRowCards.map(renderToolTile)}</View>
-                      <View style={styles.carePageRow}>{careBottomRowCards.map(renderToolTile)}</View>
-                    </View>
+                  <View
+                    style={[
+                      styles.healthCarePage,
+                      { width: healthCarePageW, height: healthMedsTallHeight },
+                    ]}
+                  >
+                    <ScrollView
+                      nestedScrollEnabled
+                      showsVerticalScrollIndicator={false}
+                      bounces
+                      decelerationRate="fast"
+                      snapToInterval={careVerticalPageStride}
+                      snapToAlignment="start"
+                      disableIntervalMomentum
+                      style={{ height: healthMedsTallHeight }}
+                      contentContainerStyle={{ gap: careVerticalPageGap }}
+                      onScroll={(e: NativeSyntheticEvent<NativeScrollEvent>) => {
+                        const y = e.nativeEvent.contentOffset.y;
+                        setCareSwipeHintVisible(y < 24);
+                      }}
+                      scrollEventThrottle={16}
+                    >
+                      <View style={{ height: healthMedsTallHeight }}>
+                        <View style={styles.carePageColumn}>
+                          <View style={styles.carePageRow}>{careTopRowCards.map(renderToolTile)}</View>
+                          <View style={styles.carePageRow}>{careBottomRowCards.map(renderToolTile)}</View>
+                        </View>
+                        {careSwipeHintVisible ? (
+                          <View style={styles.careSwipeUpHint} pointerEvents="none">
+                            <FlareLucideIcon
+                              icon={FLARE_CHROME_LUCIDE.up}
+                              size={16}
+                              color={c.textMuted}
+                            />
+                            <Text style={[styles.careSwipeUpHintText, { color: c.textMuted }]}>
+                              Swipe up
+                            </Text>
+                          </View>
+                        ) : null}
+                      </View>
+                      <View style={[styles.carePageColumn, { height: healthMedsTallHeight }]}>
+                        <View style={styles.carePageRow}>
+                          <DashboardGridTile
+                            width={tileWidth}
+                            label="My Output"
+                            variant="grid"
+                            onPress={() => {
+                              /* Output hub — not wired yet */
+                            }}
+                            icon={
+                              <FlareLucideIcon
+                                icon={FLARE_FEATURE_LUCIDE.output}
+                                size={HOME_TILE_ICON_SIZE_CHECKIN}
+                                color={c.primary}
+                              />
+                            }
+                          />
+                        </View>
+                      </View>
+                    </ScrollView>
                   </View>
                 </AnimatedScrollView>
               ) : null}
@@ -5950,6 +6009,20 @@ const styles = StyleSheet.create({
   carePageRow: {
     flexDirection: "row",
     gap: HOME_TILE_GAP,
+  },
+  careSwipeUpHint: {
+    position: "absolute",
+    left: 0,
+    right: 0,
+    bottom: 6,
+    alignItems: "center",
+    justifyContent: "center",
+    gap: 2,
+  },
+  careSwipeUpHintText: {
+    fontSize: 11,
+    fontFamily: "Inter_500Medium",
+    letterSpacing: 0.2,
   },
   moreGridLabel: {
     fontSize: 13,

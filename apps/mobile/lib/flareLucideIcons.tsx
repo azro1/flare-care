@@ -77,6 +77,8 @@ export const FLARE_FEATURE_LUCIDE = {
   supplies: Package,
   appointments: Calendar,
   reports: FileText,
+  /** Fluid / measurement output log (My care — coming soon). */
+  output: Hash,
 } as const;
 
 export type FlareFeatureLucideKey = keyof typeof FLARE_FEATURE_LUCIDE;
