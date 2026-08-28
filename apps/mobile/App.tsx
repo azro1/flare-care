@@ -1578,7 +1578,6 @@ function DashboardScreen({ user }: { user: SessionUser }) {
     Math.max(0, Math.round(windowWidth - SCREEN_EDGE_PADDING * 2)),
   );
   const [healthCarePage, setHealthCarePage] = useState(0);
-  const [careVerticalPage, setCareVerticalPage] = useState(0);
   const healthCareScrollX = useRef(new Animated.Value(0)).current;
   const healthCarePagerRef = useRef<React.ElementRef<typeof AnimatedScrollView> | null>(null);
   const careVerticalScrollRef = useRef<React.ElementRef<typeof ScrollView> | null>(null);
@@ -1633,9 +1632,17 @@ function DashboardScreen({ user }: { user: SessionUser }) {
     : priorityItems.slice(0, TODAY_PRIORITIES_COLLAPSED_COUNT);
   const hasMorePriorities = priorityItems.length > TODAY_PRIORITIES_COLLAPSED_COUNT;
   const showPrioritiesViewAll = hasMorePriorities && prioritiesExtrasReady;
-  const reservePrioritiesViewAll =
-    !prioritiesExtrasReady &&
-    visiblePriorityItems.length >= TODAY_PRIORITIES_COLLAPSED_COUNT;
+  // Hold View all + full collapsed tray height until apt/supply resolve (avoids last-row / link pop-in).
+  const reservePrioritiesCollapsedSlot = !prioritiesExtrasReady && priorityItems.length > 0;
+  const reservePrioritiesViewAll = reservePrioritiesCollapsedSlot;
+  /** padY×2 + 3 rows + gaps + View all row — keep in sync with `prioritiesTray` / `priorityRow`. */
+  const prioritiesCollapsedTrayMinHeight =
+    14 * 2 +
+    TODAY_PRIORITIES_COLLAPSED_COUNT * FLARE_LINE_HEIGHT.muted +
+    Math.max(0, TODAY_PRIORITIES_COLLAPSED_COUNT - 1) * 10 +
+    10 +
+    2 +
+    FLARE_LINE_HEIGHT.muted;
   const shelfNewsItems = useMemo(
     () => newsItems.slice(0, Math.min(DASHBOARD_NEWS_SHELF_PEEK, DASHBOARD_NEWS_HOME_SHELF_MAX)),
     [newsItems],
@@ -1656,12 +1663,16 @@ function DashboardScreen({ user }: { user: SessionUser }) {
     { key: "weight", label: "My Weight", screen: "Weight" as const, lucide: FLARE_FEATURE_LUCIDE.weight },
     { key: "supplies", label: "My Supplies", screen: "MedicalSupplies" as const, lucide: FLARE_FEATURE_LUCIDE.supplies },
     { key: "appointments", label: "Appointments", screen: "Appointments" as const, lucide: FLARE_FEATURE_LUCIDE.appointments },
+    { key: "output", label: "My Output", screen: "Output" as const, lucide: FLARE_FEATURE_LUCIDE.output },
     { key: "reports", label: "Reports", screen: "Reports" as const, lucide: FLARE_FEATURE_LUCIDE.reports },
   ];
-  const careAppointmentsCard = careCards.find((card) => card.key === "appointments")!;
   const careTopRowCards = [
     careCards.find((card) => card.key === "weight")!,
     careCards.find((card) => card.key === "supplies")!,
+  ];
+  const careBottomRowCards = [
+    careCards.find((card) => card.key === "appointments")!,
+    careCards.find((card) => card.key === "output")!,
   ];
   const careMorePageCards = [careCards.find((card) => card.key === "reports")!];
   const healthMedsCard = healthCards[0];
@@ -1671,8 +1682,6 @@ function DashboardScreen({ user }: { user: SessionUser }) {
   ];
   /** Matches `styles.homeDashboardTile` height — Meds spans both rows. */
   const healthMedsTallHeight = HOME_DASHBOARD_TILE_HEIGHT * 2 + HOME_TILE_GAP;
-  /** Full-width care tile (Appointments across both columns). */
-  const careWideTileWidth = tileWidth * 2 + HOME_TILE_GAP;
   /** Same gap as horizontal My health ↔ My care pages. */
   const careVerticalPageGap = healthCarePageGap;
   const careVerticalPageStride = healthMedsTallHeight + careVerticalPageGap;
@@ -1742,9 +1751,8 @@ function DashboardScreen({ user }: { user: SessionUser }) {
       if (cachedSupplyStatus != null) setSuppliesStatus(cachedSupplyStatus);
       if (cached !== undefined && getMedicalSupplyKitListCache(user.id) !== undefined) {
         setPrioritiesExtrasReady(true);
-      } else {
-        setPrioritiesExtrasReady(false);
       }
+      // Don't flip ready back to false on focus — that re-opens the pop-in window mid-session.
       const appointmentsReady = fetchAppointmentsForUser(user.id)
         .then(applyRows)
         .catch(() => {
@@ -2050,7 +2058,13 @@ function DashboardScreen({ user }: { user: SessionUser }) {
             {"Today's priorities"}
           </Text>
           <View style={[logHistoryCardStyles.trackerCard, styles.prioritiesCard, { backgroundColor: c.card }]}>
-            <View style={[styles.prioritiesTray, { backgroundColor: c.surfaceSubtle }]}>
+            <View
+              style={[
+                styles.prioritiesTray,
+                { backgroundColor: c.surfaceSubtle },
+                reservePrioritiesCollapsedSlot ? { minHeight: prioritiesCollapsedTrayMinHeight } : null,
+              ]}
+            >
               {priorityItems.length === 0 ? (
                 <Text style={[styles.prioritiesCaughtUp, { color: c.textMuted }]}>{"All set for today!"}</Text>
               ) : (
@@ -2085,6 +2099,14 @@ function DashboardScreen({ user }: { user: SessionUser }) {
               )}
             </View>
           </View>
+          <Pressable
+            accessibilityRole="button"
+            accessibilityLabel="Open activity"
+            onPress={() => setActivitiesOpen(true)}
+            style={({ pressed }) => [styles.prioritiesActivityLink, pressed && { opacity: 0.7 }]}
+          >
+            <Text style={[styles.prioritiesActivityLinkLabel, { color: c.primary }]}>Activity</Text>
+          </Pressable>
         </View>
 
         <View
@@ -2132,69 +2154,6 @@ function DashboardScreen({ user }: { user: SessionUser }) {
               >
                 My care
               </Animated.Text>
-            </View>
-            <View style={[styles.healthCareTitleActionSlot, { marginRight: STACKED_LINE_GAP }]}>
-              <Animated.View
-                pointerEvents={healthCarePage === 0 ? "auto" : "none"}
-                style={{
-                  opacity: healthCareScrollX.interpolate({
-                    inputRange: [0, Math.max(1, healthCarePageW)],
-                    outputRange: [1, 0],
-                    extrapolate: "clamp",
-                  }),
-                }}
-              >
-                <Pressable
-                  accessibilityRole="button"
-                  accessibilityLabel="Open activity"
-                  onPress={() => setActivitiesOpen(true)}
-                  style={({ pressed }) => [
-                    styles.progressChip,
-                    { backgroundColor: c.isDark ? c.text : c.primary },
-                    pressed && { opacity: 0.85 },
-                  ]}
-                >
-                  <Text
-                    style={[
-                      styles.progressChipLabel,
-                      { color: c.isDark ? c.appearanceChipInactiveText : c.white },
-                    ]}
-                  >
-                    Activity
-                  </Text>
-                </Pressable>
-              </Animated.View>
-              <Animated.View
-                pointerEvents={healthCarePage === 1 ? "auto" : "none"}
-                style={[
-                  styles.healthCareTitleActionLayer,
-                  {
-                    opacity: healthCareScrollX.interpolate({
-                      inputRange: [0, Math.max(1, healthCarePageW)],
-                      outputRange: [0, 1],
-                      extrapolate: "clamp",
-                    }),
-                  },
-                ]}
-              >
-                <Pressable
-                  accessibilityRole="button"
-                  accessibilityLabel={careVerticalPage === 0 ? "Show more care tools" : "Back to care tools"}
-                  hitSlop={10}
-                  onPress={() => {
-                    const nextY = careVerticalPage === 0 ? careVerticalPageStride : 0;
-                    careVerticalScrollRef.current?.scrollTo({ y: nextY, animated: true });
-                    setCareVerticalPage(careVerticalPage === 0 ? 1 : 0);
-                  }}
-                  style={({ pressed }) => [styles.careTitleChevBtn, pressed && { opacity: 0.7 }]}
-                >
-                  <FlareLucideIcon
-                    icon={careVerticalPage === 0 ? FLARE_CHROME_LUCIDE.up : FLARE_CHROME_LUCIDE.down}
-                    size={18}
-                    color={c.textMuted}
-                  />
-                </Pressable>
-              </Animated.View>
             </View>
           </View>
 
@@ -2262,53 +2221,20 @@ function DashboardScreen({ user }: { user: SessionUser }) {
                       ref={careVerticalScrollRef}
                       nestedScrollEnabled
                       showsVerticalScrollIndicator={false}
-                      bounces
                       decelerationRate="fast"
                       snapToInterval={careVerticalPageStride}
                       snapToAlignment="start"
-                      disableIntervalMomentum
                       style={{ height: healthMedsTallHeight }}
                       contentContainerStyle={{ gap: careVerticalPageGap }}
-                      onMomentumScrollEnd={(e: NativeSyntheticEvent<NativeScrollEvent>) => {
-                        const next = Math.round(e.nativeEvent.contentOffset.y / careVerticalPageStride);
-                        setCareVerticalPage(Math.max(0, Math.min(1, next)));
-                      }}
                     >
                       <View style={{ height: healthMedsTallHeight }}>
                         <View style={styles.carePageColumn}>
                           <View style={styles.carePageRow}>{careTopRowCards.map(renderToolTile)}</View>
-                          <DashboardGridTile
-                            width={careWideTileWidth}
-                            label={careAppointmentsCard.label}
-                            variant="grid"
-                            onPress={() => navigation.navigate(careAppointmentsCard.screen)}
-                            icon={
-                              <FlareLucideIcon
-                                icon={careAppointmentsCard.lucide}
-                                size={HOME_TILE_ICON_SIZE_CHECKIN}
-                                color={c.primary}
-                              />
-                            }
-                          />
+                          <View style={styles.carePageRow}>{careBottomRowCards.map(renderToolTile)}</View>
                         </View>
                       </View>
                       <View style={[styles.carePageColumn, { height: healthMedsTallHeight }]}>
-                        <View style={styles.carePageRow}>
-                          {careMorePageCards.map(renderToolTile)}
-                          <DashboardGridTile
-                            width={tileWidth}
-                            label="My Output"
-                            variant="grid"
-                            onPress={() => navigation.navigate("Output")}
-                            icon={
-                              <FlareLucideIcon
-                                icon={FLARE_FEATURE_LUCIDE.output}
-                                size={HOME_TILE_ICON_SIZE_CHECKIN}
-                                color={c.primary}
-                              />
-                            }
-                          />
-                        </View>
+                        <View style={styles.carePageRow}>{careMorePageCards.map(renderToolTile)}</View>
                       </View>
                     </ScrollView>
                   </View>
@@ -5413,22 +5339,6 @@ const styles = StyleSheet.create({
     right: 0,
     top: 0,
   },
-  healthCareTitleActionSlot: {
-    justifyContent: "center",
-    alignItems: "flex-end",
-  },
-  healthCareTitleActionLayer: {
-    ...StyleSheet.absoluteFillObject,
-    justifyContent: "center",
-    alignItems: "flex-end",
-  },
-  careTitleChevBtn: {
-    alignItems: "center",
-    justifyContent: "center",
-    // Match Activity chip height; keep tap target without widening past the right edge.
-    minHeight: 44,
-    paddingLeft: 12,
-  },
   healthCarePagerWrap: {
     alignSelf: "stretch",
   },
@@ -5704,16 +5614,14 @@ const styles = StyleSheet.create({
   prioritiesViewAllLabel: {
     ...FLARE_INLINE_ACTION_LINK,
   },
-  /** Pill CTA — single-word label. */
-  progressChip: {
-    paddingVertical: 8,
-    paddingHorizontal: HOME_TILE_GAP + 4,
-    borderRadius: 999,
+  prioritiesActivityLink: {
+    alignSelf: "flex-end",
+    // Sit in the existing card→next-shelf gap — don't add height (match GC → Check in).
+    marginTop: 0,
+    marginBottom: -FLARE_LINE_HEIGHT.muted,
   },
-  progressChipLabel: {
-    fontSize: 12,
-    lineHeight: FLARE_LINE_HEIGHT.caption,
-    fontFamily: FLARE_FONT_FAMILY.bold,
+  prioritiesActivityLinkLabel: {
+    ...FLARE_INLINE_ACTION_LINK,
   },
   /** Same bottom margin as dashboard cards (`styles.card` / tracker trays) before the next shelf title. */
   toolsGridBlock: { marginBottom: HOME_TILE_GAP },

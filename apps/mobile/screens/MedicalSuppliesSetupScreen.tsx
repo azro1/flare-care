@@ -28,12 +28,16 @@ import { formatUkDate } from "../lib/formatUkDate";
 import {
   FLARE_FONT_FAMILY,
   FLARE_FONT_SIZE,
-  QUESTIONNAIRE_STEP_FOOTER,
-  QUESTIONNAIRE_STEP_OPTION_LIST,
-  QUESTIONNAIRE_STEP_RADIO_ROW,
-  QUESTIONNAIRE_STEP_SCROLL,
-  QUESTIONNAIRE_STEP_SCROLL_BOTTOM,
-  QUESTIONNAIRE_STEP_TITLE,
+  SUPPLIES_SETUP_PICKER_PILL_GAP,
+  SUPPLIES_SETUP_STEP_BLOCK_GAP,
+  SUPPLIES_SETUP_STEP_FOOTER,
+  SUPPLIES_SETUP_STEP_NAME_BLOCK_GAP,
+  SUPPLIES_SETUP_STEP_OPTION_LIST,
+  SUPPLIES_SETUP_STEP_RADIO_ROW,
+  SUPPLIES_SETUP_STEP_SCROLL,
+  SUPPLIES_SETUP_STEP_SCROLL_BOTTOM,
+  SUPPLIES_SETUP_STEP_SUPPORT,
+  SUPPLIES_SETUP_STEP_TITLE,
   SCREEN_EDGE_PADDING,
   bottomTabBarScrollInset,
 } from "../lib/layoutConstants";
@@ -387,7 +391,7 @@ export function MedicalSuppliesSetupScreen({
       <ScrollView
         contentContainerStyle={[
           styles.scroll,
-          { paddingBottom: bottomScrollInset + QUESTIONNAIRE_STEP_SCROLL_BOTTOM },
+          { paddingBottom: bottomScrollInset + SUPPLIES_SETUP_STEP_SCROLL_BOTTOM },
         ]}
         keyboardShouldPersistTaps="handled"
         showsVerticalScrollIndicator={false}
@@ -533,26 +537,24 @@ export function MedicalSuppliesSetupScreen({
 
 const styles = StyleSheet.create({
   centered: { flex: 1, alignItems: "center", justifyContent: "center" },
-  scroll: { ...QUESTIONNAIRE_STEP_SCROLL },
-  question: { ...QUESTIONNAIRE_STEP_TITLE },
+  scroll: { ...SUPPLIES_SETUP_STEP_SCROLL },
+  question: { ...SUPPLIES_SETUP_STEP_TITLE },
   questionBesideHint: {
     marginBottom: 0,
     flexShrink: 1,
   },
-  support: {
-    fontSize: FLARE_FONT_SIZE.subhead,
-    fontFamily: FLARE_FONT_FAMILY.regular,
-    lineHeight: 24,
-    marginBottom: QUESTIONNAIRE_STEP_TITLE.marginBottom,
-  },
+  support: { ...SUPPLIES_SETUP_STEP_SUPPORT },
   supportInBlock: { marginBottom: 0 },
-  nameBlock: { gap: QUESTIONNAIRE_STEP_TITLE.marginBottom },
-  fieldGroup: { gap: QUESTIONNAIRE_STEP_TITLE.marginBottom },
-  block: { gap: QUESTIONNAIRE_STEP_TITLE.marginBottom },
+  nameBlock: { gap: SUPPLIES_SETUP_STEP_NAME_BLOCK_GAP },
+  fieldGroup: { gap: SUPPLIES_SETUP_STEP_BLOCK_GAP },
+  block: { gap: SUPPLIES_SETUP_STEP_BLOCK_GAP },
   fieldInput: { marginTop: 0 },
-  radioList: { ...QUESTIONNAIRE_STEP_OPTION_LIST },
-  customWeeks: { gap: QUESTIONNAIRE_STEP_TITLE.marginBottom, marginTop: QUESTIONNAIRE_STEP_OPTION_LIST.marginTop },
-  radioRow: { ...QUESTIONNAIRE_STEP_RADIO_ROW },
+  radioList: { ...SUPPLIES_SETUP_STEP_OPTION_LIST },
+  customWeeks: {
+    gap: SUPPLIES_SETUP_STEP_BLOCK_GAP,
+    marginTop: SUPPLIES_SETUP_STEP_OPTION_LIST.marginTop,
+  },
+  radioRow: { ...SUPPLIES_SETUP_STEP_RADIO_ROW },
   radioOuter: {
     width: RADIO_OUTER_SIZE,
     height: RADIO_OUTER_SIZE,
@@ -574,15 +576,15 @@ const styles = StyleSheet.create({
   pickerPill: {
     flexDirection: "row",
     alignItems: "center",
-    gap: 8,
+    gap: SUPPLIES_SETUP_PICKER_PILL_GAP,
     borderWidth: 1,
     borderRadius: FLARE_INPUT_BORDER_RADIUS,
     paddingHorizontal: SCREEN_EDGE_PADDING,
     minHeight: flareInputStyles.trigger.minHeight,
   },
   pickerPillText: { flex: 1, fontSize: FLARE_FONT_SIZE.body, fontFamily: FLARE_FONT_FAMILY.regular },
-  stepError: { marginTop: QUESTIONNAIRE_STEP_TITLE.marginBottom },
-  actions: { ...QUESTIONNAIRE_STEP_FOOTER },
+  stepError: { marginTop: SUPPLIES_SETUP_STEP_BLOCK_GAP },
+  actions: { ...SUPPLIES_SETUP_STEP_FOOTER },
 });
 
 export type MedicalSuppliesSetupParams = {

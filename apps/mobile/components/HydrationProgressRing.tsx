@@ -49,7 +49,7 @@ export function HydrationProgressRing({
       style={styles.wrap}
       accessibilityRole="summary"
       accessibilityLabel={
-        atGoal ? `Goal met. ${target} of ${target} cups` : `${glasses} of ${target} cups`
+        atGoal ? `Complete. ${target} of ${target} cups` : `${glasses} of ${target} cups`
       }
     >
       <Svg width={RING_SIZE} height={RING_SIZE}>
@@ -84,11 +84,11 @@ export function HydrationProgressRing({
             ]}
           >
             <View style={[styles.innerDisc, { backgroundColor: c.primary, opacity: 0.1 }]} />
-            <View style={styles.goalStack}>
-              <View style={[styles.checkBadge, { backgroundColor: c.primary }]}>
-                <FlareLucideIcon icon={FLARE_CHROME_LUCIDE.check} size={22} color={c.white} />
-              </View>
-              <Text style={[styles.goalTitle, { color: c.text }]}>Goal met</Text>
+            <View style={[styles.checkBadge, { backgroundColor: c.primary }]}>
+              <FlareLucideIcon icon={FLARE_CHROME_LUCIDE.check} size={22} color={c.white} />
+            </View>
+            <View style={styles.goalCopyStack}>
+              <Text style={[styles.goalTitle, { color: c.text }]}>Complete</Text>
               <Text style={[styles.goalCaption, { color: c.textMuted }]}>
                 {target}/{target} cups today
               </Text>
@@ -135,24 +135,29 @@ const styles = StyleSheet.create({
     ...StyleSheet.absoluteFillObject,
     borderRadius: INNER_DISC / 2,
   },
-  goalStack: {
-    alignItems: "center",
-    justifyContent: "center",
-    gap: 6,
-    paddingHorizontal: 12,
-    transform: [{ translateY: -8 }],
-  },
+  /** Fixed in the disc — text spacing below won’t shift it. */
   checkBadge: {
+    position: "absolute",
+    top: 20,
+    left: (INNER_DISC - CHECK_BADGE) / 2,
     width: CHECK_BADGE,
     height: CHECK_BADGE,
     borderRadius: CHECK_BADGE / 2,
     alignItems: "center",
     justifyContent: "center",
-    marginBottom: 2,
+  },
+  goalCopyStack: {
+    position: "absolute",
+    top: 20 + CHECK_BADGE + 8,
+    left: 12,
+    right: 12,
+    alignItems: "center",
+    gap: 4,
   },
   goalTitle: {
-    fontSize: 18,
+    fontSize: 17,
     fontFamily: FLARE_FONT_FAMILY.extrabold,
+    lineHeight: 21,
     textAlign: "center",
   },
   count: {
@@ -171,10 +176,9 @@ const styles = StyleSheet.create({
     textAlign: "center",
   },
   goalCaption: {
-    fontSize: FLARE_FONT_SIZE.muted,
+    fontSize: 15,
     fontFamily: FLARE_FONT_FAMILY.regular,
-    lineHeight: FLARE_LINE_HEIGHT.muted,
+    lineHeight: 20,
     textAlign: "center",
-    marginTop: -4,
   },
 });

@@ -349,9 +349,8 @@ export const FULL_WIDTH_CTA_EDGE_PADDING = 16;
 export const LANDING_CTA_SIDE_PAD = 10;
 
 /**
- * App questionnaire step chrome — one family for:
- * Symptoms / Meds / Wellbeing wizard steps + Supplies order setup.
- * Spread into screen StyleSheets so these flows can’t drift apart.
+ * App questionnaire step chrome — Symptoms / Meds / Wellbeing wizard steps only.
+ * Supply order setup uses `SUPPLIES_SETUP_STEP_*` (frozen separately).
  */
 export const QUESTIONNAIRE_STEP_SCROLL = {
   paddingHorizontal: 16,
@@ -384,6 +383,53 @@ export const QUESTIONNAIRE_STEP_FOOTER = {
   marginTop: 24,
   gap: 10,
 } as const;
+
+/**
+ * Supply order setup (`MedicalSuppliesSetupScreen`) — locked to pre–wizard-tighten
+ * spacing (before `QUESTIONNAIRE_STEP_*` unify). Literals on purpose so wizard
+ * token tweaks never move this flow again.
+ */
+export const SUPPLIES_SETUP_STEP_SCROLL = {
+  paddingHorizontal: 18,
+  paddingTop: 16,
+} as const;
+
+/** Was `COLLAPSING_TITLE_CONTENT_GAP` (16) + informational page pad (18). */
+export const SUPPLIES_SETUP_STEP_SCROLL_BOTTOM = 34;
+
+export const SUPPLIES_SETUP_STEP_TITLE = {
+  fontFamily: FLARE_FONT_FAMILY.bold,
+  fontSize: 20,
+  marginBottom: 12,
+} as const;
+
+export const SUPPLIES_SETUP_STEP_SUPPORT = {
+  fontSize: 14,
+  fontFamily: FLARE_FONT_FAMILY.regular,
+  lineHeight: 20,
+  marginBottom: 16,
+} as const;
+
+export const SUPPLIES_SETUP_STEP_BLOCK_GAP = 12;
+export const SUPPLIES_SETUP_STEP_NAME_BLOCK_GAP = 12;
+
+export const SUPPLIES_SETUP_STEP_OPTION_LIST = {
+  gap: 14,
+  marginTop: 8,
+} as const;
+
+export const SUPPLIES_SETUP_STEP_RADIO_ROW = {
+  flexDirection: "row" as const,
+  alignItems: "center" as const,
+  gap: 10,
+};
+
+export const SUPPLIES_SETUP_STEP_FOOTER = {
+  marginTop: 16,
+  gap: 8,
+} as const;
+
+export const SUPPLIES_SETUP_PICKER_PILL_GAP = 8;
 
 /** Wizard step-0 `ScrollView` top inset — keep in sync with wizard screens. */
 export const WIZARD_LANDING_SCROLL_TOP_PADDING = 16;
