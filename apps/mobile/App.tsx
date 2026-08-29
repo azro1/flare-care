@@ -1664,25 +1664,27 @@ function DashboardScreen({ user }: { user: SessionUser }) {
   const careCards = [
     { key: "weight", label: "My Weight", screen: "Weight" as const, lucide: FLARE_FEATURE_LUCIDE.weight },
     { key: "supplies", label: "My Supplies", screen: "MedicalSupplies" as const, lucide: FLARE_FEATURE_LUCIDE.supplies },
+    { key: "output", label: "Fluid Output", screen: "Output" as const, lucide: FLARE_FEATURE_LUCIDE.output },
     { key: "appointments", label: "Appointments", screen: "Appointments" as const, lucide: FLARE_FEATURE_LUCIDE.appointments },
-    { key: "output", label: "My Output", screen: "Output" as const, lucide: FLARE_FEATURE_LUCIDE.output },
     { key: "reports", label: "Reports", screen: "Reports" as const, lucide: FLARE_FEATURE_LUCIDE.reports },
   ];
-  const careTopRowCards = [
-    careCards.find((card) => card.key === "weight")!,
+  /** Page 1 — Weight tall left (mirrors My Meds); Supplies + Fluid Output stacked right. */
+  const careWeightCard = careCards.find((card) => card.key === "weight")!;
+  const careRightColumnCards = [
     careCards.find((card) => card.key === "supplies")!,
-  ];
-  const careBottomRowCards = [
-    careCards.find((card) => card.key === "appointments")!,
     careCards.find((card) => card.key === "output")!,
   ];
-  const careMorePageCards = [careCards.find((card) => card.key === "reports")!];
+  /** Page 2 (swipe up) — Appointments + Reports. */
+  const careMorePageCards = [
+    careCards.find((card) => card.key === "appointments")!,
+    careCards.find((card) => card.key === "reports")!,
+  ];
   const healthMedsCard = healthCards[0];
   const healthLeftColumnCards = [
     healthCards.find((card) => card.key === "bowel")!,
     healthCards.find((card) => card.key === "hydration")!,
   ];
-  /** Matches `styles.homeDashboardTile` height — Meds spans both rows. */
+  /** Matches `styles.homeDashboardTile` height — Meds / Weight span both rows. */
   const healthMedsTallHeight = HOME_DASHBOARD_TILE_HEIGHT * 2 + HOME_TILE_GAP;
   /** Same gap as horizontal My health ↔ My care pages. */
   const careVerticalPageGap = healthCarePageGap;
@@ -1709,6 +1711,14 @@ function DashboardScreen({ user }: { user: SessionUser }) {
   );
   const closeActivitiesModal = useCallback(() => {
     setActivitiesOpen(false);
+  }, []);
+  const openActivitiesModal = useCallback(() => {
+    setActivitiesOpen((wasOpen) => {
+      if (!wasOpen) return true;
+      // Mid-close still has visible=true — bounce so the open effect runs again.
+      queueMicrotask(() => setActivitiesOpen(true));
+      return false;
+    });
   }, []);
   const openMedsFromActivities = useCallback(() => {
     setActivitiesOpen(false);
@@ -2055,7 +2065,13 @@ function DashboardScreen({ user }: { user: SessionUser }) {
           </ScrollView>
         </View>
 
-        <View style={[styles.dashboardShelfSection, styles.dashboardShelfAfterCard]}>
+        <View
+          style={[
+            styles.dashboardShelfSection,
+            styles.dashboardShelfAfterCard,
+            styles.prioritiesShelfSection,
+          ]}
+        >
           <Text style={[styles.dashboardSubsectionTitleLeft, styles.dashboardSubsectionTitleCenter, { color: c.text }]}>
             {"Today's priorities"}
           </Text>
@@ -2104,7 +2120,8 @@ function DashboardScreen({ user }: { user: SessionUser }) {
           <Pressable
             accessibilityRole="button"
             accessibilityLabel="Open activity"
-            onPress={() => setActivitiesOpen(true)}
+            onPress={openActivitiesModal}
+            hitSlop={{ top: 10, bottom: 12, left: 12, right: 4 }}
             style={({ pressed }) => [styles.prioritiesActivityLink, pressed && { opacity: 0.7 }]}
           >
             <Text style={[styles.prioritiesActivityLinkLabel, { color: c.primary }]}>Activity</Text>
@@ -2118,8 +2135,8 @@ function DashboardScreen({ user }: { user: SessionUser }) {
             !SHOW_DASHBOARD_NEWS ? styles.dashboardShelfSectionLast : null,
           ]}
         >
-          <View style={styles.checkInTitleRow}>
-            <View style={styles.healthCareTitleSlot}>
+          <View style={styles.checkInTitleRow} pointerEvents="box-none">
+            <View style={styles.healthCareTitleSlot} pointerEvents="none">
               <Animated.Text
                 pointerEvents="none"
                 style={[
@@ -2230,9 +2247,22 @@ function DashboardScreen({ user }: { user: SessionUser }) {
                       contentContainerStyle={{ gap: careVerticalPageGap }}
                     >
                       <View style={{ height: healthMedsTallHeight }}>
-                        <View style={styles.carePageColumn}>
-                          <View style={styles.carePageRow}>{careTopRowCards.map(renderToolTile)}</View>
-                          <View style={styles.carePageRow}>{careBottomRowCards.map(renderToolTile)}</View>
+                        <View style={styles.carePageRow}>
+                          <DashboardGridTile
+                            width={tileWidth}
+                            height={healthMedsTallHeight}
+                            label={careWeightCard.label}
+                            variant="grid"
+                            onPress={() => navigation.navigate(careWeightCard.screen)}
+                            icon={
+                              <FlareLucideIcon
+                                icon={careWeightCard.lucide}
+                                size={HOME_TILE_ICON_SIZE_CHECKIN}
+                                color={c.primary}
+                              />
+                            }
+                          />
+                          <View style={styles.carePageColumn}>{careRightColumnCards.map(renderToolTile)}</View>
                         </View>
                       </View>
                       <View style={[styles.carePageColumn, { height: healthMedsTallHeight }]}>
@@ -4596,8 +4626,8 @@ function AppTabs({
       BristolGuide: "Bristol Stool Chart",
       Weight: "My Weight",
       WeightLogDetail: "Weight Log",
-      Output: "My Output",
-      OutputLogDetail: "Output Log",
+      Output: "Fluid Output",
+      OutputLogDetail: "Fluid Output log",
       Appointments: "Appointments",
       AppointmentsPast: "Past Appointments",
       AppointmentDetail: "Appointment",
@@ -5615,9 +5645,14 @@ const styles = StyleSheet.create({
   prioritiesViewAllLabel: {
     ...FLARE_INLINE_ACTION_LINK,
   },
+  /** Keep Activity (negative mb into next shelf) above My health title for hits. */
+  prioritiesShelfSection: {
+    zIndex: 2,
+    elevation: 2,
+  },
   prioritiesActivityLink: {
     alignSelf: "flex-end",
-    // Sit in the existing card→next-shelf gap — don't add height (match GC → Check in).
+    // Sit in the card→next-shelf gap — don't add height (match GC → Check in).
     marginTop: 0,
     marginBottom: -FLARE_LINE_HEIGHT.muted,
   },

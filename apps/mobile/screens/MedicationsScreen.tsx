@@ -31,6 +31,7 @@ import {
 } from "../components/LogHistoryList";
 import { OptionPickerModal } from "../components/OptionPickerModal";
 import { ConfirmModal } from "../components/ConfirmModal";
+import { InfoHintButton } from "../components/InfoHintButton";
 import { TrackerThumbFab, useTrackerThumbFabLayout } from "../components/TrackerThumbFab";
 import { WriggleReminderBell } from "../components/WriggleReminderBell";
 import { invalidateDashboardSnapshot } from "../lib/dashboardSnapshotCache";
@@ -325,6 +326,27 @@ export function MedicationsScreen({ user }: { user: SessionUser }) {
   const [expandedMedCount, setExpandedMedCount] = useState(() => getMedsListExpandedCount(user.id));
 
   const medItemIds = useMemo(() => meds.map((row) => String(row.id)), [meds]);
+  const renderMedsHeaderTitle = useCallback(
+    () => (
+      <View style={styles.headerTitleWithHint}>
+        <Text
+          style={{
+            fontFamily: FLARE_FONT_FAMILY.bold,
+            fontSize: FLARE_FONT_SIZE.navTitle,
+            color: c.text,
+          }}
+        >
+          My Meds
+        </Text>
+        <InfoHintButton
+          title="My Meds"
+          message="Save medications, set reminders and mark doses as taken. Check your priorities regularly to help you stay on track."
+          accessibilityLabel="About My Meds"
+        />
+      </View>
+    ),
+    [c.text],
+  );
   const {
     selectionMode,
     selectedIds,
@@ -338,7 +360,7 @@ export function MedicationsScreen({ user }: { user: SessionUser }) {
     routeName: "Meds",
     itemIds: medItemIds,
     navigation,
-    headerTitle: "My Meds",
+    headerTitle: renderMedsHeaderTitle,
   });
 
   const handleBulkDeleteConfirm = useCallback(() => {
@@ -539,6 +561,11 @@ export function MedicationsScreen({ user }: { user: SessionUser }) {
 }
 
 const styles = StyleSheet.create({
+  headerTitleWithHint: {
+    flexDirection: "row",
+    alignItems: "center",
+    gap: 6,
+  },
   medSubtitleRow: { flexDirection: "row", alignItems: "center", flexShrink: 1, minWidth: 0 },
   medReminderTimeRow: { flexDirection: "row", alignItems: "center", gap: 4, flexShrink: 1, minWidth: 0 },
   sheetRoot: { flex: 1 },

@@ -605,7 +605,7 @@ Helpers: `lib/todayPriorities.ts` (`buildTodayPriorities`, `findNearTermAppointm
 
 ### My care grid — vertical page for more tiles (open)
 
-**Now:** My care is a **2×2** on page 1 (Weight | Supplies / Appointments | Output); swipe **up** for Reports (and any extra tiles). Vertical snap matches the horizontal care/health pager.
+**Now:** My care page 1 — **Weight** tall left (like My Meds), **Supplies** + **Fluid Output** stacked right; swipe **up** for **Appointments** + **Reports**. Vertical snap matches the horizontal care/health pager.
 
 **Concern:** nested vertical scroll fights the natural home page scroll — not 100% sold. **Leave as-is for now**; brainstorm alternatives later (e.g. horizontal “more”, overflow sheet, fewer tiles on home, Reports-only affordance without a second vertical page).
 
@@ -731,7 +731,7 @@ drop table if exists public.medical_supply_kits;
 -- then run the create statements above
 ```
 
-### My Output (`track_output`)
+### Fluid Output (`track_output`)
 
 Fluid / measurement log (ml + time + type). Run in the Supabase SQL editor before testing the hub:
 

@@ -219,7 +219,7 @@ export function OutputLogDetailScreen({ user }: { user: SessionUser }) {
 
       <ConfirmModal
         visible={deleteOpen}
-        title="Delete output entry"
+        title="Delete entry"
         message="Are you sure you want to delete this entry? This action cannot be undone."
         confirmLabel={deleting ? "Deleting…" : "Delete"}
         confirmDestructive

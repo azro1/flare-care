@@ -75,17 +75,21 @@ export function buildTimestampLogRowItem({
   id,
   title,
   whenIso,
+  trailingText,
   accessibilityLabel,
 }: {
   id: string;
   title: string;
   whenIso: string | null | undefined;
+  /** Optional right-side value (e.g. Fluid Output amount) — keeps the when line. */
+  trailingText?: string;
   accessibilityLabel?: string;
 }): LogHistoryListItem {
   return {
     id,
     title,
     whenIso: whenIso || undefined,
+    trailingText,
     accessibilityLabel,
   };
 }
@@ -354,20 +358,19 @@ export function LogHistoryList({
       ]}
     >
       {items.map((item, index) => {
-        const textSubtitle = item.trailingText !== undefined ? undefined : item.subtitle;
-        const whenFormatted =
-          item.trailingText !== undefined || textSubtitle
-            ? ""
-            : item.whenIso
-              ? formatLogWhenLine(item.whenIso)
-              : (item.whenFallback ?? "");
+        const textSubtitle = item.subtitle;
+        const whenFormatted = textSubtitle
+          ? ""
+          : item.whenIso
+            ? formatLogWhenLine(item.whenIso)
+            : (item.whenFallback ?? "");
         const whenLine = textSubtitle ?? whenFormatted;
+        /** Today-style count rows (trailing only) — not history rows with a when line + amount. */
+        const isCountOnlyTrailing = item.trailingText !== undefined && !whenLine;
         const titleColor =
-          item.trailingText !== undefined || item.titleSecondary
-            ? c.textSecondary
-            : c.text;
+          item.titleSecondary || isCountOnlyTrailing ? c.textSecondary : c.text;
         const useCompactText =
-          rowTextLayout === "compact" || item.trailingText !== undefined || !!item.titleSecondary;
+          rowTextLayout === "compact" || isCountOnlyTrailing || !!item.titleSecondary;
         const primaryStyle = useCompactText
           ? logHistoryListStyles.logPrimaryToday
           : titleRegular
@@ -380,7 +383,7 @@ export function LogHistoryList({
           : logHistoryListStyles.logSecondary;
         const titleAccessory = renderTitleAccessory?.(item) ?? null;
         const customSubtitle = renderSubtitle?.(item);
-        const reserveSubtitleLine = item.trailingText === undefined && !multilineTitle;
+        const reserveSubtitleLine = !multilineTitle;
         const showSecondLine = reserveSubtitleLine && (customSubtitle != null || !!whenLine);
         /** Title-only / count rows match title+subtitle height in trays; flat-on-card lists stay dense. */
         const centerSingleLineBrowse = insetTray && !showSecondLine && !multilineTitle;
@@ -400,7 +403,16 @@ export function LogHistoryList({
             {item.completed ? (
               <FlareLucideIcon icon={FLARE_CHROME_LUCIDE.checkCircle} size={18} color={c.primary} />
             ) : null}
-            <Text style={[logHistoryListStyles.trailingValueToday, { color: c.text }]}>{item.trailingText}</Text>
+            <Text
+              style={[
+                isCountOnlyTrailing
+                  ? logHistoryListStyles.trailingValueToday
+                  : logHistoryListStyles.trailingValue,
+                { color: c.text },
+              ]}
+            >
+              {item.trailingText}
+            </Text>
           </View>
         ) : renderTrailing ? (
           renderTrailing(item)

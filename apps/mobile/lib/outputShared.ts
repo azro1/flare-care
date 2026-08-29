@@ -85,7 +85,7 @@ export function formatOutputMl(value: number | string | null | undefined): strin
 }
 
 export function formatOutputListTitle(row: OutputRow): string {
-  return `${outputKindLabel(row.kind)} — ${formatOutputMl(row.amount_ml)}`;
+  return outputKindLabel(row.kind);
 }
 
 export function normalizeOutputMlInput(raw: string): string {

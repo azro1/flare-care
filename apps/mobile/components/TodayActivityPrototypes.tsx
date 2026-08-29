@@ -46,13 +46,17 @@ const AnimatedGHScrollView = Animated.createAnimatedComponent(GHScrollView);
 /** Hint on Meds page only — Hydration is the last Activity page (graph parked). */
 const ACTIVITY_SWIPE_HINT = "Swipe for more";
 
+/** Wider tube — fills more of the band vs the old 34px hairline. */
 const PULSE_METER_HEIGHT = 80;
-const PULSE_METER_WIDTH = 34;
+const PULSE_METER_WIDTH = 88;
 const PULSE_METER_RADIUS = PULSE_METER_WIDTH / 2;
 /** Card score — readable, not a hero panel. */
 const PULSE_SCORE_SIZE = 34;
-/** One sine period — path is 2 periods wide; slide by one period for a seamless loop. */
-const WAVE_CYCLE = 36;
+/**
+ * Wave tile must stay ≥ meter width while sliding by one period
+ * (`WAVE_SVG_W - WAVE_CYCLE >= PULSE_METER_WIDTH` → cycle ≥ meter width).
+ */
+const WAVE_CYCLE = PULSE_METER_WIDTH;
 const WAVE_AMP = 4;
 const WAVE_SVG_W = WAVE_CYCLE * 2;
 const WAVE_SVG_H = PULSE_METER_HEIGHT + WAVE_AMP * 2;
@@ -1158,6 +1162,7 @@ const styles = StyleSheet.create({
     flexDirection: "row",
     gap: CONFIRM_MODAL_ACTIONS_GAP + HOME_TILE_GAP,
     alignItems: "flex-end",
+    justifyContent: "center",
   },
   pulseMeterCol: { alignItems: "center", gap: 6 },
   pulseMeterTrack: {

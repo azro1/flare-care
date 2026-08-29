@@ -69,7 +69,7 @@ export function buildTodayPriorities(input: {
     items.push({
       id: "meds",
       emoji: "💊",
-      text: "Take medication",
+      text: "Take meds",
     });
   }
 

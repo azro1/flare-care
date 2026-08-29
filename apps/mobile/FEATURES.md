@@ -65,7 +65,7 @@ Hydration **numbers** live under **View progress**.
 
 **My health / My care** (swipe between two pages)
 - Health: My Meds, Bowel, Hydration  
-- Care: Weight / Supplies over wide Appointments; swipe up for Reports + My Output  
+- Care: Weight tall left, Supplies + Fluid Output right; swipe up for Appointments + Reports  
 
 **View progress**  
 Slide-up card with:
@@ -87,7 +87,7 @@ Tap through to open My Meds or Hydration.
 | **My Hydration** | Count cups of fluid (target is 6). Can reset today’s count. Link to intake guidelines in Help |
 | **Bowel Movements** | Log stools. **Bristol Stool Chart** guide (and pick a type while logging) |
 | **My Weight** | Log weight |
-| **My Output** | Log fluid output in ml (Stoma / Urine / Drain / Other) with time; see today’s total |
+| **Fluid Output** | Log fluid output in ml (Stoma / Urine / Drain / Other) with time; see today’s total |
 
 **History**
 - **Logs** tab: symptom / medication-tracking / wellbeing lists  

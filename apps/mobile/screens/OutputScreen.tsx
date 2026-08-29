@@ -50,7 +50,6 @@ import {
   OUTPUT_KIND_OPTIONS,
   deleteOutputsForUser,
   fetchTodayOutputTotals,
-  formatOutputListTitle,
   formatOutputMl,
   getOutputListCache,
   getTodayOutputTotalCache,
@@ -187,7 +186,9 @@ export function OutputLogSheet({
           <Pressable accessibilityRole="button" accessibilityLabel="Close" onPress={onClose} hitSlop={12} style={styles.sheetClose}>
             <FlareLucideIcon icon={FLARE_CHROME_LUCIDE.close} size={26} color={c.textMuted} />
           </Pressable>
-          <Text style={[styles.sheetTitle, { color: c.text }]}>{editingId ? "Edit output" : "Log output"}</Text>
+          <Text style={[styles.sheetTitle, { color: c.text }]}>
+            {editingId ? "Edit entry" : "Log entry"}
+          </Text>
           <View style={styles.sheetClose} />
         </View>
 
@@ -370,7 +371,7 @@ export function OutputScreen({ user }: { user: SessionUser }) {
     routeName: "Output",
     itemIds: outputItemIds,
     navigation,
-    headerTitle: "My Output",
+    headerTitle: "Fluid Output",
   });
 
   const refreshTodayTotal = useCallback(async () => {
@@ -469,7 +470,7 @@ export function OutputScreen({ user }: { user: SessionUser }) {
       floatingAction={
         !selectionMode ? (
           <TrackerThumbFab
-            accessibilityLabel="Log output"
+            accessibilityLabel="Log entry"
             onPress={openNewLog}
             tabBarClearance={tabBarClearance}
           />
@@ -479,7 +480,11 @@ export function OutputScreen({ user }: { user: SessionUser }) {
         <>
           <ConfirmModal
             visible={bulkDeleteOpen}
-            title={selectedIds.size === 1 ? "Delete output entry?" : `Delete ${selectedIds.size} output entries?`}
+            title={
+              selectedIds.size === 1
+                ? "Delete entry?"
+                : `Delete ${selectedIds.size} entries?`
+            }
             message="This action cannot be undone."
             confirmLabel={bulkDeleting ? "Deleting…" : "Delete"}
             confirmDestructive
@@ -520,8 +525,9 @@ export function OutputScreen({ user }: { user: SessionUser }) {
               items={historyRows.map((row) =>
                 buildTimestampLogRowItem({
                   id: String(row.id),
-                  title: formatOutputListTitle(row),
+                  title: outputKindLabel(row.kind),
                   whenIso: row.occurred_at,
+                  trailingText: formatOutputMl(row.amount_ml),
                   accessibilityLabel: `${outputKindLabel(row.kind)}. ${formatOutputMl(row.amount_ml)}. View details`,
                 }),
               )}
