@@ -603,6 +603,12 @@ Helpers: `lib/todayPriorities.ts` (`buildTodayPriorities`, `findNearTermAppointm
 
 **Look (trial):** white card + inset `surfaceSubtle` tray, **emoji** lines, no separators / not tappable — so this shelf reads differently from Check in tiles and list trays. Shelf order: Check in → **Today's priorities** → My health / My care → News (if on).
 
+### My care grid — vertical page for more tiles (open)
+
+**Now:** My care is a **2×2** on page 1 (Weight | Supplies / Appointments | Output); swipe **up** for Reports (and any extra tiles). Vertical snap matches the horizontal care/health pager.
+
+**Concern:** nested vertical scroll fights the natural home page scroll — not 100% sold. **Leave as-is for now**; brainstorm alternatives later (e.g. horizontal “more”, overflow sheet, fewer tiles on home, Reports-only affordance without a second vertical page).
+
 ---
 
 ## Recurring Medical Supplies (v1)
@@ -784,6 +790,10 @@ Product backlog for later — not implementation work yet. Ship notes go in **`C
 - **Now:** email OTP + **Google** only on the method screen.
 - **Later:** add more OAuth (e.g. Apple). Do **not** stack many full-width provider buttons under email — the quick-unlock fingerprint is pinned to the bottom and will collide.
 - **Preferred approach:** keep email (+ maybe one OAuth) on the landing; put extra providers behind **“More ways to sign in”** (sheet) or a compact icon row.
+
+### UI — My care “more tiles” without nested vertical scroll
+
+See **Today's priorities → My care grid** above. Want a pattern that does not compete with home page scroll.
 
 ---
 

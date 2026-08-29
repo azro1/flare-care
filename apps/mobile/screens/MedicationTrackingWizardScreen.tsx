@@ -18,7 +18,7 @@ import { showFlareAlert } from "../components/FlareAlertHost";
 import { ScrollView } from "../lib/scrollViews";
 import { OptionPickerModal } from "../components/OptionPickerModal";
 import { WizardReviewMedicationSection } from "../components/symptomReviewLayout";
-import { PrimaryButton, SecondaryButton } from "../components/FlareButton";
+import { EntryPrimaryButton, PrimaryButton, SecondaryButton } from "../components/FlareButton";
 import { flareFieldErrorStyle, FlareInputTrigger, FlareTextInput } from "../components/FlareInput";
 import { invalidateDashboardSnapshot } from "../lib/dashboardSnapshotCache";
 import { formatUkDate } from "../lib/formatUkDate";
@@ -573,7 +573,7 @@ export function MedicationTrackingWizardScreen({ user }: { user: SessionUser }) 
               Capture medication events that could be important to your IBD care.
             </Text>
             <View style={styles.landingCta}>
-              <PrimaryButton title="Start now" onPress={startWizard} noTopMargin />
+              <EntryPrimaryButton title="Start now" onPress={startWizard} noTopMargin />
             </View>
           </View>
         ) : null}

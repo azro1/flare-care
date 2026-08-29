@@ -5,17 +5,19 @@ import { useFlareColors } from "../theme";
 
 /** Shared by primary/secondary buttons and appearance toggles on Settings. */
 export const FLARE_BUTTON_BORDER_RADIUS = 10;
-export const FLARE_BUTTON_MIN_HEIGHT = 42;
+export const FLARE_BUTTON_MIN_HEIGHT = 46;
 export const FLARE_BUTTON_PADDING_H = 12;
+/** Label size for all primary/secondary CTAs — 16 (`navTitle`), not body 14. */
+export const FLARE_BUTTON_FONT_SIZE = FLARE_FONT_SIZE.navTitle;
 
 /**
- * Entry / orientation CTAs only (welcome, auth, wizard landings).
- * Taller than in-app `PrimaryButton` — same corner radius so the shape family stays consistent.
+ * Entry / orientation CTAs (welcome, auth, wizard landings).
+ * Same type scale and height as `PrimaryButton` — full-bleed width for stacked entry layouts.
  */
 export const FLARE_ENTRY_BUTTON_BORDER_RADIUS = FLARE_BUTTON_BORDER_RADIUS;
-export const FLARE_ENTRY_BUTTON_MIN_HEIGHT = 46;
-export const FLARE_ENTRY_BUTTON_PADDING_H = 12;
-export const FLARE_ENTRY_BUTTON_FONT_SIZE = FLARE_FONT_SIZE.navTitle;
+export const FLARE_ENTRY_BUTTON_MIN_HEIGHT = FLARE_BUTTON_MIN_HEIGHT;
+export const FLARE_ENTRY_BUTTON_PADDING_H = FLARE_BUTTON_PADDING_H;
+export const FLARE_ENTRY_BUTTON_FONT_SIZE = FLARE_BUTTON_FONT_SIZE;
 
 export const flareButtonStyles = StyleSheet.create({
   button: {
@@ -26,7 +28,7 @@ export const flareButtonStyles = StyleSheet.create({
     paddingHorizontal: FLARE_BUTTON_PADDING_H,
     marginTop: 6,
   },
-  buttonText: { fontFamily: FLARE_FONT_FAMILY.bold, fontSize: FLARE_FONT_SIZE.body },
+  buttonText: { fontFamily: FLARE_FONT_FAMILY.bold, fontSize: FLARE_BUTTON_FONT_SIZE },
   entryButton: {
     borderRadius: FLARE_ENTRY_BUTTON_BORDER_RADIUS,
     minHeight: FLARE_ENTRY_BUTTON_MIN_HEIGHT,
@@ -50,8 +52,10 @@ export const flareButtonStyles = StyleSheet.create({
     marginTop: 6,
   },
   buttonSecondaryContent: { flexDirection: "row", alignItems: "center", justifyContent: "center", gap: 8 },
-  buttonSecondaryText: { fontFamily: FLARE_FONT_FAMILY.bold, fontSize: FLARE_FONT_SIZE.body },
+  buttonSecondaryText: { fontFamily: FLARE_FONT_FAMILY.bold, fontSize: FLARE_BUTTON_FONT_SIZE },
 });
+
+/** Optional denser label (14) — height stays `FLARE_BUTTON_MIN_HEIGHT`. */
 
 export function PrimaryButton({
   title,
@@ -62,6 +66,7 @@ export function PrimaryButton({
   variant,
   leftIcon,
   noTopMargin,
+  compact,
 }: {
   title: string;
   onPress: () => void;
@@ -73,6 +78,8 @@ export function PrimaryButton({
   leftIcon?: React.ReactNode;
   /** Use when parent layout already sets spacing above the button (e.g. confirm modals). */
   noTopMargin?: boolean;
+  /** Keep label at 14 while using shared button height (e.g. auth landing). */
+  compact?: boolean;
 }) {
   const c = useFlareColors();
   const onPrimary = variant === "onPrimary";
@@ -105,6 +112,7 @@ export function PrimaryButton({
           <Text
             style={[
               flareButtonStyles.buttonText,
+              compact ? { fontSize: FLARE_FONT_SIZE.body } : null,
               onPrimary
                 ? { color: inactive ? c.primaryHover : c.primary }
                 : { color: inactive ? c.primaryHover : c.white },
@@ -120,7 +128,7 @@ export function PrimaryButton({
 
 /**
  * Primary CTA for entry / orientation screens (welcome intro, auth, wizard landings).
- * Prefer this over `PrimaryButton` on those surfaces so in-app forms stay denser.
+ * Same label size/height as `PrimaryButton`; stretches full width for stacked entry layouts.
  */
 export function EntryPrimaryButton({
   title,
@@ -130,7 +138,7 @@ export function EntryPrimaryButton({
   variant,
   leftIcon,
   noTopMargin,
-  /** Match in-app button label size (14) — e.g. sign-in; welcome/landings keep entry size. */
+  /** Optional denser label (14) — default is the shared 16px CTA size. */
   compactLabel,
 }: {
   title: string;
@@ -254,6 +262,7 @@ export function SecondaryButton({
   borderless,
   borderlessFill = "card",
   noTopMargin,
+  compact,
 }: {
   title: string;
   onPress: () => void;
@@ -269,6 +278,8 @@ export function SecondaryButton({
   borderlessFill?: "card" | "surfaceSubtle";
   /** Use when parent layout already sets spacing above the button (e.g. confirm modals). */
   noTopMargin?: boolean;
+  /** Keep label at 14 while using shared button height (e.g. auth landing). */
+  compact?: boolean;
 }) {
   const c = useFlareColors();
   const onPrimary = variant === "onPrimary";
@@ -315,7 +326,15 @@ export function SecondaryButton({
     >
       <View style={flareButtonStyles.buttonSecondaryContent}>
         {leftIcon ? leftIcon : null}
-        <Text style={[flareButtonStyles.buttonSecondaryText, { color: labelColor }]}>{title}</Text>
+        <Text
+          style={[
+            flareButtonStyles.buttonSecondaryText,
+            compact ? { fontSize: FLARE_FONT_SIZE.body } : null,
+            { color: labelColor },
+          ]}
+        >
+          {title}
+        </Text>
       </View>
     </Pressable>
   );

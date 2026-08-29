@@ -31,7 +31,6 @@ import {
   SUPPLIES_SETUP_PICKER_PILL_GAP,
   SUPPLIES_SETUP_STEP_BLOCK_GAP,
   SUPPLIES_SETUP_STEP_FOOTER,
-  SUPPLIES_SETUP_STEP_NAME_BLOCK_GAP,
   SUPPLIES_SETUP_STEP_OPTION_LIST,
   SUPPLIES_SETUP_STEP_RADIO_ROW,
   SUPPLIES_SETUP_STEP_SCROLL,
@@ -417,12 +416,14 @@ export function MedicalSuppliesSetupScreen({
         ) : null}
 
         {step === STEP_NAME ? (
-          <View style={styles.nameBlock}>
-            <Text style={[styles.support, styles.supportInBlock, { color: c.textMuted }]}>
+          <>
+            <Text style={[styles.support, { color: c.textMuted }]}>
               Let&apos;s give it a name so you can easily identify it.
             </Text>
-            <View style={styles.fieldGroup}>
-              <FlareScreenSectionTitle compact>Order name</FlareScreenSectionTitle>
+            <View style={styles.nameContent}>
+              <FlareScreenSectionTitle compact style={styles.nameFieldLabel}>
+                Order name
+              </FlareScreenSectionTitle>
               <FlareTextInput
                 value={kitName}
                 onChangeText={setKitName}
@@ -430,8 +431,20 @@ export function MedicalSuppliesSetupScreen({
                 autoCapitalize="sentences"
                 style={styles.fieldInput}
               />
+              {stepError ? <Text style={[errTextStyle, styles.stepErrorInContent]}>{stepError}</Text> : null}
+              <View style={styles.nameActions}>
+                <PrimaryButton
+                  title={saving ? "Saving…" : "Next"}
+                  onPress={goNext}
+                  disabled={saving}
+                  noTopMargin
+                />
+                {startStep >= STEP_NAME ? (
+                  <SecondaryButton title="Back" onPress={stepBack} disabled={saving} noTopMargin />
+                ) : null}
+              </View>
             </View>
-          </View>
+          </>
         ) : null}
 
         {step === STEP_CADENCE ? (
@@ -497,27 +510,29 @@ export function MedicalSuppliesSetupScreen({
           </View>
         ) : null}
 
-        {stepError ? <Text style={[errTextStyle, styles.stepError]}>{stepError}</Text> : null}
+        {stepError && step !== STEP_NAME ? <Text style={[errTextStyle, styles.stepError]}>{stepError}</Text> : null}
 
-        <View style={styles.actions}>
-          <PrimaryButton
-            title={
-              saving
-                ? "Saving…"
-                : step === STEP_DUE
-                  ? "Finish"
-                  : step === STEP_INTRO
-                    ? "Continue"
-                    : "Next"
-            }
-            onPress={goNext}
-            disabled={saving}
-            noTopMargin
-          />
-          {step > STEP_NAME || startStep >= STEP_NAME ? (
-            <SecondaryButton title="Back" onPress={stepBack} disabled={saving} noTopMargin />
-          ) : null}
-        </View>
+        {step !== STEP_NAME ? (
+          <View style={styles.actions}>
+            <PrimaryButton
+              title={
+                saving
+                  ? "Saving…"
+                  : step === STEP_DUE
+                    ? "Finish"
+                    : step === STEP_INTRO
+                      ? "Continue"
+                      : "Next"
+              }
+              onPress={goNext}
+              disabled={saving}
+              noTopMargin
+            />
+            {step > STEP_NAME || startStep >= STEP_NAME ? (
+              <SecondaryButton title="Back" onPress={stepBack} disabled={saving} noTopMargin />
+            ) : null}
+          </View>
+        ) : null}
       </ScrollView>
 
       {datePickerOpen ? (
@@ -544,9 +559,9 @@ const styles = StyleSheet.create({
     flexShrink: 1,
   },
   support: { ...SUPPLIES_SETUP_STEP_SUPPORT },
-  supportInBlock: { marginBottom: 0 },
-  nameBlock: { gap: SUPPLIES_SETUP_STEP_NAME_BLOCK_GAP },
-  fieldGroup: { gap: SUPPLIES_SETUP_STEP_BLOCK_GAP },
+  nameContent: { gap: SUPPLIES_SETUP_STEP_BLOCK_GAP },
+  nameFieldLabel: { marginBottom: 0 },
+  nameActions: { gap: SUPPLIES_SETUP_STEP_FOOTER.gap },
   block: { gap: SUPPLIES_SETUP_STEP_BLOCK_GAP },
   fieldInput: { marginTop: 0 },
   radioList: { ...SUPPLIES_SETUP_STEP_OPTION_LIST },
@@ -584,6 +599,7 @@ const styles = StyleSheet.create({
   },
   pickerPillText: { flex: 1, fontSize: FLARE_FONT_SIZE.body, fontFamily: FLARE_FONT_FAMILY.regular },
   stepError: { marginTop: SUPPLIES_SETUP_STEP_BLOCK_GAP },
+  stepErrorInContent: { marginTop: 0 },
   actions: { ...SUPPLIES_SETUP_STEP_FOOTER },
 });
 

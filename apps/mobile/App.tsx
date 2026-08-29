@@ -1037,6 +1037,7 @@ function AuthScreen({
                   disabled={activeAuthAction !== null || !legalHydrated}
                   variant={onPrimaryChrome ? "onPrimary" : "default"}
                   noTopMargin
+                  compact
                   leftIcon={
                     <FlareLucideIcon
                       icon={FLARE_CHROME_LUCIDE.mail}
@@ -1057,6 +1058,7 @@ function AuthScreen({
                   disabled={activeAuthAction !== null || !legalHydrated}
                   variant={onPrimaryChrome ? "onPrimary" : "default"}
                   noTopMargin
+                  compact
                   leftIcon={
                     <Ionicons name="logo-google" size={16} color={onPrimaryChrome ? "#ffffff" : cAuth.secondaryBtnText} />
                   }
@@ -3853,7 +3855,6 @@ function AccountInfoScreen({ user }: { user: SessionUser }) {
             {
               label: "Account created",
               value: user.accountCreatedAt ? formatUkDate(user.accountCreatedAt) : "Not available",
-              valueSize: "caption",
             },
             { label: "Sign-in method", value: user.signInMethodLabel ?? "Not available" },
             { label: "Account ID", value: user.id, selectable: true },

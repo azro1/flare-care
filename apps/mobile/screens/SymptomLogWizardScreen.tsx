@@ -23,7 +23,7 @@ import {
   WizardReviewSection,
   type WizardReviewField,
 } from "../components/symptomReviewLayout";
-import { PrimaryButton, SecondaryButton } from "../components/FlareButton";
+import { EntryPrimaryButton, PrimaryButton, SecondaryButton } from "../components/FlareButton";
 import { flareFieldErrorStyle, FlareInputTrigger, FlareTextInput } from "../components/FlareInput";
 import { invalidateDashboardSnapshot } from "../lib/dashboardSnapshotCache";
 import { formatUkDate } from "../lib/formatUkDate";
@@ -601,7 +601,7 @@ export function SymptomLogWizardScreen({ user }: { user: SessionUser }) {
               Tell us about your symptoms and any other related details.
             </Text>
             <View style={styles.landingCta}>
-              <PrimaryButton title="Start now" onPress={startWizard} noTopMargin />
+              <EntryPrimaryButton title="Start now" onPress={startWizard} noTopMargin />
             </View>
           </View>
         ) : null}

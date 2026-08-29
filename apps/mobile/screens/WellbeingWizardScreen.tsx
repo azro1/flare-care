@@ -15,7 +15,7 @@ import {
 } from "react-native";
 import { showFlareAlert, dismissFlareAlert } from "../components/FlareAlertHost";
 import { ScrollView } from "../lib/scrollViews";
-import { PrimaryButton, SecondaryButton } from "../components/FlareButton";
+import { EntryPrimaryButton, PrimaryButton, SecondaryButton } from "../components/FlareButton";
 import { flareFieldErrorStyle, FlareTextInput } from "../components/FlareInput";
 import { WizardReviewSection, WizardReviewNotesSection, type WizardReviewField } from "../components/symptomReviewLayout";
 import { invalidateDashboardSnapshot } from "../lib/dashboardSnapshotCache";
@@ -402,7 +402,7 @@ export function WellbeingWizardScreen({ user }: { user: SessionUser }) {
                 Check in on how you&apos;re feeling today — mood, energy, sleep and more.
               </Text>
               <View style={styles.landingCta}>
-                <PrimaryButton title="Start now" onPress={startWizard} noTopMargin />
+                <EntryPrimaryButton title="Start now" onPress={startWizard} noTopMargin />
               </View>
             </View>
           ) : null}

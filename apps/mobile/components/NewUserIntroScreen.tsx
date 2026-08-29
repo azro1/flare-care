@@ -57,8 +57,8 @@ const INTRO_COPY_STACK_HEIGHT =
 const INTRO_CONTENT_DOWN_NUDGE = HOME_TILE_GAP * 3;
 /** Lift icon + title + support (+ dots follow). */
 const INTRO_COPY_UP_NUDGE = HOME_TILE_GAP * 8;
-/** Space between support copy and page dots. */
-const INTRO_DOTS_GAP = HOME_TILE_GAP * 2 + 8;
+/** Space between support copy and page dots — dots only; copy stack Y stays fixed. */
+const INTRO_DOTS_GAP = HOME_TILE_GAP * 4 + 8;
 const DOT_SIZE = 8;
 /** Active page indicator stretches into a short pill. */
 const DOT_ACTIVE_WIDTH = 22;

@@ -404,14 +404,13 @@ export const SUPPLIES_SETUP_STEP_TITLE = {
 } as const;
 
 export const SUPPLIES_SETUP_STEP_SUPPORT = {
-  fontSize: 14,
+  fontSize: FLARE_FONT_SIZE.subhead,
   fontFamily: FLARE_FONT_FAMILY.regular,
-  lineHeight: 20,
+  lineHeight: FLARE_LINE_HEIGHT.subhead,
   marginBottom: 16,
 } as const;
 
 export const SUPPLIES_SETUP_STEP_BLOCK_GAP = 12;
-export const SUPPLIES_SETUP_STEP_NAME_BLOCK_GAP = 12;
 
 export const SUPPLIES_SETUP_STEP_OPTION_LIST = {
   gap: 14,
