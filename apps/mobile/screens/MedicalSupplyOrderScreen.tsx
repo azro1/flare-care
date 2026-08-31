@@ -90,6 +90,11 @@ export function MedicalSupplyOrderScreen({ user }: { user: SessionUser }) {
   const renderOrderHeaderTitle = useCallback(
     () => (
       <View style={styles.headerTitleWithHint}>
+        <InfoHintButton
+          title={headerName}
+          message="Tap an item to edit it. Long-press to select and remove."
+          accessibilityLabel="About this order"
+        />
         <Text
           style={{
             fontFamily: FLARE_FONT_FAMILY.bold,
@@ -100,11 +105,6 @@ export function MedicalSupplyOrderScreen({ user }: { user: SessionUser }) {
         >
           {headerName}
         </Text>
-        <InfoHintButton
-          title={headerName}
-          message="Tap an item to edit it. Long-press to select and remove."
-          accessibilityLabel="About this order"
-        />
       </View>
     ),
     [c.text, headerName],

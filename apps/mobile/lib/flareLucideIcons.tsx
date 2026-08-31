@@ -51,6 +51,7 @@ import {
   Thermometer,
   Toilet,
   Trash2,
+  Utensils,
   User,
   X,
   Clock,
@@ -65,7 +66,7 @@ export const FLARE_TAB_LUCIDE_SIZE = 23;
 
 /**
  * Feature icons — Lucide outline only.
- * Spike: dashboard Check-in / My health / My care tiles.
+ * Spike: dashboard Check-in / My health / My tools / My care tiles.
  */
 export const FLARE_FEATURE_LUCIDE = {
   symptoms: Thermometer,
@@ -78,8 +79,10 @@ export const FLARE_FEATURE_LUCIDE = {
   supplies: Package,
   appointments: Calendar,
   reports: FileText,
-  /** Fluid / measurement output log (My care). */
+  /** Fluid / measurement output log (Tools). */
   output: Droplet,
+  /** Food & Drink intake diary (Tools). */
+  intake: Utensils,
 } as const;
 
 export type FlareFeatureLucideKey = keyof typeof FLARE_FEATURE_LUCIDE;

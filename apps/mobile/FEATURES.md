@@ -1,7 +1,8 @@
-# What Flarecare does
+# FEATURES — list of all the app’s features
 
-A simple list of everything in **your** app, so you can remember it.
-Update this when you add or remove something users can see.
+Everything users can see and do in Flarecare mobile. Update when you add or remove something.
+
+Not for same-day working lists (`todays_notes.md`), feature plans (`plans/`), or implementation reminders (`DEV_NOTES.md`).
 
 Flarecare helps people with Crohn’s / Colitis track their day and prepare for clinic.
 **It is not medical advice.**
@@ -63,9 +64,10 @@ It can show:
 Reminder only — you don’t tap the lines.  
 Hydration **numbers** live under **View progress**.
 
-**My health / My care** (swipe between two pages)
-- Health: My Meds, Bowel, Hydration  
-- Care: Weight tall left, Supplies + Fluid Output right; swipe up for Appointments + Reports  
+**My health / My tools / My care** (swipe between three pages)
+- Health: Hydration + Bowel on top; My Meds full-width below
+- Tools: Weight + Fluid Output stacked left; Food & Drink tall right
+- Care: Appointments tall left; Supplies + Reports right
 
 **View progress**  
 Slide-up card with:
@@ -87,7 +89,8 @@ Tap through to open My Meds or Hydration.
 | **My Hydration** | Count cups of fluid (target is 6). Can reset today’s count. Link to intake guidelines in Help |
 | **Bowel Movements** | Log stools. **Bristol Stool Chart** guide (and pick a type while logging) |
 | **My Weight** | Log weight |
-| **Fluid Output** | Log fluid output in ml (Stoma / Urine / Drain / Other) with time; see today’s total |
+| **Fluid Output** | Log fluid output in ml. Hub tabs: **Urine** \| **Stoma** \| **Drain** \| **Other** (tap; fade). FAB prefills Type from the active tab; today’s total is for the open tab |
+| **Food & Drink** | Optional diary of what you ate/drank with time. Hub tabs: **Food** \| **Drink** (tap; fade). Drinks may note ml. Not calories — for care-team intake notes |
 
 **History**
 - **Logs** tab: symptom / medication-tracking / wellbeing lists  
@@ -104,9 +107,9 @@ Some screens show a one-time tip card you can dismiss.
 
 | What | What it does |
 |------|----------------|
-| **Appointments** | Upcoming visits; add / edit; optional reminder before the visit |
+| **Appointments** | Upcoming visits; add / edit; optional reminder before the visit. Hub tabs: **Appointments** \| **Summary** (tap; fade). **Past** in the header |
 | **Past Appointments** | Older visits |
-| **Appointment Summary** | Pick a period (e.g. last 2 / 4 / 6 weeks or custom dates) → summary with health overview, next appointment, what changed → **Share** or **Email** |
+| **Appointment Summary** | On Appointments → **Summary** tab: pick a period (e.g. last 2 / 4 / 6 weeks or custom dates) → summary with health overview, next appointment, what changed → **Share** or **Email** |
 | **Reports** | Longer report for a date range → email |
 
 You always choose when something is sent. Nothing emails itself in the background.

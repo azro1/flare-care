@@ -1,7 +1,7 @@
 import { FLARE_CHROME_LUCIDE, FlareLucideIcon } from "../lib/flareLucideIcons";
 import DateTimePicker from "@react-native-community/datetimepicker";
 import { useFocusEffect, useNavigation } from "@react-navigation/native";
-import React, { useCallback, useEffect, useMemo, useRef, useState } from "react";
+import React, { useCallback, useMemo, useRef, useState } from "react";
 import {
   Animated,
   KeyboardAvoidingView,
@@ -16,7 +16,12 @@ import { showFlareAlert } from "../components/FlareAlertHost";
 import { ScrollView } from "../lib/scrollViews";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { PrimaryButton, SecondaryButton } from "../components/FlareButton";
-import { flareFieldErrorStyle, FlareTextInput, FLARE_INPUT_BORDER_RADIUS } from "../components/FlareInput";
+import {
+  flareFieldErrorStyle,
+  FlareInputTrigger,
+  FlareTextInput,
+  FLARE_INPUT_BORDER_RADIUS,
+} from "../components/FlareInput";
 import { FlareScreenSectionTitle } from "../components/FlareScreenSectionTitle";
 import {
   LogHistoryCard,
@@ -29,6 +34,7 @@ import {
   LogHistoryListQuietPlaceholder,
 } from "../components/LogHistoryList";
 import { ConfirmModal } from "../components/ConfirmModal";
+import { InfoHintButton } from "../components/InfoHintButton";
 import { InstructionScreenShell } from "../components/InstructionScreenShell";
 import { OptionPickerModal } from "../components/OptionPickerModal";
 import { TrackerThumbFab, useTrackerThumbFabLayout } from "../components/TrackerThumbFab";
@@ -47,25 +53,22 @@ import {
   bottomTabBarHeight,
 } from "../lib/layoutConstants";
 import {
-  OUTPUT_FEATURE_ICON,
-  OUTPUT_KIND_OPTIONS,
-  deleteOutputsForUser,
-  fetchTodayOutputTotals,
-  formatOutputMl,
-  getOutputListCache,
-  invalidateOutputListCache,
-  normalizeOutputKind,
-  normalizeOutputMlInput,
-  outputKindLabel,
-  outputPayloadFromForm,
-  quickOutputFormState,
-  setOutputListCache,
-  validateOutputForm,
-  type OutputFormState,
-  type OutputKind,
-  type OutputRow,
-  type TodayOutputTotals,
-} from "../lib/outputShared";
+  INTAKE_FEATURE_ICON,
+  INTAKE_KIND_OPTIONS,
+  deleteIntakesForUser,
+  getIntakeListCache,
+  intakeKindLabel,
+  intakePayloadFromForm,
+  invalidateIntakeListCache,
+  normalizeIntakeKind,
+  normalizeIntakeMlInput,
+  quickIntakeFormState,
+  setIntakeListCache,
+  validateIntakeForm,
+  type IntakeFormState,
+  type IntakeKind,
+  type IntakeRow,
+} from "../lib/intakeShared";
 import { hubTabFadeStyles, useHubTabFade } from "../lib/useHubTabFade";
 import { useDeferredListLoading } from "../lib/useDeferredListLoading";
 import { supabase, TABLES } from "../lib/supabase";
@@ -98,7 +101,7 @@ function isAndroidPickerDismissed(event: { type?: string }): boolean {
   return Platform.OS === "android" && event.type === "dismissed";
 }
 
-export function OutputLogSheet({
+export function IntakeLogSheet({
   visible,
   editingId,
   initialValues,
@@ -109,16 +112,16 @@ export function OutputLogSheet({
 }: {
   visible: boolean;
   editingId: number | null;
-  initialValues: OutputFormState;
+  initialValues: IntakeFormState;
   saving: boolean;
   saveError: string;
   onClose: () => void;
-  onSave: (values: OutputFormState) => void;
+  onSave: (values: IntakeFormState) => void;
 }) {
   const c = useFlareColors();
   const insets = useSafeAreaInsets();
   const errTextStyle = flareFieldErrorStyle(c, "input");
-  const [form, setForm] = useState<OutputFormState>(initialValues);
+  const [form, setForm] = useState<IntakeFormState>(initialValues);
   const [fieldError, setFieldError] = useState("");
   const [datePickerOpen, setDatePickerOpen] = useState(false);
   const [pickerDraftDate, setPickerDraftDate] = useState<Date | null>(null);
@@ -138,12 +141,12 @@ export function OutputLogSheet({
     }
   }, [visible, initialValues]);
 
-  const setField = <K extends keyof OutputFormState>(key: K, value: OutputFormState[K]) => {
+  const setField = <K extends keyof IntakeFormState>(key: K, value: IntakeFormState[K]) => {
     setForm((prev) => ({ ...prev, [key]: value }));
   };
 
   const handleSavePress = () => {
-    const validationError = validateOutputForm(form);
+    const validationError = validateIntakeForm(form);
     if (validationError) {
       setFieldError(validationError);
       return;
@@ -180,6 +183,8 @@ export function OutputLogSheet({
     if (d) setField("time", snapTimeHmFromDate(d));
   };
 
+  const kindLabel = intakeKindLabel(form.kind);
+
   return (
     <Modal visible={visible} animationType="slide" presentationStyle="pageSheet" onRequestClose={onClose}>
       <KeyboardAvoidingView
@@ -202,9 +207,9 @@ export function OutputLogSheet({
           showsVerticalScrollIndicator={false}
         >
           <FlareScreenSectionTitle compact>Type *</FlareScreenSectionTitle>
-          <Pressable
+          <FlareInputTrigger
             accessibilityRole="button"
-            accessibilityLabel={`Type, ${outputKindLabel(form.kind)}`}
+            accessibilityLabel={kindLabel ? `Type, ${kindLabel}` : "Choose type"}
             onPress={() => {
               setDatePickerOpen(false);
               setTimePickerOpen(false);
@@ -212,11 +217,14 @@ export function OutputLogSheet({
               setPickerDraftTime(null);
               setKindPickerOpen(true);
             }}
-            style={[styles.whenPill, { backgroundColor: c.surfaceSubtle, borderColor: c.cardBorder }]}
           >
-            <Text style={[styles.whenPillText, { color: c.text }]}>{outputKindLabel(form.kind)}</Text>
-            <FlareLucideIcon icon={FLARE_CHROME_LUCIDE.down} size={NAV_ROW_CHEVRON_SIZE} color={c.textMuted} />
-          </Pressable>
+            <View style={styles.kindPickerRow}>
+              <Text style={[styles.kindPickerText, { color: kindLabel ? c.text : c.textMuted }]} numberOfLines={1}>
+                {kindLabel || "Select"}
+              </Text>
+              <FlareLucideIcon icon={FLARE_CHROME_LUCIDE.down} size={NAV_ROW_CHEVRON_SIZE} color={c.textMuted} />
+            </View>
+          </FlareInputTrigger>
 
           <View style={[styles.whenRow, { marginTop: 16 }]}>
             <View style={styles.whenCol}>
@@ -260,14 +268,28 @@ export function OutputLogSheet({
           </View>
 
           <FlareScreenSectionTitle compact style={{ marginTop: 16 }}>
-            Amount (ml) *
+            Item *
           </FlareScreenSectionTitle>
           <FlareTextInput
-            value={form.amountMl}
-            onChangeText={(amountMl) => setField("amountMl", normalizeOutputMlInput(amountMl))}
-            placeholder="e.g. 200"
-            keyboardType="decimal-pad"
+            value={form.body}
+            onChangeText={(body) => setField("body", body)}
+            placeholder={form.kind === "drink" ? "e.g. Water" : "e.g. Sandwich"}
+            autoCapitalize="sentences"
           />
+
+          {form.kind === "drink" ? (
+            <>
+              <FlareScreenSectionTitle compact style={{ marginTop: 16 }}>
+                Amount (ml) *
+              </FlareScreenSectionTitle>
+              <FlareTextInput
+                value={form.amountMl}
+                onChangeText={(amountMl) => setField("amountMl", normalizeIntakeMlInput(amountMl))}
+                placeholder="e.g. 300"
+                keyboardType="decimal-pad"
+              />
+            </>
+          ) : null}
 
           <FlareScreenSectionTitle compact style={{ marginTop: 16 }}>
             Notes
@@ -309,10 +331,16 @@ export function OutputLogSheet({
         ) : null}
         <OptionPickerModal
           visible={kindPickerOpen}
-          options={OUTPUT_KIND_OPTIONS.map((o) => o.label)}
+          options={INTAKE_KIND_OPTIONS.map((o) => o.label)}
           onSelect={(label) => {
-            const match = OUTPUT_KIND_OPTIONS.find((o) => o.label === label);
-            if (match) setField("kind", match.value);
+            const match = INTAKE_KIND_OPTIONS.find((o) => o.label === label);
+            if (match) {
+              setForm((prev) => ({
+                ...prev,
+                kind: match.value,
+                amountMl: match.value === "food" ? "" : prev.amountMl,
+              }));
+            }
             setKindPickerOpen(false);
           }}
           onCancel={() => setKindPickerOpen(false)}
@@ -322,7 +350,7 @@ export function OutputLogSheet({
   );
 }
 
-export function OutputScreen({ user }: { user: SessionUser }) {
+export function IntakeScreen({ user }: { user: SessionUser }) {
   const c = useFlareColors();
   const navigation = useNavigation<any>();
   const insets = useSafeAreaInsets();
@@ -338,44 +366,60 @@ export function OutputScreen({ user }: { user: SessionUser }) {
     loadMore: loadMoreHistory,
     refresh: refreshHistoryLoad,
     syncExpandedFromCache,
-  } = usePaginatedLogList<OutputRow>({
+  } = usePaginatedLogList<IntakeRow>({
     userId: user.id,
-    table: TABLES.TRACK_OUTPUT,
+    table: TABLES.TRACK_INTAKE,
     select: "*",
     orderColumn: "occurred_at",
     ascending: false,
     initialVisible: LOG_HISTORY_LOAD_MORE_BATCH,
     cache: {
-      get: getOutputListCache,
-      set: setOutputListCache,
+      get: getIntakeListCache,
+      set: setIntakeListCache,
     },
   });
 
-  const [form, setForm] = useState<OutputFormState>(() => quickOutputFormState());
+  const [form, setForm] = useState<IntakeFormState>(() => quickIntakeFormState());
   const [saving, setSaving] = useState(false);
   const [saveError, setSaveError] = useState("");
   const [editingId, setEditingId] = useState<number | null>(null);
   const [sheetOpen, setSheetOpen] = useState(false);
-  const { tabIndex, goToTab, paneStyle } = useHubTabFade(0, OUTPUT_KIND_OPTIONS.length);
-  const [todayTotals, setTodayTotals] = useState<TodayOutputTotals | null>(null);
+  const { tabIndex, goToTab, paneStyle } = useHubTabFade(0, INTAKE_KIND_OPTIONS.length);
 
-  const activeKind: OutputKind = OUTPUT_KIND_OPTIONS[tabIndex]?.value ?? "urine";
-  const rowsByKind = useMemo(() => {
-    const map: Record<OutputKind, OutputRow[]> = {
-      urine: [],
-      stoma: [],
-      drain: [],
-      other: [],
-    };
-    for (const row of historyRows) {
-      map[normalizeOutputKind(row.kind)].push(row);
-    }
-    return map;
-  }, [historyRows]);
-  const activeRows = rowsByKind[activeKind];
-  const todayKindMl = todayTotals == null ? null : (todayTotals.byKind[activeKind] ?? 0);
+  const activeKind: IntakeKind = INTAKE_KIND_OPTIONS[tabIndex]?.value ?? "food";
+  const onFoodTab = tabIndex === 0;
+  const foodRows = useMemo(
+    () => historyRows.filter((row) => normalizeIntakeKind(row.kind) === "food"),
+    [historyRows],
+  );
+  const drinkRows = useMemo(
+    () => historyRows.filter((row) => normalizeIntakeKind(row.kind) === "drink"),
+    [historyRows],
+  );
+  const activeRows = onFoodTab ? foodRows : drinkRows;
 
-  const outputItemIds = useMemo(() => activeRows.map((row) => String(row.id)), [activeRows]);
+  const intakeItemIds = useMemo(() => activeRows.map((row) => String(row.id)), [activeRows]);
+  const renderIntakeHeaderTitle = useCallback(
+    () => (
+      <View style={styles.headerTitleWithHint}>
+        <InfoHintButton
+          title="Food & Drink"
+          message="Log what you eat and drink when your care team asks you to. Optional — skip if you don’t need it."
+          accessibilityLabel="About Food & Drink"
+        />
+        <Text
+          style={{
+            fontFamily: FLARE_FONT_FAMILY.bold,
+            fontSize: FLARE_FONT_SIZE.navTitle,
+            color: c.text,
+          }}
+        >
+          Food & Drink
+        </Text>
+      </View>
+    ),
+    [c.text],
+  );
   const {
     selectionMode,
     selectedIds,
@@ -386,50 +430,36 @@ export function OutputScreen({ user }: { user: SessionUser }) {
     toggleSelect,
     runBulkDelete,
   } = useLogListSelection({
-    routeName: "Output",
-    itemIds: outputItemIds,
+    routeName: "Intake",
+    itemIds: intakeItemIds,
     navigation,
-    headerTitle: "Fluid Output",
+    headerTitle: renderIntakeHeaderTitle,
   });
-
-  const refreshTodayTotal = useCallback(async () => {
-    try {
-      const totals = await fetchTodayOutputTotals(user.id);
-      setTodayTotals(totals);
-    } catch {
-      // non-fatal — list still works
-    }
-  }, [user.id]);
 
   const handleBulkDeleteConfirm = useCallback(() => {
     void runBulkDelete(async (ids) => {
       try {
-        await deleteOutputsForUser(user.id, ids);
+        await deleteIntakesForUser(user.id, ids);
         invalidateDashboardSnapshot(user.id);
-        invalidateOutputListCache(user.id);
+        invalidateIntakeListCache(user.id);
         await refreshHistoryLoad();
-        await refreshTodayTotal();
       } catch (err: unknown) {
         const message = err instanceof Error ? err.message : "Could not delete these entries.";
         showFlareAlert("Could not delete", message);
         throw err;
       }
     });
-  }, [refreshHistoryLoad, refreshTodayTotal, runBulkDelete, user.id]);
+  }, [refreshHistoryLoad, runBulkDelete, user.id]);
 
   const refreshHistoryLoadRef = useRef(refreshHistoryLoad);
   refreshHistoryLoadRef.current = refreshHistoryLoad;
   const syncExpandedFromCacheRef = useRef(syncExpandedFromCache);
   syncExpandedFromCacheRef.current = syncExpandedFromCache;
-  const refreshTodayTotalRef = useRef(refreshTodayTotal);
-  refreshTodayTotalRef.current = refreshTodayTotal;
 
   useFocusEffect(
     useCallback(() => {
       syncExpandedFromCacheRef.current();
-      // Load immediately — InteractionManager delay made the first-open list flash longer.
       void refreshHistoryLoadRef.current();
-      void refreshTodayTotalRef.current();
     }, []),
   );
 
@@ -437,41 +467,41 @@ export function OutputScreen({ user }: { user: SessionUser }) {
     setSheetOpen(false);
     setSaveError("");
     setEditingId(null);
-    setForm(quickOutputFormState(activeKind));
+    setForm(quickIntakeFormState(activeKind));
   }, [activeKind]);
 
   const openNewLog = useCallback(() => {
-    setForm(quickOutputFormState(activeKind));
+    setForm(quickIntakeFormState(activeKind));
     setEditingId(null);
     setSaveError("");
     setSheetOpen(true);
   }, [activeKind]);
 
-  const handleSave = async (values: OutputFormState) => {
+  const handleSave = async (values: IntakeFormState) => {
     setSaveError("");
     setSaving(true);
     try {
-      const payload = outputPayloadFromForm(values);
+      const payload = intakePayloadFromForm(values);
       if (editingId) {
         const { error } = await supabase
-          .from(TABLES.TRACK_OUTPUT)
+          .from(TABLES.TRACK_INTAKE)
           .update(payload)
           .eq("id", editingId)
           .eq("user_id", user.id);
         if (error) throw error;
       } else {
-        const { error } = await supabase.from(TABLES.TRACK_OUTPUT).insert([{ ...payload, user_id: user.id }]);
+        const { error } = await supabase.from(TABLES.TRACK_INTAKE).insert([{ ...payload, user_id: user.id }]);
         if (error) throw error;
       }
-      const savedKind = normalizeOutputKind(payload.kind);
-      const savedIndex = OUTPUT_KIND_OPTIONS.findIndex((o) => o.value === savedKind);
+      // Land on the tab that matches what was saved.
+      const savedKind = normalizeIntakeKind(payload.kind);
+      const savedIndex = INTAKE_KIND_OPTIONS.findIndex((o) => o.value === savedKind);
       if (savedIndex >= 0 && savedIndex !== tabIndex) {
         goToTab(savedIndex, true);
       }
       closeSheet();
       invalidateDashboardSnapshot(user.id);
       void refreshHistoryLoad();
-      void refreshTodayTotal();
     } catch (err: unknown) {
       const message = err instanceof Error ? err.message : "Could not save this entry.";
       setSaveError(message);
@@ -484,9 +514,8 @@ export function OutputScreen({ user }: { user: SessionUser }) {
   const showListLoading = useDeferredListLoading(listInitialLoad);
   const scrollBottomPadTotal = selectionMode ? tabBarClearance : scrollBottomPad;
 
-  const renderKindList = (kind: OutputKind, rows: OutputRow[]) => {
+  const renderKindList = (kind: IntakeKind, rows: IntakeRow[]) => {
     const tabEmpty = !historyLoading && rows.length === 0 && historyTotalCount >= 0;
-    const label = outputKindLabel(kind);
     return (
       <LogHistoryCard>
         <View style={logHistoryCardStyles.trackerCardBody}>
@@ -495,24 +524,31 @@ export function OutputScreen({ user }: { user: SessionUser }) {
           ) : listInitialLoad ? (
             <LogHistoryListQuietPlaceholder />
           ) : tabEmpty ? (
-            <LogHistoryEmptyState icon={OUTPUT_FEATURE_ICON} />
+            <LogHistoryEmptyState icon={INTAKE_FEATURE_ICON} />
           ) : (
             <LogHistoryPreviewList
-              items={rows.map((row) =>
-                buildTimestampLogRowItem({
+              items={rows.map((row) => {
+                const label = intakeKindLabel(row.kind);
+                return buildTimestampLogRowItem({
                   id: String(row.id),
-                  title: formatOutputMl(row.amount_ml),
+                  title: row.body,
                   whenIso: row.occurred_at,
-                  accessibilityLabel: `${label}. ${formatOutputMl(row.amount_ml)}. View details`,
-                }),
-              )}
+                  accessibilityLabel: `${label}. ${row.body}. View details`,
+                });
+              })}
               visibleCount={rows.length}
               hasMore={historyHasMore}
               loadingMore={historyLoadingMore}
               loadMoreLabel="load more"
               onLoadMore={() => void loadMoreHistory()}
               rowTextLayout="default"
-              onPressItem={(logId) => navigation.navigate("OutputLogDetail", { id: logId })}
+              onPressItem={(logId) => {
+                const row = rows.find((r) => String(r.id) === logId);
+                navigation.navigate("IntakeLogDetail", {
+                  id: logId,
+                  kind: row?.kind ?? kind,
+                });
+              }}
               selectionMode={selectionMode}
               selectedIds={selectedIds}
               onToggleSelect={toggleSelect}
@@ -532,7 +568,7 @@ export function OutputScreen({ user }: { user: SessionUser }) {
       floatingAction={
         !selectionMode ? (
           <TrackerThumbFab
-            accessibilityLabel={`Log ${outputKindLabel(activeKind).toLowerCase()}`}
+            accessibilityLabel={`Log ${intakeKindLabel(activeKind).toLowerCase()}`}
             onPress={openNewLog}
             tabBarClearance={tabBarClearance}
           />
@@ -554,7 +590,7 @@ export function OutputScreen({ user }: { user: SessionUser }) {
             onCancel={() => setBulkDeleteOpen(false)}
           />
           {sheetOpen ? (
-            <OutputLogSheet
+            <IntakeLogSheet
               visible={sheetOpen}
               editingId={editingId}
               initialValues={form}
@@ -568,7 +604,7 @@ export function OutputScreen({ user }: { user: SessionUser }) {
       }
     >
       <View style={styles.tabRow}>
-        {OUTPUT_KIND_OPTIONS.map((opt, index) => {
+        {INTAKE_KIND_OPTIONS.map((opt, index) => {
           const active = index === tabIndex;
           return (
             <Pressable
@@ -599,38 +635,38 @@ export function OutputScreen({ user }: { user: SessionUser }) {
         })}
       </View>
 
-      <View style={[styles.todayTotalCard, { backgroundColor: c.card, borderColor: c.cardBorder }]}>
-        <Text style={[styles.todayTotalLabel, { color: c.textMuted }]}>Today’s total</Text>
-        <Text style={[styles.todayTotalValue, { color: todayKindMl == null ? c.textMuted : c.text }]}>
-          {todayKindMl == null ? "…" : formatOutputMl(todayKindMl)}
-        </Text>
-      </View>
-
       <View style={hubTabFadeStyles.stack}>
-        {OUTPUT_KIND_OPTIONS.map((opt, index) => {
-          const active = index === tabIndex;
-          return (
-            <Animated.View
-              key={opt.value}
-              style={paneStyle[index]}
-              pointerEvents={active ? "auto" : "none"}
-              accessibilityElementsHidden={!active}
-              importantForAccessibility={active ? "yes" : "no-hide-descendants"}
-            >
-              {renderKindList(opt.value, rowsByKind[opt.value])}
-            </Animated.View>
-          );
-        })}
+        <Animated.View
+          style={paneStyle[0]}
+          pointerEvents={onFoodTab ? "auto" : "none"}
+          accessibilityElementsHidden={!onFoodTab}
+          importantForAccessibility={onFoodTab ? "yes" : "no-hide-descendants"}
+        >
+          {renderKindList("food", foodRows)}
+        </Animated.View>
+        <Animated.View
+          style={paneStyle[1]}
+          pointerEvents={onFoodTab ? "none" : "auto"}
+          accessibilityElementsHidden={onFoodTab}
+          importantForAccessibility={onFoodTab ? "no-hide-descendants" : "yes"}
+        >
+          {renderKindList("drink", drinkRows)}
+        </Animated.View>
       </View>
     </InstructionScreenShell>
   );
 }
 
 const styles = StyleSheet.create({
+  headerTitleWithHint: {
+    flexDirection: "row",
+    alignItems: "center",
+    gap: 6,
+  },
   tabRow: {
     flexDirection: "row",
     marginBottom: SCREEN_EDGE_PADDING,
-    gap: 16,
+    gap: 20,
   },
   tabHit: {
     paddingBottom: 8,
@@ -659,6 +695,8 @@ const styles = StyleSheet.create({
   sheetClose: { width: 44, height: 44, alignItems: "center", justifyContent: "center" },
   sheetTitle: { fontSize: FLARE_FONT_SIZE.navTitle, fontFamily: FLARE_FONT_FAMILY.bold },
   sheetScroll: { paddingHorizontal: 20, paddingTop: 14 },
+  kindPickerRow: { flexDirection: "row", alignItems: "center", gap: 8 },
+  kindPickerText: { flex: 1, fontSize: FLARE_FONT_SIZE.body, fontFamily: FLARE_FONT_FAMILY.regular },
   whenRow: { flexDirection: "row", gap: 10 },
   whenCol: { flex: 1 },
   whenPill: {
@@ -674,20 +712,4 @@ const styles = StyleSheet.create({
   notesInput: { marginTop: 0 },
   fieldError: { marginTop: 8, marginBottom: 4 },
   sheetActions: { marginTop: STACKED_DETAIL_ROW_EDGE, gap: 8 },
-  todayTotalCard: {
-    borderRadius: 12,
-    borderWidth: StyleSheet.hairlineWidth,
-    paddingHorizontal: 16,
-    paddingVertical: 14,
-    marginBottom: SCREEN_EDGE_PADDING,
-  },
-  todayTotalLabel: {
-    fontSize: FLARE_FONT_SIZE.caption,
-    fontFamily: FLARE_FONT_FAMILY.medium,
-    marginBottom: 4,
-  },
-  todayTotalValue: {
-    fontSize: 28,
-    fontFamily: FLARE_FONT_FAMILY.bold,
-  },
 });

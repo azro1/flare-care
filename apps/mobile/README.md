@@ -26,7 +26,7 @@ For **recent UI / polish / changelog-style notes**, see **`CHANGELOG.md`**.
 See **`FEATURES.md`** for the full inventory. Short map:
 
 - **Auth:** Email OTP, Google, biometric lock + quick unlock, new-user intro.
-- **Dashboard:** Weather, Check in wizards, **Today's priorities**, My health / My care, **View progress** (meds/hydration + graph).
+- **Dashboard:** Weather, Check in wizards, **Today's priorities**, My health / My tools / My care, **View progress** (meds/hydration + graph).
 - **Tracking:** Symptoms, meds list + taken tracking, hydration (cups), bowel, weight, wellbeing.
 - **Care:** Appointments + reminders, Appointment Summary (Share/Email), Reports.
 - **Supplies:** Short setup → quiet hub → editable Request supplies (Email / Share / Copy; due date advances automatically).

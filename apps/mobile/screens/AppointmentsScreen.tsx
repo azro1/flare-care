@@ -3,6 +3,7 @@ import DateTimePicker from "@react-native-community/datetimepicker";
 import { useNavigation } from "@react-navigation/native";
 import React, { useCallback, useState } from "react";
 import {
+  Animated,
   KeyboardAvoidingView,
   Modal,
   Platform,
@@ -16,7 +17,10 @@ import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { PrimaryButton, SecondaryButton } from "../components/FlareButton";
 import { flareFieldErrorStyle, FlareTextInput, FLARE_INPUT_BORDER_RADIUS } from "../components/FlareInput";
 import { FlareScreenSectionTitle } from "../components/FlareScreenSectionTitle";
+import { InstructionScreenShell } from "../components/InstructionScreenShell";
+import { InfoHintButton } from "../components/InfoHintButton";
 import { OptionPickerModal } from "../components/OptionPickerModal";
+import { TrackerThumbFab, useTrackerThumbFabLayout } from "../components/TrackerThumbFab";
 import { STACKED_DETAIL_ROW_EDGE } from "../components/StackedDetailField";
 import { invalidateDashboardSnapshot } from "../lib/dashboardSnapshotCache";
 import { useAppointmentsList } from "../lib/useAppointmentsList";
@@ -39,12 +43,26 @@ import {
   NAV_ROW_LABEL,
   SCREEN_EDGE_PADDING,
   TIME_PICKER_MINUTE_INTERVAL,
+  bottomTabBarHeight,
 } from "../lib/layoutConstants";
+import { hubTabFadeStyles, useHubTabFade } from "../lib/useHubTabFade";
 import { supabase, TABLES } from "../lib/supabase";
 import { useFlareColors } from "../theme";
+import { AppointmentBriefContent } from "./AppointmentBriefContent";
 import { AppointmentsListPane } from "./AppointmentsListPane";
 
 type SessionUser = { id: string };
+
+const APPOINTMENTS_HUB_TABS = [
+  { key: "appointments", label: "Appointments" },
+  { key: "summary", label: "Summary" },
+] as const;
+
+const APPOINTMENTS_HUB_HINT =
+  "Add appointments, set reminders and keep track of your upcoming visits.";
+
+const APPOINTMENT_SUMMARY_HINT =
+  "Generate a health summary from your records for your next appointment. Choose a suggested period or select your own dates.";
 
 function toYmd(d: Date): string {
   const y = d.getFullYear();
@@ -321,6 +339,9 @@ export function AppointmentSheet({
 export function AppointmentsScreen({ user }: { user: SessionUser }) {
   const c = useFlareColors();
   const navigation = useNavigation<any>();
+  const insets = useSafeAreaInsets();
+  const tabBarClearance = bottomTabBarHeight(insets.bottom);
+  const { scrollBottomPad } = useTrackerThumbFabLayout(tabBarClearance);
   const appointmentsList = useAppointmentsList(user.id);
   const { load } = appointmentsList;
   const [sheetOpen, setSheetOpen] = useState(false);
@@ -328,6 +349,9 @@ export function AppointmentsScreen({ user }: { user: SessionUser }) {
   const [form, setForm] = useState<AppointmentFormState>(() => quickAppointmentFormState());
   const [saving, setSaving] = useState(false);
   const [saveError, setSaveError] = useState("");
+  const { tabIndex, goToTab, paneStyle } = useHubTabFade(0, APPOINTMENTS_HUB_TABS.length);
+  const [listSelectionMode, setListSelectionMode] = useState(false);
+  const onAppointmentsTab = tabIndex === 0;
 
   const closeSheet = useCallback(() => {
     setSheetOpen(false);
@@ -357,9 +381,30 @@ export function AppointmentsScreen({ user }: { user: SessionUser }) {
     [c.text, navigation],
   );
 
-  const openSummary = useCallback(() => {
-    navigation.navigate("AppointmentBrief");
-  }, [navigation]);
+  const renderAppointmentsHeaderTitle = useCallback(
+    () => (
+      <View style={styles.headerTitleWithHint}>
+        <InfoHintButton
+          title={onAppointmentsTab ? "Appointments" : "Appointment Summary"}
+          message={onAppointmentsTab ? APPOINTMENTS_HUB_HINT : APPOINTMENT_SUMMARY_HINT}
+          accessibilityLabel={
+            onAppointmentsTab ? "About Appointments" : "About Appointment Summary"
+          }
+        />
+        <Text
+          style={{
+            fontFamily: FLARE_FONT_FAMILY.bold,
+            fontSize: FLARE_FONT_SIZE.navTitle,
+            color: c.text,
+          }}
+          numberOfLines={1}
+        >
+          Appointments
+        </Text>
+      </View>
+    ),
+    [c.text, onAppointmentsTab],
+  );
 
   const handleSave = async (values: AppointmentFormState) => {
     setSaveError("");
@@ -385,19 +430,84 @@ export function AppointmentsScreen({ user }: { user: SessionUser }) {
     }
   };
 
+  const scrollBottomPadTotal =
+    listSelectionMode || !onAppointmentsTab ? Math.max(insets.bottom, 16) + 24 : scrollBottomPad;
+
   return (
     <>
-      <AppointmentsListPane
-        user={user}
-        tab="upcoming"
-        showFab
-        onAddPress={openAdd}
-        selectionRouteName="Appointments"
-        headerTitle="Appointments"
-        renderIdleHeaderRight={renderPastLink}
-        onSummaryPress={openSummary}
-        list={appointmentsList}
-      />
+      <InstructionScreenShell
+        showInstruction={false}
+        contentPaddingBottom={scrollBottomPadTotal}
+        instruction={null}
+        floatingAction={
+          onAppointmentsTab && !listSelectionMode ? (
+            <TrackerThumbFab accessibilityLabel="Add appointment" onPress={openAdd} tabBarClearance={tabBarClearance} />
+          ) : null
+        }
+        footer={null}
+      >
+        <View style={styles.tabRow}>
+          {APPOINTMENTS_HUB_TABS.map((opt, index) => {
+            const active = index === tabIndex;
+            return (
+              <Pressable
+                key={opt.key}
+                accessibilityRole="tab"
+                accessibilityState={{ selected: active }}
+                accessibilityLabel={opt.label}
+                onPress={() => goToTab(index)}
+                style={styles.tabHit}
+              >
+                <Text
+                  style={[
+                    styles.tabLabel,
+                    { color: active ? c.text : c.textMuted },
+                    active ? styles.tabLabelActive : null,
+                  ]}
+                >
+                  {opt.label}
+                </Text>
+                <View
+                  style={[
+                    styles.tabUnderline,
+                    { backgroundColor: active ? c.primary : "transparent" },
+                  ]}
+                />
+              </Pressable>
+            );
+          })}
+        </View>
+
+        <View style={hubTabFadeStyles.stack}>
+          <Animated.View
+            style={paneStyle[0]}
+            pointerEvents={onAppointmentsTab ? "auto" : "none"}
+            accessibilityElementsHidden={!onAppointmentsTab}
+            importantForAccessibility={onAppointmentsTab ? "yes" : "no-hide-descendants"}
+          >
+            <AppointmentsListPane
+              user={user}
+              tab="upcoming"
+              showFab={false}
+              onAddPress={openAdd}
+              selectionRouteName="Appointments"
+              headerTitle={renderAppointmentsHeaderTitle}
+              renderIdleHeaderRight={renderPastLink}
+              list={appointmentsList}
+              embedded
+              onSelectionModeChange={setListSelectionMode}
+            />
+          </Animated.View>
+          <Animated.View
+            style={paneStyle[1]}
+            pointerEvents={onAppointmentsTab ? "none" : "auto"}
+            accessibilityElementsHidden={onAppointmentsTab}
+            importantForAccessibility={onAppointmentsTab ? "no-hide-descendants" : "yes"}
+          >
+            <AppointmentBriefContent />
+          </Animated.View>
+        </View>
+      </InstructionScreenShell>
 
       <AppointmentSheet
         visible={sheetOpen}
@@ -413,6 +523,31 @@ export function AppointmentsScreen({ user }: { user: SessionUser }) {
 }
 
 const styles = StyleSheet.create({
+  headerTitleWithHint: {
+    flexDirection: "row",
+    alignItems: "center",
+    gap: 6,
+  },
+  tabRow: {
+    flexDirection: "row",
+    marginBottom: SCREEN_EDGE_PADDING,
+    gap: 20,
+  },
+  tabHit: {
+    paddingBottom: 8,
+  },
+  tabLabel: {
+    fontSize: FLARE_FONT_SIZE.subhead,
+    fontFamily: FLARE_FONT_FAMILY.regular,
+  },
+  tabLabelActive: {
+    fontFamily: FLARE_FONT_FAMILY.bold,
+  },
+  tabUnderline: {
+    marginTop: 6,
+    height: 2,
+    borderRadius: 1,
+  },
   sheetRoot: { flex: 1 },
   sheetHeader: {
     flexDirection: "row",

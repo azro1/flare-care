@@ -85,6 +85,13 @@ export function MedicalSuppliesScreen({ user }: { user: SessionUser }) {
   const renderSuppliesHeaderTitle = useCallback(
     () => (
       <View style={styles.headerTitleWithHint}>
+        <InfoHintButton
+          title="My Supplies"
+          message={
+            "Your supplies hub keeps your supply orders together in one place. Create an order for each set of supplies you regularly need. Tap to manage, or long-press to delete."
+          }
+          accessibilityLabel="About My Supplies"
+        />
         <Text
           style={{
             fontFamily: FLARE_FONT_FAMILY.bold,
@@ -94,13 +101,6 @@ export function MedicalSuppliesScreen({ user }: { user: SessionUser }) {
         >
           My Supplies
         </Text>
-        <InfoHintButton
-          title="My Supplies"
-          message={
-            "Your supplies hub keeps your supply orders together in one place. Create an order for each set of supplies you regularly need. Tap to manage, or long-press to delete."
-          }
-          accessibilityLabel="About My Supplies"
-        />
       </View>
     ),
     [c.text],

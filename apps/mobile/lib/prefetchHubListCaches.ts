@@ -9,6 +9,10 @@ import {
   getOutputListCache,
   setOutputListCache,
 } from "./outputShared";
+import {
+  getIntakeListCache,
+  setIntakeListCache,
+} from "./intakeShared";
 import { supabase, TABLES } from "./supabase";
 import { getWeightListCache, setWeightListCache } from "./weightShared";
 import { getWellbeingListCache, setWellbeingListCache } from "./wellbeingShared";
@@ -126,6 +130,15 @@ export async function prefetchHubListCaches(userId: string): Promise<void> {
         // today total is best-effort
       }
     })(),
+    prefetchPaginatedListCache({
+      userId,
+      table: TABLES.TRACK_INTAKE,
+      select: "*",
+      orderColumn: "occurred_at",
+      ascending: false,
+      getCache: getIntakeListCache,
+      setCache: setIntakeListCache,
+    }),
     prefetchPaginatedListCache({
       userId,
       table: TABLES.DAILY_WELLBEING,

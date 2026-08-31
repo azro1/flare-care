@@ -12,12 +12,12 @@ import { supabase, TABLES } from "./supabase";
 export const OUTPUT_FEATURE_ICON = FLARE_FEATURE_LUCIDE.output;
 
 /** Stored in `track_output.kind` — keep general, not journey-gated. */
-export const OUTPUT_KINDS = ["stoma", "urine", "drain", "other"] as const;
+export const OUTPUT_KINDS = ["urine", "stoma", "drain", "other"] as const;
 export type OutputKind = (typeof OUTPUT_KINDS)[number];
 
 export const OUTPUT_KIND_OPTIONS: { value: OutputKind; label: string }[] = [
-  { value: "stoma", label: "Stoma" },
   { value: "urine", label: "Urine" },
+  { value: "stoma", label: "Stoma" },
   { value: "drain", label: "Drain" },
   { value: "other", label: "Other" },
 ];
@@ -55,11 +55,11 @@ export type TodayOutputTotals = {
   byKind: Partial<Record<OutputKind, number>>;
 };
 
-/** New log sheet — date today, time now. */
-export function quickOutputFormState(): OutputFormState {
+/** New log sheet — date today, time now. Prefill kind from the active hub tab when set. */
+export function quickOutputFormState(kind: OutputKind = "urine"): OutputFormState {
   const now = new Date();
   return {
-    kind: "other",
+    kind,
     date: todayYmd(),
     time: snapTimeHmFromDate(now),
     amountMl: "",

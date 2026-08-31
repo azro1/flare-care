@@ -1,3 +1,11 @@
+# TODAYS_NOTES — same-day working list
+
+If we have a **lot to do in one day**, write it here so we don’t forget during the day. Scratch / session checklist — clear or archive when the day is done.
+
+**Not for:** long-lived app reminders (`DEV_NOTES.md`), feature plans (`plans/`), full feature list (`FEATURES.md`), or shipped history (`CHANGELOG.md`).
+
+---
+
 # Mobile — follow-up / known issues
 
 ## Upcoming (2026-08-12)

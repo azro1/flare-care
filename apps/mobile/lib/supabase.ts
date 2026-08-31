@@ -43,6 +43,7 @@ export const TABLES = {
   LOG_MEDICATIONS: "log_medications",
   TRACK_WEIGHT: "track_weight",
   TRACK_OUTPUT: "track_output",
+  TRACK_INTAKE: "track_intake",
   DAILY_HYDRATION: "daily_hydration",
   BOWEL_MOVEMENTS: "bowel_movements",
   APPOINTMENTS: "appointments",

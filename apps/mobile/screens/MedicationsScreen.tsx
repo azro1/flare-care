@@ -329,6 +329,11 @@ export function MedicationsScreen({ user }: { user: SessionUser }) {
   const renderMedsHeaderTitle = useCallback(
     () => (
       <View style={styles.headerTitleWithHint}>
+        <InfoHintButton
+          title="My Meds"
+          message="Save medications, set reminders and mark doses as taken. Check your priorities regularly to help you stay on track."
+          accessibilityLabel="About My Meds"
+        />
         <Text
           style={{
             fontFamily: FLARE_FONT_FAMILY.bold,
@@ -338,11 +343,6 @@ export function MedicationsScreen({ user }: { user: SessionUser }) {
         >
           My Meds
         </Text>
-        <InfoHintButton
-          title="My Meds"
-          message="Save medications, set reminders and mark doses as taken. Check your priorities regularly to help you stay on track."
-          accessibilityLabel="About My Meds"
-        />
       </View>
     ),
     [c.text],

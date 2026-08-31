@@ -1,8 +1,34 @@
-# Flarecare mobile changelog
+# CHANGELOG — changes we have made to the app
 
-Recent UI and behavior updates on the Expo app (`apps/mobile`).
+Shipped / unreleased UI and behaviour updates for the Expo app (`apps/mobile`). Use this when recording what landed; not for feature plans (`plans/`), same-day lists (`todays_notes.md`), or long-lived conventions (`DEV_NOTES.md`).
 
 ## Unreleased
+
+### Dashboard My health / My tools / My care (2026-08)
+
+- Home tools pager is three horizontal pages: **My health** · **My tools** · **My care** (no nested vertical swipe).
+- **My health:** Hydration + Bowel on top; My Meds full-width below.
+- **My tools:** Weight + Fluid Output stacked left; Food & Drink tall right.
+- **My care:** Appointments tall left; Supplies + Reports right.
+- Fixes home scroll fighting the old My care swipe-up page.
+
+### Fluid Output hub tabs (2026-08)
+
+- **Urine** \| **Stoma** \| **Drain** \| **Other** tabs (tap; fade) — lists no longer dump every kind together.
+- FAB prefills Type from the active tab; today’s total is for the open tab.
+
+### Food & Drink (2026-08)
+
+- **My care** tile **Food & Drink** (now on **Tools** page with Weight + Fluid Output).
+- Hub splits **Food** / **Drink** tabs (tap; fade); FAB prefills Type from the active tab.
+- Log with date/time + item; drinks require ml; optional notes. Detail header is **Food** or **Drink**.
+- Optional clinical diary — not calories / nutrition scoring. Plan: `plans/food-drink-log.md`. Requires Supabase `track_intake` (SQL in `DEV_NOTES.md`).
+
+### Appointments hub tabs (2026-08)
+
+- **Appointments** \| **Summary** tabs (tap; fade between panels).
+- Summary period picker lives on the Summary tab (no bottom “Appointment Summary” link). Stack `AppointmentBrief` route kept for deep links / help.
+- Past, FAB, selection, and summary generate/share flows unchanged.
 
 ### Auth, intro & cleanup (2026-08)
 

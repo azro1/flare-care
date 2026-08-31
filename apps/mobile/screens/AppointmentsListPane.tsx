@@ -1,9 +1,8 @@
 import { FLARE_CHROME_LUCIDE, FlareLucideIcon } from "../lib/flareLucideIcons";
 import { useFocusEffect, useNavigation } from "@react-navigation/native";
-import React, { useCallback, useMemo, useState } from "react";
+import React, { useCallback, useEffect, useMemo, useState } from "react";
 import { Pressable, StyleSheet, Text, View } from "react-native";
 import { showFlareAlert } from "../components/FlareAlertHost";
-import { ScrollView } from "../lib/scrollViews";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { ConfirmModal } from "../components/ConfirmModal";
 import { InstructionScreenShell } from "../components/InstructionScreenShell";
@@ -67,16 +66,21 @@ export function AppointmentsListPane({
   renderIdleHeaderRight,
   onSummaryPress,
   list,
+  /** When true, only the list (+ delete modal) — parent owns shell / FAB / tabs. */
+  embedded = false,
+  onSelectionModeChange,
 }: {
   user: SessionUser;
   tab: AppointmentsTab;
   showFab: boolean;
   onAddPress?: () => void;
   selectionRouteName: string;
-  headerTitle: string;
+  headerTitle: string | (() => React.ReactNode);
   renderIdleHeaderRight?: () => React.ReactNode;
   onSummaryPress?: () => void;
   list: AppointmentsListState;
+  embedded?: boolean;
+  onSelectionModeChange?: (selectionMode: boolean) => void;
 }) {
   const c = useFlareColors();
   const navigation = useNavigation<any>();
@@ -184,6 +188,10 @@ export function AppointmentsListPane({
     renderIdleHeaderRight,
   });
 
+  useEffect(() => {
+    onSelectionModeChange?.(selectionMode);
+  }, [onSelectionModeChange, selectionMode]);
+
   const handleBulkDeleteConfirm = useCallback(() => {
     void runBulkDelete(async (ids) => {
       try {
@@ -204,30 +212,8 @@ export function AppointmentsListPane({
   const showListLoading = useDeferredListLoading(listInitialLoad);
   const listEmpty = !loading && visibleRows.length === 0;
 
-  return (
-    <InstructionScreenShell
-      showInstruction={false}
-      contentPaddingBottom={scrollBottomPadTotal}
-      instruction={null}
-      floatingAction={
-        showFab && !selectionMode && onAddPress ? (
-          <TrackerThumbFab accessibilityLabel="Add appointment" onPress={onAddPress} tabBarClearance={tabBarClearance} />
-        ) : null
-      }
-      footer={
-        <>
-          <ConfirmModal
-            visible={bulkDeleteOpen}
-            title={selectedIds.size === 1 ? "Delete appointment?" : `Delete ${selectedIds.size} appointments?`}
-            message="This appointment will be removed. This action cannot be undone."
-            confirmLabel={bulkDeleting ? "Deleting…" : "Delete"}
-            confirmDestructive
-            onConfirm={handleBulkDeleteConfirm}
-            onCancel={() => setBulkDeleteOpen(false)}
-          />
-        </>
-      }
-    >
+  const listBody = (
+    <>
       <LogHistoryCard>
         <View style={logHistoryCardStyles.trackerCardBody}>
           {showListLoading ? (
@@ -268,6 +254,43 @@ export function AppointmentsListPane({
           </Pressable>
         </View>
       ) : null}
+    </>
+  );
+
+  const deleteModal = (
+    <ConfirmModal
+      visible={bulkDeleteOpen}
+      title={selectedIds.size === 1 ? "Delete appointment?" : `Delete ${selectedIds.size} appointments?`}
+      message="This appointment will be removed. This action cannot be undone."
+      confirmLabel={bulkDeleting ? "Deleting…" : "Delete"}
+      confirmDestructive
+      onConfirm={handleBulkDeleteConfirm}
+      onCancel={() => setBulkDeleteOpen(false)}
+    />
+  );
+
+  if (embedded) {
+    return (
+      <>
+        {listBody}
+        {deleteModal}
+      </>
+    );
+  }
+
+  return (
+    <InstructionScreenShell
+      showInstruction={false}
+      contentPaddingBottom={scrollBottomPadTotal}
+      instruction={null}
+      floatingAction={
+        showFab && !selectionMode && onAddPress ? (
+          <TrackerThumbFab accessibilityLabel="Add appointment" onPress={onAddPress} tabBarClearance={tabBarClearance} />
+        ) : null
+      }
+      footer={deleteModal}
+    >
+      {listBody}
     </InstructionScreenShell>
   );
 }

@@ -223,6 +223,8 @@ import { WeightLogDetailScreen } from "./screens/WeightLogDetailScreen";
 import { WeightScreen } from "./screens/WeightScreen";
 import { OutputLogDetailScreen } from "./screens/OutputLogDetailScreen";
 import { OutputScreen } from "./screens/OutputScreen";
+import { IntakeLogDetailScreen } from "./screens/IntakeLogDetailScreen";
+import { IntakeScreen } from "./screens/IntakeScreen";
 import { WellbeingScreen } from "./screens/WellbeingScreen";
 import { WellbeingLogDetailScreen } from "./screens/WellbeingLogDetailScreen";
 import { WellbeingWizardScreen } from "./screens/WellbeingWizardScreen";
@@ -1442,6 +1444,7 @@ const BOTTOM_BAR_VISIBLE_ROUTES = new Set([
   "Hydration",
   "Weight",
   "Output",
+  "Intake",
   "Bowel",
   "Appointments",
   "AppointmentsPast",
@@ -1582,10 +1585,11 @@ function DashboardScreen({ user }: { user: SessionUser }) {
   const [healthCarePage, setHealthCarePage] = useState(0);
   const healthCareScrollX = useRef(new Animated.Value(0)).current;
   const healthCarePagerRef = useRef<React.ElementRef<typeof AnimatedScrollView> | null>(null);
-  const careVerticalScrollRef = useRef<React.ElementRef<typeof ScrollView> | null>(null);
   const healthCarePageGap = HOME_TILE_GAP;
   /** Page width + inter-page gap — snap interval only (title fade still uses page width). */
   const healthCarePageStride = Math.max(1, healthCarePageW + healthCarePageGap);
+  const healthCarePageCount = 3;
+  const healthCareTitleFadeW = Math.max(1, healthCarePageW);
   const tileWidth = useMemo(
     () => Math.floor((windowWidth - SCREEN_EDGE_PADDING * 2 - HOME_TILE_GAP) / 2),
     [windowWidth],
@@ -1661,35 +1665,38 @@ function DashboardScreen({ user }: { user: SessionUser }) {
     { key: "hydration", label: "My Hydration", screen: "Hydration" as const, lucide: FLARE_FEATURE_LUCIDE.hydration },
     { key: "bowel", label: "Bowel Movements", screen: "Bowel" as const, lucide: FLARE_FEATURE_LUCIDE.bowel },
   ];
-  const careCards = [
+  /** Monitoring / measure-and-record tools. */
+  const toolsCards = [
     { key: "weight", label: "My Weight", screen: "Weight" as const, lucide: FLARE_FEATURE_LUCIDE.weight },
-    { key: "supplies", label: "My Supplies", screen: "MedicalSupplies" as const, lucide: FLARE_FEATURE_LUCIDE.supplies },
     { key: "output", label: "Fluid Output", screen: "Output" as const, lucide: FLARE_FEATURE_LUCIDE.output },
+    { key: "intake", label: "Food & Drink", screen: "Intake" as const, lucide: FLARE_FEATURE_LUCIDE.intake },
+  ];
+  /** Clinical / external care organisation. */
+  const careCards = [
     { key: "appointments", label: "Appointments", screen: "Appointments" as const, lucide: FLARE_FEATURE_LUCIDE.appointments },
+    { key: "supplies", label: "My Supplies", screen: "MedicalSupplies" as const, lucide: FLARE_FEATURE_LUCIDE.supplies },
     { key: "reports", label: "Reports", screen: "Reports" as const, lucide: FLARE_FEATURE_LUCIDE.reports },
   ];
-  /** Page 1 — Weight tall left (mirrors My Meds); Supplies + Fluid Output stacked right. */
-  const careWeightCard = careCards.find((card) => card.key === "weight")!;
+  const healthMedsCard = healthCards[0];
+  const healthHydrationCard = healthCards.find((card) => card.key === "hydration")!;
+  const healthBowelCard = healthCards.find((card) => card.key === "bowel")!;
+  const toolsLeftColumnCards = [
+    toolsCards.find((card) => card.key === "weight")!,
+    toolsCards.find((card) => card.key === "output")!,
+  ];
+  const toolsIntakeCard = toolsCards.find((card) => card.key === "intake")!;
+  const careAppointmentsCard = careCards.find((card) => card.key === "appointments")!;
   const careRightColumnCards = [
     careCards.find((card) => card.key === "supplies")!,
-    careCards.find((card) => card.key === "output")!,
-  ];
-  /** Page 2 (swipe up) — Appointments + Reports. */
-  const careMorePageCards = [
-    careCards.find((card) => card.key === "appointments")!,
     careCards.find((card) => card.key === "reports")!,
   ];
-  const healthMedsCard = healthCards[0];
-  const healthLeftColumnCards = [
-    healthCards.find((card) => card.key === "bowel")!,
-    healthCards.find((card) => card.key === "hydration")!,
-  ];
-  /** Matches `styles.homeDashboardTile` height — Meds / Weight span both rows. */
+  /** Matches `styles.homeDashboardTile` height — Meds-style tall tiles / Appointments. */
   const healthMedsTallHeight = HOME_DASHBOARD_TILE_HEIGHT * 2 + HOME_TILE_GAP;
-  /** Same gap as horizontal My health ↔ My care pages. */
-  const careVerticalPageGap = healthCarePageGap;
-  const careVerticalPageStride = healthMedsTallHeight + careVerticalPageGap;
-  const renderToolTile = (item: (typeof healthCards)[number] | (typeof careCards)[number]) => (
+  /** Full-width tile under a two-column top row (My health). */
+  const toolsFullTileWidth = healthCarePageW > 0 ? healthCarePageW : tileWidth * 2 + HOME_TILE_GAP;
+  const renderToolTile = (
+    item: (typeof healthCards)[number] | (typeof toolsCards)[number] | (typeof careCards)[number],
+  ) => (
     <DashboardGridTile
       key={item.key}
       width={tileWidth}
@@ -2146,8 +2153,8 @@ function DashboardScreen({ user }: { user: SessionUser }) {
                   {
                     color: c.text,
                     opacity: healthCareScrollX.interpolate({
-                      inputRange: [0, Math.max(1, healthCarePageW)],
-                      outputRange: [1, 0],
+                      inputRange: [0, healthCareTitleFadeW, healthCareTitleFadeW * 2],
+                      outputRange: [1, 0, 0],
                       extrapolate: "clamp",
                     }),
                   },
@@ -2164,8 +2171,26 @@ function DashboardScreen({ user }: { user: SessionUser }) {
                   {
                     color: c.text,
                     opacity: healthCareScrollX.interpolate({
-                      inputRange: [0, Math.max(1, healthCarePageW)],
-                      outputRange: [0, 1],
+                      inputRange: [0, healthCareTitleFadeW, healthCareTitleFadeW * 2],
+                      outputRange: [0, 1, 0],
+                      extrapolate: "clamp",
+                    }),
+                  },
+                ]}
+              >
+                My tools
+              </Animated.Text>
+              <Animated.Text
+                pointerEvents="none"
+                style={[
+                  styles.dashboardSubsectionTitleLeft,
+                  styles.dashboardSubsectionTitleInHeader,
+                  styles.healthCareTitleLayer,
+                  {
+                    color: c.text,
+                    opacity: healthCareScrollX.interpolate({
+                      inputRange: [0, healthCareTitleFadeW, healthCareTitleFadeW * 2],
+                      outputRange: [0, 0, 1],
                       extrapolate: "clamp",
                     }),
                   },
@@ -2208,15 +2233,41 @@ function DashboardScreen({ user }: { user: SessionUser }) {
                   scrollEventThrottle={16}
                   onMomentumScrollEnd={(e: NativeSyntheticEvent<NativeScrollEvent>) => {
                     const next = Math.round(e.nativeEvent.contentOffset.x / healthCarePageStride);
-                    setHealthCarePage(Math.max(0, Math.min(1, next)));
+                    setHealthCarePage(Math.max(0, Math.min(healthCarePageCount - 1, next)));
                   }}
                 >
                   <View style={[styles.healthCarePage, { width: healthCarePageW }]}>
-                    <View style={styles.carePageRow}>
-                      <View style={styles.carePageColumn}>{healthLeftColumnCards.map(renderToolTile)}</View>
+                    <View style={styles.toolsPageStack}>
+                      <View style={styles.carePageRow}>
+                        <DashboardGridTile
+                          width={tileWidth}
+                          label={healthHydrationCard.label}
+                          variant="grid"
+                          onPress={() => navigation.navigate(healthHydrationCard.screen)}
+                          icon={
+                            <FlareLucideIcon
+                              icon={healthHydrationCard.lucide}
+                              size={HOME_TILE_ICON_SIZE_CHECKIN}
+                              color={c.primary}
+                            />
+                          }
+                        />
+                        <DashboardGridTile
+                          width={tileWidth}
+                          label={healthBowelCard.label}
+                          variant="grid"
+                          onPress={() => navigation.navigate(healthBowelCard.screen)}
+                          icon={
+                            <FlareLucideIcon
+                              icon={healthBowelCard.lucide}
+                              size={HOME_TILE_ICON_SIZE_CHECKIN}
+                              color={c.primary}
+                            />
+                          }
+                        />
+                      </View>
                       <DashboardGridTile
-                        width={tileWidth}
-                        height={healthMedsTallHeight}
+                        width={toolsFullTileWidth}
                         label={healthMedsCard.label}
                         variant="grid"
                         onPress={() => navigation.navigate(healthMedsCard.screen)}
@@ -2230,56 +2281,55 @@ function DashboardScreen({ user }: { user: SessionUser }) {
                       />
                     </View>
                   </View>
-                  <View
-                    style={[
-                      styles.healthCarePage,
-                      { width: healthCarePageW, height: healthMedsTallHeight },
-                    ]}
-                  >
-                    <ScrollView
-                      ref={careVerticalScrollRef}
-                      nestedScrollEnabled
-                      showsVerticalScrollIndicator={false}
-                      decelerationRate="fast"
-                      snapToInterval={careVerticalPageStride}
-                      snapToAlignment="start"
-                      style={{ height: healthMedsTallHeight }}
-                      contentContainerStyle={{ gap: careVerticalPageGap }}
-                    >
-                      <View style={{ height: healthMedsTallHeight }}>
-                        <View style={styles.carePageRow}>
-                          <DashboardGridTile
-                            width={tileWidth}
-                            height={healthMedsTallHeight}
-                            label={careWeightCard.label}
-                            variant="grid"
-                            onPress={() => navigation.navigate(careWeightCard.screen)}
-                            icon={
-                              <FlareLucideIcon
-                                icon={careWeightCard.lucide}
-                                size={HOME_TILE_ICON_SIZE_CHECKIN}
-                                color={c.primary}
-                              />
-                            }
+                  <View style={[styles.healthCarePage, { width: healthCarePageW }]}>
+                    <View style={styles.carePageRow}>
+                      <View style={styles.carePageColumn}>{toolsLeftColumnCards.map(renderToolTile)}</View>
+                      <DashboardGridTile
+                        width={tileWidth}
+                        height={healthMedsTallHeight}
+                        label={toolsIntakeCard.label}
+                        variant="grid"
+                        onPress={() => navigation.navigate(toolsIntakeCard.screen)}
+                        icon={
+                          <FlareLucideIcon
+                            icon={toolsIntakeCard.lucide}
+                            size={HOME_TILE_ICON_SIZE_CHECKIN}
+                            color={c.primary}
                           />
-                          <View style={styles.carePageColumn}>{careRightColumnCards.map(renderToolTile)}</View>
-                        </View>
-                      </View>
-                      <View style={[styles.carePageColumn, { height: healthMedsTallHeight }]}>
-                        <View style={styles.carePageRow}>{careMorePageCards.map(renderToolTile)}</View>
-                      </View>
-                    </ScrollView>
+                        }
+                      />
+                    </View>
+                  </View>
+                  <View style={[styles.healthCarePage, { width: healthCarePageW }]}>
+                    <View style={styles.carePageRow}>
+                      <DashboardGridTile
+                        width={tileWidth}
+                        height={healthMedsTallHeight}
+                        label={careAppointmentsCard.label}
+                        variant="grid"
+                        onPress={() => navigation.navigate(careAppointmentsCard.screen)}
+                        icon={
+                          <FlareLucideIcon
+                            icon={careAppointmentsCard.lucide}
+                            size={HOME_TILE_ICON_SIZE_CHECKIN}
+                            color={c.primary}
+                          />
+                        }
+                      />
+                      <View style={styles.carePageColumn}>{careRightColumnCards.map(renderToolTile)}</View>
+                    </View>
                   </View>
                 </AnimatedScrollView>
               ) : null}
             </View>
 
             <View style={styles.healthCareDots}>
-              {[0, 1].map((index) => {
+              {[0, 1, 2].map((index) => {
                 const active = index === healthCarePage;
+                const key = index === 0 ? "health" : index === 1 ? "tools" : "care";
                 return (
                   <View
-                    key={index === 0 ? "health" : "care"}
+                    key={key}
                     style={[
                       styles.healthCareDot,
                       active ? styles.healthCareDotActive : null,
@@ -3345,7 +3395,7 @@ function HydrationHelpContent() {
 function AppointmentSummaryHelpContent() {
   const c = useFlareColors();
   const steps = [
-    "From Appointments, tap Appointment Summary.",
+    "From Appointments, open the Summary tab.",
     "Choose a time period — a preset (2, 4, or 6 weeks) or a custom date range.",
     "Review each section: Health Overview, Next Appointment, and What Changed.",
     "Tap Share or Email to send your summary to your clinician.",
@@ -4356,6 +4406,7 @@ function MainBottomTabBar({
           routeName === "Hydration" ||
           routeName === "Weight" ||
           routeName === "Output" ||
+          routeName === "Intake" ||
           routeName === "Bowel" ||
           routeName === "MedicalSupplies" ||
           routeName === "MedicalSuppliesSetup" ||
@@ -4628,6 +4679,8 @@ function AppTabs({
       WeightLogDetail: "Weight Log",
       Output: "Fluid Output",
       OutputLogDetail: "Fluid Output log",
+      Intake: "Food & Drink",
+      IntakeLogDetail: "Food & Drink",
       Appointments: "Appointments",
       AppointmentsPast: "Past Appointments",
       AppointmentDetail: "Appointment",
@@ -4660,6 +4713,8 @@ function AppTabs({
       route.name === "WeightLogDetail" ||
       route.name === "Output" ||
       route.name === "OutputLogDetail" ||
+      route.name === "Intake" ||
+      route.name === "IntakeLogDetail" ||
       route.name === "Appointments" ||
       route.name === "AppointmentsPast" ||
       route.name === "AppointmentDetail" ||
@@ -4708,6 +4763,11 @@ function AppTabs({
               : isLogs
                 ? () => (
                     <View style={styles.headerTitleWithHint}>
+                      <InfoHintButton
+                        title="Your Logs"
+                        message="Your Logs hub keeps all your Check-in entries together in one place. Tap a list to view your records."
+                        accessibilityLabel="About Logs"
+                      />
                       <Text
                         style={{
                           fontFamily: FLARE_FONT_FAMILY.bold,
@@ -4717,16 +4777,16 @@ function AppTabs({
                       >
                         Logs
                       </Text>
-                      <InfoHintButton
-                        title="Your Logs"
-                        message="Your Logs hub keeps all your Check-in entries together in one place. Tap a list to view your records."
-                        accessibilityLabel="About Logs"
-                      />
                     </View>
                   )
               : isAppointmentBrief
                 ? () => (
                     <View style={styles.headerTitleWithHint}>
+                      <InfoHintButton
+                        title="Appointment Summary"
+                        message="Generate a health summary from your records for your next appointment. Choose a suggested period or select your own dates."
+                        accessibilityLabel="About Appointment Summary"
+                      />
                       <Text
                         style={{
                           fontFamily: FLARE_FONT_FAMILY.bold,
@@ -4736,16 +4796,18 @@ function AppTabs({
                       >
                         Appointment Summary
                       </Text>
-                      <InfoHintButton
-                        title="Appointment Summary"
-                        message="Generate a quick health summary from your records for your next appointment. Choose a suggested time period or pick your own dates to include the information you need."
-                        accessibilityLabel="About Appointment Summary"
-                      />
                     </View>
                   )
               : isMedicalSupplies
                 ? () => (
                     <View style={styles.headerTitleWithHint}>
+                      <InfoHintButton
+                        title="My Supplies"
+                        message={
+                          "Your supplies hub keeps your supply orders together in one place. Create an order for each set of supplies you regularly need. Tap to manage, or long-press to delete."
+                        }
+                        accessibilityLabel="About My Supplies"
+                      />
                       <Text
                         style={{
                           fontFamily: FLARE_FONT_FAMILY.bold,
@@ -4755,13 +4817,6 @@ function AppTabs({
                       >
                         My Supplies
                       </Text>
-                      <InfoHintButton
-                        title="My Supplies"
-                        message={
-                          "Your supplies hub keeps your supply orders together in one place. Create an order for each set of supplies you regularly need. Tap to manage, or long-press to delete."
-                        }
-                        accessibilityLabel="About My Supplies"
-                      />
                     </View>
                   )
               : isReminders
@@ -4842,6 +4897,8 @@ function AppTabs({
             <AppStack.Screen name="WeightLogDetail">{() => <WeightLogDetailScreen user={user} />}</AppStack.Screen>
             <AppStack.Screen name="Output">{() => <OutputScreen user={user} />}</AppStack.Screen>
             <AppStack.Screen name="OutputLogDetail">{() => <OutputLogDetailScreen user={user} />}</AppStack.Screen>
+            <AppStack.Screen name="Intake">{() => <IntakeScreen user={user} />}</AppStack.Screen>
+            <AppStack.Screen name="IntakeLogDetail">{() => <IntakeLogDetailScreen user={user} />}</AppStack.Screen>
             <AppStack.Screen name="Bowel">{() => <BowelScreen user={user} />}</AppStack.Screen>
             <AppStack.Screen name="Wellbeing">{() => <WellbeingScreen user={user} />}</AppStack.Screen>
             <AppStack.Screen name="WellbeingWizard">{() => <WellbeingWizardScreen user={user} />}</AppStack.Screen>
@@ -6029,6 +6086,9 @@ const styles = StyleSheet.create({
   },
   carePageRow: {
     flexDirection: "row",
+    gap: HOME_TILE_GAP,
+  },
+  toolsPageStack: {
     gap: HOME_TILE_GAP,
   },
   moreGridLabel: {

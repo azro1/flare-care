@@ -18,7 +18,13 @@ import {
 import { formatUkDate } from "../lib/formatUkDate";
 import { withAppLockExternalUi } from "../lib/biometricLock";
 import { useAppointmentBrief } from "../lib/useAppointmentBrief";
-import { ACCOUNT_LIST_ROW_PADDING, FLARE_FONT_FAMILY, FLARE_FONT_SIZE, FLARE_LINE_HEIGHT } from "../lib/layoutConstants";
+import {
+  ACCOUNT_LIST_ROW_PADDING,
+  CARD_INNER_PADDING,
+  FLARE_FONT_FAMILY,
+  FLARE_FONT_SIZE,
+  FLARE_LINE_HEIGHT,
+} from "../lib/layoutConstants";
 import { useFlareColors } from "../theme";
 import { AppointmentBriefEmailSheet } from "./AppointmentBriefEmailSheet";
 
@@ -101,7 +107,7 @@ export function AppointmentBriefResultScreen({ user }: { user: SessionUser }) {
           <Text style={errTextStyle}>{error}</Text>
         ) : brief ? (
           <>
-            <LogHistoryCard style={[flareCardSectionStyles.container, styles.summaryCard]}>
+            <LogHistoryCard style={flareCardSectionStyles.container}>
               {[
                 <View key="period" style={styles.periodHeader}>
                   <FlareScreenSectionTitle inCard>{periodChoiceLabel}</FlareScreenSectionTitle>
@@ -115,16 +121,16 @@ export function AppointmentBriefResultScreen({ user }: { user: SessionUser }) {
                   onPressItem={onPressNavItem}
                   rowPaddingHorizontal={ACCOUNT_LIST_ROW_PADDING}
                 />,
+                <View key="actions" style={styles.actionRow}>
+                  <View style={styles.actionSlot}>
+                    <PrimaryButton title="Share" onPress={handleShare} noTopMargin />
+                  </View>
+                  <View style={styles.actionSlot}>
+                    <SecondaryButton title="Email" onPress={() => setEmailOpen(true)} noTopMargin />
+                  </View>
+                </View>,
               ]}
             </LogHistoryCard>
-            <View style={styles.actionRow}>
-              <View style={styles.actionSlot}>
-                <PrimaryButton title="Share" onPress={handleShare} noTopMargin />
-              </View>
-              <View style={styles.actionSlot}>
-                <SecondaryButton title="Email" onPress={() => setEmailOpen(true)} noTopMargin />
-              </View>
-            </View>
           </>
         ) : null}
       </AppointmentBriefScrollScreen>
@@ -135,7 +141,6 @@ export function AppointmentBriefResultScreen({ user }: { user: SessionUser }) {
 }
 
 const styles = StyleSheet.create({
-  summaryCard: { marginBottom: 0 },
   periodHeader: { gap: 4 },
   customDateRange: {
     fontSize: FLARE_FONT_SIZE.caption,
@@ -144,6 +149,7 @@ const styles = StyleSheet.create({
   },
   loadingWrap: { alignItems: "center", paddingVertical: 32, gap: 12 },
   muted: { fontSize: FLARE_FONT_SIZE.body, fontFamily: FLARE_FONT_FAMILY.regular },
-  actionRow: { flexDirection: "row", gap: 8, marginTop: 16 },
+  /** Same in-card CTA inset as My Meds detail (`takenActions`). */
+  actionRow: { flexDirection: "row", gap: 8, marginTop: CARD_INNER_PADDING },
   actionSlot: { flex: 1, minWidth: 0 },
 });

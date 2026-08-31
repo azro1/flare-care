@@ -1,8 +1,12 @@
-# Flarecare Mobile — dev notes
+# DEV_NOTES — important notes to remember about the app
 
-**For Simon + AI agents.** Implementation conventions and “don’t duplicate this” reminders. Not user-facing docs.
+Long-lived conventions, “don’t forget / don’t duplicate,” SQL checklists, and open product concerns for **Simon + AI agents**.
 
-Product overview, env vars, and how to run the app stay in **`README.md`**. Recent polish / changelog-style notes: **`CHANGELOG.md`**.
+**Not for:** new feature plans → those go in **`plans/`**.  
+**Not for:** shipping change log → **`CHANGELOG.md`**.  
+**Not for:** full feature inventory → **`FEATURES.md`**.  
+**Not for:** same-day working list → **`todays_notes.md`**.  
+**Not for:** how to run the app → **`README.md`**.
 
 **Brain-full cheat sheet — mobile Email:** phone → `EXPO_PUBLIC_WEB_API_BASE_URL` (live = `https://flare-care.vercel.app`) → web route on **`master`**/Vercel → Resend. Details under **Recurring Medical Supplies → Mobile Email → web**.
 
@@ -149,7 +153,7 @@ Use existing screens as reference — do **not** default to web-style teal hyper
 |-------|-----|
 | **`FLARE_CAPTION_HINT`** (`layoutConstants.ts`) | Muted 12px helper under hubs / destructive links. Pair with `c.textMuted` at the call site. |
 
-**Live examples:** Logs hub (`App.tsx` `LogsScreen`), Appointment Summary (`AppointmentsListPane`), Account delete hint.
+**Live examples:** Logs hub (`App.tsx` `LogsScreen`), Appointment Summary (`AppointmentBriefContent` / Appointments Summary tab), Account delete hint.
 
 ### Auth landing brand (keep in sync)
 
@@ -601,13 +605,17 @@ Separate flows, separate data:
 
 Helpers: `lib/todayPriorities.ts` (`buildTodayPriorities`, `findNearTermAppointment`). Reuses `todaySummary` from the dashboard snapshot; appointments are cache-first via `appointmentShared`. Cap 3 rows + **View all** expands in-card. Caught-up empty state still shows the section.
 
-**Look (trial):** white card + inset `surfaceSubtle` tray, **emoji** lines, no separators / not tappable — so this shelf reads differently from Check in tiles and list trays. Shelf order: Check in → **Today's priorities** → My health / My care → News (if on).
+**Look (trial):** white card + inset `surfaceSubtle` tray, **emoji** lines, no separators / not tappable — so this shelf reads differently from Check in tiles and list trays. Shelf order: Check in → **Today's priorities** → My health / My tools / My care → News (if on).
 
-### My care grid — vertical page for more tiles (open)
+### My health / My tools / My care grid
 
-**Now:** My care page 1 — **Weight** tall left (like My Meds), **Supplies** + **Fluid Output** stacked right; swipe **up** for **Appointments** + **Reports**. Vertical snap matches the horizontal care/health pager.
+**Now:** three horizontal pages (same snap as before) — no nested vertical pager.
 
-**Concern:** nested vertical scroll fights the natural home page scroll — not 100% sold. **Leave as-is for now**; brainstorm alternatives later (e.g. horizontal “more”, overflow sheet, fewer tiles on home, Reports-only affordance without a second vertical page).
+- **My health** — Hydration + Bowel on top; My Meds full-width below
+- **My tools** — Weight + Fluid Output stacked left; Food & Drink tall right (monitoring / measure-and-record)
+- **My care** — Appointments tall left; Supplies + Reports right (clinical / external)
+
+**Why:** Care swipe-up stole home scroll when users tried to scroll the dashboard. Horizontal-only keeps discovery without gesture fights.
 
 ---
 
@@ -779,6 +787,55 @@ alter table public.track_output
   add column if not exists kind text not null default 'other';
 ```
 
+### Food & Drink (`track_intake`)
+
+Optional intake diary (food / drink + time; optional ml on drinks). Run in the Supabase SQL editor before testing the hub:
+
+```sql
+create table if not exists public.track_intake (
+  id bigserial primary key,
+  user_id uuid not null references auth.users (id) on delete cascade,
+  occurred_at timestamptz not null,
+  kind text not null,
+  body text not null,
+  amount_ml numeric null,
+  notes text null,
+  created_at timestamptz not null default now()
+);
+
+create index if not exists track_intake_user_id_idx
+  on public.track_intake (user_id);
+
+create index if not exists track_intake_user_occurred_at_idx
+  on public.track_intake (user_id, occurred_at desc);
+
+alter table public.track_intake enable row level security;
+
+create policy "track_intake_select_own"
+  on public.track_intake for select
+  using (auth.uid() = user_id);
+
+create policy "track_intake_insert_own"
+  on public.track_intake for insert
+  with check (auth.uid() = user_id);
+
+create policy "track_intake_update_own"
+  on public.track_intake for update
+  using (auth.uid() = user_id)
+  with check (auth.uid() = user_id);
+
+create policy "track_intake_delete_own"
+  on public.track_intake for delete
+  using (auth.uid() = user_id);
+```
+
+**If you already created `track_intake` without `notes`**, run:
+
+```sql
+alter table public.track_intake
+  add column if not exists notes text null;
+```
+
 ---
 
 ## Looking ahead
@@ -793,7 +850,7 @@ Product backlog for later — not implementation work yet. Ship notes go in **`C
 
 ### UI — My care “more tiles” without nested vertical scroll
 
-See **Today's priorities → My care grid** above. Want a pattern that does not compete with home page scroll.
+**Done (2026-08):** split into **My health / My tools / My care** horizontal pages — see Today's priorities section above.
 
 ---
 
