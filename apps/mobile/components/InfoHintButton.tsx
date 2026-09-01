@@ -5,12 +5,12 @@ import { ConfirmModal } from "./ConfirmModal";
 import { useFlareColors } from "../theme";
 
 /**
- * Small info icon that opens a notice modal — keeps helper copy off the page
+ * Small help (?) icon that opens a notice modal — keeps helper copy off the page
  * until someone wants it.
  *
  * Works best for short “how to” tips next to field labels.
  * For longer explanations (what NSAIDs are, guidelines), prefer a Help link /
- * AccountHelp section instead — title-row (i) placement fights long/short titles.
+ * AccountHelp section instead — title-row help placement fights long/short titles.
  */
 export function InfoHintButton({
   title,
@@ -33,7 +33,7 @@ export function InfoHintButton({
         onPress={() => setOpen(true)}
         style={styles.hit}
       >
-        <FlareLucideIcon icon={FLARE_CHROME_LUCIDE.info} size={22} color={c.textMuted} />
+        <FlareLucideIcon icon={FLARE_CHROME_LUCIDE.info} size={22} color={c.textSecondary} />
       </Pressable>
       <ConfirmModal
         visible={open}
