@@ -84,8 +84,8 @@ export function HydrationProgressRing({
             ]}
           >
             <View style={[styles.innerDisc, { backgroundColor: c.primary, opacity: 0.1 }]} />
-            <View style={[styles.checkBadge, { backgroundColor: c.primary }]}>
-              <FlareLucideIcon icon={FLARE_CHROME_LUCIDE.check} size={22} color={c.white} />
+            <View style={styles.checkBadge}>
+              <FlareLucideIcon icon={FLARE_CHROME_LUCIDE.checkCircle} size={36} color={c.primary} />
             </View>
             <View style={styles.goalCopyStack}>
               <Text style={[styles.goalTitle, { color: c.text }]}>Complete</Text>
@@ -138,26 +138,25 @@ const styles = StyleSheet.create({
   /** Fixed in the disc — text spacing below won’t shift it. */
   checkBadge: {
     position: "absolute",
-    top: 20,
+    top: 18,
     left: (INNER_DISC - CHECK_BADGE) / 2,
     width: CHECK_BADGE,
     height: CHECK_BADGE,
-    borderRadius: CHECK_BADGE / 2,
     alignItems: "center",
     justifyContent: "center",
   },
   goalCopyStack: {
     position: "absolute",
-    top: 20 + CHECK_BADGE + 8,
+    top: 18 + CHECK_BADGE + 6,
     left: 12,
     right: 12,
     alignItems: "center",
     gap: 4,
   },
   goalTitle: {
-    fontSize: 17,
+    fontSize: 18,
     fontFamily: FLARE_FONT_FAMILY.extrabold,
-    lineHeight: 21,
+    lineHeight: 22,
     textAlign: "center",
   },
   count: {
@@ -176,9 +175,9 @@ const styles = StyleSheet.create({
     textAlign: "center",
   },
   goalCaption: {
-    fontSize: 15,
+    fontSize: FLARE_FONT_SIZE.muted,
     fontFamily: FLARE_FONT_FAMILY.regular,
-    lineHeight: 20,
+    lineHeight: FLARE_LINE_HEIGHT.muted,
     textAlign: "center",
   },
 });

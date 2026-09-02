@@ -13,6 +13,7 @@ import {
   useWindowDimensions,
 } from "react-native";
 import { Pressable as GHPressable, ScrollView as GHScrollView } from "react-native-gesture-handler";
+import LottieView from "lottie-react-native";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 import Svg, { Path } from "react-native-svg";
 import { formatUkGreetingDate } from "../lib/formatUkDate";
@@ -46,20 +47,27 @@ const AnimatedGHScrollView = Animated.createAnimatedComponent(GHScrollView);
 /** Hint on Meds page only — Hydration is the last Activity page (graph parked). */
 const ACTIVITY_SWIPE_HINT = "Swipe for more";
 
-/** Wider tube — fills more of the band vs the old 34px hairline. */
-const PULSE_METER_HEIGHT = 80;
-const PULSE_METER_WIDTH = 88;
-const PULSE_METER_RADIUS = PULSE_METER_WIDTH / 2;
+const HYDRATION_ACTIVITY_LOTTIE = require("../assets/activity/hydration-bottle.json");
+const MEDS_ACTIVITY_LOTTIE = require("../assets/activity/meds-pill.json");
+/** Hero — enough for the jump, not a tall empty band. */
+const ACTIVITY_LOTTIE_SIZE = 140;
+/**
+ * Activity sheet vertical rhythm (top → bottom):
+ * grabber → title row → support line → Lottie → count → dots
+ */
+const ACTIVITY_GRABBER_BOTTOM = 20;
+const ACTIVITY_TITLE_TO_SUPPORT = 10;
+const ACTIVITY_HEADER_TO_HERO = 14;
+const ACTIVITY_ICON_TO_COUNT = 6;
+const ACTIVITY_CONTENT_TO_DOTS = 14;
+
 /** Card score — readable, not a hero panel. */
 const PULSE_SCORE_SIZE = 34;
-/**
- * Wave tile must stay ≥ meter width while sliding by one period
- * (`WAVE_SVG_W - WAVE_CYCLE >= PULSE_METER_WIDTH` → cycle ≥ meter width).
- */
-const WAVE_CYCLE = PULSE_METER_WIDTH;
-const WAVE_AMP = 4;
-const WAVE_SVG_W = WAVE_CYCLE * 2;
-const WAVE_SVG_H = PULSE_METER_HEIGHT + WAVE_AMP * 2;
+
+/** Tall rectangle meter — stretches full band width. */
+const PULSE_METER_HEIGHT = 132;
+const PULSE_METER_RADIUS = 16;
+const WAVE_AMP = 8;
 
 /** Closed area: sine surface on top, solid body below — the liquid itself (cadet fill). */
 function buildSineLiquidPath(width: number, height: number, amplitude: number, phase = 0, cycles = 2) {
@@ -76,8 +84,50 @@ function buildSineLiquidPath(width: number, height: number, amplitude: number, p
   return d;
 }
 
-const LIQUID_FRONT_PATH = buildSineLiquidPath(WAVE_SVG_W, WAVE_SVG_H, WAVE_AMP, 0, 2);
-const LIQUID_BACK_PATH = buildSineLiquidPath(WAVE_SVG_W, WAVE_SVG_H, WAVE_AMP * 0.9, Math.PI * 0.65, 2);
+function ActivityLottieHero({
+  source,
+  detail,
+  detailColor,
+  complete,
+  completeColor,
+  size = ACTIVITY_LOTTIE_SIZE,
+}: {
+  source: object;
+  detail: string;
+  detailColor: string;
+  complete?: boolean;
+  completeColor: string;
+  size?: number;
+}) {
+  return (
+    <View style={styles.activityHeroBlock}>
+      <View style={[styles.activityLottieFrame, { width: size, height: size }]}>
+        {complete ? (
+          <FlareLucideIcon
+            icon={FLARE_CHROME_LUCIDE.checkCircle}
+            size={Math.round(size * 0.75)}
+            color={completeColor}
+          />
+        ) : (
+          <LottieView
+            source={source}
+            autoPlay
+            loop
+            style={{ width: size, height: size }}
+          />
+        )}
+      </View>
+      <Text
+        style={[styles.activityHeroDetail, { color: detailColor }]}
+        numberOfLines={1}
+        accessibilityRole="text"
+        accessibilityLabel={detail}
+      >
+        {detail}
+      </Text>
+    </View>
+  );
+}
 
 function PulseMeterBar({
   ratio,
@@ -95,12 +145,25 @@ function PulseMeterBar({
   const heightAnim = useRef(new Animated.Value(0)).current;
   const waveFrontX = useRef(new Animated.Value(0)).current;
   const waveBackX = useRef(new Animated.Value(0)).current;
+  const [meterWidth, setMeterWidth] = useState(0);
   const clamped = Math.max(0, Math.min(1, ratio));
   const isComplete = clamped >= 1;
   const target = clamped * PULSE_METER_HEIGHT;
   /** Wave only while filling — at 100% use solid so troughs don't leave a gap at the top. */
-  const showWave = !isComplete && target > 8;
+  const showWave = meterWidth > 0 && !isComplete && target > WAVE_AMP + 2;
   const showSolid = isComplete || (target > 2 && !showWave);
+
+  const waveCycle = meterWidth;
+  const waveSvgW = waveCycle * 2;
+  const waveSvgH = PULSE_METER_HEIGHT + WAVE_AMP * 2;
+  const liquidFrontPath = useMemo(
+    () => (waveCycle > 0 ? buildSineLiquidPath(waveSvgW, waveSvgH, WAVE_AMP, 0, 2) : ""),
+    [waveCycle, waveSvgH, waveSvgW],
+  );
+  const liquidBackPath = useMemo(
+    () => (waveCycle > 0 ? buildSineLiquidPath(waveSvgW, waveSvgH, WAVE_AMP * 0.9, Math.PI * 0.65, 2) : ""),
+    [waveCycle, waveSvgH, waveSvgW],
+  );
 
   useEffect(() => {
     Animated.timing(heightAnim, {
@@ -112,7 +175,7 @@ function PulseMeterBar({
   }, [heightAnim, target]);
 
   useEffect(() => {
-    if (!showWave) {
+    if (!showWave || waveCycle <= 0) {
       waveFrontX.stopAnimation();
       waveBackX.stopAnimation();
       waveFrontX.setValue(0);
@@ -123,7 +186,7 @@ function PulseMeterBar({
     waveBackX.setValue(0);
     const frontLoop = Animated.loop(
       Animated.timing(waveFrontX, {
-        toValue: -WAVE_CYCLE,
+        toValue: -waveCycle,
         duration: 2200,
         easing: Easing.linear,
         useNativeDriver: true,
@@ -131,7 +194,7 @@ function PulseMeterBar({
     );
     const backLoop = Animated.loop(
       Animated.timing(waveBackX, {
-        toValue: -WAVE_CYCLE,
+        toValue: -waveCycle,
         duration: 3400,
         easing: Easing.linear,
         useNativeDriver: true,
@@ -143,11 +206,24 @@ function PulseMeterBar({
       frontLoop.stop();
       backLoop.stop();
     };
-  }, [showWave, waveFrontX, waveBackX]);
+  }, [showWave, waveBackX, waveCycle, waveFrontX]);
 
   return (
     <View style={styles.pulseMeterCol}>
-      <View style={[styles.pulseMeterTrack, { backgroundColor: trackColor, height: PULSE_METER_HEIGHT }]}>
+      <View
+        onLayout={(e) => {
+          const w = Math.round(e.nativeEvent.layout.width);
+          if (w > 0) setMeterWidth((prev) => (prev === w ? prev : w));
+        }}
+        style={[
+          styles.pulseMeterTrack,
+          {
+            backgroundColor: trackColor,
+            height: PULSE_METER_HEIGHT,
+            borderRadius: PULSE_METER_RADIUS,
+          },
+        ]}
+      >
         <Animated.View style={[styles.pulseMeterFill, { height: heightAnim }]}>
           {showSolid ? (
             <View style={[StyleSheet.absoluteFillObject, { backgroundColor: fillColor }]} />
@@ -158,22 +234,22 @@ function PulseMeterBar({
                 pointerEvents="none"
                 style={[
                   styles.pulseMeterWaveLayer,
-                  { transform: [{ translateX: waveBackX }] },
+                  { width: waveSvgW, height: waveSvgH, transform: [{ translateX: waveBackX }] },
                 ]}
               >
-                <Svg width={WAVE_SVG_W} height={WAVE_SVG_H}>
-                  <Path d={LIQUID_BACK_PATH} fill={fillColor} opacity={0.42} />
+                <Svg width={waveSvgW} height={waveSvgH}>
+                  <Path d={liquidBackPath} fill={fillColor} opacity={0.42} />
                 </Svg>
               </Animated.View>
               <Animated.View
                 pointerEvents="none"
                 style={[
                   styles.pulseMeterWaveLayer,
-                  { transform: [{ translateX: waveFrontX }] },
+                  { width: waveSvgW, height: waveSvgH, transform: [{ translateX: waveFrontX }] },
                 ]}
               >
-                <Svg width={WAVE_SVG_W} height={WAVE_SVG_H}>
-                  <Path d={LIQUID_FRONT_PATH} fill={fillColor} />
+                <Svg width={waveSvgW} height={waveSvgH}>
+                  <Path d={liquidFrontPath} fill={fillColor} />
                 </Svg>
               </Animated.View>
             </>
@@ -391,7 +467,6 @@ export function TodayActivitiesModal({
 
   const overlayOpacity = useRef(new Animated.Value(0)).current;
   const sheetY = useRef(new Animated.Value(windowHeight)).current;
-  const scorePulse = useRef(new Animated.Value(1)).current;
   const shellScrollX = useRef(new Animated.Value(0)).current;
   const onCloseRef = useRef(onClose);
   onCloseRef.current = onClose;
@@ -474,7 +549,6 @@ export function TodayActivitiesModal({
     sheetY.stopAnimation();
     overlayOpacity.setValue(0);
     sheetY.setValue(windowHeightRef.current);
-    scorePulse.setValue(1);
     shellScrollX.setValue(0);
     requestAnimationFrame(() => {
       pagerRef.current?.scrollTo({ x: 0, animated: false });
@@ -526,6 +600,7 @@ export function TodayActivitiesModal({
   ] as const;
 
   const taskIndex = shellIndex;
+  const activeActivity = activities[Math.max(0, Math.min(taskIndex, activities.length - 1))];
 
   const pageStatusLine =
     taskIndex === 0
@@ -542,76 +617,23 @@ export function TodayActivitiesModal({
           ? "No water consumed today"
           : "Keep going — still time today";
 
-  const pulseScoreToFull = () => {
-    Animated.sequence([
-      Animated.timing(scorePulse, {
-        toValue: 1.06,
-        duration: 160,
-        easing: Easing.out(Easing.quad),
-        useNativeDriver: true,
-      }),
-      Animated.spring(scorePulse, {
-        toValue: 1,
-        friction: 5,
-        tension: 120,
-        useNativeDriver: true,
-      }),
-    ]).start();
-  };
-
   const onShellPagerEnd = (e: NativeSyntheticEvent<NativeScrollEvent>) => {
     if (pageW <= 0) return;
     const next = Math.round(e.nativeEvent.contentOffset.x / pageW);
     setShellIndex(Math.max(0, Math.min(shellPageCount - 1, next)));
   };
 
-  const renderTaskPage = (activity: (typeof activities)[number]) => {
-    const showSwipeHint = activity.id === "meds";
-    return (
+  const renderTaskPage = (activity: (typeof activities)[number]) => (
     <View style={[styles.activityPage, { width: pageW }]}>
-      <View style={styles.pulseMeters}>
-        <PulseMeterBar
-          ratio={activity.ratio}
-          label={activity.meterLabel}
-          fillColor={c.primary}
-          trackColor={c.surfaceSubtle}
-          captionColor={c.textMuted}
-        />
-      </View>
-      <View
-        accessibilityRole="text"
-        accessibilityLabel={
-          showSwipeHint
-            ? `${activity.title}, ${activity.detail}. ${ACTIVITY_SWIPE_HINT}`
-            : `${activity.title}, ${activity.detail}`
-        }
-        style={styles.pulseRowTray}
-      >
-        <FlareLucideIcon
-          icon={activity.icon}
-          size={INSTRUCTION_CARD_ICON_SIZE}
-          color={c.primary}
-        />
-        <View style={styles.pulseRowText}>
-          <View style={styles.pulseRowTitleRow}>
-            <Text style={[styles.pulseRowTitle, { color: c.text }]}>{activity.title}</Text>
-            {showSwipeHint ? (
-              <Text style={[styles.pulseRowTapHint, { color: c.textMuted }]}>{ACTIVITY_SWIPE_HINT}</Text>
-            ) : null}
-          </View>
-          <Text style={[styles.slabMeta, { color: c.textMuted }]}>{activity.detail}</Text>
-        </View>
-        {activity.complete ? (
-          <FlareLucideIcon
-            icon={FLARE_CHROME_LUCIDE.checkCircle}
-            size={20}
-            color={c.primary}
-          />
-        ) : null}
-      </View>
+      <ActivityLottieHero
+        source={activity.id === "meds" ? MEDS_ACTIVITY_LOTTIE : HYDRATION_ACTIVITY_LOTTIE}
+        detail={activity.detail}
+        detailColor={c.textSecondary}
+        complete={activity.complete}
+        completeColor={c.primary}
+      />
     </View>
-    );
-  };
+  );
 
   if (!mounted) return null;
 
@@ -684,22 +706,26 @@ export function TodayActivitiesModal({
                       style={[styles.shellScoreSticky, { width: pageW }]}
                     >
                       <View style={styles.modalScoreWash}>
-                        <Animated.View style={[styles.pulseScore, { transform: [{ scale: scorePulse }] }]}>
-                          <CountingPercentLabel
-                            visible={visible}
-                            target={copy.pulsePct}
-                            color={c.primary}
-                            onReachFull={pulseScoreToFull}
-                          />
-                          <View style={styles.pulseStatusRow}>
+                        <View
+                          style={styles.activityHeaderBlock}
+                          accessibilityRole="header"
+                          accessibilityLabel={`${activeActivity.title}. ${pageStatusLine}`}
+                        >
+                          <View style={styles.activityHeaderTitleRow}>
                             <Text
-                              style={[styles.pulseHeroSub, { color: c.textSecondary }]}
+                              style={[styles.activityHeaderTitle, { color: c.text }]}
                               numberOfLines={1}
                             >
-                              {pageStatusLine}
+                              {activeActivity.title}
                             </Text>
                           </View>
-                        </Animated.View>
+                          <Text
+                            style={[styles.activityHeaderEncourage, { color: c.textMuted }]}
+                            numberOfLines={1}
+                          >
+                            {pageStatusLine}
+                          </Text>
+                        </View>
                       </View>
                     </View>
 
@@ -744,9 +770,9 @@ export function TodayActivitiesModal({
                                 : undefined
                             }
                           >
-                            {/* Score slot + former sheetCard gap (16) before the meter band. */}
-                            <View style={{ height: Math.max(scoreHeight, 1) + 16 }} />
-                            <View style={styles.activityTaskBandPad}>{renderTaskPage(activity)}</View>
+                            {/* Sticky header clearance + step into hero. */}
+                            <View style={{ height: Math.max(scoreHeight, 1) + ACTIVITY_HEADER_TO_HERO }} />
+                            {renderTaskPage(activity)}
                           </View>
                         ))}
                       </AnimatedGHScrollView>
@@ -1025,13 +1051,13 @@ const styles = StyleSheet.create({
     paddingHorizontal: 24,
     paddingTop: 0,
     paddingBottom: 0,
-    gap: 16,
+    gap: 0,
     overflow: "hidden",
   },
   sheetGrabberWrap: {
     alignItems: "center",
     paddingTop: 10,
-    paddingBottom: 8,
+    paddingBottom: ACTIVITY_GRABBER_BOTTOM,
   },
   sheetGrabber: {
     width: 40,
@@ -1040,6 +1066,43 @@ const styles = StyleSheet.create({
   },
   modalScoreWash: {
     alignSelf: "stretch",
+  },
+  activityHeaderBlock: {
+    alignSelf: "stretch",
+    alignItems: "center",
+    gap: ACTIVITY_TITLE_TO_SUPPORT,
+    paddingHorizontal: 36,
+    paddingTop: 8,
+    paddingBottom: 0,
+  },
+  activityHeaderTitleRow: {
+    flexDirection: "row",
+    alignItems: "center",
+    justifyContent: "center",
+    gap: 8,
+    maxWidth: "100%",
+  },
+  activityHeaderTitle: {
+    fontSize: FLARE_FONT_SIZE.sectionTitle,
+    lineHeight: FLARE_LINE_HEIGHT.sectionTitle,
+    fontFamily: FLARE_FONT_FAMILY.extrabold,
+    textAlign: "center",
+  },
+  activityHeaderEncourage: {
+    fontSize: FLARE_FONT_SIZE.subhead,
+    lineHeight: FLARE_LINE_HEIGHT.subhead,
+    fontFamily: FLARE_FONT_FAMILY.medium,
+    textAlign: "center",
+  },
+  activityHeroBlock: {
+    alignItems: "center",
+    gap: ACTIVITY_ICON_TO_COUNT,
+  },
+  activityHeroDetail: {
+    fontSize: FLARE_FONT_SIZE.subhead,
+    lineHeight: FLARE_LINE_HEIGHT.subhead,
+    fontFamily: FLARE_FONT_FAMILY.medium,
+    textAlign: "center",
   },
   modalHeaderRow: {
     flexDirection: "row",
@@ -1071,10 +1134,10 @@ const styles = StyleSheet.create({
     alignSelf: "stretch",
     position: "relative",
     overflow: "visible",
-    gap: 16,
+    gap: ACTIVITY_CONTENT_TO_DOTS,
   },
   activityTaskBandPad: {
-    paddingTop: 16,
+    paddingTop: 0,
   },
   activitySwipeBand: {
     alignSelf: "stretch",
@@ -1093,10 +1156,10 @@ const styles = StyleSheet.create({
   },
   activityPage: {
     alignItems: "center",
-    gap: 16,
   },
   activityFooter: {
     alignItems: "center",
+    paddingTop: 0,
   },
   activityDots: {
     flexDirection: "row",
@@ -1159,33 +1222,34 @@ const styles = StyleSheet.create({
     textAlign: "center",
   },
   pulseMeters: {
-    flexDirection: "row",
-    gap: CONFIRM_MODAL_ACTIONS_GAP + HOME_TILE_GAP,
-    alignItems: "flex-end",
+    alignSelf: "stretch",
+    alignItems: "center",
     justifyContent: "center",
   },
-  pulseMeterCol: { alignItems: "center", gap: 6 },
+  pulseMeterCol: { alignSelf: "stretch", alignItems: "center", gap: 6 },
+  activityLottieFrame: {
+    width: ACTIVITY_LOTTIE_SIZE,
+    height: ACTIVITY_LOTTIE_SIZE,
+    alignItems: "center",
+    justifyContent: "center",
+  },
   pulseMeterTrack: {
-    width: PULSE_METER_WIDTH,
-    borderRadius: PULSE_METER_RADIUS,
+    alignSelf: "stretch",
+    width: "100%",
     overflow: "hidden",
     justifyContent: "flex-end",
   },
   pulseMeterFill: {
     width: "100%",
-    borderBottomLeftRadius: PULSE_METER_RADIUS,
-    borderBottomRightRadius: PULSE_METER_RADIUS,
     overflow: "hidden",
   },
   pulseMeterWaveLayer: {
     position: "absolute",
     top: 0,
     left: 0,
-    width: WAVE_SVG_W,
-    height: WAVE_SVG_H,
   },
   pulseMeterCaption: {
-    fontSize: FLARE_FONT_SIZE.caption,
+    fontSize: FLARE_FONT_SIZE.subhead,
     fontFamily: FLARE_FONT_FAMILY.medium,
   },
   pulseRowInCard: {
@@ -1207,7 +1271,8 @@ const styles = StyleSheet.create({
     flexDirection: "row",
     alignItems: "center",
     gap: HOME_TILE_GAP,
-    paddingVertical: 8,
+    paddingTop: 2,
+    paddingBottom: 4,
     paddingHorizontal: 0,
   },
   pulseRows: {

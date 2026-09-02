@@ -1,4 +1,3 @@
-import { Ionicons } from "@expo/vector-icons";
 import { FLARE_CHROME_LUCIDE, FlareLucideIcon } from "../lib/flareLucideIcons";
 import React, { useEffect, useRef } from "react";
 import { Animated, Easing, StyleSheet, Text, View } from "react-native";
@@ -131,12 +130,7 @@ export function SuccessNoticeScreen({
 
   const card = (
     <View style={fullScreen ? styles.entryCard : styles.card}>
-      {fullScreen ? (
-        // Logout / account-deleted only — sole allowed filled glyph in the app.
-        <Ionicons name="checkmark-circle" size={72} color={c.primary} accessibilityIgnoresInvertColors />
-      ) : (
-        <FlareLucideIcon icon={FLARE_CHROME_LUCIDE.checkCircle} size={72} color={c.primary} />
-      )}
+      <FlareLucideIcon icon={FLARE_CHROME_LUCIDE.checkCircle} size={72} color={c.primary} />
       <Text style={[fullScreen ? styles.entryTitle : styles.title, { color: c.text }]}>{title}</Text>
       <Text style={[fullScreen ? styles.entryMessage : styles.message, { color: c.textMuted }]}>{message}</Text>
       <View style={styles.actions}>
