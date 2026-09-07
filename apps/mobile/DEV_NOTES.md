@@ -12,6 +12,12 @@ Long-lived conventions, “don’t forget / don’t duplicate,” SQL checklists
 
 ---
 
+## Idea — Activity Lottie soft disc (from MH complete)
+
+**Idea (2026-09-07):** My Hydration’s completed state uses a soft transparent primary disc behind the check + “Completed” copy (`HydrationProgressRing` inner disc). Might reuse that same treatment in the **Activity** sheet around the meds/hydration Lottie heroes — consistency + clearer visual framing. Not started; just a note.
+
+---
+
 ## Open — OS display / font size (accessibility)
 
 **Status (2026-09-07):** Brand wordmark locked with `allowFontScaling={false}` on `FlareBrandLockup` — splash/sign-in stopped clipping; full **XXL** pass looked solid across the app (quick check; wizards not deep-tested). Most layouts already flex OK.
