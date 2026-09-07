@@ -107,7 +107,7 @@ export function buildTodayPriorities(input: {
     items.push({
       id: "supplies",
       emoji: "📦",
-      text: input.suppliesStatus === "overdue" ? "Order overdue" : "Order due",
+      text: input.suppliesStatus === "overdue" ? "Supplies overdue" : "Supplies due",
     });
   }
 

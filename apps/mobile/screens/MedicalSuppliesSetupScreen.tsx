@@ -252,19 +252,19 @@ export function MedicalSuppliesSetupScreen({
   const finishSetup = async () => {
     const name = sanitizeKitName(kitName);
     if (!name) {
-      setStepError("Give this order a name.");
+      setStepError("Give this crate a name.");
       setStep(STEP_NAME);
       return;
     }
     // Prefer live resolve; fall back to last confirmed cadenceDays from the cadence step.
     const days = resolveCadenceDays() ?? normalizeCadenceDays(cadenceDays);
     if (!Number.isFinite(days) || days < 1) {
-      setStepError("Enter how many weeks between orders (1–52).");
+      setStepError("Enter how many weeks between restocks (1–52).");
       setStep(STEP_CADENCE);
       return;
     }
     if (!nextDueDate) {
-      setStepError("Pick when your next order is due.");
+      setStepError("Pick when this crate is next due.");
       setStep(STEP_DUE);
       return;
     }
@@ -315,13 +315,13 @@ export function MedicalSuppliesSetupScreen({
     setStepError("");
     if (step === STEP_NAME) {
       if (!sanitizeKitName(kitName)) {
-        setStepError("Give this order a name.");
+        setStepError("Give this crate a name.");
         return;
       }
     }
     if (step === STEP_CADENCE) {
       if (resolveCadenceDays() == null) {
-        setStepError("Enter how many weeks between orders (1–52).");
+        setStepError("Enter how many weeks between restocks (1–52).");
         return;
       }
       const days = resolveCadenceDays();
@@ -365,13 +365,13 @@ export function MedicalSuppliesSetupScreen({
   const questionTitle = useMemo(() => {
     switch (step) {
       case STEP_INTRO:
-        return "Set up an order";
+        return "Create a Supply Crate";
       case STEP_NAME:
-        return "Order name";
+        return "Crate name";
       case STEP_CADENCE:
-        return "How often do you order?";
+        return "How often do you restock this crate?";
       case STEP_DUE:
-        return "When is your next order due?";
+        return "When is this crate next due?";
       default:
         return "";
     }
@@ -398,7 +398,7 @@ export function MedicalSuppliesSetupScreen({
         {step === STEP_DUE ? (
           <InfoHintTitleRow
             hintTitle="Due-day reminder"
-            hintMessage="You'll get a phone notification at 9:00am on this date when the order has items and notifications are on."
+            hintMessage="You'll get a phone notification at 9:00am on this date when the crate has items and notifications are on."
             hintAccessibilityLabel="About due-day reminders"
           >
             <Text style={[styles.question, styles.questionBesideHint, { color: c.text }]}>
@@ -411,20 +411,20 @@ export function MedicalSuppliesSetupScreen({
 
         {step === STEP_INTRO ? (
           <Text style={[styles.support, { color: c.textMuted }]}>
-            Set up orders once, then reuse them whenever you need to reorder.
+            Supply crates are containers you can reuse whenever you need to restock.
           </Text>
         ) : null}
 
         {step === STEP_NAME ? (
           <>
             <Text style={[styles.support, { color: c.textMuted }]}>
-              Let&apos;s give your order a name so you can easily identify it.
+              Give your crate a name so you can easily identify it.
             </Text>
             <View style={styles.nameContent}>
               <FlareTextInput
                 value={kitName}
                 onChangeText={setKitName}
-                placeholder="e.g. Home stoma"
+                placeholder="e.g. My tpn, Stoma"
                 autoCapitalize="sentences"
                 style={styles.fieldInput}
               />

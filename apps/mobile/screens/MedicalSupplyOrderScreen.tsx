@@ -92,8 +92,8 @@ export function MedicalSupplyOrderScreen({ user }: { user: SessionUser }) {
       <View style={styles.headerHintSlot}>
         <InfoHintButton
           title={headerName}
-          message="Tap an item to edit it. Long-press to select and remove."
-          accessibilityLabel="About this order"
+          message="Tap an item to edit, long-press to select and remove."
+          accessibilityLabel="About this supply crate"
         />
       </View>
     ),
@@ -156,11 +156,8 @@ export function MedicalSupplyOrderScreen({ user }: { user: SessionUser }) {
   useLayoutEffect(() => {
     if (selectionMode) return;
     navigation.setOptions({
-      headerTitleAlign: "left",
-      /** Stop long titles under the ? — ellipsis with a clear gap. */
-      headerTitleContainerStyle: {
-        right: 56,
-      },
+      headerTitleAlign: "center",
+      headerTitleContainerStyle: undefined,
       headerTitle: headerName,
       headerRight: () => renderOrderHint(),
     });

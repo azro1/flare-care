@@ -77,7 +77,7 @@ export function MedicalSuppliesScreen({ user }: { user: SessionUser }) {
       <InfoHintButton
         title="My Supplies"
         message={
-          "Your supplies hub keeps your supply orders together in one place. Create an order for each set of supplies you regularly need. Tap to manage, or long-press to delete."
+          "Your supplies hub keeps your supply crates together in one place. Create a crate for each set of supplies you regularly need. Tap to manage, or long-press to delete."
         }
         accessibilityLabel="About My Supplies"
       />
