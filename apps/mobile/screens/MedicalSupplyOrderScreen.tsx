@@ -89,11 +89,13 @@ export function MedicalSupplyOrderScreen({ user }: { user: SessionUser }) {
   const stockIds = useMemo(() => items.map((row) => String(row.id)), [items]);
   const renderOrderHint = useCallback(
     () => (
-      <InfoHintButton
-        title={headerName}
-        message="Tap an item to edit it. Long-press to select and remove."
-        accessibilityLabel="About this order"
-      />
+      <View style={styles.headerHintSlot}>
+        <InfoHintButton
+          title={headerName}
+          message="Tap an item to edit it. Long-press to select and remove."
+          accessibilityLabel="About this order"
+        />
+      </View>
     ),
     [headerName],
   );
@@ -154,6 +156,11 @@ export function MedicalSupplyOrderScreen({ user }: { user: SessionUser }) {
   useLayoutEffect(() => {
     if (selectionMode) return;
     navigation.setOptions({
+      headerTitleAlign: "left",
+      /** Stop long titles under the ? — ellipsis with a clear gap. */
+      headerTitleContainerStyle: {
+        right: 56,
+      },
       headerTitle: headerName,
       headerRight: () => renderOrderHint(),
     });
@@ -436,6 +443,9 @@ export function MedicalSupplyOrderScreen({ user }: { user: SessionUser }) {
 
 const styles = StyleSheet.create({
   centered: { flex: 1, alignItems: "center", justifyContent: "center" },
+  headerHintSlot: {
+    paddingLeft: 10,
+  },
   statusCopy: { gap: STACKED_LINE_GAP },
   statusCard: { padding: 18 },
   statusHeadline: {
