@@ -37,6 +37,7 @@ import {
   SUPPLIES_SETUP_STEP_SCROLL_BOTTOM,
   SUPPLIES_SETUP_STEP_SUPPORT,
   SUPPLIES_SETUP_STEP_TITLE,
+  SUPPLIES_SETUP_STEP_TITLE_TO_OPTIONS,
   SCREEN_EDGE_PADDING,
   bottomTabBarScrollInset,
 } from "../lib/layoutConstants";
@@ -369,7 +370,7 @@ export function MedicalSuppliesSetupScreen({
       case STEP_NAME:
         return "Crate name";
       case STEP_CADENCE:
-        return "How often do you restock this crate?";
+        return "How often do you need to restock this crate?";
       case STEP_DUE:
         return "When is this crate next due?";
       default:
@@ -405,9 +406,9 @@ export function MedicalSuppliesSetupScreen({
               {questionTitle}
             </Text>
           </InfoHintTitleRow>
-        ) : (
+        ) : step !== STEP_CADENCE ? (
           <Text style={[styles.question, { color: c.text }]}>{questionTitle}</Text>
-        )}
+        ) : null}
 
         {step === STEP_INTRO ? (
           <Text style={[styles.support, { color: c.textMuted }]}>
@@ -418,7 +419,7 @@ export function MedicalSuppliesSetupScreen({
         {step === STEP_NAME ? (
           <>
             <Text style={[styles.support, { color: c.textMuted }]}>
-              Give your crate a name so you can easily identify it.
+              Give your crate a name so you can easily identify it amongst your supplies.
             </Text>
             <View style={styles.nameContent}>
               <FlareTextInput
@@ -429,24 +430,14 @@ export function MedicalSuppliesSetupScreen({
                 style={styles.fieldInput}
               />
               {stepError ? <Text style={[errTextStyle, styles.stepErrorInContent]}>{stepError}</Text> : null}
-              <View style={styles.nameActions}>
-                <PrimaryButton
-                  title={saving ? "Saving…" : "Next"}
-                  onPress={goNext}
-                  disabled={saving}
-                  noTopMargin
-                />
-                {startStep >= STEP_NAME ? (
-                  <SecondaryButton title="Back" onPress={stepBack} disabled={saving} noTopMargin />
-                ) : null}
-              </View>
             </View>
           </>
         ) : null}
 
         {step === STEP_CADENCE ? (
-          <View style={styles.block}>
-            <View style={styles.radioList}>
+          <View style={styles.cadenceStack}>
+            <Text style={[styles.questionInStack, { color: c.text }]}>{questionTitle}</Text>
+            <View style={styles.radioListInStack}>
               {SUPPLY_CADENCE_OPTIONS.map((opt) => (
                 <RadioRow
                   key={opt.days}
@@ -470,7 +461,7 @@ export function MedicalSuppliesSetupScreen({
               />
             </View>
             {cadenceCustom ? (
-              <View style={styles.customWeeks}>
+              <View style={styles.customWeeksInStack}>
                 <FlareScreenSectionTitle compact>Every how many weeks?</FlareScreenSectionTitle>
                 <FlareTextInput
                   value={customWeeksText}
@@ -484,6 +475,18 @@ export function MedicalSuppliesSetupScreen({
                 />
               </View>
             ) : null}
+            {stepError ? <Text style={errTextStyle}>{stepError}</Text> : null}
+            <View style={styles.actionsInStack}>
+              <PrimaryButton
+                title={saving ? "Saving…" : "Next"}
+                onPress={goNext}
+                disabled={saving}
+                noTopMargin
+              />
+              {step > STEP_NAME || startStep >= STEP_NAME ? (
+                <SecondaryButton title="Back" onPress={stepBack} disabled={saving} noTopMargin />
+              ) : null}
+            </View>
           </View>
         ) : null}
 
@@ -507,10 +510,17 @@ export function MedicalSuppliesSetupScreen({
           </View>
         ) : null}
 
-        {stepError && step !== STEP_NAME ? <Text style={[errTextStyle, styles.stepError]}>{stepError}</Text> : null}
+        {stepError && step !== STEP_NAME && step !== STEP_CADENCE ? (
+          <Text style={[errTextStyle, styles.stepError]}>{stepError}</Text>
+        ) : null}
 
-        {step !== STEP_NAME ? (
-          <View style={styles.actions}>
+        {step !== STEP_CADENCE ? (
+          <View
+            style={[
+              styles.actions,
+              step === STEP_INTRO ? styles.actionsAfterSupport : null,
+            ]}
+          >
             <PrimaryButton
               title={
                 saving
@@ -557,14 +567,23 @@ const styles = StyleSheet.create({
   },
   support: { ...SUPPLIES_SETUP_STEP_SUPPORT },
   nameContent: { gap: SUPPLIES_SETUP_STEP_BLOCK_GAP },
-  nameActions: { gap: SUPPLIES_SETUP_STEP_FOOTER.gap },
   block: { gap: SUPPLIES_SETUP_STEP_BLOCK_GAP },
-  fieldInput: { marginTop: 0 },
-  radioList: { ...SUPPLIES_SETUP_STEP_OPTION_LIST },
-  customWeeks: {
-    gap: SUPPLIES_SETUP_STEP_BLOCK_GAP,
-    marginTop: SUPPLIES_SETUP_STEP_OPTION_LIST.marginTop,
+  /** One gap for title ↔ radios ↔ Next — cannot drift apart. */
+  cadenceStack: { gap: SUPPLIES_SETUP_STEP_TITLE_TO_OPTIONS },
+  questionInStack: {
+    ...SUPPLIES_SETUP_STEP_TITLE,
+    marginBottom: 0,
   },
+  radioListInStack: {
+    gap: SUPPLIES_SETUP_STEP_OPTION_LIST.gap,
+  },
+  customWeeksInStack: {
+    gap: SUPPLIES_SETUP_STEP_BLOCK_GAP,
+  },
+  actionsInStack: {
+    gap: SUPPLIES_SETUP_STEP_FOOTER.gap,
+  },
+  fieldInput: { marginTop: 0 },
   radioRow: { ...SUPPLIES_SETUP_STEP_RADIO_ROW },
   radioOuter: {
     width: RADIO_OUTER_SIZE,
@@ -597,6 +616,8 @@ const styles = StyleSheet.create({
   stepError: { marginTop: SUPPLIES_SETUP_STEP_BLOCK_GAP },
   stepErrorInContent: { marginTop: 0 },
   actions: { ...SUPPLIES_SETUP_STEP_FOOTER },
+  /** Intro: extra space above Continue so support → button matches title → support. */
+  actionsAfterSupport: { marginTop: 8 },
 });
 
 export type MedicalSuppliesSetupParams = {

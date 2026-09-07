@@ -417,6 +417,10 @@ export const SUPPLIES_SETUP_STEP_OPTION_LIST = {
   marginTop: 8,
 } as const;
 
+/** Title → first radio (= title marginBottom + option list marginTop). Keep button stack in sync. */
+export const SUPPLIES_SETUP_STEP_TITLE_TO_OPTIONS =
+  SUPPLIES_SETUP_STEP_TITLE.marginBottom + SUPPLIES_SETUP_STEP_OPTION_LIST.marginTop;
+
 export const SUPPLIES_SETUP_STEP_RADIO_ROW = {
   flexDirection: "row" as const,
   alignItems: "center" as const,
@@ -424,8 +428,8 @@ export const SUPPLIES_SETUP_STEP_RADIO_ROW = {
 };
 
 export const SUPPLIES_SETUP_STEP_FOOTER = {
-  marginTop: 16,
-  gap: 8,
+  marginTop: 12,
+  gap: 12,
 } as const;
 
 export const SUPPLIES_SETUP_PICKER_PILL_GAP = 8;

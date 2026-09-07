@@ -60,7 +60,7 @@ export function ConfirmModal({
 }: {
   visible: boolean;
   title: string;
-  message?: string;
+  message?: React.ReactNode;
   confirmLabel: string;
   cancelLabel?: string;
   confirmDestructive?: boolean;
@@ -97,7 +97,13 @@ export function ConfirmModal({
           />
           <View style={[styles.card, { backgroundColor: c.card, borderColor: c.cardBorder }]}>
             <Text style={[styles.title, { color: c.text }]}>{title}</Text>
-            {message ? <Text style={[styles.message, { color: c.textMuted }]}>{message}</Text> : null}
+            {message ? (
+              typeof message === "string" ? (
+                <Text style={[styles.message, { color: c.textMuted }]}>{message}</Text>
+              ) : (
+                <View style={styles.message}>{message}</View>
+              )
+            ) : null}
             <View style={styles.actions}>
               {!notice ? (
                 <View style={styles.actionSlot}>

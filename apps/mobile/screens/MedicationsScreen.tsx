@@ -330,7 +330,7 @@ export function MedicationsScreen({ user }: { user: SessionUser }) {
     () => (
       <InfoHintButton
         title="My Meds"
-        message="Save medications, set reminders and mark doses as taken. Check your progress regularly to help you stay on track."
+        message="Save medications, set reminders and mark doses as taken. Check your progress regularly so you stay on track."
         accessibilityLabel="About My Meds"
       />
     ),

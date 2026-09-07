@@ -310,12 +310,15 @@ function FlareBrandLockup({
   markColor,
   nameColor,
   nameSize = 28,
+  nameWeight = "bold",
   style,
 }: {
   markColor: string;
   nameColor: string;
   /** Wordmark size — splash stays 28; sign-in uses 26. */
   nameSize?: number;
+  /** Splash can go heavier; auth stays bold. */
+  nameWeight?: "bold" | "extrabold";
   style?: StyleProp<ViewStyle>;
 }) {
   return (
@@ -325,7 +328,14 @@ function FlareBrandLockup({
       <Text
         allowFontScaling={false}
         numberOfLines={1}
-        style={[styles.flareBrandLockupName, { color: nameColor, fontSize: nameSize }]}
+        style={[
+          styles.flareBrandLockupName,
+          {
+            color: nameColor,
+            fontSize: nameSize,
+            fontFamily: nameWeight === "extrabold" ? "Inter_800ExtraBold" : "Inter_700Bold",
+          },
+        ]}
       >
         Flarecare
       </Text>
@@ -497,7 +507,7 @@ function SplashScreen({ showBrand = true }: { showBrand?: boolean }) {
   }
   return (
     <View style={[styles.splashScreen, { backgroundColor: c.screen }]}>
-      <FlareBrandLockup markColor={c.primary} nameColor={c.text} />
+      <FlareBrandLockup markColor={c.primary} nameColor={c.text} nameWeight="extrabold" />
     </View>
   );
 }
@@ -511,7 +521,7 @@ const SIGN_OUT_COPY: Record<SignOutReason, { title: string; message: string }> =
   },
   account_deleted: {
     title: "Account deleted",
-    message: "Your account and data have been permanently deleted.",
+    message: "Your account and all your data have been permanently deleted.",
   },
 };
 
@@ -659,6 +669,8 @@ function AuthScreen({
   const [showLegalConsent, setShowLegalConsent] = useState(false);
   const [legalConsentVisible, setLegalConsentVisible] = useState(false);
   const [authLegalModal, setAuthLegalModal] = useState<LegalDocumentKind | null>(null);
+  /** Provider they tapped before the consent sheet — Agree continues that action. */
+  const pendingAuthActionRef = useRef<"email" | "google" | null>(null);
 
   const emailSchema = useMemo(
     () =>
@@ -896,6 +908,7 @@ function AuthScreen({
   /** First-time installs: open consent sheet before email/Google; returning users skip. */
   const beginAuthAction = (action: "email" | "google") => {
     if (showLegalConsent && !legalAccepted) {
+      pendingAuthActionRef.current = action;
       setLegalConsentVisible(true);
       return;
     }
@@ -905,11 +918,16 @@ function AuthScreen({
 
   const closeLegalConsentSheet = () => {
     setLegalConsentVisible(false);
+    pendingAuthActionRef.current = null;
   };
 
   const agreeLegalAndContinue = () => {
+    const pending = pendingAuthActionRef.current;
+    pendingAuthActionRef.current = null;
     setLegalAccepted(true);
     setLegalConsentVisible(false);
+    if (pending === "email") setStep("email");
+    else if (pending === "google") void signInGoogle();
   };
 
   /** Same layout as gray auth; fill page with blue in light appearance only. */
@@ -4370,7 +4388,31 @@ function AccountScreen({
       <ConfirmModal
         visible={deleteAccountConfirmOpen}
         title="Delete account"
-        message="This permanently deletes your account and all your data. This action cannot be undone."
+        message={
+          <>
+            <Text
+              style={{
+                color: c.textMuted,
+                fontSize: FLARE_FONT_SIZE.subhead,
+                lineHeight: FLARE_LINE_HEIGHT.subhead,
+                fontFamily: FLARE_FONT_FAMILY.regular,
+              }}
+            >
+              This will permanently delete your account and all your data. This can't be undone.
+            </Text>
+            <Text
+              style={{
+                color: c.textMuted,
+                fontSize: FLARE_FONT_SIZE.subhead,
+                lineHeight: FLARE_LINE_HEIGHT.subhead,
+                fontFamily: FLARE_FONT_FAMILY.regular,
+                marginTop: 8,
+              }}
+            >
+              Are you sure?
+            </Text>
+          </>
+        }
         confirmLabel="Delete"
         cancelLabel="Cancel"
         confirmDanger

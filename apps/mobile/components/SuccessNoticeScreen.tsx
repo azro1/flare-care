@@ -59,7 +59,7 @@ const styles = StyleSheet.create({
     lineHeight: 27,
     letterSpacing: -0.4,
     textAlign: "center",
-    marginTop: 16,
+    marginTop: 30,
     marginBottom: 16,
     alignSelf: "stretch",
     width: "100%",

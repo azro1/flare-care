@@ -261,7 +261,7 @@ export function WeightScreen({ user }: { user: SessionUser }) {
     () => (
       <InfoHintButton
         title="My Weight"
-        message="Record your weight to help build a clearer picture of your health over time."
+        message="Log your weight regularly to help build a clearer picture of your health over time."
         accessibilityLabel="About My Weight"
       />
     ),

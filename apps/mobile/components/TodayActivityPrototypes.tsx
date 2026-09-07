@@ -56,7 +56,7 @@ const ACTIVITY_LOTTIE_SIZE = 112;
  * grabber → title row → support line → Lottie → count → dots
  */
 const ACTIVITY_GRABBER_BOTTOM = 20;
-const ACTIVITY_TITLE_TO_SUPPORT = 10;
+const ACTIVITY_TITLE_TO_SUPPORT = 14;
 /** Same gap above and below the Lottie (support ↔ icon ↔ count). */
 const ACTIVITY_HERO_GAP = 12;
 const ACTIVITY_CONTENT_TO_DOTS = 14;
@@ -664,15 +664,16 @@ export function TodayActivitiesModal({
                 style={StyleSheet.absoluteFillObject}
               />
             )}
-            <Animated.View
-              style={[
-                styles.sheetCard,
-                {
-                  backgroundColor: c.card,
-                  transform: [{ translateY: sheetY }],
-                },
-              ]}
-            >
+            <Animated.View style={{ transform: [{ translateY: sheetY }] }}>
+              <View
+                style={[
+                  styles.sheetCard,
+                  {
+                    backgroundColor: c.card,
+                    paddingBottom: Math.max(insets.bottom, 24),
+                  },
+                ]}
+              >
               <View style={styles.sheetGrabberWrap}>
                 <View style={[styles.sheetGrabber, { backgroundColor: c.cardBorder }]} />
               </View>
@@ -796,10 +797,11 @@ export function TodayActivitiesModal({
                           })}
                         </View>
                       </View>
-                      <View style={{ height: Math.max(insets.bottom, 24) }} />
+                      <View style={{ height: 8 }} />
                     </View>
                   </View>
                 ) : null}
+              </View>
               </View>
             </Animated.View>
           </>
@@ -1042,10 +1044,8 @@ const styles = StyleSheet.create({
     gap: 12,
     overflow: "hidden",
   },
-  /** Match sign-in legal consent sheet chrome (full-bleed, top radius only). */
+  /** Match auth `SlideUpSheet` / fingerprint consent — full-bleed, flat top edge. */
   sheetCard: {
-    borderTopLeftRadius: 22,
-    borderTopRightRadius: 22,
     paddingHorizontal: 24,
     paddingTop: 0,
     paddingBottom: 0,

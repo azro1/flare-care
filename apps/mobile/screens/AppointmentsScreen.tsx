@@ -59,7 +59,7 @@ const APPOINTMENTS_HUB_TABS = [
 ] as const;
 
 const APPOINTMENTS_HUB_HINT =
-  "Add appointments, set reminders and keep track of your upcoming visits.";
+  "Add your appointments and choose when you want to be reminded.";
 
 const APPOINTMENT_SUMMARY_HINT =
   "Generate a health summary from your records for your next appointment. Choose a suggested period or select your own dates.";

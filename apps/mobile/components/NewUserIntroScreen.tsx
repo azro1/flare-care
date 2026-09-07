@@ -30,10 +30,10 @@ const MEDIA_SIZE = 148;
 const MEDIA_GLYPH_SIZE = 60;
 /**
  * Title size for new-user intro slides.
- * Welcome (first slide) is one step larger; change INTRO_SLIDE_TITLE_SIZE to scale both.
+ * Welcome (first slide) is larger so the app name stands out; change INTRO_SLIDE_TITLE_SIZE to scale both.
  */
 const INTRO_SLIDE_TITLE_SIZE = 21;
-const WELCOME_SLIDE_TITLE_SIZE = INTRO_SLIDE_TITLE_SIZE + 1;
+const WELCOME_SLIDE_TITLE_SIZE = INTRO_SLIDE_TITLE_SIZE + 2;
 /** Icon → title — tight so the glyph reads as part of the copy stack. */
 const INTRO_ICON_TO_TITLE_GAP = HOME_TILE_GAP;
 /** Title → support. */
@@ -50,32 +50,36 @@ const INTRO_COPY_STACK_HEIGHT =
   (WELCOME_SLIDE_TITLE_SIZE + 6) +
   INTRO_TITLE_TO_SUPPORT_GAP +
   INTRO_SUPPORT_BLOCK_HEIGHT;
-/**
- * Copy sits below true vertical centre, then lifts with `INTRO_COPY_UP_NUDGE`.
- * Dots track under the support line.
- */
-const INTRO_CONTENT_DOWN_NUDGE = HOME_TILE_GAP * 3;
-/** Lift icon + title + support (+ dots follow). */
-const INTRO_COPY_UP_NUDGE = HOME_TILE_GAP * 8;
 /** Space between support copy and page dots — dots only; copy stack Y stays fixed. */
 const INTRO_DOTS_GAP = HOME_TILE_GAP * 4 + 8;
 const DOT_SIZE = 8;
 /** Active page indicator stretches into a short pill. */
 const DOT_ACTIVE_WIDTH = 22;
+/** Mid block height used to vertically centre between header and CTAs. */
+const INTRO_MID_GROUP_HEIGHT = INTRO_COPY_STACK_HEIGHT + INTRO_DOTS_GAP + DOT_SIZE;
+/**
+ * Empty padding above the glyph inside `MEDIA_SIZE`. Without this, true box-centring
+ * makes header→icon look larger than dots→buttons (icon sits below the slot top).
+ */
+const MEDIA_OPTICAL_TOP_INSET = (MEDIA_SIZE - MEDIA_GLYPH_SIZE) / 2;
+/**
+ * “Welcome to” / “Flarecare” sits mid-header — space under that label before the pager.
+ * Count it so header-label→icon matches dots→buttons by eye.
+ */
+const HEADER_TITLE_BELOW =
+  (NAV_HEADER_BAR_HEIGHT - FLARE_FONT_SIZE.navTitle) / 2;
 /**
  * Moves Next/Done + Skip only. Lower = closer to the bottom edge.
- * Mid-stack (icon / title / support / dots) uses `CONTENT_LAYOUT_FOOTER_PAD` instead.
+ * `0` = flush to `insets.bottom` (no extra pad).
  */
-const FOOTER_PAD = 28;
-/** Fixed reserve for copy + dots layout — leave this alone when nudging CTAs. */
-const CONTENT_LAYOUT_FOOTER_PAD = 64;
+const FOOTER_PAD = 0;
 /** Footer stack: Next + gap(16) + Skip hit — keep in sync with `styles.footer` / `skipHit`. */
 const INTRO_FOOTER_STACK_HEIGHT = FLARE_BUTTON_MIN_HEIGHT + 16 + (FLARE_BUTTON_MIN_HEIGHT - 8);
 
 /**
  * One-time swipe intro after sign-up — what Flarecare can do for you.
- * Copy centered between header and CTAs; dots stay fixed under the copy (do not swipe).
- * `FOOTER_PAD` and `CONTENT_LAYOUT_FOOTER_PAD` are independent on purpose.
+ * Mid stack centred so header label→icon and dots→buttons match optically.
+ * Dots stay fixed under the copy (do not swipe).
  */
 export function NewUserIntroScreen({ onFinished }: { onFinished: () => void }) {
   const c = useFlareColors();
@@ -89,24 +93,14 @@ export function NewUserIntroScreen({ onFinished }: { onFinished: () => void }) {
   ).current;
 
   /** Stable on first paint — no onLayout jump (that caused the welcome land blip). */
-  const safeBottom = Math.max(insets.bottom, 12);
-  const bottomPad = safeBottom + FOOTER_PAD;
+  const bottomPad = insets.bottom + FOOTER_PAD;
   const pagerHeight = Math.max(
     0,
     windowHeight - insets.top - NAV_HEADER_BAR_HEIGHT - INTRO_FOOTER_STACK_HEIGHT - bottomPad,
   );
-  const layoutPagerHeight = Math.max(
-    0,
-    windowHeight -
-      insets.top -
-      NAV_HEADER_BAR_HEIGHT -
-      INTRO_FOOTER_STACK_HEIGHT -
-      (safeBottom + CONTENT_LAYOUT_FOOTER_PAD),
-  );
+  /** Equal by eye: “Welcome to” → icon, and dots → Next. */
   const contentTop =
-    (layoutPagerHeight - INTRO_COPY_STACK_HEIGHT) / 2 +
-    INTRO_CONTENT_DOWN_NUDGE -
-    INTRO_COPY_UP_NUDGE;
+    (pagerHeight - INTRO_MID_GROUP_HEIGHT - MEDIA_OPTICAL_TOP_INSET - HEADER_TITLE_BELOW) / 2;
   const dotsTop = contentTop + INTRO_COPY_STACK_HEIGHT + INTRO_DOTS_GAP;
 
   useEffect(() => {

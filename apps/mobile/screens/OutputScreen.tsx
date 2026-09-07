@@ -385,7 +385,7 @@ export function OutputScreen({ user }: { user: SessionUser }) {
     () => (
       <InfoHintButton
         title="Fluid Output"
-        message="Log fluid output by type. Today’s total is for the tab you’re on."
+        message="Select a category to track your fluid output. Each tab displays its own total for today."
         accessibilityLabel="About Fluid Output"
       />
     ),
