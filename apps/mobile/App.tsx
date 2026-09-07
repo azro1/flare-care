@@ -4812,7 +4812,7 @@ function AppTabs({
       <View style={styles.headerRightCluster}>
         <InfoHintButton
           title="Your Logs"
-          message="Your Logs hub keeps all your Check-in entries together in one place. Tap a list to view your records."
+          message="Your Logs hub keeps all your Check-in entries together in one place. Tap a row to view its history."
           accessibilityLabel="About Logs"
         />
         <HeaderOverflowMenu
