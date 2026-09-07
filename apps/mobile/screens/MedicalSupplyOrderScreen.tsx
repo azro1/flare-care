@@ -87,27 +87,15 @@ export function MedicalSupplyOrderScreen({ user }: { user: SessionUser }) {
 
   const headerName = kit?.name?.trim() || paramOrderName || "Order";
   const stockIds = useMemo(() => items.map((row) => String(row.id)), [items]);
-  const renderOrderHeaderTitle = useCallback(
+  const renderOrderHint = useCallback(
     () => (
-      <View style={styles.headerTitleWithHint}>
-        <InfoHintButton
-          title={headerName}
-          message="Tap an item to edit it. Long-press to select and remove."
-          accessibilityLabel="About this order"
-        />
-        <Text
-          style={{
-            fontFamily: FLARE_FONT_FAMILY.bold,
-            fontSize: FLARE_FONT_SIZE.navTitle,
-            color: c.text,
-          }}
-          numberOfLines={1}
-        >
-          {headerName}
-        </Text>
-      </View>
+      <InfoHintButton
+        title={headerName}
+        message="Tap an item to edit it. Long-press to select and remove."
+        accessibilityLabel="About this order"
+      />
     ),
-    [c.text, headerName],
+    [headerName],
   );
   const {
     selectionMode,
@@ -123,8 +111,8 @@ export function MedicalSupplyOrderScreen({ user }: { user: SessionUser }) {
     routeName: "MedicalSupplyOrder",
     itemIds: stockIds,
     navigation,
-    headerTitle: renderOrderHeaderTitle,
-    renderIdleHeaderRight: () => null,
+    headerTitle: headerName,
+    renderIdleHeaderRight: renderOrderHint,
   });
 
   const loadDetail = useCallback(
@@ -166,9 +154,10 @@ export function MedicalSupplyOrderScreen({ user }: { user: SessionUser }) {
   useLayoutEffect(() => {
     if (selectionMode) return;
     navigation.setOptions({
-      headerTitle: renderOrderHeaderTitle,
+      headerTitle: headerName,
+      headerRight: () => renderOrderHint(),
     });
-  }, [navigation, renderOrderHeaderTitle, selectionMode]);
+  }, [headerName, navigation, renderOrderHint, selectionMode]);
 
   const handleBulkDeleteConfirm = useCallback(() => {
     void runBulkDelete(async (ids) => {
@@ -447,12 +436,6 @@ export function MedicalSupplyOrderScreen({ user }: { user: SessionUser }) {
 
 const styles = StyleSheet.create({
   centered: { flex: 1, alignItems: "center", justifyContent: "center" },
-  headerTitleWithHint: {
-    flexDirection: "row",
-    alignItems: "center",
-    gap: 6,
-    maxWidth: "100%",
-  },
   statusCopy: { gap: STACKED_LINE_GAP },
   statusCard: { padding: 18 },
   statusHeadline: {
