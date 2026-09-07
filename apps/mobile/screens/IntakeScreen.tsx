@@ -399,26 +399,15 @@ export function IntakeScreen({ user }: { user: SessionUser }) {
   const activeRows = onFoodTab ? foodRows : drinkRows;
 
   const intakeItemIds = useMemo(() => activeRows.map((row) => String(row.id)), [activeRows]);
-  const renderIntakeHeaderTitle = useCallback(
+  const renderIntakeHint = useCallback(
     () => (
-      <View style={styles.headerTitleWithHint}>
-        <InfoHintButton
-          title="Food & Drink"
-          message="Log what you eat and drink when your care team asks you to. Optional — skip if you don’t need it."
-          accessibilityLabel="About Food & Drink"
-        />
-        <Text
-          style={{
-            fontFamily: FLARE_FONT_FAMILY.bold,
-            fontSize: FLARE_FONT_SIZE.navTitle,
-            color: c.text,
-          }}
-        >
-          Food & Drink
-        </Text>
-      </View>
+      <InfoHintButton
+        title="Food & Drink"
+        message="Keep track of what you eat & drink throughout the day."
+        accessibilityLabel="About Food & Drink"
+      />
     ),
-    [c.text],
+    [],
   );
   const {
     selectionMode,
@@ -433,7 +422,8 @@ export function IntakeScreen({ user }: { user: SessionUser }) {
     routeName: "Intake",
     itemIds: intakeItemIds,
     navigation,
-    headerTitle: renderIntakeHeaderTitle,
+    headerTitle: "Food & Drink",
+    renderIdleHeaderRight: renderIntakeHint,
   });
 
   const handleBulkDeleteConfirm = useCallback(() => {
@@ -603,7 +593,7 @@ export function IntakeScreen({ user }: { user: SessionUser }) {
         </>
       }
     >
-      <View style={styles.tabRow}>
+      <View style={hubTabFadeStyles.tabRow}>
         {INTAKE_KIND_OPTIONS.map((opt, index) => {
           const active = index === tabIndex;
           return (
@@ -613,20 +603,20 @@ export function IntakeScreen({ user }: { user: SessionUser }) {
               accessibilityState={{ selected: active }}
               accessibilityLabel={opt.label}
               onPress={() => goToTab(index)}
-              style={styles.tabHit}
+              style={hubTabFadeStyles.tabHit}
             >
               <Text
                 style={[
-                  styles.tabLabel,
+                  hubTabFadeStyles.tabLabel,
                   { color: active ? c.text : c.textMuted },
-                  active ? styles.tabLabelActive : null,
+                  active ? hubTabFadeStyles.tabLabelActive : null,
                 ]}
               >
                 {opt.label}
               </Text>
               <View
                 style={[
-                  styles.tabUnderline,
+                  hubTabFadeStyles.tabUnderline,
                   { backgroundColor: active ? c.primary : "transparent" },
                 ]}
               />
@@ -658,31 +648,6 @@ export function IntakeScreen({ user }: { user: SessionUser }) {
 }
 
 const styles = StyleSheet.create({
-  headerTitleWithHint: {
-    flexDirection: "row",
-    alignItems: "center",
-    gap: 6,
-  },
-  tabRow: {
-    flexDirection: "row",
-    marginBottom: SCREEN_EDGE_PADDING,
-    gap: 20,
-  },
-  tabHit: {
-    paddingBottom: 8,
-  },
-  tabLabel: {
-    fontSize: FLARE_FONT_SIZE.subhead,
-    fontFamily: FLARE_FONT_FAMILY.regular,
-  },
-  tabLabelActive: {
-    fontFamily: FLARE_FONT_FAMILY.bold,
-  },
-  tabUnderline: {
-    marginTop: 6,
-    height: 2,
-    borderRadius: 1,
-  },
   sheetRoot: { flex: 1 },
   sheetHeader: {
     flexDirection: "row",

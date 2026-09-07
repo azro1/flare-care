@@ -369,21 +369,7 @@ export function AppointmentsScreen({ user }: { user: SessionUser }) {
 
   const renderPastLink = useCallback(
     () => (
-      <Pressable
-        accessibilityRole="button"
-        accessibilityLabel="Past Appointments"
-        hitSlop={10}
-        onPress={() => navigation.navigate("AppointmentsPast")}
-      >
-        <Text style={[NAV_ROW_LABEL, { color: c.text }]}>Past</Text>
-      </Pressable>
-    ),
-    [c.text, navigation],
-  );
-
-  const renderAppointmentsHeaderTitle = useCallback(
-    () => (
-      <View style={styles.headerTitleWithHint}>
+      <View style={styles.headerRightCluster}>
         <InfoHintButton
           title={onAppointmentsTab ? "Appointments" : "Appointment Summary"}
           message={onAppointmentsTab ? APPOINTMENTS_HUB_HINT : APPOINTMENT_SUMMARY_HINT}
@@ -391,19 +377,17 @@ export function AppointmentsScreen({ user }: { user: SessionUser }) {
             onAppointmentsTab ? "About Appointments" : "About Appointment Summary"
           }
         />
-        <Text
-          style={{
-            fontFamily: FLARE_FONT_FAMILY.bold,
-            fontSize: FLARE_FONT_SIZE.navTitle,
-            color: c.text,
-          }}
-          numberOfLines={1}
+        <Pressable
+          accessibilityRole="button"
+          accessibilityLabel="Past Appointments"
+          hitSlop={10}
+          onPress={() => navigation.navigate("AppointmentsPast")}
         >
-          Appointments
-        </Text>
+          <Text style={[NAV_ROW_LABEL, { color: c.text }]}>Past</Text>
+        </Pressable>
       </View>
     ),
-    [c.text, onAppointmentsTab],
+    [c.text, navigation, onAppointmentsTab],
   );
 
   const handleSave = async (values: AppointmentFormState) => {
@@ -446,7 +430,7 @@ export function AppointmentsScreen({ user }: { user: SessionUser }) {
         }
         footer={null}
       >
-        <View style={styles.tabRow}>
+        <View style={hubTabFadeStyles.tabRow}>
           {APPOINTMENTS_HUB_TABS.map((opt, index) => {
             const active = index === tabIndex;
             return (
@@ -456,20 +440,20 @@ export function AppointmentsScreen({ user }: { user: SessionUser }) {
                 accessibilityState={{ selected: active }}
                 accessibilityLabel={opt.label}
                 onPress={() => goToTab(index)}
-                style={styles.tabHit}
+                style={hubTabFadeStyles.tabHit}
               >
                 <Text
                   style={[
-                    styles.tabLabel,
+                    hubTabFadeStyles.tabLabel,
                     { color: active ? c.text : c.textMuted },
-                    active ? styles.tabLabelActive : null,
+                    active ? hubTabFadeStyles.tabLabelActive : null,
                   ]}
                 >
                   {opt.label}
                 </Text>
                 <View
                   style={[
-                    styles.tabUnderline,
+                    hubTabFadeStyles.tabUnderline,
                     { backgroundColor: active ? c.primary : "transparent" },
                   ]}
                 />
@@ -491,7 +475,7 @@ export function AppointmentsScreen({ user }: { user: SessionUser }) {
               showFab={false}
               onAddPress={openAdd}
               selectionRouteName="Appointments"
-              headerTitle={renderAppointmentsHeaderTitle}
+              headerTitle="Appointments"
               renderIdleHeaderRight={renderPastLink}
               list={appointmentsList}
               embedded
@@ -523,30 +507,10 @@ export function AppointmentsScreen({ user }: { user: SessionUser }) {
 }
 
 const styles = StyleSheet.create({
-  headerTitleWithHint: {
+  headerRightCluster: {
     flexDirection: "row",
     alignItems: "center",
-    gap: 6,
-  },
-  tabRow: {
-    flexDirection: "row",
-    marginBottom: SCREEN_EDGE_PADDING,
-    gap: 20,
-  },
-  tabHit: {
-    paddingBottom: 8,
-  },
-  tabLabel: {
-    fontSize: FLARE_FONT_SIZE.subhead,
-    fontFamily: FLARE_FONT_FAMILY.regular,
-  },
-  tabLabelActive: {
-    fontFamily: FLARE_FONT_FAMILY.bold,
-  },
-  tabUnderline: {
-    marginTop: 6,
-    height: 2,
-    borderRadius: 1,
+    gap: 10,
   },
   sheetRoot: { flex: 1 },
   sheetHeader: {

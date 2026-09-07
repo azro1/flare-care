@@ -1,12 +1,11 @@
 import { FLARE_CHROME_LUCIDE, FlareLucideIcon } from "../lib/flareLucideIcons";
 import { useFocusEffect, useNavigation } from "@react-navigation/native";
-import React, { useCallback, useLayoutEffect, useMemo, useState } from "react";
-import { Pressable, StyleSheet, Text, View } from "react-native";
+import React, { useCallback, useLayoutEffect, useMemo, useRef, useState } from "react";
+import { InteractionManager, Pressable, StyleSheet, Text, View } from "react-native";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { showFlareAlert } from "../components/FlareAlertHost";
 import { InstructionScreenShell } from "../components/InstructionScreenShell";
 import { ConfirmModal } from "../components/ConfirmModal";
-import { HeaderOverflowMenu } from "../components/HeaderOverflowMenu";
 import { InfoHintButton } from "../components/InfoHintButton";
 import { TrackerThumbFab, useTrackerThumbFabLayout } from "../components/TrackerThumbFab";
 import {
@@ -14,8 +13,8 @@ import {
   FLARE_FONT_SIZE,
   FLARE_INLINE_ACTION_LINK,
   FLARE_LINE_HEIGHT,
+  CARD_INNER_PADDING,
   NAV_ROW_CHEVRON_SIZE,
-  SCREEN_EDGE_PADDING,
   STACKED_LINE_GAP,
   bottomTabBarHeight,
 } from "../lib/layoutConstants";
@@ -65,6 +64,7 @@ export function MedicalSuppliesScreen({ user }: { user: SessionUser }) {
   const [noStockMessage, setNoStockMessage] = useState(
     "Add items to an order first, then you can send a request.",
   );
+  const focusAliveRef = useRef(false);
 
   useLayoutEffect(() => {
     if (!seed.openSetup) return;
@@ -72,38 +72,17 @@ export function MedicalSuppliesScreen({ user }: { user: SessionUser }) {
   }, [navigation, seed.openSetup]);
 
   const orderIds = useMemo(() => entries.map((e) => String(e.kit.id)), [entries]);
-  const renderIdleHeaderRight = useCallback(
+  const renderSuppliesHint = useCallback(
     () => (
-      <HeaderOverflowMenu
-        navigation={navigation}
-        routeName="MedicalSupplies"
-        edgePadding={SCREEN_EDGE_PADDING}
+      <InfoHintButton
+        title="My Supplies"
+        message={
+          "Your supplies hub keeps your supply orders together in one place. Create an order for each set of supplies you regularly need. Tap to manage, or long-press to delete."
+        }
+        accessibilityLabel="About My Supplies"
       />
     ),
-    [navigation],
-  );
-  const renderSuppliesHeaderTitle = useCallback(
-    () => (
-      <View style={styles.headerTitleWithHint}>
-        <InfoHintButton
-          title="My Supplies"
-          message={
-            "Your supplies hub keeps your supply orders together in one place. Create an order for each set of supplies you regularly need. Tap to manage, or long-press to delete."
-          }
-          accessibilityLabel="About My Supplies"
-        />
-        <Text
-          style={{
-            fontFamily: FLARE_FONT_FAMILY.bold,
-            fontSize: FLARE_FONT_SIZE.navTitle,
-            color: c.text,
-          }}
-        >
-          My Supplies
-        </Text>
-      </View>
-    ),
-    [c.text],
+    [],
   );
   const {
     selectionMode,
@@ -118,8 +97,8 @@ export function MedicalSuppliesScreen({ user }: { user: SessionUser }) {
     routeName: "MedicalSupplies",
     itemIds: orderIds,
     navigation,
-    headerTitle: renderSuppliesHeaderTitle,
-    renderIdleHeaderRight,
+    headerTitle: "My Supplies",
+    renderIdleHeaderRight: renderSuppliesHint,
   });
 
   const openNewOrderSetup = useCallback(() => {
@@ -129,6 +108,7 @@ export function MedicalSuppliesScreen({ user }: { user: SessionUser }) {
   const loadList = useCallback(async () => {
     try {
       const rows = await fetchKitListEntries(user.id);
+      if (!focusAliveRef.current) return;
       if (needsMedicalSuppliesSetup(rows.length)) {
         // Replace before painting an empty list (avoids list → setup flash).
         navigation.replace("MedicalSuppliesSetup", { startStep: SUPPLIES_SETUP_STEP_INTRO });
@@ -136,42 +116,38 @@ export function MedicalSuppliesScreen({ user }: { user: SessionUser }) {
       }
       setEntries(rows);
     } catch (err: unknown) {
+      if (!focusAliveRef.current) return;
       const message = err instanceof Error ? err.message : "Could not load supplies.";
       showFlareAlert("Could not load", message);
     } finally {
-      setHubReady(true);
+      if (focusAliveRef.current) setHubReady(true);
     }
   }, [navigation, user.id]);
 
   useFocusEffect(
     useCallback(() => {
+      focusAliveRef.current = true;
       const cached = getMedicalSupplyKitListCache(user.id);
       if (cached != null && needsMedicalSuppliesSetup(cached.length)) {
         navigation.replace("MedicalSuppliesSetup", { startStep: SUPPLIES_SETUP_STEP_INTRO });
-        return;
+        return () => {
+          focusAliveRef.current = false;
+        };
       }
       if (cached != null) {
-        setEntries(cached);
+        setEntries((prev) => (prev === cached ? prev : cached));
         setHubReady(true);
       }
-      void loadList();
+      /** Let the push/pop settle before network setState — same as Dashboard / Weight. */
+      const task = InteractionManager.runAfterInteractions(() => {
+        void loadList();
+      });
+      return () => {
+        focusAliveRef.current = false;
+        task.cancel();
+      };
     }, [loadList, navigation, user.id]),
   );
-
-  useLayoutEffect(() => {
-    if (selectionMode) return;
-    navigation.setOptions({
-      headerTitle: renderSuppliesHeaderTitle,
-      headerLeft: undefined,
-      headerRight: () => (
-        <HeaderOverflowMenu
-          navigation={navigation}
-          routeName="MedicalSupplies"
-          edgePadding={SCREEN_EDGE_PADDING}
-        />
-      ),
-    });
-  }, [navigation, renderSuppliesHeaderTitle, selectionMode]);
 
   const handleBulkDeleteConfirm = useCallback(() => {
     void runBulkDelete(async (ids) => {
@@ -316,14 +292,10 @@ export function MedicalSuppliesScreen({ user }: { user: SessionUser }) {
 
 const styles = StyleSheet.create({
   centered: { flex: 1, alignItems: "center", justifyContent: "center" },
-  headerTitleWithHint: {
-    flexDirection: "row",
-    alignItems: "center",
-    gap: 6,
-  },
+  /** Match `LogHistoryCard` / tracker cards — fill only, no border. */
   orderCard: {
     borderRadius: 14,
-    padding: 14,
+    padding: CARD_INNER_PADDING,
     marginBottom: 12,
     flexDirection: "row",
     alignItems: "center",

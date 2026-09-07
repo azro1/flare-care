@@ -49,7 +49,7 @@ export function HydrationProgressRing({
       style={styles.wrap}
       accessibilityRole="summary"
       accessibilityLabel={
-        atGoal ? `Complete. ${target} of ${target} cups` : `${glasses} of ${target} cups`
+        atGoal ? `Completed. ${target} of ${target} cups` : `${glasses} of ${target} cups`
       }
     >
       <Svg width={RING_SIZE} height={RING_SIZE}>
@@ -88,7 +88,7 @@ export function HydrationProgressRing({
               <FlareLucideIcon icon={FLARE_CHROME_LUCIDE.checkCircle} size={36} color={c.primary} />
             </View>
             <View style={styles.goalCopyStack}>
-              <Text style={[styles.goalTitle, { color: c.text }]}>Complete</Text>
+              <Text style={[styles.goalTitle, { color: c.text }]}>Completed</Text>
               <Text style={[styles.goalCaption, { color: c.textMuted }]}>
                 {target}/{target} cups today
               </Text>

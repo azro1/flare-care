@@ -12,6 +12,7 @@ import {
 import { BRISTOL_TYPES } from "../lib/bristolStoolChart";
 import { FLARE_FONT_FAMILY, FLARE_FONT_SIZE } from "../lib/layoutConstants";
 import { useFlareColors } from "../theme";
+
 export type BristolGuideParams = {
   pickMode?: boolean;
   highlightedType?: number;

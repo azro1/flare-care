@@ -13,7 +13,7 @@ export type ListSelectionChromeState = {
 
 type ListSelectionChromeContextValue = {
   chrome: ListSelectionChromeState | null;
-  setChrome: (chrome: ListSelectionChromeState | null) => void;
+  setChrome: React.Dispatch<React.SetStateAction<ListSelectionChromeState | null>>;
 };
 
 const ListSelectionChromeContext = createContext<ListSelectionChromeContextValue | null>(null);

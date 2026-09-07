@@ -3,7 +3,6 @@ import { FLARE_FEATURE_LUCIDE } from "./flareLucideIcons";
 import {
   buildOccurredAtIso,
   occurredAtToFormParts,
-  snapTimeHmFromDate,
   todayYmd,
 } from "./bowelMovementShared";
 import { sanitizeNotesMobile } from "./symptomWizardShared";
@@ -55,13 +54,13 @@ export type TodayOutputTotals = {
   byKind: Partial<Record<OutputKind, number>>;
 };
 
-/** New log sheet — date today, time now. Prefill kind from the active hub tab when set. */
+/** New log sheet — empty date/time until the user picks (Food & Drink pattern).
+ *  Prefill kind from the active hub tab when set. */
 export function quickOutputFormState(kind: OutputKind = "urine"): OutputFormState {
-  const now = new Date();
   return {
     kind,
-    date: todayYmd(),
-    time: snapTimeHmFromDate(now),
+    date: "",
+    time: "",
     amountMl: "",
     notes: "",
   };

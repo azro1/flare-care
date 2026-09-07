@@ -47,18 +47,18 @@ const AnimatedGHScrollView = Animated.createAnimatedComponent(GHScrollView);
 /** Hint on Meds page only — Hydration is the last Activity page (graph parked). */
 const ACTIVITY_SWIPE_HINT = "Swipe for more";
 
-const HYDRATION_ACTIVITY_LOTTIE = require("../assets/activity/hydration-bottle.json");
+const HYDRATION_ACTIVITY_LOTTIE = require("../assets/activity/hydration-cup.json");
 const MEDS_ACTIVITY_LOTTIE = require("../assets/activity/meds-pill.json");
 /** Hero — enough for the jump, not a tall empty band. */
-const ACTIVITY_LOTTIE_SIZE = 140;
+const ACTIVITY_LOTTIE_SIZE = 112;
 /**
  * Activity sheet vertical rhythm (top → bottom):
  * grabber → title row → support line → Lottie → count → dots
  */
 const ACTIVITY_GRABBER_BOTTOM = 20;
 const ACTIVITY_TITLE_TO_SUPPORT = 10;
-const ACTIVITY_HEADER_TO_HERO = 14;
-const ACTIVITY_ICON_TO_COUNT = 6;
+/** Same gap above and below the Lottie (support ↔ icon ↔ count). */
+const ACTIVITY_HERO_GAP = 12;
 const ACTIVITY_CONTENT_TO_DOTS = 14;
 
 /** Card score — readable, not a hero panel. */
@@ -278,9 +278,7 @@ function useActivityCopy(summary: TodayActivitySummary) {
     const medsComplete = hasMeds && summary.medsTaken >= summary.medsTotal;
     const medsLabel = !hasMeds
       ? "No meds saved yet"
-      : medsComplete
-        ? "All taken"
-        : `${summary.medsTaken} of ${summary.medsTotal} taken`;
+      : `${summary.medsTaken} of ${summary.medsTotal} taken`;
     const medsRatio = hasMeds ? Math.min(1, summary.medsTaken / summary.medsTotal) : 0;
     const hydrationLabel = `${summary.hydration} of ${HYDRATION_TARGET} cups`;
     const hydrationRatio = Math.min(1, summary.hydration / HYDRATION_TARGET);
@@ -771,7 +769,7 @@ export function TodayActivitiesModal({
                             }
                           >
                             {/* Sticky header clearance + step into hero. */}
-                            <View style={{ height: Math.max(scoreHeight, 1) + ACTIVITY_HEADER_TO_HERO }} />
+                            <View style={{ height: Math.max(scoreHeight, 1) + ACTIVITY_HERO_GAP }} />
                             {renderTaskPage(activity)}
                           </View>
                         ))}
@@ -1096,7 +1094,7 @@ const styles = StyleSheet.create({
   },
   activityHeroBlock: {
     alignItems: "center",
-    gap: ACTIVITY_ICON_TO_COUNT,
+    gap: ACTIVITY_HERO_GAP,
   },
   activityHeroDetail: {
     fontSize: FLARE_FONT_SIZE.subhead,

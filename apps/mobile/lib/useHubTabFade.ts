@@ -1,5 +1,6 @@
 import { useCallback, useMemo, useRef, useState } from "react";
 import { Animated, Easing, StyleSheet } from "react-native";
+import { FLARE_FONT_FAMILY, FLARE_FONT_SIZE, SCREEN_EDGE_PADDING } from "./layoutConstants";
 
 const FADE_MS = 220;
 
@@ -88,5 +89,26 @@ export const hubTabFadeStyles = StyleSheet.create({
     left: 0,
     right: 0,
     top: 0,
+  },
+  /** Shared hub tab chrome (Food & Drink / Fluid Output / Appointments). */
+  tabRow: {
+    flexDirection: "row",
+    marginBottom: SCREEN_EDGE_PADDING,
+    gap: 20,
+  },
+  tabHit: {
+    paddingBottom: 8,
+  },
+  tabLabel: {
+    fontSize: FLARE_FONT_SIZE.subhead,
+    fontFamily: FLARE_FONT_FAMILY.regular,
+  },
+  tabLabelActive: {
+    fontFamily: FLARE_FONT_FAMILY.bold,
+  },
+  tabUnderline: {
+    marginTop: 6,
+    height: 2,
+    borderRadius: 1,
   },
 });

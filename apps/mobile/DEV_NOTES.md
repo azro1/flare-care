@@ -12,6 +12,14 @@ Long-lived conventions, “don’t forget / don’t duplicate,” SQL checklists
 
 ---
 
+## Open — OS display / font size (accessibility)
+
+**Status (2026-09-07):** Brand wordmark locked with `allowFontScaling={false}` on `FlareBrandLockup` — splash/sign-in stopped clipping; full **XXL** pass looked solid across the app (quick check; wizards not deep-tested). Most layouts already flex OK.
+
+**Light follow-up someday (not urgent):** deep-check wizards / sheets at Large–XXL; spot any remaining cutoffs. Brand wordmark stays unscaled (logo); body UI keeps scaling. First noticed on mum’s phone.
+
+---
+
 ## Known-good checkpoints (rollback)
 
 If reminders / related mobile UX regress while we keep building, start from this commit before deep debugging:
@@ -652,6 +660,8 @@ Same monorepo. Mobile does **not** send mail itself.
 | Stuck on Sending… then “Network request failed” | Phone can’t reach the base URL (localhost / dead LAN IP) | Point `.env` at live Vercel URL; restart Expo `--clear` |
 | Instant “Could not send” / generic fail | Route missing on Vercel (404) or Resend rejected | Deploy route on **`master`**; check Vercel Resend env vars |
 | Works only to *your* email | Resend free / unverified domain | Normal until you verify a domain in Resend |
+
+**Open — device/network (2026-09-07):** Supply **Email** works on Simon’s phone (home Wi‑Fi / same build). On mum’s **Redmi A9** (tested at her house) it shows **Could not send → Network request failed**. Same feature must work for every device. Not the old missing-Resend-on-Vercel case (that returns after the request lands). Bring that Redmi here and debug: open `https://flare-care.vercel.app` in Chrome on the phone; confirm Metro/`EXPO_PUBLIC_WEB_API_BASE_URL` is the live Vercel URL (not a home LAN IP); compare Android version / cleartext / DNS / Wi‑Fi vs mobile data; log the exact `fetch` URL + error on that device. Track root cause here when found so other users aren’t bitten.
 
 **Ship a new email API:** commit the `src/app/api/...` file → push **`master`** → wait for Vercel Ready → then test on phone. Local `npm run dev` web is not what the phone uses when `.env` points at Vercel.
 

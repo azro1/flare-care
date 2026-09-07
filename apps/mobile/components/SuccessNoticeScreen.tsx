@@ -54,7 +54,7 @@ const styles = StyleSheet.create({
   /** Full-screen logout / delete — message sits with title; more air before CTA. */
   entryCard: { width: "100%", alignItems: "center" },
   entryTitle: {
-    fontFamily: FLARE_FONT_FAMILY.extrabold,
+    fontFamily: FLARE_FONT_FAMILY.bold,
     fontSize: 21,
     lineHeight: 27,
     letterSpacing: -0.4,

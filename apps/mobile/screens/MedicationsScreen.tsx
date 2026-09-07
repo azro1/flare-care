@@ -326,26 +326,15 @@ export function MedicationsScreen({ user }: { user: SessionUser }) {
   const [expandedMedCount, setExpandedMedCount] = useState(() => getMedsListExpandedCount(user.id));
 
   const medItemIds = useMemo(() => meds.map((row) => String(row.id)), [meds]);
-  const renderMedsHeaderTitle = useCallback(
+  const renderMedsHint = useCallback(
     () => (
-      <View style={styles.headerTitleWithHint}>
-        <InfoHintButton
-          title="My Meds"
-          message="Save medications, set reminders and mark doses as taken. Check your priorities regularly to help you stay on track."
-          accessibilityLabel="About My Meds"
-        />
-        <Text
-          style={{
-            fontFamily: FLARE_FONT_FAMILY.bold,
-            fontSize: FLARE_FONT_SIZE.navTitle,
-            color: c.text,
-          }}
-        >
-          My Meds
-        </Text>
-      </View>
+      <InfoHintButton
+        title="My Meds"
+        message="Save medications, set reminders and mark doses as taken. Check your progress regularly to help you stay on track."
+        accessibilityLabel="About My Meds"
+      />
     ),
-    [c.text],
+    [],
   );
   const {
     selectionMode,
@@ -360,7 +349,8 @@ export function MedicationsScreen({ user }: { user: SessionUser }) {
     routeName: "Meds",
     itemIds: medItemIds,
     navigation,
-    headerTitle: renderMedsHeaderTitle,
+    headerTitle: "My Meds",
+    renderIdleHeaderRight: renderMedsHint,
   });
 
   const handleBulkDeleteConfirm = useCallback(() => {
@@ -561,11 +551,6 @@ export function MedicationsScreen({ user }: { user: SessionUser }) {
 }
 
 const styles = StyleSheet.create({
-  headerTitleWithHint: {
-    flexDirection: "row",
-    alignItems: "center",
-    gap: 6,
-  },
   medSubtitleRow: { flexDirection: "row", alignItems: "center", flexShrink: 1, minWidth: 0 },
   medReminderTimeRow: { flexDirection: "row", alignItems: "center", gap: 4, flexShrink: 1, minWidth: 0 },
   sheetRoot: { flex: 1 },

@@ -32,12 +32,15 @@ export function HeaderOverflowMenu({
   routeName,
   edgePadding = 12,
   onLogout,
+  compact = false,
 }: {
   navigation: { navigate: (name: string) => void };
   routeName: string;
   /** Same as `styles.screen` horizontal padding — aligns ⋮ with card/content edge. */
   edgePadding?: number;
   onLogout?: () => void | Promise<void>;
+  /** Sit flush beside a leading header control (e.g. ? next to ⋮). */
+  compact?: boolean;
 }) {
   const [open, setOpen] = useState(false);
   const c = useFlareColors();
@@ -65,14 +68,14 @@ export function HeaderOverflowMenu({
   };
 
   return (
-    <>
+    <View style={compact ? styles.triggerCompactWrap : undefined}>
       <Pressable
         accessibilityRole="button"
         accessibilityLabel="More options"
         accessibilityState={{ expanded: open }}
         onPress={() => setOpen(true)}
-        style={styles.trigger}
-        hitSlop={{ top: 10, bottom: 10, left: 20, right: 6 }}
+        style={compact ? styles.triggerCompact : styles.trigger}
+        hitSlop={compact ? 10 : { top: 10, bottom: 10, left: 20, right: 6 }}
       >
         <FlareLucideIcon icon={FLARE_CHROME_LUCIDE.overflow} size={20} color={c.text} />
       </Pressable>
@@ -117,7 +120,7 @@ export function HeaderOverflowMenu({
           </View>
         </View>
       </Modal>
-    </>
+    </View>
   );
 }
 
@@ -126,6 +129,14 @@ const styles = StyleSheet.create({
     height: 40,
     minWidth: 44,
     alignItems: "flex-end",
+    justifyContent: "center",
+  },
+  triggerCompactWrap: {
+    justifyContent: "center",
+  },
+  triggerCompact: {
+    height: 40,
+    alignItems: "center",
     justifyContent: "center",
   },
   modalRoot: { flex: 1 },

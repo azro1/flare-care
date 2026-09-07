@@ -8,6 +8,12 @@ If we have a **lot to do in one day**, write it here so we don’t forget during
 
 # Mobile — follow-up / known issues
 
+## Open — Supplies Email on mum’s Redmi A9 (2026-09-07)
+
+- [ ] **Borrow Redmi A9**, bring it here, reproduce Supply request **Email** → **Could not send / Network request failed**
+- Works on Simon’s phone; must work the same on every device
+- Notes + debug checklist: `DEV_NOTES.md` → Recurring Medical Supplies → **Mobile Email → web** (“Open — device/network”)
+
 ## Upcoming (2026-08-12)
 
 ### 1. Wizard review redesign (especially Log Symptoms)

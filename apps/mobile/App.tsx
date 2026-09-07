@@ -321,7 +321,14 @@ function FlareBrandLockup({
   return (
     <View style={[styles.flareBrandLockup, style]}>
       <BrandMarkIcon size={FLARE_BRAND_MARK_SIZE} color={markColor} />
-      <Text style={[styles.flareBrandLockupName, { color: nameColor, fontSize: nameSize }]}>Flarecare</Text>
+      {/* Brand wordmark = logo; don't scale with OS display size or it clips on small phones. */}
+      <Text
+        allowFontScaling={false}
+        numberOfLines={1}
+        style={[styles.flareBrandLockupName, { color: nameColor, fontSize: nameSize }]}
+      >
+        Flarecare
+      </Text>
     </View>
   );
 }
@@ -2126,12 +2133,12 @@ function DashboardScreen({ user }: { user: SessionUser }) {
           </View>
           <Pressable
             accessibilityRole="button"
-            accessibilityLabel="Open activity"
+            accessibilityLabel="Open progress"
             onPress={openActivitiesModal}
             hitSlop={{ top: 10, bottom: 12, left: 12, right: 4 }}
             style={({ pressed }) => [styles.prioritiesActivityLink, pressed && { opacity: 0.7 }]}
           >
-            <Text style={[styles.prioritiesActivityLinkLabel, { color: c.primary }]}>Activity</Text>
+            <Text style={[styles.prioritiesActivityLinkLabel, { color: c.primary }]}>Progress</Text>
           </Pressable>
         </View>
 
@@ -3141,6 +3148,21 @@ function HydrationScreen({ user }: { user: SessionUser }) {
   const today = todayYmd();
   const atGoal = glasses >= HYDRATION_TARGET;
 
+  useLayoutEffect(() => {
+    navigation.setOptions({
+      headerTitleAlign: "center",
+      headerTitleContainerStyle: undefined,
+      headerTitle: "My Hydration",
+      headerRight: () => (
+        <InfoHintButton
+          title="My Hydration"
+          message="Track how much you drink throughout the day. Keep an eye on your progress to see how you're doing."
+          accessibilityLabel="About My Hydration"
+        />
+      ),
+    });
+  }, [navigation]);
+
   useEffect(() => {
     glassesRef.current = glasses;
   }, [glasses]);
@@ -3215,8 +3237,8 @@ function HydrationScreen({ user }: { user: SessionUser }) {
       footer={
         <ConfirmModal
           visible={resetConfirmOpen}
-          title="Reset today's progress"
-          message="This will reset today's hydration progress to 0. This action can't be undone."
+          title="Reset progress"
+          message="This will reset your hydration progress for today and cannot be undone."
           confirmLabel="Reset"
           cancelLabel="Cancel"
           onCancel={() => setResetConfirmOpen(false)}
@@ -4648,7 +4670,7 @@ function AppTabs({
     const isAccount = route.name === "Account";
     const isLogs = route.name === "Logs";
     const isAppointmentBrief = route.name === "AppointmentBrief";
-    const isMedicalSupplies = route.name === "MedicalSupplies";
+    const isBristolGuide = route.name === "BristolGuide";
     const isReminders = route.name === "Reminders";
     const titleForRoute: Record<string, string> = {
       Logs: "Logs",
@@ -4738,7 +4760,28 @@ function AppTabs({
       route.name === "MedicalSuppliesSetup" ||
       route.name === "MedicalSupplyRequest";
 
-    const headerRightContent = headerHidesOverflowMenu ? null : (
+    const headerRightContent = isBristolGuide ? (
+      <InfoHintButton
+        title="Bristol Stool Chart"
+        message="Types run from 1 (firmest) to 7 (loosest). Types 3–4 are often ideal; 1–2 harder, 5–7 looser."
+        accessibilityLabel="About Bristol Stool Chart"
+      />
+    ) : isLogs ? (
+      <View style={styles.headerRightCluster}>
+        <InfoHintButton
+          title="Your Logs"
+          message="Your Logs hub keeps all your Check-in entries together in one place. Tap a list to view your records."
+          accessibilityLabel="About Logs"
+        />
+        <HeaderOverflowMenu
+          navigation={navigation}
+          routeName={route.name}
+          edgePadding={SCREEN_EDGE_PADDING}
+          onLogout={onLogout}
+          compact
+        />
+      </View>
+    ) : headerHidesOverflowMenu ? null : (
       <HeaderOverflowMenu
         navigation={navigation}
         routeName={route.name}
@@ -4761,24 +4804,7 @@ function AppTabs({
             : isAccount
               ? "Account"
               : isLogs
-                ? () => (
-                    <View style={styles.headerTitleWithHint}>
-                      <InfoHintButton
-                        title="Your Logs"
-                        message="Your Logs hub keeps all your Check-in entries together in one place. Tap a list to view your records."
-                        accessibilityLabel="About Logs"
-                      />
-                      <Text
-                        style={{
-                          fontFamily: FLARE_FONT_FAMILY.bold,
-                          fontSize: FLARE_FONT_SIZE.navTitle,
-                          color: colors.text,
-                        }}
-                      >
-                        Logs
-                      </Text>
-                    </View>
-                  )
+                ? "Logs"
               : isAppointmentBrief
                 ? () => (
                     <View style={styles.headerTitleWithHint}>
@@ -4795,27 +4821,6 @@ function AppTabs({
                         }}
                       >
                         Appointment Summary
-                      </Text>
-                    </View>
-                  )
-              : isMedicalSupplies
-                ? () => (
-                    <View style={styles.headerTitleWithHint}>
-                      <InfoHintButton
-                        title="My Supplies"
-                        message={
-                          "Your supplies hub keeps your supply orders together in one place. Create an order for each set of supplies you regularly need. Tap to manage, or long-press to delete."
-                        }
-                        accessibilityLabel="About My Supplies"
-                      />
-                      <Text
-                        style={{
-                          fontFamily: FLARE_FONT_FAMILY.bold,
-                          fontSize: FLARE_FONT_SIZE.navTitle,
-                          color: colors.text,
-                        }}
-                      >
-                        My Supplies
                       </Text>
                     </View>
                   )
@@ -5552,6 +5557,7 @@ const styles = StyleSheet.create({
     textAlign: "center",
     fontSize: 28,
     fontFamily: "Inter_700Bold",
+    flexShrink: 0,
   },
   /** Email/code / Almost there: air under brand before the step title. */
   authLandingBrandRowSpaced: { marginBottom: 72 },
@@ -6169,6 +6175,11 @@ const styles = StyleSheet.create({
     flexDirection: "row",
     alignItems: "center",
     gap: 6,
+  },
+  headerRightCluster: {
+    flexDirection: "row",
+    alignItems: "center",
+    gap: 10,
   },
   recentLogsViewAllRow: { alignItems: "flex-end", marginBottom: 8 },
   recentLogsViewAllText: { ...FLARE_INLINE_ACTION_LINK },

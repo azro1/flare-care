@@ -29,6 +29,7 @@ import {
   LogHistoryListQuietPlaceholder,
 } from "../components/LogHistoryList";
 import { ConfirmModal } from "../components/ConfirmModal";
+import { InfoHintButton } from "../components/InfoHintButton";
 import { InstructionScreenShell } from "../components/InstructionScreenShell";
 import { TrackerThumbFab, useTrackerThumbFabLayout } from "../components/TrackerThumbFab";
 import { STACKED_DETAIL_ROW_EDGE } from "../components/StackedDetailField";
@@ -256,6 +257,16 @@ export function WeightScreen({ user }: { user: SessionUser }) {
   const [sheetOpen, setSheetOpen] = useState(false);
 
   const weightItemIds = useMemo(() => historyRows.map((row) => String(row.id)), [historyRows]);
+  const renderWeightHint = useCallback(
+    () => (
+      <InfoHintButton
+        title="My Weight"
+        message="Record your weight to help build a clearer picture of your health over time."
+        accessibilityLabel="About My Weight"
+      />
+    ),
+    [],
+  );
   const {
     selectionMode,
     selectedIds,
@@ -270,6 +281,7 @@ export function WeightScreen({ user }: { user: SessionUser }) {
     itemIds: weightItemIds,
     navigation,
     headerTitle: "My Weight",
+    renderIdleHeaderRight: renderWeightHint,
   });
 
   const handleBulkDeleteConfirm = useCallback(() => {

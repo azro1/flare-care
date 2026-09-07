@@ -29,6 +29,7 @@ import {
   LogHistoryListQuietPlaceholder,
 } from "../components/LogHistoryList";
 import { ConfirmModal } from "../components/ConfirmModal";
+import { InfoHintButton } from "../components/InfoHintButton";
 import { InstructionScreenShell } from "../components/InstructionScreenShell";
 import { OptionPickerModal } from "../components/OptionPickerModal";
 import { TrackerThumbFab, useTrackerThumbFabLayout } from "../components/TrackerThumbFab";
@@ -41,6 +42,7 @@ import { snapTimeHmFromDate } from "../lib/bowelMovementShared";
 import {
   FLARE_FONT_FAMILY,
   FLARE_FONT_SIZE,
+  CARD_INNER_PADDING,
   NAV_ROW_CHEVRON_SIZE,
   SCREEN_EDGE_PADDING,
   TIME_PICKER_MINUTE_INTERVAL,
@@ -376,6 +378,16 @@ export function OutputScreen({ user }: { user: SessionUser }) {
   const todayKindMl = todayTotals == null ? null : (todayTotals.byKind[activeKind] ?? 0);
 
   const outputItemIds = useMemo(() => activeRows.map((row) => String(row.id)), [activeRows]);
+  const renderOutputHint = useCallback(
+    () => (
+      <InfoHintButton
+        title="Fluid Output"
+        message="Log fluid output by type. Today’s total is for the tab you’re on."
+        accessibilityLabel="About Fluid Output"
+      />
+    ),
+    [],
+  );
   const {
     selectionMode,
     selectedIds,
@@ -390,6 +402,7 @@ export function OutputScreen({ user }: { user: SessionUser }) {
     itemIds: outputItemIds,
     navigation,
     headerTitle: "Fluid Output",
+    renderIdleHeaderRight: renderOutputHint,
   });
 
   const refreshTodayTotal = useCallback(async () => {
@@ -567,7 +580,7 @@ export function OutputScreen({ user }: { user: SessionUser }) {
         </>
       }
     >
-      <View style={styles.tabRow}>
+      <View style={hubTabFadeStyles.tabRow}>
         {OUTPUT_KIND_OPTIONS.map((opt, index) => {
           const active = index === tabIndex;
           return (
@@ -577,20 +590,20 @@ export function OutputScreen({ user }: { user: SessionUser }) {
               accessibilityState={{ selected: active }}
               accessibilityLabel={opt.label}
               onPress={() => goToTab(index)}
-              style={styles.tabHit}
+              style={hubTabFadeStyles.tabHit}
             >
               <Text
                 style={[
-                  styles.tabLabel,
+                  hubTabFadeStyles.tabLabel,
                   { color: active ? c.text : c.textMuted },
-                  active ? styles.tabLabelActive : null,
+                  active ? hubTabFadeStyles.tabLabelActive : null,
                 ]}
               >
                 {opt.label}
               </Text>
               <View
                 style={[
-                  styles.tabUnderline,
+                  hubTabFadeStyles.tabUnderline,
                   { backgroundColor: active ? c.primary : "transparent" },
                 ]}
               />
@@ -599,7 +612,7 @@ export function OutputScreen({ user }: { user: SessionUser }) {
         })}
       </View>
 
-      <View style={[styles.todayTotalCard, { backgroundColor: c.card, borderColor: c.cardBorder }]}>
+      <View style={[styles.todayTotalCard, { backgroundColor: c.card }]}>
         <Text style={[styles.todayTotalLabel, { color: c.textMuted }]}>Today’s total</Text>
         <Text style={[styles.todayTotalValue, { color: todayKindMl == null ? c.textMuted : c.text }]}>
           {todayKindMl == null ? "…" : formatOutputMl(todayKindMl)}
@@ -627,26 +640,6 @@ export function OutputScreen({ user }: { user: SessionUser }) {
 }
 
 const styles = StyleSheet.create({
-  tabRow: {
-    flexDirection: "row",
-    marginBottom: SCREEN_EDGE_PADDING,
-    gap: 16,
-  },
-  tabHit: {
-    paddingBottom: 8,
-  },
-  tabLabel: {
-    fontSize: FLARE_FONT_SIZE.subhead,
-    fontFamily: FLARE_FONT_FAMILY.regular,
-  },
-  tabLabelActive: {
-    fontFamily: FLARE_FONT_FAMILY.bold,
-  },
-  tabUnderline: {
-    marginTop: 6,
-    height: 2,
-    borderRadius: 1,
-  },
   sheetRoot: { flex: 1 },
   sheetHeader: {
     flexDirection: "row",
@@ -675,10 +668,8 @@ const styles = StyleSheet.create({
   fieldError: { marginTop: 8, marginBottom: 4 },
   sheetActions: { marginTop: STACKED_DETAIL_ROW_EDGE, gap: 8 },
   todayTotalCard: {
-    borderRadius: 12,
-    borderWidth: StyleSheet.hairlineWidth,
-    paddingHorizontal: 16,
-    paddingVertical: 14,
+    borderRadius: 14,
+    padding: CARD_INNER_PADDING,
     marginBottom: SCREEN_EDGE_PADDING,
   },
   todayTotalLabel: {
@@ -687,6 +678,7 @@ const styles = StyleSheet.create({
     marginBottom: 4,
   },
   todayTotalValue: {
+    /** Same hero digit size as hydration cup count. */
     fontSize: 28,
     fontFamily: FLARE_FONT_FAMILY.bold,
   },

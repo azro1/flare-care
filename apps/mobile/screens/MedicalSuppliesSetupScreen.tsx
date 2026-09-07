@@ -367,7 +367,7 @@ export function MedicalSuppliesSetupScreen({
       case STEP_INTRO:
         return "Set up an order";
       case STEP_NAME:
-        return "Choose a name";
+        return "Order name";
       case STEP_CADENCE:
         return "How often do you order?";
       case STEP_DUE:
@@ -418,12 +418,9 @@ export function MedicalSuppliesSetupScreen({
         {step === STEP_NAME ? (
           <>
             <Text style={[styles.support, { color: c.textMuted }]}>
-              Let&apos;s give it a name so you can easily identify it.
+              Let&apos;s give your order a name so you can easily identify it.
             </Text>
             <View style={styles.nameContent}>
-              <FlareScreenSectionTitle compact style={styles.nameFieldLabel}>
-                Order name
-              </FlareScreenSectionTitle>
               <FlareTextInput
                 value={kitName}
                 onChangeText={setKitName}
@@ -560,7 +557,6 @@ const styles = StyleSheet.create({
   },
   support: { ...SUPPLIES_SETUP_STEP_SUPPORT },
   nameContent: { gap: SUPPLIES_SETUP_STEP_BLOCK_GAP },
-  nameFieldLabel: { marginBottom: 0 },
   nameActions: { gap: SUPPLIES_SETUP_STEP_FOOTER.gap },
   block: { gap: SUPPLIES_SETUP_STEP_BLOCK_GAP },
   fieldInput: { marginTop: 0 },

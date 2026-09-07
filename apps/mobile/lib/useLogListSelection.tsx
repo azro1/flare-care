@@ -50,9 +50,12 @@ export function useLogListSelection({
   const bulkDeleteInFlight = useRef(false);
 
   const exitSelectionMode = useCallback(() => {
-    setSelectionMode(false);
-    setSelectedIds(new Set());
-    setBulkDeleteOpen(false);
+    setSelectionMode((prev) => {
+      if (!prev) return prev;
+      return false;
+    });
+    setSelectedIds((prev) => (prev.size === 0 ? prev : new Set()));
+    setBulkDeleteOpen((prev) => (prev ? false : prev));
   }, []);
 
   const enterSelectionWith = useCallback((id: string) => {
@@ -84,6 +87,7 @@ export function useLogListSelection({
   useFocusEffect(
     useCallback(() => {
       return () => {
+        // Skip setState when already idle — avoids hitching the pop-back animation.
         exitSelectionMode();
       };
     }, [exitSelectionMode]),
@@ -102,7 +106,7 @@ export function useLogListSelection({
 
   useEffect(() => {
     if (!selectionMode) {
-      setChrome(null);
+      setChrome((prev) => (prev == null ? prev : null));
       return;
     }
     setChrome({
@@ -114,7 +118,9 @@ export function useLogListSelection({
       onDelete: openBulkDelete,
       deleteDisabled: selectedIds.size === 0 || bulkDeleting,
     });
-    return () => setChrome(null);
+    return () => {
+      setChrome((prev) => (prev == null ? prev : null));
+    };
   }, [
     bulkDeleting,
     exitSelectionMode,

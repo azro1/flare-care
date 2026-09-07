@@ -42,6 +42,7 @@ import {
 } from "../components/LogHistoryList";
 import { TrackerThumbFab, useTrackerThumbFabLayout } from "../components/TrackerThumbFab";
 import { ConfirmModal } from "../components/ConfirmModal";
+import { InfoHintButton } from "../components/InfoHintButton";
 import { InstructionScreenShell } from "../components/InstructionScreenShell";
 import { usePaginatedLogList } from "../lib/paginatedLogList";
 import { useDeferredListLoading } from "../lib/useDeferredListLoading";
@@ -482,6 +483,16 @@ export function BowelScreen({ user }: { user: SessionUser }) {
   const [showOptional, setShowOptional] = useState(false);
 
   const bowelItemIds = useMemo(() => historyRows.map((row) => String(row.id)), [historyRows]);
+  const renderBowelHint = useCallback(
+    () => (
+      <InfoHintButton
+        title="Bowel Movements"
+        message="Log your bowel movements using stool types from the Bristol Stool Chart."
+        accessibilityLabel="About Bowel Movements"
+      />
+    ),
+    [],
+  );
   const {
     selectionMode,
     selectedIds,
@@ -496,6 +507,7 @@ export function BowelScreen({ user }: { user: SessionUser }) {
     itemIds: bowelItemIds,
     navigation,
     headerTitle: "Bowel Movements",
+    renderIdleHeaderRight: renderBowelHint,
   });
 
   const handleBulkDeleteConfirm = useCallback(() => {
