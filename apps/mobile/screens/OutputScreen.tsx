@@ -55,6 +55,7 @@ import {
   fetchTodayOutputTotals,
   formatOutputMl,
   getOutputListCache,
+  getTodayOutputTotalsCache,
   invalidateOutputListCache,
   normalizeOutputKind,
   normalizeOutputMlInput,
@@ -359,7 +360,9 @@ export function OutputScreen({ user }: { user: SessionUser }) {
   const [editingId, setEditingId] = useState<number | null>(null);
   const [sheetOpen, setSheetOpen] = useState(false);
   const { tabIndex, goToTab, paneStyle } = useHubTabFade(0, OUTPUT_KIND_OPTIONS.length);
-  const [todayTotals, setTodayTotals] = useState<TodayOutputTotals | null>(null);
+  const [todayTotals, setTodayTotals] = useState<TodayOutputTotals | null>(
+    () => getTodayOutputTotalsCache(user.id) ?? null,
+  );
 
   const activeKind: OutputKind = OUTPUT_KIND_OPTIONS[tabIndex]?.value ?? "urine";
   const rowsByKind = useMemo(() => {

@@ -149,27 +149,27 @@ export async function fetchTodayOutputTotals(userId: string): Promise<TodayOutpu
     byKind[kind] = (byKind[kind] ?? 0) + n;
   }
   const totals = { totalMl, byKind };
-  setTodayOutputTotalCache(userId, totalMl);
+  setTodayOutputTotalsCache(userId, totals);
   return totals;
 }
 
-/** Avoid 0→amount flash on hub land — keyed by user + local day. */
-const todayOutputTotalCacheByKey: Record<string, number> = {};
+/** Avoid …→amount flash on hub land — keyed by user + local day. */
+const todayOutputTotalsCacheByKey: Record<string, TodayOutputTotals> = {};
 
-function todayOutputTotalCacheKey(userId: string): string {
+function todayOutputTotalsCacheKey(userId: string): string {
   return `${userId}:${todayYmd()}`;
 }
 
-export function getTodayOutputTotalCache(userId: string): number | undefined {
-  return todayOutputTotalCacheByKey[todayOutputTotalCacheKey(userId)];
+export function getTodayOutputTotalsCache(userId: string): TodayOutputTotals | undefined {
+  return todayOutputTotalsCacheByKey[todayOutputTotalsCacheKey(userId)];
 }
 
-export function setTodayOutputTotalCache(userId: string, totalMl: number) {
-  todayOutputTotalCacheByKey[todayOutputTotalCacheKey(userId)] = totalMl;
+export function setTodayOutputTotalsCache(userId: string, totals: TodayOutputTotals) {
+  todayOutputTotalsCacheByKey[todayOutputTotalsCacheKey(userId)] = totals;
 }
 
-export function invalidateTodayOutputTotalCache(userId: string) {
-  delete todayOutputTotalCacheByKey[todayOutputTotalCacheKey(userId)];
+export function invalidateTodayOutputTotalsCache(userId: string) {
+  delete todayOutputTotalsCacheByKey[todayOutputTotalsCacheKey(userId)];
 }
 
 type OutputListCacheSnapshot = {
@@ -190,7 +190,7 @@ export function setOutputListCache(userId: string, snapshot: OutputListCacheSnap
 
 export function invalidateOutputListCache(userId: string) {
   delete outputListCacheByUserId[userId];
-  invalidateTodayOutputTotalCache(userId);
+  invalidateTodayOutputTotalsCache(userId);
 }
 
 export async function deleteOutputsForUser(userId: string, outputIds: string[]): Promise<void> {

@@ -4870,7 +4870,7 @@ function AppTabs({
                 }}
                 style={styles.headerBackButton}
               >
-                <FlareLucideIcon icon={FLARE_CHROME_LUCIDE.back} size={24} color={colors.textMuted} />
+                <FlareLucideIcon icon={FLARE_CHROME_LUCIDE.back} size={24} color={colors.text} />
               </Pressable>
             )
           : undefined,

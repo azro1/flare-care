@@ -85,7 +85,7 @@ export function HydrationProgressRing({
           >
             <View style={[styles.innerDisc, { backgroundColor: c.primary, opacity: 0.1 }]} />
             <View style={styles.checkBadge}>
-              <FlareLucideIcon icon={FLARE_CHROME_LUCIDE.checkCircle} size={36} color={c.primary} />
+              <FlareLucideIcon icon={FLARE_CHROME_LUCIDE.checkCircle} size={30} color={c.primary} />
             </View>
             <View style={styles.goalCopyStack}>
               <Text style={[styles.goalTitle, { color: c.text }]}>Completed</Text>
