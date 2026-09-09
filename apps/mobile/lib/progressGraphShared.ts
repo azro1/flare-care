@@ -1,6 +1,6 @@
 /**
- * Daily stay-on-track scores for the progress graph.
- * Used by `components/ProgressOverTimeGraph.tsx` (held for a future Trends screen).
+ * Daily stay-on-track scores for the legacy progress graph.
+ * Superseded by `lib/trendsLoggingShared.ts` (entry counts). Not used by Trends UI.
  */
 import { HYDRATION_TARGET } from "./hydrationShared";
 import { fetchMedicationsForUser } from "./medicationShared";

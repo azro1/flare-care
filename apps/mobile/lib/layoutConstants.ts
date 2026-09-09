@@ -231,6 +231,14 @@ export const NAV_ROW_LABEL = {
 /** Navigate / disclosure chevrons (`chevron-forward` / `-down` / `-up`). Not header back. */
 export const NAV_ROW_CHEVRON_SIZE = FLARE_FONT_SIZE.navTitle;
 
+/**
+ * Stack header chrome icons — back, ⋮, ?, edit, delete.
+ * One size so the bar doesn’t mix 20 / 22 / 24 weights.
+ */
+export const HEADER_CHROME_ICON_SIZE = 22;
+/** Visual width for header edit/delete; keep hitSlop for touch. */
+export const HEADER_ACTION_BTN_WIDTH = 34;
+
 /** In-card section title — Account, wizard review (`FlareScreenSectionTitle inCard`). */
 export const CARD_SECTION_TITLE = {
   fontSize: FLARE_FONT_SIZE.body,
@@ -272,6 +280,62 @@ export const INSTRUCTION_CARD_ICON_SIZE = 22;
 export const INSTRUCTION_CARD_CLOSE_ICON_SIZE = FLARE_FONT_SIZE.body;
 /** Top offset when floating over dashboard scroll (`dashboardWelcomeFloat`). */
 export const INSTRUCTION_CARD_FLOAT_TOP = SCREEN_EDGE_PADDING;
+
+/**
+ * Trends hub — logging entry counts over time (`TrendsScreen` / `TrendsLoggingGraph`).
+ * Chart geometry + hero type live here so screens don’t invent one-offs.
+ */
+export const TRENDS_HERO_VALUE = {
+  fontSize: 40,
+  lineHeight: 46,
+  letterSpacing: -0.5,
+} as const;
+export const TRENDS_HERO_MIN_HEIGHT = 72;
+export const TRENDS_BLOCK_GAP = 18;
+export const TRENDS_CHART_HEIGHT = 168;
+export const TRENDS_CHART_PAD_TOP = 8;
+export const TRENDS_CHART_PAD_BOTTOM = 4;
+export const TRENDS_CHART_TRAY_PAD_V = CARD_INNER_PADDING;
+export const TRENDS_CHART_TRAY_PAD_H = SCREEN_EDGE_PADDING;
+/** Extra vertical room in the chart tray around the SVG. */
+export const TRENDS_CHART_TRAY_EXTRA = CARD_INNER_PADDING - 2;
+/** Inset tray radius (controls + chart) — slightly tighter than white card. */
+export const TRENDS_INSET_TRAY_RADIUS = INSTRUCTION_CARD_RADIUS - 2;
+export const TRENDS_CONTROL_ROW_PAD_Y = TRAY_ROW_PADDING_Y + 1;
+export const TRENDS_CONTROL_ROW_PAD_H = TRAY_ROW_PADDING_H - 2;
+export const TRENDS_CONTROL_VALUE_GAP = STACKED_LINE_GAP + 2;
+export const TRENDS_CHART_BLOCK_GAP = STACKED_LINE_GAP * 2;
+export const TRENDS_CHART_TRAY_PAD_BOTTOM = TRENDS_CHART_TRAY_PAD_V - 2;
+export const TRENDS_EMPTY_COPY_PAD_H = EMPTY_TRAY_PADDING + 6;
+export const TRENDS_AXIS_LABEL = {
+  fontSize: FLARE_FONT_SIZE.caption - 1,
+  lineHeight: FLARE_LINE_HEIGHT.caption - 2,
+} as const;
+export const TRENDS_BAR_GAP_COMFORT = 3;
+export const TRENDS_BAR_GAP_TIGHT = 2;
+export const TRENDS_BAR_GAP_DENSE = 1;
+export const TRENDS_BAR_MIN_WIDTH = 1.5;
+export const TRENDS_BAR_MIN_HEIGHT = 3;
+export const TRENDS_BAR_EMPTY_HEIGHT = 2;
+export const TRENDS_BAR_RADIUS_MAX = 4;
+export const TRENDS_BAR_FILL_OPACITY = 0.88;
+export const TRENDS_BAR_EMPTY_OPACITY = 0.55;
+/** Day-count thresholds for bar gap density. */
+export const TRENDS_BAR_DENSE_DAY_COUNT = 60;
+export const TRENDS_BAR_TIGHT_DAY_COUNT = 28;
+
+/**
+ * Inline info callout (soft primary wash + i) — trial vs header `?`.
+ * Spacing mirrors NHS tip trays; colours stay Flarecare tokens.
+ */
+export const INFO_CALLOUT_RADIUS = INSTRUCTION_CARD_RADIUS - 2;
+export const INFO_CALLOUT_PAD_H = CARD_INNER_PADDING;
+export const INFO_CALLOUT_PAD_V = CARD_SECTION_INNER_GAP;
+export const INFO_CALLOUT_GAP = INSTRUCTION_CARD_HEADER_GAP;
+export const INFO_CALLOUT_ICON_SIZE = INSTRUCTION_CARD_ICON_SIZE;
+/** Soft brand wash behind the tray (hex alpha on `c.primary`). */
+export const INFO_CALLOUT_WASH_ALPHA = "1A";
+export const INFO_CALLOUT_MARGIN_BOTTOM = CARD_SECTION_INNER_GAP;
 
 /** Shared absolute overlay — dashboard welcome + wizard step-0 instruction cards. */
 export const INSTRUCTION_CARD_FLOAT_STYLE = {

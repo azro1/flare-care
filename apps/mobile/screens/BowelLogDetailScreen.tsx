@@ -32,7 +32,7 @@ import { invalidateDashboardSnapshot } from "../lib/dashboardSnapshotCache";
 import { formatAddedAtHeader } from "../lib/logDisplay";
 import { recordRecentActivityEvent } from "../lib/recentActivityEvents";
 import { formatUkDate } from "../lib/formatUkDate";
-import { FLARE_FONT_FAMILY, FLARE_FONT_SIZE } from "../lib/layoutConstants";
+import { FLARE_FONT_FAMILY, FLARE_FONT_SIZE, HEADER_ACTION_BTN_WIDTH, HEADER_CHROME_ICON_SIZE } from "../lib/layoutConstants";
 import { supabase, TABLES } from "../lib/supabase";
 import { useFlareColors } from "../theme";
 import type { BowelReturnParams, BristolGuideParams } from "./BristolGuideScreen";
@@ -68,7 +68,7 @@ function DetailEditHeaderButton({ onPress, disabled }: { onPress: () => void; di
       hitSlop={10}
       style={styles.headerEditButton}
     >
-      <FlareLucideIcon icon={FLARE_CHROME_LUCIDE.edit} size={22} color={c.textMuted} />
+      <FlareLucideIcon icon={FLARE_CHROME_LUCIDE.edit} size={HEADER_CHROME_ICON_SIZE} color={c.text} />
     </Pressable>
   );
 }
@@ -84,7 +84,7 @@ function DetailDeleteHeaderButton({ onPress, disabled }: { onPress: () => void; 
       hitSlop={10}
       style={styles.headerDeleteButton}
     >
-      <FlareLucideIcon icon={FLARE_CHROME_LUCIDE.delete} size={22} color={c.textMuted} />
+      <FlareLucideIcon icon={FLARE_CHROME_LUCIDE.delete} size={HEADER_CHROME_ICON_SIZE} color={c.text} />
     </Pressable>
   );
 }
@@ -341,15 +341,16 @@ const styles = StyleSheet.create({
   headerEditDeleteRow: {
     flexDirection: "row",
     alignItems: "center",
+    gap: 2,
   },
   headerEditButton: {
-    width: 44,
+    width: HEADER_ACTION_BTN_WIDTH,
     height: 44,
     alignItems: "center",
     justifyContent: "center",
   },
   headerDeleteButton: {
-    width: 44,
+    width: HEADER_ACTION_BTN_WIDTH,
     height: 44,
     alignItems: "center",
     justifyContent: "center",

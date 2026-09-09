@@ -40,11 +40,11 @@ import {
 import { MY_MEDS_ICON } from "../lib/medicationFeatureIcons";
 import { Portal } from "../lib/overlayPortal";
 import { useFlareColors } from "../theme";
-// ProgressOverTimeGraph kept for a future Trends screen — not shown in this sheet.
+// Legacy ProgressOverTimeGraph superseded by Trends — not shown in this sheet.
 
 const AnimatedGHScrollView = Animated.createAnimatedComponent(GHScrollView);
 
-/** Hint on Meds page only — Hydration is the last Activity page (graph parked). */
+/** Hint on Meds page only — Hydration is the last Activity page. */
 const ACTIVITY_SWIPE_HINT = "Swipe for more";
 
 const HYDRATION_ACTIVITY_LOTTIE = require("../assets/activity/hydration-cup.json");
@@ -428,7 +428,7 @@ function CountingPercentLabel({
   return <Text style={[styles.pulseHeroValue, { color }]}>{displayPct}%</Text>;
 }
 
-/** Slide-up sheet — Meds ↔ Hydration (shared %). Graph held for a future Trends screen. */
+/** Slide-up sheet — Meds ↔ Hydration (shared %). Trends lives on its own screen. */
 export function TodayActivitiesModal({
   visible,
   leaving = false,

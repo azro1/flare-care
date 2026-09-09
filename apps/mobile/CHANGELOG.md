@@ -4,6 +4,12 @@ Shipped / unreleased UI and behaviour updates for the Expo app (`apps/mobile`). 
 
 ## Unreleased
 
+### Trends (logging over time) (2026-09)
+
+- **Trends** screen — entry counts over 2 weeks → year; filter by log type.
+- Bottom tab (**Home · Trends · Logs · Account**); not under My health.
+- Activity (Progress) stays Meds ↔ Hydration only. Legacy meds+hydration % graph left unwired.
+
 ### Dashboard My health / My tools / My care (2026-08)
 
 - Home tools pager is three horizontal pages: **My health** · **My tools** · **My care** (no nested vertical swipe).

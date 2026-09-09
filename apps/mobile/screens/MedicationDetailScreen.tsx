@@ -32,7 +32,7 @@ import {
   type MedicationRow,
 } from "../lib/medicationShared";
 import { rescheduleLocalRemindersIfGranted } from "../lib/medicationNotifications";
-import { CARD_INNER_PADDING, FLARE_FONT_FAMILY, FLARE_FONT_SIZE } from "../lib/layoutConstants";
+import { CARD_INNER_PADDING, FLARE_FONT_FAMILY, FLARE_FONT_SIZE, HEADER_ACTION_BTN_WIDTH, HEADER_CHROME_ICON_SIZE } from "../lib/layoutConstants";
 import { supabase, TABLES } from "../lib/supabase";
 import { useFlareColors } from "../theme";
 import { MedicationSheet } from "./MedicationsScreen";
@@ -47,7 +47,7 @@ function DetailEditHeaderButton({ onPress, disabled }: { onPress: () => void; di
   const c = useFlareColors();
   return (
     <Pressable accessibilityRole="button" accessibilityLabel="Edit medication" onPress={onPress} disabled={disabled} hitSlop={10} style={styles.headerIconBtn}>
-      <FlareLucideIcon icon={FLARE_CHROME_LUCIDE.edit} size={22} color={c.textMuted} />
+      <FlareLucideIcon icon={FLARE_CHROME_LUCIDE.edit} size={HEADER_CHROME_ICON_SIZE} color={c.text} />
     </Pressable>
   );
 }
@@ -56,7 +56,7 @@ function DetailDeleteHeaderButton({ onPress, disabled }: { onPress: () => void; 
   const c = useFlareColors();
   return (
     <Pressable accessibilityRole="button" accessibilityLabel="Delete medication" onPress={onPress} disabled={disabled} hitSlop={10} style={styles.headerIconBtn}>
-      <FlareLucideIcon icon={FLARE_CHROME_LUCIDE.delete} size={22} color={c.textMuted} />
+      <FlareLucideIcon icon={FLARE_CHROME_LUCIDE.delete} size={HEADER_CHROME_ICON_SIZE} color={c.text} />
     </Pressable>
   );
 }
@@ -289,7 +289,7 @@ export function MedicationDetailScreen({ user }: { user: SessionUser }) {
 const styles = StyleSheet.create({
   centered: { flex: 1, alignItems: "center", justifyContent: "center", gap: 12 },
   muted: { fontSize: FLARE_FONT_SIZE.body, fontFamily: FLARE_FONT_FAMILY.regular },
-  headerBtnRow: { flexDirection: "row", alignItems: "center" },
-  headerIconBtn: { width: 44, height: 44, alignItems: "center", justifyContent: "center" },
+  headerBtnRow: { flexDirection: "row", alignItems: "center", gap: 2 },
+  headerIconBtn: { width: HEADER_ACTION_BTN_WIDTH, height: 44, alignItems: "center", justifyContent: "center" },
   takenActions: { marginTop: CARD_INNER_PADDING },
 });

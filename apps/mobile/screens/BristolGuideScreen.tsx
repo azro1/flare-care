@@ -6,6 +6,7 @@ import { InstructionScreenShell } from "../components/InstructionScreenShell";
 import {
   LogHistoryCard,
   LogHistoryList,
+  logHistoryCardStyles,
   logHistoryListStyles,
   type LogHistoryListItem,
 } from "../components/LogHistoryList";
@@ -99,20 +100,21 @@ export function BristolGuideScreen({ user }: { user: SessionUser }) {
       instruction={null}
     >
       <LogHistoryCard style={styles.guideCard}>
-        <LogHistoryList
-          items={items}
-          rowTextLayout="default"
-          renderLeading={renderLeading}
-          renderSubtitle={renderSubtitle}
-          getRowStyle={getRowStyle}
-          onPressItem={pickMode ? selectType : undefined}
-          renderTrailing={pickMode ? () => null : undefined}
-        />
+        <View style={logHistoryCardStyles.trackerCardBody}>
+          <LogHistoryList
+            items={items}
+            rowTextLayout="default"
+            renderLeading={renderLeading}
+            renderSubtitle={renderSubtitle}
+            getRowStyle={getRowStyle}
+            onPressItem={pickMode ? selectType : undefined}
+            renderTrailing={pickMode ? () => null : undefined}
+          />
+          {pickMode ? (
+            <Text style={[styles.pickFooter, { color: c.textMuted }]}>Tap a type to use it in your log.</Text>
+          ) : null}
+        </View>
       </LogHistoryCard>
-
-      {pickMode ? (
-        <Text style={[styles.pickFooter, { color: c.textMuted }]}>Tap a type to use it in your log.</Text>
-      ) : null}
     </InstructionScreenShell>
   );
 }
@@ -131,6 +133,5 @@ const styles = StyleSheet.create({
     fontSize: FLARE_FONT_SIZE.muted,
     fontFamily: FLARE_FONT_FAMILY.regular,
     textAlign: "center",
-    marginTop: 14,
   },
 });

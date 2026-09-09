@@ -12,12 +12,6 @@ Long-lived conventions, “don’t forget / don’t duplicate,” SQL checklists
 
 ---
 
-## Idea — Activity Lottie soft disc (from MH complete)
-
-**Idea (2026-09-07):** My Hydration’s completed state uses a soft transparent primary disc behind the check + “Completed” copy (`HydrationProgressRing` inner disc). Might reuse that same treatment in the **Activity** sheet around the meds/hydration Lottie heroes — consistency + clearer visual framing. Not started; just a note.
-
----
-
 ## Open — OS display / font size (accessibility)
 
 **Status (2026-09-07):** Brand wordmark locked with `allowFontScaling={false}` on `FlareBrandLockup` — splash/sign-in stopped clipping; full **XXL** pass looked solid across the app (quick check; wizards not deep-tested). Most layouts already flex OK.
@@ -95,7 +89,9 @@ Use existing screens as reference — do **not** default to web-style teal hyper
 
 **New tracker / settings screens:** card layout + `SCREEN_EDGE_PADDING` + `useFlareColors()`; stack routes with `headerOptions` titles; link rows like Account, not a second colour system.
 
-**Header chrome (list screens):** **⋮** overflow — **`c.text`** in light, **`c.textMuted`** in dark. Tracker hubs (Bowel, My Meds, Weight, Appointments) use a **thumb-reach + FAB** (`TrackerThumbFab`) instead of header **+**.
+**Header chrome (list screens):** **⋮** overflow — **`c.text`**. Back / ⋮ / `?` / edit / delete share **`HEADER_CHROME_ICON_SIZE` (22)**. Detail edit+delete use **`c.text`** with tighter action width (`HEADER_ACTION_BTN_WIDTH`) so the bar isn’t right-heavy. Tracker hubs use **thumb-reach + FAB** (`TrackerThumbFab`) instead of header **+**.
+
+**Info tips:** Header **`?`** (`InfoHintButton`) — keeps copy off the page. Soft on-page callout (`FlareInfoCallout`) was tried on Weight / Bowel / Bristol chart (2026-09) and **rejected** — too much clutter vs the clean list look. Don’t roll it out. Component + `INFO_CALLOUT_*` tokens may still exist unused.
 
 **Live examples:** Account tab (`LogHistoryList` link rows), **Bowel** / **My Meds** (`TrackerThumbFab`), **Bristol chart** (`screens/BristolGuideScreen.tsx`), **Hydration** (Reset link).
 
@@ -613,9 +609,10 @@ Separate flows, separate data:
 
 | Feature | Job |
 |---------|-----|
-| **View progress** | Reflective Meds / Hydration / graph sheet from My health |
+| **View progress** | Reflective Meds / Hydration sheet from Progress link (not Trends) |
+| **Trends** | App-wide logging entry counts (bottom tab) — not a health score |
 | **Today's priorities** | Incomplete actions: remaining meds, hydration nudge, check-in, today/tomorrow appt, **supplies due/overdue** |
-| **Supplies** | Bottom nav tab only — not on this card |
+| **Supplies** | My care tile + hub — not on this priorities card |
 
 Helpers: `lib/todayPriorities.ts` (`buildTodayPriorities`, `findNearTermAppointment`). Reuses `todaySummary` from the dashboard snapshot; appointments are cache-first via `appointmentShared`. Cap 3 rows + **View all** expands in-card. Caught-up empty state still shows the section.
 
@@ -630,6 +627,36 @@ Helpers: `lib/todayPriorities.ts` (`buildTodayPriorities`, `findNearTermAppointm
 - **My care** — Appointments tall left; Supplies + Reports right (clinical / external)
 
 **Why:** Care swipe-up stole home scroll when users tried to scroll the dashboard. Horizontal-only keeps discovery without gesture fights.
+
+### Trends (bottom tab)
+
+**Job:** How often the user has been **logging diary/health entries** over time. Not a health score. Not under My health (app-wide).
+
+**Files:** `screens/TrendsScreen.tsx`, `components/TrendsLoggingGraph.tsx`, `lib/trendsLoggingShared.ts`. Tokens: `TRENDS_*` in `layoutConstants.ts`.
+
+**Show filter (locked list — diary / logging only):**
+
+| In the picker | Source |
+|---------------|--------|
+| **All** | Sum of the rows below |
+| Symptoms | `log_symptoms` |
+| Track Medications | `log_medications` |
+| Wellbeing | `daily_wellbeing` |
+| Hydration | `daily_hydration` (day counts if glasses > 0) |
+| Bowel | `bowel_movements` |
+| Weight | `track_weight` |
+| Food & Drink | `track_intake` |
+| Fluid Output | `track_output` |
+
+**Do not add to Trends (different kind of event / not diary logging):**
+
+- My Meds **mark as taken** (`is_medication_taken`)
+- Appointments
+- Supplies / crates
+- Reports / appointment summaries
+- Account, guides, news, reminders chrome
+
+If product later wants those in the graph, call it out explicitly — don’t silently fold them into **All**.
 
 ---
 

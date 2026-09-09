@@ -34,6 +34,7 @@ import {
   Hash,
   HeartPulse,
   House,
+  Info,
   List,
   Lock,
   Mail,
@@ -51,6 +52,7 @@ import {
   Thermometer,
   Toilet,
   Trash2,
+  TrendingUp,
   Utensils,
   User,
   X,
@@ -83,6 +85,8 @@ export const FLARE_FEATURE_LUCIDE = {
   output: Droplet,
   /** Food & Drink intake diary (Tools). */
   intake: Utensils,
+  /** Logging trends over time (My health). */
+  trends: TrendingUp,
 } as const;
 
 export type FlareFeatureLucideKey = keyof typeof FLARE_FEATURE_LUCIDE;
@@ -90,6 +94,7 @@ export type FlareFeatureLucideKey = keyof typeof FLARE_FEATURE_LUCIDE;
 /** Bottom nav — Lucide outline only (active = primary color, not a filled glyph). */
 export const FLARE_TAB_LUCIDE = {
   home: House,
+  trends: TrendingUp,
   logs: List,
   account: CircleUser,
   delete: Trash2,
@@ -115,7 +120,10 @@ export const FLARE_CHROME_LUCIDE = {
   edit: SquarePen,
   delete: Trash2,
   add: Plus,
+  /** Header help — ? (opens modal). */
   info: CircleHelp,
+  /** Inline tip callout — i-in-circle (NHS-style tray trial). */
+  infoCircle: Info,
   lock: Lock,
   newspaper: Newspaper,
   notifications: Bell,

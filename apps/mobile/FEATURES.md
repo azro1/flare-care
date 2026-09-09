@@ -13,8 +13,8 @@ Flarecare helps people with Crohn’s / Colitis track their day and prepare for 
 
 **Bottom tabs**
 
-1. **Dashboard** — home  
-2. **Supplies** — medical supplies list + request  
+1. **Home** — dashboard  
+2. **Trends** — logging over time (app-wide)  
 3. **Logs** — past symptom / medication-tracking / wellbeing entries  
 4. **Account** — your settings and sign out  
 
@@ -72,9 +72,11 @@ Hydration **numbers** live under **View progress**.
 **View progress**  
 Slide-up card with:
 - Today’s meds status (how many taken)
-- Today’s hydration cups
-- A graph of progress over time  
+- Today’s hydration cups  
 Tap through to open My Meds or Hydration.
+
+**Trends** (bottom tab)  
+How often you’ve been logging in Flarecare over time (entry counts). Filter by type and period. Not a health score — more entries means more app use. App-wide — not under My health.
 
 ---
 

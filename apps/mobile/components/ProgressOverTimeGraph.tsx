@@ -1,8 +1,8 @@
 import { FLARE_CHROME_LUCIDE, FlareLucideIcon } from "../lib/flareLucideIcons";
 /**
- * Progress-over-time graph (area/line + compact period dropdown).
- * Kept for a future Trends screen — not wired into the Activity sheet.
- * Pair with `lib/progressGraphShared.ts`.
+ * Progress-over-time graph (legacy meds+hydration %).
+ * Superseded by Trends logging counts (`TrendsLoggingGraph` / `trendsLoggingShared`).
+ * Kept temporarily for reference — not wired into UI.
  */
 import React, { useEffect, useMemo, useState } from "react";
 import { ActivityIndicator, LayoutChangeEvent, Pressable, StyleSheet, Text, View } from "react-native";

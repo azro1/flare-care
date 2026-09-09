@@ -2,6 +2,7 @@ import { FLARE_CHROME_LUCIDE, FlareLucideIcon } from "../lib/flareLucideIcons";
 import React, { useState } from "react";
 import { Pressable, StyleSheet, Text, View } from "react-native";
 import { ConfirmModal } from "./ConfirmModal";
+import { HEADER_CHROME_ICON_SIZE } from "../lib/layoutConstants";
 import { useFlareColors } from "../theme";
 
 /**
@@ -33,7 +34,7 @@ export function InfoHintButton({
         onPress={() => setOpen(true)}
         style={styles.hit}
       >
-        <FlareLucideIcon icon={FLARE_CHROME_LUCIDE.info} size={22} color={c.textSecondary} />
+        <FlareLucideIcon icon={FLARE_CHROME_LUCIDE.info} size={HEADER_CHROME_ICON_SIZE} color={c.textSecondary} />
       </Pressable>
       <ConfirmModal
         visible={open}

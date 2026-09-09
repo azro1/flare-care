@@ -182,7 +182,7 @@ export function buildOccurredAtIso(date: string, time: string): Date | null {
 }
 
 export function validateBowelForm(form: BowelFormState): string | null {
-  if (form.bristolType == null) return "Please select a Bristol chart type.";
+  if (form.bristolType == null) return "Please select a type.";
   if (!form.date) return "Please select a date.";
   if (!form.time) return "Please select a time.";
   const occurred = buildOccurredAtIso(form.date, form.time);

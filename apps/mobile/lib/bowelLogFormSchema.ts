@@ -19,7 +19,7 @@ export const bowelLogFormSchema: yup.ObjectSchema<BowelFormState> = yup.object({
   bristolType: yup
     .number()
     .nullable()
-    .required("Please select a Bristol chart type.")
+    .required("Please select a type.")
     .min(1)
     .max(7),
   blood: yup.string().defined(),

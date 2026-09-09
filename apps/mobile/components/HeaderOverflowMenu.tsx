@@ -2,7 +2,7 @@ import React, { useMemo, useState } from "react";
 import { Modal, Pressable, StyleSheet, Text, View } from "react-native";
 import { showFlareAlert } from "../components/FlareAlertHost";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
-import { FLARE_FONT_FAMILY } from "../lib/layoutConstants";
+import { FLARE_FONT_FAMILY, HEADER_CHROME_ICON_SIZE } from "../lib/layoutConstants";
 import { FLARE_CHROME_LUCIDE, FlareLucideIcon } from "../lib/flareLucideIcons";
 import { useFlareColors } from "../theme";
 
@@ -77,7 +77,7 @@ export function HeaderOverflowMenu({
         style={compact ? styles.triggerCompact : styles.trigger}
         hitSlop={compact ? 10 : { top: 10, bottom: 10, left: 20, right: 6 }}
       >
-        <FlareLucideIcon icon={FLARE_CHROME_LUCIDE.overflow} size={20} color={c.text} />
+        <FlareLucideIcon icon={FLARE_CHROME_LUCIDE.overflow} size={HEADER_CHROME_ICON_SIZE} color={c.text} />
       </Pressable>
       <Modal visible={open} transparent animationType="fade" onRequestClose={close}>
         <View style={styles.modalRoot}>
