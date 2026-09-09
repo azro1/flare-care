@@ -1,5 +1,9 @@
+/**
+ * Privacy / Terms body — scan-first numbered accordion (DrDoctor-style progressive disclosure).
+ * Copy from shared `src/content/legalDocuments`.
+ */
 import React from "react";
-import { Linking, Pressable, StyleSheet, Text, View } from "react-native";
+import { Linking, StyleSheet, Text } from "react-native";
 import {
   LEGAL_FOOTER_NOTE,
   LEGAL_LAST_UPDATED,
@@ -8,8 +12,13 @@ import {
   TERMS_INTRO,
   TERMS_SECTIONS,
 } from "../../../src/content/legalDocuments";
-import { FLARE_FONT_FAMILY, FLARE_FONT_SIZE, FLARE_LINE_HEIGHT } from "../lib/layoutConstants";
+import {
+  FLARE_FONT_FAMILY,
+  FLARE_FONT_SIZE,
+  FLARE_LINE_HEIGHT,
+} from "../lib/layoutConstants";
 import { useFlareColors } from "../theme";
+import { NumberedAccordion } from "./NumberedAccordion";
 
 export type LegalDocumentKind = "privacy" | "terms";
 
@@ -23,74 +32,72 @@ const DOCUMENTS: Record<
   terms: { title: "Terms of Use", intro: TERMS_INTRO, sections: TERMS_SECTIONS },
 };
 
+const SUPPORT_EMAIL = "support@flarecare.app";
+
+/** Renders a paragraph string, making any support email a tappable cadet link. */
+function LegalParagraph({ text, c }: { text: string; c: ReturnType<typeof useFlareColors> }) {
+  const idx = text.indexOf(SUPPORT_EMAIL);
+  if (idx < 0) {
+    return <Text style={[styles.paragraph, { color: c.textMuted }]}>{text}</Text>;
+  }
+  const before = text.slice(0, idx);
+  const after = text.slice(idx + SUPPORT_EMAIL.length);
+  return (
+    <Text style={[styles.paragraph, { color: c.textMuted }]}>
+      {before}
+      <Text
+        style={{ color: c.primary, fontFamily: "Inter_600SemiBold" }}
+        onPress={() => Linking.openURL(`mailto:${SUPPORT_EMAIL}`).catch(() => {})}
+        accessibilityRole="link"
+        accessibilityLabel={`Email ${SUPPORT_EMAIL}`}
+      >
+        {SUPPORT_EMAIL}
+      </Text>
+      {after}
+    </Text>
+  );
+}
+
 export function LegalDocumentView({ kind }: { kind: LegalDocumentKind }) {
   const c = useFlareColors();
   const doc = DOCUMENTS[kind];
 
   return (
-    <View style={styles.wrap}>
-      <Text style={[styles.updated, { color: c.textMuted }]}>Last updated: {LEGAL_LAST_UPDATED}</Text>
-      <Text style={[styles.intro, { color: c.textMuted }]}>{doc.intro}</Text>
-      {doc.sections.map((section) => (
-        <View key={section.id} style={styles.section}>
-          <Text style={[styles.sectionTitle, { color: c.text }]}>{section.title}</Text>
-          {section.paragraphs.map((paragraph, index) => (
-            <Text key={index} style={[styles.paragraph, { color: c.textMuted }]}>
-              {paragraph}
-            </Text>
-          ))}
-        </View>
-      ))}
-      <Text style={[styles.footerNote, { color: c.textMuted }]}>{LEGAL_FOOTER_NOTE}</Text>
-      <Pressable
-        accessibilityRole="button"
-        accessibilityLabel="Email support at support@flarecare.app"
-        onPress={() => Linking.openURL("mailto:support@flarecare.app").catch(() => {})}
-        hitSlop={8}
-      >
-        <Text style={[styles.supportLink, { color: c.primary }]}>support@flarecare.app</Text>
-      </Pressable>
-    </View>
+    <NumberedAccordion
+      intro={doc.intro}
+      sections={doc.sections.map((section) => ({
+        id: section.id,
+        title: section.title,
+        body: section.paragraphs.map((paragraph, pIndex) => (
+          <LegalParagraph key={pIndex} text={paragraph} c={c} />
+        )),
+      }))}
+      footer={
+        <>
+          <Text style={[styles.updated, { color: c.textMuted }]}>Last updated: {LEGAL_LAST_UPDATED}</Text>
+          <Text style={[styles.footerNote, { color: c.textMuted }]}>{LEGAL_FOOTER_NOTE}</Text>
+        </>
+      }
+    />
   );
 }
 
 const styles = StyleSheet.create({
-  wrap: { paddingHorizontal: 4 },
+  paragraph: {
+    fontSize: FLARE_FONT_SIZE.muted,
+    lineHeight: FLARE_LINE_HEIGHT.muted,
+    fontFamily: FLARE_FONT_FAMILY.regular,
+  },
   updated: {
     fontSize: FLARE_FONT_SIZE.caption,
     fontFamily: FLARE_FONT_FAMILY.regular,
     lineHeight: FLARE_LINE_HEIGHT.caption,
     marginBottom: 12,
   },
-  intro: {
-    fontSize: FLARE_FONT_SIZE.muted,
-    lineHeight: FLARE_LINE_HEIGHT.muted,
-    fontFamily: FLARE_FONT_FAMILY.regular,
-    marginBottom: 20,
-  },
-  section: { marginBottom: 22 },
-  sectionTitle: {
-    fontSize: FLARE_FONT_SIZE.body,
-    lineHeight: FLARE_LINE_HEIGHT.body,
-    fontFamily: FLARE_FONT_FAMILY.bold,
-    marginBottom: 8,
-  },
-  paragraph: {
-    fontSize: FLARE_FONT_SIZE.muted,
-    lineHeight: FLARE_LINE_HEIGHT.muted,
-    fontFamily: FLARE_FONT_FAMILY.regular,
-    marginBottom: 8,
-  },
   footerNote: {
     fontSize: FLARE_FONT_SIZE.caption,
     lineHeight: FLARE_LINE_HEIGHT.caption,
     fontFamily: FLARE_FONT_FAMILY.regular,
-    marginTop: 8,
     marginBottom: 16,
-  },
-  supportLink: {
-    fontSize: FLARE_FONT_SIZE.muted,
-    fontFamily: FLARE_FONT_FAMILY.semibold,
-    marginBottom: 8,
   },
 });

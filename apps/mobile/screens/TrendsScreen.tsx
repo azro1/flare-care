@@ -32,7 +32,7 @@ export function TrendsScreen({ user }: { user: SessionUser }) {
       headerRight: () => (
         <InfoHintButton
           title="Trends"
-          message="See how often you’ve been logging in Flarecare. Each bar is one day. Taller means more entries that day — not a health score."
+          message="Trends displays your FlareCare activity. Each bar represents one day, with the height indicating the number of entries logged."
           accessibilityLabel="About Trends"
         />
       ),

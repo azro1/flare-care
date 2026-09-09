@@ -6,7 +6,7 @@ export const LEGAL_FOOTER_NOTE =
   'These documents explain how Flarecare handles your information and may be updated as the Service changes.'
 
 export const PRIVACY_INTRO =
-  'Flarecare helps people with inflammatory bowel disease (IBD) manage their condition day to day. This policy explains what data we collect, how we use it, and what choices are available to you.'
+  'This policy explains what data we collect, how we use it, and the choices available to you when using FlareCare.'
 
 export const TERMS_INTRO =
   'These Terms explain your rights and responsibilities when you use Flarecare. Please read them together with our Privacy Policy.'
@@ -147,6 +147,13 @@ export const PRIVACY_SECTIONS = [
       'We may update this policy. The latest version will be shown in the app and on our website with a new "Last updated" date.',
     ],
   },
+  {
+    id: 'contact',
+    title: 'Contact us',
+    paragraphs: [
+      'If you have any questions about these Terms of Use or this Privacy Policy, please contact us at support@flarecare.app.',
+    ],
+  },
 ]
 
 /** @type {LegalSection[]} */
@@ -240,8 +247,10 @@ export const TERMS_SECTIONS = [
   },
   {
     id: 'contact',
-    title: 'Contact',
-    paragraphs: ['Questions about these Terms: support@flarecare.app'],
+    title: 'Contact us',
+    paragraphs: [
+      'If you have any questions about these Terms of Use or this Privacy Policy, please contact us at support@flarecare.app.',
+    ],
   },
   {
     id: 'changes-terms',

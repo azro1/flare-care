@@ -150,6 +150,7 @@ import {
   otpVerifyErrorMessage,
 } from "./lib/otpAuth";
 import { LegalDocumentView, type LegalDocumentKind } from "./components/LegalDocumentView";
+import { NumberedAccordion } from "./components/NumberedAccordion";
 import {
   LogHistoryList,
   LogHistoryPreviewList,
@@ -1323,7 +1324,7 @@ function AuthScreen({
               onPress={() => setAuthLegalModal(null)}
               hitSlop={12}
             >
-              <Text style={[styles.legalModalClose, { color: cAuth.primary }]}>Done</Text>
+              <FlareLucideIcon icon={FLARE_CHROME_LUCIDE.close} size={HEADER_CHROME_ICON_SIZE} color={cAuth.text} />
             </Pressable>
           </View>
           <ScrollView
@@ -3787,10 +3788,10 @@ const IBD_TRIGGERS = [
   "Viral or bacterial infections can trigger or worsen IBD symptoms",
 ];
 
-function IbdBulletList({ items, isLastInSection }: { items: string[]; isLastInSection?: boolean }) {
+function IbdBulletList({ items }: { items: string[] }) {
   const c = useFlareColors();
   return (
-    <View style={[styles.ibdBulletList, isLastInSection && styles.infoSectionContentEnd]}>
+    <View style={styles.ibdBulletList}>
       {items.map((item) => (
         <View key={item} style={styles.ibdBulletRow}>
           <Text style={[styles.ibdBulletDot, { color: c.primary }]}>•</Text>
@@ -3801,10 +3802,10 @@ function IbdBulletList({ items, isLastInSection }: { items: string[]; isLastInSe
   );
 }
 
-function IbdCheckList({ items, isLastInSection }: { items: string[]; isLastInSection?: boolean }) {
+function IbdCheckList({ items }: { items: string[] }) {
   const c = useFlareColors();
   return (
-    <View style={[styles.ibdCheckList, isLastInSection && styles.infoSectionContentEnd]}>
+    <View style={styles.ibdCheckList}>
       {items.map((item) => (
         <View key={item} style={styles.ibdCheckRow}>
           <FlareLucideIcon icon={FLARE_CHROME_LUCIDE.check} size={16} color={c.primary} style={styles.ibdCheckIcon} />
@@ -3815,8 +3816,12 @@ function IbdCheckList({ items, isLastInSection }: { items: string[]; isLastInSec
   );
 }
 
-function IbdScreen() {
+function GuideBodyText({ children }: { children: string }) {
   const c = useFlareColors();
+  return <Text style={[styles.text, styles.guideAccordionBodyText, { color: c.textMuted }]}>{children}</Text>;
+}
+
+function IbdScreen() {
   const insets = useSafeAreaInsets();
   const bottomScrollInset = useBottomTabScrollInset();
 
@@ -3826,44 +3831,55 @@ function IbdScreen() {
       titlePreset="informational"
       bottomInset={Math.max(insets.bottom, 16) + 48 + bottomScrollInset}
     >
-      <Text style={[styles.text, styles.ibdIntro, { color: c.textMuted }]}>
-        Inflammatory Bowel Disease (IBD) is a term used to describe disorders that involve chronic inflammation of your
-        digestive tract.
-      </Text>
-
-      <Text style={[styles.text, styles.aboutBody, { color: c.textMuted }]}>The two main types are:</Text>
-      <Text style={[styles.dashboardSectionTitleLeft, { color: c.text }]}>Crohn&apos;s Disease</Text>
-      <IbdBulletList
-        items={[
-          "Can affect any part of the digestive tract",
-          "Inflammation can be patchy with healthy areas in between",
-          "Can affect the full thickness of the bowel wall",
-          "May cause complications like fistulas and strictures",
+      <NumberedAccordion
+        numbered={false}
+        intro="Inflammatory Bowel Disease (IBD) is a term used to describe disorders that involve chronic inflammation of your digestive tract. The two main types are Crohn's Disease and Ulcerative Colitis."
+        sections={[
+          {
+            id: "crohns",
+            title: "Crohn's Disease",
+            body: (
+              <IbdBulletList
+                items={[
+                  "Can affect any part of the digestive tract",
+                  "Inflammation can be patchy with healthy areas in between",
+                  "Can affect the full thickness of the bowel wall",
+                  "May cause complications like fistulas and strictures",
+                ]}
+              />
+            ),
+          },
+          {
+            id: "ulcerative-colitis",
+            title: "Ulcerative Colitis",
+            body: (
+              <IbdBulletList
+                items={[
+                  "Affects only the colon and rectum",
+                  "Inflammation is continuous, starting from the rectum",
+                  "Usually affects only the inner lining of the colon",
+                  "May increase risk of colon cancer over time",
+                ]}
+              />
+            ),
+          },
+          {
+            id: "symptoms",
+            title: "Common Symptoms",
+            body: <IbdBulletList items={IBD_SYMPTOMS} />,
+          },
+          {
+            id: "triggers",
+            title: "Common Triggers",
+            body: <IbdBulletList items={IBD_TRIGGERS} />,
+          },
+          {
+            id: "flarecare-help",
+            title: "How Flarecare Can Help",
+            body: <IbdCheckList items={IBD_FLARECARE_HELPS} />,
+          },
         ]}
-        isLastInSection
       />
-
-      <Text style={[styles.dashboardSectionTitleLeft, styles.aboutContactSectionTitle, { color: c.text }]}>Ulcerative Colitis</Text>
-      <IbdBulletList
-        items={[
-          "Affects only the colon and rectum",
-          "Inflammation is continuous, starting from the rectum",
-          "Usually affects only the inner lining of the colon",
-          "May increase risk of colon cancer over time",
-        ]}
-        isLastInSection
-      />
-
-      <Text style={[styles.dashboardSectionTitleLeft, styles.aboutContactSectionTitle, { color: c.text }]}>
-        Common Symptoms Include
-      </Text>
-      <IbdBulletList items={IBD_SYMPTOMS} isLastInSection />
-
-      <Text style={[styles.dashboardSectionTitleLeft, styles.aboutContactSectionTitle, { color: c.text }]}>Common Triggers</Text>
-      <IbdBulletList items={IBD_TRIGGERS} isLastInSection />
-
-      <Text style={[styles.dashboardSectionTitleLeft, styles.aboutContactSectionTitle, { color: c.text }]}>How Flarecare Can Help</Text>
-      <IbdCheckList items={IBD_FLARECARE_HELPS} isLastInSection />
     </CollapsingTitleScrollScreen>
   );
 }
@@ -3873,48 +3889,65 @@ function NutritionGuideScreen() {
   const insets = useSafeAreaInsets();
   const bottomScrollInset = useBottomTabScrollInset();
 
+  const categorySections = NUTRITION_CATEGORIES.map((category) => ({
+    id: `category-${category.title.toLowerCase().replace(/[^a-z0-9]+/g, "-")}`,
+    title: category.title,
+    body: (
+      <>
+        <GuideBodyText>{category.description}</GuideBodyText>
+        <View style={styles.guideAccordionListAfterSupport}>
+          <IbdBulletList items={category.examples} />
+        </View>
+      </>
+    ),
+  }));
+
   return (
     <CollapsingTitleScrollScreen
       title="Nutrition Guide"
       titlePreset="informational"
       bottomInset={Math.max(insets.bottom, 16) + 48 + bottomScrollInset}
     >
-      <Text style={[styles.text, styles.ibdIntro, { color: c.textMuted }]}>{NUTRITION_GUIDE_INTRO}</Text>
-
-      <Text style={[styles.dashboardSectionTitleLeft, { color: c.text }]}>Food Categories</Text>
-      {NUTRITION_CATEGORIES.map((category, index) => (
-        <View key={category.title}>
-          <Text style={[styles.ibdSubsectionTitle, index === 0 && { marginTop: 8 }, { color: c.text }]}>
-            {category.title}
-          </Text>
-          <Text style={[styles.text, styles.aboutBody, { color: c.textMuted }]}>{category.description}</Text>
-          <Text style={[styles.text, styles.nutritionExamplesLabel, { color: c.textMuted }]}>Examples</Text>
-          <IbdBulletList items={category.examples} isLastInSection={index === NUTRITION_CATEGORIES.length - 1} />
-        </View>
-      ))}
-
-      <Text style={[styles.dashboardSectionTitleLeft, styles.aboutContactSectionTitle, { color: c.text }]}>
-        IBD Foods
-      </Text>
-      <Text style={[styles.ibdSubsectionTitle, { marginTop: 8, color: c.text }]}>Generally Safe</Text>
-      <Text style={[styles.text, styles.aboutBody, { color: c.textMuted }]}>{NUTRITION_IBD_SAFE}</Text>
-      <Text style={[styles.ibdSubsectionTitle, { color: c.text }]}>Try Carefully</Text>
-      <Text style={[styles.text, styles.aboutBody, { color: c.textMuted }]}>{NUTRITION_IBD_CAREFUL}</Text>
-      <Text style={[styles.ibdSubsectionTitle, { color: c.text }]}>Avoid During Flares</Text>
-      <Text style={[styles.text, styles.aboutBodyLast, { color: c.textMuted }]}>{NUTRITION_IBD_AVOID_FLARE}</Text>
-
-      <Text style={[styles.dashboardSectionTitleLeft, styles.aboutContactSectionTitle, { color: c.text }]}>
-        Quick Food Tips
-      </Text>
-      <IbdCheckList items={NUTRITION_QUICK_TIPS} isLastInSection />
-
-      <Text style={[styles.dashboardSectionTitleLeft, styles.aboutContactSectionTitle, { color: c.text }]}>
-        Helpful Tips
-      </Text>
-      <IbdBulletList items={NUTRITION_HELPFUL_TIPS} isLastInSection />
-
-      <Text style={[styles.dashboardSectionTitleLeft, styles.aboutContactSectionTitle, { color: c.text }]}>Note</Text>
-      <Text style={[styles.text, styles.aboutBodyLast, { color: c.textMuted }]}>{NUTRITION_GUIDE_NOTE}</Text>
+      <NumberedAccordion
+        numbered={false}
+        intro={NUTRITION_GUIDE_INTRO}
+        sections={[
+          ...categorySections,
+          {
+            id: "ibd-foods",
+            title: "IBD Foods",
+            body: (
+              <>
+                <Text style={[styles.guideAccordionSubhead, { color: c.text }]}>Generally Safe</Text>
+                <GuideBodyText>{NUTRITION_IBD_SAFE}</GuideBodyText>
+                <Text style={[styles.guideAccordionSubhead, styles.guideAccordionIbdFoodGap, { color: c.text }]}>
+                  Try Carefully
+                </Text>
+                <GuideBodyText>{NUTRITION_IBD_CAREFUL}</GuideBodyText>
+                <Text style={[styles.guideAccordionSubhead, styles.guideAccordionIbdFoodGap, { color: c.text }]}>
+                  Avoid During Flares
+                </Text>
+                <GuideBodyText>{NUTRITION_IBD_AVOID_FLARE}</GuideBodyText>
+              </>
+            ),
+          },
+          {
+            id: "quick-tips",
+            title: "Quick Food Tips",
+            body: <IbdCheckList items={NUTRITION_QUICK_TIPS} />,
+          },
+          {
+            id: "helpful-tips",
+            title: "Helpful Tips",
+            body: <IbdBulletList items={NUTRITION_HELPFUL_TIPS} />,
+          },
+          {
+            id: "note",
+            title: "Note",
+            body: <GuideBodyText>{NUTRITION_GUIDE_NOTE}</GuideBodyText>,
+          },
+        ]}
+      />
     </CollapsingTitleScrollScreen>
   );
 }
@@ -4260,8 +4293,8 @@ function SettingsScreen() {
               </Text>
               <Text style={[styles.settingToggleHint, styles.settingsCardHint, { color: c.textMuted }]}>
                 {darkOn
-                  ? "Use a darker theme that's easier on the eyes in low light."
-                  : "Use a bright, clean theme that's easy to read in daylight."}
+                  ? "A darker theme that's easier on the eyes in low light."
+                  : "A bright, clean theme that's easy to read in daylight."}
               </Text>
             </View>
             <Pressable
@@ -5724,7 +5757,6 @@ const styles = StyleSheet.create({
     borderBottomWidth: StyleSheet.hairlineWidth,
   },
   legalModalTitle: { fontSize: 17, fontFamily: "Inter_700Bold" },
-  legalModalClose: { fontSize: 16, fontFamily: "Inter_600SemiBold" },
   legalModalScroll: { flex: 1 },
   legalModalScrollContent: { paddingHorizontal: 16, paddingTop: 16 },
   /** Same section air as tagline → CTAs. */
@@ -6103,9 +6135,9 @@ const styles = StyleSheet.create({
   /** Settings / Security toggle — same body + caption as Logs tray. */
   settingsCardTitle: { fontSize: FLARE_FONT_SIZE.body, lineHeight: FLARE_LINE_HEIGHT.body },
   settingsCardHint: { fontSize: FLARE_FONT_SIZE.caption, lineHeight: FLARE_LINE_HEIGHT.muted },
-  /** Appearance switch — track locked at native Switch size 52×31. */
+  /** Appearance switch — near-native height with a touch more horizontal breathing room. */
   appearanceSwitchTrack: {
-    width: 52,
+    width: 54,
     height: 31,
     borderRadius: 16,
     // Match knob↔edge to icon↔edge (slot 4 + centred 12-in-16 glyph ≈ 6).
@@ -6284,10 +6316,14 @@ const styles = StyleSheet.create({
     marginTop: 16,
     marginBottom: 10,
   },
-  nutritionExamplesLabel: {
-    fontFamily: FLARE_FONT_FAMILY.extrabold,
-    fontSize: 13,
-    marginBottom: 8,
+  guideAccordionBodyText: { fontSize: 13, lineHeight: 20 },
+  guideAccordionListAfterSupport: { marginTop: 8 },
+  guideAccordionIbdFoodGap: { marginTop: 10 },
+  guideAccordionSubhead: {
+    fontSize: FLARE_FONT_SIZE.body,
+    lineHeight: FLARE_LINE_HEIGHT.body,
+    fontFamily: "Inter_700Bold",
+    textAlign: "left",
   },
   aboutBody: { fontSize: 13, lineHeight: 20, marginBottom: 12 },
   aboutBodyLast: { fontSize: 13, lineHeight: 20, marginBottom: 0 },

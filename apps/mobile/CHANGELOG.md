@@ -4,6 +4,12 @@ Shipped / unreleased UI and behaviour updates for the Expo app (`apps/mobile`). 
 
 ## Unreleased
 
+### Guides & legal accordion (2026-09)
+
+- Shared **`NumberedAccordion`** for scan-first sections.
+- Privacy / Terms numbered; Contact us with inline tappable support email.
+- **What is IBD?** and **Nutrition guide** use the same expand/collapse pattern (titles only, no numbers). About unchanged.
+
 ### Trends (logging over time) (2026-09)
 
 - **Trends** screen — entry counts over 2 weeks → year; filter by log type.

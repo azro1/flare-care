@@ -347,6 +347,19 @@ Use when adding pages like **What is IBD?**, **Nutrition guide**, or **About** �
 
 **Guides hub (Home):** dashboard pill **Guides** (Today's → Logs → Latest → Guides → More) lists Account-style rows for **What is IBD?** and **Nutrition guide**. IBD is **not** in the header overflow ⋮ — overflow keeps Settings / Help / About.
 
+### Accordion sections (scan-first body)
+
+Long multi-section guides and legal docs use **`NumberedAccordion`** (`components/NumberedAccordion.tsx`) — intro + expandable rows with chevron (same progressive-disclosure pattern as Privacy / Terms).
+
+| Page | Numbers? | Notes |
+|------|----------|--------|
+| **Privacy / Terms** | Yes (`1. Title`) | `LegalDocumentView` + copy in `src/content/legalDocuments.js`. Inline tappable `support@flarecare.app` in Contact us. |
+| **What is IBD?** | No | Titles only (Crohn’s, UC, Symptoms, Triggers, How Flarecare Can Help). |
+| **Nutrition guide** | No | Food categories + IBD Foods / tips / note. No “Examples” label under categories. |
+| **About** | — | Short page — **no** accordion (no real sections). |
+
+Do **not** leave new long guide pages as a wall of always-open headings if siblings already use the accordion.
+
 ### What we built (vs normal screens)
 
 | Normal screen (Meds, Settings, …) | Informational page |
@@ -408,7 +421,7 @@ Short pages (e.g. About): collapse finishes over **however far the page can scro
 2. **Do not** animate body text with the title — only the page title moves; content scrolls normally.
 3. **Do not** wrap content in an outer `ScrollView` — `CollapsingTitleScrollScreen` is the scroll view.
 4. **Do not** add a second page title in JSX — the wrapper renders it.
-5. Section headings inside the page use `styles.dashboardSectionTitleLeft` (18px), not `pageTitle`.
+5. **Sectioned guides / legal:** prefer **`NumberedAccordion`** (see above). Plain **About**-style pages may still use `styles.dashboardSectionTitleLeft` (18px) for a couple of headings.
 6. Footer bits (e.g. version on About) may stay centred if they’re clearly a footer.
 
 ### Checklist: add a new informational page
@@ -633,6 +646,8 @@ Helpers: `lib/todayPriorities.ts` (`buildTodayPriorities`, `findNearTermAppointm
 **Job:** How often the user has been **logging diary/health entries** over time. Not a health score. Not under My health (app-wide).
 
 **Files:** `screens/TrendsScreen.tsx`, `components/TrendsLoggingGraph.tsx`, `lib/trendsLoggingShared.ts`. Tokens: `TRENDS_*` in `layoutConstants.ts`.
+
+**Info hint (header ?):** *Trends displays your FlareCare activity. Each bar represents one day, with the height indicating the number of entries logged.*
 
 **Show filter (locked list — diary / logging only):**
 
