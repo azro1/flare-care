@@ -49,6 +49,7 @@ import {
 import { TRACK_MEDICATIONS_ICON } from "../lib/medicationFeatureIcons";
 import { useFlareColors } from "../theme";
 import {
+  FLARE_FONT_SIZE,
   FULL_WIDTH_CTA_EDGE_PADDING,
   HELP_NAV_LINK_BELOW_ACTIONS_MARGIN_TOP,
   HELP_NAV_LINK_LABEL,
@@ -479,7 +480,15 @@ export function MedicationTrackingWizardScreen({ user }: { user: SessionUser }) 
                 onPress={() => removeListRow(kind, i)}
                 style={styles.removeItemLink}
               >
-                <Text style={{ color: c.textMuted, fontFamily: "Inter_600SemiBold" }}>Remove</Text>
+                <Text
+                  style={{
+                    color: c.textMuted,
+                    fontFamily: "Inter_600SemiBold",
+                    fontSize: FLARE_FONT_SIZE.caption,
+                  }}
+                >
+                  Remove
+                </Text>
               </Pressable>
             ) : null}
           </View>
@@ -634,7 +643,7 @@ export function MedicationTrackingWizardScreen({ user }: { user: SessionUser }) 
               />
             )}
             {currentStep > 1 && !editingReviewSection && currentStep !== MEDICATION_REVIEW_STEP ? (
-              <SecondaryButton title="Previous step" onPress={goBackInternal} />
+              <SecondaryButton title="Prev" onPress={goBackInternal} />
             ) : null}
           </View>
         ) : null}

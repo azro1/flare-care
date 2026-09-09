@@ -136,6 +136,8 @@ export const FLARE_CHROME_LUCIDE = {
   send: Send,
   share: Share2,
   mail: Mail,
+  sun: Sun,
+  moon: Moon,
 } as const;
 
 /**

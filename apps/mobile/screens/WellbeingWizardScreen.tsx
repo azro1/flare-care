@@ -484,7 +484,7 @@ export function WellbeingWizardScreen({ user }: { user: SessionUser }) {
                 />
               )}
               {currentStep > 1 && !editingReviewSection && currentStep !== WELLBEING_WIZARD_REVIEW_STEP ? (
-                <SecondaryButton title="Previous step" onPress={goBackInternal} />
+                <SecondaryButton title="Prev" onPress={goBackInternal} />
               ) : null}
             </View>
           ) : null}

@@ -51,7 +51,7 @@ import {
   wizardRatingToBand,
 } from "../lib/symptomWizardShared";
 import { useFlareColors } from "../theme";
-import { FULL_WIDTH_CTA_EDGE_PADDING, LANDING_CTA_SIDE_PAD, QUESTIONNAIRE_STEP_FOOTER, QUESTIONNAIRE_STEP_OPTION_LIST, QUESTIONNAIRE_STEP_RADIO_ROW, QUESTIONNAIRE_STEP_SCROLL, QUESTIONNAIRE_STEP_SCROLL_BOTTOM, QUESTIONNAIRE_STEP_TITLE } from "../lib/layoutConstants";
+import { FLARE_FONT_SIZE, FULL_WIDTH_CTA_EDGE_PADDING, LANDING_CTA_SIDE_PAD, QUESTIONNAIRE_STEP_FOOTER, QUESTIONNAIRE_STEP_OPTION_LIST, QUESTIONNAIRE_STEP_RADIO_ROW, QUESTIONNAIRE_STEP_SCROLL, QUESTIONNAIRE_STEP_SCROLL_BOTTOM, QUESTIONNAIRE_STEP_TITLE } from "../lib/layoutConstants";
 
 type SessionUser = { id: string };
 
@@ -502,7 +502,15 @@ export function SymptomLogWizardScreen({ user }: { user: SessionUser }) {
               onPress={() => removeMealRow(meal, i)}
               style={styles.removeItemLink}
             >
-              <Text style={{ color: c.textMuted, fontFamily: "Inter_600SemiBold" }}>Remove</Text>
+              <Text
+                style={{
+                  color: c.textMuted,
+                  fontFamily: "Inter_600SemiBold",
+                  fontSize: FLARE_FONT_SIZE.caption,
+                }}
+              >
+                Remove
+              </Text>
             </Pressable>
           ) : null}
         </View>
@@ -1053,7 +1061,7 @@ export function SymptomLogWizardScreen({ user }: { user: SessionUser }) {
               />
             )}
             {currentStep > 1 && !editingReviewSection && currentStep !== SYMPTOM_REVIEW_STEP ? (
-              <SecondaryButton title="Previous step" onPress={goBackInternal} />
+              <SecondaryButton title="Prev" onPress={goBackInternal} />
             ) : null}
           </View>
         ) : null}

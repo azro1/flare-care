@@ -4237,6 +4237,7 @@ function SettingsScreen() {
   const c = useFlareColors();
   const bottomScrollInset = useBottomTabScrollInset();
   const { appearancePreference, setAppearancePreference } = useFlareTheme();
+  const darkOn = appearancePreference === "dark";
 
   return (
     <ScrollView
@@ -4255,20 +4256,51 @@ function SettingsScreen() {
                   { color: c.text },
                 ]}
               >
-                {appearancePreference === "dark" ? "Dark mode" : "Light mode"}
+                {darkOn ? "Dark mode" : "Light mode"}
               </Text>
               <Text style={[styles.settingToggleHint, styles.settingsCardHint, { color: c.textMuted }]}>
-                {appearancePreference === "dark"
+                {darkOn
                   ? "Use a darker theme that's easier on the eyes in low light."
                   : "Use a bright, clean theme that's easy to read in daylight."}
               </Text>
             </View>
-            <Switch
-              value={appearancePreference === "dark"}
-              onValueChange={(next) => setAppearancePreference(next ? "dark" : "light")}
-              trackColor={{ true: c.primary, false: c.appearanceChipInactiveBg }}
-              thumbColor={c.white}
-            />
+            <Pressable
+              accessibilityRole="switch"
+              accessibilityState={{ checked: darkOn }}
+              accessibilityLabel={darkOn ? "Dark mode" : "Light mode"}
+              hitSlop={{ top: 8, bottom: 8, left: 8, right: 8 }}
+              onPress={() => setAppearancePreference(darkOn ? "light" : "dark")}
+              style={[
+                styles.appearanceSwitchTrack,
+                {
+                  backgroundColor: c.surfaceSubtle,
+                },
+              ]}
+            >
+              <View
+                style={[
+                  styles.appearanceSwitchIconSlot,
+                  darkOn ? styles.appearanceSwitchIconRight : styles.appearanceSwitchIconLeft,
+                ]}
+                pointerEvents="none"
+              >
+                <FlareLucideIcon
+                  icon={darkOn ? FLARE_CHROME_LUCIDE.moon : FLARE_CHROME_LUCIDE.sun}
+                  size={12}
+                  color={darkOn ? c.white : c.text}
+                />
+              </View>
+              <View
+                style={[
+                  styles.appearanceSwitchThumb,
+                  {
+                    // Cadet blue thumb; icon stays on the track.
+                    backgroundColor: c.primary,
+                    alignSelf: darkOn ? "flex-start" : "flex-end",
+                  },
+                ]}
+              />
+            </Pressable>
           </View>
         </View>
         <View style={styles.settingsCardSection}>
@@ -6071,6 +6103,41 @@ const styles = StyleSheet.create({
   /** Settings / Security toggle — same body + caption as Logs tray. */
   settingsCardTitle: { fontSize: FLARE_FONT_SIZE.body, lineHeight: FLARE_LINE_HEIGHT.body },
   settingsCardHint: { fontSize: FLARE_FONT_SIZE.caption, lineHeight: FLARE_LINE_HEIGHT.muted },
+  /** Appearance switch — track locked at native Switch size 52×31. */
+  appearanceSwitchTrack: {
+    width: 52,
+    height: 31,
+    borderRadius: 16,
+    // Match knob↔edge to icon↔edge (slot 4 + centred 12-in-16 glyph ≈ 6).
+    paddingHorizontal: 6,
+    justifyContent: "center",
+    position: "relative",
+  },
+  appearanceSwitchThumb: {
+    width: 20,
+    height: 20,
+    borderRadius: 10,
+    ...Platform.select({
+      ios: {
+        shadowColor: "#000",
+        shadowOffset: { width: 0, height: 1 },
+        shadowOpacity: 0.15,
+        shadowRadius: 1.25,
+      },
+      android: { elevation: 2 },
+      default: {},
+    }),
+  },
+  appearanceSwitchIconSlot: {
+    position: "absolute",
+    top: 0,
+    bottom: 0,
+    width: 16,
+    alignItems: "center",
+    justifyContent: "center",
+  },
+  appearanceSwitchIconLeft: { left: 7 },
+  appearanceSwitchIconRight: { right: 7 },
   appearanceRow: { flexDirection: "row", gap: 8, marginTop: 14 },
   appearanceChip: {
     flex: 1,
