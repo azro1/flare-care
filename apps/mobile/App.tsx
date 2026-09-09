@@ -4153,15 +4153,19 @@ function AccountSecurityScreen() {
         {bioReady ? (
           <View style={styles.settingToggleRow}>
             <View style={styles.settingToggleTextCol}>
-              <Text
-                style={[
-                  styles.settingToggleTitle,
-                  styles.settingsCardTitle,
-                  { color: c.text },
-                ]}
-              >
-                {unlockTitle}
-              </Text>
+              <View style={styles.settingToggleTitleRow}>
+                <FlareLucideIcon icon={FLARE_CHROME_LUCIDE.fingerprint} size={16} color={c.text} />
+                <Text
+                  style={[
+                    styles.settingToggleTitle,
+                    styles.settingsCardTitle,
+                    styles.settingToggleTitleBesideIcon,
+                    { color: c.text },
+                  ]}
+                >
+                  {unlockTitle}
+                </Text>
+              </View>
               <Text style={[styles.settingToggleHint, styles.settingsCardHint, { color: c.textMuted }]}>
                 {unlockHint}
               </Text>
@@ -4282,75 +4286,66 @@ function SettingsScreen() {
           <Text style={[styles.settingsCardSectionLabel, { color: c.textMuted }]}>Appearance</Text>
           <View style={styles.settingToggleRow}>
             <View style={styles.settingToggleTextCol}>
-              <Text
-                style={[
-                  styles.settingToggleTitle,
-                  styles.settingsCardTitle,
-                  { color: c.text },
-                ]}
-              >
-                {darkOn ? "Dark mode" : "Light mode"}
-              </Text>
+              <View style={styles.settingToggleTitleRow}>
+                <FlareLucideIcon
+                  icon={darkOn ? FLARE_CHROME_LUCIDE.moon : FLARE_CHROME_LUCIDE.sun}
+                  size={16}
+                  color={c.text}
+                />
+                <Text
+                  style={[
+                    styles.settingToggleTitle,
+                    styles.settingsCardTitle,
+                    styles.settingToggleTitleBesideIcon,
+                    { color: c.text },
+                  ]}
+                >
+                  {darkOn ? "Dark mode" : "Light mode"}
+                </Text>
+              </View>
               <Text style={[styles.settingToggleHint, styles.settingsCardHint, { color: c.textMuted }]}>
                 {darkOn
                   ? "A darker theme that's easier on the eyes in low light."
                   : "A bright, clean theme that's easy to read in daylight."}
               </Text>
             </View>
-            <Pressable
-              accessibilityRole="switch"
-              accessibilityState={{ checked: darkOn }}
+            <Switch
+              value={darkOn}
+              onValueChange={(on) => setAppearancePreference(on ? "dark" : "light")}
+              trackColor={{ true: c.primary, false: c.appearanceChipInactiveBg }}
+              thumbColor={c.white}
               accessibilityLabel={darkOn ? "Dark mode" : "Light mode"}
-              hitSlop={{ top: 8, bottom: 8, left: 8, right: 8 }}
-              onPress={() => setAppearancePreference(darkOn ? "light" : "dark")}
-              style={[
-                styles.appearanceSwitchTrack,
-                {
-                  backgroundColor: c.surfaceSubtle,
-                },
-              ]}
-            >
-              <View
-                style={[
-                  styles.appearanceSwitchIconSlot,
-                  darkOn ? styles.appearanceSwitchIconRight : styles.appearanceSwitchIconLeft,
-                ]}
-                pointerEvents="none"
-              >
-                <FlareLucideIcon
-                  icon={darkOn ? FLARE_CHROME_LUCIDE.moon : FLARE_CHROME_LUCIDE.sun}
-                  size={12}
-                  color={darkOn ? c.white : c.text}
-                />
-              </View>
-              <View
-                style={[
-                  styles.appearanceSwitchThumb,
-                  {
-                    // Cadet blue thumb; icon stays on the track.
-                    backgroundColor: c.primary,
-                    alignSelf: darkOn ? "flex-start" : "flex-end",
-                  },
-                ]}
-              />
-            </Pressable>
+            />
           </View>
         </View>
         <View style={styles.settingsCardSection}>
           <Text style={[styles.settingsCardSectionLabel, { color: c.textMuted }]}>Notifications</Text>
-          <LogHistoryList
-            items={[
-              {
-                id: "reminders",
-                title: "Push Notifications and Reminders",
-                accessibilityLabel: "Push Notifications and Reminders",
-              },
-            ]}
-            insetTray={false}
-            rowPaddingHorizontal={0}
-            rowPaddingVertical={0}
-            onPressItem={() => navigation.navigate("Reminders")}
-          />
+          <Pressable
+            accessibilityRole="button"
+            accessibilityLabel="Push Notifications and Reminders"
+            onPress={() => navigation.navigate("Reminders")}
+            style={styles.settingToggleRow}
+          >
+            <View style={styles.settingToggleTextCol}>
+              <View style={styles.settingToggleTitleRow}>
+                <FlareLucideIcon icon={FLARE_CHROME_LUCIDE.notifications} size={16} color={c.text} />
+                <Text
+                  style={[
+                    styles.settingToggleTitle,
+                    styles.settingsCardTitle,
+                    styles.settingToggleTitleBesideIcon,
+                    { color: c.text },
+                  ]}
+                >
+                  Push Notifications and Reminders
+                </Text>
+              </View>
+              <Text style={[styles.settingToggleHint, styles.settingsCardHint, { color: c.textMuted }]}>
+                Get reminders and updates from FlareCare.
+              </Text>
+            </View>
+            <FlareLucideIcon icon={FLARE_CHROME_LUCIDE.forward} size={NAV_ROW_CHEVRON_SIZE} color={c.text} />
+          </Pressable>
         </View>
       </LogHistoryCard>
     </ScrollView>
@@ -6127,6 +6122,15 @@ const styles = StyleSheet.create({
     fontFamily: FLARE_FONT_FAMILY.medium,
     marginBottom: 6,
   },
+  settingToggleTitleRow: {
+    flexDirection: "row",
+    alignItems: "center",
+    gap: 8,
+    marginBottom: 6,
+  },
+  settingToggleTitleBesideIcon: {
+    marginBottom: 0,
+  },
   settingToggleHint: {
     fontSize: FLARE_FONT_SIZE.caption,
     lineHeight: FLARE_LINE_HEIGHT.muted,
@@ -6135,41 +6139,6 @@ const styles = StyleSheet.create({
   /** Settings / Security toggle — same body + caption as Logs tray. */
   settingsCardTitle: { fontSize: FLARE_FONT_SIZE.body, lineHeight: FLARE_LINE_HEIGHT.body },
   settingsCardHint: { fontSize: FLARE_FONT_SIZE.caption, lineHeight: FLARE_LINE_HEIGHT.muted },
-  /** Appearance switch — near-native height with a touch more horizontal breathing room. */
-  appearanceSwitchTrack: {
-    width: 54,
-    height: 31,
-    borderRadius: 16,
-    // Match knob↔edge to icon↔edge (slot 4 + centred 12-in-16 glyph ≈ 6).
-    paddingHorizontal: 6,
-    justifyContent: "center",
-    position: "relative",
-  },
-  appearanceSwitchThumb: {
-    width: 20,
-    height: 20,
-    borderRadius: 10,
-    ...Platform.select({
-      ios: {
-        shadowColor: "#000",
-        shadowOffset: { width: 0, height: 1 },
-        shadowOpacity: 0.15,
-        shadowRadius: 1.25,
-      },
-      android: { elevation: 2 },
-      default: {},
-    }),
-  },
-  appearanceSwitchIconSlot: {
-    position: "absolute",
-    top: 0,
-    bottom: 0,
-    width: 16,
-    alignItems: "center",
-    justifyContent: "center",
-  },
-  appearanceSwitchIconLeft: { left: 7 },
-  appearanceSwitchIconRight: { right: 7 },
   appearanceRow: { flexDirection: "row", gap: 8, marginTop: 14 },
   appearanceChip: {
     flex: 1,
