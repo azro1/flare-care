@@ -43,7 +43,7 @@ import {
   View,
   ViewStyle,
 } from "react-native";
-import { ScrollView } from "./lib/scrollViews";
+import { AnimatedScrollView, ScrollView } from "./lib/scrollViews";
 import { GestureHandlerRootView } from "react-native-gesture-handler";
 import { SafeAreaProvider, initialWindowMetrics, useSafeAreaInsets } from "react-native-safe-area-context";
 import {
@@ -1611,107 +1611,14 @@ function DashboardScreen({ user }: { user: SessionUser }) {
     Math.max(0, Math.round(windowWidth - SCREEN_EDGE_PADDING * 2)),
   );
   const [healthCarePage, setHealthCarePage] = useState(0);
-  const healthCarePageRef = useRef(0);
-  healthCarePageRef.current = healthCarePage;
-  const healthCareTitleOpacity = useRef(new Animated.Value(1)).current;
-  const healthCareTitlePendingFadeIn = useRef(false);
-  /** True once this gesture has actually faded the title out (not on tiny nudge). */
-  const healthCareTitleFadedOut = useRef(false);
-  const healthCareDragging = useRef(false);
-  const healthCareTitleSettled = useRef(true);
-  const healthCareDragStartX = useRef(0);
-  const healthCareScrollXRef = useRef(0);
-  const healthCareSoftSettleTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
-  const healthCarePagerRef = useRef<React.ElementRef<typeof ScrollView> | null>(null);
+  const healthCareScrollX = useRef(new Animated.Value(0)).current;
+  const healthCarePagerRef = useRef<React.ElementRef<typeof AnimatedScrollView> | null>(null);
   const healthCarePageGap = HOME_TILE_GAP;
-  /** Page width + inter-page gap — snap interval. */
+  /** Page width + inter-page gap — snap interval + title fade landmarks. */
   const healthCarePageStride = Math.max(1, healthCarePageW + healthCarePageGap);
   const healthCarePageCount = 3;
-  const healthCareSectionTitles = ["My health", "My tools", "My care"] as const;
-  /** Ignore micro-drags so grab-and-release doesn’t blink the title. */
-  const HEALTH_CARE_TITLE_FADE_DRAG_PX = 28;
-  const clearHealthCareSoftSettleTimer = useCallback(() => {
-    if (healthCareSoftSettleTimer.current != null) {
-      clearTimeout(healthCareSoftSettleTimer.current);
-      healthCareSoftSettleTimer.current = null;
-    }
-  }, []);
-  const fadeHealthCareTitleOut = useCallback(() => {
-    if (healthCareTitleFadedOut.current) return;
-    healthCareTitleFadedOut.current = true;
-    healthCareTitlePendingFadeIn.current = false;
-    healthCareTitleOpacity.stopAnimation();
-    Animated.timing(healthCareTitleOpacity, {
-      toValue: 0,
-      duration: 120,
-      easing: Easing.out(Easing.quad),
-      useNativeDriver: true,
-    }).start();
-  }, [healthCareTitleOpacity]);
-  const settleHealthCareTitle = useCallback(
-    (rawPage: number) => {
-      healthCareDragging.current = false;
-      clearHealthCareSoftSettleTimer();
-
-      const page = Math.max(0, Math.min(healthCarePageCount - 1, rawPage));
-      const faded = healthCareTitleFadedOut.current;
-      const alreadyOnPage = page === healthCarePageRef.current;
-
-      // Same page after a settle — ignore duplicate endDrag/momentum.
-      // Still allow a later settle if the snap lands on a *different* page
-      // (early endDrag used to lock the old title).
-      if (healthCareTitleSettled.current && alreadyOnPage) {
-        if (!faded) return;
-        healthCareTitleFadedOut.current = false;
-        healthCareTitleOpacity.stopAnimation();
-        healthCareTitleOpacity.setValue(0);
-        healthCareTitlePendingFadeIn.current = false;
-        Animated.timing(healthCareTitleOpacity, {
-          toValue: 1,
-          duration: 200,
-          easing: Easing.out(Easing.cubic),
-          useNativeDriver: true,
-        }).start();
-        return;
-      }
-
-      healthCareTitleSettled.current = true;
-      healthCareTitleFadedOut.current = false;
-
-      if (!faded && alreadyOnPage) {
-        return;
-      }
-
-      healthCareTitleOpacity.stopAnimation();
-      healthCareTitleOpacity.setValue(0);
-      if (alreadyOnPage) {
-        healthCareTitlePendingFadeIn.current = false;
-        Animated.timing(healthCareTitleOpacity, {
-          toValue: 1,
-          duration: 200,
-          easing: Easing.out(Easing.cubic),
-          useNativeDriver: true,
-        }).start();
-        return;
-      }
-      healthCareTitlePendingFadeIn.current = true;
-      setHealthCarePage(page);
-    },
-    [clearHealthCareSoftSettleTimer, healthCarePageCount, healthCareTitleOpacity],
-  );
-  useLayoutEffect(() => {
-    if (!healthCareTitlePendingFadeIn.current) return;
-    healthCareTitlePendingFadeIn.current = false;
-    healthCareTitleOpacity.stopAnimation();
-    healthCareTitleOpacity.setValue(0);
-    Animated.timing(healthCareTitleOpacity, {
-      toValue: 1,
-      duration: 200,
-      easing: Easing.out(Easing.cubic),
-      useNativeDriver: true,
-    }).start();
-  }, [healthCarePage, healthCareTitleOpacity]);
-  useEffect(() => () => clearHealthCareSoftSettleTimer(), [clearHealthCareSoftSettleTimer]);
+  /** Crossfade band near each page boundary (hold solid, then dissolve). */
+  const healthCareTitleFadeBand = Math.max(48, Math.round(healthCarePageStride * 0.28));
   const tileWidth = useMemo(
     () => Math.floor((windowWidth - SCREEN_EDGE_PADDING * 2 - HOME_TILE_GAP) / 2),
     [windowWidth],
@@ -2271,13 +2178,76 @@ function DashboardScreen({ user }: { user: SessionUser }) {
                 style={[
                   styles.dashboardSubsectionTitleLeft,
                   styles.dashboardSubsectionTitleInHeader,
+                  styles.healthCareTitleLayer,
                   {
                     color: c.text,
-                    opacity: healthCareTitleOpacity,
+                    opacity: healthCareScrollX.interpolate({
+                      inputRange: [
+                        0,
+                        Math.max(1, healthCarePageStride - healthCareTitleFadeBand),
+                        healthCarePageStride,
+                        healthCarePageStride * 2,
+                      ],
+                      outputRange: [1, 1, 0, 0],
+                      extrapolate: "clamp",
+                    }),
                   },
                 ]}
               >
-                {healthCareSectionTitles[healthCarePage]}
+                My health
+              </Animated.Text>
+              <Animated.Text
+                pointerEvents="none"
+                style={[
+                  styles.dashboardSubsectionTitleLeft,
+                  styles.dashboardSubsectionTitleInHeader,
+                  styles.healthCareTitleLayer,
+                  {
+                    color: c.text,
+                    opacity: healthCareScrollX.interpolate({
+                      inputRange: [
+                        0,
+                        Math.max(1, healthCarePageStride - healthCareTitleFadeBand),
+                        healthCarePageStride,
+                        Math.max(
+                          healthCarePageStride + 1,
+                          healthCarePageStride * 2 - healthCareTitleFadeBand,
+                        ),
+                        healthCarePageStride * 2,
+                      ],
+                      outputRange: [0, 0, 1, 1, 0],
+                      extrapolate: "clamp",
+                    }),
+                  },
+                ]}
+              >
+                My tools
+              </Animated.Text>
+              <Animated.Text
+                pointerEvents="none"
+                style={[
+                  styles.dashboardSubsectionTitleLeft,
+                  styles.dashboardSubsectionTitleInHeader,
+                  styles.healthCareTitleLayer,
+                  {
+                    color: c.text,
+                    opacity: healthCareScrollX.interpolate({
+                      inputRange: [
+                        0,
+                        healthCarePageStride,
+                        Math.max(
+                          healthCarePageStride + 1,
+                          healthCarePageStride * 2 - healthCareTitleFadeBand,
+                        ),
+                        healthCarePageStride * 2,
+                      ],
+                      outputRange: [0, 0, 0, 1],
+                      extrapolate: "clamp",
+                    }),
+                  },
+                ]}
+              >
+                My care
               </Animated.Text>
             </View>
           </View>
@@ -2297,52 +2267,25 @@ function DashboardScreen({ user }: { user: SessionUser }) {
               }}
             >
               {healthCarePageW > 0 ? (
-                <ScrollView
+                <AnimatedScrollView
                   ref={healthCarePagerRef}
                   horizontal
                   showsHorizontalScrollIndicator={false}
                   snapToInterval={healthCarePageStride}
                   snapToAlignment="start"
+                  disableIntervalMomentum
                   decelerationRate="fast"
                   nestedScrollEnabled
                   style={{ width: healthCarePageW }}
                   contentContainerStyle={[styles.healthCarePagerContent, { gap: healthCarePageGap }]}
-                  onScrollBeginDrag={(e: NativeSyntheticEvent<NativeScrollEvent>) => {
-                    clearHealthCareSoftSettleTimer();
-                    healthCareDragging.current = true;
-                    healthCareTitleSettled.current = false;
-                    healthCareDragStartX.current = e.nativeEvent.contentOffset.x;
-                    healthCareScrollXRef.current = e.nativeEvent.contentOffset.x;
-                    healthCareTitleFadedOut.current = false;
-                  }}
-                  onScroll={(e: NativeSyntheticEvent<NativeScrollEvent>) => {
-                    healthCareScrollXRef.current = e.nativeEvent.contentOffset.x;
-                    // Only during finger-down drag — ignore snap-back / momentum scroll events.
-                    if (!healthCareDragging.current || healthCareTitleFadedOut.current) return;
-                    const dx = Math.abs(e.nativeEvent.contentOffset.x - healthCareDragStartX.current);
-                    if (dx >= HEALTH_CARE_TITLE_FADE_DRAG_PX) fadeHealthCareTitleOut();
-                  }}
+                  onScroll={Animated.event(
+                    [{ nativeEvent: { contentOffset: { x: healthCareScrollX } } }],
+                    { useNativeDriver: true },
+                  )}
                   scrollEventThrottle={16}
-                  onScrollEndDrag={(e: NativeSyntheticEvent<NativeScrollEvent>) => {
-                    healthCareDragging.current = false;
-                    healthCareScrollXRef.current = e.nativeEvent.contentOffset.x;
-                    const vx = e.nativeEvent.velocity?.x ?? 0;
-                    // Soft release — don’t settle from mid-snap offset; wait for momentum
-                    // or a short fallback once scrolling has stopped.
-                    if (Math.abs(vx) < 0.15) {
-                      clearHealthCareSoftSettleTimer();
-                      healthCareSoftSettleTimer.current = setTimeout(() => {
-                        healthCareSoftSettleTimer.current = null;
-                        const next = Math.round(healthCareScrollXRef.current / healthCarePageStride);
-                        settleHealthCareTitle(next);
-                      }, 90);
-                    }
-                  }}
                   onMomentumScrollEnd={(e: NativeSyntheticEvent<NativeScrollEvent>) => {
-                    healthCareDragging.current = false;
-                    healthCareScrollXRef.current = e.nativeEvent.contentOffset.x;
                     const next = Math.round(e.nativeEvent.contentOffset.x / healthCarePageStride);
-                    settleHealthCareTitle(next);
+                    setHealthCarePage(Math.max(0, Math.min(healthCarePageCount - 1, next)));
                   }}
                 >
                   <View style={[styles.healthCarePage, { width: healthCarePageW }]}>
@@ -2428,7 +2371,7 @@ function DashboardScreen({ user }: { user: SessionUser }) {
                       <View style={styles.carePageColumn}>{careRightColumnCards.map(renderToolTile)}</View>
                     </View>
                   </View>
-                </ScrollView>
+                </AnimatedScrollView>
               ) : null}
             </View>
 
@@ -5565,6 +5508,12 @@ const styles = StyleSheet.create({
     height: FLARE_LINE_HEIGHT.subhead,
     justifyContent: "center",
     marginRight: 8,
+  },
+  healthCareTitleLayer: {
+    position: "absolute",
+    left: 0,
+    right: 0,
+    top: 0,
   },
   healthCarePagerWrap: {
     alignSelf: "stretch",
