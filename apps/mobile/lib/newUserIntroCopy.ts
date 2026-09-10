@@ -3,7 +3,7 @@
  * Shown once after sign-up (and profile setup), before the dashboard.
  *
  * Keep this lean: highest-value benefits only, not a full feature tour.
- * Layout: icon → title → one short supporting line (clean onboarding stack).
+ * Layout: icon → title → one short supporting line (same stack language as auth steps).
  */
 import type { LucideIcon } from "lucide-react-native";
 import { FLARE_CHROME_LUCIDE, FLARE_FEATURE_LUCIDE } from "./flareLucideIcons";

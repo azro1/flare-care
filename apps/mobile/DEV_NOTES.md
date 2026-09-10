@@ -151,7 +151,7 @@ Use existing screens as reference — do **not** default to web-style teal hyper
 
 | Piece | Use for |
 |-------|---------|
-| **`NewUserIntroScreen`** (`components/NewUserIntroScreen.tsx`) | Full-screen post-login intro — **Done** finishes; copy in **`lib/newUserIntroCopy.ts`**. |
+| **`NewUserIntroScreen`** (`components/NewUserIntroScreen.tsx`) | Post-login swipe tips + top-right **X** to enter anytime (no last-slide CTA). Copy in **`lib/newUserIntroCopy.ts`**. |
 | **`lib/newUserIntro.ts`** | Eligible / dismissed flags + **`isNewAuthUser`** + **`resolveNewUserIntroPending`**. Mark eligible via **`markNewUserIntroEligible`** / **`markNewAccountInstructionTipsEligible`** on new signup only. |
 | **`AppRoot`** | Keep **`newUserIntroPending === null`** until resolve finishes — never leave `false` after logout or the bottom nav can flash before intro. |
 

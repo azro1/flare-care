@@ -1,4 +1,4 @@
-import React, { useCallback, useEffect, useRef, useState } from "react";
+import React, { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import {
   Animated,
   Easing,
@@ -13,73 +13,49 @@ import {
   type ViewToken,
 } from "react-native";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
-import { FLARE_BUTTON_MIN_HEIGHT, EntryPrimaryButton } from "./FlareButton";
-import { FlareLucideIcon } from "../lib/flareLucideIcons";
+import { FlareLucideIcon, FLARE_CHROME_LUCIDE } from "../lib/flareLucideIcons";
 import { NEW_USER_INTRO_SLIDES, type NewUserIntroSlide } from "../lib/newUserIntroCopy";
 import {
   FLARE_FONT_FAMILY,
-  FLARE_FONT_SIZE,
   FULL_WIDTH_CTA_EDGE_PADDING,
   HOME_TILE_GAP,
-  NAV_HEADER_BAR_HEIGHT,
+  HEADER_CHROME_ICON_SIZE,
 } from "../lib/layoutConstants";
 import { useFlareColors } from "../theme";
 
-/** Shared media band — large glyph to fill mid-stack visual weight. */
-const MEDIA_SIZE = 148;
-const MEDIA_GLYPH_SIZE = 60;
-/**
- * Title size for new-user intro slides.
- * Welcome (first slide) is larger so the app name stands out; change INTRO_SLIDE_TITLE_SIZE to scale both.
- */
-const INTRO_SLIDE_TITLE_SIZE = 21;
-const WELCOME_SLIDE_TITLE_SIZE = INTRO_SLIDE_TITLE_SIZE + 2;
-/** Icon → title — tight so the glyph reads as part of the copy stack. */
-const INTRO_ICON_TO_TITLE_GAP = HOME_TILE_GAP;
-/** Title → support. */
-const INTRO_TITLE_TO_SUPPORT_GAP = HOME_TILE_GAP * 2 + 4;
-/** Support line-height × typical two lines on the welcome slide. */
-const INTRO_SUPPORT_BLOCK_HEIGHT = 26 * 2;
-/**
- * Fixed copy stack height (icon → title → support) for centering + fixed dots Y.
- * Do not measure onLayout — that made the dots slide on first land.
- */
-const INTRO_COPY_STACK_HEIGHT =
-  MEDIA_SIZE +
-  INTRO_ICON_TO_TITLE_GAP +
-  (WELCOME_SLIDE_TITLE_SIZE + 6) +
-  INTRO_TITLE_TO_SUPPORT_GAP +
-  INTRO_SUPPORT_BLOCK_HEIGHT;
-/** Space between support copy and page dots — dots only; copy stack Y stays fixed. */
-const INTRO_DOTS_GAP = HOME_TILE_GAP * 4 + 8;
+/** Large welcome type — icon size stays 60; do not wrap in a bigger media slot. */
+const TITLE_SIZE = 24;
+const WELCOME_TITLE_SIZE = 26;
+const TITLE_LINE = 30;
+const WELCOME_TITLE_LINE = 32;
+const SUPPORT_SIZE = 18;
+const SUPPORT_LINE = 26;
+const SUPPORT_BLOCK_HEIGHT = SUPPORT_LINE * 2;
+const SLIDE_ICON_SIZE = 60;
+/** 8/12 rhythm — swipe tips; X closes into the app anytime. */
+const STACK_GAP_SM = HOME_TILE_GAP; // 12
+const STACK_GAP_MD = HOME_TILE_GAP + 8; // 20
+const STACK_GAP_LG = HOME_TILE_GAP * 2; // 24
+const STACK_GAP_XL = HOME_TILE_GAP * 2 + 8; // 32
+const TITLE_TO_SUPPORT_GAP = STACK_GAP_MD;
+const DOTS_GAP = STACK_GAP_XL;
+const HINT_GAP = STACK_GAP_LG;
+/** Match dots→Swipe only — bump icon→title; leave dots/Swipe spacing alone. */
+const ICON_TO_TITLE_GAP = HINT_GAP + STACK_GAP_SM;
 const DOT_SIZE = 8;
-/** Active page indicator stretches into a short pill. */
 const DOT_ACTIVE_WIDTH = 22;
-/** Mid block height used to vertically centre between header and CTAs. */
-const INTRO_MID_GROUP_HEIGHT = INTRO_COPY_STACK_HEIGHT + INTRO_DOTS_GAP + DOT_SIZE;
-/**
- * Empty padding above the glyph inside `MEDIA_SIZE`. Without this, true box-centring
- * makes header→icon look larger than dots→buttons (icon sits below the slot top).
- */
-const MEDIA_OPTICAL_TOP_INSET = (MEDIA_SIZE - MEDIA_GLYPH_SIZE) / 2;
-/**
- * “Welcome to” / “Flarecare” sits mid-header — space under that label before the pager.
- * Count it so header-label→icon matches dots→buttons by eye.
- */
-const HEADER_TITLE_BELOW =
-  (NAV_HEADER_BAR_HEIGHT - FLARE_FONT_SIZE.navTitle) / 2;
-/**
- * Moves Next/Done + Skip only. Lower = closer to the bottom edge.
- * `0` = flush to `insets.bottom` (no extra pad).
- */
-const FOOTER_PAD = 0;
-/** Footer stack: Next + gap(16) + Skip hit — keep in sync with `styles.footer` / `skipHit`. */
-const INTRO_FOOTER_STACK_HEIGHT = FLARE_BUTTON_MIN_HEIGHT + 16 + (FLARE_BUTTON_MIN_HEIGHT - 8);
+const SLIDE_CONTENT_HEIGHT =
+  SLIDE_ICON_SIZE +
+  ICON_TO_TITLE_GAP +
+  WELCOME_TITLE_LINE +
+  TITLE_TO_SUPPORT_GAP +
+  SUPPORT_BLOCK_HEIGHT;
+/** Optical nudge — math center reads low. */
+const OPTICAL_LIFT = 120;
 
 /**
- * One-time swipe intro after sign-up — what Flarecare can do for you.
- * Mid stack centred so header label→icon and dots→buttons match optically.
- * Dots stay fixed under the copy (do not swipe).
+ * One-time swipe intro after sign-up.
+ * Mid-screen tips; X enters the app anytime. No last-slide CTA.
  */
 export function NewUserIntroScreen({ onFinished }: { onFinished: () => void }) {
   const c = useFlareColors();
@@ -87,51 +63,36 @@ export function NewUserIntroScreen({ onFinished }: { onFinished: () => void }) {
   const { width, height: windowHeight } = useWindowDimensions();
   const listRef = useRef<FlatList<NewUserIntroSlide>>(null);
   const [index, setIndex] = useState(0);
-  const last = index >= NEW_USER_INTRO_SLIDES.length - 1;
+  const finishedRef = useRef(false);
   const dotProgress = useRef(
     NEW_USER_INTRO_SLIDES.map((_, i) => new Animated.Value(i === 0 ? 1 : 0)),
   ).current;
 
-  /** Stable on first paint — no onLayout jump (that caused the welcome land blip). */
-  const bottomPad = insets.bottom + FOOTER_PAD;
-  const pagerHeight = Math.max(
-    0,
-    windowHeight - insets.top - NAV_HEADER_BAR_HEIGHT - INTRO_FOOTER_STACK_HEIGHT - bottomPad,
-  );
-  /** Equal by eye: “Welcome to” → icon, and dots → Next. */
-  const contentTop =
-    (pagerHeight - INTRO_MID_GROUP_HEIGHT - MEDIA_OPTICAL_TOP_INSET - HEADER_TITLE_BELOW) / 2;
-  const dotsTop = contentTop + INTRO_COPY_STACK_HEIGHT + INTRO_DOTS_GAP;
+  const pagerHeight = Math.max(0, windowHeight - insets.top - insets.bottom);
+  /** Dots sit under the lifted copy stack. */
+  const dotsTop = useMemo(() => {
+    const copyCenterY = (pagerHeight - OPTICAL_LIFT) / 2;
+    return copyCenterY + SLIDE_CONTENT_HEIGHT / 2 + DOTS_GAP;
+  }, [pagerHeight]);
+
+  const finish = useCallback(() => {
+    if (finishedRef.current) return;
+    finishedRef.current = true;
+    onFinished();
+  }, [onFinished]);
 
   useEffect(() => {
     Animated.parallel(
       dotProgress.map((progress, i) =>
         Animated.timing(progress, {
           toValue: i === index ? 1 : 0,
-          duration: 280,
+          duration: 240,
           easing: Easing.out(Easing.cubic),
           useNativeDriver: false,
         }),
       ),
     ).start();
   }, [dotProgress, index]);
-
-  const goTo = useCallback(
-    (next: number) => {
-      const clamped = Math.max(0, Math.min(NEW_USER_INTRO_SLIDES.length - 1, next));
-      listRef.current?.scrollToIndex({ index: clamped, animated: true });
-      setIndex(clamped);
-    },
-    [],
-  );
-
-  const onNext = useCallback(() => {
-    if (last) {
-      onFinished();
-      return;
-    }
-    goTo(index + 1);
-  }, [goTo, index, last, onFinished]);
 
   const onMomentumScrollEnd = useCallback(
     (e: NativeSyntheticEvent<NativeScrollEvent>) => {
@@ -150,8 +111,9 @@ export function NewUserIntroScreen({ onFinished }: { onFinished: () => void }) {
 
   const renderSlide = useCallback(
     ({ item, index: slideIndex }: { item: NewUserIntroSlide; index: number }) => {
-      const titleSize =
-        slideIndex === 0 ? WELCOME_SLIDE_TITLE_SIZE : INTRO_SLIDE_TITLE_SIZE;
+      const isWelcome = slideIndex === 0;
+      const titleSize = isWelcome ? WELCOME_TITLE_SIZE : TITLE_SIZE;
+      const titleLine = isWelcome ? WELCOME_TITLE_LINE : TITLE_LINE;
       return (
         <View
           style={[
@@ -159,26 +121,29 @@ export function NewUserIntroScreen({ onFinished }: { onFinished: () => void }) {
             {
               width,
               height: pagerHeight,
-              paddingTop: contentTop,
+              paddingHorizontal: FULL_WIDTH_CTA_EDGE_PADDING,
+              paddingBottom: OPTICAL_LIFT,
             },
           ]}
         >
-          <View style={styles.contentBlock}>
+          <View style={styles.copyStack}>
             <View
               style={[
-                styles.mediaSlot,
-                item.iconOpticalOffsetY
-                  ? { transform: [{ translateY: item.iconOpticalOffsetY }] }
-                  : null,
+                styles.iconWrap,
+                item.iconOpticalOffsetY ? { transform: [{ translateY: item.iconOpticalOffsetY }] } : null,
               ]}
             >
-              <FlareLucideIcon icon={item.icon} size={MEDIA_GLYPH_SIZE} color={c.primary} />
+              <FlareLucideIcon icon={item.icon} size={SLIDE_ICON_SIZE} color={c.primary} />
             </View>
-
             <Text
               style={[
                 styles.slideTitle,
-                { color: c.text, fontSize: titleSize, lineHeight: titleSize + 6 },
+                {
+                  color: c.text,
+                  fontSize: titleSize,
+                  lineHeight: titleLine,
+                  marginBottom: TITLE_TO_SUPPORT_GAP,
+                },
               ]}
             >
               {item.title}
@@ -188,7 +153,7 @@ export function NewUserIntroScreen({ onFinished }: { onFinished: () => void }) {
         </View>
       );
     },
-    [c.primary, c.text, c.textMuted, contentTop, pagerHeight, width],
+    [c.primary, c.text, c.textMuted, pagerHeight, width],
   );
 
   return (
@@ -198,22 +163,20 @@ export function NewUserIntroScreen({ onFinished }: { onFinished: () => void }) {
         {
           backgroundColor: c.screen,
           paddingTop: insets.top,
-          paddingBottom: bottomPad,
+          paddingBottom: insets.bottom,
         },
       ]}
+      accessibilityLabel="Introduction. Swipe through tips. Tap close to enter the app."
     >
-      <View style={[styles.header, { backgroundColor: c.screen }]} accessibilityRole="header">
-        <Text
-          style={{
-            fontFamily: FLARE_FONT_FAMILY.bold,
-            fontSize: FLARE_FONT_SIZE.navTitle,
-            color: c.text,
-            textAlign: "center",
-          }}
-        >
-          {index === 0 ? "Welcome to" : "Flarecare"}
-        </Text>
-      </View>
+      <Pressable
+        accessibilityRole="button"
+        accessibilityLabel="Close introduction"
+        onPress={finish}
+        hitSlop={12}
+        style={[styles.closeHit, { top: insets.top + 4 }]}
+      >
+        <FlareLucideIcon icon={FLARE_CHROME_LUCIDE.close} size={HEADER_CHROME_ICON_SIZE} color={c.text} />
+      </Pressable>
 
       <View style={[styles.pagerWrap, { height: pagerHeight }]}>
         <FlatList
@@ -247,47 +210,38 @@ export function NewUserIntroScreen({ onFinished }: { onFinished: () => void }) {
           renderItem={renderSlide}
         />
 
-        {/* Fixed under centered copy — does not swipe with slides. */}
         <View
           pointerEvents="none"
-          style={[styles.dots, { top: dotsTop }]}
+          style={[styles.belowCopy, { top: dotsTop }]}
           accessibilityElementsHidden
           importantForAccessibility="no-hide-descendants"
         >
-          {NEW_USER_INTRO_SLIDES.map((_, i) => (
-            <Animated.View
-              key={i}
-              style={[
-                styles.dot,
-                {
-                  width: dotProgress[i].interpolate({
-                    inputRange: [0, 1],
-                    outputRange: [DOT_SIZE, DOT_ACTIVE_WIDTH],
-                  }),
-                  backgroundColor: dotProgress[i].interpolate({
-                    inputRange: [0, 1],
-                    // Not `appearanceChipInactiveBg` — in light mode that matches screen and vanishes.
-                    outputRange: [c.cardBorder, c.primary],
-                  }),
-                },
-              ]}
-            />
-          ))}
+          <View style={styles.dots}>
+            {NEW_USER_INTRO_SLIDES.map((_, i) => (
+              <Animated.View
+                key={i}
+                style={[
+                  styles.dot,
+                  {
+                    width: dotProgress[i].interpolate({
+                      inputRange: [0, 1],
+                      outputRange: [DOT_SIZE, DOT_ACTIVE_WIDTH],
+                    }),
+                    backgroundColor: dotProgress[i].interpolate({
+                      inputRange: [0, 1],
+                      outputRange: [c.cardBorder, c.primary],
+                    }),
+                  },
+                ]}
+              />
+            ))}
+          </View>
+          {index < NEW_USER_INTRO_SLIDES.length - 1 ? (
+            <Text style={[styles.hintLabel, styles.hintHit, { color: c.textMuted }]}>Swipe</Text>
+          ) : (
+            <View style={styles.hintHit} />
+          )}
         </View>
-      </View>
-
-      <View style={styles.footer}>
-        <EntryPrimaryButton title={last ? "Done" : "Next"} onPress={onNext} noTopMargin />
-
-        <Pressable
-          accessibilityRole="button"
-          accessibilityLabel="Skip introduction"
-          onPress={onFinished}
-          hitSlop={12}
-          style={styles.skipHit}
-        >
-          <Text style={[styles.skip, { color: c.textMuted }]}>Skip</Text>
-        </Pressable>
       </View>
     </View>
   );
@@ -295,8 +249,12 @@ export function NewUserIntroScreen({ onFinished }: { onFinished: () => void }) {
 
 const styles = StyleSheet.create({
   screen: { flex: 1 },
-  header: {
-    height: NAV_HEADER_BAR_HEIGHT,
+  closeHit: {
+    position: "absolute",
+    right: FULL_WIDTH_CTA_EDGE_PADDING,
+    zIndex: 2,
+    width: 44,
+    height: 44,
     alignItems: "center",
     justifyContent: "center",
   },
@@ -305,64 +263,60 @@ const styles = StyleSheet.create({
   },
   pager: { flex: 1 },
   page: {
-    paddingHorizontal: FULL_WIDTH_CTA_EDGE_PADDING,
-    justifyContent: "flex-start",
-    alignItems: "stretch",
-  },
-  contentBlock: {
-    width: "100%",
-    alignItems: "stretch",
-  },
-  mediaSlot: {
-    width: MEDIA_SIZE,
-    height: MEDIA_SIZE,
-    alignSelf: "center",
     alignItems: "center",
     justifyContent: "center",
-    marginBottom: INTRO_ICON_TO_TITLE_GAP,
+  },
+  copyStack: {
+    width: "100%",
+    alignItems: "center",
+  },
+  iconWrap: {
+    marginBottom: ICON_TO_TITLE_GAP,
+    alignItems: "center",
+    justifyContent: "center",
   },
   slideTitle: {
     fontFamily: FLARE_FONT_FAMILY.bold,
     textAlign: "center",
-    alignSelf: "stretch",
     width: "100%",
-    marginBottom: INTRO_TITLE_TO_SUPPORT_GAP,
   },
   supportText: {
-    fontSize: 18,
-    lineHeight: 26,
+    fontSize: SUPPORT_SIZE,
+    lineHeight: SUPPORT_LINE,
     fontFamily: FLARE_FONT_FAMILY.regular,
     textAlign: "center",
-    alignSelf: "stretch",
     width: "100%",
+    minHeight: SUPPORT_BLOCK_HEIGHT,
   },
-  dots: {
+  belowCopy: {
     position: "absolute",
     left: 0,
     right: 0,
+    gap: HINT_GAP,
+    alignItems: "center",
+  },
+  dots: {
     flexDirection: "row",
     alignItems: "center",
     justifyContent: "center",
-    gap: 10,
+    gap: STACK_GAP_SM - 4,
+    height: DOT_SIZE,
+    minHeight: DOT_SIZE,
   },
   dot: {
     height: DOT_SIZE,
     borderRadius: DOT_SIZE / 2,
   },
-  footer: {
-    paddingHorizontal: FULL_WIDTH_CTA_EDGE_PADDING,
-    gap: 16,
-    alignItems: "stretch",
-  },
-  skipHit: {
-    alignSelf: "center",
-    paddingVertical: 8,
-    paddingHorizontal: 12,
-    minHeight: FLARE_BUTTON_MIN_HEIGHT - 8,
+  hintHit: {
+    minHeight: 44,
+    paddingVertical: STACK_GAP_SM,
+    paddingHorizontal: STACK_GAP_MD,
     justifyContent: "center",
+    alignItems: "center",
   },
-  skip: {
+  hintLabel: {
     fontSize: 15,
+    lineHeight: 20,
     fontFamily: FLARE_FONT_FAMILY.medium,
     textAlign: "center",
   },
