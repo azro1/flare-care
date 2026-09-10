@@ -41,7 +41,6 @@ import {
   wizardLandingMinHeight,
 } from "../lib/layoutConstants";
 import {
-  createPreviewWellbeingForm,
   getTodayWellbeingEntry,
   invalidateWellbeingListCache,
   quickWellbeingFormState,
@@ -98,18 +97,14 @@ function RadioRow({
 export function WellbeingWizardScreen({ user }: { user: SessionUser }) {
   const navigation = useNavigation<any>();
   const route = useRoute();
-  const routeParams = (route.params as { editId?: string; previewReview?: boolean } | undefined) ?? {};
-  const editId = String(routeParams.editId ?? "");
-  const previewReview = Boolean(__DEV__ && routeParams.previewReview);
+  const editId = String((route.params as { editId?: string } | undefined)?.editId ?? "");
   const c = useFlareColors();
   const errTextStyle = flareFieldErrorStyle(c, "wizard");
   const { height: windowHeight } = useWindowDimensions();
 
-  const [loadingEdit, setLoadingEdit] = useState(Boolean(editId) && !previewReview);
-  const [currentStep, setCurrentStep] = useState(previewReview ? WELLBEING_WIZARD_REVIEW_STEP : 0);
-  const [form, setForm] = useState<WellbeingFormState>(() =>
-    previewReview ? createPreviewWellbeingForm() : quickWellbeingFormState(),
-  );
+  const [loadingEdit, setLoadingEdit] = useState(Boolean(editId));
+  const [currentStep, setCurrentStep] = useState(0);
+  const [form, setForm] = useState<WellbeingFormState>(() => quickWellbeingFormState());
   const [history, setHistory] = useState<{ step: number; form: WellbeingFormState }[]>([]);
   const [fieldErrors, setFieldErrors] = useState<Record<string, string>>({});
   const [submitting, setSubmitting] = useState(false);
@@ -123,7 +118,7 @@ export function WellbeingWizardScreen({ user }: { user: SessionUser }) {
   }, [currentStep]);
 
   useEffect(() => {
-    if (previewReview || !editId) return;
+    if (!editId) return;
     let cancelled = false;
     (async () => {
       setLoadingEdit(true);
@@ -147,7 +142,7 @@ export function WellbeingWizardScreen({ user }: { user: SessionUser }) {
     return () => {
       cancelled = true;
     };
-  }, [editId, navigation, previewReview, user.id]);
+  }, [editId, navigation, user.id]);
 
   const returnToReview = useCallback(() => {
     setCurrentStep(WELLBEING_WIZARD_REVIEW_STEP);
@@ -287,11 +282,6 @@ export function WellbeingWizardScreen({ user }: { user: SessionUser }) {
   };
 
   const submit = async () => {
-    if (previewReview) {
-      showFlareAlert("Preview only", "This is a review layout preview — nothing was saved.");
-      navigation.goBack();
-      return;
-    }
     setSubmitting(true);
     try {
       const payload = wellbeingPayloadFromForm(form);
@@ -503,15 +493,7 @@ export function WellbeingWizardScreen({ user }: { user: SessionUser }) {
               </View>
               <View style={styles.reviewSubmitInCard}>
                 <PrimaryButton
-                  title={
-                    previewReview
-                      ? "Close preview"
-                      : submitting
-                        ? "Saving…"
-                        : editId
-                          ? "Save changes"
-                          : "Submit"
-                  }
+                  title={submitting ? "Saving…" : editId ? "Save changes" : "Submit"}
                   onPress={submit}
                   disabled={submitting}
                   noTopMargin

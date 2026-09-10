@@ -30,7 +30,6 @@ import {
   cleanedMedicationHasNoData,
   createEmptyMedicationForm,
   createEmptyMedicationRow,
-  createPreviewMedicationForm,
   getMedicationReviewEditStep,
   getMedicationReviewSectionLastStep,
   getMedicationWizardPhaseProgress,
@@ -118,20 +117,16 @@ const MEDICATION_REVIEW_STEP = MEDICATION_WIZARD_REVIEW_STEP;
 export function MedicationTrackingWizardScreen({ user }: { user: SessionUser }) {
   const navigation = useNavigation<any>();
   const route = useRoute();
-  const routeParams = (route.params as { editId?: string; previewReview?: boolean } | undefined) ?? {};
-  const editId = String(routeParams.editId ?? "");
-  const previewReview = Boolean(__DEV__ && routeParams.previewReview);
+  const editId = String((route.params as { editId?: string } | undefined)?.editId ?? "");
   const c = useFlareColors();
   const errTextStyle = flareFieldErrorStyle(c, "wizard");
   const { height: windowHeight } = useWindowDimensions();
-  const [currentStep, setCurrentStep] = useState(previewReview ? MEDICATION_REVIEW_STEP : 0);
-  const [form, setForm] = useState<MedicationTrackingFormData>(() =>
-    previewReview ? createPreviewMedicationForm() : createEmptyMedicationForm(),
-  );
+  const [currentStep, setCurrentStep] = useState(0);
+  const [form, setForm] = useState<MedicationTrackingFormData>(() => createEmptyMedicationForm());
   const [fieldErrors, setFieldErrors] = useState<Record<string, string>>({});
   const [history, setHistory] = useState<MedicationWizardHistoryEntry[]>([]);
   const [submitting, setSubmitting] = useState(false);
-  const [loadingEdit, setLoadingEdit] = useState(Boolean(editId) && !previewReview);
+  const [loadingEdit, setLoadingEdit] = useState(Boolean(editId));
   const [datePicker, setDatePicker] = useState<DatePickerTarget>(null);
   const [timePicker, setTimePicker] = useState<TimePickerTarget>(null);
   /** Spinner/dialog value only — do not write to form until user confirms (avoids defaulting to today). */
@@ -150,7 +145,7 @@ export function MedicationTrackingWizardScreen({ user }: { user: SessionUser }) 
   }, [user.id]);
 
   useEffect(() => {
-    if (previewReview || !editId) return;
+    if (!editId) return;
     let cancelled = false;
     (async () => {
       setLoadingEdit(true);
@@ -174,7 +169,7 @@ export function MedicationTrackingWizardScreen({ user }: { user: SessionUser }) 
     return () => {
       cancelled = true;
     };
-  }, [editId, navigation, previewReview, user.id]);
+  }, [editId, navigation, user.id]);
 
   const phase = useMemo(() => getMedicationWizardPhaseProgress(currentStep, form), [currentStep, form]);
 
@@ -322,11 +317,6 @@ export function MedicationTrackingWizardScreen({ user }: { user: SessionUser }) 
   };
 
   const submit = async () => {
-    if (previewReview) {
-      showFlareAlert("Preview only", "This is a review layout preview — nothing was saved.");
-      navigation.goBack();
-      return;
-    }
     const cleaned = cleanMedicationForm(form);
     if (cleanedMedicationHasNoData(cleaned)) {
       showFlareAlert(
@@ -641,17 +631,9 @@ export function MedicationTrackingWizardScreen({ user }: { user: SessionUser }) 
             </View>
             <View style={styles.reviewSubmitInCard}>
               <PrimaryButton
-                title={
-                  previewReview
-                    ? "Close preview"
-                    : submitting
-                      ? "Saving…"
-                      : editId
-                        ? "Save changes"
-                        : "Submit"
-                }
+                title={submitting ? "Saving…" : editId ? "Save changes" : "Submit"}
                 onPress={submit}
-                disabled={submitting || (!previewReview && !reviewHasData)}
+                disabled={submitting || !reviewHasData}
                 noTopMargin
               />
             </View>

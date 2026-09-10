@@ -4579,37 +4579,6 @@ function AccountScreen({
         onPressItem={(route) => navigation.navigate(route)}
       />
       <View style={styles.accountDeleteFooter}>
-        {__DEV__ ? (
-          <>
-            <Pressable
-              accessibilityRole="button"
-              accessibilityLabel="Preview Log Symptoms review"
-              onPress={() => navigation.navigate("SymptomLogWizard", { previewReview: true })}
-              hitSlop={8}
-              style={styles.accountDeleteLink}
-            >
-              <Text style={[styles.accountDeleteLinkText, { color: c.primary }]}>Preview LS review (dev)</Text>
-            </Pressable>
-            <Pressable
-              accessibilityRole="button"
-              accessibilityLabel="Preview Track Medications review"
-              onPress={() => navigation.navigate("MedicationTrackingWizard", { previewReview: true })}
-              hitSlop={8}
-              style={styles.accountDeleteLink}
-            >
-              <Text style={[styles.accountDeleteLinkText, { color: c.primary }]}>Preview TM review (dev)</Text>
-            </Pressable>
-            <Pressable
-              accessibilityRole="button"
-              accessibilityLabel="Preview Wellbeing review"
-              onPress={() => navigation.navigate("WellbeingWizard", { previewReview: true })}
-              hitSlop={8}
-              style={styles.accountDeleteLink}
-            >
-              <Text style={[styles.accountDeleteLinkText, { color: c.primary }]}>Preview MW review (dev)</Text>
-            </Pressable>
-          </>
-        ) : null}
         <Pressable
           accessibilityRole="button"
           accessibilityLabel="Delete account"

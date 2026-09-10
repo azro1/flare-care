@@ -34,7 +34,6 @@ import { symptomWizardTryAdvance, type DateErrorsState } from "../lib/symptomWiz
 import {
   buildSymptomInsertPayload,
   createEmptySymptomForm,
-  createPreviewSymptomForm,
   fetchUserPreferencesRow,
   getSymptomReviewEditStep,
   getSymptomReviewSectionLastStep,
@@ -100,19 +99,15 @@ const SYMPTOM_REVIEW_STEP = SYMPTOM_WIZARD_REVIEW_STEP;
 export function SymptomLogWizardScreen({ user }: { user: SessionUser }) {
   const navigation = useNavigation<any>();
   const route = useRoute();
-  const routeParams = (route.params as { editId?: string; previewReview?: boolean } | undefined) ?? {};
-  const editId = String(routeParams.editId ?? "");
-  const previewReview = Boolean(__DEV__ && routeParams.previewReview);
+  const editId = String((route.params as { editId?: string } | undefined)?.editId ?? "");
   const c = useFlareColors();
   const errTextStyle = flareFieldErrorStyle(c, "wizard");
   const { height: windowHeight } = useWindowDimensions();
-  const [loadingPrefs, setLoadingPrefs] = useState(!previewReview);
+  const [loadingPrefs, setLoadingPrefs] = useState(true);
   const [userPreferences, setUserPreferences] = useState<UserPreferencesShape | null>(null);
   const [isFirstTimeUser, setIsFirstTimeUser] = useState(true);
-  const [currentStep, setCurrentStep] = useState(previewReview ? SYMPTOM_REVIEW_STEP : 0);
-  const [form, setForm] = useState<SymptomFormData>(() =>
-    previewReview ? createPreviewSymptomForm() : createEmptySymptomForm(),
-  );
+  const [currentStep, setCurrentStep] = useState(0);
+  const [form, setForm] = useState<SymptomFormData>(() => createEmptySymptomForm());
   const [fieldErrors, setFieldErrors] = useState<Record<string, string>>({});
   const [dateErrors, setDateErrors] = useState<DateErrorsState>({
     day: "",
@@ -141,11 +136,6 @@ export function SymptomLogWizardScreen({ user }: { user: SessionUser }) {
   }, [user.id]);
 
   useEffect(() => {
-    if (previewReview) {
-      setLoadingPrefs(false);
-      setIsFirstTimeUser(true);
-      return;
-    }
     (async () => {
       setLoadingPrefs(true);
       try {
@@ -156,7 +146,7 @@ export function SymptomLogWizardScreen({ user }: { user: SessionUser }) {
         setLoadingPrefs(false);
       }
     })();
-  }, [editId, previewReview, user.id]);
+  }, [editId, user.id]);
 
   useEffect(() => {
     if (!editId) return;
@@ -411,11 +401,6 @@ export function SymptomLogWizardScreen({ user }: { user: SessionUser }) {
   };
 
   const submit = async () => {
-    if (previewReview) {
-      showFlareAlert("Preview only", "This is a review layout preview — nothing was saved.");
-      navigation.goBack();
-      return;
-    }
     const hasMealData =
       form.breakfast.some((i) => i.food.trim()) ||
       form.lunch.some((i) => i.food.trim()) ||
@@ -1069,15 +1054,7 @@ export function SymptomLogWizardScreen({ user }: { user: SessionUser }) {
             </View>
             <View style={styles.reviewSubmitInCard}>
               <PrimaryButton
-                title={
-                  previewReview
-                    ? "Close preview"
-                    : submitting
-                      ? "Saving…"
-                      : editId
-                        ? "Save changes"
-                        : "Submit"
-                }
+                title={submitting ? "Saving…" : editId ? "Save changes" : "Submit"}
                 onPress={submit}
                 disabled={submitting}
                 noTopMargin
