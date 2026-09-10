@@ -2,10 +2,10 @@ import { FLARE_FEATURE_LUCIDE, FlareLucideIcon } from "../lib/flareLucideIcons";
 import DateTimePicker from "@react-native-community/datetimepicker";
 import AsyncStorage from "@react-native-async-storage/async-storage";
 import { CommonActions, useNavigation, useRoute } from "@react-navigation/native";
-import React, { useCallback, useEffect, useLayoutEffect, useMemo, useState } from "react";
+import React, { useCallback, useEffect, useLayoutEffect, useMemo, useRef, useState } from "react";
 import {
   ActivityIndicator,
-    BackHandler,
+  BackHandler,
   KeyboardAvoidingView,
   Platform,
   Pressable,
@@ -14,6 +14,7 @@ import {
   Text,
   useWindowDimensions,
   View,
+  type ScrollView as RNScrollView,
 } from "react-native";
 import { showFlareAlert } from "../components/FlareAlertHost";
 import { ScrollView } from "../lib/scrollViews";
@@ -21,6 +22,7 @@ import {
   WizardReviewMealsSection,
   WizardReviewNotesSection,
   WizardReviewSection,
+  WizardReviewShell,
   type WizardReviewField,
 } from "../components/symptomReviewLayout";
 import { EntryPrimaryButton, PrimaryButton, SecondaryButton } from "../components/FlareButton";
@@ -32,6 +34,7 @@ import { symptomWizardTryAdvance, type DateErrorsState } from "../lib/symptomWiz
 import {
   buildSymptomInsertPayload,
   createEmptySymptomForm,
+  createPreviewSymptomForm,
   fetchUserPreferencesRow,
   getSymptomReviewEditStep,
   getSymptomReviewSectionLastStep,
@@ -51,7 +54,7 @@ import {
   wizardRatingToBand,
 } from "../lib/symptomWizardShared";
 import { useFlareColors } from "../theme";
-import { FLARE_FONT_SIZE, FULL_WIDTH_CTA_EDGE_PADDING, LANDING_CTA_SIDE_PAD, QUESTIONNAIRE_STEP_FOOTER, QUESTIONNAIRE_STEP_OPTION_LIST, QUESTIONNAIRE_STEP_RADIO_ROW, QUESTIONNAIRE_STEP_SCROLL, QUESTIONNAIRE_STEP_SCROLL_BOTTOM, QUESTIONNAIRE_STEP_TITLE } from "../lib/layoutConstants";
+import { CARD_INNER_PADDING, FLARE_FONT_SIZE, FULL_WIDTH_CTA_EDGE_PADDING, LANDING_CTA_SIDE_PAD, QUESTIONNAIRE_STEP_FOOTER, QUESTIONNAIRE_STEP_OPTION_LIST, QUESTIONNAIRE_STEP_RADIO_ROW, QUESTIONNAIRE_STEP_SCROLL, QUESTIONNAIRE_STEP_SCROLL_BOTTOM, QUESTIONNAIRE_STEP_TITLE } from "../lib/layoutConstants";
 
 type SessionUser = { id: string };
 
@@ -97,15 +100,19 @@ const SYMPTOM_REVIEW_STEP = SYMPTOM_WIZARD_REVIEW_STEP;
 export function SymptomLogWizardScreen({ user }: { user: SessionUser }) {
   const navigation = useNavigation<any>();
   const route = useRoute();
-  const editId = String((route.params as { editId?: string } | undefined)?.editId ?? "");
+  const routeParams = (route.params as { editId?: string; previewReview?: boolean } | undefined) ?? {};
+  const editId = String(routeParams.editId ?? "");
+  const previewReview = Boolean(__DEV__ && routeParams.previewReview);
   const c = useFlareColors();
   const errTextStyle = flareFieldErrorStyle(c, "wizard");
   const { height: windowHeight } = useWindowDimensions();
-  const [loadingPrefs, setLoadingPrefs] = useState(true);
+  const [loadingPrefs, setLoadingPrefs] = useState(!previewReview);
   const [userPreferences, setUserPreferences] = useState<UserPreferencesShape | null>(null);
   const [isFirstTimeUser, setIsFirstTimeUser] = useState(true);
-  const [currentStep, setCurrentStep] = useState(0);
-  const [form, setForm] = useState<SymptomFormData>(() => createEmptySymptomForm());
+  const [currentStep, setCurrentStep] = useState(previewReview ? SYMPTOM_REVIEW_STEP : 0);
+  const [form, setForm] = useState<SymptomFormData>(() =>
+    previewReview ? createPreviewSymptomForm() : createEmptySymptomForm(),
+  );
   const [fieldErrors, setFieldErrors] = useState<Record<string, string>>({});
   const [dateErrors, setDateErrors] = useState<DateErrorsState>({
     day: "",
@@ -120,6 +127,12 @@ export function SymptomLogWizardScreen({ user }: { user: SessionUser }) {
   const [loadingEdit, setLoadingEdit] = useState(Boolean(editId));
   const [picker, setPicker] = useState<null | "start" | "end">(null);
   const [editingReviewSection, setEditingReviewSection] = useState<SymptomReviewSectionId | null>(null);
+  const scrollRef = useRef<RNScrollView>(null);
+
+  // Edit / step changes must land at the top — Review is tall so scroll offset otherwise sticks.
+  useEffect(() => {
+    scrollRef.current?.scrollTo({ y: 0, animated: false });
+  }, [currentStep]);
 
   useEffect(() => {
     return () => {
@@ -128,6 +141,11 @@ export function SymptomLogWizardScreen({ user }: { user: SessionUser }) {
   }, [user.id]);
 
   useEffect(() => {
+    if (previewReview) {
+      setLoadingPrefs(false);
+      setIsFirstTimeUser(true);
+      return;
+    }
     (async () => {
       setLoadingPrefs(true);
       try {
@@ -138,7 +156,7 @@ export function SymptomLogWizardScreen({ user }: { user: SessionUser }) {
         setLoadingPrefs(false);
       }
     })();
-  }, [editId, user.id]);
+  }, [editId, previewReview, user.id]);
 
   useEffect(() => {
     if (!editId) return;
@@ -393,6 +411,11 @@ export function SymptomLogWizardScreen({ user }: { user: SessionUser }) {
   };
 
   const submit = async () => {
+    if (previewReview) {
+      showFlareAlert("Preview only", "This is a review layout preview — nothing was saved.");
+      navigation.goBack();
+      return;
+    }
     const hasMealData =
       form.breakfast.some((i) => i.food.trim()) ||
       form.lunch.some((i) => i.food.trim()) ||
@@ -570,6 +593,7 @@ export function SymptomLogWizardScreen({ user }: { user: SessionUser }) {
     <KeyboardAvoidingView style={{ flex: 1, backgroundColor: c.screen }} behavior={Platform.OS === "ios" ? "padding" : undefined}>
       <View style={styles.wizardShell}>
       <ScrollView
+        ref={scrollRef}
         contentContainerStyle={[
           styles.scrollPad,
           currentStep === 0 ? styles.scrollPadLanding : styles.scrollPadWizardSteps,
@@ -1017,33 +1041,53 @@ export function SymptomLogWizardScreen({ user }: { user: SessionUser }) {
           </View>
         ) : null}
 
-        {currentStep === 17 ? (
-          <View>
-            <WizardReviewSection title="Basic Information" fields={reviewBasicFields} onEdit={() => openReviewEdit("basic")} />
-            <WizardReviewSection
-              title="Bathroom Frequency"
-              fields={reviewBathroomFields}
-              onEdit={() => openReviewEdit("bathroom")}
-            />
-            {reviewLifestyleFields.length > 0 ? (
+        {currentStep === SYMPTOM_REVIEW_STEP ? (
+          <WizardReviewShell>
+            <View style={styles.reviewSections}>
               <WizardReviewSection
-                title="Lifestyle"
-                fields={reviewLifestyleFields}
-                onEdit={() => openReviewEdit("lifestyle")}
+                embedded
+                title="Basic Information"
+                fields={reviewBasicFields}
+                onEdit={() => openReviewEdit("basic")}
               />
-            ) : null}
-            <WizardReviewMealsSection entries={mealReviewEntries} onEdit={() => openReviewEdit("meals")} />
-            <WizardReviewNotesSection notes={form.notes} onEdit={() => openReviewEdit("notes")} />
-          </View>
+              <WizardReviewSection
+                embedded
+                title="Bathroom Frequency"
+                fields={reviewBathroomFields}
+                onEdit={() => openReviewEdit("bathroom")}
+              />
+              {reviewLifestyleFields.length > 0 ? (
+                <WizardReviewSection
+                  embedded
+                  title="Lifestyle"
+                  fields={reviewLifestyleFields}
+                  onEdit={() => openReviewEdit("lifestyle")}
+                />
+              ) : null}
+              <WizardReviewMealsSection embedded entries={mealReviewEntries} onEdit={() => openReviewEdit("meals")} />
+              <WizardReviewNotesSection embedded notes={form.notes} onEdit={() => openReviewEdit("notes")} />
+            </View>
+            <View style={styles.reviewSubmitInCard}>
+              <PrimaryButton
+                title={
+                  previewReview
+                    ? "Close preview"
+                    : submitting
+                      ? "Saving…"
+                      : editId
+                        ? "Save changes"
+                        : "Submit"
+                }
+                onPress={submit}
+                disabled={submitting}
+                noTopMargin
+              />
+            </View>
+          </WizardReviewShell>
         ) : null}
 
-        {currentStep > 0 ? (
-          <View
-            style={[
-              styles.footerBtns,
-              currentStep === SYMPTOM_REVIEW_STEP && !editingReviewSection && styles.footerBtnsReview,
-            ]}
-          >
+        {currentStep > 0 && !(currentStep === SYMPTOM_REVIEW_STEP && !editingReviewSection) ? (
+          <View style={styles.footerBtns}>
             {editingReviewSection ? (
               <>
                 <PrimaryButton title="Back to review" onPress={returnToReview} />
@@ -1051,18 +1095,12 @@ export function SymptomLogWizardScreen({ user }: { user: SessionUser }) {
                   <SecondaryButton title="Next" onPress={applyAdvance} />
                 ) : null}
               </>
-            ) : currentStep < SYMPTOM_REVIEW_STEP ? (
-              <PrimaryButton title="Next" onPress={applyAdvance} />
             ) : (
-              <PrimaryButton
-                title={submitting ? "Saving…" : editId ? "Save changes" : "Submit"}
-                onPress={submit}
-                disabled={submitting}
-              />
+              <>
+                <PrimaryButton title="Next" onPress={applyAdvance} />
+                {currentStep > 1 ? <SecondaryButton title="Prev" onPress={goBackInternal} /> : null}
+              </>
             )}
-            {currentStep > 1 && !editingReviewSection && currentStep !== SYMPTOM_REVIEW_STEP ? (
-              <SecondaryButton title="Prev" onPress={goBackInternal} />
-            ) : null}
           </View>
         ) : null}
       </ScrollView>
@@ -1125,6 +1163,9 @@ const styles = StyleSheet.create({
   removeItemLink: { marginTop: 6, alignSelf: "flex-end" },
   addItemLink: { marginTop: 8, marginBottom: 8, alignSelf: "flex-start" },
   footerBtns: { ...QUESTIONNAIRE_STEP_FOOTER },
-  footerBtnsReview: { marginTop: 0 },
+  /** Section stack inside the review card. */
+  reviewSections: { gap: 12 },
+  /** Same as My Meds detail — only this gap above the in-card CTA. */
+  reviewSubmitInCard: { marginTop: CARD_INNER_PADDING },
   switchRow: { flexDirection: "row", alignItems: "center", marginTop: 12 },
 });

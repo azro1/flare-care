@@ -77,7 +77,7 @@ export function WellbeingScreen({ user }: { user: SessionUser }) {
     routeName: "Wellbeing",
     itemIds,
     navigation,
-    headerTitle: "History",
+    headerTitle: "Wellbeing Logs",
   });
 
   const handleBulkDeleteConfirm = useCallback(() => {

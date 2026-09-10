@@ -8,11 +8,13 @@ import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { ConfirmModal } from "../components/ConfirmModal";
 import {
   LogDetailAddedHeader,
-  LogDetailFieldGroup,
-  LogDetailNotesCard,
-  LogDetailSectionCard,
   logDetailStyles,
+  WizardReviewShell,
 } from "../components/LogDetailLayout";
+import {
+  WizardReviewNotesSection,
+  WizardReviewSection,
+} from "../components/symptomReviewLayout";
 import { invalidateDashboardSnapshot } from "../lib/dashboardSnapshotCache";
 import { formatAddedAtHeader } from "../lib/logDisplay";
 import { recordRecentActivityEvent } from "../lib/recentActivityEvents";
@@ -205,15 +207,13 @@ export function WellbeingLogDetailScreen({ user }: { user: SessionUser }) {
       >
         <LogDetailAddedHeader text={formatAddedAtHeader(row.created_at)} />
 
-        <LogDetailSectionCard title="Feelings">
-          <LogDetailFieldGroup fields={feelingsFields} />
-        </LogDetailSectionCard>
-
-        <LogDetailSectionCard title="Activities">
-          <LogDetailFieldGroup fields={activityFields} />
-        </LogDetailSectionCard>
-
-        {row.notes?.trim() ? <LogDetailNotesCard notes={row.notes.trim()} /> : null}
+        <WizardReviewShell>
+          <View style={logDetailStyles.reviewSections}>
+            <WizardReviewSection title="Feelings" fields={feelingsFields} embedded />
+            <WizardReviewSection title="Activities" fields={activityFields} embedded />
+            <WizardReviewNotesSection embedded notes={row.notes?.trim() ?? ""} />
+          </View>
+        </WizardReviewShell>
       </ScrollView>
 
       <ConfirmModal

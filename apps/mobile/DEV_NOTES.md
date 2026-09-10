@@ -303,6 +303,8 @@ Do **not** remove these checks when touching wizard back/next — they block the
 
 **Track Medications form copy:** dosage list rows use placeholder **`dose (mg)`** (digits only in field; `normalizeDosage` in shared).
 
+**Future — Wellbeing review Feelings (not doing today):** Review currently has one long **Feelings** tray (mood / energy / sleep / anxiety / pain / IBD impact / brain fog) + short **Activities** + optional **Notes**, so the top tray dominates. Prefer splitting **Feelings into two** review categories when we reshuffle (even-ish field groups), so Review isn’t one long card over a short bottom card. Leave wizard step order alone until then; only change how review groups fields + `getWellbeingReviewEditStep` / section last-step maps.
+
 ---
 
 ## Layout constants

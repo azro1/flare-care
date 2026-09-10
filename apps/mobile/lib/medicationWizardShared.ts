@@ -50,6 +50,31 @@ export function createEmptyMedicationForm(): MedicationTrackingFormData {
   };
 }
 
+/** Dev-only sample so Review can be opened without walking the whole wizard. */
+export function createPreviewMedicationForm(): MedicationTrackingFormData {
+  const today = new Date();
+  const y = today.getFullYear();
+  const m = String(today.getMonth() + 1).padStart(2, "0");
+  const d = String(today.getDate()).padStart(2, "0");
+  const date = `${y}-${m}-${d}`;
+  return {
+    missedMedications: true,
+    missedMedicationsList: [
+      { medication: "Mesalazine", date, timeOfDay: "Morning", dateTouched: true },
+      { medication: "Azathioprine", date, timeOfDay: "Evening", dateTouched: true },
+    ],
+    nsaidUsage: true,
+    nsaidList: [
+      { medication: "Ibuprofen", date, timeOfDay: "Afternoon", dosage: "200", dateTouched: true },
+      { medication: "Naproxen", date, timeOfDay: "Night", dosage: "250", dateTouched: true },
+    ],
+    antibioticUsage: true,
+    antibioticList: [
+      { medication: "Amoxicillin", date, timeOfDay: "Morning", dosage: "500", dateTouched: true },
+    ],
+  };
+}
+
 export function normalizeDosage(raw: string): string {
   return (raw || "").replace(/\D/g, "").slice(0, 5);
 }

@@ -99,7 +99,6 @@ import {
   owmIconIdToLucide,
 } from "./lib/flareLucideIcons";
 import { fetchMedicationsForUser } from "./lib/medicationShared";
-import { WELLBEING_LOG_TITLE } from "./lib/wellbeingShared";
 import { recordRecentActivityEvent } from "./lib/recentActivityEvents";
 import {
   NUTRITION_CATEGORIES,
@@ -167,11 +166,15 @@ import {
 import {
   LogDetailAddedHeader,
   LogDetailFieldGroup,
-  LogDetailFieldGroups,
-  LogDetailNotesCard,
-  LogDetailSectionCard,
   logDetailStyles,
+  WizardReviewShell,
 } from "./components/LogDetailLayout";
+import {
+  WizardReviewMealsSection,
+  WizardReviewMedicationSection,
+  WizardReviewNotesSection,
+  WizardReviewSection,
+} from "./components/symptomReviewLayout";
 import { NewsFeedCard, newsFeedListStyles } from "./components/NewsFeed";
 import { formatAddedAtHeader } from "./lib/logDisplay";
 import { useWizardLogHistory } from "./lib/wizardLogHistory";
@@ -2688,7 +2691,7 @@ function SymptomHistoryScreen({ user }: { user: SessionUser }) {
     routeName: "SymptomHistory",
     itemIds: symptomLogItemIds,
     navigation,
-    headerTitle: "History",
+    headerTitle: "Symptom Logs",
   });
   const selectionBarInset = selectionMode ? bottomTabBarHeight(insets.bottom) : 0;
 
@@ -3015,34 +3018,17 @@ function SymptomDetailScreen({ user }: { user: SessionUser }) {
       >
         <LogDetailAddedHeader text={formatAddedAtHeader(createdIso)} />
 
-        <LogDetailSectionCard title="Basic Information">
-          <LogDetailFieldGroup fields={basicFields} />
-        </LogDetailSectionCard>
-
-        <LogDetailSectionCard title="Bathroom Frequency">
-          <LogDetailFieldGroup fields={bathroomFields} />
-        </LogDetailSectionCard>
-
-        {lifestyleFields.length > 0 ? (
-          <LogDetailSectionCard title="Lifestyle">
-            <LogDetailFieldGroup fields={lifestyleFields} />
-          </LogDetailSectionCard>
-        ) : null}
-
-        {mealDetailEntries.length > 0 ? (
-          <LogDetailSectionCard title="Meals">
-            <LogDetailFieldGroup
-              fields={mealDetailEntries.map((entry) => ({
-                label: entry.label,
-                value: entry.items
-                  .map((item) => `${item.food}${item.quantity ? ` (${item.quantity})` : ""}`)
-                  .join("\n"),
-              }))}
-            />
-          </LogDetailSectionCard>
-        ) : null}
-
-        {notesText ? <LogDetailNotesCard notes={notesText} /> : null}
+        <WizardReviewShell>
+          <View style={logDetailStyles.reviewSections}>
+            <WizardReviewSection title="Basic Information" fields={basicFields} embedded />
+            <WizardReviewSection title="Bathroom Frequency" fields={bathroomFields} embedded />
+            {lifestyleFields.length > 0 ? (
+              <WizardReviewSection title="Lifestyle" fields={lifestyleFields} embedded />
+            ) : null}
+            <WizardReviewMealsSection embedded entries={mealDetailEntries} />
+            <WizardReviewNotesSection embedded notes={notesText} />
+          </View>
+        </WizardReviewShell>
       </ScrollView>
       <ConfirmModal
         visible={deleteConfirmOpen}
@@ -3080,7 +3066,7 @@ function MedicationTrackingHistoryScreen({ user }: { user: SessionUser }) {
     routeName: "MedicationTrackingHistory",
     itemIds: medicationLogItemIds,
     navigation,
-    headerTitle: "History",
+    headerTitle: "Medication Logs",
   });
   const selectionBarInset = selectionMode ? bottomTabBarHeight(insets.bottom) : 0;
 
@@ -3233,16 +3219,13 @@ function MedicationLogDetailScreen({ user }: { user: SessionUser }) {
     showDosage: boolean,
   ) => {
     if (!items.length) return null;
-    const groups = items.map((item) => [
-      { label: "Medication", value: item.medication },
-      ...(showDosage ? [{ label: "Dosage", value: item.dosage || "N/A" }] : []),
-      { label: "Date", value: item.date ? formatUkDate(item.date) : "N/A" },
-      { label: "Time of Day", value: item.timeOfDay || "N/A" },
-    ]);
     return (
-      <LogDetailSectionCard title={title}>
-        <LogDetailFieldGroups groups={groups} />
-      </LogDetailSectionCard>
+      <WizardReviewMedicationSection
+        embedded
+        title={title}
+        items={items}
+        showDosage={showDosage}
+      />
     );
   };
 
@@ -3271,19 +3254,22 @@ function MedicationLogDetailScreen({ user }: { user: SessionUser }) {
       >
         <LogDetailAddedHeader text={formatAddedAtHeader(createdIso)} />
 
-        <LogDetailSectionCard title="Summary">
-          <LogDetailFieldGroup
-            fields={[
-              { label: "Missed medications", value: String(missedItems.length) },
-              { label: "NSAIDs", value: String(nsaidItems.length) },
-              { label: "Antibiotics", value: String(antibioticItems.length) },
-            ]}
-          />
-        </LogDetailSectionCard>
-
-        {renderListSection("Missed Medications", missedItems, false)}
-        {renderListSection("NSAIDs Taken", nsaidItems, true)}
-        {renderListSection("Antibiotics Taken", antibioticItems, true)}
+        <WizardReviewShell>
+          <View style={logDetailStyles.reviewSections}>
+            <WizardReviewSection
+              embedded
+              title="Summary"
+              fields={[
+                { label: "Missed medications", value: String(missedItems.length) },
+                { label: "NSAIDs", value: String(nsaidItems.length) },
+                { label: "Antibiotics", value: String(antibioticItems.length) },
+              ]}
+            />
+            {renderListSection("Missed Medications", missedItems, false)}
+            {renderListSection("NSAIDs Taken", nsaidItems, true)}
+            {renderListSection("Antibiotics Taken", antibioticItems, true)}
+          </View>
+        </WizardReviewShell>
       </ScrollView>
       <ConfirmModal
         visible={deleteConfirmOpen}
@@ -4593,6 +4579,37 @@ function AccountScreen({
         onPressItem={(route) => navigation.navigate(route)}
       />
       <View style={styles.accountDeleteFooter}>
+        {__DEV__ ? (
+          <>
+            <Pressable
+              accessibilityRole="button"
+              accessibilityLabel="Preview Log Symptoms review"
+              onPress={() => navigation.navigate("SymptomLogWizard", { previewReview: true })}
+              hitSlop={8}
+              style={styles.accountDeleteLink}
+            >
+              <Text style={[styles.accountDeleteLinkText, { color: c.primary }]}>Preview LS review (dev)</Text>
+            </Pressable>
+            <Pressable
+              accessibilityRole="button"
+              accessibilityLabel="Preview Track Medications review"
+              onPress={() => navigation.navigate("MedicationTrackingWizard", { previewReview: true })}
+              hitSlop={8}
+              style={styles.accountDeleteLink}
+            >
+              <Text style={[styles.accountDeleteLinkText, { color: c.primary }]}>Preview TM review (dev)</Text>
+            </Pressable>
+            <Pressable
+              accessibilityRole="button"
+              accessibilityLabel="Preview Wellbeing review"
+              onPress={() => navigation.navigate("WellbeingWizard", { previewReview: true })}
+              hitSlop={8}
+              style={styles.accountDeleteLink}
+            >
+              <Text style={[styles.accountDeleteLinkText, { color: c.primary }]}>Preview MW review (dev)</Text>
+            </Pressable>
+          </>
+        ) : null}
         <Pressable
           accessibilityRole="button"
           accessibilityLabel="Delete account"
@@ -4947,10 +4964,10 @@ function AppTabs({
     const isReminders = route.name === "Reminders";
     const titleForRoute: Record<string, string> = {
       Logs: "Logs",
-      SymptomHistory: "History",
-      SymptomDetail: "Symptom Details",
-      MedicationTrackingHistory: "History",
-      MedicationLogDetail: "Medication Log",
+      SymptomHistory: "Symptom Logs",
+      SymptomDetail: "Log",
+      MedicationTrackingHistory: "Medication Logs",
+      MedicationLogDetail: "Log",
       SymptomLogWizard: "Log Symptoms",
       MedicationTrackingWizard: "Track Medications",
       WellbeingWizard: "My Wellbeing",
@@ -4966,8 +4983,8 @@ function AppTabs({
       Meds: "My Meds",
       MedicationDetail: "Medication",
       Bowel: "Bowel Movements",
-      Wellbeing: "History",
-      WellbeingLogDetail: WELLBEING_LOG_TITLE,
+      Wellbeing: "Wellbeing Logs",
+      WellbeingLogDetail: "Log",
       BowelLogDetail: "Bowel Log",
       BristolGuide: "Bristol Stool Chart",
       Weight: "My Weight",

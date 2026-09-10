@@ -2,7 +2,7 @@ import { FlareLucideIcon } from "../lib/flareLucideIcons";
 import DateTimePicker from "@react-native-community/datetimepicker";
 import AsyncStorage from "@react-native-async-storage/async-storage";
 import { CommonActions, useNavigation, useRoute } from "@react-navigation/native";
-import React, { useCallback, useEffect, useLayoutEffect, useMemo, useState } from "react";
+import React, { useCallback, useEffect, useLayoutEffect, useMemo, useRef, useState } from "react";
 import {
   ActivityIndicator,
     BackHandler,
@@ -13,11 +13,12 @@ import {
   Text,
   useWindowDimensions,
   View,
+  type ScrollView as RNScrollView,
 } from "react-native";
 import { showFlareAlert } from "../components/FlareAlertHost";
 import { ScrollView } from "../lib/scrollViews";
 import { OptionPickerModal } from "../components/OptionPickerModal";
-import { WizardReviewMedicationSection } from "../components/symptomReviewLayout";
+import { WizardReviewMedicationSection, WizardReviewShell } from "../components/symptomReviewLayout";
 import { EntryPrimaryButton, PrimaryButton, SecondaryButton } from "../components/FlareButton";
 import { flareFieldErrorStyle, FlareInputTrigger, FlareTextInput } from "../components/FlareInput";
 import { invalidateDashboardSnapshot } from "../lib/dashboardSnapshotCache";
@@ -29,6 +30,7 @@ import {
   cleanedMedicationHasNoData,
   createEmptyMedicationForm,
   createEmptyMedicationRow,
+  createPreviewMedicationForm,
   getMedicationReviewEditStep,
   getMedicationReviewSectionLastStep,
   getMedicationWizardPhaseProgress,
@@ -49,6 +51,7 @@ import {
 import { TRACK_MEDICATIONS_ICON } from "../lib/medicationFeatureIcons";
 import { useFlareColors } from "../theme";
 import {
+  CARD_INNER_PADDING,
   FLARE_FONT_SIZE,
   FULL_WIDTH_CTA_EDGE_PADDING,
   HELP_NAV_LINK_BELOW_ACTIONS_MARGIN_TOP,
@@ -115,21 +118,30 @@ const MEDICATION_REVIEW_STEP = MEDICATION_WIZARD_REVIEW_STEP;
 export function MedicationTrackingWizardScreen({ user }: { user: SessionUser }) {
   const navigation = useNavigation<any>();
   const route = useRoute();
-  const editId = String((route.params as { editId?: string } | undefined)?.editId ?? "");
+  const routeParams = (route.params as { editId?: string; previewReview?: boolean } | undefined) ?? {};
+  const editId = String(routeParams.editId ?? "");
+  const previewReview = Boolean(__DEV__ && routeParams.previewReview);
   const c = useFlareColors();
   const errTextStyle = flareFieldErrorStyle(c, "wizard");
   const { height: windowHeight } = useWindowDimensions();
-  const [currentStep, setCurrentStep] = useState(0);
-  const [form, setForm] = useState<MedicationTrackingFormData>(() => createEmptyMedicationForm());
+  const [currentStep, setCurrentStep] = useState(previewReview ? MEDICATION_REVIEW_STEP : 0);
+  const [form, setForm] = useState<MedicationTrackingFormData>(() =>
+    previewReview ? createPreviewMedicationForm() : createEmptyMedicationForm(),
+  );
   const [fieldErrors, setFieldErrors] = useState<Record<string, string>>({});
   const [history, setHistory] = useState<MedicationWizardHistoryEntry[]>([]);
   const [submitting, setSubmitting] = useState(false);
-  const [loadingEdit, setLoadingEdit] = useState(Boolean(editId));
+  const [loadingEdit, setLoadingEdit] = useState(Boolean(editId) && !previewReview);
   const [datePicker, setDatePicker] = useState<DatePickerTarget>(null);
   const [timePicker, setTimePicker] = useState<TimePickerTarget>(null);
   /** Spinner/dialog value only — do not write to form until user confirms (avoids defaulting to today). */
   const [pickerDraftDate, setPickerDraftDate] = useState<Date | null>(null);
   const [editingReviewSection, setEditingReviewSection] = useState<MedicationReviewSectionId | null>(null);
+  const scrollRef = useRef<RNScrollView>(null);
+
+  useEffect(() => {
+    scrollRef.current?.scrollTo({ y: 0, animated: false });
+  }, [currentStep]);
 
   useEffect(() => {
     return () => {
@@ -138,7 +150,7 @@ export function MedicationTrackingWizardScreen({ user }: { user: SessionUser }) 
   }, [user.id]);
 
   useEffect(() => {
-    if (!editId) return;
+    if (previewReview || !editId) return;
     let cancelled = false;
     (async () => {
       setLoadingEdit(true);
@@ -162,7 +174,7 @@ export function MedicationTrackingWizardScreen({ user }: { user: SessionUser }) 
     return () => {
       cancelled = true;
     };
-  }, [editId, navigation, user.id]);
+  }, [editId, navigation, previewReview, user.id]);
 
   const phase = useMemo(() => getMedicationWizardPhaseProgress(currentStep, form), [currentStep, form]);
 
@@ -310,6 +322,11 @@ export function MedicationTrackingWizardScreen({ user }: { user: SessionUser }) 
   };
 
   const submit = async () => {
+    if (previewReview) {
+      showFlareAlert("Preview only", "This is a review layout preview — nothing was saved.");
+      navigation.goBack();
+      return;
+    }
     const cleaned = cleanMedicationForm(form);
     if (cleanedMedicationHasNoData(cleaned)) {
       showFlareAlert(
@@ -544,6 +561,7 @@ export function MedicationTrackingWizardScreen({ user }: { user: SessionUser }) 
     <KeyboardAvoidingView style={{ flex: 1, backgroundColor: c.screen }} behavior={Platform.OS === "ios" ? "padding" : undefined}>
       <View style={styles.wizardShell}>
       <ScrollView
+        ref={scrollRef}
         contentContainerStyle={[
           styles.scrollPad,
           currentStep === 0 ? styles.scrollPadLanding : styles.scrollPadWizardSteps,
@@ -597,35 +615,51 @@ export function MedicationTrackingWizardScreen({ user }: { user: SessionUser }) 
         {currentStep === 6 ? renderMedicationList("antibiotic", "Please list any antibiotics you have taken recently", true, "antibioticList") : null}
 
         {currentStep === 7 ? (
-          <View>
-            <WizardReviewMedicationSection
-              title="Missed Medications"
-              items={cleanedForReview.missedMedicationsList}
-              showDosage={false}
-              onEdit={() => openReviewEdit("missed")}
-            />
-            <WizardReviewMedicationSection
-              title="NSAIDs Taken"
-              items={cleanedForReview.nsaidList}
-              showDosage
-              onEdit={() => openReviewEdit("nsaid")}
-            />
-            <WizardReviewMedicationSection
-              title="Antibiotics Taken"
-              items={cleanedForReview.antibioticList}
-              showDosage
-              onEdit={() => openReviewEdit("antibiotic")}
-            />
-          </View>
+          <WizardReviewShell>
+            <View style={styles.reviewSections}>
+              <WizardReviewMedicationSection
+                embedded
+                title="Missed Medications"
+                items={cleanedForReview.missedMedicationsList}
+                showDosage={false}
+                onEdit={() => openReviewEdit("missed")}
+              />
+              <WizardReviewMedicationSection
+                embedded
+                title="NSAIDs Taken"
+                items={cleanedForReview.nsaidList}
+                showDosage
+                onEdit={() => openReviewEdit("nsaid")}
+              />
+              <WizardReviewMedicationSection
+                embedded
+                title="Antibiotics Taken"
+                items={cleanedForReview.antibioticList}
+                showDosage
+                onEdit={() => openReviewEdit("antibiotic")}
+              />
+            </View>
+            <View style={styles.reviewSubmitInCard}>
+              <PrimaryButton
+                title={
+                  previewReview
+                    ? "Close preview"
+                    : submitting
+                      ? "Saving…"
+                      : editId
+                        ? "Save changes"
+                        : "Submit"
+                }
+                onPress={submit}
+                disabled={submitting || (!previewReview && !reviewHasData)}
+                noTopMargin
+              />
+            </View>
+          </WizardReviewShell>
         ) : null}
 
-        {currentStep > 0 ? (
-          <View
-            style={[
-              styles.footerBtns,
-              currentStep === MEDICATION_REVIEW_STEP && !editingReviewSection && styles.footerBtnsReview,
-            ]}
-          >
+        {currentStep > 0 && !(currentStep === MEDICATION_REVIEW_STEP && !editingReviewSection) ? (
+          <View style={styles.footerBtns}>
             {editingReviewSection ? (
               <>
                 <PrimaryButton title="Back to review" onPress={returnToReview} />
@@ -633,16 +667,10 @@ export function MedicationTrackingWizardScreen({ user }: { user: SessionUser }) 
                   <SecondaryButton title="Next" onPress={applyAdvance} />
                 ) : null}
               </>
-            ) : currentStep < MEDICATION_REVIEW_STEP ? (
-              <PrimaryButton title="Next" onPress={applyAdvance} />
             ) : (
-              <PrimaryButton
-                title={submitting ? "Saving…" : editId ? "Save changes" : "Submit"}
-                onPress={submit}
-                disabled={submitting || !reviewHasData}
-              />
+              <PrimaryButton title="Next" onPress={applyAdvance} />
             )}
-            {currentStep > 1 && !editingReviewSection && currentStep !== MEDICATION_REVIEW_STEP ? (
+            {currentStep > 1 && !editingReviewSection ? (
               <SecondaryButton title="Prev" onPress={goBackInternal} />
             ) : null}
           </View>
@@ -733,5 +761,6 @@ const styles = StyleSheet.create({
   listMedNameInput: { flex: 1, minWidth: 0, marginTop: 0 },
   listMedDoseInput: { width: 104, marginTop: 0, flexShrink: 0 },
   footerBtns: { ...QUESTIONNAIRE_STEP_FOOTER },
-  footerBtnsReview: { marginTop: 0 },
+  reviewSections: { gap: 12 },
+  reviewSubmitInCard: { marginTop: CARD_INNER_PADDING },
 });

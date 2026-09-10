@@ -101,6 +101,25 @@ export function quickWellbeingFormState(): WellbeingFormState {
   };
 }
 
+/** Dev-only sample so Review can be opened without walking the whole wizard. */
+export function createPreviewWellbeingForm(): WellbeingFormState {
+  return {
+    ...quickWellbeingFormState(),
+    mood: 3,
+    energy: 2,
+    sleep_quality: 4,
+    anxiety: 3,
+    pain: 2,
+    ibd_impact: 3,
+    brain_fog: 2,
+    exercised: true,
+    exercise_minutes: "25",
+    social_connection: true,
+    time_outdoors: false,
+    notes: "Sample preview notes — not saved.",
+  };
+}
+
 export function wellbeingPayloadFromForm(form: WellbeingFormState) {
   const mins = parseInt(form.exercise_minutes, 10);
   return {

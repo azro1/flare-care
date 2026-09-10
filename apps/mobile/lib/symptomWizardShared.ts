@@ -200,6 +200,39 @@ export function createEmptySymptomForm(): SymptomFormData {
   };
 }
 
+/** Dev-only sample so Review can be opened without walking the whole wizard. */
+export function createPreviewSymptomForm(): SymptomFormData {
+  const today = new Date();
+  const y = today.getFullYear();
+  const m = String(today.getMonth() + 1).padStart(2, "0");
+  const d = String(today.getDate()).padStart(2, "0");
+  const start = `${y}-${m}-${d}`;
+  return {
+    ...createEmptySymptomForm(),
+    symptomStartDate: start,
+    isOngoing: true,
+    severity: "6",
+    stress_level: "4",
+    normal_bathroom_frequency: "2–3 times a day",
+    bathroom_frequency_changed: "yes",
+    bathroom_frequency_change_details: "More often, looser stools",
+    smoker: true,
+    smoking_habits: "A few cigarettes most days",
+    smoking_step10_phase: "dayAmount",
+    smoked_on_symptom_day: true,
+    smoked_amount_on_symptom_day: "2 cigarettes",
+    alcohol: true,
+    average_alcohol_units_pw: "4",
+    alcohol_step12_phase: "dayAmount",
+    drank_on_symptom_day: true,
+    alcohol_units_on_symptom_day: "1",
+    breakfast: [{ food: "Toast", quantity: "2 slices" }],
+    lunch: [{ food: "Soup", quantity: "1 bowl" }],
+    dinner: [{ food: "Chicken and rice", quantity: "1 plate" }],
+    notes: "Sample preview notes — not saved.",
+  };
+}
+
 export function sanitizeNotesMobile(notes: string): string {
   if (typeof notes !== "string") return "";
   return notes.replace(/<[^>]*>/g, "").trim().slice(0, 500);
