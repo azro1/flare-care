@@ -4275,7 +4275,14 @@ function AccountSecurityScreen() {
                   {unlockTitle}
                 </Text>
               </View>
-              <Text style={[styles.settingToggleHint, styles.settingsCardHint, { color: c.textMuted }]}>
+              <Text
+                style={[
+                  styles.settingToggleHint,
+                  styles.settingsCardHint,
+                  styles.settingToggleHintBesideIcon,
+                  { color: c.textMuted },
+                ]}
+              >
                 {unlockHint}
               </Text>
             </View>
@@ -4412,7 +4419,14 @@ function SettingsScreen() {
                   {darkOn ? "Dark mode" : "Light mode"}
                 </Text>
               </View>
-              <Text style={[styles.settingToggleHint, styles.settingsCardHint, { color: c.textMuted }]}>
+              <Text
+                style={[
+                  styles.settingToggleHint,
+                  styles.settingsCardHint,
+                  styles.settingToggleHintBesideIcon,
+                  { color: c.textMuted },
+                ]}
+              >
                 {darkOn
                   ? "A darker theme that's easier on the eyes in low light."
                   : "A bright, clean theme that's easy to read in daylight."}
@@ -4449,7 +4463,14 @@ function SettingsScreen() {
                   Push Notifications and Reminders
                 </Text>
               </View>
-              <Text style={[styles.settingToggleHint, styles.settingsCardHint, { color: c.textMuted }]}>
+              <Text
+                style={[
+                  styles.settingToggleHint,
+                  styles.settingsCardHint,
+                  styles.settingToggleHintBesideIcon,
+                  { color: c.textMuted },
+                ]}
+              >
                 Get reminders and updates from FlareCare.
               </Text>
             </View>
@@ -6250,14 +6271,18 @@ const styles = StyleSheet.create({
   settingToggleTitleBesideIcon: {
     marginBottom: 0,
   },
+  /** Align support under the title, not under the leading icon (16 icon + 8 gap). */
+  settingToggleHintBesideIcon: {
+    marginLeft: 24,
+  },
   settingToggleHint: {
-    fontSize: FLARE_FONT_SIZE.caption,
+    fontSize: FLARE_FONT_SIZE.muted,
     lineHeight: FLARE_LINE_HEIGHT.muted,
     fontFamily: FLARE_FONT_FAMILY.regular,
   },
   /** Settings / Security toggle — same body + caption as Logs tray. */
   settingsCardTitle: { fontSize: FLARE_FONT_SIZE.body, lineHeight: FLARE_LINE_HEIGHT.body },
-  settingsCardHint: { fontSize: FLARE_FONT_SIZE.caption, lineHeight: FLARE_LINE_HEIGHT.muted },
+  settingsCardHint: { fontSize: FLARE_FONT_SIZE.muted, lineHeight: FLARE_LINE_HEIGHT.muted },
   appearanceRow: { flexDirection: "row", gap: 8, marginTop: 14 },
   appearanceChip: {
     flex: 1,

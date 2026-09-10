@@ -2,19 +2,18 @@ import React, { useCallback, useEffect, useMemo, useRef, useState } from "react"
 import {
   Animated,
   Easing,
-  FlatList,
   NativeScrollEvent,
   NativeSyntheticEvent,
   Pressable,
+  ScrollView,
   StyleSheet,
   Text,
   useWindowDimensions,
   View,
-  type ViewToken,
 } from "react-native";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { FlareLucideIcon, FLARE_CHROME_LUCIDE } from "../lib/flareLucideIcons";
-import { NEW_USER_INTRO_SLIDES, type NewUserIntroSlide } from "../lib/newUserIntroCopy";
+import { NEW_USER_INTRO_SLIDES } from "../lib/newUserIntroCopy";
 import {
   FLARE_FONT_FAMILY,
   FULL_WIDTH_CTA_EDGE_PADDING,
@@ -56,12 +55,12 @@ const OPTICAL_LIFT = 120;
 /**
  * One-time swipe intro after sign-up.
  * Mid-screen tips; X enters the app anytime. No last-slide CTA.
+ * ScrollView pager (not FlatList) — only a handful of fixed slides.
  */
 export function NewUserIntroScreen({ onFinished }: { onFinished: () => void }) {
   const c = useFlareColors();
   const insets = useSafeAreaInsets();
   const { width, height: windowHeight } = useWindowDimensions();
-  const listRef = useRef<FlatList<NewUserIntroSlide>>(null);
   const [index, setIndex] = useState(0);
   const finishedRef = useRef(false);
   const dotProgress = useRef(
@@ -102,60 +101,6 @@ export function NewUserIntroScreen({ onFinished }: { onFinished: () => void }) {
     [width],
   );
 
-  const onViewableItemsChanged = useRef(({ viewableItems }: { viewableItems: ViewToken[] }) => {
-    const first = viewableItems[0];
-    if (first?.index != null) setIndex(first.index);
-  }).current;
-
-  const viewabilityConfig = useRef({ viewAreaCoveragePercentThreshold: 60 }).current;
-
-  const renderSlide = useCallback(
-    ({ item, index: slideIndex }: { item: NewUserIntroSlide; index: number }) => {
-      const isWelcome = slideIndex === 0;
-      const titleSize = isWelcome ? WELCOME_TITLE_SIZE : TITLE_SIZE;
-      const titleLine = isWelcome ? WELCOME_TITLE_LINE : TITLE_LINE;
-      return (
-        <View
-          style={[
-            styles.page,
-            {
-              width,
-              height: pagerHeight,
-              paddingHorizontal: FULL_WIDTH_CTA_EDGE_PADDING,
-              paddingBottom: OPTICAL_LIFT,
-            },
-          ]}
-        >
-          <View style={styles.copyStack}>
-            <View
-              style={[
-                styles.iconWrap,
-                item.iconOpticalOffsetY ? { transform: [{ translateY: item.iconOpticalOffsetY }] } : null,
-              ]}
-            >
-              <FlareLucideIcon icon={item.icon} size={SLIDE_ICON_SIZE} color={c.primary} />
-            </View>
-            <Text
-              style={[
-                styles.slideTitle,
-                {
-                  color: c.text,
-                  fontSize: titleSize,
-                  lineHeight: titleLine,
-                  marginBottom: TITLE_TO_SUPPORT_GAP,
-                },
-              ]}
-            >
-              {item.title}
-            </Text>
-            <Text style={[styles.supportText, { color: c.textMuted }]}>{item.text}</Text>
-          </View>
-        </View>
-      );
-    },
-    [c.primary, c.text, c.textMuted, pagerHeight, width],
-  );
-
   return (
     <View
       style={[
@@ -179,10 +124,7 @@ export function NewUserIntroScreen({ onFinished }: { onFinished: () => void }) {
       </Pressable>
 
       <View style={[styles.pagerWrap, { height: pagerHeight }]}>
-        <FlatList
-          ref={listRef}
-          data={NEW_USER_INTRO_SLIDES}
-          keyExtractor={(item) => item.title}
+        <ScrollView
           horizontal
           pagingEnabled
           bounces={false}
@@ -190,25 +132,57 @@ export function NewUserIntroScreen({ onFinished }: { onFinished: () => void }) {
           showsHorizontalScrollIndicator={false}
           decelerationRate="fast"
           disableIntervalMomentum
-          snapToInterval={width}
-          snapToAlignment="start"
-          getItemLayout={(_, i) => ({
-            length: width,
-            offset: width * i,
-            index: i,
-          })}
           onMomentumScrollEnd={onMomentumScrollEnd}
-          onViewableItemsChanged={onViewableItemsChanged}
-          viewabilityConfig={viewabilityConfig}
-          onScrollToIndexFailed={({ index: failed }) => {
-            requestAnimationFrame(() => {
-              listRef.current?.scrollToIndex({ index: failed, animated: true });
-            });
-          }}
           style={styles.pager}
           contentContainerStyle={{ height: pagerHeight }}
-          renderItem={renderSlide}
-        />
+        >
+          {NEW_USER_INTRO_SLIDES.map((item, slideIndex) => {
+            const isWelcome = slideIndex === 0;
+            const titleSize = isWelcome ? WELCOME_TITLE_SIZE : TITLE_SIZE;
+            const titleLine = isWelcome ? WELCOME_TITLE_LINE : TITLE_LINE;
+            return (
+              <View
+                key={item.title}
+                style={[
+                  styles.page,
+                  {
+                    width,
+                    height: pagerHeight,
+                    paddingHorizontal: FULL_WIDTH_CTA_EDGE_PADDING,
+                    paddingBottom: OPTICAL_LIFT,
+                  },
+                ]}
+              >
+                <View style={styles.copyStack}>
+                  <View
+                    style={[
+                      styles.iconWrap,
+                      item.iconOpticalOffsetY
+                        ? { transform: [{ translateY: item.iconOpticalOffsetY }] }
+                        : null,
+                    ]}
+                  >
+                    <FlareLucideIcon icon={item.icon} size={SLIDE_ICON_SIZE} color={c.primary} />
+                  </View>
+                  <Text
+                    style={[
+                      styles.slideTitle,
+                      {
+                        color: c.text,
+                        fontSize: titleSize,
+                        lineHeight: titleLine,
+                        marginBottom: TITLE_TO_SUPPORT_GAP,
+                      },
+                    ]}
+                  >
+                    {item.title}
+                  </Text>
+                  <Text style={[styles.supportText, { color: c.textMuted }]}>{item.text}</Text>
+                </View>
+              </View>
+            );
+          })}
+        </ScrollView>
 
         <View
           pointerEvents="none"
