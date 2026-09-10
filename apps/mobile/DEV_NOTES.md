@@ -633,6 +633,8 @@ Separate flows, separate data:
 
 Helpers: `lib/todayPriorities.ts` (`buildTodayPriorities`, `findNearTermAppointment`). Reuses `todaySummary` from the dashboard snapshot; appointments are cache-first via `appointmentShared`. Cap 3 rows + **View all** expands in-card. Caught-up empty state still shows the section.
 
+**No layout shift (post-login):** Hold the collapsed tray at full height + an invisible **View all** slot until **today counts** and **apt/supply** extras are ready (`todayCountsReady` + `prioritiesExtrasReady` in `App.tsx` Dashboard). Don’t flip extras ready back to false on focus — that reopens the pop-in. Commit that introduced the apt/supply reserve: `3a4916b`; today-counts gate added so cold login doesn’t release early.
+
 **Look (trial):** white card + inset `surfaceSubtle` tray, **emoji** lines, no separators / not tappable — so this shelf reads differently from Check in tiles and list trays. Shelf order: Check in → **Today's priorities** → My health / My tools / My care → News (if on).
 
 ### My health / My tools / My care grid

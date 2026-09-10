@@ -1,6 +1,7 @@
 /** In-memory dashboard seed per user — cleared after symptom submit so home refetch shows fresh data. */
 
 import { EMPTY_ACTIVITY_INSIGHT, type ActivityInsight } from "./activityInsights";
+import { invalidateTrendsDayPointsCache } from "./trendsLoggingShared";
 
 export type DashboardActivityRow = {  key: string;
   title: string;
@@ -99,6 +100,7 @@ export function setLogsHubPreview(userId: string, preview: LogsHubPreview) {
 }
 
 export function invalidateDashboardSnapshot(userId: string) {
+  invalidateTrendsDayPointsCache(userId);
   const prev = dashboardSnapshotByUserId[userId];
   if (!prev) return;
   // Keep weather (and news) — logging a symptom shouldn't blank the greeting while home refetches.

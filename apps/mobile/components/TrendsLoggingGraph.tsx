@@ -49,12 +49,15 @@ import {
   TRENDS_FILTER_LABELS,
   TRENDS_PERIOD_LABELS,
   fetchTrendsDayPoints,
+  getTrendsDayPointsCache,
+  setTrendsDayPointsCache,
   totalTrendsEntries,
   trendsChartYMax,
   trendsFilterFromLabel,
   trendsFilterLabel,
   trendsPeriodFromLabel,
   trendsPeriodLabel,
+  type TrendsDayPoint,
   type TrendsFilterId,
   type TrendsPeriod,
 } from "../lib/trendsLoggingShared";
@@ -79,8 +82,13 @@ export function TrendsLoggingGraph({
   const [filter, setFilter] = useState<TrendsFilterId>(DEFAULT_TRENDS_FILTER);
   const [periodPickerOpen, setPeriodPickerOpen] = useState(false);
   const [filterPickerOpen, setFilterPickerOpen] = useState(false);
-  const [points, setPoints] = useState<Awaited<ReturnType<typeof fetchTrendsDayPoints>>>([]);
-  const [loading, setLoading] = useState(false);
+  const [points, setPoints] = useState<TrendsDayPoint[]>(
+    () => getTrendsDayPointsCache(userId, DEFAULT_TRENDS_PERIOD, DEFAULT_TRENDS_FILTER) ?? [],
+  );
+  // No cache yet → spinner; cached (including empty period) paints immediately.
+  const [loading, setLoading] = useState(
+    () => getTrendsDayPointsCache(userId, DEFAULT_TRENDS_PERIOD, DEFAULT_TRENDS_FILTER) === undefined,
+  );
   const [error, setError] = useState("");
   const [chartW, setChartW] = useState(0);
 
@@ -95,12 +103,22 @@ export function TrendsLoggingGraph({
   useEffect(() => {
     if (!active) return;
     let cancelled = false;
-    setLoading(true);
+    const cached = getTrendsDayPointsCache(userId, period, filter);
+    if (cached !== undefined) {
+      setPoints(cached);
+      setLoading(false);
+    } else {
+      // Cold combo — clear so hero + chart show spinners, not a stale period/filter.
+      setPoints([]);
+      setLoading(true);
+    }
     setError("");
     void (async () => {
       try {
         const next = await fetchTrendsDayPoints(userId, period, filter);
-        if (!cancelled) setPoints(next);
+        if (cancelled) return;
+        setTrendsDayPointsCache(userId, period, filter, next);
+        setPoints(next);
       } catch (err) {
         console.error("TRENDS_GRAPH_LOAD_ERROR", err);
         if (!cancelled) {

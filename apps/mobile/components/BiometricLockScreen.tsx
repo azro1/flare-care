@@ -3,7 +3,7 @@ import React, { useCallback, useEffect, useRef, useState } from "react";
 import { AppState, Pressable, StyleSheet, Text, View } from "react-native";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { authenticate } from "../lib/biometricLock";
-import { FULL_WIDTH_CTA_EDGE_PADDING } from "../lib/layoutConstants";
+import { FLARE_FONT_FAMILY, FULL_WIDTH_CTA_EDGE_PADDING } from "../lib/layoutConstants";
 import { useFlareColors } from "../theme";
 
 /**
@@ -117,12 +117,24 @@ const styles = StyleSheet.create({
   },
   center: { alignItems: "center", gap: 12, flex: 1, justifyContent: "center" },
   lockDisc: { width: 72, height: 72, borderRadius: 36, alignItems: "center", justifyContent: "center" },
-  title: { fontSize: 20, fontFamily: "Inter_700Bold", marginTop: 4 },
-  subtitle: { fontSize: 14, fontFamily: "Inter_400Regular", textAlign: "center" },
+  /** Match welcome tip title / support scale — was too small vs auth + intro. */
+  title: {
+    fontSize: 24,
+    lineHeight: 30,
+    fontFamily: FLARE_FONT_FAMILY.bold,
+    marginTop: 4,
+    textAlign: "center",
+  },
+  subtitle: {
+    fontSize: 18,
+    lineHeight: 26,
+    fontFamily: FLARE_FONT_FAMILY.regular,
+    textAlign: "center",
+  },
   actions: { width: "100%", alignItems: "center", paddingBottom: 8 },
   unlock: { alignItems: "center", gap: 12 },
   fingerprintDisc: { width: 72, height: 72, borderRadius: 36, alignItems: "center", justifyContent: "center" },
-  unlockLabel: { fontSize: 14, fontFamily: "Inter_500Medium", textAlign: "center" },
+  unlockLabel: { fontSize: 15, fontFamily: FLARE_FONT_FAMILY.medium, textAlign: "center" },
   signOut: { alignSelf: "center", marginTop: 14, paddingVertical: 6 },
-  signOutText: { fontSize: 14, fontFamily: "Inter_500Medium" },
+  signOutText: { fontSize: 15, fontFamily: FLARE_FONT_FAMILY.medium },
 });

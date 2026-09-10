@@ -51,6 +51,42 @@ export type TrendsDayPoint = {
   count: number;
 };
 
+/** In-memory seed per user + period + filter — land Trends without a spinner flash. */
+const trendsDayPointsCacheByKey: Record<string, TrendsDayPoint[]> = {};
+
+function trendsDayPointsCacheKey(userId: string, period: TrendsPeriod, filter: TrendsFilterId): string {
+  return `${userId}::${period}::${filter}`;
+}
+
+export function getTrendsDayPointsCache(
+  userId: string,
+  period: TrendsPeriod,
+  filter: TrendsFilterId,
+): TrendsDayPoint[] | undefined {
+  return trendsDayPointsCacheByKey[trendsDayPointsCacheKey(userId, period, filter)];
+}
+
+export function setTrendsDayPointsCache(
+  userId: string,
+  period: TrendsPeriod,
+  filter: TrendsFilterId,
+  points: TrendsDayPoint[],
+) {
+  trendsDayPointsCacheByKey[trendsDayPointsCacheKey(userId, period, filter)] = points;
+}
+
+/** Drop all period/filter combos for a user (or everything if omitted). */
+export function invalidateTrendsDayPointsCache(userId?: string) {
+  if (!userId) {
+    for (const key of Object.keys(trendsDayPointsCacheByKey)) delete trendsDayPointsCacheByKey[key];
+    return;
+  }
+  const prefix = `${userId}::`;
+  for (const key of Object.keys(trendsDayPointsCacheByKey)) {
+    if (key.startsWith(prefix)) delete trendsDayPointsCacheByKey[key];
+  }
+}
+
 export function trendsPeriodDayCount(period: TrendsPeriod): number {
   return TRENDS_PERIODS.find((p) => p.id === period)?.days ?? 14;
 }

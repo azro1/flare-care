@@ -1762,6 +1762,9 @@ function DashboardScreen({ user }: { user: SessionUser }) {
     const supplyCached = getMedicalSupplyKitListCache(user.id) !== undefined;
     return aptCached && supplyCached;
   });
+  // After login there’s no snapshot — don’t release the tray until today counts resolve
+  // (apt/supply alone was too early and the last row still popped in).
+  const [todayCountsReady, setTodayCountsReady] = useState(() => snapshotSeed != null);
   const priorityItems = useMemo(
     () =>
       buildTodayPriorities({
@@ -1776,9 +1779,10 @@ function DashboardScreen({ user }: { user: SessionUser }) {
     ? priorityItems
     : priorityItems.slice(0, TODAY_PRIORITIES_COLLAPSED_COUNT);
   const hasMorePriorities = priorityItems.length > TODAY_PRIORITIES_COLLAPSED_COUNT;
-  const showPrioritiesViewAll = hasMorePriorities && prioritiesExtrasReady;
-  // Hold View all + full collapsed tray height until apt/supply resolve (avoids last-row / link pop-in).
-  const reservePrioritiesCollapsedSlot = !prioritiesExtrasReady && priorityItems.length > 0;
+  const prioritiesLayoutReady = todayCountsReady && prioritiesExtrasReady;
+  const showPrioritiesViewAll = hasMorePriorities && prioritiesLayoutReady;
+  // Hold View all + full collapsed tray height until today counts + apt/supply resolve.
+  const reservePrioritiesCollapsedSlot = !prioritiesLayoutReady;
   const reservePrioritiesViewAll = reservePrioritiesCollapsedSlot;
   /** padY×2 + 3 rows + gaps + View all row — keep in sync with `prioritiesTray` / `priorityRow`. */
   const prioritiesCollapsedTrayMinHeight =
@@ -2056,11 +2060,13 @@ function DashboardScreen({ user }: { user: SessionUser }) {
           };
           if (!cancelled) {
             setTodaySummary(snap.todaySummary);
+            setTodayCountsReady(true);
           }
         } catch {
           snap.todaySummary = { ...EMPTY_TODAY_SUMMARY };
           if (!cancelled) {
             setTodaySummary(snap.todaySummary);
+            setTodayCountsReady(true);
           }
         }
 
@@ -4247,9 +4253,7 @@ function AccountSecurityScreen() {
 
   const unlockTitle = `Unlock with ${bioLabel === "biometrics" ? "biometrics" : bioLabel}`;
   const unlockHint = bioAvailable
-    ? bioLabel === "biometrics"
-      ? "Enable biometrics each time you open the app."
-      : `Enable ${bioLabel} (biometrics) each time you open the app.`
+    ? "Enable biometrics each time you open the app."
     : "Set up Face ID or fingerprint recognition in your device settings to use this.";
 
   return (

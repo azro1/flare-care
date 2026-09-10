@@ -17,6 +17,13 @@ import { supabase, TABLES } from "./supabase";
 import { getWeightListCache, setWeightListCache } from "./weightShared";
 import { getWellbeingListCache, setWellbeingListCache } from "./wellbeingShared";
 import {
+  DEFAULT_TRENDS_FILTER,
+  DEFAULT_TRENDS_PERIOD,
+  fetchTrendsDayPoints,
+  getTrendsDayPointsCache,
+  setTrendsDayPointsCache,
+} from "./trendsLoggingShared";
+import {
   getWizardLogHistoryCache,
   setWizardLogHistoryCache,
   type WizardLogHistoryRow,
@@ -151,6 +158,13 @@ export async function prefetchHubListCaches(userId: string): Promise<void> {
     (async () => {
       if (getMedicationsListCache(userId) !== undefined) return;
       await fetchMedicationsForUser(userId);
+    })(),
+    (async () => {
+      if (getTrendsDayPointsCache(userId, DEFAULT_TRENDS_PERIOD, DEFAULT_TRENDS_FILTER) !== undefined) {
+        return;
+      }
+      const points = await fetchTrendsDayPoints(userId, DEFAULT_TRENDS_PERIOD, DEFAULT_TRENDS_FILTER);
+      setTrendsDayPointsCache(userId, DEFAULT_TRENDS_PERIOD, DEFAULT_TRENDS_FILTER, points);
     })(),
     prefetchWizardHistoryCache(userId, TABLES.LOG_SYMPTOMS),
     prefetchWizardHistoryCache(userId, TABLES.LOG_MEDICATIONS),
