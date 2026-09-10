@@ -167,7 +167,11 @@ Use existing screens as reference — do **not** default to web-style teal hyper
 
 ### Auth landing brand (keep in sync)
 
-Sign-in (`AuthScreen`) and **Almost there** (`ProfileSetupScreen`) share the same lockup: **`authLandingBrandRow`** — `BrandMarkIcon` size **28** + **Flarecare** (`authLandingName`), same page padding / centered stack. Do not put a large solo logo back on profile setup.
+**Landing only** (`AuthScreen` step `method`): **`FlareBrandLockup`** + tagline + CTAs. Slow stagger cascade on first paint.
+
+**Email / code / Almost there:** no brand lockup — step title is the hero (common auth pattern). Same page chrome (cadet/light, fingerprint on landing only).
+
+Do not force the Flarecare wordmark onto every auth step.
 
 ### `InstructionScreenShell`
 
@@ -557,7 +561,7 @@ Hard-won from the 2026-08 sign-in redesign. Check this table **before** inventin
 | **Share / dismiss → fingerprint keeps locking** | App lock listened for `inactive` + `background`; OS Share sheet backgrounds the app | Re-lock only on **`background`**, and wrap `Share.share` in **`withAppLockExternalUi`** (`biometricLock.ts`). Same for news / appointment summary share. |
 | **Fingerprint sits in the user's face** on sign-in landing | Auto OS prompt on AuthScreen mount | **No auto-prompt** on landing — always show tap affordance when quick-login is armed. |
 | **Fingerprint Y doesn't match lock screen** | Missing reserved Sign out row height on auth landing | Match **`BiometricLockScreen`** bottom stack (fingerprint + invisible Sign out slot). |
-| **Almost there looks different from sign-in** | Large solo logo / old `authShell` layout | Same **`authLandingBrandRow`** as `AuthScreen` (icon 28 + name). |
+| **Almost there looks different from sign-in landing** | Expected — brand is landing-only; Almost there uses step title as hero | Keep that pattern; don’t force brand onto profile setup. |
 | **Tempted to bring back welcome cards** | Old `DEV_NOTES` / muscle memory | **Don't.** Intro + `FLARE_CAPTION_HINT` only. Shell may stay; cards stay dead. |
 | **`master..HEAD` shows 100+ commits** on a new feat branch | Branch was cut from `mobile-native` tip, not from `master` | Commits **since this branch was created**: `git log --oneline <branch-create-sha>..HEAD` (check `git reflog show <branch>`). |
 

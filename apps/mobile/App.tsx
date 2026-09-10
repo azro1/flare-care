@@ -945,6 +945,112 @@ function AuthScreen({
   const [unlockBusy, setUnlockBusy] = useState(false);
   /** Hold first paint until legal + unlock checks finish — avoids title jump when fingerprint mounts. */
   const [landingReady, setLandingReady] = useState(false);
+  /** Soft title motion for email / code only — never opacity-animate the TextInput block (blinks on Android/iOS). */
+  const authTitleAnim = useRef(new Animated.Value(0)).current;
+  /** Landing: stagger cascade — brand → tagline → buttons (slow). */
+  const authBrandAnim = useRef(new Animated.Value(0)).current;
+  const authTaglineAnim = useRef(new Animated.Value(0)).current;
+  const authActionsAnim = useRef(new Animated.Value(0)).current;
+  const authStepPrev = useRef(step);
+  // Zero before this paint when entering email/code — otherwise one frame flashes at opacity 1.
+  if (authStepPrev.current !== step && (step === "email" || step === "code")) {
+    authTitleAnim.setValue(0);
+  }
+
+  const authStepMotion = useCallback((anim: Animated.Value) => {
+    return {
+      opacity: anim,
+      transform: [
+        {
+          translateY: anim.interpolate({
+            inputRange: [0, 1],
+            outputRange: [10, 0],
+          }),
+        },
+      ],
+    };
+  }, []);
+
+  const authCascadeMotion = useCallback((anim: Animated.Value) => {
+    return {
+      opacity: anim,
+      transform: [
+        {
+          translateY: anim.interpolate({
+            inputRange: [0, 1],
+            outputRange: [16, 0],
+          }),
+        },
+      ],
+    };
+  }, []);
+
+  const snapLandingCascadeVisible = useCallback(() => {
+    authBrandAnim.stopAnimation();
+    authTaglineAnim.stopAnimation();
+    authActionsAnim.stopAnimation();
+    authBrandAnim.setValue(1);
+    authTaglineAnim.setValue(1);
+    authActionsAnim.setValue(1);
+  }, [authBrandAnim, authTaglineAnim, authActionsAnim]);
+
+  const prepareAuthStepEntrance = useCallback(() => {
+    authTitleAnim.stopAnimation();
+    authTitleAnim.setValue(0);
+  }, [authTitleAnim]);
+
+  /** First landing only — do not re-cascade when returning from email (can leave CTAs at opacity 0). */
+  useEffect(() => {
+    if (!landingReady) return;
+    authBrandAnim.setValue(0);
+    authTaglineAnim.setValue(0);
+    authActionsAnim.setValue(0);
+    Animated.stagger(180, [
+      Animated.timing(authBrandAnim, {
+        toValue: 1,
+        duration: 520,
+        easing: Easing.out(Easing.cubic),
+        useNativeDriver: true,
+      }),
+      Animated.timing(authTaglineAnim, {
+        toValue: 1,
+        duration: 520,
+        easing: Easing.out(Easing.cubic),
+        useNativeDriver: true,
+      }),
+      Animated.timing(authActionsAnim, {
+        toValue: 1,
+        duration: 560,
+        easing: Easing.out(Easing.cubic),
+        useNativeDriver: true,
+      }),
+    ]).start();
+  }, [landingReady, authBrandAnim, authTaglineAnim, authActionsAnim]);
+
+  // useLayoutEffect: zero title opacity before paint; field/buttons stay static (no TextInput blink).
+  useLayoutEffect(() => {
+    if (authStepPrev.current === step) return;
+    const prev = authStepPrev.current;
+    authStepPrev.current = step;
+
+    // Leave / return to landing: snap cascade fully on so CTAs never remount at opacity 0
+    // (native-driver stagger + unmount mid-flight was hiding Email/Google).
+    if (prev === "method" && step !== "method") {
+      snapLandingCascadeVisible();
+    }
+    if (step === "method") {
+      snapLandingCascadeVisible();
+      return;
+    }
+
+    prepareAuthStepEntrance();
+    Animated.timing(authTitleAnim, {
+      toValue: 1,
+      duration: 280,
+      easing: Easing.out(Easing.cubic),
+      useNativeDriver: true,
+    }).start();
+  }, [step, authTitleAnim, snapLandingCascadeVisible, prepareAuthStepEntrance]);
 
   const runQuickUnlock = useCallback(async () => {
     const remembered = await readRememberedSession();
@@ -1036,30 +1142,49 @@ function AuthScreen({
       <View style={styles.authInlineBody}>
         <View style={{ height: lockupTop }} />
         <View style={[styles.authInlinePanel, styles.authMethodPanel]}>
-          <FlareBrandLockup
-            markColor={onPrimaryChrome ? cAuth.white : cAuth.primary}
-            nameColor={onPrimaryChrome ? cAuth.white : cAuth.text}
-            nameSize={26}
-            style={step === "method" ? styles.authLandingBrandRowWithTagline : styles.authLandingBrandRowSpaced}
-          />
           {step === "method" ? (
-            <Text
-              style={[
-                styles.authLandingTagline,
-                { color: onPrimaryChrome ? "rgba(255,255,255,0.82)" : cAuth.textMuted },
-              ]}
-            >
-              Your health. Your IBD. Your control.
-            </Text>
+            <>
+              <Animated.View style={authCascadeMotion(authBrandAnim)}>
+                <FlareBrandLockup
+                  markColor={onPrimaryChrome ? cAuth.white : cAuth.primary}
+                  nameColor={onPrimaryChrome ? cAuth.white : cAuth.text}
+                  nameSize={26}
+                  style={styles.authLandingBrandRowWithTagline}
+                />
+              </Animated.View>
+              <Animated.View style={authCascadeMotion(authTaglineAnim)}>
+                <Text
+                  style={[
+                    styles.authLandingTagline,
+                    { color: onPrimaryChrome ? "rgba(255,255,255,0.82)" : cAuth.textMuted },
+                  ]}
+                >
+                  Your health. Your IBD. Your control.
+                </Text>
+              </Animated.View>
+            </>
           ) : (
-            <Text style={[styles.authPromptTitle, { color: onPrimaryChrome ? cAuth.white : cAuth.text }]}>
-              {step === "email" ? "Sign in with email" : "Enter your code"}
-            </Text>
+            <Animated.View style={authStepMotion(authTitleAnim)}>
+              <Text style={[styles.authPromptTitle, { color: onPrimaryChrome ? cAuth.white : cAuth.text }]}>
+                {step === "email" ? "Sign in with email" : "Enter your code"}
+              </Text>
+              <Text
+                style={[
+                  styles.authPromptSub,
+                  styles.authEmailHelperSub,
+                  { color: onPrimaryChrome ? "rgba(255,255,255,0.88)" : cAuth.textMuted },
+                ]}
+              >
+                {step === "email"
+                  ? "We'll send a 6-digit code to this email."
+                  : "Enter the 6-digit code from your inbox."}
+              </Text>
+            </Animated.View>
           )}
 
           <View style={styles.authStepBody}>
           {step === "method" ? (
-            <>
+            <Animated.View style={authCascadeMotion(authActionsAnim)}>
               <View style={[styles.authMethodActions, styles.authMethodActionsUnderTagline]}>
                 <PrimaryButton
                   title="Continue with email"
@@ -1067,7 +1192,6 @@ function AuthScreen({
                   disabled={activeAuthAction !== null || !legalHydrated}
                   variant={onPrimaryChrome ? "onPrimary" : "default"}
                   noTopMargin
-                  compact
                   leftIcon={
                     <FlareLucideIcon
                       icon={FLARE_CHROME_LUCIDE.mail}
@@ -1088,7 +1212,6 @@ function AuthScreen({
                   disabled={activeAuthAction !== null || !legalHydrated}
                   variant={onPrimaryChrome ? "onPrimary" : "default"}
                   noTopMargin
-                  compact
                   leftIcon={
                     <Ionicons name="logo-google" size={16} color={onPrimaryChrome ? "#ffffff" : cAuth.secondaryBtnText} />
                   }
@@ -1109,32 +1232,29 @@ function AuthScreen({
                   Secure sign-in
                 </Text>
               </View>
-            </>
+            </Animated.View>
           ) : step === "email" ? (
-            <>
-              <Text
-                style={[
-                  styles.authPromptSub,
-                  styles.authEmailHelperSub,
-                  { color: onPrimaryChrome ? "rgba(255,255,255,0.88)" : cAuth.textMuted },
-                ]}
-              >
-                We&apos;ll send a 6-digit code to this email
-              </Text>
+            <View>
               <Controller
                 control={emailControl}
                 name="email"
                 render={({ field: { onChange, value } }) => (
-                  <LabeledInput
-                    label="Email"
-                    value={value}
-                    onChangeText={onChange}
-                    placeholder="you@example.com"
-                    autoCapitalize="none"
-                    keyboardType="email-address"
-                    error={emailErrors.email?.message}
-                    onPrimary={onPrimaryChrome}
-                  />
+                  <View style={flareInputStyles.fieldBlock}>
+                    <FlareTextInput
+                      value={value}
+                      onChangeText={onChange}
+                      placeholder="Email"
+                      autoCapitalize="none"
+                      keyboardType="email-address"
+                      autoComplete="email"
+                      textContentType="emailAddress"
+                      accessibilityLabel="Email"
+                      onPrimary={onPrimaryChrome}
+                    />
+                    {emailErrors.email?.message ? (
+                      <Text style={flareFieldErrorStyle(cAuth, "input")}>{emailErrors.email.message}</Text>
+                    ) : null}
+                  </View>
                 )}
               />
               <View style={styles.authMethodActions}>
@@ -1143,35 +1263,20 @@ function AuthScreen({
                   onPress={handleEmailSubmit(sendMagicLink)}
                   disabled={activeAuthAction !== null}
                   variant={onPrimaryChrome ? "onPrimary" : "default"}
+                  noTopMargin
                 />
                 <SecondaryButton
                   title="Back"
                   onPress={() => setStep("method")}
                   disabled={activeAuthAction !== null}
                   variant={onPrimaryChrome ? "onPrimary" : "default"}
+                  noTopMargin
                 />
               </View>
-            </>
+            </View>
           ) : (
-            <>
-              <Text
-                style={[
-                  styles.authPromptSub,
-                  styles.authEmailHelperSub,
-                  { color: onPrimaryChrome ? "rgba(255,255,255,0.88)" : cAuth.textMuted },
-                ]}
-              >
-                Enter the 6-digit code from your inbox
-              </Text>
+            <View>
               <View style={flareInputStyles.fieldBlock}>
-                <Text
-                  style={[
-                    flareInputStyles.label,
-                    { color: onPrimaryChrome ? "rgba(255,255,255,0.92)" : cAuth.textSecondary },
-                  ]}
-                >
-                  Verification code
-                </Text>
                 <FlareTextInput
                   ref={otpInputRef}
                   value={otpCode}
@@ -1183,6 +1288,7 @@ function AuthScreen({
                   keyboardType="number-pad"
                   maxLength={6}
                   editable={activeAuthAction === null}
+                  accessibilityLabel="Verification code"
                   onPrimary={onPrimaryChrome}
                 />
                 {otpCodeError ? <Text style={flareFieldErrorStyle(cAuth, "input")}>{otpCodeError}</Text> : null}
@@ -1224,6 +1330,7 @@ function AuthScreen({
                   onPress={() => void verifyOtpCode()}
                   disabled={activeAuthAction !== null}
                   variant={onPrimaryChrome ? "onPrimary" : "default"}
+                  noTopMargin
                 />
                 <SecondaryButton
                   title="Use different email"
@@ -1233,9 +1340,10 @@ function AuthScreen({
                   }}
                   disabled={activeAuthAction !== null}
                   variant={onPrimaryChrome ? "onPrimary" : "default"}
+                  noTopMargin
                 />
               </View>
-            </>
+            </View>
           )}
           </View>
         </View>
@@ -1404,11 +1512,6 @@ function ProfileSetupScreen({ user, onComplete }: { user: SessionUser; onComplet
       <View style={styles.authInlineBody}>
         <View style={{ height: lockupTop }} />
         <View style={[styles.authInlinePanel, styles.authMethodPanel]}>
-          <FlareBrandLockup
-            markColor={onPrimaryChrome ? cAuth.white : cAuth.primary}
-            nameColor={onPrimaryChrome ? cAuth.white : cAuth.text}
-            style={styles.authLandingBrandRowSpaced}
-          />
           <Text style={[styles.authPromptTitle, { color: onPrimaryChrome ? cAuth.white : cAuth.text }]}>
             Almost there!
           </Text>
@@ -1426,16 +1529,21 @@ function ProfileSetupScreen({ user, onComplete }: { user: SessionUser; onComplet
               control={control}
               name="fullName"
               render={({ field: { onChange, value } }) => (
-                <LabeledInput
-                  label="Full name"
-                  value={value}
-                  onChangeText={onChange}
-                  placeholder="Your full name"
-                  autoCapitalize="words"
-                  autoComplete="name"
-                  error={profileErrors.fullName?.message}
-                  onPrimary={onPrimaryChrome}
-                />
+                <View style={flareInputStyles.fieldBlock}>
+                  <FlareTextInput
+                    value={value}
+                    onChangeText={onChange}
+                    placeholder="Full name"
+                    autoCapitalize="words"
+                    autoComplete="name"
+                    textContentType="name"
+                    accessibilityLabel="Full name"
+                    onPrimary={onPrimaryChrome}
+                  />
+                  {profileErrors.fullName?.message ? (
+                    <Text style={flareFieldErrorStyle(cAuth, "input")}>{profileErrors.fullName.message}</Text>
+                  ) : null}
+                </View>
               )}
             />
             <View style={styles.authMethodActions}>
@@ -1444,6 +1552,7 @@ function ProfileSetupScreen({ user, onComplete }: { user: SessionUser; onComplet
                 onPress={handleSubmit(saveProfile)}
                 disabled={saving}
                 variant={onPrimaryChrome ? "onPrimary" : "default"}
+                noTopMargin
               />
             </View>
           </View>
@@ -5702,9 +5811,7 @@ const styles = StyleSheet.create({
     fontFamily: "Inter_700Bold",
     flexShrink: 0,
   },
-  /** Email/code / Almost there: air under brand before the step title. */
-  authLandingBrandRowSpaced: { marginBottom: 72 },
-  /** Method: brand + tagline read as one lockup. */
+  /** Brand sits tight above tagline / step title (landing + email/code/Almost there). */
   authLandingBrandRowWithTagline: { marginBottom: 10 },
   authLandingTagline: {
     textAlign: "center",
@@ -5716,7 +5823,7 @@ const styles = StyleSheet.create({
   },
   authMethodActions: {
     marginTop: 18,
-    gap: 12,
+    gap: 10,
   },
   /** Method screen: CTA stack uses tagline/secure section gaps only. */
   authMethodActionsUnderTagline: { marginTop: 0 },
@@ -5757,10 +5864,22 @@ const styles = StyleSheet.create({
   /** Same section air as tagline → CTAs. */
   authSecureNote: { flexDirection: "row", alignItems: "center", justifyContent: "center", gap: 6, marginTop: 28 },
   authSecureNoteText: { fontSize: 13, lineHeight: 18, fontFamily: "Inter_400Regular" },
-  authPromptTitle: { textAlign: "center", fontSize: 19, fontFamily: "Inter_500Medium" },
-  authPromptSub: { textAlign: "center", fontSize: 14, lineHeight: 20, fontFamily: "Inter_400Regular", marginTop: 4 },
-  /** Extra gap before email field only — keep method screen subtitle unchanged */
-  authEmailHelperSub: { marginBottom: 18 },
+  /** Email / code / Almost there titles — real title weight, smaller than landing Flarecare (26). */
+  authPromptTitle: {
+    textAlign: "center",
+    fontSize: 22,
+    lineHeight: 28,
+    fontFamily: "Inter_700Bold",
+  },
+  authPromptSub: {
+    textAlign: "center",
+    fontSize: 15,
+    lineHeight: 22,
+    fontFamily: "Inter_400Regular",
+    marginTop: 8,
+  },
+  /** Gap under support before the email/code field. */
+  authEmailHelperSub: { marginBottom: 24 },
   authOtpCountdown: {
     textAlign: "center",
     fontSize: 13,
