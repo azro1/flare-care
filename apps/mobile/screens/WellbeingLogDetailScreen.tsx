@@ -18,7 +18,6 @@ import {
 import { invalidateDashboardSnapshot } from "../lib/dashboardSnapshotCache";
 import { formatAddedAtHeader } from "../lib/logDisplay";
 import { recordRecentActivityEvent } from "../lib/recentActivityEvents";
-import { formatUkDate } from "../lib/formatUkDate";
 import { FLARE_FONT_FAMILY, FLARE_FONT_SIZE, HEADER_ACTION_BTN_WIDTH, HEADER_CHROME_ICON_SIZE } from "../lib/layoutConstants";
 import {
   formatWellbeingScaleDisplay,
@@ -179,11 +178,13 @@ export function WellbeingLogDetailScreen({ user }: { user: SessionUser }) {
   }
 
   const feelingsFields = [
-    { label: "Date", value: formatUkDate(row.date) || "Not set" },
     { label: "Mood", value: formatWellbeingScaleDisplay(asScale(row.mood)) },
     { label: "Energy", value: formatWellbeingScaleDisplay(asScale(row.energy)) },
     { label: "Sleep quality", value: formatWellbeingScaleDisplay(asScale(row.sleep_quality)) },
     { label: "Anxiety", value: formatWellbeingScaleDisplay(asScale(row.anxiety)) },
+  ];
+
+  const ibdFields = [
     { label: "Pain / discomfort", value: formatWellbeingScaleDisplay(asScale(row.pain)) },
     { label: "IBD impact", value: formatWellbeingScaleDisplay(asScale(row.ibd_impact)) },
     { label: "Brain fog", value: formatWellbeingScaleDisplay(asScale(row.brain_fog)) },
@@ -210,6 +211,7 @@ export function WellbeingLogDetailScreen({ user }: { user: SessionUser }) {
         <WizardReviewShell>
           <View style={logDetailStyles.reviewSections}>
             <WizardReviewSection title="Feelings" fields={feelingsFields} embedded />
+            <WizardReviewSection title="IBD" fields={ibdFields} embedded />
             <WizardReviewSection title="Activities" fields={activityFields} embedded />
             <WizardReviewNotesSection embedded notes={row.notes?.trim() ?? ""} />
           </View>

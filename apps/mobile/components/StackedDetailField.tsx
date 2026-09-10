@@ -34,8 +34,6 @@ type Props = {
   selectable?: boolean;
   /** Match dashboard Today / Account compact lists (13). */
   compact?: boolean;
-  /** Value size. Default muted (13). Pass `caption` only where decided (e.g. list when lines). */
-  valueSize?: "muted" | "caption";
 };
 
 /**
@@ -52,7 +50,6 @@ export function StackedDetailField({
   hideLabel,
   selectable,
   compact,
-  valueSize = "muted",
 }: Props) {
   const c = useFlareColors();
   const hasValue = value !== undefined && value !== "";
@@ -62,8 +59,8 @@ export function StackedDetailField({
 
   const showFieldLabel = !hideLabel;
   const valueStyles: StyleProp<TextStyle> = [
-    valueSize === "caption" ? styles.valueTextWhen : styles.valueText,
-    compact && valueSize !== "caption" ? styles.valueTextCompact : null,
+    styles.valueText,
+    compact ? styles.valueTextCompact : null,
     { color: valueColor ?? c.text },
     hasValue && showFieldLabel && styles.valueAfterLabel,
   ];
@@ -177,11 +174,6 @@ const styles = StyleSheet.create({
   valueTextCompact: {
     fontSize: FLARE_FONT_SIZE.muted,
     lineHeight: FLARE_LINE_HEIGHT.muted,
-  },
-  valueTextWhen: {
-    fontSize: FLARE_FONT_SIZE.caption,
-    fontFamily: FLARE_FONT_FAMILY.regular,
-    lineHeight: FLARE_LINE_HEIGHT.caption,
   },
   valueAfterLabel: {
     marginTop: STACKED_LINE_GAP,

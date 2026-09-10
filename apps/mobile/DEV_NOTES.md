@@ -303,7 +303,11 @@ Do **not** remove these checks when touching wizard back/next — they block the
 
 **Track Medications form copy:** dosage list rows use placeholder **`dose (mg)`** (digits only in field; `normalizeDosage` in shared).
 
-**Future — Wellbeing review Feelings (not doing today):** Review currently has one long **Feelings** tray (mood / energy / sleep / anxiety / pain / IBD impact / brain fog) + short **Activities** + optional **Notes**, so the top tray dominates. Prefer splitting **Feelings into two** review categories when we reshuffle (even-ish field groups), so Review isn’t one long card over a short bottom card. Leave wizard step order alone until then; only change how review groups fields + `getWellbeingReviewEditStep` / section last-step maps.
+**Wellbeing review trays:** **Feelings** (mood / energy / sleep / anxiety) · **IBD** (pain / IBD impact / brain fog) · **Activities** · **Notes**. Wizard step order unchanged; Edit ranges via `getWellbeingReviewEditStep` / `getWellbeingReviewSectionLastStep` (`feelings` 1–4, `ibd` 5–7).
+
+**MW vs LS (do not blur):** My Wellbeing asks how IBD is affecting the **person** (mood, energy, impact, recovery habits). Log Symptoms is for **symptom logging** (severity, stress, bathroom, lifestyle triggers, meals). Do **not** add urgency / appetite / bowel changes / bloating / bleeding / similar to MW — those belong in LS. Do **not** pad MW Activities with work / hobbies / household checklists; Notes covers freeform context. Current MW Activities (exercised / social / outdoors) stay — LS does not ask those.
+
+**MW dates (one only):** MW does not ask for an event date — the entry is “how I feel now / today.” Detail shows **Added** (`created_at`) only. Do **not** put `date` in the Feelings tray (that duplicated Added). LS / TM still have event dates (symptom window / dose time) **plus** Added.
 
 ---
 

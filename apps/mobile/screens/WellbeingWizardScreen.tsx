@@ -335,6 +335,9 @@ export function WellbeingWizardScreen({ user }: { user: SessionUser }) {
     { label: "Energy", value: formatWellbeingScaleDisplay(form.energy) },
     { label: "Sleep quality", value: formatWellbeingScaleDisplay(form.sleep_quality) },
     { label: "Anxiety", value: formatWellbeingScaleDisplay(form.anxiety) },
+  ], [form]);
+
+  const reviewIbdFields = useMemo((): WizardReviewField[] => [
     { label: "Pain / discomfort", value: formatWellbeingScaleDisplay(form.pain) },
     { label: "IBD impact", value: formatWellbeingScaleDisplay(form.ibd_impact) },
     { label: "Brain fog", value: formatWellbeingScaleDisplay(form.brain_fog) },
@@ -483,6 +486,12 @@ export function WellbeingWizardScreen({ user }: { user: SessionUser }) {
                   title="Feelings"
                   fields={reviewFeelingsFields}
                   onEdit={() => openReviewEdit("feelings")}
+                />
+                <WizardReviewSection
+                  embedded
+                  title="IBD"
+                  fields={reviewIbdFields}
+                  onEdit={() => openReviewEdit("ibd")}
                 />
                 <WizardReviewSection
                   embedded

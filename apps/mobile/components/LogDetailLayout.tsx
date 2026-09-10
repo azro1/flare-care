@@ -194,7 +194,7 @@ export function LogDetailFieldGroup({
   /** No hairlines between fields (TM named entry: dose / date / time as one block). */
   hideFieldDividers,
 }: {
-  fields: { label: string; value: string; selectable?: boolean; valueSize?: "muted" | "caption" }[];
+  fields: { label: string; value: string; selectable?: boolean }[];
   /** Match dashboard Today / Account compact lists (13). */
   compact?: boolean;
   flush?: boolean;
@@ -218,7 +218,6 @@ export function LogDetailFieldGroup({
           value={field.value}
           selectable={field.selectable}
           compact={compact}
-          valueSize={field.valueSize}
           showDivider={
             !hideFieldDividers &&
             !flush &&
@@ -237,7 +236,7 @@ export function LogDetailFieldGroups({
   groups,
   flush,
 }: {
-  groups: { label: string; value: string; valueSize?: "muted" | "caption" }[][];
+  groups: { label: string; value: string }[][];
   flush?: boolean;
 }) {
   return (

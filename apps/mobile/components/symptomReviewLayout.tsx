@@ -14,8 +14,6 @@ import { useFlareColors } from "../theme";
 export type WizardReviewField = {
   label: string;
   value: string;
-  /** Default muted (13). Pass caption only where decided. */
-  valueSize?: "muted" | "caption";
 };
 
 export { WizardReviewShell };
@@ -94,7 +92,7 @@ export function WizardReviewNotesSection({
 
 /**
  * Option 2: section title + Edit stay in the tray header (same as LS/MW).
- * Each med = bold name subhead, then Dosage / Date / Time flush in that same tray.
+ * Each med = name subhead (regular weight), then Dosage / Date / Time flush in that same tray.
  */
 export function WizardReviewMedicationSection({
   title,
@@ -116,8 +114,8 @@ export function WizardReviewMedicationSection({
     name: item.medication.trim() || "Medication",
     fields: [
       ...(showDosage ? [{ label: "Dosage", value: item.dosage || "N/A" }] : []),
-      { label: "Date", value: item.date ? formatUkDate(item.date) : "N/A", valueSize: "caption" as const },
-      { label: "Time of Day", value: item.timeOfDay || "N/A", valueSize: "caption" as const },
+      { label: "Date", value: item.date ? formatUkDate(item.date) : "N/A" },
+      { label: "Time of Day", value: item.timeOfDay || "N/A" },
     ],
   }));
 
@@ -154,9 +152,9 @@ export function WizardReviewMedicationSection({
 
 const styles = StyleSheet.create({
   medName: {
-    fontSize: FLARE_FONT_SIZE.body,
-    lineHeight: FLARE_LINE_HEIGHT.body,
-    fontFamily: FLARE_FONT_FAMILY.bold,
+    fontSize: FLARE_FONT_SIZE.muted,
+    lineHeight: FLARE_LINE_HEIGHT.muted,
+    fontFamily: FLARE_FONT_FAMILY.regular,
     paddingTop: 14,
     paddingBottom: 4,
   },

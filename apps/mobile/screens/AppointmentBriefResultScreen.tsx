@@ -2,7 +2,7 @@ import { useNavigation, useRoute } from "@react-navigation/native";
 import React, { useCallback, useMemo, useState } from "react";
 import { ActivityIndicator, Share, StyleSheet, Text, View } from "react-native";
 import { PrimaryButton, SecondaryButton } from "../components/FlareButton";
-import { flareCardSectionStyles, FlareScreenSectionTitle } from "../components/FlareScreenSectionTitle";
+import { FlareScreenSectionTitle } from "../components/FlareScreenSectionTitle";
 import { AppointmentBriefScrollScreen } from "../components/AppointmentBriefScrollScreen";
 import { flareFieldErrorStyle } from "../components/FlareInput";
 import {
@@ -107,7 +107,7 @@ export function AppointmentBriefResultScreen({ user }: { user: SessionUser }) {
           <Text style={errTextStyle}>{error}</Text>
         ) : brief ? (
           <>
-            <LogHistoryCard style={flareCardSectionStyles.container}>
+            <LogHistoryCard style={{ gap: CARD_INNER_PADDING }}>
               {[
                 <View key="period" style={styles.periodHeader}>
                   <FlareScreenSectionTitle inCard>{periodChoiceLabel}</FlareScreenSectionTitle>
@@ -149,7 +149,7 @@ const styles = StyleSheet.create({
   },
   loadingWrap: { alignItems: "center", paddingVertical: 32, gap: 12 },
   muted: { fontSize: FLARE_FONT_SIZE.body, fontFamily: FLARE_FONT_FAMILY.regular },
-  /** Same in-card CTA inset as My Meds detail (`takenActions`). */
-  actionRow: { flexDirection: "row", gap: 8, marginTop: CARD_INNER_PADDING },
+  /** Same in-card CTA inset as My Meds detail — card gap only, no extra marginTop. */
+  actionRow: { flexDirection: "row", gap: 8 },
   actionSlot: { flex: 1, minWidth: 0 },
 });

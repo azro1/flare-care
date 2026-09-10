@@ -2,7 +2,7 @@ import type { WellbeingFormState, WellbeingRow, WellbeingScale } from "./wellbei
 
 export const WELLBEING_WIZARD_REVIEW_STEP = 12;
 
-export type WellbeingReviewSectionId = "feelings" | "activities" | "notes";
+export type WellbeingReviewSectionId = "feelings" | "ibd" | "activities" | "notes";
 
 export type WellbeingWizardHistoryEntry = {
   step: number;
@@ -15,19 +15,22 @@ export function cloneWellbeingForm(form: WellbeingFormState): WellbeingFormState
 
 export function getWellbeingReviewEditStep(section: WellbeingReviewSectionId): number {
   if (section === "feelings") return 1;
+  if (section === "ibd") return 5;
   if (section === "activities") return 8;
   return 11;
 }
 
 export function getWellbeingReviewSectionLastStep(section: WellbeingReviewSectionId): number {
-  if (section === "feelings") return 7;
+  if (section === "feelings") return 4;
+  if (section === "ibd") return 7;
   if (section === "activities") return 10;
   return 11;
 }
 
 export function wellbeingStepPhaseLabel(step: number): string {
   if (step <= 0) return "";
-  if (step <= 7) return "Feelings";
+  if (step <= 4) return "Feelings";
+  if (step <= 7) return "IBD";
   if (step <= 10) return "Activities";
   if (step === 11) return "Notes";
   return "Review";

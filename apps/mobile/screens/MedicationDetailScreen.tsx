@@ -14,7 +14,6 @@ import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { ConfirmModal } from "../components/ConfirmModal";
 import { PrimaryButton, SecondaryButton } from "../components/FlareButton";
 import { LogDetailAddedHeader, LogDetailCard, LogDetailFieldGroup, logDetailStyles } from "../components/LogDetailLayout";
-import { flareCardSectionStyles } from "../components/FlareScreenSectionTitle";
 import { invalidateDashboardSnapshot } from "../lib/dashboardSnapshotCache";
 import { formatAddedAtHeader } from "../lib/logDisplay";
 import { recordRecentActivityEvent } from "../lib/recentActivityEvents";
@@ -232,7 +231,7 @@ export function MedicationDetailScreen({ user }: { user: SessionUser }) {
       >
         <LogDetailAddedHeader text={formatAddedAtHeader(row.created_at)} />
 
-        <LogDetailCard style={flareCardSectionStyles.container}>
+        <LogDetailCard>
           <LogDetailFieldGroup
             fields={[
               { label: "Medication", value: row.name },
