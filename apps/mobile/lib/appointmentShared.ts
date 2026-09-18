@@ -115,6 +115,14 @@ export function getAppointmentDateTime(apt: Pick<AppointmentRow, "date" | "time"
   return dt;
 }
 
+/** Soonest upcoming appointment (any future date), or null. */
+export function findNextUpcomingAppointment(
+  rows: AppointmentRow[],
+  nowMs = Date.now(),
+): AppointmentRow | null {
+  return splitAppointmentsByTab(rows, nowMs).upcoming[0] ?? null;
+}
+
 export function splitAppointmentsByTab(
   rows: AppointmentRow[],
   nowMs = Date.now(),

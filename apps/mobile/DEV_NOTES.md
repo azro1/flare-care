@@ -628,30 +628,36 @@ Separate flows, separate data:
 
 ## Today's priorities (dashboard)
 
-**Job:** Action nudges for *today* on the home shelf (last section). Not a to-do list. Not View progress.
+**Job:** Action nudges for *today* on the home shelf. Not a to-do list. Not Targets.
 
 | Feature | Job |
 |---------|-----|
-| **View progress** | Reflective Meds / Hydration sheet from Progress link (not Trends) |
+| **Targets** | Reflective Meds / Hydration sheet from Targets link (not Trends) |
 | **Trends** | App-wide logging entry counts (bottom tab) — not a health score |
 | **Today's priorities** | Incomplete actions: remaining meds, hydration nudge, check-in, today/tomorrow appt, **supplies due/overdue** |
-| **Supplies** | My care tile + hub — not on this priorities card |
+| **Supplies** | My care card + hub — not on this priorities card |
 
 Helpers: `lib/todayPriorities.ts` (`buildTodayPriorities`, `findNearTermAppointment`). Reuses `todaySummary` from the dashboard snapshot; appointments are cache-first via `appointmentShared`. Cap 3 rows + **View all** expands in-card. Caught-up empty state still shows the section.
 
 **No layout shift (post-login):** Hold the collapsed tray at full height + an invisible **View all** slot until **today counts** and **apt/supply** extras are ready (`todayCountsReady` + `prioritiesExtrasReady` in `App.tsx` Dashboard). Don’t flip extras ready back to false on focus — that reopens the pop-in. Commit that introduced the apt/supply reserve: `3a4916b`; today-counts gate added so cold login doesn’t release early.
 
-**Look (trial):** white card + inset `surfaceSubtle` tray, **emoji** lines, no separators / not tappable — so this shelf reads differently from Check in tiles and list trays. Shelf order: Check in → **Today's priorities** → My health / My tools / My care → News (if on).
+**Look (trial):** white card + inset `surfaceSubtle` tray, **text-only lines** (no emoji / dash / Lucide — keeps Priorities distinct from icon shelves), no separators / not tappable. Title row has **Targets** trailing (same pattern as Latest news See all). Shelf order: Check in → **Today's priorities** → My health → My care → My tools → News (if on).
 
-### My health / My tools / My care grid
+### My health / My care / My tools
 
-**Now:** three horizontal pages (same snap as before) — no nested vertical pager.
+**Jobs differ** (don’t stack three identical feature grids):
 
-- **My health** — Hydration + Bowel on top; My Meds full-width below
-- **My tools** — Weight + Fluid Output stacked left; Food & Drink tall right (monitoring / measure-and-record)
-- **My care** — Appointments tall left; Supplies + Reports right (clinical / external)
+| Shelf | Job | UI |
+|-------|-----|----|
+| **My health** | Feature doors (names match screen titles) | `HomeFeatureTileGrid` — My Hydration, Bowel Movements, My Meds |
+| **My care** | Next clinic / kit moment | `HomeCareNextCard` — next appointment + supplies + Reports link |
+| **My tools** | Browse catalog | `HomeFeatureTileGrid` — Weight, Fluid Output, Food & Drink |
 
-**Why:** Care swipe-up stole home scroll when users tried to scroll the dashboard. Horizontal-only keeps discovery without gesture fights.
+Priorities = *what to do*. Targets owns today’s hydration/meds **numbers**. Health/Tools = doors only (no status tray).
+
+**Tile system (Health + Tools):** automatic **2-column flex wrap**; height follows content. Odd last tile does **not** stretch full-bleed. Labels must match destination `headerTitle`s.
+
+**Why not horizontal pages:** swipe height fights and empty gaps. Vertical stack grows with content.
 
 ### Trends (bottom tab)
 
@@ -684,6 +690,17 @@ Helpers: `lib/todayPriorities.ts` (`buildTodayPriorities`, `findNearTermAppointm
 - Account, guides, news, reminders chrome
 
 If product later wants those in the graph, call it out explicitly — don’t silently fold them into **All**.
+
+**Idea (not built):** Left **Y-axis count labels** so bar height isn’t guesswork. Today we have day marks (`_ _`) on the bottom but no vertical scale.
+
+- **Per-feature filters** (Symptoms, Wellbeing, …): axis from **1 → max in the visible range** (or a small ceil). Nobody needs 1–100 — daily logs per type stay low.
+- **All:** open question — sum of types can spike higher; options to decide later: same dynamic max-in-range; a higher soft ceiling; or hide/simplify the axis on All only.
+- Don’t hardcode 1–100. Prefer scale from data (with a sensible minimum so a single tall day doesn’t crush tiny days into nothing — if we already do that for bar height, reuse it for ticks).
+
+**Idea (not built):** Empty chart copy should follow the **Show** filter (today one generic line for everything):
+
+- **All:** keep sense of current — e.g. *Log something and your days will show up here.*
+- **Per feature:** name the feature — e.g. *Log a Wellbeing entry to see your activity here.* / *Log Symptoms to see your activity here.* Use the **same label as the picker / screen** (not a shortened nickname). Exact wording TBD; key rule = **include the feature name**.
 
 ---
 
@@ -920,7 +937,7 @@ Product backlog for later — not implementation work yet. Ship notes go in **`C
 
 ### UI — My care “more tiles” without nested vertical scroll
 
-**Done (2026-08):** split into **My health / My tools / My care** horizontal pages — see Today's priorities section above.
+**Done:** Care next card + Health/Tools feature tiles (full screen names; no Health status tray).
 
 ---
 

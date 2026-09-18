@@ -43,7 +43,7 @@ import {
   View,
   ViewStyle,
 } from "react-native";
-import { AnimatedScrollView, ScrollView } from "./lib/scrollViews";
+import { ScrollView } from "./lib/scrollViews";
 import { GestureHandlerRootView } from "react-native-gesture-handler";
 import { SafeAreaProvider, initialWindowMetrics, useSafeAreaInsets } from "react-native-safe-area-context";
 import {
@@ -66,6 +66,8 @@ import { OverlayOutlet } from "./lib/overlayPortal";
 import { SlideUpSheet } from "./components/SlideUpSheet";
 import { BiometricLockScreen } from "./components/BiometricLockScreen";
 import { TodayActivitiesModal } from "./components/TodayActivityPrototypes";
+import { HomeCareNextCard } from "./components/HomeCareNextCard";
+import { HomeFeatureTileGrid, type HomeFeatureGridTile } from "./components/HomeFeatureTileGrid";
 import {
   authenticate,
   biometricTypeLabel,
@@ -257,6 +259,7 @@ import {
 } from "./lib/todayPriorities";
 import {
   fetchAppointmentsForUser,
+  findNextUpcomingAppointment,
   getAppointmentsListCache,
   type AppointmentRow,
 } from "./lib/appointmentShared";
@@ -264,8 +267,8 @@ import {
   fetchSupplyDashboardSummary,
   getMedicalSupplyKitListCache,
   needsMedicalSuppliesSetup,
-  supplyDueStatusFromKitListCache,
-  type SupplyDueStatus,
+  supplyDashboardSummaryFromKitListCache,
+  type SupplyDashboardSummary,
 } from "./lib/medicalSuppliesShared";
 import { SUPPLIES_SETUP_STEP_INTRO } from "./screens/MedicalSuppliesSetupScreen";
 import {
@@ -1720,18 +1723,9 @@ function DashboardScreen({ user }: { user: SessionUser }) {
   const c = useFlareColors();
   const bottomScrollInset = useBottomTabScrollInset();
   const [activitiesOpen, setActivitiesOpen] = useState(false);
-  const [healthCarePageW, setHealthCarePageW] = useState(() =>
+  const [featureGridW, setFeatureGridW] = useState(() =>
     Math.max(0, Math.round(windowWidth - SCREEN_EDGE_PADDING * 2)),
   );
-  const [healthCarePage, setHealthCarePage] = useState(0);
-  const healthCareScrollX = useRef(new Animated.Value(0)).current;
-  const healthCarePagerRef = useRef<React.ElementRef<typeof AnimatedScrollView> | null>(null);
-  const healthCarePageGap = HOME_TILE_GAP;
-  /** Page width + inter-page gap — snap interval + title fade landmarks. */
-  const healthCarePageStride = Math.max(1, healthCarePageW + healthCarePageGap);
-  const healthCarePageCount = 3;
-  /** Crossfade band near each page boundary (hold solid, then dissolve). */
-  const healthCareTitleFadeBand = Math.max(48, Math.round(healthCarePageStride * 0.28));
   const tileWidth = useMemo(
     () => Math.floor((windowWidth - SCREEN_EDGE_PADDING * 2 - HOME_TILE_GAP) / 2),
     [windowWidth],
@@ -1756,8 +1750,12 @@ function DashboardScreen({ user }: { user: SessionUser }) {
     const cached = getAppointmentsListCache(user.id);
     return cached ? findNearTermAppointment(cached) : null;
   });
-  const [suppliesStatus, setSuppliesStatus] = useState<SupplyDueStatus | null>(() =>
-    supplyDueStatusFromKitListCache(user.id),
+  const [nextCareAppointment, setNextCareAppointment] = useState<AppointmentRow | null>(() => {
+    const cached = getAppointmentsListCache(user.id);
+    return cached ? findNextUpcomingAppointment(cached) : null;
+  });
+  const [suppliesSummary, setSuppliesSummary] = useState<SupplyDashboardSummary | null>(() =>
+    supplyDashboardSummaryFromKitListCache(user.id),
   );
   const [prioritiesExpanded, setPrioritiesExpanded] = useState(false);
   const [prioritiesExtrasReady, setPrioritiesExtrasReady] = useState(() => {
@@ -1774,9 +1772,9 @@ function DashboardScreen({ user }: { user: SessionUser }) {
         todaySummary,
         nearAppointment,
         hydrationTarget: HYDRATION_TARGET,
-        suppliesStatus,
+        suppliesStatus: suppliesSummary?.status ?? null,
       }),
-    [todaySummary, nearAppointment, suppliesStatus],
+    [todaySummary, nearAppointment, suppliesSummary],
   );
   const visiblePriorityItems = prioritiesExpanded
     ? priorityItems
@@ -1806,61 +1804,61 @@ function DashboardScreen({ user }: { user: SessionUser }) {
     { key: "track-meds" as const, label: "Track Medications", lucide: FLARE_FEATURE_LUCIDE.trackMeds, goTo: "MedicationTrackingWizard" },
     { key: "wellbeing" as const, label: "My Wellbeing", lucide: FLARE_FEATURE_LUCIDE.wellbeing, goTo: "WellbeingWizard" },
   ];
-  const healthCards = [
-    { key: "meds", label: "My Meds", screen: "Meds" as const, lucide: FLARE_FEATURE_LUCIDE.meds },
-    { key: "hydration", label: "My Hydration", screen: "Hydration" as const, lucide: FLARE_FEATURE_LUCIDE.hydration },
-    { key: "bowel", label: "Bowel Movements", screen: "Bowel" as const, lucide: FLARE_FEATURE_LUCIDE.bowel },
-  ];
-  /** Monitoring / measure-and-record tools. */
-  const toolsCards = [
-    { key: "weight", label: "My Weight", screen: "Weight" as const, lucide: FLARE_FEATURE_LUCIDE.weight },
-    { key: "output", label: "Fluid Output", screen: "Output" as const, lucide: FLARE_FEATURE_LUCIDE.output },
-    { key: "intake", label: "Food & Drink", screen: "Intake" as const, lucide: FLARE_FEATURE_LUCIDE.intake },
-  ];
-  /** Clinical / external care organisation. */
-  const careCards = [
-    { key: "appointments", label: "Appointments", screen: "Appointments" as const, lucide: FLARE_FEATURE_LUCIDE.appointments },
-    { key: "supplies", label: "My Supplies", screen: "MedicalSupplies" as const, lucide: FLARE_FEATURE_LUCIDE.supplies },
-    { key: "reports", label: "Reports", screen: "Reports" as const, lucide: FLARE_FEATURE_LUCIDE.reports },
-  ];
-  const healthMedsCard = healthCards[0];
-  const healthHydrationCard = healthCards.find((card) => card.key === "hydration")!;
-  const healthBowelCard = healthCards.find((card) => card.key === "bowel")!;
-  const toolsLeftColumnCards = [
-    toolsCards.find((card) => card.key === "weight")!,
-    toolsCards.find((card) => card.key === "output")!,
-  ];
-  const toolsIntakeCard = toolsCards.find((card) => card.key === "intake")!;
-  const careAppointmentsCard = careCards.find((card) => card.key === "appointments")!;
-  const careRightColumnCards = [
-    careCards.find((card) => card.key === "supplies")!,
-    careCards.find((card) => card.key === "reports")!,
-  ];
-  /** Matches `styles.homeDashboardTile` height — Meds-style tall tiles / Appointments. */
-  const healthMedsTallHeight = HOME_DASHBOARD_TILE_HEIGHT * 2 + HOME_TILE_GAP;
-  /** Full-width tile under a two-column top row (My health). */
-  const toolsFullTileWidth = healthCarePageW > 0 ? healthCarePageW : tileWidth * 2 + HOME_TILE_GAP;
-  const renderToolTile = (
-    item: (typeof healthCards)[number] | (typeof toolsCards)[number] | (typeof careCards)[number],
-  ) => (
-    <DashboardGridTile
-      key={item.key}
-      width={tileWidth}
-      label={item.label}
-      variant="grid"
-      onPress={() => {
-        // Skip empty hub when cache already says first-time setup (avoids list → setup flash).
-        if (item.key === "supplies") {
-          const cached = getMedicalSupplyKitListCache(user.id);
-          if (cached == null || needsMedicalSuppliesSetup(cached.length)) {
-            navigation.navigate("MedicalSuppliesSetup", { startStep: SUPPLIES_SETUP_STEP_INTRO });
-            return;
-          }
-        }
-        navigation.navigate(item.screen);
-      }}
-      icon={<FlareLucideIcon icon={item.lucide} size={HOME_TILE_ICON_SIZE_CHECKIN} color={c.primary} />}
-    />
+  type DashboardFeatureTile = HomeFeatureGridTile & { screen: string };
+  const healthFeatureTiles = useMemo((): DashboardFeatureTile[] => [
+    {
+      id: "hydration",
+      label: "My Hydration",
+      screen: "Hydration",
+      icon: <FlareLucideIcon icon={FLARE_FEATURE_LUCIDE.hydration} size={HOME_TILE_ICON_SIZE_CHECKIN} color={c.primary} />,
+    },
+    {
+      id: "bowel",
+      label: "Bowel Movements",
+      screen: "Bowel",
+      icon: <FlareLucideIcon icon={FLARE_FEATURE_LUCIDE.bowel} size={HOME_TILE_ICON_SIZE_CHECKIN} color={c.primary} />,
+    },
+    {
+      id: "meds",
+      label: "My Meds",
+      screen: "Meds",
+      icon: <FlareLucideIcon icon={FLARE_FEATURE_LUCIDE.meds} size={HOME_TILE_ICON_SIZE_CHECKIN} color={c.primary} />,
+    },
+  ], [c.primary]);
+  const toolsFeatureTiles = useMemo((): DashboardFeatureTile[] => [
+    {
+      id: "weight",
+      label: "My Weight",
+      screen: "Weight",
+      icon: <FlareLucideIcon icon={FLARE_FEATURE_LUCIDE.weight} size={HOME_TILE_ICON_SIZE_CHECKIN} color={c.primary} />,
+    },
+    {
+      id: "output",
+      label: "Fluid Output",
+      screen: "Output",
+      icon: <FlareLucideIcon icon={FLARE_FEATURE_LUCIDE.output} size={HOME_TILE_ICON_SIZE_CHECKIN} color={c.primary} />,
+    },
+    {
+      id: "intake",
+      label: "Food & Drink",
+      screen: "Intake",
+      icon: <FlareLucideIcon icon={FLARE_FEATURE_LUCIDE.intake} size={HOME_TILE_ICON_SIZE_CHECKIN} color={c.primary} />,
+    },
+  ], [c.primary]);
+  const openSuppliesFromHome = useCallback(() => {
+    const cached = getMedicalSupplyKitListCache(user.id);
+    if (cached == null || needsMedicalSuppliesSetup(cached.length)) {
+      navigation.navigate("MedicalSuppliesSetup", { startStep: SUPPLIES_SETUP_STEP_INTRO });
+      return;
+    }
+    navigation.navigate("MedicalSupplies");
+  }, [navigation, user.id]);
+  const pressFeatureTile = useCallback(
+    (tile: HomeFeatureGridTile) => {
+      const navTile = tile as DashboardFeatureTile;
+      navigation.navigate(navTile.screen);
+    },
+    [navigation],
   );
   const closeActivitiesModal = useCallback(() => {
     setActivitiesOpen(false);
@@ -1908,12 +1906,14 @@ function DashboardScreen({ user }: { user: SessionUser }) {
     useCallback(() => {
       let cancelled = false;
       const applyRows = (rows: AppointmentRow[]) => {
-        if (!cancelled) setNearAppointment(findNearTermAppointment(rows));
+        if (cancelled) return;
+        setNearAppointment(findNearTermAppointment(rows));
+        setNextCareAppointment(findNextUpcomingAppointment(rows));
       };
       const cached = getAppointmentsListCache(user.id);
       if (cached) applyRows(cached);
-      const cachedSupplyStatus = supplyDueStatusFromKitListCache(user.id);
-      if (cachedSupplyStatus != null) setSuppliesStatus(cachedSupplyStatus);
+      const cachedSupplySummary = supplyDashboardSummaryFromKitListCache(user.id);
+      if (cachedSupplySummary != null) setSuppliesSummary(cachedSupplySummary);
       if (cached !== undefined && getMedicalSupplyKitListCache(user.id) !== undefined) {
         setPrioritiesExtrasReady(true);
       }
@@ -1921,14 +1921,17 @@ function DashboardScreen({ user }: { user: SessionUser }) {
       const appointmentsReady = fetchAppointmentsForUser(user.id)
         .then(applyRows)
         .catch(() => {
-          if (!cancelled && !cached) setNearAppointment(null);
+          if (!cancelled && !cached) {
+            setNearAppointment(null);
+            setNextCareAppointment(null);
+          }
         });
       const suppliesReady = fetchSupplyDashboardSummary(user.id)
         .then((summary) => {
-          if (!cancelled) setSuppliesStatus(summary.status);
+          if (!cancelled) setSuppliesSummary(summary);
         })
         .catch(() => {
-          if (!cancelled) setSuppliesStatus(null);
+          if (!cancelled) setSuppliesSummary(null);
         });
       // Warm hub list caches ASAP (don't wait for weather/news) so first tile open is instant.
       void prefetchHubListCaches(user.id).catch(() => {});
@@ -2227,7 +2230,7 @@ function DashboardScreen({ user }: { user: SessionUser }) {
             styles.prioritiesShelfSection,
           ]}
         >
-          <Text style={[styles.dashboardSubsectionTitleLeft, styles.dashboardSubsectionTitleCenter, { color: c.text }]}>
+          <Text style={[styles.dashboardSubsectionTitleLeft, { color: c.text }]}>
             {"Today's priorities"}
           </Text>
           <View style={[logHistoryCardStyles.trackerCard, styles.prioritiesCard, { backgroundColor: c.card }]}>
@@ -2239,12 +2242,41 @@ function DashboardScreen({ user }: { user: SessionUser }) {
               ]}
             >
               {priorityItems.length === 0 ? (
-                <Text style={[styles.prioritiesCaughtUp, { color: c.textMuted }]}>{"All set for today!"}</Text>
+                <View style={styles.prioritiesTrayTopRow}>
+                  <Text style={[styles.prioritiesCaughtUp, styles.prioritiesTrayTopMain, { color: c.textMuted }]}>
+                    {"All set for today!"}
+                  </Text>
+                  <Pressable
+                    accessibilityRole="button"
+                    accessibilityLabel="Open targets"
+                    onPress={openActivitiesModal}
+                    hitSlop={{ top: 8, bottom: 8, left: 8, right: 8 }}
+                    style={({ pressed }) => [styles.prioritiesTargetsLink, pressed && { opacity: 0.7 }]}
+                  >
+                    <Text style={[styles.prioritiesTargetsLinkLabel, { color: c.primary }]}>Targets</Text>
+                  </Pressable>
+                </View>
               ) : (
                 <>
-                  {visiblePriorityItems.map((item) => (
+                  <View style={styles.prioritiesTrayTopRow}>
+                    <Text
+                      style={[styles.priorityLabel, styles.prioritiesTrayTopMain, { color: c.text }]}
+                      numberOfLines={2}
+                    >
+                      {visiblePriorityItems[0]?.text}
+                    </Text>
+                    <Pressable
+                      accessibilityRole="button"
+                      accessibilityLabel="Open targets"
+                      onPress={openActivitiesModal}
+                      hitSlop={{ top: 8, bottom: 8, left: 8, right: 8 }}
+                      style={({ pressed }) => [styles.prioritiesTargetsLink, pressed && { opacity: 0.7 }]}
+                    >
+                      <Text style={[styles.prioritiesTargetsLinkLabel, { color: c.primary }]}>Targets</Text>
+                    </Pressable>
+                  </View>
+                  {visiblePriorityItems.slice(1).map((item) => (
                     <View key={item.id} style={styles.priorityRow}>
-                      <Text style={[styles.priorityEmoji, { color: c.text }]}>{item.emoji}</Text>
                       <Text style={[styles.priorityLabel, { color: c.text }]} numberOfLines={2}>
                         {item.text}
                       </Text>
@@ -2272,15 +2304,38 @@ function DashboardScreen({ user }: { user: SessionUser }) {
               )}
             </View>
           </View>
-          <Pressable
-            accessibilityRole="button"
-            accessibilityLabel="Open progress"
-            onPress={openActivitiesModal}
-            hitSlop={{ top: 10, bottom: 12, left: 12, right: 4 }}
-            style={({ pressed }) => [styles.prioritiesActivityLink, pressed && { opacity: 0.7 }]}
-          >
-            <Text style={[styles.prioritiesActivityLinkLabel, { color: c.primary }]}>Progress</Text>
-          </Pressable>
+        </View>
+
+        <View
+          style={[styles.dashboardShelfSection, styles.dashboardShelfAfterCard]}
+          onLayout={(e) => {
+            const w = Math.round(e.nativeEvent.layout.width);
+            if (w > 0 && w !== featureGridW) setFeatureGridW(w);
+          }}
+        >
+          <Text style={[styles.dashboardSubsectionTitleLeft, { color: c.text }]}>My health</Text>
+          <View style={styles.toolsGridBlock}>
+            {featureGridW > 0 ? (
+              <HomeFeatureTileGrid
+                tiles={healthFeatureTiles}
+                pageWidth={featureGridW}
+                onPressTile={pressFeatureTile}
+              />
+            ) : null}
+          </View>
+        </View>
+
+        <View style={[styles.dashboardShelfSection, styles.dashboardShelfAfterCard]}>
+          <Text style={[styles.dashboardSubsectionTitleLeft, { color: c.text }]}>My care</Text>
+          <View style={styles.toolsGridBlock}>
+            <HomeCareNextCard
+              nextAppointment={nextCareAppointment}
+              supplies={suppliesSummary}
+              onPressAppointment={() => navigation.navigate("Appointments")}
+              onPressSupplies={openSuppliesFromHome}
+              onPressReports={() => navigation.navigate("Reports")}
+            />
+          </View>
         </View>
 
         <View
@@ -2290,228 +2345,15 @@ function DashboardScreen({ user }: { user: SessionUser }) {
             !SHOW_DASHBOARD_NEWS ? styles.dashboardShelfSectionLast : null,
           ]}
         >
-          <View style={styles.checkInTitleRow} pointerEvents="box-none">
-            <View style={styles.healthCareTitleSlot} pointerEvents="none">
-              <Animated.Text
-                pointerEvents="none"
-                style={[
-                  styles.dashboardSubsectionTitleLeft,
-                  styles.dashboardSubsectionTitleInHeader,
-                  styles.healthCareTitleLayer,
-                  {
-                    color: c.text,
-                    opacity: healthCareScrollX.interpolate({
-                      inputRange: [
-                        0,
-                        Math.max(1, healthCarePageStride - healthCareTitleFadeBand),
-                        healthCarePageStride,
-                        healthCarePageStride * 2,
-                      ],
-                      outputRange: [1, 1, 0, 0],
-                      extrapolate: "clamp",
-                    }),
-                  },
-                ]}
-              >
-                My health
-              </Animated.Text>
-              <Animated.Text
-                pointerEvents="none"
-                style={[
-                  styles.dashboardSubsectionTitleLeft,
-                  styles.dashboardSubsectionTitleInHeader,
-                  styles.healthCareTitleLayer,
-                  {
-                    color: c.text,
-                    opacity: healthCareScrollX.interpolate({
-                      inputRange: [
-                        0,
-                        Math.max(1, healthCarePageStride - healthCareTitleFadeBand),
-                        healthCarePageStride,
-                        Math.max(
-                          healthCarePageStride + 1,
-                          healthCarePageStride * 2 - healthCareTitleFadeBand,
-                        ),
-                        healthCarePageStride * 2,
-                      ],
-                      outputRange: [0, 0, 1, 1, 0],
-                      extrapolate: "clamp",
-                    }),
-                  },
-                ]}
-              >
-                My tools
-              </Animated.Text>
-              <Animated.Text
-                pointerEvents="none"
-                style={[
-                  styles.dashboardSubsectionTitleLeft,
-                  styles.dashboardSubsectionTitleInHeader,
-                  styles.healthCareTitleLayer,
-                  {
-                    color: c.text,
-                    opacity: healthCareScrollX.interpolate({
-                      inputRange: [
-                        0,
-                        healthCarePageStride,
-                        Math.max(
-                          healthCarePageStride + 1,
-                          healthCarePageStride * 2 - healthCareTitleFadeBand,
-                        ),
-                        healthCarePageStride * 2,
-                      ],
-                      outputRange: [0, 0, 0, 1],
-                      extrapolate: "clamp",
-                    }),
-                  },
-                ]}
-              >
-                My care
-              </Animated.Text>
-            </View>
-          </View>
-
-          <View
-            style={[
-              styles.toolsGridBlock,
-              // Carousel mb is for when MH/MC is last; with news shelf after, dots cover the shelf gap.
-              SHOW_DASHBOARD_NEWS ? styles.toolsGridBlockFlushBottom : null,
-            ]}
-          >
-            <View
-              style={styles.healthCarePagerWrap}
-              onLayout={(e) => {
-                const w = Math.round(e.nativeEvent.layout.width);
-                if (w > 0 && w !== healthCarePageW) setHealthCarePageW(w);
-              }}
-            >
-              {healthCarePageW > 0 ? (
-                <AnimatedScrollView
-                  ref={healthCarePagerRef}
-                  horizontal
-                  showsHorizontalScrollIndicator={false}
-                  snapToInterval={healthCarePageStride}
-                  snapToAlignment="start"
-                  disableIntervalMomentum
-                  decelerationRate="fast"
-                  nestedScrollEnabled
-                  style={{ width: healthCarePageW }}
-                  contentContainerStyle={[styles.healthCarePagerContent, { gap: healthCarePageGap }]}
-                  onScroll={Animated.event(
-                    [{ nativeEvent: { contentOffset: { x: healthCareScrollX } } }],
-                    { useNativeDriver: true },
-                  )}
-                  scrollEventThrottle={16}
-                  onMomentumScrollEnd={(e: NativeSyntheticEvent<NativeScrollEvent>) => {
-                    const next = Math.round(e.nativeEvent.contentOffset.x / healthCarePageStride);
-                    setHealthCarePage(Math.max(0, Math.min(healthCarePageCount - 1, next)));
-                  }}
-                >
-                  <View style={[styles.healthCarePage, { width: healthCarePageW }]}>
-                    <View style={styles.toolsPageStack}>
-                      <View style={styles.carePageRow}>
-                        <DashboardGridTile
-                          width={tileWidth}
-                          label={healthHydrationCard.label}
-                          variant="grid"
-                          onPress={() => navigation.navigate(healthHydrationCard.screen)}
-                          icon={
-                            <FlareLucideIcon
-                              icon={healthHydrationCard.lucide}
-                              size={HOME_TILE_ICON_SIZE_CHECKIN}
-                              color={c.primary}
-                            />
-                          }
-                        />
-                        <DashboardGridTile
-                          width={tileWidth}
-                          label={healthBowelCard.label}
-                          variant="grid"
-                          onPress={() => navigation.navigate(healthBowelCard.screen)}
-                          icon={
-                            <FlareLucideIcon
-                              icon={healthBowelCard.lucide}
-                              size={HOME_TILE_ICON_SIZE_CHECKIN}
-                              color={c.primary}
-                            />
-                          }
-                        />
-                      </View>
-                      <DashboardGridTile
-                        width={toolsFullTileWidth}
-                        label={healthMedsCard.label}
-                        variant="grid"
-                        onPress={() => navigation.navigate(healthMedsCard.screen)}
-                        icon={
-                          <FlareLucideIcon
-                            icon={healthMedsCard.lucide}
-                            size={HOME_TILE_ICON_SIZE_CHECKIN}
-                            color={c.primary}
-                          />
-                        }
-                      />
-                    </View>
-                  </View>
-                  <View style={[styles.healthCarePage, { width: healthCarePageW }]}>
-                    <View style={styles.carePageRow}>
-                      <View style={styles.carePageColumn}>{toolsLeftColumnCards.map(renderToolTile)}</View>
-                      <DashboardGridTile
-                        width={tileWidth}
-                        height={healthMedsTallHeight}
-                        label={toolsIntakeCard.label}
-                        variant="grid"
-                        onPress={() => navigation.navigate(toolsIntakeCard.screen)}
-                        icon={
-                          <FlareLucideIcon
-                            icon={toolsIntakeCard.lucide}
-                            size={HOME_TILE_ICON_SIZE_CHECKIN}
-                            color={c.primary}
-                          />
-                        }
-                      />
-                    </View>
-                  </View>
-                  <View style={[styles.healthCarePage, { width: healthCarePageW }]}>
-                    <View style={styles.carePageRow}>
-                      <DashboardGridTile
-                        width={tileWidth}
-                        height={healthMedsTallHeight}
-                        label={careAppointmentsCard.label}
-                        variant="grid"
-                        onPress={() => navigation.navigate(careAppointmentsCard.screen)}
-                        icon={
-                          <FlareLucideIcon
-                            icon={careAppointmentsCard.lucide}
-                            size={HOME_TILE_ICON_SIZE_CHECKIN}
-                            color={c.primary}
-                          />
-                        }
-                      />
-                      <View style={styles.carePageColumn}>{careRightColumnCards.map(renderToolTile)}</View>
-                    </View>
-                  </View>
-                </AnimatedScrollView>
-              ) : null}
-            </View>
-
-            <View style={styles.healthCareDots}>
-              {[0, 1, 2].map((index) => {
-                const active = index === healthCarePage;
-                const key = index === 0 ? "health" : index === 1 ? "tools" : "care";
-                return (
-                  <View
-                    key={key}
-                    style={[
-                      styles.healthCareDot,
-                      active ? styles.healthCareDotActive : null,
-                      {
-                        backgroundColor: active ? c.primary : c.appearanceChipInactiveBg,
-                      },
-                    ]}
-                  />
-                );
-              })}
-            </View>
+          <Text style={[styles.dashboardSubsectionTitleLeft, { color: c.text }]}>My tools</Text>
+          <View style={SHOW_DASHBOARD_NEWS ? styles.toolsGridBlockFlushBottom : styles.toolsGridBlock}>
+            {featureGridW > 0 ? (
+              <HomeFeatureTileGrid
+                tiles={toolsFeatureTiles}
+                pageWidth={featureGridW}
+                onPressTile={pressFeatureTile}
+              />
+            ) : null}
           </View>
         </View>
 
@@ -5683,42 +5525,6 @@ const styles = StyleSheet.create({
     marginTop: SECTION_TITLE_MARGIN_TOP,
     marginBottom: SECTION_TITLE_MARGIN_BOTTOM,
   },
-  healthCareTitleSlot: {
-    flex: 1,
-    height: FLARE_LINE_HEIGHT.subhead,
-    justifyContent: "center",
-    marginRight: 8,
-  },
-  healthCareTitleLayer: {
-    position: "absolute",
-    left: 0,
-    right: 0,
-    top: 0,
-  },
-  healthCarePagerWrap: {
-    alignSelf: "stretch",
-  },
-  healthCarePagerContent: {
-    flexDirection: "row",
-    alignItems: "flex-start",
-  },
-  healthCarePage: {},
-  healthCareDots: {
-    flexDirection: "row",
-    justifyContent: "center",
-    alignItems: "center",
-    gap: 6,
-    marginTop: 12,
-  },
-  healthCareDot: {
-    width: 6,
-    height: 6,
-    borderRadius: 3,
-  },
-  healthCareDotActive: {
-    width: 14,
-    borderRadius: 3,
-  },
   activitiesInlineLink: {
     ...FLARE_INLINE_ACTION_LINK,
     fontSize: 12,
@@ -5943,7 +5749,7 @@ const styles = StyleSheet.create({
   prioritiesCard: {
     marginTop: 0,
     marginBottom: 12,
-    padding: 12,
+    padding: HOME_TILE_GAP,
     gap: 0,
   },
   prioritiesTray: {
@@ -5955,11 +5761,6 @@ const styles = StyleSheet.create({
   priorityRow: {
     flexDirection: "row",
     alignItems: "flex-start",
-    gap: 8,
-  },
-  priorityEmoji: {
-    fontSize: FLARE_FONT_SIZE.muted,
-    lineHeight: FLARE_LINE_HEIGHT.muted,
   },
   priorityLabel: {
     flex: 1,
@@ -5968,10 +5769,20 @@ const styles = StyleSheet.create({
     fontFamily: FLARE_FONT_FAMILY.regular,
     lineHeight: FLARE_LINE_HEIGHT.muted,
   },
+  prioritiesTrayTopRow: {
+    flexDirection: "row",
+    alignItems: "flex-start",
+    gap: 8,
+  },
+  prioritiesTrayTopMain: {
+    flex: 1,
+    minWidth: 0,
+  },
   prioritiesCaughtUp: {
     fontSize: FLARE_FONT_SIZE.muted,
+    lineHeight: FLARE_LINE_HEIGHT.muted,
     fontFamily: FLARE_FONT_FAMILY.regular,
-    textAlign: "center",
+    textAlign: "left",
   },
   prioritiesViewAll: {
     alignSelf: "flex-start",
@@ -5980,19 +5791,17 @@ const styles = StyleSheet.create({
   prioritiesViewAllLabel: {
     ...FLARE_INLINE_ACTION_LINK,
   },
-  /** Keep Activity (negative mb into next shelf) above My health title for hits. */
   prioritiesShelfSection: {
     zIndex: 2,
     elevation: 2,
   },
-  prioritiesActivityLink: {
-    alignSelf: "flex-end",
-    // Sit in the card→next-shelf gap — don't add height (match GC → Check in).
-    marginTop: 0,
-    marginBottom: -FLARE_LINE_HEIGHT.muted,
+  prioritiesTargetsLink: {
+    flexShrink: 0,
   },
-  prioritiesActivityLinkLabel: {
-    ...FLARE_INLINE_ACTION_LINK,
+  prioritiesTargetsLinkLabel: {
+    fontSize: FLARE_FONT_SIZE.muted,
+    lineHeight: FLARE_LINE_HEIGHT.muted,
+    fontFamily: FLARE_FONT_FAMILY.medium,
   },
   /** Same bottom margin as dashboard cards (`styles.card` / tracker trays) before the next shelf title. */
   toolsGridBlock: { marginBottom: HOME_TILE_GAP },
@@ -6372,16 +6181,6 @@ const styles = StyleSheet.create({
     justifyContent: "center",
   },
   moreGrid: { flexDirection: "row", flexWrap: "wrap", gap: HOME_TILE_GAP },
-  carePageColumn: {
-    gap: HOME_TILE_GAP,
-  },
-  carePageRow: {
-    flexDirection: "row",
-    gap: HOME_TILE_GAP,
-  },
-  toolsPageStack: {
-    gap: HOME_TILE_GAP,
-  },
   moreGridLabel: {
     fontSize: 13,
     fontFamily: "Inter_500Medium",

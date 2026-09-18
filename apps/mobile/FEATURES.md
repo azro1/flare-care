@@ -62,14 +62,15 @@ It can show:
 - Supplies due / overdue
 
 Reminder only — you don’t tap the lines.  
-Hydration **numbers** live under **View progress**.
+Hydration **numbers** live under **Targets**.
 
-**My health / My tools / My care** (swipe between three pages)
-- Health: Hydration + Bowel on top; My Meds full-width below
-- Tools: Weight + Fluid Output stacked left; Food & Drink tall right
-- Care: Appointments tall left; Supplies + Reports right
+**My health / My care / My tools**
+- **Health:** tiles — My Hydration, Bowel Movements, My Meds (same names as screen headers)
+- **Care:** next appointment + supplies status + Reports
+- **Tools:** tiles — My Weight, Fluid Output, Food & Drink
+- Today’s hydration/meds **numbers** live under **Targets**
 
-**View progress**  
+**Targets**  
 Slide-up card with:
 - Today’s meds status (how many taken)
 - Today’s hydration cups  

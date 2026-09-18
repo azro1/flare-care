@@ -5,14 +5,12 @@ import {
 import { todayYmd } from "./bowelMovementShared";
 import type { DashboardTodaySummary } from "./dashboardSnapshotCache";
 import { HYDRATION_TARGET } from "./hydrationShared";
-
 import type { SupplyDueStatus } from "./medicalSuppliesShared";
 
 export const TODAY_PRIORITIES_COLLAPSED_COUNT = 3;
 
 export type TodayPriorityItem = {
   id: string;
-  emoji: string;
   text: string;
 };
 
@@ -68,7 +66,6 @@ export function buildTodayPriorities(input: {
   if (todaySummary.medsTotal > 0 && remainingMeds > 0) {
     items.push({
       id: "meds",
-      emoji: "💊",
       text: "Take meds",
     });
   }
@@ -76,7 +73,6 @@ export function buildTodayPriorities(input: {
   if (todaySummary.hydration < hydrationTarget) {
     items.push({
       id: "hydration",
-      emoji: "💧",
       text: "Stay hydrated",
     });
   }
@@ -88,7 +84,6 @@ export function buildTodayPriorities(input: {
   if (!hasCheckedIn) {
     items.push({
       id: "check-in",
-      emoji: "📝",
       text: "Check-in",
     });
   }
@@ -98,7 +93,6 @@ export function buildTodayPriorities(input: {
     const when = date === today ? "today" : "tomorrow";
     items.push({
       id: `appointment-${nearAppointment.id}`,
-      emoji: "📅",
       text: `Appointment ${when}`,
     });
   }
@@ -106,7 +100,6 @@ export function buildTodayPriorities(input: {
   if (input.suppliesStatus === "due" || input.suppliesStatus === "overdue") {
     items.push({
       id: "supplies",
-      emoji: "📦",
       text: input.suppliesStatus === "overdue" ? "Supplies overdue" : "Supplies due",
     });
   }

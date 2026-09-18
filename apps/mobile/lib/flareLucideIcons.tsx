@@ -198,5 +198,7 @@ export function FlareLucideIcon({
   color: string;
   strokeWidth?: number;
 } & Omit<React.ComponentProps<LucideIcon>, "size" | "color" | "strokeWidth">) {
+  // Lucide glyphs are often forward-ref objects (`typeof` → "object"), not plain functions.
+  if (Icon == null) return null;
   return <Icon size={size} color={color} strokeWidth={strokeWidth} {...props} />;
 }

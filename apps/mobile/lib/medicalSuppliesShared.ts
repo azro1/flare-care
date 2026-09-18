@@ -277,8 +277,7 @@ export function supplyDueStatusFromKitListCache(userId: string): SupplyDueStatus
   return "upcoming";
 }
 
-export async function fetchSupplyDashboardSummary(userId: string): Promise<SupplyDashboardSummary> {
-  const entries = await fetchKitListEntries(userId);
+export function supplyDashboardSummaryFromEntries(entries: KitListEntry[]): SupplyDashboardSummary {
   const kitCount = entries.length;
   if (kitCount === 0) {
     return { kitCount: 0, status: "empty", dueKitName: null };
@@ -292,6 +291,17 @@ export async function fetchSupplyDashboardSummary(userId: string): Promise<Suppl
     return { kitCount, status: "due", dueKitName: due.kit.name };
   }
   return { kitCount, status: "upcoming", dueKitName: null };
+}
+
+export function supplyDashboardSummaryFromKitListCache(userId: string): SupplyDashboardSummary | null {
+  const entries = getMedicalSupplyKitListCache(userId);
+  if (entries === undefined) return null;
+  return supplyDashboardSummaryFromEntries(entries);
+}
+
+export async function fetchSupplyDashboardSummary(userId: string): Promise<SupplyDashboardSummary> {
+  const entries = await fetchKitListEntries(userId);
+  return supplyDashboardSummaryFromEntries(entries);
 }
 
 export async function insertMedicalSupplyKit(
