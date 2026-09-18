@@ -4792,7 +4792,7 @@ function AppTabs({
       AppointmentBriefNext: "Next Appointment",
       AppointmentBriefChanges: "What Changed",
       LatestNews: "Latest news",
-      MedicalSupplies: "My Supplies",
+      MedicalSupplies: "Supplies",
       MedicalSuppliesSetup: "",
       MedicalSupplyOrder: "Order",
       MedicalSupplyRequest: "Send request",

@@ -32,6 +32,7 @@ export function useLogListSelection({
   navigation,
   headerTitle,
   renderIdleHeaderRight,
+  ownsHeader = true,
 }: {
   routeName: string;
   itemIds: string[];
@@ -40,6 +41,11 @@ export function useLogListSelection({
   headerTitle: string | (() => React.ReactNode);
   /** Optional header action when not in selection mode (e.g. navigate to a sibling list). */
   renderIdleHeaderRight?: () => React.ReactNode;
+  /**
+   * When false (e.g. another hub tab is showing), don’t write header / selection chrome.
+   * Used by Appointments hub so Appointments vs Questions panes don’t fight.
+   */
+  ownsHeader?: boolean;
 }) {
   const c = useFlareColors();
   const { setChrome } = useListSelectionChrome();
@@ -57,6 +63,10 @@ export function useLogListSelection({
     setSelectedIds((prev) => (prev.size === 0 ? prev : new Set()));
     setBulkDeleteOpen((prev) => (prev ? false : prev));
   }, []);
+
+  useEffect(() => {
+    if (!ownsHeader && selectionMode) exitSelectionMode();
+  }, [exitSelectionMode, ownsHeader, selectionMode]);
 
   const enterSelectionWith = useCallback((id: string) => {
     setSelectionMode(true);
@@ -105,7 +115,7 @@ export function useLogListSelection({
   );
 
   useEffect(() => {
-    if (!selectionMode) {
+    if (!ownsHeader || !selectionMode) {
       setChrome((prev) => (prev == null ? prev : null));
       return;
     }
@@ -126,6 +136,7 @@ export function useLogListSelection({
     exitSelectionMode,
     itemIds.length,
     openBulkDelete,
+    ownsHeader,
     routeName,
     selectedIds.size,
     selectionMode,
@@ -135,16 +146,16 @@ export function useLogListSelection({
 
   useFocusEffect(
     useCallback(() => {
-      if (selectionMode) return;
+      if (!ownsHeader || selectionMode) return;
       navigation.setOptions({
         headerTitle,
         headerRight: renderIdleHeaderRight ? () => renderIdleHeaderRight() : undefined,
       });
-    }, [headerTitle, navigation, renderIdleHeaderRight, selectionMode]),
+    }, [headerTitle, navigation, ownsHeader, renderIdleHeaderRight, selectionMode]),
   );
 
   useLayoutEffect(() => {
-    if (!selectionMode) {
+    if (!ownsHeader || !selectionMode) {
       return;
     }
     const allSelected = itemIds.length > 0 && selectedIds.size === itemIds.length;
@@ -186,6 +197,7 @@ export function useLogListSelection({
     headerTitle,
     itemIds.length,
     navigation,
+    ownsHeader,
     renderIdleHeaderRight,
     selectedIds.size,
     selectionMode,

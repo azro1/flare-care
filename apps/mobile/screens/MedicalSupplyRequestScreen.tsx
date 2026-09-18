@@ -297,7 +297,7 @@ export function MedicalSupplyRequestScreen({ user }: { user: SessionUser }) {
         ) : error ? (
           <Text style={errTextStyle}>{error}</Text>
         ) : kits.length === 0 ? (
-          <Text style={[styles.muted, { color: c.textMuted }]}>Set up an order in My Supplies first.</Text>
+          <Text style={[styles.muted, { color: c.textMuted }]}>Set up an order in Supplies first.</Text>
         ) : (
           <>
             <FlareScreenSectionTitle compact>Order *</FlareScreenSectionTitle>

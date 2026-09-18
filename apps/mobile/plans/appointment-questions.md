@@ -1,8 +1,8 @@
 # Plan: Questions for my appointment
 
-**Status:** Idea — not built. Strong FlareCare fit (everyday friction → clinic-ready). Could be a near-term build after the current queue of ideas lands.
+**Status:** Built (v1) — run Supabase SQL in `DEV_NOTES` → Appointment questions, then smoke on device.
 
-**Doc home:** `apps/mobile/plans/`. Short backlog pointer also under **Looking ahead** in `DEV_NOTES.md` / `FEATURES.md`.
+**Doc home:** `apps/mobile/plans/`.
 
 ---
 
@@ -27,9 +27,19 @@ Capture thoughts **in the moment**, so they show up when the appointment actuall
 
 ---
 
-## Notes / open
+## v1 shipped
 
-- Likely sits near Appointments / Appointment Brief / My care — not a clinical logger.
-- No AI diagnosis / advice generation in v1 — user-authored notes only.
-- Possible later link: pull open questions into Appointment Brief / appointment prep.
-- User noted: could build this soon, but hold until the rest of the idea dump is in.
+| Piece | Spec |
+|--------|------|
+| **Where** | Appointments hub → **Questions** tab (with Appointments · Summary) |
+| **Data** | `appointment_questions` (user-authored `body` only) — SQL in `DEV_NOTES.md` |
+| **UX** | List + FAB add · tap to edit · long-press multi-delete |
+| **Files** | `screens/AppointmentQuestionsPane.tsx`, `lib/appointmentQuestionsShared.ts` |
+| **Out of scope** | AI advice, auto-pull into Appointment Brief, mark-as-asked |
+
+---
+
+## Later
+
+- Surface open questions in Appointment Brief / prep.
+- Optional “asked” / done state after the visit.

@@ -47,6 +47,7 @@ export const TABLES = {
   DAILY_HYDRATION: "daily_hydration",
   BOWEL_MOVEMENTS: "bowel_movements",
   APPOINTMENTS: "appointments",
+  APPOINTMENT_QUESTIONS: "appointment_questions",
   MEDICATION_TAKEN: "is_medication_taken",
   USER_PREFERENCES: "user_preferences",
   DAILY_WELLBEING: "daily_wellbeing",

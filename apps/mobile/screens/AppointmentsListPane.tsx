@@ -69,6 +69,7 @@ export function AppointmentsListPane({
   /** When true, only the list (+ delete modal) — parent owns shell / FAB / tabs. */
   embedded = false,
   onSelectionModeChange,
+  ownsHeader = true,
 }: {
   user: SessionUser;
   tab: AppointmentsTab;
@@ -81,6 +82,8 @@ export function AppointmentsListPane({
   list: AppointmentsListState;
   embedded?: boolean;
   onSelectionModeChange?: (selectionMode: boolean) => void;
+  /** Hub: only the active tab should own header / selection chrome. */
+  ownsHeader?: boolean;
 }) {
   const c = useFlareColors();
   const navigation = useNavigation<any>();
@@ -186,6 +189,7 @@ export function AppointmentsListPane({
     navigation,
     headerTitle,
     renderIdleHeaderRight,
+    ownsHeader,
   });
 
   useEffect(() => {

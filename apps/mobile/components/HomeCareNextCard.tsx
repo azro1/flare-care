@@ -1,19 +1,18 @@
 /**
- * My care — next clinic / kit moment (not a three-tile feature wall).
+ * My care — Account list tray (`OneLineTrayList` chrome) + Reports inside the same card.
  */
 import React from "react";
 import { Pressable, StyleSheet, Text, View } from "react-native";
 import type { AppointmentRow } from "../lib/appointmentShared";
 import { formatUkDate } from "../lib/formatUkDate";
-import {
-  FLARE_FONT_FAMILY,
-  FLARE_FONT_SIZE,
-  FLARE_INLINE_ACTION_LINK,
-  FLARE_LINE_HEIGHT,
-  HOME_TILE_GAP,
-  STACKED_LINE_GAP,
-} from "../lib/layoutConstants";
+import { FLARE_INLINE_ACTION_LINK, HOME_TILE_GAP, ONE_LINE_TRAY_PADDING } from "../lib/layoutConstants";
 import type { SupplyDashboardSummary } from "../lib/medicalSuppliesShared";
+import {
+  LogHistoryCard,
+  LogHistoryList,
+  logHistoryListStyles,
+  oneLineTraySeparatorRowStyle,
+} from "./LogHistoryList";
 import { useFlareColors } from "../theme";
 
 type Props = {
@@ -51,12 +50,6 @@ function suppliesTitle(summary: SupplyDashboardSummary | null): string {
   return "Supplies on track";
 }
 
-function suppliesMeta(summary: SupplyDashboardSummary | null): string {
-  if (summary == null) return " ";
-  if (summary.status === "empty" || summary.kitCount === 0) return "Tap to add";
-  return "Tap to view";
-}
-
 export function HomeCareNextCard({
   nextAppointment,
   supplies,
@@ -66,54 +59,49 @@ export function HomeCareNextCard({
 }: Props) {
   const c = useFlareColors();
   const aptTitle = nextAppointment ? appointmentTitle(nextAppointment) : "No upcoming appointments";
-  const aptWhen = nextAppointment ? appointmentWhen(nextAppointment) : "Tap to add";
+  const aptWhen = nextAppointment ? appointmentWhen(nextAppointment) : "";
   const supplyTitle = suppliesTitle(supplies);
-  const supplyMeta = suppliesMeta(supplies);
+
+  const items = [
+    {
+      id: "appointment",
+      title: "Next appointment",
+      subtitle: aptWhen ? `${aptTitle} · ${aptWhen}` : aptTitle,
+      accessibilityLabel: nextAppointment
+        ? `Next appointment ${aptTitle}. ${aptWhen}. Open appointments`
+        : "No upcoming appointments. Open appointments",
+    },
+    {
+      id: "supplies",
+      title: "Supplies",
+      subtitle: supplyTitle,
+      accessibilityLabel: `${supplyTitle}. Open supplies`,
+    },
+  ];
 
   return (
-    <View style={[styles.card, { backgroundColor: c.card }]}>
-      <View style={[styles.tray, { backgroundColor: c.surfaceSubtle }]}>
-        <Pressable
-          accessibilityRole="button"
-          accessibilityLabel={
-            nextAppointment
-              ? `Next appointment ${aptTitle}. ${aptWhen}. Open appointments`
-              : "No upcoming appointments. Tap to add. Open appointments"
-          }
-          onPress={onPressAppointment}
-          style={({ pressed }) => [styles.block, pressed && { opacity: 0.7 }]}
-        >
-          <Text style={[styles.eyebrow, { color: c.textMuted }]}>Next appointment</Text>
-          <Text style={[styles.title, { color: c.text }]} numberOfLines={1}>
-            {aptTitle}
-          </Text>
-          <Text
-            style={[
-              nextAppointment ? styles.meta : styles.eyebrow,
-              { color: nextAppointment ? c.textSecondary : c.textMuted },
-            ]}
-            numberOfLines={1}
-          >
-            {aptWhen}
-          </Text>
-        </Pressable>
-
-        <View style={[styles.rule, { backgroundColor: c.cardBorder }]} />
-
-        <Pressable
-          accessibilityRole="button"
-          accessibilityLabel={`${supplyTitle}. ${supplyMeta}. Open supplies`}
-          onPress={onPressSupplies}
-          style={({ pressed }) => [styles.block, pressed && { opacity: 0.7 }]}
-        >
-          <Text style={[styles.eyebrow, { color: c.textMuted }]}>Supplies</Text>
-          <Text style={[styles.title, { color: c.text }]} numberOfLines={1}>
-            {supplyTitle}
-          </Text>
-          <Text style={[styles.eyebrow, { color: c.textMuted }]} numberOfLines={1}>
-            {supplyMeta}
-          </Text>
-        </Pressable>
+    <LogHistoryCard style={styles.card}>
+      <View
+        style={[
+          logHistoryListStyles.logList,
+          {
+            backgroundColor: c.surfaceSubtle,
+            paddingVertical: ONE_LINE_TRAY_PADDING,
+          },
+        ]}
+      >
+        <LogHistoryList
+          items={items}
+          rowTextLayout="default"
+          rowPaddingHorizontal={ONE_LINE_TRAY_PADDING}
+          rowPaddingVertical={4}
+          insetTray={false}
+          getRowStyle={(_item, index) => oneLineTraySeparatorRowStyle(index, items.length)}
+          onPressItem={(id) => {
+            if (id === "appointment") onPressAppointment();
+            else onPressSupplies();
+          }}
+        />
       </View>
 
       <Pressable
@@ -125,43 +113,15 @@ export function HomeCareNextCard({
       >
         <Text style={[styles.reportsLabel, { color: c.primary }]}>Reports</Text>
       </Pressable>
-    </View>
+    </LogHistoryCard>
   );
 }
 
 const styles = StyleSheet.create({
+  /** Same Account card; no extra marginBottom — shelf `toolsGridBlock` owns bottom gap. */
   card: {
-    borderRadius: 16,
-    padding: HOME_TILE_GAP,
+    marginBottom: 0,
     gap: HOME_TILE_GAP,
-  },
-  tray: {
-    borderRadius: 12,
-    overflow: "hidden",
-  },
-  block: {
-    paddingHorizontal: 14,
-    paddingVertical: 12,
-    gap: STACKED_LINE_GAP,
-  },
-  rule: {
-    height: StyleSheet.hairlineWidth,
-    marginHorizontal: 14,
-  },
-  eyebrow: {
-    fontSize: FLARE_FONT_SIZE.caption,
-    lineHeight: FLARE_LINE_HEIGHT.caption,
-    fontFamily: FLARE_FONT_FAMILY.medium,
-  },
-  title: {
-    fontSize: FLARE_FONT_SIZE.body,
-    lineHeight: FLARE_LINE_HEIGHT.body,
-    fontFamily: FLARE_FONT_FAMILY.medium,
-  },
-  meta: {
-    fontSize: FLARE_FONT_SIZE.muted,
-    lineHeight: FLARE_LINE_HEIGHT.muted,
-    fontFamily: FLARE_FONT_FAMILY.regular,
   },
   reportsLink: {
     alignSelf: "flex-end",

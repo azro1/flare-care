@@ -625,7 +625,7 @@ export type MedicalSuppliesSetupParams = {
   startStep?: number;
 };
 
-/** Stack route — keeps setup off the My Supplies hub so back returns to the previous screen. */
+/** Stack route — keeps setup off the Supplies hub so back returns to the previous screen. */
 export function MedicalSuppliesSetupRoute({ user }: { user: SessionUser }) {
   const navigation = useNavigation<any>();
   const route = useRoute();

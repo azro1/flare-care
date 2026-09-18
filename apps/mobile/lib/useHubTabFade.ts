@@ -100,7 +100,7 @@ export const hubTabFadeStyles = StyleSheet.create({
     paddingBottom: 8,
   },
   tabLabel: {
-    fontSize: FLARE_FONT_SIZE.subhead,
+    fontSize: FLARE_FONT_SIZE.body,
     fontFamily: FLARE_FONT_FAMILY.regular,
   },
   tabLabelActive: {

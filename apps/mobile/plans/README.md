@@ -7,7 +7,7 @@ Not for long-lived app reminders (`DEV_NOTES.md`), same-day working list (`today
 | Plan | Status |
 |------|--------|
 | [going-out.md](./going-out.md) | Idea — not built |
-| [appointment-questions.md](./appointment-questions.md) | Idea — not built (near-term candidate) |
+| [appointment-questions.md](./appointment-questions.md) | Built (v1) — run SQL + smoke |
 | [private-support-topics.md](./private-support-topics.md) | Idea — not built (Support only; careful) |
 | [ibd-at-work.md](./ibd-at-work.md) | Idea — not built (Support resource) |
 | [my-ibd-self-advocacy.md](./my-ibd-self-advocacy.md) | Idea — not built (user-authored only; careful) |

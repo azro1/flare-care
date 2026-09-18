@@ -75,11 +75,9 @@ export function MedicalSuppliesScreen({ user }: { user: SessionUser }) {
   const renderSuppliesHint = useCallback(
     () => (
       <InfoHintButton
-        title="My Supplies"
-        message={
-          "Your supplies hub keeps your supply crates together in one place. Create a crate for each set of supplies you regularly need. Tap to manage, or long-press to delete."
-        }
-        accessibilityLabel="About My Supplies"
+        title="Supplies"
+        message="Keep the supplies you regularly need organised using supply crates. Tap to manage, or long-press to delete."
+        accessibilityLabel="About Supplies"
       />
     ),
     [],
@@ -97,7 +95,7 @@ export function MedicalSuppliesScreen({ user }: { user: SessionUser }) {
     routeName: "MedicalSupplies",
     itemIds: orderIds,
     navigation,
-    headerTitle: "My Supplies",
+    headerTitle: "Supplies",
     renderIdleHeaderRight: renderSuppliesHint,
   });
 

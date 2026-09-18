@@ -57,7 +57,7 @@ type SessionUser = { id: string };
 
 export type MedicalSupplyOrderParams = {
   kitId: number;
-  /** Shown in the header immediately so we don’t flash “My Supplies”. */
+  /** Shown in the header immediately so we don’t flash “Supplies”. */
   orderName?: string;
 };
 

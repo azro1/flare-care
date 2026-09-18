@@ -1,7 +1,7 @@
 import { FLARE_CHROME_LUCIDE, FlareLucideIcon } from "../lib/flareLucideIcons";
 import DateTimePicker from "@react-native-community/datetimepicker";
 import { useNavigation } from "@react-navigation/native";
-import React, { useCallback, useState } from "react";
+import React, { useCallback, useLayoutEffect, useRef, useState } from "react";
 import {
   Animated,
   KeyboardAvoidingView,
@@ -50,11 +50,14 @@ import { supabase, TABLES } from "../lib/supabase";
 import { useFlareColors } from "../theme";
 import { AppointmentBriefContent } from "./AppointmentBriefContent";
 import { AppointmentsListPane } from "./AppointmentsListPane";
+import { AppointmentQuestionsPane } from "./AppointmentQuestionsPane";
+import { APPOINTMENT_QUESTIONS_HINT } from "../lib/appointmentQuestionsShared";
 
 type SessionUser = { id: string };
 
 const APPOINTMENTS_HUB_TABS = [
   { key: "appointments", label: "Appointments" },
+  { key: "questions", label: "Questions" },
   { key: "summary", label: "Summary" },
 ] as const;
 
@@ -351,7 +354,12 @@ export function AppointmentsScreen({ user }: { user: SessionUser }) {
   const [saveError, setSaveError] = useState("");
   const { tabIndex, goToTab, paneStyle } = useHubTabFade(0, APPOINTMENTS_HUB_TABS.length);
   const [listSelectionMode, setListSelectionMode] = useState(false);
+  const [questionsSelectionMode, setQuestionsSelectionMode] = useState(false);
+  const openQuestionAddRef = useRef<() => void>(() => {});
   const onAppointmentsTab = tabIndex === 0;
+  const onQuestionsTab = tabIndex === 1;
+  const onSummaryTab = tabIndex === 2;
+  const anySelectionMode = listSelectionMode || questionsSelectionMode;
 
   const closeSheet = useCallback(() => {
     setSheetOpen(false);
@@ -367,15 +375,35 @@ export function AppointmentsScreen({ user }: { user: SessionUser }) {
     setSheetOpen(true);
   }, []);
 
-  const renderPastLink = useCallback(
-    () => (
+  const registerOpenQuestionAdd = useCallback((fn: () => void) => {
+    openQuestionAddRef.current = fn;
+  }, []);
+
+  const renderHubHeaderRight = useCallback(() => {
+    if (onQuestionsTab) {
+      return (
+        <InfoHintButton
+          title="Questions"
+          message={APPOINTMENT_QUESTIONS_HINT}
+          accessibilityLabel="About Questions"
+        />
+      );
+    }
+    if (onSummaryTab) {
+      return (
+        <InfoHintButton
+          title="Appointment Summary"
+          message={APPOINTMENT_SUMMARY_HINT}
+          accessibilityLabel="About Appointment Summary"
+        />
+      );
+    }
+    return (
       <View style={styles.headerRightCluster}>
         <InfoHintButton
-          title={onAppointmentsTab ? "Appointments" : "Appointment Summary"}
-          message={onAppointmentsTab ? APPOINTMENTS_HUB_HINT : APPOINTMENT_SUMMARY_HINT}
-          accessibilityLabel={
-            onAppointmentsTab ? "About Appointments" : "About Appointment Summary"
-          }
+          title="Appointments"
+          message={APPOINTMENTS_HUB_HINT}
+          accessibilityLabel="About Appointments"
         />
         <Pressable
           accessibilityRole="button"
@@ -386,9 +414,8 @@ export function AppointmentsScreen({ user }: { user: SessionUser }) {
           <Text style={[NAV_ROW_LABEL, { color: c.text }]}>Past</Text>
         </Pressable>
       </View>
-    ),
-    [c.text, navigation, onAppointmentsTab],
-  );
+    );
+  }, [c.text, navigation, onQuestionsTab, onSummaryTab]);
 
   const handleSave = async (values: AppointmentFormState) => {
     setSaveError("");
@@ -414,8 +441,17 @@ export function AppointmentsScreen({ user }: { user: SessionUser }) {
     }
   };
 
-  const scrollBottomPadTotal =
-    listSelectionMode || !onAppointmentsTab ? Math.max(insets.bottom, 16) + 24 : scrollBottomPad;
+  const showFab =
+    (onAppointmentsTab && !listSelectionMode) || (onQuestionsTab && !questionsSelectionMode);
+  const scrollBottomPadTotal = anySelectionMode || !showFab ? Math.max(insets.bottom, 16) + 24 : scrollBottomPad;
+
+  useLayoutEffect(() => {
+    if (!onSummaryTab || anySelectionMode) return;
+    navigation.setOptions({
+      headerTitle: "Appointments",
+      headerRight: () => renderHubHeaderRight(),
+    });
+  }, [anySelectionMode, navigation, onSummaryTab, renderHubHeaderRight]);
 
   return (
     <>
@@ -424,8 +460,12 @@ export function AppointmentsScreen({ user }: { user: SessionUser }) {
         contentPaddingBottom={scrollBottomPadTotal}
         instruction={null}
         floatingAction={
-          onAppointmentsTab && !listSelectionMode ? (
-            <TrackerThumbFab accessibilityLabel="Add appointment" onPress={openAdd} tabBarClearance={tabBarClearance} />
+          showFab ? (
+            <TrackerThumbFab
+              accessibilityLabel={onQuestionsTab ? "Add question" : "Add appointment"}
+              onPress={onQuestionsTab ? () => openQuestionAddRef.current() : openAdd}
+              tabBarClearance={tabBarClearance}
+            />
           ) : null
         }
         footer={null}
@@ -476,17 +516,33 @@ export function AppointmentsScreen({ user }: { user: SessionUser }) {
               onAddPress={openAdd}
               selectionRouteName="Appointments"
               headerTitle="Appointments"
-              renderIdleHeaderRight={renderPastLink}
+              renderIdleHeaderRight={renderHubHeaderRight}
               list={appointmentsList}
               embedded
               onSelectionModeChange={setListSelectionMode}
+              ownsHeader={onAppointmentsTab}
             />
           </Animated.View>
           <Animated.View
             style={paneStyle[1]}
-            pointerEvents={onAppointmentsTab ? "none" : "auto"}
-            accessibilityElementsHidden={onAppointmentsTab}
-            importantForAccessibility={onAppointmentsTab ? "no-hide-descendants" : "yes"}
+            pointerEvents={onQuestionsTab ? "auto" : "none"}
+            accessibilityElementsHidden={!onQuestionsTab}
+            importantForAccessibility={onQuestionsTab ? "yes" : "no-hide-descendants"}
+          >
+            <AppointmentQuestionsPane
+              user={user}
+              embedded
+              selectionRouteName="Appointments"
+              headerActive={onQuestionsTab}
+              registerOpenAdd={registerOpenQuestionAdd}
+              onSelectionModeChange={setQuestionsSelectionMode}
+            />
+          </Animated.View>
+          <Animated.View
+            style={paneStyle[2]}
+            pointerEvents={onSummaryTab ? "auto" : "none"}
+            accessibilityElementsHidden={!onSummaryTab}
+            importantForAccessibility={onSummaryTab ? "yes" : "no-hide-descendants"}
           >
             <AppointmentBriefContent />
           </Animated.View>

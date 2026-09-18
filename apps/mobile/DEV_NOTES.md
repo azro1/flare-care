@@ -952,6 +952,45 @@ alter table public.track_intake
   add column if not exists notes text null;
 ```
 
+### Appointment questions (`appointment_questions`)
+
+User-authored “ask my doctor” notes for the Appointments hub **Questions** tab. Run in the Supabase SQL editor before testing:
+
+```sql
+create table if not exists public.appointment_questions (
+  id bigserial primary key,
+  user_id uuid not null references auth.users (id) on delete cascade,
+  body text not null,
+  created_at timestamptz not null default now(),
+  updated_at timestamptz not null default now()
+);
+
+create index if not exists appointment_questions_user_id_idx
+  on public.appointment_questions (user_id);
+
+create index if not exists appointment_questions_user_created_at_idx
+  on public.appointment_questions (user_id, created_at desc);
+
+alter table public.appointment_questions enable row level security;
+
+create policy "appointment_questions_select_own"
+  on public.appointment_questions for select
+  using (auth.uid() = user_id);
+
+create policy "appointment_questions_insert_own"
+  on public.appointment_questions for insert
+  with check (auth.uid() = user_id);
+
+create policy "appointment_questions_update_own"
+  on public.appointment_questions for update
+  using (auth.uid() = user_id)
+  with check (auth.uid() = user_id);
+
+create policy "appointment_questions_delete_own"
+  on public.appointment_questions for delete
+  using (auth.uid() = user_id);
+```
+
 ---
 
 ## Looking ahead
@@ -966,9 +1005,9 @@ Product backlog for later — not implementation work yet. Ship notes go in **`C
 
 ### Clinic prep — Questions for my appointment
 
-- **Idea:** quick capture during normal life (“Ask about my fatigue.”) — not generated medical advice.
-- **Hook:** thoughts saved in the moment → ready for the appointment, instead of blanking in the room.
-- **Plan:** [`plans/appointment-questions.md`](./plans/appointment-questions.md). Near-term candidate — hold until idea dump is done.
+- **Shipped (v1):** Appointments hub → **Questions** tab. User-authored notes only — not medical advice.
+- **SQL:** `appointment_questions` in Looking ahead / SQL section above (run before smoke).
+- **Plan:** [`plans/appointment-questions.md`](./plans/appointment-questions.md). Later: Brief integration / asked state.
 
 ### Support — Private topics (sensitive IBD life)
 
