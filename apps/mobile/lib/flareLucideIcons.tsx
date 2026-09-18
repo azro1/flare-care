@@ -26,6 +26,7 @@ import {
   CupSoda,
   Droplet,
   EllipsisVertical,
+  Expand,
   Eye,
   EyeOff,
   FileText,
@@ -46,6 +47,7 @@ import {
   Scale,
   Send,
   Share2,
+  Shrink,
   Snowflake,
   SquarePen,
   Sun,
@@ -138,6 +140,9 @@ export const FLARE_CHROME_LUCIDE = {
   mail: Mail,
   sun: Sun,
   moon: Moon,
+  /** Expandable tray — open / close. */
+  expandOpen: Expand,
+  expandClose: Shrink,
 } as const;
 
 /**

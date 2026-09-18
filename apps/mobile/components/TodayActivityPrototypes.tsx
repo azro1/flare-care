@@ -4,14 +4,11 @@ import {
   Animated,
   BackHandler,
   Easing,
-  LayoutAnimation,
   NativeScrollEvent,
   NativeSyntheticEvent,
-  Platform,
   Pressable,
   StyleSheet,
   Text,
-  UIManager,
   View,
   useWindowDimensions,
 } from "react-native";
@@ -438,18 +435,18 @@ function CountingPercentLabel({
 
 /**
  * In-place Meds ↔ Hydration pager for Today's priorities expand.
- * No overlay / bottom sheet — lives inside the TP tray.
+ * Morph motion is driven by a single shared `morphProgress` (0 collapsed → 1 expanded).
  */
 export function TodayActivitiesInline({
   summary,
   width: widthProp = 0,
-  active = true,
+  morphProgress,
 }: {
   summary: TodayActivitySummary;
   /** Parent tray width — avoids an empty first paint while measuring. */
   width?: number;
-  /** Drives enter/exit micro-motion (icon settle + staggered text). */
-  active?: boolean;
+  /** Shared 0→1 spring from the TP tray — keeps icon/title/detail in lockstep. */
+  morphProgress: Animated.Value;
 }) {
   const c = useFlareColors();
   const copy = useActivityCopy(summary);
@@ -457,116 +454,71 @@ export function TodayActivitiesInline({
   const [measuredW, setMeasuredW] = useState(0);
   const [pageIndex, setPageIndex] = useState(0);
   const scrollX = useRef(new Animated.Value(0)).current;
-  const iconProgress = useRef(new Animated.Value(0)).current;
-  const titleProgress = useRef(new Animated.Value(0)).current;
-  const detailProgress = useRef(new Animated.Value(0)).current;
-  const dotsProgress = useRef(new Animated.Value(0)).current;
   const pageW = widthProp > 0 ? widthProp : measuredW;
 
-  useEffect(() => {
-    iconProgress.stopAnimation();
-    titleProgress.stopAnimation();
-    detailProgress.stopAnimation();
-    dotsProgress.stopAnimation();
-
-    if (active) {
-      iconProgress.setValue(0);
-      titleProgress.setValue(0);
-      detailProgress.setValue(0);
-      dotsProgress.setValue(0);
-      Animated.parallel([
-        Animated.timing(iconProgress, {
-          toValue: 1,
-          duration: 400,
-          delay: 50,
-          easing: Easing.out(Easing.cubic),
-          useNativeDriver: true,
-        }),
-        Animated.timing(titleProgress, {
-          toValue: 1,
-          duration: 360,
-          delay: 40,
-          easing: Easing.out(Easing.cubic),
-          useNativeDriver: true,
-        }),
-        Animated.timing(detailProgress, {
-          toValue: 1,
-          duration: 340,
-          delay: 160,
-          easing: Easing.out(Easing.cubic),
-          useNativeDriver: true,
-        }),
-        Animated.timing(dotsProgress, {
-          toValue: 1,
-          duration: 300,
-          delay: 200,
-          easing: Easing.out(Easing.cubic),
-          useNativeDriver: true,
-        }),
-      ]).start();
-      return;
-    }
-
-    Animated.parallel([
-      Animated.timing(detailProgress, {
-        toValue: 0,
-        duration: 180,
-        easing: Easing.in(Easing.cubic),
-        useNativeDriver: true,
-      }),
-      Animated.timing(dotsProgress, {
-        toValue: 0,
-        duration: 180,
-        easing: Easing.in(Easing.cubic),
-        useNativeDriver: true,
-      }),
-      Animated.timing(titleProgress, {
-        toValue: 0,
-        duration: 260,
-        delay: 30,
-        easing: Easing.in(Easing.cubic),
-        useNativeDriver: true,
-      }),
-      Animated.timing(iconProgress, {
-        toValue: 0,
-        duration: 300,
-        delay: 30,
-        easing: Easing.in(Easing.cubic),
-        useNativeDriver: true,
-      }),
-    ]).start();
-  }, [active, iconProgress, titleProgress, detailProgress, dotsProgress]);
-
-  const iconAnimStyle = {
-    opacity: iconProgress,
+  // Stagger via progress ranges (same spring clock — no separate timings / bounce).
+  const titleAnimStyle = {
+    opacity: morphProgress.interpolate({
+      inputRange: [0, 0.12, 0.55, 1],
+      outputRange: [0, 0, 1, 1],
+      extrapolate: "clamp",
+    }),
     transform: [
       {
-        scale: iconProgress.interpolate({
+        translateY: morphProgress.interpolate({
           inputRange: [0, 1],
-          outputRange: [0.94, 1],
-        }),
-      },
-      {
-        translateY: iconProgress.interpolate({
-          inputRange: [0, 1],
-          outputRange: [10, 0],
+          outputRange: [8, 0],
+          extrapolate: "clamp",
         }),
       },
     ],
   };
-  const titleAnimStyle = {
-    opacity: titleProgress,
+  const iconAnimStyle = {
+    opacity: morphProgress.interpolate({
+      inputRange: [0, 0.08, 0.5, 1],
+      outputRange: [0, 0, 1, 1],
+      extrapolate: "clamp",
+    }),
     transform: [
       {
-        translateY: titleProgress.interpolate({
+        scale: morphProgress.interpolate({
+          inputRange: [0, 1],
+          outputRange: [0.92, 1],
+          extrapolate: "clamp",
+        }),
+      },
+      {
+        translateY: morphProgress.interpolate({
+          inputRange: [0, 1],
+          outputRange: [14, 0],
+          extrapolate: "clamp",
+        }),
+      },
+    ],
+  };
+  const detailAnimStyle = {
+    opacity: morphProgress.interpolate({
+      inputRange: [0, 0.42, 0.78, 1],
+      outputRange: [0, 0, 1, 1],
+      extrapolate: "clamp",
+    }),
+    transform: [
+      {
+        translateY: morphProgress.interpolate({
           inputRange: [0, 1],
           outputRange: [6, 0],
+          extrapolate: "clamp",
         }),
       },
     ],
   };
-  const detailAnimStyle = { opacity: detailProgress };
-  const dotsAnimStyle = { opacity: dotsProgress };
+  const dotsAnimStyle = {
+    opacity: morphProgress.interpolate({
+      inputRange: [0, 0.55, 0.9, 1],
+      outputRange: [0, 0, 1, 1],
+      extrapolate: "clamp",
+    }),
+  };
 
   const activities = [
     {
@@ -584,6 +536,7 @@ export function TodayActivitiesInline({
       source: HYDRATION_ACTIVITY_LOTTIE,
     },
   ];
+  const activeTitle = activities[Math.max(0, Math.min(pageIndex, activities.length - 1))]?.title ?? "My Meds";
 
   const onPagerEnd = (e: NativeSyntheticEvent<NativeScrollEvent>) => {
     if (pageW <= 0) return;
@@ -600,11 +553,18 @@ export function TodayActivitiesInline({
         if (w > 0) setMeasuredW((prev) => (prev === w ? prev : w));
       }}
     >
-      {pageW > 0 && active ? (
+      {pageW > 0 ? (
         <>
+          {/* Title stays put — only icon + progress swipe. */}
+          <Animated.Text
+            style={[styles.inlineTitle, { color: c.text }, titleAnimStyle]}
+            numberOfLines={1}
+          >
+            {activeTitle}
+          </Animated.Text>
+
           {/*
             RN ScrollView (not RNGH) so vertical drags on the TP tray still scroll the dashboard.
-            Unmount when inactive so a collapsed (height:0) pager can't steal gestures.
           */}
           <AnimatedScrollView
             ref={pagerRef}
@@ -619,6 +579,14 @@ export function TodayActivitiesInline({
             showsHorizontalScrollIndicator={false}
             onScroll={Animated.event([{ nativeEvent: { contentOffset: { x: scrollX } } }], {
               useNativeDriver: true,
+              listener: (e: NativeSyntheticEvent<NativeScrollEvent>) => {
+                if (pageW <= 0) return;
+                const next = Math.round(e.nativeEvent.contentOffset.x / pageW);
+                setPageIndex((prev) => {
+                  const clamped = Math.max(0, Math.min(activities.length - 1, next));
+                  return prev === clamped ? prev : clamped;
+                });
+              },
             })}
             scrollEventThrottle={16}
             onMomentumScrollEnd={onPagerEnd}
@@ -627,12 +595,6 @@ export function TodayActivitiesInline({
           >
             {activities.map((activity) => (
               <View key={activity.id} style={[styles.inlinePage, { width: pageW }]}>
-                <Animated.Text
-                  style={[styles.inlineTitle, { color: c.text }, titleAnimStyle]}
-                  numberOfLines={1}
-                >
-                  {activity.title}
-                </Animated.Text>
                 <ActivityLottieHero
                   source={activity.source}
                   detail={activity.detail}
@@ -671,32 +633,33 @@ export function TodayActivitiesInline({
   );
 }
 
-const EXPAND_MS = 400;
 const EXPAND_TRAY_PAD = 14;
 
-function configurePrioritiesExpandAnimation() {
-  if (Platform.OS === "android" && UIManager.setLayoutAnimationEnabledExperimental) {
-    UIManager.setLayoutAnimationEnabledExperimental(true);
-  }
-  LayoutAnimation.configureNext({
-    duration: EXPAND_MS,
-    update: {
-      type: LayoutAnimation.Types.easeInEaseOut,
-    },
-    create: {
-      type: LayoutAnimation.Types.easeInEaseOut,
-      property: LayoutAnimation.Properties.opacity,
-    },
-    delete: {
-      type: LayoutAnimation.Types.easeInEaseOut,
-      property: LayoutAnimation.Properties.opacity,
-    },
-  });
-}
+/** Tray pad + title + Lottie + detail + dots — morph target height. */
+export const TODAY_PRIORITIES_DETAIL_HEIGHT =
+  EXPAND_TRAY_PAD * 2 +
+  2 +
+  FLARE_LINE_HEIGHT.sectionTitle +
+  ACTIVITY_TITLE_TO_SUPPORT +
+  ACTIVITY_LOTTIE_SIZE +
+  ACTIVITY_HERO_GAP +
+  FLARE_LINE_HEIGHT.subhead +
+  ACTIVITY_CONTENT_TO_DOTS +
+  6;
+
+/** Clamped spring — premium ease, no overshoot bounce (~400ms feel). */
+const MORPH_SPRING = {
+  damping: 28,
+  stiffness: 210,
+  mass: 0.88,
+  overshootClamping: true,
+  restDisplacementThreshold: 0.02,
+  restSpeedThreshold: 0.02,
+  useNativeDriver: false as const,
+};
 
 /**
- * One TP tray — LayoutAnimation grows/shrinks the same container.
- * ⓘ stays mounted; collapsed + detail stay in-tree and resize (no dual-layer fade).
+ * Shared-element spring morph — one progress drives tray height + both layers + detail chrome.
  */
 export function TodayPrioritiesExpandableTray({
   expanded,
@@ -715,22 +678,122 @@ export function TodayPrioritiesExpandableTray({
   toggleColor: string;
   children: React.ReactNode;
 }) {
+  const morphProgress = useRef(new Animated.Value(0)).current;
+  const collapsedHRef = useRef(Math.max(collapsedMinHeight ?? 72, 72));
+  const [collapsedH, setCollapsedH] = useState(Math.max(collapsedMinHeight ?? 72, 72));
   const [trayW, setTrayW] = useState(0);
-  const [detailReady, setDetailReady] = useState(false);
+  const [detailMounted, setDetailMounted] = useState(false);
+  const [heightDriven, setHeightDriven] = useState(false);
+  const genRef = useRef(0);
+  const expandedRef = useRef(expanded);
   const innerW = Math.max(0, trayW - EXPAND_TRAY_PAD * 2);
 
+  useEffect(() => {
+    if (collapsedMinHeight != null && collapsedMinHeight > collapsedHRef.current && !expanded) {
+      collapsedHRef.current = collapsedMinHeight;
+      setCollapsedH(collapsedMinHeight);
+    }
+  }, [collapsedMinHeight, expanded]);
+
+  useEffect(() => {
+    if (expanded === expandedRef.current) return;
+    expandedRef.current = expanded;
+    const gen = ++genRef.current;
+
+    if (expanded) {
+      setDetailMounted(true);
+      setHeightDriven(true);
+      morphProgress.stopAnimation();
+      Animated.spring(morphProgress, {
+        toValue: 1,
+        ...MORPH_SPRING,
+      }).start(({ finished }) => {
+        if (!finished || gen !== genRef.current) return;
+      });
+      return;
+    }
+
+    setHeightDriven(true);
+    morphProgress.stopAnimation();
+    Animated.spring(morphProgress, {
+      toValue: 0,
+      ...MORPH_SPRING,
+    }).start(({ finished }) => {
+      if (!finished || gen !== genRef.current) return;
+      setDetailMounted(false);
+      setHeightDriven(false);
+    });
+  }, [expanded, morphProgress]);
+
   const handleToggle = useCallback(() => {
-    configurePrioritiesExpandAnimation();
-    setDetailReady(true);
+    if (!detailMounted && !expanded) setDetailMounted(true);
     onToggle();
-  }, [onToggle]);
+  }, [detailMounted, expanded, onToggle]);
+
+  const trayHeight = morphProgress.interpolate({
+    inputRange: [0, 1],
+    outputRange: [Math.max(collapsedH, 1), TODAY_PRIORITIES_DETAIL_HEIGHT],
+    extrapolate: "clamp",
+  });
+
+  const collapsedLayerStyle = {
+    opacity: morphProgress.interpolate({
+      inputRange: [0, 0.35, 0.55],
+      outputRange: [1, 0.35, 0],
+      extrapolate: "clamp",
+    }),
+    transform: [
+      {
+        scale: morphProgress.interpolate({
+          inputRange: [0, 1],
+          outputRange: [1, 0.97],
+          extrapolate: "clamp",
+        }),
+      },
+      {
+        translateY: morphProgress.interpolate({
+          inputRange: [0, 1],
+          outputRange: [0, -10],
+          extrapolate: "clamp",
+        }),
+      },
+    ],
+  };
+
+  const detailLayerStyle = {
+    opacity: morphProgress.interpolate({
+      inputRange: [0, 0.2, 0.55],
+      outputRange: [0, 0.15, 1],
+      extrapolate: "clamp",
+    }),
+    transform: [
+      {
+        scale: morphProgress.interpolate({
+          inputRange: [0, 1],
+          outputRange: [0.96, 1],
+          extrapolate: "clamp",
+        }),
+      },
+      {
+        translateY: morphProgress.interpolate({
+          inputRange: [0, 1],
+          outputRange: [16, 0],
+          extrapolate: "clamp",
+        }),
+      },
+    ],
+  };
 
   return (
-    <View
+    <Animated.View
       style={[
         styles.expandTray,
         { backgroundColor },
-        !expanded && collapsedMinHeight ? { minHeight: collapsedMinHeight } : null,
+        heightDriven || expanded
+          ? { height: trayHeight, overflow: "hidden" as const }
+          : collapsedMinHeight
+            ? { minHeight: collapsedMinHeight }
+            : null,
       ]}
       onLayout={(e) => {
         const w = Math.round(e.nativeEvent.layout.width);
@@ -747,29 +810,45 @@ export function TodayPrioritiesExpandableTray({
         hitSlop={{ top: 8, bottom: 8, left: 8, right: 8 }}
         style={({ pressed }) => [styles.expandInfoBtn, pressed && { opacity: 0.7 }]}
       >
-        <FlareLucideIcon icon={FLARE_CHROME_LUCIDE.infoCircle} size={18} color={toggleColor} />
+        <FlareLucideIcon
+          icon={expanded ? FLARE_CHROME_LUCIDE.expandClose : FLARE_CHROME_LUCIDE.expandOpen}
+          size={18}
+          color={toggleColor}
+        />
       </Pressable>
 
-      <View
-        style={expanded ? styles.expandSectionCollapsed : styles.expandCollapsedInner}
+      <Animated.View
         pointerEvents={expanded ? "none" : "auto"}
         accessibilityElementsHidden={expanded}
         importantForAccessibility={expanded ? "no-hide-descendants" : "auto"}
+        onLayout={(e) => {
+          if (expanded || heightDriven) return;
+          const h = Math.round(e.nativeEvent.layout.height) + EXPAND_TRAY_PAD * 2;
+          if (h > 0 && h !== collapsedHRef.current) {
+            collapsedHRef.current = h;
+            setCollapsedH(h);
+          }
+        }}
+        style={[
+          styles.expandCollapsedInner,
+          heightDriven || expanded || detailMounted ? styles.expandLayerAbs : null,
+          heightDriven || expanded || detailMounted ? collapsedLayerStyle : null,
+        ]}
       >
         {children}
-      </View>
+      </Animated.View>
 
-      {detailReady ? (
-        <View
-          style={expanded ? styles.expandDetailOpen : styles.expandSectionCollapsed}
+      {detailMounted ? (
+        <Animated.View
           pointerEvents={expanded ? "box-none" : "none"}
           accessibilityElementsHidden={!expanded}
           importantForAccessibility={expanded ? "auto" : "no-hide-descendants"}
+          style={[styles.expandLayerAbs, styles.expandDetailLayer, detailLayerStyle]}
         >
-          <TodayActivitiesInline summary={summary} width={innerW} active={expanded} />
-        </View>
+          <TodayActivitiesInline summary={summary} width={innerW} morphProgress={morphProgress} />
+        </Animated.View>
       ) : null}
-    </View>
+    </Animated.View>
   );
 }
 
@@ -1453,12 +1532,12 @@ const styles = StyleSheet.create({
   },
   inlinePage: {
     alignItems: "center",
-    gap: ACTIVITY_TITLE_TO_SUPPORT,
-    paddingTop: 2,
     paddingRight: 28,
   },
   inlineTitle: {
     alignSelf: "stretch",
+    paddingTop: 2,
+    paddingRight: 28,
     fontSize: FLARE_FONT_SIZE.sectionTitle,
     lineHeight: FLARE_LINE_HEIGHT.sectionTitle,
     fontFamily: FLARE_FONT_FAMILY.extrabold,
@@ -1475,13 +1554,14 @@ const styles = StyleSheet.create({
     gap: 10,
     paddingRight: 28,
   },
-  /** Collapses a section in-layout so LayoutAnimation can tween the tray height. */
-  expandSectionCollapsed: {
-    height: 0,
-    overflow: "hidden",
+  expandLayerAbs: {
+    position: "absolute",
+    left: EXPAND_TRAY_PAD,
+    right: EXPAND_TRAY_PAD,
+    top: EXPAND_TRAY_PAD,
   },
-  expandDetailOpen: {
-    paddingRight: 0,
+  expandDetailLayer: {
+    // Keep transform origin feeling centered in the tray while title stays left.
   },
   expandInfoBtn: {
     position: "absolute",
