@@ -4,11 +4,14 @@ import {
   Animated,
   BackHandler,
   Easing,
+  LayoutAnimation,
   NativeScrollEvent,
   NativeSyntheticEvent,
+  Platform,
   Pressable,
   StyleSheet,
   Text,
+  UIManager,
   View,
   useWindowDimensions,
 } from "react-native";
@@ -39,6 +42,7 @@ import {
 } from "../lib/layoutConstants";
 import { MY_MEDS_ICON } from "../lib/medicationFeatureIcons";
 import { Portal } from "../lib/overlayPortal";
+import { AnimatedScrollView } from "../lib/scrollViews";
 import { useFlareColors } from "../theme";
 // Legacy ProgressOverTimeGraph superseded by Trends — not shown in this sheet.
 
@@ -91,6 +95,8 @@ function ActivityLottieHero({
   complete,
   completeColor,
   size = ACTIVITY_LOTTIE_SIZE,
+  iconAnimStyle,
+  detailAnimStyle,
 }: {
   source: object;
   detail: string;
@@ -98,10 +104,12 @@ function ActivityLottieHero({
   complete?: boolean;
   completeColor: string;
   size?: number;
+  iconAnimStyle?: object;
+  detailAnimStyle?: object;
 }) {
   return (
     <View style={styles.activityHeroBlock}>
-      <View style={[styles.activityLottieFrame, { width: size, height: size }]}>
+      <Animated.View style={[styles.activityLottieFrame, { width: size, height: size }, iconAnimStyle]}>
         {complete ? (
           <FlareLucideIcon
             icon={FLARE_CHROME_LUCIDE.checkCircle}
@@ -116,15 +124,15 @@ function ActivityLottieHero({
             style={{ width: size, height: size }}
           />
         )}
-      </View>
-      <Text
-        style={[styles.activityHeroDetail, { color: detailColor }]}
+      </Animated.View>
+      <Animated.Text
+        style={[styles.activityHeroDetail, { color: detailColor }, detailAnimStyle]}
         numberOfLines={1}
         accessibilityRole="text"
         accessibilityLabel={detail}
       >
         {detail}
-      </Text>
+      </Animated.Text>
     </View>
   );
 }
@@ -426,6 +434,343 @@ function CountingPercentLabel({
   }, [visible, target, pctAnim]);
 
   return <Text style={[styles.pulseHeroValue, { color }]}>{displayPct}%</Text>;
+}
+
+/**
+ * In-place Meds ↔ Hydration pager for Today's priorities expand.
+ * No overlay / bottom sheet — lives inside the TP tray.
+ */
+export function TodayActivitiesInline({
+  summary,
+  width: widthProp = 0,
+  active = true,
+}: {
+  summary: TodayActivitySummary;
+  /** Parent tray width — avoids an empty first paint while measuring. */
+  width?: number;
+  /** Drives enter/exit micro-motion (icon settle + staggered text). */
+  active?: boolean;
+}) {
+  const c = useFlareColors();
+  const copy = useActivityCopy(summary);
+  const pagerRef = useRef<React.ElementRef<typeof AnimatedScrollView> | null>(null);
+  const [measuredW, setMeasuredW] = useState(0);
+  const [pageIndex, setPageIndex] = useState(0);
+  const scrollX = useRef(new Animated.Value(0)).current;
+  const iconProgress = useRef(new Animated.Value(0)).current;
+  const titleProgress = useRef(new Animated.Value(0)).current;
+  const detailProgress = useRef(new Animated.Value(0)).current;
+  const dotsProgress = useRef(new Animated.Value(0)).current;
+  const pageW = widthProp > 0 ? widthProp : measuredW;
+
+  useEffect(() => {
+    iconProgress.stopAnimation();
+    titleProgress.stopAnimation();
+    detailProgress.stopAnimation();
+    dotsProgress.stopAnimation();
+
+    if (active) {
+      iconProgress.setValue(0);
+      titleProgress.setValue(0);
+      detailProgress.setValue(0);
+      dotsProgress.setValue(0);
+      Animated.parallel([
+        Animated.timing(iconProgress, {
+          toValue: 1,
+          duration: 400,
+          delay: 50,
+          easing: Easing.out(Easing.cubic),
+          useNativeDriver: true,
+        }),
+        Animated.timing(titleProgress, {
+          toValue: 1,
+          duration: 360,
+          delay: 40,
+          easing: Easing.out(Easing.cubic),
+          useNativeDriver: true,
+        }),
+        Animated.timing(detailProgress, {
+          toValue: 1,
+          duration: 340,
+          delay: 160,
+          easing: Easing.out(Easing.cubic),
+          useNativeDriver: true,
+        }),
+        Animated.timing(dotsProgress, {
+          toValue: 1,
+          duration: 300,
+          delay: 200,
+          easing: Easing.out(Easing.cubic),
+          useNativeDriver: true,
+        }),
+      ]).start();
+      return;
+    }
+
+    Animated.parallel([
+      Animated.timing(detailProgress, {
+        toValue: 0,
+        duration: 180,
+        easing: Easing.in(Easing.cubic),
+        useNativeDriver: true,
+      }),
+      Animated.timing(dotsProgress, {
+        toValue: 0,
+        duration: 180,
+        easing: Easing.in(Easing.cubic),
+        useNativeDriver: true,
+      }),
+      Animated.timing(titleProgress, {
+        toValue: 0,
+        duration: 260,
+        delay: 30,
+        easing: Easing.in(Easing.cubic),
+        useNativeDriver: true,
+      }),
+      Animated.timing(iconProgress, {
+        toValue: 0,
+        duration: 300,
+        delay: 30,
+        easing: Easing.in(Easing.cubic),
+        useNativeDriver: true,
+      }),
+    ]).start();
+  }, [active, iconProgress, titleProgress, detailProgress, dotsProgress]);
+
+  const iconAnimStyle = {
+    opacity: iconProgress,
+    transform: [
+      {
+        scale: iconProgress.interpolate({
+          inputRange: [0, 1],
+          outputRange: [0.94, 1],
+        }),
+      },
+      {
+        translateY: iconProgress.interpolate({
+          inputRange: [0, 1],
+          outputRange: [10, 0],
+        }),
+      },
+    ],
+  };
+  const titleAnimStyle = {
+    opacity: titleProgress,
+    transform: [
+      {
+        translateY: titleProgress.interpolate({
+          inputRange: [0, 1],
+          outputRange: [6, 0],
+        }),
+      },
+    ],
+  };
+  const detailAnimStyle = { opacity: detailProgress };
+  const dotsAnimStyle = { opacity: dotsProgress };
+
+  const activities = [
+    {
+      id: "meds" as const,
+      title: "My Meds",
+      detail: copy.medsLabel,
+      complete: copy.hasMeds && copy.medsComplete,
+      source: MEDS_ACTIVITY_LOTTIE,
+    },
+    {
+      id: "hydration" as const,
+      title: "My Hydration",
+      detail: copy.hydrationLabel,
+      complete: copy.hydrationComplete,
+      source: HYDRATION_ACTIVITY_LOTTIE,
+    },
+  ];
+
+  const onPagerEnd = (e: NativeSyntheticEvent<NativeScrollEvent>) => {
+    if (pageW <= 0) return;
+    const next = Math.round(e.nativeEvent.contentOffset.x / pageW);
+    setPageIndex(Math.max(0, Math.min(activities.length - 1, next)));
+  };
+
+  return (
+    <View
+      style={styles.inlineRoot}
+      onLayout={(e) => {
+        if (widthProp > 0) return;
+        const w = Math.round(e.nativeEvent.layout.width);
+        if (w > 0) setMeasuredW((prev) => (prev === w ? prev : w));
+      }}
+    >
+      {pageW > 0 && active ? (
+        <>
+          {/*
+            RN ScrollView (not RNGH) so vertical drags on the TP tray still scroll the dashboard.
+            Unmount when inactive so a collapsed (height:0) pager can't steal gestures.
+          */}
+          <AnimatedScrollView
+            ref={pagerRef}
+            horizontal
+            pagingEnabled
+            bounces
+            overScrollMode="never"
+            decelerationRate="fast"
+            directionalLockEnabled
+            disableIntervalMomentum
+            nestedScrollEnabled
+            showsHorizontalScrollIndicator={false}
+            onScroll={Animated.event([{ nativeEvent: { contentOffset: { x: scrollX } } }], {
+              useNativeDriver: true,
+            })}
+            scrollEventThrottle={16}
+            onMomentumScrollEnd={onPagerEnd}
+            onScrollEndDrag={onPagerEnd}
+            style={{ width: pageW }}
+          >
+            {activities.map((activity) => (
+              <View key={activity.id} style={[styles.inlinePage, { width: pageW }]}>
+                <Animated.Text
+                  style={[styles.inlineTitle, { color: c.text }, titleAnimStyle]}
+                  numberOfLines={1}
+                >
+                  {activity.title}
+                </Animated.Text>
+                <ActivityLottieHero
+                  source={activity.source}
+                  detail={activity.detail}
+                  detailColor={c.textSecondary}
+                  complete={activity.complete}
+                  completeColor={c.primary}
+                  iconAnimStyle={iconAnimStyle}
+                  detailAnimStyle={detailAnimStyle}
+                />
+              </View>
+            ))}
+          </AnimatedScrollView>
+
+          <Animated.View style={[styles.activityFooter, dotsAnimStyle]}>
+            <View style={styles.activityDots}>
+              {activities.map((activity, index) => {
+                const activeDot = index === pageIndex;
+                return (
+                  <View
+                    key={activity.id}
+                    style={[
+                      styles.activityDot,
+                      activeDot ? styles.activityDotActive : null,
+                      {
+                        backgroundColor: activeDot ? c.primary : c.appearanceChipInactiveBg,
+                      },
+                    ]}
+                  />
+                );
+              })}
+            </View>
+          </Animated.View>
+        </>
+      ) : null}
+    </View>
+  );
+}
+
+const EXPAND_MS = 400;
+const EXPAND_TRAY_PAD = 14;
+
+function configurePrioritiesExpandAnimation() {
+  if (Platform.OS === "android" && UIManager.setLayoutAnimationEnabledExperimental) {
+    UIManager.setLayoutAnimationEnabledExperimental(true);
+  }
+  LayoutAnimation.configureNext({
+    duration: EXPAND_MS,
+    update: {
+      type: LayoutAnimation.Types.easeInEaseOut,
+    },
+    create: {
+      type: LayoutAnimation.Types.easeInEaseOut,
+      property: LayoutAnimation.Properties.opacity,
+    },
+    delete: {
+      type: LayoutAnimation.Types.easeInEaseOut,
+      property: LayoutAnimation.Properties.opacity,
+    },
+  });
+}
+
+/**
+ * One TP tray — LayoutAnimation grows/shrinks the same container.
+ * ⓘ stays mounted; collapsed + detail stay in-tree and resize (no dual-layer fade).
+ */
+export function TodayPrioritiesExpandableTray({
+  expanded,
+  onToggle,
+  summary,
+  collapsedMinHeight,
+  backgroundColor,
+  toggleColor,
+  children,
+}: {
+  expanded: boolean;
+  onToggle: () => void;
+  summary: TodayActivitySummary;
+  collapsedMinHeight?: number;
+  backgroundColor: string;
+  toggleColor: string;
+  children: React.ReactNode;
+}) {
+  const [trayW, setTrayW] = useState(0);
+  const [detailReady, setDetailReady] = useState(false);
+  const innerW = Math.max(0, trayW - EXPAND_TRAY_PAD * 2);
+
+  const handleToggle = useCallback(() => {
+    configurePrioritiesExpandAnimation();
+    setDetailReady(true);
+    onToggle();
+  }, [onToggle]);
+
+  return (
+    <View
+      style={[
+        styles.expandTray,
+        { backgroundColor },
+        !expanded && collapsedMinHeight ? { minHeight: collapsedMinHeight } : null,
+      ]}
+      onLayout={(e) => {
+        const w = Math.round(e.nativeEvent.layout.width);
+        if (w > 0) setTrayW((prev) => (prev === w ? prev : w));
+      }}
+    >
+      <Pressable
+        accessibilityRole="button"
+        accessibilityState={{ expanded }}
+        accessibilityLabel={
+          expanded ? "Hide meds and hydration details" : "Show meds and hydration details"
+        }
+        onPress={handleToggle}
+        hitSlop={{ top: 8, bottom: 8, left: 8, right: 8 }}
+        style={({ pressed }) => [styles.expandInfoBtn, pressed && { opacity: 0.7 }]}
+      >
+        <FlareLucideIcon icon={FLARE_CHROME_LUCIDE.infoCircle} size={18} color={toggleColor} />
+      </Pressable>
+
+      <View
+        style={expanded ? styles.expandSectionCollapsed : styles.expandCollapsedInner}
+        pointerEvents={expanded ? "none" : "auto"}
+        accessibilityElementsHidden={expanded}
+        importantForAccessibility={expanded ? "no-hide-descendants" : "auto"}
+      >
+        {children}
+      </View>
+
+      {detailReady ? (
+        <View
+          style={expanded ? styles.expandDetailOpen : styles.expandSectionCollapsed}
+          pointerEvents={expanded ? "box-none" : "none"}
+          accessibilityElementsHidden={!expanded}
+          importantForAccessibility={expanded ? "auto" : "no-hide-descendants"}
+        >
+          <TodayActivitiesInline summary={summary} width={innerW} active={expanded} />
+        </View>
+      ) : null}
+    </View>
+  );
 }
 
 /** Slide-up sheet — Meds ↔ Hydration (shared %). Trends lives on its own screen. */
@@ -1101,6 +1446,48 @@ const styles = StyleSheet.create({
     lineHeight: FLARE_LINE_HEIGHT.subhead,
     fontFamily: FLARE_FONT_FAMILY.medium,
     textAlign: "center",
+  },
+  inlineRoot: {
+    alignSelf: "stretch",
+    gap: ACTIVITY_CONTENT_TO_DOTS,
+  },
+  inlinePage: {
+    alignItems: "center",
+    gap: ACTIVITY_TITLE_TO_SUPPORT,
+    paddingTop: 2,
+    paddingRight: 28,
+  },
+  inlineTitle: {
+    alignSelf: "stretch",
+    fontSize: FLARE_FONT_SIZE.sectionTitle,
+    lineHeight: FLARE_LINE_HEIGHT.sectionTitle,
+    fontFamily: FLARE_FONT_FAMILY.extrabold,
+    textAlign: "left",
+  },
+  expandTray: {
+    borderRadius: 12,
+    paddingVertical: EXPAND_TRAY_PAD,
+    paddingHorizontal: EXPAND_TRAY_PAD,
+    position: "relative",
+    overflow: "hidden",
+  },
+  expandCollapsedInner: {
+    gap: 10,
+    paddingRight: 28,
+  },
+  /** Collapses a section in-layout so LayoutAnimation can tween the tray height. */
+  expandSectionCollapsed: {
+    height: 0,
+    overflow: "hidden",
+  },
+  expandDetailOpen: {
+    paddingRight: 0,
+  },
+  expandInfoBtn: {
+    position: "absolute",
+    top: EXPAND_TRAY_PAD + 1,
+    right: EXPAND_TRAY_PAD,
+    zIndex: 2,
   },
   modalHeaderRow: {
     flexDirection: "row",

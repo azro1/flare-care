@@ -65,7 +65,7 @@ import { FlareAlertHost, showFlareAlert } from "./components/FlareAlertHost";
 import { OverlayOutlet } from "./lib/overlayPortal";
 import { SlideUpSheet } from "./components/SlideUpSheet";
 import { BiometricLockScreen } from "./components/BiometricLockScreen";
-import { TodayActivitiesModal } from "./components/TodayActivityPrototypes";
+import { TodayPrioritiesExpandableTray } from "./components/TodayActivityPrototypes";
 import { HomeCareNextCard } from "./components/HomeCareNextCard";
 import { HomeFeatureTileGrid, type HomeFeatureGridTile } from "./components/HomeFeatureTileGrid";
 import {
@@ -1722,7 +1722,6 @@ function DashboardScreen({ user }: { user: SessionUser }) {
   const { width: windowWidth } = useWindowDimensions();
   const c = useFlareColors();
   const bottomScrollInset = useBottomTabScrollInset();
-  const [activitiesOpen, setActivitiesOpen] = useState(false);
   const [featureGridW, setFeatureGridW] = useState(() =>
     Math.max(0, Math.round(windowWidth - SCREEN_EDGE_PADDING * 2)),
   );
@@ -1757,6 +1756,7 @@ function DashboardScreen({ user }: { user: SessionUser }) {
   const [suppliesSummary, setSuppliesSummary] = useState<SupplyDashboardSummary | null>(() =>
     supplyDashboardSummaryFromKitListCache(user.id),
   );
+  const [prioritiesDetailExpanded, setPrioritiesDetailExpanded] = useState(false);
   const [prioritiesExpanded, setPrioritiesExpanded] = useState(false);
   const [prioritiesExtrasReady, setPrioritiesExtrasReady] = useState(() => {
     const aptCached = getAppointmentsListCache(user.id) !== undefined;
@@ -1860,25 +1860,9 @@ function DashboardScreen({ user }: { user: SessionUser }) {
     },
     [navigation],
   );
-  const closeActivitiesModal = useCallback(() => {
-    setActivitiesOpen(false);
+  const togglePrioritiesDetail = useCallback(() => {
+    setPrioritiesDetailExpanded((v) => !v);
   }, []);
-  const openActivitiesModal = useCallback(() => {
-    setActivitiesOpen((wasOpen) => {
-      if (!wasOpen) return true;
-      // Mid-close still has visible=true — bounce so the open effect runs again.
-      queueMicrotask(() => setActivitiesOpen(true));
-      return false;
-    });
-  }, []);
-  const openMedsFromActivities = useCallback(() => {
-    setActivitiesOpen(false);
-    navigation.navigate("Meds");
-  }, [navigation]);
-  const openHydrationFromActivities = useCallback(() => {
-    setActivitiesOpen(false);
-    navigation.navigate("Hydration");
-  }, [navigation]);
   const activitySummary = useMemo(
     () => ({
       medsTaken: todaySummary.medsTaken,
@@ -2153,6 +2137,7 @@ function DashboardScreen({ user }: { user: SessionUser }) {
           paddingBottom: bottomScrollInset,
         }}
         showsVerticalScrollIndicator={false}
+        nestedScrollEnabled
       >
         <Card title="" style={styles.greetingCard} compactBody>
           <View style={styles.weatherIntroWrap}>
@@ -2230,50 +2215,32 @@ function DashboardScreen({ user }: { user: SessionUser }) {
             styles.prioritiesShelfSection,
           ]}
         >
-          <Text style={[styles.dashboardSubsectionTitleLeft, { color: c.text }]}>
+          <Text style={[styles.dashboardSubsectionTitleLeft, styles.dashboardSubsectionTitleCenter, { color: c.text }]}>
             {"Today's priorities"}
           </Text>
           <View style={[logHistoryCardStyles.trackerCard, styles.prioritiesCard, { backgroundColor: c.card }]}>
-            <View
-              style={[
-                styles.prioritiesTray,
-                { backgroundColor: c.surfaceSubtle },
-                reservePrioritiesCollapsedSlot ? { minHeight: prioritiesCollapsedTrayMinHeight } : null,
-              ]}
+            <TodayPrioritiesExpandableTray
+              expanded={prioritiesDetailExpanded}
+              onToggle={togglePrioritiesDetail}
+              summary={activitySummary}
+              collapsedMinHeight={
+                !prioritiesDetailExpanded && reservePrioritiesCollapsedSlot
+                  ? prioritiesCollapsedTrayMinHeight
+                  : undefined
+              }
+              backgroundColor={c.surfaceSubtle}
+              toggleColor={c.primary}
             >
               {priorityItems.length === 0 ? (
-                <View style={styles.prioritiesTrayTopRow}>
-                  <Text style={[styles.prioritiesCaughtUp, styles.prioritiesTrayTopMain, { color: c.textMuted }]}>
-                    {"All set for today!"}
-                  </Text>
-                  <Pressable
-                    accessibilityRole="button"
-                    accessibilityLabel="Open targets"
-                    onPress={openActivitiesModal}
-                    hitSlop={{ top: 8, bottom: 8, left: 8, right: 8 }}
-                    style={({ pressed }) => [styles.prioritiesTargetsLink, pressed && { opacity: 0.7 }]}
-                  >
-                    <Text style={[styles.prioritiesTargetsLinkLabel, { color: c.primary }]}>Targets</Text>
-                  </Pressable>
-                </View>
+                <Text style={[styles.prioritiesCaughtUp, { color: c.textMuted }]}>
+                  {"All set for today!"}
+                </Text>
               ) : (
                 <>
-                  <View style={styles.prioritiesTrayTopRow}>
-                    <Text
-                      style={[styles.priorityLabel, styles.prioritiesTrayTopMain, { color: c.text }]}
-                      numberOfLines={2}
-                    >
+                  <View style={styles.priorityRow}>
+                    <Text style={[styles.priorityLabel, { color: c.text }]} numberOfLines={2}>
                       {visiblePriorityItems[0]?.text}
                     </Text>
-                    <Pressable
-                      accessibilityRole="button"
-                      accessibilityLabel="Open targets"
-                      onPress={openActivitiesModal}
-                      hitSlop={{ top: 8, bottom: 8, left: 8, right: 8 }}
-                      style={({ pressed }) => [styles.prioritiesTargetsLink, pressed && { opacity: 0.7 }]}
-                    >
-                      <Text style={[styles.prioritiesTargetsLinkLabel, { color: c.primary }]}>Targets</Text>
-                    </Pressable>
                   </View>
                   {visiblePriorityItems.slice(1).map((item) => (
                     <View key={item.id} style={styles.priorityRow}>
@@ -2302,7 +2269,7 @@ function DashboardScreen({ user }: { user: SessionUser }) {
                   ) : null}
                 </>
               )}
-            </View>
+            </TodayPrioritiesExpandableTray>
           </View>
         </View>
 
@@ -2414,14 +2381,6 @@ function DashboardScreen({ user }: { user: SessionUser }) {
           </View>
         ) : null}
       </ScrollView>
-
-      <TodayActivitiesModal
-        visible={activitiesOpen}
-        summary={activitySummary}
-        onClose={closeActivitiesModal}
-        onOpenMeds={openMedsFromActivities}
-        onOpenHydration={openHydrationFromActivities}
-      />
     </View>
   );
 }
@@ -5752,12 +5711,6 @@ const styles = StyleSheet.create({
     padding: HOME_TILE_GAP,
     gap: 0,
   },
-  prioritiesTray: {
-    borderRadius: 12,
-    paddingVertical: 14,
-    paddingHorizontal: 14,
-    gap: 10,
-  },
   priorityRow: {
     flexDirection: "row",
     alignItems: "flex-start",
@@ -5768,15 +5721,6 @@ const styles = StyleSheet.create({
     fontSize: FLARE_FONT_SIZE.muted,
     fontFamily: FLARE_FONT_FAMILY.regular,
     lineHeight: FLARE_LINE_HEIGHT.muted,
-  },
-  prioritiesTrayTopRow: {
-    flexDirection: "row",
-    alignItems: "flex-start",
-    gap: 8,
-  },
-  prioritiesTrayTopMain: {
-    flex: 1,
-    minWidth: 0,
   },
   prioritiesCaughtUp: {
     fontSize: FLARE_FONT_SIZE.muted,
@@ -5794,14 +5738,6 @@ const styles = StyleSheet.create({
   prioritiesShelfSection: {
     zIndex: 2,
     elevation: 2,
-  },
-  prioritiesTargetsLink: {
-    flexShrink: 0,
-  },
-  prioritiesTargetsLinkLabel: {
-    fontSize: FLARE_FONT_SIZE.muted,
-    lineHeight: FLARE_LINE_HEIGHT.muted,
-    fontFamily: FLARE_FONT_FAMILY.medium,
   },
   /** Same bottom margin as dashboard cards (`styles.card` / tracker trays) before the next shelf title. */
   toolsGridBlock: { marginBottom: HOME_TILE_GAP },
