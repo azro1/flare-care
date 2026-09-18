@@ -190,6 +190,13 @@ Right now news on home is **turned off** in the app, so you normally won’t see
 
 ## Looking ahead (not built yet)
 
+- **Going Out** — tiny “I'm going out” planner: where you’re going + a checklist from the user’s own prep profile (toilet access, meds, spare clothes, etc.). Not a giant IBD checklist. Plan: `plans/going-out.md`.
+- **Questions for my appointment** — quick notes during normal life (“Ask about my fatigue.”). Not medical advice — user-authored only. Plan: `plans/appointment-questions.md` (near-term candidate; hold for now).
+- **Private Support topics** — optional resources in Support only (sex & relationships, fertility & pregnancy, body image, talking to others about IBD). Not on the dashboard. Plan: `plans/private-support-topics.md`.
+- **IBD at work** — practical Support resource (reasonable adjustments, explaining IBD, toilet urgency, fatigue, appointments, sudden worsen). Plan: `plans/ibd-at-work.md`.
+- **My IBD (self-advocacy)** — user-built summary card (condition, treatment, team, key history). **User enters it themselves** — no medical-record import. Plan: `plans/my-ibd-self-advocacy.md`.
+- **What happens if…?** — section/card: who I contact (IBD team) + when to seek help (**clinically reviewed** guidance). Plan: `plans/what-happens-if.md`.
+- **Find a Toilet** — game-changer: usable-now UX; hard part is **freshness** (honest last-checked); v1 = GB Toilet Map → backend → map/list → Maps app; no 15-API mega system. Plan: `plans/find-a-toilet.md`.
 - **More sign-in OAuth** (e.g. Apple) — keep **email** as the main CTA; don’t stack many full-width OAuth buttons on the method screen (fingerprint quick-unlock sits at the bottom and will cover them). Prefer **“More ways to sign in”** → sheet with providers, or a compact icon row. Today: email code + Google only.
 
 ---

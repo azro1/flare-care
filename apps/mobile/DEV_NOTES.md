@@ -12,6 +12,35 @@ Long-lived conventions, “don’t forget / don’t duplicate,” SQL checklists
 
 ---
 
+## Product positioning — what FlareCare is
+
+**This is the FlareCare philosophy.** Use it when judging features, Support content, and “should we build X?” debates.
+
+- **Don’t compete with the giants.** Don’t try to be “the definitive IBD management platform.”
+- **Do be:** a real app built around the **little problems IBD can create in everyday life**.
+- **Look for the gaps** between what apps measure and what actually makes living with IBD difficult — that’s what FlareCare needs to do.
+- **Don’t just copy.** If we need a feature other apps also have, make it **ours** — same job, FlareCare angle, not a clone.
+
+### Mental model — friction → FlareCare job
+
+| Living with IBD | FlareCare leans into |
+|-----------------|----------------------|
+| unpredictability | planning |
+| fatigue | functioning |
+| urgency | freedom to go out |
+| embarrassment | communication |
+| complex care | self-advocacy |
+| information gaps | practical resources |
+| care fragmentation | knowing who/when to contact |
+
+Ship practical, everyday helpers — not a kitchen-sink clinical suite. If a feature only makes sense as “platform completeness,” it probably isn’t FlareCare. If it doesn’t map to a row above, ask whether it belongs.
+
+### Game changer — Find a Toilet
+
+Not “world’s biggest toilet database.” Design around **usable toilet** (open / usable now), not merely nearest — a closed loo 80m away is useless when desperate. Clear source/status; FlareCare never claims attributes are guaranteed. Plan: [`plans/find-a-toilet.md`](./plans/find-a-toilet.md).
+
+---
+
 ## Open — OS display / font size (accessibility)
 
 **Status (2026-09-07):** Brand wordmark locked with `allowFontScaling={false}` on `FlareBrandLockup` — splash/sign-in stopped clipping; full **XXL** pass looked solid across the app (quick check; wizards not deep-tested). Most layouts already flex OK.
@@ -927,7 +956,52 @@ alter table public.track_intake
 
 ## Looking ahead
 
-Product backlog for later — not implementation work yet. Ship notes go in **`CHANGELOG.md`**; this list is “we want to do”.
+Product backlog for later — not implementation work yet. Ship notes go in **`CHANGELOG.md`**; this list is “we want to do”. Feature plans live in **`plans/`**.
+
+### Everyday life — Going Out
+
+- **Idea:** tiny “I'm going out” planner (where + personalised prep checklist).
+- **Hook:** user builds their own preparation profile once — not another giant IBD checklist.
+- **Plan:** [`plans/going-out.md`](./plans/going-out.md). More sibling everyday-life ideas may follow.
+
+### Clinic prep — Questions for my appointment
+
+- **Idea:** quick capture during normal life (“Ask about my fatigue.”) — not generated medical advice.
+- **Hook:** thoughts saved in the moment → ready for the appointment, instead of blanking in the room.
+- **Plan:** [`plans/appointment-questions.md`](./plans/appointment-questions.md). Near-term candidate — hold until idea dump is done.
+
+### Support — Private topics (sensitive IBD life)
+
+- **Gap:** sex/relationships, embarrassment, social avoidance, explaining IBD; big info gaps on fertility/pregnancy/sexual health.
+- **Shape:** private, optional resources **inside Support only** — never a dashboard “Sex & Relationships” tile.
+- **Topics:** Sex & relationships · Fertility & pregnancy · Body image · Talking to others about IBD.
+- **Plan:** [`plans/private-support-topics.md`](./plans/private-support-topics.md). Go carefully.
+
+### Support — IBD at work
+
+- **Idea:** practical workplace resource (adjustments, explaining IBD, toilet urgency, fatigue, appointments, sudden worsen).
+- **Shape:** Support guide — not a dashboard feature or employer integration.
+- **Plan:** [`plans/ibd-at-work.md`](./plans/ibd-at-work.md).
+
+### Self-advocacy — My IBD card
+
+- **Idea:** compact “My IBD” summary (condition, diagnosed year, treatment, team, important history) for self-advocacy.
+- **Hard rule:** **user-authored only** — do not pull medical records / EHR. Not an official medical record; lawsuit risk if we over-claim or auto-import clinical data.
+- **Plan:** [`plans/my-ibd-self-advocacy.md`](./plans/my-ibd-self-advocacy.md).
+
+### Safety — What happens if…?
+
+- **Idea:** section/card — **Who I contact** (user IBD team) + **When I should seek help** (clinically reviewed guidance).
+- **Hard rule:** seek-help copy must be **clinically reviewed** — not AI freestyle. Contacts user-authored.
+- **Plan:** [`plans/what-happens-if.md`](./plans/what-happens-if.md).
+
+### Everyday urgency — Find a Toilet
+
+- **Game changer:** urgency UX — **usable** (open now), not merely nearest.
+- **Hard part:** **freshness** — be honest (last checked + “may have changed”); later simple **Report a problem** (closed / not accessible / incorrect).
+- **v1 path:** GB Toilet Map → FlareCare backend → map/list → Apple/Google Maps. **Do not** start with 15 APIs.
+- **Home:** My tools; `FindToiletScreen` + `lib/findToiletShared.ts`.
+- **Plan:** [`plans/find-a-toilet.md`](./plans/find-a-toilet.md).
 
 ### Auth — more OAuth providers
 

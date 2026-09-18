@@ -12,9 +12,13 @@ type OverflowItem = {
   route: string;
 };
 
+/**
+ * ⋮ menu — Settings / Support hub / chrome. Educational resources live under Support
+ * (What is IBD?, Nutrition Guide, …), not as app “Info”.
+ */
 const OVERFLOW_ITEMS: OverflowItem[] = [
   { id: "settings", label: "Settings", route: "Settings" },
-  { id: "info", label: "Info", route: "Info" },
+  { id: "support", label: "Support", route: "Support" },
   { id: "about", label: "About", route: "About" },
   { id: "help", label: "Help", route: "AccountHelp" },
 ];
@@ -22,7 +26,9 @@ const OVERFLOW_ITEMS: OverflowItem[] = [
 /** Routes where that menu entry is redundant (already on that screen). */
 const HIDE_ITEM_ON_ROUTE: Partial<Record<string, string[]>> = {
   Settings: ["settings"],
-  Info: ["info"],
+  Support: ["support"],
+  /** Legacy route name — hide Support while on old Info deep link if any. */
+  Info: ["support"],
   AccountHelp: ["help"],
   About: ["about"],
 };

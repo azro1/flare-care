@@ -4114,8 +4114,8 @@ function AccountLegalScreen() {
   );
 }
 
-/** Dashboard Info hub — What is IBD? + Nutrition guide (was the Info/Guides pill). */
-function InfoScreen() {
+/** Support hub — Settings-style card of educational / resource links. */
+function SupportScreen() {
   const navigation = useNavigation<any>();
   const c = useFlareColors();
   const bottomScrollInset = useBottomTabScrollInset();
@@ -4123,37 +4123,55 @@ function InfoScreen() {
   return (
     <ScrollView
       style={[styles.screen, { backgroundColor: c.screen }]}
-      contentContainerStyle={{ paddingBottom: bottomScrollInset + 24 }}
+      contentContainerStyle={[styles.accountScrollContent, { paddingBottom: bottomScrollInset + 16 }]}
     >
-      <View style={[logHistoryCardStyles.trackerCard, { backgroundColor: c.card }]}>
-        <LogHistoryList
-          items={[
-            buildBrowseLogRowItem({
-              id: "ibd",
-              title: "What is IBD?",
-              subtitle: "Understand Crohn's and ulcerative colitis",
-              accessibilityLabel: "Open What is IBD guide",
-            }),
-            buildBrowseLogRowItem({
-              id: "nutrition",
-              title: "Nutrition Guide",
-              subtitle: "Food Categories and IBD Diet Tips",
-              accessibilityLabel: "Open Nutrition Guide",
-            }),
-          ]}
-          renderSubtitle={(item) =>
-            item.subtitle ? (
+      <LogHistoryCard style={{ padding: CARD_INNER_PADDING + 2, gap: 28 }}>
+        <View style={styles.settingsCardSection}>
+          <Text style={[styles.settingsCardSectionLabel, { color: c.textMuted }]}>
+            Educational resources
+          </Text>
+          <Pressable
+            accessibilityRole="button"
+            accessibilityLabel="Open What is IBD guide"
+            onPress={() => navigation.navigate("Ibd")}
+            style={styles.settingToggleRow}
+          >
+            <View style={styles.settingToggleTextCol}>
               <Text
-                style={[logHistoryListStyles.logSecondaryWhen, { color: c.textMuted }]}
-                numberOfLines={1}
+                style={[styles.settingToggleTitle, styles.settingsCardTitle, { color: c.text }]}
               >
-                {item.subtitle}
+                What is IBD?
               </Text>
-            ) : null
-          }
-          onPressItem={(rowId) => navigation.navigate(rowId === "ibd" ? "Ibd" : "NutritionGuide")}
-        />
-      </View>
+              <Text
+                style={[styles.settingToggleHint, styles.settingsCardHint, { color: c.textMuted }]}
+              >
+                Understand Crohn&apos;s and ulcerative colitis
+              </Text>
+            </View>
+            <FlareLucideIcon icon={FLARE_CHROME_LUCIDE.forward} size={NAV_ROW_CHEVRON_SIZE} color={c.text} />
+          </Pressable>
+          <Pressable
+            accessibilityRole="button"
+            accessibilityLabel="Open Nutrition Guide"
+            onPress={() => navigation.navigate("NutritionGuide")}
+            style={styles.settingToggleRow}
+          >
+            <View style={styles.settingToggleTextCol}>
+              <Text
+                style={[styles.settingToggleTitle, styles.settingsCardTitle, { color: c.text }]}
+              >
+                Nutrition Guide
+              </Text>
+              <Text
+                style={[styles.settingToggleHint, styles.settingsCardHint, { color: c.textMuted }]}
+              >
+                Food categories and IBD diet tips
+              </Text>
+            </View>
+            <FlareLucideIcon icon={FLARE_CHROME_LUCIDE.forward} size={NAV_ROW_CHEVRON_SIZE} color={c.text} />
+          </Pressable>
+        </View>
+      </LogHistoryCard>
     </ScrollView>
   );
 }
@@ -4748,6 +4766,7 @@ function AppTabs({
       AccountHelp: "Help",
       Settings: "Settings",
       Info: "Info",
+      Support: "Support",
       Reminders: "Reminders",
       Hydration: "My Hydration",
       Meds: "My Meds",
@@ -5007,7 +5026,8 @@ function AppTabs({
               )}
             </AppStack.Screen>
             <AppStack.Screen name="Settings">{() => <SettingsScreen />}</AppStack.Screen>
-            <AppStack.Screen name="Info">{() => <InfoScreen />}</AppStack.Screen>
+            <AppStack.Screen name="Support">{() => <SupportScreen />}</AppStack.Screen>
+            <AppStack.Screen name="Info">{() => <SupportScreen />}</AppStack.Screen>
             <AppStack.Screen name="AccountInfo">{() => <AccountInfoScreen user={user} />}</AppStack.Screen>
             <AppStack.Screen name="AccountPersonalDetails">
               {() => <AccountPersonalDetailsScreen user={user} />}
