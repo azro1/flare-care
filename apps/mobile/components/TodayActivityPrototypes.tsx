@@ -1532,7 +1532,6 @@ const styles = StyleSheet.create({
   },
   inlinePage: {
     alignItems: "center",
-    paddingRight: 28,
   },
   inlineTitle: {
     alignSelf: "stretch",
