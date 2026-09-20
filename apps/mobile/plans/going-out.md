@@ -1,29 +1,14 @@
-# Plan: Going Out
+# Plan: Going Out (under Out & About)
 
-**Status:** Idea — not built. Fits FlareCare philosophy (everyday IBD friction, not a giant platform checklist).
+**Status:** Shipped v1 — Home → My tools → Out & About → Going Out. User prep profile + personalised checklist.
 
-**Doc home:** `apps/mobile/plans/`. Short backlog pointer also under **Looking ahead** in `DEV_NOTES.md` / `FEATURES.md`.
+**Doc home:** `apps/mobile/plans/`. Umbrella: Out & About (Find a Toilet / Travel / etc. can land later).
 
 ---
 
 ## Idea
 
-A tiny practical planner for leaving the house:
-
-**Going out?**
-
-**Where are you going?**  
-📍 [Place]
-
-Then FlareCare helps prepare a personalised **“I'm going out”** checklist from items the user has chosen to include, e.g.:
-
-- toilet access  
-- medication  
-- spare clothes  
-- wipes  
-- supplies  
-- food/drink  
-- emergency contact  
+A tiny practical planner for leaving the house — personalised checklist from items the user chose once.
 
 ---
 
@@ -31,11 +16,25 @@ Then FlareCare helps prepare a personalised **“I'm going out”** checklist fr
 
 **Not** the checklist itself.
 
-The user creates their own **preparation profile once**, rather than having another giant IBD checklist shoved in their face.
+The user creates their own **preparation profile once**, rather than another giant IBD checklist shoved in their face.
 
 ---
 
-## Notes / open
+## v1 shipped
 
-- Likely Support / practical everyday tool territory (not a clinical logger).
-- More related everyday-life ideas may land here or as sibling plans.
+| Piece | Choice |
+|--------|--------|
+| **Umbrella** | Home → **My tools** → **Out & About** hub |
+| **Feature** | **Going Out** |
+| **Profile items** | Short suggestions (Toilet access · Medication · Spare clothes · Wipes / tissues · Food / drink · Hand sanitiser) + **Add item** for unlimited custom entries (edit/delete). Defaults = all suggestions on. |
+| **Storage** | Supabase `going_out_profiles` (one row per user). Legacy AsyncStorage migrated once on load. |
+| **Outing UI** | Tickable checklist from profile; Edit prep profile |
+
+Later under Out & About (not decided now): Find a Toilet, Travel, Work / University, etc.
+
+---
+
+## Notes
+
+- Checklist items are **user reminders**, not medical advice.
+- Related philosophy: urgency → freedom to go out (`DEV_NOTES` mental model).

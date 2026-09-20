@@ -4,7 +4,13 @@
  */
 import React, { useMemo } from "react";
 import { Pressable, StyleSheet, Text, View } from "react-native";
-import { FLARE_FONT_FAMILY, FLARE_FONT_SIZE, HOME_TILE_GAP } from "../lib/layoutConstants";
+import {
+  FLARE_FONT_FAMILY,
+  FLARE_FONT_SIZE,
+  HOME_FEATURE_TILE_MIN_HEIGHT,
+  HOME_FEATURE_TILE_RADIUS,
+  HOME_TILE_GAP,
+} from "../lib/layoutConstants";
 import { useFlareColors } from "../theme";
 
 export type HomeFeatureGridTile = {
@@ -21,13 +27,13 @@ type Props = {
 
 const TITLE_LINE_HEIGHT = 18;
 
-function columnWidth(pageWidth: number): number {
+export function homeFeatureTileColumnWidth(pageWidth: number): number {
   return Math.max(0, Math.floor((pageWidth - HOME_TILE_GAP) / 2));
 }
 
 export function HomeFeatureTileGrid({ tiles, pageWidth, onPressTile }: Props) {
   const c = useFlareColors();
-  const tileW = useMemo(() => columnWidth(pageWidth), [pageWidth]);
+  const tileW = useMemo(() => homeFeatureTileColumnWidth(pageWidth), [pageWidth]);
 
   return (
     <View style={[styles.grid, { width: pageWidth }]}>
@@ -64,13 +70,13 @@ const styles = StyleSheet.create({
   },
   tile: {
     flexDirection: "column",
-    borderRadius: 12,
+    borderRadius: HOME_FEATURE_TILE_RADIUS,
     paddingVertical: 10,
     paddingHorizontal: 10,
     alignItems: "stretch",
     justifyContent: "center",
     overflow: "hidden",
-    minHeight: 116,
+    minHeight: HOME_FEATURE_TILE_MIN_HEIGHT,
   },
   body: {
     flexGrow: 1,

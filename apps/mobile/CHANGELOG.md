@@ -4,6 +4,14 @@ Shipped / unreleased UI and behaviour updates for the Expo app (`apps/mobile`). 
 
 ## Unreleased
 
+### Support — IBD at work (2026-09)
+
+- Support → **Practical support** → **IBD at work**: one guide screen, six topic accordions. Copy and links from Crohn’s & Colitis UK, Acas, and GOV.UK only (not invented legal/medical advice).
+
+### My tools — Out & About / Going Out (2026-09)
+
+- Home → **My tools** → **Out & About** hub → **Going Out**: user builds a checklist once; personalised tick list when leaving. Stored in Supabase `going_out_profiles` (account-scoped). Umbrella ready for Find a Toilet / Travel later.
+
 ### Guides & legal accordion (2026-09)
 
 - Shared **`NumberedAccordion`** for scan-first sections.

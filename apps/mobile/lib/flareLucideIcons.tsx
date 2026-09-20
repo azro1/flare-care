@@ -38,6 +38,7 @@ import {
   Info,
   List,
   Lock,
+  Luggage,
   Mail,
   Moon,
   Newspaper,
@@ -57,6 +58,7 @@ import {
   TrendingUp,
   Utensils,
   User,
+  Wrench,
   X,
   Clock,
   type LucideIcon,
@@ -87,6 +89,10 @@ export const FLARE_FEATURE_LUCIDE = {
   output: Droplet,
   /** Food & Drink intake diary (Tools). */
   intake: Utensils,
+  /** Out & About hub (Tools) — Going Out and later toilet/travel helpers. */
+  outAbout: Luggage,
+  /** My tools hub entry on home. */
+  tools: Wrench,
   /** Logging trends over time (My health). */
   trends: TrendingUp,
 } as const;
@@ -120,6 +126,9 @@ export const FLARE_CHROME_LUCIDE = {
   checkCircle: CircleCheck,
   circle: Circle,
   edit: SquarePen,
+  /** Row actions (e.g. Going Out custom items) — same glyphs as edit/delete. */
+  rowEdit: SquarePen,
+  rowDelete: Trash2,
   delete: Trash2,
   add: Plus,
   /** Header help — ? (opens modal). */

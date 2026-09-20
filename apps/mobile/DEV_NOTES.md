@@ -8,6 +8,35 @@ Long-lived conventions, “don’t forget / don’t duplicate,” SQL checklists
 **Not for:** same-day working list → **`todays_notes.md`**.  
 **Not for:** how to run the app → **`README.md`**.
 
+---
+
+## HARD RULE — health / legal content (public app)
+
+**Use authoritative UK sources for health and legal information — never rely on general knowledge or invent guidance.**
+
+- **Allowed sources (examples):** Crohn’s & Colitis UK, NHS / NHS 111 guidance pages, GOV.UK, Acas, Equality and Human Rights Commission, legislation.gov.uk — cite the page and prefer linking to it.
+- **Not allowed:** AI “general knowledge,” paraphrased legal advice, freestyle medical triage, or anything that could be read as FlareCare telling someone what to do medically or legally beyond what a named source states.
+- **Product copy** (Support guides, What happens if…, IBD at work, etc.) must be traceable to those sources. If you cannot find a source, **do not ship the claim** — ask Simon.
+- FlareCare helps people **understand and navigate**; it does **not** replace clinicians, lawyers, or official advice. Keep that clear in-product where content is sensitive.
+
+Breaking this rule risks real harm and legal exposure. Treat it as non-negotiable for anything that goes public.
+
+---
+
+## HARD RULE — no hardcoding (if it can be avoided)
+
+**Do not hardcode values that already have (or should have) a shared token / constant / helper.**
+
+- **Typography / spacing / chrome sizes:** `layoutConstants.ts` (`FLARE_FONT_SIZE`, `FLARE_LINE_HEIGHT`, `HOME_TILE_GAP`, tray pads, nav chevrons, etc.) — don’t invent one-off `fontSize: 13` / `padding: 14` in screens.
+- **Colours:** `useFlareColors()` / theme tokens — not one-off hex in components.
+- **Copy shared across screens:** shared libs (e.g. guide copy modules), not duplicated string literals.
+- **Feature behaviour / URLs / table names:** existing shared modules (`supabase` `TABLES`, env bases, etc.).
+- If a token doesn’t exist yet and the value will be reused or should match the design system — **add the token first**, then use it.
+
+Hardcoding is allowed only when something is truly one-off and cannot sensibly live in shared constants — ask if unsure.
+
+---
+
 **Brain-full cheat sheet — mobile Email:** phone → `EXPO_PUBLIC_WEB_API_BASE_URL` (live = `https://flare-care.vercel.app`) → web route on **`master`**/Vercel → Resend. Details under **Recurring Medical Supplies → Mobile Email → web**.
 
 ---
@@ -991,17 +1020,50 @@ create policy "appointment_questions_delete_own"
   using (auth.uid() = user_id);
 ```
 
+### Going Out checklist (`going_out_profiles`)
+
+One row per user — selected suggestion/custom ids + custom item labels. Run in the Supabase SQL editor before testing:
+
+```sql
+create table if not exists public.going_out_profiles (
+  user_id uuid primary key references auth.users (id) on delete cascade,
+  selected_ids jsonb not null default '[]'::jsonb,
+  custom_items jsonb not null default '[]'::jsonb,
+  created_at timestamptz not null default now(),
+  updated_at timestamptz not null default now()
+);
+
+alter table public.going_out_profiles enable row level security;
+
+create policy "going_out_profiles_select_own"
+  on public.going_out_profiles for select
+  using (auth.uid() = user_id);
+
+create policy "going_out_profiles_insert_own"
+  on public.going_out_profiles for insert
+  with check (auth.uid() = user_id);
+
+create policy "going_out_profiles_update_own"
+  on public.going_out_profiles for update
+  using (auth.uid() = user_id)
+  with check (auth.uid() = user_id);
+
+create policy "going_out_profiles_delete_own"
+  on public.going_out_profiles for delete
+  using (auth.uid() = user_id);
+```
+
 ---
 
 ## Looking ahead
 
 Product backlog for later — not implementation work yet. Ship notes go in **`CHANGELOG.md`**; this list is “we want to do”. Feature plans live in **`plans/`**.
 
-### Everyday life — Going Out
+### Everyday life — Out & About / Going Out
 
-- **Idea:** tiny “I'm going out” planner (where + personalised prep checklist).
-- **Hook:** user builds their own preparation profile once — not another giant IBD checklist.
-- **Plan:** [`plans/going-out.md`](./plans/going-out.md). More sibling everyday-life ideas may follow.
+- **Shipped (v1):** Home → **My tools** → **Out & About** hub → **Going Out** (user checklist → personalised leave-home ticks). Storage: Supabase `going_out_profiles` (SQL above). Legacy AsyncStorage migrated once on load.
+- **Later under the umbrella (not built):** Find a Toilet, Travel, Work / University, etc.
+- **Plan:** [`plans/going-out.md`](./plans/going-out.md).
 
 ### Clinic prep — Questions for my appointment
 
@@ -1018,8 +1080,7 @@ Product backlog for later — not implementation work yet. Ship notes go in **`C
 
 ### Support — IBD at work
 
-- **Idea:** practical workplace resource (adjustments, explaining IBD, toilet urgency, fatigue, appointments, sudden worsen).
-- **Shape:** Support guide — not a dashboard feature or employer integration.
+- **Shipped (v1):** Support → **Practical support** → IBD at work. One guide screen; six topic accordions. Not a tracker; not legal/medical advice.
 - **Plan:** [`plans/ibd-at-work.md`](./plans/ibd-at-work.md).
 
 ### Self-advocacy — My IBD card

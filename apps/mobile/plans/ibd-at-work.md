@@ -1,6 +1,6 @@
 # Plan: IBD at work (Support resource)
 
-**Status:** Idea — not built. Practical Support resource — same shelf as educational guides / private topics, not a dashboard feature.
+**Status:** Shipped v1 — Support → Practical support → one guide screen (topic list). Not a tracker or employer integration.
 
 **Doc home:** `apps/mobile/plans/`. Short backlog pointer also under **Looking ahead** in `DEV_NOTES.md` / `FEATURES.md`.
 
@@ -27,8 +27,18 @@
 
 ---
 
+## v1 shipped
+
+| Piece | Choice |
+|--------|--------|
+| **Entry** | Support → Practical support → IBD at work |
+| **Screen** | Collapsing title + `NumberedAccordion` (same pattern as Nutrition / What is IBD?) |
+| **Copy** | `lib/ibdAtWorkCopy.ts` — summary + points + tappable Sources from Crohn’s & Colitis UK, Acas, GOV.UK only |
+| **Tone** | Practical; not legal/medical advice; no invented guidance beyond those sources |
+
+---
+
 ## Notes / open
 
-- May sit beside What is IBD? / Nutrition Guide, or under a future “Practical support” / life-areas grouping.  
-- Tone: practical and respectful; clear “not legal/medical advice” where needed (especially adjustments / employment rights).  
 - Related ideas: Going Out, Private topics — all Support/life-side, not clinical logging.
+- Later: deeper UK links (ACAS / Access to Work) as tappable URLs if useful.

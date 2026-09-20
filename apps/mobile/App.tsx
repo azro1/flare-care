@@ -67,6 +67,7 @@ import { SlideUpSheet } from "./components/SlideUpSheet";
 import { BiometricLockScreen } from "./components/BiometricLockScreen";
 import { TodayPrioritiesExpandableTray } from "./components/TodayActivityPrototypes";
 import { HomeCareNextCard } from "./components/HomeCareNextCard";
+import { HomeToolsEntryCard } from "./components/HomeToolsEntryCard";
 import { HomeFeatureTileGrid, type HomeFeatureGridTile } from "./components/HomeFeatureTileGrid";
 import {
   authenticate,
@@ -112,6 +113,11 @@ import {
   NUTRITION_IBD_SAFE,
   NUTRITION_QUICK_TIPS,
 } from "./lib/nutritionGuideCopy";
+import {
+  IBD_AT_WORK_INTRO,
+  IBD_AT_WORK_NOTE,
+  IBD_AT_WORK_TOPICS,
+} from "./lib/ibdAtWorkCopy";
 import { HYDRATION_TARGET, saveHydrationReset } from "./lib/hydrationShared";
 import { EMPTY_ACTIVITY_INSIGHT } from "./lib/activityInsights";
 import {
@@ -128,7 +134,10 @@ import {
   FLARE_LINE_HEIGHT,
   HELP_NAV_LINK_LABEL,
   HELP_NAV_LINK_PRESS,
+  HOME_FEATURE_TILE_ICON_SIZE,
   HOME_TILE_GAP,
+  DASHBOARD_SHELF_AFTER_CARD,
+  DASHBOARD_SHELF_TITLE_BLOCK,
   STACKED_LINE_GAP,
   SCREEN_EDGE_PADDING,
   FULL_WIDTH_CTA_EDGE_PADDING,
@@ -252,6 +261,9 @@ import { MedicalSuppliesScreen } from "./screens/MedicalSuppliesScreen";
 import { MedicalSupplyOrderScreen } from "./screens/MedicalSupplyOrderScreen";
 import { MedicalSupplyRequestScreen } from "./screens/MedicalSupplyRequestScreen";
 import { MedicalSuppliesSetupRoute } from "./screens/MedicalSuppliesSetupScreen";
+import { OutAboutScreen } from "./screens/OutAboutScreen";
+import { GoingOutScreen } from "./screens/GoingOutScreen";
+import { MyToolsScreen } from "./screens/MyToolsScreen";
 import {
   buildTodayPriorities,
   findNearTermAppointment,
@@ -1569,8 +1581,6 @@ function ProfileSetupScreen({ user, onComplete }: { user: SessionUser; onComplet
   );
 }
 
-/** Icons inside dashboard home tiles (Daily Check-in + More). */
-const HOME_TILE_ICON_SIZE_CHECKIN = 28;
 /** Default home grid / check-in tile height (`styles.homeDashboardTile`). */
 const HOME_DASHBOARD_TILE_HEIGHT = 116;
 
@@ -1810,39 +1820,19 @@ function DashboardScreen({ user }: { user: SessionUser }) {
       id: "hydration",
       label: "My Hydration",
       screen: "Hydration",
-      icon: <FlareLucideIcon icon={FLARE_FEATURE_LUCIDE.hydration} size={HOME_TILE_ICON_SIZE_CHECKIN} color={c.primary} />,
+      icon: <FlareLucideIcon icon={FLARE_FEATURE_LUCIDE.hydration} size={HOME_FEATURE_TILE_ICON_SIZE} color={c.primary} />,
     },
     {
       id: "bowel",
       label: "Bowel Movements",
       screen: "Bowel",
-      icon: <FlareLucideIcon icon={FLARE_FEATURE_LUCIDE.bowel} size={HOME_TILE_ICON_SIZE_CHECKIN} color={c.primary} />,
+      icon: <FlareLucideIcon icon={FLARE_FEATURE_LUCIDE.bowel} size={HOME_FEATURE_TILE_ICON_SIZE} color={c.primary} />,
     },
     {
       id: "meds",
       label: "My Meds",
       screen: "Meds",
-      icon: <FlareLucideIcon icon={FLARE_FEATURE_LUCIDE.meds} size={HOME_TILE_ICON_SIZE_CHECKIN} color={c.primary} />,
-    },
-  ], [c.primary]);
-  const toolsFeatureTiles = useMemo((): DashboardFeatureTile[] => [
-    {
-      id: "weight",
-      label: "My Weight",
-      screen: "Weight",
-      icon: <FlareLucideIcon icon={FLARE_FEATURE_LUCIDE.weight} size={HOME_TILE_ICON_SIZE_CHECKIN} color={c.primary} />,
-    },
-    {
-      id: "output",
-      label: "Fluid Output",
-      screen: "Output",
-      icon: <FlareLucideIcon icon={FLARE_FEATURE_LUCIDE.output} size={HOME_TILE_ICON_SIZE_CHECKIN} color={c.primary} />,
-    },
-    {
-      id: "intake",
-      label: "Food & Drink",
-      screen: "Intake",
-      icon: <FlareLucideIcon icon={FLARE_FEATURE_LUCIDE.intake} size={HOME_TILE_ICON_SIZE_CHECKIN} color={c.primary} />,
+      icon: <FlareLucideIcon icon={FLARE_FEATURE_LUCIDE.meds} size={HOME_FEATURE_TILE_ICON_SIZE} color={c.primary} />,
     },
   ], [c.primary]);
   const openSuppliesFromHome = useCallback(() => {
@@ -2151,7 +2141,7 @@ function DashboardScreen({ user }: { user: SessionUser }) {
           {weatherMeta ? (
             <View style={styles.weatherHero}>
               <View style={styles.weatherIconWrap}>
-                <FlareLucideIcon icon={weatherIcon} size={HOME_TILE_ICON_SIZE_CHECKIN} color={c.primary} />
+                <FlareLucideIcon icon={weatherIcon} size={HOME_FEATURE_TILE_ICON_SIZE} color={c.primary} />
               </View>
               <View style={styles.weatherLeft}>
                 <Text style={[styles.weatherCity, { color: c.textSecondary }]}>{weatherMeta.city}</Text>
@@ -2202,7 +2192,7 @@ function DashboardScreen({ user }: { user: SessionUser }) {
                 variant="scroll"
                 isLastInScrollRow={index === dailyCheckinCards.length - 1}
                 onPress={() => navigation.navigate(item.goTo)}
-                icon={<FlareLucideIcon icon={item.lucide} size={HOME_TILE_ICON_SIZE_CHECKIN} color={c.primary} />}
+                icon={<FlareLucideIcon icon={item.lucide} size={HOME_FEATURE_TILE_ICON_SIZE} color={c.primary} />}
               />
             ))}
           </ScrollView>
@@ -2280,7 +2270,7 @@ function DashboardScreen({ user }: { user: SessionUser }) {
             if (w > 0 && w !== featureGridW) setFeatureGridW(w);
           }}
         >
-          <Text style={[styles.dashboardSubsectionTitleLeft, { color: c.text }]}>My health</Text>
+          <View style={styles.dashboardShelfTitleSpacer} accessibilityElementsHidden importantForAccessibility="no" />
           <View style={styles.toolsGridBlock}>
             {featureGridW > 0 ? (
               <HomeFeatureTileGrid
@@ -2312,15 +2302,12 @@ function DashboardScreen({ user }: { user: SessionUser }) {
             !SHOW_DASHBOARD_NEWS ? styles.dashboardShelfSectionLast : null,
           ]}
         >
-          <Text style={[styles.dashboardSubsectionTitleLeft, { color: c.text }]}>My tools</Text>
+          <View style={styles.dashboardShelfTitleSpacer} accessibilityElementsHidden importantForAccessibility="no" />
           <View style={SHOW_DASHBOARD_NEWS ? styles.toolsGridBlockFlushBottom : styles.toolsGridBlock}>
-            {featureGridW > 0 ? (
-              <HomeFeatureTileGrid
-                tiles={toolsFeatureTiles}
-                pageWidth={featureGridW}
-                onPressTile={pressFeatureTile}
-              />
-            ) : null}
+            <HomeToolsEntryCard
+              pageWidth={featureGridW}
+              onPress={() => navigation.navigate("MyTools")}
+            />
           </View>
         </View>
 
@@ -3854,6 +3841,59 @@ function NutritionGuideScreen() {
   );
 }
 
+/** Support — practical workplace topics (not a tracker / not legal advice). */
+function IbdAtWorkScreen() {
+  const c = useFlareColors();
+  const insets = useSafeAreaInsets();
+  const bottomScrollInset = useBottomTabScrollInset();
+
+  const sections = [
+    ...IBD_AT_WORK_TOPICS.map((topic) => ({
+      id: topic.id,
+      title: topic.title,
+      body: (
+        <>
+          <GuideBodyText>{topic.summary}</GuideBodyText>
+          <View style={styles.guideAccordionListAfterSupport}>
+            <IbdBulletList items={topic.points} />
+          </View>
+          <Text style={[styles.guideAccordionSubhead, styles.guideAccordionIbdFoodGap, { color: c.text }]}>
+            Sources
+          </Text>
+          <View style={styles.guideAccordionListAfterSupport}>
+            {topic.resources.map((resource) => (
+              <Pressable
+                key={resource.url}
+                accessibilityRole="link"
+                accessibilityLabel={`Open ${resource.label}`}
+                onPress={() => Linking.openURL(resource.url).catch(() => {})}
+                style={({ pressed }) => [styles.ibdAtWorkLinkRow, pressed && { opacity: 0.7 }]}
+              >
+                <Text style={[styles.ibdAtWorkLinkText, { color: c.primary }]}>{resource.label}</Text>
+              </Pressable>
+            ))}
+          </View>
+        </>
+      ),
+    })),
+    {
+      id: "note",
+      title: "Note",
+      body: <GuideBodyText>{IBD_AT_WORK_NOTE}</GuideBodyText>,
+    },
+  ];
+
+  return (
+    <CollapsingTitleScrollScreen
+      title="IBD at work"
+      titlePreset="informational"
+      bottomInset={Math.max(insets.bottom, 16) + 48 + bottomScrollInset}
+    >
+      <NumberedAccordion numbered={false} intro={IBD_AT_WORK_INTRO} sections={sections} />
+    </CollapsingTitleScrollScreen>
+  );
+}
+
 function AboutScreen() {
   const c = useFlareColors();
   const insets = useSafeAreaInsets();
@@ -4166,6 +4206,32 @@ function SupportScreen() {
                 style={[styles.settingToggleHint, styles.settingsCardHint, { color: c.textMuted }]}
               >
                 Food categories and IBD diet tips
+              </Text>
+            </View>
+            <FlareLucideIcon icon={FLARE_CHROME_LUCIDE.forward} size={NAV_ROW_CHEVRON_SIZE} color={c.text} />
+          </Pressable>
+        </View>
+
+        <View style={styles.settingsCardSection}>
+          <Text style={[styles.settingsCardSectionLabel, { color: c.textMuted }]}>
+            Practical support
+          </Text>
+          <Pressable
+            accessibilityRole="button"
+            accessibilityLabel="Open IBD at work guide"
+            onPress={() => navigation.navigate("IbdAtWork")}
+            style={styles.settingToggleRow}
+          >
+            <View style={styles.settingToggleTextCol}>
+              <Text
+                style={[styles.settingToggleTitle, styles.settingsCardTitle, { color: c.text }]}
+              >
+                IBD at work
+              </Text>
+              <Text
+                style={[styles.settingToggleHint, styles.settingsCardHint, { color: c.textMuted }]}
+              >
+                Adjustments, toilet urgency, fatigue, and appointments
               </Text>
             </View>
             <FlareLucideIcon icon={FLARE_CHROME_LUCIDE.forward} size={NAV_ROW_CHEVRON_SIZE} color={c.text} />
@@ -4745,6 +4811,7 @@ function AppTabs({
     const isAbout = route.name === "About";
     const isIbd = route.name === "Ibd";
     const isNutritionGuide = route.name === "NutritionGuide";
+    const isIbdAtWork = route.name === "IbdAtWork";
     const isLegalDocument = route.name === "LegalDocument";
     const isAccount = route.name === "Account";
     const isLogs = route.name === "Logs";
@@ -4767,6 +4834,9 @@ function AppTabs({
       Settings: "Settings",
       Info: "Info",
       Support: "Support",
+      OutAbout: "Out & About",
+      GoingOut: "Going Out",
+      MyTools: "My tools",
       Reminders: "Reminders",
       Hydration: "My Hydration",
       Meds: "My Meds",
@@ -4840,7 +4910,10 @@ function AppTabs({
       route.name === "MedicationLogDetail" ||
       route.name === "MedicalSupplies" ||
       route.name === "MedicalSuppliesSetup" ||
-      route.name === "MedicalSupplyRequest";
+      route.name === "MedicalSupplyRequest" ||
+      route.name === "MyTools" ||
+      route.name === "OutAbout" ||
+      route.name === "GoingOut";
 
     const headerRightContent = route.name === "BristolGuide" ? (
       <InfoHintButton
@@ -4881,6 +4954,8 @@ function AppTabs({
             ? ""
             : isNutritionGuide
             ? ""
+            : isIbdAtWork
+            ? ""
             : isLegalDocument
               ? ""
             : isAccount
@@ -4916,7 +4991,7 @@ function AppTabs({
                     ? String((route.params as { orderName?: string } | undefined)?.orderName ?? "").trim() ||
                       "Order"
                     : titleForRoute[route.name] ?? "",
-      headerTitleAlign: "center" as const,
+      headerTitleAlign: "center",
       headerLargeTitleEnabled: false,
       headerLargeTitleShadowVisible: false,
       headerStyle: { backgroundColor: colors.screen },
@@ -5012,6 +5087,10 @@ function AppTabs({
             <AppStack.Screen name="Reminders">{() => <NotificationsScreen user={user} />}</AppStack.Screen>
             <AppStack.Screen name="Ibd">{() => <IbdScreen />}</AppStack.Screen>
             <AppStack.Screen name="NutritionGuide">{() => <NutritionGuideScreen />}</AppStack.Screen>
+            <AppStack.Screen name="IbdAtWork">{() => <IbdAtWorkScreen />}</AppStack.Screen>
+            <AppStack.Screen name="OutAbout">{() => <OutAboutScreen />}</AppStack.Screen>
+            <AppStack.Screen name="GoingOut">{() => <GoingOutScreen userId={user.id} />}</AppStack.Screen>
+            <AppStack.Screen name="MyTools">{() => <MyToolsScreen />}</AppStack.Screen>
             <AppStack.Screen name="LatestNews">{() => <LatestNewsScreen user={user} />}</AppStack.Screen>
             <AppStack.Screen name="Account">
               {() => (
@@ -5723,7 +5802,9 @@ const styles = StyleSheet.create({
   /** Same rhythm as greeting Card → Daily Check-in (card mb 12 + title mt 10). */
   dashboardShelfBeforeTitle: { marginTop: 12 },
   /** Previous block already has card mb 12; title/header keeps mt 10 — +6 breathes between home shelves. */
-  dashboardShelfAfterCard: { marginTop: 6 },
+  dashboardShelfAfterCard: { marginTop: DASHBOARD_SHELF_AFTER_CARD },
+  /** Untitled shelf — same height as a subsection title band, no mark. */
+  dashboardShelfTitleSpacer: { height: DASHBOARD_SHELF_TITLE_BLOCK },
   dashboardShelfSectionLast: { marginBottom: 8 },
   prioritiesCard: {
     marginTop: 0,
@@ -6182,6 +6263,15 @@ const styles = StyleSheet.create({
     lineHeight: FLARE_LINE_HEIGHT.body,
     fontFamily: "Inter_700Bold",
     textAlign: "left",
+  },
+  ibdAtWorkLinkRow: {
+    paddingVertical: 6,
+  },
+  ibdAtWorkLinkText: {
+    fontSize: FLARE_FONT_SIZE.muted,
+    lineHeight: FLARE_LINE_HEIGHT.muted,
+    fontFamily: FLARE_FONT_FAMILY.medium,
+    textDecorationLine: "underline",
   },
   aboutBody: { fontSize: 13, lineHeight: 20, marginBottom: 12 },
   aboutBodyLast: { fontSize: 13, lineHeight: 20, marginBottom: 0 },

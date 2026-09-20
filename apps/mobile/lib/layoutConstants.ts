@@ -99,6 +99,15 @@ export const EMPTY_TRAY_PADDING = 14;
 /** Space between sibling home tiles: Daily Check-in scroll + More grid. */
 export const HOME_TILE_GAP = 12;
 
+/** Lucide size on home feature tiles (My health / My tools grid). */
+export const HOME_FEATURE_TILE_ICON_SIZE = 28;
+
+/** Corner radius for home feature tiles. */
+export const HOME_FEATURE_TILE_RADIUS = 12;
+
+/** Min height for home feature tiles (My health grid + tools entry). */
+export const HOME_FEATURE_TILE_MIN_HEIGHT = 116;
+
 /**
  * Digits optically read larger than letters at muted (13).
  * Use caption (12) for values that contain a number, date, or time.
@@ -258,9 +267,20 @@ export const CARD_SECTION_INNER_GAP = 12;
  */
 export const DASHBOARD_BLOCK_GAP =
   CARD_SECTION_INNER_GAP + SECTION_TITLE_MARGIN_TOP + SECTION_TITLE_MARGIN_BOTTOM;
-/** Extra top inset when the previous block already has the 12px bottom margin (replaces a missing title). */
-export const DASHBOARD_UNTITLED_AFTER_BLOCK =
-  SECTION_TITLE_MARGIN_TOP + SECTION_TITLE_MARGIN_BOTTOM;
+
+/** Shelf stack: previous block already has bottom margin; titled shelves add this before the title. */
+export const DASHBOARD_SHELF_AFTER_CARD = 6;
+
+/** Subsection title band — mt + line box + mb (`dashboardSubsectionTitleLeft`). */
+export const DASHBOARD_SHELF_TITLE_BLOCK =
+  SECTION_TITLE_MARGIN_TOP + FLARE_LINE_HEIGHT.subhead + SECTION_TITLE_MARGIN_BOTTOM;
+
+/**
+ * Content → content gap on a titled shelf (prev `HOME_TILE_GAP` mb + after-card + title band).
+ * Untitled shelves use an empty spacer of `DASHBOARD_SHELF_TITLE_BLOCK` so the total matches.
+ */
+export const DASHBOARD_SHELF_CONTENT_GAP =
+  HOME_TILE_GAP + DASHBOARD_SHELF_AFTER_CARD + DASHBOARD_SHELF_TITLE_BLOCK;
 
 /** Floating instruction cards — dashboard welcome + future per-screen tips. */
 export const INSTRUCTION_CARD_RADIUS = 14;

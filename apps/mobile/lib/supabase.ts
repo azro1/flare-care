@@ -53,4 +53,5 @@ export const TABLES = {
   DAILY_WELLBEING: "daily_wellbeing",
   MEDICAL_SUPPLIES: "medical_supplies",
   MEDICAL_SUPPLY_KITS: "medical_supply_kits",
+  GOING_OUT_PROFILES: "going_out_profiles",
 } as const;

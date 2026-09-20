@@ -67,7 +67,7 @@ Hydration **numbers** live under **Targets**.
 **My health / My care / My tools**
 - **Health:** tiles — My Hydration, Bowel Movements, My Meds (same names as screen headers)
 - **Care:** next appointment + supplies status + Reports
-- **Tools:** tiles — My Weight, Fluid Output, Food & Drink
+- **Tools:** tiles — My Weight, Fluid Output, Food & Drink, Out & About
 - Today’s hydration/meds **numbers** live under **Targets**
 
 **Targets**  
@@ -167,9 +167,13 @@ Open from **Settings → Push Notifications / Reminders** (wording in the app).
 - **Delete account** — permanently removes the account and data (with a confirm step)
 - Sign out
 
-**Info (from ⋮)**
+**Support (from ⋮)**
 - **What is IBD?** — plain-language IBD info and how Flarecare helps  
 - **Nutrition Guide** — food categories and tips (with a disclaimer)
+- **IBD at work** — practical workplace topics (adjustments, explaining IBD, toilet urgency, fatigue, appointments, sudden worsen). Sourced UK guidance; not legal/medical advice.
+
+**My tools — Out & About**
+- Hub for leaving-the-house helpers; v1 **Going Out** (your checklist → personalised ticks; Supabase)
 
 ---
 
@@ -191,10 +195,9 @@ Right now news on home is **turned off** in the app, so you normally won’t see
 
 ## Looking ahead (not built yet)
 
-- **Going Out** — tiny “I'm going out” planner: where you’re going + a checklist from the user’s own prep profile (toilet access, meds, spare clothes, etc.). Not a giant IBD checklist. Plan: `plans/going-out.md`.
+- **Going Out** — tiny “I'm going out” planner: personalised checklist from the user’s own list (`going_out_profiles`). Plan: `plans/going-out.md` (**built v1** under My tools → Out & About).
 - **Questions for my appointment** — Appointments hub **Questions** tab. Quick notes (“Ask about my fatigue.”). User-authored only; not medical advice. Plan: `plans/appointment-questions.md` (built v1 — run SQL).
 - **Private Support topics** — optional resources in Support only (sex & relationships, fertility & pregnancy, body image, talking to others about IBD). Not on the dashboard. Plan: `plans/private-support-topics.md`.
-- **IBD at work** — practical Support resource (reasonable adjustments, explaining IBD, toilet urgency, fatigue, appointments, sudden worsen). Plan: `plans/ibd-at-work.md`.
 - **My IBD (self-advocacy)** — user-built summary card (condition, treatment, team, key history). **User enters it themselves** — no medical-record import. Plan: `plans/my-ibd-self-advocacy.md`.
 - **What happens if…?** — section/card: who I contact (IBD team) + when to seek help (**clinically reviewed** guidance). Plan: `plans/what-happens-if.md`.
 - **Find a Toilet** — game-changer: usable-now UX; hard part is **freshness** (honest last-checked); v1 = GB Toilet Map → backend → map/list → Maps app; no 15-API mega system. Plan: `plans/find-a-toilet.md`.
