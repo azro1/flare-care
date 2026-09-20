@@ -37,3 +37,7 @@ export const MY_TOOL_DOORS: MyToolDoor[] = [
     icon: FLARE_FEATURE_LUCIDE.outAbout,
   },
 ];
+
+/** Header ? modal — keeps the hub screen tile-first. */
+export const MY_TOOLS_HINT =
+  "Practical tools to help you manage everyday life with IBD.";

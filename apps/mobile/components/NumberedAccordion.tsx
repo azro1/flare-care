@@ -43,7 +43,7 @@ export function NumberedAccordion({
   };
 
   return (
-    <View style={styles.wrap}>
+    <View>
       {intro ? <Text style={[styles.intro, { color: c.textMuted }]}>{intro}</Text> : null}
 
       <View style={[styles.accordion, !footer && styles.accordionLast]}>
@@ -69,12 +69,12 @@ export function NumberedAccordion({
                 style={styles.accordionHeader}
                 hitSlop={{ top: 6, bottom: 6, left: 4, right: 4 }}
               >
-                <FlareLucideIcon
-                  icon={open ? FLARE_CHROME_LUCIDE.down : FLARE_CHROME_LUCIDE.forward}
-                  size={16}
-                  color={c.text}
-                />
                 <Text style={[styles.accordionTitle, { color: c.text }]}>{label}</Text>
+                <FlareLucideIcon
+                  icon={open ? FLARE_CHROME_LUCIDE.up : FLARE_CHROME_LUCIDE.down}
+                  size={16}
+                  color={c.textMuted}
+                />
               </Pressable>
               {open ? <View style={styles.accordionBody}>{section.body}</View> : null}
             </View>
@@ -88,7 +88,6 @@ export function NumberedAccordion({
 }
 
 const styles = StyleSheet.create({
-  wrap: { paddingHorizontal: 4 },
   intro: {
     fontSize: FLARE_FONT_SIZE.muted,
     lineHeight: FLARE_LINE_HEIGHT.muted,
@@ -106,7 +105,7 @@ const styles = StyleSheet.create({
   },
   accordionHeader: {
     flexDirection: "row",
-    alignItems: "flex-start",
+    alignItems: "center",
     gap: 10,
     paddingVertical: 2,
   },
@@ -118,7 +117,6 @@ const styles = StyleSheet.create({
   },
   accordionBody: {
     marginTop: 10,
-    paddingLeft: 26,
     gap: STACKED_LINE_GAP,
   },
 });

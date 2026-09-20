@@ -2,15 +2,12 @@
  * My tools — doors for Weight, Fluid Output, Food & Drink, Out & About.
  */
 import React, { useMemo, useState } from "react";
-import { ScrollView, StyleSheet, Text, View } from "react-native";
+import { ScrollView, StyleSheet, View } from "react-native";
 import { useNavigation } from "@react-navigation/native";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { HomeFeatureTileGrid, type HomeFeatureGridTile } from "../components/HomeFeatureTileGrid";
 import { FlareLucideIcon } from "../lib/flareLucideIcons";
 import {
-  FLARE_FONT_FAMILY,
-  FLARE_FONT_SIZE,
-  FLARE_LINE_HEIGHT,
   HOME_FEATURE_TILE_ICON_SIZE,
   SCREEN_EDGE_PADDING,
   bottomTabBarScrollInset,
@@ -40,10 +37,6 @@ export function MyToolsScreen() {
       style={[styles.screen, { backgroundColor: c.screen }]}
       contentContainerStyle={[styles.content, { paddingBottom: bottomScrollInset + 16 }]}
     >
-      <Text style={[styles.intro, { color: c.textMuted }]}>
-        Practical tools to help you manage everyday life with IBD.
-      </Text>
-
       <View
         onLayout={(e) => {
           const w = Math.round(e.nativeEvent.layout.width);
@@ -71,10 +64,5 @@ const styles = StyleSheet.create({
     paddingHorizontal: SCREEN_EDGE_PADDING,
     paddingTop: 8,
     gap: 16,
-  },
-  intro: {
-    fontSize: FLARE_FONT_SIZE.body,
-    lineHeight: FLARE_LINE_HEIGHT.body,
-    fontFamily: FLARE_FONT_FAMILY.regular,
   },
 });

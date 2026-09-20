@@ -31,10 +31,11 @@ function appointmentDateOnly(row: AppointmentRow): string | null {
   return String(row.date || "").match(/^(\d{4}-\d{2}-\d{2})/)?.[1] ?? null;
 }
 
-/** Earliest appointment on today or tomorrow (calendar). */
+/** Earliest still-upcoming appointment on today or tomorrow (calendar). */
 export function findNearTermAppointment(
   rows: AppointmentRow[],
   today: string = todayYmd(),
+  nowMs: number = Date.now(),
 ): AppointmentRow | null {
   const tomorrow = addDaysToYmd(today, 1);
   const candidates = rows
@@ -42,7 +43,10 @@ export function findNearTermAppointment(
       const date = appointmentDateOnly(apt);
       if (date !== today && date !== tomorrow) return null;
       const dt = getAppointmentDateTime(apt);
-      return { apt, date, sortKey: dt?.getTime() ?? 0 };
+      if (!dt) return null;
+      // Today's appointment drops once its time has passed (e.g. 8am shouldn't linger all day).
+      if (date === today && dt.getTime() < nowMs) return null;
+      return { apt, date, sortKey: dt.getTime() };
     })
     .filter((x): x is { apt: AppointmentRow; date: string; sortKey: number } => x != null)
     .sort((a, b) => a.sortKey - b.sortKey);
@@ -90,11 +94,15 @@ export function buildTodayPriorities(input: {
 
   if (nearAppointment) {
     const date = appointmentDateOnly(nearAppointment) || today;
-    const when = date === today ? "today" : "tomorrow";
-    items.push({
-      id: `appointment-${nearAppointment.id}`,
-      text: `Appointment ${when}`,
-    });
+    const dt = getAppointmentDateTime(nearAppointment);
+    const stillUpcoming = date !== today || !dt || dt.getTime() >= Date.now();
+    if (stillUpcoming) {
+      const when = date === today ? "today" : "tomorrow";
+      items.push({
+        id: `appointment-${nearAppointment.id}`,
+        text: `Appointment ${when}`,
+      });
+    }
   }
 
   if (input.suppliesStatus === "due" || input.suppliesStatus === "overdue") {

@@ -265,6 +265,7 @@ import { MedicalSuppliesSetupRoute } from "./screens/MedicalSuppliesSetupScreen"
 import { OutAboutScreen } from "./screens/OutAboutScreen";
 import { GoingOutScreen } from "./screens/GoingOutScreen";
 import { MyToolsScreen } from "./screens/MyToolsScreen";
+import { MY_TOOLS_HINT } from "./lib/myToolsShared";
 import {
   buildTodayPriorities,
   findNearTermAppointment,
@@ -4835,6 +4836,7 @@ function AppTabs({
     const isLogs = route.name === "Logs";
     const isAppointmentBrief = route.name === "AppointmentBrief";
     const isReminders = route.name === "Reminders";
+    const isMyTools = route.name === "MyTools";
     const titleForRoute: Record<string, string> = {
       Logs: "Logs",
       SymptomHistory: "Symptom Logs",
@@ -4938,6 +4940,12 @@ function AppTabs({
         title="Bristol Stool Chart"
         message="Types range from 1 (firmest) to 7 (loosest). Types 3–4 are often considered ideal. Types 1–2 are harder, while 5–7 are looser."
         accessibilityLabel="About Bristol Stool Chart"
+      />
+    ) : isMyTools ? (
+      <InfoHintButton
+        title="My tools"
+        message={MY_TOOLS_HINT}
+        accessibilityLabel="About My tools"
       />
     ) : isLogs ? (
       <View style={styles.headerRightCluster}>
@@ -5827,7 +5835,7 @@ const styles = StyleSheet.create({
   prioritiesCard: {
     marginTop: 0,
     marginBottom: 12,
-    padding: HOME_TILE_GAP,
+    padding: CARD_INNER_PADDING,
     gap: 0,
   },
   priorityRow: {
@@ -6119,8 +6127,8 @@ const styles = StyleSheet.create({
   securityTogglePlaceholder: { minHeight: 52 },
   settingToggleTextCol: { flex: 1, paddingRight: 2 },
   settingToggleTitle: {
-    fontSize: FLARE_FONT_SIZE.body,
-    lineHeight: FLARE_LINE_HEIGHT.body,
+    fontSize: FLARE_FONT_SIZE.muted,
+    lineHeight: FLARE_LINE_HEIGHT.muted,
     fontFamily: FLARE_FONT_FAMILY.medium,
     marginBottom: 6,
   },
@@ -6142,8 +6150,8 @@ const styles = StyleSheet.create({
     lineHeight: FLARE_LINE_HEIGHT.muted,
     fontFamily: FLARE_FONT_FAMILY.regular,
   },
-  /** Settings / Security toggle — same body + caption as Logs tray. */
-  settingsCardTitle: { fontSize: FLARE_FONT_SIZE.body, lineHeight: FLARE_LINE_HEIGHT.body },
+  /** Settings / Security toggle — one step under body; still clear on white cards. */
+  settingsCardTitle: { fontSize: FLARE_FONT_SIZE.muted, lineHeight: FLARE_LINE_HEIGHT.muted },
   settingsCardHint: { fontSize: FLARE_FONT_SIZE.muted, lineHeight: FLARE_LINE_HEIGHT.muted },
   appearanceRow: { flexDirection: "row", gap: 8, marginTop: 14 },
   appearanceChip: {

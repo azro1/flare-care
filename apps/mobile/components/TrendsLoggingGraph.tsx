@@ -168,7 +168,7 @@ export function TrendsLoggingGraph({
             <Text style={[styles.heroError, { color: c.textSecondary }]}>{error}</Text>
           ) : (
             <>
-              <Text style={[styles.heroValue, { color: c.text }]}>{empty ? "—" : total}</Text>
+              <Text style={[styles.heroValue, { color: c.text }]}>{total}</Text>
               <Text style={[styles.heroLabel, { color: c.textSecondary }]}>
                 {empty
                   ? "No entries in this period"
