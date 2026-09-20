@@ -1,0 +1,29 @@
+---
+description: Health/legal content must use authoritative UK sources only — never invent guidance
+alwaysApply: true
+---
+
+# HARD RULE — health / legal content (public app)
+
+FlareCare ships to the public. Getting health or legal content wrong can cause real harm and legal exposure.
+
+**Use authoritative UK sources for health and legal information — never rely on general knowledge or invent guidance.**
+
+## Before writing any health/legal product copy
+
+1. Research named UK sources first (e.g. Crohn’s & Colitis UK, NHS, GOV.UK, Acas, EHRC, legislation.gov.uk).
+2. Ground every claim in those pages. Prefer linking to the source in-app.
+3. If you cannot find a source for a claim, **do not ship it** — ask Simon.
+
+## Not allowed
+
+- AI “general knowledge” as medical or legal guidance
+- Freestyle triage (“call 999 if…”) unless quoted/paraphrased only as tightly as a named NHS/CCUK page supports, with a link
+- Invented employment-rights advice beyond what Acas / GOV.UK / CCUK state
+- Support guides, “What happens if…”, IBD at work, private topics, or similar without cited sources
+
+## Product stance
+
+FlareCare helps people **understand and navigate**. It does **not** replace clinicians or lawyers. Keep that clear where content is sensitive.
+
+Also recorded in `apps/mobile/DEV_NOTES.md` (top). Treat as non-negotiable from the **first message** of any session — not after a mistake.

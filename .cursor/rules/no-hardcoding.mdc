@@ -1,0 +1,25 @@
+---
+description: No hardcoding when a shared token/constant/helper can be used
+alwaysApply: true
+---
+
+# HARD RULE — no hardcoding (if it can be avoided)
+
+From the **start of every session**: do not hardcode values that already have — or should have — a shared token, constant, or helper.
+
+## Prefer shared sources
+
+- **Typography / spacing / chrome:** `apps/mobile/lib/layoutConstants.ts`
+- **Colours:** `useFlareColors()` / theme — not one-off hex in screens
+- **Shared product copy:** dedicated copy modules / libs — don’t scatter duplicate strings
+- **Tables / env / API bases:** existing shared modules (`TABLES`, `EXPO_PUBLIC_*`, etc.)
+
+## If the token is missing
+
+Add it to the shared place first, then use it — especially when the value should match the design system or will be reused.
+
+## Exception
+
+Truly one-off values that cannot sensibly live in shared constants. If unsure, ask Simon.
+
+Also recorded in `apps/mobile/DEV_NOTES.md` (top, with the health/legal hard rule).
