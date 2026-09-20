@@ -633,7 +633,10 @@ export function TodayActivitiesInline({
   );
 }
 
+/** Inset on the TP expand tray — equal on all sides; morph height uses Y×2. */
 const EXPAND_TRAY_PAD = 14;
+/** Extra left inset for expanded Meds/Hydration titles only (not the priority list). */
+const EXPAND_DETAIL_TITLE_PAD_LEFT = 4;
 
 /** Tray pad + title + Lottie + detail + dots — morph target height. */
 export const TODAY_PRIORITIES_DETAIL_HEIGHT =
@@ -1536,6 +1539,7 @@ const styles = StyleSheet.create({
   inlineTitle: {
     alignSelf: "stretch",
     paddingTop: 2,
+    paddingLeft: EXPAND_DETAIL_TITLE_PAD_LEFT,
     paddingRight: 28,
     fontSize: FLARE_FONT_SIZE.sectionTitle,
     lineHeight: FLARE_LINE_HEIGHT.sectionTitle,

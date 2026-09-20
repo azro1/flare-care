@@ -147,6 +147,7 @@ import {
   CONFIRM_MODAL_STACK_GAP,
   CONFIRM_MODAL_ACTIONS_GAP,
   SECTION_TITLE_MARGIN_BOTTOM,
+  SECTION_TITLE_MARGIN_BOTTOM_PRIORITIES,
   SECTION_TITLE_MARGIN_TOP,
   WIZARD_LANDING_BELOW_SAFE_TOP,
   WIZARD_LANDING_BLOCK_PADDING_BOTTOM,
@@ -1795,7 +1796,7 @@ function DashboardScreen({ user }: { user: SessionUser }) {
   // Hold View all + full collapsed tray height until today counts + apt/supply resolve.
   const reservePrioritiesCollapsedSlot = !prioritiesLayoutReady;
   const reservePrioritiesViewAll = reservePrioritiesCollapsedSlot;
-  /** padY×2 + 3 rows + gaps + View all row — keep in sync with `prioritiesTray` / `priorityRow`. */
+  /** padY×2 + 3 rows + gaps + View all row — keep in sync with expand tray pad (`EXPAND_TRAY_PAD`). */
   const prioritiesCollapsedTrayMinHeight =
     14 * 2 +
     TODAY_PRIORITIES_COLLAPSED_COUNT * FLARE_LINE_HEIGHT.muted +
@@ -1832,7 +1833,11 @@ function DashboardScreen({ user }: { user: SessionUser }) {
       id: "meds",
       label: "My Meds",
       screen: "Meds",
-      icon: <FlareLucideIcon icon={FLARE_FEATURE_LUCIDE.meds} size={HOME_FEATURE_TILE_ICON_SIZE} color={c.primary} />,
+      icon: (
+        <View style={{ transform: [{ rotate: "-90deg" }] }}>
+          <FlareLucideIcon icon={FLARE_FEATURE_LUCIDE.meds} size={HOME_FEATURE_TILE_ICON_SIZE} color={c.primary} />
+        </View>
+      ),
     },
   ], [c.primary]);
   const openSuppliesFromHome = useCallback(() => {
@@ -2172,7 +2177,9 @@ function DashboardScreen({ user }: { user: SessionUser }) {
         </Card>
 
         <View style={[styles.dashboardShelfSection, styles.dashboardShelfAfterCard]}>
-          <Text style={[styles.dashboardSubsectionTitleLeft, { color: c.text }]}>
+          <Text
+            style={[styles.dashboardSubsectionTitleLeft, styles.dashboardShelfTitleEmphasis, { color: c.text }]}
+          >
             Check in
           </Text>
           <ScrollView
@@ -2205,7 +2212,14 @@ function DashboardScreen({ user }: { user: SessionUser }) {
             styles.prioritiesShelfSection,
           ]}
         >
-          <Text style={[styles.dashboardSubsectionTitleLeft, styles.dashboardSubsectionTitleCenter, { color: c.text }]}>
+          <Text
+            style={[
+              styles.dashboardSubsectionTitleLeft,
+              styles.dashboardSubsectionTitleCenter,
+              styles.prioritiesShelfTitle,
+              { color: c.text },
+            ]}
+          >
             {"Today's priorities"}
           </Text>
           <View style={[logHistoryCardStyles.trackerCard, styles.prioritiesCard, { backgroundColor: c.card }]}>
@@ -2283,7 +2297,11 @@ function DashboardScreen({ user }: { user: SessionUser }) {
         </View>
 
         <View style={[styles.dashboardShelfSection, styles.dashboardShelfAfterCard]}>
-          <Text style={[styles.dashboardSubsectionTitleLeft, { color: c.text }]}>My care</Text>
+          <Text
+            style={[styles.dashboardSubsectionTitleLeft, styles.dashboardShelfTitleEmphasis, { color: c.text }]}
+          >
+            My care
+          </Text>
           <View style={styles.toolsGridBlock}>
             <HomeCareNextCard
               nextAppointment={nextCareAppointment}
@@ -5840,6 +5858,9 @@ const styles = StyleSheet.create({
     zIndex: 2,
     elevation: 2,
   },
+  prioritiesShelfTitle: {
+    marginBottom: SECTION_TITLE_MARGIN_BOTTOM_PRIORITIES,
+  },
   /** Same bottom margin as dashboard cards (`styles.card` / tracker trays) before the next shelf title. */
   toolsGridBlock: { marginBottom: HOME_TILE_GAP },
   /** MH/MC is not last — drop carousel mb so Latest News uses the normal after-card shelf gap only. */
@@ -5874,7 +5895,7 @@ const styles = StyleSheet.create({
     marginTop: 0,
     marginBottom: 0,
   },
-  /** Shelf labels — Logs, Latest news. */
+  /** Shelf labels — Logs, Latest news, Today's priorities (stays under MM/MH). */
   dashboardSubsectionTitleLeft: {
     fontSize: FLARE_FONT_SIZE.subhead,
     lineHeight: FLARE_LINE_HEIGHT.subhead,
@@ -5882,6 +5903,11 @@ const styles = StyleSheet.create({
     marginTop: SECTION_TITLE_MARGIN_TOP,
     marginBottom: SECTION_TITLE_MARGIN_BOTTOM,
     textAlign: "left",
+  },
+  /** Check in / My care — one step up; TP stays subhead so it doesn’t fight My Meds / My Hydration. */
+  dashboardShelfTitleEmphasis: {
+    fontSize: FLARE_FONT_SIZE.navTitle,
+    lineHeight: FLARE_LINE_HEIGHT.navTitle,
   },
   /** Alternating shelf label — staggers against left/center titles. */
   dashboardSubsectionTitleRight: {

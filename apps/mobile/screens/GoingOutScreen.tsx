@@ -65,6 +65,8 @@ export function GoingOutScreen({ userId }: Props) {
   const [deleteCustomId, setDeleteCustomId] = useState<string | null>(null);
   const addInputRef = useRef<TextInput>(null);
   const skipEditBlurCommit = useRef(false);
+  /** Blur + Save can fire twice — only add once. */
+  const addCommitLock = useRef(false);
 
   const leaveProfileEditor = useCallback(() => {
     if (profile) setDraft(profile);
@@ -74,6 +76,7 @@ export function GoingOutScreen({ userId }: Props) {
     setEditingCustomId(null);
     setEditCustomLabel("");
     setDeleteCustomId(null);
+    addCommitLock.current = false;
   }, [profile]);
 
   const refresh = useCallback(async () => {
@@ -126,12 +129,14 @@ export function GoingOutScreen({ userId }: Props) {
   };
 
   const commitNewCustom = () => {
+    if (addCommitLock.current) return;
     const label = clampGoingOutCustomLabel(newCustomLabel);
     if (!label) {
       setAddingCustom(false);
       setNewCustomLabel("");
       return;
     }
+    addCommitLock.current = true;
     const id = newGoingOutCustomId();
     setDraft((prev) => {
       if (!prev) return prev;
@@ -396,6 +401,7 @@ export function GoingOutScreen({ userId }: Props) {
                 accessibilityRole="button"
                 accessibilityLabel="Add your own item"
                 onPress={() => {
+                  addCommitLock.current = false;
                   setEditingCustomId(null);
                   setAddingCustom(true);
                   setNewCustomLabel("");

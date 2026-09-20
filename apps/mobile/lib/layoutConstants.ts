@@ -134,6 +134,7 @@ export const FLARE_LINE_HEIGHT = {
   muted: 18,
   body: 20,
   subhead: 21,
+  navTitle: 22,
   sectionTitle: 22,
   pageTitle: 27,
 } as const;
@@ -257,6 +258,8 @@ export const CARD_SECTION_TITLE = {
 /** `styles.dashboardSectionTitle` / `dashboardSectionTitleLeft` spacing. */
 export const SECTION_TITLE_MARGIN_TOP = 10;
 export const SECTION_TITLE_MARGIN_BOTTOM = 12;
+/** Extra air under Today's priorities — tray is taller than other home shelves. */
+export const SECTION_TITLE_MARGIN_BOTTOM_PRIORITIES = 16;
 /** Gap below in-card section title before card body (Account, wizard review). */
 export const CARD_SECTION_INNER_GAP = 12;
 
@@ -313,19 +316,19 @@ export const TRENDS_HERO_VALUE = {
 export const TRENDS_HERO_MIN_HEIGHT = 72;
 export const TRENDS_BLOCK_GAP = 18;
 export const TRENDS_CHART_HEIGHT = 168;
-export const TRENDS_CHART_PAD_TOP = 8;
+/** Headroom above max bars inside the SVG — keep small; Y max rarely fills full height. */
+export const TRENDS_CHART_PAD_TOP = 4;
 export const TRENDS_CHART_PAD_BOTTOM = 4;
-export const TRENDS_CHART_TRAY_PAD_V = CARD_INNER_PADDING;
 export const TRENDS_CHART_TRAY_PAD_H = SCREEN_EDGE_PADDING;
-/** Extra vertical room in the chart tray around the SVG. */
-export const TRENDS_CHART_TRAY_EXTRA = CARD_INNER_PADDING - 2;
+/** Tight top inset — equal side pad looked like a dead white band above the bars. */
+export const TRENDS_CHART_TRAY_PAD_TOP = STACKED_LINE_GAP * 2;
+export const TRENDS_CHART_TRAY_PAD_BOTTOM = CARD_INNER_PADDING - 2;
 /** Inset tray radius (controls + chart) — slightly tighter than white card. */
 export const TRENDS_INSET_TRAY_RADIUS = INSTRUCTION_CARD_RADIUS - 2;
 export const TRENDS_CONTROL_ROW_PAD_Y = TRAY_ROW_PADDING_Y + 1;
 export const TRENDS_CONTROL_ROW_PAD_H = TRAY_ROW_PADDING_H - 2;
 export const TRENDS_CONTROL_VALUE_GAP = STACKED_LINE_GAP + 2;
 export const TRENDS_CHART_BLOCK_GAP = STACKED_LINE_GAP * 2;
-export const TRENDS_CHART_TRAY_PAD_BOTTOM = TRENDS_CHART_TRAY_PAD_V - 2;
 export const TRENDS_EMPTY_COPY_PAD_H = EMPTY_TRAY_PADDING + 6;
 export const TRENDS_AXIS_LABEL = {
   fontSize: FLARE_FONT_SIZE.caption - 1,

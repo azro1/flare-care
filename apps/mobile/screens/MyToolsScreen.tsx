@@ -73,8 +73,8 @@ const styles = StyleSheet.create({
     gap: 16,
   },
   intro: {
-    fontSize: FLARE_FONT_SIZE.muted,
-    lineHeight: FLARE_LINE_HEIGHT.muted,
+    fontSize: FLARE_FONT_SIZE.body,
+    lineHeight: FLARE_LINE_HEIGHT.body,
     fontFamily: FLARE_FONT_FAMILY.regular,
   },
 });

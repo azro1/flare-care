@@ -70,8 +70,8 @@ const styles = StyleSheet.create({
     fontFamily: FLARE_FONT_FAMILY.medium,
   },
   hint: {
-    fontSize: FLARE_FONT_SIZE.caption,
-    lineHeight: FLARE_LINE_HEIGHT.caption,
+    fontSize: FLARE_FONT_SIZE.muted,
+    lineHeight: FLARE_LINE_HEIGHT.muted,
     fontFamily: FLARE_FONT_FAMILY.regular,
   },
 });

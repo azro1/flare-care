@@ -34,7 +34,7 @@ import {
   TRENDS_CHART_PAD_TOP,
   TRENDS_CHART_TRAY_PAD_BOTTOM,
   TRENDS_CHART_TRAY_PAD_H,
-  TRENDS_CHART_TRAY_PAD_V,
+  TRENDS_CHART_TRAY_PAD_TOP,
   TRENDS_CONTROL_ROW_PAD_H,
   TRENDS_CONTROL_ROW_PAD_Y,
   TRENDS_CONTROL_VALUE_GAP,
@@ -373,7 +373,7 @@ const styles = StyleSheet.create({
   chartTray: {
     borderRadius: TRENDS_INSET_TRAY_RADIUS,
     paddingHorizontal: TRENDS_CHART_TRAY_PAD_H,
-    paddingTop: TRENDS_CHART_TRAY_PAD_V,
+    paddingTop: TRENDS_CHART_TRAY_PAD_TOP,
     paddingBottom: TRENDS_CHART_TRAY_PAD_BOTTOM,
     overflow: "hidden",
   },
