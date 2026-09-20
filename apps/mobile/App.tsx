@@ -147,7 +147,6 @@ import {
   CONFIRM_MODAL_STACK_GAP,
   CONFIRM_MODAL_ACTIONS_GAP,
   SECTION_TITLE_MARGIN_BOTTOM,
-  SECTION_TITLE_MARGIN_BOTTOM_PRIORITIES,
   SECTION_TITLE_MARGIN_TOP,
   WIZARD_LANDING_BELOW_SAFE_TOP,
   WIZARD_LANDING_BLOCK_PADDING_BOTTOM,
@@ -2217,7 +2216,6 @@ function DashboardScreen({ user }: { user: SessionUser }) {
             style={[
               styles.dashboardSubsectionTitleLeft,
               styles.dashboardSubsectionTitleCenter,
-              styles.prioritiesShelfTitle,
               { color: c.text },
             ]}
           >
@@ -5865,9 +5863,6 @@ const styles = StyleSheet.create({
   prioritiesShelfSection: {
     zIndex: 2,
     elevation: 2,
-  },
-  prioritiesShelfTitle: {
-    marginBottom: SECTION_TITLE_MARGIN_BOTTOM_PRIORITIES,
   },
   /** Same bottom margin as dashboard cards (`styles.card` / tracker trays) before the next shelf title. */
   toolsGridBlock: { marginBottom: HOME_TILE_GAP },

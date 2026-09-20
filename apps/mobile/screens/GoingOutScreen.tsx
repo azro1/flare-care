@@ -26,6 +26,7 @@ import {
   FLARE_LINE_HEIGHT,
   HEADER_CHROME_ICON_SIZE,
   SCREEN_EDGE_PADDING,
+  TRAY_ROW_PADDING_Y,
   bottomTabBarScrollInset,
 } from "../lib/layoutConstants";
 import {
@@ -243,7 +244,14 @@ export function GoingOutScreen({ userId }: Props) {
             anything you don't need.
           </Text>
 
-          <LogHistoryCard style={{ padding: CARD_INNER_PADDING + 2, gap: 0 }}>
+          <LogHistoryCard
+            style={{
+              paddingHorizontal: CARD_INNER_PADDING,
+              // Row padY already breathes — keep outer Y ≈ X (not card 14 + row 12).
+              paddingVertical: Math.max(0, CARD_INNER_PADDING - TRAY_ROW_PADDING_Y),
+              gap: 0,
+            }}
+          >
             {GOING_OUT_SUGGESTIONS.map((item, index) => {
               const on = draft.selectedIds.includes(item.id);
               const showBorder =
@@ -450,7 +458,13 @@ export function GoingOutScreen({ userId }: Props) {
         Tick off as you go. Change what appears here anytime in your checklist.
       </Text>
 
-      <LogHistoryCard style={{ padding: CARD_INNER_PADDING + 2, gap: 0 }}>
+      <LogHistoryCard
+        style={{
+          paddingHorizontal: CARD_INNER_PADDING,
+          paddingVertical: Math.max(0, CARD_INNER_PADDING - TRAY_ROW_PADDING_Y),
+          gap: 0,
+        }}
+      >
         {profile.selectedIds.map((id, index) => {
           const label = labelForGoingOutItem(profile, id);
           const on = checkedIds.has(id);
@@ -522,7 +536,7 @@ const styles = StyleSheet.create({
     flexDirection: "row",
     alignItems: "flex-start",
     gap: 12,
-    paddingVertical: 12,
+    paddingVertical: TRAY_ROW_PADDING_Y,
     minWidth: 0,
   },
   itemIcon: {

@@ -65,8 +65,8 @@ const styles = StyleSheet.create({
   },
   textCol: { flex: 1, gap: 4 },
   title: {
-    fontSize: FLARE_FONT_SIZE.body,
-    lineHeight: FLARE_LINE_HEIGHT.body,
+    fontSize: FLARE_FONT_SIZE.subhead,
+    lineHeight: FLARE_LINE_HEIGHT.subhead,
     fontFamily: FLARE_FONT_FAMILY.medium,
   },
   hint: {
