@@ -59,7 +59,7 @@ const ACTIVITY_LOTTIE_SIZE = 112;
 const ACTIVITY_GRABBER_BOTTOM = 20;
 const ACTIVITY_TITLE_TO_SUPPORT = 14;
 /** Same gap above and below the Lottie (support ↔ icon ↔ count). */
-const ACTIVITY_HERO_GAP = 12;
+const ACTIVITY_HERO_GAP = 6;
 const ACTIVITY_CONTENT_TO_DOTS = 14;
 
 /** Card score — readable, not a hero panel. */

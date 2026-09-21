@@ -258,6 +258,8 @@ export const CARD_SECTION_TITLE = {
 /** `styles.dashboardSectionTitle` / `dashboardSectionTitleLeft` spacing. */
 export const SECTION_TITLE_MARGIN_TOP = 10;
 export const SECTION_TITLE_MARGIN_BOTTOM = 12;
+/** Extra air under Today's priorities — tray is taller than other home shelves. */
+export const SECTION_TITLE_MARGIN_BOTTOM_PRIORITIES = 16;
 /** Gap below in-card section title before card body (Account, wizard review). */
 export const CARD_SECTION_INNER_GAP = 12;
 
