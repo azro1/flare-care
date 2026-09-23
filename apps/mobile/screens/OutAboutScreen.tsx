@@ -7,11 +7,13 @@ import { Pressable, ScrollView, StyleSheet, Text, View } from "react-native";
 import { useNavigation } from "@react-navigation/native";
 import { LogHistoryCard } from "../components/LogHistoryList";
 import { FLARE_CHROME_LUCIDE, FlareLucideIcon } from "../lib/flareLucideIcons";
+import { OUT_ABOUT_ICON } from "../lib/goingOutShared";
 import {
   CARD_INNER_PADDING,
   FLARE_FONT_FAMILY,
   FLARE_FONT_SIZE,
   FLARE_LINE_HEIGHT,
+  HOME_FEATURE_TILE_ICON_SIZE,
   NAV_ROW_CHEVRON_SIZE,
   SCREEN_EDGE_PADDING,
   bottomTabBarScrollInset,
@@ -37,6 +39,7 @@ export function OutAboutScreen() {
           onPress={() => navigation.navigate("GoingOut")}
           style={styles.row}
         >
+          <FlareLucideIcon icon={OUT_ABOUT_ICON} size={HOME_FEATURE_TILE_ICON_SIZE} color={c.primary} />
           <View style={styles.textCol}>
             <Text style={[styles.title, { color: c.text }]}>Going Out</Text>
             <Text style={[styles.hint, { color: c.textMuted }]}>
@@ -67,7 +70,7 @@ const styles = StyleSheet.create({
   title: {
     fontSize: FLARE_FONT_SIZE.subhead,
     lineHeight: FLARE_LINE_HEIGHT.subhead,
-    fontFamily: FLARE_FONT_FAMILY.medium,
+    fontFamily: FLARE_FONT_FAMILY.bold,
   },
   hint: {
     fontSize: FLARE_FONT_SIZE.muted,

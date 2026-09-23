@@ -24,6 +24,7 @@ import {
   CloudRain,
   CloudSun,
   CupSoda,
+  DoorOpen,
   Droplet,
   EllipsisVertical,
   Expand,
@@ -38,7 +39,6 @@ import {
   Info,
   List,
   Lock,
-  Luggage,
   Mail,
   Moon,
   Newspaper,
@@ -89,8 +89,8 @@ export const FLARE_FEATURE_LUCIDE = {
   output: Droplet,
   /** Food & Drink intake diary (Tools). */
   intake: Utensils,
-  /** Out & About hub (Tools) — Going Out and later toilet/travel helpers. */
-  outAbout: Luggage,
+  /** Out & About hub (Tools) — leaving the house / Going Out and later helpers. */
+  outAbout: DoorOpen,
   /** My tools hub entry on home. */
   tools: Wrench,
   /** Logging trends over time (My health). */

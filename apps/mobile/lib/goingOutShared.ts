@@ -4,8 +4,11 @@
  * Stored in Supabase (`going_out_profiles`) so the list follows the account.
  */
 import AsyncStorage from "@react-native-async-storage/async-storage";
+import { FLARE_FEATURE_LUCIDE } from "./flareLucideIcons";
 import { supabase, TABLES } from "./supabase";
 
+/** Out & About / Going Out / Edit checklist — open door (leaving the house). */
+export const OUT_ABOUT_ICON = FLARE_FEATURE_LUCIDE.outAbout;
 /** Short starting suggestions shown on the profile form. */
 export const GOING_OUT_SUGGESTIONS = [
   { id: "toilet", label: "Toilet access" },

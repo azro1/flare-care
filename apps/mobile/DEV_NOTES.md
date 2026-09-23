@@ -37,6 +37,28 @@ Hardcoding is allowed only when something is truly one-off and cannot sensibly l
 
 ---
 
+## HARD RULE — Supabase Data API grants (from 2026-10-30)
+
+**Existing tables keep working.** No action needed for tables already in production.
+
+**New tables in `public`:** from **30 Oct 2026**, Supabase stops auto-granting Data API access. A `create table` without explicit `GRANT`s is **unreachable** via `supabase-js` / PostgREST (permission denied; the error hint shows the missing grant). Same for migrations, preview branches, and `supabase db reset`.
+
+**Always put grants in the same migration / SQL block as the table** (before or with RLS):
+
+```sql
+grant select on public.your_table to anon;
+grant select, insert, update, delete on public.your_table to authenticated;
+grant select, insert, update, delete on public.your_table to service_role;
+```
+
+Then `enable row level security` + policies as usual. Grants ≠ RLS — both are required for client access.
+
+Dashboard: **Project → Data API** settings lists which tables are exposed. Changelog: Supabase “tables not exposed to Data and GraphQL API automatically”.
+
+**Cursor:** Supabase MCP is available in this workspace for SQL / migrations / advisors — confirm it is linked to the **FlareCare** project before applying anything.
+
+---
+
 **Brain-full cheat sheet — mobile Email:** phone → `EXPO_PUBLIC_WEB_API_BASE_URL` (live = `https://flare-care.vercel.app`) → web route on **`master`**/Vercel → Resend. Details under **Recurring Medical Supplies → Mobile Email → web**.
 
 ---
@@ -802,6 +824,8 @@ Same monorepo. Mobile does **not** send mail itself.
 
 ### Supabase SQL (run in dashboard SQL editor)
 
+Every new `public` table below includes Data API `GRANT`s (required from **2026-10-30** — see HARD RULE above). Existing live tables already have grants; re-running these grants is harmless.
+
 ```sql
 -- Named orders (multi per user)
 create table if not exists public.medical_supply_kits (
@@ -820,6 +844,10 @@ create table if not exists public.medical_supply_kits (
 
 create index if not exists medical_supply_kits_user_id_idx
   on public.medical_supply_kits (user_id);
+
+grant select on public.medical_supply_kits to anon;
+grant select, insert, update, delete on public.medical_supply_kits to authenticated;
+grant select, insert, update, delete on public.medical_supply_kits to service_role;
 
 alter table public.medical_supply_kits enable row level security;
 
@@ -855,6 +883,10 @@ create table if not exists public.medical_supplies (
 
 create index if not exists medical_supplies_user_id_idx on public.medical_supplies (user_id);
 create index if not exists medical_supplies_kit_id_idx on public.medical_supplies (kit_id);
+
+grant select on public.medical_supplies to anon;
+grant select, insert, update, delete on public.medical_supplies to authenticated;
+grant select, insert, update, delete on public.medical_supplies to service_role;
 
 alter table public.medical_supplies enable row level security;
 
@@ -905,6 +937,10 @@ create index if not exists track_output_user_id_idx
 create index if not exists track_output_user_occurred_at_idx
   on public.track_output (user_id, occurred_at desc);
 
+grant select on public.track_output to anon;
+grant select, insert, update, delete on public.track_output to authenticated;
+grant select, insert, update, delete on public.track_output to service_role;
+
 alter table public.track_output enable row level security;
 
 create policy "track_output_select_own"
@@ -954,6 +990,10 @@ create index if not exists track_intake_user_id_idx
 create index if not exists track_intake_user_occurred_at_idx
   on public.track_intake (user_id, occurred_at desc);
 
+grant select on public.track_intake to anon;
+grant select, insert, update, delete on public.track_intake to authenticated;
+grant select, insert, update, delete on public.track_intake to service_role;
+
 alter table public.track_intake enable row level security;
 
 create policy "track_intake_select_own"
@@ -1000,6 +1040,10 @@ create index if not exists appointment_questions_user_id_idx
 create index if not exists appointment_questions_user_created_at_idx
   on public.appointment_questions (user_id, created_at desc);
 
+grant select on public.appointment_questions to anon;
+grant select, insert, update, delete on public.appointment_questions to authenticated;
+grant select, insert, update, delete on public.appointment_questions to service_role;
+
 alter table public.appointment_questions enable row level security;
 
 create policy "appointment_questions_select_own"
@@ -1032,6 +1076,10 @@ create table if not exists public.going_out_profiles (
   created_at timestamptz not null default now(),
   updated_at timestamptz not null default now()
 );
+
+grant select on public.going_out_profiles to anon;
+grant select, insert, update, delete on public.going_out_profiles to authenticated;
+grant select, insert, update, delete on public.going_out_profiles to service_role;
 
 alter table public.going_out_profiles enable row level security;
 
