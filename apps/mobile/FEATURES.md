@@ -172,6 +172,9 @@ Open from **Settings → Push Notifications / Reminders** (wording in the app).
 - **Nutrition Guide** — food categories and tips (with a disclaimer)
 - **IBD at work** — practical workplace topics (adjustments, explaining IBD, toilet urgency, fatigue, appointments, sudden worsen). Sourced UK guidance; not legal/medical advice.
 
+**My Card**
+- ⋮ → personal notes the user chooses to share (condition, year, treatment, team, history). Not a medical record or official ID.
+
 **My tools — Out & About**
 - Hub for leaving-the-house helpers; v1 **Going Out** (your checklist → personalised ticks; Supabase)
 
@@ -197,8 +200,8 @@ Right now news on home is **turned off** in the app, so you normally won’t see
 
 - **Going Out** — tiny “I'm going out” planner: personalised checklist from the user’s own list (`going_out_profiles`). Plan: `plans/going-out.md` (**built v1** under My tools → Out & About).
 - **Questions for my appointment** — Appointments hub **Questions** tab. Quick notes (“Ask about my fatigue.”). User-authored only; not medical advice. Plan: `plans/appointment-questions.md` (built v1 — run SQL).
+- **My Card** — ⋮ personal notes (condition, treatment, team, history). User-authored only; not a medical record / official ID. Plan: `plans/my-ibd-self-advocacy.md` (**built v1**).
 - **Private Support topics** — optional resources in Support only (sex & relationships, fertility & pregnancy, body image, talking to others about IBD). Not on the dashboard. Plan: `plans/private-support-topics.md`.
-- **My IBD (self-advocacy)** — user-built summary card (condition, treatment, team, key history). **User enters it themselves** — no medical-record import. Plan: `plans/my-ibd-self-advocacy.md`.
 - **What happens if…?** — section/card: who I contact (IBD team) + when to seek help (**clinically reviewed** guidance). Plan: `plans/what-happens-if.md`.
 - **Find a Toilet** — game-changer: usable-now UX; hard part is **freshness** (honest last-checked); v1 = GB Toilet Map → backend → map/list → Maps app; no 15-API mega system. Plan: `plans/find-a-toilet.md`.
 - **More sign-in OAuth** (e.g. Apple) — keep **email** as the main CTA; don’t stack many full-width OAuth buttons on the method screen (fingerprint quick-unlock sits at the bottom and will cover them). Prefer **“More ways to sign in”** → sheet with providers, or a compact icon row. Today: email code + Google only.

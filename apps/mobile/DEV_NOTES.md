@@ -17,9 +17,10 @@ Long-lived conventions, “don’t forget / don’t duplicate,” SQL checklists
 - **Allowed sources (examples):** Crohn’s & Colitis UK, NHS / NHS 111 guidance pages, GOV.UK, Acas, Equality and Human Rights Commission, legislation.gov.uk — cite the page and prefer linking to it.
 - **Not allowed:** AI “general knowledge,” paraphrased legal advice, freestyle medical triage, or anything that could be read as FlareCare telling someone what to do medically or legally beyond what a named source states.
 - **Product copy** (Support guides, What happens if…, IBD at work, etc.) must be traceable to those sources. If you cannot find a source, **do not ship the claim** — ask Simon.
-- FlareCare helps people **understand and navigate**; it does **not** replace clinicians, lawyers, or official advice. Keep that clear in-product where content is sensitive.
+- FlareCare helps people **understand and navigate**; it does **not** replace clinicians, lawyers, or official advice.
+- **Disclaimer footers:** do **not** add them to new screens. Legal/disclaimer copy will live in **one place later** — not sprinkled per feature. New screens follow the normal pattern (title + support + content) unless Simon asks otherwise.
 
-Breaking this rule risks real harm and legal exposure. Treat it as non-negotiable for anything that goes public.
+Breaking this rule risks real harm and legal exposure. Treat **sourcing** as non-negotiable for anything that goes public.
 
 ---
 
@@ -1101,6 +1102,46 @@ create policy "going_out_profiles_delete_own"
   using (auth.uid() = user_id);
 ```
 
+### My Card (`my_ibd_profiles`)
+
+User-authored personal card (⋮ → **My Card**). Not a medical record / official ID. Run in the Supabase SQL editor if needed (already applied on FlareCare):
+
+```sql
+create table if not exists public.my_ibd_profiles (
+  user_id uuid primary key references auth.users (id) on delete cascade,
+  condition text,
+  diagnosed_year text,
+  treatment text,
+  team text,
+  history text,
+  created_at timestamptz not null default now(),
+  updated_at timestamptz not null default now()
+);
+
+grant select on public.my_ibd_profiles to anon;
+grant select, insert, update, delete on public.my_ibd_profiles to authenticated;
+grant select, insert, update, delete on public.my_ibd_profiles to service_role;
+
+alter table public.my_ibd_profiles enable row level security;
+
+create policy "my_ibd_profiles_select_own"
+  on public.my_ibd_profiles for select
+  using (auth.uid() = user_id);
+
+create policy "my_ibd_profiles_insert_own"
+  on public.my_ibd_profiles for insert
+  with check (auth.uid() = user_id);
+
+create policy "my_ibd_profiles_update_own"
+  on public.my_ibd_profiles for update
+  using (auth.uid() = user_id)
+  with check (auth.uid() = user_id);
+
+create policy "my_ibd_profiles_delete_own"
+  on public.my_ibd_profiles for delete
+  using (auth.uid() = user_id);
+```
+
 ---
 
 ## Looking ahead
@@ -1131,10 +1172,10 @@ Product backlog for later — not implementation work yet. Ship notes go in **`C
 - **Shipped (v1):** Support → **Practical support** → IBD at work. One guide screen; six topic accordions. Not a tracker; not legal/medical advice.
 - **Plan:** [`plans/ibd-at-work.md`](./plans/ibd-at-work.md).
 
-### Self-advocacy — My IBD card
+### Self-advocacy — My Card
 
-- **Idea:** compact “My IBD” summary (condition, diagnosed year, treatment, team, important history) for self-advocacy.
-- **Hard rule:** **user-authored only** — do not pull medical records / EHR. Not an official medical record; lawsuit risk if we over-claim or auto-import clinical data.
+- **Shipped (v1):** ⋮ → **My Card**. User-authored fields (condition, year, treatment, team, history). Input → Save → saved text + check. Not a medical record / official ID / access card.
+- **Storage:** Supabase `my_ibd_profiles` (SQL above).
 - **Plan:** [`plans/my-ibd-self-advocacy.md`](./plans/my-ibd-self-advocacy.md).
 
 ### Safety — What happens if…?

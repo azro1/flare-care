@@ -4,6 +4,10 @@ Shipped / unreleased UI and behaviour updates for the Expo app (`apps/mobile`). 
 
 ## Unreleased
 
+### My Card (2026-09)
+
+- ⋮ → **My Card**: user-authored personal notes (condition, year, treatment, team, history). Save a field → it locks with a check; tap to edit. Not a medical record / official ID / access card. Supabase `my_ibd_profiles`.
+
 ### Support — IBD at work (2026-09)
 
 - Support → **Practical support** → **IBD at work**: one guide screen, six topic accordions. Copy and links from Crohn’s & Colitis UK, Acas, and GOV.UK only (not invented legal/medical advice).

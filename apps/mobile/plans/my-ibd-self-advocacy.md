@@ -1,8 +1,10 @@
-# Plan: My IBD (self-advocacy card)
+# Plan: My Card (self-advocacy)
 
-**Status:** Idea — not built. Strong FlareCare concept — **tread carefully**. User-authored only.
+**Status:** Shipped v1 — ⋮ → **My Card**. User-authored only.
 
 **Doc home:** `apps/mobile/plans/`. Short backlog pointer also under **Looking ahead** in `DEV_NOTES.md` / `FEATURES.md`.
+
+**In-product name:** **My Card** (not “My IBD Card” — clearer risks of sounding official). Internal table/lib may still use `my_ibd_*`.
 
 ---
 
@@ -16,24 +18,20 @@ Research around young adults with IBD identifies gaps in:
 - care coordination  
 - decision-making  
 
-That suggests a potentially excellent FlareCare concept: a compact **self-advocacy** screen / card the user can show or review when talking to clinicians, work, or family.
+That suggests a FlareCare concept: a compact **self-advocacy** screen / card the user can review when talking to clinicians, work, or family.
 
 ---
 
-## Concept sketch — My IBD
+## Shipped v1
 
-**My IBD**  
-Crohn's disease  
-Diagnosed: 2019  
+- ⋮ menu → **My Card**
+- Fields: Condition · Diagnosed year · My treatment · My IBD team · Important history
+- Per-field morph: Add/edit input → **Save** → saved text + check (tap to edit again)
+- Supabase `my_ibd_profiles`
 
-**My treatment**  
-[their medications]
+**Purpose copy:** a personal card containing information you choose to share.
 
-**My IBD team**  
-[their clinician/service]
-
-**My important history**  
-[selected key events]
+**Never claim:** official IBD card, proof of IBD, Medical ID, access/priority rights. CCUK notes third-party access cards are not government-issued and don’t guarantee adjustments.
 
 ---
 
@@ -41,24 +39,14 @@ Diagnosed: 2019
 
 **Dangerous territory if we pull medical records automatically.**
 
-- Users **enter (or choose) this information themselves**.  
-- Do **not** obtain / import clinical records from NHS / hospitals / GPs / EHR APIs in a way that implies FlareCare holds official medical records.  
-- Frame as: **my notes about my IBD** — self-advocacy aid, not a medical record, not medical advice.  
+- Users **enter this information themselves**.  
+- Do **not** obtain / import clinical records from NHS / hospitals / GPs / EHR APIs.  
+- Frame as: **my notes** — self-advocacy aid, not a medical record, not medical advice.  
 - Avoid copy that sounds like “we fetched your diagnosis from your records.”
 
-Lawsuit / liability risk is real if we over-claim authority or pull records without a proper clinical-product posture (which FlareCare is not).
-
 ---
 
-## Product shape (early thoughts)
+## Later (not v1)
 
-- Likely Account / Support / Care-adjacent — a personal summary card, not a clinical logger.  
-- May later surface selected bits into Appointment Brief / Questions for my appointment — still user-controlled.  
-- Can reuse meds the user already tracks in-app (with consent / explicit include), but diagnosis / team / history stay user-authored.
-
----
-
-## Notes / open
-
-- Fits philosophy: gap between what apps measure and what makes living with IBD hard (advocacy / knowing your own story).  
-- Keep scope tiny: one card, not a full PHR.
+- Share / PDF / Brief integration (still user-controlled; no access-rights framing)
+- Optional include meds from My Meds (explicit toggle only)
