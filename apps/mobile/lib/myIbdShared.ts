@@ -11,6 +11,7 @@ export const MY_IBD_FIELD_KEYS = [
   "treatment",
   "team",
   "history",
+  "hcp_notes",
 ] as const;
 
 export type MyIbdFieldKey = (typeof MY_IBD_FIELD_KEYS)[number];
@@ -27,8 +28,8 @@ export const MY_IBD_FIELDS: {
   { key: "diagnosed_year", label: "Diagnosed year", placeholder: "e.g. 2019" },
   {
     key: "treatment",
-    label: "My treatment",
-    placeholder: "Medications or treatment you want noted",
+    label: "Current medications",
+    placeholder: "None in My Meds yet",
     multiline: true,
   },
   {
@@ -43,6 +44,12 @@ export const MY_IBD_FIELDS: {
     placeholder: "Key events you want to remember",
     multiline: true,
   },
+  {
+    key: "hcp_notes",
+    label: "Personal notes for healthcare professionals",
+    placeholder: "Anything else you want them to know",
+    multiline: true,
+  },
 ];
 
 /** Short fields stay short; longer notes get more room. */
@@ -52,6 +59,7 @@ export const MY_IBD_FIELD_MAX: Record<MyIbdFieldKey, number> = {
   treatment: 400,
   team: 200,
   history: 400,
+  hcp_notes: 400,
 };
 
 export function emptyMyIbdProfile(): MyIbdProfile {
@@ -61,6 +69,7 @@ export function emptyMyIbdProfile(): MyIbdProfile {
     treatment: "",
     team: "",
     history: "",
+    hcp_notes: "",
   };
 }
 
@@ -86,7 +95,7 @@ function profileFromRow(row: Record<string, unknown> | null): MyIbdProfile {
 export async function loadMyIbdProfile(userId: string): Promise<MyIbdProfile> {
   const { data, error } = await supabase
     .from(TABLES.MY_IBD_PROFILES)
-    .select("condition, diagnosed_year, treatment, team, history")
+    .select("condition, diagnosed_year, treatment, team, history, hcp_notes")
     .eq("user_id", userId)
     .maybeSingle();
   if (error) throw error;
@@ -112,6 +121,7 @@ export async function saveMyIbdField(
       treatment: next.treatment || null,
       team: next.team || null,
       history: next.history || null,
+      hcp_notes: next.hcp_notes || null,
       updated_at: new Date().toISOString(),
     },
     { onConflict: "user_id" },
@@ -122,4 +132,30 @@ export async function saveMyIbdField(
 
 export function myIbdFieldIsSaved(value: string): boolean {
   return value.trim().length > 0;
+}
+
+/** How many med names to show on the card before “+ N more”. */
+export const MY_IBD_MEDS_PREVIEW_COUNT = 3;
+
+export type MyIbdMedsPreview = {
+  names: string[];
+  moreCount: number;
+  total: number;
+};
+
+/** First few My Meds names (no dosage); remainder as moreCount. */
+export function summarizeMyIbdMedications(
+  rows: { name: string }[],
+  previewCount = MY_IBD_MEDS_PREVIEW_COUNT,
+): MyIbdMedsPreview {
+  const names = rows.map((row) => (row.name || "").trim()).filter(Boolean);
+  const total = names.length;
+  if (total <= previewCount) {
+    return { names, moreCount: 0, total };
+  }
+  return {
+    names: names.slice(0, previewCount),
+    moreCount: total - previewCount,
+    total,
+  };
 }

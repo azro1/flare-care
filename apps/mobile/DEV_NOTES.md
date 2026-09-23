@@ -1102,9 +1102,9 @@ create policy "going_out_profiles_delete_own"
   using (auth.uid() = user_id);
 ```
 
-### My Card (`my_ibd_profiles`)
+### My IBD Card (`my_ibd_profiles`)
 
-User-authored personal card (⋮ → **My Card**). Not a medical record / official ID. Run in the Supabase SQL editor if needed (already applied on FlareCare):
+User-authored personal card (⋮ → **My IBD Card**). Not a medical record / official ID. Run in the Supabase SQL editor if needed (already applied on FlareCare):
 
 ```sql
 create table if not exists public.my_ibd_profiles (
@@ -1114,6 +1114,7 @@ create table if not exists public.my_ibd_profiles (
   treatment text,
   team text,
   history text,
+  hcp_notes text,
   created_at timestamptz not null default now(),
   updated_at timestamptz not null default now()
 );
@@ -1140,6 +1141,9 @@ create policy "my_ibd_profiles_update_own"
 create policy "my_ibd_profiles_delete_own"
   on public.my_ibd_profiles for delete
   using (auth.uid() = user_id);
+
+-- Applied later if upgrading an existing table:
+-- alter table public.my_ibd_profiles add column if not exists hcp_notes text;
 ```
 
 ---
@@ -1172,11 +1176,16 @@ Product backlog for later — not implementation work yet. Ship notes go in **`C
 - **Shipped (v1):** Support → **Practical support** → IBD at work. One guide screen; six topic accordions. Not a tracker; not legal/medical advice.
 - **Plan:** [`plans/ibd-at-work.md`](./plans/ibd-at-work.md).
 
-### Self-advocacy — My Card
+### Self-advocacy — My IBD Card
 
-- **Shipped (v1):** ⋮ → **My Card**. User-authored fields (condition, year, treatment, team, history). Input → Save → saved text + check. Not a medical record / official ID / access card.
+- **Shipped (v1):** ⋮ → **My IBD Card**. User-authored: IBD type, diagnosis date, current medications, IBD team/service, important history, notes for HCPs. Leave field or Save → check. Show/refer with professionals. Not a medical record / official ID / access card.
 - **Storage:** Supabase `my_ibd_profiles` (SQL above).
 - **Plan:** [`plans/my-ibd-self-advocacy.md`](./plans/my-ibd-self-advocacy.md).
+
+### Log Symptoms v2 — IBD-type branching
+
+- **Idea (version 2 — not now):** Step 1 IBD type (Crohn’s / UC / Other / Not sure) → **branch** the wizard so we collect disease-relevant data, not one shared questionnaire. Research gate first (STRIDE-II PRO2 pairs, BSG, CCUK, validated PROs) — **do not invent questions from scratch**.
+- **Plan:** [`plans/log-symptoms-ibd-branching-v2.md`](./plans/log-symptoms-ibd-branching-v2.md).
 
 ### Safety — What happens if…?
 

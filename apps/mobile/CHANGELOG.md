@@ -4,9 +4,9 @@ Shipped / unreleased UI and behaviour updates for the Expo app (`apps/mobile`). 
 
 ## Unreleased
 
-### My Card (2026-09)
+### My IBD Card (2026-09)
 
-- ⋮ → **My Card**: user-authored personal notes (condition, year, treatment, team, history). Save a field → it locks with a check; tap to edit. Not a medical record / official ID / access card. Supabase `my_ibd_profiles`.
+- ⋮ → **My IBD Card**: personal IBD info card to show/refer with HCPs (type, diagnosis date, medications, team/service, history, notes for professionals). Leave field or Save → check. Not a medical record / official ID / access card. Supabase `my_ibd_profiles`.
 
 ### Support — IBD at work (2026-09)
 

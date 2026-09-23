@@ -1,6 +1,7 @@
 /**
  * My Card — personal notes the user chooses to share.
  * Per-field input morphs to saved text + check after Save (Google-style).
+ * Current medications: read-only preview from My Meds (names + “+ N more”).
  * Not a medical record / official ID / access card.
  */
 import React, { useCallback, useEffect, useState } from "react";
@@ -16,6 +17,7 @@ import {
   TextInput,
   View,
 } from "react-native";
+import { useFocusEffect } from "@react-navigation/native";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { LogHistoryCard } from "../components/LogHistoryList";
 import { FLARE_CHROME_LUCIDE, FlareLucideIcon } from "../lib/flareLucideIcons";
@@ -33,6 +35,7 @@ import {
   TRAY_ROW_PADDING_Y,
   bottomTabBarScrollInset,
 } from "../lib/layoutConstants";
+import { fetchMedicationsForUser } from "../lib/medicationShared";
 import {
   emptyMyIbdProfile,
   loadMyIbdProfile,
@@ -40,7 +43,9 @@ import {
   MY_IBD_FIELDS,
   myIbdFieldIsSaved,
   saveMyIbdField,
+  summarizeMyIbdMedications,
   type MyIbdFieldKey,
+  type MyIbdMedsPreview,
   type MyIbdProfile,
 } from "../lib/myIbdShared";
 import { useFlareColors } from "../theme";
@@ -49,12 +54,15 @@ type Props = {
   userId: string;
 };
 
+const EMPTY_MEDS: MyIbdMedsPreview = { names: [], moreCount: 0, total: 0 };
+
 export function MyCardScreen({ userId }: Props) {
   const c = useFlareColors();
   const insets = useSafeAreaInsets();
   const bottomScrollInset = bottomTabBarScrollInset(insets.bottom);
   const [loading, setLoading] = useState(true);
   const [profile, setProfile] = useState<MyIbdProfile>(() => emptyMyIbdProfile());
+  const [medsPreview, setMedsPreview] = useState<MyIbdMedsPreview>(EMPTY_MEDS);
   /** Which field is in edit mode (null = none editing; saved fields show as locked). */
   const [editingKey, setEditingKey] = useState<MyIbdFieldKey | null>(null);
   const [draft, setDraft] = useState("");
@@ -63,8 +71,12 @@ export function MyCardScreen({ userId }: Props) {
 
   const refresh = useCallback(async () => {
     try {
-      const next = await loadMyIbdProfile(userId);
+      const [next, medRows] = await Promise.all([
+        loadMyIbdProfile(userId),
+        fetchMedicationsForUser(userId),
+      ]);
       setProfile(next);
+      setMedsPreview(summarizeMyIbdMedications(medRows));
     } catch {
       Alert.alert("Couldn't load My Card", "Check your connection and try again.");
     } finally {
@@ -72,9 +84,11 @@ export function MyCardScreen({ userId }: Props) {
     }
   }, [userId]);
 
-  useEffect(() => {
-    void refresh();
-  }, [refresh]);
+  useFocusEffect(
+    useCallback(() => {
+      void refresh();
+    }, [refresh]),
+  );
 
   useEffect(() => {
     const showEvt = Platform.OS === "ios" ? "keyboardWillShow" : "keyboardDidShow";
@@ -90,6 +104,7 @@ export function MyCardScreen({ userId }: Props) {
   }, []);
 
   const beginEdit = (key: MyIbdFieldKey) => {
+    if (key === "treatment") return;
     setEditingKey(key);
     setDraft(profile[key]);
   };
@@ -100,6 +115,7 @@ export function MyCardScreen({ userId }: Props) {
   };
 
   const commitField = async (key: MyIbdFieldKey) => {
+    if (key === "treatment") return;
     if (savingKey) return;
     setSavingKey(key);
     try {
@@ -124,6 +140,7 @@ export function MyCardScreen({ userId }: Props) {
 
   const padBottom =
     keyboardHeight > 0 ? keyboardHeight + STACKED_LINE_GAP * 2 : bottomScrollInset + 24;
+  const hasMeds = medsPreview.total > 0;
 
   return (
     <ScrollView
@@ -133,25 +150,59 @@ export function MyCardScreen({ userId }: Props) {
       keyboardDismissMode="interactive"
     >
       <LogHistoryCard style={styles.shellCard}>
-        <Text style={[styles.lead, { color: c.text }]}>My Card</Text>
+        <Text style={[styles.lead, { color: c.text }]}>My IBD Card</Text>
         <Text style={[styles.support, { color: c.textMuted }]}>
-          A personal card containing information you choose to share.
+          A personal card containing key information about you and your condition.
         </Text>
 
         <View style={[styles.tray, { backgroundColor: c.surfaceSubtle }]}>
           {MY_IBD_FIELDS.map((field, index) => {
-            const saved = myIbdFieldIsSaved(profile[field.key]);
-            const isEditing = editingKey === field.key;
+            const fromMyMeds = field.key === "treatment";
+            const saved = fromMyMeds ? hasMeds : myIbdFieldIsSaved(profile[field.key]);
+            const isEditing = !fromMyMeds && editingKey === field.key;
             const showBorder = index < MY_IBD_FIELDS.length - 1;
             const borderStyle = showBorder
               ? { borderBottomWidth: StyleSheet.hairlineWidth, borderBottomColor: c.cardBorder }
               : null;
 
+            if (fromMyMeds) {
+              return (
+                <View key={field.key} style={[styles.savedRow, borderStyle]}>
+                  <View style={styles.savedTextCol}>
+                    <Text style={[styles.fieldLabel, { color: c.textMuted }]}>{field.label}</Text>
+                    {hasMeds ? (
+                      <>
+                        {medsPreview.names.map((name, i) => (
+                          <Text key={`${name}-${i}`} style={[styles.savedValue, { color: c.text }]}>
+                            {name}
+                          </Text>
+                        ))}
+                        {medsPreview.moreCount > 0 ? (
+                          <Text style={[styles.moreMeds, { color: c.textMuted }]}>
+                            + {medsPreview.moreCount} more
+                          </Text>
+                        ) : null}
+                      </>
+                    ) : (
+                      <Text style={[styles.addHint, { color: c.textMuted }]}>{field.placeholder}</Text>
+                    )}
+                  </View>
+                  {hasMeds ? (
+                    <FlareLucideIcon
+                      icon={FLARE_CHROME_LUCIDE.checkCircle}
+                      size={22}
+                      color={c.primary}
+                    />
+                  ) : null}
+                </View>
+              );
+            }
+
             if (isEditing) {
               const busy = savingKey === field.key;
               return (
                 <View key={field.key} style={[styles.fieldBlock, borderStyle]}>
-                  <Text style={[styles.fieldLabel, { color: c.textSecondary }]}>{field.label}</Text>
+                  <Text style={[styles.fieldLabel, { color: c.textMuted }]}>{field.label}</Text>
                   <View style={styles.inputRow}>
                     <TextInput
                       value={draft}
@@ -213,7 +264,7 @@ export function MyCardScreen({ userId }: Props) {
                   style={[styles.savedRow, borderStyle]}
                 >
                   <View style={styles.savedTextCol}>
-                    <Text style={[styles.fieldLabel, { color: c.textSecondary }]}>{field.label}</Text>
+                    <Text style={[styles.fieldLabel, { color: c.textMuted }]}>{field.label}</Text>
                     <Text style={[styles.addHint, { color: c.textMuted }]}>{field.placeholder}</Text>
                   </View>
                   <Text style={[styles.addAction, { color: c.primary }]}>Add</Text>
@@ -230,7 +281,7 @@ export function MyCardScreen({ userId }: Props) {
                 style={[styles.savedRow, borderStyle]}
               >
                 <View style={styles.savedTextCol}>
-                  <Text style={[styles.fieldLabel, { color: c.textSecondary }]}>{field.label}</Text>
+                  <Text style={[styles.fieldLabel, { color: c.textMuted }]}>{field.label}</Text>
                   <Text style={[styles.savedValue, { color: c.text }]}>{profile[field.key]}</Text>
                 </View>
                 <FlareLucideIcon
@@ -335,6 +386,11 @@ const styles = StyleSheet.create({
     fontSize: FLARE_FONT_SIZE.body,
     lineHeight: FLARE_LINE_HEIGHT.body,
     fontFamily: FLARE_FONT_FAMILY.medium,
+  },
+  moreMeds: {
+    fontSize: FLARE_FONT_SIZE.body,
+    lineHeight: FLARE_LINE_HEIGHT.body,
+    fontFamily: FLARE_FONT_FAMILY.regular,
   },
   addHint: {
     fontSize: FLARE_FONT_SIZE.body,

@@ -18,7 +18,7 @@ type OverflowItem = {
  */
 const OVERFLOW_ITEMS: OverflowItem[] = [
   { id: "settings", label: "Settings", route: "Settings" },
-  { id: "myCard", label: "My Card", route: "MyCard" },
+  { id: "myCard", label: "My IBD Card", route: "MyCard" },
   { id: "support", label: "Support", route: "Support" },
   { id: "about", label: "About", route: "About" },
   { id: "help", label: "Help", route: "AccountHelp" },

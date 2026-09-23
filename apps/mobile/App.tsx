@@ -4857,7 +4857,7 @@ function AppTabs({
       Support: "Support",
       OutAbout: "Out & About",
       GoingOut: "Going Out",
-      MyCard: "My Card",
+      MyCard: "My IBD Card",
       MyTools: "My tools",
       Reminders: "Reminders",
       Hydration: "My Hydration",

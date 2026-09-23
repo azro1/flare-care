@@ -172,8 +172,8 @@ Open from **Settings → Push Notifications / Reminders** (wording in the app).
 - **Nutrition Guide** — food categories and tips (with a disclaimer)
 - **IBD at work** — practical workplace topics (adjustments, explaining IBD, toilet urgency, fatigue, appointments, sudden worsen). Sourced UK guidance; not legal/medical advice.
 
-**My Card**
-- ⋮ → personal notes the user chooses to share (condition, year, treatment, team, history). Not a medical record or official ID.
+**My IBD Card**
+- ⋮ → personal IBD information card to show or refer to with healthcare professionals (IBD type, diagnosis date, current medications, IBD team/service, important history, notes for HCPs). User-authored; not a medical record or official ID.
 
 **My tools — Out & About**
 - Hub for leaving-the-house helpers; v1 **Going Out** (your checklist → personalised ticks; Supabase)
@@ -200,7 +200,8 @@ Right now news on home is **turned off** in the app, so you normally won’t see
 
 - **Going Out** — tiny “I'm going out” planner: personalised checklist from the user’s own list (`going_out_profiles`). Plan: `plans/going-out.md` (**built v1** under My tools → Out & About).
 - **Questions for my appointment** — Appointments hub **Questions** tab. Quick notes (“Ask about my fatigue.”). User-authored only; not medical advice. Plan: `plans/appointment-questions.md` (built v1 — run SQL).
-- **My Card** — ⋮ personal notes (condition, treatment, team, history). User-authored only; not a medical record / official ID. Plan: `plans/my-ibd-self-advocacy.md` (**built v1**).
+- **My IBD Card** — ⋮ personal IBD info card for clinic (type, diagnosis date, medications, team, history, notes for HCPs). User-authored only; not a medical record / official ID. Plan: `plans/my-ibd-self-advocacy.md` (**built v1**).
+- **Log Symptoms v2** — IBD-type branching (Crohn’s / UC / Other / Not sure) so symptom data matches what clinicians care about; research before inventing questions. Plan: `plans/log-symptoms-ibd-branching-v2.md` (**v2 — not building now**).
 - **Private Support topics** — optional resources in Support only (sex & relationships, fertility & pregnancy, body image, talking to others about IBD). Not on the dashboard. Plan: `plans/private-support-topics.md`.
 - **What happens if…?** — section/card: who I contact (IBD team) + when to seek help (**clinically reviewed** guidance). Plan: `plans/what-happens-if.md`.
 - **Find a Toilet** — game-changer: usable-now UX; hard part is **freshness** (honest last-checked); v1 = GB Toilet Map → backend → map/list → Maps app; no 15-API mega system. Plan: `plans/find-a-toilet.md`.
