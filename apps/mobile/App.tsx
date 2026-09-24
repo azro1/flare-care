@@ -264,6 +264,7 @@ import { MedicalSupplyRequestScreen } from "./screens/MedicalSupplyRequestScreen
 import { MedicalSuppliesSetupRoute } from "./screens/MedicalSuppliesSetupScreen";
 import { OutAboutScreen } from "./screens/OutAboutScreen";
 import { GoingOutScreen } from "./screens/GoingOutScreen";
+import { FindToiletScreen } from "./screens/FindToiletScreen";
 import { MyCardScreen } from "./screens/MyCardScreen";
 import { MyToolsScreen } from "./screens/MyToolsScreen";
 import { MY_TOOLS_HINT } from "./lib/myToolsShared";
@@ -4857,6 +4858,7 @@ function AppTabs({
       Support: "Support",
       OutAbout: "Out & About",
       GoingOut: "Going Out",
+      FindToilet: "Find a Toilet",
       MyCard: "My IBD Card",
       MyTools: "My tools",
       Reminders: "Reminders",
@@ -4935,7 +4937,8 @@ function AppTabs({
       route.name === "MedicalSupplyRequest" ||
       route.name === "MyTools" ||
       route.name === "OutAbout" ||
-      route.name === "GoingOut";
+      route.name === "GoingOut" ||
+      route.name === "FindToilet";
 
     const headerRightContent = route.name === "BristolGuide" ? (
       <InfoHintButton
@@ -5118,6 +5121,7 @@ function AppTabs({
             <AppStack.Screen name="IbdAtWork">{() => <IbdAtWorkScreen />}</AppStack.Screen>
             <AppStack.Screen name="OutAbout">{() => <OutAboutScreen />}</AppStack.Screen>
             <AppStack.Screen name="GoingOut">{() => <GoingOutScreen userId={user.id} />}</AppStack.Screen>
+            <AppStack.Screen name="FindToilet">{() => <FindToiletScreen />}</AppStack.Screen>
             <AppStack.Screen name="MyCard">{() => <MyCardScreen userId={user.id} />}</AppStack.Screen>
             <AppStack.Screen name="MyTools">{() => <MyToolsScreen />}</AppStack.Screen>
             <AppStack.Screen name="LatestNews">{() => <LatestNewsScreen user={user} />}</AppStack.Screen>

@@ -1,12 +1,13 @@
 /**
  * Out & About — umbrella for everyday leaving-the-house helpers.
- * v1: Going Out only; Find a Toilet / Travel / etc. can land here later.
+ * Going Out (prep) + Find a Toilet (in-the-moment).
  */
 import React from "react";
 import { Pressable, ScrollView, StyleSheet, Text, View } from "react-native";
 import { useNavigation } from "@react-navigation/native";
 import { LogHistoryCard } from "../components/LogHistoryList";
 import { FLARE_CHROME_LUCIDE, FlareLucideIcon } from "../lib/flareLucideIcons";
+import { FIND_TOILET_ICON } from "../lib/findToiletShared";
 import { OUT_ABOUT_ICON } from "../lib/goingOutShared";
 import {
   CARD_INNER_PADDING,
@@ -37,13 +38,28 @@ export function OutAboutScreen() {
           accessibilityRole="button"
           accessibilityLabel="Open Going Out"
           onPress={() => navigation.navigate("GoingOut")}
-          style={styles.row}
+          style={[styles.row, styles.rowBorder, { borderBottomColor: c.cardBorder }]}
         >
           <FlareLucideIcon icon={OUT_ABOUT_ICON} size={HOME_FEATURE_TILE_ICON_SIZE} color={c.primary} />
           <View style={styles.textCol}>
             <Text style={[styles.title, { color: c.text }]}>Going Out</Text>
             <Text style={[styles.hint, { color: c.textMuted }]}>
               Your prep checklist when you leave the house
+            </Text>
+          </View>
+          <FlareLucideIcon icon={FLARE_CHROME_LUCIDE.forward} size={NAV_ROW_CHEVRON_SIZE} color={c.text} />
+        </Pressable>
+        <Pressable
+          accessibilityRole="button"
+          accessibilityLabel="Open Find a Toilet"
+          onPress={() => navigation.navigate("FindToilet")}
+          style={styles.row}
+        >
+          <FlareLucideIcon icon={FIND_TOILET_ICON} size={HOME_FEATURE_TILE_ICON_SIZE} color={c.primary} />
+          <View style={styles.textCol}>
+            <Text style={[styles.title, { color: c.text }]}>Find a Toilet</Text>
+            <Text style={[styles.hint, { color: c.textMuted }]}>
+              Nearby toilets when you need one now
             </Text>
           </View>
           <FlareLucideIcon icon={FLARE_CHROME_LUCIDE.forward} size={NAV_ROW_CHEVRON_SIZE} color={c.text} />
@@ -65,6 +81,9 @@ const styles = StyleSheet.create({
     alignItems: "center",
     paddingVertical: 12,
     gap: 10,
+  },
+  rowBorder: {
+    borderBottomWidth: StyleSheet.hairlineWidth,
   },
   textCol: { flex: 1, gap: 4 },
   title: {

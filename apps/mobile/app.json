@@ -15,7 +15,10 @@
     },
     "ios": {
       "supportsTablet": true,
-      "bundleIdentifier": "com.flarecare.mobile"
+      "bundleIdentifier": "com.flarecare.mobile",
+      "infoPlist": {
+        "NSLocationWhenInUseUsageDescription": "Flarecare uses your location to find toilets near you."
+      }
     },
     "android": {
       "userInterfaceStyle": "automatic",
@@ -27,7 +30,7 @@
       "edgeToEdgeEnabled": true,
       "predictiveBackGestureEnabled": false,
       "package": "com.flarecare.mobile",
-      "permissions": ["SCHEDULE_EXACT_ALARM"]
+      "permissions": ["SCHEDULE_EXACT_ALARM", "ACCESS_COARSE_LOCATION", "ACCESS_FINE_LOCATION"]
     },
     "web": {
       "favicon": "./assets/favicon.png"
@@ -48,6 +51,12 @@
         "expo-local-authentication",
         {
           "faceIDPermission": "Allow Flarecare to use Face ID."
+        }
+      ],
+      [
+        "expo-location",
+        {
+          "locationWhenInUsePermission": "Flarecare uses your location to find toilets near you."
         }
       ]
     ],

@@ -1,6 +1,6 @@
 # Plan: Find a Toilet (urgency → freedom)
 
-**Status:** Idea — not built (worth building; not today). **Game-changer candidate.** Mental model: **urgency → freedom to go out**.
+**Status:** Shipped v1 (list) — Home → My tools → Out & About → **Find a Toilet**. Embedded map later.
 
 **Doc home:** `apps/mobile/plans/`. Short backlog pointer also under **Looking ahead** in `DEV_NOTES.md` / `FEATURES.md`.
 
@@ -99,8 +99,12 @@ e.g. **London Assembly** public-toilet open data — legitimate public datasets 
 ## Portfolio path (v1 — keep it small)
 
 ```
-GB Toilet Map dataset → FlareCare backend → map/list → directions
+GB Toilet Map GraphQL → FlareCare `/api/toilets/nearby` → list → Directions (Apple/Google Maps)
 ```
+
+**Shipped v1:** location permission, nearby list (distance + Free / Accessible / etc.), last checked when known, honesty + CC BY attribution, Directions hand-off. Direct Toilet Map GraphQL fallback if `EXPO_PUBLIC_WEB_API_BASE_URL` is unset (local/dev).
+
+**Not in v1:** in-app map, open-now ranking from opening hours, Report a problem.
 
 Then improve the **FlareCare experience** (usable-now ranking, honesty UI, later OSM / London Assembly / Report a problem).
 

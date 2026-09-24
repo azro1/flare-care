@@ -4,6 +4,10 @@ Shipped / unreleased UI and behaviour updates for the Expo app (`apps/mobile`). 
 
 ## Unreleased
 
+### Find a Toilet (2026-09)
+
+- My tools → **Out & About** → **Find a Toilet**: nearby list from the Great British Public Toilet Map (CC BY 4.0) via FlareCare `/api/toilets/nearby` (direct GraphQL fallback for local). Location permission → ranked by distance → **Directions** opens Apple/Google Maps. CC BY attribution on screen. List-first v1 (no in-app map yet).
+
 ### My IBD Card (2026-09)
 
 - ⋮ → **My IBD Card**: personal IBD info card to show/refer with HCPs (type, diagnosis date, medications, team/service, history, notes for professionals). Leave field or Save → check. Not a medical record / official ID / access card. Supabase `my_ibd_profiles`.
@@ -14,7 +18,7 @@ Shipped / unreleased UI and behaviour updates for the Expo app (`apps/mobile`). 
 
 ### My tools — Out & About / Going Out (2026-09)
 
-- Home → **My tools** → **Out & About** hub → **Going Out**: user builds a checklist once; personalised tick list when leaving. Stored in Supabase `going_out_profiles` (account-scoped). Umbrella ready for Find a Toilet / Travel later.
+- Home → **My tools** → **Out & About** hub → **Going Out**: user builds a checklist once; personalised tick list when leaving. Stored in Supabase `going_out_profiles` (account-scoped). Also **Find a Toilet** (nearby list).
 
 ### Guides & legal accordion (2026-09)
 

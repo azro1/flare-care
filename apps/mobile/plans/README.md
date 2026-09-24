@@ -13,7 +13,7 @@ Not for long-lived app reminders (`DEV_NOTES.md`), same-day working list (`today
 | [my-ibd-self-advocacy.md](./my-ibd-self-advocacy.md) | Built (v1) — ⋮ **My IBD Card**; user-authored; careful framing |
 | [log-symptoms-ibd-branching-v2.md](./log-symptoms-ibd-branching-v2.md) | **v2 plan** — research first; IBD-type branching for Log Symptoms |
 | [what-happens-if.md](./what-happens-if.md) | Idea — not built (clinically reviewed seek-help) |
-| [find-a-toilet.md](./find-a-toilet.md) | Idea — not built (**game-changer**; urgency UX) |
+| [find-a-toilet.md](./find-a-toilet.md) | Built (v1 list) — Out & About → Find a Toilet; map later |
 | [food-drink-log.md](./food-drink-log.md) | Built — run SQL + smoke |
 | [collapsing-large-title-headers.md](./collapsing-large-title-headers.md) | (see file) |
 | [dashboard-pill-section-redesign.md](./dashboard-pill-section-redesign.md) | (see file) |

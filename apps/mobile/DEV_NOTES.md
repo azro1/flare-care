@@ -19,6 +19,7 @@ Long-lived conventions, “don’t forget / don’t duplicate,” SQL checklists
 - **Product copy** (Support guides, What happens if…, IBD at work, etc.) must be traceable to those sources. If you cannot find a source, **do not ship the claim** — ask Simon.
 - FlareCare helps people **understand and navigate**; it does **not** replace clinicians, lawyers, or official advice.
 - **Disclaimer footers:** do **not** add them to new screens. Legal/disclaimer copy will live in **one place later** — not sprinkled per feature. New screens follow the normal pattern (title + support + content) unless Simon asks otherwise.
+- **Secondary copy → `?` first:** use header **`InfoHintButton`** for tips / caveats / optional explainer text so it stays off the page. Only put that copy **in sight** when it must be visible (e.g. CC BY data attribution that has to credit on the feature screen).
 
 Breaking this rule risks real harm and legal exposure. Treat **sourcing** as non-negotiable for anything that goes public.
 
@@ -1155,7 +1156,8 @@ Product backlog for later — not implementation work yet. Ship notes go in **`C
 ### Everyday life — Out & About / Going Out
 
 - **Shipped (v1):** Home → **My tools** → **Out & About** hub → **Going Out** (user checklist → personalised leave-home ticks). Storage: Supabase `going_out_profiles` (SQL above). Legacy AsyncStorage migrated once on load.
-- **Later under the umbrella (not built):** Find a Toilet, Travel, Work / University, etc.
+- **Later under the umbrella (not built):** Travel, Work / University, etc.
+- **Find a Toilet (v1 list):** Out & About → **Find a Toilet**. Plan: [`plans/find-a-toilet.md`](./plans/find-a-toilet.md).
 - **Plan:** [`plans/going-out.md`](./plans/going-out.md).
 
 ### Clinic prep — Questions for my appointment
@@ -1195,10 +1197,8 @@ Product backlog for later — not implementation work yet. Ship notes go in **`C
 
 ### Everyday urgency — Find a Toilet
 
-- **Game changer:** urgency UX — **usable** (open now), not merely nearest.
-- **Hard part:** **freshness** — be honest (last checked + “may have changed”); later simple **Report a problem** (closed / not accessible / incorrect).
-- **v1 path:** GB Toilet Map → FlareCare backend → map/list → Apple/Google Maps. **Do not** start with 15 APIs.
-- **Home:** My tools; `FindToiletScreen` + `lib/findToiletShared.ts`.
+- **Shipped (v1 list):** My tools → Out & About → **Find a Toilet**. Nearby list from GB Toilet Map (CC BY 4.0) via `/api/toilets/nearby` (GraphQL fallback locally). Directions → Apple/Google Maps. CC BY attribution on screen. No in-app map yet.
+- **Later:** usable-now / open hours ranking, embedded map, Report a problem.
 - **Plan:** [`plans/find-a-toilet.md`](./plans/find-a-toilet.md).
 
 ### Auth — more OAuth providers
