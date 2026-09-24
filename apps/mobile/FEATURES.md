@@ -176,7 +176,7 @@ Open from **Settings → Push Notifications / Reminders** (wording in the app).
 - ⋮ → personal IBD information card to show or refer to with healthcare professionals (IBD type, diagnosis date, current medications, IBD team/service, important history, notes for HCPs). User-authored; not a medical record or official ID.
 
 **My tools — Out & About**
-- Hub for leaving-the-house helpers; **Going Out** (checklist) + **Find a Toilet** (nearby list → Maps)
+- Hub for leaving-the-house helpers; **Going Out** (checklist) + **Find a Toilet** (map: near me + choose a place)
 
 ---
 
@@ -204,7 +204,7 @@ Right now news on home is **turned off** in the app, so you normally won’t see
 - **Log Symptoms v2** — IBD-type branching (Crohn’s / UC / Other / Not sure) so symptom data matches what clinicians care about; research before inventing questions. Plan: `plans/log-symptoms-ibd-branching-v2.md` (**v2 — not building now**).
 - **Private Support topics** — optional resources in Support only (sex & relationships, fertility & pregnancy, body image, talking to others about IBD). Not on the dashboard. Plan: `plans/private-support-topics.md`.
 - **What happens if…?** — section/card: who I contact (IBD team) + when to seek help (**clinically reviewed** guidance). Plan: `plans/what-happens-if.md`.
-- **Find a Toilet** — nearby list from GB Toilet Map (CC BY 4.0); Directions → Maps. Plan: `plans/find-a-toilet.md` (**built v1 list**).
+- **Find a Toilet** — list + in-app map (filters / circle badges) from GB Toilet Map (CC BY 4.0); Directions → Maps. Plan: `plans/find-a-toilet.md`.
 - **More sign-in OAuth** (e.g. Apple) — keep **email** as the main CTA; don’t stack many full-width OAuth buttons on the method screen (fingerprint quick-unlock sits at the bottom and will cover them). Prefer **“More ways to sign in”** → sheet with providers, or a compact icon row. Today: email code + Google only.
 
 ---

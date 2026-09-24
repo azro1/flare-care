@@ -1,8 +1,33 @@
 # Plan: Find a Toilet (urgency → freedom)
 
-**Status:** Shipped v1 (list) — Home → My tools → Out & About → **Find a Toilet**. Embedded map later.
+**Status:** Map-first **Near me** (primary) + **Choose a place** (secondary). Metro-only — no EAS rebuild for this UX.
 
 **Doc home:** `apps/mobile/plans/`. Short backlog pointer also under **Looking ahead** in `DEV_NOTES.md` / `FEATURES.md`.
+
+---
+
+## SHORT PASTE FOR CHATGPT (use this)
+
+FlareCare Expo app. Feature **Find a Toilet** under **My tools → Out & About** (next to **Going Out**).
+
+**Built:** GB Toilet Map GraphQL (CC BY, no key) via `lib/findToiletShared.ts` (+ optional `/api/toilets/nearby`). List then “Show toilets on map” (`react-native-maps`, filters, circle badges, Directions). Android Maps key = `EXPO_PUBLIC_GOOGLE_MAPS_API_KEY` (EAS). Attribution on screen; no disclaimer footers. Flow today is dumb (list→map, double GPS/fetch).
+
+**Product priority (important):**
+1. **Main:** toilets **near me** (map-first, fast) — everyday / urgency use.
+2. **Side option:** **choose a destination** — for planning trips where toilets aren’t obvious: camping, parks, beaches/holiday, long walks/hikes, festivals/events, outdoor attractions, travelling / unfamiliar places, long journeys. Distances from **that place**, not from home.
+
+Do **not** make destination-search the primary home of the feature. Near me is the default; destination is available when planning.
+
+**Files:** `findToiletShared.ts`, `FindToiletScreen.tsx`, `FindToiletMapScreen.tsx`, `OutAboutScreen.tsx`, `app.config.js`, `plans/find-a-toilet.md`.
+
+**Constraint:** Metro-only redesign if possible (no EAS rebuild unless new native module). Keep existing Expo architecture; don’t invent a new stack.
+
+**Ask:** Redesign UX + plan: map-first **near me** as main, **choose destination** as side option, one fetch per anchor.
+
+### Later UX polish (not blocking)
+
+- **Just Park–style pull-up sheet:** bottom card expands (thumb drag) to a scrollable list of all results (4 / 8 / 12…) with details + Directions — not only the selected pin.
+- **Photos:** Toilet Map GraphQL has **no image fields**. Can’t show venue photos from this dataset. Would need another licensed source later — don’t invent or scrape.
 
 ---
 
@@ -102,9 +127,11 @@ e.g. **London Assembly** public-toilet open data — legitimate public datasets 
 GB Toilet Map GraphQL → FlareCare `/api/toilets/nearby` → list → Directions (Apple/Google Maps)
 ```
 
-**Shipped v1:** location permission, nearby list (distance + Free / Accessible / etc.), last checked when known, honesty + CC BY attribution, Directions hand-off. Direct Toilet Map GraphQL fallback if `EXPO_PUBLIC_WEB_API_BASE_URL` is unset (local/dev).
+**Shipped v1:** location permission, nearby list (distance + Free / Accessible / etc.), last checked when known, CC BY attribution, Directions hand-off. Direct Toilet Map GraphQL fallback if proxy missing.
 
-**Not in v1:** in-app map, open-now ranking from opening hours, Report a problem.
+**Map v2 (Just Park–style):** list → **Show toilets on map** → filters (All / Free / Accessible / Radar key), circle badges on map, count + selected details + Directions at bottom. Needs `react-native-maps` + Android Google Maps API key in env + **dev client rebuild**.
+
+**Not yet:** open-now ranking from opening hours, Report a problem.
 
 Then improve the **FlareCare experience** (usable-now ranking, honesty UI, later OSM / London Assembly / Report a problem).
 

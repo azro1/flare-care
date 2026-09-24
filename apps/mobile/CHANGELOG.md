@@ -6,7 +6,7 @@ Shipped / unreleased UI and behaviour updates for the Expo app (`apps/mobile`). 
 
 ### Find a Toilet (2026-09)
 
-- My tools → **Out & About** → **Find a Toilet**: nearby list from the Great British Public Toilet Map (CC BY 4.0) via FlareCare `/api/toilets/nearby` (direct GraphQL fallback for local). Location permission → ranked by distance → **Directions** opens Apple/Google Maps. CC BY attribution on screen. List-first v1 (no in-app map yet).
+- My tools → **Out & About** → **Find a Toilet**: map-first from GB Toilet Map (CC BY 4.0). **Near me** (primary) + **Choose a place** (secondary, UK place search). Filters, circle badges, Directions → Maps. Attribution on screen. Metro-only UX (no rebuild for this flow).
 
 ### My IBD Card (2026-09)
 

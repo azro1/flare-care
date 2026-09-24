@@ -39,6 +39,19 @@ Hardcoding is allowed only when something is truly one-off and cannot sensibly l
 
 ---
 
+## HARD RULE — follow established UI patterns (do not invent chrome)
+
+**Before styling a new screen or sheet, copy an existing FlareCare pattern. Do not invent borders, card shells, or one-off chrome.**
+
+- Find the closest shipped screen / component first (`LogHistoryList` / `LogHistoryCard`, tracker trays, sheets, chips) and match **structure + styling**.
+- White shells and inset trays use **fill only** (`c.card`, `c.surfaceSubtle`) — **no** hairline `borderWidth` on cards, trays, chips, inputs, or sheets. Hierarchy = contrast + spacing, not strokes.
+- Reuse shared list/card components when they exist — do not hand-roll bordered “cards”.
+- If unsure which pattern — **ask Simon**. Do not freestyle.
+
+Breaking this is how Find a Toilet picked up borders the rest of the app never uses. Treat pattern-matching as non-negotiable from the first message of a session.
+
+---
+
 ## HARD RULE — Supabase Data API grants (from 2026-10-30)
 
 **Existing tables keep working.** No action needed for tables already in production.
@@ -1197,7 +1210,7 @@ Product backlog for later — not implementation work yet. Ship notes go in **`C
 
 ### Everyday urgency — Find a Toilet
 
-- **Shipped (v1 list):** My tools → Out & About → **Find a Toilet**. Nearby list from GB Toilet Map (CC BY 4.0) via `/api/toilets/nearby` (GraphQL fallback locally). Directions → Apple/Google Maps. CC BY attribution on screen. No in-app map yet.
+- **Shipped (v1 list + map):** My tools → Out & About → **Find a Toilet** → list + **Show toilets on map** (filters, circle badges, count). GB Toilet Map (CC BY 4.0). Directions → Apple/Google Maps. Android needs Maps API key + rebuild.
 - **Later:** usable-now / open hours ranking, embedded map, Report a problem.
 - **Plan:** [`plans/find-a-toilet.md`](./plans/find-a-toilet.md).
 

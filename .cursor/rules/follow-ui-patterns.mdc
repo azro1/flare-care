@@ -1,0 +1,24 @@
+---
+description: Copy existing FlareCare UI patterns — do not invent chrome (borders, cards, trays)
+alwaysApply: true
+---
+
+# HARD RULE — follow established UI patterns (do not invent chrome)
+
+From the **start of every session**: before styling a new screen or sheet, **copy an existing FlareCare pattern**. Do not invent borders, card shells, or one-off chrome.
+
+## Do this first
+
+1. Find the closest shipped screen / component (`LogHistoryList` / `LogHistoryCard`, tracker trays, sheets, chips).
+2. Match **structure + styling** (fill, radius, padding, gap) — then adapt content.
+3. If unsure which pattern — ask Simon. Do **not** freestyle.
+
+## Cards / trays / lists
+
+- White shells and inset trays use **fill only** (`c.card`, `c.surfaceSubtle`) — **no** `borderWidth` / hairline outlines on cards, trays, chips, inputs, or sheets.
+- Visual hierarchy = background contrast + spacing, not strokes.
+- Reuse shared list/card components when they exist — do not hand-roll bordered “cards”.
+
+## Also recorded
+
+`apps/mobile/DEV_NOTES.md` (top, with the other hard rules).

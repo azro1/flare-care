@@ -19,6 +19,9 @@ const NEARBY_QUERY = `
       accessible
       babyChange
       radar
+      attended
+      notes
+      paymentDetails
       openingTimes
       updatedAt
       verifiedAt
@@ -36,6 +39,23 @@ function haversineMeters(lat1, lng1, lat2, lng2) {
     Math.sin(dLat / 2) ** 2 +
     Math.cos(toRad(lat1)) * Math.cos(toRad(lat2)) * Math.sin(dLng / 2) ** 2;
   return 2 * EARTH_RADIUS_M * Math.asin(Math.min(1, Math.sqrt(a)));
+}
+
+function formatOpenToday(openingTimes) {
+  if (!Array.isArray(openingTimes) || openingTimes.length < 7) return null;
+  const mondayIndex = (new Date().getDay() + 6) % 7;
+  const slot = openingTimes[mondayIndex];
+  if (!Array.isArray(slot) || slot.length < 2) return "Closed today";
+  const open = typeof slot[0] === "string" ? slot[0] : null;
+  const close = typeof slot[1] === "string" ? slot[1] : null;
+  if (!open || !close) return "Closed today";
+  return `Open today ${open}–${close}`;
+}
+
+function cleanNote(raw) {
+  if (typeof raw !== "string") return null;
+  const t = raw.replace(/\s+/g, " ").trim();
+  return t.length > 0 ? t : null;
 }
 
 function clampRadius(raw) {
@@ -99,6 +119,11 @@ export async function GET(request) {
           radarKey: loo.radar === true,
           babyChange: loo.babyChange === true,
           allGender: loo.allGender === true,
+          attended: loo.attended === true,
+          automatic: loo.automatic === true,
+          openToday: formatOpenToday(loo.openingTimes),
+          notes: cleanNote(loo.notes),
+          paymentDetails: cleanNote(loo.paymentDetails),
           updatedAt: loo.updatedAt || null,
           verifiedAt: loo.verifiedAt || null,
         };

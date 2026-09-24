@@ -74,6 +74,7 @@ Set these before running (e.g. `.env` or your shell, depending on how you load E
 - `EXPO_PUBLIC_SUPABASE_URL`
 - `EXPO_PUBLIC_SUPABASE_ANON_KEY`
 - `EXPO_PUBLIC_WEB_API_BASE_URL` — live: `https://flare-care.vercel.app` (no trailing slash). Phone calls web API routes here (supply email, brief email, etc.). Restart Expo after changes.
+- `EXPO_PUBLIC_GOOGLE_MAPS_API_KEY` — Android Maps SDK for **Find a Toilet** map (via `app.config.js`). Also set the same name as an **EAS** env var for the `development` profile — local `.env` is not uploaded to EAS. Rebuild the development client after setting. iOS uses Apple Maps (no key).
 - `EXPO_PUBLIC_OTP_EXPIRY_SECONDS` (optional, default `900` — must match Supabase Auth → Email → OTP expiry)
 
 See **`DEV_NOTES.md` → Recurring Medical Supplies → Mobile Email → web** for the short “how email actually works / what broke last time” notes.
