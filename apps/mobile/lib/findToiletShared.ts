@@ -271,13 +271,28 @@ export async function requestUserLocation(): Promise<UserCoords> {
   // Prefer last known — avoids waking GPS / system location UI on every retry.
   const last = await Location.getLastKnownPositionAsync();
   if (last?.coords) {
-    return { lat: last.coords.latitude, lng: last.coords.longitude };
+    const coords = { lat: last.coords.latitude, lng: last.coords.longitude };
+    rememberNearMeCoords(coords);
+    return coords;
   }
 
   const pos = await Location.getCurrentPositionAsync({
     accuracy: Location.Accuracy.Balanced,
   });
-  return { lat: pos.coords.latitude, lng: pos.coords.longitude };
+  const coords = { lat: pos.coords.latitude, lng: pos.coords.longitude };
+  rememberNearMeCoords(coords);
+  return coords;
+}
+
+/** Last near-me point — paints the map on the next open before GPS resolves. */
+let rememberedNearMeCoords: UserCoords | null = null;
+
+export function peekRememberedNearMeCoords(): UserCoords | null {
+  return rememberedNearMeCoords;
+}
+
+export function rememberNearMeCoords(coords: UserCoords): void {
+  rememberedNearMeCoords = coords;
 }
 
 /** UK-friendly distance label. */

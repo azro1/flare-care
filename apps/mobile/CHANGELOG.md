@@ -6,7 +6,7 @@ Shipped / unreleased UI and behaviour updates for the Expo app (`apps/mobile`). 
 
 ### Find a Toilet (2026-09)
 
-- My tools → **Out & About** → **Find a Toilet**: map-first from GB Toilet Map (CC BY 4.0). **Near me** (primary) + **Choose a place** (secondary, UK place search). Filters, circle badges, Directions → Maps. Attribution on screen. Metro-only UX (no rebuild for this flow).
+- My tools → **Out & About** → **Find a Toilet**: map-first from GB Toilet Map (CC BY 4.0). **Near me** (primary) + **Choose a place** (secondary, UK place search). Pull-up sheet (peek → full list), filters, pin callouts, Directions → Maps. Attribution on screen. Smooth open after slide; remembered near-me for faster return visits. Out & About: separate cards for Going Out / Find a Toilet; Going Out uses Footprints icon.
 
 ### My IBD Card (2026-09)
 
@@ -18,7 +18,7 @@ Shipped / unreleased UI and behaviour updates for the Expo app (`apps/mobile`). 
 
 ### My tools — Out & About / Going Out (2026-09)
 
-- Home → **My tools** → **Out & About** hub → **Going Out**: user builds a checklist once; personalised tick list when leaving. Stored in Supabase `going_out_profiles` (account-scoped). Also **Find a Toilet** (nearby list).
+- Home → **My tools** → **Out & About** hub → **Going Out**: user builds a checklist once; personalised tick list when leaving. Stored in Supabase `going_out_profiles` (account-scoped). Also **Find a Toilet** (map-first — see above).
 
 ### Guides & legal accordion (2026-09)
 

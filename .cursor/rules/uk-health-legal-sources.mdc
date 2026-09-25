@@ -30,4 +30,8 @@ Keep the legal/product stance accurate in **sourced copy**. Do **not** add a dis
 
 FlareCare helps people **understand and navigate**. It does **not** replace clinicians or lawyers.
 
+## Google Play
+
+Same stance for store review: **not** a medical/diagnostic app; **no** medical advice in marketing or product copy. Pass Play checks cleanly — see `apps/mobile/DEV_NOTES.md` → **HARD RULE — Google Play end goal**.
+
 Also recorded in `apps/mobile/DEV_NOTES.md` (top). Treat **sourcing** as non-negotiable from the **first message** of any session — not after a mistake.

@@ -25,6 +25,58 @@ Breaking this rule risks real harm and legal exposure. Treat **sourcing** as non
 
 ---
 
+## HARD RULE — Google Play end goal (pass review cleanly)
+
+**Ship with Play Store review in mind from day one.** FlareCare must pass checks cleanly — no grey-area medical claims.
+
+- **We are not a medical / clinical / diagnostic app.** Do not advertise, title, subtitle, screenshots, or in-app copy that imply diagnosis, treatment, triage, or “prescribed by doctors.”
+- **We do not give medical advice.** Tracking, prep, navigation, and sourced support only. Never invent “call 999 if…”, dose changes, or clinical decisions unless tightly grounded in a named NHS/CCUK (etc.) page with a link — and even then prefer linking out over FlareCare instructing.
+- **Positioning:** personal IBD companion / organiser — understand and navigate everyday life with IBD; **not** a substitute for clinicians.
+- **Store + product copy stay aligned:** Data safety, descriptions, and features must match what the app actually does (logs, reminders, maps, user-authored cards — not medical devices).
+- When unsure whether copy sounds “medical,” **ask Simon** before shipping.
+
+Same spirit as the health/legal hard rule above — Play compliance is a product requirement, not a last-minute polish pass.
+
+### Play Store requirements (sort BEFORE launch, not after rejection)
+
+Do **not** wait until AAB upload. Fix or decide these early. **Full list:** [`docs/play-store-requirements.md`](../../docs/play-store-requirements.md).
+
+1. **Privacy Policy URL must be live on the public web**  
+   Play requires an active, non-geofenced HTTPS privacy page (not PDF). In-app legal text alone is **not** enough for the Console field.  
+   **Current risk (2026-09):** `https://flarecare.com` is a **domain-for-sale** page — not FlareCare. Default in `lib/legalUrls.ts` still points there. `https://flare-care.vercel.app/privacy` was **404** when checked. **Action:** own/point a real domain (or fix Vercel routes) so `/privacy` and `/terms` resolve; set `EXPO_PUBLIC_LEGAL_BASE_URL` / Console listing to that URL.
+
+2. **Store listing disclaimer (Google Health policy)**  
+   Non–medical-device health apps must say clearly in the **Play description** that the app is **not a medical device** and does **not** diagnose, treat, cure, or prevent any medical condition. Align short/full description + screenshots with companion/organiser positioning — never “clinical,” “prescribe,” “diagnose.”
+
+3. **Health apps declaration + Data safety**  
+   Complete Play Console → Policy → App content → Health apps form. Data safety must declare **Health info** (symptoms, meds, bowel, weight, etc.), **Location** (Find a Toilet), account/personal data, and that data is processed with the account. Match privacy policy. No undeclared SDKs (we don’t ship ads analytics today — keep it that way or update the form if we add any).
+
+4. **Location permission**  
+   Used for Find a Toilet only. Keep purpose string accurate. Do **not** add background location. In Data safety + Health declaration, justify location as toilet-finder, not health sensing.
+
+5. **Account deletion**  
+   We have in-app delete (`delete_user_account`). Play expects a working path + privacy policy that describes it. Smoke-test delete on a throwaway account before review.
+
+6. **App access for reviewers**  
+   If login is required, provide demo credentials (or a working “request access” flow) in Play Console App access. Reviewers must reach core features without emailing Simon.
+
+7. **Exact alarms (`SCHEDULE_EXACT_ALARM`)**  
+   Declared for reminders. Be ready to justify (med/appointment reminders) or switch to inexact if Play flags it. Don’t leave unused alarm APIs around.
+
+8. **Target audience / age**  
+   Health logging → typically **not** for children. Target 18+ (or Play’s adult band) and stay consistent in the questionnaire. Don’t market to kids.
+
+9. **Display name**  
+   `app.json` name is still **“Flarecare Mobile”** — looks like a WIP. Set the public store name before listing (e.g. Flarecare).
+
+10. **Features that must NOT ship half-baked into review**  
+    - **What happens if…** — seek-help copy needs **clinical review** before any store build.  
+    - Don’t imply Trends / Activity are clinical scores (we already say logging counts only — keep it).
+
+Also see `docs/play-store-requirements.md`, `docs/legal-checklist.md`, `docs/legal-truth-sheet.md`.
+
+---
+
 ## HARD RULE — no hardcoding (if it can be avoided)
 
 **Do not hardcode values that already have (or should have) a shared token / constant / helper.**
@@ -592,8 +644,7 @@ For those, keep `headerTitle: "…"` in `headerOptions` and **18px** / **16px** 
 
 ### References
 
-- Original iOS-native plan (superseded): `plans/collapsing-large-title-headers.md`
-- Implementation: `components/CollapsingTitleScrollScreen.tsx`, `lib/layoutConstants.ts`, `App.tsx` (`IbdScreen`, `AboutScreen`, `headerOptions`)
+- Implementation: `components/CollapsingTitleScrollScreen.tsx`, `lib/layoutConstants.ts`, `App.tsx` (`IbdScreen`, `AboutScreen`, `headerOptions`); also `apps/mobile/README.md` § Collapsing page titles.
 
 ---
 
@@ -1169,8 +1220,8 @@ Product backlog for later — not implementation work yet. Ship notes go in **`C
 ### Everyday life — Out & About / Going Out
 
 - **Shipped (v1):** Home → **My tools** → **Out & About** hub → **Going Out** (user checklist → personalised leave-home ticks). Storage: Supabase `going_out_profiles` (SQL above). Legacy AsyncStorage migrated once on load.
+- **Shipped — Find a Toilet:** Out & About → **Find a Toilet** — map-first near me + choose a place; pull-up sheet; pin callouts; Directions → Maps. GB Toilet Map (CC BY 4.0). Plan: [`plans/find-a-toilet.md`](./plans/find-a-toilet.md).
 - **Later under the umbrella (not built):** Travel, Work / University, etc.
-- **Find a Toilet (v1 list):** Out & About → **Find a Toilet**. Plan: [`plans/find-a-toilet.md`](./plans/find-a-toilet.md).
 - **Plan:** [`plans/going-out.md`](./plans/going-out.md).
 
 ### Clinic prep — Questions for my appointment
@@ -1210,8 +1261,8 @@ Product backlog for later — not implementation work yet. Ship notes go in **`C
 
 ### Everyday urgency — Find a Toilet
 
-- **Shipped (v1 list + map):** My tools → Out & About → **Find a Toilet** → list + **Show toilets on map** (filters, circle badges, count). GB Toilet Map (CC BY 4.0). Directions → Apple/Google Maps. Android needs Maps API key + rebuild.
-- **Later:** usable-now / open hours ranking, embedded map, Report a problem.
+- **Shipped:** My tools → Out & About → **Find a Toilet** — map-first **Near me** + **Choose a place**; pull-up sheet (filters, list, Directions); pin name callouts. GB Toilet Map (CC BY 4.0). Android Maps API key + dev client. Smooth open (slide then locate; remembered near-me).
+- **Later:** usable-now / open hours ranking, Report a problem, venue photos (not in Toilet Map dataset).
 - **Plan:** [`plans/find-a-toilet.md`](./plans/find-a-toilet.md).
 
 ### Auth — more OAuth providers

@@ -49,6 +49,8 @@ import {
   formatToiletLastChecked,
   formatToiletMapCount,
   openToiletDirections,
+  peekRememberedNearMeCoords,
+  rememberNearMeCoords,
   requestUserLocation,
   searchUkPlaces,
   toiletBadgeLabels,
@@ -61,15 +63,24 @@ import {
 import { FlareLucideIcon } from "../lib/flareLucideIcons";
 import { useFlareColors } from "../theme";
 
+function nearMeAnchor(coords: { lat: number; lng: number }): ToiletSearchAnchor {
+  return { coords, label: "me", kind: "me" };
+}
+
 export function FindToiletScreen() {
   const c = useFlareColors();
   const insets = useSafeAreaInsets();
   const mapRef = useRef<MapView | null>(null);
+  /** First open only — don’t blank the map every time this screen regains focus. */
+  const didBootstrapRef = useRef(false);
 
+  const remembered = peekRememberedNearMeCoords();
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [toilets, setToilets] = useState<NearbyToilet[]>([]);
-  const [anchor, setAnchor] = useState<ToiletSearchAnchor | null>(null);
+  const [anchor, setAnchor] = useState<ToiletSearchAnchor | null>(() =>
+    remembered ? nearMeAnchor(remembered) : null,
+  );
   const [filter, setFilter] = useState<ToiletMapFilter>("all");
   const [selectedId, setSelectedId] = useState<string | null>(null);
 
@@ -152,9 +163,10 @@ export function FindToiletScreen() {
   }, [filtered, selectedId]);
 
   const loadForAnchor = useCallback(async (next: ToiletSearchAnchor) => {
-    setLoading(true);
     setError(null);
     setAnchor(next);
+    if (next.kind === "me") rememberNearMeCoords(next.coords);
+    setLoading(true);
     collapseSheet();
     try {
       const result = await fetchNearbyToilets(next.coords);
@@ -175,23 +187,32 @@ export function FindToiletScreen() {
     setPlaceMode(false);
     setPlaceHits([]);
     setPlaceError(null);
-    setLoading(true);
     setError(null);
+    setLoading(true);
     try {
       const coords = await requestUserLocation();
-      await loadForAnchor({ coords, label: "me", kind: "me" });
+      // Paint the map as soon as we have a point — don't wait for the toilet fetch.
+      setAnchor(nearMeAnchor(coords));
+      rememberNearMeCoords(coords);
+      await loadForAnchor(nearMeAnchor(coords));
     } catch (e) {
       setLoading(false);
       setToilets([]);
-      setAnchor(null);
+      // Keep any remembered map up; only clear when we never had a place to show.
+      setAnchor((prev) => prev ?? null);
       setError(e instanceof Error ? e.message : "Couldn't find toilets nearby");
     }
   }, [loadForAnchor]);
 
   useFocusEffect(
     useCallback(() => {
-      // Primary job: near me on open.
-      void loadNearMe();
+      // Let the Out & About → Find a Toilet slide finish before GPS/network work.
+      const task = InteractionManager.runAfterInteractions(() => {
+        if (didBootstrapRef.current) return;
+        didBootstrapRef.current = true;
+        void loadNearMe();
+      });
+      return () => task.cancel();
     }, [loadNearMe]),
   );
 
@@ -244,6 +265,7 @@ export function FindToiletScreen() {
     filtered.length,
     anchor?.kind === "place" ? anchor.label : undefined,
   );
+  const showMapChrome = Boolean(region) || loading;
 
   return (
     <View
@@ -277,20 +299,16 @@ export function FindToiletScreen() {
         </MapView>
       ) : (
         <View style={[styles.centered, { backgroundColor: c.screen }]}>
-          {loading ? (
-            <>
-              <ActivityIndicator color={c.primary} />
-              <Text style={[styles.loadingCopy, { color: c.textMuted }]}>
-                Finding toilets near you…
-              </Text>
-            </>
-          ) : error ? (
+          {!loading && error ? (
             <>
               <Text style={[styles.errorCopy, { color: c.text }]}>{error}</Text>
               <Pressable
                 accessibilityRole="button"
                 accessibilityLabel="Try again near me"
-                onPress={() => void loadNearMe()}
+                onPress={() => {
+                  didBootstrapRef.current = false;
+                  void loadNearMe();
+                }}
                 hitSlop={8}
               >
                 <Text style={[styles.retry, { color: c.primary }]}>Try again</Text>
@@ -300,7 +318,7 @@ export function FindToiletScreen() {
         </View>
       )}
 
-      {region ? (
+      {showMapChrome ? (
         <Animated.View
           style={[
             styles.bottomPanel,
@@ -316,10 +334,12 @@ export function FindToiletScreen() {
           {/* Grabber — same idea as SlideUpSheet / fingerprint consent: drag follows thumb */}
           <View style={styles.grabberHit} {...panResponder.panHandlers}>
             <View style={[styles.sheetHandle, { backgroundColor: c.cardBorder }]} />
-            {loading ? (
+            {loading || !region ? (
               <View style={styles.bottomLoading}>
                 <ActivityIndicator color={c.primary} />
-                <Text style={[styles.loadingCopy, { color: c.textMuted }]}>Updating…</Text>
+                <Text style={[styles.loadingCopy, { color: c.textMuted }]}>
+                  Finding toilets near you…
+                </Text>
               </View>
             ) : error && toilets.length === 0 ? (
               <View style={styles.peekBlock}>

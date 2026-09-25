@@ -1,8 +1,8 @@
 # Plan: Replace Recent Activity on dashboard
 
-**Status:** Proposed — not started. Can ship with or after `dashboard-pill-section-redesign.md`.
+**Status:** Proposed — not started.
 
-**Context:** Dashboard **Recent Activity** lists events from the last ~4 hours (logged symptom, meds, bowel, weight, wellbeing, deletes, goal completions, etc.). Product feel: low value — mostly a receipt of actions the user already knows they did. **Today's Summary** (behind the pills) already surfaces counts.
+**Context:** Dashboard **Recent Activity** lists events from the last ~4 hours (logged symptom, meds, bowel, weight, wellbeing, deletes, goal completions, etc.). Product feel: low value — mostly a receipt of actions the user already knows they did. **Today's Summary** already surfaces counts.
 
 ---
 
@@ -111,11 +111,10 @@ Pattern callouts when enough data exists (e.g. sleep/energy vs usual). Do **not*
 - [ ] Ship Today checklist (meds + hydration minimum)  
 - [ ] Ship Upcoming card (appointments + meds; hide when nothing upcoming)  
 - [ ] Decide fate of `recentActivityEvents` / snapshot fields (delete vs keep for future)  
-- [ ] Align with pill redesign plan if both land together  
 - [ ] Commit on feature branch  
 
 ---
 
 ## Related
 
-- `apps/mobile/plans/dashboard-pill-section-redesign.md` — home IA; checklist pairs well with Option A (stacked home).
+- Home is already Health / Tools / Care tiles (no pill switcher). This plan is only about replacing the Recent Activity feed.

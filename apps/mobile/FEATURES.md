@@ -5,7 +5,7 @@ Everything users can see and do in Flarecare mobile. Update when you add or remo
 Not for same-day working lists (`todays_notes.md`), feature plans (`plans/`), or implementation reminders (`DEV_NOTES.md`).
 
 Flarecare helps people with Crohn’s / Colitis track their day and prepare for clinic.
-**It is not medical advice.**
+**It is not medical advice.** We do **not** advertise as a medical / clinical app — personal companion and organiser only. **Google Play end goal:** pass store review cleanly (no diagnostic/treatment claims; Data safety and listing match the product).
 
 ---
 
@@ -176,7 +176,7 @@ Open from **Settings → Push Notifications / Reminders** (wording in the app).
 - ⋮ → personal IBD information card to show or refer to with healthcare professionals (IBD type, diagnosis date, current medications, IBD team/service, important history, notes for HCPs). User-authored; not a medical record or official ID.
 
 **My tools — Out & About**
-- Hub for leaving-the-house helpers; **Going Out** (checklist) + **Find a Toilet** (map: near me + choose a place)
+- Hub for leaving-the-house helpers; **Going Out** (checklist) + **Find a Toilet** (map-first: near me + choose a place; pull-up list; Directions → Maps; GB Toilet Map CC BY 4.0)
 
 ---
 
@@ -204,7 +204,7 @@ Right now news on home is **turned off** in the app, so you normally won’t see
 - **Log Symptoms v2** — IBD-type branching (Crohn’s / UC / Other / Not sure) so symptom data matches what clinicians care about; research before inventing questions. Plan: `plans/log-symptoms-ibd-branching-v2.md` (**v2 — not building now**).
 - **Private Support topics** — optional resources in Support only (sex & relationships, fertility & pregnancy, body image, talking to others about IBD). Not on the dashboard. Plan: `plans/private-support-topics.md`.
 - **What happens if…?** — section/card: who I contact (IBD team) + when to seek help (**clinically reviewed** guidance). Plan: `plans/what-happens-if.md`.
-- **Find a Toilet** — list + in-app map (filters / circle badges) from GB Toilet Map (CC BY 4.0); Directions → Maps. Plan: `plans/find-a-toilet.md`.
+- **Find a Toilet** — **shipped** under My tools → Out & About. Map-first near me + choose a place; pull-up sheet; Directions → Maps; GB Toilet Map (CC BY 4.0). Plan: `plans/find-a-toilet.md`. Later: open-now ranking, Report a problem, photos.
 - **More sign-in OAuth** (e.g. Apple) — keep **email** as the main CTA; don’t stack many full-width OAuth buttons on the method screen (fingerprint quick-unlock sits at the bottom and will cover them). Prefer **“More ways to sign in”** → sheet with providers, or a compact icon row. Today: email code + Google only.
 
 ---

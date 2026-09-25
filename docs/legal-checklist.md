@@ -57,6 +57,7 @@ Listed in privacy policy and honest in app/store forms:
 - [ ] Mobile: store listing still needs a **public HTTPS** `/privacy` URL when you deploy web
 - [ ] **Deploy web** so production URLs work (not `#` or 404)
 - [ ] `EXPO_PUBLIC_WEB_API_BASE_URL` set for dev builds if testing Legal on device
+- [ ] **BLOCKER (checked 2026-09):** `flarecare.com` is a parked **for-sale** domain — do not use as Privacy URL. `flare-care.vercel.app/privacy` returned **404**. Fix hosting/routes + set Console + `EXPO_PUBLIC_LEGAL_BASE_URL` to a live policy before Play listing.
 
 ---
 

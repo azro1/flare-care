@@ -32,6 +32,7 @@ import {
   EyeOff,
   FileText,
   Fingerprint,
+  Footprints,
   HandHeart,
   Hash,
   HeartPulse,
@@ -89,8 +90,10 @@ export const FLARE_FEATURE_LUCIDE = {
   output: Droplet,
   /** Food & Drink intake diary (Tools). */
   intake: Utensils,
-  /** Out & About hub (Tools) — leaving the house / Going Out and later helpers. */
+  /** Out & About hub (Tools) — leaving the house / helpers. */
   outAbout: DoorOpen,
+  /** Going Out checklist — out on foot / leaving the house. */
+  goingOut: Footprints,
   /** My tools hub entry on home. */
   tools: Wrench,
   /** Logging trends over time (My health). */

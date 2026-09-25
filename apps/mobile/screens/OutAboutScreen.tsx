@@ -8,7 +8,7 @@ import { useNavigation } from "@react-navigation/native";
 import { LogHistoryCard } from "../components/LogHistoryList";
 import { FLARE_CHROME_LUCIDE, FlareLucideIcon } from "../lib/flareLucideIcons";
 import { FIND_TOILET_ICON } from "../lib/findToiletShared";
-import { OUT_ABOUT_ICON } from "../lib/goingOutShared";
+import { GOING_OUT_ICON } from "../lib/goingOutShared";
 import {
   CARD_INNER_PADDING,
   FLARE_FONT_FAMILY,
@@ -33,14 +33,14 @@ export function OutAboutScreen() {
       style={[styles.screen, { backgroundColor: c.screen }]}
       contentContainerStyle={[styles.content, { paddingBottom: bottomScrollInset + 16 }]}
     >
-      <LogHistoryCard style={{ padding: CARD_INNER_PADDING + 2, gap: 0 }}>
+      <LogHistoryCard style={{ padding: CARD_INNER_PADDING + 2 }}>
         <Pressable
           accessibilityRole="button"
           accessibilityLabel="Open Going Out"
           onPress={() => navigation.navigate("GoingOut")}
-          style={[styles.row, styles.rowBorder, { borderBottomColor: c.cardBorder }]}
+          style={styles.row}
         >
-          <FlareLucideIcon icon={OUT_ABOUT_ICON} size={HOME_FEATURE_TILE_ICON_SIZE} color={c.primary} />
+          <FlareLucideIcon icon={GOING_OUT_ICON} size={HOME_FEATURE_TILE_ICON_SIZE} color={c.primary} />
           <View style={styles.textCol}>
             <Text style={[styles.title, { color: c.text }]}>Going Out</Text>
             <Text style={[styles.hint, { color: c.textMuted }]}>
@@ -49,6 +49,9 @@ export function OutAboutScreen() {
           </View>
           <FlareLucideIcon icon={FLARE_CHROME_LUCIDE.forward} size={NAV_ROW_CHEVRON_SIZE} color={c.text} />
         </Pressable>
+      </LogHistoryCard>
+
+      <LogHistoryCard style={{ padding: CARD_INNER_PADDING + 2 }}>
         <Pressable
           accessibilityRole="button"
           accessibilityLabel="Open Find a Toilet"
@@ -59,7 +62,7 @@ export function OutAboutScreen() {
           <View style={styles.textCol}>
             <Text style={[styles.title, { color: c.text }]}>Find a Toilet</Text>
             <Text style={[styles.hint, { color: c.textMuted }]}>
-              Nearby toilets when you need one now
+              Find a toilet when you need one
             </Text>
           </View>
           <FlareLucideIcon icon={FLARE_CHROME_LUCIDE.forward} size={NAV_ROW_CHEVRON_SIZE} color={c.text} />
@@ -74,16 +77,12 @@ const styles = StyleSheet.create({
   content: {
     paddingHorizontal: SCREEN_EDGE_PADDING,
     paddingTop: 8,
-    gap: 16,
   },
   row: {
     flexDirection: "row",
     alignItems: "center",
     paddingVertical: 12,
     gap: 10,
-  },
-  rowBorder: {
-    borderBottomWidth: StyleSheet.hairlineWidth,
   },
   textCol: { flex: 1, gap: 4 },
   title: {

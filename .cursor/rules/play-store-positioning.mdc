@@ -1,0 +1,28 @@
+---
+description: Google Play end goal — not a medical app; pass review cleanly
+alwaysApply: true
+---
+
+# HARD RULE — Google Play end goal
+
+FlareCare must be built so it can **pass Google Play review cleanly**.
+
+## Positioning
+
+- **Not** a medical, clinical, diagnostic, or treatment app.
+- Do **not** advertise (store listing, screenshots, titles, in-app copy) as giving medical advice or replacing clinicians.
+- Personal IBD companion / organiser: track, prepare, navigate everyday life.
+
+## Product
+
+- No invented medical advice or freestyle triage.
+- Health/legal claims only from named UK sources (see health/legal hard rule).
+- Store listing + Data safety must match what the app actually does.
+
+When copy might sound “medical,” ask Simon before shipping.
+
+## Play Store requirements (tell Simon early)
+
+Full list: **`docs/play-store-requirements.md`**. Also summarized in `apps/mobile/DEV_NOTES.md` → **Play Store requirements**. Biggest current risk: **public Privacy Policy URL** (domain / Vercel) must be live before Console listing — in-app legal alone is not enough.
+
+Also recorded in `apps/mobile/DEV_NOTES.md` (top) and `FEATURES.md`.

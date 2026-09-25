@@ -28,7 +28,7 @@ See **`FEATURES.md`** for the full inventory. Short map:
 - **Auth:** Email OTP, Google, biometric lock + quick unlock, new-user intro.
 - **Dashboard:** Weather, Check in wizards, **Today's priorities**, My health / My tools / My care, **Targets** (meds/hydration Activity).
 - **My IBD Card:** ⋮ — personal IBD info card to show or refer to with healthcare professionals.
-- **My tools — Out & About:** Hub for leave-home helpers; **Going Out** checklist + **Find a Toilet**.
+- **My tools — Out & About:** Hub for leave-home helpers; **Going Out** checklist + **Find a Toilet** (map-first near me / choose a place).
 - **Trends:** bottom tab — logging entry counts over time (not a health score).
 - **Tracking:** Symptoms, meds list + taken tracking, hydration (cups), bowel, weight, wellbeing.
 - **Care:** Appointments + reminders, Appointment Summary (Share/Email), Reports.

@@ -14,6 +14,7 @@ Web + mobile highlights:
 - Hydration (cups), weight, bowel tracking
 - Appointments + Appointment Summary (Share/Email)
 - Recurring medical **Supplies** + Create request (Share/Email/Copy)
+- **Find a Toilet** (mobile — map-first near me / choose a place; GB Toilet Map)
 - Reports
 - Google / email OTP sign-in with Supabase-backed data
 - Biometric app lock (mobile)

@@ -2,7 +2,7 @@
 
 **Status:** Shipped v1 — Home → My tools → Out & About → Going Out. User prep profile + personalised checklist.
 
-**Doc home:** `apps/mobile/plans/`. Umbrella: Out & About (Find a Toilet / Travel / etc. can land later).
+**Doc home:** `apps/mobile/plans/`. Umbrella: Out & About (**Find a Toilet** shipped · Travel / etc. later).
 
 ---
 
@@ -30,7 +30,7 @@ The user creates their own **preparation profile once**, rather than another gia
 | **Storage** | Supabase `going_out_profiles` (one row per user). Legacy AsyncStorage migrated once on load. |
 | **Outing UI** | Tickable checklist from profile; Edit prep profile |
 
-Later under Out & About (not decided now): Find a Toilet, Travel, Work / University, etc.
+Later under Out & About (not decided now): Travel, Work / University, etc. (**Find a Toilet** is shipped — see `find-a-toilet.md`.)
 
 ---
 

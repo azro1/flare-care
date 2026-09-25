@@ -7,8 +7,10 @@ import AsyncStorage from "@react-native-async-storage/async-storage";
 import { FLARE_FEATURE_LUCIDE } from "./flareLucideIcons";
 import { supabase, TABLES } from "./supabase";
 
-/** Out & About / Going Out / Edit checklist — open door (leaving the house). */
+/** Out & About hub — open door. */
 export const OUT_ABOUT_ICON = FLARE_FEATURE_LUCIDE.outAbout;
+/** Going Out checklist — footprints (Lucide has no walking-person glyph). */
+export const GOING_OUT_ICON = FLARE_FEATURE_LUCIDE.goingOut;
 /** Short starting suggestions shown on the profile form. */
 export const GOING_OUT_SUGGESTIONS = [
   { id: "toilet", label: "Toilet access" },
