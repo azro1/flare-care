@@ -24,13 +24,7 @@ import { TrayRow } from "../components/MidnightLagoonTray";
 import { OptionChip } from "../components/OptionChip";
 import { NumberStepper } from "../components/NumberStepper";
 import { WizardProgressBar } from "../components/WizardProgressBar";
-import {
-  WizardReviewMealsSection,
-  WizardReviewNotesSection,
-  WizardReviewSection,
-  WizardReviewShell,
-  type WizardReviewField,
-} from "../components/symptomReviewLayout";
+import { type WizardReviewField } from "../components/symptomReviewLayout";
 import { PrimaryButton, SecondaryButton } from "../components/FlareButton";
 import { flareFieldErrorStyle, FlareTextInput } from "../components/FlareInput";
 import { invalidateDashboardSnapshot } from "../lib/dashboardSnapshotCache";
@@ -58,7 +52,7 @@ import {
   updateSymptomLog,
   upsertUserPreferencesMobile,
 } from "../lib/symptomWizardShared";
-import { SPACING, RADIUS, TYPOGRAPHY } from "../designTokens";
+import { SPACING, RADIUS, TYPOGRAPHY, OPACITY } from "../designTokens";
 import { useFlareColors } from "../theme";
 
 type SessionUser = { id: string };
@@ -109,6 +103,64 @@ function drinkQuantityFromInput(raw: string): string {
 }
 
 const SYMPTOM_REVIEW_STEP = SYMPTOM_WIZARD_REVIEW_STEP;
+
+function ReviewSectionCard({
+  title,
+  onEdit,
+  children,
+}: {
+  title: string;
+  onEdit: () => void;
+  children: React.ReactNode;
+}) {
+  const c = useFlareColors();
+  return (
+    <Card>
+      <View style={styles.reviewCardHeader}>
+        <View style={styles.reviewInCardLabelWrap}>
+          <SectionLabel style={styles.reviewInCardLabel}>{title}</SectionLabel>
+        </View>
+        <Pressable
+          accessibilityRole="button"
+          accessibilityLabel={`Edit ${title}`}
+          onPress={onEdit}
+          hitSlop={10}
+          style={[styles.reviewEditBtn, { backgroundColor: c.surfaceSubtle }]}
+        >
+          <FlareLucideIcon icon={FLARE_CHROME_LUCIDE.edit} size={16} color={c.textSecondary} />
+        </Pressable>
+      </View>
+      {children}
+    </Card>
+  );
+}
+
+function ReviewFieldRows({ fields }: { fields: WizardReviewField[] }) {
+  const c = useFlareColors();
+  return (
+    <>
+      {fields.map((field, i) => (
+        <View key={`${field.label}-${i}`} style={[styles.reviewFieldRow, i > 0 && styles.reviewFieldRowGap]}>
+          <Text style={[styles.reviewFieldLabel, { color: c.textSecondary, fontFamily: TYPOGRAPHY.fontFamily.regular }]}>
+            {field.label}
+          </Text>
+          <Text style={[styles.reviewFieldValue, { color: c.text, fontFamily: TYPOGRAPHY.fontFamily.medium }]}>
+            {field.value}
+          </Text>
+        </View>
+      ))}
+    </>
+  );
+}
+
+function ReviewHeroChip({ label, value }: { label: string; value: string }) {
+  return (
+    <View style={[styles.heroChip, { backgroundColor: `rgba(255,255,255,${OPACITY.heroButton})` }]}>
+      <Text style={[styles.heroChipText, { color: "#ffffff", fontFamily: TYPOGRAPHY.fontFamily.regular }]}>{label} </Text>
+      <Text style={[styles.heroChipText, { color: "#ffffff", fontFamily: TYPOGRAPHY.fontFamily.semibold }]}>{value}</Text>
+    </View>
+  );
+}
 
 export function SymptomLogWizardScreen({ user }: { user: SessionUser }) {
   const navigation = useNavigation<any>();
@@ -1010,148 +1062,75 @@ export function SymptomLogWizardScreen({ user }: { user: SessionUser }) {
         {/* Step 17: Review */}
         {currentStep === SYMPTOM_REVIEW_STEP ? (
           <View style={styles.reviewContent}>
-            <Text style={[styles.reviewPageTitle, { color: c.text, fontFamily: TYPOGRAPHY.fontFamily.semibold }]}>
+            <Text style={[styles.reviewPageTitle, { color: c.text, fontFamily: TYPOGRAPHY.fontFamily.bold }]}>
               Review your log
             </Text>
             <Text style={[styles.reviewPageSubtitle, { color: c.textSecondary, fontFamily: TYPOGRAPHY.fontFamily.regular }]}>
               Check everything looks right before saving.
             </Text>
 
-            <HeroCard title="">
-              <View style={styles.heroHeader}>
-                <Text style={[styles.heroLabel, { color: c.white, fontFamily: TYPOGRAPHY.fontFamily.semibold }]}>THIS FLARE</Text>
-                <Text style={[styles.heroTitle, { color: c.white, fontFamily: TYPOGRAPHY.fontFamily.bold }]}>
-                  {form.symptomStartDate ? `Started ${formatUkDate(form.symptomStartDate)}` : "Symptom Log"}
-                  {form.isOngoing ? ", still ongoing" : ""}
+            <HeroCard style={styles.reviewHero}>
+              <Text style={[styles.heroLabel, { fontFamily: TYPOGRAPHY.fontFamily.semibold }]}>THIS FLARE</Text>
+              <Text style={[styles.heroTitle, { fontFamily: TYPOGRAPHY.fontFamily.bold }]}>
+                {form.symptomStartDate ? `Started ${formatUkDate(form.symptomStartDate)}` : "Symptom Log"}
+                {form.isOngoing ? ", still ongoing" : ""}
+              </Text>
+              {form.isOngoing && form.symptomStartDate ? (
+                <Text style={[styles.heroDuration, { fontFamily: TYPOGRAPHY.fontFamily.regular }]}>
+                  {Math.ceil((new Date().getTime() - parseYmd(form.symptomStartDate).getTime()) / (1000 * 60 * 60 * 24))} days so far
                 </Text>
-                {form.isOngoing && form.symptomStartDate ? (
-                  <Text style={[styles.heroDuration, { color: c.white, fontFamily: TYPOGRAPHY.fontFamily.regular }]}>
-                    {Math.ceil((new Date().getTime() - parseYmd(form.symptomStartDate).getTime()) / (1000 * 60 * 60 * 24))} days so far
-                  </Text>
-                ) : null}
+              ) : null}
+              {form.severity || form.stress_level ? (
                 <View style={styles.heroChips}>
                   {form.severity ? (
-                    <View style={[styles.heroChip, { backgroundColor: "rgba(255,255,255,0.2)" }]}>
-                      <Text style={[styles.heroChipText, { color: c.white, fontFamily: TYPOGRAPHY.fontFamily.semibold }]}>
-                        Severity {SEVERITY_WORD_OPTIONS.find((o) => String(o.value) === form.severity)?.label || form.severity}
-                      </Text>
-                    </View>
+                    <ReviewHeroChip
+                      label="Severity"
+                      value={SEVERITY_WORD_OPTIONS.find((o) => String(o.value) === form.severity)?.label || form.severity}
+                    />
                   ) : null}
                   {form.stress_level ? (
-                    <View style={[styles.heroChip, { backgroundColor: "rgba(255,255,255,0.2)" }]}>
-                      <Text style={[styles.heroChipText, { color: c.white, fontFamily: TYPOGRAPHY.fontFamily.semibold }]}>
-                        Stress {STRESS_WORD_OPTIONS.find((o) => String(o.value) === form.stress_level)?.label || form.stress_level}
-                      </Text>
-                    </View>
+                    <ReviewHeroChip
+                      label="Stress"
+                      value={STRESS_WORD_OPTIONS.find((o) => String(o.value) === form.stress_level)?.label || form.stress_level}
+                    />
                   ) : null}
                 </View>
-              </View>
+              ) : null}
             </HeroCard>
 
-            <SectionLabel>BASIC INFORMATION</SectionLabel>
-            <Card>
-              <View style={styles.reviewCardHeader}>
-                <Pressable accessibilityRole="button" onPress={() => openReviewEdit("basic")} hitSlop={10}>
-                  <FlareLucideIcon icon={FLARE_CHROME_LUCIDE.edit} size={18} color={c.textMuted} />
-                </Pressable>
-              </View>
-              {reviewBasicFields.map((field, i) => (
-                <View key={i} style={[styles.reviewFieldRow, i > 0 && { marginTop: SPACING.md }]}>
-                  <Text style={[styles.reviewFieldLabel, { color: c.textSecondary, fontFamily: TYPOGRAPHY.fontFamily.regular }]}>
-                    {field.label}
-                  </Text>
-                  <Text style={[styles.reviewFieldValue, { color: c.text, fontFamily: TYPOGRAPHY.fontFamily.regular }]}>
-                    {field.value}
-                  </Text>
-                </View>
-              ))}
-            </Card>
+            <ReviewSectionCard title="Basic Information" onEdit={() => openReviewEdit("basic")}>
+              <ReviewFieldRows fields={reviewBasicFields} />
+            </ReviewSectionCard>
 
-            <SectionLabel>BATHROOM FREQUENCY</SectionLabel>
-            <Card>
-              <View style={styles.reviewCardHeader}>
-                <Pressable accessibilityRole="button" onPress={() => openReviewEdit("bathroom")} hitSlop={10}>
-                  <FlareLucideIcon icon={FLARE_CHROME_LUCIDE.edit} size={18} color={c.textMuted} />
-                </Pressable>
-              </View>
-              {reviewBathroomFields.map((field, i) => (
-                <View key={i} style={[styles.reviewFieldRow, i > 0 && { marginTop: SPACING.md }]}>
-                  <Text style={[styles.reviewFieldLabel, { color: c.textSecondary, fontFamily: TYPOGRAPHY.fontFamily.regular }]}>
-                    {field.label}
-                  </Text>
-                  <Text style={[styles.reviewFieldValue, { color: c.text, fontFamily: TYPOGRAPHY.fontFamily.regular }]}>
-                    {field.value}
-                  </Text>
-                </View>
-              ))}
-            </Card>
+            <ReviewSectionCard title="Bathroom Frequency" onEdit={() => openReviewEdit("bathroom")}>
+              <ReviewFieldRows fields={reviewBathroomFields} />
+            </ReviewSectionCard>
 
             {showLifestyleReview && reviewLifestyleFields.length > 0 ? (
-              <>
-                <SectionLabel>LIFESTYLE</SectionLabel>
-                <Card>
-                  <View style={styles.reviewCardHeader}>
-                    <Pressable accessibilityRole="button" onPress={() => openReviewEdit("lifestyle")} hitSlop={10}>
-                      <FlareLucideIcon icon={FLARE_CHROME_LUCIDE.edit} size={18} color={c.textMuted} />
-                    </Pressable>
-                  </View>
-                  {reviewLifestyleFields.map((field, i) => (
-                    <View key={i} style={[styles.reviewFieldRow, i > 0 && { marginTop: SPACING.md }]}>
-                      <Text style={[styles.reviewFieldLabel, { color: c.textSecondary, fontFamily: TYPOGRAPHY.fontFamily.regular }]}>
-                        {field.label}
-                      </Text>
-                      <Text style={[styles.reviewFieldValue, { color: c.text, fontFamily: TYPOGRAPHY.fontFamily.regular }]}>
-                        {field.value}
-                      </Text>
-                    </View>
-                  ))}
-                </Card>
-              </>
+              <ReviewSectionCard title="Lifestyle" onEdit={() => openReviewEdit("lifestyle")}>
+                <ReviewFieldRows fields={reviewLifestyleFields} />
+              </ReviewSectionCard>
             ) : null}
 
             {mealReviewEntries.length > 0 ? (
-              <>
-                <SectionLabel>MEALS</SectionLabel>
-                <Card>
-                  <View style={styles.reviewCardHeader}>
-                    <Pressable accessibilityRole="button" onPress={() => openReviewEdit("meals")} hitSlop={10}>
-                      <FlareLucideIcon icon={FLARE_CHROME_LUCIDE.edit} size={18} color={c.textMuted} />
-                    </Pressable>
-                  </View>
-                  {mealReviewEntries.map((entry, i) => (
-                    <View key={i} style={[styles.reviewFieldRow, i > 0 && { marginTop: SPACING.md }]}>
-                      <Text style={[styles.reviewFieldLabel, { color: c.textSecondary, fontFamily: TYPOGRAPHY.fontFamily.regular }]}>
-                        {entry.label}
-                      </Text>
-                      {entry.skipped ? (
-                        <Text style={[styles.reviewFieldValue, { color: c.text, fontFamily: TYPOGRAPHY.fontFamily.regular }]}>
-                          Skipped
-                        </Text>
-                      ) : entry.items ? (
-                        <Text style={[styles.reviewFieldValue, { color: c.text, fontFamily: TYPOGRAPHY.fontFamily.regular }]}>
-                          {entry.items.map((item) => `${item.food}${item.quantity ? ` (${item.quantity})` : ""}`).join(", ")}
-                        </Text>
-                      ) : null}
-                    </View>
-                  ))}
-                </Card>
-              </>
+              <ReviewSectionCard title="Meals" onEdit={() => openReviewEdit("meals")}>
+                <ReviewFieldRows
+                  fields={mealReviewEntries.map((entry) => ({
+                    label: entry.label,
+                    value: entry.skipped
+                      ? "Skipped"
+                      : (entry.items ?? []).map((item) => `${item.food}${item.quantity ? ` (${item.quantity})` : ""}`).join(", "),
+                  }))}
+                />
+              </ReviewSectionCard>
             ) : null}
 
             {form.notes.trim() ? (
-              <>
-                <SectionLabel>NOTES</SectionLabel>
-                <Card>
-                  <View style={styles.reviewCardHeader}>
-                    <Pressable accessibilityRole="button" onPress={() => openReviewEdit("notes")} hitSlop={10}>
-                      <FlareLucideIcon icon={FLARE_CHROME_LUCIDE.edit} size={18} color={c.textMuted} />
-                    </Pressable>
-                  </View>
-                  <Text style={[styles.reviewNotesText, { color: c.text, fontFamily: TYPOGRAPHY.fontFamily.regular }]}>
-                    {form.notes.trim()}
-                  </Text>
-                </Card>
-              </>
+              <ReviewSectionCard title="Notes" onEdit={() => openReviewEdit("notes")}>
+                <Text style={[styles.reviewNotesText, { color: c.text, fontFamily: TYPOGRAPHY.fontFamily.regular }]}>
+                  {`\u201C${form.notes.trim()}\u201D`}
+                </Text>
+              </ReviewSectionCard>
             ) : null}
           </View>
         ) : null}
@@ -1368,35 +1347,46 @@ const styles = StyleSheet.create({
     gap: 0,
   },
   reviewPageTitle: {
-    fontSize: TYPOGRAPHY.fontSize.cardTitle,
+    fontSize: TYPOGRAPHY.fontSize.screenTitle,
+    lineHeight: 30,
     marginBottom: SPACING.xs,
   },
   reviewPageSubtitle: {
     fontSize: TYPOGRAPHY.fontSize.md,
-    marginBottom: SPACING.lg,
+    lineHeight: 20,
+    marginBottom: SPACING.sm,
   },
-  heroHeader: {
-    gap: SPACING.xs,
+  reviewHero: {
+    marginTop: SPACING.md,
+    marginBottom: SPACING.lg,
   },
   heroLabel: {
     fontSize: TYPOGRAPHY.fontSize.xs,
-    letterSpacing: 0.5,
+    letterSpacing: 0.8,
     textTransform: "uppercase",
+    color: "rgba(255,255,255,0.82)",
+    marginBottom: SPACING.xs,
   },
   heroTitle: {
-    fontSize: TYPOGRAPHY.fontSize.heroTitle,
+    fontSize: TYPOGRAPHY.fontSize.stat,
     lineHeight: 26,
+    color: "#ffffff",
   },
   heroDuration: {
     fontSize: TYPOGRAPHY.fontSize.sm,
+    lineHeight: 18,
+    color: "rgba(255,255,255,0.9)",
+    marginTop: SPACING.xxs,
   },
   heroChips: {
     flexDirection: "row",
     flexWrap: "wrap",
     gap: SPACING.sm,
-    marginTop: SPACING.sm,
+    marginTop: SPACING.md,
   },
   heroChip: {
+    flexDirection: "row",
+    alignItems: "center",
     paddingHorizontal: SPACING.md,
     paddingVertical: SPACING.xs,
     borderRadius: RADIUS.button,
@@ -1406,13 +1396,36 @@ const styles = StyleSheet.create({
   },
   reviewCardHeader: {
     flexDirection: "row",
-    justifyContent: "flex-end",
+    alignItems: "center",
+    justifyContent: "space-between",
+    gap: SPACING.sm,
     marginBottom: SPACING.md,
+  },
+  reviewInCardLabelWrap: {
+    flex: 1,
+    minWidth: 0,
+  },
+  reviewInCardLabel: {
+    marginTop: 0,
+    marginBottom: 0,
+    marginHorizontal: 0,
+    letterSpacing: 0.8,
+  },
+  reviewEditBtn: {
+    width: 32,
+    height: 32,
+    borderRadius: 16,
+    alignItems: "center",
+    justifyContent: "center",
   },
   reviewFieldRow: {
     flexDirection: "row",
     justifyContent: "space-between",
     alignItems: "flex-start",
+    gap: SPACING.md,
+  },
+  reviewFieldRowGap: {
+    marginTop: SPACING.md,
   },
   reviewFieldLabel: {
     fontSize: TYPOGRAPHY.fontSize.md,
@@ -1425,7 +1438,8 @@ const styles = StyleSheet.create({
   },
   reviewNotesText: {
     fontSize: TYPOGRAPHY.fontSize.md,
-    lineHeight: 20,
+    lineHeight: 22,
+    fontStyle: "italic",
   },
   footer: {
     flexDirection: "row",

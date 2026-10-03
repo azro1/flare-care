@@ -4,7 +4,7 @@ import { useFlareColors } from "../theme";
 import { SPACING, RADIUS, TYPOGRAPHY } from "../designTokens";
 
 type HeroCardProps = {
-  title: string;
+  title?: string;
   subtitle?: string;
   children?: React.ReactNode;
   style?: ViewStyle;
@@ -15,14 +15,12 @@ export function HeroCard({ title, subtitle, children, style }: HeroCardProps) {
 
   return (
     <View style={[styles.heroCard, { backgroundColor: colors.primary }, style]}>
-      <Text style={[styles.heroTitle, { fontFamily: TYPOGRAPHY.fontFamily.semibold }]}>
-        {title}
-      </Text>
-      {subtitle && (
-        <Text style={[styles.heroSubtitle, { fontFamily: TYPOGRAPHY.fontFamily.regular }]}>
-          {subtitle}
-        </Text>
-      )}
+      {title ? (
+        <Text style={[styles.heroTitle, { fontFamily: TYPOGRAPHY.fontFamily.semibold }]}>{title}</Text>
+      ) : null}
+      {subtitle ? (
+        <Text style={[styles.heroSubtitle, { fontFamily: TYPOGRAPHY.fontFamily.regular }]}>{subtitle}</Text>
+      ) : null}
       {children}
     </View>
   );
