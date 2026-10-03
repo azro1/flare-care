@@ -490,110 +490,145 @@ export function OutputScreen({ user }: { user: SessionUser }) {
 
   const tabs = OUTPUT_KIND_OPTIONS.map((opt) => ({ label: opt.label, value: opt.value }));
   const showFab = !selectionMode;
-
   return (
-    <InstructionScreenShell
-      showInstruction={false}
-      contentPaddingBottom={scrollBottomPadTotal}
-      instruction={null}
-      floatingAction={
-        !selectionMode ? (
+    <>
+      <View style={[styles.screen, { backgroundColor: c.screen }]}>
+        <ScrollView
+          style={styles.scroll}
+          contentContainerStyle={[styles.scrollContent, { paddingBottom: showFab ? fabBottom + 80 : Math.max(insets.bottom, 16) + 24 }]}
+        >
+          <ScreenHeader title="Fluid Output" />
+
+          <SegmentedTabs tabs={tabs} activeValue={activeTab} onChange={setActiveTab} />
+
+          {todayKindMl != null ? (
+            <View style={[styles.totalCard, { backgroundColor: c.card, borderColor: c.border }]}>
+              <Text style={[styles.totalLabel, { color: c.textSecondary, fontFamily: TYPOGRAPHY.fontFamily.regular }]}>Today's total</Text>
+              <Text style={[styles.totalValue, { color: c.text, fontFamily: TYPOGRAPHY.fontFamily.semibold }]}>
+                {formatOutputMl(todayKindMl)}
+              </Text>
+            </View>
+          ) : null}
+
+          <SectionLabel>Log</SectionLabel>
+
+          {showListLoading ? (
+            <View style={styles.loadingWrap}>
+              <ActivityIndicator size="small" color={c.primary} />
+            </View>
+          ) : tabEmpty ? (
+            <Card>
+              <View style={styles.emptyWrap}>
+                <FlareLucideIcon icon={OUTPUT_FEATURE_ICON} size={40} color={c.textSecondary} />
+                <Text style={[styles.emptyText, { color: c.textSecondary, fontFamily: TYPOGRAPHY.fontFamily.regular }]}>
+                  No entries yet.
+                </Text>
+              </View>
+            </Card>
+          ) : (
+            <>
+              <Card noPadding style={{ paddingVertical: SPACING.sm, paddingHorizontal: SPACING.md }}>
+                {activeRows.map((row) => {
+                  const timestamp = new Date(row.occurred_at).toLocaleDateString("en-GB", {
+                    day: "numeric",
+                    month: "short",
+                  });
+                  return (
+                    <TrayRow
+                      key={row.id}
+                      icon={FLARE_FEATURE_LUCIDE.output}
+                      label={formatOutputMl(row.amount_ml)}
+                      value={timestamp}
+                      showChevron
+                      onPress={() => navigation.navigate("OutputLogDetail", { id: String(row.id) })}
+                      onLongPress={selectionMode ? undefined : () => enterSelectionWith(String(row.id))}
+                    />
+                  );
+                })}
+              </Card>
+
+              {historyHasMore ? (
+                <Pressable
+                  accessibilityRole="button"
+                  onPress={() => void loadMoreHistory()}
+                  style={({ pressed }) => [styles.loadMore, pressed && { opacity: 0.7 }]}
+                >
+                  <Text style={[styles.loadMoreText, { color: c.primary, fontFamily: TYPOGRAPHY.fontFamily.medium }]}>
+                    {historyLoadingMore ? "loading…" : "load more"}
+                  </Text>
+                </Pressable>
+              ) : null}
+            </>
+          )}
+        </ScrollView>
+
+        {showFab ? (
           <TrackerThumbFab
             accessibilityLabel={`Log ${outputKindLabel(activeKind).toLowerCase()}`}
             onPress={openNewLog}
-            tabBarClearance={tabBarClearance}
+            bottom={fabBottom}
+            right={fabRight}
           />
-        ) : null
-      }
-      footer={
-        <>
-          <ConfirmModal
-            visible={bulkDeleteOpen}
-            title={
-              selectedIds.size === 1
-                ? "Delete entry?"
-                : `Delete ${selectedIds.size} entries?`
-            }
-            message="This action cannot be undone."
-            confirmLabel={bulkDeleting ? "Deleting…" : "Delete"}
-            confirmDestructive
-            onConfirm={handleBulkDeleteConfirm}
-            onCancel={() => setBulkDeleteOpen(false)}
-          />
-          {sheetOpen ? (
-            <OutputLogSheet
-              visible={sheetOpen}
-              editingId={editingId}
-              initialValues={form}
-              saving={saving}
-              saveError={saveError}
-              onClose={closeSheet}
-              onSave={handleSave}
-            />
-          ) : null}
-        </>
-      }
-    >
-      <View style={hubTabFadeStyles.tabRow}>
-        {OUTPUT_KIND_OPTIONS.map((opt, index) => {
-          const active = index === tabIndex;
-          return (
-            <Pressable
-              key={opt.value}
-              accessibilityRole="tab"
-              accessibilityState={{ selected: active }}
-              accessibilityLabel={opt.label}
-              onPress={() => goToTab(index)}
-              style={hubTabFadeStyles.tabHit}
-            >
-              <Text
-                style={[
-                  hubTabFadeStyles.tabLabel,
-                  { color: active ? c.text : c.textMuted },
-                  active ? hubTabFadeStyles.tabLabelActive : null,
-                ]}
-              >
-                {opt.label}
-              </Text>
-              <View
-                style={[
-                  hubTabFadeStyles.tabUnderline,
-                  { backgroundColor: active ? c.primary : "transparent" },
-                ]}
-              />
-            </Pressable>
-          );
-        })}
+        ) : null}
       </View>
 
-      <View style={[styles.todayTotalCard, { backgroundColor: c.card }]}>
-        <Text style={[styles.todayTotalLabel, { color: c.textMuted }]}>Today’s total</Text>
-        <Text style={[styles.todayTotalValue, { color: todayKindMl == null ? c.textMuted : c.text }]}>
-          {todayKindMl == null ? "…" : formatOutputMl(todayKindMl)}
-        </Text>
-      </View>
+      <ConfirmModal
+        visible={bulkDeleteOpen}
+        title={selectedIds.size === 1 ? "Delete entry?" : `Delete ${selectedIds.size} entries?`}
+        message="This action cannot be undone."
+        confirmLabel={bulkDeleting ? "Deleting…" : "Delete"}
+        confirmDanger
+        onConfirm={handleBulkDeleteConfirm}
+        onCancel={() => setBulkDeleteOpen(false)}
+      />
 
-      <View style={hubTabFadeStyles.stack}>
-        {OUTPUT_KIND_OPTIONS.map((opt, index) => {
-          const active = index === tabIndex;
-          return (
-            <Animated.View
-              key={opt.value}
-              style={paneStyle[index]}
-              pointerEvents={active ? "auto" : "none"}
-              accessibilityElementsHidden={!active}
-              importantForAccessibility={active ? "yes" : "no-hide-descendants"}
-            >
-              {renderKindList(opt.value, rowsByKind[opt.value])}
-            </Animated.View>
-          );
-        })}
-      </View>
-    </InstructionScreenShell>
+      {sheetOpen ? (
+        <OutputLogSheet visible={sheetOpen} editingId={editingId} initialValues={form} saving={saving} saveError={saveError} onClose={closeSheet} onSave={handleSave} />
+      ) : null}
+    </>
   );
 }
 
 const styles = StyleSheet.create({
+  screen: { flex: 1 },
+  scroll: { flex: 1 },
+  scrollContent: {
+    paddingHorizontal: SPACING.screen,
+    paddingTop: SPACING.lg,
+  },
+  loadingWrap: {
+    paddingVertical: 24,
+    alignItems: "center",
+  },
+  emptyWrap: {
+    alignItems: "center",
+    paddingVertical: SPACING.xl,
+    gap: SPACING.md,
+  },
+  emptyText: {
+    fontSize: TYPOGRAPHY.fontSize.md,
+    textAlign: "center",
+  },
+  loadMore: {
+    paddingVertical: SPACING.md,
+    alignItems: "center",
+  },
+  loadMoreText: {
+    fontSize: TYPOGRAPHY.fontSize.sm,
+  },
+  totalCard: {
+    borderRadius: RADIUS.lg,
+    padding: CARD_INNER_PADDING,
+    marginBottom: SPACING.lg,
+    borderWidth: 1,
+  },
+  totalLabel: {
+    fontSize: TYPOGRAPHY.fontSize.sm,
+    marginBottom: 4,
+  },
+  totalValue: {
+    fontSize: 28,
+  },
   sheetRoot: { flex: 1 },
   sheetHeader: {
     flexDirection: "row",
@@ -621,19 +656,4 @@ const styles = StyleSheet.create({
   notesInput: { marginTop: 0 },
   fieldError: { marginTop: 8, marginBottom: 4 },
   sheetActions: { marginTop: STACKED_DETAIL_ROW_EDGE, gap: 8 },
-  todayTotalCard: {
-    borderRadius: 14,
-    padding: CARD_INNER_PADDING,
-    marginBottom: SCREEN_EDGE_PADDING,
-  },
-  todayTotalLabel: {
-    fontSize: FLARE_FONT_SIZE.caption,
-    fontFamily: FLARE_FONT_FAMILY.medium,
-    marginBottom: 4,
-  },
-  todayTotalValue: {
-    /** Same hero digit size as hydration cup count. */
-    fontSize: 28,
-    fontFamily: FLARE_FONT_FAMILY.bold,
-  },
 });
