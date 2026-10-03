@@ -330,6 +330,7 @@ function BrandMarkIcon({ size, color }: { size: number; color: string }) {
 
 /** Side-by-side hand+heart + Flarecare — splash, auth, Almost there. */
 const FLARE_BRAND_LOGO_HEIGHT = 56; // Logo height for auth screens
+const FLARE_BRAND_LOGO_ASPECT_RATIO = 3.03; // 3780x1248 assets
 
 function FlareBrandLockup({
   markColor,
@@ -355,7 +356,11 @@ function FlareBrandLockup({
     <View style={[styles.flareBrandLockup, style]}>
       <Image
         source={logoSource}
-        style={{ height: FLARE_BRAND_LOGO_HEIGHT, width: FLARE_BRAND_LOGO_HEIGHT * 4.86, resizeMode: "contain" }}
+        style={{ 
+          height: FLARE_BRAND_LOGO_HEIGHT, 
+          width: FLARE_BRAND_LOGO_HEIGHT * FLARE_BRAND_LOGO_ASPECT_RATIO, 
+          resizeMode: "contain" 
+        }}
         accessibilityLabel="FlareCare logo"
       />
     </View>
@@ -949,9 +954,8 @@ function AuthScreen({
     else if (pending === "google") void signInGoogle();
   };
 
-  /** Same layout as gray auth; fill page with blue in light appearance only. */
-  const authBlue = !cAuth.isDark;
-  /** Content sits on the page (no card) — light mode uses on-primary chrome. */
+  /** Auth screen uses light background in light mode, not solid primary fill. */
+  const authBlue = false;
   const onPrimaryChrome = authBlue;
 
   // Bank-style quick login: if a remembered session exists and biometric unlock is on, show the
@@ -1120,10 +1124,25 @@ function AuthScreen({
 
       if (remembered && available && enabled) {
         const label = await biometricTypeLabel();
-        // Derive a display name from the email
-        const email = remembered.email || "";
-        const namePart = email.split("@")[0];
-        const displayName = namePart.charAt(0).toUpperCase() + namePart.slice(1);
+        // Try to get a display name - check if there's a current session first
+        let displayName = "there";
+        try {
+          const { data } = await supabase.auth.getSession();
+          if (data.session?.user) {
+            const sessionUser = sessionUserFromSupabaseAuthUser(data.session.user);
+            displayName = firstNameFromSessionUser(sessionUser);
+          } else {
+            // Fall back to email-derived name
+            const email = remembered.email || "";
+            const namePart = email.split("@")[0];
+            displayName = namePart.charAt(0).toUpperCase() + namePart.slice(1);
+          }
+        } catch {
+          // Fall back to email-derived name on error
+          const email = remembered.email || "";
+          const namePart = email.split("@")[0];
+          displayName = namePart.charAt(0).toUpperCase() + namePart.slice(1);
+        }
         if (cancelled) return;
         setQuickUnlock({ label, displayName });
       }

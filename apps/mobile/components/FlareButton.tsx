@@ -220,7 +220,7 @@ export function EntrySecondaryButton({
     <Pressable
       onPress={onPress}
       disabled={disabled}
-      style={[
+      style={({ pressed }) => [
         flareButtonStyles.entryButton,
         noTopMargin ? { marginTop: 0 } : null,
         onPrimary
@@ -229,7 +229,9 @@ export function EntrySecondaryButton({
               ...outline,
             }
           : {
-              backgroundColor: c.secondaryBtnBg,
+              backgroundColor: pressed && !disabled
+                ? c.isDark ? "#2B3740" : "#081833"  // pressed state
+                : c.secondaryBtnBg,
               ...outline,
             },
         !onPrimary && disabled ? { opacity: 0.55 } : null,
@@ -305,7 +307,7 @@ export function SecondaryButton({
     <Pressable
       onPress={onPress}
       disabled={disabled}
-      style={[
+      style={({ pressed }) => [
         flareButtonStyles.buttonSecondary,
         noTopMargin ? { marginTop: 0 } : null,
         onPrimary
@@ -318,7 +320,9 @@ export function SecondaryButton({
                 ? borderlessFill === "surfaceSubtle"
                   ? c.surfaceSubtle
                   : c.card
-                : c.secondaryBtnBg,
+                : pressed && !disabled
+                  ? c.isDark ? "#2B3740" : "#081833"  // pressed state
+                  : c.secondaryBtnBg,
               ...(outline ?? null),
             },
         !onPrimary && disabled ? { opacity: 0.55 } : null,

@@ -27,6 +27,45 @@ export const MOBILE_DESTRUCTIVE_FILL = "#C81E1E" as const;
 const LIGHT_GROUPED_SCREEN_BG = "#F4F7F8";
 const LIGHT_GROUPED_CARD_BG = "#FFFFFF";
 
+/** Deep Lagoon dark mode overrides for Expo styleguide tokens */
+const DEEP_LAGOON_DARK_OVERRIDES = {
+  background: {
+    screen: "#0B0E11",
+    element: "#141A1F",
+    subtle: "#141A1F",
+    overlay: "#1C242B",
+  },
+  border: {
+    default: "#25313A",
+  },
+  text: {
+    default: "#EEF3F6",
+    secondary: "#9AAAB6",
+    tertiary: "#5A6D79",
+    danger: "#F87171",
+  },
+  button: {
+    secondary: {
+      background: "#1C242B",
+      border: "#5E727E",
+      text: "#FFFFFF",
+    },
+  },
+};
+
+/** Deep Lagoon light mode overrides for Expo styleguide tokens */
+const DEEP_LAGOON_LIGHT_OVERRIDES = {
+  border: {
+    default: "#D8E1E4",
+  },
+  text: {
+    default: "#0D234B",
+    secondary: "#4F5D6E",
+    tertiary: "#7F929B",
+    danger: "#C81E1E",
+  },
+};
+
 /** In-app theme: fixed light or dark (no OS follow mode). */
 export type AppearancePreference = "light" | "dark";
 
@@ -87,37 +126,43 @@ export type FlareColors = {
 };
 
 function mapTokens(t: StyleguideTheme, isDark: boolean): FlareColors {
-  const screen = isDark ? t.background.screen : LIGHT_GROUPED_SCREEN_BG;
-  const card = isDark ? t.background.element : LIGHT_GROUPED_CARD_BG;
+  // Apply Deep Lagoon overrides
+  const overrides = isDark ? DEEP_LAGOON_DARK_OVERRIDES : DEEP_LAGOON_LIGHT_OVERRIDES;
+  const bg = isDark ? overrides.background : { screen: LIGHT_GROUPED_SCREEN_BG, element: LIGHT_GROUPED_CARD_BG };
+  const text = overrides.text;
+  const border = overrides.border;
+  
+  const screen = isDark ? bg.screen : LIGHT_GROUPED_SCREEN_BG;
+  const card = isDark ? bg.element : LIGHT_GROUPED_CARD_BG;
 
   return {
     isDark,
     screen,
     card,
-    cardBorder: t.border.default,
-    surfaceSubtle: isDark ? t.background.subtle : screen,
-    surfaceRaised: t.background.element,
+    cardBorder: border.default,
+    surfaceSubtle: isDark ? bg.subtle : screen,
+    surfaceRaised: isDark ? bg.element : t.background.element,
     primary: MOBILE_BRAND_ACCENT.primary,
     primaryHover: MOBILE_BRAND_ACCENT.hover,
     primaryDisabledBg: MOBILE_BRAND_ACCENT.disabled,
-    text: t.text.default,
-    textSecondary: t.text.secondary,
-    textMuted: t.text.tertiary,
-    link: MOBILE_BRAND_ACCENT.primary,
-    danger: t.text.danger,
+    text: text.default,
+    textSecondary: text.secondary,
+    textMuted: text.tertiary,
+    link: isDark ? "#5CC8C2" : "#0B6A69",
+    danger: text.danger,
     destructiveFill: MOBILE_DESTRUCTIVE_FILL,
-    inputBg: isDark ? t.background.subtle : t.background.overlay,
-    inputBorder: t.border.default,
-    secondaryBtnBg: t.button.secondary.background,
-    secondaryBtnBorder: t.button.secondary.border,
-    secondaryBtnText: isDark ? t.button.secondary.text : MOBILE_BRAND_ACCENT.hover,
+    inputBg: isDark ? bg.subtle : t.background.overlay,
+    inputBorder: isDark ? "#5A6D79" : "#7F929B",
+    secondaryBtnBg: isDark ? "#1C242B" : "#0D234B",
+    secondaryBtnBorder: isDark ? "#5E727E" : "#0D234B",
+    secondaryBtnText: "#FFFFFF",
     newsCardBg: card,
-    newsImageBg: isDark ? t.background.subtle : screen,
-    reportBg: isDark ? t.background.subtle : screen,
-    reportBorder: t.border.default,
+    newsImageBg: isDark ? bg.subtle : screen,
+    reportBg: isDark ? bg.subtle : screen,
+    reportBorder: border.default,
     white: "#ffffff",
     appearanceChipInactiveBg: isDark ? "#ffffff" : screen,
-    appearanceChipInactiveText: isDark ? "#121212" : t.text.default,
+    appearanceChipInactiveText: isDark ? "#121212" : text.default,
     modalBackdrop: isDark ? "rgba(0,0,0,0.78)" : "rgba(15,23,42,0.48)",
     instructionScrim: isDark ? "rgba(0,0,0,1)" : "rgba(15,23,42,0.30)",
   };
