@@ -27,6 +27,7 @@ import { ScrollView } from "../lib/scrollViews";
 import { formatUkDate } from "../lib/formatUkDate";
 import { SPACING, TYPOGRAPHY } from "../designTokens";
 import {
+  FLARE_FONT_SIZE,
   SUPPLIES_SETUP_PICKER_PILL_GAP,
   SCREEN_EDGE_PADDING,
   bottomTabBarScrollInset,

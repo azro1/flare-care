@@ -27,6 +27,7 @@ import { FLARE_BUTTON_BORDER_RADIUS } from "../components/FlareButton";
 import { SPACING, TYPOGRAPHY } from "../designTokens";
 import {
   CARD_INNER_PADDING,
+  FLARE_LINE_HEIGHT,
   INSTRUCTION_CARD_RADIUS,
   SCREEN_EDGE_PADDING,
   TRAY_ROW_PADDING_H,
