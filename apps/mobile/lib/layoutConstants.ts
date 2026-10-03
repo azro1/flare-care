@@ -146,11 +146,11 @@ export const INFORMATIONAL_PAGE_TITLE = {
 } as const;
 
 export const FLARE_FONT_FAMILY = {
-  regular: "Inter_400Regular",
-  medium: "Inter_500Medium",
-  semibold: "Inter_600SemiBold",
-  bold: "Inter_700Bold",
-  extrabold: "Inter_800ExtraBold",
+  regular: "Outfit_400Regular",
+  medium: "Outfit_500Medium",
+  semibold: "Outfit_600SemiBold",
+  bold: "Outfit_700Bold",
+  extrabold: "Outfit_700Bold",
 } as const;
 
 /** Gap between stacked text lines — list title→subtitle, detail label→value. */
