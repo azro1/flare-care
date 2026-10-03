@@ -36,13 +36,9 @@ import {
   type MedicalSupplyRow,
 } from "../lib/medicalSuppliesShared";
 import { rescheduleSupplyNotificationsForUser } from "../lib/medicationNotifications";
+import { SPACING, TYPOGRAPHY } from "../designTokens";
 import {
-  FLARE_FONT_FAMILY,
-  FLARE_FONT_SIZE,
-  FLARE_INLINE_ACTION_LINK,
-  FLARE_LINE_HEIGHT,
   NAV_ROW_CHEVRON_SIZE,
-  WIZARD_LANDING_BLOCK_PADDING_BOTTOM,
   bottomTabBarScrollInset,
 } from "../lib/layoutConstants";
 import { formatUkDate } from "../lib/formatUkDate";
@@ -345,7 +341,7 @@ export function MedicalSupplyRequestScreen({ user }: { user: SessionUser }) {
                 />
 
                 <Pressable accessibilityRole="button" onPress={handleRebuildList} style={styles.rebuildLink}>
-                  <Text style={[FLARE_INLINE_ACTION_LINK, { color: c.primary }]}>
+                  <Text style={[styles.rebuildLinkText, { color: c.primary, fontFamily: TYPOGRAPHY.fontFamily.regular }]}>
                     Rebuild list from {kit?.name || "this order"}
                   </Text>
                 </Pressable>
@@ -402,29 +398,31 @@ export function MedicalSupplyRequestScreen({ user }: { user: SessionUser }) {
 
 const styles = StyleSheet.create({
   screen: { flex: 1 },
-  scroll: { paddingHorizontal: 20, paddingTop: 14 },
+  scroll: { paddingHorizontal: SPACING.screen, paddingTop: SPACING.lg },
   loadingWrap: {
     alignItems: "center",
-    paddingVertical: WIZARD_LANDING_BLOCK_PADDING_BOTTOM,
-    gap: 12,
+    paddingVertical: SPACING.xl * 1.5,
+    gap: SPACING.md,
   },
   muted: {
-    fontSize: FLARE_FONT_SIZE.muted,
-    lineHeight: FLARE_LINE_HEIGHT.muted,
-    fontFamily: FLARE_FONT_FAMILY.regular,
+    fontSize: TYPOGRAPHY.fontSize.sm,
+    fontFamily: TYPOGRAPHY.fontFamily.regular,
   },
-  emptyItems: { marginTop: 16 },
-  orderPickerRow: { flex: 1, flexDirection: "row", alignItems: "center", gap: 8 },
+  emptyItems: { marginTop: SPACING.lg },
+  orderPickerRow: { flex: 1, flexDirection: "row", alignItems: "center", gap: SPACING.sm },
   orderPickerText: {
     flex: 1,
-    fontSize: FLARE_FONT_SIZE.body,
-    fontFamily: FLARE_FONT_FAMILY.regular,
+    fontSize: TYPOGRAPHY.fontSize.md,
+    fontFamily: TYPOGRAPHY.fontFamily.regular,
   },
-  fieldGap: { marginTop: 16 },
+  fieldGap: { marginTop: SPACING.lg },
   bodyInput: {
     minHeight: flareInputStyles.textarea.minHeight + 80,
   },
-  rebuildLink: { alignSelf: "flex-start", paddingVertical: 10 },
-  fieldError: { marginTop: 8 },
-  actionCol: { gap: 8, marginTop: 20 },
+  rebuildLink: { alignSelf: "flex-start", paddingVertical: SPACING.sm },
+  rebuildLinkText: {
+    fontSize: TYPOGRAPHY.fontSize.md,
+  },
+  fieldError: { marginTop: SPACING.sm },
+  actionCol: { gap: SPACING.sm, marginTop: SPACING.lg },
 });
