@@ -3592,55 +3592,65 @@ function NotificationsScreen({ user }: { user: SessionUser }) {
     : FLARE_CHROME_LUCIDE.notificationsOff;
 
   return (
-    <ScrollView
-      style={[styles.screen, { backgroundColor: c.screen }]}
-      contentContainerStyle={{ paddingBottom: bottomScrollInset + 16 }}
-    >
-      <Card style={styles.accountPaddedCard}>
-        <View style={styles.remindersStatusRow}>
-          <View style={[styles.accountAvatarWell, { backgroundColor: c.surfaceSubtle }]}>
-            <FlareLucideIcon
-              icon={reminderStatusIcon}
-              size={26}
-              color={c.primary}
-            />
+    <View style={[styles.screen, { backgroundColor: c.screen }]}>
+      <ScrollView
+        style={styles.scroll}
+        contentContainerStyle={[styles.scrollContent, { paddingBottom: bottomScrollInset + 16 }]}
+      >
+        <Card>
+          <View style={styles.remindersStatusRow}>
+            <View style={[styles.accountAvatarWell, { backgroundColor: c.surfaceSubtle }]}>
+              <FlareLucideIcon
+                icon={reminderStatusIcon}
+                size={26}
+                color={c.primary}
+              />
+            </View>
+            <View style={styles.accountIdentityTextCol}>
+              <Text style={[styles.accountFirstName, { color: c.text, fontFamily: TYPOGRAPHY.fontFamily.semibold }]}>
+                {reminderStatusTitle}
+              </Text>
+              {reminderStatusSubtitle ? (
+                <Text style={[styles.remindersStatusSubtitle, { color: c.textMuted, fontFamily: TYPOGRAPHY.fontFamily.regular }]}>
+                  {reminderStatusSubtitle}
+                </Text>
+              ) : null}
+            </View>
           </View>
-          <View style={styles.accountIdentityTextCol}>
-            <Text style={[styles.accountFirstName, { color: c.text }]}>{reminderStatusTitle}</Text>
-            {reminderStatusSubtitle ? (
-              <Text style={[styles.remindersStatusSubtitle, { color: c.textMuted }]}>{reminderStatusSubtitle}</Text>
-            ) : null}
-          </View>
-        </View>
 
-        {!statusReady ? (
-          <View style={styles.remindersStatusLoading}>
-            <ActivityIndicator size="small" color={c.primary} />
-          </View>
-        ) : !permissionGranted ? (
-          <View style={styles.remindersSetupBlock}>
-            <Text style={[styles.muted, { color: c.textMuted, lineHeight: 20 }]}>{REMINDERS_SETUP_INTRO_OFF}</Text>
-            <PrimaryButton title="Open phone settings" onPress={() => void openAppNotificationSettings()} />
-          </View>
-        ) : (
-          <Text style={[styles.muted, { color: c.textMuted, marginTop: 16, lineHeight: 20 }]}>
-            {scheduled > 0 ? REMINDERS_READY_BODY : REMINDERS_READY_NONE}
-          </Text>
-        )}
+          {!statusReady ? (
+            <View style={styles.remindersStatusLoading}>
+              <ActivityIndicator size="small" color={c.primary} />
+            </View>
+          ) : !permissionGranted ? (
+            <View style={styles.remindersSetupBlock}>
+              <Text style={[styles.muted, { color: c.textMuted, lineHeight: 20, fontFamily: TYPOGRAPHY.fontFamily.regular }]}>
+                {REMINDERS_SETUP_INTRO_OFF}
+              </Text>
+              <PrimaryButton title="Open phone settings" onPress={() => void openAppNotificationSettings()} />
+            </View>
+          ) : (
+            <Text style={[styles.muted, { color: c.textMuted, marginTop: 16, lineHeight: 20, fontFamily: TYPOGRAPHY.fontFamily.regular }]}>
+              {scheduled > 0 ? REMINDERS_READY_BODY : REMINDERS_READY_NONE}
+            </Text>
+          )}
 
-        {lastError ? (
-          <Text style={[flareFieldErrorStyle(c, "wizard"), { marginTop: 12 }]}>{lastError}</Text>
-        ) : null}
-        <Pressable
-          accessibilityRole="button"
-          accessibilityLabel="Notification help"
-          onPress={() => navigation.navigate("AccountHelp", { expandSection: "notifications" })}
-          style={({ pressed }) => [styles.remindersGuideLinkPress, pressed && { opacity: 0.7 }]}
-        >
-          <Text style={[styles.remindersGuideLink, { color: c.text }]}>Not getting alerts?</Text>
-        </Pressable>
-      </Card>
-    </ScrollView>
+          {lastError ? (
+            <Text style={[flareFieldErrorStyle(c, "wizard"), { marginTop: 12 }]}>{lastError}</Text>
+          ) : null}
+          <Pressable
+            accessibilityRole="button"
+            accessibilityLabel="Notification help"
+            onPress={() => navigation.navigate("AccountHelp", { expandSection: "notifications" })}
+            style={({ pressed }) => [styles.remindersGuideLinkPress, pressed && { opacity: 0.7 }]}
+          >
+            <Text style={[styles.remindersGuideLink, { color: c.text, fontFamily: TYPOGRAPHY.fontFamily.regular }]}>
+              Not getting alerts?
+            </Text>
+          </Pressable>
+        </Card>
+      </ScrollView>
+    </View>
   );
 }
 
