@@ -1,15 +1,17 @@
-import { FLARE_CHROME_LUCIDE, FlareLucideIcon, FLARE_FEATURE_LUCIDE } from "../lib/flareLucideIcons";
+import { FlareLucideIcon } from "../lib/flareLucideIcons";
+import { PenLine } from "lucide-react-native";
 import DateTimePicker from "@react-native-community/datetimepicker";
 import AsyncStorage from "@react-native-async-storage/async-storage";
 import { CommonActions, useNavigation, useRoute } from "@react-navigation/native";
 import React, { useCallback, useEffect, useLayoutEffect, useMemo, useRef, useState } from "react";
-import { ActivityIndicator, BackHandler, KeyboardAvoidingView, Platform, Pressable, StyleSheet, Text, useWindowDimensions, View, type ScrollView as RNScrollView } from "react-native";
+import { ActivityIndicator, BackHandler, KeyboardAvoidingView, Platform, Pressable, StyleSheet, Text, View, type ScrollView as RNScrollView } from "react-native";
 import { showFlareAlert } from "../components/FlareAlertHost";
 import { ScrollView } from "../lib/scrollViews";
 import { OptionPickerModal } from "../components/OptionPickerModal";
 import { Card } from "../components/MidnightLagoonCard";
-import { Tray, TrayRow } from "../components/MidnightLagoonTray";
+import { SectionLabel } from "../components/MidnightLagoonSectionLabel";
 import { OptionChip } from "../components/OptionChip";
+import { WizardProgressBar } from "../components/WizardProgressBar";
 import { PrimaryButton, SecondaryButton } from "../components/FlareButton";
 import { flareFieldErrorStyle, FlareInputTrigger, FlareTextInput } from "../components/FlareInput";
 import { invalidateDashboardSnapshot } from "../lib/dashboardSnapshotCache";
@@ -39,7 +41,7 @@ import {
   type MedicationWizardHistoryEntry,
 } from "../lib/medicationWizardShared";
 import { TRACK_MEDICATIONS_ICON } from "../lib/medicationFeatureIcons";
-import { SPACING, RADIUS, TYPOGRAPHY } from "../designTokens";
+import { SPACING, TYPOGRAPHY } from "../designTokens";
 import { useFlareColors } from "../theme";
 
 type SessionUser = { id: string };
@@ -90,13 +92,57 @@ function listKey(kind: ListKind): "missedMedicationsList" | "nsaidList" | "antib
 
 const MEDICATION_REVIEW_STEP = MEDICATION_WIZARD_REVIEW_STEP;
 
+function ReviewSectionCard({
+  title,
+  onEdit,
+  children,
+}: {
+  title: string;
+  onEdit: () => void;
+  children: React.ReactNode;
+}) {
+  const c = useFlareColors();
+  return (
+    <Card>
+      <View style={styles.reviewCardHeader}>
+        <View style={styles.reviewInCardLabelWrap}>
+          <SectionLabel style={styles.reviewInCardLabel}>{title}</SectionLabel>
+        </View>
+        <Pressable
+          accessibilityRole="button"
+          accessibilityLabel={`Edit ${title}`}
+          onPress={onEdit}
+          hitSlop={10}
+          style={[styles.reviewEditBtn, { backgroundColor: c.surfaceSubtle }]}
+        >
+          <FlareLucideIcon icon={PenLine} size={16} color={c.primary} />
+        </Pressable>
+      </View>
+      {children}
+    </Card>
+  );
+}
+
+function ReviewFieldRows({ fields }: { fields: { label: string; value: string }[] }) {
+  const c = useFlareColors();
+  return (
+    <>
+      {fields.map((field, i) => (
+        <View key={`${field.label}-${i}`} style={[styles.reviewFieldRow, i > 0 && styles.reviewFieldRowGap]}>
+          <Text style={[styles.reviewFieldLabel, { color: c.textSecondary, fontFamily: TYPOGRAPHY.fontFamily.regular }]}>{field.label}</Text>
+          <Text style={[styles.reviewFieldValue, { color: c.text, fontFamily: TYPOGRAPHY.fontFamily.medium }]}>{field.value}</Text>
+        </View>
+      ))}
+    </>
+  );
+}
+
 export function MedicationTrackingWizardScreen({ user }: { user: SessionUser }) {
   const navigation = useNavigation<any>();
   const route = useRoute();
   const editId = String((route.params as { editId?: string } | undefined)?.editId ?? "");
   const c = useFlareColors();
   const errTextStyle = flareFieldErrorStyle(c, "wizard");
-  const { height: windowHeight } = useWindowDimensions();
   const [currentStep, setCurrentStep] = useState(0);
   const [form, setForm] = useState<MedicationTrackingFormData>(() => createEmptyMedicationForm());
   const [fieldErrors, setFieldErrors] = useState<Record<string, string>>({});
@@ -366,7 +412,7 @@ export function MedicationTrackingWizardScreen({ user }: { user: SessionUser }) 
   };
 
   const renderYesNo = (field: "missedMedications" | "nsaidUsage" | "antibioticUsage", title: string) => (
-    <View>
+    <View style={styles.stepContent}>
       <Text style={[styles.stepTitle, { color: c.text, fontFamily: TYPOGRAPHY.fontFamily.semibold }]}>{title}</Text>
       <View style={styles.optionChipRow}>
         <OptionChip label="Yes" selected={form[field] === true} onPress={() => setYesNo(field, true)} />
@@ -383,7 +429,7 @@ export function MedicationTrackingWizardScreen({ user }: { user: SessionUser }) 
     const canAdd = withDosage ? isDosageRowComplete(last) : isMissedRowComplete(last);
 
     return (
-      <View>
+      <View style={styles.stepContent}>
         <Text style={[styles.stepTitle, { color: c.text, fontFamily: TYPOGRAPHY.fontFamily.semibold }]}>{title}</Text>
         {list.map((item, i) => (
           <View key={i} style={styles.listEntry}>
@@ -446,22 +492,30 @@ export function MedicationTrackingWizardScreen({ user }: { user: SessionUser }) 
   return (
     <KeyboardAvoidingView style={[styles.screen, { backgroundColor: c.screen }]} behavior={Platform.OS === "ios" ? "padding" : undefined}>
       <ScrollView ref={scrollRef} contentContainerStyle={[styles.scrollContent, currentStep === 0 && styles.scrollContentLanding]} keyboardShouldPersistTaps="handled">
-        {currentStep > 0 && phase.sectionTotal > 0 ? (
-          <Text style={[styles.phaseLine, { color: c.textSecondary, fontFamily: TYPOGRAPHY.fontFamily.medium }]}>
-            Section {phase.sectionStep}/{phase.sectionTotal}: {phase.currentPhaseLabel}
-          </Text>
+        {currentStep > 0 && currentStep !== MEDICATION_REVIEW_STEP && phase.phaseNames.length > 0 ? (
+          <View style={styles.progressWrap}>
+            <Text style={[styles.progressLabel, { color: c.textMuted, fontFamily: TYPOGRAPHY.fontFamily.regular }]}>
+              {phase.currentPhaseLabel} • {Math.max(0, phase.phaseNames.indexOf(phase.currentPhaseLabel)) + 1}/{phase.phaseNames.length}
+            </Text>
+            <WizardProgressBar
+              current={Math.max(0, phase.phaseNames.indexOf(phase.currentPhaseLabel)) + 1}
+              total={phase.phaseNames.length}
+            />
+          </View>
         ) : null}
 
         {currentStep === 0 ? (
-          <View style={[styles.landing, { minHeight: Math.max(windowHeight * 0.58, 420) }]}>
-            <View style={[styles.landingIconPanel, { backgroundColor: c.card }]}>
-              <FlareLucideIcon icon={TRACK_MEDICATIONS_ICON} size={28} color={c.primary} />
-            </View>
-            <Text style={[styles.landingTitle, { color: c.text, fontFamily: TYPOGRAPHY.fontFamily.bold }]}>Track Medications</Text>
-            <Text style={[styles.landingSub, { color: c.textSecondary, fontFamily: TYPOGRAPHY.fontFamily.regular }]}>Capture medication events that could be important to your IBD care.</Text>
-            <View style={styles.landingCta}>
+          <View style={styles.landing}>
+            <Card style={styles.landingCard}>
+              <View style={styles.landingIconWrap}>
+                <FlareLucideIcon icon={TRACK_MEDICATIONS_ICON} size={48} color={c.primary} />
+              </View>
+              <Text style={[styles.landingTitle, { color: c.text, fontFamily: TYPOGRAPHY.fontFamily.bold }]}>Track Medications</Text>
+              <Text style={[styles.landingDesc, { color: c.textSecondary, fontFamily: TYPOGRAPHY.fontFamily.regular }]}>
+                Capture medication events that could be important to your IBD care.
+              </Text>
               <PrimaryButton title="Start now" onPress={startWizard} />
-            </View>
+            </Card>
           </View>
         ) : null}
 
@@ -473,65 +527,58 @@ export function MedicationTrackingWizardScreen({ user }: { user: SessionUser }) 
         {currentStep === 6 ? renderMedicationList("antibiotic", "Please list any antibiotics you have taken recently", true, "antibioticList") : null}
 
         {currentStep === 7 ? (
-          <Card>
-            <View style={styles.reviewSections}>
-              {cleanedForReview.missedMedicationsList.length > 0 ? (
-                <View>
-                  <Text style={[styles.reviewSectionTitle, { color: c.text, fontFamily: TYPOGRAPHY.fontFamily.semibold }]}>Missed Medications</Text>
-                  <Tray>
-                    {cleanedForReview.missedMedicationsList.map((item, idx) => (
-                      <TrayRow key={idx} icon={FLARE_FEATURE_LUCIDE.meds} label={item.medication} sublabel={`${formatUkDate(item.date)} at ${item.timeOfDay}`} />
-                    ))}
-                  </Tray>
-                  <Pressable onPress={() => openReviewEdit("missed")}>
-                    <Text style={[styles.editLink, { color: c.primary, fontFamily: TYPOGRAPHY.fontFamily.semibold }]}>Edit</Text>
-                  </Pressable>
-                </View>
-              ) : null}
-              {cleanedForReview.nsaidList.length > 0 ? (
-                <View>
-                  <Text style={[styles.reviewSectionTitle, { color: c.text, fontFamily: TYPOGRAPHY.fontFamily.semibold }]}>NSAIDs Taken</Text>
-                  <Tray>
-                    {cleanedForReview.nsaidList.map((item, idx) => (
-                      <TrayRow key={idx} icon={FLARE_FEATURE_LUCIDE.meds} label={`${item.medication} ${item.dosage}mg`} sublabel={`${formatUkDate(item.date)} at ${item.timeOfDay}`} />
-                    ))}
-                  </Tray>
-                  <Pressable onPress={() => openReviewEdit("nsaid")}>
-                    <Text style={[styles.editLink, { color: c.primary, fontFamily: TYPOGRAPHY.fontFamily.semibold }]}>Edit</Text>
-                  </Pressable>
-                </View>
-              ) : null}
-              {cleanedForReview.antibioticList.length > 0 ? (
-                <View>
-                  <Text style={[styles.reviewSectionTitle, { color: c.text, fontFamily: TYPOGRAPHY.fontFamily.semibold }]}>Antibiotics Taken</Text>
-                  <Tray>
-                    {cleanedForReview.antibioticList.map((item, idx) => (
-                      <TrayRow key={idx} icon={FLARE_FEATURE_LUCIDE.meds} label={`${item.medication} ${item.dosage}mg`} sublabel={`${formatUkDate(item.date)} at ${item.timeOfDay}`} />
-                    ))}
-                  </Tray>
-                  <Pressable onPress={() => openReviewEdit("antibiotic")}>
-                    <Text style={[styles.editLink, { color: c.primary, fontFamily: TYPOGRAPHY.fontFamily.semibold }]}>Edit</Text>
-                  </Pressable>
-                </View>
-              ) : null}
-            </View>
-            <View style={styles.reviewSubmit}>
-              <PrimaryButton title={submitting ? "Saving…" : editId ? "Save changes" : "Submit"} onPress={submit} disabled={submitting || !reviewHasData} />
-            </View>
-          </Card>
-        ) : null}
-
-        {currentStep > 0 && !(currentStep === MEDICATION_REVIEW_STEP && !editingReviewSection) ? (
-          <View style={styles.footerBtns}>
-            {editingReviewSection ? (
-              <>
-                <PrimaryButton title="Back to review" onPress={returnToReview} />
-                {currentStep < getMedicationReviewSectionLastStep(editingReviewSection, form) ? <SecondaryButton title="Next" onPress={applyAdvance} /> : null}
-              </>
-            ) : (
-              <PrimaryButton title="Next" onPress={applyAdvance} />
-            )}
-            {currentStep > 1 && !editingReviewSection ? <SecondaryButton title="Prev" onPress={goBackInternal} /> : null}
+          <View style={styles.reviewContent}>
+            <Text style={[styles.reviewPageTitle, { color: c.text, fontFamily: TYPOGRAPHY.fontFamily.bold }]}>Review your log</Text>
+            <Text style={[styles.reviewPageSubtitle, { color: c.textSecondary, fontFamily: TYPOGRAPHY.fontFamily.regular }]}>
+              Check everything looks right before saving.
+            </Text>
+            {cleanedForReview.missedMedicationsList.length > 0 ? (
+              <ReviewSectionCard title="Missed medications" onEdit={() => openReviewEdit("missed")}>
+                {cleanedForReview.missedMedicationsList.map((item, idx) => (
+                  <View key={idx} style={idx > 0 ? styles.reviewItemGap : undefined}>
+                    <ReviewFieldRows
+                      fields={[
+                        { label: "Medication", value: item.medication },
+                        { label: "Date", value: item.date ? formatUkDate(item.date) : "Not set" },
+                        { label: "Time", value: item.timeOfDay || "Not set" },
+                      ]}
+                    />
+                  </View>
+                ))}
+              </ReviewSectionCard>
+            ) : null}
+            {cleanedForReview.nsaidList.length > 0 ? (
+              <ReviewSectionCard title="NSAIDs" onEdit={() => openReviewEdit("nsaid")}>
+                {cleanedForReview.nsaidList.map((item, idx) => (
+                  <View key={idx} style={idx > 0 ? styles.reviewItemGap : undefined}>
+                    <ReviewFieldRows
+                      fields={[
+                        { label: "Medication", value: item.medication },
+                        { label: "Dose", value: item.dosage || "Not set" },
+                        { label: "Date", value: item.date ? formatUkDate(item.date) : "Not set" },
+                        { label: "Time", value: item.timeOfDay || "Not set" },
+                      ]}
+                    />
+                  </View>
+                ))}
+              </ReviewSectionCard>
+            ) : null}
+            {cleanedForReview.antibioticList.length > 0 ? (
+              <ReviewSectionCard title="Antibiotics" onEdit={() => openReviewEdit("antibiotic")}>
+                {cleanedForReview.antibioticList.map((item, idx) => (
+                  <View key={idx} style={idx > 0 ? styles.reviewItemGap : undefined}>
+                    <ReviewFieldRows
+                      fields={[
+                        { label: "Medication", value: item.medication },
+                        { label: "Dose", value: item.dosage || "Not set" },
+                        { label: "Date", value: item.date ? formatUkDate(item.date) : "Not set" },
+                        { label: "Time", value: item.timeOfDay || "Not set" },
+                      ]}
+                    />
+                  </View>
+                ))}
+              </ReviewSectionCard>
+            ) : null}
           </View>
         ) : null}
 
@@ -541,6 +588,21 @@ export function MedicationTrackingWizardScreen({ user }: { user: SessionUser }) 
           </Pressable>
         ) : null}
       </ScrollView>
+
+      {currentStep > 0 && !(currentStep === MEDICATION_REVIEW_STEP && !editingReviewSection) ? (
+        <View style={[styles.footer, { backgroundColor: c.screen, borderTopColor: c.cardBorder }]}>
+          <SecondaryButton title="Back" onPress={goBackInternal} />
+          {!editingReviewSection || currentStep < getMedicationReviewSectionLastStep(editingReviewSection, form) ? (
+            <PrimaryButton title="Next" onPress={applyAdvance} />
+          ) : null}
+        </View>
+      ) : null}
+
+      {currentStep === MEDICATION_REVIEW_STEP && !editingReviewSection ? (
+        <View style={[styles.fixedFooter, { backgroundColor: c.screen, borderTopColor: c.cardBorder }]}>
+          <PrimaryButton title={submitting ? "Saving..." : "Save log"} onPress={submit} disabled={submitting || !reviewHasData} />
+        </View>
+      ) : null}
 
       <OptionPickerModal visible={timePicker != null} options={TIME_OF_DAY_OPTIONS} onSelect={selectTimeOfDay} onCancel={closeTimePicker} />
     </KeyboardAvoidingView>
@@ -552,55 +614,60 @@ const styles = StyleSheet.create({
   scrollContent: {
     paddingHorizontal: SPACING.screen,
     paddingTop: SPACING.lg,
-    paddingBottom: 100,
+    paddingBottom: 120,
   },
   scrollContentLanding: {
-    flexGrow: 1,
+    paddingTop: 0,
+    paddingBottom: SPACING.xl,
   },
   centered: {
     flex: 1,
     justifyContent: "center",
     alignItems: "center",
   },
-  phaseLine: {
+  progressWrap: {
+    marginBottom: SPACING.xl,
+    gap: SPACING.sm,
+  },
+  progressLabel: {
     fontSize: TYPOGRAPHY.fontSize.sm,
-    marginBottom: SPACING.md,
   },
   landing: {
-    alignItems: "center",
+    flex: 1,
     justifyContent: "center",
-    paddingVertical: SPACING.xl,
+    paddingVertical: SPACING.xl * 2,
   },
-  landingIconPanel: {
-    width: 56,
-    height: 56,
-    borderRadius: RADIUS.card,
+  landingCard: {
+    alignItems: "center",
+    gap: SPACING.lg,
+  },
+  landingIconWrap: {
+    width: 80,
+    height: 80,
+    borderRadius: 40,
     alignItems: "center",
     justifyContent: "center",
-    marginBottom: SPACING.xl,
+    marginBottom: SPACING.md,
   },
   landingTitle: {
     fontSize: TYPOGRAPHY.fontSize.screenTitle,
-    lineHeight: 28,
-    marginBottom: SPACING.lg,
     textAlign: "center",
-    letterSpacing: -0.4,
-    maxWidth: 360,
   },
-  landingSub: {
-    fontSize: TYPOGRAPHY.fontSize.heroTitle,
-    lineHeight: 26,
+  landingDesc: {
+    fontSize: TYPOGRAPHY.fontSize.md,
     textAlign: "center",
-    marginBottom: SPACING.xl,
-    maxWidth: 360,
+    lineHeight: 22,
   },
-  landingCta: {
-    width: "100%",
-    maxWidth: 360,
+  stepContent: {
+    gap: SPACING.lg,
   },
   stepTitle: {
     fontSize: TYPOGRAPHY.fontSize.cardTitle,
-    marginBottom: SPACING.md,
+    lineHeight: 24,
+  },
+  optionChipRow: {
+    flexDirection: "row",
+    gap: SPACING.md,
   },
   optionList: {
     gap: SPACING.md,
@@ -660,23 +727,76 @@ const styles = StyleSheet.create({
   addLinkText: {
     fontSize: TYPOGRAPHY.fontSize.md,
   },
-  reviewSections: {
-    gap: SPACING.lg,
+  reviewContent: {
+    gap: 0,
   },
-  reviewSectionTitle: {
-    fontSize: TYPOGRAPHY.fontSize.heroTitle,
+  reviewPageTitle: {
+    fontSize: TYPOGRAPHY.fontSize.screenTitle,
+    lineHeight: 30,
+    marginBottom: SPACING.xs,
+  },
+  reviewPageSubtitle: {
+    fontSize: TYPOGRAPHY.fontSize.md,
+    lineHeight: 20,
     marginBottom: SPACING.sm,
   },
-  editLink: {
-    fontSize: TYPOGRAPHY.fontSize.sm,
-    marginTop: SPACING.xs,
+  reviewCardHeader: {
+    flexDirection: "row",
+    alignItems: "center",
+    justifyContent: "space-between",
+    gap: SPACING.sm,
+    marginBottom: SPACING.md,
   },
-  reviewSubmit: {
-    marginTop: SPACING.lg,
+  reviewInCardLabelWrap: {
+    flex: 1,
+    minWidth: 0,
   },
-  footerBtns: {
-    marginTop: SPACING.lg,
+  reviewInCardLabel: {
+    marginTop: 0,
+    marginBottom: 0,
+    marginHorizontal: 0,
+    letterSpacing: 0.8,
+  },
+  reviewEditBtn: {
+    width: 32,
+    height: 32,
+    borderRadius: 16,
+    alignItems: "center",
+    justifyContent: "center",
+  },
+  reviewFieldRow: {
+    flexDirection: "row",
+    justifyContent: "space-between",
+    alignItems: "flex-start",
     gap: SPACING.md,
+  },
+  reviewFieldRowGap: {
+    marginTop: SPACING.md,
+  },
+  reviewFieldLabel: {
+    fontSize: TYPOGRAPHY.fontSize.md,
+    flex: 1,
+  },
+  reviewFieldValue: {
+    fontSize: TYPOGRAPHY.fontSize.md,
+    textAlign: "right",
+    flex: 1,
+  },
+  reviewItemGap: {
+    marginTop: SPACING.lg,
+  },
+  footer: {
+    flexDirection: "row",
+    justifyContent: "flex-end",
+    gap: SPACING.md,
+    paddingHorizontal: SPACING.screen,
+    paddingVertical: SPACING.lg,
+    borderTopWidth: 1,
+  },
+  fixedFooter: {
+    paddingHorizontal: SPACING.screen,
+    paddingVertical: SPACING.lg,
+    borderTopWidth: 1,
   },
   helpLink: {
     marginTop: SPACING.lg,
