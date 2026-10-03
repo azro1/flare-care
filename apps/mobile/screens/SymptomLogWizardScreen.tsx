@@ -425,36 +425,52 @@ export function SymptomLogWizardScreen({ user }: { user: SessionUser }) {
     });
   }, [navigation, currentStep, editingReviewSection]);
 
-  const applyAdvance = useCallback(() => {
-    const res = symptomWizardTryAdvance({
-      currentStep,
-      form,
-      isFirstTimeUser,
-      userPreferences,
-    });
-    if (!res.ok) {
-      setFieldErrors(res.fieldErrors);
-      setDateErrors(res.dateErrors);
-      return;
-    }
-    setFieldErrors({});
-    if (res.clearDateErrors) setDateErrors({ day: "", month: "", year: "", endDay: "", endMonth: "", endYear: "" });
-    setForm(res.form);
-    if (editingReviewSection) {
-      const sectionLast = getSymptomReviewSectionLastStep(editingReviewSection);
-      if (res.nextStep > sectionLast) {
-        returnToReview();
+  const advanceFrom = useCallback(
+    (source: SymptomFormData) => {
+      const res = symptomWizardTryAdvance({
+        currentStep,
+        form: source,
+        isFirstTimeUser,
+        userPreferences,
+      });
+      if (!res.ok) {
+        setForm(source);
+        setFieldErrors(res.fieldErrors);
+        setDateErrors(res.dateErrors);
         return;
       }
+      setFieldErrors({});
+      if (res.clearDateErrors) setDateErrors({ day: "", month: "", year: "", endDay: "", endMonth: "", endYear: "" });
+      setForm(res.form);
+      if (editingReviewSection) {
+        const sectionLast = getSymptomReviewSectionLastStep(editingReviewSection);
+        if (res.nextStep > sectionLast) {
+          returnToReview();
+          return;
+        }
+        setCurrentStep(res.nextStep);
+        return;
+      }
+      if (res.nextStep === SYMPTOM_REVIEW_STEP) {
+        setEditingReviewSection(null);
+      }
+      setHistory((h) => [...h, { step: currentStep, form: cloneForm(source) }]);
       setCurrentStep(res.nextStep);
-      return;
-    }
-    if (res.nextStep === SYMPTOM_REVIEW_STEP) {
-      setEditingReviewSection(null);
-    }
-    setHistory((h) => [...h, { step: currentStep, form: cloneForm(form) }]);
-    setCurrentStep(res.nextStep);
-  }, [currentStep, editingReviewSection, form, isFirstTimeUser, returnToReview, userPreferences]);
+    },
+    [currentStep, editingReviewSection, isFirstTimeUser, returnToReview, userPreferences],
+  );
+
+  const applyAdvance = useCallback(() => {
+    advanceFrom(form);
+  }, [advanceFrom, form]);
+
+  /** One tap completes the answer and moves on. Back restores it and does not advance again. */
+  const chooseSingle = useCallback(
+    (patch: Partial<SymptomFormData>) => {
+      advanceFrom({ ...form, ...patch });
+    },
+    [advanceFrom, form],
+  );
 
   const startWizard = () => {
     setHistory([{ step: 0, form: cloneForm(form) }]);
@@ -510,8 +526,7 @@ export function SymptomLogWizardScreen({ user }: { user: SessionUser }) {
   };
 
   const setRating = (name: "severity" | "stress_level", value: number) => {
-    setForm((prev) => ({ ...prev, [name]: String(value) }));
-    setFieldErrors((prev) => ({ ...prev, [name]: "" }));
+    chooseSingle({ [name]: String(value) });
   };
 
   const mealLabel = (meal: "breakfast" | "lunch" | "dinner") => {
@@ -796,8 +811,8 @@ export function SymptomLogWizardScreen({ user }: { user: SessionUser }) {
           <View style={styles.stepContent}>
             <Text style={[styles.stepTitle, { color: c.text, fontFamily: TYPOGRAPHY.fontFamily.semibold }]}>Are symptoms still ongoing?</Text>
             <View style={styles.optionChipRow}>
-              <OptionChip label="Yes" selected={form.isOngoing === true} onPress={() => setForm((p) => ({ ...p, isOngoing: true }))} />
-              <OptionChip label="No" selected={form.isOngoing === false} onPress={() => setForm((p) => ({ ...p, isOngoing: false }))} />
+              <OptionChip label="Yes" selected={form.isOngoing === true} onPress={() => chooseSingle({ isOngoing: true })} />
+              <OptionChip label="No" selected={form.isOngoing === false} onPress={() => chooseSingle({ isOngoing: false })} />
             </View>
             {fieldErrors.isOngoing ? <Text style={errTextStyle}>{fieldErrors.isOngoing}</Text> : null}
           </View>
@@ -889,12 +904,12 @@ export function SymptomLogWizardScreen({ user }: { user: SessionUser }) {
               <OptionChip
                 label="Yes"
                 selected={form.bathroom_frequency_changed === "yes"}
-                onPress={() => setForm((p) => ({ ...p, bathroom_frequency_changed: "yes" }))}
+                onPress={() => chooseSingle({ bathroom_frequency_changed: "yes" })}
               />
               <OptionChip
                 label="No"
                 selected={form.bathroom_frequency_changed === "no"}
-                onPress={() => setForm((p) => ({ ...p, bathroom_frequency_changed: "no" }))}
+                onPress={() => chooseSingle({ bathroom_frequency_changed: "no" })}
               />
             </View>
             {fieldErrors.bathroom_frequency_changed ? <Text style={errTextStyle}>{fieldErrors.bathroom_frequency_changed}</Text> : null}
@@ -921,8 +936,8 @@ export function SymptomLogWizardScreen({ user }: { user: SessionUser }) {
           <View style={styles.stepContent}>
             <Text style={[styles.stepTitle, { color: c.text, fontFamily: TYPOGRAPHY.fontFamily.semibold }]}>Do you smoke?</Text>
             <View style={styles.optionChipRow}>
-              <OptionChip label="Yes" selected={form.smoker === true} onPress={() => setForm((p) => ({ ...p, smoker: true }))} />
-              <OptionChip label="No" selected={form.smoker === false} onPress={() => setForm((p) => ({ ...p, smoker: false }))} />
+              <OptionChip label="Yes" selected={form.smoker === true} onPress={() => chooseSingle({ smoker: true })} />
+              <OptionChip label="No" selected={form.smoker === false} onPress={() => chooseSingle({ smoker: false })} />
             </View>
             {fieldErrors.smoker ? <Text style={errTextStyle}>{fieldErrors.smoker}</Text> : null}
           </View>
@@ -952,12 +967,12 @@ export function SymptomLogWizardScreen({ user }: { user: SessionUser }) {
               <OptionChip
                 label="Yes"
                 selected={form.smoked_on_symptom_day === true}
-                onPress={() => setForm((p) => ({ ...p, smoked_on_symptom_day: true }))}
+                onPress={() => chooseSingle({ smoked_on_symptom_day: true })}
               />
               <OptionChip
                 label="No"
                 selected={form.smoked_on_symptom_day === false}
-                onPress={() => setForm((p) => ({ ...p, smoked_on_symptom_day: false }))}
+                onPress={() => chooseSingle({ smoked_on_symptom_day: false })}
               />
             </View>
             {fieldErrors.smoked_on_symptom_day ? <Text style={errTextStyle}>{fieldErrors.smoked_on_symptom_day}</Text> : null}
@@ -983,8 +998,8 @@ export function SymptomLogWizardScreen({ user }: { user: SessionUser }) {
           <View style={styles.stepContent}>
             <Text style={[styles.stepTitle, { color: c.text, fontFamily: TYPOGRAPHY.fontFamily.semibold }]}>Do you drink alcohol?</Text>
             <View style={styles.optionChipRow}>
-              <OptionChip label="Yes" selected={form.alcohol === true} onPress={() => setForm((p) => ({ ...p, alcohol: true }))} />
-              <OptionChip label="No" selected={form.alcohol === false} onPress={() => setForm((p) => ({ ...p, alcohol: false }))} />
+              <OptionChip label="Yes" selected={form.alcohol === true} onPress={() => chooseSingle({ alcohol: true })} />
+              <OptionChip label="No" selected={form.alcohol === false} onPress={() => chooseSingle({ alcohol: false })} />
             </View>
             {fieldErrors.alcohol ? <Text style={errTextStyle}>{fieldErrors.alcohol}</Text> : null}
           </View>
@@ -1017,12 +1032,12 @@ export function SymptomLogWizardScreen({ user }: { user: SessionUser }) {
               <OptionChip
                 label="Yes"
                 selected={form.drank_on_symptom_day === true}
-                onPress={() => setForm((p) => ({ ...p, drank_on_symptom_day: true }))}
+                onPress={() => chooseSingle({ drank_on_symptom_day: true })}
               />
               <OptionChip
                 label="No"
                 selected={form.drank_on_symptom_day === false}
-                onPress={() => setForm((p) => ({ ...p, drank_on_symptom_day: false }))}
+                onPress={() => chooseSingle({ drank_on_symptom_day: false })}
               />
             </View>
             {fieldErrors.drank_on_symptom_day ? <Text style={errTextStyle}>{fieldErrors.drank_on_symptom_day}</Text> : null}
