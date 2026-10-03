@@ -272,6 +272,11 @@ export function symptomWizardTryAdvance(input: {
     if (!hasBreakfast) {
       return fail({ breakfast: "Please enter what you ate for breakfast or check \"I didn't eat anything\"" });
     }
+    for (const meal of form.breakfast) {
+      if (meal.food.trim() && !meal.quantity.trim()) {
+        return fail({ breakfast: "Please enter an amount" });
+      }
+    }
   }
 
   if (currentStep === 14) {
@@ -279,12 +284,22 @@ export function symptomWizardTryAdvance(input: {
     if (!hasLunch) {
       return fail({ lunch: "Please enter what you ate for lunch or check \"I didn't eat anything\"" });
     }
+    for (const meal of form.lunch) {
+      if (meal.food.trim() && !meal.quantity.trim()) {
+        return fail({ lunch: "Please enter an amount" });
+      }
+    }
   }
 
   if (currentStep === 15) {
     const hasDinner = form.dinner.some((meal) => meal.food.trim()) || form.dinner_skipped;
     if (!hasDinner) {
       return fail({ dinner: "Please enter what you ate for dinner or check \"I didn't eat anything\"" });
+    }
+    for (const meal of form.dinner) {
+      if (meal.food.trim() && !meal.quantity.trim()) {
+        return fail({ dinner: "Please enter an amount" });
+      }
     }
   }
 
