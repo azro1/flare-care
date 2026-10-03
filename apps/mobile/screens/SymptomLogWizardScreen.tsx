@@ -1,4 +1,4 @@
-import { FLARE_FEATURE_LUCIDE, FlareLucideIcon } from "../lib/flareLucideIcons";
+import { FLARE_FEATURE_LUCIDE, FlareLucideIcon, FLARE_CHROME_LUCIDE } from "../lib/flareLucideIcons";
 import DateTimePicker from "@react-native-community/datetimepicker";
 import AsyncStorage from "@react-native-async-storage/async-storage";
 import { CommonActions, useNavigation, useRoute } from "@react-navigation/native";
@@ -18,7 +18,9 @@ import {
 import { showFlareAlert } from "../components/FlareAlertHost";
 import { ScrollView } from "../lib/scrollViews";
 import { Card } from "../components/MidnightLagoonCard";
+import { HeroCard } from "../components/MidnightLagoonHeroCard";
 import { SectionLabel } from "../components/MidnightLagoonSectionLabel";
+import { TrayRow } from "../components/MidnightLagoonTray";
 import { OptionChip } from "../components/OptionChip";
 import { NumberStepper } from "../components/NumberStepper";
 import { WizardProgressBar } from "../components/WizardProgressBar";
@@ -108,6 +110,7 @@ export function SymptomLogWizardScreen({ user }: { user: SessionUser }) {
   const [loadingEdit, setLoadingEdit] = useState(Boolean(editId));
   const [picker, setPicker] = useState<null | "start" | "end">(null);
   const [editingReviewSection, setEditingReviewSection] = useState<SymptomReviewSectionId | null>(null);
+  const [editingMealRow, setEditingMealRow] = useState<{ meal: "breakfast" | "lunch" | "dinner"; index: number } | null>(null);
   const scrollRef = useRef<RNScrollView>(null);
 
   useEffect(() => {
@@ -448,82 +451,115 @@ export function SymptomLogWizardScreen({ user }: { user: SessionUser }) {
 
   const renderMeal = (meal: "breakfast" | "lunch" | "dinner", skipKey: "breakfast_skipped" | "lunch_skipped" | "dinner_skipped") => {
     const list = form[meal];
-    const last = list[list.length - 1];
-    const canAdd = Boolean(last?.food.trim() && last?.quantity.trim()) && !form[skipKey];
 
     return (
       <View style={styles.stepContent}>
         <Text style={[styles.stepTitle, { color: c.text, fontFamily: TYPOGRAPHY.fontFamily.semibold }]}>{mealLabel(meal)}</Text>
-        {list.map((item, i) => (
-          <View key={i} style={styles.mealRow}>
-            <FlareTextInput
-              placeholder="Food"
-              value={item.food}
-              onChangeText={(t) =>
-                setForm((p) => ({
-                  ...p,
-                  [meal]: p[meal].map((row, j) => (j === i ? { ...row, food: t } : row)),
-                  [skipKey]: false,
-                }))
-              }
-              style={styles.mealFoodInput}
-            />
-            <FlareTextInput
-              placeholder="Quantity"
-              value={item.quantity}
-              onChangeText={(t) =>
-                setForm((p) => ({
-                  ...p,
-                  [meal]: p[meal].map((row, j) => (j === i ? { ...row, quantity: t } : row)),
-                }))
-              }
-            />
-            {list.length > 1 ? (
-              <Pressable
-                accessibilityRole="button"
-                accessibilityLabel="Remove meal item"
-                hitSlop={8}
-                onPress={() => removeMealRow(meal, i)}
-                style={styles.removeLink}
-              >
-                <Text style={[styles.removeLinkText, { color: c.textMuted, fontFamily: TYPOGRAPHY.fontFamily.semibold }]}>Remove</Text>
-              </Pressable>
-            ) : null}
-          </View>
-        ))}
+        
         <Pressable
           accessibilityRole="button"
-          accessibilityLabel={`Add another ${meal} item`}
-          disabled={!canAdd}
-          hitSlop={10}
           onPress={() => {
-            if (!canAdd) return;
+            const newValue = !form[skipKey];
             setForm((p) => ({
               ...p,
-              [meal]: [...p[meal], { food: "", quantity: "" }],
-              [skipKey]: false,
+              [skipKey]: newValue,
+              [meal]: newValue ? [{ food: "", quantity: "" }] : p[meal],
             }));
           }}
-          style={styles.addLink}
+          style={[
+            styles.skipToggle,
+            {
+              backgroundColor: form[skipKey] ? c.primary : c.inputBg,
+              borderColor: form[skipKey] ? c.primary : c.inputBorder,
+            },
+          ]}
         >
-          <Text style={[styles.addLinkText, { color: c.primary, fontFamily: TYPOGRAPHY.fontFamily.bold, opacity: canAdd ? 1 : 0.45 }]}>Add item</Text>
+          <View style={[styles.skipToggleIcon, { backgroundColor: form[skipKey] ? c.white : c.inputBorder }]}>
+            <FlareLucideIcon icon={FLARE_CHROME_LUCIDE.check} size={20} color={form[skipKey] ? c.primary : c.textSecondary} />
+          </View>
+          <View style={styles.skipToggleText}>
+            <Text style={[styles.skipToggleLabel, { color: form[skipKey] ? c.white : c.text, fontFamily: TYPOGRAPHY.fontFamily.semibold }]}>
+              I didn't eat anything
+            </Text>
+            <Text style={[styles.skipToggleSublabel, { color: form[skipKey] ? c.white : c.textSecondary, fontFamily: TYPOGRAPHY.fontFamily.regular }]}>
+              Skip {meal} for today
+            </Text>
+          </View>
         </Pressable>
-        <View style={styles.switchRow}>
-          <Text style={[styles.switchLabel, { color: c.text, fontFamily: TYPOGRAPHY.fontFamily.regular }]}>I didn't eat anything</Text>
-          <Switch
-            value={form[skipKey]}
-            trackColor={{ false: c.inputBorder, true: c.primary }}
-            thumbColor={c.white}
-            ios_backgroundColor={c.inputBorder}
-            onValueChange={(v) =>
-              setForm((p) => ({
-                ...p,
-                [skipKey]: v,
-                [meal]: v ? [{ food: "", quantity: "" }] : p[meal],
-              }))
-            }
-          />
-        </View>
+
+        {!form[skipKey] ? (
+          <>
+            <SectionLabel>{`YOUR ${meal.toUpperCase()}`}</SectionLabel>
+            <Card noPadding style={{ paddingVertical: SPACING.sm, paddingHorizontal: SPACING.md }}>
+              {list.map((item, i) => (
+                <Pressable
+                  key={i}
+                  accessibilityRole="button"
+                  onPress={() => setEditingMealRow({ meal, index: i })}
+                  style={[styles.mealFoodRow, i > 0 && styles.mealFoodRowBorder, { borderTopColor: c.cardBorder }]}
+                >
+                  <View style={styles.mealFoodRowLeft}>
+                    <Text style={[styles.mealFoodName, { color: item.food ? c.text : c.textSecondary, fontFamily: TYPOGRAPHY.fontFamily.regular }]}>
+                      {item.food || "Tap to edit"}
+                    </Text>
+                    {item.food ? (
+                      <Text style={[styles.mealFoodHint, { color: c.textSecondary, fontFamily: TYPOGRAPHY.fontFamily.regular }]}>Tap to edit</Text>
+                    ) : null}
+                  </View>
+                  <View style={styles.portionChips}>
+                    <OptionChip
+                      label="Small"
+                      selected={item.quantity === "Small"}
+                      onPress={() => {
+                        setForm((p) => ({
+                          ...p,
+                          [meal]: p[meal].map((row, j) => (j === i ? { ...row, quantity: "Small" } : row)),
+                        }));
+                      }}
+                    />
+                    <OptionChip
+                      label="Medium"
+                      selected={item.quantity === "Medium"}
+                      onPress={() => {
+                        setForm((p) => ({
+                          ...p,
+                          [meal]: p[meal].map((row, j) => (j === i ? { ...row, quantity: "Medium" } : row)),
+                        }));
+                      }}
+                    />
+                    <OptionChip
+                      label="Large"
+                      selected={item.quantity === "Large"}
+                      onPress={() => {
+                        setForm((p) => ({
+                          ...p,
+                          [meal]: p[meal].map((row, j) => (j === i ? { ...row, quantity: "Large" } : row)),
+                        }));
+                      }}
+                    />
+                  </View>
+                </Pressable>
+              ))}
+            </Card>
+            <Pressable
+              accessibilityRole="button"
+              onPress={() => {
+                const last = list[list.length - 1];
+                if (last.food.trim() && last.quantity) {
+                  setForm((p) => ({
+                    ...p,
+                    [meal]: [...p[meal], { food: "", quantity: "" }],
+                  }));
+                }
+              }}
+              style={[styles.addFoodButton, { borderColor: c.inputBorder }]}
+            >
+              <FlareLucideIcon icon={FLARE_CHROME_LUCIDE.add} size={16} color={c.primary} />
+              <Text style={[styles.addFoodText, { color: c.primary, fontFamily: TYPOGRAPHY.fontFamily.semibold }]}>Add food</Text>
+            </Pressable>
+          </>
+        ) : null}
+
         {fieldErrors[meal] ? <Text style={errTextStyle}>{fieldErrors[meal]}</Text> : null}
       </View>
     );
@@ -860,18 +896,134 @@ export function SymptomLogWizardScreen({ user }: { user: SessionUser }) {
         {/* Step 17: Review */}
         {currentStep === SYMPTOM_REVIEW_STEP ? (
           <View style={styles.reviewContent}>
-            <Text style={[styles.reviewTitle, { color: c.text, fontFamily: TYPOGRAPHY.fontFamily.bold }]}>Review Your Log</Text>
-            <WizardReviewShell>
-              <WizardReviewSection title="Basic Information" fields={reviewBasicFields} onEdit={() => openReviewEdit("basic")} />
-              <WizardReviewSection title="Bathroom Frequency" fields={reviewBathroomFields} onEdit={() => openReviewEdit("bathroom")} />
-              {showLifestyleReview && reviewLifestyleFields.length > 0 ? (
-                <WizardReviewSection title="Lifestyle" fields={reviewLifestyleFields} onEdit={() => openReviewEdit("lifestyle")} />
-              ) : null}
-              {mealReviewEntries.length > 0 ? (
-                <WizardReviewMealsSection entries={mealReviewEntries} onEdit={() => openReviewEdit("meals")} />
-              ) : null}
-              {form.notes.trim() ? <WizardReviewNotesSection notes={form.notes.trim()} onEdit={() => openReviewEdit("notes")} /> : null}
-            </WizardReviewShell>
+            <HeroCard title="">
+              <View style={styles.heroHeader}>
+                <Text style={[styles.heroLabel, { color: c.white, fontFamily: TYPOGRAPHY.fontFamily.medium }]}>THIS FLARE</Text>
+                <Text style={[styles.heroTitle, { color: c.white, fontFamily: TYPOGRAPHY.fontFamily.bold }]}>
+                  {form.symptomStartDate ? `Started ${formatUkDate(form.symptomStartDate)}` : "Symptom Log"}
+                  {form.isOngoing ? ", still ongoing" : ""}
+                </Text>
+                {!form.isOngoing && form.symptomEndDate ? (
+                  <Text style={[styles.heroDuration, { color: c.white, fontFamily: TYPOGRAPHY.fontFamily.regular }]}>
+                    Ended {formatUkDate(form.symptomEndDate)}
+                  </Text>
+                ) : null}
+                <View style={styles.heroChips}>
+                  {form.severity ? (
+                    <View style={[styles.heroChip, { backgroundColor: "rgba(255,255,255,0.2)" }]}>
+                      <Text style={[styles.heroChipText, { color: c.white, fontFamily: TYPOGRAPHY.fontFamily.semibold }]}>
+                        Severity {SEVERITY_WORD_OPTIONS.find((o) => String(o.value) === form.severity)?.label || form.severity}
+                      </Text>
+                    </View>
+                  ) : null}
+                  {form.stress_level ? (
+                    <View style={[styles.heroChip, { backgroundColor: "rgba(255,255,255,0.2)" }]}>
+                      <Text style={[styles.heroChipText, { color: c.white, fontFamily: TYPOGRAPHY.fontFamily.semibold }]}>
+                        Stress {STRESS_WORD_OPTIONS.find((o) => String(o.value) === form.stress_level)?.label || form.stress_level}
+                      </Text>
+                    </View>
+                  ) : null}
+                </View>
+              </View>
+            </HeroCard>
+
+            <View style={styles.reviewSection}>
+              <View style={styles.reviewSectionHeader}>
+                <Text style={[styles.reviewSectionLabel, { color: c.textSecondary, fontFamily: TYPOGRAPHY.fontFamily.semibold }]}>
+                  BASIC INFORMATION
+                </Text>
+                <Pressable accessibilityRole="button" onPress={() => openReviewEdit("basic")} hitSlop={10}>
+                  <FlareLucideIcon icon={FLARE_CHROME_LUCIDE.edit} size={16} color={c.textMuted} />
+                </Pressable>
+              </View>
+              <View style={styles.reviewSectionContent}>
+                {reviewBasicFields.map((field, i) => (
+                  <View key={i} style={styles.reviewRow}>
+                    <Text style={[styles.reviewLabel, { color: c.textSecondary, fontFamily: TYPOGRAPHY.fontFamily.regular }]}>{field.label}</Text>
+                    <Text style={[styles.reviewValue, { color: c.text, fontFamily: TYPOGRAPHY.fontFamily.regular }]}>{field.value}</Text>
+                  </View>
+                ))}
+              </View>
+            </View>
+
+            <View style={styles.reviewSection}>
+              <View style={styles.reviewSectionHeader}>
+                <Text style={[styles.reviewSectionLabel, { color: c.textSecondary, fontFamily: TYPOGRAPHY.fontFamily.semibold }]}>
+                  BATHROOM FREQUENCY
+                </Text>
+                <Pressable accessibilityRole="button" onPress={() => openReviewEdit("bathroom")} hitSlop={10}>
+                  <FlareLucideIcon icon={FLARE_CHROME_LUCIDE.edit} size={16} color={c.textMuted} />
+                </Pressable>
+              </View>
+              <View style={styles.reviewSectionContent}>
+                {reviewBathroomFields.map((field, i) => (
+                  <View key={i} style={styles.reviewRow}>
+                    <Text style={[styles.reviewLabel, { color: c.textSecondary, fontFamily: TYPOGRAPHY.fontFamily.regular }]}>{field.label}</Text>
+                    <Text style={[styles.reviewValue, { color: c.text, fontFamily: TYPOGRAPHY.fontFamily.regular }]}>{field.value}</Text>
+                  </View>
+                ))}
+              </View>
+            </View>
+
+            {showLifestyleReview && reviewLifestyleFields.length > 0 ? (
+              <View style={styles.reviewSection}>
+                <View style={styles.reviewSectionHeader}>
+                  <Text style={[styles.reviewSectionLabel, { color: c.textSecondary, fontFamily: TYPOGRAPHY.fontFamily.semibold }]}>LIFESTYLE</Text>
+                  <Pressable accessibilityRole="button" onPress={() => openReviewEdit("lifestyle")} hitSlop={10}>
+                    <FlareLucideIcon icon={FLARE_CHROME_LUCIDE.edit} size={16} color={c.textMuted} />
+                  </Pressable>
+                </View>
+                <View style={styles.reviewSectionContent}>
+                  {reviewLifestyleFields.map((field, i) => (
+                    <View key={i} style={styles.reviewRow}>
+                      <Text style={[styles.reviewLabel, { color: c.textSecondary, fontFamily: TYPOGRAPHY.fontFamily.regular }]}>{field.label}</Text>
+                      <Text style={[styles.reviewValue, { color: c.text, fontFamily: TYPOGRAPHY.fontFamily.regular }]}>{field.value}</Text>
+                    </View>
+                  ))}
+                </View>
+              </View>
+            ) : null}
+
+            {mealReviewEntries.length > 0 ? (
+              <View style={styles.reviewSection}>
+                <View style={styles.reviewSectionHeader}>
+                  <Text style={[styles.reviewSectionLabel, { color: c.textSecondary, fontFamily: TYPOGRAPHY.fontFamily.semibold }]}>MEALS</Text>
+                  <Pressable accessibilityRole="button" onPress={() => openReviewEdit("meals")} hitSlop={10}>
+                    <FlareLucideIcon icon={FLARE_CHROME_LUCIDE.edit} size={16} color={c.textMuted} />
+                  </Pressable>
+                </View>
+                <View style={styles.reviewSectionContent}>
+                  {mealReviewEntries.map((entry, i) => (
+                    <View key={i} style={styles.reviewMealEntry}>
+                      <Text style={[styles.reviewMealLabel, { color: c.textSecondary, fontFamily: TYPOGRAPHY.fontFamily.regular }]}>
+                        {entry.label}
+                      </Text>
+                      {entry.skipped ? (
+                        <Text style={[styles.reviewMealSkipped, { color: c.textMuted, fontFamily: TYPOGRAPHY.fontFamily.regular }]}>Skipped</Text>
+                      ) : entry.items ? (
+                        <Text style={[styles.reviewMealItems, { color: c.text, fontFamily: TYPOGRAPHY.fontFamily.regular }]}>
+                          {entry.items.map((item) => `${item.food}${item.quantity ? ` (${item.quantity})` : ""}`).join(", ")}
+                        </Text>
+                      ) : null}
+                    </View>
+                  ))}
+                </View>
+              </View>
+            ) : null}
+
+            {form.notes.trim() ? (
+              <View style={styles.reviewSection}>
+                <View style={styles.reviewSectionHeader}>
+                  <Text style={[styles.reviewSectionLabel, { color: c.textSecondary, fontFamily: TYPOGRAPHY.fontFamily.semibold }]}>NOTES</Text>
+                  <Pressable accessibilityRole="button" onPress={() => openReviewEdit("notes")} hitSlop={10}>
+                    <FlareLucideIcon icon={FLARE_CHROME_LUCIDE.edit} size={16} color={c.textMuted} />
+                  </Pressable>
+                </View>
+                <View style={styles.reviewSectionContent}>
+                  <Text style={[styles.reviewNotesText, { color: c.text, fontFamily: TYPOGRAPHY.fontFamily.regular }]}>{form.notes.trim()}</Text>
+                </View>
+              </View>
+            ) : null}
           </View>
         ) : null}
       </ScrollView>
@@ -884,8 +1036,34 @@ export function SymptomLogWizardScreen({ user }: { user: SessionUser }) {
       ) : null}
 
       {currentStep === SYMPTOM_REVIEW_STEP && !editingReviewSection ? (
-        <View style={[styles.footer, { backgroundColor: c.screen, borderTopColor: c.cardBorder }]}>
-          <PrimaryButton title={submitting ? "Saving..." : "Save"} onPress={submit} disabled={submitting} />
+        <View style={[styles.fixedFooter, { backgroundColor: c.screen, borderTopColor: c.cardBorder }]}>
+          <PrimaryButton title={submitting ? "Saving..." : "Save log"} onPress={submit} disabled={submitting} />
+        </View>
+      ) : null}
+
+      {editingMealRow ? (
+        <View style={styles.modalOverlay}>
+          <Pressable style={StyleSheet.absoluteFill} onPress={() => setEditingMealRow(null)} />
+          <Card style={styles.modalCard}>
+            <Text style={[styles.modalTitle, { color: c.text, fontFamily: TYPOGRAPHY.fontFamily.semibold }]}>Edit food name</Text>
+            <FlareTextInput
+              value={form[editingMealRow.meal][editingMealRow.index]?.food || ""}
+              onChangeText={(t) => {
+                const { meal, index } = editingMealRow;
+                setForm((p) => ({
+                  ...p,
+                  [meal]: p[meal].map((row, j) => (j === index ? { ...row, food: t } : row)),
+                  [`${meal}_skipped` as const]: false,
+                }));
+              }}
+              placeholder="e.g. Chicken sandwich"
+              autoFocus
+            />
+            <View style={styles.modalButtons}>
+              <SecondaryButton title="Cancel" onPress={() => setEditingMealRow(null)} />
+              <PrimaryButton title="Done" onPress={() => setEditingMealRow(null)} />
+            </View>
+          </Card>
         </View>
       ) : null}
 
@@ -988,41 +1166,148 @@ const styles = StyleSheet.create({
   dateText: {
     fontSize: TYPOGRAPHY.fontSize.md,
   },
-  mealRow: {
-    gap: SPACING.sm,
+  skipToggle: {
+    flexDirection: "row",
+    alignItems: "center",
+    padding: SPACING.lg,
+    borderRadius: RADIUS.card,
+    borderWidth: 2,
+    gap: SPACING.md,
   },
-  mealFoodInput: {
+  skipToggleIcon: {
+    width: 40,
+    height: 40,
+    borderRadius: 20,
+    alignItems: "center",
+    justifyContent: "center",
+  },
+  skipToggleText: {
     flex: 1,
+    gap: SPACING.xxs,
   },
-  removeLink: {
-    paddingVertical: SPACING.xs,
-    alignSelf: "flex-start",
-  },
-  removeLinkText: {
-    fontSize: TYPOGRAPHY.fontSize.sm,
-  },
-  addLink: {
-    paddingVertical: SPACING.sm,
-    alignSelf: "flex-start",
-  },
-  addLinkText: {
+  skipToggleLabel: {
     fontSize: TYPOGRAPHY.fontSize.md,
   },
-  switchRow: {
+  skipToggleSublabel: {
+    fontSize: TYPOGRAPHY.fontSize.sm,
+  },
+  portionChips: {
+    flexDirection: "row",
+    gap: SPACING.xs,
+  },
+  mealFoodRow: {
     flexDirection: "row",
     alignItems: "center",
     justifyContent: "space-between",
-    paddingVertical: SPACING.sm,
+    paddingVertical: SPACING.md,
+    gap: SPACING.md,
   },
-  switchLabel: {
+  mealFoodRowBorder: {
+    borderTopWidth: 1,
+  },
+  mealFoodRowLeft: {
     flex: 1,
+    gap: SPACING.xxs,
+  },
+  mealFoodName: {
     fontSize: TYPOGRAPHY.fontSize.md,
+  },
+  mealFoodHint: {
+    fontSize: TYPOGRAPHY.fontSize.sm,
+  },
+  addFoodButton: {
+    flexDirection: "row",
+    alignItems: "center",
+    justifyContent: "center",
+    gap: SPACING.xs,
+    paddingVertical: SPACING.md,
+    paddingHorizontal: SPACING.lg,
+    borderRadius: RADIUS.button,
+    borderWidth: 1.5,
+    borderStyle: "dashed",
+    alignSelf: "flex-start",
+  },
+  addFoodText: {
+    fontSize: TYPOGRAPHY.fontSize.sm,
   },
   reviewContent: {
     gap: SPACING.lg,
   },
-  reviewTitle: {
-    fontSize: TYPOGRAPHY.fontSize.screenTitle,
+  heroHeader: {
+    gap: SPACING.xs,
+  },
+  heroLabel: {
+    fontSize: TYPOGRAPHY.fontSize.xs,
+    letterSpacing: 0.5,
+    textTransform: "uppercase",
+  },
+  heroTitle: {
+    fontSize: TYPOGRAPHY.fontSize.heroTitle,
+    lineHeight: 26,
+  },
+  heroDuration: {
+    fontSize: TYPOGRAPHY.fontSize.sm,
+  },
+  heroChips: {
+    flexDirection: "row",
+    flexWrap: "wrap",
+    gap: SPACING.sm,
+    marginTop: SPACING.sm,
+  },
+  heroChip: {
+    paddingHorizontal: SPACING.md,
+    paddingVertical: SPACING.xs,
+    borderRadius: RADIUS.button,
+  },
+  heroChipText: {
+    fontSize: TYPOGRAPHY.fontSize.sm,
+  },
+  reviewSection: {
+    backgroundColor: "transparent",
+  },
+  reviewSectionHeader: {
+    flexDirection: "row",
+    alignItems: "center",
+    justifyContent: "space-between",
+    marginBottom: SPACING.sm,
+  },
+  reviewSectionLabel: {
+    fontSize: TYPOGRAPHY.fontSize.xs,
+    letterSpacing: 0.5,
+    textTransform: "uppercase",
+  },
+  reviewSectionContent: {
+    gap: SPACING.xs,
+  },
+  reviewRow: {
+    flexDirection: "row",
+    justifyContent: "space-between",
+    paddingVertical: SPACING.xs,
+  },
+  reviewLabel: {
+    fontSize: TYPOGRAPHY.fontSize.sm,
+    flex: 1,
+  },
+  reviewValue: {
+    fontSize: TYPOGRAPHY.fontSize.sm,
+    textAlign: "right",
+  },
+  reviewMealEntry: {
+    paddingVertical: SPACING.xs,
+  },
+  reviewMealLabel: {
+    fontSize: TYPOGRAPHY.fontSize.sm,
+    marginBottom: SPACING.xxs,
+  },
+  reviewMealSkipped: {
+    fontSize: TYPOGRAPHY.fontSize.sm,
+  },
+  reviewMealItems: {
+    fontSize: TYPOGRAPHY.fontSize.sm,
+  },
+  reviewNotesText: {
+    fontSize: TYPOGRAPHY.fontSize.sm,
+    lineHeight: 20,
   },
   footer: {
     flexDirection: "row",
@@ -1030,5 +1315,29 @@ const styles = StyleSheet.create({
     paddingHorizontal: SPACING.screen,
     paddingVertical: SPACING.lg,
     borderTopWidth: 1,
+  },
+  fixedFooter: {
+    paddingHorizontal: SPACING.screen,
+    paddingVertical: SPACING.lg,
+    borderTopWidth: 1,
+  },
+  modalOverlay: {
+    ...StyleSheet.absoluteFillObject,
+    backgroundColor: "rgba(0,0,0,0.5)",
+    alignItems: "center",
+    justifyContent: "center",
+    padding: SPACING.screen,
+  },
+  modalCard: {
+    width: "100%",
+    maxWidth: 400,
+    gap: SPACING.lg,
+  },
+  modalTitle: {
+    fontSize: TYPOGRAPHY.fontSize.cardTitle,
+  },
+  modalButtons: {
+    flexDirection: "row",
+    gap: SPACING.md,
   },
 });
