@@ -444,44 +444,6 @@ function accountIdentityFirstLine(user: SessionUser): string {
   return first === "there" ? "You" : first;
 }
 
-function LegacyCard({
-  title,
-  children,
-  style,
-  plain,
-  compactBody,
-  bordered,
-}: {
-  title: string;
-  children: React.ReactNode;
-  style?: StyleProp<ViewStyle>;
-  plain?: boolean;
-  compactBody?: boolean;
-  bordered?: boolean;
-}) {
-  const c = useFlareColors();
-  return (
-    <View
-      style={[
-        styles.card,
-        style,
-        plain
-          ? { backgroundColor: "transparent", marginBottom: 0 }
-          : {
-              backgroundColor: c.card,
-              ...(bordered ? { borderWidth: 1, borderColor: c.cardBorder } : null),
-            },
-      ]}
-    >
-      {title ? <Text style={[styles.cardTitle, { color: c.text }]}>{title}</Text> : null}
-      {
-        plain ? children : (
-          <View style={[styles.cardBody, compactBody && styles.cardBodyCompact]}>{children}</View>
-        )}
-    </View>
-  );
-}
-
 async function deleteUserLogRow(
   table: string,
   id: string,
@@ -2146,7 +2108,7 @@ function DashboardScreen({ user }: { user: SessionUser }) {
         showsVerticalScrollIndicator={false}
         nestedScrollEnabled
       >
-        <LegacyCard title="" style={styles.greetingCard} compactBody>
+        <Card style={styles.greetingCard}>
           <View style={styles.weatherIntroWrap}>
             <Text style={[styles.weatherGreeting, { color: c.text }]} numberOfLines={1}>
               Hi, {greetingFirstName}
@@ -2186,7 +2148,7 @@ function DashboardScreen({ user }: { user: SessionUser }) {
               </View>
             </View>
           )}
-        </LegacyCard>
+        </Card>
 
         <View style={[styles.dashboardShelfSection, styles.dashboardShelfAfterCard]}>
           <Text
@@ -3298,7 +3260,10 @@ function ReportsScreen({ user }: { user: SessionUser }) {
       contentPaddingBottom={bottomScrollInset}
       instruction={null}
     >
-      <LegacyCard title="Reports & Briefs">
+      <Card>
+        <Text style={[styles.cardSectionTitle, { color: c.text, fontFamily: TYPOGRAPHY.fontFamily.bold }]}>
+          Reports & Briefs
+        </Text>
         <PrimaryButton title={loading ? "Generating..." : "Generate report"} onPress={generate} />
         <Text
           style={[styles.reportBox, { backgroundColor: c.reportBg, borderColor: c.reportBorder, color: c.text }]}
@@ -3307,7 +3272,7 @@ function ReportsScreen({ user }: { user: SessionUser }) {
         </Text>
         <LabeledInput label="Clinician email" value={email} onChangeText={setEmail} placeholder="Clinician email" autoCapitalize="none" />
         <PrimaryButton title="Email report" onPress={emailReport} disabled={!report || !email} />
-      </LegacyCard>
+      </Card>
     </InstructionScreenShell>
   );
 }
@@ -3631,7 +3596,7 @@ function NotificationsScreen({ user }: { user: SessionUser }) {
       style={[styles.screen, { backgroundColor: c.screen }]}
       contentContainerStyle={{ paddingBottom: bottomScrollInset + 16 }}
     >
-      <LegacyCard title="" style={styles.accountPaddedCard} compactBody>
+      <Card style={styles.accountPaddedCard}>
         <View style={styles.remindersStatusRow}>
           <View style={[styles.accountAvatarWell, { backgroundColor: c.surfaceSubtle }]}>
             <FlareLucideIcon
@@ -3674,7 +3639,7 @@ function NotificationsScreen({ user }: { user: SessionUser }) {
         >
           <Text style={[styles.remindersGuideLink, { color: c.text }]}>Not getting alerts?</Text>
         </Pressable>
-      </LegacyCard>
+      </Card>
     </ScrollView>
   );
 }
@@ -6429,5 +6394,9 @@ const styles = StyleSheet.create({
   settingHint: {
     fontSize: TYPOGRAPHY.fontSize.sm,
     lineHeight: 18,
+  },
+  cardSectionTitle: {
+    fontSize: TYPOGRAPHY.fontSize.cardTitle,
+    marginBottom: SPACING.md,
   },
 });
