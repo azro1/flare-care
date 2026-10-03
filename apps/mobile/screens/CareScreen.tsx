@@ -55,6 +55,17 @@ export function CareScreen({ user }: CareScreenProps) {
           </View>
         </View>
 
+        <SectionLabel>My Meds</SectionLabel>
+
+        <Card noPadding style={{ paddingVertical: SPACING.sm, paddingHorizontal: SPACING.md }}>
+          <TrayRow
+            icon={FLARE_FEATURE_LUCIDE.meds}
+            label="My Meds"
+            showChevron
+            onPress={() => navigation.navigate("Meds")}
+          />
+        </Card>
+
         <SectionLabel>Clinic</SectionLabel>
 
         <Card noPadding style={{ paddingVertical: SPACING.sm, paddingHorizontal: SPACING.md }}>

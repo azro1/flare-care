@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useCallback } from "react";
-import { View, StyleSheet, Modal, Pressable, Text, Platform, ActivityIndicator } from "react-native";
+import { View, StyleSheet, Modal, Pressable, Text, Platform } from "react-native";
 import DateTimePicker from "@react-native-community/datetimepicker";
 import { ScrollView } from "../lib/scrollViews";
 import { useNavigation, useFocusEffect } from "@react-navigation/native";
@@ -86,7 +86,6 @@ export function TrackScreen({ user }: TrackScreenProps) {
   const [customEndDate, setCustomEndDate] = useState(new Date());
   const [showStartPicker, setShowStartPicker] = useState(false);
   const [showEndPicker, setShowEndPicker] = useState(false);
-  const [loading, setLoading] = useState(true);
   const [recentLogs, setRecentLogs] = useState<LogEntry[]>([]);
   const [stats, setStats] = useState<SummaryStats>({
     symptomsCount: 0,
@@ -96,7 +95,6 @@ export function TrackScreen({ user }: TrackScreenProps) {
   });
 
   const loadTrackData = useCallback(async () => {
-    setLoading(true);
     try {
       const { start, end } = getDateRange(timePeriod, customStartDate, customEndDate);
       const startIso = start.toISOString();
@@ -210,8 +208,6 @@ export function TrackScreen({ user }: TrackScreenProps) {
       setRecentLogs(allLogs.slice(0, 10));
     } catch (error) {
       console.error("Failed to load track data:", error);
-    } finally {
-      setLoading(false);
     }
   }, [timePeriod, customStartDate, customEndDate, user.id]);
 
@@ -264,7 +260,6 @@ export function TrackScreen({ user }: TrackScreenProps) {
   const logTiles = [
     { icon: FLARE_FEATURE_LUCIDE.symptoms, label: "Symptoms", onPress: () => navigation.navigate("SymptomLogWizard") },
     { icon: FLARE_FEATURE_LUCIDE.wellbeing, label: "Wellbeing", onPress: () => navigation.navigate("WellbeingWizard") },
-    { icon: FLARE_FEATURE_LUCIDE.meds, label: "Meds", onPress: () => navigation.navigate("Meds") },
     { icon: FLARE_FEATURE_LUCIDE.hydration, label: "Hydration", onPress: () => navigation.navigate("Hydration") },
     { icon: FLARE_FEATURE_LUCIDE.bowel, label: "Bowel", onPress: () => navigation.navigate("Bowel") },
     { icon: FLARE_FEATURE_LUCIDE.weight, label: "Weight", onPress: () => navigation.navigate("Weight") },
@@ -282,65 +277,70 @@ export function TrackScreen({ user }: TrackScreenProps) {
           { paddingBottom: insets.bottom + 100 },
         ]}
       >
-        <ScreenHeader title="Track" />
+        <ScreenHeader
+          title="Track"
+          rightAction={
+            <Pressable
+              accessibilityRole="button"
+              accessibilityLabel="History"
+              onPress={() => navigation.navigate("History")}
+              hitSlop={8}
+              style={styles.historyButton}
+            >
+              <Text style={[styles.historyButtonText, { color: colors.primary, fontFamily: TYPOGRAPHY.fontFamily.semibold }]}>
+                History
+              </Text>
+            </Pressable>
+          }
+        />
         <SegmentedTabs tabs={timeTabs} activeValue={timePeriod} onChange={handleTabChange} />
 
-        {loading ? (
-          <Card>
-            <View style={styles.loadingWrap}>
-              <ActivityIndicator size="small" color={colors.primary} />
+        <Card>
+          <SectionLabel style={{ marginTop: 0 }}>Summary</SectionLabel>
+          <View style={styles.statsGrid}>
+            <View style={styles.statCard}>
+              <Text style={[styles.statValue, { color: colors.text, fontFamily: TYPOGRAPHY.fontFamily.bold }]}>
+                {stats.symptomsCount}
+              </Text>
+              <Text style={[styles.statLabel, { color: colors.textSecondary, fontFamily: TYPOGRAPHY.fontFamily.regular }]}>
+                Symptoms
+              </Text>
             </View>
-          </Card>
-        ) : (
-          <>
-            <Card>
-              <SectionLabel style={{ marginTop: 0 }}>Summary</SectionLabel>
-              <View style={styles.statsGrid}>
-                <View style={styles.statCard}>
-                  <Text style={[styles.statValue, { color: colors.text, fontFamily: TYPOGRAPHY.fontFamily.bold }]}>
-                    {stats.symptomsCount}
-                  </Text>
-                  <Text style={[styles.statLabel, { color: colors.textSecondary, fontFamily: TYPOGRAPHY.fontFamily.regular }]}>
-                    Symptoms
-                  </Text>
-                </View>
-                <View style={styles.statCard}>
-                  <Text style={[styles.statValue, { color: colors.text, fontFamily: TYPOGRAPHY.fontFamily.bold }]}>
-                    {stats.bowelCount}
-                  </Text>
-                  <Text style={[styles.statLabel, { color: colors.textSecondary, fontFamily: TYPOGRAPHY.fontFamily.regular }]}>
-                    Bowel
-                  </Text>
-                </View>
-                <View style={styles.statCard}>
-                  <Text style={[styles.statValue, { color: colors.text, fontFamily: TYPOGRAPHY.fontFamily.bold }]}>
-                    {Math.round(stats.hydrationTotal / 1000)}L
-                  </Text>
-                  <Text style={[styles.statLabel, { color: colors.textSecondary, fontFamily: TYPOGRAPHY.fontFamily.regular }]}>
-                    Hydration
-                  </Text>
-                </View>
-                <View style={styles.statCard}>
-                  <Text style={[styles.statValue, { color: colors.text, fontFamily: TYPOGRAPHY.fontFamily.bold }]}>
-                    {stats.medicationsCount}
-                  </Text>
-                  <Text style={[styles.statLabel, { color: colors.textSecondary, fontFamily: TYPOGRAPHY.fontFamily.regular }]}>
-                    Medications
-                  </Text>
-                </View>
-              </View>
-            </Card>
+            <View style={styles.statCard}>
+              <Text style={[styles.statValue, { color: colors.text, fontFamily: TYPOGRAPHY.fontFamily.bold }]}>
+                {stats.bowelCount}
+              </Text>
+              <Text style={[styles.statLabel, { color: colors.textSecondary, fontFamily: TYPOGRAPHY.fontFamily.regular }]}>
+                Bowel
+              </Text>
+            </View>
+            <View style={styles.statCard}>
+              <Text style={[styles.statValue, { color: colors.text, fontFamily: TYPOGRAPHY.fontFamily.bold }]}>
+                {Math.round(stats.hydrationTotal / 1000)}L
+              </Text>
+              <Text style={[styles.statLabel, { color: colors.textSecondary, fontFamily: TYPOGRAPHY.fontFamily.regular }]}>
+                Hydration
+              </Text>
+            </View>
+            <View style={styles.statCard}>
+              <Text style={[styles.statValue, { color: colors.text, fontFamily: TYPOGRAPHY.fontFamily.bold }]}>
+                {stats.medicationsCount}
+              </Text>
+              <Text style={[styles.statLabel, { color: colors.textSecondary, fontFamily: TYPOGRAPHY.fontFamily.regular }]}>
+                Medications
+              </Text>
+            </View>
+          </View>
+        </Card>
 
-            <Card>
-              <View style={styles.chartPlaceholder}>
-                <FlareLucideIcon icon={FLARE_CHROME_LUCIDE.briefcase} size={32} color={colors.textMuted} />
-                <Text style={[styles.chartText, { color: colors.textMuted, fontFamily: TYPOGRAPHY.fontFamily.regular }]}>
-                  Chart visualization
-                </Text>
-              </View>
-            </Card>
-          </>
-        )}
+        <Card>
+          <View style={styles.chartPlaceholder}>
+            <FlareLucideIcon icon={FLARE_CHROME_LUCIDE.briefcase} size={32} color={colors.textMuted} />
+            <Text style={[styles.chartText, { color: colors.textMuted, fontFamily: TYPOGRAPHY.fontFamily.regular }]}>
+              Chart visualization
+            </Text>
+          </View>
+        </Card>
 
         <SectionLabel>Log something</SectionLabel>
 
@@ -458,9 +458,11 @@ const styles = StyleSheet.create({
     paddingHorizontal: SPACING.screen,
     paddingTop: SPACING.lg,
   },
-  loadingWrap: {
-    paddingVertical: SPACING.xl,
-    alignItems: "center",
+  historyButton: {
+    paddingTop: SPACING.xs,
+  },
+  historyButtonText: {
+    fontSize: TYPOGRAPHY.fontSize.cardTitle,
   },
   statsGrid: {
     flexDirection: "row",

@@ -182,17 +182,12 @@ import {
   logHistoryListStyles,
 } from "./components/LogHistoryList";
 import {
-  LogDetailAddedHeader,
-  LogDetailFieldGroup,
-  logDetailStyles,
-  WizardReviewShell,
-} from "./components/LogDetailLayout";
-import {
-  WizardReviewMealsSection,
-  WizardReviewMedicationSection,
-  WizardReviewNotesSection,
-  WizardReviewSection,
-} from "./components/symptomReviewLayout";
+  DetailAddedLine,
+  DetailFieldRows,
+  DetailMedicationEntries,
+  DetailNotesBody,
+  DetailSectionCard,
+} from "./components/MidnightLagoonDetailSection";
 import { NewsFeedCard, newsFeedListStyles } from "./components/NewsFeed";
 import { formatAddedAtHeader } from "./lib/logDisplay";
 import { useWizardLogHistory } from "./lib/wizardLogHistory";
@@ -246,6 +241,7 @@ import { WeightLogDetailScreen } from "./screens/WeightLogDetailScreen";
 import { WeightScreen } from "./screens/WeightScreen";
 import { TodayScreen } from "./screens/TodayScreen";
 import { TrackScreen } from "./screens/TrackScreen";
+import { HistoryScreen } from "./screens/HistoryScreen";
 import { CareScreen } from "./screens/CareScreen";
 import { MeScreen } from "./screens/MeScreen";
 import { OutputLogDetailScreen } from "./screens/OutputLogDetailScreen";
@@ -1568,6 +1564,7 @@ const BOTTOM_BAR_VISIBLE_ROUTES = new Set([
   "Trends",
   "SymptomHistory",
   "MedicationTrackingHistory",
+  "History",
   "Wellbeing",
   "Reminders",
   "Meds",
@@ -2706,7 +2703,7 @@ function SymptomDetailScreen({ user }: { user: SessionUser }) {
 
   if (loading) {
     return (
-      <View style={[logDetailStyles.scroll, styles.centered, { backgroundColor: c.screen, paddingBottom: bottomScrollInset }]}>
+      <View style={[styles.centered, { flex: 1, backgroundColor: c.screen, paddingBottom: bottomScrollInset }]}>
         <ActivityIndicator color={c.primary} />
         <Text style={[styles.muted, { color: c.textMuted, marginTop: 12 }]}>Loading…</Text>
       </View>
@@ -2715,7 +2712,10 @@ function SymptomDetailScreen({ user }: { user: SessionUser }) {
 
   if (!row) {
     return (
-      <ScrollView style={[logDetailStyles.scroll, { backgroundColor: c.screen }]} contentContainerStyle={{ paddingBottom: bottomScrollInset + 24 }}>
+      <ScrollView
+        style={{ flex: 1, backgroundColor: c.screen }}
+        contentContainerStyle={{ paddingHorizontal: SPACING.screen, paddingTop: SPACING.lg, paddingBottom: bottomScrollInset + 24 }}
+      >
         <Text style={[styles.muted, { color: c.textMuted }]}>Could not load this entry.</Text>
       </ScrollView>
     );
@@ -2791,25 +2791,40 @@ function SymptomDetailScreen({ user }: { user: SessionUser }) {
     }
   }
 
+  const mealFields = mealDetailEntries.map((entry) => ({
+    label: entry.label,
+    value: entry.items.map((item) => `${item.food}${item.quantity ? ` (${item.quantity})` : ""}`).join("\n"),
+  }));
+
   return (
     <>
       <ScrollView
-        style={[logDetailStyles.scroll, { backgroundColor: c.screen }]}
-        contentContainerStyle={{ paddingBottom: bottomScrollInset + 24 }}
+        style={{ flex: 1, backgroundColor: c.screen }}
+        contentContainerStyle={{ paddingHorizontal: SPACING.screen, paddingTop: SPACING.lg, paddingBottom: bottomScrollInset + 24 }}
       >
-        <LogDetailAddedHeader text={formatAddedAtHeader(createdIso)} />
+        <DetailAddedLine text={formatAddedAtHeader(createdIso)} />
 
-        <WizardReviewShell>
-          <View style={logDetailStyles.reviewSections}>
-            <WizardReviewSection title="Basic Information" fields={basicFields} embedded />
-            <WizardReviewSection title="Bathroom Frequency" fields={bathroomFields} embedded />
-            {lifestyleFields.length > 0 ? (
-              <WizardReviewSection title="Lifestyle" fields={lifestyleFields} embedded />
-            ) : null}
-            <WizardReviewMealsSection embedded entries={mealDetailEntries} />
-            <WizardReviewNotesSection embedded notes={notesText} />
-          </View>
-        </WizardReviewShell>
+        <DetailSectionCard title="Basic Information">
+          <DetailFieldRows fields={basicFields} />
+        </DetailSectionCard>
+        <DetailSectionCard title="Bathroom Frequency">
+          <DetailFieldRows fields={bathroomFields} />
+        </DetailSectionCard>
+        {lifestyleFields.length > 0 ? (
+          <DetailSectionCard title="Lifestyle">
+            <DetailFieldRows fields={lifestyleFields} />
+          </DetailSectionCard>
+        ) : null}
+        {mealFields.length > 0 ? (
+          <DetailSectionCard title="Meals">
+            <DetailFieldRows fields={mealFields} />
+          </DetailSectionCard>
+        ) : null}
+        {notesText ? (
+          <DetailSectionCard title="Notes">
+            <DetailNotesBody notes={notesText} />
+          </DetailSectionCard>
+        ) : null}
       </ScrollView>
       <ConfirmModal
         visible={deleteConfirmOpen}
@@ -3001,18 +3016,15 @@ function MedicationLogDetailScreen({ user }: { user: SessionUser }) {
   ) => {
     if (!items.length) return null;
     return (
-      <WizardReviewMedicationSection
-        embedded
-        title={title}
-        items={items}
-        showDosage={showDosage}
-      />
+      <DetailSectionCard title={title}>
+        <DetailMedicationEntries items={items} showDosage={showDosage} />
+      </DetailSectionCard>
     );
   };
 
   if (loading) {
     return (
-      <View style={[logDetailStyles.scroll, styles.centered, { backgroundColor: c.screen, paddingBottom: bottomScrollInset }]}>
+      <View style={[styles.centered, { flex: 1, backgroundColor: c.screen, paddingBottom: bottomScrollInset }]}>
         <ActivityIndicator color={c.primary} />
         <Text style={[styles.muted, { color: c.textMuted, marginTop: 12 }]}>Loading…</Text>
       </View>
@@ -3021,7 +3033,10 @@ function MedicationLogDetailScreen({ user }: { user: SessionUser }) {
 
   if (!row) {
     return (
-      <ScrollView style={[logDetailStyles.scroll, { backgroundColor: c.screen }]} contentContainerStyle={{ paddingBottom: bottomScrollInset + 24 }}>
+      <ScrollView
+        style={{ flex: 1, backgroundColor: c.screen }}
+        contentContainerStyle={{ paddingHorizontal: SPACING.screen, paddingTop: SPACING.lg, paddingBottom: bottomScrollInset + 24 }}
+      >
         <Text style={[styles.muted, { color: c.textMuted }]}>Could not load this entry.</Text>
       </ScrollView>
     );
@@ -3030,27 +3045,23 @@ function MedicationLogDetailScreen({ user }: { user: SessionUser }) {
   return (
     <>
       <ScrollView
-        style={[logDetailStyles.scroll, { backgroundColor: c.screen }]}
-        contentContainerStyle={{ paddingBottom: bottomScrollInset + 24 }}
+        style={{ flex: 1, backgroundColor: c.screen }}
+        contentContainerStyle={{ paddingHorizontal: SPACING.screen, paddingTop: SPACING.lg, paddingBottom: bottomScrollInset + 24 }}
       >
-        <LogDetailAddedHeader text={formatAddedAtHeader(createdIso)} />
+        <DetailAddedLine text={formatAddedAtHeader(createdIso)} />
 
-        <WizardReviewShell>
-          <View style={logDetailStyles.reviewSections}>
-            <WizardReviewSection
-              embedded
-              title="Summary"
-              fields={[
-                { label: "Missed medications", value: String(missedItems.length) },
-                { label: "NSAIDs", value: String(nsaidItems.length) },
-                { label: "Antibiotics", value: String(antibioticItems.length) },
-              ]}
-            />
-            {renderListSection("Missed Medications", missedItems, false)}
-            {renderListSection("NSAIDs Taken", nsaidItems, true)}
-            {renderListSection("Antibiotics Taken", antibioticItems, true)}
-          </View>
-        </WizardReviewShell>
+        <DetailSectionCard title="Summary">
+          <DetailFieldRows
+            fields={[
+              { label: "Missed medications", value: String(missedItems.length) },
+              { label: "NSAIDs", value: String(nsaidItems.length) },
+              { label: "Antibiotics", value: String(antibioticItems.length) },
+            ]}
+          />
+        </DetailSectionCard>
+        {renderListSection("Missed Medications", missedItems, false)}
+        {renderListSection("NSAIDs Taken", nsaidItems, true)}
+        {renderListSection("Antibiotics Taken", antibioticItems, true)}
       </ScrollView>
       <ConfirmModal
         visible={deleteConfirmOpen}
@@ -4517,6 +4528,7 @@ function MainBottomTabBar({
         (routeName === "Trends" ||
           routeName === "SymptomHistory" ||
           routeName === "MedicationTrackingHistory" ||
+          routeName === "History" ||
           routeName === "Wellbeing")) ||
       (target === "Me" && routeName === "Account");
     return (
@@ -4771,6 +4783,7 @@ function AppTabs({
     const isMyTools = route.name === "MyTools";
     const titleForRoute: Record<string, string> = {
       Logs: "Logs",
+      History: "History",
       SymptomHistory: "Symptom Logs",
       SymptomDetail: "Log",
       MedicationTrackingHistory: "Medication Logs",
@@ -4858,6 +4871,7 @@ function AppTabs({
       route.name === "WellbeingLogDetail" ||
       route.name === "BowelLogDetail" ||
       route.name === "BristolGuide" ||
+      route.name === "History" ||
       route.name === "SymptomHistory" ||
       route.name === "SymptomDetail" ||
       route.name === "MedicationTrackingHistory" ||
@@ -5011,6 +5025,7 @@ function AppTabs({
             <AppStack.Screen name="Track">
               {() => <TrackScreen key={user.id} user={user} />}
             </AppStack.Screen>
+            <AppStack.Screen name="History">{() => <HistoryScreen user={user} />}</AppStack.Screen>
             <AppStack.Screen name="Care">
               {() => <CareScreen key={user.id} user={user} />}
             </AppStack.Screen>

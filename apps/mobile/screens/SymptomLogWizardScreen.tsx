@@ -7,6 +7,7 @@ import React, { useCallback, useEffect, useLayoutEffect, useMemo, useRef, useSta
 import {
   ActivityIndicator,
   BackHandler,
+  InteractionManager,
   KeyboardAvoidingView,
   Platform,
   Pressable,
@@ -16,7 +17,7 @@ import {
   View,
   type ScrollView as RNScrollView,
 } from "react-native";
-import { showFlareAlert } from "../components/FlareAlertHost";
+import { dismissFlareAlert, showFlareAlert } from "../components/FlareAlertHost";
 import { ScrollView } from "../lib/scrollViews";
 import { Card } from "../components/MidnightLagoonCard";
 import { HeroCard } from "../components/MidnightLagoonHeroCard";
@@ -580,8 +581,27 @@ export function SymptomLogWizardScreen({ user }: { user: SessionUser }) {
         navigation.goBack();
         showFlareAlert("Saved");
       } else {
-        navigation.dispatch(CommonActions.reset({ index: 0, routes: [{ name: "Dashboard" }] }));
-        showFlareAlert("Saved. To view, tap Logs.");
+        showFlareAlert(
+          "View it in Track",
+          undefined,
+          [
+            {
+              text: "OK",
+              onPress: () => {
+                navigation.dispatch(
+                  CommonActions.reset({
+                    index: 1,
+                    routes: [{ name: "Track" }, { name: "History" }],
+                  }),
+                );
+                InteractionManager.runAfterInteractions(() => {
+                  requestAnimationFrame(() => dismissFlareAlert());
+                });
+              },
+            },
+          ],
+          { holdUntilDismissed: true },
+        );
       }
     } catch (e: any) {
       showFlareAlert(e?.message || "Could not save");
