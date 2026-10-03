@@ -150,7 +150,7 @@ export function MedicationDetailScreen({ user }: { user: SessionUser }) {
       invalidateDashboardSnapshot(user.id);
     } catch (err: unknown) {
       setTakenToday(wasTaken);
-      showFlareAlert("Could not update", err instanceof Error ? err.message : "Something went wrong.");
+      showFlareAlert("Could not update");
     } finally {
       setTakenBusy(false);
     }
@@ -174,7 +174,7 @@ export function MedicationDetailScreen({ user }: { user: SessionUser }) {
       if (navigation.canGoBack()) navigation.goBack();
       else navigation.navigate("Meds");
     } catch (err: unknown) {
-      showFlareAlert("Could not delete", err instanceof Error ? err.message : "Something went wrong.");
+      showFlareAlert("Could not delete");
     } finally {
       setDeleting(false);
       deleteInFlight.current = false;
@@ -227,22 +227,22 @@ export function MedicationDetailScreen({ user }: { user: SessionUser }) {
           <ScreenHeader title={row.name} subtitle={formatAddedAtHeader(row.created_at)} />
           <Card noPadding style={{ paddingVertical: SPACING.sm, paddingHorizontal: SPACING.md }}>
             <TrayRow label="Medication" value={row.name} />
-            <TrayRow label="Dosage" value={`${row.dosage_mg}mg`} />
+            <TrayRow label="Dosage" value={row.dosage ?? "Not set"} />
             <TrayRow label="Frequency" value={normalizeFrequencyPreset(row.frequency) || "Not set"} />
-            <TrayRow label="Reminder time" value={formatMedicationReminderTime(row.reminder_time_of_day)} />
+            <TrayRow label="Reminder time" value={formatMedicationReminderTime(row.time_of_day)} />
             {row.notes?.trim() ? <TrayRow label="Notes" value={row.notes.trim()} /> : null}
           </Card>
 
           <View style={styles.takenActions}>
             {takenToday ? (
               <PrimaryButton
-                label="Taken today"
+                title="Taken today"
                 onPress={handleToggleTaken}
                 disabled={takenBusy}
                 leftIcon={<FlareLucideIcon icon={FLARE_CHROME_LUCIDE.check} size={18} color={c.white} />}
               />
             ) : (
-              <SecondaryButton label="Mark as taken today" onPress={handleToggleTaken} disabled={takenBusy} />
+              <SecondaryButton title="Mark as taken today" onPress={handleToggleTaken} disabled={takenBusy} />
             )}
           </View>
         </ScrollView>
