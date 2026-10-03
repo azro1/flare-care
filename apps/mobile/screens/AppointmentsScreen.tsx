@@ -2,26 +2,15 @@ import { FLARE_CHROME_LUCIDE, FlareLucideIcon } from "../lib/flareLucideIcons";
 import DateTimePicker from "@react-native-community/datetimepicker";
 import { useNavigation } from "@react-navigation/native";
 import React, { useCallback, useLayoutEffect, useRef, useState } from "react";
-import {
-  Animated,
-  KeyboardAvoidingView,
-  Modal,
-  Platform,
-  Pressable,
-  StyleSheet,
-  Text,
-  View,
-} from "react-native";
+import { Animated, KeyboardAvoidingView, Modal, Platform, Pressable, StyleSheet, Text, View } from "react-native";
 import { ScrollView } from "../lib/scrollViews";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { PrimaryButton, SecondaryButton } from "../components/FlareButton";
-import { flareFieldErrorStyle, FlareTextInput, FLARE_INPUT_BORDER_RADIUS } from "../components/FlareInput";
-import { FlareScreenSectionTitle } from "../components/FlareScreenSectionTitle";
-import { InstructionScreenShell } from "../components/InstructionScreenShell";
+import { flareFieldErrorStyle, FlareTextInput } from "../components/FlareInput";
+import { SectionLabel } from "../components/MidnightLagoonSectionLabel";
 import { InfoHintButton } from "../components/InfoHintButton";
 import { OptionPickerModal } from "../components/OptionPickerModal";
 import { TrackerThumbFab, useTrackerThumbFabLayout } from "../components/TrackerThumbFab";
-import { STACKED_DETAIL_ROW_EDGE } from "../components/StackedDetailField";
 import { invalidateDashboardSnapshot } from "../lib/dashboardSnapshotCache";
 import { useAppointmentsList } from "../lib/useAppointmentsList";
 import { formatUkDate } from "../lib/formatUkDate";
@@ -36,16 +25,9 @@ import {
   validateAppointmentForm,
   type AppointmentFormState,
 } from "../lib/appointmentShared";
-import {
-  FLARE_FONT_FAMILY,
-  FLARE_FONT_SIZE,
-  NAV_ROW_CHEVRON_SIZE,
-  NAV_ROW_LABEL,
-  SCREEN_EDGE_PADDING,
-  TIME_PICKER_MINUTE_INTERVAL,
-  bottomTabBarHeight,
-} from "../lib/layoutConstants";
+import { TIME_PICKER_MINUTE_INTERVAL } from "../lib/layoutConstants";
 import { hubTabFadeStyles, useHubTabFade } from "../lib/useHubTabFade";
+import { SPACING, RADIUS, TYPOGRAPHY } from "../designTokens";
 import { supabase, TABLES } from "../lib/supabase";
 import { useFlareColors } from "../theme";
 import { AppointmentBriefContent } from "./AppointmentBriefContent";
@@ -61,11 +43,8 @@ const APPOINTMENTS_HUB_TABS = [
   { key: "summary", label: "Summary" },
 ] as const;
 
-const APPOINTMENTS_HUB_HINT =
-  "Add your appointments and choose when you want to be reminded.";
-
-const APPOINTMENT_SUMMARY_HINT =
-  "Generate a health summary from your records for your next appointment. Choose a suggested period or select your own dates.";
+const APPOINTMENTS_HUB_HINT = "Add your appointments and choose when you want to be reminded.";
+const APPOINTMENT_SUMMARY_HINT = "Generate a health summary from your records for your next appointment. Choose a suggested period or select your own dates.";
 
 function toYmd(d: Date): string {
   const y = d.getFullYear();
@@ -103,9 +82,7 @@ function snapTimeHmFromDate(d: Date): string {
 async function maybeRescheduleAppointmentReminders(userId: string) {
   try {
     await rescheduleAppointmentNotificationsForUser(userId);
-  } catch {
-    // non-fatal
-  }
+  } catch {}
 }
 
 export function AppointmentSheet({
@@ -190,38 +167,21 @@ export function AppointmentSheet({
   return (
     <>
       <Modal visible={visible} animationType="slide" presentationStyle="pageSheet" onRequestClose={onClose}>
-        <KeyboardAvoidingView
-          style={[styles.sheetRoot, { backgroundColor: c.screen }]}
-          behavior={Platform.OS === "ios" ? "padding" : undefined}
-        >
-          <View
-            style={[
-              styles.sheetHeader,
-              {
-                borderBottomColor: c.cardBorder,
-                paddingTop: Math.max(insets.top, 12),
-                backgroundColor: c.screen,
-                zIndex: 1,
-                elevation: 1,
-              },
-            ]}
-          >
+        <KeyboardAvoidingView style={[styles.sheetRoot, { backgroundColor: c.screen }]} behavior={Platform.OS === "ios" ? "padding" : undefined}>
+          <View style={[styles.sheetHeader, { borderBottomColor: c.cardBorder, paddingTop: Math.max(insets.top, 12) }]}>
             <Pressable accessibilityRole="button" accessibilityLabel="Close" onPress={onClose} hitSlop={12} style={styles.sheetClose}>
-              <FlareLucideIcon icon={FLARE_CHROME_LUCIDE.close} size={26} color={c.textMuted} />
+              <FlareLucideIcon icon={FLARE_CHROME_LUCIDE.close} size={26} color={c.textSecondary} />
             </Pressable>
-            <Text style={[styles.sheetTitle, { color: c.text }]}>{editingId ? "Edit appointment" : "Add appointment"}</Text>
+            <Text style={[styles.sheetTitle, { color: c.text, fontFamily: TYPOGRAPHY.fontFamily.semibold }]}>
+              {editingId ? "Edit appointment" : "Add appointment"}
+            </Text>
             <View style={styles.sheetClose} />
           </View>
 
-          <ScrollView
-            keyboardShouldPersistTaps="handled"
-            contentContainerStyle={[styles.sheetScroll, { paddingBottom: insets.bottom + 24 }]}
-            showsVerticalScrollIndicator={false}
-          >
-            <View style={styles.whenBlock}>
+          <ScrollView keyboardShouldPersistTaps="handled" contentContainerStyle={[styles.sheetScroll, { paddingBottom: insets.bottom + 24 }]} showsVerticalScrollIndicator={false}>
             <View style={styles.whenRow}>
               <View style={styles.whenCol}>
-                <FlareScreenSectionTitle compact>Date *</FlareScreenSectionTitle>
+                <SectionLabel>Date *</SectionLabel>
                 <Pressable
                   accessibilityRole="button"
                   accessibilityLabel="Date"
@@ -230,14 +190,16 @@ export function AppointmentSheet({
                     setPickerDraftDate(form.date ? parseYmd(form.date) : new Date());
                     setDatePickerOpen(true);
                   }}
-                  style={[styles.whenPill, { backgroundColor: c.surfaceSubtle, borderColor: c.cardBorder }]}
+                  style={[styles.whenPill, { backgroundColor: c.inputBg, borderColor: c.inputBorder }]}
                 >
                   <FlareLucideIcon icon={FLARE_CHROME_LUCIDE.calendar} size={18} color={c.textSecondary} />
-                  <Text style={[styles.whenPillText, { color: form.date ? c.text : c.textMuted }]}>{form.date ? formatUkDate(form.date) : ""}</Text>
+                  <Text style={[styles.whenPillText, { color: form.date ? c.text : c.textSecondary, fontFamily: TYPOGRAPHY.fontFamily.regular }]}>
+                    {form.date ? formatUkDate(form.date) : ""}
+                  </Text>
                 </Pressable>
               </View>
               <View style={styles.whenCol}>
-                <FlareScreenSectionTitle compact>Time *</FlareScreenSectionTitle>
+                <SectionLabel>Time *</SectionLabel>
                 <Pressable
                   accessibilityRole="button"
                   accessibilityLabel="Time"
@@ -246,94 +208,59 @@ export function AppointmentSheet({
                     setPickerDraftTime(form.time ? parseTimeHm(form.time) : new Date());
                     setTimePickerOpen(true);
                   }}
-                  style={[styles.whenPill, { backgroundColor: c.surfaceSubtle, borderColor: c.cardBorder }]}
+                  style={[styles.whenPill, { backgroundColor: c.inputBg, borderColor: c.inputBorder }]}
                 >
                   <FlareLucideIcon icon={FLARE_CHROME_LUCIDE.time} size={18} color={c.textSecondary} />
-                  <Text style={[styles.whenPillText, { color: form.time ? c.text : c.textMuted }]}>{form.time || ""}</Text>
+                  <Text style={[styles.whenPillText, { color: form.time ? c.text : c.textSecondary, fontFamily: TYPOGRAPHY.fontFamily.regular }]}>
+                    {form.time || ""}
+                  </Text>
                 </Pressable>
               </View>
             </View>
-            </View>
 
-            <FlareScreenSectionTitle compact style={{ marginTop: 16 }}>
-              Type of appointment *
-            </FlareScreenSectionTitle>
+            <SectionLabel>Type of appointment *</SectionLabel>
             <FlareTextInput value={form.type} onChangeText={(type) => setField("type", type)} placeholder="e.g. GP, Surgical, MRI, Endoscopy" />
 
-            <FlareScreenSectionTitle compact style={{ marginTop: 16 }}>
-              Name of clinician
-            </FlareScreenSectionTitle>
+            <SectionLabel>Name of clinician</SectionLabel>
             <FlareTextInput value={form.clinicianName} onChangeText={(clinicianName) => setField("clinicianName", clinicianName)} placeholder="e.g. Dr Smith" />
 
-            <FlareScreenSectionTitle compact style={{ marginTop: 16 }}>
-              Location *
-            </FlareScreenSectionTitle>
+            <SectionLabel>Location *</SectionLabel>
             <FlareTextInput value={form.location} onChangeText={(location) => setField("location", location)} placeholder="e.g. St Mary's Hospital" />
 
-            <FlareScreenSectionTitle compact style={{ marginTop: 16 }}>
-              Notes
-            </FlareScreenSectionTitle>
-            <FlareTextInput
-              multiline
-              value={form.notes}
-              onChangeText={(notes) => setField("notes", notes)}
-              placeholder="e.g. Bring medications, list any questions you have"
-              style={styles.notesInput}
-            />
+            <SectionLabel>Notes</SectionLabel>
+            <FlareTextInput multiline value={form.notes} onChangeText={(notes) => setField("notes", notes)} placeholder="e.g. Bring medications, list any questions you have" style={styles.notesInput} />
 
-            <FlareScreenSectionTitle compact style={{ marginTop: 16 }}>
-              Remind me
-            </FlareScreenSectionTitle>
-            <Pressable
-              accessibilityRole="button"
-              accessibilityLabel="Reminder"
-              onPress={() => setReminderPickerOpen(true)}
-              style={[styles.whenPill, { backgroundColor: c.surfaceSubtle, borderColor: c.cardBorder }]}
-            >
+            <SectionLabel>Remind me</SectionLabel>
+            <Pressable accessibilityRole="button" accessibilityLabel="Reminder" onPress={() => setReminderPickerOpen(true)} style={[styles.whenPill, { backgroundColor: c.inputBg, borderColor: c.inputBorder }]}>
               <FlareLucideIcon icon={FLARE_CHROME_LUCIDE.notifications} size={18} color={c.textSecondary} />
-              <Text style={[styles.whenPillText, { color: c.text }]}>{reminderLabel}</Text>
-              <FlareLucideIcon icon={FLARE_CHROME_LUCIDE.down} size={NAV_ROW_CHEVRON_SIZE} color={c.textMuted} />
+              <Text style={[styles.whenPillText, { color: c.text, fontFamily: TYPOGRAPHY.fontFamily.regular }]}>{reminderLabel}</Text>
+              <FlareLucideIcon icon={FLARE_CHROME_LUCIDE.down} size={18} color={c.textSecondary} />
             </Pressable>
 
             {fieldError ? <Text style={[errTextStyle, styles.fieldError]}>{fieldError}</Text> : null}
             {saveError ? <Text style={[errTextStyle, styles.fieldError]}>{saveError}</Text> : null}
 
             <View style={styles.sheetActions}>
-              <PrimaryButton title={saving ? "Saving…" : "Save"} onPress={handleSavePress} disabled={saving} />
-              <SecondaryButton title="Cancel" onPress={onClose} />
+              <PrimaryButton label={saving ? "Saving…" : "Save"} onPress={handleSavePress} disabled={saving} />
+              <SecondaryButton label="Cancel" onPress={onClose} />
             </View>
           </ScrollView>
 
-          {datePickerOpen && pickerDraftDate ? (
-            <DateTimePicker
-              value={pickerDraftDate}
-              mode="date"
-              display="default"
-              minimumDate={editingId ? undefined : new Date()}
-              onChange={handleDatePickerChange}
-            />
-          ) : null}
+          {datePickerOpen && pickerDraftDate ? <DateTimePicker value={pickerDraftDate} mode="date" display="default" minimumDate={editingId ? undefined : new Date()} onChange={handleDatePickerChange} /> : null}
 
-          {timePickerOpen && pickerDraftTime ? (
-            <DateTimePicker
-              value={pickerDraftTime}
-              mode="time"
-              display="default"
-              minuteInterval={TIME_PICKER_MINUTE_INTERVAL}
-              onChange={handleTimePickerChange}
-            />
-          ) : null}
+          {timePickerOpen && pickerDraftTime ? <DateTimePicker value={pickerDraftTime} mode="time" display="default" minuteInterval={TIME_PICKER_MINUTE_INTERVAL} onChange={handleTimePickerChange} /> : null}
         </KeyboardAvoidingView>
       </Modal>
 
       <OptionPickerModal
         visible={reminderPickerOpen}
         options={APPOINTMENT_REMINDER_PICKER_LABELS}
+        selectedOption={reminderLabel}
         onSelect={(label) => {
           setField("reminderMinutesBefore", reminderMinutesFromPickerLabel(label));
           setReminderPickerOpen(false);
         }}
-        onCancel={() => setReminderPickerOpen(false)}
+        onClose={() => setReminderPickerOpen(false)}
       />
     </>
   );
@@ -343,8 +270,7 @@ export function AppointmentsScreen({ user }: { user: SessionUser }) {
   const c = useFlareColors();
   const navigation = useNavigation<any>();
   const insets = useSafeAreaInsets();
-  const tabBarClearance = bottomTabBarHeight(insets.bottom);
-  const { scrollBottomPad } = useTrackerThumbFabLayout(tabBarClearance);
+  const { fabBottom, fabRight } = useTrackerThumbFabLayout();
   const appointmentsList = useAppointmentsList(user.id);
   const { load } = appointmentsList;
   const [sheetOpen, setSheetOpen] = useState(false);
@@ -381,37 +307,16 @@ export function AppointmentsScreen({ user }: { user: SessionUser }) {
 
   const renderHubHeaderRight = useCallback(() => {
     if (onQuestionsTab) {
-      return (
-        <InfoHintButton
-          title="Questions"
-          message={APPOINTMENT_QUESTIONS_HINT}
-          accessibilityLabel="About Questions"
-        />
-      );
+      return <InfoHintButton title="Questions" message={APPOINTMENT_QUESTIONS_HINT} accessibilityLabel="About Questions" />;
     }
     if (onSummaryTab) {
-      return (
-        <InfoHintButton
-          title="Appointment Summary"
-          message={APPOINTMENT_SUMMARY_HINT}
-          accessibilityLabel="About Appointment Summary"
-        />
-      );
+      return <InfoHintButton title="Appointment Summary" message={APPOINTMENT_SUMMARY_HINT} accessibilityLabel="About Appointment Summary" />;
     }
     return (
       <View style={styles.headerRightCluster}>
-        <InfoHintButton
-          title="Appointments"
-          message={APPOINTMENTS_HUB_HINT}
-          accessibilityLabel="About Appointments"
-        />
-        <Pressable
-          accessibilityRole="button"
-          accessibilityLabel="Past Appointments"
-          hitSlop={10}
-          onPress={() => navigation.navigate("AppointmentsPast")}
-        >
-          <Text style={[NAV_ROW_LABEL, { color: c.text }]}>Past</Text>
+        <InfoHintButton title="Appointments" message={APPOINTMENTS_HUB_HINT} accessibilityLabel="About Appointments" />
+        <Pressable accessibilityRole="button" accessibilityLabel="Past Appointments" hitSlop={10} onPress={() => navigation.navigate("AppointmentsPast")}>
+          <Text style={[styles.navLabel, { color: c.text, fontFamily: TYPOGRAPHY.fontFamily.regular }]}>Past</Text>
         </Pressable>
       </View>
     );
@@ -441,9 +346,7 @@ export function AppointmentsScreen({ user }: { user: SessionUser }) {
     }
   };
 
-  const showFab =
-    (onAppointmentsTab && !listSelectionMode) || (onQuestionsTab && !questionsSelectionMode);
-  const scrollBottomPadTotal = anySelectionMode || !showFab ? Math.max(insets.bottom, 16) + 24 : scrollBottomPad;
+  const showFab = (onAppointmentsTab && !listSelectionMode) || (onQuestionsTab && !questionsSelectionMode);
 
   useLayoutEffect(() => {
     if (!onSummaryTab || anySelectionMode) return;
@@ -455,145 +358,103 @@ export function AppointmentsScreen({ user }: { user: SessionUser }) {
 
   return (
     <>
-      <InstructionScreenShell
-        showInstruction={false}
-        contentPaddingBottom={scrollBottomPadTotal}
-        instruction={null}
-        floatingAction={
-          showFab ? (
-            <TrackerThumbFab
-              accessibilityLabel={onQuestionsTab ? "Add question" : "Add appointment"}
-              onPress={onQuestionsTab ? () => openQuestionAddRef.current() : openAdd}
-              tabBarClearance={tabBarClearance}
-            />
-          ) : null
-        }
-        footer={null}
-      >
+      <View style={[styles.screen, { backgroundColor: c.screen }]}>
         <View style={hubTabFadeStyles.tabRow}>
           {APPOINTMENTS_HUB_TABS.map((opt, index) => {
             const active = index === tabIndex;
             return (
-              <Pressable
-                key={opt.key}
-                accessibilityRole="tab"
-                accessibilityState={{ selected: active }}
-                accessibilityLabel={opt.label}
-                onPress={() => goToTab(index)}
-                style={hubTabFadeStyles.tabHit}
-              >
-                <Text
-                  style={[
-                    hubTabFadeStyles.tabLabel,
-                    { color: active ? c.text : c.textMuted },
-                    active ? hubTabFadeStyles.tabLabelActive : null,
-                  ]}
-                >
+              <Pressable key={opt.key} accessibilityRole="tab" accessibilityState={{ selected: active }} accessibilityLabel={opt.label} onPress={() => goToTab(index)} style={hubTabFadeStyles.tabHit}>
+                <Text style={[hubTabFadeStyles.tabLabel, { color: active ? c.text : c.textSecondary, fontFamily: TYPOGRAPHY.fontFamily.medium }, active ? hubTabFadeStyles.tabLabelActive : null]}>
                   {opt.label}
                 </Text>
-                <View
-                  style={[
-                    hubTabFadeStyles.tabUnderline,
-                    { backgroundColor: active ? c.primary : "transparent" },
-                  ]}
-                />
+                <View style={[hubTabFadeStyles.tabUnderline, { backgroundColor: active ? c.primary : "transparent" }]} />
               </Pressable>
             );
           })}
         </View>
 
         <View style={hubTabFadeStyles.stack}>
-          <Animated.View
-            style={paneStyle[0]}
-            pointerEvents={onAppointmentsTab ? "auto" : "none"}
-            accessibilityElementsHidden={!onAppointmentsTab}
-            importantForAccessibility={onAppointmentsTab ? "yes" : "no-hide-descendants"}
-          >
-            <AppointmentsListPane
-              user={user}
-              tab="upcoming"
-              showFab={false}
-              onAddPress={openAdd}
-              selectionRouteName="Appointments"
-              headerTitle="Appointments"
-              renderIdleHeaderRight={renderHubHeaderRight}
-              list={appointmentsList}
-              embedded
-              onSelectionModeChange={setListSelectionMode}
-              ownsHeader={onAppointmentsTab}
-            />
+          <Animated.View style={paneStyle[0]} pointerEvents={onAppointmentsTab ? "auto" : "none"} accessibilityElementsHidden={!onAppointmentsTab} importantForAccessibility={onAppointmentsTab ? "yes" : "no-hide-descendants"}>
+            <AppointmentsListPane user={user} tab="upcoming" showFab={false} onAddPress={openAdd} selectionRouteName="Appointments" headerTitle="Appointments" renderIdleHeaderRight={renderHubHeaderRight} list={appointmentsList} embedded onSelectionModeChange={setListSelectionMode} ownsHeader={onAppointmentsTab} />
           </Animated.View>
-          <Animated.View
-            style={paneStyle[1]}
-            pointerEvents={onQuestionsTab ? "auto" : "none"}
-            accessibilityElementsHidden={!onQuestionsTab}
-            importantForAccessibility={onQuestionsTab ? "yes" : "no-hide-descendants"}
-          >
-            <AppointmentQuestionsPane
-              user={user}
-              embedded
-              selectionRouteName="Appointments"
-              headerActive={onQuestionsTab}
-              registerOpenAdd={registerOpenQuestionAdd}
-              onSelectionModeChange={setQuestionsSelectionMode}
-            />
+          <Animated.View style={paneStyle[1]} pointerEvents={onQuestionsTab ? "auto" : "none"} accessibilityElementsHidden={!onQuestionsTab} importantForAccessibility={onQuestionsTab ? "yes" : "no-hide-descendants"}>
+            <AppointmentQuestionsPane user={user} embedded selectionRouteName="Appointments" headerActive={onQuestionsTab} registerOpenAdd={registerOpenQuestionAdd} onSelectionModeChange={setQuestionsSelectionMode} />
           </Animated.View>
-          <Animated.View
-            style={paneStyle[2]}
-            pointerEvents={onSummaryTab ? "auto" : "none"}
-            accessibilityElementsHidden={!onSummaryTab}
-            importantForAccessibility={onSummaryTab ? "yes" : "no-hide-descendants"}
-          >
+          <Animated.View style={paneStyle[2]} pointerEvents={onSummaryTab ? "auto" : "none"} accessibilityElementsHidden={!onSummaryTab} importantForAccessibility={onSummaryTab ? "yes" : "no-hide-descendants"}>
             <AppointmentBriefContent />
           </Animated.View>
         </View>
-      </InstructionScreenShell>
 
-      <AppointmentSheet
-        visible={sheetOpen}
-        editingId={editingId}
-        initialValues={form}
-        saving={saving}
-        saveError={saveError}
-        onClose={closeSheet}
-        onSave={handleSave}
-      />
+        {showFab ? <TrackerThumbFab accessibilityLabel={onQuestionsTab ? "Add question" : "Add appointment"} onPress={onQuestionsTab ? () => openQuestionAddRef.current() : openAdd} bottom={fabBottom} right={fabRight} /> : null}
+      </View>
+
+      <AppointmentSheet visible={sheetOpen} editingId={editingId} initialValues={form} saving={saving} saveError={saveError} onClose={closeSheet} onSave={handleSave} />
     </>
   );
 }
 
 const styles = StyleSheet.create({
+  screen: { flex: 1 },
   headerRightCluster: {
     flexDirection: "row",
     alignItems: "center",
-    gap: 10,
+    gap: SPACING.md,
+  },
+  navLabel: {
+    fontSize: TYPOGRAPHY.fontSize.md,
   },
   sheetRoot: { flex: 1 },
   sheetHeader: {
     flexDirection: "row",
     alignItems: "center",
     justifyContent: "space-between",
-    paddingHorizontal: 8,
-    paddingBottom: SCREEN_EDGE_PADDING,
-    borderBottomWidth: StyleSheet.hairlineWidth,
+    paddingHorizontal: SPACING.lg,
+    paddingBottom: SPACING.md,
+    borderBottomWidth: 1,
   },
-  sheetClose: { width: 44, height: 44, alignItems: "center", justifyContent: "center" },
-  sheetTitle: { fontSize: FLARE_FONT_SIZE.navTitle, fontFamily: FLARE_FONT_FAMILY.bold },
-  sheetScroll: { paddingHorizontal: 20, paddingTop: 14 },
-  whenBlock: { marginBottom: 4 },
-  whenRow: { flexDirection: "row", gap: STACKED_DETAIL_ROW_EDGE },
-  whenCol: { flex: 1, gap: 6 },
+  sheetClose: {
+    width: 44,
+    height: 44,
+    alignItems: "center",
+    justifyContent: "center",
+  },
+  sheetTitle: {
+    fontSize: TYPOGRAPHY.fontSize.cardTitle,
+  },
+  sheetScroll: {
+    paddingHorizontal: SPACING.lg,
+    paddingTop: SPACING.lg,
+  },
+  whenRow: {
+    flexDirection: "row",
+    gap: SPACING.md,
+    marginBottom: SPACING.md,
+  },
+  whenCol: {
+    flex: 1,
+    gap: SPACING.xs,
+  },
   whenPill: {
     flexDirection: "row",
     alignItems: "center",
-    gap: 8,
+    gap: SPACING.sm,
     minHeight: 42,
-    paddingHorizontal: 12,
-    borderRadius: FLARE_INPUT_BORDER_RADIUS,
+    paddingHorizontal: SPACING.md,
+    borderRadius: 8,
     borderWidth: 1,
   },
-  whenPillText: { flex: 1, fontSize: FLARE_FONT_SIZE.body, fontFamily: FLARE_FONT_FAMILY.regular },
-  notesInput: { marginTop: 0 },
-  fieldError: { marginTop: 8, marginBottom: 4 },
-  sheetActions: { marginTop: STACKED_DETAIL_ROW_EDGE, gap: 8 },
+  whenPillText: {
+    flex: 1,
+    fontSize: TYPOGRAPHY.fontSize.md,
+  },
+  notesInput: {
+    marginTop: 0,
+  },
+  fieldError: {
+    marginTop: SPACING.sm,
+  },
+  sheetActions: {
+    marginTop: SPACING.lg,
+    gap: SPACING.md,
+  },
 });
