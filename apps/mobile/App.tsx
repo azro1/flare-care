@@ -85,7 +85,9 @@ import {
 import { clearRememberedSession, readRememberedSession, rememberSession } from "./lib/rememberedSession";
 import { readAuthLegalAccepted, setAuthLegalAccepted } from "./lib/authLegalAcceptance";
 import { CollapsingTitleScrollScreen } from "./components/CollapsingTitleScrollScreen";
+import { Card } from "./components/MidnightLagoonCard";
 import { FlareThemeProvider, useFlareColors, useFlareTheme } from "./theme";
+import { SPACING, TYPOGRAPHY } from "./designTokens";
 import { formatUkDate, formatUkGreetingDate } from "./lib/formatUkDate";
 import { todayYmd } from "./lib/bowelMovementShared";
 import { handleListExpansionNavigationRouteChange } from "./lib/listExpansionNavigation";
@@ -3997,24 +3999,42 @@ function AccountInfoScreen({ user }: { user: SessionUser }) {
   const bottomScrollInset = useBottomTabScrollInset();
 
   return (
-    <ScrollView
-      style={[styles.screen, { backgroundColor: c.screen }]}
-      contentContainerStyle={{ paddingBottom: bottomScrollInset + 24 }}
-    >
-      <View style={[logHistoryCardStyles.trackerCard, { backgroundColor: c.card }]}>
-        <LogDetailFieldGroup
-          compact
-          fields={[
-            {
-              label: "Account created",
-              value: user.accountCreatedAt ? formatUkDate(user.accountCreatedAt) : "Not available",
-            },
-            { label: "Sign-in method", value: user.signInMethodLabel ?? "Not available" },
-            { label: "Account ID", value: user.id, selectable: true },
-          ]}
-        />
-      </View>
-    </ScrollView>
+    <View style={[styles.screen, { backgroundColor: c.screen }]}>
+      <ScrollView
+        style={styles.scroll}
+        contentContainerStyle={[styles.scrollContent, { paddingBottom: bottomScrollInset + 24 }]}
+      >
+        <Card>
+          <View style={styles.fieldRow}>
+            <Text style={[styles.fieldLabel, { color: c.textSecondary, fontFamily: TYPOGRAPHY.fontFamily.regular }]}>
+              Account created
+            </Text>
+            <Text style={[styles.fieldValue, { color: c.text, fontFamily: TYPOGRAPHY.fontFamily.regular }]}>
+              {user.accountCreatedAt ? formatUkDate(user.accountCreatedAt) : "Not available"}
+            </Text>
+          </View>
+          <View style={styles.fieldRow}>
+            <Text style={[styles.fieldLabel, { color: c.textSecondary, fontFamily: TYPOGRAPHY.fontFamily.regular }]}>
+              Sign-in method
+            </Text>
+            <Text style={[styles.fieldValue, { color: c.text, fontFamily: TYPOGRAPHY.fontFamily.regular }]}>
+              {user.signInMethodLabel ?? "Not available"}
+            </Text>
+          </View>
+          <View style={styles.fieldRow}>
+            <Text style={[styles.fieldLabel, { color: c.textSecondary, fontFamily: TYPOGRAPHY.fontFamily.regular }]}>
+              Account ID
+            </Text>
+            <Text
+              style={[styles.fieldValue, { color: c.text, fontFamily: TYPOGRAPHY.fontFamily.regular }]}
+              selectable
+            >
+              {user.id}
+            </Text>
+          </View>
+        </Card>
+      </ScrollView>
+    </View>
   );
 }
 
@@ -6420,6 +6440,24 @@ const styles = StyleSheet.create({
   hydrationHelpLink: {
     ...HELP_NAV_LINK_LABEL,
   },
-  /** Keeps stacked detail rows out of `cardBody` gap (which would add space between every field). */
   detailFieldsStack: { alignSelf: "stretch" },
+  scroll: { flex: 1 },
+  scrollContent: {
+    paddingHorizontal: SPACING.screen,
+    paddingTop: SPACING.lg,
+  },
+  fieldRow: {
+    flexDirection: "row",
+    justifyContent: "space-between",
+    paddingVertical: SPACING.md,
+  },
+  fieldLabel: {
+    fontSize: TYPOGRAPHY.fontSize.sm,
+  },
+  fieldValue: {
+    fontSize: TYPOGRAPHY.fontSize.md,
+    flex: 1,
+    textAlign: "right",
+    paddingLeft: SPACING.md,
+  },
 });
