@@ -87,6 +87,7 @@ import { readAuthLegalAccepted, setAuthLegalAccepted } from "./lib/authLegalAcce
 import { CollapsingTitleScrollScreen } from "./components/CollapsingTitleScrollScreen";
 import { Card } from "./components/MidnightLagoonCard";
 import { TrayRow } from "./components/MidnightLagoonTray";
+import { SectionLabel } from "./components/MidnightLagoonSectionLabel";
 import { FlareThemeProvider, useFlareColors, useFlareTheme } from "./theme";
 import { SPACING, TYPOGRAPHY } from "./designTokens";
 import { formatUkDate, formatUkGreetingDate } from "./lib/formatUkDate";
@@ -4181,84 +4182,38 @@ function SupportScreen() {
   const bottomScrollInset = useBottomTabScrollInset();
 
   return (
-    <ScrollView
-      style={[styles.screen, { backgroundColor: c.screen }]}
-      contentContainerStyle={[styles.accountScrollContent, { paddingBottom: bottomScrollInset + 16 }]}
-    >
-      <LogHistoryCard style={{ padding: CARD_INNER_PADDING + 2, gap: 28 }}>
-        <View style={styles.settingsCardSection}>
-          <Text style={[styles.settingsCardSectionLabel, { color: c.textMuted }]}>
-            Educational resources
-          </Text>
-          <Pressable
-            accessibilityRole="button"
-            accessibilityLabel="Open What is IBD guide"
+    <View style={[styles.screen, { backgroundColor: c.screen }]}>
+      <ScrollView
+        style={styles.scroll}
+        contentContainerStyle={[styles.scrollContent, { paddingBottom: bottomScrollInset + 16 }]}
+      >
+        <Card>
+          <SectionLabel>Educational resources</SectionLabel>
+          <TrayRow
+            label="What is IBD?"
+            sublabel="Understand Crohn's and ulcerative colitis"
             onPress={() => navigation.navigate("Ibd")}
-            style={styles.settingToggleRow}
-          >
-            <View style={styles.settingToggleTextCol}>
-              <Text
-                style={[styles.settingToggleTitle, styles.settingsCardTitle, { color: c.text }]}
-              >
-                What is IBD?
-              </Text>
-              <Text
-                style={[styles.settingToggleHint, styles.settingsCardHint, { color: c.textMuted }]}
-              >
-                Understand Crohn&apos;s and ulcerative colitis
-              </Text>
-            </View>
-            <FlareLucideIcon icon={FLARE_CHROME_LUCIDE.forward} size={NAV_ROW_CHEVRON_SIZE} color={c.text} />
-          </Pressable>
-          <Pressable
-            accessibilityRole="button"
-            accessibilityLabel="Open Nutrition Guide"
+            showChevron
+          />
+          <TrayRow
+            label="Nutrition Guide"
+            sublabel="Food categories and IBD diet tips"
             onPress={() => navigation.navigate("NutritionGuide")}
-            style={styles.settingToggleRow}
-          >
-            <View style={styles.settingToggleTextCol}>
-              <Text
-                style={[styles.settingToggleTitle, styles.settingsCardTitle, { color: c.text }]}
-              >
-                Nutrition Guide
-              </Text>
-              <Text
-                style={[styles.settingToggleHint, styles.settingsCardHint, { color: c.textMuted }]}
-              >
-                Food categories and IBD diet tips
-              </Text>
-            </View>
-            <FlareLucideIcon icon={FLARE_CHROME_LUCIDE.forward} size={NAV_ROW_CHEVRON_SIZE} color={c.text} />
-          </Pressable>
-        </View>
+            showChevron
+          />
+        </Card>
 
-        <View style={styles.settingsCardSection}>
-          <Text style={[styles.settingsCardSectionLabel, { color: c.textMuted }]}>
-            Practical support
-          </Text>
-          <Pressable
-            accessibilityRole="button"
-            accessibilityLabel="Open IBD at work guide"
+        <Card style={{ marginTop: SPACING.lg }}>
+          <SectionLabel>Practical support</SectionLabel>
+          <TrayRow
+            label="IBD at work"
+            sublabel="Adjustments, toilet urgency, fatigue, and appointments"
             onPress={() => navigation.navigate("IbdAtWork")}
-            style={styles.settingToggleRow}
-          >
-            <View style={styles.settingToggleTextCol}>
-              <Text
-                style={[styles.settingToggleTitle, styles.settingsCardTitle, { color: c.text }]}
-              >
-                IBD at work
-              </Text>
-              <Text
-                style={[styles.settingToggleHint, styles.settingsCardHint, { color: c.textMuted }]}
-              >
-                Adjustments, toilet urgency, fatigue, and appointments
-              </Text>
-            </View>
-            <FlareLucideIcon icon={FLARE_CHROME_LUCIDE.forward} size={NAV_ROW_CHEVRON_SIZE} color={c.text} />
-          </Pressable>
-        </View>
-      </LogHistoryCard>
-    </ScrollView>
+            showChevron
+          />
+        </Card>
+      </ScrollView>
+    </View>
   );
 }
 
