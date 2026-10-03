@@ -339,12 +339,19 @@ export function AppointmentsScreen({ user }: { user: SessionUser }) {
             { paddingBottom: showFab ? fabBottom + 80 : Math.max(insets.bottom, 16) + 24 },
           ]}
         >
-          <View style={styles.headerRow}>
-            <ScreenHeader title="Appointments" />
-            <Pressable accessibilityRole="button" accessibilityLabel="Past Appointments" hitSlop={10} onPress={() => navigation.navigate("AppointmentsPast")}>
-              <Text style={[styles.navLabel, { color: c.text, fontFamily: TYPOGRAPHY.fontFamily.regular }]}>Past</Text>
-            </Pressable>
-          </View>
+          <ScreenHeader
+            title="Appointments"
+            rightAction={
+              <Pressable
+                accessibilityRole="button"
+                accessibilityLabel="Past Appointments"
+                hitSlop={10}
+                onPress={() => navigation.navigate("AppointmentsPast")}
+              >
+                <Text style={[styles.navLabel, { color: c.text, fontFamily: TYPOGRAPHY.fontFamily.regular }]}>Past</Text>
+              </Pressable>
+            }
+          />
 
           <SegmentedTabs tabs={APPOINTMENTS_HUB_TABS} activeValue={activeTab} onChange={setActiveTab} />
 
@@ -398,12 +405,6 @@ const styles = StyleSheet.create({
   scrollContent: {
     paddingHorizontal: SPACING.screen,
     paddingTop: SPACING.lg,
-  },
-  headerRow: {
-    flexDirection: "row",
-    alignItems: "center",
-    justifyContent: "space-between",
-    marginBottom: SPACING.lg,
   },
   navLabel: {
     fontSize: TYPOGRAPHY.fontSize.md,

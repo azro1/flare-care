@@ -7,9 +7,10 @@ type ScreenHeaderProps = {
   title: string;
   subtitle?: string;
   onMenuPress?: () => void;
+  rightAction?: React.ReactNode;
 };
 
-export function ScreenHeader({ title, subtitle, onMenuPress }: ScreenHeaderProps) {
+export function ScreenHeader({ title, subtitle, onMenuPress, rightAction }: ScreenHeaderProps) {
   const colors = useFlareColors();
 
   return (
@@ -30,11 +31,15 @@ export function ScreenHeader({ title, subtitle, onMenuPress }: ScreenHeaderProps
             styles.title,
             { color: colors.text, fontFamily: TYPOGRAPHY.fontFamily.bold },
           ]}
+          numberOfLines={1}
+          ellipsizeMode="tail"
         >
           {title}
         </Text>
       </View>
-      {onMenuPress && (
+      {rightAction ? (
+        <View style={styles.rightAction}>{rightAction}</View>
+      ) : onMenuPress ? (
         <Pressable
           onPress={onMenuPress}
           hitSlop={{ top: 10, bottom: 10, left: 10, right: 10 }}
@@ -43,7 +48,7 @@ export function ScreenHeader({ title, subtitle, onMenuPress }: ScreenHeaderProps
         >
           <Text style={[styles.menuIcon, { color: colors.textSecondary }]}>⋮</Text>
         </Pressable>
-      )}
+      ) : null}
     </View>
   );
 }
@@ -53,9 +58,14 @@ const styles = StyleSheet.create({
     flexDirection: "row",
     justifyContent: "space-between",
     alignItems: "flex-start",
+    gap: SPACING.md,
   },
   headerText: {
     flex: 1,
+    minWidth: 0,
+  },
+  rightAction: {
+    flexShrink: 0,
   },
   subtitle: {
     fontSize: TYPOGRAPHY.fontSize.md,
