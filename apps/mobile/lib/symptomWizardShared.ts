@@ -2,7 +2,7 @@
 
 import { supabase, TABLES } from "./supabase";
 
-export type MealRow = { food: string; quantity: string };
+export type MealRow = { food: string; quantity: string; kind?: "food" | "drink" };
 
 export type SymptomFormData = {
   symptomStartDate: string;
@@ -239,6 +239,12 @@ export function resolveAlcoholStep12Phase(form: SymptomFormData): "baseline" | "
   return "baseline";
 }
 
+function mealKindFromStored(raw: unknown, quantity: string): "food" | "drink" | undefined {
+  if (raw === "food" || raw === "drink") return raw;
+  if (quantity.toLowerCase().includes("ml")) return "drink";
+  return undefined;
+}
+
 function parseSymptomMealRows(raw: unknown): MealRow[] {
   let arr: unknown[] = [];
   if (Array.isArray(raw)) arr = raw;
@@ -252,18 +258,21 @@ function parseSymptomMealRows(raw: unknown): MealRow[] {
   }
   const items = arr
     .map((meal): MealRow => {
-      if (typeof meal === "string") return { food: meal, quantity: "" };
+      if (typeof meal === "string") return { food: meal, quantity: "", kind: "food" };
       if (meal && typeof meal === "object") {
         const m = meal as Record<string, unknown>;
+        const quantity = typeof m.quantity === "string" ? m.quantity.trim() : "";
+        const kind = mealKindFromStored(m.kind, quantity);
         return {
           food: typeof m.food === "string" ? m.food : "",
-          quantity: typeof m.quantity === "string" ? m.quantity.trim() : "",
+          quantity,
+          ...(kind ? { kind } : {}),
         };
       }
-      return { food: "", quantity: "" };
+      return { food: "", quantity: "", kind: "food" };
     })
     .filter((item) => item.food.trim() || item.quantity.trim());
-  return items.length ? items : [{ food: "", quantity: "" }];
+  return items.length ? items : [{ food: "", quantity: "", kind: "food" }];
 }
 
 function symptomRowString(row: Record<string, unknown>, snake: string, camel?: string): string {
@@ -306,26 +315,24 @@ export function symptomLogRowToForm(row: Record<string, unknown>): SymptomFormDa
   return form;
 }
 
+function persistMealRows(rows: MealRow[]): MealRow[] {
+  return rows
+    .map((item) => {
+      const row: MealRow = {
+        food: sanitizeFoodTriggersMobile(item.food),
+        quantity: sanitizeFoodTriggersMobile(item.quantity),
+      };
+      if (item.kind === "food" || item.kind === "drink") row.kind = item.kind;
+      return row;
+    })
+    .filter((item) => item.food.trim());
+}
+
 function buildSymptomLogFields(form: SymptomFormData, isFirstTimeUser: boolean, isEdit = false) {
   const includeLifestyleBaseline = isFirstTimeUser || isEdit;
-  const breakfast = form.breakfast
-    .map((item) => ({
-      food: sanitizeFoodTriggersMobile(item.food),
-      quantity: sanitizeFoodTriggersMobile(item.quantity),
-    }))
-    .filter((item) => item.food.trim());
-  const lunch = form.lunch
-    .map((item) => ({
-      food: sanitizeFoodTriggersMobile(item.food),
-      quantity: sanitizeFoodTriggersMobile(item.quantity),
-    }))
-    .filter((item) => item.food.trim());
-  const dinner = form.dinner
-    .map((item) => ({
-      food: sanitizeFoodTriggersMobile(item.food),
-      quantity: sanitizeFoodTriggersMobile(item.quantity),
-    }))
-    .filter((item) => item.food.trim());
+  const breakfast = persistMealRows(form.breakfast);
+  const lunch = persistMealRows(form.lunch);
+  const dinner = persistMealRows(form.dinner);
 
   return {
     symptom_start_date: form.symptomStartDate || null,

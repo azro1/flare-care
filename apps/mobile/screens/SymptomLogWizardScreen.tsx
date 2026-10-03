@@ -91,6 +91,23 @@ function isAndroidDatePickerDismissed(event: { type?: string }): boolean {
   return Platform.OS === "android" && event.type === "dismissed";
 }
 
+function isDrinkRow(item: MealRow): boolean {
+  if (item.kind === "drink") return true;
+  if (item.kind === "food") return false;
+  return (item.quantity ?? "").toLowerCase().includes("ml");
+}
+
+function drinkAmountInputValue(quantity: string): string {
+  const q = (quantity ?? "").trim();
+  if (!q || q.toLowerCase() === "ml") return "";
+  return q.replace(/\s*ml$/i, "");
+}
+
+function drinkQuantityFromInput(raw: string): string {
+  const digits = raw.replace(/[^0-9]/g, "");
+  return digits ? `${digits} ml` : "";
+}
+
 const SYMPTOM_REVIEW_STEP = SYMPTOM_WIZARD_REVIEW_STEP;
 
 export function SymptomLogWizardScreen({ user }: { user: SessionUser }) {
@@ -449,8 +466,9 @@ export function SymptomLogWizardScreen({ user }: { user: SessionUser }) {
   const removeMealRow = (meal: "breakfast" | "lunch" | "dinner", index: number) => {
     setForm((p) => {
       const list = p[meal];
+      if (index < 0 || index >= list.length) return p;
       if (list.length <= 1) {
-        return { ...p, [meal]: [{ food: "", quantity: "" }] };
+        return { ...p, [meal]: [{ food: "", quantity: "", kind: "food" }] };
       }
       return { ...p, [meal]: list.filter((_, j) => j !== index) };
     });
@@ -458,8 +476,15 @@ export function SymptomLogWizardScreen({ user }: { user: SessionUser }) {
 
   const renderMeal = (meal: "breakfast" | "lunch" | "dinner", skipKey: "breakfast_skipped" | "lunch_skipped" | "dinner_skipped") => {
     const list = form[meal];
-    const foodItems = list.filter((item) => !item.quantity.includes("ml"));
-    const drinkItems = list.filter((item) => item.quantity.includes("ml"));
+    const entries = list.map((item, index) => ({ item, index }));
+    const foodEntries = entries.filter(({ item }) => !isDrinkRow(item));
+    const drinkEntries = entries.filter(({ item }) => isDrinkRow(item));
+    const patchRow = (index: number, patch: Partial<MealRow>) => {
+      setForm((p) => ({
+        ...p,
+        [meal]: p[meal].map((row, j) => (j === index ? { ...row, ...patch } : row)),
+      }));
+    };
 
     return (
       <View style={styles.stepContent}>
@@ -472,7 +497,7 @@ export function SymptomLogWizardScreen({ user }: { user: SessionUser }) {
             setForm((p) => ({
               ...p,
               [skipKey]: newValue,
-              [meal]: newValue ? [{ food: "", quantity: "" }] : p[meal],
+              [meal]: newValue ? [{ food: "", quantity: "", kind: "food" }] : p[meal],
             }));
           }}
           style={[
@@ -500,37 +525,26 @@ export function SymptomLogWizardScreen({ user }: { user: SessionUser }) {
           <>
             <SectionLabel>FOOD</SectionLabel>
             <Card noPadding style={{ paddingVertical: SPACING.sm, paddingHorizontal: SPACING.md }}>
-              {foodItems.length === 0 ? (
+              {foodEntries.length === 0 ? (
                 <Text style={[styles.emptyText, { color: c.textSecondary, fontFamily: TYPOGRAPHY.fontFamily.regular }]}>No food added yet</Text>
               ) : (
-                foodItems.map((item, originalIndex) => {
-                  const i = list.findIndex((row) => row === item);
+                foodEntries.map(({ item, index }, originalIndex) => {
                   return (
                     <View
-                      key={i}
+                      key={index}
                       style={[styles.mealFoodRow, originalIndex > 0 && styles.mealFoodRowBorder, { borderTopColor: c.cardBorder }]}
                     >
                       <View style={styles.mealRowContent}>
                         <View style={styles.mealRowTop}>
                           <FlareTextInput
                             value={item.food}
-                            onChangeText={(t) => {
-                              setForm((p) => ({
-                                ...p,
-                                [meal]: p[meal].map((row, j) => (j === i ? { ...row, food: t } : row)),
-                              }));
-                            }}
+                            onChangeText={(t) => patchRow(index, { food: t, kind: "food" })}
                             placeholder="Food name"
                             style={styles.mealNameInput}
                           />
                           <FlareTextInput
                             value={item.quantity && !["Small", "Medium", "Large"].includes(item.quantity) ? item.quantity : item.quantity || ""}
-                            onChangeText={(t) => {
-                              setForm((p) => ({
-                                ...p,
-                                [meal]: p[meal].map((row, j) => (j === i ? { ...row, quantity: t } : row)),
-                              }));
-                            }}
+                            onChangeText={(t) => patchRow(index, { quantity: t, kind: "food" })}
                             placeholder="Amount"
                             style={styles.mealAmountInputSmall}
                           />
@@ -539,41 +553,26 @@ export function SymptomLogWizardScreen({ user }: { user: SessionUser }) {
                           <OptionChip
                             label="Small"
                             selected={item.quantity === "Small"}
-                            onPress={() => {
-                              setForm((p) => ({
-                                ...p,
-                                [meal]: p[meal].map((row, j) => (j === i ? { ...row, quantity: "Small" } : row)),
-                              }));
-                            }}
+                            onPress={() => patchRow(index, { quantity: "Small", kind: "food" })}
                           />
                           <OptionChip
                             label="Medium"
                             selected={item.quantity === "Medium"}
-                            onPress={() => {
-                              setForm((p) => ({
-                                ...p,
-                                [meal]: p[meal].map((row, j) => (j === i ? { ...row, quantity: "Medium" } : row)),
-                              }));
-                            }}
+                            onPress={() => patchRow(index, { quantity: "Medium", kind: "food" })}
                           />
                           <OptionChip
                             label="Large"
                             selected={item.quantity === "Large"}
-                            onPress={() => {
-                              setForm((p) => ({
-                                ...p,
-                                [meal]: p[meal].map((row, j) => (j === i ? { ...row, quantity: "Large" } : row)),
-                              }));
-                            }}
+                            onPress={() => patchRow(index, { quantity: "Large", kind: "food" })}
                           />
                         </View>
                       </View>
                       {list.length > 1 ? (
                         <Pressable
                           accessibilityRole="button"
-                          accessibilityLabel="Remove"
+                          accessibilityLabel="Remove meal item"
                           hitSlop={10}
-                          onPress={() => removeMealRow(meal, i)}
+                          onPress={() => removeMealRow(meal, index)}
                         >
                           <FlareLucideIcon icon={FLARE_CHROME_LUCIDE.delete} size={20} color={c.textMuted} />
                         </Pressable>
@@ -588,7 +587,7 @@ export function SymptomLogWizardScreen({ user }: { user: SessionUser }) {
               onPress={() => {
                 setForm((p) => ({
                   ...p,
-                  [meal]: [...p[meal], { food: "", quantity: "" }],
+                  [meal]: [...p[meal], { food: "", quantity: "", kind: "food" }],
                 }));
               }}
               style={[styles.addFoodButton, { borderColor: c.inputBorder }]}
@@ -599,38 +598,26 @@ export function SymptomLogWizardScreen({ user }: { user: SessionUser }) {
 
             <SectionLabel>DRINKS</SectionLabel>
             <Card noPadding style={{ paddingVertical: SPACING.sm, paddingHorizontal: SPACING.md }}>
-              {drinkItems.length === 0 ? (
+              {drinkEntries.length === 0 ? (
                 <Text style={[styles.emptyText, { color: c.textSecondary, fontFamily: TYPOGRAPHY.fontFamily.regular }]}>No drinks added yet</Text>
               ) : (
-                drinkItems.map((item, originalIndex) => {
-                  const i = list.findIndex((row) => row === item);
+                drinkEntries.map(({ item, index }, originalIndex) => {
                   return (
                     <View
-                      key={i}
+                      key={index}
                       style={[styles.mealFoodRow, originalIndex > 0 && styles.mealFoodRowBorder, { borderTopColor: c.cardBorder }]}
                     >
                       <View style={styles.mealRowContent}>
                         <View style={styles.mealRowTop}>
                           <FlareTextInput
                             value={item.food}
-                            onChangeText={(t) => {
-                              setForm((p) => ({
-                                ...p,
-                                [meal]: p[meal].map((row, j) => (j === i ? { ...row, food: t } : row)),
-                              }));
-                            }}
+                            onChangeText={(t) => patchRow(index, { food: t, kind: "drink" })}
                             placeholder="Drink name"
                             style={styles.mealNameInput}
                           />
                           <FlareTextInput
-                            value={item.quantity.replace(" ml", "")}
-                            onChangeText={(t) => {
-                              const numericValue = t.replace(/[^0-9]/g, "");
-                              setForm((p) => ({
-                                ...p,
-                                [meal]: p[meal].map((row, j) => (j === i ? { ...row, quantity: `${numericValue} ml` } : row)),
-                              }));
-                            }}
+                            value={drinkAmountInputValue(item.quantity)}
+                            onChangeText={(t) => patchRow(index, { quantity: drinkQuantityFromInput(t), kind: "drink" })}
                             placeholder="ml"
                             keyboardType="number-pad"
                             style={styles.mealAmountInputSmall}
@@ -640,41 +627,26 @@ export function SymptomLogWizardScreen({ user }: { user: SessionUser }) {
                           <OptionChip
                             label="250 ml"
                             selected={item.quantity === "250 ml"}
-                            onPress={() => {
-                              setForm((p) => ({
-                                ...p,
-                                [meal]: p[meal].map((row, j) => (j === i ? { ...row, quantity: "250 ml" } : row)),
-                              }));
-                            }}
+                            onPress={() => patchRow(index, { quantity: "250 ml", kind: "drink" })}
                           />
                           <OptionChip
                             label="330 ml"
                             selected={item.quantity === "330 ml"}
-                            onPress={() => {
-                              setForm((p) => ({
-                                ...p,
-                                [meal]: p[meal].map((row, j) => (j === i ? { ...row, quantity: "330 ml" } : row)),
-                              }));
-                            }}
+                            onPress={() => patchRow(index, { quantity: "330 ml", kind: "drink" })}
                           />
                           <OptionChip
                             label="500 ml"
                             selected={item.quantity === "500 ml"}
-                            onPress={() => {
-                              setForm((p) => ({
-                                ...p,
-                                [meal]: p[meal].map((row, j) => (j === i ? { ...row, quantity: "500 ml" } : row)),
-                              }));
-                            }}
+                            onPress={() => patchRow(index, { quantity: "500 ml", kind: "drink" })}
                           />
                         </View>
                       </View>
                       {list.length > 1 ? (
                         <Pressable
                           accessibilityRole="button"
-                          accessibilityLabel="Remove"
+                          accessibilityLabel="Remove meal item"
                           hitSlop={10}
-                          onPress={() => removeMealRow(meal, i)}
+                          onPress={() => removeMealRow(meal, index)}
                         >
                           <FlareLucideIcon icon={FLARE_CHROME_LUCIDE.delete} size={20} color={c.textMuted} />
                         </Pressable>
@@ -689,7 +661,7 @@ export function SymptomLogWizardScreen({ user }: { user: SessionUser }) {
               onPress={() => {
                 setForm((p) => ({
                   ...p,
-                  [meal]: [...p[meal], { food: "", quantity: "250 ml" }],
+                  [meal]: [...p[meal], { food: "", quantity: "250 ml", kind: "drink" }],
                 }));
               }}
               style={[styles.addFoodButton, { borderColor: c.inputBorder }]}

@@ -27,6 +27,12 @@ const emptyDateErrors = (): DateErrorsState => ({
 
 const ALCOHOL_UNITS_RANGE_ERR = "Enter a number between 0 and 30";
 
+/** Blank, or only the drink unit left after the number is cleared. */
+function isMissingMealAmount(quantity: string): boolean {
+  const q = quantity.trim().toLowerCase();
+  return q === "" || q === "ml";
+}
+
 /** Web alcohol fields use min=0 max=30. Use after non-empty checks. */
 function isValidAlcoholUnits0To30(raw: string): boolean {
   const n = parseFloat(String(raw ?? "").trim());
@@ -273,7 +279,7 @@ export function symptomWizardTryAdvance(input: {
       return fail({ breakfast: "Please enter what you ate for breakfast or check \"I didn't eat anything\"" });
     }
     for (const meal of form.breakfast) {
-      if (meal.food.trim() && !meal.quantity.trim()) {
+      if (meal.food.trim() && isMissingMealAmount(meal.quantity)) {
         return fail({ breakfast: "Please enter an amount" });
       }
     }
@@ -285,7 +291,7 @@ export function symptomWizardTryAdvance(input: {
       return fail({ lunch: "Please enter what you ate for lunch or check \"I didn't eat anything\"" });
     }
     for (const meal of form.lunch) {
-      if (meal.food.trim() && !meal.quantity.trim()) {
+      if (meal.food.trim() && isMissingMealAmount(meal.quantity)) {
         return fail({ lunch: "Please enter an amount" });
       }
     }
@@ -297,7 +303,7 @@ export function symptomWizardTryAdvance(input: {
       return fail({ dinner: "Please enter what you ate for dinner or check \"I didn't eat anything\"" });
     }
     for (const meal of form.dinner) {
-      if (meal.food.trim() && !meal.quantity.trim()) {
+      if (meal.food.trim() && isMissingMealAmount(meal.quantity)) {
         return fail({ dinner: "Please enter an amount" });
       }
     }
