@@ -1188,6 +1188,7 @@ export function SymptomLogWizardScreen({ user }: { user: SessionUser }) {
           value={picker === "start" && form.symptomStartDate ? parseYmd(form.symptomStartDate) : picker === "end" && form.symptomEndDate ? parseYmd(form.symptomEndDate) : new Date()}
           mode="date"
           display={Platform.OS === "ios" ? "spinner" : "default"}
+          minimumDate={picker === "end" && form.symptomStartDate ? parseYmd(form.symptomStartDate) : undefined}
           maximumDate={new Date()}
           onChange={(event, d) => {
             if (Platform.OS === "android") {
