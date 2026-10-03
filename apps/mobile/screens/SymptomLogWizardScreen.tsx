@@ -513,7 +513,7 @@ export function SymptomLogWizardScreen({ user }: { user: SessionUser }) {
               <Text
                 style={{
                   color: c.textMuted,
-                  fontFamily: "Inter_600SemiBold",
+                  fontFamily: "Outfit_600SemiBold",
                   fontSize: FLARE_FONT_SIZE.caption,
                 }}
               >
@@ -538,7 +538,7 @@ export function SymptomLogWizardScreen({ user }: { user: SessionUser }) {
         }}
         style={styles.addItemLink}
       >
-        <Text style={{ color: c.primary, fontFamily: "Inter_700Bold", opacity: canAdd ? 1 : 0.45 }}>
+        <Text style={{ color: c.primary, fontFamily: "Outfit_700Bold", opacity: canAdd ? 1 : 0.45 }}>
           Add item
         </Text>
       </Pressable>
@@ -1109,7 +1109,7 @@ const styles = StyleSheet.create({
     marginBottom: 32,
   },
   landingTitle: {
-    fontFamily: "Inter_800ExtraBold",
+    fontFamily: "Outfit_700Bold",
     fontSize: 22,
     lineHeight: 28,
     marginBottom: 20,
@@ -1128,7 +1128,7 @@ const styles = StyleSheet.create({
     width: "100%",
   },
   landingCta: { width: "100%", paddingHorizontal: LANDING_CTA_SIDE_PAD, marginTop: 28 },
-  phaseLine: { fontSize: 13, marginBottom: 12, fontFamily: "Inter_500Medium" },
+  phaseLine: { fontSize: 13, marginBottom: 12, fontFamily: "Outfit_500Medium" },
   h3: { ...QUESTIONNAIRE_STEP_TITLE },
   rowGap: { ...QUESTIONNAIRE_STEP_OPTION_LIST },
   radioRow: { ...QUESTIONNAIRE_STEP_RADIO_ROW },

@@ -8,7 +8,7 @@ import React, { useCallback, useEffect, useLayoutEffect, useMemo, useRef, useSta
 import { Controller, useForm } from "react-hook-form";
 import { yupResolver } from "@hookform/resolvers/yup";
 import * as yup from "yup";
-import { useFonts, Inter_400Regular, Inter_500Medium, Inter_700Bold, Inter_800ExtraBold } from "@expo-google-fonts/inter";
+import { useFonts, Outfit_400Regular, Outfit_500Medium, Outfit_700Bold, Outfit_700Bold } from "@expo-google-fonts/inter";
 import { Outfit_400Regular, Outfit_500Medium, Outfit_600SemiBold, Outfit_700Bold } from "@expo-google-fonts/outfit";
 import { Ionicons } from "@expo/vector-icons";
 import {
@@ -363,7 +363,7 @@ function FlareBrandLockup({
           {
             color: nameColor,
             fontSize: nameSize,
-            fontFamily: nameWeight === "extrabold" ? "Inter_800ExtraBold" : "Inter_700Bold",
+            fontFamily: nameWeight === "extrabold" ? "Outfit_700Bold" : "Outfit_700Bold",
           },
         ]}
       >
@@ -5241,10 +5241,10 @@ function AppRoot() {
   /** While Auth finishes OTP/Google handoff, ignore onAuthStateChange setUser (prevents splash blink). */
   const authSessionHandoffRef = useRef(false);
   const [fontsLoaded] = useFonts({
-    Inter_400Regular,
-    Inter_500Medium,
-    Inter_700Bold,
-    Inter_800ExtraBold,
+    Outfit_400Regular,
+    Outfit_500Medium,
+    Outfit_700Bold,
+    Outfit_700Bold,
     Outfit_400Regular,
     Outfit_500Medium,
     Outfit_600SemiBold,
@@ -5669,7 +5669,7 @@ const styles = StyleSheet.create({
   },
   homeSwipeHintText: {
     fontSize: 13,
-    fontFamily: "Inter_400Regular",
+    fontFamily: "Outfit_400Regular",
     textAlign: "center",
   },
   homePagerDots: {
@@ -5722,12 +5722,12 @@ const styles = StyleSheet.create({
     paddingBottom: WIZARD_LANDING_BLOCK_PADDING_BOTTOM,
   },
   authLogo: { width: 92, height: 92 },
-  authBrandName: { fontSize: 28, fontFamily: "Inter_400Regular" },
+  authBrandName: { fontSize: 28, fontFamily: "Outfit_400Regular" },
   authBrandTagline: {
     textAlign: "center",
     fontSize: 16,
     lineHeight: 22,
-    fontFamily: "Inter_400Regular",
+    fontFamily: "Outfit_400Regular",
     paddingHorizontal: 8,
   },
   authCardPlain: { flex: 1, paddingHorizontal: 0 },
@@ -5746,7 +5746,7 @@ const styles = StyleSheet.create({
   flareBrandLockupName: {
     textAlign: "center",
     fontSize: 28,
-    fontFamily: "Inter_700Bold",
+    fontFamily: "Outfit_700Bold",
     flexShrink: 0,
   },
   /** Brand sits tight above tagline / step title (landing + email/code/Almost there). */
@@ -5755,7 +5755,7 @@ const styles = StyleSheet.create({
     textAlign: "center",
     fontSize: 16,
     lineHeight: 24,
-    fontFamily: "Inter_400Regular",
+    fontFamily: "Outfit_400Regular",
     /** Section air above CTAs — matches `authSecureNote` below. */
     marginBottom: 28,
   },
@@ -5770,23 +5770,23 @@ const styles = StyleSheet.create({
   authQuickUnlockActions: { width: "100%", alignItems: "center", paddingBottom: 8, zIndex: 0 },
   authQuickUnlock: { alignItems: "center", gap: 12 },
   authFingerprintDisc: { width: 72, height: 72, borderRadius: 36, alignItems: "center", justifyContent: "center" },
-  authQuickUnlockLabel: { fontSize: 14, fontFamily: "Inter_500Medium", textAlign: "center" },
+  authQuickUnlockLabel: { fontSize: 14, fontFamily: "Outfit_500Medium", textAlign: "center" },
   /** Same metrics as lock-screen Sign out so fingerprint Y matches when that link isn’t present. */
   authQuickUnlockFooterSlot: { alignSelf: "center", marginTop: 14, paddingVertical: 6 },
-  authQuickUnlockFooterSlotText: { fontSize: 14, fontFamily: "Inter_500Medium" },
+  authQuickUnlockFooterSlotText: { fontSize: 14, fontFamily: "Outfit_500Medium" },
   authSheetContent: { paddingTop: 8, paddingBottom: 8 },
   /** Neutralize the full-screen panels' `flex: 1` centering when hosted in the slide-up sheet. */
   authSheetPanel: { flex: 0, justifyContent: "flex-start" },
   authLegalSheetBody: { paddingTop: 12, paddingBottom: 20, gap: 24 },
-  authLegalSheetTitle: { fontSize: 20, fontFamily: "Inter_700Bold", textAlign: "center" },
+  authLegalSheetTitle: { fontSize: 20, fontFamily: "Outfit_700Bold", textAlign: "center" },
   authLegalSheetCopy: {
     fontSize: 14,
     lineHeight: 22,
-    fontFamily: "Inter_400Regular",
+    fontFamily: "Outfit_400Regular",
     textAlign: "center",
     paddingHorizontal: 4,
   },
-  authLegalLink: { fontFamily: "Inter_600SemiBold" },
+  authLegalLink: { fontFamily: "Outfit_600SemiBold" },
   legalModalRoot: { flex: 1 },
   legalModalHeader: {
     flexDirection: "row",
@@ -5796,24 +5796,24 @@ const styles = StyleSheet.create({
     paddingVertical: 12,
     borderBottomWidth: StyleSheet.hairlineWidth,
   },
-  legalModalTitle: { fontSize: 17, fontFamily: "Inter_700Bold" },
+  legalModalTitle: { fontSize: 17, fontFamily: "Outfit_700Bold" },
   legalModalScroll: { flex: 1 },
   legalModalScrollContent: { paddingHorizontal: 16, paddingTop: 16 },
   /** Same section air as tagline → CTAs. */
   authSecureNote: { flexDirection: "row", alignItems: "center", justifyContent: "center", gap: 6, marginTop: 28 },
-  authSecureNoteText: { fontSize: 13, lineHeight: 18, fontFamily: "Inter_400Regular" },
+  authSecureNoteText: { fontSize: 13, lineHeight: 18, fontFamily: "Outfit_400Regular" },
   /** Email / code / Almost there titles — real title weight, smaller than landing Flarecare (26). */
   authPromptTitle: {
     textAlign: "center",
     fontSize: 22,
     lineHeight: 28,
-    fontFamily: "Inter_700Bold",
+    fontFamily: "Outfit_700Bold",
   },
   authPromptSub: {
     textAlign: "center",
     fontSize: 15,
     lineHeight: 22,
-    fontFamily: "Inter_400Regular",
+    fontFamily: "Outfit_400Regular",
     marginTop: 8,
   },
   /** Gap under support before the email/code field. */
@@ -5821,15 +5821,15 @@ const styles = StyleSheet.create({
   authOtpCountdown: {
     textAlign: "center",
     fontSize: 13,
-    fontFamily: "Inter_400Regular",
+    fontFamily: "Outfit_400Regular",
     marginTop: 4,
   },
   authOtpResendPressable: { alignSelf: "center", marginTop: 10, paddingVertical: 4 },
-  authOtpResendLabel: { fontSize: 14, fontFamily: "Inter_500Medium", textAlign: "center" },
+  authOtpResendLabel: { fontSize: 14, fontFamily: "Outfit_500Medium", textAlign: "center" },
   authOtpLimitMessage: {
     textAlign: "center",
     fontSize: 13,
-    fontFamily: "Inter_400Regular",
+    fontFamily: "Outfit_400Regular",
     marginTop: 10,
     lineHeight: 18,
   },
@@ -5856,7 +5856,7 @@ const styles = StyleSheet.create({
   cardBodyCompact: { gap: 0 },
   cardTitle: {
     fontSize: 18,
-    fontFamily: "Inter_700Bold",
+    fontFamily: "Outfit_700Bold",
     textAlign: "left",
     alignSelf: "stretch",
     marginBottom: 12,
@@ -5994,8 +5994,8 @@ const styles = StyleSheet.create({
     marginTop: SECTION_TITLE_MARGIN_TOP,
     textAlign: "left",
   },
-  text: { fontSize: 14, fontFamily: "Inter_400Regular" },
-  muted: { fontSize: 13, fontFamily: "Inter_400Regular" },
+  text: { fontSize: 14, fontFamily: "Outfit_400Regular" },
+  muted: { fontSize: 13, fontFamily: "Outfit_400Regular" },
   remindersSetupBlock: { gap: 12, marginTop: 16 },
   remindersStatusLoading: { alignItems: "center", marginTop: 20, paddingVertical: 8 },
   remindersSetupStep: { gap: 10, marginTop: 16 },
@@ -6007,7 +6007,7 @@ const styles = StyleSheet.create({
   remindersStatusRow: { flexDirection: "row", alignItems: "flex-start" },
   remindersStatusSubtitle: {
     fontSize: 14,
-    fontFamily: "Inter_400Regular",
+    fontFamily: "Outfit_400Regular",
     lineHeight: 20,
     marginTop: 4,
   },
@@ -6020,7 +6020,7 @@ const styles = StyleSheet.create({
   },
   notificationHelpStepList: { gap: 6 },
   notificationHelpStepRow: { flexDirection: "row", alignItems: "flex-start" },
-  notificationHelpStepBullet: { fontSize: 13, lineHeight: 20, marginRight: 8, fontFamily: "Inter_700Bold" },
+  notificationHelpStepBullet: { fontSize: 13, lineHeight: 20, marginRight: 8, fontFamily: "Outfit_700Bold" },
   notificationHelpStepText: { flex: 1, fontSize: 13, lineHeight: 20 },
   helpCardIntro: { fontSize: 13, lineHeight: 20 },
   notificationHelpEmphasis: { fontStyle: "italic" },
@@ -6041,7 +6041,7 @@ const styles = StyleSheet.create({
   helpSectionToggleMark: {
     fontSize: 20,
     lineHeight: 20,
-    fontFamily: "Inter_400Regular",
+    fontFamily: "Outfit_400Regular",
     minWidth: 20,
     textAlign: "center",
   },
@@ -6057,7 +6057,7 @@ const styles = StyleSheet.create({
   remindersGuideLink: {
     ...HELP_NAV_LINK_LABEL,
   },
-  bigText: { fontSize: 30, fontFamily: "Inter_700Bold", marginBottom: 8 },
+  bigText: { fontSize: 30, fontFamily: "Outfit_700Bold", marginBottom: 8 },
   headerIconButton: {
     width: 34,
     height: 34,
@@ -6104,7 +6104,7 @@ const styles = StyleSheet.create({
     borderTopWidth: StyleSheet.hairlineWidth,
   },
   bottomTabItem: { flex: 1, alignItems: "center", justifyContent: "center", gap: 3, paddingVertical: 4 },
-  bottomTabLabel: { fontSize: 11, fontFamily: "Inter_500Medium" },
+  bottomTabLabel: { fontSize: 11, fontFamily: "Outfit_500Medium" },
   accountIdentityRow: { flexDirection: "row", alignItems: "center", flex: 1, minWidth: 0 },
   accountIdentityNavRow: {
     flexDirection: "row",
@@ -6142,9 +6142,9 @@ const styles = StyleSheet.create({
     marginRight: 14,
   },
   accountIdentityTextCol: { flex: 1, minWidth: 0 },
-  accountFirstName: { fontSize: 14, fontFamily: "Inter_500Medium" },
-  accountEmailLine: { fontSize: FLARE_FONT_SIZE.muted, fontFamily: "Inter_400Regular", marginTop: 3 },
-  accountMemberSince: { fontSize: 13, fontFamily: "Inter_400Regular", marginTop: 6 },
+  accountFirstName: { fontSize: 14, fontFamily: "Outfit_500Medium" },
+  accountEmailLine: { fontSize: FLARE_FONT_SIZE.muted, fontFamily: "Outfit_400Regular", marginTop: 3 },
+  accountMemberSince: { fontSize: 13, fontFamily: "Outfit_400Regular", marginTop: 6 },
   accountNavRow: {
     flexDirection: "row",
     alignItems: "center",
@@ -6200,7 +6200,7 @@ const styles = StyleSheet.create({
     justifyContent: "center",
     alignSelf: "stretch",
   },
-  appearanceChipText: { fontSize: 14, fontFamily: "Inter_700Bold" },
+  appearanceChipText: { fontSize: 14, fontFamily: "Outfit_700Bold" },
   row: { flexDirection: "row", alignItems: "center", justifyContent: "space-between", gap: 8, marginBottom: 8 },
   reportBox: {
     minHeight: 130,
@@ -6235,26 +6235,26 @@ const styles = StyleSheet.create({
   },
   weatherIcon: { fontSize: 24 },
   weatherLeft: { flex: 1, paddingRight: 8 },
-  weatherCity: { fontSize: FLARE_FONT_SIZE.muted, fontFamily: "Inter_500Medium" },
+  weatherCity: { fontSize: FLARE_FONT_SIZE.muted, fontFamily: "Outfit_500Medium" },
   weatherGreeting: {
     flex: 1,
     fontSize: 21,
-    fontFamily: "Inter_800ExtraBold",
+    fontFamily: "Outfit_700Bold",
     paddingRight: 8,
     marginLeft: 8,
   },
   weatherDate: {
     fontSize: FLARE_FONT_SIZE.caption,
     lineHeight: FLARE_LINE_HEIGHT.caption,
-    fontFamily: "Inter_400Regular",
+    fontFamily: "Outfit_400Regular",
     marginRight: 12,
     flexShrink: 0,
     textAlign: "right",
   },
-  weatherDesc: { fontSize: FLARE_FONT_SIZE.muted, fontFamily: "Inter_400Regular", textTransform: "capitalize" },
+  weatherDesc: { fontSize: FLARE_FONT_SIZE.muted, fontFamily: "Outfit_400Regular", textTransform: "capitalize" },
   weatherTempWrap: { flexDirection: "row", alignItems: "flex-start", marginRight: 8 },
-  weatherTemp: { fontSize: 30, fontFamily: "Inter_800ExtraBold" },
-  weatherUnit: { fontSize: 12, fontFamily: "Inter_700Bold", marginTop: 6, marginLeft: 2 },
+  weatherTemp: { fontSize: 30, fontFamily: "Outfit_700Bold" },
+  weatherUnit: { fontSize: 12, fontFamily: "Outfit_700Bold", marginTop: 6, marginLeft: 2 },
   checkinSection: {},
   /** Daily Check-in + Tools grid — shared tile shell. */
   homeDashboardTile: {
@@ -6291,7 +6291,7 @@ const styles = StyleSheet.create({
   moreGrid: { flexDirection: "row", flexWrap: "wrap", gap: HOME_TILE_GAP },
   moreGridLabel: {
     fontSize: 13,
-    fontFamily: "Inter_500Medium",
+    fontFamily: "Outfit_500Medium",
     textAlign: "center",
     lineHeight: 18,
     width: "100%",
@@ -6302,8 +6302,8 @@ const styles = StyleSheet.create({
     justifyContent: "space-between",
   },
   summaryWebLeft: { flexDirection: "row", alignItems: "center", flex: 1, paddingRight: 8 },
-  summaryWebLabel: { fontSize: 14, fontFamily: "Inter_400Regular", flex: 1 },
-  summaryWebValue: { fontSize: 14, fontFamily: "Inter_500Medium" },
+  summaryWebLabel: { fontSize: 14, fontFamily: "Outfit_400Regular", flex: 1 },
+  summaryWebValue: { fontSize: 14, fontFamily: "Outfit_500Medium" },
   activityListWrap: {
     borderRadius: 10,
     overflow: "hidden",
@@ -6311,7 +6311,7 @@ const styles = StyleSheet.create({
   /** After today’s list — away from Daily Check-in title band. */
   activityNoteRowDivider: { borderBottomWidth: 1 },
   aboutTagline: {
-    fontFamily: "Inter_400Regular",
+    fontFamily: "Outfit_400Regular",
     fontSize: 13,
     textAlign: "left",
     lineHeight: 20,
@@ -6321,7 +6321,7 @@ const styles = StyleSheet.create({
   ibdSubsectionTitle: {
     fontSize: FLARE_FONT_SIZE.body,
     lineHeight: FLARE_LINE_HEIGHT.body,
-    fontFamily: "Inter_700Bold",
+    fontFamily: "Outfit_700Bold",
     textAlign: "left",
     marginTop: 16,
     marginBottom: 10,
@@ -6332,7 +6332,7 @@ const styles = StyleSheet.create({
   guideAccordionSubhead: {
     fontSize: FLARE_FONT_SIZE.body,
     lineHeight: FLARE_LINE_HEIGHT.body,
-    fontFamily: "Inter_700Bold",
+    fontFamily: "Outfit_700Bold",
     textAlign: "left",
   },
   ibdAtWorkLinkRow: {
@@ -6349,7 +6349,7 @@ const styles = StyleSheet.create({
   infoSectionContentEnd: { marginBottom: 0 },
   ibdBulletList: { gap: 8 },
   ibdBulletRow: { flexDirection: "row", alignItems: "flex-start" },
-  ibdBulletDot: { fontSize: 14, lineHeight: 20, marginRight: 8, fontFamily: "Inter_700Bold" },
+  ibdBulletDot: { fontSize: 14, lineHeight: 20, marginRight: 8, fontFamily: "Outfit_700Bold" },
   ibdBulletText: { flex: 1, fontSize: 13, lineHeight: 20 },
   ibdCheckList: { gap: 8 },
   ibdCheckRow: { flexDirection: "row", alignItems: "flex-start" },
@@ -6362,7 +6362,7 @@ const styles = StyleSheet.create({
   aboutSupportButton: { alignSelf: "flex-start", marginTop: 10, paddingVertical: 10, paddingHorizontal: 4 },
   aboutSupportButtonPressed: { opacity: 0.75 },
   aboutSupportButtonText: {
-    fontFamily: "Inter_400Regular",
+    fontFamily: "Outfit_400Regular",
     fontSize: 13,
     lineHeight: 20,
   },
@@ -6375,7 +6375,7 @@ const styles = StyleSheet.create({
     paddingVertical: 14,
     paddingHorizontal: 12,
   },
-  moreNavRowLabel: { fontSize: 14, fontFamily: "Inter_400Regular", flex: 1, paddingRight: 10 },
+  moreNavRowLabel: { fontSize: 14, fontFamily: "Outfit_400Regular", flex: 1, paddingRight: 10 },
   headerTitleWithHint: {
     flexDirection: "row",
     alignItems: "center",
@@ -6395,8 +6395,8 @@ const styles = StyleSheet.create({
     paddingVertical: 12,
     paddingHorizontal: 12,
   },
-  recentLogsRowDate: { fontSize: 14, fontFamily: "Inter_500Medium" },
-  recentLogsRowTime: { fontSize: 12, fontFamily: "Inter_400Regular" },
+  recentLogsRowDate: { fontSize: 14, fontFamily: "Outfit_500Medium" },
+  recentLogsRowTime: { fontSize: 12, fontFamily: "Outfit_400Regular" },
   recentLogsEmpty: { alignItems: "center", paddingVertical: 16, paddingHorizontal: 8 },
   recentLogsEmptyCta: { marginTop: 8 },
   /** Logged-at line above symptom detail review cards. */
