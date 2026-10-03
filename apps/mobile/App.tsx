@@ -4091,7 +4091,6 @@ function AccountSecurityScreen() {
   useEffect(() => {
     let cancelled = false;
     void (async () => {
-      // Disk hydrate is faster than hardware probes — paint the real card ASAP.
       const hydrated = await hydrateBioLockCacheFromStorage();
       if (!cancelled && hydrated) {
         setBioAvailable(hydrated.available);
@@ -4132,52 +4131,41 @@ function AccountSecurityScreen() {
     : "Set up Face ID or fingerprint recognition in your device settings to use this.";
 
   return (
-    <ScrollView
-      style={[styles.screen, { backgroundColor: c.screen }]}
-      contentContainerStyle={[styles.accountScrollContent, { paddingBottom: bottomScrollInset + 24 }]}
-    >
-      <LogHistoryCard style={{ padding: CARD_INNER_PADDING + 2, gap: 10 }}>
-        <Text style={[styles.settingsCardSectionLabel, { color: c.textMuted }]}>App lock</Text>
-        {bioReady ? (
-          <View style={styles.settingToggleRow}>
-            <View style={styles.settingToggleTextCol}>
-              <View style={styles.settingToggleTitleRow}>
-                <FlareLucideIcon icon={FLARE_CHROME_LUCIDE.fingerprint} size={16} color={c.text} />
-                <Text
-                  style={[
-                    styles.settingToggleTitle,
-                    styles.settingsCardTitle,
-                    styles.settingToggleTitleBesideIcon,
-                    { color: c.text },
-                  ]}
-                >
-                  {unlockTitle}
+    <View style={[styles.screen, { backgroundColor: c.screen }]}>
+      <ScrollView
+        style={styles.scroll}
+        contentContainerStyle={[styles.scrollContent, { paddingBottom: bottomScrollInset + 24 }]}
+      >
+        <Card>
+          {bioReady ? (
+            <View style={styles.settingRow}>
+              <View style={styles.settingTextCol}>
+                <View style={styles.settingTitleRow}>
+                  <FlareLucideIcon icon={FLARE_CHROME_LUCIDE.fingerprint} size={16} color={c.text} />
+                  <Text style={[styles.settingTitle, { color: c.text, fontFamily: TYPOGRAPHY.fontFamily.semibold }]}>
+                    {unlockTitle}
+                  </Text>
+                </View>
+                <Text style={[styles.settingHint, { color: c.textSecondary, fontFamily: TYPOGRAPHY.fontFamily.regular }]}>
+                  {unlockHint}
                 </Text>
               </View>
-              <Text
-                style={[
-                  styles.settingToggleHint,
-                  styles.settingsCardHint,
-                  styles.settingToggleHintBesideIcon,
-                  { color: c.textMuted },
-                ]}
-              >
-                {unlockHint}
-              </Text>
+              <Switch
+                value={bioOn}
+                onValueChange={toggleBio}
+                disabled={!bioAvailable}
+                trackColor={{ true: c.primary, false: c.appearanceChipInactiveBg }}
+                thumbColor={c.white}
+              />
             </View>
-            <Switch
-              value={bioOn}
-              onValueChange={toggleBio}
-              disabled={!bioAvailable}
-              trackColor={{ true: c.primary, false: c.appearanceChipInactiveBg }}
-              thumbColor={c.white}
-            />
-          </View>
-        ) : (
-          <View style={styles.securityTogglePlaceholder} />
-        )}
-      </LogHistoryCard>
-    </ScrollView>
+          ) : (
+            <View style={styles.securityTogglePlaceholder}>
+              <ActivityIndicator color={c.primary} />
+            </View>
+          )}
+        </Card>
+      </ScrollView>
+    </View>
   );
 }
 
