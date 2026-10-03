@@ -2,14 +2,11 @@ import { useNavigation, useRoute } from "@react-navigation/native";
 import React, { useCallback, useMemo, useState } from "react";
 import { ActivityIndicator, Share, StyleSheet, Text, View } from "react-native";
 import { PrimaryButton, SecondaryButton } from "../components/FlareButton";
-import { FlareScreenSectionTitle } from "../components/FlareScreenSectionTitle";
+import { SectionLabel } from "../components/MidnightLagoonSectionLabel";
+import { Card } from "../components/MidnightLagoonCard";
+import { TrayRow } from "../components/MidnightLagoonTray";
 import { AppointmentBriefScrollScreen } from "../components/AppointmentBriefScrollScreen";
 import { flareFieldErrorStyle } from "../components/FlareInput";
-import {
-  buildBrowseLogRowItem,
-  LogHistoryCard,
-  LogHistoryList,
-} from "../components/LogHistoryList";
 import {
   formatAppointmentBriefText,
   formatBriefPeriodChoiceLabel,
@@ -18,13 +15,7 @@ import {
 import { formatUkDate } from "../lib/formatUkDate";
 import { withAppLockExternalUi } from "../lib/biometricLock";
 import { useAppointmentBrief } from "../lib/useAppointmentBrief";
-import {
-  ACCOUNT_LIST_ROW_PADDING,
-  CARD_INNER_PADDING,
-  FLARE_FONT_FAMILY,
-  FLARE_FONT_SIZE,
-  FLARE_LINE_HEIGHT,
-} from "../lib/layoutConstants";
+import { SPACING, TYPOGRAPHY } from "../designTokens";
 import { useFlareColors } from "../theme";
 import { AppointmentBriefEmailSheet } from "./AppointmentBriefEmailSheet";
 
@@ -65,24 +56,24 @@ export function AppointmentBriefResultScreen({ user }: { user: SessionUser }) {
   const navItems = useMemo(() => {
     if (!brief) return [];
     return [
-      buildBrowseLogRowItem({
+      {
         id: "health",
         title: "Health Overview",
         subtitle: "Symptoms, bowel, weight, medications",
         accessibilityLabel: "Health Overview",
-      }),
-      buildBrowseLogRowItem({
+      },
+      {
         id: "next",
         title: "Next Appointment",
         subtitle: nextSubtitle,
         accessibilityLabel: "Next Appointment",
-      }),
-      buildBrowseLogRowItem({
+      },
+      {
         id: "changes",
         title: "What Changed",
         subtitle: `${brief.talkingPoints.length} talking point${brief.talkingPoints.length === 1 ? "" : "s"}`,
         accessibilityLabel: "What Changed",
-      }),
+      },
     ];
   }, [brief, nextSubtitle]);
 
@@ -101,36 +92,40 @@ export function AppointmentBriefResultScreen({ user }: { user: SessionUser }) {
         {loading ? (
           <View style={styles.loadingWrap}>
             <ActivityIndicator color={c.primary} />
-            <Text style={[styles.muted, { color: c.textMuted }]}>Building summary…</Text>
+            <Text style={[styles.muted, { color: c.textMuted, fontFamily: TYPOGRAPHY.fontFamily.regular }]}>Building summary…</Text>
           </View>
         ) : error ? (
           <Text style={errTextStyle}>{error}</Text>
         ) : brief ? (
           <>
-            <LogHistoryCard style={{ gap: CARD_INNER_PADDING }}>
-              {[
-                <View key="period" style={styles.periodHeader}>
-                  <FlareScreenSectionTitle inCard>{periodChoiceLabel}</FlareScreenSectionTitle>
-                  {customDateRange ? (
-                    <Text style={[styles.customDateRange, { color: c.textMuted }]}>{customDateRange}</Text>
-                  ) : null}
-                </View>,
-                <LogHistoryList
-                  key="nav"
-                  items={navItems}
-                  onPressItem={onPressNavItem}
-                  rowPaddingHorizontal={ACCOUNT_LIST_ROW_PADDING}
-                />,
-                <View key="actions" style={styles.actionRow}>
-                  <View style={styles.actionSlot}>
-                    <PrimaryButton title="Share" onPress={handleShare} noTopMargin />
-                  </View>
-                  <View style={styles.actionSlot}>
-                    <SecondaryButton title="Email" onPress={() => setEmailOpen(true)} noTopMargin />
-                  </View>
-                </View>,
-              ]}
-            </LogHistoryCard>
+            <View style={styles.periodHeader}>
+              <SectionLabel text={periodChoiceLabel} />
+              {customDateRange ? (
+                <Text style={[styles.customDateRange, { color: c.textSecondary, fontFamily: TYPOGRAPHY.fontFamily.regular }]}>{customDateRange}</Text>
+              ) : null}
+            </View>
+
+            <Card noPadding style={{ paddingVertical: SPACING.sm, paddingHorizontal: SPACING.md }}>
+              {navItems.map((item, index) => (
+                <TrayRow
+                  key={item.id}
+                  label={item.title}
+                  value={item.subtitle}
+                  onPress={() => onPressNavItem(item.id)}
+                  isFirst={index === 0}
+                  isLast={index === navItems.length - 1}
+                />
+              ))}
+            </Card>
+
+            <View style={styles.actionRow}>
+              <View style={styles.actionSlot}>
+                <PrimaryButton title="Share" onPress={handleShare} noTopMargin />
+              </View>
+              <View style={styles.actionSlot}>
+                <SecondaryButton title="Email" onPress={() => setEmailOpen(true)} noTopMargin />
+              </View>
+            </View>
           </>
         ) : null}
       </AppointmentBriefScrollScreen>
@@ -141,15 +136,28 @@ export function AppointmentBriefResultScreen({ user }: { user: SessionUser }) {
 }
 
 const styles = StyleSheet.create({
-  periodHeader: { gap: 4 },
-  customDateRange: {
-    fontSize: FLARE_FONT_SIZE.caption,
-    fontFamily: FLARE_FONT_FAMILY.regular,
-    lineHeight: FLARE_LINE_HEIGHT.caption,
+  periodHeader: {
+    gap: SPACING.xs,
   },
-  loadingWrap: { alignItems: "center", paddingVertical: 32, gap: 12 },
-  muted: { fontSize: FLARE_FONT_SIZE.body, fontFamily: FLARE_FONT_FAMILY.regular },
-  /** Same in-card CTA inset as My Meds detail — card gap only, no extra marginTop. */
-  actionRow: { flexDirection: "row", gap: 8 },
-  actionSlot: { flex: 1, minWidth: 0 },
+  customDateRange: {
+    fontSize: TYPOGRAPHY.fontSize.sm,
+    paddingHorizontal: SPACING.screen,
+  },
+  loadingWrap: {
+    alignItems: "center",
+    paddingVertical: SPACING.xl,
+    gap: SPACING.md,
+  },
+  muted: {
+    fontSize: TYPOGRAPHY.fontSize.md,
+  },
+  actionRow: {
+    flexDirection: "row",
+    gap: SPACING.sm,
+    marginTop: SPACING.lg,
+  },
+  actionSlot: {
+    flex: 1,
+    minWidth: 0,
+  },
 });
