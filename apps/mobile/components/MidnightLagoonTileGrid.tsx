@@ -17,6 +17,9 @@ type TileGridProps = {
 export function TileGrid({ tiles, columns = 3 }: TileGridProps) {
   const colors = useFlareColors();
 
+  // Calculate tile width: (100% - gaps) / columns
+  const tileWidthPercentage = columns === 3 ? `31%` : `48%`;
+
   return (
     <View style={[styles.grid, columns === 2 && styles.grid2]}>
       {tiles.map((tile, index) => (
@@ -25,7 +28,11 @@ export function TileGrid({ tiles, columns = 3 }: TileGridProps) {
           onPress={tile.onPress}
           style={({ pressed }) => [
             styles.tile,
-            { backgroundColor: colors.tray, opacity: pressed ? 0.7 : 1 },
+            { 
+              backgroundColor: colors.tray, 
+              opacity: pressed ? 0.7 : 1,
+              width: tileWidthPercentage,
+            },
           ]}
           accessibilityRole="button"
         >
@@ -66,8 +73,6 @@ const styles = StyleSheet.create({
     alignItems: "center",
     justifyContent: "center",
     minHeight: 70,
-    flex: 1,
-    minWidth: "30%",
   },
   iconTile: {
     width: DIMENSIONS.iconTile,
