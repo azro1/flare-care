@@ -239,6 +239,10 @@ import { MedicationDetailScreen } from "./screens/MedicationDetailScreen";
 import { MedicationsScreen } from "./screens/MedicationsScreen";
 import { WeightLogDetailScreen } from "./screens/WeightLogDetailScreen";
 import { WeightScreen } from "./screens/WeightScreen";
+import { TodayScreen } from "./screens/TodayScreen";
+import { TrackScreen } from "./screens/TrackScreen";
+import { CareScreen } from "./screens/CareScreen";
+import { MeScreen } from "./screens/MeScreen";
 import { OutputLogDetailScreen } from "./screens/OutputLogDetailScreen";
 import { OutputScreen } from "./screens/OutputScreen";
 import { IntakeLogDetailScreen } from "./screens/IntakeLogDetailScreen";
@@ -1591,6 +1595,10 @@ const HOME_DASHBOARD_TILE_HEIGHT = 116;
 
 /** Show bottom shortcuts on tab roots + reminder-adjacent hubs; hide on wizard/detail flows, etc. */
 const BOTTOM_BAR_VISIBLE_ROUTES = new Set([
+  "Today",
+  "Track",
+  "Care",
+  "Me",
   "Dashboard",
   "Account",
   "Logs",
@@ -4562,21 +4570,20 @@ function MainBottomTabBar({
     return null;
   }
 
-  const go = (target: "Dashboard" | "Trends" | "Logs" | "Account") => {
+  const go = (target: "Today" | "Track" | "Care" | "Me") => {
     navigationRef?.navigate(target as never);
   };
 
   const item = (
-    target: "Dashboard" | "Trends" | "Logs" | "Account",
+    target: "Today" | "Track" | "Care" | "Me",
     icon: ({ active }: { active: boolean }) => React.ReactNode,
     label: string,
   ) => {
     const active =
       routeName === target ||
-      (target === "Logs" &&
-        (routeName === "SymptomHistory" || routeName === "MedicationTrackingHistory" || routeName === "Wellbeing")) ||
-      (target === "Dashboard" &&
-        (routeName === "Meds" ||
+      (target === "Today" &&
+        (routeName === "Dashboard" ||
+          routeName === "Meds" ||
           routeName === "Appointments" ||
           routeName === "AppointmentsPast" ||
           routeName === "LatestNews" ||
@@ -4589,7 +4596,13 @@ function MainBottomTabBar({
           routeName === "MedicalSupplies" ||
           routeName === "MedicalSuppliesSetup" ||
           routeName === "MedicalSupplyRequest" ||
-          routeName === "MedicalSupplyOrder"));
+          routeName === "MedicalSupplyOrder")) ||
+      (target === "Track" &&
+        (routeName === "Trends" ||
+          routeName === "SymptomHistory" ||
+          routeName === "MedicationTrackingHistory" ||
+          routeName === "Wellbeing")) ||
+      (target === "Me" && routeName === "Account");
     return (
       <Pressable
         key={target}
@@ -4617,12 +4630,12 @@ function MainBottomTabBar({
       <FlareLucideIcon
         icon={FLARE_TAB_LUCIDE.delete}
         size={FLARE_TAB_LUCIDE_SIZE}
-        color={selectionChrome.deleteDisabled ? colors.textMuted : c.destructiveFill}
+        color={selectionChrome.deleteDisabled ? colors.textSecondary : c.destructiveFill}
       />
       <Text
         style={[
           styles.bottomTabLabel,
-          { color: selectionChrome.deleteDisabled ? colors.textMuted : c.destructiveFill },
+          { color: selectionChrome.deleteDisabled ? colors.textSecondary : c.destructiveFill },
         ]}
       >
         Delete
@@ -4630,52 +4643,52 @@ function MainBottomTabBar({
     </Pressable>
   ) : (
     item(
-      "Account",
+      "Me",
       ({ active }) => (
         <FlareLucideIcon
-          icon={FLARE_TAB_LUCIDE.account}
+          icon={FLARE_TAB_LUCIDE.me}
           size={FLARE_TAB_LUCIDE_SIZE}
-          color={active ? colors.primary : colors.textMuted}
+          color={active ? colors.primary : colors.textSecondary}
         />
       ),
-      "Account",
+      "Me",
     )
   );
 
   return (
-    <View style={[styles.bottomTabBarWrap, { backgroundColor: c.screen, borderTopColor: c.cardBorder, paddingBottom: Math.max(insets.bottom, 10) }]}>
+    <View style={[styles.bottomTabBarWrap, { backgroundColor: c.card, borderTopColor: c.cardBorder, paddingBottom: Math.max(insets.bottom, 10) }]}>
       {item(
-        "Dashboard",
+        "Today",
         ({ active }) => (
           <FlareLucideIcon
-            icon={FLARE_TAB_LUCIDE.home}
+            icon={FLARE_TAB_LUCIDE.today}
             size={FLARE_TAB_LUCIDE_SIZE}
-            color={active ? colors.primary : colors.textMuted}
+            color={active ? colors.primary : colors.textSecondary}
           />
         ),
-        "Home",
+        "Today",
       )}
       {item(
-        "Trends",
+        "Track",
         ({ active }) => (
           <FlareLucideIcon
-            icon={FLARE_TAB_LUCIDE.trends}
+            icon={FLARE_TAB_LUCIDE.track}
             size={FLARE_TAB_LUCIDE_SIZE}
-            color={active ? colors.primary : colors.textMuted}
+            color={active ? colors.primary : colors.textSecondary}
           />
         ),
-        "Trends",
+        "Track",
       )}
       {item(
-        "Logs",
+        "Care",
         ({ active }) => (
           <FlareLucideIcon
-            icon={FLARE_TAB_LUCIDE.logs}
+            icon={FLARE_TAB_LUCIDE.care}
             size={FLARE_TAB_LUCIDE_SIZE}
-            color={active ? colors.primary : colors.textMuted}
+            color={active ? colors.primary : colors.textSecondary}
           />
         ),
-        "Logs",
+        "Care",
       )}
       {deleteSlot}
     </View>
@@ -5075,7 +5088,19 @@ function AppTabs({
       <ListSelectionChromeProvider>
         <View style={{ flex: 1, backgroundColor: colors.screen }}>
           <View style={{ flex: 1 }}>
-            <AppStack.Navigator initialRouteName="Dashboard" screenOptions={headerOptions as any}>
+            <AppStack.Navigator initialRouteName="Today" screenOptions={headerOptions as any}>
+            <AppStack.Screen name="Today">
+              {() => <TodayScreen key={user.id} user={user} />}
+            </AppStack.Screen>
+            <AppStack.Screen name="Track">
+              {() => <TrackScreen key={user.id} user={user} />}
+            </AppStack.Screen>
+            <AppStack.Screen name="Care">
+              {() => <CareScreen key={user.id} user={user} />}
+            </AppStack.Screen>
+            <AppStack.Screen name="Me">
+              {() => <MeScreen key={user.id} user={user} onLogout={onLogout} />}
+            </AppStack.Screen>
             <AppStack.Screen name="Dashboard">
               {() => <DashboardScreen key={user.id} user={user} />}
             </AppStack.Screen>

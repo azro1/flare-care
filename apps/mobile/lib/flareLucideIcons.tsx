@@ -62,6 +62,14 @@ import {
   Wrench,
   X,
   Clock,
+  Activity,
+  Heart,
+  LogOut,
+  Briefcase,
+  MapPin,
+  Shield,
+  CreditCard,
+  Settings,
   type LucideIcon,
 } from "lucide-react-native";
 
@@ -104,6 +112,10 @@ export type FlareFeatureLucideKey = keyof typeof FLARE_FEATURE_LUCIDE;
 
 /** Bottom nav — Lucide outline only (active = primary color, not a filled glyph). */
 export const FLARE_TAB_LUCIDE = {
+  today: House,
+  track: Activity,
+  care: Heart,
+  me: CircleUser,
   home: House,
   trends: TrendingUp,
   logs: List,
@@ -129,14 +141,11 @@ export const FLARE_CHROME_LUCIDE = {
   checkCircle: CircleCheck,
   circle: Circle,
   edit: SquarePen,
-  /** Row actions (e.g. Going Out custom items) — same glyphs as edit/delete. */
   rowEdit: SquarePen,
   rowDelete: Trash2,
   delete: Trash2,
   add: Plus,
-  /** Header help — ? (opens modal). */
   info: CircleHelp,
-  /** Inline tip callout — i-in-circle (NHS-style tray trial). */
   infoCircle: Info,
   lock: Lock,
   newspaper: Newspaper,
@@ -152,9 +161,16 @@ export const FLARE_CHROME_LUCIDE = {
   mail: Mail,
   sun: Sun,
   moon: Moon,
-  /** Expandable tray — open / close. */
   expandOpen: Expand,
   expandClose: Shrink,
+  logOut: LogOut,
+  briefcase: Briefcase,
+  mapPin: MapPin,
+  shield: Shield,
+  card: CreditCard,
+  settings: Settings,
+  help: CircleHelp,
+  bell: Bell,
 } as const;
 
 /**
