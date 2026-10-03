@@ -47,13 +47,23 @@ export const SYMPTOM_WIZARD_REVIEW_STEP = 17;
 /** Review card sections — `basic` spans duration + severity/stress (wizard steps 1–5). */
 export type SymptomReviewSectionId = "basic" | "bathroom" | "lifestyle" | "meals" | "notes";
 
+/** Permanent section labels - single source of truth for both progress tracker and Review screen */
+export const SYMPTOM_WIZARD_SECTION_LABELS = {
+  basic: "Basic Information",
+  bathroom: "Bathroom Frequency",
+  lifestyle: "Lifestyle",
+  meals: "Meals",
+  notes: "Notes",
+  review: "Review",
+} as const;
+
 export const SYMPTOM_WIZARD_PHASES = [
-  { id: "basic", label: "Basic Information", firstStep: 1, lastStep: 5 },
-  { id: "bathroom", label: "Bathroom Frequency", firstStep: 6, lastStep: 8 },
-  { id: "lifestyle", label: "Lifestyle", firstStep: 9, lastStep: 12 },
-  { id: "meals", label: "Meals", firstStep: 13, lastStep: 15 },
-  { id: "notes", label: "Notes", firstStep: 16, lastStep: 16 },
-  { id: "review", label: "Review", firstStep: 17, lastStep: 17 },
+  { id: "basic", label: SYMPTOM_WIZARD_SECTION_LABELS.basic, firstStep: 1, lastStep: 5 },
+  { id: "bathroom", label: SYMPTOM_WIZARD_SECTION_LABELS.bathroom, firstStep: 6, lastStep: 8 },
+  { id: "lifestyle", label: SYMPTOM_WIZARD_SECTION_LABELS.lifestyle, firstStep: 9, lastStep: 12 },
+  { id: "meals", label: SYMPTOM_WIZARD_SECTION_LABELS.meals, firstStep: 13, lastStep: 15 },
+  { id: "notes", label: SYMPTOM_WIZARD_SECTION_LABELS.notes, firstStep: 16, lastStep: 16 },
+  { id: "review", label: SYMPTOM_WIZARD_SECTION_LABELS.review, firstStep: 17, lastStep: 17 },
 ] as const;
 
 export function getSymptomWizardPhasesFiltered(isFirstTimeUser: boolean, userPreferences: UserPreferencesShape | null) {

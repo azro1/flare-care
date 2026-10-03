@@ -47,6 +47,7 @@ import {
   resolveAlcoholStep12Phase,
   resolveSmokingStep10Phase,
   SYMPTOM_WIZARD_REVIEW_STEP,
+  SYMPTOM_WIZARD_SECTION_LABELS,
   symptomLogRowToForm,
   type SymptomReviewSectionId,
   SEVERITY_WORD_OPTIONS,
@@ -1046,7 +1047,7 @@ export function SymptomLogWizardScreen({ user }: { user: SessionUser }) {
             <View style={styles.reviewSection}>
               <View style={styles.reviewSectionHeader}>
                 <Text style={[styles.reviewSectionLabel, { color: c.textSecondary, fontFamily: TYPOGRAPHY.fontFamily.semibold }]}>
-                  BASIC INFORMATION
+                  {SYMPTOM_WIZARD_SECTION_LABELS.basic.toUpperCase()}
                 </Text>
                 <Pressable accessibilityRole="button" onPress={() => openReviewEdit("basic")} hitSlop={10}>
                   <FlareLucideIcon icon={FLARE_CHROME_LUCIDE.edit} size={16} color={c.textMuted} />
@@ -1065,7 +1066,7 @@ export function SymptomLogWizardScreen({ user }: { user: SessionUser }) {
             <View style={styles.reviewSection}>
               <View style={styles.reviewSectionHeader}>
                 <Text style={[styles.reviewSectionLabel, { color: c.textSecondary, fontFamily: TYPOGRAPHY.fontFamily.semibold }]}>
-                  BATHROOM FREQUENCY
+                  {SYMPTOM_WIZARD_SECTION_LABELS.bathroom.toUpperCase()}
                 </Text>
                 <Pressable accessibilityRole="button" onPress={() => openReviewEdit("bathroom")} hitSlop={10}>
                   <FlareLucideIcon icon={FLARE_CHROME_LUCIDE.edit} size={16} color={c.textMuted} />
@@ -1084,7 +1085,9 @@ export function SymptomLogWizardScreen({ user }: { user: SessionUser }) {
             {showLifestyleReview && reviewLifestyleFields.length > 0 ? (
               <View style={styles.reviewSection}>
                 <View style={styles.reviewSectionHeader}>
-                  <Text style={[styles.reviewSectionLabel, { color: c.textSecondary, fontFamily: TYPOGRAPHY.fontFamily.semibold }]}>LIFESTYLE</Text>
+                  <Text style={[styles.reviewSectionLabel, { color: c.textSecondary, fontFamily: TYPOGRAPHY.fontFamily.semibold }]}>
+                    {SYMPTOM_WIZARD_SECTION_LABELS.lifestyle.toUpperCase()}
+                  </Text>
                   <Pressable accessibilityRole="button" onPress={() => openReviewEdit("lifestyle")} hitSlop={10}>
                     <FlareLucideIcon icon={FLARE_CHROME_LUCIDE.edit} size={16} color={c.textMuted} />
                   </Pressable>
@@ -1103,7 +1106,9 @@ export function SymptomLogWizardScreen({ user }: { user: SessionUser }) {
             {mealReviewEntries.length > 0 ? (
               <View style={styles.reviewSection}>
                 <View style={styles.reviewSectionHeader}>
-                  <Text style={[styles.reviewSectionLabel, { color: c.textSecondary, fontFamily: TYPOGRAPHY.fontFamily.semibold }]}>MEALS</Text>
+                  <Text style={[styles.reviewSectionLabel, { color: c.textSecondary, fontFamily: TYPOGRAPHY.fontFamily.semibold }]}>
+                    {SYMPTOM_WIZARD_SECTION_LABELS.meals.toUpperCase()}
+                  </Text>
                   <Pressable accessibilityRole="button" onPress={() => openReviewEdit("meals")} hitSlop={10}>
                     <FlareLucideIcon icon={FLARE_CHROME_LUCIDE.edit} size={16} color={c.textMuted} />
                   </Pressable>
@@ -1130,7 +1135,9 @@ export function SymptomLogWizardScreen({ user }: { user: SessionUser }) {
             {form.notes.trim() ? (
               <View style={styles.reviewSection}>
                 <View style={styles.reviewSectionHeader}>
-                  <Text style={[styles.reviewSectionLabel, { color: c.textSecondary, fontFamily: TYPOGRAPHY.fontFamily.semibold }]}>NOTES</Text>
+                  <Text style={[styles.reviewSectionLabel, { color: c.textSecondary, fontFamily: TYPOGRAPHY.fontFamily.semibold }]}>
+                    {SYMPTOM_WIZARD_SECTION_LABELS.notes.toUpperCase()}
+                  </Text>
                   <Pressable accessibilityRole="button" onPress={() => openReviewEdit("notes")} hitSlop={10}>
                     <FlareLucideIcon icon={FLARE_CHROME_LUCIDE.edit} size={16} color={c.textMuted} />
                   </Pressable>
