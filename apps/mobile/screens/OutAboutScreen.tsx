@@ -3,17 +3,17 @@
  * Going Out (prep) + Find a Toilet (in-the-moment).
  */
 import React from "react";
-import { Pressable, ScrollView, StyleSheet, Text, View } from "react-native";
+import { Pressable, StyleSheet, Text, View } from "react-native";
+import { ScrollView } from "../lib/scrollViews";
 import { useNavigation } from "@react-navigation/native";
-import { LogHistoryCard } from "../components/LogHistoryList";
-import { FLARE_CHROME_LUCIDE, FlareLucideIcon } from "../lib/flareLucideIcons";
+import { Card } from "../components/MidnightLagoonCard";
+import { TrayRow } from "../components/MidnightLagoonTray";
+import { ScreenHeader } from "../components/MidnightLagoonScreenHeader";
+import { FlareLucideIcon } from "../lib/flareLucideIcons";
 import { FIND_TOILET_ICON } from "../lib/findToiletShared";
 import { GOING_OUT_ICON } from "../lib/goingOutShared";
 import { SPACING, TYPOGRAPHY } from "../designTokens";
 import {
-  CARD_INNER_PADDING,
-  HOME_FEATURE_TILE_ICON_SIZE,
-  NAV_ROW_CHEVRON_SIZE,
   SCREEN_EDGE_PADDING,
   bottomTabBarScrollInset,
 } from "../lib/layoutConstants";
@@ -27,68 +27,39 @@ export function OutAboutScreen() {
   const bottomScrollInset = bottomTabBarScrollInset(insets.bottom);
 
   return (
-    <ScrollView
-      style={[styles.screen, { backgroundColor: c.screen }]}
-      contentContainerStyle={[styles.content, { paddingBottom: bottomScrollInset + 16 }]}
-    >
-      <LogHistoryCard style={{ padding: CARD_INNER_PADDING + 2 }}>
-        <Pressable
-          accessibilityRole="button"
-          accessibilityLabel="Open Going Out"
-          onPress={() => navigation.navigate("GoingOut")}
-          style={styles.row}
-        >
-          <FlareLucideIcon icon={GOING_OUT_ICON} size={HOME_FEATURE_TILE_ICON_SIZE} color={c.primary} />
-          <View style={styles.textCol}>
-            <Text style={[styles.title, { color: c.text }]}>Going Out</Text>
-            <Text style={[styles.hint, { color: c.textMuted }]}>
-              Your prep checklist when you leave the house
-            </Text>
-          </View>
-          <FlareLucideIcon icon={FLARE_CHROME_LUCIDE.forward} size={NAV_ROW_CHEVRON_SIZE} color={c.text} />
-        </Pressable>
-      </LogHistoryCard>
+    <View style={[styles.screen, { backgroundColor: c.screen }]}>
+      <ScrollView
+        style={styles.scroll}
+        contentContainerStyle={[styles.content, { paddingBottom: bottomScrollInset + 16 }]}
+      >
+        <ScreenHeader title="Out & About" />
 
-      <LogHistoryCard style={{ padding: CARD_INNER_PADDING + 2 }}>
-        <Pressable
-          accessibilityRole="button"
-          accessibilityLabel="Open Find a Toilet"
-          onPress={() => navigation.navigate("FindToilet")}
-          style={styles.row}
-        >
-          <FlareLucideIcon icon={FIND_TOILET_ICON} size={HOME_FEATURE_TILE_ICON_SIZE} color={c.primary} />
-          <View style={styles.textCol}>
-            <Text style={[styles.title, { color: c.text }]}>Find a Toilet</Text>
-            <Text style={[styles.hint, { color: c.textMuted }]}>
-              Find a toilet when you need one
-            </Text>
-          </View>
-          <FlareLucideIcon icon={FLARE_CHROME_LUCIDE.forward} size={NAV_ROW_CHEVRON_SIZE} color={c.text} />
-        </Pressable>
-      </LogHistoryCard>
-    </ScrollView>
+        <Card noPadding style={{ paddingVertical: SPACING.sm, paddingHorizontal: SPACING.md }}>
+          <TrayRow
+            icon={GOING_OUT_ICON}
+            label="Going Out"
+            value="Your prep checklist"
+            showChevron
+            onPress={() => navigation.navigate("GoingOut")}
+          />
+          <TrayRow
+            icon={FIND_TOILET_ICON}
+            label="Find a Toilet"
+            value="Find a toilet near you"
+            showChevron
+            onPress={() => navigation.navigate("FindToilet")}
+          />
+        </Card>
+      </ScrollView>
+    </View>
   );
 }
 
 const styles = StyleSheet.create({
   screen: { flex: 1 },
+  scroll: { flex: 1 },
   content: {
     paddingHorizontal: SCREEN_EDGE_PADDING,
-    paddingTop: 8,
-  },
-  row: {
-    flexDirection: "row",
-    alignItems: "center",
-    paddingVertical: 12,
-    gap: 10,
-  },
-  textCol: { flex: 1, gap: SPACING.xxs },
-  title: {
-    fontSize: TYPOGRAPHY.fontSize.cardTitle,
-    fontFamily: TYPOGRAPHY.fontFamily.bold,
-  },
-  hint: {
-    fontSize: TYPOGRAPHY.fontSize.sm,
-    fontFamily: TYPOGRAPHY.fontFamily.regular,
+    paddingTop: SPACING.lg,
   },
 });
