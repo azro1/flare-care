@@ -227,7 +227,7 @@ const styles = StyleSheet.create({
   scroll: { flex: 1 },
   scrollContent: {
     paddingHorizontal: SPACING.screen,
-    paddingTop: 56,
+    paddingTop: SPACING.lg,
   },
   centered: {
     flex: 1,
