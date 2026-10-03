@@ -1393,7 +1393,7 @@ const styles = StyleSheet.create({
   },
   mealRowContent: {
     flex: 1,
-    gap: SPACING.xs,
+    gap: SPACING.md,
   },
   mealRowTop: {
     flexDirection: "row",
