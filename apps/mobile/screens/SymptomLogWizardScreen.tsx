@@ -568,6 +568,16 @@ export function SymptomLogWizardScreen({ user }: { user: SessionUser }) {
                           />
                         </View>
                       </View>
+                      {list.length > 1 ? (
+                        <Pressable
+                          accessibilityRole="button"
+                          accessibilityLabel="Remove"
+                          hitSlop={10}
+                          onPress={() => removeMealRow(meal, i)}
+                        >
+                          <FlareLucideIcon icon={FLARE_CHROME_LUCIDE.delete} size={20} color={c.textMuted} />
+                        </Pressable>
+                      ) : null}
                     </View>
                   );
                 })
@@ -618,7 +628,7 @@ export function SymptomLogWizardScreen({ user }: { user: SessionUser }) {
                               const numericValue = t.replace(/[^0-9]/g, "");
                               setForm((p) => ({
                                 ...p,
-                                [meal]: p[meal].map((row, j) => (j === i ? { ...row, quantity: numericValue ? `${numericValue} ml` : "" } : row)),
+                                [meal]: p[meal].map((row, j) => (j === i ? { ...row, quantity: `${numericValue} ml` } : row)),
                               }));
                             }}
                             placeholder="ml"
@@ -659,6 +669,16 @@ export function SymptomLogWizardScreen({ user }: { user: SessionUser }) {
                           />
                         </View>
                       </View>
+                      {list.length > 1 ? (
+                        <Pressable
+                          accessibilityRole="button"
+                          accessibilityLabel="Remove"
+                          hitSlop={10}
+                          onPress={() => removeMealRow(meal, i)}
+                        >
+                          <FlareLucideIcon icon={FLARE_CHROME_LUCIDE.delete} size={20} color={c.textMuted} />
+                        </Pressable>
+                      ) : null}
                     </View>
                   );
                 })
