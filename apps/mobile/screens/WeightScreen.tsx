@@ -1,9 +1,10 @@
-import { FLARE_CHROME_LUCIDE, FlareLucideIcon } from "../lib/flareLucideIcons";
+import { FLARE_CHROME_LUCIDE, FlareLucideIcon, FLARE_FEATURE_LUCIDE } from "../lib/flareLucideIcons";
 import DateTimePicker from "@react-native-community/datetimepicker";
 import { useFocusEffect, useNavigation } from "@react-navigation/native";
 import React, { useCallback, useMemo, useRef, useState } from "react";
 import {
-    InteractionManager,
+  ActivityIndicator,
+  InteractionManager,
   KeyboardAvoidingView,
   Modal,
   Platform,
@@ -18,19 +19,10 @@ import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { PrimaryButton, SecondaryButton } from "../components/FlareButton";
 import { flareFieldErrorStyle, FlareTextInput, FLARE_INPUT_BORDER_RADIUS } from "../components/FlareInput";
 import { FlareScreenSectionTitle } from "../components/FlareScreenSectionTitle";
-import {
-  LogHistoryCard,
-  LogHistoryListLoading,
-  LogHistoryEmptyState,
-  LogHistoryPreviewList,
-  LOG_HISTORY_LOAD_MORE_BATCH,
-  buildTimestampLogRowItem,
-  logHistoryCardStyles,
-  LogHistoryListQuietPlaceholder,
-} from "../components/LogHistoryList";
+import { Card } from "../components/MidnightLagoonCard";
+import { TrayRow } from "../components/MidnightLagoonTray";
+import { ScreenHeader } from "../components/MidnightLagoonScreenHeader";
 import { ConfirmModal } from "../components/ConfirmModal";
-import { InfoHintButton } from "../components/InfoHintButton";
-import { InstructionScreenShell } from "../components/InstructionScreenShell";
 import { TrackerThumbFab, useTrackerThumbFabLayout } from "../components/TrackerThumbFab";
 import { STACKED_DETAIL_ROW_EDGE } from "../components/StackedDetailField";
 import { invalidateDashboardSnapshot } from "../lib/dashboardSnapshotCache";
@@ -39,6 +31,7 @@ import { useLogListSelection } from "../lib/useLogListSelection";
 import { usePaginatedLogList } from "../lib/paginatedLogList";
 import { useDeferredListLoading } from "../lib/useDeferredListLoading";
 import { formatUkDate } from "../lib/formatUkDate";
+import { SPACING, TYPOGRAPHY, RADIUS } from "../designTokens";
 import {
   FLARE_FONT_FAMILY,
   FLARE_FONT_SIZE,
@@ -60,6 +53,7 @@ import {
   type WeightFormState,
   type WeightRow,
 } from "../lib/weightShared";
+import { LOG_HISTORY_LOAD_MORE_BATCH } from "../components/LogHistoryList";
 import { supabase, TABLES } from "../lib/supabase";
 import { useFlareColors } from "../theme";
 
@@ -224,8 +218,7 @@ export function WeightScreen({ user }: { user: SessionUser }) {
   const c = useFlareColors();
   const navigation = useNavigation<any>();
   const insets = useSafeAreaInsets();
-  const tabBarClearance = bottomTabBarHeight(insets.bottom);
-  const { scrollBottomPad } = useTrackerThumbFabLayout(tabBarClearance);
+  const { fabBottom, fabRight } = useTrackerThumbFabLayout();
 
   const {
     rows: historyRows,
@@ -257,16 +250,6 @@ export function WeightScreen({ user }: { user: SessionUser }) {
   const [sheetOpen, setSheetOpen] = useState(false);
 
   const weightItemIds = useMemo(() => historyRows.map((row) => String(row.id)), [historyRows]);
-  const renderWeightHint = useCallback(
-    () => (
-      <InfoHintButton
-        title="My Weight"
-        message="Log your weight regularly to help build a clearer picture of your health over time."
-        accessibilityLabel="About My Weight"
-      />
-    ),
-    [],
-  );
   const {
     selectionMode,
     selectedIds,
@@ -281,7 +264,7 @@ export function WeightScreen({ user }: { user: SessionUser }) {
     itemIds: weightItemIds,
     navigation,
     headerTitle: "My Weight",
-    renderIdleHeaderRight: renderWeightHint,
+    renderIdleHeaderRight: undefined,
   });
 
   const handleBulkDeleteConfirm = useCallback(() => {
@@ -335,11 +318,7 @@ export function WeightScreen({ user }: { user: SessionUser }) {
     try {
       const payload = weightPayloadFromForm(values);
       if (editingId) {
-        const { error } = await supabase
-          .from(TABLES.TRACK_WEIGHT)
-          .update(payload)
-          .eq("id", editingId)
-          .eq("user_id", user.id);
+        const { error } = await supabase.from(TABLES.TRACK_WEIGHT).update(payload).eq("id", editingId).eq("user_id", user.id);
         if (error) throw error;
         await recordRecentActivityEvent(user.id, "weight-updated");
       } else {
@@ -360,85 +339,114 @@ export function WeightScreen({ user }: { user: SessionUser }) {
   const listInitialLoad = historyLoading && historyRows.length === 0;
   const showListLoading = useDeferredListLoading(listInitialLoad);
   const historyEmpty = !historyLoading && historyTotalCount === 0;
-  const scrollBottomPadTotal = selectionMode ? tabBarClearance : scrollBottomPad;
+  const showFab = !selectionMode;
 
   return (
-    <InstructionScreenShell
-      showInstruction={false}
-      contentPaddingBottom={scrollBottomPadTotal}
-      instruction={null}
-      floatingAction={
-        !selectionMode ? (
-          <TrackerThumbFab
-            accessibilityLabel="Log weight"
-            onPress={openNewLog}
-            tabBarClearance={tabBarClearance}
-          />
-        ) : null
-      }
-      footer={
-        <>
-          <ConfirmModal
-            visible={bulkDeleteOpen}
-            title={selectedIds.size === 1 ? "Delete weight entry?" : `Delete ${selectedIds.size} weight entries?`}
-            message="This action cannot be undone."
-            confirmLabel={bulkDeleting ? "Deleting…" : "Delete"}
-            confirmDestructive
-            onConfirm={handleBulkDeleteConfirm}
-            onCancel={() => setBulkDeleteOpen(false)}
-          />
-          {sheetOpen ? (
-            <WeightLogSheet
-              visible={sheetOpen}
-              editingId={editingId}
-              initialValues={form}
-              saving={saving}
-              saveError={saveError}
-              onClose={closeSheet}
-              onSave={handleSave}
-            />
-          ) : null}
-        </>
-      }
-    >
-      <LogHistoryCard>
-        <View style={logHistoryCardStyles.trackerCardBody}>
+    <>
+      <View style={[styles.screen, { backgroundColor: c.screen }]}>
+        <ScrollView
+          style={styles.scroll}
+          contentContainerStyle={[styles.scrollContent, { paddingBottom: showFab ? fabBottom + 80 : Math.max(insets.bottom, 16) + 24 }]}
+        >
+          <ScreenHeader title="My Weight" />
+
           {showListLoading ? (
-            <LogHistoryListLoading />
-          ) : listInitialLoad ? (
-            <LogHistoryListQuietPlaceholder />
+            <View style={styles.loadingWrap}>
+              <ActivityIndicator size="small" color={c.primary} />
+            </View>
           ) : historyEmpty ? (
-            <LogHistoryEmptyState icon={WEIGHT_FEATURE_ICON} />
+            <Card>
+              <View style={styles.emptyWrap}>
+                <FlareLucideIcon icon={WEIGHT_FEATURE_ICON} size={40} color={c.textSecondary} />
+                <Text style={[styles.emptyText, { color: c.textSecondary, fontFamily: TYPOGRAPHY.fontFamily.regular }]}>
+                  No weight entries yet.
+                </Text>
+              </View>
+            </Card>
           ) : (
-            <LogHistoryPreviewList
-              items={historyRows.map((row) =>
-                buildTimestampLogRowItem({
-                  id: String(row.id),
-                  title: formatWeightKg(row.value_kg),
-                  whenIso: row.created_at,
-                  accessibilityLabel: `${formatUkDate(row.date)}. ${formatWeightKg(row.value_kg)}. View details`,
-                }),
-              )}
-              visibleCount={historyVisibleCount}
-              hasMore={historyHasMore}
-              loadingMore={historyLoadingMore}
-              loadMoreLabel="load more"
-              onLoadMore={() => void loadMoreHistory()}
-              rowTextLayout="default"
-              onPressItem={(logId) => navigation.navigate("WeightLogDetail", { id: logId })}
-              selectionMode={selectionMode}
-              selectedIds={selectedIds}
-              onToggleSelect={toggleSelect}
-              onLongPressItem={enterSelectionWith}
-            />
+            <>
+              <Card noPadding style={{ paddingVertical: SPACING.sm, paddingHorizontal: SPACING.md }}>
+                {historyRows.map((row) => {
+                  const timestamp = new Date(row.date).toLocaleDateString("en-GB", {
+                    day: "numeric",
+                    month: "short",
+                  });
+                  return (
+                    <TrayRow
+                      key={row.id}
+                      icon={FLARE_FEATURE_LUCIDE.weight}
+                      label={formatWeightKg(row.value_kg)}
+                      value={timestamp}
+                      showChevron
+                      onPress={() => navigation.navigate("WeightLogDetail", { id: String(row.id) })}
+                      onLongPress={selectionMode ? undefined : () => enterSelectionWith(String(row.id))}
+                    />
+                  );
+                })}
+              </Card>
+
+              {historyHasMore ? (
+                <Pressable
+                  accessibilityRole="button"
+                  onPress={() => void loadMoreHistory()}
+                  style={({ pressed }) => [styles.loadMore, pressed && { opacity: 0.7 }]}
+                >
+                  <Text style={[styles.loadMoreText, { color: c.primary, fontFamily: TYPOGRAPHY.fontFamily.medium }]}>
+                    {historyLoadingMore ? "loading…" : "load more"}
+                  </Text>
+                </Pressable>
+              ) : null}
+            </>
           )}
-        </View>
-      </LogHistoryCard>
-    </InstructionScreenShell>
+        </ScrollView>
+
+        {showFab ? <TrackerThumbFab accessibilityLabel="Log weight" onPress={openNewLog} bottom={fabBottom} right={fabRight} /> : null}
+      </View>
+
+      <ConfirmModal
+        visible={bulkDeleteOpen}
+        title={selectedIds.size === 1 ? "Delete entry?" : `Delete ${selectedIds.size} entries?`}
+        message="This action cannot be undone."
+        confirmLabel={bulkDeleting ? "Deleting…" : "Delete"}
+        confirmDanger
+        onConfirm={handleBulkDeleteConfirm}
+        onCancel={() => setBulkDeleteOpen(false)}
+      />
+
+      {sheetOpen ? (
+        <WeightLogSheet visible={sheetOpen} editingId={editingId} initialValues={form} saving={saving} saveError={saveError} onClose={closeSheet} onSave={handleSave} />
+      ) : null}
+    </>
   );
 }
 
 const styles = StyleSheet.create({
+  screen: { flex: 1 },
+  scroll: { flex: 1 },
+  scrollContent: {
+    paddingHorizontal: SPACING.screen,
+    paddingTop: SPACING.lg,
+  },
+  loadingWrap: {
+    paddingVertical: 24,
+    alignItems: "center",
+  },
+  emptyWrap: {
+    alignItems: "center",
+    paddingVertical: SPACING.xl,
+    gap: SPACING.md,
+  },
+  emptyText: {
+    fontSize: TYPOGRAPHY.fontSize.md,
+    textAlign: "center",
+  },
+  loadMore: {
+    paddingVertical: SPACING.md,
+    alignItems: "center",
+  },
+  loadMoreText: {
+    fontSize: TYPOGRAPHY.fontSize.sm,
+  },
   sheetRoot: { flex: 1 },
   sheetHeader: {
     flexDirection: "row",
