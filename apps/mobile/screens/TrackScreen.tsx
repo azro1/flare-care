@@ -1,8 +1,8 @@
-import React, { useState } from "react";
-import { View, StyleSheet, Modal, Pressable, Text, Platform } from "react-native";
+import React, { useState, useEffect, useCallback } from "react";
+import { View, StyleSheet, Modal, Pressable, Text, Platform, ActivityIndicator } from "react-native";
 import DateTimePicker from "@react-native-community/datetimepicker";
 import { ScrollView } from "../lib/scrollViews";
-import { useNavigation } from "@react-navigation/native";
+import { useNavigation, useFocusEffect } from "@react-navigation/native";
 import { useFlareColors } from "../theme";
 import { SPACING, TYPOGRAPHY, RADIUS } from "../designTokens";
 import { Card } from "../components/MidnightLagoonCard";
@@ -13,12 +13,67 @@ import { SegmentedTabs } from "../components/MidnightLagoonSegmentedTabs";
 import { TileGrid } from "../components/MidnightLagoonTileGrid";
 import { PrimaryButton, SecondaryButton } from "../components/FlareButton";
 import { FlareLucideIcon, FLARE_FEATURE_LUCIDE, FLARE_CHROME_LUCIDE } from "../lib/flareLucideIcons";
-import type { SessionUser } from "../lib/supabase";
+import { supabase, TABLES } from "../lib/supabase";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
+import { formatUkDate } from "../lib/formatUkDate";
+
+type SessionUser = { id: string };
 
 type TrackScreenProps = {
   user: SessionUser;
 };
+
+type LogEntry = {
+  id: string;
+  type: string;
+  label: string;
+  time: string;
+  timestamp: string;
+};
+
+type SummaryStats = {
+  symptomsCount: number;
+  bowelCount: number;
+  hydrationTotal: number;
+  medicationsCount: number;
+};
+
+function getDateRange(period: string, customStart?: Date, customEnd?: Date): { start: Date; end: Date } {
+  const now = new Date();
+  const end = new Date(now.getFullYear(), now.getMonth(), now.getDate(), 23, 59, 59);
+  let start: Date;
+
+  switch (period) {
+    case "2weeks":
+      start = new Date(end);
+      start.setDate(start.getDate() - 14);
+      break;
+    case "4weeks":
+      start = new Date(end);
+      start.setDate(start.getDate() - 28);
+      break;
+    case "3months":
+      start = new Date(end);
+      start.setMonth(start.getMonth() - 3);
+      break;
+    case "custom":
+      if (customStart && customEnd) {
+        start = new Date(customStart.getFullYear(), customStart.getMonth(), customStart.getDate(), 0, 0, 0);
+        return {
+          start,
+          end: new Date(customEnd.getFullYear(), customEnd.getMonth(), customEnd.getDate(), 23, 59, 59),
+        };
+      }
+      start = new Date(end);
+      start.setDate(start.getDate() - 14);
+      break;
+    default:
+      start = new Date(end);
+      start.setDate(start.getDate() - 14);
+  }
+
+  return { start, end };
+}
 
 export function TrackScreen({ user }: TrackScreenProps) {
   const navigation = useNavigation<any>();
@@ -31,6 +86,144 @@ export function TrackScreen({ user }: TrackScreenProps) {
   const [customEndDate, setCustomEndDate] = useState(new Date());
   const [showStartPicker, setShowStartPicker] = useState(false);
   const [showEndPicker, setShowEndPicker] = useState(false);
+  const [loading, setLoading] = useState(true);
+  const [recentLogs, setRecentLogs] = useState<LogEntry[]>([]);
+  const [stats, setStats] = useState<SummaryStats>({
+    symptomsCount: 0,
+    bowelCount: 0,
+    hydrationTotal: 0,
+    medicationsCount: 0,
+  });
+
+  const loadTrackData = useCallback(async () => {
+    setLoading(true);
+    try {
+      const { start, end } = getDateRange(timePeriod, customStartDate, customEndDate);
+      const startIso = start.toISOString();
+      const endIso = end.toISOString();
+
+      // Fetch summary stats
+      const [symptomsRes, bowelRes, hydrationRes, medsRes] = await Promise.all([
+        supabase
+          .from(TABLES.LOG_SYMPTOMS)
+          .select("id", { count: "exact", head: true })
+          .eq("user_id", user.id)
+          .gte("added_at", startIso)
+          .lte("added_at", endIso),
+        supabase
+          .from(TABLES.BOWEL_MOVEMENTS)
+          .select("id", { count: "exact", head: true })
+          .eq("user_id", user.id)
+          .gte("added_at", startIso)
+          .lte("added_at", endIso),
+        supabase
+          .from(TABLES.DAILY_HYDRATION)
+          .select("amount_ml")
+          .eq("user_id", user.id)
+          .gte("added_at", startIso)
+          .lte("added_at", endIso),
+        supabase
+          .from(TABLES.LOG_MEDICATIONS)
+          .select("id", { count: "exact", head: true })
+          .eq("user_id", user.id)
+          .gte("added_at", startIso)
+          .lte("added_at", endIso),
+      ]);
+
+      const hydrationSum = (hydrationRes.data || []).reduce((sum, row) => sum + (row.amount_ml || 0), 0);
+
+      setStats({
+        symptomsCount: symptomsRes.count || 0,
+        bowelCount: bowelRes.count || 0,
+        hydrationTotal: hydrationSum,
+        medicationsCount: medsRes.count || 0,
+      });
+
+      // Fetch recent logs (last 10)
+      const recentEnd = new Date().toISOString();
+      const recentStart = new Date();
+      recentStart.setDate(recentStart.getDate() - 7);
+
+      const [symptomsLogs, bowelLogs, hydrationLogs] = await Promise.all([
+        supabase
+          .from(TABLES.LOG_SYMPTOMS)
+          .select("id, added_at, severity")
+          .eq("user_id", user.id)
+          .gte("added_at", recentStart.toISOString())
+          .lte("added_at", recentEnd)
+          .order("added_at", { ascending: false })
+          .limit(5),
+        supabase
+          .from(TABLES.BOWEL_MOVEMENTS)
+          .select("id, added_at, bristol_type")
+          .eq("user_id", user.id)
+          .gte("added_at", recentStart.toISOString())
+          .lte("added_at", recentEnd)
+          .order("added_at", { ascending: false })
+          .limit(5),
+        supabase
+          .from(TABLES.DAILY_HYDRATION)
+          .select("id, added_at, amount_ml")
+          .eq("user_id", user.id)
+          .gte("added_at", recentStart.toISOString())
+          .lte("added_at", recentEnd)
+          .order("added_at", { ascending: false })
+          .limit(5),
+      ]);
+
+      const allLogs: LogEntry[] = [];
+
+      (symptomsLogs.data || []).forEach((log) => {
+        const time = new Date(log.added_at);
+        allLogs.push({
+          id: `symptom-${log.id}`,
+          type: "symptom",
+          label: `Symptoms · ${log.severity || "Mild"}`,
+          time: time.toLocaleTimeString("en-GB", { hour: "2-digit", minute: "2-digit" }),
+          timestamp: log.added_at,
+        });
+      });
+
+      (bowelLogs.data || []).forEach((log) => {
+        const time = new Date(log.added_at);
+        allLogs.push({
+          id: `bowel-${log.id}`,
+          type: "bowel",
+          label: `Bowel · Type ${log.bristol_type || "4"}`,
+          time: time.toLocaleTimeString("en-GB", { hour: "2-digit", minute: "2-digit" }),
+          timestamp: log.added_at,
+        });
+      });
+
+      (hydrationLogs.data || []).forEach((log) => {
+        const time = new Date(log.added_at);
+        allLogs.push({
+          id: `hydration-${log.id}`,
+          type: "hydration",
+          label: `Hydration · ${log.amount_ml || 0}ml`,
+          time: time.toLocaleTimeString("en-GB", { hour: "2-digit", minute: "2-digit" }),
+          timestamp: log.added_at,
+        });
+      });
+
+      allLogs.sort((a, b) => new Date(b.timestamp).getTime() - new Date(a.timestamp).getTime());
+      setRecentLogs(allLogs.slice(0, 10));
+    } catch (error) {
+      console.error("Failed to load track data:", error);
+    } finally {
+      setLoading(false);
+    }
+  }, [timePeriod, customStartDate, customEndDate, user.id]);
+
+  useEffect(() => {
+    void loadTrackData();
+  }, [loadTrackData]);
+
+  useFocusEffect(
+    useCallback(() => {
+      void loadTrackData();
+    }, [loadTrackData]),
+  );
 
   const timeTabs = [
     { label: "2 weeks", value: "2weeks" },
@@ -57,6 +250,7 @@ export function TrackScreen({ user }: TrackScreenProps) {
     }
     setTimePeriod("custom");
     setCustomRangeOpen(false);
+    void loadTrackData();
   };
 
   const handleCancelCustomRange = () => {
@@ -91,10 +285,62 @@ export function TrackScreen({ user }: TrackScreenProps) {
         <ScreenHeader title="Track" />
         <SegmentedTabs tabs={timeTabs} activeValue={timePeriod} onChange={handleTabChange} />
 
-        <Card>
-          <View style={styles.entriesPlaceholder}>
-          </View>
-        </Card>
+        {loading ? (
+          <Card>
+            <View style={styles.loadingWrap}>
+              <ActivityIndicator size="small" color={colors.primary} />
+            </View>
+          </Card>
+        ) : (
+          <>
+            <Card>
+              <SectionLabel style={{ marginTop: 0 }}>Summary</SectionLabel>
+              <View style={styles.statsGrid}>
+                <View style={styles.statCard}>
+                  <Text style={[styles.statValue, { color: colors.text, fontFamily: TYPOGRAPHY.fontFamily.bold }]}>
+                    {stats.symptomsCount}
+                  </Text>
+                  <Text style={[styles.statLabel, { color: colors.textSecondary, fontFamily: TYPOGRAPHY.fontFamily.regular }]}>
+                    Symptoms
+                  </Text>
+                </View>
+                <View style={styles.statCard}>
+                  <Text style={[styles.statValue, { color: colors.text, fontFamily: TYPOGRAPHY.fontFamily.bold }]}>
+                    {stats.bowelCount}
+                  </Text>
+                  <Text style={[styles.statLabel, { color: colors.textSecondary, fontFamily: TYPOGRAPHY.fontFamily.regular }]}>
+                    Bowel
+                  </Text>
+                </View>
+                <View style={styles.statCard}>
+                  <Text style={[styles.statValue, { color: colors.text, fontFamily: TYPOGRAPHY.fontFamily.bold }]}>
+                    {Math.round(stats.hydrationTotal / 1000)}L
+                  </Text>
+                  <Text style={[styles.statLabel, { color: colors.textSecondary, fontFamily: TYPOGRAPHY.fontFamily.regular }]}>
+                    Hydration
+                  </Text>
+                </View>
+                <View style={styles.statCard}>
+                  <Text style={[styles.statValue, { color: colors.text, fontFamily: TYPOGRAPHY.fontFamily.bold }]}>
+                    {stats.medicationsCount}
+                  </Text>
+                  <Text style={[styles.statLabel, { color: colors.textSecondary, fontFamily: TYPOGRAPHY.fontFamily.regular }]}>
+                    Medications
+                  </Text>
+                </View>
+              </View>
+            </Card>
+
+            <Card>
+              <View style={styles.chartPlaceholder}>
+                <FlareLucideIcon icon={FLARE_CHROME_LUCIDE.briefcase} size={32} color={colors.textMuted} />
+                <Text style={[styles.chartText, { color: colors.textMuted, fontFamily: TYPOGRAPHY.fontFamily.regular }]}>
+                  Chart visualization
+                </Text>
+              </View>
+            </Card>
+          </>
+        )}
 
         <SectionLabel>Log something</SectionLabel>
 
@@ -102,17 +348,30 @@ export function TrackScreen({ user }: TrackScreenProps) {
           <TileGrid tiles={logTiles} columns={3} />
         </Card>
 
-        <SectionLabel>Recent</SectionLabel>
-
-        <Card noPadding style={{ paddingVertical: SPACING.sm, paddingHorizontal: SPACING.md }}>
-          <TrayRow label="Symptoms · Mild" value="9:12 am" onPress={() => navigation.navigate("SymptomHistory")} />
-          <TrayRow label="Bowel · Type 4" value="8:40 am" onPress={() => navigation.navigate("Bowel")} />
-        </Card>
+        {recentLogs.length > 0 && (
+          <>
+            <SectionLabel>Recent</SectionLabel>
+            <Card noPadding style={{ paddingVertical: SPACING.sm, paddingHorizontal: SPACING.md }}>
+              {recentLogs.map((log) => (
+                <TrayRow
+                  key={log.id}
+                  label={log.label}
+                  value={log.time}
+                  onPress={() => {
+                    if (log.type === "symptom") navigation.navigate("SymptomHistory");
+                    else if (log.type === "bowel") navigation.navigate("Bowel");
+                    else if (log.type === "hydration") navigation.navigate("Hydration");
+                  }}
+                />
+              ))}
+            </Card>
+          </>
+        )}
       </ScrollView>
 
       <Modal visible={customRangeOpen} animationType="slide" presentationStyle="pageSheet" onRequestClose={handleCancelCustomRange}>
         <View style={[styles.modalRoot, { backgroundColor: colors.screen }]}>
-          <View style={[styles.modalHeader, { borderBottomColor: colors.divider }]}>
+          <View style={[styles.modalHeader, { borderBottomColor: colors.cardBorder }]}>
             <Pressable accessibilityRole="button" accessibilityLabel="Close" onPress={handleCancelCustomRange} style={styles.modalClose}>
               <FlareLucideIcon icon={FLARE_CHROME_LUCIDE.close} size={20} color={colors.textSecondary} />
             </Pressable>
@@ -130,7 +389,7 @@ export function TrackScreen({ user }: TrackScreenProps) {
               <Pressable
                 accessibilityRole="button"
                 onPress={() => setShowStartPicker(true)}
-                style={[styles.datePill, { backgroundColor: colors.card, borderColor: colors.border }]}
+                style={[styles.datePill, { backgroundColor: colors.card, borderColor: colors.cardBorder }]}
               >
                 <FlareLucideIcon icon={FLARE_CHROME_LUCIDE.calendar} size={18} color={colors.textSecondary} />
                 <Text style={[styles.datePillText, { color: colors.text, fontFamily: TYPOGRAPHY.fontFamily.regular }]}>
@@ -144,7 +403,7 @@ export function TrackScreen({ user }: TrackScreenProps) {
               <Pressable
                 accessibilityRole="button"
                 onPress={() => setShowEndPicker(true)}
-                style={[styles.datePill, { backgroundColor: colors.card, borderColor: colors.border }]}
+                style={[styles.datePill, { backgroundColor: colors.card, borderColor: colors.cardBorder }]}
               >
                 <FlareLucideIcon icon={FLARE_CHROME_LUCIDE.calendar} size={18} color={colors.textSecondary} />
                 <Text style={[styles.datePillText, { color: colors.text, fontFamily: TYPOGRAPHY.fontFamily.regular }]}>
@@ -154,8 +413,8 @@ export function TrackScreen({ user }: TrackScreenProps) {
             </View>
 
             <View style={styles.modalActions}>
-              <PrimaryButton label="Apply" onPress={handleApplyCustomRange} />
-              <SecondaryButton label="Cancel" onPress={handleCancelCustomRange} />
+              <PrimaryButton title="Apply" onPress={handleApplyCustomRange} />
+              <SecondaryButton title="Cancel" onPress={handleCancelCustomRange} />
             </View>
           </ScrollView>
 
@@ -199,8 +458,37 @@ const styles = StyleSheet.create({
     paddingHorizontal: SPACING.screen,
     paddingTop: SPACING.lg,
   },
-  entriesPlaceholder: {
-    height: 120,
+  loadingWrap: {
+    paddingVertical: SPACING.xl,
+    alignItems: "center",
+  },
+  statsGrid: {
+    flexDirection: "row",
+    flexWrap: "wrap",
+    gap: SPACING.md,
+    marginTop: SPACING.sm,
+  },
+  statCard: {
+    flex: 1,
+    minWidth: "45%",
+    alignItems: "center",
+    paddingVertical: SPACING.lg,
+  },
+  statValue: {
+    fontSize: TYPOGRAPHY.fontSize.stat,
+    marginBottom: SPACING.xs,
+  },
+  statLabel: {
+    fontSize: TYPOGRAPHY.fontSize.sm,
+  },
+  chartPlaceholder: {
+    height: 180,
+    alignItems: "center",
+    justifyContent: "center",
+    gap: SPACING.sm,
+  },
+  chartText: {
+    fontSize: TYPOGRAPHY.fontSize.md,
   },
   modalRoot: {
     flex: 1,
@@ -243,7 +531,7 @@ const styles = StyleSheet.create({
     gap: SPACING.sm,
     minHeight: 42,
     paddingHorizontal: SPACING.md,
-    borderRadius: RADIUS.md,
+    borderRadius: RADIUS.button,
     borderWidth: 1,
   },
   datePillText: {
