@@ -1,19 +1,15 @@
 import { FLARE_CHROME_LUCIDE, FlareLucideIcon } from "../lib/flareLucideIcons";
 import { useFocusEffect, useNavigation, useRoute } from "@react-navigation/native";
 import React, { useCallback, useLayoutEffect, useRef, useState } from "react";
-import {
-  ActivityIndicator,
-    Pressable,
-  StyleSheet,
-  Text,
-  View,
-} from "react-native";
+import { ActivityIndicator, Pressable, StyleSheet, Text, View } from "react-native";
 import { showFlareAlert } from "../components/FlareAlertHost";
 import { ScrollView } from "../lib/scrollViews";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { ConfirmModal } from "../components/ConfirmModal";
 import { PrimaryButton, SecondaryButton } from "../components/FlareButton";
-import { LogDetailAddedHeader, LogDetailCard, LogDetailFieldGroup, logDetailStyles } from "../components/LogDetailLayout";
+import { Card } from "../components/MidnightLagoonCard";
+import { TrayRow } from "../components/MidnightLagoonTray";
+import { ScreenHeader } from "../components/MidnightLagoonScreenHeader";
 import { invalidateDashboardSnapshot } from "../lib/dashboardSnapshotCache";
 import { formatAddedAtHeader } from "../lib/logDisplay";
 import { recordRecentActivityEvent } from "../lib/recentActivityEvents";
@@ -31,7 +27,7 @@ import {
   type MedicationRow,
 } from "../lib/medicationShared";
 import { rescheduleLocalRemindersIfGranted } from "../lib/medicationNotifications";
-import { CARD_INNER_PADDING, FLARE_FONT_FAMILY, FLARE_FONT_SIZE, HEADER_ACTION_BTN_WIDTH, HEADER_CHROME_ICON_SIZE } from "../lib/layoutConstants";
+import { SPACING, TYPOGRAPHY } from "../designTokens";
 import { supabase, TABLES } from "../lib/supabase";
 import { useFlareColors } from "../theme";
 import { MedicationSheet } from "./MedicationsScreen";
@@ -46,7 +42,7 @@ function DetailEditHeaderButton({ onPress, disabled }: { onPress: () => void; di
   const c = useFlareColors();
   return (
     <Pressable accessibilityRole="button" accessibilityLabel="Edit medication" onPress={onPress} disabled={disabled} hitSlop={10} style={styles.headerIconBtn}>
-      <FlareLucideIcon icon={FLARE_CHROME_LUCIDE.edit} size={HEADER_CHROME_ICON_SIZE} color={c.text} />
+      <FlareLucideIcon icon={FLARE_CHROME_LUCIDE.edit} size={22} color={c.text} />
     </Pressable>
   );
 }
@@ -55,7 +51,7 @@ function DetailDeleteHeaderButton({ onPress, disabled }: { onPress: () => void; 
   const c = useFlareColors();
   return (
     <Pressable accessibilityRole="button" accessibilityLabel="Delete medication" onPress={onPress} disabled={disabled} hitSlop={10} style={styles.headerIconBtn}>
-      <FlareLucideIcon icon={FLARE_CHROME_LUCIDE.delete} size={HEADER_CHROME_ICON_SIZE} color={c.text} />
+      <FlareLucideIcon icon={FLARE_CHROME_LUCIDE.delete} size={22} color={c.text} />
     </Pressable>
   );
 }
@@ -209,86 +205,98 @@ export function MedicationDetailScreen({ user }: { user: SessionUser }) {
     return (
       <View style={[styles.centered, { backgroundColor: c.screen, paddingBottom: bottomPad }]}>
         <ActivityIndicator color={c.primary} />
-        <Text style={[styles.muted, { color: c.textMuted }]}>Loading…</Text>
+        <Text style={[styles.loadingText, { color: c.textSecondary, fontFamily: TYPOGRAPHY.fontFamily.regular }]}>Loading…</Text>
       </View>
     );
   }
 
   if (!row) {
     return (
-      <ScrollView style={[logDetailStyles.scroll, { backgroundColor: c.screen }]} contentContainerStyle={{ paddingBottom: bottomPad }}>
-        <Text style={[styles.muted, { color: c.textMuted }]}>Could not load this medication.</Text>
-      </ScrollView>
+      <View style={[styles.screen, { backgroundColor: c.screen }]}>
+        <ScrollView style={styles.scroll} contentContainerStyle={[styles.scrollContent, { paddingBottom: bottomPad }]}>
+          <Text style={[styles.errorText, { color: c.textSecondary, fontFamily: TYPOGRAPHY.fontFamily.regular }]}>Could not load this medication.</Text>
+        </ScrollView>
+      </View>
     );
   }
 
   return (
     <>
-      <ScrollView
-        style={[logDetailStyles.scroll, { backgroundColor: c.screen }]}
-        contentContainerStyle={{ paddingBottom: bottomPad }}
-        showsVerticalScrollIndicator={false}
-      >
-        <LogDetailAddedHeader text={formatAddedAtHeader(row.created_at)} />
+      <View style={[styles.screen, { backgroundColor: c.screen }]}>
+        <ScrollView style={styles.scroll} contentContainerStyle={[styles.scrollContent, { paddingBottom: bottomPad }]} showsVerticalScrollIndicator={false}>
+          <ScreenHeader title={row.name} subtitle={formatAddedAtHeader(row.created_at)} />
 
-        <LogDetailCard>
-          <LogDetailFieldGroup
-            fields={[
-              { label: "Medication", value: row.name },
-              { label: "Dosage", value: row.dosage?.trim() || "Not set" },
-              { label: "Frequency", value: normalizeFrequencyPreset(row.frequency) || "Not set" },
-              { label: "Reminder time", value: formatMedicationReminderTime(row.time_of_day) },
-              { label: "Notes", value: row.notes?.trim() || "Not set" },
-            ]}
-          />
+          <Card noPadding style={{ paddingVertical: SPACING.sm, paddingHorizontal: SPACING.md }}>
+            <TrayRow label="Medication" value={row.name} />
+            <TrayRow label="Dosage" value={`${row.dosage_mg}mg`} />
+            <TrayRow label="Frequency" value={normalizeFrequencyPreset(row.frequency) || "Not set"} />
+            <TrayRow label="Reminder time" value={formatMedicationReminderTime(row.reminder_time_of_day)} />
+            {row.notes?.trim() ? <TrayRow label="Notes" value={row.notes.trim()} /> : null}
+          </Card>
+
           <View style={styles.takenActions}>
             {takenToday ? (
               <PrimaryButton
-                title="Taken today"
+                label="Taken today"
                 onPress={handleToggleTaken}
                 disabled={takenBusy}
-                noTopMargin
                 leftIcon={<FlareLucideIcon icon={FLARE_CHROME_LUCIDE.check} size={18} color={c.white} />}
               />
             ) : (
-              <SecondaryButton
-                title="Mark as taken today"
-                onPress={handleToggleTaken}
-                disabled={takenBusy}
-                noTopMargin
-              />
+              <SecondaryButton label="Mark as taken today" onPress={handleToggleTaken} disabled={takenBusy} />
             )}
           </View>
-        </LogDetailCard>
-      </ScrollView>
+        </ScrollView>
+      </View>
 
       <ConfirmModal
         visible={deleteOpen}
         title="Delete medication"
         message="Are you sure you want to delete this medication? This cannot be undone."
         confirmLabel={deleting ? "Deleting…" : "Delete"}
-        confirmDestructive
+        confirmDanger
         onConfirm={handleDelete}
         onCancel={() => setDeleteOpen(false)}
       />
 
-      <MedicationSheet
-        visible={sheetOpen}
-        editingId={row.id}
-        initialValues={form}
-        saving={saving}
-        saveError={saveError}
-        onClose={closeSheet}
-        onSave={handleSave}
-      />
+      <MedicationSheet visible={sheetOpen} editingId={row.id} initialValues={form} saving={saving} saveError={saveError} onClose={closeSheet} onSave={handleSave} />
     </>
   );
 }
 
 const styles = StyleSheet.create({
-  centered: { flex: 1, alignItems: "center", justifyContent: "center", gap: 12 },
-  muted: { fontSize: FLARE_FONT_SIZE.body, fontFamily: FLARE_FONT_FAMILY.regular },
-  headerBtnRow: { flexDirection: "row", alignItems: "center", gap: 2 },
-  headerIconBtn: { width: HEADER_ACTION_BTN_WIDTH, height: 44, alignItems: "center", justifyContent: "center" },
-  takenActions: { marginTop: CARD_INNER_PADDING },
+  screen: { flex: 1 },
+  scroll: { flex: 1 },
+  scrollContent: {
+    paddingHorizontal: SPACING.screen,
+    paddingTop: 56,
+  },
+  centered: {
+    flex: 1,
+    alignItems: "center",
+    justifyContent: "center",
+    gap: SPACING.md,
+  },
+  loadingText: {
+    fontSize: TYPOGRAPHY.fontSize.md,
+  },
+  errorText: {
+    fontSize: TYPOGRAPHY.fontSize.md,
+    textAlign: "center",
+    marginTop: SPACING.xl,
+  },
+  headerBtnRow: {
+    flexDirection: "row",
+    alignItems: "center",
+    gap: SPACING.xs,
+  },
+  headerIconBtn: {
+    width: 44,
+    height: 44,
+    alignItems: "center",
+    justifyContent: "center",
+  },
+  takenActions: {
+    marginTop: SPACING.lg,
+  },
 });

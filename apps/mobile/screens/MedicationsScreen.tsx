@@ -1,39 +1,29 @@
-import { FLARE_CHROME_LUCIDE, FlareLucideIcon } from "../lib/flareLucideIcons";
+import { FLARE_CHROME_LUCIDE, FlareLucideIcon, FLARE_FEATURE_LUCIDE } from "../lib/flareLucideIcons";
 import DateTimePicker from "@react-native-community/datetimepicker";
 import { useFocusEffect, useNavigation } from "@react-navigation/native";
 import React, { useCallback, useEffect, useMemo, useState } from "react";
 import {
-    KeyboardAvoidingView,
+  KeyboardAvoidingView,
   Modal,
   Platform,
   Pressable,
   StyleSheet,
   Text,
   View,
+  ActivityIndicator,
 } from "react-native";
 import { showFlareAlert } from "../components/FlareAlertHost";
 import { ScrollView } from "../lib/scrollViews";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { PrimaryButton, SecondaryButton } from "../components/FlareButton";
-import { InstructionScreenShell } from "../components/InstructionScreenShell";
 import { flareFieldErrorStyle, FlareTextInput } from "../components/FlareInput";
-import { FlareScreenSectionTitle } from "../components/FlareScreenSectionTitle";
-import {
-  LogHistoryCard,
-  LogHistoryListLoading,
-  LogHistoryEmptyState,
-  LogHistoryPreviewList,
-  LOG_HISTORY_LOAD_MORE_BATCH,
-  logHistoryCardStyles,
-  logHistoryListStyles,
-  LogHistoryListQuietPlaceholder,
-  type LogHistoryListItem,
-} from "../components/LogHistoryList";
+import { Card } from "../components/MidnightLagoonCard";
+import { TrayRow } from "../components/MidnightLagoonTray";
+import { ScreenHeader } from "../components/MidnightLagoonScreenHeader";
+import { SectionLabel } from "../components/MidnightLagoonSectionLabel";
 import { OptionPickerModal } from "../components/OptionPickerModal";
 import { ConfirmModal } from "../components/ConfirmModal";
-import { InfoHintButton } from "../components/InfoHintButton";
 import { TrackerThumbFab, useTrackerThumbFabLayout } from "../components/TrackerThumbFab";
-import { WriggleReminderBell } from "../components/WriggleReminderBell";
 import { invalidateDashboardSnapshot } from "../lib/dashboardSnapshotCache";
 import { useDeferredListLoading } from "../lib/useDeferredListLoading";
 import { recordRecentActivityEvent } from "../lib/recentActivityEvents";
@@ -56,24 +46,15 @@ import {
 } from "../lib/medicationShared";
 import { useMedicationsList } from "../lib/useMedicationsList";
 import { snapTimeHmFromDate } from "../lib/bowelMovementShared";
-import {
-  CARD_SECTION_INNER_GAP,
-  FLARE_FONT_FAMILY,
-  FLARE_FONT_SIZE,
-  NAV_ROW_CHEVRON_SIZE,
-  SCREEN_EDGE_PADDING,
-  TIME_PICKER_MINUTE_INTERVAL,
-  bottomTabBarHeight,
-} from "../lib/layoutConstants";
+import { TIME_PICKER_MINUTE_INTERVAL } from "../lib/layoutConstants";
+import { SPACING, TYPOGRAPHY } from "../designTokens";
 import { supabase, TABLES } from "../lib/supabase";
 import { useFlareColors } from "../theme";
 
 type SessionUser = { id: string };
 
-const FREQUENCY_PICKER_OPTIONS = [
-  ...MEDICATION_FREQUENCY_PRESETS,
-  "Custom frequency…",
-] as const;
+const FREQUENCY_PICKER_OPTIONS = [...MEDICATION_FREQUENCY_PRESETS, "Custom frequency…"] as const;
+const LOAD_MORE_BATCH = 15;
 
 function parseTimeHm(s: string): Date {
   if (/^\d{2}:\d{2}$/.test(s)) {
@@ -120,9 +101,7 @@ export function MedicationSheet({
       setForm(initialValues);
       setNameError("");
       setDosageError("");
-      setCustomFrequencyEditing(
-        initialValues.frequencyMode === "custom" && !initialValues.frequency.trim(),
-      );
+      setCustomFrequencyEditing(initialValues.frequencyMode === "custom" && !initialValues.frequency.trim());
     }
   }, [visible, initialValues]);
 
@@ -156,24 +135,19 @@ export function MedicationSheet({
   return (
     <>
       <Modal visible={visible} animationType="slide" presentationStyle="pageSheet" onRequestClose={onClose}>
-        <KeyboardAvoidingView
-          style={[styles.sheetRoot, { backgroundColor: c.screen }]}
-          behavior={Platform.OS === "ios" ? "padding" : undefined}
-        >
+        <KeyboardAvoidingView style={[styles.sheetRoot, { backgroundColor: c.screen }]} behavior={Platform.OS === "ios" ? "padding" : undefined}>
           <View style={[styles.sheetHeader, { borderBottomColor: c.cardBorder, paddingTop: Math.max(insets.top, 12) }]}>
             <Pressable accessibilityRole="button" accessibilityLabel="Close" onPress={onClose} hitSlop={12} style={styles.sheetClose}>
-              <FlareLucideIcon icon={FLARE_CHROME_LUCIDE.close} size={26} color={c.textMuted} />
+              <FlareLucideIcon icon={FLARE_CHROME_LUCIDE.close} size={26} color={c.textSecondary} />
             </Pressable>
-            <Text style={[styles.sheetTitle, { color: c.text }]}>{editingId ? "Edit medication" : "Add medication"}</Text>
+            <Text style={[styles.sheetTitle, { color: c.text, fontFamily: TYPOGRAPHY.fontFamily.semibold }]}>
+              {editingId ? "Edit medication" : "Add medication"}
+            </Text>
             <View style={styles.sheetClose} />
           </View>
 
-          <ScrollView
-            keyboardShouldPersistTaps="handled"
-            contentContainerStyle={[styles.sheetScroll, { paddingBottom: insets.bottom + 24 }]}
-            showsVerticalScrollIndicator={false}
-          >
-            <FlareScreenSectionTitle compact>Medication *</FlareScreenSectionTitle>
+          <ScrollView keyboardShouldPersistTaps="handled" contentContainerStyle={[styles.sheetScroll, { paddingBottom: insets.bottom + 24 }]} showsVerticalScrollIndicator={false}>
+            <SectionLabel>Medication *</SectionLabel>
             <View style={styles.nameDoseRow}>
               <FlareTextInput
                 value={form.name}
@@ -199,387 +173,450 @@ export function MedicationSheet({
             {nameError ? <Text style={errTextStyle}>{nameError}</Text> : null}
             {dosageError ? <Text style={errTextStyle}>{dosageError}</Text> : null}
 
-            <FlareScreenSectionTitle compact style={{ marginTop: 16 }}>
-              Frequency
-            </FlareScreenSectionTitle>
+            <SectionLabel>How often</SectionLabel>
             <Pressable
               accessibilityRole="button"
-              accessibilityLabel="Frequency"
               onPress={() => setFrequencyPickerOpen(true)}
-              style={[styles.pickerPill, { backgroundColor: c.surfaceSubtle, borderColor: c.cardBorder }]}
+              style={[styles.frequencyPick, { backgroundColor: c.inputBg, borderColor: c.inputBorder }]}
             >
-              <Text style={[styles.pickerPillText, { color: form.frequency ? c.text : c.textMuted }]}>
-                {form.frequencyMode === "custom" && form.frequency
-                  ? form.frequency
-                  : form.frequency || "Select frequency"}
+              <Text style={[styles.frequencyPickLabel, { color: c.text, fontFamily: TYPOGRAPHY.fontFamily.regular }]}>
+                {form.frequencyMode === "preset" ? form.frequency : "Custom frequency…"}
               </Text>
-              <FlareLucideIcon icon={FLARE_CHROME_LUCIDE.down} size={NAV_ROW_CHEVRON_SIZE} color={c.textMuted} />
+              <FlareLucideIcon icon={FLARE_CHROME_LUCIDE.down} size={18} color={c.textSecondary} />
             </Pressable>
-            {form.frequencyMode === "custom" && customFrequencyEditing ? (
+
+            {customFrequencyEditing ? (
               <FlareTextInput
                 value={form.frequency}
                 onChangeText={(frequency) => setField("frequency", frequency)}
-                onBlur={() => {
-                  setForm((prev) => {
-                    if (prev.frequency.trim()) setCustomFrequencyEditing(false);
-                    return prev;
-                  });
-                }}
-                placeholder="Custom frequency"
-                autoFocus
-                style={{ marginTop: 8 }}
+                placeholder="e.g. Every other day"
+                autoCapitalize="sentences"
               />
             ) : null}
 
-            <FlareScreenSectionTitle compact style={{ marginTop: 16 }}>
-              Reminder time
-            </FlareScreenSectionTitle>
-            <Pressable
-              accessibilityRole="button"
-              accessibilityLabel="Reminder time"
-              onPress={() => {
-                setPickerDraftTime(form.timeOfDay ? parseTimeHm(form.timeOfDay) : new Date());
-                setTimePickerOpen(true);
-              }}
-              style={[styles.pickerPill, { backgroundColor: c.surfaceSubtle, borderColor: c.cardBorder }]}
-            >
-              <FlareLucideIcon icon={FLARE_CHROME_LUCIDE.time} size={18} color={c.textSecondary} />
-              <Text style={[styles.pickerPillText, { color: form.timeOfDay ? c.text : c.textMuted }]}>
-                {form.timeOfDay ? formatMedicationReminderTime(form.timeOfDay) : "Select time"}
-              </Text>
-            </Pressable>
+            <SectionLabel>Reminder</SectionLabel>
+            <View style={styles.reminderRow}>
+              <Text style={[styles.reminderLabel, { color: c.text, fontFamily: TYPOGRAPHY.fontFamily.regular }]}>Daily reminder</Text>
+              <Pressable
+                accessibilityRole="switch"
+                accessibilityState={{ checked: form.reminderEnabled }}
+                onPress={() => setField("reminderEnabled", !form.reminderEnabled)}
+                style={[styles.switch, form.reminderEnabled ? { backgroundColor: c.primary } : { backgroundColor: c.inputBorder }]}
+              >
+                <View style={[styles.switchThumb, { backgroundColor: c.white, transform: [{ translateX: form.reminderEnabled ? 20 : 0 }] }]} />
+              </Pressable>
+            </View>
 
-            <FlareScreenSectionTitle compact style={{ marginTop: 16 }}>
-              Notes
-            </FlareScreenSectionTitle>
-            <FlareTextInput
-              multiline
-              value={form.notes}
-              onChangeText={(notes) => setField("notes", notes)}
-              placeholder="Optional"
-              style={styles.notesInput}
-            />
+            {form.reminderEnabled ? (
+              <Pressable
+                accessibilityRole="button"
+                onPress={() => {
+                  setPickerDraftTime(parseTimeHm(form.timeOfDay));
+                  setTimePickerOpen(true);
+                }}
+                style={[styles.timePick, { backgroundColor: c.inputBg, borderColor: c.inputBorder }]}
+              >
+                <Text style={[styles.timePickLabel, { color: c.text, fontFamily: TYPOGRAPHY.fontFamily.regular }]}>{form.timeOfDay}</Text>
+                <FlareLucideIcon icon={FLARE_CHROME_LUCIDE.time} size={18} color={c.textSecondary} />
+              </Pressable>
+            ) : null}
 
-            {saveError ? <Text style={[errTextStyle, styles.saveError]}>{saveError}</Text> : null}
+            {saveError ? (
+              <Text style={[styles.saveError, { color: c.danger, fontFamily: TYPOGRAPHY.fontFamily.regular }]}>{saveError}</Text>
+            ) : null}
 
             <View style={styles.sheetActions}>
-              <PrimaryButton title={saving ? "Saving…" : "Save"} onPress={handleSavePress} disabled={saving} />
-              <SecondaryButton title="Cancel" onPress={onClose} />
+              <PrimaryButton label={saving ? "Saving..." : "Save"} onPress={handleSavePress} disabled={saving} />
+              <SecondaryButton label="Cancel" onPress={onClose} disabled={saving} />
             </View>
           </ScrollView>
-
-          {timePickerOpen && pickerDraftTime ? (
-            <DateTimePicker
-              value={pickerDraftTime}
-              mode="time"
-              display="default"
-              minuteInterval={TIME_PICKER_MINUTE_INTERVAL}
-              onChange={handleTimePickerChange}
-            />
-          ) : null}
         </KeyboardAvoidingView>
       </Modal>
 
+      {timePickerOpen && pickerDraftTime ? (
+        Platform.OS === "ios" ? (
+          <Modal visible transparent animationType="slide" onRequestClose={() => setTimePickerOpen(false)}>
+            <Pressable style={styles.timePickerBackdrop} onPress={() => setTimePickerOpen(false)}>
+              <View style={[styles.timePickerModal, { backgroundColor: c.card }]}>
+                <DateTimePicker
+                  value={pickerDraftTime}
+                  mode="time"
+                  display="spinner"
+                  minuteInterval={TIME_PICKER_MINUTE_INTERVAL}
+                  onChange={handleTimePickerChange}
+                  themeVariant={c.isDark ? "dark" : "light"}
+                />
+              </View>
+            </Pressable>
+          </Modal>
+        ) : (
+          <DateTimePicker
+            value={pickerDraftTime}
+            mode="time"
+            minuteInterval={TIME_PICKER_MINUTE_INTERVAL}
+            onChange={handleTimePickerChange}
+          />
+        )
+      ) : null}
+
       <OptionPickerModal
         visible={frequencyPickerOpen}
+        title="How often"
         options={FREQUENCY_PICKER_OPTIONS}
-        onSelect={(value) => {
-          setFrequencyPickerOpen(false);
-          if (value === "Custom frequency…") {
+        selectedOption={form.frequencyMode === "preset" ? form.frequency : "Custom frequency…"}
+        onSelect={(opt) => {
+          if (opt === "Custom frequency…") {
             setField("frequencyMode", "custom");
             setCustomFrequencyEditing(true);
-            if (MEDICATION_FREQUENCY_PRESETS.includes(form.frequency as (typeof MEDICATION_FREQUENCY_PRESETS)[number])) {
-              setField("frequency", "");
-            }
-            return;
+          } else {
+            setField("frequencyMode", "preset");
+            setField("frequency", opt);
+            setCustomFrequencyEditing(false);
           }
-          setField("frequencyMode", "preset");
-          setCustomFrequencyEditing(false);
-          setField("frequency", value);
+          setFrequencyPickerOpen(false);
         }}
-        onCancel={() => setFrequencyPickerOpen(false)}
+        onClose={() => setFrequencyPickerOpen(false)}
       />
     </>
   );
-}
-
-async function maybeRescheduleReminders(userId: string) {
-  try {
-    await rescheduleLocalRemindersIfGranted(userId);
-  } catch (error) {
-    console.error("MED_REMINDER_RESCHEDULE_ERROR", error);
-  }
 }
 
 export function MedicationsScreen({ user }: { user: SessionUser }) {
   const c = useFlareColors();
   const navigation = useNavigation<any>();
   const insets = useSafeAreaInsets();
-  const tabBarClearance = bottomTabBarHeight(insets.bottom);
-  const { scrollBottomPad } = useTrackerThumbFabLayout(tabBarClearance);
-  const { meds, loading, load } = useMedicationsList(user.id);
-  const [sheetOpen, setSheetOpen] = useState(false);
+  const { fabBottom, fabRight, scrollPadding } = useTrackerThumbFabLayout();
+
+  const { medications, loading: dataLoading, error, reload } = useMedicationsList(user.id);
+  const listLoading = useDeferredListLoading(dataLoading);
+
+  const [sheetVisible, setSheetVisible] = useState(false);
   const [editingId, setEditingId] = useState<number | null>(null);
-  const [form, setForm] = useState<MedicationFormState>(() => emptyMedicationFormState());
+  const [sheetInitial, setSheetInitial] = useState<MedicationFormState>(emptyMedicationFormState());
   const [saving, setSaving] = useState(false);
   const [saveError, setSaveError] = useState("");
-  const [expandedMedCount, setExpandedMedCount] = useState(() => getMedsListExpandedCount(user.id));
+  const [deleteConfirmOpen, setDeleteConfirmOpen] = useState(false);
+  const [deleting, setDeleting] = useState(false);
 
-  const medItemIds = useMemo(() => meds.map((row) => String(row.id)), [meds]);
-  const renderMedsHint = useCallback(
-    () => (
-      <InfoHintButton
-        title="My Meds"
-        message="Save medications, set reminders and mark doses as taken. Check your progress regularly so you stay on track."
-        accessibilityLabel="About My Meds"
-      />
-    ),
-    [],
-  );
-  const {
-    selectionMode,
-    selectedIds,
-    bulkDeleteOpen,
-    setBulkDeleteOpen,
-    bulkDeleting,
-    enterSelectionWith,
-    toggleSelect,
-    runBulkDelete,
-  } = useLogListSelection({
-    routeName: "Meds",
-    itemIds: medItemIds,
-    navigation,
-    headerTitle: "My Meds",
-    renderIdleHeaderRight: renderMedsHint,
-  });
+  const { selection, toggleSelection, clearSelection, selectionActive } = useLogListSelection();
 
-  const handleBulkDeleteConfirm = useCallback(() => {
-    void runBulkDelete(async (ids) => {
-      try {
-        await deleteMedicationsForUser(user.id, ids);
-        await recordRecentActivityEvent(user.id, "medication-deleted");
-        invalidateDashboardSnapshot(user.id);
-        invalidateMedicationsListCache(user.id);
-        await load();
-        await maybeRescheduleReminders(user.id);
-      } catch (err: unknown) {
-        const message = err instanceof Error ? err.message : "Could not delete these medications.";
-        showFlareAlert("Could not delete", message);
-        throw err;
-      }
-    });
-  }, [load, runBulkDelete, user.id]);
+  const [expandedCount, setExpandedCount] = useState(() => getMedsListExpandedCount(user.id));
 
   useFocusEffect(
     useCallback(() => {
-      setExpandedMedCount(getMedsListExpandedCount(user.id));
+      setExpandedCount(getMedsListExpandedCount(user.id));
+      return () => {};
     }, [user.id]),
   );
 
-  /** Derived on every render so "load more" never flashes after add/save (useEffect ran one frame late). */
-  const visibleMedCount = useMemo(() => {
-    if (meds.length === 0) return LOG_HISTORY_LOAD_MORE_BATCH;
-    if (meds.length <= LOG_HISTORY_LOAD_MORE_BATCH) return meds.length;
-    return Math.min(expandedMedCount, meds.length);
-  }, [meds.length, expandedMedCount]);
+  const activeMeds = useMemo(() => medications.filter((m) => !m.archived && !m.paused), [medications]);
 
-  const closeSheet = useCallback(() => {
-    setSheetOpen(false);
+  const visibleCount = useMemo(() => {
+    if (activeMeds.length === 0) return LOAD_MORE_BATCH;
+    if (activeMeds.length <= LOAD_MORE_BATCH) return activeMeds.length;
+    return Math.min(expandedCount, activeMeds.length);
+  }, [expandedCount, activeMeds.length]);
+
+  const visibleMeds = useMemo(() => activeMeds.slice(0, visibleCount), [activeMeds, visibleCount]);
+  const hasMore = activeMeds.length > visibleCount;
+
+  const loadMore = useCallback(() => {
+    const newCount = Math.min(expandedCount + LOAD_MORE_BATCH, activeMeds.length);
+    setExpandedCount(newCount);
+    setMedsListExpandedCount(user.id, newCount);
+  }, [expandedCount, activeMeds.length, user.id]);
+
+  const openAddSheet = useCallback(() => {
     setEditingId(null);
+    setSheetInitial(emptyMedicationFormState());
     setSaveError("");
-    setForm(emptyMedicationFormState());
+    setSheetVisible(true);
   }, []);
 
-  const openAdd = useCallback(() => {
-    setForm(emptyMedicationFormState());
-    setEditingId(null);
-    setSaveError("");
-    setSheetOpen(true);
-  }, []);
-
-  const handleSave = async (values: MedicationFormState) => {
-    setSaveError("");
-    setSaving(true);
-    try {
-      if (editingId) {
-        const { error } = await supabase
-          .from(TABLES.MEDICATIONS)
-          .update(medicationUpdatePayloadFromForm(values))
-          .eq("id", editingId)
-          .eq("user_id", user.id);
-        if (error) throw error;
-      } else {
-        const { error } = await supabase.from(TABLES.MEDICATIONS).insert([medicationPayloadFromForm(values, user.id)]);
-        if (error) throw error;
-      }
-      closeSheet();
-      await load();
-      invalidateDashboardSnapshot(user.id);
-      await maybeRescheduleReminders(user.id);
-    } catch (err: unknown) {
-      setSaveError(err instanceof Error ? err.message : "Could not save this medication.");
-    } finally {
-      setSaving(false);
-    }
-  };
-
-  const medById = useCallback((id: string) => meds.find((row) => String(row.id) === id), [meds]);
-
-  const medListItems: LogHistoryListItem[] = meds.map((row) => {
-    const subtitle = medicationListSubtitle(row);
-    const reminderLabel = medicationHasReminder(row) ? formatMedicationReminderTime(row.time_of_day) : null;
-    return {
-      id: String(row.id),
-      title: row.name,
-      subtitle: subtitle || undefined,
-      accessibilityLabel: reminderLabel
-        ? `${row.name}. ${subtitle}. Reminder at ${reminderLabel}. View details`
-        : subtitle
-          ? `${row.name}. ${subtitle}. View details`
-          : `${row.name}. View details`,
-    };
-  });
-
-  const hasMoreMeds = meds.length > visibleMedCount;
-  const loadMoreMeds = useCallback(() => {
-    setExpandedMedCount((count) => {
-      const next = Math.min(count + LOG_HISTORY_LOAD_MORE_BATCH, meds.length);
-      setMedsListExpandedCount(user.id, next);
-      return next;
+  const openEditSheet = useCallback((id: number) => {
+    const med = medications.find((m) => m.id === id);
+    if (!med) return;
+    setEditingId(id);
+    setSheetInitial({
+      name: med.name,
+      dosage: String(med.dosage_mg),
+      frequencyMode: med.frequency_mode,
+      frequency: med.frequency,
+      reminderEnabled: medicationHasReminder(med),
+      timeOfDay: med.reminder_time_of_day ?? "08:00",
     });
-  }, [meds.length, user.id]);
+    setSaveError("");
+    setSheetVisible(true);
+  }, [medications]);
 
-  const renderMedSubtitle = useCallback(
-    (item: LogHistoryListItem) => {
-      const row = medById(item.id);
-      if (!row) return null;
-      const dosage = row.dosage?.trim();
-      const hasReminder = medicationHasReminder(row);
-      const timeLabel = hasReminder ? formatMedicationReminderTime(row.time_of_day) : null;
-      if (!dosage && !timeLabel) return null;
-      const dosageStyle = [logHistoryListStyles.logSecondaryWhen, { color: c.textMuted }];
-      const timeStyle = [logHistoryListStyles.logSecondaryWhen, { color: c.textMuted }];
-      return (
-        <View style={styles.medSubtitleRow}>
-          {dosage ? (
-            <Text style={dosageStyle} numberOfLines={1}>
-              {dosage}
-              {timeLabel ? " · " : ""}
-            </Text>
-          ) : null}
-          {timeLabel ? (
-            <View style={styles.medReminderTimeRow}>
-              <WriggleReminderBell color={c.textMuted} />
-              <Text style={timeStyle} numberOfLines={1}>
-                {timeLabel}
-              </Text>
-            </View>
-          ) : null}
-        </View>
-      );
+  const handleSheetSave = useCallback(
+    async (values: MedicationFormState) => {
+      setSaving(true);
+      setSaveError("");
+      try {
+        if (editingId) {
+          const payload = medicationUpdatePayloadFromForm(values);
+          const { error: updateError } = await supabase
+            .from(TABLES.MEDICATIONS)
+            .update(payload)
+            .eq("id", editingId)
+            .eq("user_id", user.id);
+          if (updateError) throw updateError;
+        } else {
+          const payload = medicationPayloadFromForm(user.id, values);
+          const { error: insertError } = await supabase.from(TABLES.MEDICATIONS).insert(payload);
+          if (insertError) throw insertError;
+        }
+        invalidateMedicationsListCache(user.id);
+        invalidateDashboardSnapshot(user.id);
+        await rescheduleLocalRemindersIfGranted();
+        void reload();
+        recordRecentActivityEvent(user.id, "medication", editingId ? "edit" : "add");
+        setSheetVisible(false);
+      } catch (err: any) {
+        setSaveError(err?.message ?? "Save failed.");
+      } finally {
+        setSaving(false);
+      }
     },
-    [c.textMuted, medById],
+    [editingId, user.id, reload],
   );
 
-  const showListLoading = useDeferredListLoading(loading && meds.length === 0);
+  const handleMarkTaken = useCallback(
+    async (id: number) => {
+      const today = new Date().toISOString().split("T")[0];
+      try {
+        const { error: insertError } = await supabase
+          .from(TABLES.MEDICATION_TAKEN)
+          .insert({ user_id: user.id, medication_id: id, taken_date: today });
+        if (insertError) throw insertError;
+        invalidateDashboardSnapshot(user.id);
+        showFlareAlert({ message: "Marked as taken today.", duration: 2000 });
+      } catch (err: any) {
+        showFlareAlert({ message: err?.message ?? "Failed to mark as taken.", duration: 3000 });
+      }
+    },
+    [user.id],
+  );
+
+  const handleDeleteSelected = useCallback(async () => {
+    if (selection.size === 0) return;
+    setDeleting(true);
+    try {
+      await deleteMedicationsForUser(user.id, Array.from(selection));
+      invalidateDashboardSnapshot(user.id);
+      void reload();
+      clearSelection();
+      setDeleteConfirmOpen(false);
+    } catch {
+      showFlareAlert({ message: "Delete failed.", duration: 3000 });
+    } finally {
+      setDeleting(false);
+    }
+  }, [selection, user.id, reload, clearSelection]);
 
   return (
-    <InstructionScreenShell
-      showInstruction={false}
-      contentPaddingBottom={scrollBottomPad}
-      instruction={null}
-      floatingAction={
-        !selectionMode ? (
-          <TrackerThumbFab
-            accessibilityLabel="Add medication"
-            onPress={openAdd}
-            tabBarClearance={tabBarClearance}
-          />
-        ) : null
-      }
-      footer={
-        <>
-          <ConfirmModal
-            visible={bulkDeleteOpen}
-            title={selectedIds.size === 1 ? "Delete medication?" : `Delete ${selectedIds.size} medications?`}
-            message="This cannot be undone."
-            confirmLabel={bulkDeleting ? "Deleting…" : "Delete"}
-            confirmDestructive
-            onConfirm={handleBulkDeleteConfirm}
-            onCancel={() => setBulkDeleteOpen(false)}
-          />
-          {sheetOpen ? (
-            <MedicationSheet
-              visible={sheetOpen}
-              editingId={editingId}
-              initialValues={form}
-              saving={saving}
-              saveError={saveError}
-              onClose={closeSheet}
-              onSave={handleSave}
-            />
-          ) : null}
-        </>
-      }
-    >
-      <LogHistoryCard>
-        <View style={logHistoryCardStyles.trackerCardBody}>
-          {loading && meds.length === 0 ? (
-            showListLoading ? <LogHistoryListLoading /> : <LogHistoryListQuietPlaceholder />
-          ) : meds.length === 0 ? (
-            <LogHistoryEmptyState icon={MY_MEDS_ICON} />
-          ) : (
-            <LogHistoryPreviewList
-              items={medListItems}
-              visibleCount={visibleMedCount}
-              hasMore={hasMoreMeds}
-              loadMoreLabel="load more"
-              onLoadMore={loadMoreMeds}
-              rowTextLayout="default"
-              renderSubtitle={renderMedSubtitle}
-              onPressItem={(medId) => navigation.navigate("MedicationDetail", { id: medId })}
-              selectionMode={selectionMode}
-              selectedIds={selectedIds}
-              onToggleSelect={toggleSelect}
-              onLongPressItem={enterSelectionWith}
-            />
-          )}
-        </View>
-      </LogHistoryCard>
-    </InstructionScreenShell>
+    <View style={[styles.screen, { backgroundColor: c.screen }]}>
+      <ScrollView style={styles.scroll} contentContainerStyle={[styles.scrollContent, { paddingBottom: scrollPadding }]}>
+        <ScreenHeader title="My Meds" />
+
+        {listLoading ? (
+          <View style={styles.loadingWrap}>
+            <ActivityIndicator size="small" color={c.primary} />
+          </View>
+        ) : error ? (
+          <Card>
+            <Text style={[styles.errorText, { color: c.textSecondary, fontFamily: TYPOGRAPHY.fontFamily.regular }]}>
+              {error}
+            </Text>
+          </Card>
+        ) : activeMeds.length === 0 ? (
+          <Card>
+            <Text style={[styles.emptyText, { color: c.textSecondary, fontFamily: TYPOGRAPHY.fontFamily.regular }]}>
+              No medications added yet.
+            </Text>
+          </Card>
+        ) : (
+          <>
+            <Card noPadding style={{ paddingVertical: SPACING.sm, paddingHorizontal: SPACING.md }}>
+              {visibleMeds.map((med) => (
+                <TrayRow
+                  key={med.id}
+                  icon={FLARE_FEATURE_LUCIDE.meds}
+                  label={`${med.name} ${med.dosage_mg}mg`}
+                  sublabel={medicationListSubtitle(med)}
+                  showChevron
+                  onPress={() => navigation.navigate("MedicationDetail", { medicationId: med.id })}
+                />
+              ))}
+            </Card>
+
+            {hasMore ? (
+              <Pressable
+                accessibilityRole="button"
+                onPress={loadMore}
+                style={({ pressed }) => [styles.loadMore, pressed && { opacity: 0.7 }]}
+              >
+                <Text style={[styles.loadMoreText, { color: c.primary, fontFamily: TYPOGRAPHY.fontFamily.medium }]}>
+                  load more
+                </Text>
+              </Pressable>
+            ) : null}
+          </>
+        )}
+      </ScrollView>
+
+      <TrackerThumbFab icon={MY_MEDS_ICON} onPress={openAddSheet} bottom={fabBottom} right={fabRight} />
+
+      <MedicationSheet
+        visible={sheetVisible}
+        editingId={editingId}
+        initialValues={sheetInitial}
+        saving={saving}
+        saveError={saveError}
+        onClose={() => setSheetVisible(false)}
+        onSave={handleSheetSave}
+      />
+
+      <ConfirmModal
+        visible={deleteConfirmOpen}
+        title="Delete medications"
+        message={`Delete ${selection.size} medication${selection.size === 1 ? "" : "s"}?`}
+        confirmLabel="Delete"
+        cancelLabel="Cancel"
+        confirmDanger
+        onConfirm={handleDeleteSelected}
+        onCancel={() => setDeleteConfirmOpen(false)}
+        working={deleting}
+      />
+    </View>
   );
 }
 
 const styles = StyleSheet.create({
-  medSubtitleRow: { flexDirection: "row", alignItems: "center", flexShrink: 1, minWidth: 0 },
-  medReminderTimeRow: { flexDirection: "row", alignItems: "center", gap: 4, flexShrink: 1, minWidth: 0 },
-  sheetRoot: { flex: 1 },
+  screen: { flex: 1 },
+  scroll: { flex: 1 },
+  scrollContent: {
+    paddingHorizontal: SPACING.screen,
+    paddingTop: 56,
+  },
+  loadingWrap: {
+    paddingVertical: 24,
+    alignItems: "center",
+  },
+  errorText: {
+    fontSize: TYPOGRAPHY.fontSize.md,
+    textAlign: "center",
+  },
+  emptyText: {
+    fontSize: TYPOGRAPHY.fontSize.md,
+    textAlign: "center",
+  },
+  loadMore: {
+    paddingVertical: SPACING.md,
+    alignItems: "center",
+  },
+  loadMoreText: {
+    fontSize: TYPOGRAPHY.fontSize.sm,
+  },
+  sheetRoot: {
+    flex: 1,
+  },
   sheetHeader: {
     flexDirection: "row",
     alignItems: "center",
     justifyContent: "space-between",
-    paddingHorizontal: 8,
-    paddingBottom: SCREEN_EDGE_PADDING,
-    borderBottomWidth: StyleSheet.hairlineWidth,
+    paddingHorizontal: SPACING.lg,
+    paddingBottom: SPACING.md,
+    borderBottomWidth: 1,
   },
-  sheetClose: { width: 44, height: 44, alignItems: "center", justifyContent: "center" },
-  sheetTitle: { fontSize: FLARE_FONT_SIZE.navTitle, fontFamily: FLARE_FONT_FAMILY.bold },
-  sheetScroll: { paddingHorizontal: 20, paddingTop: 14 },
-  nameDoseRow: { flexDirection: "row", alignItems: "stretch", gap: 6 },
-  nameInput: { flex: 1, minWidth: 0 },
-  doseInput: { width: 104, flexShrink: 0 },
-  pickerPill: {
+  sheetClose: {
+    width: 34,
+    height: 34,
+    alignItems: "center",
+    justifyContent: "center",
+  },
+  sheetTitle: {
+    fontSize: TYPOGRAPHY.fontSize.cardTitle,
+  },
+  sheetScroll: {
+    paddingHorizontal: SPACING.lg,
+    paddingTop: SPACING.lg,
+  },
+  nameDoseRow: {
+    flexDirection: "row",
+    gap: SPACING.md,
+  },
+  nameInput: {
+    flex: 1,
+  },
+  doseInput: {
+    width: 100,
+  },
+  frequencyPick: {
     flexDirection: "row",
     alignItems: "center",
-    gap: 8,
+    justifyContent: "space-between",
+    paddingHorizontal: SPACING.md,
+    paddingVertical: SPACING.md,
+    borderRadius: 8,
     borderWidth: 1,
-    borderRadius: 12,
-    paddingHorizontal: 12,
-    paddingVertical: 12,
-    marginTop: 6,
+    marginBottom: SPACING.md,
   },
-  pickerPillText: { flex: 1, fontSize: FLARE_FONT_SIZE.body, fontFamily: FLARE_FONT_FAMILY.regular },
-  notesInput: { minHeight: 88, textAlignVertical: "top" },
-  saveError: { marginTop: 12 },
-  sheetActions: { gap: 8, marginTop: 24 },
+  frequencyPickLabel: {
+    fontSize: TYPOGRAPHY.fontSize.md,
+  },
+  reminderRow: {
+    flexDirection: "row",
+    alignItems: "center",
+    justifyContent: "space-between",
+    marginBottom: SPACING.md,
+  },
+  reminderLabel: {
+    fontSize: TYPOGRAPHY.fontSize.md,
+  },
+  switch: {
+    width: 48,
+    height: 28,
+    borderRadius: 14,
+    padding: 2,
+    justifyContent: "center",
+  },
+  switchThumb: {
+    width: 24,
+    height: 24,
+    borderRadius: 12,
+  },
+  timePick: {
+    flexDirection: "row",
+    alignItems: "center",
+    justifyContent: "space-between",
+    paddingHorizontal: SPACING.md,
+    paddingVertical: SPACING.md,
+    borderRadius: 8,
+    borderWidth: 1,
+    marginBottom: SPACING.md,
+  },
+  timePickLabel: {
+    fontSize: TYPOGRAPHY.fontSize.md,
+  },
+  saveError: {
+    fontSize: TYPOGRAPHY.fontSize.sm,
+    marginTop: SPACING.md,
+    textAlign: "center",
+  },
+  sheetActions: {
+    marginTop: SPACING.xl,
+    gap: SPACING.md,
+  },
+  timePickerBackdrop: {
+    flex: 1,
+    justifyContent: "flex-end",
+    backgroundColor: "rgba(0,0,0,0.5)",
+  },
+  timePickerModal: {
+    borderTopLeftRadius: SPACING.lg,
+    borderTopRightRadius: SPACING.lg,
+    padding: SPACING.lg,
+  },
 });
