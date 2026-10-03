@@ -19,7 +19,8 @@ import {
 } from "react-native";
 import { useFocusEffect } from "@react-navigation/native";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
-import { LogHistoryCard } from "../components/LogHistoryList";
+import { Card } from "../components/MidnightLagoonCard";
+import { ScreenHeader } from "../components/MidnightLagoonScreenHeader";
 import { FLARE_CHROME_LUCIDE, FlareLucideIcon } from "../lib/flareLucideIcons";
 import { SPACING, TYPOGRAPHY } from "../designTokens";
 import {
@@ -145,9 +146,11 @@ export function MyCardScreen({ userId }: Props) {
       keyboardShouldPersistTaps="handled"
       keyboardDismissMode="interactive"
     >
-      <LogHistoryCard style={styles.shellCard}>
-        <Text style={[styles.lead, { color: c.text }]}>My IBD Card</Text>
-        <Text style={[styles.support, { color: c.textMuted }]}>
+      <ScreenHeader title="My Card" />
+      
+      <Card style={styles.shellCard}>
+        <Text style={[styles.lead, { color: c.text, fontFamily: TYPOGRAPHY.fontFamily.bold }]}>My IBD Card</Text>
+        <Text style={[styles.support, { color: c.textMuted, fontFamily: TYPOGRAPHY.fontFamily.regular }]}>
           A personal card containing key information about you and your condition.
         </Text>
 
@@ -289,7 +292,7 @@ export function MyCardScreen({ userId }: Props) {
             );
           })}
         </View>
-      </LogHistoryCard>
+      </Card>
     </ScrollView>
   );
 }
