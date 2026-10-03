@@ -20,17 +20,13 @@ import { SecondaryButton } from "../components/FlareButton";
 import { ConfirmModal } from "../components/ConfirmModal";
 import { LogHistoryCard } from "../components/LogHistoryList";
 import { FLARE_CHROME_LUCIDE, FlareLucideIcon } from "../lib/flareLucideIcons";
+import { SPACING, TYPOGRAPHY } from "../designTokens";
 import {
   CARD_INNER_PADDING,
   CARD_SECTION_INNER_GAP,
-  FLARE_FONT_FAMILY,
-  FLARE_FONT_SIZE,
-  FLARE_INLINE_ACTION_LINK,
-  FLARE_LINE_HEIGHT,
   HEADER_CHROME_ICON_SIZE,
   INSTRUCTION_CARD_RADIUS,
   SCREEN_EDGE_PADDING,
-  STACKED_LINE_GAP,
   TRAY_ROW_PADDING_H,
   TRAY_ROW_PADDING_Y,
   bottomTabBarScrollInset,
@@ -301,7 +297,7 @@ export function GoingOutScreen({ userId }: Props) {
     const customCount = draft.customItems.length;
     const padBottom =
       keyboardHeight > 0
-        ? keyboardHeight + STACKED_LINE_GAP * 2
+        ? keyboardHeight + SPACING.lg
         : bottomScrollInset + 24;
     return (
       <>
@@ -593,10 +589,10 @@ const styles = StyleSheet.create({
     fontFamily: FLARE_FONT_FAMILY.bold,
   },
   support: {
-    fontSize: FLARE_FONT_SIZE.muted,
+    fontSize: TYPOGRAPHY.fontSize.sm,
     lineHeight: FLARE_LINE_HEIGHT.muted,
-    fontFamily: FLARE_FONT_FAMILY.regular,
-    marginBottom: STACKED_LINE_GAP,
+    fontFamily: TYPOGRAPHY.fontFamily.regular,
+    marginBottom: SPACING.xxs,
   },
   itemRow: {
     flexDirection: "row",
@@ -625,9 +621,9 @@ const styles = StyleSheet.create({
     flex: 1,
     minWidth: 0,
     flexShrink: 1,
-    fontSize: FLARE_FONT_SIZE.body,
-    lineHeight: FLARE_LINE_HEIGHT.body,
-    fontFamily: FLARE_FONT_FAMILY.medium,
+    fontSize: TYPOGRAPHY.fontSize.md,
+    lineHeight: 22,
+    fontFamily: TYPOGRAPHY.fontFamily.medium,
   },
   itemLabelDone: {
     textDecorationLine: "line-through",
@@ -644,7 +640,7 @@ const styles = StyleSheet.create({
     paddingVertical: 4,
   },
   addLink: {
-    ...FLARE_INLINE_ACTION_LINK,
+    fontSize: TYPOGRAPHY.fontSize.md, fontFamily: TYPOGRAPHY.fontFamily.regular,
   },
   addRow: {
     flexDirection: "row",
@@ -660,12 +656,12 @@ const styles = StyleSheet.create({
     borderRadius: 10,
     paddingHorizontal: 12,
     paddingVertical: 10,
-    fontSize: FLARE_FONT_SIZE.body,
-    fontFamily: FLARE_FONT_FAMILY.regular,
+    fontSize: TYPOGRAPHY.fontSize.md,
+    fontFamily: TYPOGRAPHY.fontFamily.regular,
   },
   addAction: {
     flexShrink: 0,
-    fontSize: FLARE_FONT_SIZE.body,
-    fontFamily: FLARE_FONT_FAMILY.medium,
+    fontSize: TYPOGRAPHY.fontSize.md,
+    fontFamily: TYPOGRAPHY.fontFamily.medium,
   },
 });
