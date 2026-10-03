@@ -51,9 +51,17 @@ export function NumberStepper({
         <Text style={{ color: c.text, fontSize: 20, fontFamily: TYPOGRAPHY.fontFamily.bold }}>−</Text>
       </Pressable>
 
-      <View style={[styles.valueContainer, { backgroundColor: c.inputBg, borderColor: c.inputBorder }]}>
-        <Text style={[styles.value, { color: c.text, fontFamily: TYPOGRAPHY.fontFamily.semibold }]}>{value}</Text>
-      </View>
+      <Pressable
+        accessibilityRole="button"
+        accessibilityLabel="Confirm number"
+        disabled={disabled}
+        onPress={() => onChange(value)}
+        style={({ pressed }) => [pressed && !disabled && { opacity: 0.8 }]}
+      >
+        <View style={[styles.valueContainer, { backgroundColor: c.inputBg, borderColor: c.inputBorder }]}>
+          <Text style={[styles.value, { color: c.text, fontFamily: TYPOGRAPHY.fontFamily.semibold }]}>{value}</Text>
+        </View>
+      </Pressable>
 
       <Pressable
         accessibilityRole="button"

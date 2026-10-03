@@ -189,6 +189,24 @@ export function SymptomLogWizardScreen({ user }: { user: SessionUser }) {
   const [picker, setPicker] = useState<null | "start" | "end">(null);
   const [editingReviewSection, setEditingReviewSection] = useState<SymptomReviewSectionId | null>(null);
   const scrollRef = useRef<RNScrollView>(null);
+  const formRef = useRef(form);
+  formRef.current = form;
+  const advancingRef = useRef(false);
+  const leavingRef = useRef(false);
+  const placeRef = useRef("0");
+  const numberTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
+  const textTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
+
+  const clearAdvanceTimers = () => {
+    if (numberTimer.current) {
+      clearTimeout(numberTimer.current);
+      numberTimer.current = null;
+    }
+    if (textTimer.current) {
+      clearTimeout(textTimer.current);
+      textTimer.current = null;
+    }
+  };
 
   useEffect(() => {
     scrollRef.current?.scrollTo({ y: 0, animated: false });
@@ -253,6 +271,15 @@ export function SymptomLogWizardScreen({ user }: { user: SessionUser }) {
 
   const smokingStep10Phase = resolveSmokingStep10Phase(form);
   const alcoholStep12Phase = resolveAlcoholStep12Phase(form);
+  placeRef.current = `${currentStep}:${smokingStep10Phase}:${alcoholStep12Phase}`;
+
+  useEffect(() => {
+    advancingRef.current = false;
+    leavingRef.current = false;
+    return () => {
+      clearAdvanceTimers();
+    };
+  }, [currentStep, smokingStep10Phase, alcoholStep12Phase]);
 
   const mealReviewEntries = useMemo(() => {
     const entries: { label: string; skipped?: boolean; items?: MealRow[] }[] = [];
@@ -369,6 +396,8 @@ export function SymptomLogWizardScreen({ user }: { user: SessionUser }) {
   );
 
   const goBackInternal = useCallback(() => {
+    leavingRef.current = true;
+    clearAdvanceTimers();
     if (currentStep === SYMPTOM_REVIEW_STEP && !editingReviewSection) {
       navigation.goBack();
       return true;
@@ -427,6 +456,8 @@ export function SymptomLogWizardScreen({ user }: { user: SessionUser }) {
 
   const advanceFrom = useCallback(
     (source: SymptomFormData) => {
+      if (advancingRef.current) return;
+      clearAdvanceTimers();
       const res = symptomWizardTryAdvance({
         currentStep,
         form: source,
@@ -442,6 +473,7 @@ export function SymptomLogWizardScreen({ user }: { user: SessionUser }) {
       setFieldErrors({});
       if (res.clearDateErrors) setDateErrors({ day: "", month: "", year: "", endDay: "", endMonth: "", endYear: "" });
       setForm(res.form);
+      advancingRef.current = true;
       if (editingReviewSection) {
         const sectionLast = getSymptomReviewSectionLastStep(editingReviewSection);
         if (res.nextStep > sectionLast) {
@@ -464,13 +496,45 @@ export function SymptomLogWizardScreen({ user }: { user: SessionUser }) {
     advanceFrom(form);
   }, [advanceFrom, form]);
 
-  /** One tap completes the answer and moves on. Back restores it and does not advance again. */
+  /** One completed answer moves on. Back restores it and does not advance again. */
   const chooseSingle = useCallback(
     (patch: Partial<SymptomFormData>) => {
       advanceFrom({ ...form, ...patch });
     },
     [advanceFrom, form],
   );
+
+  const rememberText = (patch: Partial<SymptomFormData>) => {
+    const next = { ...formRef.current, ...patch };
+    formRef.current = next;
+    setForm(next);
+  };
+
+  // Blur can fire before Back's press, and again when the field unmounts. Wait so Back can cancel.
+  const answerPlace = placeRef.current;
+  const finishText = () => {
+    if (advancingRef.current || leavingRef.current) return;
+    if (textTimer.current) clearTimeout(textTimer.current);
+    textTimer.current = setTimeout(() => {
+      textTimer.current = null;
+      if (advancingRef.current || leavingRef.current) return;
+      if (placeRef.current !== answerPlace) return;
+      advanceFrom(formRef.current);
+    }, 100);
+  };
+
+  const queueNumber = (patch: Partial<SymptomFormData>) => {
+    const next = { ...formRef.current, ...patch };
+    formRef.current = next;
+    setForm(next);
+    if (numberTimer.current) clearTimeout(numberTimer.current);
+    numberTimer.current = setTimeout(() => {
+      numberTimer.current = null;
+      if (advancingRef.current || leavingRef.current) return;
+      if (placeRef.current !== answerPlace) return;
+      advanceFrom(next);
+    }, 700);
+  };
 
   const startWizard = () => {
     setHistory([{ step: 0, form: cloneForm(form) }]);
@@ -885,7 +949,7 @@ export function SymptomLogWizardScreen({ user }: { user: SessionUser }) {
             <View style={styles.stepperWrap}>
               <NumberStepper
                 value={Number.parseInt(form.normal_bathroom_frequency || "0", 10)}
-                onChange={(v) => setForm((p) => ({ ...p, normal_bathroom_frequency: String(v) }))}
+                onChange={(v) => queueNumber({ normal_bathroom_frequency: String(v) })}
                 min={0}
                 max={99}
               />
@@ -922,7 +986,10 @@ export function SymptomLogWizardScreen({ user }: { user: SessionUser }) {
             <Text style={[styles.stepTitle, { color: c.text, fontFamily: TYPOGRAPHY.fontFamily.semibold }]}>Describe your change</Text>
             <FlareTextInput
               value={form.bathroom_frequency_change_details}
-              onChangeText={(t) => setForm((p) => ({ ...p, bathroom_frequency_change_details: t }))}
+              onChangeText={(t) => rememberText({ bathroom_frequency_change_details: t })}
+              onBlur={finishText}
+              blurOnSubmit
+              returnKeyType="done"
               placeholder="e.g. more often, blood, or loose stools"
               multiline
               numberOfLines={3}
@@ -949,7 +1016,10 @@ export function SymptomLogWizardScreen({ user }: { user: SessionUser }) {
             <Text style={[styles.stepTitle, { color: c.text, fontFamily: TYPOGRAPHY.fontFamily.semibold }]}>Describe your smoking habits</Text>
             <FlareTextInput
               value={form.smoking_habits}
-              onChangeText={(t) => setForm((p) => ({ ...p, smoking_habits: t }))}
+              onChangeText={(t) => rememberText({ smoking_habits: t })}
+              onBlur={finishText}
+              blurOnSubmit
+              returnKeyType="done"
               placeholder="e.g. 1 pack of cigarettes per day"
               multiline
               numberOfLines={3}
@@ -984,7 +1054,10 @@ export function SymptomLogWizardScreen({ user }: { user: SessionUser }) {
             <Text style={[styles.stepTitle, { color: c.text, fontFamily: TYPOGRAPHY.fontFamily.semibold }]}>How much did you smoke?</Text>
             <FlareTextInput
               value={form.smoked_amount_on_symptom_day}
-              onChangeText={(t) => setForm((p) => ({ ...p, smoked_amount_on_symptom_day: t }))}
+              onChangeText={(t) => rememberText({ smoked_amount_on_symptom_day: t })}
+              onBlur={finishText}
+              blurOnSubmit
+              returnKeyType="done"
               placeholder={isFirstTimeUser ? "e.g. 3 cigarettes or 1 cigar" : "e.g. 5 cigarettes or 1 cigar"}
               multiline
               numberOfLines={2}
@@ -1014,7 +1087,7 @@ export function SymptomLogWizardScreen({ user }: { user: SessionUser }) {
             <View style={styles.stepperWrap}>
               <NumberStepper
                 value={Number.parseInt(form.average_alcohol_units_pw || "0", 10)}
-                onChange={(v) => setForm((p) => ({ ...p, average_alcohol_units_pw: String(v) }))}
+                onChange={(v) => queueNumber({ average_alcohol_units_pw: String(v) })}
                 min={0}
                 max={30}
               />
@@ -1050,7 +1123,7 @@ export function SymptomLogWizardScreen({ user }: { user: SessionUser }) {
             <View style={styles.stepperWrap}>
               <NumberStepper
                 value={Number.parseInt(form.alcohol_units_on_symptom_day || "0", 10)}
-                onChange={(v) => setForm((p) => ({ ...p, alcohol_units_on_symptom_day: String(v) }))}
+                onChange={(v) => queueNumber({ alcohol_units_on_symptom_day: String(v) })}
                 min={0}
                 max={30}
               />
@@ -1070,7 +1143,10 @@ export function SymptomLogWizardScreen({ user }: { user: SessionUser }) {
             <Text style={[styles.stepTitle, { color: c.text, fontFamily: TYPOGRAPHY.fontFamily.semibold }]}>Additional notes</Text>
             <FlareTextInput
               value={form.notes}
-              onChangeText={(t) => setForm((p) => ({ ...p, notes: t }))}
+              onChangeText={(t) => rememberText({ notes: t })}
+              onBlur={finishText}
+              blurOnSubmit
+              returnKeyType="done"
               placeholder="Any other information you'd like to record"
               multiline
               numberOfLines={4}
@@ -1163,7 +1239,7 @@ export function SymptomLogWizardScreen({ user }: { user: SessionUser }) {
       {currentStep > 0 && currentStep !== SYMPTOM_REVIEW_STEP ? (
         <View style={[styles.footer, { backgroundColor: c.screen, borderTopColor: c.cardBorder }]}>
           <SecondaryButton title="Back" onPress={goBackInternal} />
-          <PrimaryButton title="Next" onPress={applyAdvance} />
+          {currentStep >= 13 && currentStep <= 15 ? <PrimaryButton title="Next" onPress={applyAdvance} /> : null}
         </View>
       ) : null}
 
