@@ -274,17 +274,22 @@ export function SymptomLogWizardScreen({ user }: { user: SessionUser }) {
   const showLifestyleReview =
     isFirstTimeUser || typeof form.smoked_on_symptom_day === "boolean" || typeof form.drank_on_symptom_day === "boolean";
 
-  const reviewBasicFields = useMemo((): WizardReviewField[] => {
+  const reviewDurationFields = useMemo((): WizardReviewField[] => {
     const fields: WizardReviewField[] = [
       { label: "Start Date", value: form.symptomStartDate ? formatUkDate(form.symptomStartDate) : "Not set" },
-      { label: "Status", value: form.isOngoing ? "Ongoing" : "Ended" },
+      { label: "Still ongoing", value: form.isOngoing ? "Yes" : "No" },
+    ];
+    if (!form.isOngoing && form.symptomEndDate) {
+      fields.push({ label: "End Date", value: formatUkDate(form.symptomEndDate) });
+    }
+    return fields;
+  }, [form]);
+
+  const reviewSeverityFields = useMemo((): WizardReviewField[] => {
+    return [
       { label: "Severity", value: form.severity ? `${form.severity}/10` : "Not set" },
       { label: "Stress Level", value: form.stress_level ? `${form.stress_level}/10` : "Not set" },
     ];
-    if (!form.isOngoing && form.symptomEndDate) {
-      fields.splice(2, 0, { label: "End Date", value: formatUkDate(form.symptomEndDate) });
-    }
-    return fields;
   }, [form]);
 
   const reviewBathroomFields = useMemo((): WizardReviewField[] => {
@@ -1098,22 +1103,26 @@ export function SymptomLogWizardScreen({ user }: { user: SessionUser }) {
               ) : null}
             </HeroCard>
 
-            <ReviewSectionCard title="Basic Information" onEdit={() => openReviewEdit("basic")}>
-              <ReviewFieldRows fields={reviewBasicFields} />
+            <ReviewSectionCard title={SYMPTOM_WIZARD_SECTION_LABELS.duration} onEdit={() => openReviewEdit("duration")}>
+              <ReviewFieldRows fields={reviewDurationFields} />
             </ReviewSectionCard>
 
-            <ReviewSectionCard title="Bathroom Frequency" onEdit={() => openReviewEdit("bathroom")}>
+            <ReviewSectionCard title={SYMPTOM_WIZARD_SECTION_LABELS.severity} onEdit={() => openReviewEdit("severity")}>
+              <ReviewFieldRows fields={reviewSeverityFields} />
+            </ReviewSectionCard>
+
+            <ReviewSectionCard title={SYMPTOM_WIZARD_SECTION_LABELS.bathroom} onEdit={() => openReviewEdit("bathroom")}>
               <ReviewFieldRows fields={reviewBathroomFields} />
             </ReviewSectionCard>
 
             {showLifestyleReview && reviewLifestyleFields.length > 0 ? (
-              <ReviewSectionCard title="Lifestyle" onEdit={() => openReviewEdit("lifestyle")}>
+              <ReviewSectionCard title={SYMPTOM_WIZARD_SECTION_LABELS.lifestyle} onEdit={() => openReviewEdit("lifestyle")}>
                 <ReviewFieldRows fields={reviewLifestyleFields} />
               </ReviewSectionCard>
             ) : null}
 
             {mealReviewEntries.length > 0 ? (
-              <ReviewSectionCard title="Meals" onEdit={() => openReviewEdit("meals")}>
+              <ReviewSectionCard title={SYMPTOM_WIZARD_SECTION_LABELS.meals} onEdit={() => openReviewEdit("meals")}>
                 <ReviewFieldRows
                   fields={mealReviewEntries.map((entry) => ({
                     label: entry.label,
@@ -1126,7 +1135,7 @@ export function SymptomLogWizardScreen({ user }: { user: SessionUser }) {
             ) : null}
 
             {form.notes.trim() ? (
-              <ReviewSectionCard title="Notes" onEdit={() => openReviewEdit("notes")}>
+              <ReviewSectionCard title={SYMPTOM_WIZARD_SECTION_LABELS.notes} onEdit={() => openReviewEdit("notes")}>
                 <Text style={[styles.reviewNotesText, { color: c.text, fontFamily: TYPOGRAPHY.fontFamily.regular }]}>
                   {`\u201C${form.notes.trim()}\u201D`}
                 </Text>

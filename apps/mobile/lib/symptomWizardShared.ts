@@ -44,8 +44,8 @@ export type UserPreferencesShape = {
 
 export const SYMPTOM_WIZARD_REVIEW_STEP = 17;
 
-/** Review card sections — `basic` spans duration + severity/stress (wizard steps 1–5). */
-export type SymptomReviewSectionId = "basic" | "bathroom" | "lifestyle" | "meals" | "notes";
+/** Review card sections. Ids match progress phases so each pencil edits that section only. */
+export type SymptomReviewSectionId = "duration" | "severity" | "bathroom" | "lifestyle" | "meals" | "notes";
 
 /** Progress-bar sections. Review keeps its own card titles. */
 export const SYMPTOM_WIZARD_SECTION_LABELS = {
@@ -81,31 +81,13 @@ export function getSymptomReviewEditStep(
   isFirstTimeUser: boolean,
   userPreferences: UserPreferencesShape | null,
 ): number | null {
-  if (section === "basic") return 1;
-  const phaseId =
-    section === "bathroom"
-      ? "bathroom"
-      : section === "lifestyle"
-        ? "lifestyle"
-        : section === "meals"
-          ? "meals"
-          : "notes";
-  const phase = SYMPTOM_WIZARD_PHASES.find((p) => p.id === phaseId);
+  const phase = SYMPTOM_WIZARD_PHASES.find((p) => p.id === section);
   if (!phase) return null;
   return getSymptomWizardPhaseEntryStep(phase, isFirstTimeUser, userPreferences);
 }
 
 export function getSymptomReviewSectionLastStep(section: SymptomReviewSectionId): number {
-  if (section === "basic") return 5;
-  const phaseId =
-    section === "bathroom"
-      ? "bathroom"
-      : section === "lifestyle"
-        ? "lifestyle"
-        : section === "meals"
-          ? "meals"
-          : "notes";
-  return SYMPTOM_WIZARD_PHASES.find((p) => p.id === phaseId)?.lastStep ?? SYMPTOM_WIZARD_REVIEW_STEP;
+  return SYMPTOM_WIZARD_PHASES.find((p) => p.id === section)?.lastStep ?? SYMPTOM_WIZARD_REVIEW_STEP;
 }
 
 export function getSymptomWizardPhaseEntryStep(
