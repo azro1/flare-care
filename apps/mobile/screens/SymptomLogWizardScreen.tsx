@@ -511,9 +511,6 @@ export function SymptomLogWizardScreen({ user }: { user: SessionUser }) {
               ) : (
                 foodItems.map((item, originalIndex) => {
                   const i = list.findIndex((row) => row === item);
-                  const displayAmount = ["Small", "Medium", "Large"].includes(item.quantity) 
-                    ? `1 ${item.quantity.toLowerCase()}`
-                    : item.quantity;
                   return (
                     <View
                       key={i}
@@ -532,9 +529,17 @@ export function SymptomLogWizardScreen({ user }: { user: SessionUser }) {
                             placeholder="Food name"
                             style={styles.mealNameInput}
                           />
-                          <Text style={[styles.mealAmountDisplay, { color: item.quantity ? c.text : c.textSecondary, fontFamily: TYPOGRAPHY.fontFamily.regular }]}>
-                            {displayAmount || ""}
-                          </Text>
+                          <FlareTextInput
+                            value={item.quantity && !["Small", "Medium", "Large"].includes(item.quantity) ? item.quantity : item.quantity || ""}
+                            onChangeText={(t) => {
+                              setForm((p) => ({
+                                ...p,
+                                [meal]: p[meal].map((row, j) => (j === i ? { ...row, quantity: t } : row)),
+                              }));
+                            }}
+                            placeholder="Amount"
+                            style={styles.mealAmountInputSmall}
+                          />
                         </View>
                         <View style={styles.portionChips}>
                           <OptionChip
@@ -1343,11 +1348,6 @@ const styles = StyleSheet.create({
   },
   mealAmountInputSmall: {
     minWidth: 80,
-  },
-  mealAmountDisplay: {
-    fontSize: TYPOGRAPHY.fontSize.md,
-    minWidth: 80,
-    textAlign: "right",
   },
   emptyText: {
     fontSize: TYPOGRAPHY.fontSize.sm,
