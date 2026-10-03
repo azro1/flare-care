@@ -1,25 +1,25 @@
 import React, { useCallback, useMemo, useState } from "react";
-import { ActivityIndicator, Pressable, Text, View } from "react-native";
+import { ActivityIndicator, Pressable, StyleSheet, Text, View } from "react-native";
 import { useFocusEffect } from "@react-navigation/native";
 import { ScrollView } from "../lib/scrollViews";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
+import { ScreenHeader } from "../components/MidnightLagoonScreenHeader";
 import { NewsFeedCard, newsFeedListStyles } from "../components/NewsFeed";
 import { dashboardSnapshotByUserId } from "../lib/dashboardSnapshotCache";
 import { LOG_HISTORY_LOAD_MORE_BATCH } from "../lib/logHistoryConstants";
-import { SCREEN_EDGE_PADDING, bottomTabBarScrollInset } from "../lib/layoutConstants";
+import { bottomTabBarScrollInset } from "../lib/layoutConstants";
 import { mapNewsItems, newsApiBase } from "../lib/newsShared";
 import { logHistoryListStyles } from "../components/LogHistoryList";
+import { SPACING, TYPOGRAPHY } from "../designTokens";
 import { useFlareColors } from "../theme";
 
 type SessionUser = { id: string };
 
-/** Same batch as My Meds / Appointments / Log History hubs. */
 const NEWS_PAGE_SIZE = LOG_HISTORY_LOAD_MORE_BATCH;
 
 export function LatestNewsScreen({ user }: { user: SessionUser }) {
   const c = useFlareColors();
   const insets = useSafeAreaInsets();
-  /** Tab bar stays visible on this route — clear it so load more isn’t trapped under the last card. */
   const bottomScrollInset = bottomTabBarScrollInset(insets.bottom);
   const [newsItems, setNewsItems] = useState(() => dashboardSnapshotByUserId[user.id]?.newsItems ?? []);
   const [newsError, setNewsError] = useState<string | null>(() => dashboardSnapshotByUserId[user.id]?.newsError ?? null);
@@ -94,7 +94,6 @@ export function LatestNewsScreen({ user }: { user: SessionUser }) {
     }, [user.id]),
   );
 
-  /** Same derive-on-render pattern as My Meds / Appointments. */
   const visibleCount = useMemo(() => {
     if (newsItems.length === 0) return NEWS_PAGE_SIZE;
     if (newsItems.length <= NEWS_PAGE_SIZE) return newsItems.length;
@@ -109,45 +108,61 @@ export function LatestNewsScreen({ user }: { user: SessionUser }) {
   }, [newsItems.length]);
 
   return (
-    <ScrollView
-      style={{ flex: 1, backgroundColor: c.screen }}
-      contentContainerStyle={{
-        padding: SCREEN_EDGE_PADDING,
-        paddingBottom: bottomScrollInset,
-      }}
-      showsVerticalScrollIndicator={false}
-    >
-      {newsLoading ? (
-        <View style={{ paddingVertical: 24, alignItems: "center" }}>
-          <ActivityIndicator size="small" color={c.primary} />
-        </View>
-      ) : newsError ? (
-        <Text style={{ fontSize: 13, fontFamily: "Outfit_400Regular", color: c.textMuted }}>{newsError}</Text>
-      ) : newsItems.length === 0 ? (
-        <Text style={{ fontSize: 13, fontFamily: "Outfit_400Regular", color: c.textMuted }}>No news available right now.</Text>
-      ) : (
-        <>
-          <View style={newsFeedListStyles.fullFeed}>
-            {visibleItems.map((item) => (
-              <NewsFeedCard key={item.link ?? item.title} item={item} variant="full" />
-            ))}
+    <View style={[styles.screen, { backgroundColor: c.screen }]}>
+      <ScrollView
+        style={styles.scroll}
+        contentContainerStyle={[styles.scrollContent, { paddingBottom: bottomScrollInset }]}
+        showsVerticalScrollIndicator={false}
+      >
+        <ScreenHeader title="Latest News" />
+        {newsLoading ? (
+          <View style={styles.loadingWrap}>
+            <ActivityIndicator size="small" color={c.primary} />
           </View>
-          {hasMore ? (
-            <Pressable
-              accessibilityRole="button"
-              accessibilityLabel="load more"
-              onPress={loadMore}
-              style={({ pressed }) => [
-                logHistoryListStyles.loadMoreRow,
-                { paddingBottom: 8 },
-                pressed && { opacity: 0.7 },
-              ]}
-            >
-              <Text style={[logHistoryListStyles.loadMoreLabel, { color: c.primary }]}>load more</Text>
-            </Pressable>
-          ) : null}
-        </>
-      )}
-    </ScrollView>
+        ) : newsError ? (
+          <Text style={[styles.emptyText, { color: c.textSecondary, fontFamily: TYPOGRAPHY.fontFamily.regular }]}>{newsError}</Text>
+        ) : newsItems.length === 0 ? (
+          <Text style={[styles.emptyText, { color: c.textSecondary, fontFamily: TYPOGRAPHY.fontFamily.regular }]}>No news available right now.</Text>
+        ) : (
+          <>
+            <View style={newsFeedListStyles.fullFeed}>
+              {visibleItems.map((item) => (
+                <NewsFeedCard key={item.link ?? item.title} item={item} variant="full" />
+              ))}
+            </View>
+            {hasMore ? (
+              <Pressable
+                accessibilityRole="button"
+                accessibilityLabel="load more"
+                onPress={loadMore}
+                style={({ pressed }) => [
+                  logHistoryListStyles.loadMoreRow,
+                  { paddingBottom: SPACING.sm },
+                  pressed && { opacity: 0.7 },
+                ]}
+              >
+                <Text style={[logHistoryListStyles.loadMoreLabel, { color: c.primary }]}>load more</Text>
+              </Pressable>
+            ) : null}
+          </>
+        )}
+      </ScrollView>
+    </View>
   );
 }
+
+const styles = StyleSheet.create({
+  screen: { flex: 1 },
+  scroll: { flex: 1 },
+  scrollContent: {
+    paddingHorizontal: SPACING.screen,
+    paddingTop: SPACING.lg,
+  },
+  loadingWrap: {
+    paddingVertical: SPACING.lg,
+    alignItems: "center",
+  },
+  emptyText: {
+    fontSize: TYPOGRAPHY.fontSize.md,
+  },
+});
