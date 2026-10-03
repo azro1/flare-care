@@ -1,9 +1,9 @@
-import { FLARE_CHROME_LUCIDE, FlareLucideIcon } from "../lib/flareLucideIcons";
+import { FLARE_CHROME_LUCIDE, FlareLucideIcon, FLARE_FEATURE_LUCIDE } from "../lib/flareLucideIcons";
 import DateTimePicker from "@react-native-community/datetimepicker";
 import { useFocusEffect, useNavigation } from "@react-navigation/native";
 import React, { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import {
-  Animated,
+  ActivityIndicator,
   KeyboardAvoidingView,
   Modal,
   Platform,
@@ -18,19 +18,12 @@ import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { PrimaryButton, SecondaryButton } from "../components/FlareButton";
 import { flareFieldErrorStyle, FlareTextInput, FLARE_INPUT_BORDER_RADIUS } from "../components/FlareInput";
 import { FlareScreenSectionTitle } from "../components/FlareScreenSectionTitle";
-import {
-  LogHistoryCard,
-  LogHistoryListLoading,
-  LogHistoryEmptyState,
-  LogHistoryPreviewList,
-  LOG_HISTORY_LOAD_MORE_BATCH,
-  buildTimestampLogRowItem,
-  logHistoryCardStyles,
-  LogHistoryListQuietPlaceholder,
-} from "../components/LogHistoryList";
+import { Card } from "../components/MidnightLagoonCard";
+import { TrayRow } from "../components/MidnightLagoonTray";
+import { ScreenHeader } from "../components/MidnightLagoonScreenHeader";
+import { SectionLabel } from "../components/MidnightLagoonSectionLabel";
+import { SegmentedTabs } from "../components/MidnightLagoonSegmentedTabs";
 import { ConfirmModal } from "../components/ConfirmModal";
-import { InfoHintButton } from "../components/InfoHintButton";
-import { InstructionScreenShell } from "../components/InstructionScreenShell";
 import { OptionPickerModal } from "../components/OptionPickerModal";
 import { TrackerThumbFab, useTrackerThumbFabLayout } from "../components/TrackerThumbFab";
 import { STACKED_DETAIL_ROW_EDGE } from "../components/StackedDetailField";
@@ -39,6 +32,8 @@ import { useLogListSelection } from "../lib/useLogListSelection";
 import { usePaginatedLogList } from "../lib/paginatedLogList";
 import { formatUkDate } from "../lib/formatUkDate";
 import { snapTimeHmFromDate } from "../lib/bowelMovementShared";
+import { useDeferredListLoading } from "../lib/useDeferredListLoading";
+import { SPACING, TYPOGRAPHY, RADIUS } from "../designTokens";
 import {
   FLARE_FONT_FAMILY,
   FLARE_FONT_SIZE,
@@ -69,8 +64,7 @@ import {
   type OutputRow,
   type TodayOutputTotals,
 } from "../lib/outputShared";
-import { hubTabFadeStyles, useHubTabFade } from "../lib/useHubTabFade";
-import { useDeferredListLoading } from "../lib/useDeferredListLoading";
+import { LOG_HISTORY_LOAD_MORE_BATCH } from "../components/LogHistoryList";
 import { supabase, TABLES } from "../lib/supabase";
 import { useFlareColors } from "../theme";
 
@@ -329,8 +323,7 @@ export function OutputScreen({ user }: { user: SessionUser }) {
   const c = useFlareColors();
   const navigation = useNavigation<any>();
   const insets = useSafeAreaInsets();
-  const tabBarClearance = bottomTabBarHeight(insets.bottom);
-  const { scrollBottomPad } = useTrackerThumbFabLayout(tabBarClearance);
+  const { fabBottom, fabRight } = useTrackerThumbFabLayout();
 
   const {
     rows: historyRows,
@@ -359,12 +352,10 @@ export function OutputScreen({ user }: { user: SessionUser }) {
   const [saveError, setSaveError] = useState("");
   const [editingId, setEditingId] = useState<number | null>(null);
   const [sheetOpen, setSheetOpen] = useState(false);
-  const { tabIndex, goToTab, paneStyle } = useHubTabFade(0, OUTPUT_KIND_OPTIONS.length);
-  const [todayTotals, setTodayTotals] = useState<TodayOutputTotals | null>(
-    () => getTodayOutputTotalsCache(user.id) ?? null,
-  );
+  const [activeTab, setActiveTab] = useState("urine");
+  const [todayTotals, setTodayTotals] = useState<TodayOutputTotals | null>(() => getTodayOutputTotalsCache(user.id) ?? null);
 
-  const activeKind: OutputKind = OUTPUT_KIND_OPTIONS[tabIndex]?.value ?? "urine";
+  const activeKind: OutputKind = activeTab as OutputKind;
   const rowsByKind = useMemo(() => {
     const map: Record<OutputKind, OutputRow[]> = {
       urine: [],
@@ -480,10 +471,7 @@ export function OutputScreen({ user }: { user: SessionUser }) {
         if (error) throw error;
       }
       const savedKind = normalizeOutputKind(payload.kind);
-      const savedIndex = OUTPUT_KIND_OPTIONS.findIndex((o) => o.value === savedKind);
-      if (savedIndex >= 0 && savedIndex !== tabIndex) {
-        goToTab(savedIndex, true);
-      }
+      setActiveTab(savedKind);
       closeSheet();
       invalidateDashboardSnapshot(user.id);
       void refreshHistoryLoad();
@@ -498,47 +486,10 @@ export function OutputScreen({ user }: { user: SessionUser }) {
 
   const listInitialLoad = historyLoading && historyRows.length === 0;
   const showListLoading = useDeferredListLoading(listInitialLoad);
-  const scrollBottomPadTotal = selectionMode ? tabBarClearance : scrollBottomPad;
+  const tabEmpty = !historyLoading && activeRows.length === 0 && historyTotalCount >= 0;
 
-  const renderKindList = (kind: OutputKind, rows: OutputRow[]) => {
-    const tabEmpty = !historyLoading && rows.length === 0 && historyTotalCount >= 0;
-    const label = outputKindLabel(kind);
-    return (
-      <LogHistoryCard>
-        <View style={logHistoryCardStyles.trackerCardBody}>
-          {showListLoading ? (
-            <LogHistoryListLoading />
-          ) : listInitialLoad ? (
-            <LogHistoryListQuietPlaceholder />
-          ) : tabEmpty ? (
-            <LogHistoryEmptyState icon={OUTPUT_FEATURE_ICON} />
-          ) : (
-            <LogHistoryPreviewList
-              items={rows.map((row) =>
-                buildTimestampLogRowItem({
-                  id: String(row.id),
-                  title: formatOutputMl(row.amount_ml),
-                  whenIso: row.occurred_at,
-                  accessibilityLabel: `${label}. ${formatOutputMl(row.amount_ml)}. View details`,
-                }),
-              )}
-              visibleCount={rows.length}
-              hasMore={historyHasMore}
-              loadingMore={historyLoadingMore}
-              loadMoreLabel="load more"
-              onLoadMore={() => void loadMoreHistory()}
-              rowTextLayout="default"
-              onPressItem={(logId) => navigation.navigate("OutputLogDetail", { id: logId })}
-              selectionMode={selectionMode}
-              selectedIds={selectedIds}
-              onToggleSelect={toggleSelect}
-              onLongPressItem={enterSelectionWith}
-            />
-          )}
-        </View>
-      </LogHistoryCard>
-    );
-  };
+  const tabs = OUTPUT_KIND_OPTIONS.map((opt) => ({ label: opt.label, value: opt.value }));
+  const showFab = !selectionMode;
 
   return (
     <InstructionScreenShell
