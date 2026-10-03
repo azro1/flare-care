@@ -1,36 +1,27 @@
 import { useNavigation } from "@react-navigation/native";
 import React, { useCallback, useMemo } from "react";
 import { Pressable, StyleSheet, Text, View } from "react-native";
-import {
-  buildBrowseLogRowItem,
-  LogHistoryCard,
-  LogHistoryList,
-} from "../components/LogHistoryList";
+import { Card } from "../components/MidnightLagoonCard";
+import { TrayRow } from "../components/MidnightLagoonTray";
+import { FLARE_FEATURE_LUCIDE } from "../lib/flareLucideIcons";
 import { BRIEF_WEEK_PRESETS } from "../lib/appointmentBriefShared";
-import { ACCOUNT_LIST_ROW_PADDING, FLARE_CAPTION_HINT } from "../lib/layoutConstants";
+import { SPACING, TYPOGRAPHY } from "../designTokens";
 import { useFlareColors } from "../theme";
 
-/** Period picker + help link — shared by stack `AppointmentBrief` and Appointments hub Summary tab. */
 export function AppointmentBriefContent() {
   const c = useFlareColors();
   const navigation = useNavigation<any>();
 
   const items = useMemo(
     () => [
-      ...BRIEF_WEEK_PRESETS.map((weeks) =>
-        buildBrowseLogRowItem({
-          id: `preset-${weeks}`,
-          title: `Last ${weeks} weeks`,
-          subtitle: "",
-          accessibilityLabel: `Last ${weeks} weeks`,
-        }),
-      ),
-      buildBrowseLogRowItem({
+      ...BRIEF_WEEK_PRESETS.map((weeks) => ({
+        id: `preset-${weeks}`,
+        label: `Last ${weeks} weeks`,
+      })),
+      {
         id: "custom",
-        title: "Custom Date Range",
-        subtitle: "Pick your own start and end dates",
-        accessibilityLabel: "Custom Date Range",
-      }),
+        label: "Custom Date Range",
+      },
     ],
     [],
   );
@@ -49,9 +40,17 @@ export function AppointmentBriefContent() {
 
   return (
     <>
-      <LogHistoryCard>
-        <LogHistoryList items={items} onPressItem={onPressItem} rowPaddingHorizontal={ACCOUNT_LIST_ROW_PADDING} />
-      </LogHistoryCard>
+      <Card noPadding style={{ paddingVertical: SPACING.sm, paddingHorizontal: SPACING.md }}>
+        {items.map((item) => (
+          <TrayRow
+            key={item.id}
+            icon={FLARE_FEATURE_LUCIDE.calendar}
+            label={item.label}
+            showChevron
+            onPress={() => onPressItem(item.id)}
+          />
+        ))}
+      </Card>
       <View style={styles.needHelpBlock}>
         <Pressable
           accessibilityRole="link"
@@ -59,7 +58,9 @@ export function AppointmentBriefContent() {
           onPress={() => navigation.navigate("AccountHelp", { expandSection: "appointmentSummary" })}
           style={({ pressed }) => [styles.needHelpLink, pressed && { opacity: 0.7 }]}
         >
-          <Text style={[styles.needHelpLinkLabel, { color: c.text }]}>Still need help?</Text>
+          <Text style={[styles.needHelpLinkLabel, { color: c.text, fontFamily: TYPOGRAPHY.fontFamily.regular }]}>
+            Still need help?
+          </Text>
         </Pressable>
       </View>
     </>
@@ -69,16 +70,16 @@ export function AppointmentBriefContent() {
 const styles = StyleSheet.create({
   needHelpBlock: {
     alignItems: "center",
-    marginTop: 4,
-    paddingHorizontal: 24,
+    marginTop: SPACING.md,
+    paddingHorizontal: SPACING.lg,
   },
   needHelpLink: {
     alignSelf: "center",
-    marginTop: 8,
-    paddingVertical: 6,
+    marginTop: SPACING.sm,
+    paddingVertical: SPACING.sm,
   },
   needHelpLinkLabel: {
-    ...FLARE_CAPTION_HINT,
+    fontSize: TYPOGRAPHY.fontSize.sm,
     textDecorationLine: "underline",
   },
 });
