@@ -1,25 +1,13 @@
 import { FLARE_CHROME_LUCIDE, FlareLucideIcon } from "../lib/flareLucideIcons";
 import { useFocusEffect, useNavigation, useRoute } from "@react-navigation/native";
 import React, { useCallback, useLayoutEffect, useRef, useState } from "react";
-import {
-  ActivityIndicator,
-    Pressable,
-  StyleSheet,
-  Text,
-  View,
-} from "react-native";
+import { ActivityIndicator, Pressable, StyleSheet, Text, View } from "react-native";
 import { showFlareAlert } from "../components/FlareAlertHost";
 import { ScrollView } from "../lib/scrollViews";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { ConfirmModal } from "../components/ConfirmModal";
-import {
-  LogDetailAddedHeader,
-  LogDetailCard,
-  LogDetailFieldGroup,
-  LogDetailNotesCard,
-  logDetailStyles,
-} from "../components/LogDetailLayout";
-import { flareCardSectionStyles } from "../components/FlareScreenSectionTitle";
+import { Card } from "../components/MidnightLagoonCard";
+import { SectionLabel } from "../components/MidnightLagoonSectionLabel";
 import { formatBristolLine } from "../lib/bristolStoolChart";
 import {
   boolToTri,
@@ -27,23 +15,22 @@ import {
   type BowelMovementRow,
   formatUkTimeFromOccurred,
   triStateDisplayLabel,
-} from "../lib/bowelMovementShared";
-import { invalidateDashboardSnapshot } from "../lib/dashboardSnapshotCache";
-import { formatAddedAtHeader } from "../lib/logDisplay";
-import { recordRecentActivityEvent } from "../lib/recentActivityEvents";
-import { formatUkDate } from "../lib/formatUkDate";
-import { FLARE_FONT_FAMILY, FLARE_FONT_SIZE, HEADER_ACTION_BTN_WIDTH, HEADER_CHROME_ICON_SIZE } from "../lib/layoutConstants";
-import { supabase, TABLES } from "../lib/supabase";
-import { useFlareColors } from "../theme";
-import type { BowelReturnParams, BristolGuideParams } from "./BristolGuideScreen";
-import { BowelLogSheet } from "./BowelScreen";
-import {
   bowelFormFromRow,
   bowelFormHasOptionalDetails,
   bowelPayloadFromForm,
   quickBowelFormState,
   type BowelFormState,
 } from "../lib/bowelMovementShared";
+import { invalidateDashboardSnapshot } from "../lib/dashboardSnapshotCache";
+import { formatAddedAtHeader } from "../lib/logDisplay";
+import { recordRecentActivityEvent } from "../lib/recentActivityEvents";
+import { formatUkDate } from "../lib/formatUkDate";
+import { SPACING, TYPOGRAPHY } from "../designTokens";
+import { HEADER_ACTION_BTN_WIDTH, HEADER_CHROME_ICON_SIZE } from "../lib/layoutConstants";
+import { supabase, TABLES } from "../lib/supabase";
+import { useFlareColors } from "../theme";
+import type { BowelReturnParams, BristolGuideParams } from "./BristolGuideScreen";
+import { BowelLogSheet } from "./BowelScreen";
 
 type SessionUser = { id: string };
 
@@ -267,54 +254,92 @@ export function BowelLogDetailScreen({ user }: { user: SessionUser }) {
   if (loading) {
     return (
       <View style={[styles.centered, { backgroundColor: c.screen, paddingBottom: bottomPad }]}>
-        <ActivityIndicator color={c.primary} />
-        <Text style={[styles.muted, { color: c.textMuted }]}>Loading…</Text>
+        <ActivityIndicator size="small" color={c.primary} />
+        <Text style={[styles.mutedText, { color: c.textSecondary, fontFamily: TYPOGRAPHY.fontFamily.regular }]}>Loading…</Text>
       </View>
     );
   }
 
   if (!row) {
     return (
-      <ScrollView
-        style={[logDetailStyles.scroll, { backgroundColor: c.screen }]}
-        contentContainerStyle={{ paddingBottom: bottomPad }}
-      >
-        <Text style={[styles.muted, { color: c.textMuted }]}>Could not load this entry.</Text>
-      </ScrollView>
+      <View style={[styles.screen, { backgroundColor: c.screen }]}>
+        <ScrollView style={styles.scroll} contentContainerStyle={[styles.scrollContent, { paddingBottom: bottomPad }]}>
+          <Text style={[styles.mutedText, { color: c.textSecondary, fontFamily: TYPOGRAPHY.fontFamily.regular }]}>
+            Could not load this entry.
+          </Text>
+        </ScrollView>
+      </View>
     );
   }
 
   return (
     <>
-      <ScrollView
-        style={[logDetailStyles.scroll, { backgroundColor: c.screen }]}
-        contentContainerStyle={{ paddingBottom: bottomPad }}
-        showsVerticalScrollIndicator={false}
-      >
-        <LogDetailAddedHeader text={formatAddedAtHeader(row.created_at)} />
+      <View style={[styles.screen, { backgroundColor: c.screen }]}>
+        <ScrollView style={styles.scroll} contentContainerStyle={[styles.scrollContent, { paddingBottom: bottomPad }]}>
+          <Text style={[styles.addedHeader, { color: c.textSecondary, fontFamily: TYPOGRAPHY.fontFamily.regular }]}>
+            {formatAddedAtHeader(row.created_at)}
+          </Text>
 
-        <LogDetailCard style={flareCardSectionStyles.container}>
-          <LogDetailFieldGroup
-            fields={[
-              { label: "Date", value: formatUkDate(row.occurred_at) || "Not set" },
-              { label: "Time", value: formatUkTimeFromOccurred(row.occurred_at) || "Not set" },
-              { label: "Bristol type", value: formatBristolLine(row.bristol_type) },
-              { label: "Blood visible?", value: triStateFromBool(row.blood) },
-              { label: "Pain or straining?", value: triStateFromBool(row.strain) },
-              { label: "Urgent need to go?", value: triStateFromBool(row.urgency) },
-            ]}
-          />
-        </LogDetailCard>
+          <Card>
+            <View style={styles.fieldList}>
+              <View style={styles.fieldRow}>
+                <Text style={[styles.fieldLabel, { color: c.textSecondary, fontFamily: TYPOGRAPHY.fontFamily.regular }]}>Date</Text>
+                <Text style={[styles.fieldValue, { color: c.text, fontFamily: TYPOGRAPHY.fontFamily.medium }]}>
+                  {formatUkDate(row.occurred_at) || "Not set"}
+                </Text>
+              </View>
+              <View style={styles.fieldRow}>
+                <Text style={[styles.fieldLabel, { color: c.textSecondary, fontFamily: TYPOGRAPHY.fontFamily.regular }]}>Time</Text>
+                <Text style={[styles.fieldValue, { color: c.text, fontFamily: TYPOGRAPHY.fontFamily.medium }]}>
+                  {formatUkTimeFromOccurred(row.occurred_at) || "Not set"}
+                </Text>
+              </View>
+              <View style={styles.fieldRow}>
+                <Text style={[styles.fieldLabel, { color: c.textSecondary, fontFamily: TYPOGRAPHY.fontFamily.regular }]}>Bristol type</Text>
+                <Text style={[styles.fieldValue, { color: c.text, fontFamily: TYPOGRAPHY.fontFamily.medium }]}>
+                  {formatBristolLine(row.bristol_type)}
+                </Text>
+              </View>
+              <View style={styles.fieldRow}>
+                <Text style={[styles.fieldLabel, { color: c.textSecondary, fontFamily: TYPOGRAPHY.fontFamily.regular }]}>Blood visible?</Text>
+                <Text style={[styles.fieldValue, { color: c.text, fontFamily: TYPOGRAPHY.fontFamily.medium }]}>
+                  {triStateFromBool(row.blood)}
+                </Text>
+              </View>
+              <View style={styles.fieldRow}>
+                <Text style={[styles.fieldLabel, { color: c.textSecondary, fontFamily: TYPOGRAPHY.fontFamily.regular }]}>Pain or straining?</Text>
+                <Text style={[styles.fieldValue, { color: c.text, fontFamily: TYPOGRAPHY.fontFamily.medium }]}>
+                  {triStateFromBool(row.strain)}
+                </Text>
+              </View>
+              <View style={styles.fieldRow}>
+                <Text style={[styles.fieldLabel, { color: c.textSecondary, fontFamily: TYPOGRAPHY.fontFamily.regular }]}>Urgent need to go?</Text>
+                <Text style={[styles.fieldValue, { color: c.text, fontFamily: TYPOGRAPHY.fontFamily.medium }]}>
+                  {triStateFromBool(row.urgency)}
+                </Text>
+              </View>
+            </View>
+          </Card>
 
-        {notes ? <LogDetailNotesCard notes={notes} /> : null}
-      </ScrollView>
+          {notes ? (
+            <>
+              <SectionLabel>Notes</SectionLabel>
+              <Card>
+                <Text style={[styles.notesText, { color: c.text, fontFamily: TYPOGRAPHY.fontFamily.regular }]}>
+                  {notes}
+                </Text>
+              </Card>
+            </>
+          ) : null}
+        </ScrollView>
+      </View>
 
       <ConfirmModal
         visible={deleteOpen}
         title="Delete bowel log"
         message="Are you sure you want to delete this log? This action cannot be undone."
         confirmLabel={deleting ? "Deleting…" : "Delete"}
-        confirmDestructive
+        confirmDanger
         onConfirm={handleDelete}
         onCancel={() => setDeleteOpen(false)}
       />
@@ -336,8 +361,43 @@ export function BowelLogDetailScreen({ user }: { user: SessionUser }) {
 }
 
 const styles = StyleSheet.create({
-  centered: { flex: 1, alignItems: "center", justifyContent: "center", gap: 12 },
-  muted: { fontSize: FLARE_FONT_SIZE.body, fontFamily: FLARE_FONT_FAMILY.regular },
+  screen: { flex: 1 },
+  scroll: { flex: 1 },
+  scrollContent: {
+    paddingHorizontal: SPACING.screen,
+    paddingTop: 56,
+  },
+  centered: {
+    flex: 1,
+    alignItems: "center",
+    justifyContent: "center",
+    gap: SPACING.md,
+  },
+  mutedText: {
+    fontSize: TYPOGRAPHY.fontSize.md,
+  },
+  addedHeader: {
+    fontSize: TYPOGRAPHY.fontSize.sm,
+    marginBottom: SPACING.lg,
+  },
+  fieldList: {
+    gap: SPACING.md,
+  },
+  fieldRow: {
+    flexDirection: "row",
+    justifyContent: "space-between",
+    alignItems: "center",
+  },
+  fieldLabel: {
+    fontSize: TYPOGRAPHY.fontSize.md,
+  },
+  fieldValue: {
+    fontSize: TYPOGRAPHY.fontSize.md,
+  },
+  notesText: {
+    fontSize: TYPOGRAPHY.fontSize.md,
+    lineHeight: 22,
+  },
   headerEditDeleteRow: {
     flexDirection: "row",
     alignItems: "center",
