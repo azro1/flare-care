@@ -21,16 +21,12 @@ import { useFocusEffect } from "@react-navigation/native";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { LogHistoryCard } from "../components/LogHistoryList";
 import { FLARE_CHROME_LUCIDE, FlareLucideIcon } from "../lib/flareLucideIcons";
+import { SPACING, TYPOGRAPHY } from "../designTokens";
 import {
   CARD_INNER_PADDING,
   CARD_SECTION_INNER_GAP,
-  FLARE_FONT_FAMILY,
-  FLARE_FONT_SIZE,
-  FLARE_INLINE_ACTION_LINK,
-  FLARE_LINE_HEIGHT,
   INSTRUCTION_CARD_RADIUS,
   SCREEN_EDGE_PADDING,
-  STACKED_LINE_GAP,
   TRAY_ROW_PADDING_H,
   TRAY_ROW_PADDING_Y,
   bottomTabBarScrollInset,
@@ -139,7 +135,7 @@ export function MyCardScreen({ userId }: Props) {
   }
 
   const padBottom =
-    keyboardHeight > 0 ? keyboardHeight + STACKED_LINE_GAP * 2 : bottomScrollInset + 24;
+    keyboardHeight > 0 ? keyboardHeight + SPACING.lg : bottomScrollInset + 24;
   const hasMeds = medsPreview.total > 0;
 
   return (
@@ -314,13 +310,13 @@ const styles = StyleSheet.create({
   lead: {
     fontSize: FLARE_FONT_SIZE.navTitle,
     lineHeight: FLARE_LINE_HEIGHT.navTitle,
-    fontFamily: FLARE_FONT_FAMILY.bold,
+    fontFamily: TYPOGRAPHY.fontFamily.bold,
   },
   support: {
-    fontSize: FLARE_FONT_SIZE.muted,
-    lineHeight: FLARE_LINE_HEIGHT.muted,
-    fontFamily: FLARE_FONT_FAMILY.regular,
-    marginBottom: STACKED_LINE_GAP,
+    fontSize: TYPOGRAPHY.fontSize.sm,
+    lineHeight: 20,
+    fontFamily: TYPOGRAPHY.fontFamily.regular,
+    marginBottom: SPACING.xxs,
   },
   tray: {
     borderRadius: INSTRUCTION_CARD_RADIUS - 2,
@@ -332,9 +328,9 @@ const styles = StyleSheet.create({
     gap: 8,
   },
   fieldLabel: {
-    fontSize: FLARE_FONT_SIZE.caption,
-    lineHeight: FLARE_LINE_HEIGHT.caption,
-    fontFamily: FLARE_FONT_FAMILY.medium,
+    fontSize: TYPOGRAPHY.fontSize.sm,
+    lineHeight: 18,
+    fontFamily: TYPOGRAPHY.fontFamily.medium,
   },
   inputRow: {
     flexDirection: "row",
@@ -348,8 +344,8 @@ const styles = StyleSheet.create({
     borderRadius: 10,
     paddingHorizontal: 12,
     paddingVertical: 10,
-    fontSize: FLARE_FONT_SIZE.body,
-    fontFamily: FLARE_FONT_FAMILY.regular,
+    fontSize: TYPOGRAPHY.fontSize.md,
+    fontFamily: TYPOGRAPHY.fontFamily.regular,
   },
   inputMultiline: {
     minHeight: 72,
@@ -360,15 +356,15 @@ const styles = StyleSheet.create({
     flexShrink: 0,
   },
   saveLabel: {
-    ...FLARE_INLINE_ACTION_LINK,
+    fontSize: TYPOGRAPHY.fontSize.md, fontFamily: TYPOGRAPHY.fontFamily.regular,
   },
   cancelHit: {
     alignSelf: "flex-start",
     paddingVertical: 2,
   },
   cancelLabel: {
-    fontSize: FLARE_FONT_SIZE.caption,
-    fontFamily: FLARE_FONT_FAMILY.medium,
+    fontSize: TYPOGRAPHY.fontSize.sm,
+    fontFamily: TYPOGRAPHY.fontFamily.medium,
   },
   savedRow: {
     flexDirection: "row",
@@ -383,22 +379,22 @@ const styles = StyleSheet.create({
     gap: 4,
   },
   savedValue: {
-    fontSize: FLARE_FONT_SIZE.body,
-    lineHeight: FLARE_LINE_HEIGHT.body,
-    fontFamily: FLARE_FONT_FAMILY.medium,
+    fontSize: TYPOGRAPHY.fontSize.md,
+    lineHeight: 22,
+    fontFamily: TYPOGRAPHY.fontFamily.medium,
   },
   moreMeds: {
-    fontSize: FLARE_FONT_SIZE.body,
-    lineHeight: FLARE_LINE_HEIGHT.body,
-    fontFamily: FLARE_FONT_FAMILY.regular,
+    fontSize: TYPOGRAPHY.fontSize.md,
+    lineHeight: 22,
+    fontFamily: TYPOGRAPHY.fontFamily.regular,
   },
   addHint: {
-    fontSize: FLARE_FONT_SIZE.body,
-    lineHeight: FLARE_LINE_HEIGHT.body,
-    fontFamily: FLARE_FONT_FAMILY.regular,
+    fontSize: TYPOGRAPHY.fontSize.md,
+    lineHeight: 22,
+    fontFamily: TYPOGRAPHY.fontFamily.regular,
   },
   addAction: {
-    ...FLARE_INLINE_ACTION_LINK,
+    fontSize: TYPOGRAPHY.fontSize.md, fontFamily: TYPOGRAPHY.fontFamily.regular,
     marginTop: 14,
   },
 });
