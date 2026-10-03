@@ -1,40 +1,21 @@
-import { FLARE_CHROME_LUCIDE, FlareLucideIcon } from "../lib/flareLucideIcons";
+import { FLARE_CHROME_LUCIDE, FlareLucideIcon, FLARE_FEATURE_LUCIDE } from "../lib/flareLucideIcons";
 import { useFocusEffect, useNavigation } from "@react-navigation/native";
 import React, { useCallback, useEffect, useMemo, useRef, useState } from "react";
-import {
-  KeyboardAvoidingView,
-  Modal,
-  Platform,
-  Pressable,
-  StyleSheet,
-  Text,
-  View,
-} from "react-native";
+import { ActivityIndicator, KeyboardAvoidingView, Modal, Platform, Pressable, StyleSheet, Text, View } from "react-native";
 import { showFlareAlert } from "../components/FlareAlertHost";
 import { ScrollView } from "../lib/scrollViews";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { PrimaryButton, SecondaryButton } from "../components/FlareButton";
 import { flareFieldErrorStyle, FlareTextInput } from "../components/FlareInput";
-import {
-  LogHistoryCard,
-  LogHistoryListLoading,
-  LogHistoryEmptyState,
-  LogHistoryPreviewList,
-  buildTimestampLogRowItem,
-  logHistoryCardStyles,
-  LogHistoryListQuietPlaceholder,
-} from "../components/LogHistoryList";
+import { Card } from "../components/MidnightLagoonCard";
+import { TrayRow } from "../components/MidnightLagoonTray";
 import { ConfirmModal } from "../components/ConfirmModal";
-import { InfoHintButton } from "../components/InfoHintButton";
-import { STACKED_DETAIL_ROW_EDGE } from "../components/StackedDetailField";
-import { useLogListSelection } from "../lib/useLogListSelection";
 import { useDeferredListLoading } from "../lib/useDeferredListLoading";
+import { useLogListSelection } from "../lib/useLogListSelection";
 import { formatUkDate } from "../lib/formatUkDate";
-import {
-  FLARE_FONT_FAMILY,
-  FLARE_FONT_SIZE,
-  SCREEN_EDGE_PADDING,
-} from "../lib/layoutConstants";
+import { SPACING, TYPOGRAPHY } from "../designTokens";
+import { FLARE_FONT_FAMILY, FLARE_FONT_SIZE, SCREEN_EDGE_PADDING } from "../lib/layoutConstants";
+import { STACKED_DETAIL_ROW_EDGE } from "../components/StackedDetailField";
 import {
   APPOINTMENT_QUESTIONS_HINT,
   appointmentQuestionFormFromRow,
@@ -316,57 +297,53 @@ export function AppointmentQuestionsPane({
   const showListLoading = useDeferredListLoading(listInitialLoad);
   const listEmpty = !loading && rows.length === 0;
 
-  const listCard = (
-    <LogHistoryCard>
-      <View style={logHistoryCardStyles.trackerCardBody}>
-        {showListLoading ? (
-          <LogHistoryListLoading />
-        ) : listInitialLoad ? (
-          <LogHistoryListQuietPlaceholder />
-        ) : listEmpty ? (
-          <LogHistoryEmptyState icon={QUESTIONS_EMPTY_ICON} />
-        ) : (
-          <LogHistoryPreviewList
-            items={rows.map((row) =>
-              buildTimestampLogRowItem({
-                id: String(row.id),
-                title: row.body,
-                whenIso: row.created_at,
-                accessibilityLabel: `${row.body}. Added ${formatUkDate(row.created_at)}. Edit`,
-              }),
-            )}
-            visibleCount={rows.length}
-            hasMore={false}
-            loadingMore={false}
-            loadMoreLabel="load more"
-            onLoadMore={() => {}}
-            rowTextLayout="default"
-            multilineTitle
-            onPressItem={(id) => {
-              const row = rows.find((r) => String(r.id) === id);
-              if (row) openEdit(row);
-            }}
-            selectionMode={selectionMode}
-            selectedIds={selectedIds}
-            onToggleSelect={toggleSelect}
-            onLongPressItem={enterSelectionWith}
-          />
-        )}
-      </View>
-    </LogHistoryCard>
-  );
-
-  const modals = (
+  return (
     <>
+      {showListLoading ? (
+        <View style={styles.loadingWrap}>
+          <ActivityIndicator size="small" color={c.primary} />
+        </View>
+      ) : listEmpty ? (
+        <Card>
+          <View style={styles.emptyWrap}>
+            <FlareLucideIcon icon={QUESTIONS_EMPTY_ICON} size={40} color={c.textSecondary} />
+            <Text style={[styles.emptyText, { color: c.textSecondary, fontFamily: TYPOGRAPHY.fontFamily.regular }]}>
+              No questions yet.
+            </Text>
+          </View>
+        </Card>
+      ) : (
+        <Card noPadding style={{ paddingVertical: SPACING.sm, paddingHorizontal: SPACING.md }}>
+          {rows.map((row) => {
+            const timestamp = new Date(row.created_at).toLocaleDateString("en-GB", {
+              day: "numeric",
+              month: "short",
+            });
+            return (
+              <TrayRow
+                key={row.id}
+                icon={FLARE_FEATURE_LUCIDE.questions}
+                label={row.body}
+                value={timestamp}
+                showChevron
+                onPress={() => openEdit(row)}
+                onLongPress={selectionMode ? undefined : () => enterSelectionWith(String(row.id))}
+              />
+            );
+          })}
+        </Card>
+      )}
+
       <ConfirmModal
         visible={bulkDeleteOpen}
         title={selectedIds.size === 1 ? "Delete question?" : `Delete ${selectedIds.size} questions?`}
         message="This action cannot be undone."
         confirmLabel={bulkDeleting ? "Deleting…" : "Delete"}
-        confirmDestructive
+        confirmDanger
         onConfirm={handleBulkDeleteConfirm}
         onCancel={() => setBulkDeleteOpen(false)}
       />
+
       {sheetOpen ? (
         <QuestionSheet
           visible={sheetOpen}
@@ -380,25 +357,22 @@ export function AppointmentQuestionsPane({
       ) : null}
     </>
   );
-
-  if (embedded) {
-    return (
-      <>
-        {listCard}
-        {modals}
-      </>
-    );
-  }
-
-  return (
-    <>
-      {listCard}
-      {modals}
-    </>
-  );
 }
 
 const styles = StyleSheet.create({
+  loadingWrap: {
+    paddingVertical: 24,
+    alignItems: "center",
+  },
+  emptyWrap: {
+    alignItems: "center",
+    paddingVertical: SPACING.xl,
+    gap: SPACING.md,
+  },
+  emptyText: {
+    fontSize: TYPOGRAPHY.fontSize.md,
+    textAlign: "center",
+  },
   sheetRoot: { flex: 1 },
   sheetHeader: {
     flexDirection: "row",
