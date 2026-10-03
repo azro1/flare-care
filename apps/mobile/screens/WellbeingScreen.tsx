@@ -1,27 +1,22 @@
 import { useFocusEffect, useNavigation } from "@react-navigation/native";
 import React, { useCallback, useMemo, useRef } from "react";
-import { InteractionManager, View } from "react-native";
+import { ActivityIndicator, InteractionManager, Pressable, StyleSheet, Text, View } from "react-native";
+import { ScrollView } from "../lib/scrollViews";
 import { showFlareAlert } from "../components/FlareAlertHost";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
-import {
-  LogHistoryCard,
-  LogHistoryListLoading,
-  LogHistoryEmptyState,
-  LogHistoryPreviewList,
-  LOG_HISTORY_LOAD_MORE_BATCH,
-  buildTimestampLogRowItem,
-  logHistoryCardStyles,
-  LogHistoryListQuietPlaceholder,
-} from "../components/LogHistoryList";
+import { Card } from "../components/MidnightLagoonCard";
+import { TrayRow } from "../components/MidnightLagoonTray";
+import { ScreenHeader } from "../components/MidnightLagoonScreenHeader";
 import { ConfirmModal } from "../components/ConfirmModal";
-import { InstructionScreenShell } from "../components/InstructionScreenShell";
+import { FlareLucideIcon, FLARE_FEATURE_LUCIDE } from "../lib/flareLucideIcons";
 import { invalidateDashboardSnapshot } from "../lib/dashboardSnapshotCache";
 import { recordRecentActivityEvent } from "../lib/recentActivityEvents";
 import { useLogListSelection } from "../lib/useLogListSelection";
 import { usePaginatedLogList } from "../lib/paginatedLogList";
 import { useDeferredListLoading } from "../lib/useDeferredListLoading";
 import { formatUkDate } from "../lib/formatUkDate";
-import { bottomTabBarHeight } from "../lib/layoutConstants";
+import { SPACING, TYPOGRAPHY } from "../designTokens";
+import { LOG_HISTORY_LOAD_MORE_BATCH } from "../components/LogHistoryList";
 import {
   WELLBEING_ICON,
   WELLBEING_LOG_TITLE,
@@ -32,13 +27,14 @@ import {
   type WellbeingRow,
 } from "../lib/wellbeingShared";
 import { TABLES } from "../lib/supabase";
+import { useFlareColors } from "../theme";
 
 type SessionUser = { id: string };
 
 export function WellbeingScreen({ user }: { user: SessionUser }) {
+  const c = useFlareColors();
   const navigation = useNavigation<any>();
   const insets = useSafeAreaInsets();
-  const bottomBarClearance = bottomTabBarHeight(insets.bottom);
 
   const {
     rows: historyRows,
@@ -114,62 +110,105 @@ export function WellbeingScreen({ user }: { user: SessionUser }) {
   const listInitialLoad = historyLoading && historyRows.length === 0;
   const showListLoading = useDeferredListLoading(listInitialLoad);
   const historyEmpty = !historyLoading && historyTotalCount === 0;
-  const scrollBottomPadTotal = bottomBarClearance;
 
   return (
-    <InstructionScreenShell
-      showInstruction={false}
-      contentPaddingBottom={scrollBottomPadTotal}
-      instruction={null}
-      footer={
-        <ConfirmModal
-          visible={bulkDeleteOpen}
-          title={
-            selectedIds.size === 1
-              ? "Delete wellbeing entry?"
-              : `Delete ${selectedIds.size} wellbeing entries?`
-          }
-          message="This action cannot be undone."
-          confirmLabel={bulkDeleting ? "Deleting…" : "Delete"}
-          confirmDestructive
-          onConfirm={handleBulkDeleteConfirm}
-          onCancel={() => setBulkDeleteOpen(false)}
-        />
-      }
-    >
-      <LogHistoryCard>
-        <View style={logHistoryCardStyles.trackerCardBody}>
+    <>
+      <View style={[styles.screen, { backgroundColor: c.screen }]}>
+        <ScrollView
+          style={styles.scroll}
+          contentContainerStyle={[styles.scrollContent, { paddingBottom: Math.max(insets.bottom, 16) + 24 }]}
+        >
+          <ScreenHeader title="Wellbeing Logs" />
+
           {showListLoading ? (
-            <LogHistoryListLoading />
-          ) : listInitialLoad ? (
-            <LogHistoryListQuietPlaceholder />
+            <View style={styles.loadingWrap}>
+              <ActivityIndicator size="small" color={c.primary} />
+            </View>
           ) : historyEmpty ? (
-            <LogHistoryEmptyState icon={WELLBEING_ICON} />
+            <Card>
+              <View style={styles.emptyWrap}>
+                <FlareLucideIcon icon={WELLBEING_ICON} size={40} color={c.textSecondary} />
+                <Text style={[styles.emptyText, { color: c.textSecondary, fontFamily: TYPOGRAPHY.fontFamily.regular }]}>
+                  No wellbeing entries yet.
+                </Text>
+              </View>
+            </Card>
           ) : (
-            <LogHistoryPreviewList
-              items={historyRows.map((row) =>
-                buildTimestampLogRowItem({
-                  id: String(row.id),
-                  title: WELLBEING_LOG_TITLE,
-                  whenIso: row.created_at,
-                  accessibilityLabel: `${WELLBEING_LOG_TITLE}, ${formatUkDate(row.date)}. View details`,
-                }),
-              )}
-              visibleCount={historyVisibleCount}
-              hasMore={historyHasMore}
-              loadingMore={historyLoadingMore}
-              loadMoreLabel="load more"
-              onLoadMore={() => void loadMoreHistory()}
-              rowTextLayout="default"
-              onPressItem={(logId) => navigation.navigate("WellbeingLogDetail", { id: logId })}
-              selectionMode={selectionMode}
-              selectedIds={selectedIds}
-              onToggleSelect={toggleSelect}
-              onLongPressItem={enterSelectionWith}
-            />
+            <>
+              <Card noPadding style={{ paddingVertical: SPACING.sm, paddingHorizontal: SPACING.md }}>
+                {historyRows.map((row) => {
+                  const timestamp = new Date(row.date).toLocaleDateString("en-GB", {
+                    day: "numeric",
+                    month: "short",
+                  });
+                  return (
+                    <TrayRow
+                      key={row.id}
+                      icon={FLARE_FEATURE_LUCIDE.wellbeing}
+                      label={WELLBEING_LOG_TITLE}
+                      value={timestamp}
+                      showChevron
+                      onPress={() => navigation.navigate("WellbeingLogDetail", { id: String(row.id) })}
+                      onLongPress={selectionMode ? undefined : () => enterSelectionWith(String(row.id))}
+                    />
+                  );
+                })}
+              </Card>
+
+              {historyHasMore ? (
+                <Pressable
+                  accessibilityRole="button"
+                  onPress={() => void loadMoreHistory()}
+                  style={({ pressed }) => [styles.loadMore, pressed && { opacity: 0.7 }]}
+                >
+                  <Text style={[styles.loadMoreText, { color: c.primary, fontFamily: TYPOGRAPHY.fontFamily.medium }]}>
+                    {historyLoadingMore ? "loading…" : "load more"}
+                  </Text>
+                </Pressable>
+              ) : null}
+            </>
           )}
-        </View>
-      </LogHistoryCard>
-    </InstructionScreenShell>
+        </ScrollView>
+      </View>
+
+      <ConfirmModal
+        visible={bulkDeleteOpen}
+        title={selectedIds.size === 1 ? "Delete wellbeing entry?" : `Delete ${selectedIds.size} wellbeing entries?`}
+        message="This action cannot be undone."
+        confirmLabel={bulkDeleting ? "Deleting…" : "Delete"}
+        confirmDanger
+        onConfirm={handleBulkDeleteConfirm}
+        onCancel={() => setBulkDeleteOpen(false)}
+      />
+    </>
   );
 }
+
+const styles = StyleSheet.create({
+  screen: { flex: 1 },
+  scroll: { flex: 1 },
+  scrollContent: {
+    paddingHorizontal: SPACING.screen,
+    paddingTop: SPACING.lg,
+  },
+  loadingWrap: {
+    paddingVertical: 24,
+    alignItems: "center",
+  },
+  emptyWrap: {
+    alignItems: "center",
+    paddingVertical: SPACING.xl,
+    gap: SPACING.md,
+  },
+  emptyText: {
+    fontSize: TYPOGRAPHY.fontSize.md,
+    textAlign: "center",
+  },
+  loadMore: {
+    paddingVertical: SPACING.md,
+    alignItems: "center",
+  },
+  loadMoreText: {
+    fontSize: TYPOGRAPHY.fontSize.sm,
+  },
+});
