@@ -4417,96 +4417,100 @@ function AccountScreen({
   }, [beginSignOutBlocking, endSignOutBlocking, finishSignOut, prepareSignOut, restoreAfterAbortedSignOut, user.id]);
 
   return (
-    <ScrollView
-      style={[styles.screen, { backgroundColor: c.screen }]}
-      contentContainerStyle={{ paddingBottom: bottomScrollInset + 24 }}
-    >
-      <View style={[logHistoryCardStyles.trackerCard, { backgroundColor: c.card }]}>
-        <Pressable
-          accessibilityRole="button"
-          accessibilityLabel={`Personal Details, ${accountFirstName}, ${user.email || "Unknown user"}`}
-          onPress={() => navigation.navigate("AccountPersonalDetails")}
-          hitSlop={4}
-          style={[
-            styles.accountIdentityNavRow,
-            styles.accountIdentityNavInset,
-            logHistoryListStyles.logList,
-            { backgroundColor: c.surfaceSubtle },
-          ]}
-        >
-          <View style={styles.accountIdentityRow}>
-            <View style={[styles.accountAvatarWell, { backgroundColor: c.surfaceRaised }]}>
-              <FlareLucideIcon icon={FLARE_CHROME_LUCIDE.person} size={26} color={c.primary} />
+    <View style={[styles.screen, { backgroundColor: c.screen }]}>
+      <ScrollView
+        style={styles.scroll}
+        contentContainerStyle={[styles.scrollContent, { paddingBottom: bottomScrollInset + 24 }]}
+      >
+        <Card>
+          <Pressable
+            accessibilityRole="button"
+            accessibilityLabel={`Personal Details, ${accountFirstName}, ${user.email || "Unknown user"}`}
+            onPress={() => navigation.navigate("AccountPersonalDetails")}
+            hitSlop={4}
+            style={[styles.accountIdentityNavRow, { backgroundColor: c.surfaceSubtle }]}
+          >
+            <View style={styles.accountIdentityRow}>
+              <View style={[styles.accountAvatarWell, { backgroundColor: c.surfaceRaised }]}>
+                <FlareLucideIcon icon={FLARE_CHROME_LUCIDE.person} size={26} color={c.primary} />
+              </View>
+              <View style={styles.accountIdentityTextCol}>
+                <Text style={[styles.accountFirstName, { color: c.text, fontFamily: TYPOGRAPHY.fontFamily.semibold }]}>
+                  {accountFirstName}
+                </Text>
+                <Text style={[styles.accountEmailLine, { color: c.textMuted, fontFamily: TYPOGRAPHY.fontFamily.regular }]}>
+                  {user.email || "Unknown user"}
+                </Text>
+              </View>
             </View>
-            <View style={styles.accountIdentityTextCol}>
-              <Text style={[styles.accountFirstName, { color: c.text }]}>{accountFirstName}</Text>
-              <Text style={[styles.accountEmailLine, { color: c.textMuted }]}>{user.email || "Unknown user"}</Text>
-            </View>
-          </View>
-          <FlareLucideIcon
-            icon={FLARE_CHROME_LUCIDE.forward}
-            size={NAV_ROW_CHEVRON_SIZE}
-            color={c.text}
+            <FlareLucideIcon icon={FLARE_CHROME_LUCIDE.forward} size={NAV_ROW_CHEVRON_SIZE} color={c.text} />
+          </Pressable>
+        </Card>
+
+        <View style={{ marginTop: SPACING.lg }}>
+          <OneLineTrayList
+            items={ACCOUNT_OPTION_ROUTES.map((item) => ({
+              id: item.route,
+              title: item.label,
+              accessibilityLabel: item.label,
+            }))}
+            onPressItem={(route) => navigation.navigate(route)}
           />
-        </Pressable>
-      </View>
-      <OneLineTrayList
-        items={ACCOUNT_OPTION_ROUTES.map((item) => ({
-          id: item.route,
-          title: item.label,
-          accessibilityLabel: item.label,
-        }))}
-        onPressItem={(route) => navigation.navigate(route)}
-      />
-      <View style={styles.accountDeleteFooter}>
-        <Pressable
-          accessibilityRole="button"
-          accessibilityLabel="Delete account"
-          onPress={() => setDeleteAccountConfirmOpen(true)}
-          hitSlop={8}
-          style={styles.accountDeleteLink}
-        >
-          <Text style={[styles.accountDeleteLinkText, { color: c.destructiveFill }]}>Delete account</Text>
-        </Pressable>
-        <Text style={[styles.accountDeleteHint, { color: c.textMuted }]}>
-          Permanently removes your account and data.
-        </Text>
-      </View>
-      <ConfirmModal
-        visible={deleteAccountConfirmOpen}
-        title="Delete account"
-        message={
-          <>
-            <Text
-              style={{
-                color: c.textMuted,
-                fontSize: FLARE_FONT_SIZE.subhead,
-                lineHeight: FLARE_LINE_HEIGHT.subhead,
-                fontFamily: FLARE_FONT_FAMILY.regular,
-              }}
-            >
-              This will permanently delete your account and all your data. This can't be undone.
+        </View>
+
+        <View style={styles.accountDeleteFooter}>
+          <Pressable
+            accessibilityRole="button"
+            accessibilityLabel="Delete account"
+            onPress={() => setDeleteAccountConfirmOpen(true)}
+            hitSlop={8}
+            style={styles.accountDeleteLink}
+          >
+            <Text style={[styles.accountDeleteLinkText, { color: c.destructiveFill, fontFamily: TYPOGRAPHY.fontFamily.regular }]}>
+              Delete account
             </Text>
-            <Text
-              style={{
-                color: c.textMuted,
-                fontSize: FLARE_FONT_SIZE.subhead,
-                lineHeight: FLARE_LINE_HEIGHT.subhead,
-                fontFamily: FLARE_FONT_FAMILY.regular,
-                marginTop: 8,
-              }}
-            >
-              Are you sure?
-            </Text>
-          </>
-        }
-        confirmLabel="Delete"
-        cancelLabel="Cancel"
-        confirmDanger
-        onCancel={() => setDeleteAccountConfirmOpen(false)}
-        onConfirm={handleDeleteAccountConfirm}
-      />
-    </ScrollView>
+          </Pressable>
+          <Text style={[styles.accountDeleteHint, { color: c.textSecondary, fontFamily: TYPOGRAPHY.fontFamily.regular }]}>
+            Permanently removes your account and data.
+          </Text>
+        </View>
+
+        <ConfirmModal
+          visible={deleteAccountConfirmOpen}
+          title="Delete account"
+          message={
+            <>
+              <Text
+                style={{
+                  color: c.textMuted,
+                  fontSize: TYPOGRAPHY.fontSize.md,
+                  lineHeight: 20,
+                  fontFamily: TYPOGRAPHY.fontFamily.regular,
+                }}
+              >
+                This will permanently delete your account and all your data. This can't be undone.
+              </Text>
+              <Text
+                style={{
+                  color: c.textMuted,
+                  fontSize: TYPOGRAPHY.fontSize.md,
+                  lineHeight: 20,
+                  fontFamily: TYPOGRAPHY.fontFamily.regular,
+                  marginTop: SPACING.sm,
+                }}
+              >
+                Are you sure?
+              </Text>
+            </>
+          }
+          confirmLabel="Delete"
+          cancelLabel="Cancel"
+          confirmDanger
+          onCancel={() => setDeleteAccountConfirmOpen(false)}
+          onConfirm={handleDeleteAccountConfirm}
+        />
+      </ScrollView>
+    </View>
   );
 }
 
