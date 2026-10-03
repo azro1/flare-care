@@ -4006,40 +4006,49 @@ function AccountPersonalDetailsScreen({ user }: { user: SessionUser }) {
   const displayName = user.displayName?.trim() || "Not set";
 
   return (
-    <ScrollView
-      style={[styles.screen, { backgroundColor: c.screen }]}
-      contentContainerStyle={{ flexGrow: 1, paddingBottom: bottomScrollInset + 24, backgroundColor: c.screen }}
-    >
-      <View style={[logHistoryCardStyles.trackerCard, { backgroundColor: c.card }]}>
-        <View
-          style={[
-            styles.accountIdentityNavRow,
-            styles.accountIdentityNavInset,
-            logHistoryListStyles.logList,
-            { backgroundColor: c.surfaceSubtle },
-          ]}
-        >
-          <View style={styles.accountIdentityRow}>
-            <View style={[styles.accountAvatarWell, { backgroundColor: c.surfaceRaised }]}>
-              <FlareLucideIcon icon={FLARE_CHROME_LUCIDE.person} size={26} color={c.primary} />
-            </View>
-            <View style={styles.accountIdentityTextCol}>
-              <Text style={[styles.accountFirstName, { color: c.text }]}>{accountIdentityFirstLine(user)}</Text>
-              <Text style={[styles.accountEmailLine, { color: c.textMuted }]}>{user.email || "Unknown user"}</Text>
+    <View style={[styles.screen, { backgroundColor: c.screen }]}>
+      <ScrollView
+        style={styles.scroll}
+        contentContainerStyle={[styles.scrollContent, { paddingBottom: bottomScrollInset + 24 }]}
+      >
+        <Card>
+          <View style={[styles.accountIdentityNavRow, { backgroundColor: c.surfaceSubtle }]}>
+            <View style={styles.accountIdentityRow}>
+              <View style={[styles.accountAvatarWell, { backgroundColor: c.surfaceRaised }]}>
+                <FlareLucideIcon icon={FLARE_CHROME_LUCIDE.person} size={26} color={c.primary} />
+              </View>
+              <View style={styles.accountIdentityTextCol}>
+                <Text style={[styles.accountFirstName, { color: c.text, fontFamily: TYPOGRAPHY.fontFamily.semibold }]}>
+                  {accountIdentityFirstLine(user)}
+                </Text>
+                <Text style={[styles.accountEmailLine, { color: c.textMuted, fontFamily: TYPOGRAPHY.fontFamily.regular }]}>
+                  {user.email || "Unknown user"}
+                </Text>
+              </View>
             </View>
           </View>
-        </View>
-      </View>
-      <View style={[logHistoryCardStyles.trackerCard, { backgroundColor: c.card }]}>
-        <LogDetailFieldGroup
-          compact
-          fields={[
-            { label: "Full name", value: displayName },
-            { label: "Email", value: user.email || "Not available" },
-          ]}
-        />
-      </View>
-    </ScrollView>
+        </Card>
+
+        <Card style={{ marginTop: SPACING.lg }}>
+          <View style={styles.fieldRow}>
+            <Text style={[styles.fieldLabel, { color: c.textSecondary, fontFamily: TYPOGRAPHY.fontFamily.regular }]}>
+              Full name
+            </Text>
+            <Text style={[styles.fieldValue, { color: c.text, fontFamily: TYPOGRAPHY.fontFamily.regular }]}>
+              {displayName}
+            </Text>
+          </View>
+          <View style={styles.fieldRow}>
+            <Text style={[styles.fieldLabel, { color: c.textSecondary, fontFamily: TYPOGRAPHY.fontFamily.regular }]}>
+              Email
+            </Text>
+            <Text style={[styles.fieldValue, { color: c.text, fontFamily: TYPOGRAPHY.fontFamily.regular }]}>
+              {user.email || "Not available"}
+            </Text>
+          </View>
+        </Card>
+      </ScrollView>
+    </View>
   );
 }
 
