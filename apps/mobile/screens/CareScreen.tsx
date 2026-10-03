@@ -31,7 +31,6 @@ export function CareScreen({ user }: CareScreenProps) {
         ]}
       >
         <ScreenHeader title="Care" />
-
         <View style={[styles.appointmentHero, { backgroundColor: colors.primary }]}>
           <Text style={[styles.heroLabel, { fontFamily: TYPOGRAPHY.fontFamily.semibold }]}>
             NEXT APPOINTMENT

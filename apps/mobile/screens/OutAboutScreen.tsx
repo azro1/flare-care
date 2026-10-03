@@ -33,7 +33,6 @@ export function OutAboutScreen() {
         contentContainerStyle={[styles.content, { paddingBottom: bottomScrollInset + 16 }]}
       >
         <ScreenHeader title="Out & About" />
-
         <Card noPadding style={{ paddingVertical: SPACING.sm, paddingHorizontal: SPACING.md }}>
           <TrayRow
             icon={GOING_OUT_ICON}

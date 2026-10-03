@@ -317,7 +317,6 @@ export function MedicalSupplyOrderScreen({ user }: { user: SessionUser }) {
           contentContainerStyle={[styles.scrollContent, { paddingBottom: scrollBottomPad }]}
         >
           <ScreenHeader title={headerName} />
-
           <Card style={styles.statusCard}>
             <View style={styles.statusCopy}>
               {dueStatus === "overdue" && kit?.next_due_date ? (

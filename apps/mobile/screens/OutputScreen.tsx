@@ -498,7 +498,6 @@ export function OutputScreen({ user }: { user: SessionUser }) {
           contentContainerStyle={[styles.scrollContent, { paddingBottom: showFab ? fabBottom + 80 : Math.max(insets.bottom, 16) + 24 }]}
         >
           <ScreenHeader title="Fluid Output" />
-
           <SegmentedTabs tabs={tabs} activeValue={activeTab} onChange={setActiveTab} />
 
           {todayKindMl != null ? (

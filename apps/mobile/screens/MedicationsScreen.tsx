@@ -419,7 +419,6 @@ export function MedicationsScreen({ user }: { user: SessionUser }) {
     <View style={[styles.screen, { backgroundColor: c.screen }]}>
       <ScrollView style={styles.scroll} contentContainerStyle={[styles.scrollContent, { paddingBottom: scrollPadding }]}>
         <ScreenHeader title="My Meds" />
-
         {listLoading ? (
           <View style={styles.loadingWrap}>
             <ActivityIndicator size="small" color={c.primary} />

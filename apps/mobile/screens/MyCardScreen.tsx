@@ -153,7 +153,6 @@ export function MyCardScreen({ userId }: Props) {
         <Text style={[styles.support, { color: c.textMuted, fontFamily: TYPOGRAPHY.fontFamily.regular }]}>
           A personal card containing key information about you and your condition.
         </Text>
-
         <View style={[styles.tray, { backgroundColor: c.surfaceSubtle }]}>
           {MY_IBD_FIELDS.map((field, index) => {
             const fromMyMeds = field.key === "treatment";

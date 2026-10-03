@@ -42,7 +42,6 @@ export function MyToolsScreen() {
         contentContainerStyle={[styles.content, { paddingBottom: bottomScrollInset + 16 }]}
       >
         <ScreenHeader title="My Tools" />
-
         <View
           onLayout={(e) => {
             const w = Math.round(e.nativeEvent.layout.width);

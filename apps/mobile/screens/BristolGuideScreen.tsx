@@ -62,7 +62,6 @@ export function BristolGuideScreen({ user }: { user: SessionUser }) {
         ]}
       >
         <ScreenHeader title="Bristol Stool Chart" />
-
         <Card noPadding style={{ paddingVertical: SPACING.sm, paddingHorizontal: SPACING.md }}>
           {BRISTOL_TYPES.map((item) => (
             <View key={item.type}>

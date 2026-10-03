@@ -225,7 +225,6 @@ export function MedicationDetailScreen({ user }: { user: SessionUser }) {
       <View style={[styles.screen, { backgroundColor: c.screen }]}>
         <ScrollView style={styles.scroll} contentContainerStyle={[styles.scrollContent, { paddingBottom: bottomPad }]} showsVerticalScrollIndicator={false}>
           <ScreenHeader title={row.name} subtitle={formatAddedAtHeader(row.created_at)} />
-
           <Card noPadding style={{ paddingVertical: SPACING.sm, paddingHorizontal: SPACING.md }}>
             <TrayRow label="Medication" value={row.name} />
             <TrayRow label="Dosage" value={`${row.dosage_mg}mg`} />

@@ -194,7 +194,6 @@ export function AppointmentDetailScreen({ user }: { user: SessionUser }) {
       <View style={[styles.screen, { backgroundColor: c.screen }]}>
         <ScrollView style={styles.scroll} contentContainerStyle={[styles.scrollContent, { paddingBottom: bottomPad }]} showsVerticalScrollIndicator={false}>
           <ScreenHeader title={row.type?.trim() || "Appointment"} subtitle={formatAddedAtHeader(row.created_at)} />
-
           <Card noPadding style={{ paddingVertical: SPACING.sm, paddingHorizontal: SPACING.md }}>
             <TrayRow label="Date" value={formatUkDate(row.date) || "Not set"} />
             <TrayRow label="Time" value={row.time?.trim() || "Not set"} />

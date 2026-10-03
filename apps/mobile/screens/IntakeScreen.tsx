@@ -478,7 +478,6 @@ export function IntakeScreen({ user }: { user: SessionUser }) {
           contentContainerStyle={[styles.scrollContent, { paddingBottom: showFab ? fabBottom + 80 : Math.max(insets.bottom, 16) + 24 }]}
         >
           <ScreenHeader title="Food & Drink" />
-
           <SegmentedTabs tabs={tabs} activeValue={activeTab} onChange={setActiveTab} />
 
           {showListLoading ? (

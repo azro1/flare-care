@@ -603,7 +603,6 @@ export function BowelScreen({ user }: { user: SessionUser }) {
           ]}
         >
           <ScreenHeader title="Bowel Movements" />
-
           {showListLoading ? (
             <View style={stylesScreen.loadingWrap}>
               <ActivityIndicator size="small" color={c.primary} />

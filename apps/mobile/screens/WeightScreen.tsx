@@ -349,7 +349,6 @@ export function WeightScreen({ user }: { user: SessionUser }) {
           contentContainerStyle={[styles.scrollContent, { paddingBottom: showFab ? fabBottom + 80 : Math.max(insets.bottom, 16) + 24 }]}
         >
           <ScreenHeader title="My Weight" />
-
           {showListLoading ? (
             <View style={styles.loadingWrap}>
               <ActivityIndicator size="small" color={c.primary} />

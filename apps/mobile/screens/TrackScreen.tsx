@@ -89,7 +89,6 @@ export function TrackScreen({ user }: TrackScreenProps) {
         ]}
       >
         <ScreenHeader title="Track" />
-
         <SegmentedTabs tabs={timeTabs} activeValue={timePeriod} onChange={handleTabChange} />
 
         <Card>

@@ -119,7 +119,6 @@ export function WellbeingScreen({ user }: { user: SessionUser }) {
           contentContainerStyle={[styles.scrollContent, { paddingBottom: Math.max(insets.bottom, 16) + 24 }]}
         >
           <ScreenHeader title="Wellbeing Logs" />
-
           {showListLoading ? (
             <View style={styles.loadingWrap}>
               <ActivityIndicator size="small" color={c.primary} />

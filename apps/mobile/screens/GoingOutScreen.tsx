@@ -317,7 +317,6 @@ export function GoingOutScreen({ userId }: Props) {
               Choose the items you want on your Going Out checklist. Add your own items or remove
               anything you don't need. Changes save as you go.
             </Text>
-
             <View style={[styles.checklistTray, { backgroundColor: c.surfaceSubtle }]}>
               {GOING_OUT_SUGGESTIONS.map((item, index) => {
                 const on = draft.selectedIds.includes(item.id);
@@ -519,7 +518,6 @@ export function GoingOutScreen({ userId }: Props) {
         <Text style={[styles.support, { color: c.textMuted, fontFamily: TYPOGRAPHY.fontFamily.regular }]}>
           Tick off as you go. Change what appears here anytime in your checklist.
         </Text>
-
         <View style={[styles.checklistTray, { backgroundColor: c.surfaceSubtle }]}>
           {profile.selectedIds.map((id, index) => {
             const label = labelForGoingOutItem(profile, id);

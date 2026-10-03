@@ -200,7 +200,6 @@ export function MedicalSuppliesScreen({ user }: { user: SessionUser }) {
           contentContainerStyle={[styles.scrollContent, { paddingBottom: scrollBottomPad }]}
         >
           <ScreenHeader title="Supplies" />
-
           <Card noPadding style={{ paddingVertical: SPACING.sm, paddingHorizontal: SPACING.md }}>
             {entries.map(({ kit: row, itemCount, status }) => {
               const id = String(row.id);
