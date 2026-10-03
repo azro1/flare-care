@@ -6,18 +6,14 @@ import { showFlareAlert } from "../components/FlareAlertHost";
 import { ScrollView } from "../lib/scrollViews";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { ConfirmModal } from "../components/ConfirmModal";
-import {
-  LogDetailAddedHeader,
-  LogDetailCard,
-  LogDetailFieldGroup,
-  logDetailStyles,
-} from "../components/LogDetailLayout";
-import { flareCardSectionStyles } from "../components/FlareScreenSectionTitle";
+import { Card } from "../components/MidnightLagoonCard";
+import { SectionLabel } from "../components/MidnightLagoonSectionLabel";
 import { invalidateDashboardSnapshot } from "../lib/dashboardSnapshotCache";
 import { formatAddedAtHeader } from "../lib/logDisplay";
 import { formatUkDate } from "../lib/formatUkDate";
 import { formatUkTimeFromOccurred, occurredAtToFormParts } from "../lib/bowelMovementShared";
-import { FLARE_FONT_FAMILY, FLARE_FONT_SIZE, HEADER_ACTION_BTN_WIDTH, HEADER_CHROME_ICON_SIZE } from "../lib/layoutConstants";
+import { SPACING, TYPOGRAPHY } from "../designTokens";
+import { HEADER_ACTION_BTN_WIDTH, HEADER_CHROME_ICON_SIZE } from "../lib/layoutConstants";
 import {
   formatIntakeMl,
   intakeFormFromRow,
@@ -179,21 +175,26 @@ export function IntakeLogDetailScreen({ user }: { user: SessionUser }) {
   }, [deleting, handleEdit, loading, navigation, paramKind, row]);
 
   const bottomPad = Math.max(insets.bottom, 16) + 24;
+  const notes = row?.notes?.trim() ?? "";
 
   if (loading) {
     return (
       <View style={[styles.centered, { backgroundColor: c.screen, paddingBottom: bottomPad }]}>
-        <ActivityIndicator color={c.primary} />
-        <Text style={[styles.muted, { color: c.textMuted }]}>Loading…</Text>
+        <ActivityIndicator size="small" color={c.primary} />
+        <Text style={[styles.mutedText, { color: c.textSecondary, fontFamily: TYPOGRAPHY.fontFamily.regular }]}>Loading…</Text>
       </View>
     );
   }
 
   if (!row) {
     return (
-      <ScrollView style={[logDetailStyles.scroll, { backgroundColor: c.screen }]} contentContainerStyle={{ paddingBottom: bottomPad }}>
-        <Text style={[styles.muted, { color: c.textMuted }]}>Could not load this entry.</Text>
-      </ScrollView>
+      <View style={[styles.screen, { backgroundColor: c.screen }]}>
+        <ScrollView style={styles.scroll} contentContainerStyle={[styles.scrollContent, { paddingBottom: bottomPad }]}>
+          <Text style={[styles.mutedText, { color: c.textSecondary, fontFamily: TYPOGRAPHY.fontFamily.regular }]}>
+            Could not load this entry.
+          </Text>
+        </ScrollView>
+      </View>
     );
   }
 
@@ -202,53 +203,115 @@ export function IntakeLogDetailScreen({ user }: { user: SessionUser }) {
 
   return (
     <>
-      <ScrollView
-        style={[logDetailStyles.scroll, { backgroundColor: c.screen }]}
-        contentContainerStyle={{ paddingBottom: bottomPad }}
-        showsVerticalScrollIndicator={false}
-      >
-        <LogDetailAddedHeader text={formatAddedAtHeader(row.created_at)} />
+      <View style={[styles.screen, { backgroundColor: c.screen }]}>
+        <ScrollView style={styles.scroll} contentContainerStyle={[styles.scrollContent, { paddingBottom: bottomPad }]}>
+          <Text style={[styles.addedHeader, { color: c.textSecondary, fontFamily: TYPOGRAPHY.fontFamily.regular }]}>
+            {formatAddedAtHeader(row.created_at)}
+          </Text>
 
-        <LogDetailCard style={flareCardSectionStyles.container}>
-          <LogDetailFieldGroup
-            fields={[
-              { label: "Type", value: intakeKindLabel(row.kind) },
-              { label: "Date", value: formatUkDate(date) || "Not set" },
-              { label: "Time", value: formatUkTimeFromOccurred(row.occurred_at) || "Not set" },
-              { label: "Item", value: row.body?.trim() || "Not set" },
-              ...(amountLabel ? [{ label: "Amount", value: amountLabel }] : []),
-              { label: "Notes", value: row.notes?.trim() || "Not set" },
-            ]}
-          />
-        </LogDetailCard>
-      </ScrollView>
+          <Card>
+            <View style={styles.fieldList}>
+              <View style={styles.fieldRow}>
+                <Text style={[styles.fieldLabel, { color: c.textSecondary, fontFamily: TYPOGRAPHY.fontFamily.regular }]}>Type</Text>
+                <Text style={[styles.fieldValue, { color: c.text, fontFamily: TYPOGRAPHY.fontFamily.medium }]}>
+                  {intakeKindLabel(row.kind)}
+                </Text>
+              </View>
+              <View style={styles.fieldRow}>
+                <Text style={[styles.fieldLabel, { color: c.textSecondary, fontFamily: TYPOGRAPHY.fontFamily.regular }]}>Date</Text>
+                <Text style={[styles.fieldValue, { color: c.text, fontFamily: TYPOGRAPHY.fontFamily.medium }]}>
+                  {formatUkDate(date) || "Not set"}
+                </Text>
+              </View>
+              <View style={styles.fieldRow}>
+                <Text style={[styles.fieldLabel, { color: c.textSecondary, fontFamily: TYPOGRAPHY.fontFamily.regular }]}>Time</Text>
+                <Text style={[styles.fieldValue, { color: c.text, fontFamily: TYPOGRAPHY.fontFamily.medium }]}>
+                  {formatUkTimeFromOccurred(row.occurred_at) || "Not set"}
+                </Text>
+              </View>
+              <View style={styles.fieldRow}>
+                <Text style={[styles.fieldLabel, { color: c.textSecondary, fontFamily: TYPOGRAPHY.fontFamily.regular }]}>Item</Text>
+                <Text style={[styles.fieldValue, { color: c.text, fontFamily: TYPOGRAPHY.fontFamily.medium }]}>
+                  {row.body?.trim() || "Not set"}
+                </Text>
+              </View>
+              {amountLabel ? (
+                <View style={styles.fieldRow}>
+                  <Text style={[styles.fieldLabel, { color: c.textSecondary, fontFamily: TYPOGRAPHY.fontFamily.regular }]}>Amount</Text>
+                  <Text style={[styles.fieldValue, { color: c.text, fontFamily: TYPOGRAPHY.fontFamily.medium }]}>
+                    {amountLabel}
+                  </Text>
+                </View>
+              ) : null}
+            </View>
+          </Card>
+
+          {notes ? (
+            <>
+              <SectionLabel>Notes</SectionLabel>
+              <Card>
+                <Text style={[styles.notesText, { color: c.text, fontFamily: TYPOGRAPHY.fontFamily.regular }]}>
+                  {notes}
+                </Text>
+              </Card>
+            </>
+          ) : null}
+        </ScrollView>
+      </View>
 
       <ConfirmModal
         visible={deleteOpen}
         title="Delete entry"
         message="Are you sure you want to delete this entry? This action cannot be undone."
         confirmLabel={deleting ? "Deleting…" : "Delete"}
-        confirmDestructive
+        confirmDanger
         onConfirm={handleDelete}
         onCancel={() => setDeleteOpen(false)}
       />
 
-      <IntakeLogSheet
-        visible={sheetOpen}
-        editingId={row.id}
-        initialValues={form}
-        saving={saving}
-        saveError={saveError}
-        onClose={closeSheet}
-        onSave={handleSave}
-      />
+      <IntakeLogSheet visible={sheetOpen} editingId={row.id} initialValues={form} saving={saving} saveError={saveError} onClose={closeSheet} onSave={handleSave} />
     </>
   );
 }
 
 const styles = StyleSheet.create({
-  centered: { flex: 1, alignItems: "center", justifyContent: "center", gap: 12 },
-  muted: { fontSize: FLARE_FONT_SIZE.body, fontFamily: FLARE_FONT_FAMILY.regular },
+  screen: { flex: 1 },
+  scroll: { flex: 1 },
+  scrollContent: {
+    paddingHorizontal: SPACING.screen,
+    paddingTop: 56,
+  },
+  centered: {
+    flex: 1,
+    alignItems: "center",
+    justifyContent: "center",
+    gap: SPACING.md,
+  },
+  mutedText: {
+    fontSize: TYPOGRAPHY.fontSize.md,
+  },
+  addedHeader: {
+    fontSize: TYPOGRAPHY.fontSize.sm,
+    marginBottom: SPACING.lg,
+  },
+  fieldList: {
+    gap: SPACING.md,
+  },
+  fieldRow: {
+    flexDirection: "row",
+    justifyContent: "space-between",
+    alignItems: "center",
+  },
+  fieldLabel: {
+    fontSize: TYPOGRAPHY.fontSize.md,
+  },
+  fieldValue: {
+    fontSize: TYPOGRAPHY.fontSize.md,
+  },
+  notesText: {
+    fontSize: TYPOGRAPHY.fontSize.md,
+    lineHeight: 22,
+  },
   headerEditDeleteRow: { flexDirection: "row", alignItems: "center", gap: 2 },
   headerIconBtn: { width: HEADER_ACTION_BTN_WIDTH, height: 44, alignItems: "center", justifyContent: "center" },
 });
