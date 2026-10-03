@@ -22,6 +22,7 @@ import {
 import MapView, { Marker, type Region } from "react-native-maps";
 import { useFocusEffect } from "@react-navigation/native";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
+import { Card } from "../components/MidnightLagoonCard";
 import { FLARE_BUTTON_BORDER_RADIUS } from "../components/FlareButton";
 import { SPACING, TYPOGRAPHY } from "../designTokens";
 import {
@@ -382,13 +383,9 @@ export function FindToiletScreen() {
                     toilet.verifiedAt || toilet.updatedAt,
                   );
                   return (
-                    <View
+                    <Card
                       key={toilet.id}
-                      accessibilityLabel={`${toilet.name}, ${formatToiletDistance(toilet.distanceMeters)}`}
-                      style={[
-                        styles.toiletCard,
-                        { backgroundColor: c.surfaceSubtle },
-                      ]}
+                      style={styles.toiletCard}
                     >
                       <View style={styles.toiletCardTop}>
                         <View style={styles.toiletCardMain}>
@@ -398,11 +395,11 @@ export function FindToiletScreen() {
                               size={TYPOGRAPHY.fontSize.md}
                               color={c.primary}
                             />
-                            <Text style={[styles.resultDistance, { color: c.textMuted }]}>
+                            <Text style={[styles.resultDistance, { color: c.textMuted, fontFamily: TYPOGRAPHY.fontFamily.regular }]}>
                               {formatToiletDistance(toilet.distanceMeters)}
                             </Text>
                           </View>
-                          <Text style={[styles.selectedName, { color: c.text }]} numberOfLines={2}>
+                          <Text style={[styles.selectedName, { color: c.text, fontFamily: TYPOGRAPHY.fontFamily.medium }]} numberOfLines={2}>
                             {toilet.name}
                           </Text>
                         </View>
@@ -413,7 +410,7 @@ export function FindToiletScreen() {
                           hitSlop={8}
                           style={styles.resultDirections}
                         >
-                          <Text style={[styles.retry, { color: c.primary }]}>Directions</Text>
+                          <Text style={[styles.directionsLink, { color: c.primary, fontFamily: TYPOGRAPHY.fontFamily.regular }]}>Directions</Text>
                         </Pressable>
                       </View>
 
@@ -422,38 +419,38 @@ export function FindToiletScreen() {
                           {badges.map((label) => (
                             <View
                               key={label}
-                              style={[styles.badgePill, { backgroundColor: c.card }]}
+                              style={[styles.badgePill, { backgroundColor: c.surfaceSubtle }]}
                             >
-                              <Text style={[styles.badgePillText, { color: c.text }]}>{label}</Text>
+                              <Text style={[styles.badgePillText, { color: c.text, fontFamily: TYPOGRAPHY.fontFamily.medium }]}>{label}</Text>
                             </View>
                           ))}
                         </View>
                       ) : null}
 
                       {toilet.openToday ? (
-                        <Text style={[styles.metaLine, { color: c.textMuted }]}>
+                        <Text style={[styles.metaLine, { color: c.textMuted, fontFamily: TYPOGRAPHY.fontFamily.regular }]}>
                           {toilet.openToday}
                         </Text>
                       ) : null}
 
                       {toilet.paymentDetails ? (
-                        <Text style={[styles.metaLine, { color: c.textMuted }]} numberOfLines={1}>
+                        <Text style={[styles.metaLine, { color: c.textMuted, fontFamily: TYPOGRAPHY.fontFamily.regular }]} numberOfLines={1}>
                           {toilet.paymentDetails}
                         </Text>
                       ) : null}
 
                       {toilet.notes ? (
-                        <Text style={[styles.notesLine, { color: c.textMuted }]} numberOfLines={3}>
+                        <Text style={[styles.notesLine, { color: c.textMuted, fontFamily: TYPOGRAPHY.fontFamily.regular }]} numberOfLines={3}>
                           {toilet.notes}
                         </Text>
                       ) : null}
 
                       {lastChecked ? (
-                        <Text style={[styles.metaLine, { color: c.textMuted }]}>
+                        <Text style={[styles.metaLine, { color: c.textMuted, fontFamily: TYPOGRAPHY.fontFamily.regular }]}>
                           Last checked: {lastChecked}
                         </Text>
                       ) : null}
-                    </View>
+                    </Card>
                   );
                 })}
               </ScrollView>
@@ -804,21 +801,17 @@ const styles = StyleSheet.create({
     gap: SPACING.xl,
   },
   toiletCard: {
-
-    borderRadius: FLARE_BUTTON_BORDER_RADIUS,
-    paddingHorizontal: TRAY_ROW_PADDING_H,
-    paddingVertical: TRAY_ROW_PADDING_Y + 4,
-    gap: SPACING.xxs + 2,
+    marginBottom: SPACING.md,
   },
   toiletCardTop: {
     flexDirection: "row",
     alignItems: "flex-start",
-    gap: 12,
+    gap: SPACING.md,
   },
   toiletCardMain: {
     flex: 1,
     minWidth: 0,
-    gap: SPACING.xxs,
+    gap: SPACING.xs,
   },
   distanceRow: {
     flexDirection: "row",
@@ -833,6 +826,9 @@ const styles = StyleSheet.create({
   resultDirections: {
     flexShrink: 0,
     paddingTop: 2,
+  },
+  directionsLink: {
+    fontSize: TYPOGRAPHY.fontSize.md,
   },
   badgeRow: {
     flexDirection: "row",
