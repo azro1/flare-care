@@ -61,10 +61,13 @@ export type FlareColors = {
   cardBorder: string;
   tray: string;
   primary: string;
+  primaryHover: string;
+  primaryDisabledBg: string;
   link: string;
   accent: string;
   text: string;
   textSecondary: string;
+  textMuted: string;
   danger: string;
   destructiveFill: string;
   inputBg: string;
@@ -77,14 +80,18 @@ export type FlareColors = {
   appearanceChipInactiveText: string;
   modalBackdrop: string;
   instructionScrim: string;
+  surfaceSubtle: string;
+  surfaceRaised: string;
+  reportBg: string;
+  reportBorder: string;
 };
 
 function mapTokens(_t: StyleguideTheme, isDark: boolean): FlareColors {
   const bg = isDark ? MIDNIGHT_LAGOON_BG.dark : MIDNIGHT_LAGOON_BG.light;
   const colors = isDark ? MIDNIGHT_LAGOON_ACCENT.dark : MIDNIGHT_LAGOON_ACCENT.light;
   const textColors = {
-    dark: { main: "#EAF2F5", secondary: "#93A7B3" },
-    light: { main: "#0D234B", secondary: "#4F5D6E" },
+    dark: { main: "#EAF2F5", secondary: "#93A7B3", muted: "#93A7B3" },
+    light: { main: "#0D234B", secondary: "#4F5D6E", muted: "#4F5D6E" },
   };
   const text = isDark ? textColors.dark : textColors.light;
 
@@ -95,10 +102,13 @@ function mapTokens(_t: StyleguideTheme, isDark: boolean): FlareColors {
     cardBorder: bg.border,
     tray: bg.tray,
     primary: colors.primary,
+    primaryHover: colors.primary,
+    primaryDisabledBg: isDark ? "#2A3A46" : "#B8D4D5",
     link: colors.link,
     accent: colors.accent,
     text: text.main,
     textSecondary: text.secondary,
+    textMuted: text.muted,
     danger: isDark ? "#F87171" : "#C81E1E",
     destructiveFill: MOBILE_DESTRUCTIVE_FILL,
     inputBg: bg.tray,
@@ -111,6 +121,10 @@ function mapTokens(_t: StyleguideTheme, isDark: boolean): FlareColors {
     appearanceChipInactiveText: isDark ? "#121212" : text.main,
     modalBackdrop: isDark ? "rgba(0,0,0,0.78)" : "rgba(15,23,42,0.48)",
     instructionScrim: isDark ? "rgba(0,0,0,1)" : "rgba(15,23,42,0.30)",
+    surfaceSubtle: bg.tray,
+    surfaceRaised: bg.card,
+    reportBg: bg.tray,
+    reportBorder: bg.border,
   };
 }
 
