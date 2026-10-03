@@ -329,7 +329,7 @@ function BrandMarkIcon({ size, color }: { size: number; color: string }) {
 }
 
 /** Side-by-side hand+heart + Flarecare — splash, auth, Almost there. */
-const FLARE_BRAND_MARK_SIZE = 28;
+const FLARE_BRAND_LOGO_HEIGHT = 56; // Logo height for auth screens
 
 function FlareBrandLockup({
   markColor,
@@ -346,24 +346,18 @@ function FlareBrandLockup({
   nameWeight?: "bold" | "extrabold";
   style?: StyleProp<ViewStyle>;
 }) {
+  const { colors } = useFlareTheme();
+  const logoSource = colors.isDark
+    ? require("./assets/flarecare-logo-dark.png")
+    : require("./assets/flarecare-logo-light.png");
+  
   return (
     <View style={[styles.flareBrandLockup, style]}>
-      <BrandMarkIcon size={FLARE_BRAND_MARK_SIZE} color={markColor} />
-      {/* Brand wordmark = logo; don't scale with OS display size or it clips on small phones. */}
-      <Text
-        allowFontScaling={false}
-        numberOfLines={1}
-        style={[
-          styles.flareBrandLockupName,
-          {
-            color: nameColor,
-            fontSize: nameSize,
-            fontFamily: nameWeight === "extrabold" ? "Inter_800ExtraBold" : "Inter_700Bold",
-          },
-        ]}
-      >
-        Flarecare
-      </Text>
+      <Image
+        source={logoSource}
+        style={{ height: FLARE_BRAND_LOGO_HEIGHT, width: FLARE_BRAND_LOGO_HEIGHT * 4.86, resizeMode: "contain" }}
+        accessibilityLabel="FlareCare logo"
+      />
     </View>
   );
 }
@@ -963,8 +957,9 @@ function AuthScreen({
   // Bank-style quick login: if a remembered session exists and biometric unlock is on, show the
   // fingerprint control on landing. Do NOT auto-prompt — user taps when ready (e.g. after Sign in
   // from the logout notice).
-  const [quickUnlock, setQuickUnlock] = useState<{ label: string } | null>(null);
+  const [quickUnlock, setQuickUnlock] = useState<{ label: string; displayName: string } | null>(null);
   const [unlockBusy, setUnlockBusy] = useState(false);
+  const [showAuthMethodsFromQuickUnlock, setShowAuthMethodsFromQuickUnlock] = useState(false);
   /** Hold first paint until legal + unlock checks finish — avoids title jump when fingerprint mounts. */
   const [landingReady, setLandingReady] = useState(false);
   /** Soft title motion for email / code only — never opacity-animate the TextInput block (blinks on Android/iOS). */
@@ -1125,8 +1120,12 @@ function AuthScreen({
 
       if (remembered && available && enabled) {
         const label = await biometricTypeLabel();
+        // Derive a display name from the email
+        const email = remembered.email || "";
+        const namePart = email.split("@")[0];
+        const displayName = namePart.charAt(0).toUpperCase() + namePart.slice(1);
         if (cancelled) return;
-        setQuickUnlock({ label });
+        setQuickUnlock({ label, displayName });
       }
       if (!cancelled) setLandingReady(true);
     })();
@@ -1205,7 +1204,7 @@ function AuthScreen({
           )}
 
           <View style={styles.authStepBody}>
-          {step === "method" ? (
+          {step === "method" && (!quickUnlock || showAuthMethodsFromQuickUnlock) ? (
             <Animated.View style={authCascadeMotion(authActionsAnim)}>
               <View style={[styles.authMethodActions, styles.authMethodActionsUnderTagline]}>
                 <PrimaryButton
@@ -1373,42 +1372,76 @@ function AuthScreen({
       </View>
 
       {/* Always visible when quick-login is armed — tap to open OS biometric (no auto-prompt). */}
-      {quickUnlock ? (
+      {quickUnlock && !showAuthMethodsFromQuickUnlock ? (
         <View style={styles.authQuickUnlockActions} pointerEvents="box-none">
-          <Pressable
-            accessibilityRole="button"
-            accessibilityLabel={`Unlock with ${quickUnlock.label}`}
+          <Text
+            style={[
+              styles.authQuickUnlockWelcome,
+              { color: authBlue ? "rgba(255,255,255,0.92)" : cAuth.textSecondary },
+            ]}
+          >
+            Welcome back, {quickUnlock.displayName}
+          </Text>
+          <PrimaryButton
+            title={`Unlock with ${quickUnlock.label}`}
             onPress={runQuickUnlock}
             disabled={unlockBusy}
-            style={styles.authQuickUnlock}
-          >
-            <View
-              style={[
-                styles.authFingerprintDisc,
-                {
-                  backgroundColor: authBlue ? "rgba(255,255,255,0.16)" : cAuth.surfaceSubtle,
-                  opacity: unlockBusy ? 0.6 : 1,
-                },
-              ]}
-            >
+            variant={onPrimaryChrome ? "onPrimary" : "default"}
+            noTopMargin
+            leftIcon={
               <FlareLucideIcon
                 icon={FLARE_CHROME_LUCIDE.fingerprint}
-                size={34}
-                color={authBlue ? cAuth.white : cAuth.primary}
+                size={16}
+                color={
+                  unlockBusy
+                    ? cAuth.primaryHover
+                    : onPrimaryChrome
+                      ? cAuth.primary
+                      : cAuth.white
+                }
               />
-            </View>
+            }
+          />
+          <Pressable
+            accessibilityRole="button"
+            accessibilityLabel="Use email or Google instead"
+            onPress={() => setShowAuthMethodsFromQuickUnlock(true)}
+            hitSlop={8}
+            style={styles.authQuickUnlockFallbackLink}
+          >
             <Text
               style={[
-                styles.authQuickUnlockLabel,
-                { color: authBlue ? "rgba(255,255,255,0.92)" : cAuth.textMuted },
+                styles.authQuickUnlockFallbackLinkText,
+                { color: authBlue ? "rgba(255,255,255,0.88)" : cAuth.link },
               ]}
             >
-              {unlockBusy ? "Unlocking…" : `Tap to unlock with ${quickUnlock.label}`}
+              Use email or Google instead
             </Text>
           </Pressable>
           {/* Matches lock-screen Sign out row so the fingerprint sits in the same spot. */}
-          <View style={styles.authQuickUnlockFooterSlot} accessibilityElementsHidden importantForAccessibility="no-hide-descendants">
-            <Text style={[styles.authQuickUnlockFooterSlotText, { opacity: 0 }]}>Sign out</Text>
+          <View style={styles.authLegalFooter}>
+            <Text
+              style={[
+                styles.authLegalFooterText,
+                { color: authBlue ? "rgba(255,255,255,0.7)" : cAuth.textMuted },
+              ]}
+            >
+              By continuing you agree to our{" "}
+              <Text
+                style={[styles.authLegalLink, { color: authBlue ? "rgba(255,255,255,0.88)" : cAuth.primary }]}
+                onPress={() => setAuthLegalModal("terms")}
+              >
+                Terms of Service
+              </Text>{" "}
+              and{" "}
+              <Text
+                style={[styles.authLegalLink, { color: authBlue ? "rgba(255,255,255,0.88)" : cAuth.primary }]}
+                onPress={() => setAuthLegalModal("privacy")}
+              >
+                Privacy Policy
+              </Text>
+              .
+            </Text>
           </View>
         </View>
       ) : null}
@@ -5744,6 +5777,11 @@ const styles = StyleSheet.create({
   /** Same metrics as lock-screen Sign out so fingerprint Y matches when that link isn’t present. */
   authQuickUnlockFooterSlot: { alignSelf: "center", marginTop: 14, paddingVertical: 6 },
   authQuickUnlockFooterSlotText: { fontSize: 14, fontFamily: "Inter_500Medium" },
+  authQuickUnlockWelcome: { fontSize: 18, fontFamily: "Inter_500Medium", textAlign: "center" },
+  authQuickUnlockFallbackLink: { alignSelf: "center", marginTop: 4, paddingVertical: 6 },
+  authQuickUnlockFallbackLinkText: { fontSize: 15, fontFamily: "Inter_500Medium", textAlign: "center" },
+  authLegalFooter: { alignSelf: "center", marginTop: 24, paddingHorizontal: 24 },
+  authLegalFooterText: { fontSize: 12, lineHeight: 18, fontFamily: "Inter_400Regular", textAlign: "center" },
   authSheetContent: { paddingTop: 8, paddingBottom: 8 },
   /** Neutralize the full-screen panels' `flex: 1` centering when hosted in the slide-up sheet. */
   authSheetPanel: { flex: 0, justifyContent: "flex-start" },

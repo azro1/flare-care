@@ -9,22 +9,22 @@ const APPEARANCE_STORAGE_KEY = "flarecare.appearance.preference";
 /**
  * Mobile brand accent — **only edit this object** to change primary CTAs, icons, tabs, nav tint,
  * weather accent, secondary labels (light), auth screen fill (light), etc.
- * Cadet blue matches web (`globals.css` --bg-button-cadet); calmer than generic SaaS blue.
+ * Deep Lagoon teal: Option B palette for FlareCare redesign.
  */
 const MOBILE_BRAND_ACCENT = {
-  primary: "#5F9EA0",
-  hover: "#4A8A8A",
-  disabled: "#B8D4D5",
+  primary: "#0E7C7B",
+  hover: "#0B6A69",
+  disabled: "#BFDCDB",
 } as const;
 
 /** Brand accent for custom UI (e.g. action-sheet cancel) — same as `useFlareColors().primary` in light mode. */
 export const MOBILE_BRAND_PRIMARY = MOBILE_BRAND_ACCENT.primary;
 
 /** Danger red — Delete account link text + that modal’s Delete button only. */
-export const MOBILE_DESTRUCTIVE_FILL = "#dc2626" as const;
+export const MOBILE_DESTRUCTIVE_FILL = "#C81E1E" as const;
 
 /** Light mode only — grouped layout: gray page, white panels (dark mode uses styleguide tokens). */
-const LIGHT_GROUPED_SCREEN_BG = "#F4F4F4";
+const LIGHT_GROUPED_SCREEN_BG = "#F4F7F8";
 const LIGHT_GROUPED_CARD_BG = "#FFFFFF";
 
 /** In-app theme: fixed light or dark (no OS follow mode). */
