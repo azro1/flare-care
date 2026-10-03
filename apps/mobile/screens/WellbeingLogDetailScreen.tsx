@@ -5,20 +5,14 @@ import { ActivityIndicator, Pressable, StyleSheet, Text, View } from "react-nati
 import { showFlareAlert } from "../components/FlareAlertHost";
 import { ScrollView } from "../lib/scrollViews";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
+import { Card } from "../components/MidnightLagoonCard";
+import { SectionLabel } from "../components/MidnightLagoonSectionLabel";
 import { ConfirmModal } from "../components/ConfirmModal";
-import {
-  LogDetailAddedHeader,
-  logDetailStyles,
-  WizardReviewShell,
-} from "../components/LogDetailLayout";
-import {
-  WizardReviewNotesSection,
-  WizardReviewSection,
-} from "../components/symptomReviewLayout";
 import { invalidateDashboardSnapshot } from "../lib/dashboardSnapshotCache";
 import { formatAddedAtHeader } from "../lib/logDisplay";
 import { recordRecentActivityEvent } from "../lib/recentActivityEvents";
-import { FLARE_FONT_FAMILY, FLARE_FONT_SIZE, HEADER_ACTION_BTN_WIDTH, HEADER_CHROME_ICON_SIZE } from "../lib/layoutConstants";
+import { HEADER_ACTION_BTN_WIDTH, HEADER_CHROME_ICON_SIZE } from "../lib/layoutConstants";
+import { SPACING, TYPOGRAPHY } from "../designTokens";
 import {
   formatWellbeingScaleDisplay,
   formatWellbeingYesNoDisplay,
@@ -162,18 +156,26 @@ export function WellbeingLogDetailScreen({ user }: { user: SessionUser }) {
 
   if (loading) {
     return (
-      <View style={[styles.centered, { backgroundColor: c.screen, paddingBottom: bottomPad }]}>
-        <ActivityIndicator color={c.primary} />
-        <Text style={[styles.muted, { color: c.textMuted }]}>Loading…</Text>
+      <View style={[styles.screen, { backgroundColor: c.screen }]}>
+        <View style={styles.centered}>
+          <ActivityIndicator color={c.primary} />
+          <Text style={[styles.mutedText, { color: c.textMuted, fontFamily: TYPOGRAPHY.fontFamily.regular }]}>
+            Loading…
+          </Text>
+        </View>
       </View>
     );
   }
 
   if (!row) {
     return (
-      <ScrollView style={[logDetailStyles.scroll, { backgroundColor: c.screen }]} contentContainerStyle={{ paddingBottom: bottomPad }}>
-        <Text style={[styles.muted, { color: c.textMuted }]}>Could not load this entry.</Text>
-      </ScrollView>
+      <View style={[styles.screen, { backgroundColor: c.screen }]}>
+        <ScrollView style={styles.scroll} contentContainerStyle={[styles.scrollContent, { paddingBottom: bottomPad }]}>
+          <Text style={[styles.mutedText, { color: c.textMuted, fontFamily: TYPOGRAPHY.fontFamily.regular }]}>
+            Could not load this entry.
+          </Text>
+        </ScrollView>
+      </View>
     );
   }
 
@@ -201,29 +203,83 @@ export function WellbeingLogDetailScreen({ user }: { user: SessionUser }) {
 
   return (
     <>
-      <ScrollView
-        style={[logDetailStyles.scroll, { backgroundColor: c.screen }]}
-        contentContainerStyle={{ paddingBottom: bottomPad }}
-        showsVerticalScrollIndicator={false}
-      >
-        <LogDetailAddedHeader text={formatAddedAtHeader(row.created_at)} />
+      <View style={[styles.screen, { backgroundColor: c.screen }]}>
+        <ScrollView
+          style={styles.scroll}
+          contentContainerStyle={[styles.scrollContent, { paddingBottom: bottomPad }]}
+          showsVerticalScrollIndicator={false}
+        >
+          <Text style={[styles.addedHeader, { color: c.textMuted, fontFamily: TYPOGRAPHY.fontFamily.regular }]}>
+            {formatAddedAtHeader(row.created_at)}
+          </Text>
 
-        <WizardReviewShell>
-          <View style={logDetailStyles.reviewSections}>
-            <WizardReviewSection title="Feelings" fields={feelingsFields} embedded />
-            <WizardReviewSection title="IBD" fields={ibdFields} embedded />
-            <WizardReviewSection title="Activities" fields={activityFields} embedded />
-            <WizardReviewNotesSection embedded notes={row.notes?.trim() ?? ""} />
-          </View>
-        </WizardReviewShell>
-      </ScrollView>
+          <SectionLabel text="Feelings" />
+          <Card>
+            <View style={styles.fieldList}>
+              {feelingsFields.map((field) => (
+                <View key={field.label} style={styles.fieldRow}>
+                  <Text style={[styles.fieldLabel, { color: c.text, fontFamily: TYPOGRAPHY.fontFamily.regular }]}>
+                    {field.label}
+                  </Text>
+                  <Text style={[styles.fieldValue, { color: c.textSecondary, fontFamily: TYPOGRAPHY.fontFamily.regular }]}>
+                    {field.value}
+                  </Text>
+                </View>
+              ))}
+            </View>
+          </Card>
+
+          <SectionLabel text="IBD" />
+          <Card>
+            <View style={styles.fieldList}>
+              {ibdFields.map((field) => (
+                <View key={field.label} style={styles.fieldRow}>
+                  <Text style={[styles.fieldLabel, { color: c.text, fontFamily: TYPOGRAPHY.fontFamily.regular }]}>
+                    {field.label}
+                  </Text>
+                  <Text style={[styles.fieldValue, { color: c.textSecondary, fontFamily: TYPOGRAPHY.fontFamily.regular }]}>
+                    {field.value}
+                  </Text>
+                </View>
+              ))}
+            </View>
+          </Card>
+
+          <SectionLabel text="Activities" />
+          <Card>
+            <View style={styles.fieldList}>
+              {activityFields.map((field) => (
+                <View key={field.label} style={styles.fieldRow}>
+                  <Text style={[styles.fieldLabel, { color: c.text, fontFamily: TYPOGRAPHY.fontFamily.regular }]}>
+                    {field.label}
+                  </Text>
+                  <Text style={[styles.fieldValue, { color: c.textSecondary, fontFamily: TYPOGRAPHY.fontFamily.regular }]}>
+                    {field.value}
+                  </Text>
+                </View>
+              ))}
+            </View>
+          </Card>
+
+          {row.notes?.trim() ? (
+            <>
+              <SectionLabel text="Notes" />
+              <Card>
+                <Text style={[styles.notesText, { color: c.text, fontFamily: TYPOGRAPHY.fontFamily.regular }]}>
+                  {row.notes.trim()}
+                </Text>
+              </Card>
+            </>
+          ) : null}
+        </ScrollView>
+      </View>
 
       <ConfirmModal
         visible={deleteOpen}
         title="Delete wellbeing entry?"
         message="This action cannot be undone."
         confirmLabel={deleting ? "Deleting…" : "Delete"}
-        confirmDestructive
+        confirmDanger
         onConfirm={() => void handleDelete()}
         onCancel={() => setDeleteOpen(false)}
       />
@@ -232,8 +288,43 @@ export function WellbeingLogDetailScreen({ user }: { user: SessionUser }) {
 }
 
 const styles = StyleSheet.create({
-  centered: { flex: 1, alignItems: "center", justifyContent: "center", gap: 12 },
-  muted: { fontSize: FLARE_FONT_SIZE.body, fontFamily: FLARE_FONT_FAMILY.regular },
+  screen: { flex: 1 },
+  scroll: { flex: 1 },
+  scrollContent: {
+    paddingHorizontal: SPACING.screen,
+    paddingTop: SPACING.lg,
+  },
+  centered: {
+    flex: 1,
+    alignItems: "center",
+    justifyContent: "center",
+    gap: SPACING.md,
+  },
+  mutedText: {
+    fontSize: TYPOGRAPHY.fontSize.md,
+  },
+  addedHeader: {
+    fontSize: TYPOGRAPHY.fontSize.sm,
+    marginBottom: SPACING.lg,
+  },
+  fieldList: {
+    gap: SPACING.md,
+  },
+  fieldRow: {
+    flexDirection: "row",
+    justifyContent: "space-between",
+    alignItems: "center",
+  },
+  fieldLabel: {
+    fontSize: TYPOGRAPHY.fontSize.md,
+  },
+  fieldValue: {
+    fontSize: TYPOGRAPHY.fontSize.md,
+  },
+  notesText: {
+    fontSize: TYPOGRAPHY.fontSize.md,
+    lineHeight: 22,
+  },
   headerActions: { flexDirection: "row", alignItems: "center", gap: 2 },
   headerIconBtn: { width: HEADER_ACTION_BTN_WIDTH, height: 44, alignItems: "center", justifyContent: "center" },
 });
