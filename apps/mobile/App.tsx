@@ -3412,23 +3412,29 @@ function HelpSectionDropdown({
 }) {
   const c = useFlareColors();
   return (
-    <View style={[logHistoryCardStyles.trackerCard, { backgroundColor: c.card, gap: 0 }]}>
+    <Card style={{ marginBottom: SPACING.md }}>
       <Pressable
         accessibilityRole="button"
         accessibilityState={{ expanded }}
         accessibilityLabel={title}
         onPress={onToggle}
-        style={[styles.helpSectionToggle, expanded && styles.helpSectionToggleExpanded]}
+        style={styles.helpSectionToggle}
       >
-        <Text style={[styles.helpSectionToggleTitle, { color: c.text }]}>
+        <Text style={[styles.helpSectionToggleTitle, { color: c.text, fontFamily: TYPOGRAPHY.fontFamily.semibold }]}>
           {title}
         </Text>
-        <Text style={[styles.helpSectionToggleMark, { color: c.text }]} accessibilityElementsHidden>
+        <Text
+          style={[
+            styles.helpSectionToggleMark,
+            { color: c.text, fontFamily: TYPOGRAPHY.fontFamily.regular },
+          ]}
+          accessibilityElementsHidden
+        >
           {expanded ? "−" : "+"}
         </Text>
       </Pressable>
       {expanded ? <View style={styles.helpSectionBody}>{children}</View> : null}
-    </View>
+    </Card>
   );
 }
 
@@ -3474,39 +3480,41 @@ function AccountHelpScreen() {
   );
 
   return (
-    <ScrollView
-      style={[styles.screen, { backgroundColor: c.screen }]}
-      contentContainerStyle={[styles.accountScrollContent, { paddingBottom: bottomScrollInset + 24 }]}
-    >
-      <HelpSectionDropdown
-        title="Notifications"
-        expanded={notificationsOpen}
-        onToggle={() => setNotificationsOpen((open) => !open)}
+    <View style={[styles.screen, { backgroundColor: c.screen }]}>
+      <ScrollView
+        style={styles.scroll}
+        contentContainerStyle={[styles.scrollContent, { paddingBottom: bottomScrollInset + 24 }]}
       >
-        <NotificationHelpContent />
-      </HelpSectionDropdown>
-      <HelpSectionDropdown
-        title="Daily Intake Guidelines"
-        expanded={hydrationOpen}
-        onToggle={() => setHydrationOpen((open) => !open)}
-      >
-        <HydrationHelpContent />
-      </HelpSectionDropdown>
-      <HelpSectionDropdown
-        title="Appointments"
-        expanded={appointmentSummaryOpen}
-        onToggle={() => setAppointmentSummaryOpen((open) => !open)}
-      >
-        <AppointmentSummaryHelpContent />
-      </HelpSectionDropdown>
-      <HelpSectionDropdown
-        title="NSAIDs"
-        expanded={nsaidsOpen}
-        onToggle={() => setNsaidsOpen((open) => !open)}
-      >
-        <NsaidHelpContent />
-      </HelpSectionDropdown>
-    </ScrollView>
+        <HelpSectionDropdown
+          title="Notifications"
+          expanded={notificationsOpen}
+          onToggle={() => setNotificationsOpen((open) => !open)}
+        >
+          <NotificationHelpContent />
+        </HelpSectionDropdown>
+        <HelpSectionDropdown
+          title="Daily Intake Guidelines"
+          expanded={hydrationOpen}
+          onToggle={() => setHydrationOpen((open) => !open)}
+        >
+          <HydrationHelpContent />
+        </HelpSectionDropdown>
+        <HelpSectionDropdown
+          title="Appointments"
+          expanded={appointmentSummaryOpen}
+          onToggle={() => setAppointmentSummaryOpen((open) => !open)}
+        >
+          <AppointmentSummaryHelpContent />
+        </HelpSectionDropdown>
+        <HelpSectionDropdown
+          title="NSAIDs"
+          expanded={nsaidsOpen}
+          onToggle={() => setNsaidsOpen((open) => !open)}
+        >
+          <NsaidHelpContent />
+        </HelpSectionDropdown>
+      </ScrollView>
+    </View>
   );
 }
 
