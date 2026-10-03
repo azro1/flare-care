@@ -2,12 +2,14 @@ import { FLARE_CHROME_LUCIDE, FlareLucideIcon } from "../lib/flareLucideIcons";
 import DateTimePicker from "@react-native-community/datetimepicker";
 import { useNavigation } from "@react-navigation/native";
 import React, { useCallback, useLayoutEffect, useRef, useState } from "react";
-import { Animated, KeyboardAvoidingView, Modal, Platform, Pressable, StyleSheet, Text, View } from "react-native";
+import { KeyboardAvoidingView, Modal, Platform, Pressable, StyleSheet, Text, View } from "react-native";
 import { ScrollView } from "../lib/scrollViews";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { PrimaryButton, SecondaryButton } from "../components/FlareButton";
 import { flareFieldErrorStyle, FlareTextInput } from "../components/FlareInput";
 import { SectionLabel } from "../components/MidnightLagoonSectionLabel";
+import { SegmentedTabs } from "../components/MidnightLagoonSegmentedTabs";
+import { ScreenHeader } from "../components/MidnightLagoonScreenHeader";
 import { InfoHintButton } from "../components/InfoHintButton";
 import { OptionPickerModal } from "../components/OptionPickerModal";
 import { TrackerThumbFab, useTrackerThumbFabLayout } from "../components/TrackerThumbFab";
@@ -26,7 +28,6 @@ import {
   type AppointmentFormState,
 } from "../lib/appointmentShared";
 import { TIME_PICKER_MINUTE_INTERVAL } from "../lib/layoutConstants";
-import { hubTabFadeStyles, useHubTabFade } from "../lib/useHubTabFade";
 import { SPACING, RADIUS, TYPOGRAPHY } from "../designTokens";
 import { supabase, TABLES } from "../lib/supabase";
 import { useFlareColors } from "../theme";
@@ -38,9 +39,9 @@ import { APPOINTMENT_QUESTIONS_HINT } from "../lib/appointmentQuestionsShared";
 type SessionUser = { id: string };
 
 const APPOINTMENTS_HUB_TABS = [
-  { key: "appointments", label: "Appointments" },
-  { key: "questions", label: "Questions" },
-  { key: "summary", label: "Summary" },
+  { label: "Appointments", value: "appointments" },
+  { label: "Questions", value: "questions" },
+  { label: "Summary", value: "summary" },
 ] as const;
 
 const APPOINTMENTS_HUB_HINT = "Add your appointments and choose when you want to be reminded.";
@@ -278,13 +279,10 @@ export function AppointmentsScreen({ user }: { user: SessionUser }) {
   const [form, setForm] = useState<AppointmentFormState>(() => quickAppointmentFormState());
   const [saving, setSaving] = useState(false);
   const [saveError, setSaveError] = useState("");
-  const { tabIndex, goToTab, paneStyle } = useHubTabFade(0, APPOINTMENTS_HUB_TABS.length);
+  const [activeTab, setActiveTab] = useState("appointments");
   const [listSelectionMode, setListSelectionMode] = useState(false);
   const [questionsSelectionMode, setQuestionsSelectionMode] = useState(false);
   const openQuestionAddRef = useRef<() => void>(() => {});
-  const onAppointmentsTab = tabIndex === 0;
-  const onQuestionsTab = tabIndex === 1;
-  const onSummaryTab = tabIndex === 2;
   const anySelectionMode = listSelectionMode || questionsSelectionMode;
 
   const closeSheet = useCallback(() => {
@@ -304,23 +302,6 @@ export function AppointmentsScreen({ user }: { user: SessionUser }) {
   const registerOpenQuestionAdd = useCallback((fn: () => void) => {
     openQuestionAddRef.current = fn;
   }, []);
-
-  const renderHubHeaderRight = useCallback(() => {
-    if (onQuestionsTab) {
-      return <InfoHintButton title="Questions" message={APPOINTMENT_QUESTIONS_HINT} accessibilityLabel="About Questions" />;
-    }
-    if (onSummaryTab) {
-      return <InfoHintButton title="Appointment Summary" message={APPOINTMENT_SUMMARY_HINT} accessibilityLabel="About Appointment Summary" />;
-    }
-    return (
-      <View style={styles.headerRightCluster}>
-        <InfoHintButton title="Appointments" message={APPOINTMENTS_HUB_HINT} accessibilityLabel="About Appointments" />
-        <Pressable accessibilityRole="button" accessibilityLabel="Past Appointments" hitSlop={10} onPress={() => navigation.navigate("AppointmentsPast")}>
-          <Text style={[styles.navLabel, { color: c.text, fontFamily: TYPOGRAPHY.fontFamily.regular }]}>Past</Text>
-        </Pressable>
-      </View>
-    );
-  }, [c.text, navigation, onQuestionsTab, onSummaryTab]);
 
   const handleSave = async (values: AppointmentFormState) => {
     setSaveError("");
@@ -346,46 +327,64 @@ export function AppointmentsScreen({ user }: { user: SessionUser }) {
     }
   };
 
-  const showFab = (onAppointmentsTab && !listSelectionMode) || (onQuestionsTab && !questionsSelectionMode);
-
-  useLayoutEffect(() => {
-    if (!onSummaryTab || anySelectionMode) return;
-    navigation.setOptions({
-      headerTitle: "Appointments",
-      headerRight: () => renderHubHeaderRight(),
-    });
-  }, [anySelectionMode, navigation, onSummaryTab, renderHubHeaderRight]);
+  const showFab = (activeTab === "appointments" && !listSelectionMode) || (activeTab === "questions" && !questionsSelectionMode);
 
   return (
     <>
       <View style={[styles.screen, { backgroundColor: c.screen }]}>
-        <View style={hubTabFadeStyles.tabRow}>
-          {APPOINTMENTS_HUB_TABS.map((opt, index) => {
-            const active = index === tabIndex;
-            return (
-              <Pressable key={opt.key} accessibilityRole="tab" accessibilityState={{ selected: active }} accessibilityLabel={opt.label} onPress={() => goToTab(index)} style={hubTabFadeStyles.tabHit}>
-                <Text style={[hubTabFadeStyles.tabLabel, { color: active ? c.text : c.textSecondary, fontFamily: TYPOGRAPHY.fontFamily.medium }, active ? hubTabFadeStyles.tabLabelActive : null]}>
-                  {opt.label}
-                </Text>
-                <View style={[hubTabFadeStyles.tabUnderline, { backgroundColor: active ? c.primary : "transparent" }]} />
-              </Pressable>
-            );
-          })}
-        </View>
+        <ScrollView
+          style={styles.scroll}
+          contentContainerStyle={[
+            styles.scrollContent,
+            { paddingBottom: showFab ? fabBottom + 80 : Math.max(insets.bottom, 16) + 24 },
+          ]}
+        >
+          <View style={styles.headerRow}>
+            <ScreenHeader title="Appointments" />
+            <Pressable accessibilityRole="button" accessibilityLabel="Past Appointments" hitSlop={10} onPress={() => navigation.navigate("AppointmentsPast")}>
+              <Text style={[styles.navLabel, { color: c.text, fontFamily: TYPOGRAPHY.fontFamily.regular }]}>Past</Text>
+            </Pressable>
+          </View>
 
-        <View style={hubTabFadeStyles.stack}>
-          <Animated.View style={paneStyle[0]} pointerEvents={onAppointmentsTab ? "auto" : "none"} accessibilityElementsHidden={!onAppointmentsTab} importantForAccessibility={onAppointmentsTab ? "yes" : "no-hide-descendants"}>
-            <AppointmentsListPane user={user} tab="upcoming" showFab={false} onAddPress={openAdd} selectionRouteName="Appointments" headerTitle="Appointments" renderIdleHeaderRight={renderHubHeaderRight} list={appointmentsList} embedded onSelectionModeChange={setListSelectionMode} ownsHeader={onAppointmentsTab} />
-          </Animated.View>
-          <Animated.View style={paneStyle[1]} pointerEvents={onQuestionsTab ? "auto" : "none"} accessibilityElementsHidden={!onQuestionsTab} importantForAccessibility={onQuestionsTab ? "yes" : "no-hide-descendants"}>
-            <AppointmentQuestionsPane user={user} embedded selectionRouteName="Appointments" headerActive={onQuestionsTab} registerOpenAdd={registerOpenQuestionAdd} onSelectionModeChange={setQuestionsSelectionMode} />
-          </Animated.View>
-          <Animated.View style={paneStyle[2]} pointerEvents={onSummaryTab ? "auto" : "none"} accessibilityElementsHidden={!onSummaryTab} importantForAccessibility={onSummaryTab ? "yes" : "no-hide-descendants"}>
-            <AppointmentBriefContent />
-          </Animated.View>
-        </View>
+          <SegmentedTabs tabs={APPOINTMENTS_HUB_TABS} activeValue={activeTab} onChange={setActiveTab} />
 
-        {showFab ? <TrackerThumbFab accessibilityLabel={onQuestionsTab ? "Add question" : "Add appointment"} onPress={onQuestionsTab ? () => openQuestionAddRef.current() : openAdd} bottom={fabBottom} right={fabRight} /> : null}
+          {activeTab === "appointments" && (
+            <AppointmentsListPane
+              user={user}
+              tab="upcoming"
+              showFab={false}
+              onAddPress={openAdd}
+              selectionRouteName="Appointments"
+              headerTitle="Appointments"
+              list={appointmentsList}
+              embedded
+              onSelectionModeChange={setListSelectionMode}
+              ownsHeader={false}
+            />
+          )}
+
+          {activeTab === "questions" && (
+            <AppointmentQuestionsPane
+              user={user}
+              embedded
+              selectionRouteName="Appointments"
+              headerActive={true}
+              registerOpenAdd={registerOpenQuestionAdd}
+              onSelectionModeChange={setQuestionsSelectionMode}
+            />
+          )}
+
+          {activeTab === "summary" && <AppointmentBriefContent />}
+        </ScrollView>
+
+        {showFab ? (
+          <TrackerThumbFab
+            accessibilityLabel={activeTab === "questions" ? "Add question" : "Add appointment"}
+            onPress={activeTab === "questions" ? () => openQuestionAddRef.current() : openAdd}
+            bottom={fabBottom}
+            right={fabRight}
+          />
+        ) : null}
       </View>
 
       <AppointmentSheet visible={sheetOpen} editingId={editingId} initialValues={form} saving={saving} saveError={saveError} onClose={closeSheet} onSave={handleSave} />
@@ -395,10 +394,16 @@ export function AppointmentsScreen({ user }: { user: SessionUser }) {
 
 const styles = StyleSheet.create({
   screen: { flex: 1 },
-  headerRightCluster: {
+  scroll: { flex: 1 },
+  scrollContent: {
+    paddingHorizontal: SPACING.screen,
+    paddingTop: 56,
+  },
+  headerRow: {
     flexDirection: "row",
     alignItems: "center",
-    gap: SPACING.md,
+    justifyContent: "space-between",
+    marginBottom: SPACING.lg,
   },
   navLabel: {
     fontSize: TYPOGRAPHY.fontSize.md,
