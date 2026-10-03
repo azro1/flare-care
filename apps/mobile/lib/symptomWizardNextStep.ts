@@ -273,8 +273,16 @@ export function symptomWizardTryAdvance(input: {
       return fail({ breakfast: "Please enter what you ate for breakfast or check \"I didn't eat anything\"" });
     }
     for (const meal of form.breakfast) {
-      if (meal.food.trim() && !meal.quantity.trim()) {
-        return fail({ breakfast: "Please enter an amount" });
+      if (meal.food.trim()) {
+        if (meal.quantity.includes("ml")) {
+          if (!meal.quantity.trim()) {
+            return fail({ breakfast: "Please enter an amount" });
+          }
+        } else {
+          if (!["Small", "Medium", "Large"].includes(meal.quantity)) {
+            return fail({ breakfast: "Please select a portion size" });
+          }
+        }
       }
     }
   }
@@ -285,8 +293,16 @@ export function symptomWizardTryAdvance(input: {
       return fail({ lunch: "Please enter what you ate for lunch or check \"I didn't eat anything\"" });
     }
     for (const meal of form.lunch) {
-      if (meal.food.trim() && !meal.quantity.trim()) {
-        return fail({ lunch: "Please enter an amount" });
+      if (meal.food.trim()) {
+        if (meal.quantity.includes("ml")) {
+          if (!meal.quantity.trim()) {
+            return fail({ lunch: "Please enter an amount" });
+          }
+        } else {
+          if (!["Small", "Medium", "Large"].includes(meal.quantity)) {
+            return fail({ lunch: "Please select a portion size" });
+          }
+        }
       }
     }
   }
@@ -297,8 +313,16 @@ export function symptomWizardTryAdvance(input: {
       return fail({ dinner: "Please enter what you ate for dinner or check \"I didn't eat anything\"" });
     }
     for (const meal of form.dinner) {
-      if (meal.food.trim() && !meal.quantity.trim()) {
-        return fail({ dinner: "Please enter an amount" });
+      if (meal.food.trim()) {
+        if (meal.quantity.includes("ml")) {
+          if (!meal.quantity.trim()) {
+            return fail({ dinner: "Please enter an amount" });
+          }
+        } else {
+          if (!["Small", "Medium", "Large"].includes(meal.quantity)) {
+            return fail({ dinner: "Please select a portion size" });
+          }
+        }
       }
     }
   }
