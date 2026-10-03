@@ -4,28 +4,24 @@ import { Pressable, StyleSheet, Text, View } from "react-native";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { showFlareAlert } from "../components/FlareAlertHost";
 import { PrimaryButton } from "../components/FlareButton";
-import { InstructionScreenShell } from "../components/InstructionScreenShell";
 import { MedicalSupplyItemSheet } from "../components/MedicalSupplyItemSheet";
 import {
   LogHistoryCard,
   LogHistoryEmptyState,
   LogHistoryPreviewList,
-  LOG_HISTORY_LOAD_MORE_BATCH,
   logHistoryCardStyles,
   type LogHistoryListItem,
 } from "../components/LogHistoryList";
+import { FlareLucideIcon, FLARE_FEATURE_LUCIDE } from "../lib/flareLucideIcons";
 import { ConfirmModal } from "../components/ConfirmModal";
 import { InfoHintButton } from "../components/InfoHintButton";
 import { TrackerThumbFab, useTrackerThumbFabLayout } from "../components/TrackerThumbFab";
-import {
-  FLARE_FONT_FAMILY,
-  FLARE_FONT_SIZE,
-  FLARE_INLINE_ACTION_LINK,
-  FLARE_LINE_HEIGHT,
-  INSTRUCTION_CARD_HEADER_GAP,
-  STACKED_LINE_GAP,
-  bottomTabBarHeight,
-} from "../lib/layoutConstants";
+import { Card } from "../components/MidnightLagoonCard";
+import { TrayRow } from "../components/MidnightLagoonTray";
+import { ScreenHeader } from "../components/MidnightLagoonScreenHeader";
+import { ScrollView } from "../lib/scrollViews";
+import { SPACING, TYPOGRAPHY } from "../designTokens";
+import { bottomTabBarHeight, LOG_HISTORY_LOAD_MORE_BATCH } from "../lib/layoutConstants";
 import { useLogListSelection } from "../lib/useLogListSelection";
 import {
   MEDICAL_SUPPLIES_FEATURE_ICON,
@@ -300,7 +296,13 @@ export function MedicalSupplyOrderScreen({ user }: { user: SessionUser }) {
   }, [items.length]);
 
   if (detailLoading && !kit) {
-    return <View style={[styles.centered, { backgroundColor: c.screen }]} />;
+    return (
+      <View style={[styles.screen, { backgroundColor: c.screen }]}>
+        <View style={styles.centered}>
+          <ActivityIndicator color={c.primary} />
+        </View>
+      </View>
+    );
   }
 
   const dueHeadline = supplyDueHeadline(kit, items.length);
@@ -308,155 +310,209 @@ export function MedicalSupplyOrderScreen({ user }: { user: SessionUser }) {
   const cadenceDays = normalizeCadenceDays(kit?.cadence_days ?? 7);
 
   return (
-    <InstructionScreenShell
-      showInstruction={false}
-      contentPaddingBottom={scrollBottomPad}
-      instruction={null}
-      floatingAction={
-        !selectionMode ? (
+    <>
+      <View style={[styles.screen, { backgroundColor: c.screen }]}>
+        <ScrollView
+          style={styles.scroll}
+          contentContainerStyle={[styles.scrollContent, { paddingBottom: scrollBottomPad }]}
+        >
+          <ScreenHeader title={headerName} />
+
+          <Card style={styles.statusCard}>
+            <View style={styles.statusCopy}>
+              {dueStatus === "overdue" && kit?.next_due_date ? (
+                <Text style={[styles.statusHeadline, { color: c.text, fontFamily: TYPOGRAPHY.fontFamily.medium }]}>
+                  {"Order overdue: "}
+                  <Text style={{ color: c.danger }}>{formatUkDate(kit.next_due_date)}</Text>
+                </Text>
+              ) : (
+                <Text style={[styles.statusHeadline, { color: c.text, fontFamily: TYPOGRAPHY.fontFamily.medium }]}>
+                  {dueHeadline}
+                </Text>
+              )}
+              <Text style={[styles.statusMeta, { color: c.textMuted, fontFamily: TYPOGRAPHY.fontFamily.regular }]}>
+                {cadenceLabel(cadenceDays)}
+              </Text>
+            </View>
+
+            <View
+              style={[styles.statusActions, selectionMode && styles.statusActionsDisabled]}
+              pointerEvents={selectionMode ? "none" : "auto"}
+            >
+              <PrimaryButton title="Send request" onPress={openRequestSupplies} disabled={selectionMode} />
+              <Pressable
+                accessibilityRole="button"
+                accessibilityState={{ disabled: selectionMode }}
+                disabled={selectionMode}
+                onPress={() =>
+                  navigation.navigate({
+                    name: "MedicalSuppliesSetup",
+                    params: { editKitId: kitId },
+                  })
+                }
+                style={[styles.changeLink, styles.editSetupLink]}
+              >
+                <Text style={[styles.changeLinkText, { color: c.primary, fontFamily: TYPOGRAPHY.fontFamily.regular }]}>
+                  Edit setup
+                </Text>
+              </Pressable>
+              <Pressable
+                accessibilityRole="button"
+                accessibilityState={{ disabled: selectionMode }}
+                disabled={selectionMode}
+                onPress={() => setDeleteOrderOpen(true)}
+                style={styles.changeLink}
+              >
+                <Text style={[styles.changeLinkText, { color: c.danger, fontFamily: TYPOGRAPHY.fontFamily.regular }]}>
+                  Delete
+                </Text>
+              </Pressable>
+            </View>
+          </Card>
+
+          {items.length === 0 ? (
+            <Card>
+              <View style={styles.emptyWrap}>
+                <FlareLucideIcon icon={MEDICAL_SUPPLIES_FEATURE_ICON} size={40} color={c.textSecondary} />
+                <Text style={[styles.emptyText, { color: c.textSecondary, fontFamily: TYPOGRAPHY.fontFamily.regular }]}>
+                  No items yet.
+                </Text>
+              </View>
+            </Card>
+          ) : (
+            <>
+              <Card noPadding style={{ paddingVertical: SPACING.sm, paddingHorizontal: SPACING.md }}>
+                {listItems.slice(0, visibleCount).map((item) => {
+                  const isSelected = selectedIds.has(item.id);
+                  return (
+                    <TrayRow
+                      key={item.id}
+                      icon={FLARE_FEATURE_LUCIDE.supplies}
+                      label={item.title}
+                      value={item.subtitle ?? ""}
+                      showChevron
+                      onPress={() => {
+                        if (selectionMode) {
+                          toggleSelect(item.id);
+                        } else {
+                          const row = items.find((r) => String(r.id) === item.id);
+                          if (row) openEdit(row);
+                        }
+                      }}
+                      onLongPress={selectionMode ? undefined : () => enterSelectionWith(item.id)}
+                    />
+                  );
+                })}
+              </Card>
+
+              {hasMore && (
+                <Pressable
+                  accessibilityRole="button"
+                  onPress={loadMore}
+                  style={({ pressed }) => [styles.loadMore, pressed && { opacity: 0.7 }]}
+                >
+                  <Text style={[styles.loadMoreText, { color: c.primary, fontFamily: TYPOGRAPHY.fontFamily.medium }]}>
+                    load more
+                  </Text>
+                </Pressable>
+              )}
+            </>
+          )}
+        </ScrollView>
+
+        {!selectionMode && (
           <TrackerThumbFab
             accessibilityLabel="Add item"
             onPress={openAdd}
             tabBarClearance={tabBarClearance}
           />
-        ) : null
-      }
-      footer={
-        <>
-          <ConfirmModal
-            visible={bulkDeleteOpen}
-            title={selectedIds.size === 1 ? "Delete item?" : `Delete ${selectedIds.size} items?`}
-            message="This cannot be undone."
-            confirmLabel={bulkDeleting ? "Deleting…" : "Delete"}
-            confirmDestructive
-            onConfirm={handleBulkDeleteConfirm}
-            onCancel={() => setBulkDeleteOpen(false)}
-          />
-          <ConfirmModal
-            visible={deleteOrderOpen}
-            title="Delete this order?"
-            message="This removes the order and all data associated with it."
-            confirmLabel={deletingOrder ? "Deleting…" : "Delete"}
-            confirmDestructive
-            onConfirm={() => void handleDeleteOrder()}
-            onCancel={() => setDeleteOrderOpen(false)}
-          />
-          <MedicalSupplyItemSheet
-            visible={sheetOpen}
-            editingId={editingId}
-            initialValues={form}
-            saving={saving}
-            saveError={saveError}
-            onClose={closeSheet}
-            onSave={handleSave}
-          />
-          <ConfirmModal
-            visible={noStockOpen}
-            notice
-            title="Add items first"
-            message="Add items to this order first, then you can send a request."
-            confirmLabel="OK"
-            onConfirm={() => setNoStockOpen(false)}
-            onCancel={() => setNoStockOpen(false)}
-          />
-        </>
-      }
-    >
-      <View style={[logHistoryCardStyles.trackerCard, styles.statusCard, { backgroundColor: c.card }]}>
-        <View style={styles.statusCopy}>
-          {dueStatus === "overdue" && kit?.next_due_date ? (
-            <Text style={[styles.statusHeadline, { color: c.text }]}>
-              {"Order overdue: "}
-              <Text style={{ color: c.danger }}>{formatUkDate(kit.next_due_date)}</Text>
-            </Text>
-          ) : (
-            <Text style={[styles.statusHeadline, { color: c.text }]}>{dueHeadline}</Text>
-          )}
-          <Text style={[styles.statusMeta, { color: c.textMuted }]}>{cadenceLabel(cadenceDays)}</Text>
-        </View>
-
-        <View
-          style={[styles.statusActions, selectionMode ? styles.statusActionsDisabled : null]}
-          pointerEvents={selectionMode ? "none" : "auto"}
-        >
-          <PrimaryButton title="Send request" onPress={openRequestSupplies} disabled={selectionMode} />
-          <Pressable
-            accessibilityRole="button"
-            accessibilityState={{ disabled: selectionMode }}
-            disabled={selectionMode}
-            onPress={() =>
-              navigation.navigate({
-                name: "MedicalSuppliesSetup",
-                params: { editKitId: kitId },
-              })
-            }
-            style={[styles.changeLink, styles.editSetupLink]}
-          >
-            <Text style={[FLARE_INLINE_ACTION_LINK, { color: c.primary, textAlign: "center" }]}>
-              Edit setup
-            </Text>
-          </Pressable>
-          <Pressable
-            accessibilityRole="button"
-            accessibilityState={{ disabled: selectionMode }}
-            disabled={selectionMode}
-            onPress={() => setDeleteOrderOpen(true)}
-            style={styles.changeLink}
-          >
-            <Text style={[FLARE_INLINE_ACTION_LINK, { color: c.danger, textAlign: "center" }]}>
-              Delete
-            </Text>
-          </Pressable>
-        </View>
+        )}
       </View>
 
-      <LogHistoryCard>
-        <View style={logHistoryCardStyles.trackerCardBody}>
-          {items.length === 0 ? (
-            <LogHistoryEmptyState icon={MEDICAL_SUPPLIES_FEATURE_ICON} />
-          ) : (
-            <LogHistoryPreviewList
-              items={listItems}
-              visibleCount={visibleCount}
-              hasMore={hasMore}
-              loadMoreLabel="load more"
-              onLoadMore={loadMore}
-              rowTextLayout="default"
-              onPressItem={(id) => {
-                const row = items.find((r) => String(r.id) === id);
-                if (row) openEdit(row);
-              }}
-              selectionMode={selectionMode}
-              selectedIds={selectedIds}
-              onToggleSelect={toggleSelect}
-              onLongPressItem={enterSelectionWith}
-            />
-          )}
-        </View>
-      </LogHistoryCard>
-    </InstructionScreenShell>
+      <ConfirmModal
+        visible={bulkDeleteOpen}
+        title={selectedIds.size === 1 ? "Delete item?" : `Delete ${selectedIds.size} items?`}
+        message="This cannot be undone."
+        confirmLabel={bulkDeleting ? "Deleting…" : "Delete"}
+        confirmDanger
+        onConfirm={handleBulkDeleteConfirm}
+        onCancel={() => setBulkDeleteOpen(false)}
+      />
+      <ConfirmModal
+        visible={deleteOrderOpen}
+        title="Delete this order?"
+        message="This removes the order and all data associated with it."
+        confirmLabel={deletingOrder ? "Deleting…" : "Delete"}
+        confirmDanger
+        onConfirm={() => void handleDeleteOrder()}
+        onCancel={() => setDeleteOrderOpen(false)}
+      />
+      <MedicalSupplyItemSheet
+        visible={sheetOpen}
+        editingId={editingId}
+        initialValues={form}
+        saving={saving}
+        saveError={saveError}
+        onClose={closeSheet}
+        onSave={handleSave}
+      />
+      <ConfirmModal
+        visible={noStockOpen}
+        notice
+        title="Add items first"
+        message="Add items to this order first, then you can send a request."
+        confirmLabel="OK"
+        onConfirm={() => setNoStockOpen(false)}
+        onCancel={() => setNoStockOpen(false)}
+      />
+    </>
   );
 }
 
 const styles = StyleSheet.create({
-  centered: { flex: 1, alignItems: "center", justifyContent: "center" },
-  headerHintSlot: {
-    paddingLeft: 10,
+  screen: { flex: 1 },
+  scroll: { flex: 1 },
+  scrollContent: {
+    paddingHorizontal: SPACING.screen,
+    paddingTop: SPACING.lg,
   },
-  statusCopy: { gap: STACKED_LINE_GAP },
-  statusCard: { padding: 18 },
+  centered: {
+    flex: 1,
+    alignItems: "center",
+    justifyContent: "center",
+  },
+  headerHintSlot: {
+    paddingLeft: SPACING.sm,
+  },
+  statusCard: { padding: SPACING.lg },
+  statusCopy: { gap: SPACING.xxs },
   statusHeadline: {
-    fontSize: FLARE_FONT_SIZE.subhead,
-    lineHeight: FLARE_LINE_HEIGHT.subhead,
-    fontFamily: FLARE_FONT_FAMILY.medium,
+    fontSize: TYPOGRAPHY.fontSize.cardTitle,
   },
   statusMeta: {
-    fontSize: FLARE_FONT_SIZE.muted,
-    lineHeight: FLARE_LINE_HEIGHT.muted,
-    fontFamily: FLARE_FONT_FAMILY.regular,
+    fontSize: TYPOGRAPHY.fontSize.sm,
   },
-  statusActions: { gap: INSTRUCTION_CARD_HEADER_GAP },
+  statusActions: { gap: SPACING.md, marginTop: SPACING.lg },
   statusActionsDisabled: { opacity: 0.4 },
-  editSetupLink: { marginTop: 4 },
-  changeLink: { paddingVertical: STACKED_LINE_GAP },
+  editSetupLink: { marginTop: SPACING.xs },
+  changeLink: { paddingVertical: SPACING.xxs, alignItems: "center" },
+  changeLinkText: {
+    fontSize: TYPOGRAPHY.fontSize.md,
+  },
+  emptyWrap: {
+    alignItems: "center",
+    paddingVertical: SPACING.xl,
+    gap: SPACING.md,
+  },
+  emptyText: {
+    fontSize: TYPOGRAPHY.fontSize.md,
+    textAlign: "center",
+  },
+  loadMore: {
+    paddingVertical: SPACING.md,
+    alignItems: "center",
+  },
+  loadMoreText: {
+    fontSize: TYPOGRAPHY.fontSize.sm,
+  },
 });
