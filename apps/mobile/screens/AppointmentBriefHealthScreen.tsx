@@ -3,12 +3,12 @@ import React from "react";
 import { ActivityIndicator, StyleSheet, Text, View } from "react-native";
 import { ScrollView } from "../lib/scrollViews";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
+import { Card } from "../components/MidnightLagoonCard";
+import { SectionLabel } from "../components/MidnightLagoonSectionLabel";
 import { flareFieldErrorStyle } from "../components/FlareInput";
-import { LogDetailCard, LogDetailFieldGroup } from "../components/LogDetailLayout";
-import { flareCardSectionStyles } from "../components/FlareScreenSectionTitle";
+import { SPACING, TYPOGRAPHY } from "../designTokens";
 import type { AppointmentBriefRouteParams } from "../lib/appointmentBriefShared";
 import { useAppointmentBrief } from "../lib/useAppointmentBrief";
-import { SCREEN_EDGE_PADDING } from "../lib/layoutConstants";
 import { useFlareColors } from "../theme";
 
 type SessionUser = { id: string };
@@ -29,16 +29,23 @@ export function AppointmentBriefHealthScreen({ user }: { user: SessionUser }) {
 
   if (loading) {
     return (
-      <View style={[styles.centered, { backgroundColor: c.screen }]}>
-        <ActivityIndicator color={c.primary} />
+      <View style={[styles.screen, { backgroundColor: c.screen }]}>
+        <View style={styles.centered}>
+          <ActivityIndicator color={c.primary} />
+        </View>
       </View>
     );
   }
 
   if (error || !brief) {
     return (
-      <View style={[styles.centered, { backgroundColor: c.screen, padding: SCREEN_EDGE_PADDING }]}>
-        <Text style={errTextStyle}>{error || "Summary not available."}</Text>
+      <View style={[styles.screen, { backgroundColor: c.screen }]}>
+        <ScrollView
+          style={styles.scroll}
+          contentContainerStyle={[styles.scrollContent, { paddingBottom: bottomPad }]}
+        >
+          <Text style={errTextStyle}>{error || "Summary not available."}</Text>
+        </ScrollView>
       </View>
     );
   }
@@ -60,26 +67,74 @@ export function AppointmentBriefHealthScreen({ user }: { user: SessionUser }) {
       : `${brief.medications.missedCurrent} logged`;
 
   return (
-    <ScrollView
-      style={[styles.screen, { backgroundColor: c.screen }]}
-      contentContainerStyle={{ paddingBottom: bottomPad }}
-      showsVerticalScrollIndicator={false}
-    >
-      <LogDetailCard style={flareCardSectionStyles.container}>
-        <LogDetailFieldGroup
-          fields={[
-            { label: "Symptoms", value: symptomsLine },
-            { label: "Bowel", value: bowelLine },
-            { label: "Weight", value: weightLine },
-            { label: "Missed doses", value: medsLine },
-          ]}
-        />
-      </LogDetailCard>
-    </ScrollView>
+    <View style={[styles.screen, { backgroundColor: c.screen }]}>
+      <ScrollView
+        style={styles.scroll}
+        contentContainerStyle={[styles.scrollContent, { paddingBottom: bottomPad }]}
+        showsVerticalScrollIndicator={false}
+      >
+        <SectionLabel text="Health Data" />
+        <Card>
+          <View style={styles.fieldList}>
+            <View style={styles.fieldRow}>
+              <Text style={[styles.fieldLabel, { color: c.text, fontFamily: TYPOGRAPHY.fontFamily.regular }]}>Symptoms</Text>
+              <Text style={[styles.fieldValue, { color: c.textSecondary, fontFamily: TYPOGRAPHY.fontFamily.regular }]}>
+                {symptomsLine}
+              </Text>
+            </View>
+            <View style={styles.fieldRow}>
+              <Text style={[styles.fieldLabel, { color: c.text, fontFamily: TYPOGRAPHY.fontFamily.regular }]}>Bowel</Text>
+              <Text style={[styles.fieldValue, { color: c.textSecondary, fontFamily: TYPOGRAPHY.fontFamily.regular }]}>
+                {bowelLine}
+              </Text>
+            </View>
+            <View style={styles.fieldRow}>
+              <Text style={[styles.fieldLabel, { color: c.text, fontFamily: TYPOGRAPHY.fontFamily.regular }]}>Weight</Text>
+              <Text style={[styles.fieldValue, { color: c.textSecondary, fontFamily: TYPOGRAPHY.fontFamily.regular }]}>
+                {weightLine}
+              </Text>
+            </View>
+            <View style={styles.fieldRow}>
+              <Text style={[styles.fieldLabel, { color: c.text, fontFamily: TYPOGRAPHY.fontFamily.regular }]}>Missed doses</Text>
+              <Text style={[styles.fieldValue, { color: c.textSecondary, fontFamily: TYPOGRAPHY.fontFamily.regular }]}>
+                {medsLine}
+              </Text>
+            </View>
+          </View>
+        </Card>
+      </ScrollView>
+    </View>
   );
 }
 
 const styles = StyleSheet.create({
-  screen: { flex: 1, padding: SCREEN_EDGE_PADDING },
-  centered: { flex: 1, alignItems: "center", justifyContent: "center" },
+  screen: { flex: 1 },
+  scroll: { flex: 1 },
+  scrollContent: {
+    paddingHorizontal: SPACING.screen,
+    paddingTop: SPACING.lg,
+  },
+  centered: {
+    flex: 1,
+    alignItems: "center",
+    justifyContent: "center",
+  },
+  fieldList: {
+    gap: SPACING.md,
+  },
+  fieldRow: {
+    flexDirection: "row",
+    justifyContent: "space-between",
+    alignItems: "flex-start",
+    gap: SPACING.md,
+  },
+  fieldLabel: {
+    fontSize: TYPOGRAPHY.fontSize.md,
+    flexShrink: 0,
+  },
+  fieldValue: {
+    fontSize: TYPOGRAPHY.fontSize.md,
+    textAlign: "right",
+    flex: 1,
+  },
 });
