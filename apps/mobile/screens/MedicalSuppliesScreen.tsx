@@ -1,23 +1,17 @@
 import { FLARE_CHROME_LUCIDE, FlareLucideIcon } from "../lib/flareLucideIcons";
 import { useFocusEffect, useNavigation } from "@react-navigation/native";
 import React, { useCallback, useLayoutEffect, useMemo, useRef, useState } from "react";
-import { InteractionManager, Pressable, StyleSheet, Text, View } from "react-native";
+import { ActivityIndicator, InteractionManager, Pressable, StyleSheet, Text, View } from "react-native";
+import { ScrollView } from "../lib/scrollViews";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { showFlareAlert } from "../components/FlareAlertHost";
-import { InstructionScreenShell } from "../components/InstructionScreenShell";
+import { Card } from "../components/MidnightLagoonCard";
+import { ScreenHeader } from "../components/MidnightLagoonScreenHeader";
 import { ConfirmModal } from "../components/ConfirmModal";
 import { InfoHintButton } from "../components/InfoHintButton";
 import { TrackerThumbFab, useTrackerThumbFabLayout } from "../components/TrackerThumbFab";
-import {
-  FLARE_FONT_FAMILY,
-  FLARE_FONT_SIZE,
-  FLARE_INLINE_ACTION_LINK,
-  FLARE_LINE_HEIGHT,
-  CARD_INNER_PADDING,
-  NAV_ROW_CHEVRON_SIZE,
-  STACKED_LINE_GAP,
-  bottomTabBarHeight,
-} from "../lib/layoutConstants";
+import { SPACING, TYPOGRAPHY } from "../designTokens";
+import { NAV_ROW_CHEVRON_SIZE, bottomTabBarHeight } from "../lib/layoutConstants";
 import { useLogListSelection } from "../lib/useLogListSelection";
 import {
   deleteMedicalSupplyKit,
@@ -189,127 +183,161 @@ export function MedicalSuppliesScreen({ user }: { user: SessionUser }) {
   }, [entries, navigation]);
 
   if (!hubReady || entries.length === 0) {
-    return <View style={[styles.centered, { backgroundColor: c.screen }]} />;
+    return (
+      <View style={[styles.screen, { backgroundColor: c.screen }]}>
+        <View style={styles.centered}>
+          <ActivityIndicator color={c.primary} />
+        </View>
+      </View>
+    );
   }
 
   return (
-    <InstructionScreenShell
-      showInstruction={false}
-      contentPaddingBottom={scrollBottomPad}
-      instruction={null}
-      floatingAction={
-        !selectionMode ? (
+    <>
+      <View style={[styles.screen, { backgroundColor: c.screen }]}>
+        <ScrollView
+          style={styles.scroll}
+          contentContainerStyle={[styles.scrollContent, { paddingBottom: scrollBottomPad }]}
+        >
+          <ScreenHeader title="Supplies" />
+
+          <Card noPadding style={{ paddingVertical: SPACING.sm, paddingHorizontal: SPACING.md }}>
+            {entries.map(({ kit: row, itemCount, status }) => {
+              const id = String(row.id);
+              const isSelected = selectedIds.has(id);
+              return (
+                <Pressable
+                  key={row.id}
+                  accessibilityRole="button"
+                  accessibilityLabel={`${row.name}. ${supplyDueListLabel(row, itemCount)}`}
+                  accessibilityState={selectionMode ? { selected: isSelected } : undefined}
+                  onPress={() => {
+                    if (selectionMode) {
+                      toggleSelect(id);
+                      return;
+                    }
+                    navigation.navigate("MedicalSupplyOrder", { kitId: row.id, orderName: row.name });
+                  }}
+                  onLongPress={() => enterSelectionWith(id)}
+                  delayLongPress={280}
+                  style={styles.orderRow}
+                >
+                  <View style={styles.orderCopy}>
+                    <Text
+                      style={[
+                        styles.orderName,
+                        { color: c.text, fontFamily: TYPOGRAPHY.fontFamily.medium },
+                      ]}
+                      numberOfLines={1}
+                    >
+                      {row.name}
+                    </Text>
+                    <Text
+                      style={[
+                        styles.orderDue,
+                        {
+                          color: status === "overdue" ? c.danger : c.textMuted,
+                          fontFamily: TYPOGRAPHY.fontFamily.regular,
+                        },
+                      ]}
+                      numberOfLines={1}
+                    >
+                      {supplyDueListLabel(row, itemCount)}
+                    </Text>
+                  </View>
+                  {selectionMode ? (
+                    <FlareLucideIcon
+                      icon={isSelected ? FLARE_CHROME_LUCIDE.checkCircle : FLARE_CHROME_LUCIDE.circle}
+                      size={22}
+                      color={isSelected ? c.primary : c.textMuted}
+                    />
+                  ) : (
+                    <FlareLucideIcon icon={FLARE_CHROME_LUCIDE.forward} size={NAV_ROW_CHEVRON_SIZE} color={c.text} />
+                  )}
+                </Pressable>
+              );
+            })}
+          </Card>
+
+          <Pressable
+            accessibilityRole="button"
+            accessibilityState={{ disabled: selectionMode }}
+            disabled={selectionMode}
+            onPress={() => openRequestSupplies()}
+            style={[styles.changeLink, selectionMode && styles.changeLinkDisabled]}
+            pointerEvents={selectionMode ? "none" : "auto"}
+          >
+            <Text
+              style={[
+                styles.changeLinkText,
+                { color: c.primary, fontFamily: TYPOGRAPHY.fontFamily.regular },
+              ]}
+            >
+              Send request
+            </Text>
+          </Pressable>
+        </ScrollView>
+
+        {!selectionMode && (
           <TrackerThumbFab
             accessibilityLabel="Add order"
             onPress={openNewOrderSetup}
             tabBarClearance={tabBarClearance}
           />
-        ) : null
-      }
-      footer={
-        <>
-          <ConfirmModal
-            visible={bulkDeleteOpen}
-            title={selectedIds.size === 1 ? "Delete this order?" : `Delete ${selectedIds.size} orders?`}
-            message="This removes each order and all data associated with it."
-            confirmLabel={bulkDeleting ? "Deleting…" : "Delete"}
-            confirmDestructive
-            onConfirm={handleBulkDeleteConfirm}
-            onCancel={() => setBulkDeleteOpen(false)}
-          />
-          <ConfirmModal
-            visible={noStockOpen}
-            notice
-            title="Add items first"
-            message={noStockMessage}
-            confirmLabel="OK"
-            onConfirm={() => setNoStockOpen(false)}
-            onCancel={() => setNoStockOpen(false)}
-          />
-        </>
-      }
-    >
-      {entries.map(({ kit: row, itemCount, status }) => {
-        const id = String(row.id);
-        const isSelected = selectedIds.has(id);
-        return (
-          <Pressable
-            key={row.id}
-            accessibilityRole="button"
-            accessibilityLabel={`${row.name}. ${supplyDueListLabel(row, itemCount)}`}
-            accessibilityState={selectionMode ? { selected: isSelected } : undefined}
-            onPress={() => {
-              if (selectionMode) {
-                toggleSelect(id);
-                return;
-              }
-              navigation.navigate("MedicalSupplyOrder", { kitId: row.id, orderName: row.name });
-            }}
-            onLongPress={() => enterSelectionWith(id)}
-            delayLongPress={280}
-            style={[styles.orderCard, { backgroundColor: c.card }]}
-          >
-            <View style={styles.orderCopy}>
-              <Text style={[styles.orderName, { color: c.text }]} numberOfLines={1}>
-                {row.name}
-              </Text>
-              <Text
-                style={[styles.orderDue, { color: status === "overdue" ? c.danger : c.textMuted }]}
-                numberOfLines={1}
-              >
-                {supplyDueListLabel(row, itemCount)}
-              </Text>
-            </View>
-            {selectionMode ? (
-              <FlareLucideIcon
-                icon={isSelected ? FLARE_CHROME_LUCIDE.checkCircle : FLARE_CHROME_LUCIDE.circle}
-                size={22}
-                color={isSelected ? c.primary : c.textMuted}
-              />
-            ) : (
-              <FlareLucideIcon icon={FLARE_CHROME_LUCIDE.forward} size={NAV_ROW_CHEVRON_SIZE} color={c.text} />
-            )}
-          </Pressable>
-        );
-      })}
-      <Pressable
-        accessibilityRole="button"
-        accessibilityState={{ disabled: selectionMode }}
-        disabled={selectionMode}
-        onPress={() => openRequestSupplies()}
-        style={[styles.changeLink, selectionMode ? styles.changeLinkDisabled : null]}
-        pointerEvents={selectionMode ? "none" : "auto"}
-      >
-        <Text style={[FLARE_INLINE_ACTION_LINK, { color: c.primary, textAlign: "center" }]}>
-          Send request
-        </Text>
-      </Pressable>
-    </InstructionScreenShell>
+        )}
+      </View>
+
+      <ConfirmModal
+        visible={bulkDeleteOpen}
+        title={selectedIds.size === 1 ? "Delete this order?" : `Delete ${selectedIds.size} orders?`}
+        message="This removes each order and all data associated with it."
+        confirmLabel={bulkDeleting ? "Deleting…" : "Delete"}
+        confirmDanger
+        onConfirm={handleBulkDeleteConfirm}
+        onCancel={() => setBulkDeleteOpen(false)}
+      />
+      <ConfirmModal
+        visible={noStockOpen}
+        notice
+        title="Add items first"
+        message={noStockMessage}
+        confirmLabel="OK"
+        onConfirm={() => setNoStockOpen(false)}
+        onCancel={() => setNoStockOpen(false)}
+      />
+    </>
   );
 }
 
 const styles = StyleSheet.create({
-  centered: { flex: 1, alignItems: "center", justifyContent: "center" },
-  /** Match `LogHistoryCard` / tracker cards — fill only, no border. */
-  orderCard: {
-    borderRadius: 14,
-    padding: CARD_INNER_PADDING,
-    marginBottom: 12,
+  screen: { flex: 1 },
+  scroll: { flex: 1 },
+  scrollContent: {
+    paddingHorizontal: SPACING.screen,
+    paddingTop: SPACING.lg,
+  },
+  centered: {
+    flex: 1,
+    alignItems: "center",
+    justifyContent: "center",
+  },
+  orderRow: {
     flexDirection: "row",
     alignItems: "center",
-    gap: 10,
+    gap: SPACING.sm,
+    paddingVertical: SPACING.sm,
+    minHeight: 56,
   },
-  orderCopy: { flex: 1, gap: STACKED_LINE_GAP },
+  orderCopy: { flex: 1, gap: SPACING.xxs },
   orderName: {
-    fontSize: FLARE_FONT_SIZE.body,
-    lineHeight: FLARE_LINE_HEIGHT.body,
-    fontFamily: FLARE_FONT_FAMILY.medium,
+    fontSize: TYPOGRAPHY.fontSize.md,
   },
   orderDue: {
-    fontSize: FLARE_FONT_SIZE.caption,
-    lineHeight: FLARE_LINE_HEIGHT.caption,
-    fontFamily: FLARE_FONT_FAMILY.regular,
+    fontSize: TYPOGRAPHY.fontSize.sm,
   },
-  changeLink: { paddingVertical: STACKED_LINE_GAP },
+  changeLink: { paddingVertical: SPACING.md, alignItems: "center" },
   changeLinkDisabled: { opacity: 0.4 },
+  changeLinkText: {
+    fontSize: TYPOGRAPHY.fontSize.md,
+  },
 });
