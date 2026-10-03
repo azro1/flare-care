@@ -59,6 +59,7 @@ const styles = StyleSheet.create({
     justifyContent: "space-between",
     alignItems: "flex-start",
     gap: SPACING.md,
+    marginBottom: SPACING.lg,
   },
   headerText: {
     flex: 1,
