@@ -126,7 +126,7 @@ export function MedicationTrackingWizardScreen({ user }: { user: SessionUser }) 
       const { data, error } = await supabase.from(TABLES.LOG_MEDICATIONS).select("*").eq("user_id", user.id).eq("id", editId).maybeSingle();
       if (cancelled) return;
       if (error || !data) {
-        showFlareAlert({ message: "Could not load entry", duration: 3000 });
+        showFlareAlert("Could not load entry");
         navigation.goBack();
         return;
       }
@@ -146,7 +146,7 @@ export function MedicationTrackingWizardScreen({ user }: { user: SessionUser }) 
 
   const returnToReview = useCallback(() => {
     if (cleanedMedicationHasNoData(cleanMedicationForm(form))) {
-      showFlareAlert({ message: "No tracking data entered", duration: 3000 });
+      showFlareAlert("No tracking data entered");
       return;
     }
     setCurrentStep(MEDICATION_REVIEW_STEP);
@@ -248,7 +248,7 @@ export function MedicationTrackingWizardScreen({ user }: { user: SessionUser }) 
     const res = medicationWizardTryAdvance({ currentStep, form });
     if (!res.ok) {
       if (res.noData) {
-        showFlareAlert({ message: "No tracking data entered", duration: 3000 });
+        showFlareAlert("No tracking data entered");
         return;
       }
       setFieldErrors(res.fieldErrors);
@@ -279,7 +279,7 @@ export function MedicationTrackingWizardScreen({ user }: { user: SessionUser }) 
   const submit = async () => {
     const cleaned = cleanMedicationForm(form);
     if (cleanedMedicationHasNoData(cleaned)) {
-      showFlareAlert({ message: "No tracking data entered", duration: 3000 });
+      showFlareAlert("No tracking data entered");
       return;
     }
     setSubmitting(true);
@@ -293,14 +293,14 @@ export function MedicationTrackingWizardScreen({ user }: { user: SessionUser }) 
       invalidateDashboardSnapshot(user.id);
       if (editId) {
         navigation.goBack();
-        showFlareAlert({ message: "Saved", duration: 2000 });
+        showFlareAlert("Saved");
       } else {
         navigation.dispatch(CommonActions.reset({ index: 0, routes: [{ name: "Dashboard" }] }));
-        showFlareAlert({ message: "Saved", duration: 2000 });
+        showFlareAlert("Saved");
       }
     } catch (e: unknown) {
       const message = e instanceof Error ? e.message : "Unknown error";
-      showFlareAlert({ message, duration: 3000 });
+      showFlareAlert(message);
     } finally {
       setSubmitting(false);
     }
@@ -369,13 +369,13 @@ export function MedicationTrackingWizardScreen({ user }: { user: SessionUser }) 
       <Text style={[styles.stepTitle, { color: c.text, fontFamily: TYPOGRAPHY.fontFamily.semibold }]}>{title}</Text>
       <View style={styles.optionList}>
         <Pressable style={styles.radioRow} onPress={() => setYesNo(field, true)}>
-          <View style={[styles.radioOuter, { borderColor: c.border }]}>
+          <View style={[styles.radioOuter, { borderColor: c.inputBorder }]}>
             {form[field] === true ? <View style={[styles.radioInner, { backgroundColor: c.primary }]} /> : null}
           </View>
           <Text style={[styles.radioLabel, { color: c.text, fontFamily: TYPOGRAPHY.fontFamily.regular }]}>Yes</Text>
         </Pressable>
         <Pressable style={styles.radioRow} onPress={() => setYesNo(field, false)}>
-          <View style={[styles.radioOuter, { borderColor: c.border }]}>
+          <View style={[styles.radioOuter, { borderColor: c.inputBorder }]}>
             {form[field] === false ? <View style={[styles.radioInner, { backgroundColor: c.primary }]} /> : null}
           </View>
           <Text style={[styles.radioLabel, { color: c.text, fontFamily: TYPOGRAPHY.fontFamily.regular }]}>No</Text>
@@ -437,7 +437,7 @@ export function MedicationTrackingWizardScreen({ user }: { user: SessionUser }) 
                 if (d) setPickerDraftDate(d);
               }}
             />
-            {Platform.OS === "ios" ? <PrimaryButton label="Done" onPress={commitPickerDate} /> : null}
+            {Platform.OS === "ios" ? <PrimaryButton title="Done" onPress={commitPickerDate} /> : null}
           </>
         ) : null}
       </View>
@@ -469,7 +469,7 @@ export function MedicationTrackingWizardScreen({ user }: { user: SessionUser }) 
             <Text style={[styles.landingTitle, { color: c.text, fontFamily: TYPOGRAPHY.fontFamily.bold }]}>Track Medications</Text>
             <Text style={[styles.landingSub, { color: c.textSecondary, fontFamily: TYPOGRAPHY.fontFamily.regular }]}>Capture medication events that could be important to your IBD care.</Text>
             <View style={styles.landingCta}>
-              <PrimaryButton label="Start now" onPress={startWizard} />
+              <PrimaryButton title="Start now" onPress={startWizard} />
             </View>
           </View>
         ) : null}
@@ -525,7 +525,7 @@ export function MedicationTrackingWizardScreen({ user }: { user: SessionUser }) 
               ) : null}
             </View>
             <View style={styles.reviewSubmit}>
-              <PrimaryButton label={submitting ? "Saving…" : editId ? "Save changes" : "Submit"} onPress={submit} disabled={submitting || !reviewHasData} />
+              <PrimaryButton title={submitting ? "Saving…" : editId ? "Save changes" : "Submit"} onPress={submit} disabled={submitting || !reviewHasData} />
             </View>
           </Card>
         ) : null}
@@ -534,13 +534,13 @@ export function MedicationTrackingWizardScreen({ user }: { user: SessionUser }) 
           <View style={styles.footerBtns}>
             {editingReviewSection ? (
               <>
-                <PrimaryButton label="Back to review" onPress={returnToReview} />
-                {currentStep < getMedicationReviewSectionLastStep(editingReviewSection, form) ? <SecondaryButton label="Next" onPress={applyAdvance} /> : null}
+                <PrimaryButton title="Back to review" onPress={returnToReview} />
+                {currentStep < getMedicationReviewSectionLastStep(editingReviewSection, form) ? <SecondaryButton title="Next" onPress={applyAdvance} /> : null}
               </>
             ) : (
-              <PrimaryButton label="Next" onPress={applyAdvance} />
+              <PrimaryButton title="Next" onPress={applyAdvance} />
             )}
-            {currentStep > 1 && !editingReviewSection ? <SecondaryButton label="Prev" onPress={goBackInternal} /> : null}
+            {currentStep > 1 && !editingReviewSection ? <SecondaryButton title="Prev" onPress={goBackInternal} /> : null}
           </View>
         ) : null}
 
@@ -551,7 +551,7 @@ export function MedicationTrackingWizardScreen({ user }: { user: SessionUser }) 
         ) : null}
       </ScrollView>
 
-      <OptionPickerModal visible={timePicker != null} options={TIME_OF_DAY_OPTIONS} selectedOption={timePicker ? form[listKey(timePicker.list)][timePicker.index]?.timeOfDay ?? "" : ""} onSelect={selectTimeOfDay} onClose={closeTimePicker} />
+      <OptionPickerModal visible={timePicker != null} options={TIME_OF_DAY_OPTIONS} onSelect={selectTimeOfDay} onCancel={closeTimePicker} />
     </KeyboardAvoidingView>
   );
 }
@@ -589,7 +589,7 @@ const styles = StyleSheet.create({
     marginBottom: SPACING.xl,
   },
   landingTitle: {
-    fontSize: TYPOGRAPHY.fontSize.xxl,
+    fontSize: TYPOGRAPHY.fontSize.screenTitle,
     lineHeight: 28,
     marginBottom: SPACING.lg,
     textAlign: "center",
@@ -597,7 +597,7 @@ const styles = StyleSheet.create({
     maxWidth: 360,
   },
   landingSub: {
-    fontSize: TYPOGRAPHY.fontSize.lg,
+    fontSize: TYPOGRAPHY.fontSize.heroTitle,
     lineHeight: 26,
     textAlign: "center",
     marginBottom: SPACING.xl,
@@ -673,7 +673,7 @@ const styles = StyleSheet.create({
     gap: SPACING.lg,
   },
   reviewSectionTitle: {
-    fontSize: TYPOGRAPHY.fontSize.lg,
+    fontSize: TYPOGRAPHY.fontSize.heroTitle,
     marginBottom: SPACING.sm,
   },
   editLink: {

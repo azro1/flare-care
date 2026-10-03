@@ -5159,10 +5159,6 @@ function AppRoot() {
   const [fontsLoaded] = useFonts({
     Outfit_400Regular,
     Outfit_500Medium,
-    Outfit_700Bold,
-    Outfit_700Bold,
-    Outfit_400Regular,
-    Outfit_500Medium,
     Outfit_600SemiBold,
     Outfit_700Bold,
   });
