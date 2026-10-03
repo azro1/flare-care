@@ -23,15 +23,11 @@ import MapView, { Marker, type Region } from "react-native-maps";
 import { useFocusEffect } from "@react-navigation/native";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { FLARE_BUTTON_BORDER_RADIUS } from "../components/FlareButton";
+import { SPACING, TYPOGRAPHY } from "../designTokens";
 import {
   CARD_INNER_PADDING,
-  FLARE_FONT_FAMILY,
-  FLARE_FONT_SIZE,
-  FLARE_INLINE_ACTION_LINK,
-  FLARE_LINE_HEIGHT,
   INSTRUCTION_CARD_RADIUS,
   SCREEN_EDGE_PADDING,
-  STACKED_LINE_GAP,
   TRAY_ROW_PADDING_H,
   TRAY_ROW_PADDING_Y,
 } from "../lib/layoutConstants";
@@ -325,7 +321,7 @@ export function FindToiletScreen() {
             {
               backgroundColor: c.card,
               height: sheetH,
-              paddingBottom: Math.max(insets.bottom, SCREEN_EDGE_PADDING) + STACKED_LINE_GAP * 2,
+              paddingBottom: Math.max(insets.bottom, SCREEN_EDGE_PADDING) + SPACING.lg,
               bottom: 0,
               transform: [{ translateY }],
             },
@@ -399,7 +395,7 @@ export function FindToiletScreen() {
                           <View style={styles.distanceRow}>
                             <FlareLucideIcon
                               icon={FIND_TOILET_DISTANCE_ICON}
-                              size={FLARE_FONT_SIZE.body}
+                              size={TYPOGRAPHY.fontSize.md}
                               color={c.primary}
                             />
                             <Text style={[styles.resultDistance, { color: c.textMuted }]}>
@@ -654,17 +650,17 @@ const styles = StyleSheet.create({
     paddingHorizontal: SCREEN_EDGE_PADDING,
   },
   loadingCopy: {
-    fontSize: FLARE_FONT_SIZE.muted,
-    fontFamily: FLARE_FONT_FAMILY.regular,
+    fontSize: TYPOGRAPHY.fontSize.sm,
+    fontFamily: TYPOGRAPHY.fontFamily.regular,
   },
   errorCopy: {
-    fontSize: FLARE_FONT_SIZE.body,
-    lineHeight: FLARE_LINE_HEIGHT.body,
-    fontFamily: FLARE_FONT_FAMILY.regular,
+    fontSize: TYPOGRAPHY.fontSize.md,
+    lineHeight: 22,
+    fontFamily: TYPOGRAPHY.fontFamily.regular,
     textAlign: "center",
   },
   retry: {
-    ...FLARE_INLINE_ACTION_LINK,
+    fontSize: TYPOGRAPHY.fontSize.md, fontFamily: TYPOGRAPHY.fontFamily.regular,
   },
   topOverlay: {
     position: "absolute",
@@ -678,8 +674,8 @@ const styles = StyleSheet.create({
     borderRadius: INSTRUCTION_CARD_RADIUS,
 
     padding: CARD_INNER_PADDING,
-    // Slightly more than STACKED_LINE_GAP so Near me row isn’t tight on filters.
-    gap: STACKED_LINE_GAP * 2,
+    // Slightly more than SPACING.xxs so Near me row isn’t tight on filters.
+    gap: SPACING.lg,
   },
   modeRow: {
     flexDirection: "row",
@@ -693,12 +689,12 @@ const styles = StyleSheet.create({
     alignItems: "center",
   },
   modeChipLabel: {
-    fontSize: FLARE_FONT_SIZE.muted,
-    lineHeight: FLARE_LINE_HEIGHT.muted,
-    fontFamily: FLARE_FONT_FAMILY.medium,
+    fontSize: TYPOGRAPHY.fontSize.sm,
+    lineHeight: 20,
+    fontFamily: TYPOGRAPHY.fontFamily.medium,
   },
   placePanel: {
-    marginTop: STACKED_LINE_GAP,
+    marginTop: SPACING.xxs,
     borderRadius: INSTRUCTION_CARD_RADIUS,
 
     padding: CARD_INNER_PADDING,
@@ -715,32 +711,32 @@ const styles = StyleSheet.create({
     borderRadius: FLARE_BUTTON_BORDER_RADIUS,
     paddingHorizontal: 12,
     paddingVertical: 10,
-    fontSize: FLARE_FONT_SIZE.body,
-    fontFamily: FLARE_FONT_FAMILY.regular,
+    fontSize: TYPOGRAPHY.fontSize.md,
+    fontFamily: TYPOGRAPHY.fontFamily.regular,
   },
   placeSearchBtn: {
     flexShrink: 0,
     paddingVertical: 8,
   },
   placeHint: {
-    fontSize: FLARE_FONT_SIZE.caption,
-    lineHeight: FLARE_LINE_HEIGHT.caption,
-    fontFamily: FLARE_FONT_FAMILY.regular,
+    fontSize: TYPOGRAPHY.fontSize.sm,
+    lineHeight: 18,
+    fontFamily: TYPOGRAPHY.fontFamily.regular,
   },
   placeHits: {
     maxHeight: FIND_TOILET_PLACE_DROPDOWN_MAX_H,
-    gap: STACKED_LINE_GAP,
+    gap: SPACING.xxs,
   },
   hitRow: {
     borderRadius: FLARE_BUTTON_BORDER_RADIUS,
     paddingHorizontal: 12,
     paddingVertical: 12,
-    marginBottom: STACKED_LINE_GAP,
+    marginBottom: SPACING.xxs,
   },
   hitLabel: {
-    fontSize: FLARE_FONT_SIZE.body,
-    lineHeight: FLARE_LINE_HEIGHT.body,
-    fontFamily: FLARE_FONT_FAMILY.regular,
+    fontSize: TYPOGRAPHY.fontSize.md,
+    lineHeight: 22,
+    fontFamily: TYPOGRAPHY.fontFamily.regular,
   },
   filterRow: {
     gap: 8,
@@ -754,9 +750,9 @@ const styles = StyleSheet.create({
     paddingVertical: 8,
   },
   chipLabel: {
-    fontSize: FLARE_FONT_SIZE.caption,
-    lineHeight: FLARE_LINE_HEIGHT.caption,
-    fontFamily: FLARE_FONT_FAMILY.medium,
+    fontSize: TYPOGRAPHY.fontSize.sm,
+    lineHeight: 18,
+    fontFamily: TYPOGRAPHY.fontFamily.medium,
   },
   bottomPanel: {
     position: "absolute",
@@ -769,14 +765,14 @@ const styles = StyleSheet.create({
 
 
     paddingHorizontal: CARD_INNER_PADDING,
-    paddingTop: STACKED_LINE_GAP,
-    gap: STACKED_LINE_GAP,
+    paddingTop: SPACING.xxs,
+    gap: SPACING.xxs,
     overflow: "hidden",
     zIndex: 2,
     elevation: 2,
   },
   grabberHit: {
-    paddingTop: STACKED_LINE_GAP * 2,
+    paddingTop: SPACING.lg,
     paddingBottom: 4,
   },
   sheetHandle: {
@@ -787,7 +783,7 @@ const styles = StyleSheet.create({
     marginBottom: 8,
   },
   peekBlock: {
-    gap: STACKED_LINE_GAP,
+    gap: SPACING.xxs,
   },
   bottomLoading: {
     flexDirection: "row",
@@ -796,23 +792,23 @@ const styles = StyleSheet.create({
     paddingVertical: 4,
   },
   count: {
-    fontSize: FLARE_FONT_SIZE.navTitle,
+    fontSize: TYPOGRAPHY.fontSize.screenTitle,
     lineHeight: FLARE_LINE_HEIGHT.navTitle,
-    fontFamily: FLARE_FONT_FAMILY.bold,
+    fontFamily: TYPOGRAPHY.fontFamily.bold,
   },
   resultsScroll: {
     flex: 1,
   },
   resultsContent: {
     paddingBottom: 4,
-    gap: STACKED_LINE_GAP * 3,
+    gap: SPACING.xl,
   },
   toiletCard: {
 
     borderRadius: FLARE_BUTTON_BORDER_RADIUS,
     paddingHorizontal: TRAY_ROW_PADDING_H,
     paddingVertical: TRAY_ROW_PADDING_Y + 4,
-    gap: STACKED_LINE_GAP + 2,
+    gap: SPACING.xxs + 2,
   },
   toiletCardTop: {
     flexDirection: "row",
@@ -822,17 +818,17 @@ const styles = StyleSheet.create({
   toiletCardMain: {
     flex: 1,
     minWidth: 0,
-    gap: STACKED_LINE_GAP,
+    gap: SPACING.xxs,
   },
   distanceRow: {
     flexDirection: "row",
     alignItems: "center",
-    gap: STACKED_LINE_GAP,
+    gap: SPACING.xxs,
   },
   resultDistance: {
-    fontSize: FLARE_FONT_SIZE.caption,
-    lineHeight: FLARE_LINE_HEIGHT.caption,
-    fontFamily: FLARE_FONT_FAMILY.medium,
+    fontSize: TYPOGRAPHY.fontSize.sm,
+    lineHeight: 18,
+    fontFamily: TYPOGRAPHY.fontFamily.medium,
   },
   resultDirections: {
     flexShrink: 0,
@@ -850,34 +846,34 @@ const styles = StyleSheet.create({
     paddingVertical: 4,
   },
   badgePillText: {
-    fontSize: FLARE_FONT_SIZE.caption,
-    lineHeight: FLARE_LINE_HEIGHT.caption,
-    fontFamily: FLARE_FONT_FAMILY.medium,
+    fontSize: TYPOGRAPHY.fontSize.sm,
+    lineHeight: 18,
+    fontFamily: TYPOGRAPHY.fontFamily.medium,
   },
   metaLine: {
-    fontSize: FLARE_FONT_SIZE.caption,
-    lineHeight: FLARE_LINE_HEIGHT.caption,
-    fontFamily: FLARE_FONT_FAMILY.regular,
+    fontSize: TYPOGRAPHY.fontSize.sm,
+    lineHeight: 18,
+    fontFamily: TYPOGRAPHY.fontFamily.regular,
   },
   notesLine: {
-    fontSize: FLARE_FONT_SIZE.caption,
-    lineHeight: FLARE_LINE_HEIGHT.caption,
-    fontFamily: FLARE_FONT_FAMILY.regular,
+    fontSize: TYPOGRAPHY.fontSize.sm,
+    lineHeight: 18,
+    fontFamily: TYPOGRAPHY.fontFamily.regular,
   },
   selectedName: {
-    fontSize: FLARE_FONT_SIZE.body,
-    lineHeight: FLARE_LINE_HEIGHT.body,
-    fontFamily: FLARE_FONT_FAMILY.medium,
+    fontSize: TYPOGRAPHY.fontSize.md,
+    lineHeight: 22,
+    fontFamily: TYPOGRAPHY.fontFamily.medium,
   },
   selectedMeta: {
-    fontSize: FLARE_FONT_SIZE.caption,
-    lineHeight: FLARE_LINE_HEIGHT.caption,
-    fontFamily: FLARE_FONT_FAMILY.regular,
+    fontSize: TYPOGRAPHY.fontSize.sm,
+    lineHeight: 18,
+    fontFamily: TYPOGRAPHY.fontFamily.regular,
   },
   attribution: {
-    fontSize: FLARE_FONT_SIZE.caption,
-    lineHeight: FLARE_LINE_HEIGHT.caption,
-    fontFamily: FLARE_FONT_FAMILY.regular,
-    paddingTop: STACKED_LINE_GAP,
+    fontSize: TYPOGRAPHY.fontSize.sm,
+    lineHeight: 18,
+    fontFamily: TYPOGRAPHY.fontFamily.regular,
+    paddingTop: SPACING.xxs,
   },
 });
