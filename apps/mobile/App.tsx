@@ -86,6 +86,7 @@ import { clearRememberedSession, readRememberedSession, rememberSession } from "
 import { readAuthLegalAccepted, setAuthLegalAccepted } from "./lib/authLegalAcceptance";
 import { CollapsingTitleScrollScreen } from "./components/CollapsingTitleScrollScreen";
 import { Card } from "./components/MidnightLagoonCard";
+import { TrayRow } from "./components/MidnightLagoonTray";
 import { FlareThemeProvider, useFlareColors, useFlareTheme } from "./theme";
 import { SPACING, TYPOGRAPHY } from "./designTokens";
 import { formatUkDate, formatUkGreetingDate } from "./lib/formatUkDate";
@@ -443,7 +444,7 @@ function accountIdentityFirstLine(user: SessionUser): string {
   return first === "there" ? "You" : first;
 }
 
-function Card({
+function LegacyCard({
   title,
   children,
   style,
@@ -454,11 +455,8 @@ function Card({
   title: string;
   children: React.ReactNode;
   style?: StyleProp<ViewStyle>;
-  /** No filled panel — sits on screen background (e.g. login). */
   plain?: boolean;
-  /** Stack rows flush (e.g. account option list) — no `cardBody` gap between children. */
   compactBody?: boolean;
-  /** 1px Expo `border.default` — omit on panels that wrap horizontal scroll rows. */
   bordered?: boolean;
 }) {
   const c = useFlareColors();
@@ -477,7 +475,6 @@ function Card({
     >
       {title ? <Text style={[styles.cardTitle, { color: c.text }]}>{title}</Text> : null}
       {
-        /** Auth `plain` card uses `flex:1` panels; skipping `cardBody` keeps flex layout valid (nested non-flex wrappers collapse children). */
         plain ? children : (
           <View style={[styles.cardBody, compactBody && styles.cardBodyCompact]}>{children}</View>
         )}
@@ -2149,7 +2146,7 @@ function DashboardScreen({ user }: { user: SessionUser }) {
         showsVerticalScrollIndicator={false}
         nestedScrollEnabled
       >
-        <Card title="" style={styles.greetingCard} compactBody>
+        <LegacyCard title="" style={styles.greetingCard} compactBody>
           <View style={styles.weatherIntroWrap}>
             <Text style={[styles.weatherGreeting, { color: c.text }]} numberOfLines={1}>
               Hi, {greetingFirstName}
@@ -2189,7 +2186,7 @@ function DashboardScreen({ user }: { user: SessionUser }) {
               </View>
             </View>
           )}
-        </Card>
+        </LegacyCard>
 
         <View style={[styles.dashboardShelfSection, styles.dashboardShelfAfterCard]}>
           <Text
@@ -3301,7 +3298,7 @@ function ReportsScreen({ user }: { user: SessionUser }) {
       contentPaddingBottom={bottomScrollInset}
       instruction={null}
     >
-      <Card title="Reports & Briefs">
+      <LegacyCard title="Reports & Briefs">
         <PrimaryButton title={loading ? "Generating..." : "Generate report"} onPress={generate} />
         <Text
           style={[styles.reportBox, { backgroundColor: c.reportBg, borderColor: c.reportBorder, color: c.text }]}
@@ -3310,7 +3307,7 @@ function ReportsScreen({ user }: { user: SessionUser }) {
         </Text>
         <LabeledInput label="Clinician email" value={email} onChangeText={setEmail} placeholder="Clinician email" autoCapitalize="none" />
         <PrimaryButton title="Email report" onPress={emailReport} disabled={!report || !email} />
-      </Card>
+      </LegacyCard>
     </InstructionScreenShell>
   );
 }
@@ -3634,7 +3631,7 @@ function NotificationsScreen({ user }: { user: SessionUser }) {
       style={[styles.screen, { backgroundColor: c.screen }]}
       contentContainerStyle={{ paddingBottom: bottomScrollInset + 16 }}
     >
-      <Card title="" style={styles.accountPaddedCard} compactBody>
+      <LegacyCard title="" style={styles.accountPaddedCard} compactBody>
         <View style={styles.remindersStatusRow}>
           <View style={[styles.accountAvatarWell, { backgroundColor: c.surfaceSubtle }]}>
             <FlareLucideIcon
@@ -3677,7 +3674,7 @@ function NotificationsScreen({ user }: { user: SessionUser }) {
         >
           <Text style={[styles.remindersGuideLink, { color: c.text }]}>Not getting alerts?</Text>
         </Pressable>
-      </Card>
+      </LegacyCard>
     </ScrollView>
   );
 }
@@ -4319,40 +4316,25 @@ function SettingsScreen() {
   const darkOn = appearancePreference === "dark";
 
   return (
-    <ScrollView
-      style={[styles.screen, { backgroundColor: c.screen }]}
-      contentContainerStyle={[styles.accountScrollContent, { paddingBottom: bottomScrollInset + 16 }]}
-    >
-      <LogHistoryCard style={{ padding: CARD_INNER_PADDING + 2, gap: 28 }}>
-        <View style={styles.settingsCardSection}>
-          <Text style={[styles.settingsCardSectionLabel, { color: c.textMuted }]}>Appearance</Text>
-          <View style={styles.settingToggleRow}>
-            <View style={styles.settingToggleTextCol}>
-              <View style={styles.settingToggleTitleRow}>
+    <View style={[styles.screen, { backgroundColor: c.screen }]}>
+      <ScrollView
+        style={styles.scroll}
+        contentContainerStyle={[styles.scrollContent, { paddingBottom: bottomScrollInset + 16 }]}
+      >
+        <Card>
+          <View style={styles.settingRow}>
+            <View style={styles.settingTextCol}>
+              <View style={styles.settingTitleRow}>
                 <FlareLucideIcon
                   icon={darkOn ? FLARE_CHROME_LUCIDE.moon : FLARE_CHROME_LUCIDE.sun}
                   size={16}
                   color={c.text}
                 />
-                <Text
-                  style={[
-                    styles.settingToggleTitle,
-                    styles.settingsCardTitle,
-                    styles.settingToggleTitleBesideIcon,
-                    { color: c.text },
-                  ]}
-                >
+                <Text style={[styles.settingTitle, { color: c.text, fontFamily: TYPOGRAPHY.fontFamily.semibold }]}>
                   {darkOn ? "Dark mode" : "Light mode"}
                 </Text>
               </View>
-              <Text
-                style={[
-                  styles.settingToggleHint,
-                  styles.settingsCardHint,
-                  styles.settingToggleHintBesideIcon,
-                  { color: c.textMuted },
-                ]}
-              >
+              <Text style={[styles.settingHint, { color: c.textSecondary, fontFamily: TYPOGRAPHY.fontFamily.regular }]}>
                 {darkOn
                   ? "A darker theme that's easier on the eyes in low light."
                   : "A bright, clean theme that's easy to read in daylight."}
@@ -4366,45 +4348,19 @@ function SettingsScreen() {
               accessibilityLabel={darkOn ? "Dark mode" : "Light mode"}
             />
           </View>
-        </View>
-        <View style={styles.settingsCardSection}>
-          <Text style={[styles.settingsCardSectionLabel, { color: c.textMuted }]}>Notifications</Text>
-          <Pressable
-            accessibilityRole="button"
-            accessibilityLabel="Push Notifications and Reminders"
+        </Card>
+
+        <Card noPadding style={{ paddingVertical: SPACING.sm, paddingHorizontal: SPACING.md, marginTop: SPACING.lg }}>
+          <TrayRow
+            icon={FLARE_CHROME_LUCIDE.notifications}
+            label="Push Notifications and Reminders"
+            value="Get reminders and updates from FlareCare."
+            showChevron
             onPress={() => navigation.navigate("Reminders")}
-            style={styles.settingToggleRow}
-          >
-            <View style={styles.settingToggleTextCol}>
-              <View style={styles.settingToggleTitleRow}>
-                <FlareLucideIcon icon={FLARE_CHROME_LUCIDE.notifications} size={16} color={c.text} />
-                <Text
-                  style={[
-                    styles.settingToggleTitle,
-                    styles.settingsCardTitle,
-                    styles.settingToggleTitleBesideIcon,
-                    { color: c.text },
-                  ]}
-                >
-                  Push Notifications and Reminders
-                </Text>
-              </View>
-              <Text
-                style={[
-                  styles.settingToggleHint,
-                  styles.settingsCardHint,
-                  styles.settingToggleHintBesideIcon,
-                  { color: c.textMuted },
-                ]}
-              >
-                Get reminders and updates from FlareCare.
-              </Text>
-            </View>
-            <FlareLucideIcon icon={FLARE_CHROME_LUCIDE.forward} size={NAV_ROW_CHEVRON_SIZE} color={c.text} />
-          </Pressable>
-        </View>
-      </LogHistoryCard>
-    </ScrollView>
+          />
+        </Card>
+      </ScrollView>
+    </View>
   );
 }
 
@@ -6459,5 +6415,27 @@ const styles = StyleSheet.create({
     flex: 1,
     textAlign: "right",
     paddingLeft: SPACING.md,
+  },
+  settingRow: {
+    flexDirection: "row",
+    alignItems: "center",
+    gap: SPACING.md,
+    paddingVertical: SPACING.md,
+  },
+  settingTextCol: {
+    flex: 1,
+    gap: SPACING.xs,
+  },
+  settingTitleRow: {
+    flexDirection: "row",
+    alignItems: "center",
+    gap: SPACING.xs,
+  },
+  settingTitle: {
+    fontSize: TYPOGRAPHY.fontSize.md,
+  },
+  settingHint: {
+    fontSize: TYPOGRAPHY.fontSize.sm,
+    lineHeight: 18,
   },
 });
