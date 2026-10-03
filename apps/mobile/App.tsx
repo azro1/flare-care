@@ -8,7 +8,8 @@ import React, { useCallback, useEffect, useLayoutEffect, useMemo, useRef, useSta
 import { Controller, useForm } from "react-hook-form";
 import { yupResolver } from "@hookform/resolvers/yup";
 import * as yup from "yup";
-import { useFonts, Outfit_400Regular, Outfit_500Medium, Outfit_700Bold, Outfit_700Bold } from "@expo-google-fonts/inter";
+import { useFonts } from "expo-font";
+import { Inter_400Regular, Inter_500Medium, Inter_700Bold, Inter_800ExtraBold } from "@expo-google-fonts/inter";
 import { Outfit_400Regular, Outfit_500Medium, Outfit_600SemiBold, Outfit_700Bold } from "@expo-google-fonts/outfit";
 import { Ionicons } from "@expo/vector-icons";
 import {
