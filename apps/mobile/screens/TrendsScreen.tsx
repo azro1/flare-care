@@ -1,23 +1,18 @@
 import { useFocusEffect, useNavigation } from "@react-navigation/native";
 import React, { useCallback, useLayoutEffect, useState } from "react";
-import { View } from "react-native";
+import { StyleSheet, View } from "react-native";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
+import { ScrollView } from "../lib/scrollViews";
 import { InfoHintButton } from "../components/InfoHintButton";
-import { InstructionScreenShell } from "../components/InstructionScreenShell";
-import { logHistoryCardStyles } from "../components/LogHistoryList";
+import { ScreenHeader } from "../components/MidnightLagoonScreenHeader";
+import { Card } from "../components/MidnightLagoonCard";
 import { TrendsLoggingGraph } from "../components/TrendsLoggingGraph";
-import {
-  CARD_SECTION_INNER_GAP,
-  bottomTabBarScrollInset,
-} from "../lib/layoutConstants";
+import { bottomTabBarScrollInset } from "../lib/layoutConstants";
+import { SPACING } from "../designTokens";
 import { useFlareColors } from "../theme";
 
 type SessionUser = { id: string };
 
-/**
- * Trends — how often the user has been logging in Flarecare (not a health score).
- * Bottom-tab root (app-wide). Distinct from Activity / Progress (Meds ↔ Hydration).
- */
 export function TrendsScreen({ user }: { user: SessionUser }) {
   const c = useFlareColors();
   const navigation = useNavigation<any>();
@@ -47,14 +42,26 @@ export function TrendsScreen({ user }: { user: SessionUser }) {
   );
 
   return (
-    <InstructionScreenShell
-      showInstruction={false}
-      contentPaddingBottom={bottomTabBarScrollInset(insets.bottom) + CARD_SECTION_INNER_GAP}
-      instruction={null}
-    >
-      <View style={[logHistoryCardStyles.trackerCard, { backgroundColor: c.card }]}>
-        <TrendsLoggingGraph userId={user.id} active={focused} />
-      </View>
-    </InstructionScreenShell>
+    <View style={[styles.screen, { backgroundColor: c.screen }]}>
+      <ScrollView
+        style={styles.scroll}
+        contentContainerStyle={[styles.scrollContent, { paddingBottom: bottomTabBarScrollInset(insets.bottom) }]}
+        showsVerticalScrollIndicator={false}
+      >
+        <ScreenHeader title="Trends" subtitle="Your FlareCare activity" />
+        <Card>
+          <TrendsLoggingGraph userId={user.id} active={focused} />
+        </Card>
+      </ScrollView>
+    </View>
   );
 }
+
+const styles = StyleSheet.create({
+  screen: { flex: 1 },
+  scroll: { flex: 1 },
+  scrollContent: {
+    paddingHorizontal: SPACING.screen,
+    paddingTop: SPACING.lg,
+  },
+});
