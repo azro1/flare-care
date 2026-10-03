@@ -25,19 +25,9 @@ import {
 import { FlareScreenSectionTitle } from "../components/FlareScreenSectionTitle";
 import { ScrollView } from "../lib/scrollViews";
 import { formatUkDate } from "../lib/formatUkDate";
+import { SPACING, TYPOGRAPHY } from "../designTokens";
 import {
-  FLARE_FONT_FAMILY,
-  FLARE_FONT_SIZE,
   SUPPLIES_SETUP_PICKER_PILL_GAP,
-  SUPPLIES_SETUP_STEP_BLOCK_GAP,
-  SUPPLIES_SETUP_STEP_FOOTER,
-  SUPPLIES_SETUP_STEP_OPTION_LIST,
-  SUPPLIES_SETUP_STEP_RADIO_ROW,
-  SUPPLIES_SETUP_STEP_SCROLL,
-  SUPPLIES_SETUP_STEP_SCROLL_BOTTOM,
-  SUPPLIES_SETUP_STEP_SUPPORT,
-  SUPPLIES_SETUP_STEP_TITLE,
-  SUPPLIES_SETUP_STEP_TITLE_TO_OPTIONS,
   SCREEN_EDGE_PADDING,
   bottomTabBarScrollInset,
 } from "../lib/layoutConstants";
@@ -391,7 +381,7 @@ export function MedicalSuppliesSetupScreen({
       <ScrollView
         contentContainerStyle={[
           styles.scroll,
-          { paddingBottom: bottomScrollInset + SUPPLIES_SETUP_STEP_SCROLL_BOTTOM },
+          { paddingBottom: bottomScrollInset + 80 },
         ]}
         keyboardShouldPersistTaps="handled"
         showsVerticalScrollIndicator={false}
@@ -559,32 +549,49 @@ export function MedicalSuppliesSetupScreen({
 
 const styles = StyleSheet.create({
   centered: { flex: 1, alignItems: "center", justifyContent: "center" },
-  scroll: { ...SUPPLIES_SETUP_STEP_SCROLL },
-  question: { ...SUPPLIES_SETUP_STEP_TITLE },
+  scroll: { paddingHorizontal: SPACING.screen, paddingTop: SPACING.lg },
+  question: {
+    fontFamily: TYPOGRAPHY.fontFamily.medium,
+    fontSize: TYPOGRAPHY.fontSize.lg,
+    marginBottom: SPACING.md,
+  },
   questionBesideHint: {
     marginBottom: 0,
     flexShrink: 1,
   },
-  support: { ...SUPPLIES_SETUP_STEP_SUPPORT },
-  nameContent: { gap: SUPPLIES_SETUP_STEP_BLOCK_GAP },
-  block: { gap: SUPPLIES_SETUP_STEP_BLOCK_GAP },
-  /** One gap for title ↔ radios ↔ Next — cannot drift apart. */
-  cadenceStack: { gap: SUPPLIES_SETUP_STEP_TITLE_TO_OPTIONS },
+  support: {
+    fontSize: TYPOGRAPHY.fontSize.md,
+    fontFamily: TYPOGRAPHY.fontFamily.regular,
+    marginBottom: SPACING.lg,
+    lineHeight: 22,
+  },
+  nameContent: { gap: SPACING.lg },
+  block: { gap: SPACING.lg },
+  cadenceStack: { gap: SPACING.md },
   questionInStack: {
-    ...SUPPLIES_SETUP_STEP_TITLE,
+    fontFamily: TYPOGRAPHY.fontFamily.medium,
+    fontSize: TYPOGRAPHY.fontSize.lg,
     marginBottom: 0,
   },
   radioListInStack: {
-    gap: SUPPLIES_SETUP_STEP_OPTION_LIST.gap,
+    gap: SPACING.sm,
   },
   customWeeksInStack: {
-    gap: SUPPLIES_SETUP_STEP_BLOCK_GAP,
+    gap: SPACING.lg,
   },
   actionsInStack: {
-    gap: SUPPLIES_SETUP_STEP_FOOTER.gap,
+    gap: SPACING.md,
   },
   fieldInput: { marginTop: 0 },
-  radioRow: { ...SUPPLIES_SETUP_STEP_RADIO_ROW },
+  radioRow: {
+    flexDirection: "row",
+    alignItems: "center",
+    gap: SPACING.sm,
+    paddingVertical: SPACING.sm,
+    paddingHorizontal: SPACING.md,
+    borderRadius: 8,
+    minHeight: 48,
+  },
   radioOuter: {
     width: RADIO_OUTER_SIZE,
     height: RADIO_OUTER_SIZE,
@@ -600,8 +607,8 @@ const styles = StyleSheet.create({
   },
   radioLabel: {
     flex: 1,
-    fontSize: FLARE_FONT_SIZE.body,
-    fontFamily: FLARE_FONT_FAMILY.regular,
+    fontSize: TYPOGRAPHY.fontSize.md,
+    fontFamily: TYPOGRAPHY.fontFamily.regular,
   },
   pickerPill: {
     flexDirection: "row",
@@ -612,12 +619,15 @@ const styles = StyleSheet.create({
     paddingHorizontal: SCREEN_EDGE_PADDING,
     minHeight: flareInputStyles.trigger.minHeight,
   },
-  pickerPillText: { flex: 1, fontSize: FLARE_FONT_SIZE.body, fontFamily: FLARE_FONT_FAMILY.regular },
-  stepError: { marginTop: SUPPLIES_SETUP_STEP_BLOCK_GAP },
+  pickerPillText: { flex: 1, fontSize: TYPOGRAPHY.fontSize.md, fontFamily: TYPOGRAPHY.fontFamily.regular },
+  stepError: { marginTop: SPACING.lg },
   stepErrorInContent: { marginTop: 0 },
-  actions: { ...SUPPLIES_SETUP_STEP_FOOTER },
-  /** Intro: extra space above Continue so support → button matches title → support. */
-  actionsAfterSupport: { marginTop: 8 },
+  actions: {
+    flexDirection: "column",
+    gap: SPACING.md,
+    paddingTop: SPACING.lg,
+  },
+  actionsAfterSupport: { marginTop: SPACING.sm },
 });
 
 export type MedicalSuppliesSetupParams = {
