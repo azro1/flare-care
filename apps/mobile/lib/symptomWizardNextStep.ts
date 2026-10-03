@@ -60,6 +60,13 @@ export function symptomWizardTryAdvance(input: {
     if (!form.symptomStartDate) {
       return fail({}, { day: "Please select a date" });
     }
+    const testStartDate = new Date(form.symptomStartDate + "T12:00:00");
+    if (Number.isNaN(testStartDate.getTime())) {
+      return fail({}, { day: "Please select a valid date" });
+    }
+    if (testStartDate > new Date()) {
+      return fail({}, { day: "Date cannot be in the future" });
+    }
   }
 
   if (currentStep === 2 && typeof form.isOngoing !== "boolean") {
@@ -76,6 +83,12 @@ export function symptomWizardTryAdvance(input: {
     }
     if (testEndDate > new Date()) {
       return fail({}, { endDay: "Date cannot be in the future" });
+    }
+    if (form.symptomStartDate) {
+      const testStartDate = new Date(form.symptomStartDate + "T12:00:00");
+      if (!Number.isNaN(testStartDate.getTime()) && testEndDate < testStartDate) {
+        return fail({}, { endDay: "End date cannot be before the start date" });
+      }
     }
   }
 
