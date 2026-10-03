@@ -36,7 +36,7 @@ import { flareFieldErrorStyle, FlareTextInput } from "../components/FlareInput";
 import { invalidateDashboardSnapshot } from "../lib/dashboardSnapshotCache";
 import { formatUkDate } from "../lib/formatUkDate";
 import { supabase, TABLES } from "../lib/supabase";
-import { symptomWizardTryAdvance } from "../lib/symptomWizardNextStep";
+import { symptomWizardTryAdvance, type DateErrorsState } from "../lib/symptomWizardNextStep";
 import {
   buildSymptomInsertPayload,
   createEmptySymptomForm,
@@ -105,6 +105,14 @@ export function SymptomLogWizardScreen({ user }: { user: SessionUser }) {
   const [currentStep, setCurrentStep] = useState(0);
   const [form, setForm] = useState<SymptomFormData>(() => createEmptySymptomForm());
   const [fieldErrors, setFieldErrors] = useState<Record<string, string>>({});
+  const [dateErrors, setDateErrors] = useState<DateErrorsState>({
+    day: "",
+    month: "",
+    year: "",
+    endDay: "",
+    endMonth: "",
+    endYear: "",
+  });
   const [history, setHistory] = useState<{ step: number; form: SymptomFormData }[]>([]);
   const [submitting, setSubmitting] = useState(false);
   const [loadingEdit, setLoadingEdit] = useState(Boolean(editId));
@@ -314,6 +322,7 @@ export function SymptomLogWizardScreen({ user }: { user: SessionUser }) {
       setCurrentStep(prev.step);
       setForm(prev.form);
       setFieldErrors({});
+      setDateErrors({ day: "", month: "", year: "", endDay: "", endMonth: "", endYear: "" });
       return true;
     }
     if (editingReviewSection) {
@@ -321,6 +330,7 @@ export function SymptomLogWizardScreen({ user }: { user: SessionUser }) {
       if (previousStep >= 1) {
         setCurrentStep(previousStep);
         setFieldErrors({});
+        setDateErrors({ day: "", month: "", year: "", endDay: "", endMonth: "", endYear: "" });
         return true;
       }
       returnToReview();
@@ -329,6 +339,7 @@ export function SymptomLogWizardScreen({ user }: { user: SessionUser }) {
     if (editId && currentStep > 1) {
       setCurrentStep((step) => step - 1);
       setFieldErrors({});
+      setDateErrors({ day: "", month: "", year: "", endDay: "", endMonth: "", endYear: "" });
       return true;
     }
     navigation.goBack();
@@ -355,9 +366,11 @@ export function SymptomLogWizardScreen({ user }: { user: SessionUser }) {
     });
     if (!res.ok) {
       setFieldErrors(res.fieldErrors);
+      setDateErrors(res.dateErrors);
       return;
     }
     setFieldErrors({});
+    if (res.clearDateErrors) setDateErrors({ day: "", month: "", year: "", endDay: "", endMonth: "", endYear: "" });
     setForm(res.form);
     if (editingReviewSection) {
       const sectionLast = getSymptomReviewSectionLastStep(editingReviewSection);
@@ -451,6 +464,8 @@ export function SymptomLogWizardScreen({ user }: { user: SessionUser }) {
 
   const renderMeal = (meal: "breakfast" | "lunch" | "dinner", skipKey: "breakfast_skipped" | "lunch_skipped" | "dinner_skipped") => {
     const list = form[meal];
+    const foodItems = list.filter((item) => !item.quantity.includes("ml"));
+    const drinkItems = list.filter((item) => item.quantity.includes("ml"));
 
     return (
       <View style={styles.stepContent}>
@@ -479,7 +494,7 @@ export function SymptomLogWizardScreen({ user }: { user: SessionUser }) {
           </View>
           <View style={styles.skipToggleText}>
             <Text style={[styles.skipToggleLabel, { color: form[skipKey] ? c.white : c.text, fontFamily: TYPOGRAPHY.fontFamily.semibold }]}>
-              I didn't eat anything
+              I didn't eat or drink anything
             </Text>
             <Text style={[styles.skipToggleSublabel, { color: form[skipKey] ? c.white : c.textSecondary, fontFamily: TYPOGRAPHY.fontFamily.regular }]}>
               Skip {meal} for today
@@ -489,73 +504,172 @@ export function SymptomLogWizardScreen({ user }: { user: SessionUser }) {
 
         {!form[skipKey] ? (
           <>
-            <SectionLabel>{`YOUR ${meal.toUpperCase()}`}</SectionLabel>
+            <SectionLabel>FOOD</SectionLabel>
             <Card noPadding style={{ paddingVertical: SPACING.sm, paddingHorizontal: SPACING.md }}>
-              {list.map((item, i) => (
-                <Pressable
-                  key={i}
-                  accessibilityRole="button"
-                  onPress={() => setEditingMealRow({ meal, index: i })}
-                  style={[styles.mealFoodRow, i > 0 && styles.mealFoodRowBorder, { borderTopColor: c.cardBorder }]}
-                >
-                  <View style={styles.mealFoodRowLeft}>
-                    <Text style={[styles.mealFoodName, { color: item.food ? c.text : c.textSecondary, fontFamily: TYPOGRAPHY.fontFamily.regular }]}>
-                      {item.food || "Tap to edit"}
-                    </Text>
-                    {item.food ? (
-                      <Text style={[styles.mealFoodHint, { color: c.textSecondary, fontFamily: TYPOGRAPHY.fontFamily.regular }]}>Tap to edit</Text>
-                    ) : null}
-                  </View>
-                  <View style={styles.portionChips}>
-                    <OptionChip
-                      label="Small"
-                      selected={item.quantity === "Small"}
-                      onPress={() => {
-                        setForm((p) => ({
-                          ...p,
-                          [meal]: p[meal].map((row, j) => (j === i ? { ...row, quantity: "Small" } : row)),
-                        }));
-                      }}
-                    />
-                    <OptionChip
-                      label="Medium"
-                      selected={item.quantity === "Medium"}
-                      onPress={() => {
-                        setForm((p) => ({
-                          ...p,
-                          [meal]: p[meal].map((row, j) => (j === i ? { ...row, quantity: "Medium" } : row)),
-                        }));
-                      }}
-                    />
-                    <OptionChip
-                      label="Large"
-                      selected={item.quantity === "Large"}
-                      onPress={() => {
-                        setForm((p) => ({
-                          ...p,
-                          [meal]: p[meal].map((row, j) => (j === i ? { ...row, quantity: "Large" } : row)),
-                        }));
-                      }}
-                    />
-                  </View>
-                </Pressable>
-              ))}
+              {foodItems.length === 0 ? (
+                <Text style={[styles.emptyText, { color: c.textSecondary, fontFamily: TYPOGRAPHY.fontFamily.regular }]}>No food added yet</Text>
+              ) : (
+                foodItems.map((item, originalIndex) => {
+                  const i = list.findIndex((row) => row === item);
+                  return (
+                    <View
+                      key={i}
+                      style={[styles.mealFoodRow, originalIndex > 0 && styles.mealFoodRowBorder, { borderTopColor: c.cardBorder }]}
+                    >
+                      <View style={styles.mealFoodRowLeft}>
+                        <Pressable onPress={() => setEditingMealRow({ meal, index: i })}>
+                          <Text style={[styles.mealFoodName, { color: item.food ? c.text : c.textSecondary, fontFamily: TYPOGRAPHY.fontFamily.regular }]}>
+                            {item.food || "Tap to edit"}
+                          </Text>
+                        </Pressable>
+                        <View style={styles.mealAmountRow}>
+                          <FlareTextInput
+                            value={item.quantity && !["Small", "Medium", "Large"].includes(item.quantity) ? item.quantity : ""}
+                            onChangeText={(t) => {
+                              setForm((p) => ({
+                                ...p,
+                                [meal]: p[meal].map((row, j) => (j === i ? { ...row, quantity: t } : row)),
+                              }));
+                            }}
+                            placeholder="Amount"
+                            style={styles.mealAmountInput}
+                          />
+                          <View style={styles.portionChips}>
+                            <OptionChip
+                              label="Small"
+                              selected={item.quantity === "Small"}
+                              onPress={() => {
+                                setForm((p) => ({
+                                  ...p,
+                                  [meal]: p[meal].map((row, j) => (j === i ? { ...row, quantity: "Small" } : row)),
+                                }));
+                              }}
+                            />
+                            <OptionChip
+                              label="Medium"
+                              selected={item.quantity === "Medium"}
+                              onPress={() => {
+                                setForm((p) => ({
+                                  ...p,
+                                  [meal]: p[meal].map((row, j) => (j === i ? { ...row, quantity: "Medium" } : row)),
+                                }));
+                              }}
+                            />
+                            <OptionChip
+                              label="Large"
+                              selected={item.quantity === "Large"}
+                              onPress={() => {
+                                setForm((p) => ({
+                                  ...p,
+                                  [meal]: p[meal].map((row, j) => (j === i ? { ...row, quantity: "Large" } : row)),
+                                }));
+                              }}
+                            />
+                          </View>
+                        </View>
+                      </View>
+                    </View>
+                  );
+                })
+              )}
             </Card>
             <Pressable
               accessibilityRole="button"
               onPress={() => {
-                const last = list[list.length - 1];
-                if (last.food.trim() && last.quantity) {
-                  setForm((p) => ({
-                    ...p,
-                    [meal]: [...p[meal], { food: "", quantity: "" }],
-                  }));
-                }
+                setForm((p) => ({
+                  ...p,
+                  [meal]: [...p[meal], { food: "", quantity: "" }],
+                }));
               }}
               style={[styles.addFoodButton, { borderColor: c.inputBorder }]}
             >
               <FlareLucideIcon icon={FLARE_CHROME_LUCIDE.add} size={16} color={c.primary} />
               <Text style={[styles.addFoodText, { color: c.primary, fontFamily: TYPOGRAPHY.fontFamily.semibold }]}>Add food</Text>
+            </Pressable>
+
+            <SectionLabel>DRINKS</SectionLabel>
+            <Card noPadding style={{ paddingVertical: SPACING.sm, paddingHorizontal: SPACING.md }}>
+              {drinkItems.length === 0 ? (
+                <Text style={[styles.emptyText, { color: c.textSecondary, fontFamily: TYPOGRAPHY.fontFamily.regular }]}>No drinks added yet</Text>
+              ) : (
+                drinkItems.map((item, originalIndex) => {
+                  const i = list.findIndex((row) => row === item);
+                  return (
+                    <View
+                      key={i}
+                      style={[styles.mealFoodRow, originalIndex > 0 && styles.mealFoodRowBorder, { borderTopColor: c.cardBorder }]}
+                    >
+                      <View style={styles.mealFoodRowLeft}>
+                        <Pressable onPress={() => setEditingMealRow({ meal, index: i })}>
+                          <Text style={[styles.mealFoodName, { color: item.food ? c.text : c.textSecondary, fontFamily: TYPOGRAPHY.fontFamily.regular }]}>
+                            {item.food || "Tap to edit"}
+                          </Text>
+                        </Pressable>
+                        <View style={styles.mealAmountRow}>
+                          <FlareTextInput
+                            value={item.quantity.replace(" ml", "")}
+                            onChangeText={(t) => {
+                              const numericValue = t.replace(/[^0-9]/g, "");
+                              setForm((p) => ({
+                                ...p,
+                                [meal]: p[meal].map((row, j) => (j === i ? { ...row, quantity: numericValue ? `${numericValue} ml` : "" } : row)),
+                              }));
+                            }}
+                            placeholder="Amount"
+                            keyboardType="number-pad"
+                            style={styles.mealAmountInput}
+                          />
+                          <View style={styles.portionChips}>
+                            <OptionChip
+                              label="250 ml"
+                              selected={item.quantity === "250 ml"}
+                              onPress={() => {
+                                setForm((p) => ({
+                                  ...p,
+                                  [meal]: p[meal].map((row, j) => (j === i ? { ...row, quantity: "250 ml" } : row)),
+                                }));
+                              }}
+                            />
+                            <OptionChip
+                              label="330 ml"
+                              selected={item.quantity === "330 ml"}
+                              onPress={() => {
+                                setForm((p) => ({
+                                  ...p,
+                                  [meal]: p[meal].map((row, j) => (j === i ? { ...row, quantity: "330 ml" } : row)),
+                                }));
+                              }}
+                            />
+                            <OptionChip
+                              label="500 ml"
+                              selected={item.quantity === "500 ml"}
+                              onPress={() => {
+                                setForm((p) => ({
+                                  ...p,
+                                  [meal]: p[meal].map((row, j) => (j === i ? { ...row, quantity: "500 ml" } : row)),
+                                }));
+                              }}
+                            />
+                          </View>
+                        </View>
+                      </View>
+                    </View>
+                  );
+                })
+              )}
+            </Card>
+            <Pressable
+              accessibilityRole="button"
+              onPress={() => {
+                setForm((p) => ({
+                  ...p,
+                  [meal]: [...p[meal], { food: "", quantity: "250 ml" }],
+                }));
+              }}
+              style={[styles.addFoodButton, { borderColor: c.inputBorder }]}
+            >
+              <FlareLucideIcon icon={FLARE_CHROME_LUCIDE.add} size={16} color={c.primary} />
+              <Text style={[styles.addFoodText, { color: c.primary, fontFamily: TYPOGRAPHY.fontFamily.semibold }]}>Add drink</Text>
             </Pressable>
           </>
         ) : null}
@@ -618,6 +732,7 @@ export function SymptomLogWizardScreen({ user }: { user: SessionUser }) {
               </Text>
             </Pressable>
             {fieldErrors.symptomStartDate ? <Text style={errTextStyle}>{fieldErrors.symptomStartDate}</Text> : null}
+            {dateErrors.day ? <Text style={errTextStyle}>{dateErrors.day}</Text> : null}
           </View>
         ) : null}
 
@@ -647,6 +762,7 @@ export function SymptomLogWizardScreen({ user }: { user: SessionUser }) {
               </Text>
             </Pressable>
             {fieldErrors.symptomEndDate ? <Text style={errTextStyle}>{fieldErrors.symptomEndDate}</Text> : null}
+            {dateErrors.endDay ? <Text style={errTextStyle}>{dateErrors.endDay}</Text> : null}
           </View>
         ) : null}
 
@@ -1207,13 +1323,26 @@ const styles = StyleSheet.create({
   },
   mealFoodRowLeft: {
     flex: 1,
-    gap: SPACING.xxs,
+    gap: SPACING.xs,
   },
   mealFoodName: {
     fontSize: TYPOGRAPHY.fontSize.md,
   },
   mealFoodHint: {
     fontSize: TYPOGRAPHY.fontSize.sm,
+  },
+  mealAmountRow: {
+    flexDirection: "row",
+    alignItems: "center",
+    gap: SPACING.sm,
+  },
+  mealAmountInput: {
+    flex: 1,
+  },
+  emptyText: {
+    fontSize: TYPOGRAPHY.fontSize.sm,
+    paddingVertical: SPACING.md,
+    textAlign: "center",
   },
   addFoodButton: {
     flexDirection: "row",
