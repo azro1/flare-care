@@ -1238,8 +1238,8 @@ export function SymptomLogWizardScreen({ user }: { user: SessionUser }) {
 
       {currentStep > 0 && currentStep !== SYMPTOM_REVIEW_STEP ? (
         <View style={[styles.footer, { backgroundColor: c.screen, borderTopColor: c.cardBorder }]}>
-          <SecondaryButton title="Back" onPress={goBackInternal} />
           {currentStep >= 13 && currentStep <= 15 ? <PrimaryButton title="Next" onPress={applyAdvance} /> : null}
+          <SecondaryButton title="Back" onPress={goBackInternal} />
         </View>
       ) : null}
 
@@ -1542,6 +1542,7 @@ const styles = StyleSheet.create({
   },
   footer: {
     flexDirection: "row",
+    justifyContent: "flex-end",
     gap: SPACING.md,
     paddingHorizontal: SPACING.screen,
     paddingVertical: SPACING.lg,
