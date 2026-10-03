@@ -523,37 +523,50 @@ export function SymptomLogWizardScreen({ user }: { user: SessionUser }) {
                             {item.food || "Tap to edit"}
                           </Text>
                         </Pressable>
-                        <View style={styles.portionChips}>
-                          <OptionChip
-                            label="Small"
-                            selected={item.quantity === "Small"}
-                            onPress={() => {
+                        <View style={styles.mealAmountRow}>
+                          <FlareTextInput
+                            value={item.quantity && !["Small", "Medium", "Large"].includes(item.quantity) ? item.quantity : ""}
+                            onChangeText={(t) => {
                               setForm((p) => ({
                                 ...p,
-                                [meal]: p[meal].map((row, j) => (j === i ? { ...row, quantity: "Small" } : row)),
+                                [meal]: p[meal].map((row, j) => (j === i ? { ...row, quantity: t } : row)),
                               }));
                             }}
+                            placeholder="Amount"
+                            style={styles.mealAmountInput}
                           />
-                          <OptionChip
-                            label="Medium"
-                            selected={item.quantity === "Medium"}
-                            onPress={() => {
-                              setForm((p) => ({
-                                ...p,
-                                [meal]: p[meal].map((row, j) => (j === i ? { ...row, quantity: "Medium" } : row)),
-                              }));
-                            }}
-                          />
-                          <OptionChip
-                            label="Large"
-                            selected={item.quantity === "Large"}
-                            onPress={() => {
-                              setForm((p) => ({
-                                ...p,
-                                [meal]: p[meal].map((row, j) => (j === i ? { ...row, quantity: "Large" } : row)),
-                              }));
-                            }}
-                          />
+                          <View style={styles.portionChips}>
+                            <OptionChip
+                              label="Small"
+                              selected={item.quantity === "Small"}
+                              onPress={() => {
+                                setForm((p) => ({
+                                  ...p,
+                                  [meal]: p[meal].map((row, j) => (j === i ? { ...row, quantity: "Small" } : row)),
+                                }));
+                              }}
+                            />
+                            <OptionChip
+                              label="Medium"
+                              selected={item.quantity === "Medium"}
+                              onPress={() => {
+                                setForm((p) => ({
+                                  ...p,
+                                  [meal]: p[meal].map((row, j) => (j === i ? { ...row, quantity: "Medium" } : row)),
+                                }));
+                              }}
+                            />
+                            <OptionChip
+                              label="Large"
+                              selected={item.quantity === "Large"}
+                              onPress={() => {
+                                setForm((p) => ({
+                                  ...p,
+                                  [meal]: p[meal].map((row, j) => (j === i ? { ...row, quantity: "Large" } : row)),
+                                }));
+                              }}
+                            />
+                          </View>
                         </View>
                       </View>
                     </View>
