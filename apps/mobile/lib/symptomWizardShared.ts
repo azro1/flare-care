@@ -68,18 +68,8 @@ export const SYMPTOM_WIZARD_PHASES = [
   { id: "review", label: SYMPTOM_WIZARD_SECTION_LABELS.review, firstStep: 17, lastStep: 17 },
 ] as const;
 
-/** Progress stepper only. Same names as before the Duration split. */
-const SYMPTOM_WIZARD_PROGRESS_PHASES = [
-  { id: "basic", label: "Basic Information", firstStep: 1, lastStep: 5 },
-  { id: "bathroom", label: "Bathroom Frequency", firstStep: 6, lastStep: 8 },
-  { id: "lifestyle", label: "Lifestyle", firstStep: 9, lastStep: 12 },
-  { id: "meals", label: "Meals", firstStep: 13, lastStep: 15 },
-  { id: "notes", label: "Notes", firstStep: 16, lastStep: 16 },
-  { id: "review", label: "Review", firstStep: 17, lastStep: 17 },
-] as const;
-
 export function getSymptomWizardPhasesFiltered(isFirstTimeUser: boolean, userPreferences: UserPreferencesShape | null) {
-  const phases = [...SYMPTOM_WIZARD_PROGRESS_PHASES];
+  const phases = [...SYMPTOM_WIZARD_PHASES];
   if (!isFirstTimeUser && userPreferences && !userPreferences.isSmoker && !userPreferences.isDrinker) {
     return phases.filter((p) => p.id !== "lifestyle");
   }
@@ -101,7 +91,7 @@ export function getSymptomReviewSectionLastStep(section: SymptomReviewSectionId)
 }
 
 export function getSymptomWizardPhaseEntryStep(
-  phase: { id: string; firstStep: number },
+  phase: (typeof SYMPTOM_WIZARD_PHASES)[number],
   isFirstTimeUser: boolean,
   userPreferences: UserPreferencesShape | null,
 ): number | null {
