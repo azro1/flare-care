@@ -6,9 +6,9 @@ import { ScrollView } from "../lib/scrollViews";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { PrimaryButton, SecondaryButton } from "../components/FlareButton";
 import { flareFieldErrorStyle, FlareTextInput } from "../components/FlareInput";
-import { FlareScreenSectionTitle } from "../components/FlareScreenSectionTitle";
+import { SectionLabel } from "../components/MidnightLagoonSectionLabel";
 import { formatUkDate } from "../lib/formatUkDate";
-import { FLARE_FONT_FAMILY, FLARE_FONT_SIZE, SCREEN_EDGE_PADDING } from "../lib/layoutConstants";
+import { SPACING, TYPOGRAPHY } from "../designTokens";
 import type { AppointmentBriefData } from "../lib/appointmentBriefShared";
 import { useFlareColors } from "../theme";
 
@@ -95,7 +95,7 @@ export function AppointmentBriefEmailSheet({
           <Pressable accessibilityRole="button" accessibilityLabel="Close" onPress={handleClose} hitSlop={12} style={styles.sheetClose}>
             <FlareLucideIcon icon={FLARE_CHROME_LUCIDE.close} size={26} color={c.textMuted} />
           </Pressable>
-          <Text style={[styles.sheetTitle, { color: c.text }]}>Email summary</Text>
+          <Text style={[styles.sheetTitle, { color: c.text, fontFamily: TYPOGRAPHY.fontFamily.bold }]}>Email summary</Text>
           <View style={styles.sheetClose} />
         </View>
         <ScrollView
@@ -103,7 +103,7 @@ export function AppointmentBriefEmailSheet({
           keyboardShouldPersistTaps="handled"
           showsVerticalScrollIndicator={false}
         >
-          <FlareScreenSectionTitle compact>Clinician email *</FlareScreenSectionTitle>
+          <SectionLabel text="Clinician email *" style={{ marginLeft: 0 }} />
           <FlareTextInput
             value={consultantEmail}
             onChangeText={setConsultantEmail}
@@ -111,21 +111,17 @@ export function AppointmentBriefEmailSheet({
             autoCapitalize="none"
             keyboardType="email-address"
           />
-          <FlareScreenSectionTitle compact style={{ marginTop: 16 }}>
-            Clinician name (optional)
-          </FlareScreenSectionTitle>
+          <SectionLabel text="Clinician name (optional)" style={{ marginLeft: 0, marginTop: SPACING.md }} />
           <FlareTextInput value={consultantName} onChangeText={setConsultantName} placeholder="Dr Smith" />
-          <FlareScreenSectionTitle compact style={{ marginTop: 16 }}>
-            Note to include (optional)
-          </FlareScreenSectionTitle>
+          <SectionLabel text="Note to include (optional)" style={{ marginLeft: 0, marginTop: SPACING.md }} />
           <FlareTextInput multiline value={emailNote} onChangeText={setEmailNote} placeholder="Optional note" />
-          {emailError ? <Text style={[errTextStyle, { marginTop: 8 }]}>{emailError}</Text> : null}
+          {emailError ? <Text style={[errTextStyle, { marginTop: SPACING.sm }]}>{emailError}</Text> : null}
           {brief ? (
-            <Text style={[styles.period, { color: c.textMuted }]}>
+            <Text style={[styles.period, { color: c.textSecondary, fontFamily: TYPOGRAPHY.fontFamily.regular }]}>
               {`This summary will cover the period from ${formatUkDate(brief.period.start)} to ${formatUkDate(brief.period.end)}.`}
             </Text>
           ) : null}
-          <View style={{ marginTop: 20, gap: 8 }}>
+          <View style={styles.buttonWrap}>
             <PrimaryButton title={sendingEmail ? "Sending…" : "Send summary"} onPress={handleSend} disabled={sendingEmail} />
             <SecondaryButton title="Cancel" onPress={handleClose} />
           </View>
@@ -141,12 +137,30 @@ const styles = StyleSheet.create({
     flexDirection: "row",
     alignItems: "center",
     justifyContent: "space-between",
-    paddingHorizontal: 8,
-    paddingBottom: SCREEN_EDGE_PADDING,
+    paddingHorizontal: SPACING.sm,
+    paddingBottom: SPACING.screen,
     borderBottomWidth: StyleSheet.hairlineWidth,
   },
-  sheetClose: { width: 44, height: 44, alignItems: "center", justifyContent: "center" },
-  sheetTitle: { fontSize: FLARE_FONT_SIZE.navTitle, fontFamily: FLARE_FONT_FAMILY.bold },
-  sheetScroll: { paddingHorizontal: 20, paddingTop: 14 },
-  period: { fontSize: FLARE_FONT_SIZE.body, marginTop: 16, textAlign: "left" },
+  sheetClose: {
+    width: 44,
+    height: 44,
+    alignItems: "center",
+    justifyContent: "center",
+  },
+  sheetTitle: {
+    fontSize: TYPOGRAPHY.fontSize.lg,
+  },
+  sheetScroll: {
+    paddingHorizontal: SPACING.screen,
+    paddingTop: SPACING.md,
+  },
+  period: {
+    fontSize: TYPOGRAPHY.fontSize.md,
+    marginTop: SPACING.md,
+    textAlign: "left",
+  },
+  buttonWrap: {
+    marginTop: SPACING.lg,
+    gap: SPACING.sm,
+  },
 });
