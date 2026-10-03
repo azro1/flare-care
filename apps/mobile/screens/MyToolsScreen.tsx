@@ -2,11 +2,14 @@
  * My tools — doors for Weight, Fluid Output, Food & Drink, Out & About.
  */
 import React, { useMemo, useState } from "react";
-import { ScrollView, StyleSheet, View } from "react-native";
+import { StyleSheet, View } from "react-native";
+import { ScrollView } from "../lib/scrollViews";
 import { useNavigation } from "@react-navigation/native";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
+import { ScreenHeader } from "../components/MidnightLagoonScreenHeader";
 import { HomeFeatureTileGrid, type HomeFeatureGridTile } from "../components/HomeFeatureTileGrid";
 import { FlareLucideIcon } from "../lib/flareLucideIcons";
+import { SPACING } from "../designTokens";
 import {
   HOME_FEATURE_TILE_ICON_SIZE,
   SCREEN_EDGE_PADDING,
@@ -33,36 +36,40 @@ export function MyToolsScreen() {
   );
 
   return (
-    <ScrollView
-      style={[styles.screen, { backgroundColor: c.screen }]}
-      contentContainerStyle={[styles.content, { paddingBottom: bottomScrollInset + 16 }]}
-    >
-      <View
-        onLayout={(e) => {
-          const w = Math.round(e.nativeEvent.layout.width);
-          if (w > 0 && w !== gridW) setGridW(w);
-        }}
+    <View style={[styles.screen, { backgroundColor: c.screen }]}>
+      <ScrollView
+        style={styles.scroll}
+        contentContainerStyle={[styles.content, { paddingBottom: bottomScrollInset + 16 }]}
       >
-        {gridW > 0 ? (
-          <HomeFeatureTileGrid
-            tiles={tiles}
-            pageWidth={gridW}
-            onPressTile={(tile) => {
-              const door = MY_TOOL_DOORS.find((d) => d.id === tile.id);
-              if (door) navigation.navigate(door.screen);
-            }}
-          />
-        ) : null}
-      </View>
-    </ScrollView>
+        <ScreenHeader title="My Tools" />
+
+        <View
+          onLayout={(e) => {
+            const w = Math.round(e.nativeEvent.layout.width);
+            if (w > 0 && w !== gridW) setGridW(w);
+          }}
+        >
+          {gridW > 0 ? (
+            <HomeFeatureTileGrid
+              tiles={tiles}
+              pageWidth={gridW}
+              onPressTile={(tile) => {
+                const door = MY_TOOL_DOORS.find((d) => d.id === tile.id);
+                if (door) navigation.navigate(door.screen);
+              }}
+            />
+          ) : null}
+        </View>
+      </ScrollView>
+    </View>
   );
 }
 
 const styles = StyleSheet.create({
   screen: { flex: 1 },
+  scroll: { flex: 1 },
   content: {
     paddingHorizontal: SCREEN_EDGE_PADDING,
-    paddingTop: 8,
-    gap: 16,
+    paddingTop: SPACING.lg,
   },
 });
