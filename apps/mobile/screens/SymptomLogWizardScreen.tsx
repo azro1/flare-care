@@ -119,7 +119,6 @@ export function SymptomLogWizardScreen({ user }: { user: SessionUser }) {
   const [loadingEdit, setLoadingEdit] = useState(Boolean(editId));
   const [picker, setPicker] = useState<null | "start" | "end">(null);
   const [editingReviewSection, setEditingReviewSection] = useState<SymptomReviewSectionId | null>(null);
-  const [editingMealRow, setEditingMealRow] = useState<{ meal: "breakfast" | "lunch" | "dinner"; index: number } | null>(null);
   const scrollRef = useRef<RNScrollView>(null);
 
   useEffect(() => {
@@ -517,15 +516,21 @@ export function SymptomLogWizardScreen({ user }: { user: SessionUser }) {
                       key={i}
                       style={[styles.mealFoodRow, originalIndex > 0 && styles.mealFoodRowBorder, { borderTopColor: c.cardBorder }]}
                     >
-                      <View style={styles.mealFoodRowLeft}>
-                        <Pressable onPress={() => setEditingMealRow({ meal, index: i })}>
-                          <Text style={[styles.mealFoodName, { color: item.food ? c.text : c.textSecondary, fontFamily: TYPOGRAPHY.fontFamily.regular }]}>
-                            {item.food || "Tap to edit"}
-                          </Text>
-                        </Pressable>
-                        <View style={styles.mealAmountRow}>
+                      <View style={styles.mealRowContent}>
+                        <View style={styles.mealRowTop}>
                           <FlareTextInput
-                            value={item.quantity && !["Small", "Medium", "Large"].includes(item.quantity) ? item.quantity : ""}
+                            value={item.food}
+                            onChangeText={(t) => {
+                              setForm((p) => ({
+                                ...p,
+                                [meal]: p[meal].map((row, j) => (j === i ? { ...row, food: t } : row)),
+                              }));
+                            }}
+                            placeholder="Food name"
+                            style={styles.mealNameInput}
+                          />
+                          <FlareTextInput
+                            value={item.quantity && !["Small", "Medium", "Large"].includes(item.quantity) ? item.quantity : item.quantity || ""}
                             onChangeText={(t) => {
                               setForm((p) => ({
                                 ...p,
@@ -533,40 +538,40 @@ export function SymptomLogWizardScreen({ user }: { user: SessionUser }) {
                               }));
                             }}
                             placeholder="Amount"
-                            style={styles.mealAmountInput}
+                            style={styles.mealAmountInputSmall}
                           />
-                          <View style={styles.portionChips}>
-                            <OptionChip
-                              label="Small"
-                              selected={item.quantity === "Small"}
-                              onPress={() => {
-                                setForm((p) => ({
-                                  ...p,
-                                  [meal]: p[meal].map((row, j) => (j === i ? { ...row, quantity: "Small" } : row)),
-                                }));
-                              }}
-                            />
-                            <OptionChip
-                              label="Medium"
-                              selected={item.quantity === "Medium"}
-                              onPress={() => {
-                                setForm((p) => ({
-                                  ...p,
-                                  [meal]: p[meal].map((row, j) => (j === i ? { ...row, quantity: "Medium" } : row)),
-                                }));
-                              }}
-                            />
-                            <OptionChip
-                              label="Large"
-                              selected={item.quantity === "Large"}
-                              onPress={() => {
-                                setForm((p) => ({
-                                  ...p,
-                                  [meal]: p[meal].map((row, j) => (j === i ? { ...row, quantity: "Large" } : row)),
-                                }));
-                              }}
-                            />
-                          </View>
+                        </View>
+                        <View style={styles.portionChips}>
+                          <OptionChip
+                            label="Small"
+                            selected={item.quantity === "Small"}
+                            onPress={() => {
+                              setForm((p) => ({
+                                ...p,
+                                [meal]: p[meal].map((row, j) => (j === i ? { ...row, quantity: "Small" } : row)),
+                              }));
+                            }}
+                          />
+                          <OptionChip
+                            label="Medium"
+                            selected={item.quantity === "Medium"}
+                            onPress={() => {
+                              setForm((p) => ({
+                                ...p,
+                                [meal]: p[meal].map((row, j) => (j === i ? { ...row, quantity: "Medium" } : row)),
+                              }));
+                            }}
+                          />
+                          <OptionChip
+                            label="Large"
+                            selected={item.quantity === "Large"}
+                            onPress={() => {
+                              setForm((p) => ({
+                                ...p,
+                                [meal]: p[meal].map((row, j) => (j === i ? { ...row, quantity: "Large" } : row)),
+                              }));
+                            }}
+                          />
                         </View>
                       </View>
                     </View>
@@ -600,13 +605,19 @@ export function SymptomLogWizardScreen({ user }: { user: SessionUser }) {
                       key={i}
                       style={[styles.mealFoodRow, originalIndex > 0 && styles.mealFoodRowBorder, { borderTopColor: c.cardBorder }]}
                     >
-                      <View style={styles.mealFoodRowLeft}>
-                        <Pressable onPress={() => setEditingMealRow({ meal, index: i })}>
-                          <Text style={[styles.mealFoodName, { color: item.food ? c.text : c.textSecondary, fontFamily: TYPOGRAPHY.fontFamily.regular }]}>
-                            {item.food || "Tap to edit"}
-                          </Text>
-                        </Pressable>
-                        <View style={styles.mealAmountRow}>
+                      <View style={styles.mealRowContent}>
+                        <View style={styles.mealRowTop}>
+                          <FlareTextInput
+                            value={item.food}
+                            onChangeText={(t) => {
+                              setForm((p) => ({
+                                ...p,
+                                [meal]: p[meal].map((row, j) => (j === i ? { ...row, food: t } : row)),
+                              }));
+                            }}
+                            placeholder="Drink name"
+                            style={styles.mealNameInput}
+                          />
                           <FlareTextInput
                             value={item.quantity.replace(" ml", "")}
                             onChangeText={(t) => {
@@ -616,42 +627,42 @@ export function SymptomLogWizardScreen({ user }: { user: SessionUser }) {
                                 [meal]: p[meal].map((row, j) => (j === i ? { ...row, quantity: numericValue ? `${numericValue} ml` : "" } : row)),
                               }));
                             }}
-                            placeholder="Amount"
+                            placeholder="ml"
                             keyboardType="number-pad"
-                            style={styles.mealAmountInput}
+                            style={styles.mealAmountInputSmall}
                           />
-                          <View style={styles.portionChips}>
-                            <OptionChip
-                              label="250 ml"
-                              selected={item.quantity === "250 ml"}
-                              onPress={() => {
-                                setForm((p) => ({
-                                  ...p,
-                                  [meal]: p[meal].map((row, j) => (j === i ? { ...row, quantity: "250 ml" } : row)),
-                                }));
-                              }}
-                            />
-                            <OptionChip
-                              label="330 ml"
-                              selected={item.quantity === "330 ml"}
-                              onPress={() => {
-                                setForm((p) => ({
-                                  ...p,
-                                  [meal]: p[meal].map((row, j) => (j === i ? { ...row, quantity: "330 ml" } : row)),
-                                }));
-                              }}
-                            />
-                            <OptionChip
-                              label="500 ml"
-                              selected={item.quantity === "500 ml"}
-                              onPress={() => {
-                                setForm((p) => ({
-                                  ...p,
-                                  [meal]: p[meal].map((row, j) => (j === i ? { ...row, quantity: "500 ml" } : row)),
-                                }));
-                              }}
-                            />
-                          </View>
+                        </View>
+                        <View style={styles.portionChips}>
+                          <OptionChip
+                            label="250 ml"
+                            selected={item.quantity === "250 ml"}
+                            onPress={() => {
+                              setForm((p) => ({
+                                ...p,
+                                [meal]: p[meal].map((row, j) => (j === i ? { ...row, quantity: "250 ml" } : row)),
+                              }));
+                            }}
+                          />
+                          <OptionChip
+                            label="330 ml"
+                            selected={item.quantity === "330 ml"}
+                            onPress={() => {
+                              setForm((p) => ({
+                                ...p,
+                                [meal]: p[meal].map((row, j) => (j === i ? { ...row, quantity: "330 ml" } : row)),
+                              }));
+                            }}
+                          />
+                          <OptionChip
+                            label="500 ml"
+                            selected={item.quantity === "500 ml"}
+                            onPress={() => {
+                              setForm((p) => ({
+                                ...p,
+                                [meal]: p[meal].map((row, j) => (j === i ? { ...row, quantity: "500 ml" } : row)),
+                              }));
+                            }}
+                          />
                         </View>
                       </View>
                     </View>
@@ -1164,32 +1175,6 @@ export function SymptomLogWizardScreen({ user }: { user: SessionUser }) {
         </View>
       ) : null}
 
-      {editingMealRow ? (
-        <View style={styles.modalOverlay}>
-          <Pressable style={StyleSheet.absoluteFill} onPress={() => setEditingMealRow(null)} />
-          <Card style={styles.modalCard}>
-            <Text style={[styles.modalTitle, { color: c.text, fontFamily: TYPOGRAPHY.fontFamily.semibold }]}>Edit food name</Text>
-            <FlareTextInput
-              value={form[editingMealRow.meal][editingMealRow.index]?.food || ""}
-              onChangeText={(t) => {
-                const { meal, index } = editingMealRow;
-                setForm((p) => ({
-                  ...p,
-                  [meal]: p[meal].map((row, j) => (j === index ? { ...row, food: t } : row)),
-                  [`${meal}_skipped` as const]: false,
-                }));
-              }}
-              placeholder="e.g. Chicken sandwich"
-              autoFocus
-            />
-            <View style={styles.modalButtons}>
-              <SecondaryButton title="Cancel" onPress={() => setEditingMealRow(null)} />
-              <PrimaryButton title="Done" onPress={() => setEditingMealRow(null)} />
-            </View>
-          </Card>
-        </View>
-      ) : null}
-
       {picker && (
         <DateTimePicker
           value={picker === "start" && form.symptomStartDate ? parseYmd(form.symptomStartDate) : picker === "end" && form.symptomEndDate ? parseYmd(form.symptomEndDate) : new Date()}
@@ -1333,8 +1318,22 @@ const styles = StyleSheet.create({
     flex: 1,
     gap: SPACING.xs,
   },
+  mealRowContent: {
+    flex: 1,
+    gap: SPACING.xs,
+  },
+  mealRowTop: {
+    flexDirection: "row",
+    alignItems: "center",
+    justifyContent: "space-between",
+    gap: SPACING.sm,
+  },
+  mealNameInput: {
+    flex: 1,
+  },
   mealFoodName: {
     fontSize: TYPOGRAPHY.fontSize.md,
+    flex: 1,
   },
   mealFoodHint: {
     fontSize: TYPOGRAPHY.fontSize.sm,
@@ -1346,6 +1345,9 @@ const styles = StyleSheet.create({
   },
   mealAmountInput: {
     flex: 1,
+  },
+  mealAmountInputSmall: {
+    minWidth: 80,
   },
   emptyText: {
     fontSize: TYPOGRAPHY.fontSize.sm,
