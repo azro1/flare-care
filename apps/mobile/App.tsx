@@ -1167,17 +1167,13 @@ function AuthScreen({
 
   // AUTH LANDING - EXACT 1:1 PORT FROM MOCKUP CSS
   if (step === "method") {
-    const statusBarHeight = 54;
-    
     return (
       <View style={{ flex: 1, backgroundColor: cAuth.screen }}>
-        {/* Status bar area - 54px total (16px top padding in CSS) */}
-        <View style={{ height: statusBarHeight, paddingTop: Math.max(insets.top, 16) }} />
-
         {/* Hero - flex:1, centered, 40px bottom padding */}
         <View
           style={{
             flex: 1,
+            paddingTop: insets.top,
             paddingHorizontal: 24,
             paddingBottom: 40,
             alignItems: "center",
@@ -1187,7 +1183,7 @@ function AuthScreen({
           {/* Logo 272px wide */}
           <FlareBrandLockup markColor={cAuth.primary} nameColor={cAuth.text} nameSize={26} />
           
-          {/* Tagline: margin-top 22px, font-size 18px, line-height 1.45 (26.1), font-weight 500 */}
+          {/* Tagline: margin-top 22px, font-size 18px, line-height 26, font-weight 500 */}
           <Text
             style={{
               marginTop: 22,
@@ -1203,7 +1199,7 @@ function AuthScreen({
         </View>
 
         {/* Actions - gap 14px (first-time) or 8px (returning), padding-bottom 18px */}
-        <View style={{ paddingHorizontal: 24, paddingBottom: 18 }}>
+        <View style={{ paddingHorizontal: 24, paddingBottom: 18 + insets.bottom + 23 }}>
           {quickUnlock && !showAuthMethodsFromQuickUnlock ? (
             // RETURNING USER - gap 8px
             <View style={{ gap: 8 }}>
@@ -1257,7 +1253,7 @@ function AuthScreen({
                 </Text>
               </Pressable>
 
-              {/* Footer: font-size 12.5px, line-height 1.5 (18.75), padding 4px 10px 0 */}
+              {/* Footer: font-size 12.5px, line-height 18.75, padding 4px 10px 0 */}
               <Text
                 style={{
                   paddingTop: 4,
@@ -1336,7 +1332,7 @@ function AuthScreen({
                 </Text>
               </Pressable>
 
-              {/* Footer: font-size 12.5px, line-height 1.5 (18.75), padding 4px 10px 0 */}
+              {/* Footer: font-size 12.5px, line-height 18.75, padding 4px 10px 0 */}
               <Text
                 style={{
                   paddingTop: 4,
@@ -1367,20 +1363,6 @@ function AuthScreen({
             </View>
           )}
         </View>
-
-        {/* Home indicator: margin 14px 0 9px (total 23px after actions) */}
-        <View
-          style={{
-            height: 5,
-            width: 134,
-            borderRadius: 3,
-            backgroundColor: cAuth.text,
-            opacity: 0.85,
-            alignSelf: "center",
-            marginTop: 14,
-            marginBottom: Math.max(insets.bottom, 9),
-          }}
-        />
 
         <SlideUpSheet visible={legalConsentVisible} onClose={closeLegalConsentSheet}>
           <View style={styles.authLegalSheetBody}>
