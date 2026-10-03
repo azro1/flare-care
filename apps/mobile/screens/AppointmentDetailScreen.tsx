@@ -6,14 +6,14 @@ import { showFlareAlert } from "../components/FlareAlertHost";
 import { ScrollView } from "../lib/scrollViews";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { ConfirmModal } from "../components/ConfirmModal";
-import { LogDetailAddedHeader, LogDetailCard, LogDetailFieldGroup, logDetailStyles } from "../components/LogDetailLayout";
-import { flareCardSectionStyles } from "../components/FlareScreenSectionTitle";
+import { Card } from "../components/MidnightLagoonCard";
+import { TrayRow } from "../components/MidnightLagoonTray";
+import { ScreenHeader } from "../components/MidnightLagoonScreenHeader";
 import { invalidateDashboardSnapshot } from "../lib/dashboardSnapshotCache";
 import { formatAddedAtHeader } from "../lib/logDisplay";
 import { recordRecentActivityEvent } from "../lib/recentActivityEvents";
 import { formatUkDate } from "../lib/formatUkDate";
 import { rescheduleAppointmentNotificationsForUser } from "../lib/medicationNotifications";
-import { FLARE_FONT_FAMILY, FLARE_FONT_SIZE, HEADER_ACTION_BTN_WIDTH, HEADER_CHROME_ICON_SIZE } from "../lib/layoutConstants";
 import { invalidateAllAppointmentCaches } from "../lib/appointmentCaches";
 import {
   appointmentFormFromRow,
@@ -23,6 +23,7 @@ import {
   type AppointmentFormState,
   type AppointmentRow,
 } from "../lib/appointmentShared";
+import { SPACING, TYPOGRAPHY } from "../designTokens";
 import { supabase, TABLES } from "../lib/supabase";
 import { useFlareColors } from "../theme";
 import { AppointmentSheet } from "./AppointmentsScreen";
@@ -37,7 +38,7 @@ function DetailEditHeaderButton({ onPress, disabled }: { onPress: () => void; di
   const c = useFlareColors();
   return (
     <Pressable accessibilityRole="button" accessibilityLabel="Edit appointment" onPress={onPress} disabled={disabled} hitSlop={10} style={styles.headerIconBtn}>
-      <FlareLucideIcon icon={FLARE_CHROME_LUCIDE.edit} size={HEADER_CHROME_ICON_SIZE} color={c.text} />
+      <FlareLucideIcon icon={FLARE_CHROME_LUCIDE.edit} size={22} color={c.text} />
     </Pressable>
   );
 }
@@ -46,7 +47,7 @@ function DetailDeleteHeaderButton({ onPress, disabled }: { onPress: () => void; 
   const c = useFlareColors();
   return (
     <Pressable accessibilityRole="button" accessibilityLabel="Delete appointment" onPress={onPress} disabled={disabled} hitSlop={10} style={styles.headerIconBtn}>
-      <FlareLucideIcon icon={FLARE_CHROME_LUCIDE.delete} size={HEADER_CHROME_ICON_SIZE} color={c.text} />
+      <FlareLucideIcon icon={FLARE_CHROME_LUCIDE.delete} size={22} color={c.text} />
     </Pressable>
   );
 }
@@ -76,12 +77,7 @@ export function AppointmentDetailScreen({ user }: { user: SessionUser }) {
       return;
     }
     setLoading(true);
-    const { data, error } = await supabase
-      .from(TABLES.APPOINTMENTS)
-      .select("*")
-      .eq("user_id", user.id)
-      .eq("id", aptId)
-      .maybeSingle();
+    const { data, error } = await supabase.from(TABLES.APPOINTMENTS).select("*").eq("user_id", user.id).eq("id", aptId).maybeSingle();
     setRow(error || !data ? null : (data as AppointmentRow));
     setLoading(false);
   }, [aptId, id, user.id]);
@@ -112,11 +108,7 @@ export function AppointmentDetailScreen({ user }: { user: SessionUser }) {
       setSaving(true);
       try {
         const payload = appointmentPayloadFromForm(values, true);
-        const { error } = await supabase
-          .from(TABLES.APPOINTMENTS)
-          .update(payload)
-          .eq("id", row.id)
-          .eq("user_id", user.id);
+        const { error } = await supabase.from(TABLES.APPOINTMENTS).update(payload).eq("id", row.id).eq("user_id", user.id);
         if (error) throw error;
         closeSheet();
         invalidateDashboardSnapshot(user.id);
@@ -124,9 +116,7 @@ export function AppointmentDetailScreen({ user }: { user: SessionUser }) {
         await load();
         try {
           await rescheduleAppointmentNotificationsForUser(user.id);
-        } catch {
-          // non-fatal
-        }
+        } catch {}
       } catch (err: unknown) {
         setSaveError(err instanceof Error ? err.message : "Could not save this appointment.");
       } finally {
@@ -149,9 +139,7 @@ export function AppointmentDetailScreen({ user }: { user: SessionUser }) {
       invalidateAllAppointmentCaches(user.id);
       try {
         await rescheduleAppointmentNotificationsForUser(user.id);
-      } catch {
-        // non-fatal
-      }
+      } catch {}
       if (navigation.canGoBack()) navigation.goBack();
       else navigation.navigate("Appointments");
     } catch (err: unknown) {
@@ -186,69 +174,84 @@ export function AppointmentDetailScreen({ user }: { user: SessionUser }) {
     return (
       <View style={[styles.centered, { backgroundColor: c.screen, paddingBottom: bottomPad }]}>
         <ActivityIndicator color={c.primary} />
-        <Text style={[styles.muted, { color: c.textMuted }]}>Loading…</Text>
+        <Text style={[styles.loadingText, { color: c.textSecondary, fontFamily: TYPOGRAPHY.fontFamily.regular }]}>Loading…</Text>
       </View>
     );
   }
 
   if (!row) {
     return (
-      <ScrollView style={[logDetailStyles.scroll, { backgroundColor: c.screen }]} contentContainerStyle={{ paddingBottom: bottomPad }}>
-        <Text style={[styles.muted, { color: c.textMuted }]}>Could not load this appointment.</Text>
-      </ScrollView>
+      <View style={[styles.screen, { backgroundColor: c.screen }]}>
+        <ScrollView style={styles.scroll} contentContainerStyle={[styles.scrollContent, { paddingBottom: bottomPad }]}>
+          <Text style={[styles.errorText, { color: c.textSecondary, fontFamily: TYPOGRAPHY.fontFamily.regular }]}>Could not load this appointment.</Text>
+        </ScrollView>
+      </View>
     );
   }
 
   return (
     <>
-      <ScrollView
-        style={[logDetailStyles.scroll, { backgroundColor: c.screen }]}
-        contentContainerStyle={{ paddingBottom: bottomPad }}
-        showsVerticalScrollIndicator={false}
-      >
-        <LogDetailAddedHeader text={formatAddedAtHeader(row.created_at)} />
+      <View style={[styles.screen, { backgroundColor: c.screen }]}>
+        <ScrollView style={styles.scroll} contentContainerStyle={[styles.scrollContent, { paddingBottom: bottomPad }]} showsVerticalScrollIndicator={false}>
+          <ScreenHeader title={row.type?.trim() || "Appointment"} subtitle={formatAddedAtHeader(row.created_at)} />
 
-        <LogDetailCard style={flareCardSectionStyles.container}>
-          <LogDetailFieldGroup
-            fields={[
-              { label: "Date", value: formatUkDate(row.date) || "Not set" },
-              { label: "Time", value: row.time?.trim() || "Not set" },
-              { label: "Type", value: row.type?.trim() || "Not set" },
-              { label: "Clinician", value: row.clinician_name?.trim() || "Not set" },
-              { label: "Location", value: row.location?.trim() || "Not set" },
-              { label: "Reminder", value: reminderLabelFromMinutes(row.reminder_minutes_before) },
-              { label: "Notes", value: row.notes?.trim() || "Not set" },
-            ]}
-          />
-        </LogDetailCard>
-      </ScrollView>
+          <Card noPadding style={{ paddingVertical: SPACING.sm, paddingHorizontal: SPACING.md }}>
+            <TrayRow label="Date" value={formatUkDate(row.date) || "Not set"} />
+            <TrayRow label="Time" value={row.time?.trim() || "Not set"} />
+            <TrayRow label="Type" value={row.type?.trim() || "Not set"} />
+            <TrayRow label="Clinician" value={row.clinician_name?.trim() || "Not set"} />
+            <TrayRow label="Location" value={row.location?.trim() || "Not set"} />
+            <TrayRow label="Reminder" value={reminderLabelFromMinutes(row.reminder_minutes_before)} />
+            {row.notes?.trim() ? <TrayRow label="Notes" value={row.notes.trim()} /> : null}
+          </Card>
+        </ScrollView>
+      </View>
 
       <ConfirmModal
         visible={deleteOpen}
         title="Delete appointment?"
         message="This appointment will be removed. Are you sure you want to delete it?"
         confirmLabel={deleting ? "Deleting…" : "Delete"}
-        confirmDestructive
+        confirmDanger
         onConfirm={handleDelete}
         onCancel={() => setDeleteOpen(false)}
       />
 
-      <AppointmentSheet
-        visible={sheetOpen}
-        editingId={row.id}
-        initialValues={form}
-        saving={saving}
-        saveError={saveError}
-        onClose={closeSheet}
-        onSave={handleSave}
-      />
+      <AppointmentSheet visible={sheetOpen} editingId={row.id} initialValues={form} saving={saving} saveError={saveError} onClose={closeSheet} onSave={handleSave} />
     </>
   );
 }
 
 const styles = StyleSheet.create({
-  centered: { flex: 1, alignItems: "center", justifyContent: "center", gap: 12 },
-  muted: { fontSize: FLARE_FONT_SIZE.body, fontFamily: FLARE_FONT_FAMILY.regular },
-  headerBtnRow: { flexDirection: "row", alignItems: "center", gap: 2 },
-  headerIconBtn: { width: HEADER_ACTION_BTN_WIDTH, height: 44, alignItems: "center", justifyContent: "center" },
+  screen: { flex: 1 },
+  scroll: { flex: 1 },
+  scrollContent: {
+    paddingHorizontal: SPACING.screen,
+    paddingTop: 56,
+  },
+  centered: {
+    flex: 1,
+    alignItems: "center",
+    justifyContent: "center",
+    gap: SPACING.md,
+  },
+  loadingText: {
+    fontSize: TYPOGRAPHY.fontSize.md,
+  },
+  errorText: {
+    fontSize: TYPOGRAPHY.fontSize.md,
+    textAlign: "center",
+    marginTop: SPACING.xl,
+  },
+  headerBtnRow: {
+    flexDirection: "row",
+    alignItems: "center",
+    gap: SPACING.xs,
+  },
+  headerIconBtn: {
+    width: 44,
+    height: 44,
+    alignItems: "center",
+    justifyContent: "center",
+  },
 });

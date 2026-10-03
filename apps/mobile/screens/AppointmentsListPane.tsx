@@ -1,22 +1,13 @@
-import { FLARE_CHROME_LUCIDE, FlareLucideIcon } from "../lib/flareLucideIcons";
+import { FLARE_CHROME_LUCIDE, FlareLucideIcon, FLARE_FEATURE_LUCIDE } from "../lib/flareLucideIcons";
 import { useFocusEffect, useNavigation } from "@react-navigation/native";
 import React, { useCallback, useEffect, useMemo, useState } from "react";
-import { Pressable, StyleSheet, Text, View } from "react-native";
+import { ActivityIndicator, Pressable, StyleSheet, Text, View } from "react-native";
 import { showFlareAlert } from "../components/FlareAlertHost";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
+import { ScrollView } from "../lib/scrollViews";
 import { ConfirmModal } from "../components/ConfirmModal";
-import { InstructionScreenShell } from "../components/InstructionScreenShell";
-import {
-  LogHistoryCard,
-  LogHistoryListLoading,
-  LogHistoryEmptyState,
-  LogHistoryPreviewList,
-  LOG_HISTORY_LOAD_MORE_BATCH,
-  logHistoryCardStyles,
-  logHistoryListStyles,
-  LogHistoryListQuietPlaceholder,
-  type LogHistoryListItem,
-} from "../components/LogHistoryList";
+import { Card } from "../components/MidnightLagoonCard";
+import { TrayRow } from "../components/MidnightLagoonTray";
 import { TrackerThumbFab, useTrackerThumbFabLayout } from "../components/TrackerThumbFab";
 import { WriggleReminderBell } from "../components/WriggleReminderBell";
 import { invalidateDashboardSnapshot } from "../lib/dashboardSnapshotCache";
@@ -32,28 +23,22 @@ import {
   appointmentHasReminder,
   deleteAppointmentsForUser,
   getApptsListExpandedCount,
-  reminderLabelFromMinutes,
   reminderListLabelFromMinutes,
   setApptsListExpandedCount,
   splitAppointmentsByTab,
   type AppointmentsTab,
 } from "../lib/appointmentShared";
-import {
-  FLARE_FONT_FAMILY,
-  FLARE_FONT_SIZE,
-  NAV_ROW_CHEVRON_SIZE,
-  bottomTabBarHeight,
-} from "../lib/layoutConstants";
+import { SPACING, TYPOGRAPHY } from "../designTokens";
 import { useFlareColors } from "../theme";
 
 type SessionUser = { id: string };
 
+const LOAD_MORE_BATCH = 15;
+
 async function maybeRescheduleAppointmentReminders(userId: string) {
   try {
     await rescheduleAppointmentNotificationsForUser(userId);
-  } catch {
-    // non-fatal
-  }
+  } catch {}
 }
 
 export function AppointmentsListPane({
@@ -66,7 +51,6 @@ export function AppointmentsListPane({
   renderIdleHeaderRight,
   onSummaryPress,
   list,
-  /** When true, only the list (+ delete modal) — parent owns shell / FAB / tabs. */
   embedded = false,
   onSelectionModeChange,
   ownsHeader = true,
@@ -82,15 +66,12 @@ export function AppointmentsListPane({
   list: AppointmentsListState;
   embedded?: boolean;
   onSelectionModeChange?: (selectionMode: boolean) => void;
-  /** Hub: only the active tab should own header / selection chrome. */
   ownsHeader?: boolean;
 }) {
   const c = useFlareColors();
   const navigation = useNavigation<any>();
   const insets = useSafeAreaInsets();
-  const tabBarClearance = bottomTabBarHeight(insets.bottom);
-  const { scrollBottomPad } = useTrackerThumbFabLayout(showFab ? tabBarClearance : 0);
-  const scrollBottomPadTotal = showFab ? scrollBottomPad : Math.max(insets.bottom, 16) + 24;
+  const { fabBottom, fabRight, scrollPadding } = useTrackerThumbFabLayout();
 
   const { appointments, loading, load } = list;
   const [expandedCount, setExpandedCount] = useState(() => getApptsListExpandedCount(user.id, tab));
@@ -105,8 +86,8 @@ export function AppointmentsListPane({
   );
 
   const visibleCount = useMemo(() => {
-    if (visibleRows.length === 0) return LOG_HISTORY_LOAD_MORE_BATCH;
-    if (visibleRows.length <= LOG_HISTORY_LOAD_MORE_BATCH) return visibleRows.length;
+    if (visibleRows.length === 0) return LOAD_MORE_BATCH;
+    if (visibleRows.length <= LOAD_MORE_BATCH) return visibleRows.length;
     return Math.min(expandedCount, visibleRows.length);
   }, [expandedCount, visibleRows.length]);
 
@@ -114,76 +95,16 @@ export function AppointmentsListPane({
 
   const loadMore = useCallback(() => {
     setExpandedCount((count) => {
-      const next = Math.min(count + LOG_HISTORY_LOAD_MORE_BATCH, visibleRows.length);
+      const next = Math.min(count + LOAD_MORE_BATCH, visibleRows.length);
       setApptsListExpandedCount(user.id, tab, next);
       return next;
     });
   }, [tab, user.id, visibleRows.length]);
 
-  const aptListItems: LogHistoryListItem[] = useMemo(
-    () =>
-      visibleRows.map((row) => {
-        const dateLine = [formatUkDateShort(row.date), row.time?.trim()].filter(Boolean).join(" · ");
-        const title = row.type?.trim() || "Appointment";
-        const reminderLabel = appointmentHasReminder(row)
-          ? reminderLabelFromMinutes(row.reminder_minutes_before)
-          : null;
-        return {
-          id: String(row.id),
-          title,
-          subtitle: dateLine,
-          accessibilityLabel: reminderLabel
-            ? `${title}. ${dateLine}. Reminder ${reminderLabel}. View details`
-            : `${title}. ${dateLine}. View details`,
-        };
-      }),
-    [visibleRows],
-  );
-
-  const aptById = useCallback((id: string) => visibleRows.find((row) => String(row.id) === id), [visibleRows]);
-
-  const renderAptSubtitle = useCallback(
-    (item: LogHistoryListItem) => {
-      const row = aptById(item.id);
-      if (!row) return null;
-      const dateLine = [formatUkDateShort(row.date), row.time?.trim()].filter(Boolean).join(" · ");
-      const hasReminder = appointmentHasReminder(row);
-      const reminderLabel = hasReminder ? reminderListLabelFromMinutes(row.reminder_minutes_before) : null;
-      if (!dateLine && !reminderLabel) return null;
-      const subtitleTextStyle = [logHistoryListStyles.logSecondaryWhen, { color: c.textMuted }];
-      return (
-        <View style={styles.aptSubtitleRow}>
-          {dateLine ? (
-            <Text style={subtitleTextStyle} numberOfLines={1}>
-              {dateLine}
-              {reminderLabel ? " · " : ""}
-            </Text>
-          ) : null}
-          {reminderLabel ? (
-            <View style={styles.aptReminderRow}>
-              <WriggleReminderBell color={c.textMuted} />
-              <Text style={subtitleTextStyle} numberOfLines={1}>
-                {reminderLabel}
-              </Text>
-            </View>
-          ) : null}
-        </View>
-      );
-    },
-    [aptById, c.textMuted],
-  );
-
+  const aptListItems = useMemo(() => visibleRows.slice(0, visibleCount), [visibleRows, visibleCount]);
   const aptItemIds = useMemo(() => visibleRows.map((row) => String(row.id)), [visibleRows]);
-  const {
-    selectionMode,
-    selectedIds,
-    bulkDeleteOpen,
-    setBulkDeleteOpen,
-    bulkDeleting,
-    enterSelectionWith,
-    toggleSelect,
-    runBulkDelete,
-  } = useLogListSelection({
+
+  const { selectionMode, selectedIds, bulkDeleteOpen, setBulkDeleteOpen, bulkDeleting, enterSelectionWith, toggleSelect, runBulkDelete } = useLogListSelection({
     routeName: selectionRouteName,
     itemIds: aptItemIds,
     navigation,
@@ -217,48 +138,59 @@ export function AppointmentsListPane({
   const listEmpty = !loading && visibleRows.length === 0;
 
   const listBody = (
-    <>
-      <LogHistoryCard>
-        <View style={logHistoryCardStyles.trackerCardBody}>
-          {showListLoading ? (
-            <LogHistoryListLoading />
-          ) : listInitialLoad ? (
-            <LogHistoryListQuietPlaceholder />
-          ) : listEmpty ? (
-            <LogHistoryEmptyState icon={APPOINTMENTS_FEATURE_ICON} />
-          ) : (
-            <LogHistoryPreviewList
-              items={aptListItems}
-              visibleCount={visibleCount}
-              hasMore={hasMore}
-              loadMoreLabel="load more"
-              onLoadMore={loadMore}
-              rowTextLayout="default"
-              renderSubtitle={renderAptSubtitle}
-              onPressItem={(aptId) => navigation.navigate("AppointmentDetail", { id: aptId })}
-              selectionMode={selectionMode}
-              selectedIds={selectedIds}
-              onToggleSelect={toggleSelect}
-              onLongPressItem={enterSelectionWith}
-            />
-          )}
-        </View>
-      </LogHistoryCard>
+    <View style={[styles.screen, { backgroundColor: c.screen }]}>
+      <ScrollView style={styles.scroll} contentContainerStyle={[styles.scrollContent, { paddingBottom: showFab ? scrollPadding : Math.max(insets.bottom, 16) + 24 }]}>
+        {showListLoading ? (
+          <View style={styles.loadingWrap}>
+            <ActivityIndicator size="small" color={c.primary} />
+          </View>
+        ) : listEmpty ? (
+          <Card>
+            <View style={styles.emptyWrap}>
+              <FlareLucideIcon icon={APPOINTMENTS_FEATURE_ICON} size={40} color={c.textSecondary} />
+              <Text style={[styles.emptyText, { color: c.textSecondary, fontFamily: TYPOGRAPHY.fontFamily.regular }]}>No appointments yet.</Text>
+            </View>
+          </Card>
+        ) : (
+          <>
+            <Card noPadding style={{ paddingVertical: SPACING.sm, paddingHorizontal: SPACING.md }}>
+              {aptListItems.map((row) => {
+                const dateLine = [formatUkDateShort(row.date), row.time?.trim()].filter(Boolean).join(" · ");
+                const hasReminder = appointmentHasReminder(row);
+                const reminderLabel = hasReminder ? reminderListLabelFromMinutes(row.reminder_minutes_before) : null;
+                const sublabel = reminderLabel ? `${dateLine} · ${reminderLabel}` : dateLine;
+                return (
+                  <TrayRow
+                    key={row.id}
+                    icon={FLARE_FEATURE_LUCIDE.appointments}
+                    label={row.type?.trim() || "Appointment"}
+                    sublabel={sublabel}
+                    showChevron
+                    onPress={() => navigation.navigate("AppointmentDetail", { id: String(row.id) })}
+                    onLongPress={selectionMode ? undefined : () => enterSelectionWith(String(row.id))}
+                  />
+                );
+              })}
+            </Card>
 
-      {onSummaryPress && !selectionMode ? (
-        <View style={styles.summaryBlock}>
-          <Pressable
-            accessibilityRole="button"
-            accessibilityLabel="Appointment Summary"
-            onPress={onSummaryPress}
-            style={({ pressed }) => [styles.summaryLink, pressed && { opacity: 0.85 }]}
-          >
-            <Text style={[styles.summaryLinkLabel, { color: c.text }]}>Appointment Summary</Text>
-            <FlareLucideIcon icon={FLARE_CHROME_LUCIDE.forward} size={NAV_ROW_CHEVRON_SIZE} color={c.textMuted} />
+            {hasMore ? (
+              <Pressable accessibilityRole="button" onPress={loadMore} style={({ pressed }) => [styles.loadMore, pressed && { opacity: 0.7 }]}>
+                <Text style={[styles.loadMoreText, { color: c.primary, fontFamily: TYPOGRAPHY.fontFamily.medium }]}>load more</Text>
+              </Pressable>
+            ) : null}
+          </>
+        )}
+
+        {onSummaryPress && !selectionMode ? (
+          <Pressable accessibilityRole="button" accessibilityLabel="Appointment Summary" onPress={onSummaryPress} style={({ pressed }) => [styles.summaryLink, pressed && { opacity: 0.85 }]}>
+            <Text style={[styles.summaryLinkText, { color: c.text, fontFamily: TYPOGRAPHY.fontFamily.regular }]}>Appointment Summary</Text>
+            <FlareLucideIcon icon={FLARE_CHROME_LUCIDE.forward} size={18} color={c.textSecondary} />
           </Pressable>
-        </View>
-      ) : null}
-    </>
+        ) : null}
+      </ScrollView>
+
+      {showFab && !selectionMode && onAddPress ? <TrackerThumbFab accessibilityLabel="Add appointment" onPress={onAddPress} bottom={fabBottom} right={fabRight} /> : null}
+    </View>
   );
 
   const deleteModal = (
@@ -267,7 +199,7 @@ export function AppointmentsListPane({
       title={selectedIds.size === 1 ? "Delete appointment?" : `Delete ${selectedIds.size} appointments?`}
       message="This appointment will be removed. This action cannot be undone."
       confirmLabel={bulkDeleting ? "Deleting…" : "Delete"}
-      confirmDestructive
+      confirmDanger
       onConfirm={handleBulkDeleteConfirm}
       onCancel={() => setBulkDeleteOpen(false)}
     />
@@ -283,39 +215,49 @@ export function AppointmentsListPane({
   }
 
   return (
-    <InstructionScreenShell
-      showInstruction={false}
-      contentPaddingBottom={scrollBottomPadTotal}
-      instruction={null}
-      floatingAction={
-        showFab && !selectionMode && onAddPress ? (
-          <TrackerThumbFab accessibilityLabel="Add appointment" onPress={onAddPress} tabBarClearance={tabBarClearance} />
-        ) : null
-      }
-      footer={deleteModal}
-    >
+    <>
       {listBody}
-    </InstructionScreenShell>
+      {deleteModal}
+    </>
   );
 }
 
 const styles = StyleSheet.create({
-  aptSubtitleRow: { flexDirection: "row", alignItems: "center", flexShrink: 1, minWidth: 0 },
-  aptReminderRow: { flexDirection: "row", alignItems: "center", gap: 4, flexShrink: 1, minWidth: 0 },
-  summaryBlock: {
+  screen: { flex: 1 },
+  scroll: { flex: 1 },
+  scrollContent: {
+    paddingHorizontal: SPACING.screen,
+    paddingTop: SPACING.lg,
+  },
+  loadingWrap: {
+    paddingVertical: 24,
     alignItems: "center",
-    marginTop: 12,
-    paddingHorizontal: 24,
+  },
+  emptyWrap: {
+    alignItems: "center",
+    paddingVertical: SPACING.xl,
+    gap: SPACING.md,
+  },
+  emptyText: {
+    fontSize: TYPOGRAPHY.fontSize.md,
+    textAlign: "center",
+  },
+  loadMore: {
+    paddingVertical: SPACING.md,
+    alignItems: "center",
+  },
+  loadMoreText: {
+    fontSize: TYPOGRAPHY.fontSize.sm,
   },
   summaryLink: {
     flexDirection: "row",
     alignItems: "center",
     alignSelf: "center",
-    gap: 4,
-    paddingVertical: 8,
+    gap: SPACING.xs,
+    paddingVertical: SPACING.md,
+    marginTop: SPACING.md,
   },
-  summaryLinkLabel: {
-    fontSize: FLARE_FONT_SIZE.subhead,
-    fontFamily: FLARE_FONT_FAMILY.regular,
+  summaryLinkText: {
+    fontSize: TYPOGRAPHY.fontSize.md,
   },
 });
