@@ -1165,136 +1165,222 @@ function AuthScreen({
     );
   }
 
-  // REBUILT AUTH LANDING TO MATCH MOCKUPS
+  // AUTH LANDING - EXACT 1:1 PORT FROM MOCKUP CSS
   if (step === "method") {
+    const statusBarHeight = 54;
+    
     return (
-      <View
-        style={[
-          styles.authScreenFill,
-          {
-            backgroundColor: cAuth.screen,
-            paddingTop: insets.top + 60,
-            paddingBottom: Math.max(insets.bottom, 24),
+      <View style={{ flex: 1, backgroundColor: cAuth.screen }}>
+        {/* Status bar area - 54px total (16px top padding in CSS) */}
+        <View style={{ height: statusBarHeight, paddingTop: Math.max(insets.top, 16) }} />
+
+        {/* Hero - flex:1, centered, 40px bottom padding */}
+        <View
+          style={{
+            flex: 1,
             paddingHorizontal: 24,
-          },
-        ]}
-      >
-        {/* Logo + Tagline - upper-middle */}
-        <View style={styles.authLandingTop}>
-          <FlareBrandLockup
-            markColor={cAuth.primary}
-            nameColor={cAuth.text}
-            nameSize={26}
-            style={{ marginBottom: 20 }}
-          />
-          <Text style={[styles.authLandingTaglineNew, { color: cAuth.textSecondary }]}>
+            paddingBottom: 40,
+            alignItems: "center",
+            justifyContent: "center",
+          }}
+        >
+          {/* Logo 272px wide */}
+          <FlareBrandLockup markColor={cAuth.primary} nameColor={cAuth.text} nameSize={26} />
+          
+          {/* Tagline: margin-top 22px, font-size 18px, line-height 1.45 (26.1), font-weight 500 */}
+          <Text
+            style={{
+              marginTop: 22,
+              fontSize: 18,
+              lineHeight: 26,
+              fontFamily: "Inter_500Medium",
+              color: cAuth.textSecondary,
+              textAlign: "center",
+            }}
+          >
             Your Health. Your IBD.{"\n"}Your Control.
           </Text>
         </View>
 
-        {/* Spacer */}
-        <View style={{ flex: 1 }} />
-
-        {/* Bottom Actions Area */}
-        {quickUnlock && !showAuthMethodsFromQuickUnlock ? (
-          // RETURNING USER WITH BIOMETRICS
-          <View style={styles.authLandingBottom}>
-            <Text style={[styles.authWelcomeBack, { color: cAuth.textSecondary }]}>
-              Welcome back, {quickUnlock.displayName}
-            </Text>
-            
-            <PrimaryButton
-              title={unlockBusy ? "Unlocking…" : `Unlock with ${quickUnlock.label}`}
-              onPress={runQuickUnlock}
-              disabled={unlockBusy}
-              noTopMargin
-              leftIcon={
-                <FlareLucideIcon
-                  icon={FLARE_CHROME_LUCIDE.fingerprint}
-                  size={18}
-                  color={unlockBusy ? cAuth.primaryHover : cAuth.white}
-                />
-              }
-            />
-
-            <Pressable
-              accessibilityRole="button"
-              accessibilityLabel="Use email or Google instead"
-              onPress={() => setShowAuthMethodsFromQuickUnlock(true)}
-              hitSlop={8}
-              style={styles.authFallbackLink}
-            >
-              <Text style={[styles.authFallbackLinkText, { color: cAuth.link }]}>
-                Use email or Google instead
+        {/* Actions - gap 14px (first-time) or 8px (returning), padding-bottom 18px */}
+        <View style={{ paddingHorizontal: 24, paddingBottom: 18 }}>
+          {quickUnlock && !showAuthMethodsFromQuickUnlock ? (
+            // RETURNING USER - gap 8px
+            <View style={{ gap: 8 }}>
+              {/* Welcome: font-size 16px, font-weight 500, margin-bottom 2px */}
+              <Text
+                style={{
+                  fontSize: 16,
+                  fontFamily: "Inter_500Medium",
+                  color: cAuth.textSecondary,
+                  textAlign: "center",
+                  marginBottom: 2,
+                }}
+              >
+                Welcome back, {quickUnlock.displayName}
               </Text>
-            </Pressable>
 
-            <Text style={[styles.authLegalFooter, { color: cAuth.textMuted }]}>
-              By continuing you agree to our{" "}
-              <Text
-                style={[styles.authLegalLink, { color: cAuth.link }]}
-                onPress={() => setAuthLegalModal("terms")}
+              {/* Button: height 56px, border-radius 16px, font-size 17px, font-weight 600, gap 12px */}
+              <Pressable
+                onPress={runQuickUnlock}
+                disabled={unlockBusy}
+                style={{
+                  height: 56,
+                  borderRadius: 16,
+                  backgroundColor: unlockBusy ? cAuth.primaryHover : cAuth.primary,
+                  flexDirection: "row",
+                  alignItems: "center",
+                  justifyContent: "center",
+                  gap: 12,
+                }}
               >
-                Terms of Service
-              </Text>{" "}
-              and{" "}
-              <Text
-                style={[styles.authLegalLink, { color: cAuth.link }]}
-                onPress={() => setAuthLegalModal("privacy")}
+                {/* Icon 22px */}
+                <FlareLucideIcon icon={FLARE_CHROME_LUCIDE.fingerprint} size={22} color={cAuth.white} />
+                <Text style={{ fontSize: 17, fontFamily: "Inter_600SemiBold", color: cAuth.white }}>
+                  {unlockBusy ? "Unlocking…" : `Unlock with ${quickUnlock.label}`}
+                </Text>
+              </Pressable>
+
+              {/* Text link: min-height 48px, font-size 16px, font-weight 600, margin-top -8px */}
+              <Pressable
+                accessibilityRole="button"
+                onPress={() => setShowAuthMethodsFromQuickUnlock(true)}
+                style={{
+                  minHeight: 48,
+                  marginTop: -8,
+                  alignItems: "center",
+                  justifyContent: "center",
+                }}
               >
-                Privacy Policy
+                <Text style={{ fontSize: 16, fontFamily: "Inter_600SemiBold", color: cAuth.link }}>
+                  Use email or Google instead
+                </Text>
+              </Pressable>
+
+              {/* Footer: font-size 12.5px, line-height 1.5 (18.75), padding 4px 10px 0 */}
+              <Text
+                style={{
+                  paddingTop: 4,
+                  paddingHorizontal: 10,
+                  fontSize: 12.5,
+                  lineHeight: 18.75,
+                  fontFamily: "Inter_400Regular",
+                  textAlign: "center",
+                  color: cAuth.textSecondary,
+                }}
+              >
+                By continuing you agree to our{"\n"}
+                <Text
+                  style={{ fontFamily: "Inter_600SemiBold", color: cAuth.link }}
+                  onPress={() => setAuthLegalModal("terms")}
+                >
+                  Terms of Service
+                </Text>{" "}
+                and{" "}
+                <Text
+                  style={{ fontFamily: "Inter_600SemiBold", color: cAuth.link }}
+                  onPress={() => setAuthLegalModal("privacy")}
+                >
+                  Privacy Policy
+                </Text>
+                .
               </Text>
-              .
-            </Text>
-          </View>
-        ) : (
-          // FIRST-TIME USER
-          <View style={styles.authLandingBottom}>
-            <PrimaryButton
-              title="Continue with email"
-              onPress={() => beginAuthAction("email")}
-              disabled={activeAuthAction !== null || !legalHydrated}
-              noTopMargin
-              leftIcon={
-                <FlareLucideIcon
-                  icon={FLARE_CHROME_LUCIDE.mail}
-                  size={18}
-                  color={
-                    activeAuthAction !== null || !legalHydrated
-                      ? cAuth.primaryHover
-                      : cAuth.white
-                  }
-                />
-              }
-            />
-
-            <SecondaryButton
-              title={activeAuthAction === "google" ? "Loading..." : "Continue with Google"}
-              onPress={() => beginAuthAction("google")}
-              disabled={activeAuthAction !== null || !legalHydrated}
-              noTopMargin
-              leftIcon={<GoogleGIcon size={18} />}
-            />
-
-            <Text style={[styles.authLegalFooter, { color: cAuth.textMuted }]}>
-              By continuing you agree to our{" "}
-              <Text
-                style={[styles.authLegalLink, { color: cAuth.link }]}
-                onPress={() => setAuthLegalModal("terms")}
+            </View>
+          ) : (
+            // FIRST-TIME USER - gap 14px
+            <View style={{ gap: 14 }}>
+              {/* Primary button: height 56px, border-radius 16px, font-size 17px, font-weight 600, gap 12px */}
+              <Pressable
+                onPress={() => beginAuthAction("email")}
+                disabled={activeAuthAction !== null || !legalHydrated}
+                style={{
+                  height: 56,
+                  borderRadius: 16,
+                  backgroundColor: activeAuthAction !== null || !legalHydrated ? cAuth.primaryHover : cAuth.primary,
+                  flexDirection: "row",
+                  alignItems: "center",
+                  justifyContent: "center",
+                  gap: 12,
+                }}
               >
-                Terms of Service
-              </Text>{" "}
-              and{" "}
-              <Text
-                style={[styles.authLegalLink, { color: cAuth.link }]}
-                onPress={() => setAuthLegalModal("privacy")}
+                {/* Icon 22px */}
+                <FlareLucideIcon icon={FLARE_CHROME_LUCIDE.mail} size={22} color={cAuth.white} />
+                <Text style={{ fontSize: 17, fontFamily: "Inter_600SemiBold", color: cAuth.white }}>
+                  Continue with email
+                </Text>
+              </Pressable>
+
+              {/* Google button: height 56px, border-radius 16px, font-size 17px, font-weight 600, gap 12px, border 1.5px */}
+              <Pressable
+                onPress={() => beginAuthAction("google")}
+                disabled={activeAuthAction !== null || !legalHydrated}
+                style={[
+                  {
+                    height: 56,
+                    borderRadius: 16,
+                    flexDirection: "row",
+                    alignItems: "center",
+                    justifyContent: "center",
+                    gap: 12,
+                    borderWidth: 1.5,
+                  },
+                  cAuth.isDark
+                    ? { backgroundColor: "#1C242B", borderColor: "#5E727E" }
+                    : { backgroundColor: "#0D234B", borderColor: "transparent" },
+                ]}
               >
-                Privacy Policy
+                {/* Icon 22px */}
+                <GoogleGIcon size={22} />
+                <Text style={{ fontSize: 17, fontFamily: "Inter_600SemiBold", color: cAuth.white }}>
+                  {activeAuthAction === "google" ? "Loading..." : "Continue with Google"}
+                </Text>
+              </Pressable>
+
+              {/* Footer: font-size 12.5px, line-height 1.5 (18.75), padding 4px 10px 0 */}
+              <Text
+                style={{
+                  paddingTop: 4,
+                  paddingHorizontal: 10,
+                  fontSize: 12.5,
+                  lineHeight: 18.75,
+                  fontFamily: "Inter_400Regular",
+                  textAlign: "center",
+                  color: cAuth.textSecondary,
+                }}
+              >
+                By continuing you agree to our{"\n"}
+                <Text
+                  style={{ fontFamily: "Inter_600SemiBold", color: cAuth.link }}
+                  onPress={() => setAuthLegalModal("terms")}
+                >
+                  Terms of Service
+                </Text>{" "}
+                and{" "}
+                <Text
+                  style={{ fontFamily: "Inter_600SemiBold", color: cAuth.link }}
+                  onPress={() => setAuthLegalModal("privacy")}
+                >
+                  Privacy Policy
+                </Text>
+                .
               </Text>
-              .
-            </Text>
-          </View>
-        )}
+            </View>
+          )}
+        </View>
+
+        {/* Home indicator: margin 14px 0 9px (total 23px after actions) */}
+        <View
+          style={{
+            height: 5,
+            width: 134,
+            borderRadius: 3,
+            backgroundColor: cAuth.text,
+            opacity: 0.85,
+            alignSelf: "center",
+            marginTop: 14,
+            marginBottom: Math.max(insets.bottom, 9),
+          }}
+        />
 
         <SlideUpSheet visible={legalConsentVisible} onClose={closeLegalConsentSheet}>
           <View style={styles.authLegalSheetBody}>
@@ -5765,41 +5851,8 @@ const styles = StyleSheet.create({
     fontSize: 16,
     lineHeight: 24,
     fontFamily: "Inter_400Regular",
-    /** Section air above CTAs — matches `authSecureNote` below. */
     marginBottom: 28,
   },
-  /** NEW REBUILT AUTH LANDING STYLES */
-  authLandingTop: {
-    alignItems: "center",
-    marginTop: 20,
-  },
-  authLandingTaglineNew: {
-    textAlign: "center",
-    fontSize: 18,
-    lineHeight: 26,
-    fontFamily: "Inter_400Regular",
-  },
-  authLandingBottom: {
-    width: "100%",
-    gap: 12,
-  },
-  authWelcomeBack: {
-    fontSize: 18,
-    fontFamily: "Inter_500Medium",
-    textAlign: "center",
-    marginBottom: 4,
-  },
-  authFallbackLink: {
-    alignSelf: "center",
-    marginTop: 4,
-    paddingVertical: 6,
-  },
-  authFallbackLinkText: {
-    fontSize: 15,
-    fontFamily: "Inter_500Medium",
-    textAlign: "center",
-  },
-  /** END NEW STYLES */
   authMethodActions: {
     marginTop: 18,
     gap: 10,
