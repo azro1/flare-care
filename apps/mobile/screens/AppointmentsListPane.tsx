@@ -138,97 +138,75 @@ export function AppointmentsListPane({
   const listEmpty = !loading && visibleRows.length === 0;
 
   const listBody = (
-    <View style={[styles.screen, { backgroundColor: c.screen }]}>
-      <ScrollView style={styles.scroll} contentContainerStyle={[styles.scrollContent, { paddingBottom: showFab ? scrollPadding : Math.max(insets.bottom, 16) + 24 }]}>
-        {showListLoading ? (
-          <View style={styles.loadingWrap}>
-            <ActivityIndicator size="small" color={c.primary} />
+    <>
+      {showListLoading ? (
+        <View style={styles.loadingWrap}>
+          <ActivityIndicator size="small" color={c.primary} />
+        </View>
+      ) : listEmpty ? (
+        <Card>
+          <View style={styles.emptyWrap}>
+            <FlareLucideIcon icon={APPOINTMENTS_FEATURE_ICON} size={40} color={c.textSecondary} />
+            <Text style={[styles.emptyText, { color: c.textSecondary, fontFamily: TYPOGRAPHY.fontFamily.regular }]}>No appointments yet.</Text>
           </View>
-        ) : listEmpty ? (
-          <Card>
-            <View style={styles.emptyWrap}>
-              <FlareLucideIcon icon={APPOINTMENTS_FEATURE_ICON} size={40} color={c.textSecondary} />
-              <Text style={[styles.emptyText, { color: c.textSecondary, fontFamily: TYPOGRAPHY.fontFamily.regular }]}>No appointments yet.</Text>
-            </View>
+        </Card>
+      ) : (
+        <>
+          <Card noPadding style={{ paddingVertical: SPACING.sm, paddingHorizontal: SPACING.md }}>
+            {aptListItems.map((row) => {
+              const dateLine = [formatUkDateShort(row.date), row.time?.trim()].filter(Boolean).join(" · ");
+              const hasReminder = appointmentHasReminder(row);
+              const reminderLabel = hasReminder ? reminderListLabelFromMinutes(row.reminder_minutes_before) : null;
+              const sublabel = reminderLabel ? `${dateLine} · ${reminderLabel}` : dateLine;
+              return (
+                <TrayRow
+                  key={row.id}
+                  icon={FLARE_FEATURE_LUCIDE.appointments}
+                  label={row.type?.trim() || "Appointment"}
+                  sublabel={sublabel}
+                  showChevron
+                  onPress={() => navigation.navigate("AppointmentDetail", { id: String(row.id) })}
+                  onLongPress={selectionMode ? undefined : () => enterSelectionWith(String(row.id))}
+                />
+              );
+            })}
           </Card>
-        ) : (
-          <>
-            <Card noPadding style={{ paddingVertical: SPACING.sm, paddingHorizontal: SPACING.md }}>
-              {aptListItems.map((row) => {
-                const dateLine = [formatUkDateShort(row.date), row.time?.trim()].filter(Boolean).join(" · ");
-                const hasReminder = appointmentHasReminder(row);
-                const reminderLabel = hasReminder ? reminderListLabelFromMinutes(row.reminder_minutes_before) : null;
-                const sublabel = reminderLabel ? `${dateLine} · ${reminderLabel}` : dateLine;
-                return (
-                  <TrayRow
-                    key={row.id}
-                    icon={FLARE_FEATURE_LUCIDE.appointments}
-                    label={row.type?.trim() || "Appointment"}
-                    sublabel={sublabel}
-                    showChevron
-                    onPress={() => navigation.navigate("AppointmentDetail", { id: String(row.id) })}
-                    onLongPress={selectionMode ? undefined : () => enterSelectionWith(String(row.id))}
-                  />
-                );
-              })}
-            </Card>
 
-            {hasMore ? (
-              <Pressable accessibilityRole="button" onPress={loadMore} style={({ pressed }) => [styles.loadMore, pressed && { opacity: 0.7 }]}>
-                <Text style={[styles.loadMoreText, { color: c.primary, fontFamily: TYPOGRAPHY.fontFamily.medium }]}>load more</Text>
-              </Pressable>
-            ) : null}
-          </>
-        )}
+          {hasMore ? (
+            <Pressable accessibilityRole="button" onPress={loadMore} style={({ pressed }) => [styles.loadMore, pressed && { opacity: 0.7 }]}>
+              <Text style={[styles.loadMoreText, { color: c.primary, fontFamily: TYPOGRAPHY.fontFamily.medium }]}>load more</Text>
+            </Pressable>
+          ) : null}
+        </>
+      )}
 
-        {onSummaryPress && !selectionMode ? (
-          <Pressable accessibilityRole="button" accessibilityLabel="Appointment Summary" onPress={onSummaryPress} style={({ pressed }) => [styles.summaryLink, pressed && { opacity: 0.85 }]}>
-            <Text style={[styles.summaryLinkText, { color: c.text, fontFamily: TYPOGRAPHY.fontFamily.regular }]}>Appointment Summary</Text>
-            <FlareLucideIcon icon={FLARE_CHROME_LUCIDE.forward} size={18} color={c.textSecondary} />
-          </Pressable>
-        ) : null}
-      </ScrollView>
+      {onSummaryPress && !selectionMode ? (
+        <Pressable accessibilityRole="button" accessibilityLabel="Appointment Summary" onPress={onSummaryPress} style={({ pressed }) => [styles.summaryLink, pressed && { opacity: 0.85 }]}>
+          <Text style={[styles.summaryLinkText, { color: c.text, fontFamily: TYPOGRAPHY.fontFamily.regular }]}>Appointment Summary</Text>
+          <FlareLucideIcon icon={FLARE_CHROME_LUCIDE.forward} size={18} color={c.textSecondary} />
+        </Pressable>
+      ) : null}
 
-      {showFab && !selectionMode && onAddPress ? <TrackerThumbFab accessibilityLabel="Add appointment" onPress={onAddPress} bottom={fabBottom} right={fabRight} /> : null}
-    </View>
-  );
-
-  const deleteModal = (
-    <ConfirmModal
-      visible={bulkDeleteOpen}
-      title={selectedIds.size === 1 ? "Delete appointment?" : `Delete ${selectedIds.size} appointments?`}
-      message="This appointment will be removed. This action cannot be undone."
-      confirmLabel={bulkDeleting ? "Deleting…" : "Delete"}
-      confirmDanger
-      onConfirm={handleBulkDeleteConfirm}
-      onCancel={() => setBulkDeleteOpen(false)}
-    />
+      <ConfirmModal
+        visible={bulkDeleteOpen}
+        title={selectedIds.size === 1 ? "Delete appointment?" : `Delete ${selectedIds.size} appointments?`}
+        message="This appointment will be removed. This action cannot be undone."
+        confirmLabel={bulkDeleting ? "Deleting…" : "Delete"}
+        confirmDanger
+        onConfirm={handleBulkDeleteConfirm}
+        onCancel={() => setBulkDeleteOpen(false)}
+      />
+    </>
   );
 
   if (embedded) {
-    return (
-      <>
-        {listBody}
-        {deleteModal}
-      </>
-    );
+    return listBody;
   }
 
-  return (
-    <>
-      {listBody}
-      {deleteModal}
-    </>
-  );
+  return listBody;
 }
 
 const styles = StyleSheet.create({
-  screen: { flex: 1 },
-  scroll: { flex: 1 },
-  scrollContent: {
-    paddingHorizontal: SPACING.screen,
-    paddingTop: SPACING.lg,
-  },
   loadingWrap: {
     paddingVertical: 24,
     alignItems: "center",
