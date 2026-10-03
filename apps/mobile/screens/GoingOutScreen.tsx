@@ -17,8 +17,9 @@ import {
 import { useNavigation } from "@react-navigation/native";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { SecondaryButton } from "../components/FlareButton";
+import { Card } from "../components/MidnightLagoonCard";
+import { ScreenHeader } from "../components/MidnightLagoonScreenHeader";
 import { ConfirmModal } from "../components/ConfirmModal";
-import { LogHistoryCard } from "../components/LogHistoryList";
 import { FLARE_CHROME_LUCIDE, FlareLucideIcon } from "../lib/flareLucideIcons";
 import { SPACING, TYPOGRAPHY } from "../designTokens";
 import {
@@ -308,9 +309,11 @@ export function GoingOutScreen({ userId }: Props) {
           keyboardShouldPersistTaps="handled"
           keyboardDismissMode="interactive"
         >
-          <LogHistoryCard style={styles.shellCard}>
-            <Text style={[styles.lead, { color: c.text }]}>Edit checklist</Text>
-            <Text style={[styles.support, { color: c.textMuted }]}>
+          <ScreenHeader title="Going Out" />
+          
+          <Card style={styles.shellCard}>
+            <Text style={[styles.lead, { color: c.text, fontFamily: TYPOGRAPHY.fontFamily.bold }]}>Edit checklist</Text>
+            <Text style={[styles.support, { color: c.textMuted, fontFamily: TYPOGRAPHY.fontFamily.regular }]}>
               Choose the items you want on your Going Out checklist. Add your own items or remove
               anything you don't need. Changes save as you go.
             </Text>
@@ -485,7 +488,7 @@ export function GoingOutScreen({ userId }: Props) {
                 </Pressable>
               </View>
             ) : null}
-          </LogHistoryCard>
+          </Card>
         </ScrollView>
 
         <ConfirmModal
@@ -509,9 +512,11 @@ export function GoingOutScreen({ userId }: Props) {
       contentContainerStyle={[styles.content, { paddingBottom: bottomScrollInset + 24 }]}
       keyboardShouldPersistTaps="handled"
     >
-      <LogHistoryCard style={styles.shellCard}>
-        <Text style={[styles.lead, { color: c.text }]}>Checklist</Text>
-        <Text style={[styles.support, { color: c.textMuted }]}>
+      <ScreenHeader title="Going Out" />
+      
+      <Card style={styles.shellCard}>
+        <Text style={[styles.lead, { color: c.text, fontFamily: TYPOGRAPHY.fontFamily.bold }]}>Checklist</Text>
+        <Text style={[styles.support, { color: c.textMuted, fontFamily: TYPOGRAPHY.fontFamily.regular }]}>
           Tick off as you go. Change what appears here anytime in your checklist.
         </Text>
 
@@ -553,7 +558,7 @@ export function GoingOutScreen({ userId }: Props) {
             );
           })}
         </View>
-      </LogHistoryCard>
+      </Card>
 
       <SecondaryButton
         title="Edit checklist"
