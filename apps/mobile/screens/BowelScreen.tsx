@@ -1,11 +1,12 @@
-import { FLARE_CHROME_LUCIDE, FlareLucideIcon } from "../lib/flareLucideIcons";
+import { FLARE_CHROME_LUCIDE, FlareLucideIcon, FLARE_FEATURE_LUCIDE } from "../lib/flareLucideIcons";
 import DateTimePicker from "@react-native-community/datetimepicker";
 import { useFocusEffect, useNavigation, useRoute } from "@react-navigation/native";
 import { yupResolver } from "@hookform/resolvers/yup";
 import React, { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { useForm } from "react-hook-form";
 import {
-    KeyboardAvoidingView,
+  ActivityIndicator,
+  KeyboardAvoidingView,
   Modal,
   Platform,
   Pressable,
@@ -18,42 +19,19 @@ import { showFlareAlert } from "../components/FlareAlertHost";
 import { ScrollView } from "../lib/scrollViews";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 import type { BowelReturnParams, BristolGuideParams } from "./BristolGuideScreen";
-import {
-  FLARE_BUTTON_BORDER_RADIUS,
-  FLARE_BUTTON_MIN_HEIGHT,
-  FLARE_BUTTON_PADDING_H,
-  PrimaryButton,
-  SecondaryButton,
-} from "../components/FlareButton";
-import {
-  FLARE_INPUT_BORDER_RADIUS,
-  flareFieldErrorStyle,
-  FlareTextInput,
-} from "../components/FlareInput";
-import {
-  LogHistoryCard,
-  LogHistoryListLoading,
-  LogHistoryEmptyState,
-  LogHistoryPreviewList,
-  LOG_HISTORY_LOAD_MORE_BATCH,
-  buildTimestampLogRowItem,
-  logHistoryCardStyles,
-  LogHistoryListQuietPlaceholder,
-} from "../components/LogHistoryList";
+import { Card } from "../components/MidnightLagoonCard";
+import { TrayRow } from "../components/MidnightLagoonTray";
+import { ScreenHeader } from "../components/MidnightLagoonScreenHeader";
+import { FLARE_BUTTON_BORDER_RADIUS, FLARE_BUTTON_MIN_HEIGHT, FLARE_BUTTON_PADDING_H, PrimaryButton, SecondaryButton } from "../components/FlareButton";
+import { FLARE_INPUT_BORDER_RADIUS, flareFieldErrorStyle, FlareTextInput } from "../components/FlareInput";
 import { TrackerThumbFab, useTrackerThumbFabLayout } from "../components/TrackerThumbFab";
 import { ConfirmModal } from "../components/ConfirmModal";
 import { InfoHintButton } from "../components/InfoHintButton";
-import { InstructionScreenShell } from "../components/InstructionScreenShell";
 import { usePaginatedLogList } from "../lib/paginatedLogList";
 import { useDeferredListLoading } from "../lib/useDeferredListLoading";
 import { STACKED_DETAIL_ROW_EDGE } from "../components/StackedDetailField";
 import { FlareScreenSectionTitle } from "../components/FlareScreenSectionTitle";
-import {
-  BRISTOL_TYPES,
-  formatBristolDetailLabel,
-  formatBristolTypeOnly,
-  getBristolTypeMeta,
-} from "../lib/bristolStoolChart";
+import { BRISTOL_TYPES, formatBristolDetailLabel, formatBristolTypeOnly, getBristolTypeMeta } from "../lib/bristolStoolChart";
 import {
   BOWEL_FEATURE_ICON,
   snapTimeHmFromDate,
@@ -71,19 +49,14 @@ import { bowelLogFormSchema } from "../lib/bowelLogFormSchema";
 import { invalidateDashboardSnapshot } from "../lib/dashboardSnapshotCache";
 import { recordRecentActivityEvent } from "../lib/recentActivityEvents";
 import { useLogListSelection } from "../lib/useLogListSelection";
-import {
-  FLARE_FONT_FAMILY,
-  FLARE_FONT_SIZE,
-  FLARE_LINE_HEIGHT,
-  CARD_SECTION_INNER_GAP,
-  NAV_ROW_CHEVRON_SIZE,
-  SCREEN_EDGE_PADDING,
-  TIME_PICKER_MINUTE_INTERVAL,
-  bottomTabBarHeight,
-} from "../lib/layoutConstants";
+import { FLARE_FONT_FAMILY, FLARE_FONT_SIZE, FLARE_LINE_HEIGHT, CARD_SECTION_INNER_GAP, NAV_ROW_CHEVRON_SIZE, SCREEN_EDGE_PADDING, TIME_PICKER_MINUTE_INTERVAL, bottomTabBarHeight } from "../lib/layoutConstants";
+import { SPACING, TYPOGRAPHY } from "../designTokens";
 import { formatUkDate } from "../lib/formatUkDate";
 import { supabase, TABLES } from "../lib/supabase";
 import { useFlareColors } from "../theme";
+
+const LOG_HISTORY_LOAD_MORE_BATCH = 15;
+const BOWEL_FEATURE_LUCIDE = FLARE_FEATURE_LUCIDE.bowel;
 
 type SessionUser = { id: string };
 
@@ -617,85 +590,107 @@ export function BowelScreen({ user }: { user: SessionUser }) {
   const listInitialLoad = historyLoading && historyRows.length === 0;
   const showListLoading = useDeferredListLoading(listInitialLoad);
   const historyEmpty = !historyLoading && historyTotalCount === 0;
-  const scrollBottomPadTotal = selectionMode ? tabBarClearance : scrollBottomPad;
+  const scrollBottomPadTotal = selectionMode ? Math.max(insets.bottom, 16) + 24 : scrollBottomPad;
 
   return (
-    <InstructionScreenShell
-      showInstruction={false}
-      contentPaddingBottom={scrollBottomPadTotal}
-      instruction={null}
-      floatingAction={
-        !selectionMode ? (
+    <>
+      <View style={[stylesScreen.screen, { backgroundColor: c.screen }]}>
+        <ScrollView
+          style={stylesScreen.scroll}
+          contentContainerStyle={[
+            stylesScreen.scrollContent,
+            { paddingBottom: scrollBottomPadTotal },
+          ]}
+        >
+          <ScreenHeader title="Bowel Movements" />
+
+          {showListLoading ? (
+            <View style={stylesScreen.loadingWrap}>
+              <ActivityIndicator size="small" color={c.primary} />
+            </View>
+          ) : historyEmpty ? (
+            <Card>
+              <View style={stylesScreen.emptyWrap}>
+                <FlareLucideIcon icon={BOWEL_FEATURE_LUCIDE} size={40} color={c.textSecondary} />
+                <Text style={[stylesScreen.emptyText, { color: c.textSecondary, fontFamily: FLARE_FONT_FAMILY.regular }]}>
+                  No bowel movements logged yet.
+                </Text>
+              </View>
+            </Card>
+          ) : (
+            <>
+              <Card noPadding style={{ paddingVertical: 12, paddingHorizontal: 14 }}>
+                {historyRows.slice(0, historyVisibleCount).map((row) => {
+                  const meta = getBristolTypeMeta(row.bristol_type);
+                  const label = meta?.shortLabel ?? formatBristolTypeOnly(row.bristol_type);
+                  const timestamp = new Date(row.created_at).toLocaleTimeString("en-GB", {
+                    hour: "2-digit",
+                    minute: "2-digit",
+                  });
+                  return (
+                    <TrayRow
+                      key={row.id}
+                      icon={BOWEL_FEATURE_ICON}
+                      label={label}
+                      value={timestamp}
+                      showChevron
+                      onPress={() => navigation.navigate("BowelLogDetail", { id: row.id })}
+                      onLongPress={selectionMode ? undefined : () => enterSelectionWith(row.id)}
+                    />
+                  );
+                })}
+              </Card>
+
+              {historyHasMore ? (
+                <Pressable
+                  accessibilityRole="button"
+                  onPress={() => void loadMoreHistory()}
+                  style={({ pressed }) => [stylesScreen.loadMore, pressed && { opacity: 0.7 }]}
+                >
+                  <Text style={[stylesScreen.loadMoreText, { color: c.primary, fontFamily: FLARE_FONT_FAMILY.medium }]}>
+                    {historyLoadingMore ? "loading…" : "load more"}
+                  </Text>
+                </Pressable>
+              ) : null}
+            </>
+          )}
+        </ScrollView>
+
+        {!selectionMode ? (
           <TrackerThumbFab
             accessibilityLabel="Log bowel movement"
             onPress={openNewLog}
-            tabBarClearance={tabBarClearance}
+            bottom={tabBarClearance + 16}
+            right={16}
           />
-        ) : null
-      }
-      footer={
-        <>
-          <ConfirmModal
-            visible={bulkDeleteOpen}
-            title={selectedIds.size === 1 ? "Delete bowel log?" : `Delete ${selectedIds.size} bowel logs?`}
-            message="This action cannot be undone."
-            confirmLabel={bulkDeleting ? "Deleting…" : "Delete"}
-            confirmDestructive
-            onConfirm={handleBulkDeleteConfirm}
-            onCancel={() => setBulkDeleteOpen(false)}
-          />
-          {sheetOpen ? (
-            <BowelLogSheet
-              visible={sheetOpen}
-              editingId={editingId}
-              initialValues={form}
-              saving={saving}
-              saveError={saveError}
-              showOptional={showOptional}
-              setShowOptional={setShowOptional}
-              onClose={closeSheet}
-              onSave={handleSave}
-              onOpenGuide={(highlightedType) => openGuide(true, highlightedType)}
-            />
-          ) : null}
-        </>
-      }
-    >
-      <LogHistoryCard>
-        <View style={logHistoryCardStyles.trackerCardBody}>
-          {showListLoading ? (
-            <LogHistoryListLoading />
-          ) : listInitialLoad ? (
-            <LogHistoryListQuietPlaceholder />
-          ) : historyEmpty ? (
-            <LogHistoryEmptyState icon={BOWEL_FEATURE_ICON} />
-          ) : (
-            <LogHistoryPreviewList
-              items={historyRows.map((row) => {
-                const meta = getBristolTypeMeta(row.bristol_type);
-                return buildTimestampLogRowItem({
-                  id: row.id,
-                  title: meta?.shortLabel ?? formatBristolTypeOnly(row.bristol_type),
-                  whenIso: row.created_at,
-                  accessibilityLabel: `${formatBristolDetailLabel(row.bristol_type)}. View details`,
-                });
-              })}
-              visibleCount={historyVisibleCount}
-              hasMore={historyHasMore}
-              loadingMore={historyLoadingMore}
-              loadMoreLabel="load more"
-              onLoadMore={() => void loadMoreHistory()}
-              rowTextLayout="default"
-              onPressItem={(logId) => navigation.navigate("BowelLogDetail", { id: logId })}
-              selectionMode={selectionMode}
-              selectedIds={selectedIds}
-              onToggleSelect={toggleSelect}
-              onLongPressItem={enterSelectionWith}
-            />
-          )}
-        </View>
-      </LogHistoryCard>
-    </InstructionScreenShell>
+        ) : null}
+      </View>
+
+      <ConfirmModal
+        visible={bulkDeleteOpen}
+        title={selectedIds.size === 1 ? "Delete bowel log?" : `Delete ${selectedIds.size} bowel logs?`}
+        message="This action cannot be undone."
+        confirmLabel={bulkDeleting ? "Deleting…" : "Delete"}
+        confirmDanger
+        onConfirm={handleBulkDeleteConfirm}
+        onCancel={() => setBulkDeleteOpen(false)}
+      />
+
+      {sheetOpen ? (
+        <BowelLogSheet
+          visible={sheetOpen}
+          editingId={editingId}
+          initialValues={form}
+          saving={saving}
+          saveError={saveError}
+          showOptional={showOptional}
+          setShowOptional={setShowOptional}
+          onClose={closeSheet}
+          onSave={handleSave}
+          onOpenGuide={(highlightedType) => openGuide(true, highlightedType)}
+        />
+      ) : null}
+    </>
   );
 }
 
@@ -802,4 +797,33 @@ const styles = StyleSheet.create({
   saveError: { marginBottom: 8 },
   sheetActions: { marginTop: STACKED_DETAIL_ROW_EDGE, gap: 8 },
   fieldErrorBelowSection: { marginTop: 6, marginBottom: 8 },
+});
+
+const stylesScreen = StyleSheet.create({
+  screen: { flex: 1 },
+  scroll: { flex: 1 },
+  scrollContent: {
+    paddingHorizontal: SPACING.screen,
+    paddingTop: 56,
+  },
+  loadingWrap: {
+    paddingVertical: 24,
+    alignItems: "center",
+  },
+  emptyWrap: {
+    alignItems: "center",
+    paddingVertical: SPACING.xl,
+    gap: SPACING.md,
+  },
+  emptyText: {
+    fontSize: TYPOGRAPHY.fontSize.md,
+    textAlign: "center",
+  },
+  loadMore: {
+    paddingVertical: SPACING.md,
+    alignItems: "center",
+  },
+  loadMoreText: {
+    fontSize: TYPOGRAPHY.fontSize.sm,
+  },
 });
