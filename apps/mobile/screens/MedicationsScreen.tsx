@@ -199,15 +199,31 @@ export function MedicationSheet({
               <Text style={[styles.reminderLabel, { color: c.text, fontFamily: TYPOGRAPHY.fontFamily.regular }]}>Daily reminder</Text>
               <Pressable
                 accessibilityRole="switch"
-                accessibilityState={{ checked: form.reminderEnabled }}
-                onPress={() => setField("reminderEnabled", !form.reminderEnabled)}
-                style={[styles.switch, form.reminderEnabled ? { backgroundColor: c.primary } : { backgroundColor: c.inputBorder }]}
+                accessibilityState={{ checked: form.timeOfDay.trim() !== "" && form.timeOfDay !== "as-needed" }}
+                onPress={() => {
+                  const currentlyEnabled = form.timeOfDay.trim() !== "" && form.timeOfDay !== "as-needed";
+                  setField("timeOfDay", currentlyEnabled ? "" : "09:00");
+                }}
+                style={[
+                  styles.switch,
+                  (form.timeOfDay.trim() !== "" && form.timeOfDay !== "as-needed")
+                    ? { backgroundColor: c.primary }
+                    : { backgroundColor: c.inputBorder }
+                ]}
               >
-                <View style={[styles.switchThumb, { backgroundColor: c.white, transform: [{ translateX: form.reminderEnabled ? 20 : 0 }] }]} />
+                <View
+                  style={[
+                    styles.switchThumb,
+                    {
+                      backgroundColor: c.white,
+                      transform: [{ translateX: (form.timeOfDay.trim() !== "" && form.timeOfDay !== "as-needed") ? 20 : 0 }]
+                    }
+                  ]}
+                />
               </Pressable>
             </View>
 
-            {form.reminderEnabled ? (
+            {form.timeOfDay.trim() !== "" && form.timeOfDay !== "as-needed" ? (
               <Pressable
                 accessibilityRole="button"
                 onPress={() => {
@@ -226,8 +242,8 @@ export function MedicationSheet({
             ) : null}
 
             <View style={styles.sheetActions}>
-              <PrimaryButton label={saving ? "Saving..." : "Save"} onPress={handleSavePress} disabled={saving} />
-              <SecondaryButton label="Cancel" onPress={onClose} disabled={saving} />
+              <PrimaryButton title={saving ? "Saving..." : "Save"} onPress={handleSavePress} disabled={saving} />
+              <SecondaryButton title="Cancel" onPress={onClose} disabled={saving} />
             </View>
           </ScrollView>
         </KeyboardAvoidingView>
@@ -261,9 +277,7 @@ export function MedicationSheet({
 
       <OptionPickerModal
         visible={frequencyPickerOpen}
-        title="How often"
         options={FREQUENCY_PICKER_OPTIONS}
-        selectedOption={form.frequencyMode === "preset" ? form.frequency : "Custom frequency…"}
         onSelect={(opt) => {
           if (opt === "Custom frequency…") {
             setField("frequencyMode", "custom");
@@ -275,7 +289,7 @@ export function MedicationSheet({
           }
           setFrequencyPickerOpen(false);
         }}
-        onClose={() => setFrequencyPickerOpen(false)}
+        onCancel={() => setFrequencyPickerOpen(false)}
       />
     </>
   );
@@ -285,20 +299,25 @@ export function MedicationsScreen({ user }: { user: SessionUser }) {
   const c = useFlareColors();
   const navigation = useNavigation<any>();
   const insets = useSafeAreaInsets();
-  const { fabBottom, fabRight, scrollPadding } = useTrackerThumbFabLayout();
+  const { fabBottom, fabInsetRight, scrollBottomPad } = useTrackerThumbFabLayout();
 
-  const { medications, loading: dataLoading, error, reload } = useMedicationsList(user.id);
+  const { meds: medications, loading: dataLoading, load } = useMedicationsList(user.id);
   const listLoading = useDeferredListLoading(dataLoading);
+  const error = "";
 
   const [sheetVisible, setSheetVisible] = useState(false);
   const [editingId, setEditingId] = useState<number | null>(null);
   const [sheetInitial, setSheetInitial] = useState<MedicationFormState>(emptyMedicationFormState());
   const [saving, setSaving] = useState(false);
   const [saveError, setSaveError] = useState("");
-  const [deleteConfirmOpen, setDeleteConfirmOpen] = useState(false);
-  const [deleting, setDeleting] = useState(false);
 
-  const { selection, toggleSelection, clearSelection, selectionActive } = useLogListSelection();
+  const medIds = medications.map((m) => String(m.id));
+  const selection = useLogListSelection({
+    routeName: "My Meds",
+    itemIds: medIds,
+    navigation,
+    headerTitle: "My Meds",
+  });
 
   const [expandedCount, setExpandedCount] = useState(() => getMedsListExpandedCount(user.id));
 
@@ -309,7 +328,7 @@ export function MedicationsScreen({ user }: { user: SessionUser }) {
     }, [user.id]),
   );
 
-  const activeMeds = useMemo(() => medications.filter((m) => !m.archived && !m.paused), [medications]);
+  const activeMeds = useMemo(() => medications, [medications]);
 
   const visibleCount = useMemo(() => {
     if (activeMeds.length === 0) return LOAD_MORE_BATCH;
@@ -339,11 +358,11 @@ export function MedicationsScreen({ user }: { user: SessionUser }) {
     setEditingId(id);
     setSheetInitial({
       name: med.name,
-      dosage: String(med.dosage_mg),
-      frequencyMode: med.frequency_mode,
-      frequency: med.frequency,
-      reminderEnabled: medicationHasReminder(med),
-      timeOfDay: med.reminder_time_of_day ?? "08:00",
+      dosage: med.dosage ?? "",
+      frequencyMode: "preset",
+      frequency: med.frequency ?? "Once daily",
+      timeOfDay: med.time_of_day ?? "08:00",
+      notes: med.notes ?? "",
     });
     setSaveError("");
     setSheetVisible(true);
@@ -363,15 +382,14 @@ export function MedicationsScreen({ user }: { user: SessionUser }) {
             .eq("user_id", user.id);
           if (updateError) throw updateError;
         } else {
-          const payload = medicationPayloadFromForm(user.id, values);
+          const payload = medicationPayloadFromForm(values, user.id);
           const { error: insertError } = await supabase.from(TABLES.MEDICATIONS).insert(payload);
           if (insertError) throw insertError;
         }
         invalidateMedicationsListCache(user.id);
         invalidateDashboardSnapshot(user.id);
-        await rescheduleLocalRemindersIfGranted();
-        void reload();
-        recordRecentActivityEvent(user.id, "medication", editingId ? "edit" : "add");
+        await rescheduleLocalRemindersIfGranted(user.id);
+        void load();
         setSheetVisible(false);
       } catch (err: any) {
         setSaveError(err?.message ?? "Save failed.");
@@ -379,7 +397,7 @@ export function MedicationsScreen({ user }: { user: SessionUser }) {
         setSaving(false);
       }
     },
-    [editingId, user.id, reload],
+    [editingId, load, user.id],
   );
 
   const handleMarkTaken = useCallback(
@@ -391,33 +409,25 @@ export function MedicationsScreen({ user }: { user: SessionUser }) {
           .insert({ user_id: user.id, medication_id: id, taken_date: today });
         if (insertError) throw insertError;
         invalidateDashboardSnapshot(user.id);
-        showFlareAlert({ message: "Marked as taken today.", duration: 2000 });
+        showFlareAlert("Marked as taken today");
       } catch (err: any) {
-        showFlareAlert({ message: err?.message ?? "Failed to mark as taken.", duration: 3000 });
+        showFlareAlert(err?.message ?? "Failed to mark as taken");
       }
     },
     [user.id],
   );
 
-  const handleDeleteSelected = useCallback(async () => {
-    if (selection.size === 0) return;
-    setDeleting(true);
-    try {
-      await deleteMedicationsForUser(user.id, Array.from(selection));
+  const handleDeleteSelected = useCallback(() => {
+    void selection.runBulkDelete(async (ids) => {
+      await deleteMedicationsForUser(user.id, ids.map((id) => Number.parseInt(id, 10)));
       invalidateDashboardSnapshot(user.id);
-      void reload();
-      clearSelection();
-      setDeleteConfirmOpen(false);
-    } catch {
-      showFlareAlert({ message: "Delete failed.", duration: 3000 });
-    } finally {
-      setDeleting(false);
-    }
-  }, [selection, user.id, reload, clearSelection]);
+      await load();
+    });
+  }, [selection, user.id, load]);
 
   return (
     <View style={[styles.screen, { backgroundColor: c.screen }]}>
-      <ScrollView style={styles.scroll} contentContainerStyle={[styles.scrollContent, { paddingBottom: scrollPadding }]}>
+      <ScrollView style={styles.scroll} contentContainerStyle={[styles.scrollContent, { paddingBottom: scrollBottomPad }]}>
         <ScreenHeader title="My Meds" />
         {listLoading ? (
           <View style={styles.loadingWrap}>
@@ -442,7 +452,7 @@ export function MedicationsScreen({ user }: { user: SessionUser }) {
                 <TrayRow
                   key={med.id}
                   icon={FLARE_FEATURE_LUCIDE.meds}
-                  label={`${med.name} ${med.dosage_mg}mg`}
+                  label={`${med.name}${med.dosage ? ` ${med.dosage}` : ""}`}
                   sublabel={medicationListSubtitle(med)}
                   showChevron
                   onPress={() => navigation.navigate("MedicationDetail", { medicationId: med.id })}
@@ -465,7 +475,7 @@ export function MedicationsScreen({ user }: { user: SessionUser }) {
         )}
       </ScrollView>
 
-      <TrackerThumbFab icon={MY_MEDS_ICON} onPress={openAddSheet} bottom={fabBottom} right={fabRight} />
+      <TrackerThumbFab accessibilityLabel="Add medication" onPress={openAddSheet} />
 
       <MedicationSheet
         visible={sheetVisible}
@@ -478,15 +488,14 @@ export function MedicationsScreen({ user }: { user: SessionUser }) {
       />
 
       <ConfirmModal
-        visible={deleteConfirmOpen}
+        visible={selection.bulkDeleteOpen}
         title="Delete medications"
-        message={`Delete ${selection.size} medication${selection.size === 1 ? "" : "s"}?`}
+        message={`Delete ${selection.selectedIds.size} medication${selection.selectedIds.size === 1 ? "" : "s"}?`}
         confirmLabel="Delete"
         cancelLabel="Cancel"
         confirmDanger
         onConfirm={handleDeleteSelected}
-        onCancel={() => setDeleteConfirmOpen(false)}
-        working={deleting}
+        onCancel={() => selection.setBulkDeleteOpen(false)}
       />
     </View>
   );
