@@ -12,12 +12,16 @@ import {
   StyleSheet,
   Switch,
   Text,
-  useWindowDimensions,
   View,
   type ScrollView as RNScrollView,
 } from "react-native";
 import { showFlareAlert } from "../components/FlareAlertHost";
 import { ScrollView } from "../lib/scrollViews";
+import { Card } from "../components/MidnightLagoonCard";
+import { SectionLabel } from "../components/MidnightLagoonSectionLabel";
+import { OptionChip } from "../components/OptionChip";
+import { NumberStepper } from "../components/NumberStepper";
+import { WizardProgressBar } from "../components/WizardProgressBar";
 import {
   WizardReviewMealsSection,
   WizardReviewNotesSection,
@@ -25,12 +29,12 @@ import {
   WizardReviewShell,
   type WizardReviewField,
 } from "../components/symptomReviewLayout";
-import { EntryPrimaryButton, PrimaryButton, SecondaryButton } from "../components/FlareButton";
-import { flareFieldErrorStyle, FlareInputTrigger, FlareTextInput } from "../components/FlareInput";
+import { PrimaryButton, SecondaryButton } from "../components/FlareButton";
+import { flareFieldErrorStyle, FlareTextInput } from "../components/FlareInput";
 import { invalidateDashboardSnapshot } from "../lib/dashboardSnapshotCache";
 import { formatUkDate } from "../lib/formatUkDate";
 import { supabase, TABLES } from "../lib/supabase";
-import { symptomWizardTryAdvance, type DateErrorsState } from "../lib/symptomWizardNextStep";
+import { symptomWizardTryAdvance } from "../lib/symptomWizardNextStep";
 import {
   buildSymptomInsertPayload,
   createEmptySymptomForm,
@@ -50,14 +54,12 @@ import {
   type UserPreferencesShape,
   updateSymptomLog,
   upsertUserPreferencesMobile,
-  wizardRatingToBand,
 } from "../lib/symptomWizardShared";
+import { SPACING, RADIUS, TYPOGRAPHY } from "../designTokens";
 import { useFlareColors } from "../theme";
-import { CARD_INNER_PADDING, FLARE_FONT_SIZE, FULL_WIDTH_CTA_EDGE_PADDING, LANDING_CTA_SIDE_PAD, QUESTIONNAIRE_STEP_FOOTER, QUESTIONNAIRE_STEP_OPTION_LIST, QUESTIONNAIRE_STEP_RADIO_ROW, QUESTIONNAIRE_STEP_SCROLL, QUESTIONNAIRE_STEP_SCROLL_BOTTOM, QUESTIONNAIRE_STEP_TITLE } from "../lib/layoutConstants";
 
 type SessionUser = { id: string };
 
-/** Cleared on leave/submit — no draft resume (matches web symptoms wizard unmount). */
 function symptomWizardStorageKeys(userId: string) {
   return [`symptom-wizard-mobile-step:${userId}`, `symptom-wizard-mobile-form:${userId}`];
 }
@@ -65,13 +67,6 @@ function symptomWizardStorageKeys(userId: string) {
 async function clearSymptomWizardStorage(userId: string) {
   await AsyncStorage.multiRemove(symptomWizardStorageKeys(userId));
 }
-
-/** Example wording aligned with web `src/app/symptoms/page.js` helper `<p>` copy — mobile uses as input placeholders only */
-const PLACEHOLDER_BATHROOM_CHANGE_EXAMPLE = "e.g. more often, blood, or loose stools";
-const PLACEHOLDER_SMOKE_DAY_AMOUNT_EXAMPLE = "e.g. 3 cigarettes or 1 cigar";
-const PLACEHOLDER_SMOKE_AMOUNT_RETURNING_EXAMPLE = "e.g. 5 cigarettes or 1 cigar";
-const PLACEHOLDER_SMOKING_HABITS_EXAMPLE = "e.g. 1 pack of cigarettes per day";
-const PLACEHOLDER_ALCOHOL_UNITS_EXAMPLE = "e.g. 0.5 or 2";
 
 function cloneForm(f: SymptomFormData): SymptomFormData {
   return JSON.parse(JSON.stringify(f)) as SymptomFormData;
@@ -89,7 +84,6 @@ function parseYmd(s: string): Date {
   return Number.isNaN(d.getTime()) ? new Date() : d;
 }
 
-/** Android date dialog: Cancel fires `onChange` with `type: "dismissed"` — must not commit a date. */
 function isAndroidDatePickerDismissed(event: { type?: string }): boolean {
   return Platform.OS === "android" && event.type === "dismissed";
 }
@@ -102,21 +96,13 @@ export function SymptomLogWizardScreen({ user }: { user: SessionUser }) {
   const editId = String((route.params as { editId?: string } | undefined)?.editId ?? "");
   const c = useFlareColors();
   const errTextStyle = flareFieldErrorStyle(c, "wizard");
-  const { height: windowHeight } = useWindowDimensions();
+  
   const [loadingPrefs, setLoadingPrefs] = useState(true);
   const [userPreferences, setUserPreferences] = useState<UserPreferencesShape | null>(null);
   const [isFirstTimeUser, setIsFirstTimeUser] = useState(true);
   const [currentStep, setCurrentStep] = useState(0);
   const [form, setForm] = useState<SymptomFormData>(() => createEmptySymptomForm());
   const [fieldErrors, setFieldErrors] = useState<Record<string, string>>({});
-  const [dateErrors, setDateErrors] = useState<DateErrorsState>({
-    day: "",
-    month: "",
-    year: "",
-    endDay: "",
-    endMonth: "",
-    endYear: "",
-  });
   const [history, setHistory] = useState<{ step: number; form: SymptomFormData }[]>([]);
   const [submitting, setSubmitting] = useState(false);
   const [loadingEdit, setLoadingEdit] = useState(Boolean(editId));
@@ -124,7 +110,6 @@ export function SymptomLogWizardScreen({ user }: { user: SessionUser }) {
   const [editingReviewSection, setEditingReviewSection] = useState<SymptomReviewSectionId | null>(null);
   const scrollRef = useRef<RNScrollView>(null);
 
-  // Edit / step changes must land at the top — Review is tall so scroll offset otherwise sticks.
   useEffect(() => {
     scrollRef.current?.scrollTo({ y: 0, animated: false });
   }, [currentStep]);
@@ -161,7 +146,7 @@ export function SymptomLogWizardScreen({ user }: { user: SessionUser }) {
         .maybeSingle();
       if (cancelled) return;
       if (error || !data) {
-        showFlareAlert("Could not load entry", "This symptom log could not be opened for editing.");
+        showFlareAlert("Could not load entry");
         navigation.goBack();
         return;
       }
@@ -291,7 +276,6 @@ export function SymptomLogWizardScreen({ user }: { user: SessionUser }) {
     setCurrentStep(SYMPTOM_REVIEW_STEP);
     setEditingReviewSection(null);
     setFieldErrors({});
-    setDateErrors({ day: "", month: "", year: "", endDay: "", endMonth: "", endYear: "" });
   }, []);
 
   const openReviewEdit = useCallback(
@@ -301,7 +285,6 @@ export function SymptomLogWizardScreen({ user }: { user: SessionUser }) {
       setEditingReviewSection(section);
       setCurrentStep(entryStep);
       setFieldErrors({});
-      setDateErrors({ day: "", month: "", year: "", endDay: "", endMonth: "", endYear: "" });
     },
     [isFirstTimeUser, userPreferences],
   );
@@ -320,7 +303,6 @@ export function SymptomLogWizardScreen({ user }: { user: SessionUser }) {
     }
     const prev = history[history.length - 1];
     if (prev && !editingReviewSection) {
-      // Don't return to landing (step 0) — exit the wizard like Track Medications / Wellbeing.
       if (prev.step <= 0) {
         navigation.goBack();
         return true;
@@ -329,7 +311,6 @@ export function SymptomLogWizardScreen({ user }: { user: SessionUser }) {
       setCurrentStep(prev.step);
       setForm(prev.form);
       setFieldErrors({});
-      setDateErrors({ day: "", month: "", year: "", endDay: "", endMonth: "", endYear: "" });
       return true;
     }
     if (editingReviewSection) {
@@ -337,7 +318,6 @@ export function SymptomLogWizardScreen({ user }: { user: SessionUser }) {
       if (previousStep >= 1) {
         setCurrentStep(previousStep);
         setFieldErrors({});
-        setDateErrors({ day: "", month: "", year: "", endDay: "", endMonth: "", endYear: "" });
         return true;
       }
       returnToReview();
@@ -346,7 +326,6 @@ export function SymptomLogWizardScreen({ user }: { user: SessionUser }) {
     if (editId && currentStep > 1) {
       setCurrentStep((step) => step - 1);
       setFieldErrors({});
-      setDateErrors({ day: "", month: "", year: "", endDay: "", endMonth: "", endYear: "" });
       return true;
     }
     navigation.goBack();
@@ -373,11 +352,9 @@ export function SymptomLogWizardScreen({ user }: { user: SessionUser }) {
     });
     if (!res.ok) {
       setFieldErrors(res.fieldErrors);
-      setDateErrors(res.dateErrors);
       return;
     }
     setFieldErrors({});
-    if (res.clearDateErrors) setDateErrors({ day: "", month: "", year: "", endDay: "", endMonth: "", endYear: "" });
     setForm(res.form);
     if (editingReviewSection) {
       const sectionLast = getSymptomReviewSectionLastStep(editingReviewSection);
@@ -409,11 +386,11 @@ export function SymptomLogWizardScreen({ user }: { user: SessionUser }) {
       form.lunch_skipped ||
       form.dinner_skipped;
     if (!form.notes.trim() && !hasMealData) {
-      showFlareAlert("Missing information", "Please add some notes or meal information to log this entry.");
+      showFlareAlert("Please add notes or meal information");
       return;
     }
     if (!form.isOngoing && !form.symptomEndDate) {
-      showFlareAlert("Missing end date", "Please specify when symptoms ended.");
+      showFlareAlert("Please specify when symptoms ended");
       return;
     }
     setSubmitting(true);
@@ -436,13 +413,13 @@ export function SymptomLogWizardScreen({ user }: { user: SessionUser }) {
       invalidateDashboardSnapshot(user.id);
       if (editId) {
         navigation.goBack();
-        showFlareAlert("Saved", "Your symptom log was updated.");
+        showFlareAlert("Saved");
       } else {
         navigation.dispatch(CommonActions.reset({ index: 0, routes: [{ name: "Dashboard" }] }));
-        showFlareAlert("Saved", "Your symptom log was saved. To view, tap Logs.");
+        showFlareAlert("Saved. To view, tap Logs.");
       }
     } catch (e: any) {
-      showFlareAlert("Could not save", e?.message || "Unknown error");
+      showFlareAlert(e?.message || "Could not save");
     } finally {
       setSubmitting(false);
     }
@@ -472,14 +449,13 @@ export function SymptomLogWizardScreen({ user }: { user: SessionUser }) {
   const renderMeal = (meal: "breakfast" | "lunch" | "dinner", skipKey: "breakfast_skipped" | "lunch_skipped" | "dinner_skipped") => {
     const list = form[meal];
     const last = list[list.length - 1];
-    const canAdd =
-      Boolean(last?.food.trim() && last?.quantity.trim()) && !form[skipKey];
+    const canAdd = Boolean(last?.food.trim() && last?.quantity.trim()) && !form[skipKey];
 
     return (
-    <View>
-      <Text style={[styles.h3, { color: c.text }]}>{mealLabel(meal)}</Text>
-      {list.map((item, i) => (
-        <View key={i} style={[styles.mealEntryWrap, i === 0 ? styles.mealEntryWrapFirst : null]}>
+      <View style={styles.stepContent}>
+        <Text style={[styles.stepTitle, { color: c.text, fontFamily: TYPOGRAPHY.fontFamily.semibold }]}>{mealLabel(meal)}</Text>
+        {list.map((item, i) => (
+          <View key={i} style={styles.mealRow}>
             <FlareTextInput
               placeholder="Food"
               value={item.food}
@@ -502,67 +478,54 @@ export function SymptomLogWizardScreen({ user }: { user: SessionUser }) {
                 }))
               }
             />
-          {list.length > 1 ? (
-            <Pressable
-              accessibilityRole="button"
-              accessibilityLabel="Remove meal item"
-              hitSlop={{ top: 8, bottom: 8, left: 8, right: 8 }}
-              onPress={() => removeMealRow(meal, i)}
-              style={styles.removeItemLink}
-            >
-              <Text
-                style={{
-                  color: c.textMuted,
-                  fontFamily: "Outfit_600SemiBold",
-                  fontSize: FLARE_FONT_SIZE.caption,
-                }}
+            {list.length > 1 ? (
+              <Pressable
+                accessibilityRole="button"
+                accessibilityLabel="Remove meal item"
+                hitSlop={8}
+                onPress={() => removeMealRow(meal, i)}
+                style={styles.removeLink}
               >
-                Remove
-              </Text>
-            </Pressable>
-          ) : null}
-        </View>
-      ))}
-      <Pressable
-        accessibilityRole="button"
-        accessibilityLabel={`Add another ${meal} item`}
-        disabled={!canAdd}
-        hitSlop={{ top: 10, bottom: 10, left: 8, right: 8 }}
-        onPress={() => {
-          if (!canAdd) return;
-          setForm((p) => ({
-            ...p,
-            [meal]: [...p[meal], { food: "", quantity: "" }],
-            [skipKey]: false,
-          }));
-        }}
-        style={styles.addItemLink}
-      >
-        <Text style={{ color: c.primary, fontFamily: "Outfit_700Bold", opacity: canAdd ? 1 : 0.45 }}>
-          Add item
-        </Text>
-      </Pressable>
-      <View style={styles.switchRow}>
-        <Text style={{ color: c.text, flex: 1 }}>I didn&apos;t eat anything</Text>
-        <Switch
-          value={form[skipKey]}
-          trackColor={{
-            false: c.isDark ? "#57534e" : "#94a3b8",
-            true: c.primary,
-          }}
-          thumbColor={c.white}
-          ios_backgroundColor={c.isDark ? "#57534e" : "#94a3b8"}
-          onValueChange={(v) =>
+                <Text style={[styles.removeLinkText, { color: c.textMuted, fontFamily: TYPOGRAPHY.fontFamily.semibold }]}>Remove</Text>
+              </Pressable>
+            ) : null}
+          </View>
+        ))}
+        <Pressable
+          accessibilityRole="button"
+          accessibilityLabel={`Add another ${meal} item`}
+          disabled={!canAdd}
+          hitSlop={10}
+          onPress={() => {
+            if (!canAdd) return;
             setForm((p) => ({
               ...p,
-              [skipKey]: v,
-              [meal]: v ? [{ food: "", quantity: "" }] : p[meal],
-            }))
-          }
-        />
+              [meal]: [...p[meal], { food: "", quantity: "" }],
+              [skipKey]: false,
+            }));
+          }}
+          style={styles.addLink}
+        >
+          <Text style={[styles.addLinkText, { color: c.primary, fontFamily: TYPOGRAPHY.fontFamily.bold, opacity: canAdd ? 1 : 0.45 }]}>Add item</Text>
+        </Pressable>
+        <View style={styles.switchRow}>
+          <Text style={[styles.switchLabel, { color: c.text, fontFamily: TYPOGRAPHY.fontFamily.regular }]}>I didn't eat anything</Text>
+          <Switch
+            value={form[skipKey]}
+            trackColor={{ false: c.inputBorder, true: c.primary }}
+            thumbColor={c.white}
+            ios_backgroundColor={c.inputBorder}
+            onValueChange={(v) =>
+              setForm((p) => ({
+                ...p,
+                [skipKey]: v,
+                [meal]: v ? [{ food: "", quantity: "" }] : p[meal],
+              }))
+            }
+          />
+        </View>
+        {fieldErrors[meal] ? <Text style={errTextStyle}>{fieldErrors[meal]}</Text> : null}
       </View>
-      {fieldErrors[meal] ? <Text style={errTextStyle}>{fieldErrors[meal]}</Text> : null}
-    </View>
     );
   };
 
@@ -575,574 +538,497 @@ export function SymptomLogWizardScreen({ user }: { user: SessionUser }) {
   }
 
   return (
-    <KeyboardAvoidingView style={{ flex: 1, backgroundColor: c.screen }} behavior={Platform.OS === "ios" ? "padding" : undefined}>
-      <View style={styles.wizardShell}>
+    <KeyboardAvoidingView style={[styles.screen, { backgroundColor: c.screen }]} behavior={Platform.OS === "ios" ? "padding" : undefined}>
       <ScrollView
         ref={scrollRef}
-        contentContainerStyle={[
-          styles.scrollPad,
-          currentStep === 0 ? styles.scrollPadLanding : styles.scrollPadWizardSteps,
-        ]}
+        contentContainerStyle={[styles.scrollContent, currentStep === 0 && styles.scrollContentLanding]}
         keyboardShouldPersistTaps="handled"
       >
-        {currentStep > 0 && phase.sectionTotal > 0 ? (
-          <Text style={[styles.phaseLine, { color: c.textMuted }]}>
-            Section {phase.sectionStep}/{phase.sectionTotal}: {phase.currentPhaseLabel}
-          </Text>
+        {currentStep > 0 && currentStep !== SYMPTOM_REVIEW_STEP && phase.sectionTotal > 0 ? (
+          <View style={styles.progressWrap}>
+            <Text style={[styles.progressLabel, { color: c.textMuted, fontFamily: TYPOGRAPHY.fontFamily.regular }]}>
+              {phase.currentPhaseLabel} • {phase.sectionStep}/{phase.sectionTotal}
+            </Text>
+            <WizardProgressBar current={phase.sectionStep} total={phase.sectionTotal} />
+          </View>
         ) : null}
 
         {currentStep === 0 ? (
-          <View style={[styles.landing, { minHeight: Math.max(windowHeight * 0.58, 420) }]}>
-            {/* Same surface token as home `Card` (`c.card`) — matches section panels */}
-            <View
-              style={[
-                styles.landingIconPanel,
-                {
-                  backgroundColor: c.card,
-                  ...Platform.select({
-                    ios: {
-                      shadowColor: "#000",
-                      shadowOffset: { width: 0, height: 1 },
-                      shadowOpacity: c.isDark ? 0.3 : 0.05,
-                      shadowRadius: 2,
-                    },
-                    android: { elevation: 2 },
-                  }),
-                },
-              ]}
-            >
-              <FlareLucideIcon icon={FLARE_FEATURE_LUCIDE.symptoms} size={28} color={c.primary} />
-            </View>
-            <Text style={[styles.landingTitle, { color: c.text }]}>Log Symptoms</Text>
-            <Text style={[styles.landingSub, { color: c.textMuted }]}>
-              Tell us about your symptoms and any other related details.
-            </Text>
-            <View style={styles.landingCta}>
-              <EntryPrimaryButton title="Start now" onPress={startWizard} noTopMargin />
-            </View>
-          </View>
-        ) : null}
-
-        {currentStep === 1 ? (
-          <View>
-            <Text style={[styles.h3, { color: c.text }]}>When did your symptoms begin?</Text>
-            <FlareInputTrigger pickerIcon="date" onPress={() => setPicker("start")}>
-              <Text style={{ color: form.symptomStartDate ? c.text : c.textMuted }}>
-                {form.symptomStartDate ? formatUkDate(form.symptomStartDate) : ""}
+          <View style={styles.landing}>
+            <Card style={styles.landingCard}>
+              <View style={styles.landingIconWrap}>
+                <FlareLucideIcon icon={FLARE_FEATURE_LUCIDE.symptoms} size={48} color={c.primary} />
+              </View>
+              <Text style={[styles.landingTitle, { color: c.text, fontFamily: TYPOGRAPHY.fontFamily.bold }]}>Log Your Symptoms</Text>
+              <Text style={[styles.landingDesc, { color: c.textSecondary, fontFamily: TYPOGRAPHY.fontFamily.regular }]}>
+                Track when symptoms occur, severity, lifestyle factors and meals to help identify patterns.
               </Text>
-            </FlareInputTrigger>
-            {dateErrors.day ? <Text style={errTextStyle}>{dateErrors.day}</Text> : null}
-            {picker === "start" ? (
-              <DateTimePicker
-                value={form.symptomStartDate ? parseYmd(form.symptomStartDate) : new Date()}
-                mode="date"
-                display={Platform.OS === "ios" ? "spinner" : "default"}
-                maximumDate={new Date()}
-                minimumDate={new Date(2020, 0, 1)}
-                onChange={(event, d) => {
-                  if (Platform.OS === "android") setPicker(null);
-                  if (isAndroidDatePickerDismissed(event)) return;
-                  if (d) setForm((p) => ({ ...p, symptomStartDate: toYmd(d) }));
-                }}
-              />
-            ) : null}
-            {Platform.OS === "ios" && picker === "start" ? <PrimaryButton title="Done" onPress={() => setPicker(null)} /> : null}
+              <PrimaryButton title="Start now" onPress={startWizard} />
+            </Card>
           </View>
         ) : null}
 
+        {/* Step 1: When did symptoms begin */}
+        {currentStep === 1 ? (
+          <View style={styles.stepContent}>
+            <Text style={[styles.stepTitle, { color: c.text, fontFamily: TYPOGRAPHY.fontFamily.semibold }]}>When did your symptoms begin?</Text>
+            <Pressable
+              accessibilityRole="button"
+              onPress={() => setPicker("start")}
+              style={[styles.datePicker, { backgroundColor: c.inputBg, borderColor: c.inputBorder }]}
+            >
+              <Text style={[styles.dateText, { color: form.symptomStartDate ? c.text : c.textSecondary, fontFamily: TYPOGRAPHY.fontFamily.regular }]}>
+                {form.symptomStartDate ? formatUkDate(form.symptomStartDate) : "Select date"}
+              </Text>
+            </Pressable>
+            {fieldErrors.symptomStartDate ? <Text style={errTextStyle}>{fieldErrors.symptomStartDate}</Text> : null}
+          </View>
+        ) : null}
+
+        {/* Step 2: Ongoing? */}
         {currentStep === 2 ? (
-          <View>
-            <Text style={[styles.h3, { color: c.text }]}>Are symptoms still ongoing?</Text>
-            <View style={styles.rowGap}>
-              <Pressable style={styles.radioRow} onPress={() => setForm((p) => ({ ...p, isOngoing: true }))}>
-                <View style={[styles.radioOuter, { borderColor: c.cardBorder }]}>{form.isOngoing === true ? <View style={[styles.radioInner, { backgroundColor: c.primary }]} /> : null}</View>
-                <Text style={{ color: c.text }}>Yes</Text>
-              </Pressable>
-              <Pressable style={styles.radioRow} onPress={() => setForm((p) => ({ ...p, isOngoing: false }))}>
-                <View style={[styles.radioOuter, { borderColor: c.cardBorder }]}>{form.isOngoing === false ? <View style={[styles.radioInner, { backgroundColor: c.primary }]} /> : null}</View>
-                <Text style={{ color: c.text }}>No</Text>
-              </Pressable>
+          <View style={styles.stepContent}>
+            <Text style={[styles.stepTitle, { color: c.text, fontFamily: TYPOGRAPHY.fontFamily.semibold }]}>Are symptoms still ongoing?</Text>
+            <View style={styles.optionChipRow}>
+              <OptionChip label="Yes" selected={form.isOngoing === true} onPress={() => setForm((p) => ({ ...p, isOngoing: true }))} />
+              <OptionChip label="No" selected={form.isOngoing === false} onPress={() => setForm((p) => ({ ...p, isOngoing: false }))} />
             </View>
             {fieldErrors.isOngoing ? <Text style={errTextStyle}>{fieldErrors.isOngoing}</Text> : null}
           </View>
         ) : null}
 
+        {/* Step 3: When did symptoms end */}
         {currentStep === 3 ? (
-          <View>
-            <Text style={[styles.h3, { color: c.text }]}>When did symptoms end?</Text>
-            <FlareInputTrigger pickerIcon="date" onPress={() => setPicker("end")}>
-              <Text style={{ color: form.symptomEndDate ? c.text : c.textMuted }}>
-                {form.symptomEndDate ? formatUkDate(form.symptomEndDate) : ""}
+          <View style={styles.stepContent}>
+            <Text style={[styles.stepTitle, { color: c.text, fontFamily: TYPOGRAPHY.fontFamily.semibold }]}>When did symptoms end?</Text>
+            <Pressable
+              accessibilityRole="button"
+              onPress={() => setPicker("end")}
+              style={[styles.datePicker, { backgroundColor: c.inputBg, borderColor: c.inputBorder }]}
+            >
+              <Text style={[styles.dateText, { color: form.symptomEndDate ? c.text : c.textSecondary, fontFamily: TYPOGRAPHY.fontFamily.regular }]}>
+                {form.symptomEndDate ? formatUkDate(form.symptomEndDate) : "Select date"}
               </Text>
-            </FlareInputTrigger>
-            {dateErrors.endDay ? <Text style={errTextStyle}>{dateErrors.endDay}</Text> : null}
-            {picker === "end" ? (
-              <DateTimePicker
-                value={form.symptomEndDate ? parseYmd(form.symptomEndDate) : new Date()}
-                mode="date"
-                display={Platform.OS === "ios" ? "spinner" : "default"}
-                maximumDate={new Date()}
-                minimumDate={form.symptomStartDate ? parseYmd(form.symptomStartDate) : new Date(2020, 0, 1)}
-                onChange={(event, d) => {
-                  if (Platform.OS === "android") setPicker(null);
-                  if (isAndroidDatePickerDismissed(event)) return;
-                  if (d) setForm((p) => ({ ...p, symptomEndDate: toYmd(d) }));
-                }}
-              />
-            ) : null}
-            {Platform.OS === "ios" && picker === "end" ? <PrimaryButton title="Done" onPress={() => setPicker(null)} /> : null}
+            </Pressable>
+            {fieldErrors.symptomEndDate ? <Text style={errTextStyle}>{fieldErrors.symptomEndDate}</Text> : null}
           </View>
         ) : null}
 
+        {/* Step 4: Severity */}
         {currentStep === 4 ? (
-          <View>
-            <Text style={[styles.h3, { color: c.text }]}>
-              {form.isOngoing ? "How severe are your symptoms?" : "How severe were your symptoms?"}
+          <View style={styles.stepContent}>
+            <Text style={[styles.stepTitle, { color: c.text, fontFamily: TYPOGRAPHY.fontFamily.semibold }]}>
+              How severe {form.isOngoing ? "are" : "were"} your symptoms?
             </Text>
-            <View style={styles.rowGap}>
-              {SEVERITY_WORD_OPTIONS.map((opt) => {
-                const band = form.severity ? wizardRatingToBand(form.severity) : null;
-                const selected = band !== null && band === opt.value;
-                return (
-                  <Pressable key={opt.value} style={styles.radioRow} onPress={() => setRating("severity", opt.value)}>
-                    <View style={[styles.radioOuter, { borderColor: c.cardBorder }]}>
-                      {selected ? <View style={[styles.radioInner, { backgroundColor: c.primary }]} /> : null}
-                    </View>
-                    <Text style={{ color: c.text, flex: 1 }}>{opt.label}</Text>
-                  </Pressable>
-                );
-              })}
+            <View style={styles.optionChipGrid}>
+              {SEVERITY_WORD_OPTIONS.map((opt) => (
+                <OptionChip
+                  key={opt.value}
+                  label={opt.label}
+                  selected={form.severity === String(opt.value)}
+                  onPress={() => setRating("severity", opt.value)}
+                />
+              ))}
             </View>
             {fieldErrors.severity ? <Text style={errTextStyle}>{fieldErrors.severity}</Text> : null}
           </View>
         ) : null}
 
+        {/* Step 5: Stress */}
         {currentStep === 5 ? (
-          <View>
-            <Text style={[styles.h3, { color: c.text }]}>
-              {form.isOngoing ? "How stressed are you feeling?" : "How stressed were you feeling during that time?"}
+          <View style={styles.stepContent}>
+            <Text style={[styles.stepTitle, { color: c.text, fontFamily: TYPOGRAPHY.fontFamily.semibold }]}>
+              How stressed {form.isOngoing ? "are" : "were"} you feeling?
             </Text>
-            <View style={styles.rowGap}>
-              {STRESS_WORD_OPTIONS.map((opt) => {
-                const band = form.stress_level ? wizardRatingToBand(form.stress_level) : null;
-                const selected = band !== null && band === opt.value;
-                return (
-                  <Pressable key={opt.value} style={styles.radioRow} onPress={() => setRating("stress_level", opt.value)}>
-                    <View style={[styles.radioOuter, { borderColor: c.cardBorder }]}>
-                      {selected ? <View style={[styles.radioInner, { backgroundColor: c.primary }]} /> : null}
-                    </View>
-                    <Text style={{ color: c.text, flex: 1 }}>{opt.label}</Text>
-                  </Pressable>
-                );
-              })}
+            <View style={styles.optionChipGrid}>
+              {STRESS_WORD_OPTIONS.map((opt) => (
+                <OptionChip
+                  key={opt.value}
+                  label={opt.label}
+                  selected={form.stress_level === String(opt.value)}
+                  onPress={() => setRating("stress_level", opt.value)}
+                />
+              ))}
             </View>
             {fieldErrors.stress_level ? <Text style={errTextStyle}>{fieldErrors.stress_level}</Text> : null}
           </View>
         ) : null}
 
+        {/* Step 6: Bathroom frequency */}
         {currentStep === 6 ? (
-          <View>
-            <Text style={[styles.h3, { color: c.text }]}>How many times a day do you usually empty your bowels?</Text>
-            <FlareTextInput
-              keyboardType="number-pad"
-              value={form.normal_bathroom_frequency}
-              onChangeText={(t) => {
-                if (t.length > 2) return;
-                const n = parseInt(t, 10);
-                if (t && (Number.isNaN(n) || n < 0 || n > 99)) return;
-                setForm((p) => ({ ...p, normal_bathroom_frequency: t }));
-              }}
-              placeholder="e.g. 1 or 3"
-            />
+          <View style={styles.stepContent}>
+            <Text style={[styles.stepTitle, { color: c.text, fontFamily: TYPOGRAPHY.fontFamily.semibold }]}>
+              How many times a day do you usually empty your bowels?
+            </Text>
+            <View style={styles.stepperWrap}>
+              <NumberStepper
+                value={Number.parseInt(form.normal_bathroom_frequency || "0", 10)}
+                onChange={(v) => setForm((p) => ({ ...p, normal_bathroom_frequency: String(v) }))}
+                min={0}
+                max={99}
+              />
+            </View>
             {fieldErrors.normal_bathroom_frequency ? <Text style={errTextStyle}>{fieldErrors.normal_bathroom_frequency}</Text> : null}
           </View>
         ) : null}
 
+        {/* Step 7: Bathroom frequency changed? */}
         {currentStep === 7 ? (
-          <View>
-            <Text style={[styles.h3, { color: c.text }]}>
-              {form.isOngoing
-                ? "Have you noticed a change in bathroom frequency since symptoms started?"
-                : "Did you notice a change in bathroom frequency during that time?"}
+          <View style={styles.stepContent}>
+            <Text style={[styles.stepTitle, { color: c.text, fontFamily: TYPOGRAPHY.fontFamily.semibold }]}>
+              {form.isOngoing ? "Have you noticed" : "Did you notice"} a change in bathroom frequency?
             </Text>
-            <View style={styles.rowGap}>
-              {(["yes", "no"] as const).map((v) => (
-                <Pressable key={v} style={styles.radioRow} onPress={() => setForm((p) => ({ ...p, bathroom_frequency_changed: v }))}>
-                  <View style={[styles.radioOuter, { borderColor: c.cardBorder }]}>
-                    {form.bathroom_frequency_changed === v ? <View style={[styles.radioInner, { backgroundColor: c.primary }]} /> : null}
-                  </View>
-                  <Text style={{ color: c.text }}>{v === "yes" ? "Yes" : "No"}</Text>
-                </Pressable>
-              ))}
+            <View style={styles.optionChipRow}>
+              <OptionChip
+                label="Yes"
+                selected={form.bathroom_frequency_changed === "yes"}
+                onPress={() => setForm((p) => ({ ...p, bathroom_frequency_changed: "yes" }))}
+              />
+              <OptionChip
+                label="No"
+                selected={form.bathroom_frequency_changed === "no"}
+                onPress={() => setForm((p) => ({ ...p, bathroom_frequency_changed: "no" }))}
+              />
             </View>
             {fieldErrors.bathroom_frequency_changed ? <Text style={errTextStyle}>{fieldErrors.bathroom_frequency_changed}</Text> : null}
           </View>
         ) : null}
 
+        {/* Step 8: Describe bathroom change */}
         {currentStep === 8 ? (
-          <View>
-            <Text style={[styles.h3, { color: c.text }]}>Describe your change</Text>
+          <View style={styles.stepContent}>
+            <Text style={[styles.stepTitle, { color: c.text, fontFamily: TYPOGRAPHY.fontFamily.semibold }]}>Describe your change</Text>
             <FlareTextInput
-              multiline
-              placeholder={PLACEHOLDER_BATHROOM_CHANGE_EXAMPLE}
               value={form.bathroom_frequency_change_details}
               onChangeText={(t) => setForm((p) => ({ ...p, bathroom_frequency_change_details: t }))}
+              placeholder="e.g. more often, blood, or loose stools"
+              multiline
+              numberOfLines={3}
             />
             {fieldErrors.bathroom_frequency_change_details ? <Text style={errTextStyle}>{fieldErrors.bathroom_frequency_change_details}</Text> : null}
           </View>
         ) : null}
 
-        {currentStep === 9 ? (
-          <View>
-            <Text style={[styles.h3, { color: c.text }]}>
-              {isFirstTimeUser
-                ? "Do you smoke?"
-                : userPreferences?.isSmoker
-                  ? isSymptomDayToday
-                    ? "Did you smoke today?"
-                    : `Did you smoke on ${symptomDayLabel}?`
-                  : "Do you smoke?"}
-            </Text>
-            <View style={styles.rowGap}>
-              <Pressable
-                style={styles.radioRow}
-                onPress={() =>
-                  setForm((p) =>
-                    !isFirstTimeUser && userPreferences?.isSmoker ? { ...p, smoked_on_symptom_day: true } : { ...p, smoker: true },
-                  )
-                }
-              >
-                <View style={[styles.radioOuter, { borderColor: c.cardBorder }]}>
-                  {(!isFirstTimeUser && userPreferences?.isSmoker ? form.smoked_on_symptom_day === true : form.smoker === true) ? (
-                    <View style={[styles.radioInner, { backgroundColor: c.primary }]} />
-                  ) : null}
-                </View>
-                <Text style={{ color: c.text }}>Yes</Text>
-              </Pressable>
-              <Pressable
-                style={styles.radioRow}
-                onPress={() =>
-                  setForm((p) =>
-                    !isFirstTimeUser && userPreferences?.isSmoker ? { ...p, smoked_on_symptom_day: false } : { ...p, smoker: false },
-                  )
-                }
-              >
-                <View style={[styles.radioOuter, { borderColor: c.cardBorder }]}>
-                  {(!isFirstTimeUser && userPreferences?.isSmoker ? form.smoked_on_symptom_day === false : form.smoker === false) ? (
-                    <View style={[styles.radioInner, { backgroundColor: c.primary }]} />
-                  ) : null}
-                </View>
-                <Text style={{ color: c.text }}>No</Text>
-              </Pressable>
+        {/* Step 9: Do you smoke? (first-time only) */}
+        {currentStep === 9 && isFirstTimeUser ? (
+          <View style={styles.stepContent}>
+            <Text style={[styles.stepTitle, { color: c.text, fontFamily: TYPOGRAPHY.fontFamily.semibold }]}>Do you smoke?</Text>
+            <View style={styles.optionChipRow}>
+              <OptionChip label="Yes" selected={form.smoker === true} onPress={() => setForm((p) => ({ ...p, smoker: true }))} />
+              <OptionChip label="No" selected={form.smoker === false} onPress={() => setForm((p) => ({ ...p, smoker: false }))} />
             </View>
-            {fieldErrors.smoked_on_symptom_day ? <Text style={errTextStyle}>{fieldErrors.smoked_on_symptom_day}</Text> : null}
             {fieldErrors.smoker ? <Text style={errTextStyle}>{fieldErrors.smoker}</Text> : null}
           </View>
         ) : null}
 
-        {currentStep === 10 ? (
-          <View>
-            {form.smoker === true && smokingStep10Phase === "dayAmount" ? (
-              <>
-                <Text style={[styles.h3, { color: c.text }]}>
-                  {!isFirstTimeUser
-                    ? "How much did you smoke?"
-                    : isSymptomDayToday
-                      ? "How much did you smoke today?"
-                      : `How much did you smoke on ${symptomDayLabel}?`}
-                </Text>
-                <FlareTextInput
-                  placeholder={PLACEHOLDER_SMOKE_DAY_AMOUNT_EXAMPLE}
-                  value={form.smoked_amount_on_symptom_day}
-                  onChangeText={(t) => setForm((p) => ({ ...p, smoked_amount_on_symptom_day: t }))}
-                />
-                {fieldErrors.smoked_amount_on_symptom_day ? <Text style={errTextStyle}>{fieldErrors.smoked_amount_on_symptom_day}</Text> : null}
-              </>
-            ) : form.smoker === true && smokingStep10Phase === "dayYesNo" ? (
-              <>
-                <Text style={[styles.h3, { color: c.text }]}>
-                  {isSymptomDayToday ? "Did you smoke today?" : `Did you smoke on ${symptomDayLabel}?`}
-                </Text>
-                <View style={styles.rowGap}>
-                  <Pressable style={styles.radioRow} onPress={() => setForm((p) => ({ ...p, smoked_on_symptom_day: true }))}>
-                    <View style={[styles.radioOuter, { borderColor: c.cardBorder }]}>
-                      {form.smoked_on_symptom_day === true ? <View style={[styles.radioInner, { backgroundColor: c.primary }]} /> : null}
-                    </View>
-                    <Text style={{ color: c.text }}>Yes</Text>
-                  </Pressable>
-                  <Pressable style={styles.radioRow} onPress={() => setForm((p) => ({ ...p, smoked_on_symptom_day: false }))}>
-                    <View style={[styles.radioOuter, { borderColor: c.cardBorder }]}>
-                      {form.smoked_on_symptom_day === false ? <View style={[styles.radioInner, { backgroundColor: c.primary }]} /> : null}
-                    </View>
-                    <Text style={{ color: c.text }}>No</Text>
-                  </Pressable>
-                </View>
-                {fieldErrors.smoked_on_symptom_day ? <Text style={errTextStyle}>{fieldErrors.smoked_on_symptom_day}</Text> : null}
-              </>
-            ) : (
-              <>
-                <Text style={[styles.h3, { color: c.text }]}>
-                  {!isFirstTimeUser && userPreferences?.isSmoker ? "How much did you smoke?" : "Please describe your smoking habits"}
-                </Text>
-                <FlareTextInput
-                  placeholder={
-                    !isFirstTimeUser && userPreferences?.isSmoker
-                      ? PLACEHOLDER_SMOKE_AMOUNT_RETURNING_EXAMPLE
-                      : PLACEHOLDER_SMOKING_HABITS_EXAMPLE
-                  }
-                  value={!isFirstTimeUser && userPreferences?.isSmoker ? form.smoked_amount_on_symptom_day : form.smoking_habits}
-                  onChangeText={(t) =>
-                    setForm((p) =>
-                      !isFirstTimeUser && userPreferences?.isSmoker ? { ...p, smoked_amount_on_symptom_day: t } : { ...p, smoking_habits: t },
-                    )
-                  }
-                />
-                {fieldErrors.smoked_amount_on_symptom_day ? <Text style={errTextStyle}>{fieldErrors.smoked_amount_on_symptom_day}</Text> : null}
-                {fieldErrors.smoking_habits ? <Text style={errTextStyle}>{fieldErrors.smoking_habits}</Text> : null}
-              </>
-            )}
+        {/* Step 10: Smoking habits / day question / day amount (multi-phase) */}
+        {currentStep === 10 && smokingStep10Phase === "details" ? (
+          <View style={styles.stepContent}>
+            <Text style={[styles.stepTitle, { color: c.text, fontFamily: TYPOGRAPHY.fontFamily.semibold }]}>Describe your smoking habits</Text>
+            <FlareTextInput
+              value={form.smoking_habits}
+              onChangeText={(t) => setForm((p) => ({ ...p, smoking_habits: t }))}
+              placeholder="e.g. 1 pack of cigarettes per day"
+              multiline
+              numberOfLines={3}
+            />
+            {fieldErrors.smoking_habits ? <Text style={errTextStyle}>{fieldErrors.smoking_habits}</Text> : null}
           </View>
         ) : null}
 
-        {currentStep === 11 ? (
-          <View>
-            <Text style={[styles.h3, { color: c.text }]}>
-              {isFirstTimeUser
-                ? "Do you drink alcohol?"
-                : userPreferences?.isDrinker
-                  ? isSymptomDayToday
-                    ? "Did you drink alcohol today?"
-                    : `Did you drink alcohol on ${symptomDayLabel}?`
-                  : "Do you drink alcohol?"}
+        {currentStep === 10 && smokingStep10Phase === "dayYesNo" ? (
+          <View style={styles.stepContent}>
+            <Text style={[styles.stepTitle, { color: c.text, fontFamily: TYPOGRAPHY.fontFamily.semibold }]}>
+              Did you smoke {isSymptomDayToday ? "today" : `on ${symptomDayLabel}`}?
             </Text>
-            <View style={styles.rowGap}>
-              <Pressable
-                style={styles.radioRow}
-                onPress={() =>
-                  setForm((p) => (!isFirstTimeUser && userPreferences?.isDrinker ? { ...p, drank_on_symptom_day: true } : { ...p, alcohol: true }))
-                }
-              >
-                <View style={[styles.radioOuter, { borderColor: c.cardBorder }]}>
-                  {(!isFirstTimeUser && userPreferences?.isDrinker ? form.drank_on_symptom_day === true : form.alcohol === true) ? (
-                    <View style={[styles.radioInner, { backgroundColor: c.primary }]} />
-                  ) : null}
-                </View>
-                <Text style={{ color: c.text }}>Yes</Text>
-              </Pressable>
-              <Pressable
-                style={styles.radioRow}
-                onPress={() =>
-                  setForm((p) => (!isFirstTimeUser && userPreferences?.isDrinker ? { ...p, drank_on_symptom_day: false } : { ...p, alcohol: false }))
-                }
-              >
-                <View style={[styles.radioOuter, { borderColor: c.cardBorder }]}>
-                  {(!isFirstTimeUser && userPreferences?.isDrinker ? form.drank_on_symptom_day === false : form.alcohol === false) ? (
-                    <View style={[styles.radioInner, { backgroundColor: c.primary }]} />
-                  ) : null}
-                </View>
-                <Text style={{ color: c.text }}>No</Text>
-              </Pressable>
+            <View style={styles.optionChipRow}>
+              <OptionChip
+                label="Yes"
+                selected={form.smoked_on_symptom_day === true}
+                onPress={() => setForm((p) => ({ ...p, smoked_on_symptom_day: true }))}
+              />
+              <OptionChip
+                label="No"
+                selected={form.smoked_on_symptom_day === false}
+                onPress={() => setForm((p) => ({ ...p, smoked_on_symptom_day: false }))}
+              />
             </View>
-            {fieldErrors.drank_on_symptom_day ? <Text style={errTextStyle}>{fieldErrors.drank_on_symptom_day}</Text> : null}
+            {fieldErrors.smoked_on_symptom_day ? <Text style={errTextStyle}>{fieldErrors.smoked_on_symptom_day}</Text> : null}
+          </View>
+        ) : null}
+
+        {currentStep === 10 && smokingStep10Phase === "dayAmount" ? (
+          <View style={styles.stepContent}>
+            <Text style={[styles.stepTitle, { color: c.text, fontFamily: TYPOGRAPHY.fontFamily.semibold }]}>How much did you smoke?</Text>
+            <FlareTextInput
+              value={form.smoked_amount_on_symptom_day}
+              onChangeText={(t) => setForm((p) => ({ ...p, smoked_amount_on_symptom_day: t }))}
+              placeholder={isFirstTimeUser ? "e.g. 3 cigarettes or 1 cigar" : "e.g. 5 cigarettes or 1 cigar"}
+              multiline
+              numberOfLines={2}
+            />
+            {fieldErrors.smoked_amount_on_symptom_day ? <Text style={errTextStyle}>{fieldErrors.smoked_amount_on_symptom_day}</Text> : null}
+          </View>
+        ) : null}
+
+        {/* Step 11: Do you drink alcohol? (first-time only) */}
+        {currentStep === 11 && isFirstTimeUser ? (
+          <View style={styles.stepContent}>
+            <Text style={[styles.stepTitle, { color: c.text, fontFamily: TYPOGRAPHY.fontFamily.semibold }]}>Do you drink alcohol?</Text>
+            <View style={styles.optionChipRow}>
+              <OptionChip label="Yes" selected={form.alcohol === true} onPress={() => setForm((p) => ({ ...p, alcohol: true }))} />
+              <OptionChip label="No" selected={form.alcohol === false} onPress={() => setForm((p) => ({ ...p, alcohol: false }))} />
+            </View>
             {fieldErrors.alcohol ? <Text style={errTextStyle}>{fieldErrors.alcohol}</Text> : null}
           </View>
         ) : null}
 
-        {currentStep === 12 ? (
-          <View>
-            {form.alcohol === true && alcoholStep12Phase === "dayAmount" ? (
-              <>
-                <Text style={[styles.h3, { color: c.text }]}>
-                  {isSymptomDayToday
-                    ? "How many units of alcohol did you drink today?"
-                    : `How many units of alcohol did you drink on ${symptomDayLabel}?`}
-                </Text>
-                <FlareTextInput
-                  keyboardType="decimal-pad"
-                  placeholder={PLACEHOLDER_ALCOHOL_UNITS_EXAMPLE}
-                  value={form.alcohol_units_on_symptom_day}
-                  onChangeText={(t) => setForm((p) => ({ ...p, alcohol_units_on_symptom_day: t }))}
-                />
-                {fieldErrors.alcohol_units_on_symptom_day ? <Text style={errTextStyle}>{fieldErrors.alcohol_units_on_symptom_day}</Text> : null}
-              </>
-            ) : form.alcohol === true && alcoholStep12Phase === "dayYesNo" ? (
-              <>
-                <Text style={[styles.h3, { color: c.text }]}>
-                  {isSymptomDayToday ? "Did you drink alcohol today?" : `Did you drink alcohol on ${symptomDayLabel}?`}
-                </Text>
-                <View style={styles.rowGap}>
-                  <Pressable style={styles.radioRow} onPress={() => setForm((p) => ({ ...p, drank_on_symptom_day: true }))}>
-                    <View style={[styles.radioOuter, { borderColor: c.cardBorder }]}>
-                      {form.drank_on_symptom_day === true ? <View style={[styles.radioInner, { backgroundColor: c.primary }]} /> : null}
-                    </View>
-                    <Text style={{ color: c.text }}>Yes</Text>
-                  </Pressable>
-                  <Pressable style={styles.radioRow} onPress={() => setForm((p) => ({ ...p, drank_on_symptom_day: false }))}>
-                    <View style={[styles.radioOuter, { borderColor: c.cardBorder }]}>
-                      {form.drank_on_symptom_day === false ? <View style={[styles.radioInner, { backgroundColor: c.primary }]} /> : null}
-                    </View>
-                    <Text style={{ color: c.text }}>No</Text>
-                  </Pressable>
-                </View>
-                {fieldErrors.drank_on_symptom_day ? <Text style={errTextStyle}>{fieldErrors.drank_on_symptom_day}</Text> : null}
-              </>
-            ) : (
-              <>
-                <Text style={[styles.h3, { color: c.text }]}>
-                  {!isFirstTimeUser && userPreferences?.isDrinker
-                    ? "How many units of alcohol did you drink?"
-                    : "On average, how many units of alcohol do you drink per week?"}
-                </Text>
-                <FlareTextInput
-                  keyboardType="decimal-pad"
-                  placeholder={PLACEHOLDER_ALCOHOL_UNITS_EXAMPLE}
-                  value={!isFirstTimeUser && userPreferences?.isDrinker ? form.alcohol_units_on_symptom_day : form.average_alcohol_units_pw}
-                  onChangeText={(t) =>
-                    setForm((p) =>
-                      !isFirstTimeUser && userPreferences?.isDrinker ? { ...p, alcohol_units_on_symptom_day: t } : { ...p, average_alcohol_units_pw: t },
-                    )
-                  }
-                />
-                {fieldErrors.alcohol_units_on_symptom_day ? <Text style={errTextStyle}>{fieldErrors.alcohol_units_on_symptom_day}</Text> : null}
-                {fieldErrors.average_alcohol_units_pw ? <Text style={errTextStyle}>{fieldErrors.average_alcohol_units_pw}</Text> : null}
-              </>
-            )}
+        {/* Step 12: Alcohol baseline / day question / day amount (multi-phase) */}
+        {currentStep === 12 && alcoholStep12Phase === "baseline" ? (
+          <View style={styles.stepContent}>
+            <Text style={[styles.stepTitle, { color: c.text, fontFamily: TYPOGRAPHY.fontFamily.semibold }]}>
+              On average, how many units per week?
+            </Text>
+            <View style={styles.stepperWrap}>
+              <NumberStepper
+                value={Number.parseInt(form.average_alcohol_units_pw || "0", 10)}
+                onChange={(v) => setForm((p) => ({ ...p, average_alcohol_units_pw: String(v) }))}
+                min={0}
+                max={30}
+              />
+            </View>
+            {fieldErrors.average_alcohol_units_pw ? <Text style={errTextStyle}>{fieldErrors.average_alcohol_units_pw}</Text> : null}
           </View>
         ) : null}
 
+        {currentStep === 12 && alcoholStep12Phase === "dayYesNo" ? (
+          <View style={styles.stepContent}>
+            <Text style={[styles.stepTitle, { color: c.text, fontFamily: TYPOGRAPHY.fontFamily.semibold }]}>
+              Did you drink {isSymptomDayToday ? "today" : `on ${symptomDayLabel}`}?
+            </Text>
+            <View style={styles.optionChipRow}>
+              <OptionChip
+                label="Yes"
+                selected={form.drank_on_symptom_day === true}
+                onPress={() => setForm((p) => ({ ...p, drank_on_symptom_day: true }))}
+              />
+              <OptionChip
+                label="No"
+                selected={form.drank_on_symptom_day === false}
+                onPress={() => setForm((p) => ({ ...p, drank_on_symptom_day: false }))}
+              />
+            </View>
+            {fieldErrors.drank_on_symptom_day ? <Text style={errTextStyle}>{fieldErrors.drank_on_symptom_day}</Text> : null}
+          </View>
+        ) : null}
+
+        {currentStep === 12 && alcoholStep12Phase === "dayAmount" ? (
+          <View style={styles.stepContent}>
+            <Text style={[styles.stepTitle, { color: c.text, fontFamily: TYPOGRAPHY.fontFamily.semibold }]}>How many units?</Text>
+            <View style={styles.stepperWrap}>
+              <NumberStepper
+                value={Number.parseInt(form.alcohol_units_on_symptom_day || "0", 10)}
+                onChange={(v) => setForm((p) => ({ ...p, alcohol_units_on_symptom_day: String(v) }))}
+                min={0}
+                max={30}
+              />
+            </View>
+            {fieldErrors.alcohol_units_on_symptom_day ? <Text style={errTextStyle}>{fieldErrors.alcohol_units_on_symptom_day}</Text> : null}
+          </View>
+        ) : null}
+
+        {/* Steps 13-15: Meals */}
         {currentStep === 13 ? renderMeal("breakfast", "breakfast_skipped") : null}
         {currentStep === 14 ? renderMeal("lunch", "lunch_skipped") : null}
         {currentStep === 15 ? renderMeal("dinner", "dinner_skipped") : null}
 
+        {/* Step 16: Notes */}
         {currentStep === 16 ? (
-          <View>
-            <Text style={[styles.h3, { color: c.text }]}>Additional notes</Text>
+          <View style={styles.stepContent}>
+            <Text style={[styles.stepTitle, { color: c.text, fontFamily: TYPOGRAPHY.fontFamily.semibold }]}>Additional notes</Text>
             <FlareTextInput
-              multiline
-              placeholder="Anything else you would like to add…"
               value={form.notes}
               onChangeText={(t) => setForm((p) => ({ ...p, notes: t }))}
+              placeholder="Any other information you'd like to record"
+              multiline
+              numberOfLines={4}
             />
+            {fieldErrors.notes ? <Text style={errTextStyle}>{fieldErrors.notes}</Text> : null}
           </View>
         ) : null}
 
+        {/* Step 17: Review */}
         {currentStep === SYMPTOM_REVIEW_STEP ? (
-          <WizardReviewShell>
-            <View style={styles.reviewSections}>
-              <WizardReviewSection
-                embedded
-                title="Basic Information"
-                fields={reviewBasicFields}
-                onEdit={() => openReviewEdit("basic")}
-              />
-              <WizardReviewSection
-                embedded
-                title="Bathroom Frequency"
-                fields={reviewBathroomFields}
-                onEdit={() => openReviewEdit("bathroom")}
-              />
-              {reviewLifestyleFields.length > 0 ? (
-                <WizardReviewSection
-                  embedded
-                  title="Lifestyle"
-                  fields={reviewLifestyleFields}
-                  onEdit={() => openReviewEdit("lifestyle")}
-                />
+          <View style={styles.reviewContent}>
+            <Text style={[styles.reviewTitle, { color: c.text, fontFamily: TYPOGRAPHY.fontFamily.bold }]}>Review Your Log</Text>
+            <WizardReviewShell>
+              <WizardReviewSection title="Basic Information" fields={reviewBasicFields} onEdit={() => openReviewEdit("basic")} />
+              <WizardReviewSection title="Bathroom Frequency" fields={reviewBathroomFields} onEdit={() => openReviewEdit("bathroom")} />
+              {showLifestyleReview && reviewLifestyleFields.length > 0 ? (
+                <WizardReviewSection title="Lifestyle" fields={reviewLifestyleFields} onEdit={() => openReviewEdit("lifestyle")} />
               ) : null}
-              <WizardReviewMealsSection embedded entries={mealReviewEntries} onEdit={() => openReviewEdit("meals")} />
-              <WizardReviewNotesSection embedded notes={form.notes} onEdit={() => openReviewEdit("notes")} />
-            </View>
-            <View style={styles.reviewSubmitInCard}>
-              <PrimaryButton
-                title={submitting ? "Saving…" : editId ? "Save changes" : "Submit"}
-                onPress={submit}
-                disabled={submitting}
-                noTopMargin
-              />
-            </View>
-          </WizardReviewShell>
-        ) : null}
-
-        {currentStep > 0 && !(currentStep === SYMPTOM_REVIEW_STEP && !editingReviewSection) ? (
-          <View style={styles.footerBtns}>
-            {editingReviewSection ? (
-              <>
-                <PrimaryButton title="Back to review" onPress={returnToReview} />
-                {currentStep < getSymptomReviewSectionLastStep(editingReviewSection) ? (
-                  <SecondaryButton title="Next" onPress={applyAdvance} />
-                ) : null}
-              </>
-            ) : (
-              <>
-                <PrimaryButton title="Next" onPress={applyAdvance} />
-                {currentStep > 1 ? <SecondaryButton title="Prev" onPress={goBackInternal} /> : null}
-              </>
-            )}
+              {mealReviewEntries.length > 0 ? (
+                <WizardReviewMealsSection entries={mealReviewEntries} onEdit={() => openReviewEdit("meals")} />
+              ) : null}
+              {form.notes.trim() ? <WizardReviewNotesSection notes={form.notes.trim()} onEdit={() => openReviewEdit("notes")} /> : null}
+            </WizardReviewShell>
           </View>
         ) : null}
       </ScrollView>
-      </View>
+
+      {currentStep > 0 && currentStep !== SYMPTOM_REVIEW_STEP ? (
+        <View style={[styles.footer, { backgroundColor: c.screen, borderTopColor: c.cardBorder }]}>
+          <SecondaryButton title="Back" onPress={goBackInternal} />
+          <PrimaryButton title="Next" onPress={applyAdvance} />
+        </View>
+      ) : null}
+
+      {currentStep === SYMPTOM_REVIEW_STEP && !editingReviewSection ? (
+        <View style={[styles.footer, { backgroundColor: c.screen, borderTopColor: c.cardBorder }]}>
+          <PrimaryButton title={submitting ? "Saving..." : "Save"} onPress={submit} disabled={submitting} />
+        </View>
+      ) : null}
+
+      {picker && (
+        <DateTimePicker
+          value={picker === "start" && form.symptomStartDate ? parseYmd(form.symptomStartDate) : picker === "end" && form.symptomEndDate ? parseYmd(form.symptomEndDate) : new Date()}
+          mode="date"
+          display={Platform.OS === "ios" ? "spinner" : "default"}
+          maximumDate={new Date()}
+          onChange={(event, d) => {
+            if (Platform.OS === "android") {
+              setPicker(null);
+              if (isAndroidDatePickerDismissed(event)) return;
+              if (event.type === "set" && d) {
+                setForm((p) => ({ ...p, [picker === "start" ? "symptomStartDate" : "symptomEndDate"]: toYmd(d) }));
+              }
+              return;
+            }
+            if (d) {
+              setForm((p) => ({ ...p, [picker === "start" ? "symptomStartDate" : "symptomEndDate"]: toYmd(d) }));
+            }
+            setPicker(null);
+          }}
+        />
+      )}
     </KeyboardAvoidingView>
   );
 }
 
 const styles = StyleSheet.create({
-  centered: { flex: 1, justifyContent: "center", alignItems: "center" },
-  wizardShell: { flex: 1 },
-  scrollPad: { paddingTop: 16, paddingBottom: QUESTIONNAIRE_STEP_SCROLL_BOTTOM },
-  scrollPadLanding: { flexGrow: 1, paddingHorizontal: FULL_WIDTH_CTA_EDGE_PADDING },
-  scrollPadWizardSteps: { ...QUESTIONNAIRE_STEP_SCROLL },
-  landing: {
-    alignItems: "center",
-    justifyContent: "center",
-    paddingTop: 8,
-    paddingBottom: 36,
-    width: "100%",
+  screen: { flex: 1 },
+  centered: { flex: 1, alignItems: "center", justifyContent: "center" },
+  scrollContent: {
+    paddingHorizontal: SPACING.screen,
+    paddingTop: SPACING.lg,
+    paddingBottom: 120,
   },
-  /** Web: `w-14 h-14` (56), `rounded-2xl` (16); spaced from title so the icon reads as its own band. */
-  landingIconPanel: {
-    width: 56,
-    height: 56,
-    borderRadius: 16,
+  scrollContentLanding: {
+    paddingTop: 0,
+    paddingBottom: SPACING.xl,
+  },
+  progressWrap: {
+    marginBottom: SPACING.xl,
+    gap: SPACING.sm,
+  },
+  progressLabel: {
+    fontSize: TYPOGRAPHY.fontSize.sm,
+  },
+  landing: {
+    flex: 1,
+    justifyContent: "center",
+    paddingVertical: SPACING.xl * 2,
+  },
+  landingCard: {
+    alignItems: "center",
+    gap: SPACING.lg,
+  },
+  landingIconWrap: {
+    width: 80,
+    height: 80,
+    borderRadius: 40,
     alignItems: "center",
     justifyContent: "center",
-    marginBottom: 32,
+    marginBottom: SPACING.md,
   },
   landingTitle: {
-    fontFamily: "Outfit_700Bold",
-    fontSize: 22,
-    lineHeight: 28,
-    marginBottom: 20,
+    fontSize: TYPOGRAPHY.fontSize.screenTitle,
     textAlign: "center",
-    letterSpacing: -0.4,
-    maxWidth: 360,
-    width: "100%",
   },
-  landingSub: {
-    fontSize: 17,
-    lineHeight: 26,
+  landingDesc: {
+    fontSize: TYPOGRAPHY.fontSize.md,
     textAlign: "center",
-    marginBottom: 0,
-    paddingHorizontal: 4,
-    maxWidth: 360,
-    width: "100%",
+    lineHeight: 22,
   },
-  landingCta: { width: "100%", paddingHorizontal: LANDING_CTA_SIDE_PAD, marginTop: 28 },
-  phaseLine: { fontSize: 13, marginBottom: 12, fontFamily: "Outfit_500Medium" },
-  h3: { ...QUESTIONNAIRE_STEP_TITLE },
-  rowGap: { ...QUESTIONNAIRE_STEP_OPTION_LIST },
-  radioRow: { ...QUESTIONNAIRE_STEP_RADIO_ROW },
-  radioOuter: { width: 22, height: 22, borderRadius: 11, borderWidth: 2, alignItems: "center", justifyContent: "center" },
-  radioInner: { width: 12, height: 12, borderRadius: 6 },
-  mealEntryWrap: { marginBottom: 12 },
-  mealEntryWrapFirst: { paddingTop: 0 },
-  mealFoodInput: { marginTop: 0 },
-  removeItemLink: { marginTop: 6, alignSelf: "flex-end" },
-  addItemLink: { marginTop: 8, marginBottom: 8, alignSelf: "flex-start" },
-  footerBtns: { ...QUESTIONNAIRE_STEP_FOOTER },
-  /** Section stack inside the review card. */
-  reviewSections: { gap: 12 },
-  /** Same as My Meds detail — only this gap above the in-card CTA. */
-  reviewSubmitInCard: { marginTop: CARD_INNER_PADDING },
-  switchRow: { flexDirection: "row", alignItems: "center", marginTop: 12 },
+  stepContent: {
+    gap: SPACING.lg,
+  },
+  stepTitle: {
+    fontSize: TYPOGRAPHY.fontSize.cardTitle,
+    lineHeight: 24,
+  },
+  optionChipRow: {
+    flexDirection: "row",
+    gap: SPACING.md,
+  },
+  optionChipGrid: {
+    flexDirection: "row",
+    flexWrap: "wrap",
+    gap: SPACING.md,
+  },
+  stepperWrap: {
+    alignItems: "flex-start",
+  },
+  datePicker: {
+    paddingHorizontal: SPACING.lg,
+    paddingVertical: SPACING.card,
+    borderRadius: RADIUS.button,
+    borderWidth: 1.5,
+  },
+  dateText: {
+    fontSize: TYPOGRAPHY.fontSize.md,
+  },
+  mealRow: {
+    gap: SPACING.sm,
+  },
+  mealFoodInput: {
+    flex: 1,
+  },
+  removeLink: {
+    paddingVertical: SPACING.xs,
+    alignSelf: "flex-start",
+  },
+  removeLinkText: {
+    fontSize: TYPOGRAPHY.fontSize.sm,
+  },
+  addLink: {
+    paddingVertical: SPACING.sm,
+    alignSelf: "flex-start",
+  },
+  addLinkText: {
+    fontSize: TYPOGRAPHY.fontSize.md,
+  },
+  switchRow: {
+    flexDirection: "row",
+    alignItems: "center",
+    justifyContent: "space-between",
+    paddingVertical: SPACING.sm,
+  },
+  switchLabel: {
+    flex: 1,
+    fontSize: TYPOGRAPHY.fontSize.md,
+  },
+  reviewContent: {
+    gap: SPACING.lg,
+  },
+  reviewTitle: {
+    fontSize: TYPOGRAPHY.fontSize.screenTitle,
+  },
+  footer: {
+    flexDirection: "row",
+    gap: SPACING.md,
+    paddingHorizontal: SPACING.screen,
+    paddingVertical: SPACING.lg,
+    borderTopWidth: 1,
+  },
 });

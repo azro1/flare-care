@@ -9,6 +9,7 @@ import { ScrollView } from "../lib/scrollViews";
 import { OptionPickerModal } from "../components/OptionPickerModal";
 import { Card } from "../components/MidnightLagoonCard";
 import { Tray, TrayRow } from "../components/MidnightLagoonTray";
+import { OptionChip } from "../components/OptionChip";
 import { PrimaryButton, SecondaryButton } from "../components/FlareButton";
 import { flareFieldErrorStyle, FlareInputTrigger, FlareTextInput } from "../components/FlareInput";
 import { invalidateDashboardSnapshot } from "../lib/dashboardSnapshotCache";
@@ -367,19 +368,9 @@ export function MedicationTrackingWizardScreen({ user }: { user: SessionUser }) 
   const renderYesNo = (field: "missedMedications" | "nsaidUsage" | "antibioticUsage", title: string) => (
     <View>
       <Text style={[styles.stepTitle, { color: c.text, fontFamily: TYPOGRAPHY.fontFamily.semibold }]}>{title}</Text>
-      <View style={styles.optionList}>
-        <Pressable style={styles.radioRow} onPress={() => setYesNo(field, true)}>
-          <View style={[styles.radioOuter, { borderColor: c.inputBorder }]}>
-            {form[field] === true ? <View style={[styles.radioInner, { backgroundColor: c.primary }]} /> : null}
-          </View>
-          <Text style={[styles.radioLabel, { color: c.text, fontFamily: TYPOGRAPHY.fontFamily.regular }]}>Yes</Text>
-        </Pressable>
-        <Pressable style={styles.radioRow} onPress={() => setYesNo(field, false)}>
-          <View style={[styles.radioOuter, { borderColor: c.inputBorder }]}>
-            {form[field] === false ? <View style={[styles.radioInner, { backgroundColor: c.primary }]} /> : null}
-          </View>
-          <Text style={[styles.radioLabel, { color: c.text, fontFamily: TYPOGRAPHY.fontFamily.regular }]}>No</Text>
-        </Pressable>
+      <View style={styles.optionChipRow}>
+        <OptionChip label="Yes" selected={form[field] === true} onPress={() => setYesNo(field, true)} />
+        <OptionChip label="No" selected={form[field] === false} onPress={() => setYesNo(field, false)} />
       </View>
       {fieldErrors[field] ? <Text style={errTextStyle}>{fieldErrors[field]}</Text> : null}
     </View>
