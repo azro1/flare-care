@@ -1238,8 +1238,8 @@ export function SymptomLogWizardScreen({ user }: { user: SessionUser }) {
 
       {currentStep > 0 && currentStep !== SYMPTOM_REVIEW_STEP ? (
         <View style={[styles.footer, { backgroundColor: c.screen, borderTopColor: c.cardBorder }]}>
-          {currentStep >= 13 && currentStep <= 15 ? <PrimaryButton title="Next" onPress={applyAdvance} /> : null}
           <SecondaryButton title="Back" onPress={goBackInternal} />
+          {currentStep >= 13 && currentStep <= 16 ? <PrimaryButton title="Next" onPress={applyAdvance} /> : null}
         </View>
       ) : null}
 
