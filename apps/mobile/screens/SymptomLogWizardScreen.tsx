@@ -1,5 +1,5 @@
 import { FLARE_FEATURE_LUCIDE, FlareLucideIcon, FLARE_CHROME_LUCIDE } from "../lib/flareLucideIcons";
-import { Pencil } from "lucide-react-native";
+import { PenLine } from "lucide-react-native";
 import DateTimePicker from "@react-native-community/datetimepicker";
 import AsyncStorage from "@react-native-async-storage/async-storage";
 import { CommonActions, useNavigation, useRoute } from "@react-navigation/native";
@@ -128,7 +128,7 @@ function ReviewSectionCard({
           hitSlop={10}
           style={[styles.reviewEditBtn, { backgroundColor: c.surfaceSubtle }]}
         >
-          <FlareLucideIcon icon={Pencil} size={16} color={c.primary} />
+          <FlareLucideIcon icon={PenLine} size={16} color={c.primary} />
         </Pressable>
       </View>
       {children}
