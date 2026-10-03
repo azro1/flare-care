@@ -69,6 +69,7 @@ import { TodayPrioritiesExpandableTray } from "./components/TodayActivityPrototy
 import { HomeCareNextCard } from "./components/HomeCareNextCard";
 import { HomeToolsEntryCard } from "./components/HomeToolsEntryCard";
 import { HomeFeatureTileGrid, type HomeFeatureGridTile } from "./components/HomeFeatureTileGrid";
+import { GoogleGIcon } from "./components/GoogleGIcon";
 import {
   authenticate,
   biometricTypeLabel,
@@ -1158,12 +1159,200 @@ function AuthScreen({
       <View
         style={[
           styles.authScreenFill,
-          { backgroundColor: authBlue ? cAuth.primary : cAuth.screen },
+          { backgroundColor: cAuth.screen },
         ]}
       />
     );
   }
 
+  // REBUILT AUTH LANDING TO MATCH MOCKUPS
+  if (step === "method") {
+    return (
+      <View
+        style={[
+          styles.authScreenFill,
+          {
+            backgroundColor: cAuth.screen,
+            paddingTop: insets.top + 60,
+            paddingBottom: Math.max(insets.bottom, 24),
+            paddingHorizontal: 24,
+          },
+        ]}
+      >
+        {/* Logo + Tagline - upper-middle */}
+        <View style={styles.authLandingTop}>
+          <FlareBrandLockup
+            markColor={cAuth.primary}
+            nameColor={cAuth.text}
+            nameSize={26}
+            style={{ marginBottom: 20 }}
+          />
+          <Text style={[styles.authLandingTaglineNew, { color: cAuth.textSecondary }]}>
+            Your Health. Your IBD.{"\n"}Your Control.
+          </Text>
+        </View>
+
+        {/* Spacer */}
+        <View style={{ flex: 1 }} />
+
+        {/* Bottom Actions Area */}
+        {quickUnlock && !showAuthMethodsFromQuickUnlock ? (
+          // RETURNING USER WITH BIOMETRICS
+          <View style={styles.authLandingBottom}>
+            <Text style={[styles.authWelcomeBack, { color: cAuth.textSecondary }]}>
+              Welcome back, {quickUnlock.displayName}
+            </Text>
+            
+            <PrimaryButton
+              title={unlockBusy ? "Unlocking…" : `Unlock with ${quickUnlock.label}`}
+              onPress={runQuickUnlock}
+              disabled={unlockBusy}
+              noTopMargin
+              leftIcon={
+                <FlareLucideIcon
+                  icon={FLARE_CHROME_LUCIDE.fingerprint}
+                  size={18}
+                  color={unlockBusy ? cAuth.primaryHover : cAuth.white}
+                />
+              }
+            />
+
+            <Pressable
+              accessibilityRole="button"
+              accessibilityLabel="Use email or Google instead"
+              onPress={() => setShowAuthMethodsFromQuickUnlock(true)}
+              hitSlop={8}
+              style={styles.authFallbackLink}
+            >
+              <Text style={[styles.authFallbackLinkText, { color: cAuth.link }]}>
+                Use email or Google instead
+              </Text>
+            </Pressable>
+
+            <Text style={[styles.authLegalFooter, { color: cAuth.textMuted }]}>
+              By continuing you agree to our{" "}
+              <Text
+                style={[styles.authLegalLink, { color: cAuth.link }]}
+                onPress={() => setAuthLegalModal("terms")}
+              >
+                Terms of Service
+              </Text>{" "}
+              and{" "}
+              <Text
+                style={[styles.authLegalLink, { color: cAuth.link }]}
+                onPress={() => setAuthLegalModal("privacy")}
+              >
+                Privacy Policy
+              </Text>
+              .
+            </Text>
+          </View>
+        ) : (
+          // FIRST-TIME USER
+          <View style={styles.authLandingBottom}>
+            <PrimaryButton
+              title="Continue with email"
+              onPress={() => beginAuthAction("email")}
+              disabled={activeAuthAction !== null || !legalHydrated}
+              noTopMargin
+              leftIcon={
+                <FlareLucideIcon
+                  icon={FLARE_CHROME_LUCIDE.mail}
+                  size={18}
+                  color={
+                    activeAuthAction !== null || !legalHydrated
+                      ? cAuth.primaryHover
+                      : cAuth.white
+                  }
+                />
+              }
+            />
+
+            <SecondaryButton
+              title={activeAuthAction === "google" ? "Loading..." : "Continue with Google"}
+              onPress={() => beginAuthAction("google")}
+              disabled={activeAuthAction !== null || !legalHydrated}
+              noTopMargin
+              leftIcon={<GoogleGIcon size={18} />}
+            />
+
+            <Text style={[styles.authLegalFooter, { color: cAuth.textMuted }]}>
+              By continuing you agree to our{" "}
+              <Text
+                style={[styles.authLegalLink, { color: cAuth.link }]}
+                onPress={() => setAuthLegalModal("terms")}
+              >
+                Terms of Service
+              </Text>{" "}
+              and{" "}
+              <Text
+                style={[styles.authLegalLink, { color: cAuth.link }]}
+                onPress={() => setAuthLegalModal("privacy")}
+              >
+                Privacy Policy
+              </Text>
+              .
+            </Text>
+          </View>
+        )}
+
+        <SlideUpSheet visible={legalConsentVisible} onClose={closeLegalConsentSheet}>
+          <View style={styles.authLegalSheetBody}>
+            <Text style={[styles.authLegalSheetTitle, { color: cAuth.text }]}>Before you continue</Text>
+            <Text style={[styles.authLegalSheetCopy, { color: cAuth.textMuted }]}>
+              To use Flarecare you need to agree to our{" "}
+              <Text
+                style={[styles.authLegalLink, { color: cAuth.primary }]}
+                onPress={() => setAuthLegalModal("terms")}
+              >
+                Terms of Service
+              </Text>{" "}
+              and{" "}
+              <Text
+                style={[styles.authLegalLink, { color: cAuth.primary }]}
+                onPress={() => setAuthLegalModal("privacy")}
+              >
+                Privacy Policy
+              </Text>
+              , including the processing of your health information.
+            </Text>
+            <PrimaryButton title="Agree" onPress={agreeLegalAndContinue} noTopMargin />
+          </View>
+        </SlideUpSheet>
+
+        <Modal
+          visible={authLegalModal !== null}
+          animationType="slide"
+          presentationStyle="pageSheet"
+          onRequestClose={() => setAuthLegalModal(null)}
+        >
+          <View style={[styles.legalModalRoot, { backgroundColor: cAuth.screen, paddingTop: insets.top }]}>
+            <View style={[styles.legalModalHeader, { borderBottomColor: cAuth.cardBorder }]}>
+              <Text style={[styles.legalModalTitle, { color: cAuth.text }]}>
+                {authLegalModal === "terms" ? "Terms of Use" : "Privacy Policy"}
+              </Text>
+              <Pressable
+                accessibilityRole="button"
+                accessibilityLabel="Close"
+                onPress={() => setAuthLegalModal(null)}
+                hitSlop={12}
+              >
+                <FlareLucideIcon icon={FLARE_CHROME_LUCIDE.close} size={HEADER_CHROME_ICON_SIZE} color={cAuth.text} />
+              </Pressable>
+            </View>
+            <ScrollView
+              style={styles.legalModalScroll}
+              contentContainerStyle={[styles.legalModalScrollContent, { paddingBottom: Math.max(insets.bottom, 24) }]}
+            >
+              {authLegalModal ? <LegalDocumentView kind={authLegalModal} /> : null}
+            </ScrollView>
+          </View>
+        </Modal>
+      </View>
+    );
+  }
+
+  // EMAIL / CODE ENTRY SCREENS
   return (
     <Pressable
       accessible={false}
@@ -1171,9 +1360,8 @@ function AuthScreen({
       style={[
         styles.authScreenFill,
         {
-          backgroundColor: authBlue ? cAuth.primary : cAuth.screen,
+          backgroundColor: cAuth.screen,
           paddingTop: authTopChrome,
-          // Match BiometricLockScreen bottom inset so the fingerprint sits on the same baseline.
           paddingBottom: Math.max(insets.bottom, 16),
           paddingHorizontal: FULL_WIDTH_CTA_EDGE_PADDING,
         },
@@ -1182,98 +1370,25 @@ function AuthScreen({
       <View style={styles.authInlineBody}>
         <View style={{ height: lockupTop }} />
         <View style={[styles.authInlinePanel, styles.authMethodPanel]}>
-          {step === "method" ? (
-            <>
-              <Animated.View style={authCascadeMotion(authBrandAnim)}>
-                <FlareBrandLockup
-                  markColor={onPrimaryChrome ? cAuth.white : cAuth.primary}
-                  nameColor={onPrimaryChrome ? cAuth.white : cAuth.text}
-                  nameSize={26}
-                  style={styles.authLandingBrandRowWithTagline}
-                />
-              </Animated.View>
-              <Animated.View style={authCascadeMotion(authTaglineAnim)}>
-                <Text
-                  style={[
-                    styles.authLandingTagline,
-                    { color: onPrimaryChrome ? "rgba(255,255,255,0.82)" : cAuth.textMuted },
-                  ]}
-                >
-                  Your health. Your IBD. Your control.
-                </Text>
-              </Animated.View>
-            </>
-          ) : (
-            <Animated.View style={authStepMotion(authTitleAnim)}>
-              <Text style={[styles.authPromptTitle, { color: onPrimaryChrome ? cAuth.white : cAuth.text }]}>
-                {step === "email" ? "Sign in with email" : "Enter your code"}
-              </Text>
-              <Text
-                style={[
-                  styles.authPromptSub,
-                  styles.authEmailHelperSub,
-                  { color: onPrimaryChrome ? "rgba(255,255,255,0.88)" : cAuth.textMuted },
-                ]}
-              >
-                {step === "email"
-                  ? "We'll send a 6-digit code to this email."
-                  : "Enter the 6-digit code from your inbox."}
-              </Text>
-            </Animated.View>
-          )}
+          <Animated.View style={authStepMotion(authTitleAnim)}>
+            <Text style={[styles.authPromptTitle, { color: cAuth.text }]}>
+              {step === "email" ? "Sign in with email" : "Enter your code"}
+            </Text>
+            <Text
+              style={[
+                styles.authPromptSub,
+                styles.authEmailHelperSub,
+                { color: cAuth.textMuted },
+              ]}
+            >
+              {step === "email"
+                ? "We'll send a 6-digit code to this email."
+                : "Enter the 6-digit code from your inbox."}
+            </Text>
+          </Animated.View>
 
           <View style={styles.authStepBody}>
-          {step === "method" && (!quickUnlock || showAuthMethodsFromQuickUnlock) ? (
-            <Animated.View style={authCascadeMotion(authActionsAnim)}>
-              <View style={[styles.authMethodActions, styles.authMethodActionsUnderTagline]}>
-                <PrimaryButton
-                  title="Continue with email"
-                  onPress={() => beginAuthAction("email")}
-                  disabled={activeAuthAction !== null || !legalHydrated}
-                  variant={onPrimaryChrome ? "onPrimary" : "default"}
-                  noTopMargin
-                  leftIcon={
-                    <FlareLucideIcon
-                      icon={FLARE_CHROME_LUCIDE.mail}
-                      size={16}
-                      color={
-                        activeAuthAction !== null || !legalHydrated
-                          ? cAuth.primaryHover
-                          : onPrimaryChrome
-                            ? cAuth.primary
-                            : cAuth.white
-                      }
-                    />
-                  }
-                />
-                <SecondaryButton
-                  title={activeAuthAction === "google" ? "Loading..." : "Continue with Google"}
-                  onPress={() => beginAuthAction("google")}
-                  disabled={activeAuthAction !== null || !legalHydrated}
-                  variant={onPrimaryChrome ? "onPrimary" : "default"}
-                  noTopMargin
-                  leftIcon={
-                    <Ionicons name="logo-google" size={16} color={onPrimaryChrome ? "#ffffff" : cAuth.secondaryBtnText} />
-                  }
-                />
-              </View>
-              <View style={styles.authSecureNote}>
-                <FlareLucideIcon
-                  icon={FLARE_CHROME_LUCIDE.lock}
-                  size={13}
-                  color={onPrimaryChrome ? "rgba(255,255,255,0.7)" : cAuth.textMuted}
-                />
-                <Text
-                  style={[
-                    styles.authSecureNoteText,
-                    { color: onPrimaryChrome ? "rgba(255,255,255,0.7)" : cAuth.textMuted },
-                  ]}
-                >
-                  Secure sign-in
-                </Text>
-              </View>
-            </Animated.View>
-          ) : step === "email" ? (
+          {step === "email" ? (
             <View>
               <Controller
                 control={emailControl}
@@ -1389,134 +1504,6 @@ function AuthScreen({
         </View>
         <View style={styles.authLockupBottomFill} />
       </View>
-
-      {/* Always visible when quick-login is armed — tap to open OS biometric (no auto-prompt). */}
-      {quickUnlock && !showAuthMethodsFromQuickUnlock ? (
-        <View style={styles.authQuickUnlockActions} pointerEvents="box-none">
-          <Text
-            style={[
-              styles.authQuickUnlockWelcome,
-              { color: authBlue ? "rgba(255,255,255,0.92)" : cAuth.textSecondary },
-            ]}
-          >
-            Welcome back, {quickUnlock.displayName}
-          </Text>
-          <PrimaryButton
-            title={`Unlock with ${quickUnlock.label}`}
-            onPress={runQuickUnlock}
-            disabled={unlockBusy}
-            variant={onPrimaryChrome ? "onPrimary" : "default"}
-            noTopMargin
-            leftIcon={
-              <FlareLucideIcon
-                icon={FLARE_CHROME_LUCIDE.fingerprint}
-                size={16}
-                color={
-                  unlockBusy
-                    ? cAuth.primaryHover
-                    : onPrimaryChrome
-                      ? cAuth.primary
-                      : cAuth.white
-                }
-              />
-            }
-          />
-          <Pressable
-            accessibilityRole="button"
-            accessibilityLabel="Use email or Google instead"
-            onPress={() => setShowAuthMethodsFromQuickUnlock(true)}
-            hitSlop={8}
-            style={styles.authQuickUnlockFallbackLink}
-          >
-            <Text
-              style={[
-                styles.authQuickUnlockFallbackLinkText,
-                { color: authBlue ? "rgba(255,255,255,0.88)" : cAuth.link },
-              ]}
-            >
-              Use email or Google instead
-            </Text>
-          </Pressable>
-          {/* Matches lock-screen Sign out row so the fingerprint sits in the same spot. */}
-          <View style={styles.authLegalFooter}>
-            <Text
-              style={[
-                styles.authLegalFooterText,
-                { color: authBlue ? "rgba(255,255,255,0.7)" : cAuth.textMuted },
-              ]}
-            >
-              By continuing you agree to our{" "}
-              <Text
-                style={[styles.authLegalLink, { color: authBlue ? "rgba(255,255,255,0.88)" : cAuth.primary }]}
-                onPress={() => setAuthLegalModal("terms")}
-              >
-                Terms of Service
-              </Text>{" "}
-              and{" "}
-              <Text
-                style={[styles.authLegalLink, { color: authBlue ? "rgba(255,255,255,0.88)" : cAuth.primary }]}
-                onPress={() => setAuthLegalModal("privacy")}
-              >
-                Privacy Policy
-              </Text>
-              .
-            </Text>
-          </View>
-        </View>
-      ) : null}
-
-      <SlideUpSheet visible={legalConsentVisible} onClose={closeLegalConsentSheet}>
-        <View style={styles.authLegalSheetBody}>
-          <Text style={[styles.authLegalSheetTitle, { color: cAuth.text }]}>Before you continue</Text>
-          <Text style={[styles.authLegalSheetCopy, { color: cAuth.textMuted }]}>
-            To use Flarecare you need to agree to our{" "}
-            <Text
-              style={[styles.authLegalLink, { color: cAuth.primary }]}
-              onPress={() => setAuthLegalModal("terms")}
-            >
-              Terms of Service
-            </Text>{" "}
-            and{" "}
-            <Text
-              style={[styles.authLegalLink, { color: cAuth.primary }]}
-              onPress={() => setAuthLegalModal("privacy")}
-            >
-              Privacy Policy
-            </Text>
-            , including the processing of your health information.
-          </Text>
-          <PrimaryButton title="Agree" onPress={agreeLegalAndContinue} noTopMargin />
-        </View>
-      </SlideUpSheet>
-
-      <Modal
-        visible={authLegalModal !== null}
-        animationType="slide"
-        presentationStyle="pageSheet"
-        onRequestClose={() => setAuthLegalModal(null)}
-      >
-        <View style={[styles.legalModalRoot, { backgroundColor: cAuth.screen, paddingTop: insets.top }]}>
-          <View style={[styles.legalModalHeader, { borderBottomColor: cAuth.cardBorder }]}>
-            <Text style={[styles.legalModalTitle, { color: cAuth.text }]}>
-              {authLegalModal === "terms" ? "Terms of Use" : "Privacy Policy"}
-            </Text>
-            <Pressable
-              accessibilityRole="button"
-              accessibilityLabel="Close"
-              onPress={() => setAuthLegalModal(null)}
-              hitSlop={12}
-            >
-              <FlareLucideIcon icon={FLARE_CHROME_LUCIDE.close} size={HEADER_CHROME_ICON_SIZE} color={cAuth.text} />
-            </Pressable>
-          </View>
-          <ScrollView
-            style={styles.legalModalScroll}
-            contentContainerStyle={[styles.legalModalScrollContent, { paddingBottom: Math.max(insets.bottom, 24) }]}
-          >
-            {authLegalModal ? <LegalDocumentView kind={authLegalModal} /> : null}
-          </ScrollView>
-        </View>
-      </Modal>
     </Pressable>
   );
 }
@@ -5781,6 +5768,38 @@ const styles = StyleSheet.create({
     /** Section air above CTAs — matches `authSecureNote` below. */
     marginBottom: 28,
   },
+  /** NEW REBUILT AUTH LANDING STYLES */
+  authLandingTop: {
+    alignItems: "center",
+    marginTop: 20,
+  },
+  authLandingTaglineNew: {
+    textAlign: "center",
+    fontSize: 18,
+    lineHeight: 26,
+    fontFamily: "Inter_400Regular",
+  },
+  authLandingBottom: {
+    width: "100%",
+    gap: 12,
+  },
+  authWelcomeBack: {
+    fontSize: 18,
+    fontFamily: "Inter_500Medium",
+    textAlign: "center",
+    marginBottom: 4,
+  },
+  authFallbackLink: {
+    alignSelf: "center",
+    marginTop: 4,
+    paddingVertical: 6,
+  },
+  authFallbackLinkText: {
+    fontSize: 15,
+    fontFamily: "Inter_500Medium",
+    textAlign: "center",
+  },
+  /** END NEW STYLES */
   authMethodActions: {
     marginTop: 18,
     gap: 10,
