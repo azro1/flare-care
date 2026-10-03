@@ -1,6 +1,5 @@
 import React from "react";
 import { View, Text, StyleSheet, ViewStyle } from "react-native";
-import { LinearGradient } from "expo-linear-gradient";
 import { useFlareColors } from "../theme";
 import { SPACING, RADIUS, TYPOGRAPHY } from "../designTokens";
 
@@ -13,15 +12,9 @@ type HeroCardProps = {
 
 export function HeroCard({ title, subtitle, children, style }: HeroCardProps) {
   const colors = useFlareColors();
-  const navyBlend = "#0D234B";
 
   return (
-    <LinearGradient
-      colors={[colors.primary, navyBlend]}
-      start={{ x: 0, y: 0 }}
-      end={{ x: 1, y: 1 }}
-      style={[styles.heroCard, style]}
-    >
+    <View style={[styles.heroCard, { backgroundColor: colors.primary }, style]}>
       <Text style={[styles.heroTitle, { fontFamily: TYPOGRAPHY.fontFamily.semibold }]}>
         {title}
       </Text>
@@ -31,7 +24,7 @@ export function HeroCard({ title, subtitle, children, style }: HeroCardProps) {
         </Text>
       )}
       {children}
-    </LinearGradient>
+    </View>
   );
 }
 

@@ -62,7 +62,7 @@ export function TodayScreen({ user }: TodayScreenProps) {
               .eq("date", today)
               .maybeSingle(),
             supabase
-              .from(TABLES.DAILY_BOWEL)
+              .from(TABLES.BOWEL_MOVEMENTS)
               .select("id")
               .eq("user_id", user.id)
               .gte("created_at", `${today}T00:00:00`),

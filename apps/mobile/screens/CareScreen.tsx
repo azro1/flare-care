@@ -2,7 +2,6 @@ import React from "react";
 import { View, Text, StyleSheet } from "react-native";
 import { ScrollView } from "../lib/scrollViews";
 import { useNavigation } from "@react-navigation/native";
-import { LinearGradient } from "expo-linear-gradient";
 import { useFlareColors } from "../theme";
 import { SPACING, RADIUS, TYPOGRAPHY, OPACITY } from "../designTokens";
 import { Card } from "../components/MidnightLagoonCard";
@@ -21,7 +20,6 @@ export function CareScreen({ user }: CareScreenProps) {
   const navigation = useNavigation<any>();
   const colors = useFlareColors();
   const insets = useSafeAreaInsets();
-  const navyBlend = "#0D234B";
 
   return (
     <View style={[styles.screen, { backgroundColor: colors.screen }]}>
@@ -34,12 +32,7 @@ export function CareScreen({ user }: CareScreenProps) {
       >
         <ScreenHeader title="Care" />
 
-        <LinearGradient
-          colors={[colors.primary, navyBlend]}
-          start={{ x: 0, y: 0 }}
-          end={{ x: 1, y: 1 }}
-          style={styles.appointmentHero}
-        >
+        <View style={[styles.appointmentHero, { backgroundColor: colors.primary }]}>
           <Text style={[styles.heroLabel, { fontFamily: TYPOGRAPHY.fontFamily.semibold }]}>
             NEXT APPOINTMENT
           </Text>
@@ -61,7 +54,7 @@ export function CareScreen({ user }: CareScreenProps) {
               </Text>
             </View>
           </View>
-        </LinearGradient>
+        </View>
 
         <SectionLabel>Clinic</SectionLabel>
 
