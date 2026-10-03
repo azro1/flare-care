@@ -221,18 +221,12 @@ export function SymptomLogWizardScreen({ user }: { user: SessionUser }) {
   const reviewBathroomFields = useMemo((): WizardReviewField[] => {
     const fields: WizardReviewField[] = [
       {
-        label: "Frequency",
-        value: form.normal_bathroom_frequency ? `${form.normal_bathroom_frequency} times/day` : "Not set",
+        label: "Usually",
+        value: form.normal_bathroom_frequency ? `${form.normal_bathroom_frequency} a day` : "Not set",
       },
     ];
-    if (form.bathroom_frequency_changed) {
-      fields.push({
-        label: "Frequency Changed",
-        value: form.bathroom_frequency_changed === "yes" ? "Yes" : "No",
-      });
-    }
     if (form.bathroom_frequency_changed === "yes" && form.bathroom_frequency_change_details?.trim()) {
-      fields.push({ label: "Change Description", value: form.bathroom_frequency_change_details.trim() });
+      fields.push({ label: "Change", value: form.bathroom_frequency_change_details.trim() });
     }
     return fields;
   }, [form]);
@@ -248,13 +242,13 @@ export function SymptomLogWizardScreen({ user }: { user: SessionUser }) {
     }
     if (!isFirstTimeUser && typeof form.smoked_on_symptom_day === "boolean") {
       fields.push({
-        label: "Smoked",
+        label: isSymptomDayToday ? "Smoked today" : "Smoked",
         value: form.smoked_on_symptom_day ? form.smoked_amount_on_symptom_day?.trim() || "Yes" : "No",
       });
     }
     if (isFirstTimeUser && form.smoker === true && form.smoked_amount_on_symptom_day?.trim()) {
       fields.push({
-        label: isSymptomDayToday ? "Smoked Today" : `Smoked on ${symptomDayLabel}`,
+        label: isSymptomDayToday ? "Smoked today" : "Smoked",
         value: form.smoked_amount_on_symptom_day.trim(),
       });
     }
@@ -266,7 +260,7 @@ export function SymptomLogWizardScreen({ user }: { user: SessionUser }) {
     }
     if (!isFirstTimeUser && typeof form.drank_on_symptom_day === "boolean") {
       fields.push({
-        label: "Alcohol Units Consumed",
+        label: isSymptomDayToday ? "Drank today" : "Alcohol consumed",
         value: form.drank_on_symptom_day
           ? form.alcohol_units_on_symptom_day?.trim()
             ? `${form.alcohol_units_on_symptom_day.trim()} units`
@@ -276,7 +270,7 @@ export function SymptomLogWizardScreen({ user }: { user: SessionUser }) {
     }
     if (isFirstTimeUser && form.alcohol === true && form.alcohol_units_on_symptom_day?.trim()) {
       fields.push({
-        label: isSymptomDayToday ? "Alcohol Units Today" : `Alcohol Units on ${symptomDayLabel}`,
+        label: isSymptomDayToday ? "Drank today" : "Alcohol consumed",
         value: `${form.alcohol_units_on_symptom_day.trim()} units`,
       });
     }
@@ -1024,16 +1018,23 @@ export function SymptomLogWizardScreen({ user }: { user: SessionUser }) {
         {/* Step 17: Review */}
         {currentStep === SYMPTOM_REVIEW_STEP ? (
           <View style={styles.reviewContent}>
+            <Text style={[styles.reviewPageTitle, { color: c.text, fontFamily: TYPOGRAPHY.fontFamily.semibold }]}>
+              Review your log
+            </Text>
+            <Text style={[styles.reviewPageSubtitle, { color: c.textSecondary, fontFamily: TYPOGRAPHY.fontFamily.regular }]}>
+              Check everything looks right before saving.
+            </Text>
+
             <HeroCard title="">
               <View style={styles.heroHeader}>
-                <Text style={[styles.heroLabel, { color: c.white, fontFamily: TYPOGRAPHY.fontFamily.medium }]}>THIS FLARE</Text>
+                <Text style={[styles.heroLabel, { color: c.white, fontFamily: TYPOGRAPHY.fontFamily.semibold }]}>THIS FLARE</Text>
                 <Text style={[styles.heroTitle, { color: c.white, fontFamily: TYPOGRAPHY.fontFamily.bold }]}>
                   {form.symptomStartDate ? `Started ${formatUkDate(form.symptomStartDate)}` : "Symptom Log"}
                   {form.isOngoing ? ", still ongoing" : ""}
                 </Text>
-                {!form.isOngoing && form.symptomEndDate ? (
+                {form.isOngoing && form.symptomStartDate ? (
                   <Text style={[styles.heroDuration, { color: c.white, fontFamily: TYPOGRAPHY.fontFamily.regular }]}>
-                    Ended {formatUkDate(form.symptomEndDate)}
+                    {Math.ceil((new Date().getTime() - parseYmd(form.symptomStartDate).getTime()) / (1000 * 60 * 60 * 24))} days so far
                   </Text>
                 ) : null}
                 <View style={styles.heroChips}>
@@ -1055,108 +1056,110 @@ export function SymptomLogWizardScreen({ user }: { user: SessionUser }) {
               </View>
             </HeroCard>
 
-            <View style={styles.reviewSection}>
-              <View style={styles.reviewSectionHeader}>
-                <Text style={[styles.reviewSectionLabel, { color: c.textSecondary, fontFamily: TYPOGRAPHY.fontFamily.semibold }]}>
-                  {SYMPTOM_WIZARD_SECTION_LABELS.basic.toUpperCase()}
-                </Text>
+            <SectionLabel>BASIC INFORMATION</SectionLabel>
+            <Card>
+              <View style={styles.reviewCardHeader}>
                 <Pressable accessibilityRole="button" onPress={() => openReviewEdit("basic")} hitSlop={10}>
-                  <FlareLucideIcon icon={FLARE_CHROME_LUCIDE.edit} size={16} color={c.textMuted} />
+                  <FlareLucideIcon icon={FLARE_CHROME_LUCIDE.edit} size={18} color={c.textMuted} />
                 </Pressable>
               </View>
-              <View style={styles.reviewSectionContent}>
-                {reviewBasicFields.map((field, i) => (
-                  <View key={i} style={styles.reviewRow}>
-                    <Text style={[styles.reviewLabel, { color: c.textSecondary, fontFamily: TYPOGRAPHY.fontFamily.regular }]}>{field.label}</Text>
-                    <Text style={[styles.reviewValue, { color: c.text, fontFamily: TYPOGRAPHY.fontFamily.regular }]}>{field.value}</Text>
-                  </View>
-                ))}
-              </View>
-            </View>
+              {reviewBasicFields.map((field, i) => (
+                <View key={i} style={[styles.reviewFieldRow, i > 0 && { marginTop: SPACING.md }]}>
+                  <Text style={[styles.reviewFieldLabel, { color: c.textSecondary, fontFamily: TYPOGRAPHY.fontFamily.regular }]}>
+                    {field.label}
+                  </Text>
+                  <Text style={[styles.reviewFieldValue, { color: c.text, fontFamily: TYPOGRAPHY.fontFamily.regular }]}>
+                    {field.value}
+                  </Text>
+                </View>
+              ))}
+            </Card>
 
-            <View style={styles.reviewSection}>
-              <View style={styles.reviewSectionHeader}>
-                <Text style={[styles.reviewSectionLabel, { color: c.textSecondary, fontFamily: TYPOGRAPHY.fontFamily.semibold }]}>
-                  {SYMPTOM_WIZARD_SECTION_LABELS.bathroom.toUpperCase()}
-                </Text>
+            <SectionLabel>BATHROOM FREQUENCY</SectionLabel>
+            <Card>
+              <View style={styles.reviewCardHeader}>
                 <Pressable accessibilityRole="button" onPress={() => openReviewEdit("bathroom")} hitSlop={10}>
-                  <FlareLucideIcon icon={FLARE_CHROME_LUCIDE.edit} size={16} color={c.textMuted} />
+                  <FlareLucideIcon icon={FLARE_CHROME_LUCIDE.edit} size={18} color={c.textMuted} />
                 </Pressable>
               </View>
-              <View style={styles.reviewSectionContent}>
-                {reviewBathroomFields.map((field, i) => (
-                  <View key={i} style={styles.reviewRow}>
-                    <Text style={[styles.reviewLabel, { color: c.textSecondary, fontFamily: TYPOGRAPHY.fontFamily.regular }]}>{field.label}</Text>
-                    <Text style={[styles.reviewValue, { color: c.text, fontFamily: TYPOGRAPHY.fontFamily.regular }]}>{field.value}</Text>
-                  </View>
-                ))}
-              </View>
-            </View>
+              {reviewBathroomFields.map((field, i) => (
+                <View key={i} style={[styles.reviewFieldRow, i > 0 && { marginTop: SPACING.md }]}>
+                  <Text style={[styles.reviewFieldLabel, { color: c.textSecondary, fontFamily: TYPOGRAPHY.fontFamily.regular }]}>
+                    {field.label}
+                  </Text>
+                  <Text style={[styles.reviewFieldValue, { color: c.text, fontFamily: TYPOGRAPHY.fontFamily.regular }]}>
+                    {field.value}
+                  </Text>
+                </View>
+              ))}
+            </Card>
 
             {showLifestyleReview && reviewLifestyleFields.length > 0 ? (
-              <View style={styles.reviewSection}>
-                <View style={styles.reviewSectionHeader}>
-                  <Text style={[styles.reviewSectionLabel, { color: c.textSecondary, fontFamily: TYPOGRAPHY.fontFamily.semibold }]}>
-                    {SYMPTOM_WIZARD_SECTION_LABELS.lifestyle.toUpperCase()}
-                  </Text>
-                  <Pressable accessibilityRole="button" onPress={() => openReviewEdit("lifestyle")} hitSlop={10}>
-                    <FlareLucideIcon icon={FLARE_CHROME_LUCIDE.edit} size={16} color={c.textMuted} />
-                  </Pressable>
-                </View>
-                <View style={styles.reviewSectionContent}>
+              <>
+                <SectionLabel>LIFESTYLE</SectionLabel>
+                <Card>
+                  <View style={styles.reviewCardHeader}>
+                    <Pressable accessibilityRole="button" onPress={() => openReviewEdit("lifestyle")} hitSlop={10}>
+                      <FlareLucideIcon icon={FLARE_CHROME_LUCIDE.edit} size={18} color={c.textMuted} />
+                    </Pressable>
+                  </View>
                   {reviewLifestyleFields.map((field, i) => (
-                    <View key={i} style={styles.reviewRow}>
-                      <Text style={[styles.reviewLabel, { color: c.textSecondary, fontFamily: TYPOGRAPHY.fontFamily.regular }]}>{field.label}</Text>
-                      <Text style={[styles.reviewValue, { color: c.text, fontFamily: TYPOGRAPHY.fontFamily.regular }]}>{field.value}</Text>
+                    <View key={i} style={[styles.reviewFieldRow, i > 0 && { marginTop: SPACING.md }]}>
+                      <Text style={[styles.reviewFieldLabel, { color: c.textSecondary, fontFamily: TYPOGRAPHY.fontFamily.regular }]}>
+                        {field.label}
+                      </Text>
+                      <Text style={[styles.reviewFieldValue, { color: c.text, fontFamily: TYPOGRAPHY.fontFamily.regular }]}>
+                        {field.value}
+                      </Text>
                     </View>
                   ))}
-                </View>
-              </View>
+                </Card>
+              </>
             ) : null}
 
             {mealReviewEntries.length > 0 ? (
-              <View style={styles.reviewSection}>
-                <View style={styles.reviewSectionHeader}>
-                  <Text style={[styles.reviewSectionLabel, { color: c.textSecondary, fontFamily: TYPOGRAPHY.fontFamily.semibold }]}>
-                    {SYMPTOM_WIZARD_SECTION_LABELS.meals.toUpperCase()}
-                  </Text>
-                  <Pressable accessibilityRole="button" onPress={() => openReviewEdit("meals")} hitSlop={10}>
-                    <FlareLucideIcon icon={FLARE_CHROME_LUCIDE.edit} size={16} color={c.textMuted} />
-                  </Pressable>
-                </View>
-                <View style={styles.reviewSectionContent}>
+              <>
+                <SectionLabel>MEALS</SectionLabel>
+                <Card>
+                  <View style={styles.reviewCardHeader}>
+                    <Pressable accessibilityRole="button" onPress={() => openReviewEdit("meals")} hitSlop={10}>
+                      <FlareLucideIcon icon={FLARE_CHROME_LUCIDE.edit} size={18} color={c.textMuted} />
+                    </Pressable>
+                  </View>
                   {mealReviewEntries.map((entry, i) => (
-                    <View key={i} style={styles.reviewMealEntry}>
-                      <Text style={[styles.reviewMealLabel, { color: c.textSecondary, fontFamily: TYPOGRAPHY.fontFamily.regular }]}>
+                    <View key={i} style={[styles.reviewFieldRow, i > 0 && { marginTop: SPACING.md }]}>
+                      <Text style={[styles.reviewFieldLabel, { color: c.textSecondary, fontFamily: TYPOGRAPHY.fontFamily.regular }]}>
                         {entry.label}
                       </Text>
                       {entry.skipped ? (
-                        <Text style={[styles.reviewMealSkipped, { color: c.textMuted, fontFamily: TYPOGRAPHY.fontFamily.regular }]}>Skipped</Text>
+                        <Text style={[styles.reviewFieldValue, { color: c.text, fontFamily: TYPOGRAPHY.fontFamily.regular }]}>
+                          Skipped
+                        </Text>
                       ) : entry.items ? (
-                        <Text style={[styles.reviewMealItems, { color: c.text, fontFamily: TYPOGRAPHY.fontFamily.regular }]}>
+                        <Text style={[styles.reviewFieldValue, { color: c.text, fontFamily: TYPOGRAPHY.fontFamily.regular }]}>
                           {entry.items.map((item) => `${item.food}${item.quantity ? ` (${item.quantity})` : ""}`).join(", ")}
                         </Text>
                       ) : null}
                     </View>
                   ))}
-                </View>
-              </View>
+                </Card>
+              </>
             ) : null}
 
             {form.notes.trim() ? (
-              <View style={styles.reviewSection}>
-                <View style={styles.reviewSectionHeader}>
-                  <Text style={[styles.reviewSectionLabel, { color: c.textSecondary, fontFamily: TYPOGRAPHY.fontFamily.semibold }]}>
-                    {SYMPTOM_WIZARD_SECTION_LABELS.notes.toUpperCase()}
+              <>
+                <SectionLabel>NOTES</SectionLabel>
+                <Card>
+                  <View style={styles.reviewCardHeader}>
+                    <Pressable accessibilityRole="button" onPress={() => openReviewEdit("notes")} hitSlop={10}>
+                      <FlareLucideIcon icon={FLARE_CHROME_LUCIDE.edit} size={18} color={c.textMuted} />
+                    </Pressable>
+                  </View>
+                  <Text style={[styles.reviewNotesText, { color: c.text, fontFamily: TYPOGRAPHY.fontFamily.regular }]}>
+                    {form.notes.trim()}
                   </Text>
-                  <Pressable accessibilityRole="button" onPress={() => openReviewEdit("notes")} hitSlop={10}>
-                    <FlareLucideIcon icon={FLARE_CHROME_LUCIDE.edit} size={16} color={c.textMuted} />
-                  </Pressable>
-                </View>
-                <View style={styles.reviewSectionContent}>
-                  <Text style={[styles.reviewNotesText, { color: c.text, fontFamily: TYPOGRAPHY.fontFamily.regular }]}>{form.notes.trim()}</Text>
-                </View>
-              </View>
+                </Card>
+              </>
             ) : null}
           </View>
         ) : null}
@@ -1370,7 +1373,15 @@ const styles = StyleSheet.create({
     fontSize: TYPOGRAPHY.fontSize.sm,
   },
   reviewContent: {
-    gap: SPACING.lg,
+    gap: 0,
+  },
+  reviewPageTitle: {
+    fontSize: TYPOGRAPHY.fontSize.cardTitle,
+    marginBottom: SPACING.xs,
+  },
+  reviewPageSubtitle: {
+    fontSize: TYPOGRAPHY.fontSize.md,
+    marginBottom: SPACING.lg,
   },
   heroHeader: {
     gap: SPACING.xs,
@@ -1401,51 +1412,27 @@ const styles = StyleSheet.create({
   heroChipText: {
     fontSize: TYPOGRAPHY.fontSize.sm,
   },
-  reviewSection: {
-    backgroundColor: "transparent",
-  },
-  reviewSectionHeader: {
+  reviewCardHeader: {
     flexDirection: "row",
-    alignItems: "center",
-    justifyContent: "space-between",
-    marginBottom: SPACING.sm,
+    justifyContent: "flex-end",
+    marginBottom: SPACING.md,
   },
-  reviewSectionLabel: {
-    fontSize: TYPOGRAPHY.fontSize.xs,
-    letterSpacing: 0.5,
-    textTransform: "uppercase",
-  },
-  reviewSectionContent: {
-    gap: SPACING.xs,
-  },
-  reviewRow: {
+  reviewFieldRow: {
     flexDirection: "row",
     justifyContent: "space-between",
-    paddingVertical: SPACING.xs,
+    alignItems: "flex-start",
   },
-  reviewLabel: {
-    fontSize: TYPOGRAPHY.fontSize.sm,
+  reviewFieldLabel: {
+    fontSize: TYPOGRAPHY.fontSize.md,
     flex: 1,
   },
-  reviewValue: {
-    fontSize: TYPOGRAPHY.fontSize.sm,
+  reviewFieldValue: {
+    fontSize: TYPOGRAPHY.fontSize.md,
     textAlign: "right",
-  },
-  reviewMealEntry: {
-    paddingVertical: SPACING.xs,
-  },
-  reviewMealLabel: {
-    fontSize: TYPOGRAPHY.fontSize.sm,
-    marginBottom: SPACING.xxs,
-  },
-  reviewMealSkipped: {
-    fontSize: TYPOGRAPHY.fontSize.sm,
-  },
-  reviewMealItems: {
-    fontSize: TYPOGRAPHY.fontSize.sm,
+    flex: 1,
   },
   reviewNotesText: {
-    fontSize: TYPOGRAPHY.fontSize.sm,
+    fontSize: TYPOGRAPHY.fontSize.md,
     lineHeight: 20,
   },
   footer: {
