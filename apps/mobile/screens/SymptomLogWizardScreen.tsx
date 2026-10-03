@@ -1181,18 +1181,17 @@ export function SymptomLogWizardScreen({ user }: { user: SessionUser }) {
           minimumDate={picker === "end" && form.symptomStartDate ? parseYmd(form.symptomStartDate) : undefined}
           maximumDate={new Date()}
           onChange={(event, d) => {
+            const commit = (date: Date) => {
+              chooseSingle(picker === "start" ? { symptomStartDate: toYmd(date) } : { symptomEndDate: toYmd(date) });
+            };
             if (Platform.OS === "android") {
               setPicker(null);
               if (isAndroidDatePickerDismissed(event)) return;
-              if (event.type === "set" && d) {
-                setForm((p) => ({ ...p, [picker === "start" ? "symptomStartDate" : "symptomEndDate"]: toYmd(d) }));
-              }
+              if (event.type === "set" && d) commit(d);
               return;
             }
-            if (d) {
-              setForm((p) => ({ ...p, [picker === "start" ? "symptomStartDate" : "symptomEndDate"]: toYmd(d) }));
-            }
             setPicker(null);
+            if (d) commit(d);
           }}
         />
       )}
