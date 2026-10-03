@@ -48,9 +48,8 @@ export const SYMPTOM_WIZARD_REVIEW_STEP = 17;
 export type SymptomReviewSectionId = "basic" | "bathroom" | "lifestyle" | "meals" | "notes";
 
 export const SYMPTOM_WIZARD_PHASES = [
-  { id: "timing", label: "Duration", firstStep: 1, lastStep: 3 },
-  { id: "severity", label: "Severity & stress", firstStep: 4, lastStep: 5 },
-  { id: "bathroom", label: "Bathroom frequency", firstStep: 6, lastStep: 8 },
+  { id: "basic", label: "Basic Information", firstStep: 1, lastStep: 5 },
+  { id: "bathroom", label: "Bathroom Frequency", firstStep: 6, lastStep: 8 },
   { id: "lifestyle", label: "Lifestyle", firstStep: 9, lastStep: 12 },
   { id: "meals", label: "Meals", firstStep: 13, lastStep: 15 },
   { id: "notes", label: "Notes", firstStep: 16, lastStep: 16 },
