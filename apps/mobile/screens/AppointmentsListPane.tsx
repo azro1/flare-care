@@ -71,7 +71,7 @@ export function AppointmentsListPane({
   const c = useFlareColors();
   const navigation = useNavigation<any>();
   const insets = useSafeAreaInsets();
-  const { fabBottom, fabRight, scrollPadding } = useTrackerThumbFabLayout();
+  const { fabBottom, fabInsetRight, scrollBottomPad } = useTrackerThumbFabLayout();
 
   const { appointments, loading, load } = list;
   const [expandedCount, setExpandedCount] = useState(() => getApptsListExpandedCount(user.id, tab));

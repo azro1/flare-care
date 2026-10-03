@@ -34,6 +34,7 @@ type TrayRowProps = {
   valueColor?: string;
   showChevron?: boolean;
   onPress?: () => void;
+  onLongPress?: () => void;
   disabled?: boolean;
   style?: ViewStyle;
 };
@@ -46,6 +47,7 @@ export function TrayRow({
   valueColor,
   showChevron,
   onPress,
+  onLongPress,
   disabled,
   style,
 }: TrayRowProps) {
@@ -103,6 +105,7 @@ export function TrayRow({
     return (
       <Pressable
         onPress={onPress}
+        onLongPress={onLongPress}
         style={({ pressed }) => [{ opacity: pressed ? 0.7 : 1 }]}
         accessibilityRole="button"
       >
