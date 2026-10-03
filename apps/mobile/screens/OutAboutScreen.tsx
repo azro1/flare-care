@@ -9,11 +9,9 @@ import { LogHistoryCard } from "../components/LogHistoryList";
 import { FLARE_CHROME_LUCIDE, FlareLucideIcon } from "../lib/flareLucideIcons";
 import { FIND_TOILET_ICON } from "../lib/findToiletShared";
 import { GOING_OUT_ICON } from "../lib/goingOutShared";
+import { SPACING, TYPOGRAPHY } from "../designTokens";
 import {
   CARD_INNER_PADDING,
-  FLARE_FONT_FAMILY,
-  FLARE_FONT_SIZE,
-  FLARE_LINE_HEIGHT,
   HOME_FEATURE_TILE_ICON_SIZE,
   NAV_ROW_CHEVRON_SIZE,
   SCREEN_EDGE_PADDING,
@@ -84,15 +82,13 @@ const styles = StyleSheet.create({
     paddingVertical: 12,
     gap: 10,
   },
-  textCol: { flex: 1, gap: 4 },
+  textCol: { flex: 1, gap: SPACING.xxs },
   title: {
-    fontSize: FLARE_FONT_SIZE.subhead,
-    lineHeight: FLARE_LINE_HEIGHT.subhead,
-    fontFamily: FLARE_FONT_FAMILY.bold,
+    fontSize: TYPOGRAPHY.fontSize.cardTitle,
+    fontFamily: TYPOGRAPHY.fontFamily.bold,
   },
   hint: {
-    fontSize: FLARE_FONT_SIZE.muted,
-    lineHeight: FLARE_LINE_HEIGHT.muted,
-    fontFamily: FLARE_FONT_FAMILY.regular,
+    fontSize: TYPOGRAPHY.fontSize.sm,
+    fontFamily: TYPOGRAPHY.fontFamily.regular,
   },
 });
