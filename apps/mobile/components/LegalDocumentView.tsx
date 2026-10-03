@@ -46,7 +46,7 @@ function LegalParagraph({ text, c }: { text: string; c: ReturnType<typeof useFla
     <Text style={[styles.paragraph, { color: c.textMuted }]}>
       {before}
       <Text
-        style={{ color: c.primary, fontFamily: "Inter_600SemiBold" }}
+        style={{ color: c.primary, fontFamily: "Outfit_600SemiBold" }}
         onPress={() => Linking.openURL(`mailto:${SUPPORT_EMAIL}`).catch(() => {})}
         accessibilityRole="link"
         accessibilityLabel={`Email ${SUPPORT_EMAIL}`}

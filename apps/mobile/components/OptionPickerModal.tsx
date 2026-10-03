@@ -168,17 +168,17 @@ const styles = StyleSheet.create({
   },
   actionLabel: {
     fontSize: 17,
-    fontFamily: "Inter_400Regular",
+    fontFamily: "Outfit_400Regular",
     textAlign: "center",
   },
   cancelLabel: {
     fontSize: 17,
-    fontFamily: "Inter_400Regular",
+    fontFamily: "Outfit_400Regular",
     textAlign: "center",
   },
   lightBrandCancelLabel: {
     fontSize: 17,
-    fontFamily: "Inter_400Regular",
+    fontFamily: "Outfit_400Regular",
     textAlign: "center",
     color: BRAND_CANCEL_TEXT,
   },

@@ -122,9 +122,9 @@ export function LatestNewsScreen({ user }: { user: SessionUser }) {
           <ActivityIndicator size="small" color={c.primary} />
         </View>
       ) : newsError ? (
-        <Text style={{ fontSize: 13, fontFamily: "Inter_400Regular", color: c.textMuted }}>{newsError}</Text>
+        <Text style={{ fontSize: 13, fontFamily: "Outfit_400Regular", color: c.textMuted }}>{newsError}</Text>
       ) : newsItems.length === 0 ? (
-        <Text style={{ fontSize: 13, fontFamily: "Inter_400Regular", color: c.textMuted }}>No news available right now.</Text>
+        <Text style={{ fontSize: 13, fontFamily: "Outfit_400Regular", color: c.textMuted }}>No news available right now.</Text>
       ) : (
         <>
           <View style={newsFeedListStyles.fullFeed}>

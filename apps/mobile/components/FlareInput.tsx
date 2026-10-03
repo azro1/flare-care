@@ -27,7 +27,7 @@ export const flareInputStyles = StyleSheet.create({
     paddingVertical: 10,
     marginTop: 6,
     fontSize: 14,
-    fontFamily: "Inter_400Regular",
+    fontFamily: "Outfit_400Regular",
   },
   textarea: {
     borderWidth: 1,
@@ -39,7 +39,7 @@ export const flareInputStyles = StyleSheet.create({
     textAlignVertical: "top",
     fontSize: 14,
     lineHeight: 20,
-    fontFamily: "Inter_400Regular",
+    fontFamily: "Outfit_400Regular",
   },
   trigger: {
     borderWidth: 1,
@@ -67,17 +67,17 @@ export const flareInputStyles = StyleSheet.create({
   },
   inputTrailingLabel: {
     fontSize: 14,
-    fontFamily: "Inter_500Medium",
+    fontFamily: "Outfit_500Medium",
     flexShrink: 0,
   },
   fieldBlock: { gap: 6, marginBottom: 2 },
-  label: { fontSize: 13, fontFamily: "Inter_500Medium", marginTop: 2 },
+  label: { fontSize: 13, fontFamily: "Outfit_500Medium", marginTop: 2 },
 });
 
 /** Shared validation/error copy — always use `c.danger` for color. */
 export const flareFieldErrorStyles = StyleSheet.create({
-  input: { fontSize: 12, fontFamily: "Inter_400Regular", marginTop: 2 },
-  wizard: { fontSize: 13, fontFamily: "Inter_400Regular", marginTop: 8 },
+  input: { fontSize: 12, fontFamily: "Outfit_400Regular", marginTop: 2 },
+  wizard: { fontSize: 13, fontFamily: "Outfit_400Regular", marginTop: 8 },
 });
 
 export function flareFieldErrorStyle(c: FlareColors, variant: "input" | "wizard" = "input") {
@@ -133,7 +133,7 @@ export const FlareTextInput = React.forwardRef<
         {icon ? <FlareLucideIcon icon={icon} size={18} color={c.textSecondary} /> : null}
         <TextInput
           ref={ref}
-          style={[flareInputStyles.inputWithIconField, { color: theme.color, fontSize: 14, fontFamily: "Inter_400Regular" }]}
+          style={[flareInputStyles.inputWithIconField, { color: theme.color, fontSize: 14, fontFamily: "Outfit_400Regular" }]}
           placeholderTextColor={theme.placeholderColor}
           {...props}
         />
