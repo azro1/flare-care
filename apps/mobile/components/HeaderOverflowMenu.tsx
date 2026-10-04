@@ -35,18 +35,23 @@ const HIDE_ITEM_ON_ROUTE: Partial<Record<string, string[]>> = {
   About: ["about"],
 };
 
+export function confirmLogOut(onLogout: () => void | Promise<void>) {
+  showFlareAlert("Log out?", "You will be logged out of your account. Are you sure?", [
+    { text: "Stay signed in", style: "cancel" },
+    { text: "Log out", style: "destructive", onPress: () => void onLogout() },
+  ]);
+}
+
 export function HeaderOverflowMenu({
   navigation,
   routeName,
   edgePadding = 12,
-  onLogout,
   compact = false,
 }: {
   navigation: { navigate: (name: string) => void };
   routeName: string;
   /** Same as `styles.screen` horizontal padding — aligns ⋮ with card/content edge. */
   edgePadding?: number;
-  onLogout?: () => void | Promise<void>;
   /** Sit flush beside a leading header control (e.g. ? next to ⋮). */
   compact?: boolean;
 }) {
@@ -64,15 +69,6 @@ export function HeaderOverflowMenu({
   const onSelect = (route: string) => {
     close();
     navigation.navigate(route);
-  };
-
-  const onLogoutPress = () => {
-    close();
-    if (!onLogout) return;
-    showFlareAlert("Log out?", "You will be logged out of your account. Are you sure?", [
-      { text: "Stay signed in", style: "cancel" },
-      { text: "Log out", style: "destructive", onPress: () => void onLogout() },
-    ]);
   };
 
   return (
@@ -116,15 +112,6 @@ export function HeaderOverflowMenu({
                 <Text style={[styles.label, { color: c.text }]}>{item.label}</Text>
               </Pressable>
             ))}
-            {onLogout ? (
-              <Pressable
-                accessibilityRole="menuitem"
-                onPress={onLogoutPress}
-                style={({ pressed }) => [styles.row, pressed ? { opacity: 0.75 } : null]}
-              >
-                <Text style={[styles.label, { color: c.text }]}>Log out</Text>
-              </Pressable>
-            ) : null}
           </View>
         </View>
       </Modal>

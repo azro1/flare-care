@@ -1,9 +1,9 @@
-import { FlareLucideIcon } from "../lib/flareLucideIcons";
+import { FLARE_CHROME_LUCIDE, FlareLucideIcon } from "../lib/flareLucideIcons";
 import { PenLine } from "lucide-react-native";
 import DateTimePicker from "@react-native-community/datetimepicker";
 import AsyncStorage from "@react-native-async-storage/async-storage";
 import { CommonActions, useNavigation, useRoute } from "@react-navigation/native";
-import React, { useCallback, useEffect, useLayoutEffect, useMemo, useRef, useState } from "react";
+import React, { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { ActivityIndicator, BackHandler, KeyboardAvoidingView, Platform, Pressable, StyleSheet, Text, View, type ScrollView as RNScrollView } from "react-native";
 import { showFlareAlert } from "../components/FlareAlertHost";
 import { ScrollView } from "../lib/scrollViews";
@@ -31,8 +31,6 @@ import {
   MEDICATION_WIZARD_REVIEW_STEP,
   medicationLogRowToForm,
   updateMedicationTrackingLog,
-  isDosageRowComplete,
-  isMissedRowComplete,
   normalizeDosage,
   TIME_OF_DAY_OPTIONS,
   type MedicationListRow,
@@ -41,7 +39,7 @@ import {
   type MedicationWizardHistoryEntry,
 } from "../lib/medicationWizardShared";
 import { TRACK_MEDICATIONS_ICON } from "../lib/medicationFeatureIcons";
-import { SPACING, TYPOGRAPHY } from "../designTokens";
+import { RADIUS, SPACING, TYPOGRAPHY } from "../designTokens";
 import { useFlareColors } from "../theme";
 
 type SessionUser = { id: string };
@@ -154,8 +152,10 @@ export function MedicationTrackingWizardScreen({ user }: { user: SessionUser }) 
   const [pickerDraftDate, setPickerDraftDate] = useState<Date | null>(null);
   const [editingReviewSection, setEditingReviewSection] = useState<MedicationReviewSectionId | null>(null);
   const scrollRef = useRef<RNScrollView>(null);
+  const advancingRef = useRef(false);
 
   useEffect(() => {
+    advancingRef.current = false;
     scrollRef.current?.scrollTo({ y: 0, animated: false });
   }, [currentStep]);
 
@@ -191,17 +191,20 @@ export function MedicationTrackingWizardScreen({ user }: { user: SessionUser }) 
   const cleanedForReview = useMemo(() => cleanMedicationForm(form), [form]);
   const reviewHasData = !cleanedMedicationHasNoData(cleanedForReview);
 
-  const returnToReview = useCallback(() => {
-    if (cleanedMedicationHasNoData(cleanMedicationForm(form))) {
+  const returnToReview = useCallback((source: MedicationTrackingFormData = form) => {
+    if (cleanedMedicationHasNoData(cleanMedicationForm(source))) {
+      setForm(source);
       showFlareAlert("No tracking data entered");
-      return;
+      return false;
     }
+    setForm(source);
     setCurrentStep(MEDICATION_REVIEW_STEP);
     setEditingReviewSection(null);
     setFieldErrors({});
     setDatePicker(null);
     setPickerDraftDate(null);
     setTimePicker(null);
+    return true;
   }, [form]);
 
   const openReviewEdit = useCallback((section: MedicationReviewSectionId) => {
@@ -269,12 +272,6 @@ export function MedicationTrackingWizardScreen({ user }: { user: SessionUser }) 
     return () => sub.remove();
   }, [goBackInternal]);
 
-  useLayoutEffect(() => {
-    navigation.setOptions({
-      headerTitle: currentStep === MEDICATION_REVIEW_STEP && !editingReviewSection ? "Review" : "",
-    });
-  }, [navigation, currentStep, editingReviewSection]);
-
   const resetToLanding = () => {
     setCurrentStep(0);
     setForm(createEmptyMedicationForm());
@@ -291,32 +288,53 @@ export function MedicationTrackingWizardScreen({ user }: { user: SessionUser }) 
     setDatePicker({ list: kind, index });
   };
 
-  const applyAdvance = useCallback(() => {
-    const res = medicationWizardTryAdvance({ currentStep, form });
-    if (!res.ok) {
-      if (res.noData) {
-        showFlareAlert("No tracking data entered");
+  const advanceFrom = useCallback(
+    (source: MedicationTrackingFormData) => {
+      if (advancingRef.current) return;
+      const res = medicationWizardTryAdvance({ currentStep, form: source });
+      if (!res.ok) {
+        setForm(source);
+        advancingRef.current = false;
+        if (res.noData) {
+          showFlareAlert("No tracking data entered");
+          return;
+        }
+        setFieldErrors(res.fieldErrors);
         return;
       }
-      setFieldErrors(res.fieldErrors);
-      return;
-    }
-    setFieldErrors({});
-    if (editingReviewSection) {
-      const sectionLast = getMedicationReviewSectionLastStep(editingReviewSection, form);
-      if (res.nextStep > sectionLast) {
-        returnToReview();
+      setForm(source);
+      setFieldErrors({});
+      advancingRef.current = true;
+      if (editingReviewSection) {
+        const sectionLast = getMedicationReviewSectionLastStep(editingReviewSection, source);
+        if (res.nextStep > sectionLast) {
+          const returned = returnToReview(source);
+          if (!returned) advancingRef.current = false;
+          return;
+        }
+        setCurrentStep(res.nextStep);
         return;
       }
+      if (res.nextStep === MEDICATION_REVIEW_STEP) {
+        setEditingReviewSection(null);
+      }
+      setHistory((h) => [...h, { step: currentStep, form: cloneForm(source) }]);
       setCurrentStep(res.nextStep);
-      return;
-    }
-    if (res.nextStep === MEDICATION_REVIEW_STEP) {
-      setEditingReviewSection(null);
-    }
-    setHistory((h) => [...h, { step: currentStep, form: cloneForm(form) }]);
-    setCurrentStep(res.nextStep);
-  }, [currentStep, editingReviewSection, form, returnToReview]);
+    },
+    [currentStep, editingReviewSection, returnToReview],
+  );
+
+  const applyAdvance = useCallback(() => {
+    advanceFrom(form);
+  }, [advanceFrom, form]);
+
+  /** Yes or No is the whole answer, so the step moves on. Back restores it and does not advance again. */
+  const chooseYesNo = useCallback(
+    (field: "missedMedications" | "nsaidUsage" | "antibioticUsage", value: boolean) => {
+      advanceFrom({ ...form, [field]: value });
+    },
+    [advanceFrom, form],
+  );
 
   const startWizard = () => {
     setHistory([{ step: 0, form: cloneForm(form) }]);
@@ -342,8 +360,8 @@ export function MedicationTrackingWizardScreen({ user }: { user: SessionUser }) 
         navigation.goBack();
         showFlareAlert("Saved");
       } else {
-        navigation.dispatch(CommonActions.reset({ index: 0, routes: [{ name: "Dashboard" }] }));
-        showFlareAlert("Saved");
+        navigation.dispatch(CommonActions.reset({ index: 0, routes: [{ name: "Today" }] }));
+        showFlareAlert("Saved", "To view, see History in Track");
       }
     } catch (e: unknown) {
       const message = e instanceof Error ? e.message : "Unknown error";
@@ -351,11 +369,6 @@ export function MedicationTrackingWizardScreen({ user }: { user: SessionUser }) 
     } finally {
       setSubmitting(false);
     }
-  };
-
-  const setYesNo = (field: "missedMedications" | "nsaidUsage" | "antibioticUsage", value: boolean) => {
-    setForm((p) => ({ ...p, [field]: value }));
-    setFieldErrors((prev) => ({ ...prev, [field]: "" }));
   };
 
   const openTimePicker = (kind: ListKind, index: number) => {
@@ -415,8 +428,8 @@ export function MedicationTrackingWizardScreen({ user }: { user: SessionUser }) 
     <View style={styles.stepContent}>
       <Text style={[styles.stepTitle, { color: c.text, fontFamily: TYPOGRAPHY.fontFamily.semibold }]}>{title}</Text>
       <View style={styles.optionChipRow}>
-        <OptionChip label="Yes" selected={form[field] === true} onPress={() => setYesNo(field, true)} />
-        <OptionChip label="No" selected={form[field] === false} onPress={() => setYesNo(field, false)} />
+        <OptionChip label="Yes" selected={form[field] === true} onPress={() => chooseYesNo(field, true)} />
+        <OptionChip label="No" selected={form[field] === false} onPress={() => chooseYesNo(field, false)} />
       </View>
       {fieldErrors[field] ? <Text style={errTextStyle}>{fieldErrors[field]}</Text> : null}
     </View>
@@ -425,33 +438,77 @@ export function MedicationTrackingWizardScreen({ user }: { user: SessionUser }) 
   const renderMedicationList = (kind: ListKind, title: string, withDosage: boolean, errKey: string) => {
     const key = listKey(kind);
     const list = form[key];
-    const last = list[list.length - 1];
-    const canAdd = withDosage ? isDosageRowComplete(last) : isMissedRowComplete(last);
 
     return (
       <View style={styles.stepContent}>
         <Text style={[styles.stepTitle, { color: c.text, fontFamily: TYPOGRAPHY.fontFamily.semibold }]}>{title}</Text>
-        {list.map((item, i) => (
-          <View key={i} style={styles.listEntry}>
-            <View style={styles.medNameDoseRow}>
-              <FlareTextInput fieldIcon="pill" placeholder="" value={item.medication} onChangeText={(t) => updateListRow(kind, i, "medication", t)} style={styles.medNameInput} />
-              {withDosage ? <FlareTextInput trailingLabel="mg" placeholder="" keyboardType="number-pad" value={item.dosage ?? ""} maxLength={5} onChangeText={(t) => updateListRow(kind, i, "dosage", t)} style={styles.medDoseInput} accessibilityLabel="Dose in milligrams" /> : null}
+        <Card noPadding style={{ paddingVertical: SPACING.sm, paddingHorizontal: SPACING.md }}>
+          {list.map((item, i) => (
+            <View key={i} style={[styles.mealFoodRow, i > 0 && styles.mealFoodRowBorder, { borderTopColor: c.cardBorder }]}>
+              <View style={styles.mealRowContent}>
+                <View style={styles.mealRowTop}>
+                  <FlareTextInput
+                    placeholder="Medication"
+                    value={item.medication}
+                    onChangeText={(t) => updateListRow(kind, i, "medication", t)}
+                    style={styles.mealNameInput}
+                  />
+                  {withDosage ? (
+                    <FlareTextInput
+                      placeholder="mg"
+                      keyboardType="number-pad"
+                      value={item.dosage ?? ""}
+                      maxLength={5}
+                      onChangeText={(t) => updateListRow(kind, i, "dosage", t)}
+                      style={styles.mealAmountInputSmall}
+                      accessibilityLabel="Dose in milligrams"
+                    />
+                  ) : (
+                    <FlareInputTrigger onPress={() => openDatePicker(kind, i)} style={styles.mealAmountInputSmall}>
+                      <Text style={[styles.triggerText, { color: item.date ? c.text : c.textMuted, fontFamily: TYPOGRAPHY.fontFamily.regular }]}>
+                        {item.date ? formatUkDate(item.date) : "Date"}
+                      </Text>
+                    </FlareInputTrigger>
+                  )}
+                </View>
+                {withDosage ? (
+                  <FlareInputTrigger onPress={() => openDatePicker(kind, i)} style={styles.dateField}>
+                    <Text style={[styles.triggerText, { color: item.date ? c.text : c.textMuted, fontFamily: TYPOGRAPHY.fontFamily.regular }]}>
+                      {item.date ? formatUkDate(item.date) : "Date"}
+                    </Text>
+                  </FlareInputTrigger>
+                ) : null}
+                <View style={styles.portionChips}>
+                  {TIME_OF_DAY_OPTIONS.map((label) => (
+                    <OptionChip
+                      key={label}
+                      label={label}
+                      selected={item.timeOfDay === label}
+                      onPress={() => updateListRow(kind, i, "timeOfDay", label)}
+                    />
+                  ))}
+                </View>
+              </View>
+              {list.length > 1 ? (
+                <Pressable
+                  accessibilityRole="button"
+                  accessibilityLabel="Remove medication"
+                  hitSlop={10}
+                  onPress={() => removeListRow(kind, i)}
+                >
+                  <FlareLucideIcon icon={FLARE_CHROME_LUCIDE.delete} size={20} color={c.textMuted} />
+                </Pressable>
+              ) : null}
             </View>
-            <FlareInputTrigger pickerIcon="date" onPress={() => openDatePicker(kind, i)}>
-              <Text style={[styles.triggerText, { color: item.date ? c.text : c.textSecondary, fontFamily: TYPOGRAPHY.fontFamily.regular }]}>{item.date ? formatUkDate(item.date) : ""}</Text>
-            </FlareInputTrigger>
-            <FlareInputTrigger pickerIcon="time" onPress={() => openTimePicker(kind, i)}>
-              <Text style={[styles.triggerText, { color: item.timeOfDay ? c.text : c.textSecondary, fontFamily: TYPOGRAPHY.fontFamily.regular }]}>{item.timeOfDay || ""}</Text>
-            </FlareInputTrigger>
-            {list.length > 1 ? (
-              <Pressable accessibilityRole="button" accessibilityLabel="Remove medication" hitSlop={8} onPress={() => removeListRow(kind, i)} style={styles.removeLink}>
-                <Text style={[styles.removeLinkText, { color: c.textSecondary, fontFamily: TYPOGRAPHY.fontFamily.semibold }]}>Remove</Text>
-              </Pressable>
-            ) : null}
-          </View>
-        ))}
-        <Pressable accessibilityRole="button" disabled={!canAdd} onPress={() => canAdd && addListRow(kind)} hitSlop={10} style={styles.addLink}>
-          <Text style={[styles.addLinkText, { color: c.primary, fontFamily: TYPOGRAPHY.fontFamily.bold, opacity: canAdd ? 1 : 0.45 }]}>Add medication</Text>
+          ))}
+        </Card>
+        <Pressable
+          accessibilityRole="button"
+          onPress={() => addListRow(kind)}
+          style={[styles.addFoodButton, { borderColor: c.inputBorder }]}
+        >
+          <FlareLucideIcon icon={FLARE_CHROME_LUCIDE.add} size={16} color={c.primary} />
+          <Text style={[styles.addFoodText, { color: c.primary, fontFamily: TYPOGRAPHY.fontFamily.semibold }]}>Add medication</Text>
         </Pressable>
         {fieldErrors[errKey] ? <Text style={errTextStyle}>{fieldErrors[errKey]}</Text> : null}
         {datePicker?.list === kind && datePicker.index >= 0 && pickerDraftDate ? (
@@ -459,7 +516,9 @@ export function MedicationTrackingWizardScreen({ user }: { user: SessionUser }) 
             <DateTimePicker
               value={pickerDraftDate}
               mode="date"
-              display={Platform.OS === "ios" ? "spinner" : "default"}
+              display="spinner"
+              textColor={c.text}
+              themeVariant={c.isDark ? "dark" : "light"}
               maximumDate={new Date()}
               onChange={(event, d) => {
                 if (Platform.OS === "android") {
@@ -491,7 +550,15 @@ export function MedicationTrackingWizardScreen({ user }: { user: SessionUser }) 
 
   return (
     <KeyboardAvoidingView style={[styles.screen, { backgroundColor: c.screen }]} behavior={Platform.OS === "ios" ? "padding" : undefined}>
-      <ScrollView ref={scrollRef} contentContainerStyle={[styles.scrollContent, currentStep === 0 && styles.scrollContentLanding]} keyboardShouldPersistTaps="handled">
+      <ScrollView
+        ref={scrollRef}
+        contentContainerStyle={[
+          styles.scrollContent,
+          currentStep === 0 && styles.scrollContentLanding,
+          currentStep === MEDICATION_REVIEW_STEP && styles.scrollContentReview,
+        ]}
+        keyboardShouldPersistTaps="handled"
+      >
         {currentStep > 0 && currentStep !== MEDICATION_REVIEW_STEP && phase.phaseNames.length > 0 ? (
           <View style={styles.progressWrap}>
             <Text style={[styles.progressLabel, { color: c.textMuted, fontFamily: TYPOGRAPHY.fontFamily.regular }]}>
@@ -532,6 +599,7 @@ export function MedicationTrackingWizardScreen({ user }: { user: SessionUser }) 
             <Text style={[styles.reviewPageSubtitle, { color: c.textSecondary, fontFamily: TYPOGRAPHY.fontFamily.regular }]}>
               Check everything looks right before saving.
             </Text>
+            <View style={styles.reviewSections}>
             {cleanedForReview.missedMedicationsList.length > 0 ? (
               <ReviewSectionCard title="Missed medications" onEdit={() => openReviewEdit("missed")}>
                 {cleanedForReview.missedMedicationsList.map((item, idx) => (
@@ -579,6 +647,7 @@ export function MedicationTrackingWizardScreen({ user }: { user: SessionUser }) 
                 ))}
               </ReviewSectionCard>
             ) : null}
+            </View>
           </View>
         ) : null}
 
@@ -592,7 +661,7 @@ export function MedicationTrackingWizardScreen({ user }: { user: SessionUser }) 
       {currentStep > 0 && !(currentStep === MEDICATION_REVIEW_STEP && !editingReviewSection) ? (
         <View style={[styles.footer, { backgroundColor: c.screen, borderTopColor: c.cardBorder }]}>
           <SecondaryButton title="Back" onPress={goBackInternal} />
-          {!editingReviewSection || currentStep < getMedicationReviewSectionLastStep(editingReviewSection, form) ? (
+          {currentStep !== 1 && currentStep !== 3 && currentStep !== 5 && (!editingReviewSection || currentStep < getMedicationReviewSectionLastStep(editingReviewSection, form)) ? (
             <PrimaryButton title="Next" onPress={applyAdvance} />
           ) : null}
         </View>
@@ -614,11 +683,14 @@ const styles = StyleSheet.create({
   scrollContent: {
     paddingHorizontal: SPACING.screen,
     paddingTop: SPACING.lg,
-    paddingBottom: 120,
+    paddingBottom: SPACING.lg * 2,
   },
   scrollContentLanding: {
     paddingTop: 0,
     paddingBottom: SPACING.xl,
+  },
+  scrollContentReview: {
+    paddingBottom: SPACING.lg * 2,
   },
   centered: {
     flex: 1,
@@ -640,6 +712,7 @@ const styles = StyleSheet.create({
   landingCard: {
     alignItems: "center",
     gap: SPACING.lg,
+    paddingBottom: SPACING.lg * 2,
   },
   landingIconWrap: {
     width: 80,
@@ -694,38 +767,58 @@ const styles = StyleSheet.create({
   radioLabel: {
     fontSize: TYPOGRAPHY.fontSize.md,
   },
-  listEntry: {
-    marginBottom: SPACING.md,
-  },
-  medNameDoseRow: {
+  mealFoodRow: {
     flexDirection: "row",
-    gap: SPACING.sm,
-    marginBottom: SPACING.sm,
+    alignItems: "center",
+    justifyContent: "space-between",
+    paddingVertical: SPACING.md,
+    gap: SPACING.md,
   },
-  medNameInput: {
+  mealFoodRowBorder: {
+    borderTopWidth: 1,
+  },
+  mealRowContent: {
     flex: 1,
+    gap: SPACING.md,
+  },
+  mealRowTop: {
+    flexDirection: "row",
+    alignItems: "center",
+    justifyContent: "space-between",
+    gap: SPACING.sm,
+  },
+  mealNameInput: {
+    flex: 1,
+  },
+  mealAmountInputSmall: {
+    minWidth: 80,
     marginTop: 0,
   },
-  medDoseInput: {
-    width: 100,
+  dateField: {
     marginTop: 0,
+  },
+  portionChips: {
+    flexDirection: "row",
+    flexWrap: "wrap",
+    gap: SPACING.xs,
   },
   triggerText: {
     fontSize: TYPOGRAPHY.fontSize.md,
   },
-  removeLink: {
-    marginTop: SPACING.xs,
-    alignSelf: "flex-end",
-  },
-  removeLinkText: {
-    fontSize: TYPOGRAPHY.fontSize.sm,
-  },
-  addLink: {
-    marginTop: SPACING.sm,
+  addFoodButton: {
+    flexDirection: "row",
+    alignItems: "center",
+    justifyContent: "center",
+    gap: SPACING.xs,
+    paddingVertical: SPACING.md,
+    paddingHorizontal: SPACING.lg,
+    borderRadius: RADIUS.button,
+    borderWidth: 1.5,
+    borderStyle: "dashed",
     alignSelf: "flex-start",
   },
-  addLinkText: {
-    fontSize: TYPOGRAPHY.fontSize.md,
+  addFoodText: {
+    fontSize: TYPOGRAPHY.fontSize.sm,
   },
   reviewContent: {
     gap: 0,
@@ -739,6 +832,9 @@ const styles = StyleSheet.create({
     fontSize: TYPOGRAPHY.fontSize.md,
     lineHeight: 20,
     marginBottom: SPACING.sm,
+  },
+  reviewSections: {
+    marginTop: SPACING.md,
   },
   reviewCardHeader: {
     flexDirection: "row",

@@ -1,6 +1,7 @@
 import { CommonActions, useNavigation, useRoute } from "@react-navigation/native";
-import React, { useCallback, useEffect, useLayoutEffect, useMemo, useRef, useState } from "react";
+import React, { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { FlareLucideIcon } from "../lib/flareLucideIcons";
+import { PenLine } from "lucide-react-native";
 import {
   ActivityIndicator,
   BackHandler,
@@ -10,35 +11,33 @@ import {
   Pressable,
   StyleSheet,
   Text,
-  useWindowDimensions,
   View,
   type ScrollView as RNScrollView,
 } from "react-native";
 import { showFlareAlert, dismissFlareAlert } from "../components/FlareAlertHost";
 import { ScrollView } from "../lib/scrollViews";
-import { EntryPrimaryButton, PrimaryButton, SecondaryButton } from "../components/FlareButton";
+import { PrimaryButton, SecondaryButton } from "../components/FlareButton";
+import { Card } from "../components/MidnightLagoonCard";
+import { SectionLabel } from "../components/MidnightLagoonSectionLabel";
+import { OptionChip } from "../components/OptionChip";
+import { WizardProgressBar } from "../components/WizardProgressBar";
 import { flareFieldErrorStyle, FlareTextInput } from "../components/FlareInput";
-import {
-  WizardReviewNotesSection,
-  WizardReviewSection,
-  WizardReviewShell,
-  type WizardReviewField,
-} from "../components/symptomReviewLayout";
+import type { WizardReviewField } from "../components/symptomReviewLayout";
 import { invalidateDashboardSnapshot } from "../lib/dashboardSnapshotCache";
 import { recordRecentActivityEvent } from "../lib/recentActivityEvents";
 import { SPACING, TYPOGRAPHY } from "../designTokens";
-import {
-  CARD_INNER_PADDING,
-  FULL_WIDTH_CTA_EDGE_PADDING,
-  LANDING_CTA_SIDE_PAD,
-  wizardLandingMinHeight,
-} from "../lib/layoutConstants";
 import {
   getTodayWellbeingEntry,
   invalidateWellbeingListCache,
   quickWellbeingFormState,
   SCALE_OPTIONS_MOOD,
-  SCALE_OPTIONS_SEVERITY,
+  SCALE_OPTIONS_ENERGY,
+  SCALE_OPTIONS_SLEEP,
+  SCALE_OPTIONS_ANXIETY,
+  SCALE_OPTIONS_PAIN,
+  SCALE_OPTIONS_IBD,
+  SCALE_OPTIONS_BRAIN_FOG,
+  labelForWellbeingScale,
   WELLBEING_ICON,
   wellbeingPayloadFromForm,
   type WellbeingFormState,
@@ -47,7 +46,6 @@ import {
 import { wellbeingWizardTryAdvance } from "../lib/wellbeingWizardNextStep";
 import {
   cloneWellbeingForm,
-  formatWellbeingScaleDisplay,
   formatWellbeingYesNoDisplay,
   getPreviousWellbeingStep,
   getWellbeingReviewEditStep,
@@ -62,28 +60,48 @@ import { useFlareColors } from "../theme";
 
 type SessionUser = { id: string };
 
-function RadioRow({
-  label,
-  selected,
-  onPress,
+function ReviewSectionCard({
+  title,
+  onEdit,
+  children,
 }: {
-  label: string;
-  selected: boolean;
-  onPress: () => void;
+  title: string;
+  onEdit: () => void;
+  children: React.ReactNode;
 }) {
   const c = useFlareColors();
   return (
-    <Pressable
-      style={styles.radioRow}
-      onPress={onPress}
-      accessibilityRole="radio"
-      accessibilityState={{ checked: selected }}
-    >
-      <View style={[styles.radioOuter, { borderColor: c.cardBorder }]}>
-        {selected ? <View style={[styles.radioInner, { backgroundColor: c.primary }]} /> : null}
+    <Card>
+      <View style={styles.reviewCardHeader}>
+        <View style={styles.reviewInCardLabelWrap}>
+          <SectionLabel style={styles.reviewInCardLabel}>{title}</SectionLabel>
+        </View>
+        <Pressable
+          accessibilityRole="button"
+          accessibilityLabel={`Edit ${title}`}
+          onPress={onEdit}
+          hitSlop={10}
+          style={[styles.reviewEditBtn, { backgroundColor: c.surfaceSubtle }]}
+        >
+          <FlareLucideIcon icon={PenLine} size={16} color={c.primary} />
+        </Pressable>
       </View>
-      <Text style={{ color: c.text, flex: 1 }}>{label}</Text>
-    </Pressable>
+      {children}
+    </Card>
+  );
+}
+
+function ReviewFieldRows({ fields }: { fields: { label: string; value: string }[] }) {
+  const c = useFlareColors();
+  return (
+    <>
+      {fields.map((field, i) => (
+        <View key={`${field.label}-${i}`} style={[styles.reviewFieldRow, i > 0 && styles.reviewFieldRowGap]}>
+          <Text style={[styles.reviewFieldLabel, { color: c.textSecondary, fontFamily: TYPOGRAPHY.fontFamily.regular }]}>{field.label}</Text>
+          <Text style={[styles.reviewFieldValue, { color: c.text, fontFamily: TYPOGRAPHY.fontFamily.medium }]}>{field.value}</Text>
+        </View>
+      ))}
+    </>
   );
 }
 
@@ -91,23 +109,40 @@ export function WellbeingWizardScreen({ user }: { user: SessionUser }) {
   const navigation = useNavigation<any>();
   const route = useRoute();
   const editId = String((route.params as { editId?: string } | undefined)?.editId ?? "");
+  const presetMoodRaw = Number((route.params as { mood?: number } | undefined)?.mood);
+  const presetMood: WellbeingScale | null =
+    !editId && (presetMoodRaw === 1 || presetMoodRaw === 2 || presetMoodRaw === 3 || presetMoodRaw === 4 || presetMoodRaw === 5)
+      ? presetMoodRaw
+      : null;
   const c = useFlareColors();
   const errTextStyle = flareFieldErrorStyle(c, "wizard");
-  const { height: windowHeight } = useWindowDimensions();
 
   const [loadingEdit, setLoadingEdit] = useState(Boolean(editId));
-  const [currentStep, setCurrentStep] = useState(0);
-  const [form, setForm] = useState<WellbeingFormState>(() => quickWellbeingFormState());
-  const [history, setHistory] = useState<{ step: number; form: WellbeingFormState }[]>([]);
+  const [currentStep, setCurrentStep] = useState(presetMood ? 2 : 0);
+  const [form, setForm] = useState<WellbeingFormState>(() => {
+    const base = quickWellbeingFormState();
+    if (presetMood) base.mood = presetMood;
+    return base;
+  });
+  const [history, setHistory] = useState<{ step: number; form: WellbeingFormState }[]>(() => {
+    if (!presetMood) return [];
+    const prior = quickWellbeingFormState();
+    prior.mood = presetMood;
+    return [{ step: 0, form: cloneWellbeingForm(prior) }];
+  });
   const [fieldErrors, setFieldErrors] = useState<Record<string, string>>({});
   const [submitting, setSubmitting] = useState(false);
   const [editingReviewSection, setEditingReviewSection] = useState<WellbeingReviewSectionId | null>(null);
   const scrollRef = useRef<RNScrollView>(null);
+  const formRef = useRef(form);
+  const advancingRef = useRef(false);
+  formRef.current = form;
 
   const phase = useMemo(() => getWellbeingWizardPhaseProgress(currentStep), [currentStep]);
 
   useEffect(() => {
     scrollRef.current?.scrollTo({ y: 0, animated: false });
+    advancingRef.current = false;
   }, [currentStep]);
 
   useEffect(() => {
@@ -192,12 +227,6 @@ export function WellbeingWizardScreen({ user }: { user: SessionUser }) {
     return true;
   }, [currentStep, editingReviewSection, history, navigation, returnToReview]);
 
-  useLayoutEffect(() => {
-    navigation.setOptions({
-      headerTitle: currentStep === WELLBEING_WIZARD_REVIEW_STEP && !editingReviewSection ? "Review" : "",
-    });
-  }, [navigation, currentStep, editingReviewSection]);
-
   useEffect(() => {
     const sub = BackHandler.addEventListener("hardwareBackPress", goBackInternal);
     return () => sub.remove();
@@ -205,36 +234,61 @@ export function WellbeingWizardScreen({ user }: { user: SessionUser }) {
 
   const setField = <K extends keyof WellbeingFormState>(key: K, value: WellbeingFormState[K]) => {
     setForm((prev) => {
-      if (key === "exercised" && value === false) {
-        return { ...prev, exercised: false, exercise_minutes: "" };
-      }
-      return { ...prev, [key]: value };
+      const next =
+        key === "exercised" && value === false
+          ? { ...prev, exercised: false as const, exercise_minutes: "" }
+          : { ...prev, [key]: value };
+      formRef.current = next;
+      return next;
     });
     setFieldErrors((prev) => ({ ...prev, [key]: "" }));
   };
 
-  const applyAdvance = useCallback(() => {
-    const res = wellbeingWizardTryAdvance({ currentStep, form });
-    if (!res.ok) {
-      setFieldErrors(res.fieldErrors);
-      return;
-    }
-    setFieldErrors({});
-    if (editingReviewSection) {
-      const sectionLast = getWellbeingReviewSectionLastStep(editingReviewSection);
-      if (res.nextStep > sectionLast) {
-        returnToReview();
+  const advanceFrom = useCallback(
+    (source: WellbeingFormState) => {
+      if (advancingRef.current) return;
+      const res = wellbeingWizardTryAdvance({ currentStep, form: source });
+      if (!res.ok) {
+        formRef.current = source;
+        setForm(source);
+        setFieldErrors(res.fieldErrors);
         return;
       }
+      formRef.current = source;
+      setForm(source);
+      setFieldErrors({});
+      advancingRef.current = true;
+      if (editingReviewSection) {
+        const sectionLast = getWellbeingReviewSectionLastStep(editingReviewSection);
+        if (res.nextStep > sectionLast) {
+          returnToReview();
+          return;
+        }
+        setCurrentStep(res.nextStep);
+        return;
+      }
+      if (res.nextStep === WELLBEING_WIZARD_REVIEW_STEP) {
+        setEditingReviewSection(null);
+      }
+      setHistory((h) => [...h, { step: currentStep, form: cloneWellbeingForm(source) }]);
       setCurrentStep(res.nextStep);
-      return;
-    }
-    if (res.nextStep === WELLBEING_WIZARD_REVIEW_STEP) {
-      setEditingReviewSection(null);
-    }
-    setHistory((h) => [...h, { step: currentStep, form: cloneWellbeingForm(form) }]);
-    setCurrentStep(res.nextStep);
-  }, [currentStep, editingReviewSection, form, returnToReview]);
+    },
+    [currentStep, editingReviewSection, returnToReview],
+  );
+
+  const applyAdvance = useCallback(() => {
+    advanceFrom(formRef.current);
+  }, [advanceFrom]);
+
+  /** One completed answer moves on. Back restores it and does not advance again. */
+  const chooseSingle = useCallback(
+    (patch: Partial<WellbeingFormState>) => {
+      const next = { ...formRef.current, ...patch };
+      if (patch.exercised === false) next.exercise_minutes = "";
+      advanceFrom(next);
+    },
+    [advanceFrom],
+  );
 
   /** Keep alert up until Dashboard paints (logout/Done overlay pattern) — no blank-cover jump. */
   const showAlreadyCheckedInToday = useCallback(() => {
@@ -250,7 +304,7 @@ export function WellbeingWizardScreen({ user }: { user: SessionUser }) {
             if (navigation.canGoBack()) {
               navigation.goBack();
             } else {
-              navigation.dispatch(CommonActions.reset({ index: 0, routes: [{ name: "Dashboard" }] }));
+              navigation.dispatch(CommonActions.reset({ index: 0, routes: [{ name: "Today" }] }));
             }
             InteractionManager.runAfterInteractions(() => {
               requestAnimationFrame(() => dismissFlareAlert());
@@ -261,6 +315,19 @@ export function WellbeingWizardScreen({ user }: { user: SessionUser }) {
       { holdUntilDismissed: true },
     );
   }, [navigation]);
+
+  useEffect(() => {
+    if (!presetMood) return;
+    let cancelled = false;
+    void (async () => {
+      const existing = await getTodayWellbeingEntry(user.id, form.date);
+      if (cancelled || !existing) return;
+      showAlreadyCheckedInToday();
+    })();
+    return () => {
+      cancelled = true;
+    };
+  }, [form.date, presetMood, showAlreadyCheckedInToday, user.id]);
 
   const startWizard = async () => {
     if (!editId) {
@@ -289,7 +356,7 @@ export function WellbeingWizardScreen({ user }: { user: SessionUser }) {
         invalidateDashboardSnapshot(user.id);
         invalidateWellbeingListCache(user.id);
         navigation.goBack();
-        showFlareAlert("Saved", "Your wellbeing log was updated.");
+        showFlareAlert("Saved");
       } else {
         const existing = await getTodayWellbeingEntry(user.id, form.date);
         if (existing) {
@@ -303,8 +370,8 @@ export function WellbeingWizardScreen({ user }: { user: SessionUser }) {
         await recordRecentActivityEvent(user.id, "wellbeing-logged");
         invalidateDashboardSnapshot(user.id);
         invalidateWellbeingListCache(user.id);
-        navigation.dispatch(CommonActions.reset({ index: 0, routes: [{ name: "Dashboard" }] }));
-        showFlareAlert("Saved", "Your wellbeing log was saved. To view, tap Logs.");
+        navigation.dispatch(CommonActions.reset({ index: 0, routes: [{ name: "Today" }] }));
+        showFlareAlert("Saved", "To view, see History in Track");
       }
     } catch (e: unknown) {
       showFlareAlert("Could not save", e instanceof Error ? e.message : "Unknown error");
@@ -314,16 +381,16 @@ export function WellbeingWizardScreen({ user }: { user: SessionUser }) {
   };
 
   const reviewFeelingsFields = useMemo((): WizardReviewField[] => [
-    { label: "Mood", value: formatWellbeingScaleDisplay(form.mood) },
-    { label: "Energy", value: formatWellbeingScaleDisplay(form.energy) },
-    { label: "Sleep quality", value: formatWellbeingScaleDisplay(form.sleep_quality) },
-    { label: "Anxiety", value: formatWellbeingScaleDisplay(form.anxiety) },
+    { label: "Mood", value: labelForWellbeingScale(SCALE_OPTIONS_MOOD, form.mood) },
+    { label: "Energy", value: labelForWellbeingScale(SCALE_OPTIONS_ENERGY, form.energy) },
+    { label: "Sleep quality", value: labelForWellbeingScale(SCALE_OPTIONS_SLEEP, form.sleep_quality) },
+    { label: "Anxiety", value: labelForWellbeingScale(SCALE_OPTIONS_ANXIETY, form.anxiety) },
   ], [form]);
 
   const reviewIbdFields = useMemo((): WizardReviewField[] => [
-    { label: "Pain / discomfort", value: formatWellbeingScaleDisplay(form.pain) },
-    { label: "IBD impact", value: formatWellbeingScaleDisplay(form.ibd_impact) },
-    { label: "Brain fog", value: formatWellbeingScaleDisplay(form.brain_fog) },
+    { label: "Pain / discomfort", value: labelForWellbeingScale(SCALE_OPTIONS_PAIN, form.pain) },
+    { label: "IBD impact", value: labelForWellbeingScale(SCALE_OPTIONS_IBD, form.ibd_impact) },
+    { label: "Brain fog", value: labelForWellbeingScale(SCALE_OPTIONS_BRAIN_FOG, form.brain_fog) },
   ], [form]);
 
   const reviewActivitiesFields = useMemo((): WizardReviewField[] => [
@@ -341,15 +408,15 @@ export function WellbeingWizardScreen({ user }: { user: SessionUser }) {
   }
 
   const scaleStep = (field: keyof WellbeingFormState, options: { value: WellbeingScale; label: string }[], title: string) => (
-    <View>
-      <Text style={[styles.h3, { color: c.text }]}>{title}</Text>
-      <View style={styles.rowGap}>
+    <View style={styles.stepContent}>
+      <Text style={[styles.stepTitle, { color: c.text, fontFamily: TYPOGRAPHY.fontFamily.semibold }]}>{title}</Text>
+      <View style={styles.optionChipGrid}>
         {options.map((opt) => (
-          <RadioRow
+          <OptionChip
             key={opt.value}
             label={opt.label}
             selected={form[field] === opt.value}
-            onPress={() => setField(field, opt.value as WellbeingFormState[typeof field])}
+            onPress={() => chooseSingle({ [field]: opt.value } as Partial<WellbeingFormState>)}
           />
         ))}
       </View>
@@ -358,11 +425,11 @@ export function WellbeingWizardScreen({ user }: { user: SessionUser }) {
   );
 
   const yesNoStep = (field: "exercised" | "social_connection" | "time_outdoors", title: string) => (
-    <View>
-      <Text style={[styles.h3, { color: c.text }]}>{title}</Text>
-      <View style={styles.rowGap}>
-        <RadioRow label="Yes" selected={form[field] === true} onPress={() => setField(field, true)} />
-        <RadioRow label="No" selected={form[field] === false} onPress={() => setField(field, false)} />
+    <View style={styles.stepContent}>
+      <Text style={[styles.stepTitle, { color: c.text, fontFamily: TYPOGRAPHY.fontFamily.semibold }]}>{title}</Text>
+      <View style={styles.optionChipRow}>
+        <OptionChip label="Yes" selected={form[field] === true} onPress={() => chooseSingle({ [field]: true })} />
+        <OptionChip label="No" selected={form[field] === false} onPress={() => chooseSingle({ [field]: false })} />
       </View>
       {fieldErrors[field] ? <Text style={errTextStyle}>{fieldErrors[field]}</Text> : null}
     </View>
@@ -376,57 +443,58 @@ export function WellbeingWizardScreen({ user }: { user: SessionUser }) {
           contentContainerStyle={[
             styles.scrollPad,
             currentStep === 0 ? styles.scrollPadLanding : styles.scrollPadWizardSteps,
+            currentStep === WELLBEING_WIZARD_REVIEW_STEP && !editingReviewSection ? styles.scrollPadReview : null,
           ]}
           keyboardShouldPersistTaps="handled"
         >
-          {currentStep > 0 && phase.sectionTotal > 0 ? (
-            <Text style={[styles.phaseLine, { color: c.textMuted }]}>
-              Section {phase.sectionStep}/{phase.sectionTotal}: {phase.currentPhaseLabel}
-            </Text>
+          {currentStep > 0 && currentStep !== WELLBEING_WIZARD_REVIEW_STEP && phase.sectionTotal > 0 ? (
+            <View style={styles.progressWrap}>
+              <Text style={[styles.progressLabel, { color: c.textMuted, fontFamily: TYPOGRAPHY.fontFamily.regular }]}>
+                {phase.currentPhaseLabel} • {phase.sectionStep}/{phase.sectionTotal}
+              </Text>
+              <WizardProgressBar current={phase.sectionStep} total={phase.sectionTotal} />
+            </View>
           ) : null}
 
           {currentStep === 0 ? (
-            <View style={[styles.landing, { minHeight: wizardLandingMinHeight(windowHeight) }]}>
-              <View
-                style={[
-                  styles.landingIconPanel,
-                  {
-                    backgroundColor: c.card,
-                    ...Platform.select({
-                      ios: {
-                        shadowColor: "#000",
-                        shadowOffset: { width: 0, height: 1 },
-                        shadowOpacity: c.isDark ? 0.3 : 0.05,
-                        shadowRadius: 2,
-                      },
-                      android: { elevation: 2 },
-                    }),
-                  },
-                ]}
-              >
-                <FlareLucideIcon icon={WELLBEING_ICON} size={28} color={c.primary} />
-              </View>
-              <Text style={[styles.landingTitle, { color: c.text }]}>My Wellbeing</Text>
-              <Text style={[styles.landingSub, { color: c.textMuted }]}>
-                Check in on how you&apos;re feeling today — mood, energy, sleep and more.
-              </Text>
-              <View style={styles.landingCta}>
-                <EntryPrimaryButton title="Start now" onPress={startWizard} noTopMargin />
-              </View>
+            <View style={styles.landing}>
+              <Card style={styles.landingCard}>
+                <View style={styles.landingIconWrap}>
+                  <FlareLucideIcon icon={WELLBEING_ICON} size={48} color={c.primary} />
+                </View>
+                <Text style={[styles.landingTitle, { color: c.text, fontFamily: TYPOGRAPHY.fontFamily.bold }]}>My Wellbeing</Text>
+                <Text style={[styles.landingDesc, { color: c.textSecondary, fontFamily: TYPOGRAPHY.fontFamily.regular }]}>Check in on how you&apos;re feeling today — mood, energy, sleep and more.</Text>
+                <PrimaryButton title="Start now" onPress={startWizard} />
+              </Card>
             </View>
           ) : null}
 
           {currentStep === 1 ? scaleStep("mood", SCALE_OPTIONS_MOOD, "How is your mood today?") : null}
-          {currentStep === 2 ? scaleStep("energy", SCALE_OPTIONS_MOOD, "How are your energy levels today?") : null}
-          {currentStep === 3 ? scaleStep("sleep_quality", SCALE_OPTIONS_MOOD, "How well did you sleep last night?") : null}
-          {currentStep === 4 ? scaleStep("anxiety", SCALE_OPTIONS_SEVERITY, "How anxious are you feeling today?") : null}
-          {currentStep === 5 ? scaleStep("pain", SCALE_OPTIONS_SEVERITY, "How much pain or discomfort are you in today?") : null}
-          {currentStep === 6 ? scaleStep("ibd_impact", SCALE_OPTIONS_SEVERITY, "How much has IBD affected your day?") : null}
-          {currentStep === 7 ? scaleStep("brain_fog", SCALE_OPTIONS_SEVERITY, "Are you experiencing any brain fog today?") : null}
+          {currentStep === 2 ? scaleStep("energy", SCALE_OPTIONS_ENERGY, "How are your energy levels today?") : null}
+          {currentStep === 3 ? scaleStep("sleep_quality", SCALE_OPTIONS_SLEEP, "How well did you sleep last night?") : null}
+          {currentStep === 4 ? scaleStep("anxiety", SCALE_OPTIONS_ANXIETY, "How anxious are you feeling today?") : null}
+          {currentStep === 5 ? scaleStep("pain", SCALE_OPTIONS_PAIN, "How much pain or discomfort are you in today?") : null}
+          {currentStep === 6 ? scaleStep("ibd_impact", SCALE_OPTIONS_IBD, "How much has IBD affected your day?") : null}
+          {currentStep === 7 ? scaleStep("brain_fog", SCALE_OPTIONS_BRAIN_FOG, "Are you experiencing any brain fog today?") : null}
 
           {currentStep === 8 ? (
             <View>
-              {yesNoStep("exercised", "Did you exercise today?")}
+              <View style={styles.stepContent}>
+                <Text style={[styles.stepTitle, { color: c.text, fontFamily: TYPOGRAPHY.fontFamily.semibold }]}>Did you exercise today?</Text>
+                <View style={styles.optionChipRow}>
+                  <OptionChip
+                    label="Yes"
+                    selected={form.exercised === true}
+                    onPress={() => setField("exercised", true)}
+                  />
+                  <OptionChip
+                    label="No"
+                    selected={form.exercised === false}
+                    onPress={() => chooseSingle({ exercised: false })}
+                  />
+                </View>
+                {fieldErrors.exercised ? <Text style={errTextStyle}>{fieldErrors.exercised}</Text> : null}
+              </View>
               {form.exercised === true ? (
                 <View style={{ marginTop: 20 }}>
                   <Text style={[styles.subLabel, { color: c.textMuted }]}>How many minutes? (optional)</Text>
@@ -450,8 +518,8 @@ export function WellbeingWizardScreen({ user }: { user: SessionUser }) {
           {currentStep === 10 ? yesNoStep("time_outdoors", "Did you spend time outdoors today?") : null}
 
           {currentStep === 11 ? (
-            <View>
-              <Text style={[styles.h3, { color: c.text }]}>Any additional notes?</Text>
+            <View style={styles.stepContent}>
+              <Text style={[styles.stepTitle, { color: c.text, fontFamily: TYPOGRAPHY.fontFamily.semibold }]}>Any additional notes?</Text>
               <FlareTextInput
                 multiline
                 value={form.notes}
@@ -462,57 +530,47 @@ export function WellbeingWizardScreen({ user }: { user: SessionUser }) {
           ) : null}
 
           {currentStep === WELLBEING_WIZARD_REVIEW_STEP ? (
-            <WizardReviewShell>
+            <View style={styles.reviewContent}>
+              <Text style={[styles.reviewPageTitle, { color: c.text, fontFamily: TYPOGRAPHY.fontFamily.bold }]}>Review your log</Text>
+              <Text style={[styles.reviewPageSubtitle, { color: c.textSecondary, fontFamily: TYPOGRAPHY.fontFamily.regular }]}>Check everything looks right before saving.</Text>
               <View style={styles.reviewSections}>
-                <WizardReviewSection
-                  embedded
-                  title="Feelings"
-                  fields={reviewFeelingsFields}
-                  onEdit={() => openReviewEdit("feelings")}
-                />
-                <WizardReviewSection
-                  embedded
-                  title="IBD"
-                  fields={reviewIbdFields}
-                  onEdit={() => openReviewEdit("ibd")}
-                />
-                <WizardReviewSection
-                  embedded
-                  title="Activities"
-                  fields={reviewActivitiesFields}
-                  onEdit={() => openReviewEdit("activities")}
-                />
-                <WizardReviewNotesSection embedded notes={form.notes} onEdit={() => openReviewEdit("notes")} />
+              <ReviewSectionCard title="Feelings" onEdit={() => openReviewEdit("feelings")}>
+                <ReviewFieldRows fields={reviewFeelingsFields} />
+              </ReviewSectionCard>
+              <ReviewSectionCard title="IBD" onEdit={() => openReviewEdit("ibd")}>
+                <ReviewFieldRows fields={reviewIbdFields} />
+              </ReviewSectionCard>
+              <ReviewSectionCard title="Activities" onEdit={() => openReviewEdit("activities")}>
+                <ReviewFieldRows fields={reviewActivitiesFields} />
+              </ReviewSectionCard>
+              <ReviewSectionCard title="Notes" onEdit={() => openReviewEdit("notes")}>
+                <Text style={[styles.reviewNotesText, { color: c.text, fontFamily: TYPOGRAPHY.fontFamily.regular }]}>
+                  {form.notes.trim() ? `\u201C${form.notes.trim()}\u201D` : "None"}
+                </Text>
+              </ReviewSectionCard>
               </View>
-              <View style={styles.reviewSubmitInCard}>
-                <PrimaryButton
-                  title={submitting ? "Saving…" : editId ? "Save changes" : "Submit"}
-                  onPress={submit}
-                  disabled={submitting}
-                  noTopMargin
-                />
-              </View>
-            </WizardReviewShell>
-          ) : null}
-
-          {currentStep > 0 && !(currentStep === WELLBEING_WIZARD_REVIEW_STEP && !editingReviewSection) ? (
-            <View style={styles.footerBtns}>
-              {editingReviewSection ? (
-                <>
-                  <PrimaryButton title="Back to review" onPress={returnToReview} />
-                  {currentStep < getWellbeingReviewSectionLastStep(editingReviewSection) ? (
-                    <SecondaryButton title="Next" onPress={applyAdvance} />
-                  ) : null}
-                </>
-              ) : (
-                <PrimaryButton title="Next" onPress={applyAdvance} />
-              )}
-              {currentStep > 1 && !editingReviewSection ? (
-                <SecondaryButton title="Prev" onPress={goBackInternal} />
-              ) : null}
             </View>
           ) : null}
         </ScrollView>
+
+        {currentStep > 0 && !(currentStep === WELLBEING_WIZARD_REVIEW_STEP && !editingReviewSection) ? (
+          <View style={[styles.footer, { backgroundColor: c.screen, borderTopColor: c.cardBorder }]}>
+            <SecondaryButton title="Back" onPress={goBackInternal} />
+            {currentStep === 11 || (currentStep === 8 && form.exercised === true) ? (
+              <PrimaryButton title="Next" onPress={applyAdvance} />
+            ) : null}
+          </View>
+        ) : null}
+
+        {currentStep === WELLBEING_WIZARD_REVIEW_STEP && !editingReviewSection ? (
+          <View style={[styles.fixedFooter, { backgroundColor: c.screen, borderTopColor: c.cardBorder }]}>
+            <PrimaryButton
+              title={submitting ? "Saving..." : "Save log"}
+              onPress={submit}
+              disabled={submitting}
+            />
+          </View>
+        ) : null}
       </View>
     </KeyboardAvoidingView>
   );
@@ -522,67 +580,137 @@ const styles = StyleSheet.create({
   centered: { flex: 1, justifyContent: "center", alignItems: "center" },
   wizardShell: { flex: 1 },
   scrollPad: { paddingTop: SPACING.lg, paddingBottom: 80 },
-  scrollPadLanding: { flexGrow: 1, paddingHorizontal: FULL_WIDTH_CTA_EDGE_PADDING },
+  scrollPadLanding: {
+    paddingHorizontal: SPACING.screen,
+    paddingTop: 0,
+    paddingBottom: SPACING.xl,
+  },
   scrollPadWizardSteps: { paddingHorizontal: SPACING.screen, paddingTop: SPACING.lg, paddingBottom: 80 },
+  scrollPadReview: { paddingBottom: SPACING.lg * 2 },
   landing: {
+    flex: 1,
+    justifyContent: "center",
+    paddingVertical: SPACING.xl * 2,
+  },
+  landingCard: {
+    alignItems: "center",
+    gap: SPACING.lg,
+    paddingBottom: SPACING.lg * 2,
+  },
+  landingIconWrap: {
+    width: 80,
+    height: 80,
+    borderRadius: 40,
     alignItems: "center",
     justifyContent: "center",
-    paddingTop: SPACING.sm,
-    paddingBottom: SPACING.xl * 1.5,
-    width: "100%",
+    marginBottom: SPACING.md,
   },
-  landingIconPanel: {
-    width: 56,
-    height: 56,
+  landingTitle: {
+    fontSize: TYPOGRAPHY.fontSize.screenTitle,
+    textAlign: "center",
+  },
+  landingDesc: {
+    fontSize: TYPOGRAPHY.fontSize.md,
+    textAlign: "center",
+    lineHeight: 22,
+  },
+  progressWrap: {
+    marginBottom: SPACING.xl,
+    gap: SPACING.sm,
+  },
+  progressLabel: {
+    fontSize: TYPOGRAPHY.fontSize.sm,
+  },
+  stepContent: {
+    gap: SPACING.lg,
+  },
+  stepTitle: {
+    fontSize: TYPOGRAPHY.fontSize.cardTitle,
+    lineHeight: 24,
+  },
+  optionChipRow: {
+    flexDirection: "row",
+    gap: SPACING.md,
+  },
+  optionChipGrid: {
+    flexDirection: "row",
+    flexWrap: "wrap",
+    gap: SPACING.md,
+  },
+  subLabel: { fontSize: TYPOGRAPHY.fontSize.md, fontFamily: TYPOGRAPHY.fontFamily.medium, marginBottom: SPACING.xs },
+  reviewContent: {
+    gap: 0,
+  },
+  reviewPageTitle: {
+    fontSize: TYPOGRAPHY.fontSize.screenTitle,
+    lineHeight: 30,
+    marginBottom: SPACING.xs,
+  },
+  reviewPageSubtitle: {
+    fontSize: TYPOGRAPHY.fontSize.md,
+    lineHeight: 20,
+    marginBottom: SPACING.sm,
+  },
+  reviewSections: {
+    marginTop: SPACING.md,
+  },
+  reviewCardHeader: {
+    flexDirection: "row",
+    alignItems: "center",
+    justifyContent: "space-between",
+    gap: SPACING.sm,
+    marginBottom: SPACING.md,
+  },
+  reviewInCardLabelWrap: {
+    flex: 1,
+    minWidth: 0,
+  },
+  reviewInCardLabel: {
+    marginTop: 0,
+    marginBottom: 0,
+    marginHorizontal: 0,
+    letterSpacing: 0.8,
+  },
+  reviewEditBtn: {
+    width: 32,
+    height: 32,
     borderRadius: 16,
     alignItems: "center",
     justifyContent: "center",
-    marginBottom: SPACING.xl,
   },
-  landingTitle: {
-    fontFamily: TYPOGRAPHY.fontFamily.extrabold,
-    fontSize: 22,
-    lineHeight: 28,
-    marginBottom: SPACING.lg,
-    textAlign: "center",
-    letterSpacing: -0.4,
-    maxWidth: 360,
-    width: "100%",
-  },
-  landingSub: {
-    fontSize: 17,
-    lineHeight: 26,
-    textAlign: "center",
-    marginBottom: 0,
-    paddingHorizontal: SPACING.xs,
-    maxWidth: 360,
-    width: "100%",
-  },
-  landingCta: { width: "100%", paddingHorizontal: LANDING_CTA_SIDE_PAD, marginTop: SPACING.lg * 1.4 },
-  phaseLine: { fontSize: 13, marginBottom: SPACING.md, fontFamily: TYPOGRAPHY.fontFamily.medium },
-  h3: {
-    fontFamily: TYPOGRAPHY.fontFamily.medium,
-    fontSize: TYPOGRAPHY.fontSize.lg,
-    marginBottom: SPACING.md,
-  },
-  subLabel: { fontSize: TYPOGRAPHY.fontSize.md, fontFamily: TYPOGRAPHY.fontFamily.medium, marginBottom: SPACING.xs },
-  rowGap: { gap: SPACING.sm },
-  radioRow: {
+  reviewFieldRow: {
     flexDirection: "row",
-    alignItems: "center",
-    gap: SPACING.sm,
-    paddingVertical: SPACING.sm,
-    paddingHorizontal: SPACING.md,
-    borderRadius: 8,
-    minHeight: 48,
-  },
-  radioOuter: { width: 22, height: 22, borderRadius: 11, borderWidth: 2, alignItems: "center", justifyContent: "center" },
-  radioInner: { width: 12, height: 12, borderRadius: 6 },
-  footerBtns: {
-    flexDirection: "row",
+    justifyContent: "space-between",
+    alignItems: "flex-start",
     gap: SPACING.md,
-    paddingTop: SPACING.lg,
   },
-  reviewSections: { gap: SPACING.md },
-  reviewSubmitInCard: { marginTop: CARD_INNER_PADDING },
+  reviewFieldRowGap: {
+    marginTop: SPACING.md,
+  },
+  reviewFieldLabel: {
+    fontSize: TYPOGRAPHY.fontSize.md,
+    flex: 1,
+  },
+  reviewFieldValue: {
+    fontSize: TYPOGRAPHY.fontSize.md,
+    textAlign: "right",
+    flex: 1,
+  },
+  reviewNotesText: {
+    fontSize: TYPOGRAPHY.fontSize.md,
+    lineHeight: 22,
+  },
+  footer: {
+    flexDirection: "row",
+    justifyContent: "flex-end",
+    gap: SPACING.md,
+    paddingHorizontal: SPACING.screen,
+    paddingVertical: SPACING.lg,
+    borderTopWidth: 1,
+  },
+  fixedFooter: {
+    paddingHorizontal: SPACING.screen,
+    paddingVertical: SPACING.lg,
+    borderTopWidth: 1,
+  },
 });

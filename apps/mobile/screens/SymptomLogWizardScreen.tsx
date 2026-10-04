@@ -3,7 +3,7 @@ import { PenLine } from "lucide-react-native";
 import DateTimePicker from "@react-native-community/datetimepicker";
 import AsyncStorage from "@react-native-async-storage/async-storage";
 import { CommonActions, useNavigation, useRoute } from "@react-navigation/native";
-import React, { useCallback, useEffect, useLayoutEffect, useMemo, useRef, useState } from "react";
+import React, { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import {
   ActivityIndicator,
   BackHandler,
@@ -449,12 +449,6 @@ export function SymptomLogWizardScreen({ user }: { user: SessionUser }) {
     return () => sub.remove();
   }, [goBackInternal]);
 
-  useLayoutEffect(() => {
-    navigation.setOptions({
-      headerTitle: currentStep === SYMPTOM_REVIEW_STEP && !editingReviewSection ? "Review" : "",
-    });
-  }, [navigation, currentStep, editingReviewSection]);
-
   const advanceFrom = useCallback(
     (source: SymptomFormData) => {
       if (advancingRef.current) return;
@@ -580,8 +574,8 @@ export function SymptomLogWizardScreen({ user }: { user: SessionUser }) {
         navigation.goBack();
         showFlareAlert("Saved");
       } else {
-        navigation.dispatch(CommonActions.reset({ index: 0, routes: [{ name: "Dashboard" }] }));
-        showFlareAlert("Saved", "To view, click History in Track");
+        navigation.dispatch(CommonActions.reset({ index: 0, routes: [{ name: "Today" }] }));
+        showFlareAlert("Saved", "To view, see History in Track");
       }
     } catch (e: any) {
       showFlareAlert(e?.message || "Could not save");
@@ -826,7 +820,11 @@ export function SymptomLogWizardScreen({ user }: { user: SessionUser }) {
     <KeyboardAvoidingView style={[styles.screen, { backgroundColor: c.screen }]} behavior={Platform.OS === "ios" ? "padding" : undefined}>
       <ScrollView
         ref={scrollRef}
-        contentContainerStyle={[styles.scrollContent, currentStep === 0 && styles.scrollContentLanding]}
+        contentContainerStyle={[
+          styles.scrollContent,
+          currentStep === 0 && styles.scrollContentLanding,
+          currentStep === SYMPTOM_REVIEW_STEP && styles.scrollContentReview,
+        ]}
         keyboardShouldPersistTaps="handled"
       >
         {currentStep > 0 && currentStep !== SYMPTOM_REVIEW_STEP && phase.sectionTotal > 0 ? (
@@ -1246,7 +1244,11 @@ export function SymptomLogWizardScreen({ user }: { user: SessionUser }) {
 
       {currentStep === SYMPTOM_REVIEW_STEP && !editingReviewSection ? (
         <View style={[styles.fixedFooter, { backgroundColor: c.screen, borderTopColor: c.cardBorder }]}>
-          <PrimaryButton title={submitting ? "Saving..." : "Save log"} onPress={submit} disabled={submitting} />
+          <PrimaryButton
+            title={submitting ? "Saving..." : "Save log"}
+            onPress={submit}
+            disabled={submitting}
+          />
         </View>
       ) : null}
 
@@ -1254,7 +1256,9 @@ export function SymptomLogWizardScreen({ user }: { user: SessionUser }) {
         <DateTimePicker
           value={picker === "start" && form.symptomStartDate ? parseYmd(form.symptomStartDate) : picker === "end" && form.symptomEndDate ? parseYmd(form.symptomEndDate) : new Date()}
           mode="date"
-          display={Platform.OS === "ios" ? "spinner" : "default"}
+          display="spinner"
+          textColor={c.text}
+          themeVariant={c.isDark ? "dark" : "light"}
           minimumDate={picker === "end" && form.symptomStartDate ? parseYmd(form.symptomStartDate) : undefined}
           maximumDate={new Date()}
           onChange={(event, d) => {
@@ -1282,11 +1286,14 @@ const styles = StyleSheet.create({
   scrollContent: {
     paddingHorizontal: SPACING.screen,
     paddingTop: SPACING.lg,
-    paddingBottom: 120,
+    paddingBottom: SPACING.lg * 2,
   },
   scrollContentLanding: {
     paddingTop: 0,
     paddingBottom: SPACING.xl,
+  },
+  scrollContentReview: {
+    paddingBottom: SPACING.lg * 2,
   },
   progressWrap: {
     marginBottom: SPACING.xl,
@@ -1303,6 +1310,7 @@ const styles = StyleSheet.create({
   landingCard: {
     alignItems: "center",
     gap: SPACING.lg,
+    paddingBottom: SPACING.lg * 2,
   },
   landingIconWrap: {
     width: 80,

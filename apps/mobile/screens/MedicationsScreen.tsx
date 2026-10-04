@@ -19,7 +19,6 @@ import { PrimaryButton, SecondaryButton } from "../components/FlareButton";
 import { flareFieldErrorStyle, FlareTextInput } from "../components/FlareInput";
 import { Card } from "../components/MidnightLagoonCard";
 import { TrayRow } from "../components/MidnightLagoonTray";
-import { ScreenHeader } from "../components/MidnightLagoonScreenHeader";
 import { SectionLabel } from "../components/MidnightLagoonSectionLabel";
 import { OptionPickerModal } from "../components/OptionPickerModal";
 import { ConfirmModal } from "../components/ConfirmModal";
@@ -46,7 +45,7 @@ import {
 } from "../lib/medicationShared";
 import { useMedicationsList } from "../lib/useMedicationsList";
 import { snapTimeHmFromDate } from "../lib/bowelMovementShared";
-import { TIME_PICKER_MINUTE_INTERVAL } from "../lib/layoutConstants";
+import { TIME_PICKER_MINUTE_INTERVAL, bottomTabBarHeight } from "../lib/layoutConstants";
 import { SPACING, TYPOGRAPHY } from "../designTokens";
 import { supabase, TABLES } from "../lib/supabase";
 import { useFlareColors } from "../theme";
@@ -299,7 +298,8 @@ export function MedicationsScreen({ user }: { user: SessionUser }) {
   const c = useFlareColors();
   const navigation = useNavigation<any>();
   const insets = useSafeAreaInsets();
-  const { fabBottom, fabInsetRight, scrollBottomPad } = useTrackerThumbFabLayout();
+  const tabBarClearance = bottomTabBarHeight(insets.bottom);
+  const { scrollBottomPad } = useTrackerThumbFabLayout(tabBarClearance);
 
   const { meds: medications, loading: dataLoading, load } = useMedicationsList(user.id);
   const listLoading = useDeferredListLoading(dataLoading);
@@ -428,7 +428,6 @@ export function MedicationsScreen({ user }: { user: SessionUser }) {
   return (
     <View style={[styles.screen, { backgroundColor: c.screen }]}>
       <ScrollView style={styles.scroll} contentContainerStyle={[styles.scrollContent, { paddingBottom: scrollBottomPad }]}>
-        <ScreenHeader title="My Meds" />
         {listLoading ? (
           <View style={styles.loadingWrap}>
             <ActivityIndicator size="small" color={c.primary} />
@@ -475,7 +474,11 @@ export function MedicationsScreen({ user }: { user: SessionUser }) {
         )}
       </ScrollView>
 
-      <TrackerThumbFab accessibilityLabel="Add medication" onPress={openAddSheet} />
+      <TrackerThumbFab
+        accessibilityLabel="Add medication"
+        onPress={openAddSheet}
+        tabBarClearance={tabBarClearance}
+      />
 
       <MedicationSheet
         visible={sheetVisible}

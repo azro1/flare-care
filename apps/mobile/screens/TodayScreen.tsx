@@ -1,18 +1,31 @@
-import React, { useState, useCallback, useEffect, useMemo } from "react";
+import React, { useState, useCallback } from "react";
 import { View, Text, Pressable, StyleSheet } from "react-native";
 import { ScrollView } from "../lib/scrollViews";
 import { useNavigation, useFocusEffect } from "@react-navigation/native";
 import { useFlareColors } from "../theme";
-import { SPACING, TYPOGRAPHY, RADIUS, OPACITY } from "../designTokens";
+import { SPACING, OPACITY, DIMENSIONS } from "../designTokens";
 import { Card } from "../components/MidnightLagoonCard";
 import { HeroCard } from "../components/MidnightLagoonHeroCard";
-import { StatRing } from "../components/MidnightLagoonStatRing";
+import { FillStatTile } from "../components/MidnightLagoonWeekHeatTile";
 import { TrayRow } from "../components/MidnightLagoonTray";
 import { ScreenHeader } from "../components/MidnightLagoonScreenHeader";
 import { SectionLabel } from "../components/MidnightLagoonSectionLabel";
 import { supabase, TABLES } from "../lib/supabase";
 import { todayYmd } from "../lib/bowelMovementShared";
-import { fetchMedicationsForUser } from "../lib/medicationShared";
+import {
+  fetchMedicationsForUser,
+  formatMedicationReminderTime,
+  nextReminderMedication,
+  type MedicationRow,
+} from "../lib/medicationShared";
+import { HYDRATION_TARGET } from "../lib/hydrationShared";
+import {
+  fetchKitListEntries,
+  nextDueSupplyKit,
+  supplyDueListLabel,
+  type KitListEntry,
+} from "../lib/medicalSuppliesShared";
+import { getTodayWellbeingEntry, type WellbeingScale } from "../lib/wellbeingShared";
 import { formatUkGreetingDate } from "../lib/formatUkDate";
 import type { SessionUser } from "../lib/supabase";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
@@ -21,25 +34,19 @@ type TodayScreenProps = {
   user: SessionUser;
 };
 
-const HYDRATION_TARGET = 6;
-
 export function TodayScreen({ user }: TodayScreenProps) {
   const navigation = useNavigation<any>();
   const colors = useFlareColors();
   const insets = useSafeAreaInsets();
 
-  const [userName, setUserName] = useState("there");
-  const [todayDate, setTodayDate] = useState("");
+  const userName = (user.displayName ?? "").trim().split(/\s+/)[0] || "there";
+  const todayDate = formatUkGreetingDate(new Date());
   const [medsTaken, setMedsTaken] = useState(0);
-  const [medsTotal, setMedsTotal] = useState(2);
+  const [medsTotal, setMedsTotal] = useState(0);
   const [hydration, setHydration] = useState(0);
-  const [bowelCount, setBowelCount] = useState(0);
-
-  useEffect(() => {
-    const name = user.user_metadata?.first_name?.trim();
-    setUserName(name || "there");
-    setTodayDate(formatUkGreetingDate(new Date()));
-  }, [user]);
+  const [checkedIn, setCheckedIn] = useState(false);
+  const [nextMed, setNextMed] = useState<MedicationRow | null>(null);
+  const [nextSupply, setNextSupply] = useState<KitListEntry | null>(null);
 
   useFocusEffect(
     useCallback(() => {
@@ -48,7 +55,7 @@ export function TodayScreen({ user }: TodayScreenProps) {
 
       void (async () => {
         try {
-          const [medsListRes, takenMedsRes, hydrationRes, bowelRes] = await Promise.all([
+          const [medsListRes, takenMedsRes, hydrationRes, wellbeingToday, supplyEntries] = await Promise.all([
             fetchMedicationsForUser(user.id),
             supabase
               .from(TABLES.MEDICATION_TAKEN)
@@ -61,23 +68,24 @@ export function TodayScreen({ user }: TodayScreenProps) {
               .eq("user_id", user.id)
               .eq("date", today)
               .maybeSingle(),
-            supabase
-              .from(TABLES.BOWEL_MOVEMENTS)
-              .select("id")
-              .eq("user_id", user.id)
-              .gte("created_at", `${today}T00:00:00`),
+            getTodayWellbeingEntry(user.id, today),
+            fetchKitListEntries(user.id),
           ]);
 
           if (cancelled) return;
+          if (takenMedsRes.error) throw takenMedsRes.error;
+          if (hydrationRes.error) throw hydrationRes.error;
 
           const activeMeds = medsListRes.filter((m) => !m.paused && !m.archived);
-          const takenSet = new Set((takenMedsRes.data ?? []).map((r) => r.medication_id));
-          const taken = activeMeds.filter((m) => takenSet.has(m.id)).length;
+          const takenSet = new Set((takenMedsRes.data ?? []).map((row) => String(row.medication_id)));
+          const taken = activeMeds.filter((med) => takenSet.has(String(med.id))).length;
 
           setMedsTotal(activeMeds.length);
           setMedsTaken(taken);
           setHydration(hydrationRes.data?.glasses ?? 0);
-          setBowelCount(bowelRes.data?.length ?? 0);
+          setCheckedIn(wellbeingToday != null);
+          setNextMed(nextReminderMedication(activeMeds, takenSet));
+          setNextSupply(nextDueSupplyKit(supplyEntries));
         } catch (error) {
           console.error("TodayScreen data fetch failed:", error);
         }
@@ -90,13 +98,16 @@ export function TodayScreen({ user }: TodayScreenProps) {
   );
 
   const handleMoodPress = useCallback(
-    (mood: number) => {
-      navigation.navigate("SymptomLogWizard");
+    (index: number) => {
+      const mood = (index + 1) as WellbeingScale;
+      navigation.navigate("WellbeingWizard", { mood });
     },
     [navigation],
   );
 
   const moodFaces = ["😣", "😕", "😐", "🙂", "😄"];
+  const medsRatio = medsTotal > 0 ? medsTaken / medsTotal : 0;
+  const hydrationRatio = HYDRATION_TARGET > 0 ? hydration / HYDRATION_TARGET : 0;
 
   return (
     <View style={[styles.screen, { backgroundColor: colors.screen }]}>
@@ -107,21 +118,20 @@ export function TodayScreen({ user }: TodayScreenProps) {
           { paddingBottom: insets.bottom + 100 },
         ]}
       >
-        <ScreenHeader
-          title={`Hi ${userName}`}
-          subtitle={todayDate}
-        />
+        <ScreenHeader title={`Hi, ${userName}`} subtitle={todayDate} />
 
-        <HeroCard title="How are you feeling today?" subtitle="One tap to check in. Add details if you want.">
+        <HeroCard
+          title="How are you feeling today?"
+          subtitle={checkedIn ? "Checked in today." : "One tap to check in. Add details if you want."}
+          style={styles.hero}
+        >
           <View style={styles.moodFaces}>
             {moodFaces.map((face, index) => (
               <Pressable
                 key={index}
                 onPress={() => handleMoodPress(index)}
-                style={[
-                  styles.moodFace,
-                  { backgroundColor: `rgba(255, 255, 255, ${OPACITY.heroMood})` },
-                ]}
+                accessibilityRole="button"
+                style={[styles.moodFace, { backgroundColor: `rgba(255, 255, 255, ${OPACITY.heroMood})` }]}
               >
                 <Text style={styles.moodEmoji}>{face}</Text>
               </Pressable>
@@ -130,25 +140,47 @@ export function TodayScreen({ user }: TodayScreenProps) {
         </HeroCard>
 
         <View style={styles.statRings}>
-          <StatRing value={`${medsTaken}/${medsTotal}`} label="Meds" progress={medsTotal > 0 ? medsTaken / medsTotal : 0} />
-          <StatRing value={`${hydration}/${HYDRATION_TARGET}`} label="Cups" progress={hydration / HYDRATION_TARGET} />
-          <StatRing value={`${bowelCount}`} label="BMs" progress={bowelCount > 0 ? Math.min(1, bowelCount / 3) : 0} />
+          <FillStatTile
+            label="My meds"
+            value={String(medsTaken)}
+            total={String(medsTotal)}
+            caption="taken today"
+            ratio={medsRatio}
+            hue={colors.primary}
+          />
+          <FillStatTile
+            label="My hydration"
+            value={String(hydration)}
+            total={String(HYDRATION_TARGET)}
+            caption="cups today"
+            ratio={hydrationRatio}
+            hue={colors.hydration}
+          />
         </View>
 
-        <SectionLabel>Still to do</SectionLabel>
+        <SectionLabel style={{ marginTop: 0 }}>Still to do</SectionLabel>
 
         <Card noPadding style={{ paddingVertical: SPACING.sm, paddingHorizontal: SPACING.md }}>
-          <TrayRow
-            label="Take Mesalazine"
-            value="8:00 am"
-            onPress={() => navigation.navigate("Meds")}
-          />
-          <TrayRow
-            label="Order stoma bags"
-            value="Due today"
-            valueColor={colors.accent}
-            onPress={() => navigation.navigate("MedicalSupplies")}
-          />
+          {nextMed ? (
+            <TrayRow
+              label={`Take ${nextMed.name}`}
+              value={formatMedicationReminderTime(nextMed.time_of_day)}
+              onPress={() => navigation.navigate("MedicationDetail", { medicationId: nextMed.id })}
+            />
+          ) : null}
+          {nextSupply ? (
+            <TrayRow
+              label={nextSupply.kit.name}
+              value={supplyDueListLabel(nextSupply.kit, nextSupply.itemCount)}
+              valueColor={nextSupply.status === "overdue" ? colors.danger : colors.accent}
+              onPress={() =>
+                navigation.navigate("MedicalSupplyOrder", {
+                  kitId: nextSupply.kit.id,
+                  orderName: nextSupply.kit.name,
+                })
+              }
+            />
+          ) : null}
           <TrayRow
             label="Clinic tomorrow"
             value="10:30 am"
@@ -161,6 +193,15 @@ export function TodayScreen({ user }: TodayScreenProps) {
 }
 
 const styles = StyleSheet.create({
+  hero: {
+    marginBottom: SPACING.screen,
+  },
+  statRings: {
+    flexDirection: "row",
+    alignItems: "stretch",
+    gap: DIMENSIONS.statTileGap,
+    marginBottom: SPACING.screen,
+  },
   screen: {
     flex: 1,
   },
@@ -185,9 +226,5 @@ const styles = StyleSheet.create({
   },
   moodEmoji: {
     fontSize: 24,
-  },
-  statRings: {
-    flexDirection: "row",
-    gap: SPACING.sm,
   },
 });

@@ -26,8 +26,8 @@ export function OptionChip({
       style={({ pressed }) => [
         styles.chip,
         {
-          backgroundColor: selected ? c.primary : c.inputBg,
-          borderColor: selected ? c.primary : c.inputBorder,
+          backgroundColor: selected ? c.cta : c.inputBg,
+          borderColor: selected ? c.cta : c.inputBorder,
         },
         pressed && !disabled && { opacity: 0.8 },
         disabled && { opacity: 0.5 },

@@ -16,6 +16,12 @@ export const TRENDS_PERIODS: { id: TrendsPeriod; label: string; days: number }[]
 ];
 
 export const DEFAULT_TRENDS_PERIOD: TrendsPeriod = "2w";
+
+/** ? beside Your activity — same explanation the old Trends header used. */
+export const ACTIVITY_HINT_TITLE = "Activity";
+export const ACTIVITY_HINT_MESSAGE =
+  "Each bar is one day. The height is how many entries you logged that day.";
+export const ACTIVITY_HINT_ACCESSIBILITY_LABEL = "About Activity";
 export const TRENDS_PERIOD_LABELS = TRENDS_PERIODS.map((p) => p.label);
 
 export type TrendsFilterId =

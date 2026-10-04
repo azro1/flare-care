@@ -10,38 +10,91 @@ export const WELLBEING_LOG_TITLE = "Wellbeing Log";
 export type WellbeingScale = 1 | 2 | 3 | 4 | 5;
 
 export const SCALE_OPTIONS: { value: WellbeingScale; label: string }[] = [
-  { value: 1, label: "1 – Very poor" },
-  { value: 2, label: "2 – Poor" },
-  { value: 3, label: "3 – Moderate" },
-  { value: 4, label: "4 – Good" },
-  { value: 5, label: "5 – Very good" },
+  { value: 1, label: "Very poor" },
+  { value: 2, label: "Poor" },
+  { value: 3, label: "Moderate" },
+  { value: 4, label: "Good" },
+  { value: 5, label: "Very good" },
 ];
 
 export const SCALE_OPTIONS_REVERSED: { value: WellbeingScale; label: string }[] = [
-  { value: 1, label: "1 – Very low" },
-  { value: 2, label: "2 – Low" },
-  { value: 3, label: "3 – Moderate" },
-  { value: 4, label: "4 – High" },
-  { value: 5, label: "5 – Very high" },
+  { value: 1, label: "Very low" },
+  { value: 2, label: "Low" },
+  { value: 3, label: "Moderate" },
+  { value: 4, label: "High" },
+  { value: 5, label: "Very high" },
 ];
 
-/** Options where lower numbers = worse (mood, energy, sleep). */
+/** How is your mood today? 1 is worst. */
 export const SCALE_OPTIONS_MOOD: { value: WellbeingScale; label: string }[] = [
-  { value: 1, label: "1 – Very low" },
-  { value: 2, label: "2 – Low" },
-  { value: 3, label: "3 – Okay" },
-  { value: 4, label: "4 – Good" },
-  { value: 5, label: "5 – Great" },
+  { value: 1, label: "Very low" },
+  { value: 2, label: "Low" },
+  { value: 3, label: "Okay" },
+  { value: 4, label: "Good" },
+  { value: 5, label: "Great" },
 ];
 
-/** Options for anxiety/pain/IBD impact where higher = worse. */
-export const SCALE_OPTIONS_SEVERITY: { value: WellbeingScale; label: string }[] = [
-  { value: 1, label: "1 – None" },
-  { value: 2, label: "2 – Mild" },
-  { value: 3, label: "3 – Moderate" },
-  { value: 4, label: "4 – High" },
-  { value: 5, label: "5 – Severe" },
+/** How are your energy levels today? 1 is worst. */
+export const SCALE_OPTIONS_ENERGY: { value: WellbeingScale; label: string }[] = [
+  { value: 1, label: "Drained" },
+  { value: 2, label: "Low" },
+  { value: 3, label: "Okay" },
+  { value: 4, label: "Good" },
+  { value: 5, label: "High" },
 ];
+
+/** How well did you sleep last night? 1 is no sleep. */
+export const SCALE_OPTIONS_SLEEP: { value: WellbeingScale; label: string }[] = [
+  { value: 1, label: "None" },
+  { value: 2, label: "Not much" },
+  { value: 3, label: "Okay" },
+  { value: 4, label: "Well" },
+  { value: 5, label: "Very well" },
+];
+
+/** How anxious are you feeling today? 5 is worst. */
+export const SCALE_OPTIONS_ANXIETY: { value: WellbeingScale; label: string }[] = [
+  { value: 1, label: "None" },
+  { value: 2, label: "A little" },
+  { value: 3, label: "Moderate" },
+  { value: 4, label: "High" },
+  { value: 5, label: "Severe" },
+];
+
+/** How much pain or discomfort are you in today? 5 is worst. */
+export const SCALE_OPTIONS_PAIN: { value: WellbeingScale; label: string }[] = [
+  { value: 1, label: "None" },
+  { value: 2, label: "A little" },
+  { value: 3, label: "Moderate" },
+  { value: 4, label: "A lot" },
+  { value: 5, label: "Severe" },
+];
+
+/** How much has IBD affected your day? 5 is worst. */
+export const SCALE_OPTIONS_IBD: { value: WellbeingScale; label: string }[] = [
+  { value: 1, label: "None" },
+  { value: 2, label: "A little" },
+  { value: 3, label: "Some" },
+  { value: 4, label: "A lot" },
+  { value: 5, label: "Severely" },
+];
+
+/** Are you experiencing any brain fog today? 5 is worst. */
+export const SCALE_OPTIONS_BRAIN_FOG: { value: WellbeingScale; label: string }[] = [
+  { value: 1, label: "None" },
+  { value: 2, label: "A little" },
+  { value: 3, label: "Some" },
+  { value: 4, label: "A lot" },
+  { value: 5, label: "Severe" },
+];
+
+export function labelForWellbeingScale(
+  options: { value: WellbeingScale; label: string }[],
+  value: WellbeingScale | null,
+): string {
+  if (value == null) return "Not set";
+  return options.find((option) => option.value === value)?.label ?? "Not set";
+}
 
 export type WellbeingFormState = {
   date: string;

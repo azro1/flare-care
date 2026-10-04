@@ -27,12 +27,6 @@ const emptyDateErrors = (): DateErrorsState => ({
 
 const ALCOHOL_UNITS_RANGE_ERR = "Enter a number between 0 and 30";
 
-/** Blank, or only the drink unit left after the number is cleared. */
-function isMissingMealAmount(quantity: string): boolean {
-  const q = quantity.trim().toLowerCase();
-  return q === "" || q === "ml";
-}
-
 /** Web alcohol fields use min=0 max=30. Use after non-empty checks. */
 function isValidAlcoholUnits0To30(raw: string): boolean {
   const n = parseFloat(String(raw ?? "").trim());
@@ -66,13 +60,6 @@ export function symptomWizardTryAdvance(input: {
     if (!form.symptomStartDate) {
       return fail({}, { day: "Please select a date" });
     }
-    const testStartDate = new Date(form.symptomStartDate + "T12:00:00");
-    if (Number.isNaN(testStartDate.getTime())) {
-      return fail({}, { day: "Please select a valid date" });
-    }
-    if (testStartDate > new Date()) {
-      return fail({}, { day: "Date cannot be in the future" });
-    }
   }
 
   if (currentStep === 2 && typeof form.isOngoing !== "boolean") {
@@ -89,12 +76,6 @@ export function symptomWizardTryAdvance(input: {
     }
     if (testEndDate > new Date()) {
       return fail({}, { endDay: "Date cannot be in the future" });
-    }
-    if (form.symptomStartDate) {
-      const testStartDate = new Date(form.symptomStartDate + "T12:00:00");
-      if (!Number.isNaN(testStartDate.getTime()) && testEndDate < testStartDate) {
-        return fail({}, { endDay: "End date cannot be before the start date" });
-      }
     }
   }
 
@@ -278,11 +259,6 @@ export function symptomWizardTryAdvance(input: {
     if (!hasBreakfast) {
       return fail({ breakfast: "Please enter what you ate for breakfast or check \"I didn't eat anything\"" });
     }
-    for (const meal of form.breakfast) {
-      if (meal.food.trim() && isMissingMealAmount(meal.quantity)) {
-        return fail({ breakfast: "Please enter an amount" });
-      }
-    }
   }
 
   if (currentStep === 14) {
@@ -290,22 +266,12 @@ export function symptomWizardTryAdvance(input: {
     if (!hasLunch) {
       return fail({ lunch: "Please enter what you ate for lunch or check \"I didn't eat anything\"" });
     }
-    for (const meal of form.lunch) {
-      if (meal.food.trim() && isMissingMealAmount(meal.quantity)) {
-        return fail({ lunch: "Please enter an amount" });
-      }
-    }
   }
 
   if (currentStep === 15) {
     const hasDinner = form.dinner.some((meal) => meal.food.trim()) || form.dinner_skipped;
     if (!hasDinner) {
       return fail({ dinner: "Please enter what you ate for dinner or check \"I didn't eat anything\"" });
-    }
-    for (const meal of form.dinner) {
-      if (meal.food.trim() && isMissingMealAmount(meal.quantity)) {
-        return fail({ dinner: "Please enter an amount" });
-      }
     }
   }
 

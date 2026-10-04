@@ -8,6 +8,11 @@ import { ScreenHeader } from "../components/MidnightLagoonScreenHeader";
 import { Card } from "../components/MidnightLagoonCard";
 import { TrendsLoggingGraph } from "../components/TrendsLoggingGraph";
 import { bottomTabBarScrollInset } from "../lib/layoutConstants";
+import {
+  ACTIVITY_HINT_ACCESSIBILITY_LABEL,
+  ACTIVITY_HINT_MESSAGE,
+  ACTIVITY_HINT_TITLE,
+} from "../lib/trendsLoggingShared";
 import { SPACING } from "../designTokens";
 import { useFlareColors } from "../theme";
 
@@ -21,14 +26,12 @@ export function TrendsScreen({ user }: { user: SessionUser }) {
 
   useLayoutEffect(() => {
     navigation.setOptions({
-      headerTitleAlign: "center",
-      headerTitleContainerStyle: undefined,
-      headerTitle: "Trends",
+      headerTitle: "",
       headerRight: () => (
         <InfoHintButton
-          title="Trends"
-          message="Trends displays your FlareCare activity. Each bar represents one day, with the height indicating the number of entries logged."
-          accessibilityLabel="About Trends"
+          title={ACTIVITY_HINT_TITLE}
+          message={ACTIVITY_HINT_MESSAGE}
+          accessibilityLabel={ACTIVITY_HINT_ACCESSIBILITY_LABEL}
         />
       ),
     });
@@ -48,7 +51,7 @@ export function TrendsScreen({ user }: { user: SessionUser }) {
         contentContainerStyle={[styles.scrollContent, { paddingBottom: bottomTabBarScrollInset(insets.bottom) }]}
         showsVerticalScrollIndicator={false}
       >
-        <ScreenHeader title="Trends" subtitle="Your FlareCare activity" />
+        <ScreenHeader title="Activity" supportLine="See how often you logged" />
         <Card>
           <TrendsLoggingGraph userId={user.id} active={focused} />
         </Card>

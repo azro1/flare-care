@@ -1,5 +1,5 @@
 /**
- * Privacy / Terms body — scan-first numbered accordion (DrDoctor-style progressive disclosure).
+ * Privacy / Terms body — numbered sections, all shown open.
  * Copy from shared `src/content/legalDocuments`.
  */
 import React from "react";
@@ -64,6 +64,7 @@ export function LegalDocumentView({ kind }: { kind: LegalDocumentKind }) {
 
   return (
     <NumberedAccordion
+      collapsible={false}
       intro={doc.intro}
       sections={doc.sections.map((section) => ({
         id: section.id,

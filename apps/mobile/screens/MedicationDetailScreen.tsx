@@ -9,7 +9,6 @@ import { ConfirmModal } from "../components/ConfirmModal";
 import { PrimaryButton, SecondaryButton } from "../components/FlareButton";
 import { Card } from "../components/MidnightLagoonCard";
 import { TrayRow } from "../components/MidnightLagoonTray";
-import { ScreenHeader } from "../components/MidnightLagoonScreenHeader";
 import { invalidateDashboardSnapshot } from "../lib/dashboardSnapshotCache";
 import { formatAddedAtHeader } from "../lib/logDisplay";
 import { recordRecentActivityEvent } from "../lib/recentActivityEvents";
@@ -61,7 +60,8 @@ export function MedicationDetailScreen({ user }: { user: SessionUser }) {
   const route = useRoute();
   const c = useFlareColors();
   const insets = useSafeAreaInsets();
-  const id = String((route.params as MedicationDetailParams | undefined)?.id ?? "");
+  const params = route.params as (MedicationDetailParams & { medicationId?: string | number }) | undefined;
+  const id = String(params?.id ?? params?.medicationId ?? "");
   const medId = parseInt(id, 10);
 
   const [loading, setLoading] = useState(true);
@@ -220,11 +220,17 @@ export function MedicationDetailScreen({ user }: { user: SessionUser }) {
     );
   }
 
+  const addedLine = formatAddedAtHeader(row.created_at);
+
   return (
     <>
       <View style={[styles.screen, { backgroundColor: c.screen }]}>
         <ScrollView style={styles.scroll} contentContainerStyle={[styles.scrollContent, { paddingBottom: bottomPad }]} showsVerticalScrollIndicator={false}>
-          <ScreenHeader title={row.name} subtitle={formatAddedAtHeader(row.created_at)} />
+          {addedLine ? (
+            <Text style={[styles.addedLine, { color: c.textSecondary, fontFamily: TYPOGRAPHY.fontFamily.regular }]}>
+              {addedLine}
+            </Text>
+          ) : null}
           <Card noPadding style={{ paddingVertical: SPACING.sm, paddingHorizontal: SPACING.md }}>
             <TrayRow label="Medication" value={row.name} />
             <TrayRow label="Dosage" value={row.dosage ?? "Not set"} />
@@ -288,6 +294,10 @@ const styles = StyleSheet.create({
     flexDirection: "row",
     alignItems: "center",
     gap: SPACING.xs,
+  },
+  addedLine: {
+    fontSize: TYPOGRAPHY.fontSize.md,
+    marginBottom: SPACING.lg,
   },
   headerIconBtn: {
     width: 44,

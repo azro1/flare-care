@@ -1,8 +1,9 @@
-import React from "react";
-import { View, Text, Pressable, StyleSheet } from "react-native";
+import React, { useState } from "react";
+import { View, Text, Pressable, StyleSheet, useWindowDimensions, type LayoutChangeEvent } from "react-native";
 import { useFlareColors } from "../theme";
-import { SPACING, RADIUS, TYPOGRAPHY, DIMENSIONS, OPACITY } from "../designTokens";
+import { SPACING, RADIUS, TYPOGRAPHY, DIMENSIONS } from "../designTokens";
 import { FlareLucideIcon } from "../lib/flareLucideIcons";
+import { HEADER_CHROME_ICON_SIZE } from "../lib/layoutConstants";
 import type { LucideIcon } from "lucide-react-native";
 
 type TileGridProps = {
@@ -12,16 +13,28 @@ type TileGridProps = {
     onPress: () => void;
   }>;
   columns?: 2 | 3;
+  /** When true, tiles have no filled background so they sit flat on a card. */
+  plain?: boolean;
 };
 
-export function TileGrid({ tiles, columns = 3 }: TileGridProps) {
+export function TileGrid({ tiles, columns = 3, plain = false }: TileGridProps) {
   const colors = useFlareColors();
+  const { width: windowWidth } = useWindowDimensions();
+  const estimatedWidth = Math.floor(
+    (windowWidth - SPACING.screen * 2 - SPACING.lg * 2 - 2 - SPACING.sm * (columns - 1)) / columns,
+  );
+  const [tileWidth, setTileWidth] = useState(estimatedWidth);
 
-  // Calculate tile width: (100% - gaps) / columns
-  const tileWidthPercentage = columns === 3 ? `31%` : `48%`;
+  // Measure the row and give every tile an exact pixel width, so the column
+  // count is guaranteed instead of guessed from percentages.
+  const handleLayout = (event: LayoutChangeEvent) => {
+    const width = event.nativeEvent.layout.width;
+    const next = Math.floor((width - SPACING.sm * (columns - 1)) / columns);
+    setTileWidth((prev) => (prev === next ? prev : next));
+  };
 
   return (
-    <View style={[styles.grid, columns === 2 && styles.grid2]}>
+    <View style={styles.grid} onLayout={handleLayout}>
       {tiles.map((tile, index) => (
         <Pressable
           key={index}
@@ -29,20 +42,15 @@ export function TileGrid({ tiles, columns = 3 }: TileGridProps) {
           style={({ pressed }) => [
             styles.tile,
             { 
-              backgroundColor: colors.tray, 
+              backgroundColor: plain ? "transparent" : colors.tray, 
               opacity: pressed ? 0.7 : 1,
-              width: tileWidthPercentage,
+              width: tileWidth || undefined,
             },
           ]}
           accessibilityRole="button"
         >
-          <View
-            style={[
-              styles.iconTile,
-              { backgroundColor: colors.primary + Math.round(OPACITY.iconTile * 255).toString(16).padStart(2, '0') },
-            ]}
-          >
-            <FlareLucideIcon icon={tile.icon} size={18} color={colors.primary} />
+          <View style={styles.iconTile}>
+            <FlareLucideIcon icon={tile.icon} size={HEADER_CHROME_ICON_SIZE} color={colors.primary} />
           </View>
           <Text
             style={[

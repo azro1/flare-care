@@ -76,6 +76,8 @@ export const TYPOGRAPHY = {
     stat: 20,
     /** 24px - screen title */
     screenTitle: 24,
+    /** 40px - Today fill-tile count */
+    tileValue: 40,
   },
   fontWeight: {
     regular: '400' as const,
@@ -101,6 +103,10 @@ export const DIMENSIONS = {
   buttonHeight: 56,
   /** Mood face size (52x52px) */
   moodFace: 52,
+  /** Today fill tile height */
+  statTileHeight: 150,
+  /** Gap between the two Today fill tiles */
+  statTileGap: 10,
 } as const;
 
 /** Shadows - currently minimal/none in Midnight Lagoon design */

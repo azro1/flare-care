@@ -23,12 +23,15 @@ export function NumberedAccordion({
   sections,
   footer,
   numbered = true,
+  collapsible = true,
 }: {
   intro?: string;
   sections: NumberedAccordionSection[];
   footer?: ReactNode;
   /** When false, section titles show without leading numbers (e.g. What is IBD?). */
   numbered?: boolean;
+  /** When false, every section is shown open with no dropdown chevrons (e.g. legal docs). */
+  collapsible?: boolean;
 }) {
   const c = useFlareColors();
   const [openIds, setOpenIds] = useState<Set<string>>(() => new Set());
@@ -48,7 +51,7 @@ export function NumberedAccordion({
 
       <View style={[styles.accordion, !footer && styles.accordionLast]}>
         {sections.map((section, index) => {
-          const open = openIds.has(section.id);
+          const open = !collapsible || openIds.has(section.id);
           const n = index + 1;
           const label = numbered ? `${n}. ${section.title}` : section.title;
           return (
@@ -61,21 +64,29 @@ export function NumberedAccordion({
                   : null,
               ]}
             >
-              <Pressable
-                accessibilityRole="button"
-                accessibilityState={{ expanded: open }}
-                accessibilityLabel={label}
-                onPress={() => toggleSection(section.id)}
-                style={styles.accordionHeader}
-                hitSlop={{ top: 6, bottom: 6, left: 4, right: 4 }}
-              >
-                <Text style={[styles.accordionTitle, { color: c.text }]}>{label}</Text>
-                <FlareLucideIcon
-                  icon={open ? FLARE_CHROME_LUCIDE.up : FLARE_CHROME_LUCIDE.down}
-                  size={16}
-                  color={c.textMuted}
-                />
-              </Pressable>
+              {collapsible ? (
+                <Pressable
+                  accessibilityRole="button"
+                  accessibilityState={{ expanded: open }}
+                  accessibilityLabel={label}
+                  onPress={() => toggleSection(section.id)}
+                  style={styles.accordionHeader}
+                  hitSlop={{ top: 6, bottom: 6, left: 4, right: 4 }}
+                >
+                  <Text style={[styles.accordionTitle, { color: c.text }]}>{label}</Text>
+                  <FlareLucideIcon
+                    icon={open ? FLARE_CHROME_LUCIDE.up : FLARE_CHROME_LUCIDE.down}
+                    size={16}
+                    color={c.textMuted}
+                  />
+                </Pressable>
+              ) : (
+                <View style={styles.accordionHeader}>
+                  <Text accessibilityRole="header" style={[styles.accordionTitle, { color: c.text }]}>
+                    {label}
+                  </Text>
+                </View>
+              )}
               {open ? <View style={styles.accordionBody}>{section.body}</View> : null}
             </View>
           );

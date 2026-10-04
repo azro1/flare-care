@@ -1,215 +1,89 @@
-# FEATURES — list of all the app’s features
+# FlareCare features
 
-Everything users can see and do in Flarecare mobile. Update when you add or remove something.
+**New app only.** GitHub `azro1/flare-care`, branch `design/midnight-lagoon`, folder `flare-care-redesign`.
 
-Not for same-day working lists (`todays_notes.md`), feature plans (`plans/`), or implementation reminders (`DEV_NOTES.md`).
+Not the old app. Do not copy the `FEATURES.md` in the `flare-care` folder.
 
-Flarecare helps people with Crohn’s / Colitis track their day and prepare for clinic.
-**It is not medical advice.** We do **not** advertise as a medical / clinical app — personal companion and organiser only. **Google Play end goal:** pass store review cleanly (no diagnostic/treatment claims; Data safety and listing match the product).
-
----
-
-## How you move around
-
-**Bottom tabs**
-
-1. **Home** — dashboard  
-2. **Trends** — logging over time (app-wide)  
-3. **Logs** — past symptom / medication-tracking / wellbeing entries  
-4. **Account** — your settings and sign out  
-
-**Top-right ⋮ menu** (on many screens)
-
-- Settings  
-- Info (IBD + nutrition guides)  
-- About  
-- Help  
-- Log out  
+Update this file the same day a feature is added, removed, or changed.
 
 ---
 
-## Signing in
+FlareCare is a personal companion for people with Crohn’s or colitis. Track the day, see what is still left, and get ready for clinic. Not medical advice. Not a diagnostic app.
 
-- Sign in with **email code** or **Google**
-- You must accept **Terms** and **Privacy** first
-- Optional **fingerprint / Face ID** app lock while signed in
-- With lock on, you can unlock again quickly after signing out (same fingerprint / Face ID)
-- First-time users get a short **multi-slide intro**
-- If there’s no name on the account, it asks for one (**Almost there**)
+[FEATURE] Sign in (Sign-in screen) — Sign in with an email code or Google. Terms and Privacy are accepted first.
 
----
+[FEATURE] App lock (Profile → Security) — Lock and unlock the app with fingerprint or Face ID.
 
-## Home (Dashboard)
+[FEATURE] First-time intro (first open) — Short screens the first time the app is opened. Asks for a name if the account has none.
 
-**Top**
-- Hello + today’s weather (city, condition, temperature)
+[FEATURE] Mood check-in (Today) — Five faces, worst to best. One tap starts today’s wellbeing check-in with that mood already chosen. One check-in a day.
 
-**Check in**
-- **Log Symptoms**
-- **Track Medications** (missed meds, NSAIDs, antibiotics — for patterns)
-- **My Wellbeing**
+[FEATURE] My meds today (Today) — Shows how many medicines are marked taken today. The tile fills as more are taken.
 
-**Today’s priorities**  
-A short list of what’s still left today. Only unfinished things appear.  
-If everything’s done: “You're caught up for today”.  
-Long lists can use **View all**.
+[FEATURE] My hydration today (Today) — Shows cups logged today, out of 6. The tile fills the same way.
 
-It can show:
-- Take medication (and the time, if you set one)
-- Stay hydrated
-- Check-in not completed
-- Appointment today or tomorrow
-- Supplies due / overdue
+[FEATURE] Still to do (Today) — Short list of what is left today. Shows the next medicine that has a reminder and is not taken yet, with the time. Shows a supply order when it is due today or overdue.
 
-Reminder only — you don’t tap the lines.  
-Hydration **numbers** live under **Targets**.
+[FEATURE] Log symptoms (Track) — Step-by-step log of how you feel today. One-tap answers move on. Meals and notes wait for Next. Review, then save.
 
-**My health / My care / My tools**
-- **Health:** tiles — My Hydration, Bowel Movements, My Meds (same names as screen headers)
-- **Care:** next appointment + supplies status + Reports
-- **Tools:** tiles — My Weight, Fluid Output, Food & Drink, Out & About
-- Today’s hydration/meds **numbers** live under **Targets**
+[FEATURE] Log wellbeing (Track) — Step-by-step check-in for mood, energy, sleep, and more. The faces on Today open this with the mood already filled. One-tap answers move on. Exercise minutes and notes wait for Next.
 
-**Targets**  
-Slide-up card with:
-- Today’s meds status (how many taken)
-- Today’s hydration cups  
-Tap through to open My Meds or Hydration.
+[FEATURE] Log hydration (Track) — Cup count for today. Target is 6. Today’s count can be reset.
 
-**Trends** (bottom tab)  
-How often you’ve been logging in Flarecare over time (entry counts). Filter by type and period. Not a health score — more entries means more app use. App-wide — not under My health.
+[FEATURE] Log bowel movements (Track) — Log stools. Bristol Stool Chart to pick a type while logging.
 
----
+[FEATURE] Log weight (Track) — Log weight.
 
-## Logging your health
+[FEATURE] Log fluid output (Track) — Log output in ml. Split by urine, stoma, drain, or other.
 
-| What | What it does |
-|------|----------------|
-| **Log Symptoms** | Record how you feel today (wizard) |
-| **Track Medications** | Log missed prescribed meds, plus NSAIDs or antibiotics taken recently (patterns / triggers) |
-| **My Wellbeing** | Log mood / wellbeing for the day |
-| **My Meds** | Your medicine list (name, dose, reminder time). Open a medicine → **Mark as taken today** |
-| **My Hydration** | Count cups of fluid (target is 6). Can reset today’s count. Link to intake guidelines in Help |
-| **Bowel Movements** | Log stools. **Bristol Stool Chart** guide (and pick a type while logging) |
-| **My Weight** | Log weight |
-| **Fluid Output** | Log fluid output in ml. Hub tabs: **Urine** \| **Stoma** \| **Drain** \| **Other** (tap; fade). FAB prefills Type from the active tab; today’s total is for the open tab |
-| **Food & Drink** | Optional diary of what you ate/drank with time. Hub tabs: **Food** \| **Drink** (tap; fade). Drinks may note ml. Not calories — for care-team intake notes |
+[FEATURE] Log food and drink (Track) — Optional diary of what you ate or drank, and when. Not a calorie counter.
 
-**History**
-- **Logs** tab: symptom / medication-tracking / wellbeing lists  
-- Each tracker also has its own history / detail screens  
+[FEATURE] Log medications (Track) — Diary of missed prescribed medicines, plus NSAIDs or antibiotics taken recently. Separate from the medicine list. Yes or No moves on. The medicine lists wait for Next.
 
-**Editing lists**
-- On many lists you can **long-press** to select several items and **delete** them together (meds, appointments, supplies, bowel, weight, logs, etc.)
+[FEATURE] History (Track → History) — Past symptom, medication, and wellbeing logs. Each shows how many entries there are. After a new log is saved, the app says to see History in Track.
 
-Some screens show a one-time tip card you can dismiss.
+[FEATURE] Your activity (Track → History) — Chart under the logs. A ? next to the heading explains the bars. Each bar is one day. The height is how many entries you logged. Filter by what you logged. Not a health score.
+
+[FEATURE] My meds (Care) — Medicine list: name, dose, and a reminder time if you set one. Open a medicine to mark it taken today.
+
+[FEATURE] Medicine reminders (⋮ menu → Settings → Reminders) — Phone alert at the time set on a medicine.
+
+[FEATURE] Appointments (Care) — Upcoming clinic visits. Add, edit, and set a reminder before the visit. Past visits are on Appointments → Past.
+
+[FEATURE] Questions for my doctor (Care, and Appointments → Questions) — Your own notes of things to ask. Not advice from the app.
+
+[FEATURE] Appointment summary (Appointments → Summary) — Pick a period. Builds a summary of what you logged. Share or email only when you choose.
+
+[FEATURE] Reports (Care) — Longer report for a date range. Share or email only when you choose.
+
+[FEATURE] Supplies (Care → Supplies) — Named orders you reorder, such as bags or dressings. Each has how often, a due date, and a stock list.
+
+[FEATURE] Supply request (Supplies → an order) — Email, share, or copy a message of the stock. Email saves the wording for next time and moves that order’s due date on.
+
+[FEATURE] Supply reminder (⋮ menu → Settings → Reminders) — Phone alert at 9:00am on the due day, when notifications are on. Tap opens that order.
+
+[FEATURE] Delete account (Profile → Security) — At the bottom of Security. Permanently deletes the account and the data after you confirm.
+
+[FEATURE] Log out (Profile) — Text under the menu. Asks you to confirm before you are signed out.
+
+[FEATURE] My IBD Card (⋮ menu) — A card you write yourself for clinic: IBD type, diagnosis date, medicines, team, history, and notes. Not a medical record. Not an official ID.
+
+[FEATURE] Support (⋮ menu) — What is IBD?, a nutrition guide, and IBD at work. Wording from named UK sources. Not advice from FlareCare.
+
+[FEATURE] About (⋮ menu) — What the app is, a short disclaimer, a support email, and the app version.
+
+[FEATURE] Going Out (Out & About) — A leaving-the-house checklist you build once. Not on the main tabs yet.
+
+[FEATURE] Find a Toilet (Out & About) — Map. Near me, or search for a place. Directions open in Maps. Data from the GB Toilet Map. Not on the main tabs yet.
+
+[FEATURE] Latest news (Latest News) — List of articles to open or share. Usually turned off. Not on the main tabs.
 
 ---
 
-## Care / clinic
+Do not put these on LinkedIn. They are not finished.
 
-| What | What it does |
-|------|----------------|
-| **Appointments** | Upcoming visits; add / edit; optional reminder before the visit. Hub tabs: **Appointments** \| **Questions** \| **Summary** (tap; fade). **Past** in the header on Appointments |
-| **Past Appointments** | Older visits |
-| **Appointment Summary** | On Appointments → **Summary** tab: pick a period (e.g. last 2 / 4 / 6 weeks or custom dates) → summary with health overview, next appointment, what changed → **Share** or **Email** |
-| **Questions for my appointment** | On Appointments → **Questions** tab: save things to ask the doctor during normal life. Your notes only — not medical advice |
-| **Reports** | Longer report for a date range → email |
+- Still to do line for an appointment today or tomorrow. The “Clinic tomorrow” row is sample text.
+- Still to do lines for stay hydrated, or check-in not done.
+- The next-appointment card on Care, and the supply rows on that page. Sample text.
 
-You always choose when something is sent. Nothing emails itself in the background.
-
----
-
-## Supplies
-
-For things you reorder regularly (bags, dressings, giving sets, etc.).
-
-**Named orders:** each order has its own name, cadence, due date, stock list, and saved email/subject/message — so you can switch without rewriting.
-
-**First time:** Supplies opens setup — name → how often (including custom weeks) → next due.  
-Then add stock on that order with **+**.
-
-**Hub:** cards for each named order (due + cadence). **+** adds another order. Tap a card to manage its stock.
-
-**Request supplies:** pick the order name (dropdown) → loads that order’s stock + wording → Email / Share / Copy message.
-**Email** saves **send-to email, subject, and message** for that order (so next week they’re pre-filled) and advances **that** order’s due date. **Share** / **Copy message** only hand off the text — they do not save, advance due, or leave the request screen.
-
-
-When any order is due or overdue, home shows it under **Today’s priorities**.
-
-**Due-day alert:** if notifications are already on, stocked orders get a local phone alert at **9:00am** on the due date (tap opens that order). Empty orders are skipped; overdue stays on home priorities only (no catch-up ping).
-
----
-
-## Reminders (phone alerts)
-
-Open from **Settings → Push Notifications / Reminders** (wording in the app).
-
-- Turn permission on/off  
-- See how many alerts are scheduled  
-- Open phone settings if alerts aren’t arriving  
-- Daily alerts for medicines (when a reminder time is set)  
-- Alerts before appointments (when a reminder is set)  
-- Supply-order due alerts at **9:00am** on the due date (when the order has items and notifications are on). Tap opens that order. Overdue stays on home priorities — no catch-up alert.
-
----
-
-## Account & info pages
-
-**Account tab**
-- Information (created date, sign-in method, account id)
-- Personal details (name, email)
-- Security (app lock)
-- Appearance / theme is also in **Settings**
-- Legal — Privacy Policy and Terms (read in the app)
-- Help — Notifications, Daily Intake Guidelines, Appointments / summary
-- About — product story, disclaimer, support email, app version
-- **Delete account** — permanently removes the account and data (with a confirm step)
-- Sign out
-
-**Support (from ⋮)**
-- **What is IBD?** — plain-language IBD info and how Flarecare helps  
-- **Nutrition Guide** — food categories and tips (with a disclaimer)
-- **IBD at work** — practical workplace topics (adjustments, explaining IBD, toilet urgency, fatigue, appointments, sudden worsen). Sourced UK guidance; not legal/medical advice.
-
-**My IBD Card**
-- ⋮ → personal IBD information card to show or refer to with healthcare professionals (IBD type, diagnosis date, current medications, IBD team/service, important history, notes for HCPs). User-authored; not a medical record or official ID.
-
-**My tools — Out & About**
-- Hub for leaving-the-house helpers; **Going Out** (checklist) + **Find a Toilet** (map-first: near me + choose a place; pull-up list; Directions → Maps; GB Toilet Map CC BY 4.0)
-
----
-
-## News (built, usually hidden)
-
-There is a **Latest News** list (open / share articles) and a home news shelf.  
-Right now news on home is **turned off** in the app, so you normally won’t see it.
-
----
-
-## What Flarecare does **not** do
-
-- Give medical advice or tell you to go to A&E  
-- Send supply requests or emails by itself  
-- Keep a history of old supply requests (not in this version)  
-- Remote/server push for supplies (due alerts are **local** device notifications, same as meds/appointments)
-
----
-
-## Looking ahead (not built yet)
-
-- **Going Out** — tiny “I'm going out” planner: personalised checklist from the user’s own list (`going_out_profiles`). Plan: `plans/going-out.md` (**built v1** under My tools → Out & About).
-- **Questions for my appointment** — Appointments hub **Questions** tab. Quick notes (“Ask about my fatigue.”). User-authored only; not medical advice. Plan: `plans/appointment-questions.md` (built v1 — run SQL).
-- **My IBD Card** — ⋮ personal IBD info card for clinic (type, diagnosis date, medications, team, history, notes for HCPs). User-authored only; not a medical record / official ID. Plan: `plans/my-ibd-self-advocacy.md` (**built v1**).
-- **Log Symptoms v2** — IBD-type branching (Crohn’s / UC / Other / Not sure) so symptom data matches what clinicians care about; research before inventing questions. Plan: `plans/log-symptoms-ibd-branching-v2.md` (**v2 — not building now**).
-- **Private Support topics** — optional resources in Support only (sex & relationships, fertility & pregnancy, body image, talking to others about IBD). Not on the dashboard. Plan: `plans/private-support-topics.md`.
-- **What happens if…?** — section/card: who I contact (IBD team) + when to seek help (**clinically reviewed** guidance). Plan: `plans/what-happens-if.md`.
-- **Find a Toilet** — **shipped** under My tools → Out & About. Map-first near me + choose a place; pull-up sheet; Directions → Maps; GB Toilet Map (CC BY 4.0). Plan: `plans/find-a-toilet.md`. Later: open-now ranking, Report a problem, photos.
-- **More sign-in OAuth** (e.g. Apple) — keep **email** as the main CTA; don’t stack many full-width OAuth buttons on the method screen (fingerprint quick-unlock sits at the bottom and will cover them). Prefer **“More ways to sign in”** → sheet with providers, or a compact icon row. Today: email code + Google only.
-
----
-
-## Tip for you
-
-When you invent a new feature, add one short line here so future-you knows it’s real.
-When something is only planned, put it under **Looking ahead** instead.
+Not built: symptom questions that change by IBD type. Extra support topics. A “what happens if…?” page. Sign in with Apple.

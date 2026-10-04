@@ -277,6 +277,11 @@ export function supplyDueStatusFromKitListCache(userId: string): SupplyDueStatus
   return "upcoming";
 }
 
+/** Next order that is overdue, otherwise due today. Hidden when neither. */
+export function nextDueSupplyKit(entries: KitListEntry[]): KitListEntry | null {
+  return entries.find((entry) => entry.status === "overdue") ?? entries.find((entry) => entry.status === "due") ?? null;
+}
+
 export function supplyDashboardSummaryFromEntries(entries: KitListEntry[]): SupplyDashboardSummary {
   const kitCount = entries.length;
   if (kitCount === 0) {

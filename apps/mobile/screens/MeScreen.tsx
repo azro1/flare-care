@@ -1,19 +1,26 @@
 import React from "react";
-import { View, Text, StyleSheet } from "react-native";
+import { Pressable, View, Text, StyleSheet } from "react-native";
 import { ScrollView } from "../lib/scrollViews";
 import { useNavigation } from "@react-navigation/native";
 import { useFlareColors } from "../theme";
 import { SPACING, TYPOGRAPHY } from "../designTokens";
+import { FLARE_FONT_SIZE } from "../lib/layoutConstants";
+import { confirmLogOut } from "../components/HeaderOverflowMenu";
 import { Card } from "../components/MidnightLagoonCard";
 import { TrayRow } from "../components/MidnightLagoonTray";
-import { SectionLabel } from "../components/MidnightLagoonSectionLabel";
-import { FLARE_CHROME_LUCIDE, FLARE_FEATURE_LUCIDE } from "../lib/flareLucideIcons";
-import type { SessionUser } from "../lib/supabase";
+import { ScreenHeader } from "../components/MidnightLagoonScreenHeader";
+import { FLARE_CHROME_LUCIDE } from "../lib/flareLucideIcons";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 
+type MeUser = {
+  id: string;
+  email?: string | null;
+  displayName?: string | null;
+};
+
 type MeScreenProps = {
-  user: SessionUser;
-  onLogout: () => void;
+  user: MeUser;
+  onLogout: () => void | Promise<void>;
 };
 
 export function MeScreen({ user, onLogout }: MeScreenProps) {
@@ -21,7 +28,7 @@ export function MeScreen({ user, onLogout }: MeScreenProps) {
   const colors = useFlareColors();
   const insets = useSafeAreaInsets();
 
-  const userName = user.user_metadata?.first_name?.trim() || "User";
+  const userName = (user.displayName ?? "").trim().split(/\s+/)[0] || "User";
   const userEmail = user.email || "";
 
   return (
@@ -33,118 +40,76 @@ export function MeScreen({ user, onLogout }: MeScreenProps) {
           { paddingBottom: insets.bottom + 100 },
         ]}
       >
-        <View style={styles.profileHeader}>
-          <View style={[styles.profileAvatar, { backgroundColor: colors.primary }]}>
-            <Text style={[styles.profileInitial, { fontFamily: TYPOGRAPHY.fontFamily.bold }]}>
-              {userName.charAt(0).toUpperCase()}
-            </Text>
+        <ScreenHeader title="Profile" />
+
+        <Card style={{ marginBottom: SPACING.xl }}>
+          <View style={styles.profileRow}>
+            <View style={[styles.profileAvatar, { backgroundColor: colors.surfaceSubtle }]}>
+              <Text style={[styles.profileInitial, { color: colors.primary, fontFamily: TYPOGRAPHY.fontFamily.bold }]}>
+                {userName.charAt(0).toUpperCase()}
+              </Text>
+            </View>
+            <View style={styles.profileText}>
+              <Text style={[styles.profileName, { color: colors.text, fontFamily: TYPOGRAPHY.fontFamily.semibold }]}>
+                {userName}
+              </Text>
+              {userEmail ? (
+                <Text style={[styles.profileEmail, { color: colors.textSecondary, fontFamily: TYPOGRAPHY.fontFamily.regular }]}>
+                  {userEmail}
+                </Text>
+              ) : null}
+            </View>
           </View>
-          <Text style={[styles.profileName, { color: colors.text, fontFamily: TYPOGRAPHY.fontFamily.semibold }]}>
-            {userName}
-          </Text>
-          <Text style={[styles.profileEmail, { color: colors.textSecondary, fontFamily: TYPOGRAPHY.fontFamily.regular }]}>
-            {userEmail}
-          </Text>
-        </View>
-
-        <Card noPadding style={{ paddingVertical: SPACING.sm, paddingHorizontal: SPACING.md }}>
-          <TrayRow
-            icon={FLARE_CHROME_LUCIDE.card}
-            label="My IBD Card"
-            showChevron
-            onPress={() => navigation.navigate("MyCard")}
-          />
         </Card>
 
-        <SectionLabel>Out & About</SectionLabel>
-
         <Card noPadding style={{ paddingVertical: SPACING.sm, paddingHorizontal: SPACING.md }}>
           <TrayRow
-            icon={FLARE_CHROME_LUCIDE.mapPin}
-            label="Find a Toilet"
+            icon={FLARE_CHROME_LUCIDE.person}
+            label="Personal details"
             showChevron
-            onPress={() => navigation.navigate("FindToilet")}
+            bareIcon
+            onPress={() => navigation.navigate("AccountPersonalDetails")}
           />
-          <TrayRow
-            icon={FLARE_FEATURE_LUCIDE.goingOut}
-            label="Going Out"
-            showChevron
-            onPress={() => navigation.navigate("GoingOut")}
-          />
-        </Card>
-
-        <SectionLabel>Guides</SectionLabel>
-
-        <Card noPadding style={{ paddingVertical: SPACING.sm, paddingHorizontal: SPACING.md }}>
           <TrayRow
             icon={FLARE_CHROME_LUCIDE.info}
-            label="What is IBD?"
+            label="Information"
             showChevron
-            onPress={() => navigation.navigate("Ibd")}
+            bareIcon
+            onPress={() => navigation.navigate("AccountInfo")}
           />
           <TrayRow
-            icon={FLARE_FEATURE_LUCIDE.intake}
-            label="Nutrition"
+            icon={FLARE_CHROME_LUCIDE.shield}
+            label="Security"
             showChevron
-            onPress={() => navigation.navigate("NutritionGuide")}
+            bareIcon
+            onPress={() => navigation.navigate("AccountSecurity")}
           />
           <TrayRow
-            icon={FLARE_CHROME_LUCIDE.briefcase}
-            label="IBD at work"
+            icon={FLARE_CHROME_LUCIDE.card}
+            label="Legal"
             showChevron
-            onPress={() => navigation.navigate("IbdAtWork")}
-          />
-        </Card>
-
-        <SectionLabel>Settings</SectionLabel>
-
-        <Card noPadding style={{ paddingVertical: SPACING.sm, paddingHorizontal: SPACING.md }}>
-          <TrayRow
-            icon={FLARE_CHROME_LUCIDE.settings}
-            label="Settings"
-            showChevron
-            onPress={() => navigation.navigate("Settings")}
-          />
-          <TrayRow
-            icon={FLARE_CHROME_LUCIDE.bell}
-            label="Reminders"
-            showChevron
-            onPress={() => navigation.navigate("Reminders")}
+            bareIcon
+            onPress={() => navigation.navigate("AccountLegal")}
           />
           <TrayRow
             icon={FLARE_CHROME_LUCIDE.help}
             label="Help"
             showChevron
+            bareIcon
             onPress={() => navigation.navigate("AccountHelp")}
           />
-          <TrayRow
-            icon={FLARE_CHROME_LUCIDE.info}
-            label="About"
-            showChevron
-            onPress={() => navigation.navigate("About")}
-          />
-          <TrayRow
-            icon={FLARE_CHROME_LUCIDE.shield}
-            label="Legal"
-            showChevron
-            onPress={() => navigation.navigate("AccountLegal")}
-          />
         </Card>
 
-        <Card noPadding style={{ paddingVertical: SPACING.sm, paddingHorizontal: SPACING.md }}>
-          <TrayRow
-            icon={FLARE_CHROME_LUCIDE.logOut}
-            label="Sign out"
-            onPress={onLogout}
-          />
-        </Card>
-
-        <Card noPadding style={{ paddingVertical: SPACING.sm, paddingHorizontal: SPACING.md }}>
-          <TrayRow
-            label="Delete account"
-            onPress={() => navigation.navigate("Account")}
-          />
-        </Card>
+        <View style={styles.logoutRow}>
+          <Pressable
+            accessibilityRole="button"
+            accessibilityLabel="Log out"
+            hitSlop={{ top: 10, bottom: 10, left: 10, right: 10 }}
+            onPress={() => confirmLogOut(onLogout)}
+          >
+            <Text style={[styles.logoutLabel, { color: colors.text }]}>Log out</Text>
+          </Pressable>
+        </View>
       </ScrollView>
     </View>
   );
@@ -161,27 +126,39 @@ const styles = StyleSheet.create({
     paddingHorizontal: SPACING.screen,
     paddingTop: SPACING.lg,
   },
-  profileHeader: {
+  profileRow: {
+    flexDirection: "row",
     alignItems: "center",
-    marginBottom: SPACING.xl,
+    gap: SPACING.card,
   },
   profileAvatar: {
-    width: 72,
-    height: 72,
-    borderRadius: 36,
+    width: 56,
+    height: 56,
+    borderRadius: 28,
     alignItems: "center",
     justifyContent: "center",
-    marginBottom: SPACING.md,
   },
   profileInitial: {
-    fontSize: 32,
-    color: "#ffffff",
+    fontSize: TYPOGRAPHY.fontSize.screenTitle,
+  },
+  profileText: {
+    flex: 1,
+    minWidth: 0,
   },
   profileName: {
     fontSize: TYPOGRAPHY.fontSize.cardTitle,
-    marginBottom: SPACING.xs,
   },
   profileEmail: {
     fontSize: TYPOGRAPHY.fontSize.sm,
+    marginTop: SPACING.xs,
+  },
+  logoutRow: {
+    flexDirection: "row",
+    justifyContent: "center",
+    marginTop: SPACING.xl,
+  },
+  logoutLabel: {
+    fontFamily: TYPOGRAPHY.fontFamily.regular,
+    fontSize: FLARE_FONT_SIZE.navTitle,
   },
 });

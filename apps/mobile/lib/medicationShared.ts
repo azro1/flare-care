@@ -131,6 +131,27 @@ export function medicationHasReminder(row: MedicationRow): boolean {
   return Boolean(row.reminders_enabled && time && time !== "as-needed");
 }
 
+function reminderMinutes(timeOfDay: string | null | undefined): number | null {
+  const match = timeOfDay?.trim().match(/^(\d{2}):(\d{2})$/);
+  if (!match) return null;
+  return Number(match[1]) * 60 + Number(match[2]);
+}
+
+/** Next untaken medication that has a reminder. Upcoming time today wins; otherwise the earliest. */
+export function nextReminderMedication(
+  meds: MedicationRow[],
+  takenIds: Set<string>,
+  now: Date = new Date(),
+): MedicationRow | null {
+  const nowMinutes = now.getHours() * 60 + now.getMinutes();
+  const due = meds
+    .filter((med) => medicationHasReminder(med) && !takenIds.has(String(med.id)))
+    .map((med) => ({ med, minutes: reminderMinutes(med.time_of_day) }))
+    .filter((item): item is { med: MedicationRow; minutes: number } => item.minutes != null)
+    .sort((a, b) => a.minutes - b.minutes);
+  return due.find((item) => item.minutes >= nowMinutes)?.med ?? due[0]?.med ?? null;
+}
+
 export function medicationListSubtitle(row: MedicationRow): string {
   const parts: string[] = [];
   const dosage = row.dosage?.trim();

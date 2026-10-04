@@ -95,7 +95,7 @@ export function TrackerThumbFab({
         style={({ pressed }) => [
           styles.fab,
           {
-            backgroundColor: c.primary,
+            backgroundColor: c.cta,
             opacity: pressed ? 0.92 : 1,
             ...Platform.select({
               ios: {

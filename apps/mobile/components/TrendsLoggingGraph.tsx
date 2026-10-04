@@ -261,12 +261,10 @@ export function TrendsLoggingGraph({
               </View>
             )}
           </View>
-          {!empty && startLabel && endLabel ? (
-            <View style={styles.xLabels}>
-              <Text style={[styles.axisLabel, { color: c.textMuted }]}>{startLabel}</Text>
-              <Text style={[styles.axisLabel, { color: c.textMuted }]}>{endLabel}</Text>
-            </View>
-          ) : null}
+          <View style={styles.xLabels}>
+            <Text style={[styles.axisLabel, { color: c.textMuted }]}>{!empty ? startLabel : ""}</Text>
+            <Text style={[styles.axisLabel, { color: c.textMuted }]}>{!empty ? endLabel : ""}</Text>
+          </View>
         </View>
       </View>
 

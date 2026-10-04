@@ -87,9 +87,10 @@ import { readAuthLegalAccepted, setAuthLegalAccepted } from "./lib/authLegalAcce
 import { CollapsingTitleScrollScreen } from "./components/CollapsingTitleScrollScreen";
 import { Card } from "./components/MidnightLagoonCard";
 import { TrayRow } from "./components/MidnightLagoonTray";
+import { MidnightLagoonLogList } from "./components/MidnightLagoonLogList";
 import { SectionLabel } from "./components/MidnightLagoonSectionLabel";
 import { FlareThemeProvider, useFlareColors, useFlareTheme } from "./theme";
-import { SPACING, TYPOGRAPHY } from "./designTokens";
+import { DIMENSIONS, OPACITY, RADIUS, SPACING, TYPOGRAPHY } from "./designTokens";
 import { formatUkDate, formatUkGreetingDate } from "./lib/formatUkDate";
 import { todayYmd } from "./lib/bowelMovementShared";
 import { handleListExpansionNavigationRouteChange } from "./lib/listExpansionNavigation";
@@ -849,7 +850,11 @@ function AuthScreen({
       showFlareAlert("Google sign in failed", "Missing auth URL.");
       return;
     }
-    const result = await WebBrowser.openAuthSessionAsync(data.url, redirectTo);
+    const result = await WebBrowser.openAuthSessionAsync(data.url, redirectTo, {
+      toolbarColor: cAuth.screen,
+      secondaryToolbarColor: cAuth.card,
+      controlsColor: cAuth.text,
+    });
     if (result.type === "success" && result.url) {
       onAuthBusy?.(true);
       onBeginSessionHandoff?.();
@@ -919,8 +924,8 @@ function AuthScreen({
     else if (pending === "google") void signInGoogle();
   };
 
-  /** Same layout as gray auth; fill page with blue in light appearance only. */
-  const authBlue = !cAuth.isDark;
+  /** Auth screen uses the app background, not a solid accent fill. */
+  const authBlue = false;
   /** Content sits on the page (no card) — light mode uses on-primary chrome. */
   const onPrimaryChrome = authBlue;
 
@@ -2501,47 +2506,29 @@ function SymptomHistoryScreen({ user }: { user: SessionUser }) {
   }, [refresh, runBulkDelete, user.id]);
 
   return (
-    <InstructionScreenShell
-      showInstruction={false}
-      contentPaddingBottom={bottomScrollInset + selectionBarInset + 24}
-      instruction={null}
-      footer={
-        <ConfirmModal
-          visible={bulkDeleteOpen}
-          title={selectedIds.size === 1 ? "Delete symptom log?" : `Delete ${selectedIds.size} symptom logs?`}
-          message="This action cannot be undone."
-          confirmLabel={bulkDeleting ? "Deleting…" : "Delete"}
-          confirmDestructive
-          onConfirm={handleBulkDeleteConfirm}
-          onCancel={() => setBulkDeleteOpen(false)}
-        />
-      }
-    >
-      <LogHistoryCard>
-        <View style={logHistoryCardStyles.trackerCardBody}>
-          {showListLoading ? (
-            <LogHistoryListLoading />
-          ) : listInitialLoad ? (
-            <LogHistoryListQuietPlaceholder />
-          ) : rows.length === 0 ? (
-            <LogHistoryEmptyState icon={FLARE_FEATURE_LUCIDE.symptoms} />
-          ) : (
-            <LogHistoryPreviewList
-              items={symptomLogItems}
-              visibleCount={visibleCount}
-              hasMore={hasMore}
-              loadingMore={loadingMore}
-              onLoadMore={() => void loadMore()}
-              onPressItem={(logId) => navigation.navigate("SymptomDetail", { id: logId })}
-              selectionMode={selectionMode}
-              selectedIds={selectedIds}
-              onToggleSelect={toggleSelect}
-              onLongPressItem={enterSelectionWith}
-            />
-          )}
-        </View>
-      </LogHistoryCard>
-    </InstructionScreenShell>
+    <>
+      <MidnightLagoonLogList
+        items={symptomLogItems.map((item) => ({ id: item.id, label: item.title, whenIso: item.whenIso }))}
+        visibleCount={visibleCount}
+        hasMore={hasMore}
+        loading={loading}
+        loadingMore={loadingMore}
+        icon={FLARE_FEATURE_LUCIDE.symptoms}
+        emptyText="No symptom logs yet."
+        onPressItem={(logId) => navigation.navigate("SymptomDetail", { id: logId })}
+        onLoadMore={() => void loadMore()}
+        onLongPressItem={enterSelectionWith}
+      />
+      <ConfirmModal
+        visible={bulkDeleteOpen}
+        title={selectedIds.size === 1 ? "Delete symptom log?" : `Delete ${selectedIds.size} symptom logs?`}
+        message="This action cannot be undone."
+        confirmLabel={bulkDeleting ? "Deleting…" : "Delete"}
+        confirmDestructive
+        onConfirm={handleBulkDeleteConfirm}
+        onCancel={() => setBulkDeleteOpen(false)}
+      />
+    </>
   );
 }
 
@@ -2899,47 +2886,29 @@ function MedicationTrackingHistoryScreen({ user }: { user: SessionUser }) {
   }, [refresh, runBulkDelete, user.id]);
 
   return (
-    <InstructionScreenShell
-      showInstruction={false}
-      contentPaddingBottom={bottomScrollInset + selectionBarInset + 24}
-      instruction={null}
-      footer={
-        <ConfirmModal
-          visible={bulkDeleteOpen}
-          title={selectedIds.size === 1 ? "Delete medication log?" : `Delete ${selectedIds.size} medication logs?`}
-          message="This action cannot be undone."
-          confirmLabel={bulkDeleting ? "Deleting…" : "Delete"}
-          confirmDestructive
-          onConfirm={handleBulkDeleteConfirm}
-          onCancel={() => setBulkDeleteOpen(false)}
-        />
-      }
-    >
-      <LogHistoryCard>
-        <View style={logHistoryCardStyles.trackerCardBody}>
-          {showListLoading ? (
-            <LogHistoryListLoading />
-          ) : listInitialLoad ? (
-            <LogHistoryListQuietPlaceholder />
-          ) : rows.length === 0 ? (
-            <LogHistoryEmptyState icon={TRACK_MEDICATIONS_ICON} />
-          ) : (
-            <LogHistoryPreviewList
-              items={medicationLogItems}
-              visibleCount={visibleCount}
-              hasMore={hasMore}
-              loadingMore={loadingMore}
-              onLoadMore={() => void loadMore()}
-              onPressItem={(logId) => navigation.navigate("MedicationLogDetail", { id: logId })}
-              selectionMode={selectionMode}
-              selectedIds={selectedIds}
-              onToggleSelect={toggleSelect}
-              onLongPressItem={enterSelectionWith}
-            />
-          )}
-        </View>
-      </LogHistoryCard>
-    </InstructionScreenShell>
+    <>
+      <MidnightLagoonLogList
+        items={medicationLogItems.map((item) => ({ id: item.id, label: item.title, whenIso: item.whenIso }))}
+        visibleCount={visibleCount}
+        hasMore={hasMore}
+        loading={loading}
+        loadingMore={loadingMore}
+        icon={FLARE_FEATURE_LUCIDE.meds}
+        emptyText="No medication logs yet."
+        onPressItem={(logId) => navigation.navigate("MedicationLogDetail", { id: logId })}
+        onLoadMore={() => void loadMore()}
+        onLongPressItem={enterSelectionWith}
+      />
+      <ConfirmModal
+        visible={bulkDeleteOpen}
+        title={selectedIds.size === 1 ? "Delete medication log?" : `Delete ${selectedIds.size} medication logs?`}
+        message="This action cannot be undone."
+        confirmLabel={bulkDeleting ? "Deleting…" : "Delete"}
+        confirmDestructive
+        onConfirm={handleBulkDeleteConfirm}
+        onCancel={() => setBulkDeleteOpen(false)}
+      />
+    </>
   );
 }
 
@@ -3496,7 +3465,7 @@ function AccountHelpScreen() {
   );
 
   return (
-    <View style={[styles.screen, { backgroundColor: c.screen }]}>
+    <View style={{ flex: 1, backgroundColor: c.screen }}>
       <ScrollView
         style={styles.scroll}
         contentContainerStyle={[styles.scrollContent, { paddingBottom: bottomScrollInset + 24 }]}
@@ -3617,7 +3586,7 @@ function NotificationsScreen({ user }: { user: SessionUser }) {
     : FLARE_CHROME_LUCIDE.notificationsOff;
 
   return (
-    <View style={[styles.screen, { backgroundColor: c.screen }]}>
+    <View style={{ flex: 1, backgroundColor: c.screen }}>
       <ScrollView
         style={styles.scroll}
         contentContainerStyle={[styles.scrollContent, { paddingBottom: bottomScrollInset + 16 }]}
@@ -3996,7 +3965,7 @@ function AccountInfoScreen({ user }: { user: SessionUser }) {
   const bottomScrollInset = useBottomTabScrollInset();
 
   return (
-    <View style={[styles.screen, { backgroundColor: c.screen }]}>
+    <View style={{ flex: 1, backgroundColor: c.screen }}>
       <ScrollView
         style={styles.scroll}
         contentContainerStyle={[styles.scrollContent, { paddingBottom: bottomScrollInset + 24 }]}
@@ -4041,16 +4010,18 @@ function AccountPersonalDetailsScreen({ user }: { user: SessionUser }) {
   const displayName = user.displayName?.trim() || "Not set";
 
   return (
-    <View style={[styles.screen, { backgroundColor: c.screen }]}>
+    <View style={{ flex: 1, backgroundColor: c.screen }}>
       <ScrollView
         style={styles.scroll}
         contentContainerStyle={[styles.scrollContent, { paddingBottom: bottomScrollInset + 24 }]}
       >
         <Card>
-          <View style={[styles.accountIdentityNavRow, { backgroundColor: c.surfaceSubtle }]}>
+          <View style={styles.accountIdentityNavRow}>
             <View style={styles.accountIdentityRow}>
-              <View style={[styles.accountAvatarWell, { backgroundColor: c.surfaceRaised }]}>
-                <FlareLucideIcon icon={FLARE_CHROME_LUCIDE.person} size={26} color={c.primary} />
+              <View style={[styles.accountAvatarWell, { backgroundColor: c.surfaceSubtle }]}>
+                <Text style={[styles.accountAvatarInitial, { color: c.primary, fontFamily: TYPOGRAPHY.fontFamily.bold }]}>
+                  {accountIdentityFirstLine(user).charAt(0).toUpperCase()}
+                </Text>
               </View>
               <View style={styles.accountIdentityTextCol}>
                 <Text style={[styles.accountFirstName, { color: c.text, fontFamily: TYPOGRAPHY.fontFamily.semibold }]}>
@@ -4087,9 +4058,25 @@ function AccountPersonalDetailsScreen({ user }: { user: SessionUser }) {
   );
 }
 
-function AccountSecurityScreen() {
+function AccountSecurityScreen({
+  user,
+  beginSignOutBlocking,
+  endSignOutBlocking,
+  finishSignOut,
+  prepareSignOut,
+  restoreAfterAbortedSignOut,
+}: {
+  user: SessionUser;
+  beginSignOutBlocking: () => void;
+  endSignOutBlocking: () => void;
+  finishSignOut: () => Promise<void>;
+  prepareSignOut: (reason: SignOutReason) => void;
+  restoreAfterAbortedSignOut: () => Promise<void>;
+}) {
   const c = useFlareColors();
   const bottomScrollInset = useBottomTabScrollInset();
+  const [deleteAccountConfirmOpen, setDeleteAccountConfirmOpen] = useState(false);
+  const deleteAccountInFlight = useRef(false);
   const seed = peekBioLockSnapshot();
 
   const [bioAvailable, setBioAvailable] = useState(() => seed?.available ?? false);
@@ -4134,13 +4121,41 @@ function AccountSecurityScreen() {
     [bioLabel],
   );
 
+  const handleDeleteAccountConfirm = useCallback(async () => {
+    if (deleteAccountInFlight.current) return;
+    deleteAccountInFlight.current = true;
+    setDeleteAccountConfirmOpen(false);
+    beginSignOutBlocking();
+    try {
+      const { error } = await supabase.rpc("delete_user_account");
+      if (error) {
+        await restoreAfterAbortedSignOut();
+        showFlareAlert("Could not delete account", error.message);
+        return;
+      }
+      prepareSignOut("account_deleted");
+      await finishSignOut();
+      await clearRememberedSession();
+      await setAuthLegalAccepted(false);
+      await clearNewUserIntroState(user.id);
+      await clearAllHubTipsDismissed();
+    } catch (e: unknown) {
+      await restoreAfterAbortedSignOut();
+      const msg = e instanceof Error ? e.message : "Something went wrong.";
+      showFlareAlert("Could not delete account", msg);
+    } finally {
+      deleteAccountInFlight.current = false;
+      endSignOutBlocking();
+    }
+  }, [beginSignOutBlocking, endSignOutBlocking, finishSignOut, prepareSignOut, restoreAfterAbortedSignOut, user.id]);
+
   const unlockTitle = `Unlock with ${bioLabel === "biometrics" ? "biometrics" : bioLabel}`;
   const unlockHint = bioAvailable
     ? "Enable biometrics each time you open the app."
     : "Set up Face ID or fingerprint recognition in your device settings to use this.";
 
   return (
-    <View style={[styles.screen, { backgroundColor: c.screen }]}>
+    <View style={{ flex: 1, backgroundColor: c.screen }}>
       <ScrollView
         style={styles.scroll}
         contentContainerStyle={[styles.scrollContent, { paddingBottom: bottomScrollInset + 24 }]}
@@ -4150,7 +4165,17 @@ function AccountSecurityScreen() {
             <View style={styles.settingRow}>
               <View style={styles.settingTextCol}>
                 <View style={styles.settingTitleRow}>
-                  <FlareLucideIcon icon={FLARE_CHROME_LUCIDE.fingerprint} size={16} color={c.text} />
+                  <View
+                    style={[
+                      styles.securityIconWell,
+                      {
+                        backgroundColor:
+                          c.primary + Math.round(OPACITY.iconTile * 255).toString(16).padStart(2, "0"),
+                      },
+                    ]}
+                  >
+                    <FlareLucideIcon icon={FLARE_CHROME_LUCIDE.fingerprint} size={18} color={c.primary} />
+                  </View>
                   <Text style={[styles.settingTitle, { color: c.text, fontFamily: TYPOGRAPHY.fontFamily.semibold }]}>
                     {unlockTitle}
                   </Text>
@@ -4173,6 +4198,51 @@ function AccountSecurityScreen() {
             </View>
           )}
         </Card>
+
+        <Card noPadding style={{ paddingVertical: SPACING.sm, paddingHorizontal: SPACING.md, marginTop: SPACING.lg }}>
+          <TrayRow
+            icon={FLARE_CHROME_LUCIDE.delete}
+            iconColor={c.destructiveFill}
+            bareIcon={false}
+            label="Delete account"
+            onPress={() => setDeleteAccountConfirmOpen(true)}
+          />
+        </Card>
+
+        <ConfirmModal
+          visible={deleteAccountConfirmOpen}
+          title="Delete account"
+          message={
+            <>
+              <Text
+                style={{
+                  color: c.textMuted,
+                  fontSize: TYPOGRAPHY.fontSize.md,
+                  lineHeight: 20,
+                  fontFamily: TYPOGRAPHY.fontFamily.regular,
+                }}
+              >
+                This will permanently delete your account and all your data. This can't be undone.
+              </Text>
+              <Text
+                style={{
+                  color: c.textMuted,
+                  fontSize: TYPOGRAPHY.fontSize.md,
+                  lineHeight: 20,
+                  fontFamily: TYPOGRAPHY.fontFamily.regular,
+                  marginTop: SPACING.sm,
+                }}
+              >
+                Are you sure?
+              </Text>
+            </>
+          }
+          confirmLabel="Delete"
+          cancelLabel="Cancel"
+          confirmDanger
+          onCancel={() => setDeleteAccountConfirmOpen(false)}
+          onConfirm={() => void handleDeleteAccountConfirm()}
+        />
       </ScrollView>
     </View>
   );
@@ -4184,18 +4254,27 @@ function AccountLegalScreen() {
   const bottomScrollInset = useBottomTabScrollInset();
 
   return (
-    <ScrollView
-      style={[styles.screen, { backgroundColor: c.screen }]}
-      contentContainerStyle={{ paddingBottom: bottomScrollInset + 24 }}
-    >
-      <OneLineTrayList
-        items={[
-          { id: "privacy", title: "Privacy Policy", accessibilityLabel: "Privacy Policy" },
-          { id: "terms", title: "Terms of Use", accessibilityLabel: "Terms of Use" },
-        ]}
-        onPressItem={(document) => navigation.navigate("LegalDocument", { document })}
-      />
-    </ScrollView>
+    <View style={{ flex: 1, backgroundColor: c.screen }}>
+      <ScrollView
+        style={styles.scroll}
+        contentContainerStyle={[styles.scrollContent, { paddingBottom: bottomScrollInset + 24 }]}
+      >
+        <Card noPadding style={{ paddingVertical: SPACING.sm, paddingHorizontal: SPACING.md }}>
+          <TrayRow
+            icon={FLARE_CHROME_LUCIDE.shield}
+            label="Privacy Policy"
+            showChevron
+            onPress={() => navigation.navigate("LegalDocument", { document: "privacy" })}
+          />
+          <TrayRow
+            icon={FLARE_CHROME_LUCIDE.card}
+            label="Terms of Use"
+            showChevron
+            onPress={() => navigation.navigate("LegalDocument", { document: "terms" })}
+          />
+        </Card>
+      </ScrollView>
+    </View>
   );
 }
 
@@ -4206,13 +4285,13 @@ function SupportScreen() {
   const bottomScrollInset = useBottomTabScrollInset();
 
   return (
-    <View style={[styles.screen, { backgroundColor: c.screen }]}>
+    <View style={{ flex: 1, backgroundColor: c.screen }}>
       <ScrollView
         style={styles.scroll}
         contentContainerStyle={[styles.scrollContent, { paddingBottom: bottomScrollInset + 16 }]}
       >
         <Card>
-          <SectionLabel>Educational resources</SectionLabel>
+          <SectionLabel style={{ marginTop: 0 }}>Educational resources</SectionLabel>
           <TrayRow
             label="What is IBD?"
             sublabel="Understand Crohn's and ulcerative colitis"
@@ -4228,7 +4307,7 @@ function SupportScreen() {
         </Card>
 
         <Card style={{ marginTop: SPACING.lg }}>
-          <SectionLabel>Practical support</SectionLabel>
+          <SectionLabel style={{ marginTop: 0 }}>Practical support</SectionLabel>
           <TrayRow
             label="IBD at work"
             sublabel="Adjustments, toilet urgency, fatigue, and appointments"
@@ -4267,7 +4346,7 @@ function SettingsScreen() {
   const darkOn = appearancePreference === "dark";
 
   return (
-    <View style={[styles.screen, { backgroundColor: c.screen }]}>
+    <View style={{ flex: 1, backgroundColor: c.screen }}>
       <ScrollView
         style={styles.scroll}
         contentContainerStyle={[styles.scrollContent, { paddingBottom: bottomScrollInset + 16 }]}
@@ -4278,10 +4357,10 @@ function SettingsScreen() {
               <View style={styles.settingTitleRow}>
                 <FlareLucideIcon
                   icon={darkOn ? FLARE_CHROME_LUCIDE.moon : FLARE_CHROME_LUCIDE.sun}
-                  size={16}
-                  color={c.text}
+                  size={18}
+                  color={c.primary}
                 />
-                <Text style={[styles.settingTitle, { color: c.text, fontFamily: TYPOGRAPHY.fontFamily.semibold }]}>
+                <Text style={[styles.settingTitle, { color: c.text, fontFamily: TYPOGRAPHY.fontFamily.semibold, flex: 1 }]}>
                   {darkOn ? "Dark mode" : "Light mode"}
                 </Text>
               </View>
@@ -4301,15 +4380,29 @@ function SettingsScreen() {
           </View>
         </Card>
 
-        <Card noPadding style={{ paddingVertical: SPACING.sm, paddingHorizontal: SPACING.md, marginTop: SPACING.lg }}>
-          <TrayRow
-            icon={FLARE_CHROME_LUCIDE.notifications}
-            label="Push Notifications and Reminders"
-            value="Get reminders and updates from FlareCare."
-            showChevron
-            onPress={() => navigation.navigate("Reminders")}
-          />
-        </Card>
+        <Pressable
+          accessibilityRole="button"
+          accessibilityLabel="Push Notifications and Reminders"
+          onPress={() => navigation.navigate("Reminders")}
+          style={({ pressed }) => [{ opacity: pressed ? 0.7 : 1 }]}
+        >
+          <Card style={{ marginTop: SPACING.lg }}>
+            <View style={styles.settingRow}>
+              <View style={styles.settingTextCol}>
+                <View style={styles.settingTitleRow}>
+                  <FlareLucideIcon icon={FLARE_CHROME_LUCIDE.notifications} size={18} color={c.primary} />
+                  <Text style={[styles.settingTitle, { color: c.text, fontFamily: TYPOGRAPHY.fontFamily.semibold, flex: 1 }]}>
+                    Push Notifications and Reminders
+                  </Text>
+                </View>
+                <Text style={[styles.settingHint, { color: c.textSecondary, fontFamily: TYPOGRAPHY.fontFamily.regular }]}>
+                  Get reminders and updates from FlareCare.
+                </Text>
+              </View>
+              <FlareLucideIcon icon={FLARE_CHROME_LUCIDE.forward} size={NAV_ROW_CHEVRON_SIZE} color={c.text} />
+            </View>
+          </Card>
+        </Pressable>
       </ScrollView>
     </View>
   );
@@ -4380,7 +4473,7 @@ function AccountScreen({
   }, [beginSignOutBlocking, endSignOutBlocking, finishSignOut, prepareSignOut, restoreAfterAbortedSignOut, user.id]);
 
   return (
-    <View style={[styles.screen, { backgroundColor: c.screen }]}>
+    <View style={{ flex: 1, backgroundColor: c.screen }}>
       <ScrollView
         style={styles.scroll}
         contentContainerStyle={[styles.scrollContent, { paddingBottom: bottomScrollInset + 24 }]}
@@ -4495,6 +4588,9 @@ function MainBottomTabBar({
   const { colors } = useFlareTheme();
   const c = useFlareColors();
   const insets = useSafeAreaInsets();
+  const bottomPadRef = useRef(Math.max(insets.bottom, 10));
+  if (insets.bottom > bottomPadRef.current) bottomPadRef.current = Math.max(insets.bottom, 10);
+  const tabBottomPad = Math.max(bottomPadRef.current, insets.bottom);
   const { chrome } = useListSelectionChrome();
   const selectionChrome = chrome?.routeName === routeName ? chrome : null;
 
@@ -4584,12 +4680,12 @@ function MainBottomTabBar({
           color={active ? colors.primary : colors.textSecondary}
         />
       ),
-      "Me",
+      "Profile",
     )
   );
 
   return (
-    <View style={[styles.bottomTabBarWrap, { backgroundColor: c.card, borderTopColor: c.cardBorder, paddingBottom: Math.max(insets.bottom, 10) }]}>
+    <View style={[styles.bottomTabBarWrap, { backgroundColor: c.card, borderTopColor: c.cardBorder, paddingBottom: tabBottomPad }]}>
       {item(
         "Today",
         ({ active }) => (
@@ -4776,6 +4872,8 @@ function AppTabs({
 
   const headerOptions = ({ navigation, route }: { navigation: any; route: { name: string; params?: { document?: string } } }) => {
     const isDashboard = route.name === "Dashboard";
+    const isTabRoot =
+      route.name === "Today" || route.name === "Track" || route.name === "Care" || route.name === "Me";
     const isAbout = route.name === "About";
     const isIbd = route.name === "Ibd";
     const isNutritionGuide = route.name === "NutritionGuide";
@@ -4838,7 +4936,7 @@ function AppTabs({
       MedicalSuppliesSetup: "",
       MedicalSupplyOrder: "Order",
       MedicalSupplyRequest: "Send request",
-      Trends: "Trends",
+      Trends: "",
       Reports: "Reports",
     };
     const isSymptomLogWizard = route.name === "SymptomLogWizard";
@@ -4912,7 +5010,6 @@ function AppTabs({
           navigation={navigation}
           routeName={route.name}
           edgePadding={SCREEN_EDGE_PADDING}
-          onLogout={onLogout}
           compact
         />
       </View>
@@ -4921,7 +5018,6 @@ function AppTabs({
         navigation={navigation}
         routeName={route.name}
         edgePadding={SCREEN_EDGE_PADDING}
-        onLogout={onLogout}
       />
     );
 
@@ -4990,6 +5086,7 @@ function AppTabs({
       headerLeftContainerStyle: { paddingLeft: 0, marginLeft: 0 },
       headerLeft:
         !isDashboard &&
+        !isTabRoot &&
         !isSymptomLogWizard &&
         !isMedicationTrackingWizard &&
         !isWellbeingWizard &&
@@ -5035,7 +5132,9 @@ function AppTabs({
               {() => <CareScreen key={user.id} user={user} />}
             </AppStack.Screen>
             <AppStack.Screen name="Me">
-              {() => <MeScreen key={user.id} user={user} onLogout={onLogout} />}
+              {() => (
+                <MeScreen key={user.id} user={user} onLogout={onLogout} />
+              )}
             </AppStack.Screen>
             <AppStack.Screen name="Dashboard">
               {() => <DashboardScreen key={user.id} user={user} />}
@@ -5106,7 +5205,18 @@ function AppTabs({
             <AppStack.Screen name="AccountPersonalDetails">
               {() => <AccountPersonalDetailsScreen user={user} />}
             </AppStack.Screen>
-            <AppStack.Screen name="AccountSecurity">{() => <AccountSecurityScreen />}</AppStack.Screen>
+            <AppStack.Screen name="AccountSecurity">
+              {() => (
+                <AccountSecurityScreen
+                  user={user}
+                  beginSignOutBlocking={beginSignOutBlocking}
+                  endSignOutBlocking={endSignOutBlocking}
+                  prepareSignOut={prepareSignOut}
+                  finishSignOut={finishSignOut}
+                  restoreAfterAbortedSignOut={restoreAfterAbortedSignOut}
+                />
+              )}
+            </AppStack.Screen>
             <AppStack.Screen name="AccountLegal">{() => <AccountLegalScreen />}</AppStack.Screen>
             <AppStack.Screen name="LegalDocument" component={LegalDocumentScreen} />
             <AppStack.Screen name="AccountHelp">{() => <AccountHelpScreen />}</AppStack.Screen>
@@ -6073,6 +6183,9 @@ const styles = StyleSheet.create({
     justifyContent: "center",
     marginRight: 14,
   },
+  accountAvatarInitial: {
+    fontSize: TYPOGRAPHY.fontSize.screenTitle,
+  },
   accountIdentityTextCol: { flex: 1, minWidth: 0 },
   accountFirstName: { fontSize: 14, fontFamily: "Outfit_500Medium" },
   accountEmailLine: { fontSize: FLARE_FONT_SIZE.muted, fontFamily: "Outfit_400Regular", marginTop: 3 },
@@ -6381,10 +6494,17 @@ const styles = StyleSheet.create({
     flex: 1,
     gap: SPACING.xs,
   },
+  securityIconWell: {
+    width: DIMENSIONS.iconTile,
+    height: DIMENSIONS.iconTile,
+    borderRadius: RADIUS.iconTile,
+    alignItems: "center",
+    justifyContent: "center",
+  },
   settingTitleRow: {
     flexDirection: "row",
     alignItems: "center",
-    gap: SPACING.xs,
+    gap: SPACING.sm,
   },
   settingTitle: {
     fontSize: TYPOGRAPHY.fontSize.md,

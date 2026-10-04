@@ -1,110 +1,94 @@
 import React, { useCallback, useState } from "react";
-import { ActivityIndicator, StyleSheet, Text, View } from "react-native";
+import { StyleSheet, View } from "react-native";
 import { useFocusEffect, useNavigation } from "@react-navigation/native";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { ScrollView } from "../lib/scrollViews";
+import { InfoHintButton } from "../components/InfoHintButton";
 import { Card } from "../components/MidnightLagoonCard";
+import { SectionLabel } from "../components/MidnightLagoonSectionLabel";
 import { TrayRow } from "../components/MidnightLagoonTray";
-import { SPACING, TYPOGRAPHY } from "../designTokens";
+import { TrendsLoggingGraph } from "../components/TrendsLoggingGraph";
+import { SPACING } from "../designTokens";
+import {
+  ACTIVITY_HINT_ACCESSIBILITY_LABEL,
+  ACTIVITY_HINT_MESSAGE,
+  ACTIVITY_HINT_TITLE,
+} from "../lib/trendsLoggingShared";
 import { FLARE_FEATURE_LUCIDE } from "../lib/flareLucideIcons";
-import { formatLogWhenLine } from "../lib/logDisplay";
 import { supabase, TABLES } from "../lib/supabase";
 import { useFlareColors } from "../theme";
-import type { LucideIcon } from "lucide-react-native";
 
 type SessionUser = { id: string };
 
-type HistoryKind = "symptom" | "medication" | "bowel" | "weight";
-
-type HistoryEntry = {
-  id: string;
-  kind: HistoryKind;
-  label: string;
-  createdAt: string;
-  route: "SymptomDetail" | "MedicationLogDetail" | "BowelLogDetail" | "WeightLogDetail";
-  icon: LucideIcon;
+type HistoryCounts = {
+  symptom: number | null;
+  medication: number | null;
+  wellbeing: number | null;
 };
 
-const KIND_META: Record<HistoryKind, Pick<HistoryEntry, "label" | "route" | "icon">> = {
-  symptom: { label: "Symptom Log", route: "SymptomDetail", icon: FLARE_FEATURE_LUCIDE.symptoms },
-  medication: { label: "Medication Log", route: "MedicationLogDetail", icon: FLARE_FEATURE_LUCIDE.trackMeds },
-  bowel: { label: "Bowel Log", route: "BowelLogDetail", icon: FLARE_FEATURE_LUCIDE.bowel },
-  weight: { label: "Weight Log", route: "WeightLogDetail", icon: FLARE_FEATURE_LUCIDE.weight },
-};
+/** "No entries" / "1 entry" / "12 entries" — matches the Logs browse rows in the old app. */
+function entryCountLabel(count: number | null): string {
+  if (count === null) return "";
+  if (count === 0) return "No entries";
+  if (count === 1) return "1 entry";
+  return `${count} entries`;
+}
 
-function rowsToEntries(
-  kind: HistoryKind,
-  rows: { id: string | number; created_at?: string | null }[] | null,
-): HistoryEntry[] {
-  const meta = KIND_META[kind];
-  return (rows ?? []).map((row) => ({
-    id: String(row.id),
-    kind,
-    label: meta.label,
-    createdAt: row.created_at ?? "",
-    route: meta.route,
-    icon: meta.icon,
-  }));
+async function countRows(table: string, userId: string): Promise<number | null> {
+  const { count, error } = await supabase
+    .from(table)
+    .select("id", { count: "exact", head: true })
+    .eq("user_id", userId);
+  return error ? null : count ?? 0;
 }
 
 export function HistoryScreen({ user }: { user: SessionUser }) {
   const navigation = useNavigation<any>();
   const colors = useFlareColors();
   const insets = useSafeAreaInsets();
-  const [loading, setLoading] = useState(true);
-  const [entries, setEntries] = useState<HistoryEntry[]>([]);
-  const [loadError, setLoadError] = useState("");
+  const [focused, setFocused] = useState(true);
+  const [counts, setCounts] = useState<HistoryCounts>({ symptom: null, medication: null, wellbeing: null });
 
   const load = useCallback(async () => {
-    setLoading(true);
-    setLoadError("");
-    try {
-      const [symptomsRes, medicationsRes, bowelRes, weightRes] = await Promise.all([
-        supabase
-          .from(TABLES.LOG_SYMPTOMS)
-          .select("id, created_at")
-          .eq("user_id", user.id)
-          .order("created_at", { ascending: false }),
-        supabase
-          .from(TABLES.LOG_MEDICATIONS)
-          .select("id, created_at")
-          .eq("user_id", user.id)
-          .order("created_at", { ascending: false }),
-        supabase
-          .from(TABLES.BOWEL_MOVEMENTS)
-          .select("id, created_at")
-          .eq("user_id", user.id)
-          .order("created_at", { ascending: false }),
-        supabase
-          .from(TABLES.TRACK_WEIGHT)
-          .select("id, created_at")
-          .eq("user_id", user.id)
-          .order("created_at", { ascending: false }),
-      ]);
-
-      const failed = [symptomsRes.error, medicationsRes.error, bowelRes.error, weightRes.error].find(Boolean);
-      const next = [
-        ...rowsToEntries("symptom", symptomsRes.data),
-        ...rowsToEntries("medication", medicationsRes.data),
-        ...rowsToEntries("bowel", bowelRes.data),
-        ...rowsToEntries("weight", weightRes.data),
-      ].sort((a, b) => new Date(b.createdAt || 0).getTime() - new Date(a.createdAt || 0).getTime());
-
-      setEntries(next);
-      setLoadError(failed ? "Could not load every log." : "");
-    } catch {
-      setEntries([]);
-      setLoadError("Could not load logs.");
-    } finally {
-      setLoading(false);
-    }
+    const [symptom, medication, wellbeing] = await Promise.all([
+      countRows(TABLES.LOG_SYMPTOMS, user.id),
+      countRows(TABLES.LOG_MEDICATIONS, user.id),
+      countRows(TABLES.DAILY_WELLBEING, user.id),
+    ]);
+    setCounts({ symptom, medication, wellbeing });
   }, [user.id]);
 
   useFocusEffect(
     useCallback(() => {
+      setFocused(true);
       void load();
+      return () => setFocused(false);
     }, [load]),
   );
+
+  const rows = [
+    {
+      id: "symptom",
+      label: "Symptoms",
+      icon: FLARE_FEATURE_LUCIDE.symptoms,
+      route: "SymptomHistory",
+      count: counts.symptom,
+    },
+    {
+      id: "medication",
+      label: "Medications",
+      icon: FLARE_FEATURE_LUCIDE.meds,
+      route: "MedicationTrackingHistory",
+      count: counts.medication,
+    },
+    {
+      id: "wellbeing",
+      label: "Wellbeing",
+      icon: FLARE_FEATURE_LUCIDE.wellbeing,
+      route: "Wellbeing",
+      count: counts.wellbeing,
+    },
+  ];
 
   return (
     <View style={[styles.screen, { backgroundColor: colors.screen }]}>
@@ -112,37 +96,29 @@ export function HistoryScreen({ user }: { user: SessionUser }) {
         style={styles.scroll}
         contentContainerStyle={[styles.scrollContent, { paddingBottom: insets.bottom + 100 }]}
       >
-        {loading && entries.length === 0 ? (
-          <View style={styles.loadingWrap}>
-            <ActivityIndicator size="small" color={colors.primary} />
-          </View>
-        ) : entries.length === 0 ? (
-          <Card>
-            <Text style={[styles.emptyText, { color: colors.textSecondary, fontFamily: TYPOGRAPHY.fontFamily.regular }]}>
-              {loadError || "No logs yet."}
-            </Text>
-          </Card>
-        ) : (
-          <>
-            {loadError ? (
-              <Text style={[styles.errorText, { color: colors.textSecondary, fontFamily: TYPOGRAPHY.fontFamily.regular }]}>
-                {loadError}
-              </Text>
-            ) : null}
-            <Card noPadding style={styles.listCard}>
-              {entries.map((entry) => (
-                <TrayRow
-                  key={`${entry.kind}-${entry.id}`}
-                  icon={entry.icon}
-                  label={entry.label}
-                  value={formatLogWhenLine(entry.createdAt)}
-                  showChevron
-                  onPress={() => navigation.navigate(entry.route, { id: entry.id })}
-                />
-              ))}
-            </Card>
-          </>
-        )}
+        <Card noPadding style={styles.listCard}>
+          {rows.map((row) => (
+            <TrayRow
+              key={row.id}
+              icon={row.icon}
+              label={row.label}
+              value={entryCountLabel(row.count)}
+              showChevron
+              onPress={() => navigation.navigate(row.route)}
+            />
+          ))}
+        </Card>
+        <View style={styles.activityHeading}>
+          <SectionLabel style={styles.activityLabel}>Your activity</SectionLabel>
+          <InfoHintButton
+            title={ACTIVITY_HINT_TITLE}
+            message={ACTIVITY_HINT_MESSAGE}
+            accessibilityLabel={ACTIVITY_HINT_ACCESSIBILITY_LABEL}
+          />
+        </View>
+        <Card>
+          <TrendsLoggingGraph userId={user.id} active={focused} />
+        </Card>
       </ScrollView>
     </View>
   );
@@ -159,19 +135,22 @@ const styles = StyleSheet.create({
     paddingHorizontal: SPACING.screen,
     paddingTop: SPACING.lg,
   },
-  loadingWrap: {
-    paddingVertical: SPACING.xl,
-    alignItems: "center",
-  },
   listCard: {
     paddingVertical: SPACING.sm,
     paddingHorizontal: SPACING.md,
   },
-  emptyText: {
-    fontSize: TYPOGRAPHY.fontSize.md,
-  },
-  errorText: {
-    fontSize: TYPOGRAPHY.fontSize.sm,
+  activityHeading: {
+    flexDirection: "row",
+    alignItems: "center",
+    justifyContent: "space-between",
+    marginTop: SPACING.lg,
     marginBottom: SPACING.sm,
+    marginHorizontal: 2,
+  },
+  activityLabel: {
+    marginTop: 0,
+    marginBottom: 0,
+    marginHorizontal: 0,
+    flex: 1,
   },
 });

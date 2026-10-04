@@ -27,7 +27,7 @@ import {
   validateAppointmentForm,
   type AppointmentFormState,
 } from "../lib/appointmentShared";
-import { TIME_PICKER_MINUTE_INTERVAL } from "../lib/layoutConstants";
+import { TIME_PICKER_MINUTE_INTERVAL, bottomTabBarHeight } from "../lib/layoutConstants";
 import { SPACING, RADIUS, TYPOGRAPHY } from "../designTokens";
 import { supabase, TABLES } from "../lib/supabase";
 import { useFlareColors } from "../theme";
@@ -271,7 +271,8 @@ export function AppointmentsScreen({ user }: { user: SessionUser }) {
   const c = useFlareColors();
   const navigation = useNavigation<any>();
   const insets = useSafeAreaInsets();
-  const { fabBottom, fabRight } = useTrackerThumbFabLayout();
+  const tabBarClearance = bottomTabBarHeight(insets.bottom);
+  const { scrollBottomPad } = useTrackerThumbFabLayout(tabBarClearance);
   const appointmentsList = useAppointmentsList(user.id);
   const { load } = appointmentsList;
   const [sheetOpen, setSheetOpen] = useState(false);
@@ -336,7 +337,7 @@ export function AppointmentsScreen({ user }: { user: SessionUser }) {
           style={styles.scroll}
           contentContainerStyle={[
             styles.scrollContent,
-            { paddingBottom: showFab ? fabBottom + 80 : Math.max(insets.bottom, 16) + 24 },
+            { paddingBottom: showFab ? scrollBottomPad : Math.max(insets.bottom, 16) + 24 },
           ]}
         >
           <ScreenHeader
@@ -388,8 +389,7 @@ export function AppointmentsScreen({ user }: { user: SessionUser }) {
           <TrackerThumbFab
             accessibilityLabel={activeTab === "questions" ? "Add question" : "Add appointment"}
             onPress={activeTab === "questions" ? () => openQuestionAddRef.current() : openAdd}
-            bottom={fabBottom}
-            right={fabRight}
+            tabBarClearance={tabBarClearance}
           />
         ) : null}
       </View>

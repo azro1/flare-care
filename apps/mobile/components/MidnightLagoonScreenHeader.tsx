@@ -8,9 +8,10 @@ type ScreenHeaderProps = {
   subtitle?: string;
   onMenuPress?: () => void;
   rightAction?: React.ReactNode;
+  supportLine?: string;
 };
 
-export function ScreenHeader({ title, subtitle, onMenuPress, rightAction }: ScreenHeaderProps) {
+export function ScreenHeader({ title, subtitle, onMenuPress, rightAction, supportLine }: ScreenHeaderProps) {
   const colors = useFlareColors();
 
   return (
@@ -36,6 +37,17 @@ export function ScreenHeader({ title, subtitle, onMenuPress, rightAction }: Scre
         >
           {title}
         </Text>
+        {supportLine ? (
+          <Text
+            style={[
+              styles.subtitle,
+              styles.supportLine,
+              { color: colors.textSecondary, fontFamily: TYPOGRAPHY.fontFamily.regular },
+            ]}
+          >
+            {supportLine}
+          </Text>
+        ) : null}
       </View>
       {rightAction ? (
         <View style={styles.rightAction}>{rightAction}</View>
@@ -74,6 +86,10 @@ const styles = StyleSheet.create({
   },
   title: {
     fontSize: TYPOGRAPHY.fontSize.screenTitle,
+  },
+  supportLine: {
+    marginTop: SPACING.xs,
+    marginBottom: 0,
   },
   menuIcon: {
     fontSize: 22,

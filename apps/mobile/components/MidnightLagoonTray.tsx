@@ -2,7 +2,8 @@ import React from "react";
 import { View, Text, Pressable, StyleSheet, ViewStyle, TextStyle } from "react-native";
 import { useFlareColors } from "../theme";
 import { SPACING, RADIUS, TYPOGRAPHY, DIMENSIONS, OPACITY } from "../designTokens";
-import { FlareLucideIcon } from "../lib/flareLucideIcons";
+import { FlareLucideIcon, FLARE_CHROME_LUCIDE } from "../lib/flareLucideIcons";
+import { NAV_ROW_CHEVRON_SIZE } from "../lib/layoutConstants";
 import type { LucideIcon } from "lucide-react-native";
 
 type TrayProps = {
@@ -36,6 +37,12 @@ type TrayRowProps = {
   onPress?: () => void;
   onLongPress?: () => void;
   disabled?: boolean;
+  /** No filled tray background, so the row sits flat on its card. */
+  plain?: boolean;
+  /** No coloured square behind the icon. Lists use this. Pass false for a square, as on Security. */
+  bareIcon?: boolean;
+  /** Glyph colour. Defaults to the theme primary. The tile wash uses the same colour. */
+  iconColor?: string;
   style?: ViewStyle;
 };
 
@@ -49,21 +56,30 @@ export function TrayRow({
   onPress,
   onLongPress,
   disabled,
+  plain,
+  bareIcon = true,
+  iconColor,
   style,
 }: TrayRowProps) {
   const colors = useFlareColors();
 
   const content = (
-    <View style={[styles.trayRow, { backgroundColor: colors.tray }, style]}>
+    <View style={[styles.trayRow, { backgroundColor: plain ? "transparent" : colors.tray }, style]}>
       <View style={styles.trayRowLeft}>
         {icon && (
           <View
             style={[
               styles.iconTile,
-              { backgroundColor: colors.primary + Math.round(OPACITY.iconTile * 255).toString(16).padStart(2, '0') },
+              bareIcon
+                ? null
+                : {
+                    backgroundColor:
+                      (iconColor ?? colors.primary) +
+                      Math.round(OPACITY.iconTile * 255).toString(16).padStart(2, "0"),
+                  },
             ]}
           >
-            <FlareLucideIcon icon={icon} size={18} color={colors.primary} />
+            <FlareLucideIcon icon={icon} size={18} color={iconColor ?? colors.primary} />
           </View>
         )}
         <View style={styles.trayRowLabels}>
@@ -87,17 +103,26 @@ export function TrayRow({
           )}
         </View>
       </View>
-      <Text
-        style={[
-          styles.trayRowValue,
-          {
-            color: valueColor || colors.textSecondary,
-            fontFamily: TYPOGRAPHY.fontFamily.regular,
-          },
-        ]}
-      >
-        {value || (showChevron ? "›" : "")}
-      </Text>
+      {value || showChevron ? (
+        <View style={styles.trayRowTrailing}>
+          {value ? (
+            <Text
+              style={[
+                styles.trayRowValue,
+                {
+                  color: valueColor || colors.textSecondary,
+                  fontFamily: TYPOGRAPHY.fontFamily.regular,
+                },
+              ]}
+            >
+              {value}
+            </Text>
+          ) : null}
+          {showChevron ? (
+            <FlareLucideIcon icon={FLARE_CHROME_LUCIDE.forward} size={NAV_ROW_CHEVRON_SIZE} color={colors.text} />
+          ) : null}
+        </View>
+      ) : null}
     </View>
   );
 
@@ -156,8 +181,15 @@ const styles = StyleSheet.create({
     fontSize: TYPOGRAPHY.fontSize.xs,
     marginTop: 2,
   },
+  trayRowTrailing: {
+    flexDirection: "row",
+    alignItems: "center",
+    gap: SPACING.sm,
+    marginLeft: SPACING.md,
+    flexShrink: 1,
+  },
   trayRowValue: {
     fontSize: TYPOGRAPHY.fontSize.md,
-    marginLeft: SPACING.md,
+    flexShrink: 1,
   },
 });

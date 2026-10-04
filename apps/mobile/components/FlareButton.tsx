@@ -100,8 +100,8 @@ export function PrimaryButton({
           : danger
             ? { backgroundColor: c.destructiveFill, opacity: inactive ? 0.5 : 1 }
             : destructive
-              ? { backgroundColor: c.primary, opacity: inactive ? 0.5 : 1 }
-              : { backgroundColor: inactive ? c.primaryDisabledBg : c.primary },
+              ? { backgroundColor: c.cta, opacity: inactive ? 0.5 : 1 }
+              : { backgroundColor: inactive ? c.primaryDisabledBg : c.cta },
       ]}
     >
       {loading ? (
@@ -163,7 +163,7 @@ export function EntryPrimaryButton({
         noTopMargin ? { marginTop: 0 } : null,
         onPrimary
           ? { backgroundColor: inactive ? "rgba(255,255,255,0.78)" : c.white }
-          : { backgroundColor: inactive ? c.primaryDisabledBg : c.primary },
+          : { backgroundColor: inactive ? c.primaryDisabledBg : c.cta },
       ]}
     >
       {loading ? (

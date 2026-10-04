@@ -7,21 +7,52 @@ import React, { createContext, useCallback, useContext, useEffect, useMemo, useS
 const APPEARANCE_STORAGE_KEY = "flarecare.appearance.preference";
 
 /**
- * Midnight Lagoon palette — teal-cyan primary replaces cadet blue.
- * Used for CTAs, active tabs, nav tint, progress indicators.
+ * Moss palette. Change a value here and every screen that uses it updates.
+ * Primary is amber (meds, buttons). Hydration is the soft green tile fill.
  */
 const MIDNIGHT_LAGOON_ACCENT = {
   dark: {
-    primary: "#14A39A",
-    link: "#5FD4CB",
-    accent: "#FF7A59",
+    primary: "#E9A23B",
+    hydration: "#7CC4A0",
+    link: "#7CC4A0",
+    accent: "#E9A23B",
+    heroStart: "#2F6B4F",
+    heroEnd: "#1F4E3A",
   },
   light: {
-    primary: "#0E7C7B",
-    link: "#0B6A69",
-    accent: "#F0603F",
+    primary: "#C27C14",
+    hydration: "#2F8A62",
+    link: "#2F8A62",
+    accent: "#C27C14",
+    heroStart: "#2F6B4F",
+    heroEnd: "#1F4E3A",
   },
 } as const;
+
+/** Care appointment card. All four stay, even if only one is on screen. */
+export const CARE_CARD_PALETTES = {
+  clay: {
+    dark: { start: "#8A4B32", end: "#5E2F1F" },
+    light: { start: "#9C5538", end: "#6E3824" },
+  },
+  slate: {
+    dark: { start: "#3D5470", end: "#26364A" },
+    light: { start: "#4A6380", end: "#2E4058" },
+  },
+  plum: {
+    dark: { start: "#5A3A5C", end: "#3A2340" },
+    light: { start: "#6A4570", end: "#45294C" },
+  },
+  olive: {
+    dark: { start: "#5B6B2E", end: "#3E4A1E" },
+    light: { start: "#66783A", end: "#465424" },
+  },
+} as const;
+
+export type CareCardName = keyof typeof CARE_CARD_PALETTES;
+
+/** The Care card on screen. Clay, slate, plum, or olive. */
+export const CARE_CARD_ACTIVE: CareCardName = "clay";
 
 /** Brand primary for custom UI components (action sheets, etc.). */
 export const MOBILE_BRAND_PRIMARY = MIDNIGHT_LAGOON_ACCENT.light.primary;
@@ -32,16 +63,16 @@ export const MOBILE_DESTRUCTIVE_FILL = "#dc2626" as const;
 /** Midnight Lagoon backgrounds. */
 const MIDNIGHT_LAGOON_BG = {
   dark: {
-    screen: "#0A1015",
-    card: "#16222B",
-    tray: "#0F181F",
-    border: "#2A3A46",
+    screen: "#0E1411",
+    card: "#18211C",
+    tray: "#121A16",
+    border: "#2A3830",
   },
   light: {
-    screen: "#F2F6F7",
+    screen: "#F5F4EE",
     card: "#FFFFFF",
-    tray: "#EAF1F2",
-    border: "#D3E0E3",
+    tray: "#EEEDE5",
+    border: "#DEDDD2",
   },
 } as const;
 
@@ -63,6 +94,14 @@ export type FlareColors = {
   primary: string;
   primaryHover: string;
   primaryDisabledBg: string;
+  hydration: string;
+  heroStart: string;
+  heroEnd: string;
+  /** Care appointment card. Darker brown than the Today green. */
+  careStart: string;
+  careEnd: string;
+  /** Filled primary actions. Same green as the Today hero. Set back to `primary` to restore amber buttons. */
+  cta: string;
   link: string;
   accent: string;
   text: string;
@@ -90,8 +129,8 @@ function mapTokens(_t: StyleguideTheme, isDark: boolean): FlareColors {
   const bg = isDark ? MIDNIGHT_LAGOON_BG.dark : MIDNIGHT_LAGOON_BG.light;
   const colors = isDark ? MIDNIGHT_LAGOON_ACCENT.dark : MIDNIGHT_LAGOON_ACCENT.light;
   const textColors = {
-    dark: { main: "#EAF2F5", secondary: "#93A7B3", muted: "#93A7B3" },
-    light: { main: "#0D234B", secondary: "#4F5D6E", muted: "#4F5D6E" },
+    dark: { main: "#EEF3EF", secondary: "#9AAAA0", muted: "#9AAAA0" },
+    light: { main: "#1A2420", secondary: "#5C6A62", muted: "#5C6A62" },
   };
   const text = isDark ? textColors.dark : textColors.light;
 
@@ -103,7 +142,13 @@ function mapTokens(_t: StyleguideTheme, isDark: boolean): FlareColors {
     tray: bg.tray,
     primary: colors.primary,
     primaryHover: colors.primary,
-    primaryDisabledBg: isDark ? "#2A3A46" : "#B8D4D5",
+    primaryDisabledBg: bg.border,
+    hydration: colors.hydration,
+    heroStart: colors.heroStart,
+    heroEnd: colors.heroEnd,
+    careStart: CARE_CARD_PALETTES[CARE_CARD_ACTIVE][isDark ? "dark" : "light"].start,
+    careEnd: CARE_CARD_PALETTES[CARE_CARD_ACTIVE][isDark ? "dark" : "light"].end,
+    cta: colors.heroStart,
     link: colors.link,
     accent: colors.accent,
     text: text.main,

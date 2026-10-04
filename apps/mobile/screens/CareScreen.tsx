@@ -5,6 +5,7 @@ import { useNavigation } from "@react-navigation/native";
 import { useFlareColors } from "../theme";
 import { SPACING, RADIUS, TYPOGRAPHY, OPACITY } from "../designTokens";
 import { Card } from "../components/MidnightLagoonCard";
+import { HeroCard } from "../components/MidnightLagoonHeroCard";
 import { TrayRow } from "../components/MidnightLagoonTray";
 import { ScreenHeader } from "../components/MidnightLagoonScreenHeader";
 import { SectionLabel } from "../components/MidnightLagoonSectionLabel";
@@ -20,6 +21,8 @@ export function CareScreen({ user }: CareScreenProps) {
   const navigation = useNavigation<any>();
   const colors = useFlareColors();
   const insets = useSafeAreaInsets();
+  const careMuted = "rgba(255, 255, 255, 0.85)";
+  const careChip = `rgba(255, 255, 255, ${OPACITY.heroMood})`;
 
   return (
     <View style={[styles.screen, { backgroundColor: colors.screen }]}>
@@ -31,34 +34,35 @@ export function CareScreen({ user }: CareScreenProps) {
         ]}
       >
         <ScreenHeader title="Care" />
-        <View style={[styles.appointmentHero, { backgroundColor: colors.primary }]}>
-          <Text style={[styles.heroLabel, { fontFamily: TYPOGRAPHY.fontFamily.semibold }]}>
+        <HeroCard fillStart={colors.careStart} fillEnd={colors.careEnd}>
+          <Text style={[styles.heroLabel, { color: careMuted, fontFamily: TYPOGRAPHY.fontFamily.semibold }]}>
             NEXT APPOINTMENT
           </Text>
-          <Text style={[styles.heroTitle, { fontFamily: TYPOGRAPHY.fontFamily.semibold }]}>
+          <Text style={[styles.heroTitle, { color: colors.white, fontFamily: TYPOGRAPHY.fontFamily.semibold }]}>
             Tue 13 Oct · 10:30 am
           </Text>
-          <Text style={[styles.heroSubtitle, { fontFamily: TYPOGRAPHY.fontFamily.regular }]}>
+          <Text style={[styles.heroSubtitle, { color: careMuted, fontFamily: TYPOGRAPHY.fontFamily.regular }]}>
             IBD clinic, St Thomas'
           </Text>
           <View style={styles.heroActions}>
-            <View style={[styles.heroButton, { backgroundColor: `rgba(255, 255, 255, ${OPACITY.heroButton})` }]}>
-              <Text style={[styles.heroButtonText, { fontFamily: TYPOGRAPHY.fontFamily.semibold }]}>
+            <View style={[styles.heroButton, { backgroundColor: careChip }]}>
+              <Text style={[styles.heroButtonText, { color: colors.white, fontFamily: TYPOGRAPHY.fontFamily.semibold }]}>
                 3 questions
               </Text>
             </View>
-            <View style={[styles.heroButton, { backgroundColor: `rgba(255, 255, 255, ${OPACITY.heroButton})` }]}>
-              <Text style={[styles.heroButtonText, { fontFamily: TYPOGRAPHY.fontFamily.semibold }]}>
+            <View style={[styles.heroButton, { backgroundColor: careChip }]}>
+              <Text style={[styles.heroButtonText, { color: colors.white, fontFamily: TYPOGRAPHY.fontFamily.semibold }]}>
                 Make summary
               </Text>
             </View>
           </View>
-        </View>
+        </HeroCard>
 
         <SectionLabel>My Meds</SectionLabel>
 
         <Card noPadding style={{ paddingVertical: SPACING.sm, paddingHorizontal: SPACING.md }}>
           <TrayRow
+            bareIcon
             icon={FLARE_FEATURE_LUCIDE.meds}
             label="My Meds"
             showChevron
@@ -70,6 +74,7 @@ export function CareScreen({ user }: CareScreenProps) {
 
         <Card noPadding style={{ paddingVertical: SPACING.sm, paddingHorizontal: SPACING.md }}>
           <TrayRow
+            bareIcon
             icon={FLARE_CHROME_LUCIDE.calendar}
             label="Appointments"
             sublabel="1 upcoming"
@@ -77,6 +82,7 @@ export function CareScreen({ user }: CareScreenProps) {
             onPress={() => navigation.navigate("Appointments")}
           />
           <TrayRow
+            bareIcon
             icon={FLARE_CHROME_LUCIDE.help}
             label="Questions for my doctor"
             sublabel="3 saved"
@@ -84,6 +90,7 @@ export function CareScreen({ user }: CareScreenProps) {
             onPress={() => navigation.navigate("Appointments")}
           />
           <TrayRow
+            bareIcon
             icon={FLARE_FEATURE_LUCIDE.reports}
             label="Reports"
             sublabel="Share or email"
@@ -96,6 +103,7 @@ export function CareScreen({ user }: CareScreenProps) {
 
         <Card noPadding style={{ paddingVertical: SPACING.sm, paddingHorizontal: SPACING.md }}>
           <TrayRow
+            bareIcon
             icon={FLARE_FEATURE_LUCIDE.supplies}
             label="Stoma bags"
             sublabel="Every 4 weeks"
@@ -104,6 +112,7 @@ export function CareScreen({ user }: CareScreenProps) {
             onPress={() => navigation.navigate("MedicalSupplies")}
           />
           <TrayRow
+            bareIcon
             icon={FLARE_FEATURE_LUCIDE.supplies}
             label="Dressings"
             sublabel="Every 2 weeks"
@@ -126,11 +135,6 @@ const styles = StyleSheet.create({
   scrollContent: {
     paddingHorizontal: SPACING.screen,
     paddingTop: SPACING.lg,
-  },
-  appointmentHero: {
-    borderRadius: RADIUS.hero,
-    padding: SPACING.lg,
-    marginVertical: SPACING.card,
   },
   heroLabel: {
     fontSize: TYPOGRAPHY.fontSize.xs,

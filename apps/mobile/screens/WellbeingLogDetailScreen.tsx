@@ -13,12 +13,17 @@ import { formatAddedAtHeader } from "../lib/logDisplay";
 import { recordRecentActivityEvent } from "../lib/recentActivityEvents";
 import { HEADER_ACTION_BTN_WIDTH, HEADER_CHROME_ICON_SIZE } from "../lib/layoutConstants";
 import { SPACING, TYPOGRAPHY } from "../designTokens";
-import {
-  formatWellbeingScaleDisplay,
-  formatWellbeingYesNoDisplay,
-} from "../lib/wellbeingWizardShared";
+import { formatWellbeingYesNoDisplay } from "../lib/wellbeingWizardShared";
 import {
   invalidateWellbeingListCache,
+  labelForWellbeingScale,
+  SCALE_OPTIONS_ANXIETY,
+  SCALE_OPTIONS_BRAIN_FOG,
+  SCALE_OPTIONS_ENERGY,
+  SCALE_OPTIONS_IBD,
+  SCALE_OPTIONS_MOOD,
+  SCALE_OPTIONS_PAIN,
+  SCALE_OPTIONS_SLEEP,
   type WellbeingRow,
   type WellbeingScale,
 } from "../lib/wellbeingShared";
@@ -60,6 +65,25 @@ function DetailDeleteHeaderButton({ onPress, disabled }: { onPress: () => void; 
     >
       <FlareLucideIcon icon={FLARE_CHROME_LUCIDE.delete} size={HEADER_CHROME_ICON_SIZE} color={c.text} />
     </Pressable>
+  );
+}
+
+function DetailSection({ title, fields }: { title: string; fields: { label: string; value: string }[] }) {
+  const c = useFlareColors();
+  return (
+    <Card>
+      <SectionLabel style={styles.inCardLabel}>{title}</SectionLabel>
+      {fields.map((field, i) => (
+        <View key={field.label} style={[styles.fieldRow, i > 0 && styles.fieldRowGap]}>
+          <Text style={[styles.fieldLabel, { color: c.textSecondary, fontFamily: TYPOGRAPHY.fontFamily.regular }]}>
+            {field.label}
+          </Text>
+          <Text style={[styles.fieldValue, { color: c.text, fontFamily: TYPOGRAPHY.fontFamily.medium }]}>
+            {field.value}
+          </Text>
+        </View>
+      ))}
+    </Card>
   );
 }
 
@@ -171,7 +195,7 @@ export function WellbeingLogDetailScreen({ user }: { user: SessionUser }) {
     return (
       <View style={[styles.screen, { backgroundColor: c.screen }]}>
         <ScrollView style={styles.scroll} contentContainerStyle={[styles.scrollContent, { paddingBottom: bottomPad }]}>
-          <Text style={[styles.mutedText, { color: c.textMuted, fontFamily: TYPOGRAPHY.fontFamily.regular }]}>
+          <Text style={[styles.mutedText, { color: c.textSecondary, fontFamily: TYPOGRAPHY.fontFamily.regular }]}>
             Could not load this entry.
           </Text>
         </ScrollView>
@@ -180,16 +204,16 @@ export function WellbeingLogDetailScreen({ user }: { user: SessionUser }) {
   }
 
   const feelingsFields = [
-    { label: "Mood", value: formatWellbeingScaleDisplay(asScale(row.mood)) },
-    { label: "Energy", value: formatWellbeingScaleDisplay(asScale(row.energy)) },
-    { label: "Sleep quality", value: formatWellbeingScaleDisplay(asScale(row.sleep_quality)) },
-    { label: "Anxiety", value: formatWellbeingScaleDisplay(asScale(row.anxiety)) },
+    { label: "Mood", value: labelForWellbeingScale(SCALE_OPTIONS_MOOD, asScale(row.mood)) },
+    { label: "Energy", value: labelForWellbeingScale(SCALE_OPTIONS_ENERGY, asScale(row.energy)) },
+    { label: "Sleep quality", value: labelForWellbeingScale(SCALE_OPTIONS_SLEEP, asScale(row.sleep_quality)) },
+    { label: "Anxiety", value: labelForWellbeingScale(SCALE_OPTIONS_ANXIETY, asScale(row.anxiety)) },
   ];
 
   const ibdFields = [
-    { label: "Pain / discomfort", value: formatWellbeingScaleDisplay(asScale(row.pain)) },
-    { label: "IBD impact", value: formatWellbeingScaleDisplay(asScale(row.ibd_impact)) },
-    { label: "Brain fog", value: formatWellbeingScaleDisplay(asScale(row.brain_fog)) },
+    { label: "Pain / discomfort", value: labelForWellbeingScale(SCALE_OPTIONS_PAIN, asScale(row.pain)) },
+    { label: "IBD impact", value: labelForWellbeingScale(SCALE_OPTIONS_IBD, asScale(row.ibd_impact)) },
+    { label: "Brain fog", value: labelForWellbeingScale(SCALE_OPTIONS_BRAIN_FOG, asScale(row.brain_fog)) },
   ];
 
   const activityFields = [
@@ -209,67 +233,21 @@ export function WellbeingLogDetailScreen({ user }: { user: SessionUser }) {
           contentContainerStyle={[styles.scrollContent, { paddingBottom: bottomPad }]}
           showsVerticalScrollIndicator={false}
         >
-          <Text style={[styles.addedHeader, { color: c.textMuted, fontFamily: TYPOGRAPHY.fontFamily.regular }]}>
+          <Text style={[styles.addedHeader, { color: c.textSecondary, fontFamily: TYPOGRAPHY.fontFamily.regular }]}>
             {formatAddedAtHeader(row.created_at)}
           </Text>
 
-          <SectionLabel text="Feelings" />
-          <Card>
-            <View style={styles.fieldList}>
-              {feelingsFields.map((field) => (
-                <View key={field.label} style={styles.fieldRow}>
-                  <Text style={[styles.fieldLabel, { color: c.text, fontFamily: TYPOGRAPHY.fontFamily.regular }]}>
-                    {field.label}
-                  </Text>
-                  <Text style={[styles.fieldValue, { color: c.textSecondary, fontFamily: TYPOGRAPHY.fontFamily.regular }]}>
-                    {field.value}
-                  </Text>
-                </View>
-              ))}
-            </View>
-          </Card>
-
-          <SectionLabel text="IBD" />
-          <Card>
-            <View style={styles.fieldList}>
-              {ibdFields.map((field) => (
-                <View key={field.label} style={styles.fieldRow}>
-                  <Text style={[styles.fieldLabel, { color: c.text, fontFamily: TYPOGRAPHY.fontFamily.regular }]}>
-                    {field.label}
-                  </Text>
-                  <Text style={[styles.fieldValue, { color: c.textSecondary, fontFamily: TYPOGRAPHY.fontFamily.regular }]}>
-                    {field.value}
-                  </Text>
-                </View>
-              ))}
-            </View>
-          </Card>
-
-          <SectionLabel text="Activities" />
-          <Card>
-            <View style={styles.fieldList}>
-              {activityFields.map((field) => (
-                <View key={field.label} style={styles.fieldRow}>
-                  <Text style={[styles.fieldLabel, { color: c.text, fontFamily: TYPOGRAPHY.fontFamily.regular }]}>
-                    {field.label}
-                  </Text>
-                  <Text style={[styles.fieldValue, { color: c.textSecondary, fontFamily: TYPOGRAPHY.fontFamily.regular }]}>
-                    {field.value}
-                  </Text>
-                </View>
-              ))}
-            </View>
-          </Card>
+          <DetailSection title="Feelings" fields={feelingsFields} />
+          <DetailSection title="IBD" fields={ibdFields} />
+          <DetailSection title="Activities" fields={activityFields} />
 
           {row.notes?.trim() ? (
-            <>
-              <SectionLabel text="Notes" />
-              <Card>
-                <Text style={[styles.notesText, { color: c.text, fontFamily: TYPOGRAPHY.fontFamily.regular }]}>
-                  {row.notes.trim()}
-                </Text>
-              </Card>
-            </>
+            <Card>
+              <SectionLabel style={styles.inCardLabel}>Notes</SectionLabel>
+              <Text style={[styles.notesText, { color: c.text, fontFamily: TYPOGRAPHY.fontFamily.regular }]}>
+                {`\u201C${row.notes.trim()}\u201D`}
+              </Text>
+            </Card>
           ) : null}
         </ScrollView>
       </View>
@@ -307,23 +285,34 @@ const styles = StyleSheet.create({
     fontSize: TYPOGRAPHY.fontSize.sm,
     marginBottom: SPACING.lg,
   },
-  fieldList: {
-    gap: SPACING.md,
+  inCardLabel: {
+    marginTop: 0,
+    marginBottom: SPACING.md,
+    marginHorizontal: 0,
+    letterSpacing: 0.8,
   },
   fieldRow: {
     flexDirection: "row",
     justifyContent: "space-between",
-    alignItems: "center",
+    alignItems: "flex-start",
+    gap: SPACING.md,
+  },
+  fieldRowGap: {
+    marginTop: SPACING.md,
   },
   fieldLabel: {
     fontSize: TYPOGRAPHY.fontSize.md,
+    flex: 1,
   },
   fieldValue: {
     fontSize: TYPOGRAPHY.fontSize.md,
+    textAlign: "right",
+    flex: 1,
   },
   notesText: {
     fontSize: TYPOGRAPHY.fontSize.md,
     lineHeight: 22,
+    fontStyle: "italic",
   },
   headerActions: { flexDirection: "row", alignItems: "center", gap: 2 },
   headerIconBtn: { width: HEADER_ACTION_BTN_WIDTH, height: 44, alignItems: "center", justifyContent: "center" },

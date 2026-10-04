@@ -29,6 +29,7 @@ import {
   type AppointmentsTab,
 } from "../lib/appointmentShared";
 import { SPACING, TYPOGRAPHY } from "../designTokens";
+import { NAV_ROW_CHEVRON_SIZE } from "../lib/layoutConstants";
 import { useFlareColors } from "../theme";
 
 type SessionUser = { id: string };
@@ -135,19 +136,20 @@ export function AppointmentsListPane({
 
   const listInitialLoad = loading && appointments.length === 0;
   const showListLoading = useDeferredListLoading(listInitialLoad);
-  const listEmpty = !loading && visibleRows.length === 0;
 
   const listBody = (
     <>
-      {showListLoading ? (
-        <View style={styles.loadingWrap}>
-          <ActivityIndicator size="small" color={c.primary} />
-        </View>
-      ) : listEmpty ? (
+      {visibleRows.length === 0 ? (
         <Card>
           <View style={styles.emptyWrap}>
-            <FlareLucideIcon icon={APPOINTMENTS_FEATURE_ICON} size={40} color={c.textSecondary} />
-            <Text style={[styles.emptyText, { color: c.textSecondary, fontFamily: TYPOGRAPHY.fontFamily.regular }]}>No appointments yet.</Text>
+            {showListLoading ? (
+              <ActivityIndicator size="small" color={c.primary} />
+            ) : listInitialLoad ? null : (
+              <>
+                <FlareLucideIcon icon={APPOINTMENTS_FEATURE_ICON} size={40} color={c.textSecondary} />
+                <Text style={[styles.emptyText, { color: c.textSecondary, fontFamily: TYPOGRAPHY.fontFamily.regular }]}>No appointments yet.</Text>
+              </>
+            )}
           </View>
         </Card>
       ) : (
@@ -183,7 +185,7 @@ export function AppointmentsListPane({
       {onSummaryPress && !selectionMode ? (
         <Pressable accessibilityRole="button" accessibilityLabel="Appointment Summary" onPress={onSummaryPress} style={({ pressed }) => [styles.summaryLink, pressed && { opacity: 0.85 }]}>
           <Text style={[styles.summaryLinkText, { color: c.text, fontFamily: TYPOGRAPHY.fontFamily.regular }]}>Appointment Summary</Text>
-          <FlareLucideIcon icon={FLARE_CHROME_LUCIDE.forward} size={18} color={c.textSecondary} />
+          <FlareLucideIcon icon={FLARE_CHROME_LUCIDE.forward} size={NAV_ROW_CHEVRON_SIZE} color={c.text} />
         </Pressable>
       ) : null}
 
@@ -207,14 +209,12 @@ export function AppointmentsListPane({
 }
 
 const styles = StyleSheet.create({
-  loadingWrap: {
-    paddingVertical: 24,
-    alignItems: "center",
-  },
   emptyWrap: {
     alignItems: "center",
+    justifyContent: "center",
     paddingVertical: SPACING.xl,
     gap: SPACING.md,
+    minHeight: 132,
   },
   emptyText: {
     fontSize: TYPOGRAPHY.fontSize.md,
