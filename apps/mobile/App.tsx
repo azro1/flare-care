@@ -2745,10 +2745,12 @@ function SymptomDetailScreen({ user }: { user: SessionUser }) {
           ? "No"
           : "Not recorded";
 
-  const basicFields = [
+  const durationFields = [
     { label: "Start Date", value: timelineStart },
     { label: "Status", value: isOngoing ? "Ongoing" : "Ended" },
     ...(!isOngoing && timelineEnd ? [{ label: "End Date", value: formatUkDate(timelineEnd) }] : []),
+  ];
+  const severityFields = [
     { label: "Severity", value: formatSymptomScoreDisplay(severityRaw) },
     { label: "Stress Level", value: formatSymptomScoreDisplay(stressRaw) },
   ];
@@ -2805,9 +2807,12 @@ function SymptomDetailScreen({ user }: { user: SessionUser }) {
         <DetailAddedLine text={formatAddedAtHeader(createdIso)} />
 
         <DetailSectionCard title="Basic Information">
-          <DetailFieldRows fields={basicFields} />
+          <DetailFieldRows fields={durationFields} />
         </DetailSectionCard>
-        <DetailSectionCard title="Bathroom Frequency">
+        <DetailSectionCard title="Severity & stress">
+          <DetailFieldRows fields={severityFields} />
+        </DetailSectionCard>
+        <DetailSectionCard title="Bathroom frequency">
           <DetailFieldRows fields={bathroomFields} />
         </DetailSectionCard>
         {lifestyleFields.length > 0 ? (

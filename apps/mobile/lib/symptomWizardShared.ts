@@ -49,7 +49,7 @@ export type SymptomReviewSectionId = "duration" | "severity" | "bathroom" | "lif
 
 /** Progress-bar sections. Review keeps its own card titles. */
 export const SYMPTOM_WIZARD_SECTION_LABELS = {
-  duration: "Duration",
+  duration: "Basic Information",
   severity: "Severity & stress",
   bathroom: "Bathroom frequency",
   lifestyle: "Lifestyle",
