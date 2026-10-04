@@ -581,7 +581,7 @@ export function SymptomLogWizardScreen({ user }: { user: SessionUser }) {
         showFlareAlert("Saved");
       } else {
         navigation.dispatch(CommonActions.reset({ index: 0, routes: [{ name: "Dashboard" }] }));
-        showFlareAlert("Saved. To view, tap Logs.");
+        showFlareAlert("Saved", "To view, click History in Track");
       }
     } catch (e: any) {
       showFlareAlert(e?.message || "Could not save");
